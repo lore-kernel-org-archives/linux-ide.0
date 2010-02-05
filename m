@@ -1,138 +1,106 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [patch for 2.6.33? 1/1] ata: call flush_dcache_page() around
- PIO data transfers in libata-aff.c
-Date: Thu, 04 Feb 2010 15:36:36 -0600
-Message-ID: <1265319396.29959.7.camel@mulgrave.site>
-References: <1265218789.2873.276.camel@mulgrave.site>
-	 <1265294017.28746.88.camel@pc1117.cambridge.arm.com>
-	 <1265295694.29959.3.camel@mulgrave.site>
-	 <1265297951.28746.116.camel@pc1117.cambridge.arm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Thu, 4 Feb 2010 20:29:41 -0500
+Message-ID: <20100205012940.GA22072@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53563 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754348Ab0BDVgs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Feb 2010 16:36:48 -0500
-In-Reply-To: <1265297951.28746.116.camel@pc1117.cambridge.arm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, David Miller <davem@davemloft.net>, jeff@garzik.org, linux-ide@vger.kernel.org, stable@kernel.org, tj@kernel.org
-
-On Thu, 2010-02-04 at 15:39 +0000, Catalin Marinas wrote:
-> On Thu, 2010-02-04 at 15:01 +0000, James Bottomley wrote:
-> > On Thu, 2010-02-04 at 14:33 +0000, Catalin Marinas wrote:
-> > > On Wed, 2010-02-03 at 17:39 +0000, James Bottomley wrote:
-> > > > On Wed, 2010-02-03 at 12:29 -0500, Jeff Garzik wrote:
-> > > > > On 02/03/2010 12:20 PM, Andrew Morton wrote:
-> > > > > > On Wed, 03 Feb 2010 12:15:46 -0500 Jeff Garzik<jgarzik@pobox.com>  wrote:
-> > > > > >> On 02/03/2010 12:06 PM, Andrew Morton wrote:
-> > > > > >>> Anyway, I'd draw your attention to this claim in the changelog: "This
-> > > > > >>> patch allows the ARM boards to use a rootfs on CompactFlash with the
-> > > > > >>> PATA platform driver." Immediate-term, we should be looking for a small
-> > > > > >>> fix for this issue which is acceptable for 2.6.33 and 2.6.32 and earlier.
-> > > > > >>
-> > > > > >> Sure...  see above.  hopefully one that does not punish -everybody-
-> > > > > >> though.  It would be sad to unconditionally slow down millions of volume
-> > > > > >> platform (read: x86) users for some embedded boards.
-> > > > > >
-> > > > > > Well.
-> > > > > > ata-call-flush_dcache_page-around-pio-data-transfers-in-libata-affc.patch
-> > > > > > is a no-op on x86.  It only has an effect on architectures which
-> > > > > > implement flush_dcache_page().  And I expect flush_dcache_page() is
-> > > > > > pretty light on those architectures, when compared with a PIO-mode
-> > > > > > transfer.
-> > > > >
-> > > > > I don't object to the patch...  as long as the arch people are happy.
-> > > > > Arch people seem to be the ones complaining, though
-> > > >
-> > > > Apart from the contents, which is looking like sprinkle mainline with
-> > > > random flushes, I'm unhappy that something which could be better
-> > > > implemented by thinking about the problem is now being rammed through as
-> > > > a must have bug fix.
-> > > >
-> > > > We got this piece of crap in the same way:
-> > > >
-> > > > commit 2d4dc890b5c8fabd818a8586607e6843c4375e62
-> > > > Author: Ilya Loginov <isloginov@gmail.com>
-> > > > Date:   Thu Nov 26 09:16:19 2009 +0100
-> > > >
-> > > >     block: add helpers to run flush_dcache_page() against a bio and a
-> > > > request's pages
-> > > >
-> > > > Which is another race to flush everywhere until my coherence problem
-> > > > goes away.
-> > > >
-> > > > This scattershot approach to coherency is really damaging in the long
-> > > > term because all these random flushes are going to mask real problems we
-> > > > may or may not have in the arch APIs ... and worse, they'll mask
-> > > > mostly ... there'll likely be times when the masking is incomplete and
-> > > > we're left with incredibly hard to debug data loss or binary crashes.
-> > >
-> > > I agree that this could be solved in a better way and I'm in favour of
-> > > API improvements. The current API and description in cachetlb.txt
-> > > suggest that flush_dcache_page() is the best approach when modifying
-> > > page cache pages.
-> > >
-> > > AFAICT, there are two main use cases of flush_dcache_page() (could be
-> > > more but that's what affects ARM): (1) filesystems modifying page cache
-> > > pages (NFS, cramfs etc.) and (2) drivers doing PIO (block, HCD) that may
-> > > write directly to page cache pages. Point (2) is a newer addition (as
-> > > the one above) to fix coherency problems on Harvard architectures.
-> > >
-> > > As long as you use filesystems like cramfs that call
-> > > flush_dcache_page(), the PIO block driver doesn't need to do any
-> > > flushing. That's one of the reasons why MTD didn't need any for a long
-> > > time. Once you start using filesystems like ext2, there is no
-> > > flush_dcache_page() called by the VFS layer, so we thought about moving
-> > > this into the driver (for a long time I had a dirty hack in
-> > > mpage_end_io_read() to call flush_dcache_page()).
-> > >
-> > > If we state that flush_dcache_page() should not be used in driver code,
-> > > than we need additional API for this (like pio_map_page etc. to be in
-> > > line with the dma_map_* functions). This would allow architectures to
-> > > implement them however they like.
-> > >
-> > > I can go on linux-arch with a proposed patch if this sounds acceptable.
-> > 
-> > I think I'd prefer some type of kmap_ variant.  The reason is that all
-> > the semantics are going to be the same as kmap ... down to having the
-> > slots for atomic.  All we need is the extra flag giving the direction of
-> > transfer and, of course, what you get back is a virtual address pointer
-> > (all the dma operations return physical address handles).
-> 
-> Would a kmap_pio API always require a page structure as argument?
-
-This seems a reasonable requirement.
-
-> There is a similar situation for HCD drivers and USB mass storage which
-> I raised recently. The idea that the USB mass storage code should do the
-> cache flushing was rejected as this has to be pushed down to the HCD
-> driver. However, the HCD driver doesn't get page information, only a
-> urb->transfer_buffer pointer to which it may do either DMA or PIO (both
-> may actually happen in the same driver as an optimisation).
-
-You'd want to do dma_map or kmap at a point after the DMA or PIO
-decision is made.
-
-> If we enforce the use of a kmap_pio API in the USB mass storage, it
-> wouldn't be optimal since this code is not aware of whether the HCD
-> driver would do PIO or DMA.
-
-So, if the decision isn't made until the HCD driver, then surely this
-belongs there.
-
-> Looking at the HCD drivers, there are more similarities to the DMA API
-> like pio_map_page, pio_map_single etc. I personally don't care much
-> about how the API is named but rather where such API should be called
-> from.
-
-the API usage is similar to the dma one.  The point I was making is the
-semantics are similar to kmap because of the slot and atomic/non atomic
-requirements.
-
-James
 
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/ahci.c        |   15 +++++++++++++++
+ drivers/ata/libata-scsi.c |    2 +-
+ drivers/ata/libata-sff.c  |    3 +++
+ include/linux/ata.h       |    4 ++--
+ 4 files changed, 21 insertions(+), 3 deletions(-)
+
+Catalin Marinas (1):
+      [libata] Call flush_dcache_page after PIO data transfers in libata-sff.c
+
+Christoph Hellwig (1):
+      libata: fix ata_id_logical_per_physical_sectors
+
+Douglas Gilbert (1):
+      libata-scsi passthru: fix bug which truncated LBA48 return values
+
+Tejun Heo (1):
+      ahci: add Acer G725 to broken suspend list
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index b8bea10..b343903 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2868,6 +2868,21 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 			},
+ 			.driver_data = "F.23",	/* cutoff BIOS version */
+ 		},
++		/*
++		 * Acer eMachines G725 has the same problem.  BIOS
++		 * V1.03 is known to be broken.  V3.04 is known to
++		 * work.  Inbetween, there are V1.06, V2.06 and V3.03
++		 * that we don't have much idea about.  For now,
++		 * blacklist anything older than V3.04.
++		 */
++		{
++			.ident = "G725",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "eMachines"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "eMachines G725"),
++			},
++			.driver_data = "V3.04",	/* cutoff BIOS version */
++		},
+ 		{ }	/* terminate list */
+ 	};
+ 	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index f4ea5a8..d096fbc 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2875,7 +2875,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	 * write indication (used for PIO/DMA setup), result TF is
+ 	 * copied back and we don't whine too much about its failure.
+ 	 */
+-	tf->flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	if (scmd->sc_data_direction == DMA_TO_DEVICE)
+ 		tf->flags |= ATA_TFLAG_WRITE;
+ 
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 741065c..730ef3c 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -893,6 +893,9 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 				       do_write);
+ 	}
+ 
++	if (!do_write)
++		flush_dcache_page(page);
++
+ 	qc->curbytes += qc->sect_size;
+ 	qc->cursg_ofs += qc->sect_size;
+ 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 38a6948..20f3156 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -647,9 +647,9 @@ static inline int ata_id_has_large_logical_sectors(const u16 *id)
+ 	return id[ATA_ID_SECTOR_SIZE] & (1 << 13);
+ }
+ 
+-static inline u8 ata_id_logical_per_physical_sectors(const u16 *id)
++static inline u16 ata_id_logical_per_physical_sectors(const u16 *id)
+ {
+-	return id[ATA_ID_SECTOR_SIZE] & 0xf;
++	return 1 << (id[ATA_ID_SECTOR_SIZE] & 0xf);
+ }
+ 
+ static inline int ata_id_has_lba48(const u16 *id)
