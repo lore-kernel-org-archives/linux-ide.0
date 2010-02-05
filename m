@@ -1,92 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: port multiplier problem
-Date: Fri, 05 Feb 2010 11:44:50 +0900
-Message-ID: <4B6B8622.9090109@kernel.org>
-References: <4B5885F7.2020007@gmail.com> <4B6833DD.1020001@gmail.com>	 <4B683581.7070708@kernel.org> <4B683DEF.3000302@gmail.com>	 <da824cf31002020844r12cada26x57f96b0aa24b59c6@mail.gmail.com>	 <4B686B2B.2080406@gmail.com>	 <da824cf31002021104v72efcd05ne639091042d5999d@mail.gmail.com>	 <4B687B7C.2070406@gmail.com>	 <da824cf31002031837t1cf2357bsbb53a3b4ea5e671f@mail.gmail.com>	 <4B6A3DED.6060708@kernel.org> <da824cf31002040959y63f3484cv6d551acd49b80fa7@mail.gmail.com>
+From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Subject: [PATCH] non-existant config in kernel source (CONFIG_AHCI)
+Date: Fri, 5 Feb 2010 14:29:59 +0100
+Message-ID: <20100205132959.GB6874@faui49.informatik.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34984 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933633Ab0BECiL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Feb 2010 21:38:11 -0500
-In-Reply-To: <da824cf31002040959y63f3484cv6d551acd49b80fa7@mail.gmail.com>
+Received: from faui40.informatik.uni-erlangen.de ([131.188.34.40]:57674 "EHLO
+	faui40.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932091Ab0BEN3q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Feb 2010 08:29:46 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Chandra Shekhar Sah <edu4madh@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Erik Inge Bols?? <knan-lkml@anduin.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: vamos@i4.informatik.uni-erlangen.de, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello,
+Hi all!
 
-On 02/05/2010 02:59 AM, Grant Grundler wrote:
->> That said, I'm not quite sure this is relevant to the reported
->> problem but it's worth a shot.
->
-> I didn't have a better idea.
+	As part of the VAMOS[0] research project at the University of
+Erlangen we're checking referential integrity between kernel KConfig
+options and in-code Conditional blocks.
 
-Heh... yeah, me neither.  If that doesn't work, I'll dig out 3726s I
-have and see whether the new kernels are having problems with them but
-I can't think of anything which could have effects like this.
+	While there's one place that is checking for CONFIG_AHCI, this
+config being referenced from printed books and people pointing to this
+config item I can't find it anywhere in the kernel kconfig
+infrastruture and it doesn't seem to ever have been there (since
+git). Is this maybe a typo for CONFIG_SATA_AHCI? reading the
+information for the affected piece of source it would actually make
+sense.
 
-> I'm seeing this in sata_pmp_quirks() since ATA_LFLAG_NO_SRST was introduced:
->  337 static void sata_pmp_quirks(struct ata_port *ap)
->  338 {
->  339         u32 *gscr = ap->link.device->gscr;
->  340         u16 vendor = sata_pmp_gscr_vendor(gscr);
->  341         u16 devid = sata_pmp_gscr_devid(gscr);
->  342         struct ata_link *link;
->  343
->  344         if (vendor == 0x1095 && devid == 0x3726) {
->  345                 /* sil3726 quirks */
->  346                 ata_for_each_link(link, ap, EDGE) {
->  347                         /* Class code report is unreliable and SRST
->  348                          * times out under certain configurations.
->  349                          */
->  350                         if (link->pmp < 5)
->  351                                 link->flags |= ATA_LFLAG_NO_SRST |
->  352                                                ATA_LFLAG_ASSUME_ATA;
->  353
->  354                         /* port 5 is for SEMB device and it doesn't like SRST */
->  355                         if (link->pmp == 5)
->  356                                 link->flags |= ATA_LFLAG_NO_SRST |
->  357                                                ATA_LFLAG_ASSUME_SEMB;
->  358                 }
-> 
-> 
-> But the ATA_LFLAG_NO_SRST used in line 351 is not present in the
-> 2.6.26 tree I know works with PMPs. The original commit comment isn't
-> specific about exactly which HW had problems:
->     http://www.mail-archive.com/git-commits-head@vger.kernel.org/msg24335.html
-> 
->    "Some links on some PMPs locks up on SRST and/or report incorrect
->     device signature.  Implement ATA_LFLAG_NO_SRST, ASSUME_ATA and
->     ASSUME_SEMB to handle these quirky links.  NO_SRST makes EH avoid
->     SRST.  ASSUME_ATA and SEMB forces class code to ATA and SEMB_UNSUP
->     respectively.  Note that SEMB isn't currently supported yet so the
->     _UNSUP variant is used."
-> 
-> Can you publish which PMP implementations sometimes lock up on SRST?
+	Please keep me informed of this patch getting confirmed /
+merged so we can keep track of it.
 
-I don't remember the details but it was a 3726 or 4726 with slightly
-different firmware revision.
+Regards
 
-> I doubt this is related to the problem Chandra is seeing but again,
-> don't have better ideas.
-> 
-> BTW, this same kernel works fine without disabling port 5 (SEMB
-> port).  I didn't know this until I just looked. I know previous
-> source trees Google used ignored SEMB port on 3726 and I mistakenly
-> assumed this one did too. :(
+	Christoph Egger
 
-But the other report where the PMP device failed hardreset too was a
-3/4726.  I don't know what the variables are (firmware revision
-definitely is one but there seem to be others) but these pseudo
-devices are extremely fragile.  Certain configurations just don't work
-or work with strange quirks.  I think it would be best to just stay
-away from those.
+[0] http://vamos1.informatik.uni-erlangen.de/
 
-Thanks.
+----
+>From 60136f94d9c97f9a788738e30731e25bd794322b Mon Sep 17 00:00:00 2001
+From: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Date: Fri, 5 Feb 2010 13:26:33 +0100
+Subject: [PATCH] CONFIG_AHCI is really CONFIG_SATA_AHCI
 
+The marvell driver comtains a fallback to ahci for the sata ports
+which is incorrectly checked as CONFIG_AHCI while the only AHCI config
+item is actually called SATA_AHCI (which also sounds sensible
+considering it's a fallback for the sata ports).
+
+Signed-off-by: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+---
+ drivers/ata/pata_marvell.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index 950da39..eabd138 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -147,7 +147,7 @@ static int marvell_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 	if (pdev->device == 0x6101)
+ 		ppi[1] = &ata_dummy_port_info;
+ 
+-#if defined(CONFIG_AHCI) || defined(CONFIG_AHCI_MODULE)
++#if defined(CONFIG_SATA_AHCI) || defined(SATA_CONFIG_AHCI_MODULE)
+ 	if (!marvell_pata_active(pdev)) {
+ 		printk(KERN_INFO DRV_NAME ": PATA port not active, deferring to AHCI driver.\n");
+ 		return -ENODEV;
 -- 
-tejun
+1.6.3.3
+
+
