@@ -1,59 +1,70 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Corrupt data - RAID sata_sil 3114 chip
-Date: Sat, 06 Feb 2010 12:54:08 +0900
-Message-ID: <4B6CE7E0.1060209@kernel.org>
-References: <4B630914.9010503@fs.ei.tum.de> <4B6338E2.1040507@gmail.com>
+Subject: Re: [smartmontools-support] SATA drive reset/disable events on ICH7
+ ata_piix when polling SMART info
+Date: Sat, 06 Feb 2010 12:39:31 +0900
+Message-ID: <4B6CE473.7060901@kernel.org>
+References: <4B6C2635.105@buttersideup.com> <alpine.DEB.2.00.1002050911500.7774@p34.internal.lan> <4B6C2BC8.7000609@buttersideup.com> <4B6C91F3.5090809@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51777 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:51797 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753389Ab0BFIHY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 6 Feb 2010 03:07:24 -0500
-In-Reply-To: <4B6338E2.1040507@gmail.com>
+	id S1751160Ab0BFIIh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 6 Feb 2010 03:08:37 -0500
+In-Reply-To: <4B6C91F3.5090809@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: "Ulli.Brennenstuhl" <Ulli.Brennenstuhl@fs.ei.tum.de>, linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Tim Small <tim@buttersideup.com>, Justin Piszcz <jpiszcz@lucidpixels.com>, "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
 
 Hello,
 
-On 01/30/2010 04:37 AM, Robert Hancock wrote:
-> On 01/29/2010 10:13 AM, Ulli.Brennenstuhl wrote:
->> After deactivating every single bios option that somehow optimizes the
->> pci bus the problem seems to be gone. After some more testing I could
->> narrow the problem down to the option "PCI Master 0 WS Write", which
->> controls if requests to the pci bus are executed immediately (with zero
->> wait states) or if every write request will be delayed by one wait state.
->>
->> Obviously this reduces the performance. I didn't perform tests but the
->> resync speed of the raid dropped from ~ 28mb/s to ~ 17mb/s.
->>
->> I hope this also solves the problems for other people and it would be
->> interesting if any change to the driver would allow to reenable the "PCI
->> Master 0 WS Write" option.
+On 02/06/2010 06:47 AM, Mark Lord wrote:
+>> 2. A few failures were seen with the Seagate drives as well (see last
+>> bits of the email), similarly with no apparent bad SMART attributes.
+> ..
 > 
-> I don't imagine there's anything the driver's likely to be able to do to
-> avoid it. That sounds like a definite chipset bug. The PCI interface on
-> older VIA chipsets was pretty notorious for them.
+> I have observed (and reported) the same issue in the past,
+> on Hitachi and Seagate drives.
+> 
+> The only constants seem to be libata and ICH7/8.
+> We must have a bug somewhere in there.
 
-Sil3112/3114 are now virtually the only controllers with occassional
-and unresolved data corruption issues.  The other one was sata_via
-with ATAPI devices which got a possible fix recently (it needed a
-delay or flush during command issue or CDB leaked into write buffer).
+In piix mode or ahci mode?  If in piix mode, ich7 and 8 would behave
+quite differently.  ICH8 has SIDPR so it can hardreset while 7 can't.
+ICH SIDPR access had a hardware problem where write to SControl to
+clear DET is sometimes ignored which led to occassional hardreset
+failure which got fixed recently.  The reason why ich's are involved
+in those incidents could just be that they are extremely popular.
 
-Given that these sil chips are used very widely and the relatively low
-frequency and certain traits like putting two controllers on the bus
-triggers the problem more easily and this fiddling with PCI bus option
-resolves it, it's conceivable that signal tx/rx quality of sil3112/4
-is borderline in certain cases which usually doesn't show up but
-causes problem when there also are other weaknesses in the bus (heavy
-loading, bus controller not having exactly the best signal quality and
-so on.
+Things to try after such completely drive shutdown are...
 
-It would be great if there's some knob we can turn in the controller
-PCI config space but I really have no idea whatsoever.  :-(
+* Disconnect the drive from the host but do not remove power.
+  Reconnect the drive to a different port and/or controller, does the
+  drive work there?
+
+* Power-cycle the drive (and issue manual rescan if necessary).  Does
+  the drive get recognized again?
+
+* Disconnect the drive and connect a different drive to the port.
+  Does the port work?
+
+* Soft reset the machine.  Can BIOS recognize the drive?
+
+In many cases I've seen, it's usually that the drive's firmware is
+completely hung and only power cycling the drive brought it back.  But
+then again, there have been some number of cases which didn't get
+diagnosed properly, so it's definitely possible that we're doing
+something wrong in the driver.
+
+Anyways, if it happens again, please try the above and try to find out
+whether the controller or the drive is hung.  Also, please keep in
+mind that timeouts on 0xEA (flush) is very often indicative of power
+related issues.  FLUSH spikes power consumption and surprisingly many
+PSUs fail to sustain proper voltage over that, so powering up a
+separate PSU and connecting only the hard drive to it and see what
+happens is often interesting too.
 
 Thanks.
 
