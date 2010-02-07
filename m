@@ -1,33 +1,55 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [smartmontools-support] SATA drive reset/disable events on ICH7
- ata_piix when polling SMART info
-Date: Sat, 06 Feb 2010 23:51:38 -0500
-Message-ID: <4B6E46DA.9040308@teksavvy.com>
-References: <4B6C2635.105@buttersideup.com> <alpine.DEB.2.00.1002050911500.7774@p34.internal.lan> <4B6C2BC8.7000609@buttersideup.com> <4B6C91F3.5090809@teksavvy.com> <4B6CE473.7060901@kernel.org> <4B6D8A12.70200@buttersideup.com> <4B6DA74C.2040007@teksavvy.com> <4B6DEBA7.2030505@buttersideup.com>
+From: Dan Porat <dan.porat@gmail.com>
+Subject: Re: 520 Bytes sector size
+Date: Sun, 7 Feb 2010 09:57:56 +0200
+Message-ID: <93b143da1002062357o4503d1aajeff1595684211c5@mail.gmail.com>
+References: <93b143da1002020450sf495912ib0ea75989d1d8928@mail.gmail.com>
+	 <yq1aavrqlxw.fsf@sermon.lab.mkp.net>
+	 <20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
+	 <4B69B032.4010600@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:43904 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753759Ab0BGEvl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Feb 2010 23:51:41 -0500
-In-Reply-To: <4B6DEBA7.2030505@buttersideup.com>
+Received: from mail-fx0-f211.google.com ([209.85.220.211]:57152 "EHLO
+	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937Ab0BGH55 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2010 02:57:57 -0500
+Received: by fxm3 with SMTP id 3so6057765fxm.39
+        for <linux-ide@vger.kernel.org>; Sat, 06 Feb 2010 23:57:56 -0800 (PST)
+In-Reply-To: <4B69B032.4010600@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: Tejun Heo <tj@kernel.org>, Justin Piszcz <jpiszcz@lucidpixels.com>, "smartmontools-support@lists.sourceforge.net" <smartmontools-support@lists.sourceforge.net>, linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-Tim Small wrote:
-> Mark Lord wrote:
->> My theory on the problem when I first had it here, was that doing
->> a FLUSH_CACHE[_EXT] before any PIO command (eg. SMART) should prevent
->> the problem.  This was never explored further (by me or others).
+I see , but aren't all the commands (including FPDMA) , shoudl work in
+520 mode , when the disk is formatted to 520 ?
+
+Thanks
+
+
+On Wed, Feb 3, 2010 at 7:19 PM, Mark Lord <kernel@teksavvy.com> wrote:
+> Alan Cox wrote:
 >>
-> 
-> Would using "option libata force=pio4" be a simple way to start to test
-> this hypothesis?
-..
-
-Yup.  If the hypothesis is FALSE, then you'll still see trouble.
-Otherwise, it *might* be correct.  ;)
+>> On Tue, 02 Feb 2010 18:04:11 -0500
+>> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+>>
+>>>>>>>> "Dan" =3D=3D Dan Porat <dan.porat@gmail.com> writes:
+>>>
+>>> Dan> I would like to run 520 Bytes disk in native mode. =A0What cha=
+nges I
+>>> Dan> have to run in sg driver ? =A0Is there any kernel already adap=
+ted for
+>>> Dan> 520 bytes sector size ?
+>>>
+>>> Linux does not support 520-byte sectors unless the drive is formatt=
+ed
+>>> with DIF and hanging off a DIF-capable HBA.
+>
+> ..
+>
+> The ATA READ_LONG and WRITE_LONG commands both use 520 byte sectors,
+> and both work with libata.
+>
+> -ml
+>
