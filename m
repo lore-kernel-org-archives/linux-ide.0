@@ -1,55 +1,82 @@
-From: Dan Porat <dan.porat@gmail.com>
-Subject: Re: 520 Bytes sector size
-Date: Sun, 7 Feb 2010 09:57:56 +0200
-Message-ID: <93b143da1002062357o4503d1aajeff1595684211c5@mail.gmail.com>
-References: <93b143da1002020450sf495912ib0ea75989d1d8928@mail.gmail.com>
-	 <yq1aavrqlxw.fsf@sermon.lab.mkp.net>
-	 <20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
-	 <4B69B032.4010600@teksavvy.com>
+From: Sergey Matyukevich <geomatsi@gmail.com>
+Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
+Date: Sun, 7 Feb 2010 18:10:20 +0300
+Message-ID: <20100207181020.21d8c9b4@realm>
+References: <cover.1265095093.git.joe@perches.com>
+	<12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
+	<4B69B0A0.2040701@teksavvy.com>
+	<4B69B182.9040400@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f211.google.com ([209.85.220.211]:57152 "EHLO
-	mail-fx0-f211.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751937Ab0BGH55 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2010 02:57:57 -0500
-Received: by fxm3 with SMTP id 3so6057765fxm.39
-        for <linux-ide@vger.kernel.org>; Sat, 06 Feb 2010 23:57:56 -0800 (PST)
-In-Reply-To: <4B69B032.4010600@teksavvy.com>
+Received: from mail-ew0-f228.google.com ([209.85.219.228]:58573 "EHLO
+	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755904Ab0BGPQH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2010 10:16:07 -0500
+Received: by ewy28 with SMTP id 28so1626632ewy.28
+        for <linux-ide@vger.kernel.org>; Sun, 07 Feb 2010 07:16:04 -0800 (PST)
+In-Reply-To: <4B69B182.9040400@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Joe Perches <joe@perches.com>
+Cc: Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org
 
-I see , but aren't all the commands (including FPDMA) , shoudl work in
-520 mode , when the disk is formatted to 520 ?
+Hello,
+Thanks for attention and fix. For me Joe's fix is fine. 
+But if you would prefer one-line version:
 
-Thanks
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 41c94b1..7ce9595 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -153,8 +153,7 @@ static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	/* Compute ATA timing and set it to SMC */
+ 	ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
+ 	if (ret) {
+-		dev_warn(ap->dev, "Failed to compute ATA timing %d, \
+-				set PIO_0 timing\n", ret);
++		dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0 timing\n", ret);
+ 		set_smc_timing(ap->dev, info, &initial_timing);
+ 	} else {
+ 		set_smc_timing(ap->dev, info, &timing);
 
 
-On Wed, Feb 3, 2010 at 7:19 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> Alan Cox wrote:
->>
->> On Tue, 02 Feb 2010 18:04:11 -0500
->> "Martin K. Petersen" <martin.petersen@oracle.com> wrote:
->>
->>>>>>>> "Dan" =3D=3D Dan Porat <dan.porat@gmail.com> writes:
->>>
->>> Dan> I would like to run 520 Bytes disk in native mode. =A0What cha=
-nges I
->>> Dan> have to run in sg driver ? =A0Is there any kernel already adap=
-ted for
->>> Dan> 520 bytes sector size ?
->>>
->>> Linux does not support 520-byte sectors unless the drive is formatt=
-ed
->>> with DIF and hanging off a DIF-capable HBA.
->
-> ..
->
-> The ATA READ_LONG and WRITE_LONG commands both use 520 byte sectors,
-> and both work with libata.
->
-> -ml
->
+> > Joe Perches wrote:
+> >> String constants that are continued on subsequent lines with \
+> >> are not good.
+> >>
+> >> Signed-off-by: Joe Perches <joe@perches.com>
+> >> ---
+> >> drivers/ata/pata_at91.c | 4 ++--
+> >> 1 files changed, 2 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+> >> index 41c94b1..d222c0d 100644
+> >> --- a/drivers/ata/pata_at91.c
+> >> +++ b/drivers/ata/pata_at91.c
+> >> @@ -153,8 +153,8 @@ static void pata_at91_set_piomode(struct
+> >> ata_port *ap, struct ata_device *adev)
+> >> /* Compute ATA timing and set it to SMC */
+> >> ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
+> >> if (ret) {
+> >> - dev_warn(ap->dev, "Failed to compute ATA timing %d, \
+> >> - set PIO_0 timing\n", ret);
+> >> + dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0
+> >> timing\n",
+> >> + ret);
+> > ..
+> >
+> > NAK. Just stick the ret); part onto the same line and be done with
+> > it.
+> 
+> Agreed...
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
