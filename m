@@ -1,82 +1,41 @@
-From: Sergey Matyukevich <geomatsi@gmail.com>
-Subject: Re: [PATCH 02/10] drivers/ata: Fix continuation line formats
-Date: Sun, 7 Feb 2010 18:10:20 +0300
-Message-ID: <20100207181020.21d8c9b4@realm>
-References: <cover.1265095093.git.joe@perches.com>
-	<12d39ac4f14bfe82a02b4ee246d183b48988fe12.1265095094.git.joe@perches.com>
-	<4B69B0A0.2040701@teksavvy.com>
-	<4B69B182.9040400@pobox.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Corrupt data - RAID sata_sil 3114 chip
+Date: Sun, 07 Feb 2010 10:09:56 -0600
+Message-ID: <4B6EE5D4.1010907@gmail.com>
+References: <4B630914.9010503@fs.ei.tum.de> <4B6338E2.1040507@gmail.com> <4B6CE7E0.1060209@kernel.org> <4B6D87DF.6030305@buttersideup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f228.google.com ([209.85.219.228]:58573 "EHLO
-	mail-ew0-f228.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755904Ab0BGPQH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2010 10:16:07 -0500
-Received: by ewy28 with SMTP id 28so1626632ewy.28
-        for <linux-ide@vger.kernel.org>; Sun, 07 Feb 2010 07:16:04 -0800 (PST)
-In-Reply-To: <4B69B182.9040400@pobox.com>
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:45160 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755905Ab0BGQKA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2010 11:10:00 -0500
+Received: by iwn12 with SMTP id 12so6045546iwn.26
+        for <linux-ide@vger.kernel.org>; Sun, 07 Feb 2010 08:09:59 -0800 (PST)
+In-Reply-To: <4B6D87DF.6030305@buttersideup.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Joe Perches <joe@perches.com>
-Cc: Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org
+To: Tim Small <tim@buttersideup.com>
+Cc: Tejun Heo <tj@kernel.org>, "Ulli.Brennenstuhl" <Ulli.Brennenstuhl@fs.ei.tum.de>, linux-ide@vger.kernel.org
 
-Hello,
-Thanks for attention and fix. For me Joe's fix is fine. 
-But if you would prefer one-line version:
+On 02/06/2010 09:16 AM, Tim Small wrote:
+> Tejun Heo wrote:
+>> It would be great if there's some knob we can turn in the controller
+>> PCI config space but I really have no idea whatsoever.  :-(
+>>
+>
+> I wonder if enabling EDAC PCI parity error detection would show up these
+> problems - either on the controller itself, or its upstream PCI bridge chip?
+>
+> modprobe edac_core check_pci_errors=1
+>
+> alternatively, "setpci -s<slot>  STATUS" should also show status
+> register bit 15 having been asserted, I think, and lspci -vv should say
+> "<PERR+"
 
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 41c94b1..7ce9595 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -153,8 +153,7 @@ static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	/* Compute ATA timing and set it to SMC */
- 	ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
- 	if (ret) {
--		dev_warn(ap->dev, "Failed to compute ATA timing %d, \
--				set PIO_0 timing\n", ret);
-+		dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0 timing\n", ret);
- 		set_smc_timing(ap->dev, info, &initial_timing);
- 	} else {
- 		set_smc_timing(ap->dev, info, &timing);
-
-
-> > Joe Perches wrote:
-> >> String constants that are continued on subsequent lines with \
-> >> are not good.
-> >>
-> >> Signed-off-by: Joe Perches <joe@perches.com>
-> >> ---
-> >> drivers/ata/pata_at91.c | 4 ++--
-> >> 1 files changed, 2 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-> >> index 41c94b1..d222c0d 100644
-> >> --- a/drivers/ata/pata_at91.c
-> >> +++ b/drivers/ata/pata_at91.c
-> >> @@ -153,8 +153,8 @@ static void pata_at91_set_piomode(struct
-> >> ata_port *ap, struct ata_device *adev)
-> >> /* Compute ATA timing and set it to SMC */
-> >> ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
-> >> if (ret) {
-> >> - dev_warn(ap->dev, "Failed to compute ATA timing %d, \
-> >> - set PIO_0 timing\n", ret);
-> >> + dev_warn(ap->dev, "Failed to compute ATA timing %d, set PIO_0
-> >> timing\n",
-> >> + ret);
-> > ..
-> >
-> > NAK. Just stick the ret); part onto the same line and be done with
-> > it.
-> 
-> Agreed...
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide"
-> in the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+It's something to check, yes. It would be somewhat surprising if that 
+were occurring - detected PCI parity errors should cause a target abort 
+and cause a transfer failure, not silent data corruption. But again, on 
+an old VIA chipset, for this to be handled improperly wouldn't be 
+shocking :-)
