@@ -1,43 +1,77 @@
-From: Dan Porat <dan.porat@gmail.com>
-Subject: Re: 520 Bytes sector size
-Date: Mon, 8 Feb 2010 20:49:16 +0200
-Message-ID: <93b143da1002081049u7a5b90ebkff73018e72f5c5f9@mail.gmail.com>
-References: <93b143da1002020450sf495912ib0ea75989d1d8928@mail.gmail.com>
-	 <yq1aavrqlxw.fsf@sermon.lab.mkp.net>
-	 <20100202232540.7f5327f6@lxorguk.ukuu.org.uk>
-	 <4B69B032.4010600@teksavvy.com>
-	 <93b143da1002062357o4503d1aajeff1595684211c5@mail.gmail.com>
-	 <4B6EE668.1000701@teksavvy.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Linux Storage and Filesystems Summit 8-9 August
+Date: Mon, 08 Feb 2010 13:15:30 -0600
+Message-ID: <1265656530.6289.28.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f219.google.com ([209.85.218.219]:35514 "EHLO
-	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753408Ab0BHStS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Feb 2010 13:49:18 -0500
-Received: by bwz19 with SMTP id 19so2177868bwz.28
-        for <linux-ide@vger.kernel.org>; Mon, 08 Feb 2010 10:49:16 -0800 (PST)
-In-Reply-To: <4B6EE668.1000701@teksavvy.com>
+Received: from cantor2.suse.de ([195.135.220.15]:41519 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754255Ab0BHTPi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Feb 2010 14:15:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Some high-end storage disks are formatted to sectors of 520.
-They save the payload with the DIF .
+This year we'll hold the Linux Storage and Filesystems summit jointly
+with the VM summit on the two days before LinuxCon in Boston (that's
+Sunday and Monday) at the Renaissance Hotel:
 
-This is the disk I have.
+http://events.linuxfoundation.org/events/linuxcon
 
-Thanks
+We're planning to hold some sessions jointly and split into three tracks
+(Filesystems, Storage and VM) for others, so we're encouraging proposals
+for discussion that cover areas relevant to all three groups as well as
+more specific technical topics.
+
+Suggestions for agenda topics should be sent to
+
+lsf10-pc@lists.linuxfoundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+SCSI: linux-scsi@vger.kernel.org
+FS: linux-fsdevel@vger.kernel.org (plus relevant fs specific list)
+MM: linux-mm@kvack.org
+
+Please tag your subject with [LSF/VM TOPIC] so those of us who're not
+very organised can find them easily in our inboxes.  The agenda topics
+and attendees will be selected by the programme committee, but the final
+agenda will be by formed by consensus of the attendees on the day.
+
+We'll try to cap attendance at around 20 per track to facilitate
+discussions although the final numbers will depend on the room sizes
+at the venue.
+
+Requests to attend should be sent to:
+
+lsf10-pc@lists.linuxfoundation.org
+
+please summarise what you'll bring to the meeting, and what you'd like
+to discuss.  please also tag your email with [ATTEND] so there's less
+chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged.  There will be no recording or audio bridge, however
+written minutes will be published as in previous years:
+
+2009:
+http://lwn.net/Articles/327601/
+http://lwn.net/Articles/327740/
+http://lwn.net/Articles/328347/
+
+Prior years:
+http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
+
+If you have feedback on last year's meeting that we can use to improve
+this year's, please also send that to:
+
+lsf10-pc@lists.linuxfoundation.org
+
+Thanks,
+
+James
 
 
-On Sun, Feb 7, 2010 at 6:12 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> Dan Porat wrote:
->>
->> I see , but aren't all the commands (including FPDMA) , shoudl work in
->> 520 mode , when the disk is formatted to 520 ?
->
-> ..
->
-> How does one "Format to 520" ??
->
