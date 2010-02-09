@@ -1,77 +1,67 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Linux Storage and Filesystems Summit 8-9 August
-Date: Mon, 08 Feb 2010 13:15:30 -0600
-Message-ID: <1265656530.6289.28.camel@mulgrave.site>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: "raid5:md0: read error not correctable (sector 795463080 on sdf1)"
+  error on controller with SIL 3114
+Date: Mon, 08 Feb 2010 23:13:33 -0600
+Message-ID: <4B70EEFD.1040603@gmail.com>
+References: <a01a16b51002080311i420f6429ld3545c44c04603eb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41519 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754255Ab0BHTPi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Feb 2010 14:15:38 -0500
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:60447 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778Ab0BIFNg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Feb 2010 00:13:36 -0500
+Received: by iwn12 with SMTP id 12so8223553iwn.26
+        for <linux-ide@vger.kernel.org>; Mon, 08 Feb 2010 21:13:35 -0800 (PST)
+In-Reply-To: <a01a16b51002080311i420f6429ld3545c44c04603eb@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-This year we'll hold the Linux Storage and Filesystems summit jointly
-with the VM summit on the two days before LinuxCon in Boston (that's
-Sunday and Monday) at the Renaissance Hotel:
+On 02/08/2010 05:11 AM, H=C3=A5kon L=C3=B8vdal wrote:
+> Hi. I have had some trouble with the machine I want to have as a file=
+ server.
+>
+> After having let the "get raid up and running reliably" project lie
+> dormant for some time, I tried again this Friday. After connecting th=
+e
+> disks, the status was the following: 4 out of 6 disk in a raid6 setup
+> were recognised (see log-1). I was able to mount the volume when the
+> machine was finished booting.
+>
+> I then added the two missing disks with mdadm, one of them started
+> rebuilding and the other one were not recognised in some way (log-2).
+> The rebuild of the disk was successfull (log-3), but later some error=
+s
+> occured, see log-4 below, and now only three disks are left in the
+> array (log-5).
+>
+> Are these errors related to Tejun's recent statement "Sil3112/3114 ar=
+e
+> now virtually the only controllers with occassional and unresolved da=
+ta
+> corruption issues."? Disks sda (hosting root file system for os), sdb
+> sdc and sdd are connected the motherboard while sde, sdf and sdg are
+> connected to a controller card using 3114:
 
-http://events.linuxfoundation.org/events/linuxcon
+=2E.
 
-We're planning to hold some sessions jointly and split into three tracks
-(Filesystems, Storage and VM) for others, so we're encouraging proposals
-for discussion that cover areas relevant to all three groups as well as
-more specific technical topics.
+> ---BEGIN log-4---
+> Feb  6 07:09:57 localhost kernel: ata8.00: exception Emask 0x0 SAct
+> 0x0 SErr 0x0 action 0x0
+> Feb  6 07:09:57 localhost kernel: ata8.00: BMDMA2 stat 0x6c0009
+> Feb  6 07:09:57 localhost kernel: ata8.00: cmd
+> 25/00:80:cf:cd:69/00:00:2f:00:00/e0 tag 0 dma 65536 in
+> Feb  6 07:09:57 localhost kernel:         res
+> 51/40:00:e4:cd:69/00:00:2f:00:00/e0 Emask 0x9 (media error)
+> Feb  6 07:09:57 localhost kernel: ata8.00: status: { DRDY ERR }
+> Feb  6 07:09:57 localhost kernel: ata8.00: error: { UNC }
 
-Suggestions for agenda topics should be sent to
-
-lsf10-pc@lists.linuxfoundation.org
-
-and optionally cc the Linux list which would be most interested in it:
-
-SCSI: linux-scsi@vger.kernel.org
-FS: linux-fsdevel@vger.kernel.org (plus relevant fs specific list)
-MM: linux-mm@kvack.org
-
-Please tag your subject with [LSF/VM TOPIC] so those of us who're not
-very organised can find them easily in our inboxes.  The agenda topics
-and attendees will be selected by the programme committee, but the final
-agenda will be by formed by consensus of the attendees on the day.
-
-We'll try to cap attendance at around 20 per track to facilitate
-discussions although the final numbers will depend on the room sizes
-at the venue.
-
-Requests to attend should be sent to:
-
-lsf10-pc@lists.linuxfoundation.org
-
-please summarise what you'll bring to the meeting, and what you'd like
-to discuss.  please also tag your email with [ATTEND] so there's less
-chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged.  There will be no recording or audio bridge, however
-written minutes will be published as in previous years:
-
-2009:
-http://lwn.net/Articles/327601/
-http://lwn.net/Articles/327740/
-http://lwn.net/Articles/328347/
-
-Prior years:
-http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-
-If you have feedback on last year's meeting that we can use to improve
-this year's, please also send that to:
-
-lsf10-pc@lists.linuxfoundation.org
-
-Thanks,
-
-James
-
-
+That's fairly definitive, uncorrected read error reported by the drive.=
+=20
+You might want to check its SMART status. Could be a bad drive, or=20
+potentially other causes like excessive vibration, high temperature,=20
+power issues..
