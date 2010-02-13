@@ -1,39 +1,54 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 2/2] sata_via: Delay on vt6420 when starting ATAPI DMA
- write
-Date: Sat, 13 Feb 2010 17:47:53 -0500
-Message-ID: <4B772C19.90501@pobox.com>
-References: <20100116235653.898098245@gmail.com>	 <20100116235851.884756038@gmail.com> <4B5678E2.2050709@gmail.com> <7eb6a4d81001192244k19d28805p9cb4eaec7eed9366@mail.gmail.com> <4B56A8C9.2000807@gmail.com>
+Subject: Re: [PATCH] non-existant config in kernel source (CONFIG_AHCI)
+Date: Sat, 13 Feb 2010 17:49:17 -0500
+Message-ID: <4B772C6D.5000600@pobox.com>
+References: <20100205132959.GB6874@faui49.informatik.uni-erlangen.de> <201002051457.04135.elendil@planet.nl> <20100205152635.GC7299@faui49.informatik.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f196.google.com ([209.85.210.196]:39669 "EHLO
-	mail-yx0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757619Ab0BMWrz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Feb 2010 17:47:55 -0500
-In-Reply-To: <4B56A8C9.2000807@gmail.com>
+Received: from mail-gx0-f224.google.com ([209.85.217.224]:44482 "EHLO
+	mail-gx0-f224.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752830Ab0BMWtV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Feb 2010 17:49:21 -0500
+In-Reply-To: <20100205152635.GC7299@faui49.informatik.uni-erlangen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bart Hartgers <bart.hartgers@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, juergen.metzdorf@telelev-dsl.de, markpschool@hotmail.com, sporadic.crash@gmail.com, apopov@sirma.bg, david@coomber.co.za, jay4mail@gmail.com
+To: Christoph Egger <siccegge@stud.informatik.uni-erlangen.de>
+Cc: Frans Pop <elendil@planet.nl>, knan-lkml@anduin.net, bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos@i4.informatik.uni-erlangen.de, alan@lxorguk.ukuu.org.uk
 
-On 01/20/2010 01:55 AM, Tejun Heo wrote:
-> Hello,
+On 02/05/2010 10:26 AM, Christoph Egger wrote:
+> On Fri, Feb 05, 2010 at 02:57:00PM +0100, Frans Pop wrote:
+>> Christoph Egger wrote:
+>>> --- a/drivers/ata/pata_marvell.c
+>>> +++ b/drivers/ata/pata_marvell.c
+>>> @@ -147,7 +147,7 @@ static int marvell_init_one (struct pci_dev *pdev,
+>>> 	if (pdev->device == 0x6101)
+>>> 		ppi[1] =&ata_dummy_port_info;
+>>>
+>>> -#if defined(CONFIG_AHCI) || defined(CONFIG_AHCI_MODULE)
+>>> +#if defined(CONFIG_SATA_AHCI) || defined(SATA_CONFIG_AHCI_MODULE)
+>>
+>> Shouldn't the last be CONFIG_SATA_AHCI_MODULE ?
 >
-> On 01/20/2010 03:44 PM, Bart Hartgers wrote:
->> Yes, you're right. I'll drop the printk_once and send another patch
->> for inclusion. However, for testing I found it very useful to make
->> sure that I got the right module loaded. So I figured it could be
->> helpful for the interpretation of success/failure reports.
+> Right my fault. Updated patch below
 >
-> Oh yeah, for testing, having it there is a good idea.
+> -----
+>> From 60136f94d9c97f9a788738e30731e25bd794322b Mon Sep 17 00:00:00 2001
+> From: Christoph Egger<siccegge@stud.informatik.uni-erlangen.de>
+> Date: Fri, 5 Feb 2010 13:26:33 +0100
+> Subject: [PATCH] CONFIG_AHCI is really CONFIG_SATA_AHCI
 >
->> Assuming that this patch works for other people as well, what is
->> prefered: resending both patches or just to make a new #2/2 (the
->> vt6420 one)?
+> The marvell driver comtains a fallback to ahci for the sata ports
+> which is incorrectly checked as CONFIG_AHCI while the only AHCI config
+> item is actually called SATA_AHCI (which also sounds sensible
+> considering it's a fallback for the sata ports).
 >
-> I think just re-doing the second patch should be enough.
+> Signed-off-by: Christoph Egger<siccegge@stud.informatik.uni-erlangen.de>
+> ---
+>   drivers/ata/pata_marvell.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
 
-Agreed...  ping, Bart?
+applied
+
 
