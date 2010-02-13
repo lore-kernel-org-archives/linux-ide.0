@@ -1,36 +1,45 @@
-From: infernix <infernix@infernix.net>
-Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
-Date: Sat, 13 Feb 2010 01:21:53 +0100
-Message-ID: <4B75F0A1.4060204@infernix.net>
-References: <4B591D61.8030003@infernix.net>	<4B593128.1040104@gmail.com>	<4B59A0CD.4000801@infernix.net>	<4B5A4F7A.4040709@gmail.com>	<4B5A5F09.1070300@infernix.net>	<20100123101457.7f8cbb3f@lxorguk.ukuu.org.uk>	<4B5AF4DF.4020100@infernix.net>	<20100123133831.7f24ae95@lxorguk.ukuu.org.uk>	<4B75E4B2.3070105@infernix.net> <20100213000410.5d58d619@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git patches] atang tree: fix UDMA mode for older Promise controllers
+Date: Sat, 13 Feb 2010 14:35:38 +0100
+Message-ID: <20100213133538.11564.94218.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dx.infernix.net ([83.96.151.193]:47684 "EHLO dx.infernix.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755506Ab0BMAVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Feb 2010 19:21:43 -0500
-In-Reply-To: <20100213000410.5d58d619@lxorguk.ukuu.org.uk>
+Received: from mail-fx0-f227.google.com ([209.85.220.227]:48992 "EHLO
+	mail-fx0-f227.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618Ab0BMNmQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Feb 2010 08:42:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
 
-On 13/02/10 01:04, Alan Cox wrote:
-> Beyond that I've dug into it with another owner of the same board - the
-> BIOS has hidden the device. Unfortunately the documentation for the
-> chipset is quite explicit that while you can hide devices you cannot then
-> unhide them again.
->
-> It might be possible to do something by booting the system in compatible
-> mode and beating the controller into AHCI + PATA mode but really what is
-> needed is a BIOS fix.
 
-That BIOS update will never happen, because the device was declared EOL 
-by Intel in January.
+DISCLAIMER: the fact of getting patches merged into atang tree means
+that from now on they will be getting updates for changes happening
+in atang tree and it should not be treated as an indication regarding
+decisions taken by 'upstream' kernel trees
 
-So if it's a beating that's needed, I'm happy to give it, just point it 
-out :) Otherwise I guess it's a lost cause, and I'd probably be better 
-off by just plugging a USB stick in an internal USB port than to use the 
-PATA port.
+
+Russell King did some great debugging work last month on the root
+source of UDMA problems that have been consistenly reported against
+pata_pdc202xx_old driver for the last couple of years which should
+allow us to hopefully fix them all in atang tree.
+
+
+On top of atang-v4.4.
+
+The following changes since commit bcf33ade797072b4dcd51dd13b353a6e052036c6:
+  Thomas Chou (1):
+        drivers/staging: New PATA driver for Altera CompactFlash.
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.5
+
+Bartlomiej Zolnierkiewicz (3):
+      pata_pdc202xx_old: fix UDMA mode for Promise UDMA33 cards
+      pata_pdc202xx_old: fix UDMA mode for PDC2026x chipsets
+      pata_pdc202xx_old: update documentation
+
+ drivers/ata/Kconfig             |    1 -
+ drivers/ata/pata_pdc202xx_old.c |   13 ++++++++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
