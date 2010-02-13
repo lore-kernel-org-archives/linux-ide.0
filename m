@@ -1,24 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/3] pata_pdc202xx_old: fix UDMA mode for PDC2026x chipsets
-Date: Sat, 13 Feb 2010 17:44:10 -0500
-Message-ID: <4B772B3A.6030202@garzik.org>
-References: <20100213133538.11564.94218.sendpatchset@localhost> <20100213133559.11564.54028.sendpatchset@localhost> <201002131444.58139.bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: Allow pata_legacy to be built on non-ISA but
+ PCI	systems
+Date: Sat, 13 Feb 2010 17:45:56 -0500
+Message-ID: <4B772BA4.9050505@garzik.org>
+References: <20100208100429.2679.52367.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f179.google.com ([209.85.211.179]:56777 "EHLO
-	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543Ab0BMWoN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Feb 2010 17:44:13 -0500
-In-Reply-To: <201002131444.58139.bzolnier@gmail.com>
+Received: from mail-yx0-f196.google.com ([209.85.210.196]:48814 "EHLO
+	mail-yx0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757486Ab0BMWp7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Feb 2010 17:45:59 -0500
+Received: by yxe34 with SMTP id 34so1633928yxe.15
+        for <linux-ide@vger.kernel.org>; Sat, 13 Feb 2010 14:45:59 -0800 (PST)
+In-Reply-To: <20100208100429.2679.52367.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-On 02/13/2010 08:44 AM, Bartlomiej Zolnierkiewicz wrote:
-> .sff_exec_command	= pdc202xx_exec_command,
+On 02/08/2010 05:04 AM, Alan Cox wrote:
+> This is needed for some unsupported hardware setups on strange 64bit
+> mainboards where crazy stuff has been done like putting flash ata adapters
+> on the LPC bus, or where the real hardware is hidden/confused.
+>
+> Signed-off-by: Alan Cox<alan@linux.intel.com>
+> ---
+>
+>   drivers/ata/Kconfig |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
 
-applied patch #2 + this missing chunk
+applied
+
 
