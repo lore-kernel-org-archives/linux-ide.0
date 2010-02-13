@@ -1,65 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: infernix <infernix@infernix.net>
 Subject: Re: PATA port not detected when using AHCI on Intel 82801GB/GR/GH
-Date: Sat, 13 Feb 2010 00:04:10 +0000
-Message-ID: <20100213000410.5d58d619@lxorguk.ukuu.org.uk>
-References: <4B591D61.8030003@infernix.net>
-	<4B593128.1040104@gmail.com>
-	<4B59A0CD.4000801@infernix.net>
-	<4B5A4F7A.4040709@gmail.com>
-	<4B5A5F09.1070300@infernix.net>
-	<20100123101457.7f8cbb3f@lxorguk.ukuu.org.uk>
-	<4B5AF4DF.4020100@infernix.net>
-	<20100123133831.7f24ae95@lxorguk.ukuu.org.uk>
-	<4B75E4B2.3070105@infernix.net>
+Date: Sat, 13 Feb 2010 01:21:53 +0100
+Message-ID: <4B75F0A1.4060204@infernix.net>
+References: <4B591D61.8030003@infernix.net>	<4B593128.1040104@gmail.com>	<4B59A0CD.4000801@infernix.net>	<4B5A4F7A.4040709@gmail.com>	<4B5A5F09.1070300@infernix.net>	<20100123101457.7f8cbb3f@lxorguk.ukuu.org.uk>	<4B5AF4DF.4020100@infernix.net>	<20100123133831.7f24ae95@lxorguk.ukuu.org.uk>	<4B75E4B2.3070105@infernix.net> <20100213000410.5d58d619@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:36855 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751568Ab0BMAEW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Feb 2010 19:04:22 -0500
-In-Reply-To: <4B75E4B2.3070105@infernix.net>
+Received: from dx.infernix.net ([83.96.151.193]:47684 "EHLO dx.infernix.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755506Ab0BMAVn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Feb 2010 19:21:43 -0500
+In-Reply-To: <20100213000410.5d58d619@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: infernix <infernix@infernix.net>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: linux-ide@vger.kernel.org
 
-On Sat, 13 Feb 2010 00:30:58 +0100
-infernix <infernix@infernix.net> wrote:
+On 13/02/10 01:04, Alan Cox wrote:
+> Beyond that I've dug into it with another owner of the same board - the
+> BIOS has hidden the device. Unfortunately the documentation for the
+> chipset is quite explicit that while you can hide devices you cannot then
+> unhide them again.
+>
+> It might be possible to do something by booting the system in compatible
+> mode and beating the controller into AHCI + PATA mode but really what is
+> needed is a BIOS fix.
 
-> Hi again,
->=20
-> It's been a while because I got a bad set of hard disks to start test=
-ing=20
-> with, but I'm all set now that I've got new ones. Both the PATA port=20
-> with the IDE DOM as well as all the SATA ports are recognised and=20
-> working now.
->=20
-> PATA_LEGACY Depends on: ATA [=3Dy] && ATA_SFF [=3Dy] && ISA [=3Dn] &&=
-=20
-> EXPERIMENTAL [=3Dy]                                            =E2=94=
-=82
->=20
-> To make it work, PATA_LEGACY needs to have the ISA dependancy removed=
-=20
-> (at least on x86_64). Not sure if that's been committed by anyone yet=
-=2E
+That BIOS update will never happen, because the device was declared EOL 
+by Intel in January.
 
-I have it pending - but its not urgent so with a release pending isn't
-going to get pushed in a hurry.
-
-Beyond that I've dug into it with another owner of the same board - the
-BIOS has hidden the device. Unfortunately the documentation for the
-chipset is quite explicit that while you can hide devices you cannot th=
-en
-unhide them again.
-
-It might be possible to do something by booting the system in compatibl=
-e
-mode and beating the controller into AHCI + PATA mode but really what i=
-s
-needed is a BIOS fix.
-
-Alan
-=20
+So if it's a beating that's needed, I'm happy to give it, just point it 
+out :) Otherwise I guess it's a lost cause, and I'd probably be better 
+off by just plugging a USB stick in an internal USB port than to use the 
+PATA port.
