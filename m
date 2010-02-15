@@ -1,75 +1,49 @@
-From: Nikola Ciprich <extmaillist@linuxbox.cz>
-Subject: Re: 2.6.32.4 - still getting ext4 related crashes
-Date: Mon, 15 Feb 2010 07:13:49 +0100
-Message-ID: <20100215061349.GB30897@develbox.linuxbox.cz>
-References: <20100122085035.GA5020@nik-nb2.linuxbox.cz>
- <20100122213827.GH21263@thunk.org>
- <20100124071943.GA4407@nik-comp.linuxbox.cz>
- <20100124094853.GA4382@thunk.org>
- <20100126204754.GA4637@nik-comp.linuxbox.cz>
- <4B60A4A6.3070001@redhat.com>
- <20100128172442.GA531@develbox.linuxbox.cz>
- <4B61D4A2.5020407@redhat.com>
- <20100128183639.GA546@develbox.linuxbox.cz>
- <4B736B20.4070703@kernel.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH] ahci: disable FPDMA auto-activate optimization on NVIDIA
+	AHCI
+Date: Mon, 15 Feb 2010 12:34:18 -0600
+Message-ID: <51f3faa71002151034k225d204fr5ce0af821e39c639@mail.gmail.com>
+References: <4B5FC213.1060601@gmail.com> <4B772BE2.30108@garzik.org>
+	 <51f3faa71002131453m4dd2b82cgd8b874866146da60@mail.gmail.com>
+	 <4B772F74.1030509@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gwu.lbox.cz ([62.245.111.132]:37056 "EHLO gwu.lbox.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753334Ab0BOGRN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Feb 2010 01:17:13 -0500
-Content-Disposition: inline
-In-Reply-To: <4B736B20.4070703@kernel.org>
+Received: from mail-iw0-f185.google.com ([209.85.223.185]:39217 "EHLO
+	mail-iw0-f185.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755801Ab0BOSeT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Feb 2010 13:34:19 -0500
+In-Reply-To: <4B772F74.1030509@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Ric Wheeler <rwheeler@redhat.com>, tytso@mit.edu, Nikola Ciprich <nikola.ciprich@linuxbox.cz>, ext4 maillist <linux-ext4@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, mzik@linuxbox.cz
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, Mike Cui <cuicui@gmail.com>, Peer Chen <pchen@nvidia.com>, Allen Martin <AMartin@nvidia.com>
 
-Hi,
-I'm sorry for late reply. I did a lot of new tests, and during it, I
-noticed that one of chips gets quite hot during them (and of course it's
-one without fan, and certainly one without temperature sensor, as none
-of temperature sensors shown any suspicious value).
-So we replaced case with few more additional fans, and since that, I didn't
-get any crash. So I'm really very sorry, seems like it could have been
-overheating problem all the time. I just checked CPU/general temperatures
-first, so I didn't notice. I'll investigate further on the production machine,
-we got those problems first and report if I find anything of interest.
-with best regards
-nik
+On Sat, Feb 13, 2010 at 5:02 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>>>> Mike, can you test this out and make sure this resolves the proble=
+m for
+>>>> you?
+>>>
+>>> Sigh... =A0 we never did hear back from Mike or NVIDIA on this one,=
+ did we?
+>>> =A0I've been watching for a response, and haven't seen one to date.
+>>
+>> No, I haven't seen a response. It's pretty apparent it should fix th=
+e
+>> problem based on earlier testing, but it would be nice to find out f=
+or
+>> sure which chipsets this affects.
+>
+> Yep, that's my main concern... =A0being overly aggressive and zapping=
+ it on
+> all NVIDIA chipsets, even future ones.
 
-
-
-On Thu, Feb 11, 2010 at 11:27:44AM +0900, Tejun Heo wrote:
-> On 01/29/2010 03:36 AM, Nikola Ciprich wrote:
-> > Nope, anything. That's why I first posted it to ext4 list, but now it
-> > seems to me it might be hw related...
-> 
-> Maybe testing on raw block device is a good idea to rule out the
-> filesystem?
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
--------------------------------------
-Ing. Nikola CIPRICH
-LinuxBox.cz, s.r.o.
-28. rijna 168, 709 01 Ostrava
-
-tel.:   +420 596 603 142
-fax:    +420 596 621 273
-mobil:  +420 777 093 799
-www.linuxbox.cz
-
-mobil servis: +420 737 238 656
-email servis: servis@linuxbox.cz
--------------------------------------
+I'm thinking if we don't hear any more specifics on the problem from
+NVIDIA or someone otherwise knowledgeable Real Soon Now we should
+likely just merge this patch. MCP79 is a fairly new chipset and it's
+likely a good assumption that the older NVIDIA AHCI chipsets would
+have the same issue. It's possible that some of the newer chipsets do
+or will fix the problem, but we can address that at a later date - the
+auto-activate optimization is pretty minor and not worth breaking
+things if there's doubt of it working on these controllers..
