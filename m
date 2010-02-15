@@ -1,82 +1,75 @@
-From: Bart Hartgers <bart.hartgers@gmail.com>
-Subject: [patch 1/1] Delay on vt6420 when starting ATAPI DMA write
-Date: Sun, 14 Feb 2010 13:04:50 +0100
-Message-ID: <20100214120819.947320201@gmail.com>
-References: <20100214120449.503204189@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline; filename=sata_via/vt6420-atapi-dma.patch
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Tejun Heo <htejun@gmail.com>, Bart Hartgers <bart.hartgers@gmail.com>
+From: Nikola Ciprich <extmaillist@linuxbox.cz>
+Subject: Re: 2.6.32.4 - still getting ext4 related crashes
+Date: Mon, 15 Feb 2010 07:13:49 +0100
+Message-ID: <20100215061349.GB30897@develbox.linuxbox.cz>
+References: <20100122085035.GA5020@nik-nb2.linuxbox.cz>
+ <20100122213827.GH21263@thunk.org>
+ <20100124071943.GA4407@nik-comp.linuxbox.cz>
+ <20100124094853.GA4382@thunk.org>
+ <20100126204754.GA4637@nik-comp.linuxbox.cz>
+ <4B60A4A6.3070001@redhat.com>
+ <20100128172442.GA531@develbox.linuxbox.cz>
+ <4B61D4A2.5020407@redhat.com>
+ <20100128183639.GA546@develbox.linuxbox.cz>
+ <4B736B20.4070703@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gwu.lbox.cz ([62.245.111.132]:37056 "EHLO gwu.lbox.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753334Ab0BOGRN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Feb 2010 01:17:13 -0500
+Content-Disposition: inline
+In-Reply-To: <4B736B20.4070703@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Ric Wheeler <rwheeler@redhat.com>, tytso@mit.edu, Nikola Ciprich <nikola.ciprich@linuxbox.cz>, ext4 maillist <linux-ext4@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, mzik@linuxbox.cz
 
-When writing a disc on certain lite-on dvd-writers (also rebadged 
-as optiarc/LG/...) connected to a vt6420, the ATAPI CDB ends
-up in the datastream and on the disc, causing silent corruption. 
-Delaying between sending the CDB and starting DMA seems to 
-prevent this.
+Hi,
+I'm sorry for late reply. I did a lot of new tests, and during it, I
+noticed that one of chips gets quite hot during them (and of course it's
+one without fan, and certainly one without temperature sensor, as none
+of temperature sensors shown any suspicious value).
+So we replaced case with few more additional fans, and since that, I didn't
+get any crash. So I'm really very sorry, seems like it could have been
+overheating problem all the time. I just checked CPU/general temperatures
+first, so I didn't notice. I'll investigate further on the production machine,
+we got those problems first and report if I find anything of interest.
+with best regards
+nik
 
-I do not know if there are burners that do not suffer from
-this, but the patch should be safe for those as well.
 
-There are many reports of this issue, but AFAICT no solution was 
-found before. For example:
-http://lkml.indiana.edu/hypermail/linux/kernel/0802.3/0561.html
 
-Signed-off-by: Bart Hartgers <bart.hartgers@gmail.com>
----
-Index: linux-2.6.33-rc4/drivers/ata/sata_via.c
-===================================================================
---- linux-2.6.33-rc4.orig/drivers/ata/sata_via.c	2010-02-14 11:54:15.000000000 +0100
-+++ linux-2.6.33-rc4/drivers/ata/sata_via.c	2010-02-14 11:55:42.000000000 +0100
-@@ -40,11 +40,13 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/device.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
- 
- #define DRV_NAME	"sata_via"
--#define DRV_VERSION	"2.5"
-+#define DRV_VERSION	"2.6"
- 
- /*
-  * vt8251 is different from other sata controllers of VIA.  It has two
-@@ -80,6 +82,7 @@ static int vt8251_scr_write(struct ata_l
- static void svia_tf_load(struct ata_port *ap, const struct ata_taskfile *tf);
- static void svia_noop_freeze(struct ata_port *ap);
- static int vt6420_prereset(struct ata_link *link, unsigned long deadline);
-+static void vt6420_bmdma_start(struct ata_queued_cmd *qc);
- static int vt6421_pata_cable_detect(struct ata_port *ap);
- static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
- static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
-@@ -121,6 +124,7 @@ static struct ata_port_operations vt6420
- 	.inherits		= &svia_base_ops,
- 	.freeze			= svia_noop_freeze,
- 	.prereset		= vt6420_prereset,
-+	.bmdma_start		= vt6420_bmdma_start,
- };
- 
- static struct ata_port_operations vt6421_pata_ops = {
-@@ -377,6 +381,17 @@ static int vt6420_prereset(struct ata_li
- 	return 0;
- }
- 
-+static void vt6420_bmdma_start(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	if ((qc->tf.command == ATA_CMD_PACKET) &&
-+	    (qc->scsicmd->sc_data_direction == DMA_TO_DEVICE)) {
-+		/* Prevents corruption on some ATAPI burners */
-+		ata_sff_pause(ap);
-+	}
-+	ata_bmdma_start(qc);
-+}
-+
- static int vt6421_pata_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+On Thu, Feb 11, 2010 at 11:27:44AM +0900, Tejun Heo wrote:
+> On 01/29/2010 03:36 AM, Nikola Ciprich wrote:
+> > Nope, anything. That's why I first posted it to ext4 list, but now it
+> > seems to me it might be hw related...
+> 
+> Maybe testing on raw block device is a good idea to rule out the
+> filesystem?
+> 
+> Thanks.
+> 
+> -- 
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 -- 
+-------------------------------------
+Ing. Nikola CIPRICH
+LinuxBox.cz, s.r.o.
+28. rijna 168, 709 01 Ostrava
+
+tel.:   +420 596 603 142
+fax:    +420 596 621 273
+mobil:  +420 777 093 799
+www.linuxbox.cz
+
+mobil servis: +420 737 238 656
+email servis: servis@linuxbox.cz
+-------------------------------------
