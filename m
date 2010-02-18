@@ -1,34 +1,50 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] pata_oldpiix: enable parallel scan
-Date: Thu, 18 Feb 2010 19:59:36 +0100
-Message-ID: <20100218185936.16594.94485.sendpatchset@localhost>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/3] libata: pass host flags into
+ __ata_pci_sff_init_one() helper
+Date: Thu, 18 Feb 2010 21:44:48 +0000
+Message-ID: <20100218214448.692552fd@lxorguk.ukuu.org.uk>
 References: <20100218185914.16594.61415.sendpatchset@localhost>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100218185914.16594.61415.sendpatchset@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
+	<20100218185922.16594.98925.sendpatchset@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53096 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754186Ab0BRVpm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 16:45:42 -0500
+In-Reply-To: <20100218185922.16594.98925.sendpatchset@localhost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_oldpiix: enable parallel scan
+On Thu, 18 Feb 2010 19:59:22 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/pata_oldpiix.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] libata: pass host flags into __ata_pci_sff_init_one() helper
+> 
+> This was orginally proposed by Alan Cox but as a change
+> for ata_pci_sff_init_one() helper function instead of
+> __ata_pci_sff_init_one() one which casues needless churn
+> to all host drivers and accidentally breakes few host
+> drivers which are still on their way upstream.
+> 
+> Allows parallel scan and the like to be set without
+> having to stop using the existing full helper functions.
 
-Index: b/drivers/ata/pata_oldpiix.c
-===================================================================
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -215,7 +215,8 @@ static int oldpiix_init_one (struct pci_
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL);
-+	return __ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
- }
- 
- static const struct pci_device_id oldpiix_pci_tbl[] = {
+NAK - __ is for internal symbol names.
+
+I was split 50/50 on adding ata_pci_sff_init_one_flags() or similar but
+the churn, given its a one off and we can then add all sorts of other
+future flags without pain, seemed worth it.
+
+I'm ambivalent about whether its best to go with a new function name as
+you have or take the hit now (which seems sensible to me). Either way the
+__ naming is wrong for an external interface.
+
+Anyway I'd *hope* we can get > 50% of interfaces parallel scanning at
+which point it ceases to be more noise anyway !
+
+Jeff ?
