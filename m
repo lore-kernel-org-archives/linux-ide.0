@@ -1,91 +1,106 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_nv times out for BD-ROM iHOS104-08
-Date: Thu, 18 Feb 2010 10:50:38 +0900
-Message-ID: <4B7C9CEE.4080902@kernel.org>
-References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<d2d378040912232302u4b550dap687fcadced237935@mail.gmail.com> 	<4B331771.3090309@kernel.org> <d2d378041001161334r6fe3ee65w39cf98a6c2d1d399@mail.gmail.com> 	<4B5666B4.6000804@kernel.org> <51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com> 	<d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com> 	<4B5A70E5.6050106@kernel.org> <d2d378041001231339o1d1b0984y2b2a85b717987d93@mail.gmail.com> 	<4B67A149.10406@kernel.org> <d2d378041002170814l1da6b022p4902128c604fc84b@mail.gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [RFC 1/4] libata: cache device select
+Date: Thu, 18 Feb 2010 00:13:34 -0500
+Message-ID: <4B7CCC7E.3060108@teksavvy.com>
+References: <20100217130847.16338.55586.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060400070204040406020702"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46699 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751801Ab0BRBm3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Feb 2010 20:42:29 -0500
-In-Reply-To: <d2d378041002170814l1da6b022p4902128c604fc84b@mail.gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:38870 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751115Ab0BRFNk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 00:13:40 -0500
+In-Reply-To: <20100217130847.16338.55586.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alan Cox <alan@linux.intel.com>
+Cc: jeff@garzik.org.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060400070204040406020702
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+On 02/17/10 08:10, Alan Cox wrote:
+> Avoid the device select overhead on every qc_issue (>  10uS) by caching the
+> currently selected device. This shows up on profiles under load. Best case
+> this costs us 10uS for the delay, worst case with a dumb interface it's
+> costing us about *1mS* a command.
+>
+> I believe the logic here is sufficient, but would welcome some second reviews
+> as its not something you want to get wrong !
+>
+> Signed-off-by: Alan Cox<alan@linux.intel.com>
+..
 
-On 02/18/2010 01:14 AM, Cengiz Günay wrote:
-> 2010/2/1 Tejun Heo <tj@kernel.org>:
-> 
->> Can you please attach full dmesg w/ the patch applied w/o any kernel
->> parameter?  I'm curious where the hda warnings are coming from.  Is
->> generic IDE driver loaded?
-> 
-> The dmesg snippet I attached last time was w/o any kernel parameters.
-> This time I'm attaching the full dmesg output. hda is my other DVD-RW
-> drive, I'm not sure what the warnings mean. ide_core is loaded, but
-> not the ide-generic or ide-pci-generic modules, although they are
-> available. Would you like me to force them to load?
+I totally agree with this patch, but question the timings used to justify it.
+Surely the overhead is only 1-2usec for the case where the device
+is the one that was already selected (on a "smart" interface) ?
 
-No, I was concerned because there were a few cases where two drivers
-were attached to the same controller but I don't think that's possible
-here.
+And for the case where the currently selected device is different
+than the desired device (the 1msec case), this patch makes little/no difference?
 
-Does the attached patch make any difference?
+Cheers
 
-Thanks.
 
--- 
-tejun
+> ---
+>
+>   drivers/ata/libata-sff.c |    8 ++++++--
+>   include/linux/libata.h   |    1 +
+>   2 files changed, 7 insertions(+), 2 deletions(-)
+>
+>
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 63d9c6a..cf0332a 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -469,6 +469,7 @@ void ata_sff_dev_select(struct ata_port *ap, unsigned int device)
+>
+>   	iowrite8(tmp, ap->ioaddr.device_addr);
+>   	ata_sff_pause(ap);	/* needed; also flushes, for mmio */
+> +	ap->sff_selected = device;
+>   }
+>   EXPORT_SYMBOL_GPL(ata_sff_dev_select);
+>
+> @@ -1538,7 +1539,8 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
+>   	}
+>
+>   	/* select the device */
+> -	ata_dev_select(ap, qc->dev->devno, 1, 0);
+> +	if (qc->dev->devno != ap->sff_selected)
+> +        	ata_dev_select(ap, qc->dev->devno, 1, 0);
+>
+>   	/* start the command */
+>   	switch (qc->tf.protocol) {
+> @@ -1925,6 +1927,8 @@ int ata_sff_prereset(struct ata_link *link, unsigned long deadline)
+>   	struct ata_eh_context *ehc =&link->eh_context;
+>   	int rc;
+>
+> +	link->ap->sff_selected = -1;	/* Unknown */
+> +
+>   	rc = ata_std_prereset(link, deadline);
+>   	if (rc)
+>   		return rc;
+> @@ -2687,7 +2691,7 @@ void ata_bus_reset(struct ata_port *ap)
+>   		iowrite8(ap->ctl, ioaddr->ctl_addr);
+>   		ap->last_ctl = ap->ctl;
+>   	}
+> -
+> +	ap->sff_selected = -1;
+>   	DPRINTK("EXIT\n");
+>   	return;
+>
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 5fb8884..a85adc2 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -725,6 +725,7 @@ struct ata_port {
+>
+>   #ifdef CONFIG_ATA_SFF
+>   	struct ata_ioports	ioaddr;	/* ATA cmd/ctl/dma register blocks */
+> +	int			sff_selected;	/* Cache of selected device */
+>   #endif /* CONFIG_ATA_SFF */
+>
+>   	u8			ctl;	/* cache of ATA control register */
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
---------------060400070204040406020702
-Content-Type: text/x-patch;
- name="drain-from-atapi_pio_bytes.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="drain-from-atapi_pio_bytes.patch"
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 730ef3c..d189b48 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1070,6 +1070,7 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
- 	struct ata_eh_info *ehi = &dev->link->eh_info;
- 	unsigned int ireason, bc_lo, bc_hi, bytes;
- 	int i_write, do_write = (qc->tf.flags & ATA_TFLAG_WRITE) ? 1 : 0;
-+	u8 stat;
- 
- 	/* Abuse qc->result_tf for temp storage of intermediate TF
- 	 * here to save some kernel stack usage.
-@@ -1099,6 +1100,21 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
- 
- 	if (unlikely(__atapi_pio_bytes(qc, bytes)))
- 		goto err_out;
-+
-+	/* this really should be done only after the final transfer is complete */
-+	stat = ata_sff_altstatus(ap);
-+	if (stat & ATA_DRQ) {
-+		int count;
-+
-+		ata_port_printk(ap, KERN_INFO, "stat=%x after atapi_pio_bytes\n", stat);
-+
-+		for (count = 0; (ap->ops->sff_check_status(ap) & ATA_DRQ)
-+						&& count < 65536; count += 2)
-+			ioread16(ap->ioaddr.data_addr);
-+		if (count)
-+			ata_port_printk(ap, KERN_DEBUG,
-+					"drained %d bytes to clear DRQ.\n", count);
-+	}
- 	ata_sff_sync(ap); /* flush */
- 
- 	return;
-
---------------060400070204040406020702--
