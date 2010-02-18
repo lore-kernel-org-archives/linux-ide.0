@@ -1,106 +1,40 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [RFC 1/4] libata: cache device select
-Date: Thu, 18 Feb 2010 00:13:34 -0500
-Message-ID: <4B7CCC7E.3060108@teksavvy.com>
-References: <20100217130847.16338.55586.stgit@localhost.localdomain>
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Subject: Re: ata8.00: log page 10h reported inactive tag 0
+Date: Thu, 18 Feb 2010 08:55:58 +0100
+Message-ID: <87r5ojm0z5.fsf@nemi.mork.no>
+References: <87y6isp4da.fsf@nemi.mork.no> <4B7C88EB.1040502@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:38870 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751115Ab0BRFNk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 00:13:40 -0500
-In-Reply-To: <20100217130847.16338.55586.stgit@localhost.localdomain>
+Received: from canardo.mork.no ([148.122.252.1]:34611 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751240Ab0BRH4D convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 02:56:03 -0500
+Received: from nemi.mork.no (nemi.mork.no [IPv6:2001:16d8:ffb4:2:216:eaff:feb3:788])
+	(authenticated bits=0)
+	by canardo.mork.no (8.14.3/8.14.3) with ESMTP id o1I7tw26006844
+	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK)
+	for <linux-ide@vger.kernel.org>; Thu, 18 Feb 2010 08:55:59 +0100
+Received: from bjorn by nemi.mork.no with local (Exim 4.69)
+	(envelope-from <bjorn@mork.no>)
+	id 1Ni1Es-0007Az-LG
+	for linux-ide@vger.kernel.org; Thu, 18 Feb 2010 08:55:58 +0100
+In-Reply-To: <4B7C88EB.1040502@gmail.com> (Robert Hancock's message of "Wed,
+	17 Feb 2010 18:25:15 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: jeff@garzik.org.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 02/17/10 08:10, Alan Cox wrote:
-> Avoid the device select overhead on every qc_issue (>  10uS) by caching the
-> currently selected device. This shows up on profiles under load. Best case
-> this costs us 10uS for the delay, worst case with a dumb interface it's
-> costing us about *1mS* a command.
->
-> I believe the logic here is sufficient, but would welcome some second reviews
-> as its not something you want to get wrong !
->
-> Signed-off-by: Alan Cox<alan@linux.intel.com>
-..
+Robert Hancock <hancockrwd@gmail.com> writes:
 
-I totally agree with this patch, but question the timings used to justify it.
-Surely the overhead is only 1-2usec for the case where the device
-is the one that was already selected (on a "smart" interface) ?
+> Well, that error indicates a read error on some sectors reported by
+> the drive. This could be caused by a hard power-down in the middle of
+> a write to those sectors - in that case, one can in principle use
+> something like hdparm --write-sector to rewrite the sector
+> correctly. However, it could also be due to a drive fault.
 
-And for the case where the currently selected device is different
-than the desired device (the 1msec case), this patch makes little/no difference?
-
-Cheers
+Thanks.
 
 
-> ---
->
->   drivers/ata/libata-sff.c |    8 ++++++--
->   include/linux/libata.h   |    1 +
->   2 files changed, 7 insertions(+), 2 deletions(-)
->
->
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 63d9c6a..cf0332a 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -469,6 +469,7 @@ void ata_sff_dev_select(struct ata_port *ap, unsigned int device)
->
->   	iowrite8(tmp, ap->ioaddr.device_addr);
->   	ata_sff_pause(ap);	/* needed; also flushes, for mmio */
-> +	ap->sff_selected = device;
->   }
->   EXPORT_SYMBOL_GPL(ata_sff_dev_select);
->
-> @@ -1538,7 +1539,8 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
->   	}
->
->   	/* select the device */
-> -	ata_dev_select(ap, qc->dev->devno, 1, 0);
-> +	if (qc->dev->devno != ap->sff_selected)
-> +        	ata_dev_select(ap, qc->dev->devno, 1, 0);
->
->   	/* start the command */
->   	switch (qc->tf.protocol) {
-> @@ -1925,6 +1927,8 @@ int ata_sff_prereset(struct ata_link *link, unsigned long deadline)
->   	struct ata_eh_context *ehc =&link->eh_context;
->   	int rc;
->
-> +	link->ap->sff_selected = -1;	/* Unknown */
-> +
->   	rc = ata_std_prereset(link, deadline);
->   	if (rc)
->   		return rc;
-> @@ -2687,7 +2691,7 @@ void ata_bus_reset(struct ata_port *ap)
->   		iowrite8(ap->ctl, ioaddr->ctl_addr);
->   		ap->last_ctl = ap->ctl;
->   	}
-> -
-> +	ap->sff_selected = -1;
->   	DPRINTK("EXIT\n");
->   	return;
->
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 5fb8884..a85adc2 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -725,6 +725,7 @@ struct ata_port {
->
->   #ifdef CONFIG_ATA_SFF
->   	struct ata_ioports	ioaddr;	/* ATA cmd/ctl/dma register blocks */
-> +	int			sff_selected;	/* Cache of selected device */
->   #endif /* CONFIG_ATA_SFF */
->
->   	u8			ctl;	/* cache of ATA control register */
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Bj=C3=B8rn
