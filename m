@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/3] pata_oldpiix: add locking for parallel scanning
-Date: Thu, 18 Feb 2010 19:59:28 +0100
-Message-ID: <20100218185928.16594.4054.sendpatchset@localhost>
+Subject: [PATCH 3/3] pata_oldpiix: enable parallel scan
+Date: Thu, 18 Feb 2010 19:59:36 +0100
+Message-ID: <20100218185936.16594.94485.sendpatchset@localhost>
 References: <20100218185914.16594.61415.sendpatchset@localhost>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20100218185914.16594.61415.sendpatchset@localhost>
@@ -11,65 +11,24 @@ Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_oldpiix: add locking for parallel scanning
-
-Add an extra locking for parallel scanning.
-
-This is similar change as commit 60c3be3 for ata_piix host driver
-and while pata_oldpiix doesn't enable parallel scan yet the race
-could probably also be triggered by requesting re-scanning of both
-ports at the same time using SCSI sysfs interface.
-
-Fix documentation while at it.
+Subject: [PATCH] pata_oldpiix: enable parallel scan
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_oldpiix.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/ata/pata_oldpiix.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 Index: b/drivers/ata/pata_oldpiix.c
 ===================================================================
 --- a/drivers/ata/pata_oldpiix.c
 +++ b/drivers/ata/pata_oldpiix.c
-@@ -1,7 +1,8 @@
- /*
-- *    pata_oldpiix.c - Intel PATA/SATA controllers
-+ *    pata_oldpiix.c - older Intel PATA controllers
-  *
-  *	(C) 2005 Red Hat
-+ *	(C) 2010 Bartlomiej Zolnierkiewicz
-  *
-  *    Some parts based on ata_piix.c by Jeff Garzik and others.
-  *
-@@ -50,10 +51,13 @@ static int oldpiix_pre_reset(struct ata_
- 	return ata_sff_prereset(link, deadline);
+@@ -215,7 +215,8 @@ static int oldpiix_init_one (struct pci_
+ 		dev_printk(KERN_DEBUG, &pdev->dev,
+ 			   "version " DRV_VERSION "\n");
+ 
+-	return ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL);
++	return __ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL, NULL,
++				      ATA_HOST_PARALLEL_SCAN);
  }
  
-+static DEFINE_SPINLOCK(piix_lock);
-+
- static void oldpiix_set_timings(struct ata_port *ap, struct ata_device *adev,
- 				u8 pio, bool use_mwdma)
- {
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-+	unsigned long flags;
- 	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
- 	u16 idetm_data;
- 	int control = 0;
-@@ -84,6 +88,8 @@ static void oldpiix_set_timings(struct a
- 		/* Enable DMA timing only */
- 		control |= 8;	/* PIO cycles in PIO0 */
- 
-+	spin_lock_irqsave(&piix_lock, flags);
-+
- 	pci_read_config_word(dev, idetm_port, &idetm_data);
- 
- 	/*
-@@ -101,6 +107,8 @@ static void oldpiix_set_timings(struct a
- 			(timings[pio][1] << 8);
- 	pci_write_config_word(dev, idetm_port, idetm_data);
- 
-+	spin_unlock_irqrestore(&piix_lock, flags);
-+
- 	/* Track which port is configured */
- 	ap->private_data = adev;
- }
+ static const struct pci_device_id oldpiix_pci_tbl[] = {
