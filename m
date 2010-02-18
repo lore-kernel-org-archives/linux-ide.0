@@ -1,50 +1,57 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Kernel Bug in ATA or SMART area
-Date: Thu, 18 Feb 2010 11:50:06 +0100
-Message-ID: <19325.7006.892019.748974@pilspetsen.it.uu.se>
-References: <4B72941A.7060704@gmx.de>
-	<4B74BDCF.1010805@kernel.org>
-	<4B74F263.1060709@gmx.de>
-	<4B7505CA.60409@kernel.org>
-	<4B75154B.8030507@gmx.de>
-	<4B7B548B.4040606@kernel.org>
-	<4B7C5696.7030609@gmx.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [git patches] atang tree: parallel scanning improvements
+Date: Thu, 18 Feb 2010 19:59:14 +0100
+Message-ID: <20100218185914.16594.61415.sendpatchset@localhost>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:32914 "EHLO fanny.its.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756721Ab0BRKuN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Feb 2010 05:50:13 -0500
-In-Reply-To: <4B7C5696.7030609@gmx.de>
+Received: from fg-out-1718.google.com ([72.14.220.159]:4680 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755512Ab0BRS7f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 13:59:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Axel Uhl <axel.uhl@gmx.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Axel Uhl writes:
- > Here's what /var/log/dmesg contains:
-...
- > Tejun Heo wrote:
- > > Hello,
- > > 
- > > On 02/12/2010 05:46 PM, Axel Uhl wrote:
- > >> I don't have a /var/log/boot.msg, only a /var/log/boot. Its contents:
- > > 
- > > Then please attach output of dmesg after boot.
+DISCLAIMER: the fact of getting patches merged into atang tree means
+that from now on they will be getting updates for changes happening
+in atang tree and it should not be treated as an indication regarding
+decisions taken by 'upstream' kernel trees
 
-Judging from your initial message and this one, it appears that the
-problematic disk is driven by sata_via, but sata_via shares IRQ with
-an awful lot of other junk.
 
-Suggestions:
-1. Enable IO/APIC support in the kernel. According to your previous lspci
-   the chipset does have one. This should reduce IRQ sharing and make IRQ
-   handling generally better. If there's still some sharing going on,
-   try moving PCI cards to other slots.
-2. Move the problematic disk around to e.g. the Promise controller. Do the
-   stray exceptions persist? If so, then it's the disk that's at fault.
-   As long as the libata's error handling recovers, things should work anyway.
-3. (Unrelated but...) Why use Old IDE to drive the VIA PATA controller?
-   Just use pata_via for that one, enable SCSI SR+SG support, and disable IDE.
+Allow parallel scan and the like to be set without having to stop using
+the existing full helper functions (this is based on a upstream proposal
+patch from Alan Cox) and add parallel scanning feature for older Intel
+PATA controllers.
+
+[ Patches for other controllers are welcomed and I will also continue
+  progressively adding parallel scanning while fixing/testing drivers. ]
+
+
+The following changes since commit e2adfa56bafbafb65cdb6d8efe4cac5ed7582f88:
+  Bartlomiej Zolnierkiewicz (1):
+        pata_pdc202xx_old: update documentation
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.6
+
+Bartlomiej Zolnierkiewicz (3):
+      libata: pass host flags into __ata_pci_sff_init_one() helper
+      pata_oldpiix: add locking for parallel scanning
+      pata_oldpiix: enable parallel scan
+
+ drivers/ata/libata-sff.c    |    4 +++-
+ drivers/ata/pata_ali.c      |    2 +-
+ drivers/ata/pata_amd.c      |    2 +-
+ drivers/ata/pata_artop.c    |    2 +-
+ drivers/ata/pata_atiixp.c   |   18 ++----------------
+ drivers/ata/pata_cmd640.c   |    2 +-
+ drivers/ata/pata_cs5530.c   |    2 +-
+ drivers/ata/pata_efar.c     |   18 ++----------------
+ drivers/ata/pata_hpt366.c   |    2 +-
+ drivers/ata/pata_it821x.c   |    2 +-
+ drivers/ata/pata_ns87415.c  |    2 +-
+ drivers/ata/pata_oldpiix.c  |   13 +++++++++++--
+ drivers/ata/pata_sl82c105.c |    2 +-
+ include/linux/libata.h      |    4 ++--
+ 14 files changed, 29 insertions(+), 46 deletions(-)
