@@ -1,40 +1,34 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: ata8.00: log page 10h reported inactive tag 0
-Date: Thu, 18 Feb 2010 08:55:58 +0100
-Message-ID: <87r5ojm0z5.fsf@nemi.mork.no>
-References: <87y6isp4da.fsf@nemi.mork.no> <4B7C88EB.1040502@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC 1/4] libata: cache device select
+Date: Thu, 18 Feb 2010 10:16:03 +0000
+Message-ID: <20100218101603.23c16786@lxorguk.ukuu.org.uk>
+References: <20100217130847.16338.55586.stgit@localhost.localdomain>
+	<4B7CCC7E.3060108@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:34611 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751240Ab0BRH4D convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 02:56:03 -0500
-Received: from nemi.mork.no (nemi.mork.no [IPv6:2001:16d8:ffb4:2:216:eaff:feb3:788])
-	(authenticated bits=0)
-	by canardo.mork.no (8.14.3/8.14.3) with ESMTP id o1I7tw26006844
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=OK)
-	for <linux-ide@vger.kernel.org>; Thu, 18 Feb 2010 08:55:59 +0100
-Received: from bjorn by nemi.mork.no with local (Exim 4.69)
-	(envelope-from <bjorn@mork.no>)
-	id 1Ni1Es-0007Az-LG
-	for linux-ide@vger.kernel.org; Thu, 18 Feb 2010 08:55:58 +0100
-In-Reply-To: <4B7C88EB.1040502@gmail.com> (Robert Hancock's message of "Wed,
-	17 Feb 2010 18:25:15 -0600")
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:41566 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753938Ab0BRKTU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2010 05:19:20 -0500
+In-Reply-To: <4B7CCC7E.3060108@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Alan Cox <alan@linux.intel.com>, jeff@garzik.org.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Robert Hancock <hancockrwd@gmail.com> writes:
+O> I totally agree with this patch, but question the timings used to justify it.
+> Surely the overhead is only 1-2usec for the case where the device
+> is the one that was already selected (on a "smart" interface) ?
 
-> Well, that error indicates a read error on some sectors reported by
-> the drive. This could be caused by a hard power-down in the middle of
-> a write to those sectors - in that case, one can in principle use
-> something like hdparm --write-sector to rewrite the sector
-> correctly. However, it could also be due to a drive fault.
+IFF you have a smart interface. A lot of the controllers in the PCI space
+don't appear to be that clever.
 
-Thanks.
+> And for the case where the currently selected device is different
+> than the desired device (the 1msec case), this patch makes little/no difference?
 
+Correct, but even with two devices per cable (which is not the most
+common setup) you win. Worst case (which I've never seen) you draw.
 
-Bj=C3=B8rn
+Alan
