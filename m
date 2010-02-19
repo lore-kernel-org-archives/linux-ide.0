@@ -1,60 +1,60 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: Kernel Bug in ATA or SMART area
-Date: Fri, 19 Feb 2010 22:03:59 +0100
-Message-ID: <19326.64703.561400.379749@pilspetsen.it.uu.se>
-References: <4B72941A.7060704@gmx.de>
-	<4B74BDCF.1010805@kernel.org>
-	<4B74F263.1060709@gmx.de>
-	<4B7505CA.60409@kernel.org>
-	<4B75154B.8030507@gmx.de>
-	<4B7B548B.4040606@kernel.org>
-	<4B7C5696.7030609@gmx.de>
-	<19325.7006.892019.748974@pilspetsen.it.uu.se>
-	<4B7EDE2F.8030107@gmx.de>
+From: Asdo <asdo@shiftmail.org>
+Subject: How to reread disk size?
+Date: Sat, 20 Feb 2010 00:48:31 +0100
+Message-ID: <4B7F234F.9000107@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:61383 "EHLO fanny.its.uu.se"
+Received: from mx2.isti.cnr.it ([194.119.192.4]:2672 "EHLO mx2.isti.cnr.it"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754242Ab0BSVEK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Feb 2010 16:04:10 -0500
-In-Reply-To: <4B7EDE2F.8030107@gmx.de>
+	id S1754469Ab0BTCTt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Feb 2010 21:19:49 -0500
+Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it
+ (PMDF V6.5-b2 #31825) id <01NJV7P6WAW0BF3HYU@mx.isti.cnr.it> for
+ linux-ide@vger.kernel.org; Sat, 20 Feb 2010 00:48:33 +0100
+Received: from [10.0.0.61]
+ (host-78-12-70-104.cust-adsl.tiscali.it [78.12.70.104])
+ by mx.isti.cnr.it (PMDF V6.5-b2 #31826)
+ with ESMTPSA id <01NJV7P4QEM4BJSI3Y@mx.isti.cnr.it> for
+ linux-ide@vger.kernel.org; Sat, 20 Feb 2010 00:48:31 +0100 (MET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Axel Uhl <axel.uhl@gmx.de>
-Cc: Mikael Pettersson <mikpe@it.uu.se>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Axel Uhl writes:
- > I now enabled IO/APIC in my kernel. See attached .config. I also enabled 
- >   pata_via but was unsure which IDE driver to disable.
+Hi all,
+I have a system with hot swappable bays but one of the involved 
+controllers apparently does not support hot swap:
+(I have unfortunately an old kernel: 2.6.24)
 
-That would be VIA82CXXX. But all your PATA/SATA controllers are now driven
-by libata, so you can disable IDE, i.e. set CONFIG_IDE=n.
+00:1f.2 IDE interface: Intel Corporation 631xESB/632xESB/3100 Chipset 
+SATA IDE Controller (rev 09) (prog-if 8f [Master SecP SecO PriP PriO])
+        Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 19
+        I/O ports at 18c8 [size=8]
+        I/O ports at 18ac [size=4]
+        I/O ports at 18c0 [size=8]
+        I/O ports at 18a8 [size=4]
+        I/O ports at 18b0 [size=16]
+        Memory at da804400 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [70] Power Management version 2
 
- > The kernel 
- > rebooted fine. The following appeared in my syslog when the smartctl 
- > command spinned up the disk:
- > 
- > Feb 19 18:57:09 homemp3 kernel: ata5.00: exception Emask 0x0 SAct 0x0 
- > SErr 0x0 action 0x6 frozen
- > Feb 19 18:57:09 homemp3 kernel: ata5.00: failed command: SMART
- > Feb 19 18:57:09 homemp3 kernel: ata5.00: cmd 
- > b0/da:00:00:4f:c2/00:00:00:00:00/00 tag 0
- > Feb 19 18:57:09 homemp3 kernel:          res 
- > 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
- > Feb 19 18:57:09 homemp3 kernel: ata5.00: status: { DRDY }
- > Feb 19 18:57:09 homemp3 kernel: ata5: soft resetting link
- > Feb 19 18:57:09 homemp3 kernel: ata5.00: configured for UDMA/133
- > Feb 19 18:57:09 homemp3 kernel: ata5: EH complete
- > 
- > 
- > At least it seems that the kernel recovered better from this exception 
- > than before. In particular, IRQ10 didn't get disabled and so I/O 
- > continued to work fine. Thanks for the hint.
- > 
- > Would you consider the exception above a serious problem that should be 
- > taken care of somehow?
 
-Apparently this disk likes to complain when issued a SMART command while spun
-down, but as libata EH recovers nicely there's no real reason to worry.
+I have swapped the disk with a larger one (750GB -> 1TB) but it blockdev 
+--getsize64 still sees the old size. It has not realized I have swapped 
+disk.
+
+In the past I was doing:
+
+  blockdev --rereadpt /dev/sdX
+
+and it usually worked on other controllers to reread the size visible 
+from "blockdev --getsize" or "blockdev --getsize64". One time I think it 
+even worked on exactly *that* controller... but it's not working now, 
+it's strange.
+
+Is there a technique, or I am out of luck?
+The machine should not be rebooted
+I would even enter the size manually if possible: I know how many LBA 
+blocks are in that disk.
+
+Thank you
