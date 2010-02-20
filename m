@@ -1,58 +1,58 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: How to reread disk size?
-Date: Sat, 20 Feb 2010 12:37:19 -0600
-Message-ID: <4B802BDF.9020509@gmail.com>
-References: <4B7F234F.9000107@shiftmail.org>
+Subject: Re: bad performance with SSD since kernel version 2.6.32
+Date: Sat, 20 Feb 2010 12:35:00 -0600
+Message-ID: <4B802B54.1080009@gmail.com>
+References: <20100220142826.62dd5989@pluto-lenny.milky.way>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f209.google.com ([209.85.217.209]:52675 "EHLO
-	mail-gx0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751117Ab0BTSpd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Feb 2010 13:45:33 -0500
-Received: by gxk1 with SMTP id 1so1278205gxk.19
-        for <linux-ide@vger.kernel.org>; Sat, 20 Feb 2010 10:45:32 -0800 (PST)
-In-Reply-To: <4B7F234F.9000107@shiftmail.org>
+Received: from mail-yx0-f200.google.com ([209.85.210.200]:57170 "EHLO
+	mail-yx0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578Ab0BTSfE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Feb 2010 13:35:04 -0500
+Received: by yxe38 with SMTP id 38so1185641yxe.4
+        for <linux-ide@vger.kernel.org>; Sat, 20 Feb 2010 10:35:03 -0800 (PST)
+In-Reply-To: <20100220142826.62dd5989@pluto-lenny.milky.way>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: linux-ide@vger.kernel.org
+To: "Benjamin S." <sbenni@gmx.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 02/19/2010 05:48 PM, Asdo wrote:
-> Hi all,
-> I have a system with hot swappable bays but one of the involved
-> controllers apparently does not support hot swap:
-> (I have unfortunately an old kernel: 2.6.24)
+On 02/20/2010 07:28 AM, Benjamin S. wrote:
 >
-> 00:1f.2 IDE interface: Intel Corporation 631xESB/632xESB/3100 Chipset
-> SATA IDE Controller (rev 09) (prog-if 8f [Master SecP SecO PriP PriO])
-> Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 19
-> I/O ports at 18c8 [size=8]
-> I/O ports at 18ac [size=4]
-> I/O ports at 18c0 [size=8]
-> I/O ports at 18a8 [size=4]
-> I/O ports at 18b0 [size=16]
-> Memory at da804400 (32-bit, non-prefetchable) [size=1K]
-> Capabilities: [70] Power Management version 2
+> Hello list,
+>
+> I have a Super Talent Ultradrive GX MLC 64GB SSD and an Intel
+> DH55HC board with H55 chipset. Processor is an Intel Core i5-661.
+>
+> Since 2.6.32 the sequentiell read performance of the ssd is bad:
+>
+> # dd if=/dev/sda of=/dev/zero bs=1M count=300
+> 300+0 records in
+> 300+0 records out
+> 314572800 bytes (315 MB) copied, 4.61777 s, 68.1 MB/s
+>
+> Same results with other blocksizes (e.g tested with 4K).
 >
 >
-> I have swapped the disk with a larger one (750GB -> 1TB) but it blockdev
-> --getsize64 still sees the old size. It has not realized I have swapped
-> disk.
+> With 2.6.31.7 the same hardware is able to read with about
+> 190MB/s.
 >
-> In the past I was doing:
 >
-> blockdev --rereadpt /dev/sdX
+> The normal hard drive reads with both kernel versions with about 100MB/s.
 >
-> and it usually worked on other controllers to reread the size visible
-> from "blockdev --getsize" or "blockdev --getsize64". One time I think it
-> even worked on exactly *that* controller... but it's not working now,
-> it's strange.
 >
-> Is there a technique, or I am out of luck?
-> The machine should not be rebooted
-> I would even enter the size manually if possible: I know how many LBA
-> blocks are in that disk.
+> Does somebody have an idea what I can test before I have to bisect
+> it?
 
-What dmesg output do you get when you do this?
+Could be some kind of block layer or IO scheduler behavior change.. you 
+could try testing after doing:
+
+echo noop > /sys/block/sda/queue/scheduler
+
+or
+
+echo deadline > /sys/block/sda/queue/scheduler
+
+and see if that affects the speed..
