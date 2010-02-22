@@ -1,55 +1,71 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: How to reread disk size?
-Date: Mon, 22 Feb 2010 13:57:52 +0100
-Message-ID: <1266843472.4414.23.camel@mulgrave.site>
-References: <4B7F234F.9000107@shiftmail.org> <4B802BDF.9020509@gmail.com>
-	 <4B805487.2010900@shiftmail.org> <1266736938.4414.9.camel@mulgrave.site>
-	 <4B814B26.5020501@shiftmail.org>
-	 <51f3faa71002210910s484c8e4i975ebf2314287d66@mail.gmail.com>
-	 <4B81D699.704@shiftmail.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: bad performance with SSD since kernel version 2.6.32
+Date: Mon, 22 Feb 2010 08:41:10 -0600
+Message-ID: <51f3faa71002220641n75c52dw661b86a77e44a0a1@mail.gmail.com>
+References: <20100220142826.62dd5989@pluto-lenny.milky.way>
+	 <4B802B54.1080009@gmail.com> <20100221022613.1096fd12@uranus>
+	 <51f3faa71002210922i542c37f0j9e0e4a84d0977f90@mail.gmail.com>
+	 <20100221225544.5a9ded51@pluto-lenny.milky.way>
+	 <51f3faa71002211400u2177660ei1c0dc3d9306b146e@mail.gmail.com>
+	 <20100222141802.2bcbf607@pluto-lenny.milky.way>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:33197 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753376Ab0BVM56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Feb 2010 07:57:58 -0500
-In-Reply-To: <4B81D699.704@shiftmail.org>
+Received: from mail-iw0-f177.google.com ([209.85.223.177]:55872 "EHLO
+	mail-iw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236Ab0BVOlL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Feb 2010 09:41:11 -0500
+Received: by iwn7 with SMTP id 7so2137306iwn.4
+        for <linux-ide@vger.kernel.org>; Mon, 22 Feb 2010 06:41:10 -0800 (PST)
+In-Reply-To: <20100222141802.2bcbf607@pluto-lenny.milky.way>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Asdo <asdo@shiftmail.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: "Benjamin S." <sbenni@gmx.de>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Mon, 2010-02-22 at 01:58 +0100, Asdo wrote:
-> Robert Hancock wrote:
-> > ata_piix doesn't have a way to get automatically notified that the
-> > disk has been hotplugged since the chipset doesn't support it in this
-> > mode. (The ideal solution would be to switch the controller into AHCI
-> > mode, but I don't know if that's possible on that chipset and BIOS.)
-> >
-> > I think there are some ways to get the code to recheck the disk
-> > however.. you can try echoing something into the "rescan" sysfs file
-> > under /sys that matches your device (do a "find /sys/ -name
-> > scsi_level" to see what directories they're in, the rescan file is in
-> > the same directory).
-> >   
-> 
-> Thanks for the hint
-> It doesn't work unfortunately.
-> Echoing something into rescan makes it output (in dmesg) basically the 
-> same message that comes out with blockdev --rereadpt /dev/sdr. The size 
-> is still detected wrong. Catting "model" also turns out that the old 
-> brand of disk still being detected. smartctl -a does show the new disk :-)
-> I tried to write "1" in evt_media_change but it's permission denied :-)
+CCing Rafael, this should be added to the list of known regressions.
 
-Right.  libata caches the value from the moment it scans the device.
-You might be able to alter it by having the device destroyed and
-recreated ... that would be echoing 1 to the delete under the scsi
-device sysfs node and then echoing '- - -' to the host rescan parameter.
-If that doesn't work, libata will need to be fixed somehow because that
-would mean it isn't slaving it's device lifetimes to the SCSI model.
-
-James
-
-
+On Mon, Feb 22, 2010 at 7:18 AM, Benjamin S. <sbenni@gmx.de> wrote:
+>
+> On Sun, 21 Feb 2010 16:00:35 -0600
+> Robert Hancock <hancockrwd@gmail.com> wrote:
+>
+>> Hmm.. Well, that's not it then.. I suspect a bisection is likely the
+>> easiest route at this point..
+>
+> fb1e75389bd06fd5987e9cda1b4e0305c782f854 is the first bad commit
+> commit fb1e75389bd06fd5987e9cda1b4e0305c782f854
+> Author: Jens Axboe <jens.axboe@oracle.com>
+> Date: =A0 Thu Jul 30 08:18:24 2009 +0200
+>
+> =A0 =A0block: improve queue_should_plug() by looking at IO depths
+>
+> =A0 =A0Instead of just checking whether this device uses block layer
+> =A0 =A0tagging, we can improve the detection by looking at the maximu=
+m
+> =A0 =A0queue depth it has reached. If that crosses 4, then deem it a
+> =A0 =A0queuing device.
+>
+> =A0 =A0This is important on high IOPS devices, since plugging hurts
+> =A0 =A0the performance there (it can be as much as 10-15% of the sys
+> =A0 =A0time).
+>
+> =A0 =A0Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+>
+>
+>
+>
+> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
+commitdiff;h=3Dfb1e75389bd06fd5987e9cda1b4e0305c782f854
+>
+>
+> Without that patch my SSD (Super Talent Ultradrive GX MLC 64GB)
+> reaches about 200MB/s sequentiell read. After applying the patch it
+> reaches only 70MB/s.
+>
+>
+>
+> Note: Added Jens to CC.
+>
+>
