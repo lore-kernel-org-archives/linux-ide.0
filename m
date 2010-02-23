@@ -1,38 +1,72 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [git patch] atang tree: fix 2.6.32 SSD performance regression
-Date: Tue, 23 Feb 2010 07:23:24 +0100
-Message-ID: <20100223062324.GI1025@kernel.dk>
-References: <201002222224.35860.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/5] libata: Pass host flags into the pci helper
+Date: Tue, 23 Feb 2010 02:27:24 -0500
+Message-ID: <4B83835C.8090707@garzik.org>
+References: <20100217131532.16884.21696.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:56174 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750863Ab0BWGXZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Feb 2010 01:23:25 -0500
-Content-Disposition: inline
-In-Reply-To: <201002222224.35860.bzolnier@gmail.com>
+Received: from mail-yx0-f189.google.com ([209.85.210.189]:32955 "EHLO
+	mail-yx0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186Ab0BWH13 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 02:27:29 -0500
+In-Reply-To: <20100217131532.16884.21696.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Benjamin S." <sbenni@gmx.de>
+To: Alan Cox <alan@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Feb 22 2010, Bartlomiej Zolnierkiewicz wrote:
-> DISCLAIMER: the fact of getting patches merged into atang tree means
-> that from now on they will be getting updates for changes happening
-> in atang tree and it should not be treated as an indication regarding
-> decisions taken by 'upstream' kernel trees
-> 
-> 
-> Fix 2.6.32 regression bringing back the desired SSD performance.
-> 
-> [ 'upstream' may want to wait for a proper resolution, for atang tree
->   performance of big non-ATA boxes owned by a very few people is not
->   of such a big concern as a major regression on a commodity hardware ]
+On 02/17/2010 08:15 AM, Alan Cox wrote:
+> This allows parallel scan and the like to be set without having to stop
+> using the existing full helper functions. This patch merely adds the argument
+> and fixes up the callers. It doesn't undo the special cases already in the
+> tree or add any new parallel callers.
+>
+> Signed-off-by: Alan Cox<alan@linux.intel.com>
+> ---
+>
+>   drivers/ata/ata_generic.c       |    2 +-
+>   drivers/ata/libata-sff.c        |    6 ++++--
+>   drivers/ata/pata_acpi.c         |    2 +-
+>   drivers/ata/pata_ali.c          |    2 +-
+>   drivers/ata/pata_amd.c          |    2 +-
+>   drivers/ata/pata_artop.c        |    2 +-
+>   drivers/ata/pata_atiixp.c       |    2 +-
+>   drivers/ata/pata_cmd640.c       |    2 +-
+>   drivers/ata/pata_cmd64x.c       |    2 +-
+>   drivers/ata/pata_cs5530.c       |    2 +-
+>   drivers/ata/pata_cs5535.c       |    2 +-
+>   drivers/ata/pata_cs5536.c       |    2 +-
+>   drivers/ata/pata_cypress.c      |    2 +-
+>   drivers/ata/pata_efar.c         |    2 +-
+>   drivers/ata/pata_hpt366.c       |    2 +-
+>   drivers/ata/pata_hpt37x.c       |    2 +-
+>   drivers/ata/pata_hpt3x2n.c      |    2 +-
+>   drivers/ata/pata_it8213.c       |    2 +-
+>   drivers/ata/pata_it821x.c       |    2 +-
+>   drivers/ata/pata_jmicron.c      |    2 +-
+>   drivers/ata/pata_marvell.c      |    2 +-
+>   drivers/ata/pata_netcell.c      |    2 +-
+>   drivers/ata/pata_ns87410.c      |    2 +-
+>   drivers/ata/pata_ns87415.c      |    2 +-
+>   drivers/ata/pata_oldpiix.c      |    2 +-
+>   drivers/ata/pata_opti.c         |    2 +-
+>   drivers/ata/pata_optidma.c      |    2 +-
+>   drivers/ata/pata_pdc202xx_old.c |    2 +-
+>   drivers/ata/pata_piccolo.c      |    2 +-
+>   drivers/ata/pata_radisys.c      |    2 +-
+>   drivers/ata/pata_rz1000.c       |    2 +-
+>   drivers/ata/pata_sc1200.c       |    2 +-
+>   drivers/ata/pata_serverworks.c  |    2 +-
+>   drivers/ata/pata_sil680.c       |    2 +-
+>   drivers/ata/pata_sis.c          |    2 +-
+>   drivers/ata/pata_sl82c105.c     |    2 +-
+>   drivers/ata/pata_triflex.c      |    2 +-
+>   drivers/ata/pata_via.c          |    2 +-
+>   include/linux/libata.h          |    4 ++--
+>   39 files changed, 43 insertions(+), 41 deletions(-)
 
-What is the point of this, other than continuing your past history of
-political tirades?
+applied (after catching one miss in drivers/staging/)
 
--- 
-Jens Axboe
 
