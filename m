@@ -1,81 +1,71 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patch] atang tree: enhanced SSD detection
-Date: Tue, 23 Feb 2010 01:08:21 -0500
-Message-ID: <4B8370D5.1070302@garzik.org>
-References: <201002211841.24936.bzolnier@gmail.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: bad performance with SSD since kernel version 2.6.32
+Date: Tue, 23 Feb 2010 07:21:23 +0100
+Message-ID: <20100223062123.GG1025@kernel.dk>
+References: <20100220142826.62dd5989@pluto-lenny.milky.way> <4B802B54.1080009@gmail.com> <20100221022613.1096fd12@uranus> <51f3faa71002210922i542c37f0j9e0e4a84d0977f90@mail.gmail.com> <20100221225544.5a9ded51@pluto-lenny.milky.way> <51f3faa71002211400u2177660ei1c0dc3d9306b146e@mail.gmail.com> <20100222141802.2bcbf607@pluto-lenny.milky.way> <20100222190522.GD1025@kernel.dk> <4B82FBF4.10702@teksavvy.com> <51f3faa71002221522p74744f28ue1bb3db4558818c9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:52828 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751638Ab0BWGI2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 01:08:28 -0500
-In-Reply-To: <201002211841.24936.bzolnier@gmail.com>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:56098 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751254Ab0BWGVZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Feb 2010 01:21:25 -0500
+Content-Disposition: inline
+In-Reply-To: <51f3faa71002221522p74744f28ue1bb3db4558818c9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Mark Lord <kernel@teksavvy.com>, "Benjamin S." <sbenni@gmx.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 02/21/2010 12:41 PM, Bartlomiej Zolnierkiewicz wrote:
-> DISCLAIMER: the fact of getting patches merged into atang tree means
-> that from now on they will be getting updates for changes happening
-> in atang tree and it should not be treated as an indication regarding
-> decisions taken by 'upstream' kernel trees
->
->
-> Improve SSD detection so block layer optimizations can be applied
-> to many more SSD devices.
->
->
-> The following changes since commit 17c619273d412ed7b6120e448f87b2329457fc90:
->    Bartlomiej Zolnierkiewicz (1):
->          pata_oldpiix: enable parallel scan
->
-> are available in the git repository at:
->
->    git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.7
->
-> Bartlomiej Zolnierkiewicz (1):
->        libata: enhanced SSD detection
->
->   drivers/ata/libata-core.c |    3 +++
->   drivers/ata/libata-scsi.c |   18 ++++++++++--------
->   include/linux/libata.h    |    1 +
->   3 files changed, 14 insertions(+), 8 deletions(-)
->
->
-> commit ded92e0d01fbb7f27bec7a35606847a2547e95e0
-> Author: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Date:   Sun Feb 21 18:31:18 2010 +0100
->
->      libata: enhanced SSD detection
->
->      Many SSD devices predate or just don't implement non-rotational
->      media type advertisement through the word 217 of the id block so
->      check also the product id for 'SSD' substring to automatically
->      detect SSD devices and apply relevant block layer optimizations.
->
->      This is based on earlier Jeff Garzik's patch from April 2009:
->      http://lkml.org/lkml/2009/4/7/495
->
->      While at it:
->      - cleanup ata_scsi_dev_config() a bit
->
->      Tested with ASUS-PHISON SSD devices found in Asus Eee 901.
->
->      Cc: Jeff Garzik<jeff@garzik.org>
->      Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+On Mon, Feb 22 2010, Robert Hancock wrote:
+> On Mon, Feb 22, 2010 at 3:49 PM, Mark Lord <kernel@teksavvy.com> wrot=
+e:
+> > On 02/22/10 14:05, Jens Axboe wrote:
+> >
+> > --- a/block/blk-core.c
+> > +++ b/block/blk-core.c
+> > ...
+> > @@ -1857,8 +1857,15 @@ void blk_dequeue_request(struct request *rq)
+> > =A0 =A0 =A0 =A0 * and to it is freed is accounted as io that is in =
+progress at
+> > =A0 =A0 =A0 =A0 * the driver side.
+> > =A0 =A0 =A0 =A0 */
+> > - =A0 =A0 =A0 if (blk_account_rq(rq))
+> > + =A0 =A0 =A0 if (blk_account_rq(rq)) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0q->in_flight[rq_is_sync(rq)]++;
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Mark this device as supporting h=
+ardware queuing, if
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we have more IOs in flight than =
+4.
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!blk_queue_queuing(q) && queue_in=
+_flight(q) > 4)
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 set_bit(QUEUE_FLAG_CQ=
+, &q->queue_flags);
+> > + =A0 =A0 =A0 }
+> > =A0}
+> > ...
+> >
+> > Mmm.. So is this code actually trying to rely upon the software bei=
+ng quick
+> > enough to queue five or more commands before the drive completes on=
+e of
+> > them?
 
-Yes, I agree we need something like this.  I will review for atang 
-dependencies, and then make sure it gets applied to upstream.
+Yes, it'll trigger easily. If it's the boot drive, it'll be on before
+booting has completed.
 
-The previous discussion of this approach concluded weakly with "poor 
-heuristic", but a better approach did not materialize.
+> > Wouldn't a better way be to just look at the queue_depth, for SCSI/=
+SATA at
+> > least?
+>=20
+> Yeah, that seems like a rather fragile heuristic to me..
 
-One question, though:  why did you drop ata_id_is_ssd() test?
+It may seem fragile, but it's not. Queue depth is device information
+that isn't available at the block level.
 
-	Jeff
-
-
+--=20
+Jens Axboe
 
