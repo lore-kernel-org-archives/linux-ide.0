@@ -1,72 +1,85 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/5] libata: Pass host flags into the pci helper
-Date: Tue, 23 Feb 2010 02:27:24 -0500
-Message-ID: <4B83835C.8090707@garzik.org>
-References: <20100217131532.16884.21696.stgit@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git patch] atang tree: enhanced SSD detection
+Date: Tue, 23 Feb 2010 13:13:52 +0100
+Message-ID: <201002231313.52569.bzolnier@gmail.com>
+References: <201002211841.24936.bzolnier@gmail.com> <4B8370D5.1070302@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f189.google.com ([209.85.210.189]:32955 "EHLO
-	mail-yx0-f189.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186Ab0BWH13 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 02:27:29 -0500
-In-Reply-To: <20100217131532.16884.21696.stgit@localhost.localdomain>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:43176 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752480Ab0BWMVF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 07:21:05 -0500
+In-Reply-To: <4B8370D5.1070302@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 02/17/2010 08:15 AM, Alan Cox wrote:
-> This allows parallel scan and the like to be set without having to stop
-> using the existing full helper functions. This patch merely adds the argument
-> and fixes up the callers. It doesn't undo the special cases already in the
-> tree or add any new parallel callers.
->
-> Signed-off-by: Alan Cox<alan@linux.intel.com>
-> ---
->
->   drivers/ata/ata_generic.c       |    2 +-
->   drivers/ata/libata-sff.c        |    6 ++++--
->   drivers/ata/pata_acpi.c         |    2 +-
->   drivers/ata/pata_ali.c          |    2 +-
->   drivers/ata/pata_amd.c          |    2 +-
->   drivers/ata/pata_artop.c        |    2 +-
->   drivers/ata/pata_atiixp.c       |    2 +-
->   drivers/ata/pata_cmd640.c       |    2 +-
->   drivers/ata/pata_cmd64x.c       |    2 +-
->   drivers/ata/pata_cs5530.c       |    2 +-
->   drivers/ata/pata_cs5535.c       |    2 +-
->   drivers/ata/pata_cs5536.c       |    2 +-
->   drivers/ata/pata_cypress.c      |    2 +-
->   drivers/ata/pata_efar.c         |    2 +-
->   drivers/ata/pata_hpt366.c       |    2 +-
->   drivers/ata/pata_hpt37x.c       |    2 +-
->   drivers/ata/pata_hpt3x2n.c      |    2 +-
->   drivers/ata/pata_it8213.c       |    2 +-
->   drivers/ata/pata_it821x.c       |    2 +-
->   drivers/ata/pata_jmicron.c      |    2 +-
->   drivers/ata/pata_marvell.c      |    2 +-
->   drivers/ata/pata_netcell.c      |    2 +-
->   drivers/ata/pata_ns87410.c      |    2 +-
->   drivers/ata/pata_ns87415.c      |    2 +-
->   drivers/ata/pata_oldpiix.c      |    2 +-
->   drivers/ata/pata_opti.c         |    2 +-
->   drivers/ata/pata_optidma.c      |    2 +-
->   drivers/ata/pata_pdc202xx_old.c |    2 +-
->   drivers/ata/pata_piccolo.c      |    2 +-
->   drivers/ata/pata_radisys.c      |    2 +-
->   drivers/ata/pata_rz1000.c       |    2 +-
->   drivers/ata/pata_sc1200.c       |    2 +-
->   drivers/ata/pata_serverworks.c  |    2 +-
->   drivers/ata/pata_sil680.c       |    2 +-
->   drivers/ata/pata_sis.c          |    2 +-
->   drivers/ata/pata_sl82c105.c     |    2 +-
->   drivers/ata/pata_triflex.c      |    2 +-
->   drivers/ata/pata_via.c          |    2 +-
->   include/linux/libata.h          |    4 ++--
->   39 files changed, 43 insertions(+), 41 deletions(-)
+On Tuesday 23 February 2010 07:08:21 am Jeff Garzik wrote:
+> On 02/21/2010 12:41 PM, Bartlomiej Zolnierkiewicz wrote:
+> > DISCLAIMER: the fact of getting patches merged into atang tree means
+> > that from now on they will be getting updates for changes happening
+> > in atang tree and it should not be treated as an indication regarding
+> > decisions taken by 'upstream' kernel trees
+> >
+> >
+> > Improve SSD detection so block layer optimizations can be applied
+> > to many more SSD devices.
+> >
+> >
+> > The following changes since commit 17c619273d412ed7b6120e448f87b2329457fc90:
+> >    Bartlomiej Zolnierkiewicz (1):
+> >          pata_oldpiix: enable parallel scan
+> >
+> > are available in the git repository at:
+> >
+> >    git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.7
+> >
+> > Bartlomiej Zolnierkiewicz (1):
+> >        libata: enhanced SSD detection
+> >
+> >   drivers/ata/libata-core.c |    3 +++
+> >   drivers/ata/libata-scsi.c |   18 ++++++++++--------
+> >   include/linux/libata.h    |    1 +
+> >   3 files changed, 14 insertions(+), 8 deletions(-)
+> >
+> >
+> > commit ded92e0d01fbb7f27bec7a35606847a2547e95e0
+> > Author: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > Date:   Sun Feb 21 18:31:18 2010 +0100
+> >
+> >      libata: enhanced SSD detection
+> >
+> >      Many SSD devices predate or just don't implement non-rotational
+> >      media type advertisement through the word 217 of the id block so
+> >      check also the product id for 'SSD' substring to automatically
+> >      detect SSD devices and apply relevant block layer optimizations.
+> >
+> >      This is based on earlier Jeff Garzik's patch from April 2009:
+> >      http://lkml.org/lkml/2009/4/7/495
+> >
+> >      While at it:
+> >      - cleanup ata_scsi_dev_config() a bit
+> >
+> >      Tested with ASUS-PHISON SSD devices found in Asus Eee 901.
+> >
+> >      Cc: Jeff Garzik<jeff@garzik.org>
+> >      Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> 
+> Yes, I agree we need something like this.  I will review for atang 
+> dependencies, and then make sure it gets applied to upstream.
+> 
+> The previous discussion of this approach concluded weakly with "poor 
+> heuristic", but a better approach did not materialize.
+> 
+> One question, though:  why did you drop ata_id_is_ssd() test?
 
-applied (after catching one miss in drivers/staging/)
+This test is not in the 'upstream' any longer as 'standard' detection
+is now handled through libata-scsi emulation layer (after SSD related
+SCSI changes made by Martin K. Petersen, commit f17259a etc).
 
-
+--
+Bartlomiej Zolnierkiewicz
