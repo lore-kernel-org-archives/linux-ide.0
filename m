@@ -1,65 +1,113 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: bad performance with SSD since kernel version 2.6.32
-Date: Mon, 22 Feb 2010 17:22:31 -0600
-Message-ID: <51f3faa71002221522p74744f28ue1bb3db4558818c9@mail.gmail.com>
-References: <20100220142826.62dd5989@pluto-lenny.milky.way>
-	 <4B802B54.1080009@gmail.com> <20100221022613.1096fd12@uranus>
-	 <51f3faa71002210922i542c37f0j9e0e4a84d0977f90@mail.gmail.com>
-	 <20100221225544.5a9ded51@pluto-lenny.milky.way>
-	 <51f3faa71002211400u2177660ei1c0dc3d9306b146e@mail.gmail.com>
-	 <20100222141802.2bcbf607@pluto-lenny.milky.way>
-	 <20100222190522.GD1025@kernel.dk> <4B82FBF4.10702@teksavvy.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: sata_nv times out for BD-ROM iHOS104-08
+Date: Tue, 23 Feb 2010 11:38:25 +0900
+Message-ID: <4B833FA1.8030207@kernel.org>
+References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com> 	<d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com> 	<4B5A70E5.6050106@kernel.org> <d2d378041001231339o1d1b0984y2b2a85b717987d93@mail.gmail.com> 	<4B67A149.10406@kernel.org> <d2d378041002170814l1da6b022p4902128c604fc84b@mail.gmail.com> 	<4B7C9CEE.4080902@kernel.org> <d2d378041002201111g7af41a3dpdb2fa300a65d56bf@mail.gmail.com> 	<4B8085E7.5000501@kernel.org> <d2d378041002211328w6355d2f9ued625de53964cee5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------040603050803040501090108"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f177.google.com ([209.85.223.177]:43044 "EHLO
-	mail-iw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754776Ab0BVXWc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Feb 2010 18:22:32 -0500
-Received: by iwn7 with SMTP id 7so2596892iwn.4
-        for <linux-ide@vger.kernel.org>; Mon, 22 Feb 2010 15:22:31 -0800 (PST)
-In-Reply-To: <4B82FBF4.10702@teksavvy.com>
+Received: from hera.kernel.org ([140.211.167.34]:59034 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752443Ab0BWC2y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Feb 2010 21:28:54 -0500
+In-Reply-To: <d2d378041002211328w6355d2f9ued625de53964cee5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, "Benjamin S." <sbenni@gmx.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, Feb 22, 2010 at 3:49 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 02/22/10 14:05, Jens Axboe wrote:
->
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> ...
-> @@ -1857,8 +1857,15 @@ void blk_dequeue_request(struct request *rq)
-> =A0 =A0 =A0 =A0 * and to it is freed is accounted as io that is in pr=
-ogress at
-> =A0 =A0 =A0 =A0 * the driver side.
-> =A0 =A0 =A0 =A0 */
-> - =A0 =A0 =A0 if (blk_account_rq(rq))
-> + =A0 =A0 =A0 if (blk_account_rq(rq)) {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0q->in_flight[rq_is_sync(rq)]++;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* Mark this device as supporting har=
-dware queuing, if
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* we have more IOs in flight than 4.
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!blk_queue_queuing(q) && queue_in_f=
-light(q) > 4)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 set_bit(QUEUE_FLAG_CQ, =
-&q->queue_flags);
-> + =A0 =A0 =A0 }
-> =A0}
-> ...
->
-> Mmm.. So is this code actually trying to rely upon the software being=
- quick
-> enough to queue five or more commands before the drive completes one =
-of
-> them?
->
-> Wouldn't a better way be to just look at the queue_depth, for SCSI/SA=
-TA at
-> least?
+This is a multi-part message in MIME format.
+--------------040603050803040501090108
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Yeah, that seems like a rather fragile heuristic to me..
+Hello,
+
+On 02/22/2010 06:28 AM, Cengiz Günay wrote:
+> On Sat, Feb 20, 2010 at 8:01 PM, Tejun Heo <tj@kernel.org> wrote:
+>> Hmmm... So, DRQ gets cleared?  That's strange.  When then the 18 extra
+>> bytes happen?  Can you please try this one?
+> 
+> It worked!
+> 
+> $ lsscsi
+> ...
+> [4:0:0:0]    cd/dvd  ATAPI    iHOS104          WL08  /dev/sr0
+> ...
+> 
+> I was able to read a regular DVD in the drive. According to dmesg the
+> negotiated speed was down to UDMA/33, so I am not sure about the
+> performance of the drive.
+
+Hmmm.... it could be that the drive is sending more data then
+requested and the state machine in the controller doesn't like that
+and fails to assert IRQ on the host side.  You're still getting
+timeouts on 96 byte dma inquiries.  Can you please this patch?
+
+-- 
+tejun
+
+--------------040603050803040501090108
+Content-Type: text/x-patch;
+ name="swncq-atapi-pio.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="swncq-atapi-pio.patch"
+
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 0c82d33..4ad76f1 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -307,6 +307,7 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ 
+ static int nv_hardreset(struct ata_link *link, unsigned int *class,
+ 			unsigned long deadline);
++static int nv_check_atapi_dma(struct ata_queued_cmd *qc);
+ static void nv_nf2_freeze(struct ata_port *ap);
+ static void nv_nf2_thaw(struct ata_port *ap);
+ static void nv_ck804_freeze(struct ata_port *ap);
+@@ -470,6 +471,7 @@ static struct ata_port_operations nv_generic_ops = {
+ 	.scr_read		= nv_scr_read,
+ 	.scr_write		= nv_scr_write,
+ 	.hardreset		= nv_hardreset,
++	.check_atapi_dma	= nv_check_atapi_dma,
+ };
+ 
+ static struct ata_port_operations nv_nf2_ops = {
+@@ -585,7 +587,7 @@ static const struct ata_port_info nv_port_info[] = {
+ 	/* SWNCQ */
+ 	{
+ 		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+-				  ATA_FLAG_NCQ,
++				  ATA_FLAG_NCQ | ATA_FLAG_PIO_POLLING,
+ 		.pio_mask	= NV_PIO_MASK,
+ 		.mwdma_mask	= NV_MWDMA_MASK,
+ 		.udma_mask	= NV_UDMA_MASK,
+@@ -1614,6 +1616,24 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
+ 	return -EAGAIN;
+ }
+ 
++#include <scsi/scsi_cmnd.h>
++static int nv_check_atapi_dma(struct ata_queued_cmd *qc)
++{
++	/* Whitelist commands that may use DMA. */
++	switch (qc->scsicmd->cmnd[0]) {
++	case WRITE_12:
++	case WRITE_10:
++	case WRITE_6:
++	case READ_12:
++	case READ_10:
++	case READ_6:
++	case 0xad: /* READ_DVD_STRUCTURE */
++	case 0xbe: /* READ_CD */
++		return 0;
++	}
++	return 1;
++}
++
+ static void nv_nf2_freeze(struct ata_port *ap)
+ {
+ 	void __iomem *scr_addr = ap->host->ports[0]->ioaddr.scr_addr;
+
+--------------040603050803040501090108--
