@@ -1,113 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_nv times out for BD-ROM iHOS104-08
-Date: Tue, 23 Feb 2010 11:38:25 +0900
-Message-ID: <4B833FA1.8030207@kernel.org>
-References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<51f3faa71001191859l3c323a8ev6b7c0cced2c59e92@mail.gmail.com> 	<d2d378041001220611ieb9d715of8d727f8f93ca9f@mail.gmail.com> 	<4B5A70E5.6050106@kernel.org> <d2d378041001231339o1d1b0984y2b2a85b717987d93@mail.gmail.com> 	<4B67A149.10406@kernel.org> <d2d378041002170814l1da6b022p4902128c604fc84b@mail.gmail.com> 	<4B7C9CEE.4080902@kernel.org> <d2d378041002201111g7af41a3dpdb2fa300a65d56bf@mail.gmail.com> 	<4B8085E7.5000501@kernel.org> <d2d378041002211328w6355d2f9ued625de53964cee5@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patch] atang tree: enhanced SSD detection
+Date: Tue, 23 Feb 2010 01:08:21 -0500
+Message-ID: <4B8370D5.1070302@garzik.org>
+References: <201002211841.24936.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040603050803040501090108"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59034 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752443Ab0BWC2y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Feb 2010 21:28:54 -0500
-In-Reply-To: <d2d378041002211328w6355d2f9ued625de53964cee5@mail.gmail.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:52828 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638Ab0BWGI2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 01:08:28 -0500
+In-Reply-To: <201002211841.24936.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040603050803040501090108
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+On 02/21/2010 12:41 PM, Bartlomiej Zolnierkiewicz wrote:
+> DISCLAIMER: the fact of getting patches merged into atang tree means
+> that from now on they will be getting updates for changes happening
+> in atang tree and it should not be treated as an indication regarding
+> decisions taken by 'upstream' kernel trees
+>
+>
+> Improve SSD detection so block layer optimizations can be applied
+> to many more SSD devices.
+>
+>
+> The following changes since commit 17c619273d412ed7b6120e448f87b2329457fc90:
+>    Bartlomiej Zolnierkiewicz (1):
+>          pata_oldpiix: enable parallel scan
+>
+> are available in the git repository at:
+>
+>    git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.7
+>
+> Bartlomiej Zolnierkiewicz (1):
+>        libata: enhanced SSD detection
+>
+>   drivers/ata/libata-core.c |    3 +++
+>   drivers/ata/libata-scsi.c |   18 ++++++++++--------
+>   include/linux/libata.h    |    1 +
+>   3 files changed, 14 insertions(+), 8 deletions(-)
+>
+>
+> commit ded92e0d01fbb7f27bec7a35606847a2547e95e0
+> Author: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Date:   Sun Feb 21 18:31:18 2010 +0100
+>
+>      libata: enhanced SSD detection
+>
+>      Many SSD devices predate or just don't implement non-rotational
+>      media type advertisement through the word 217 of the id block so
+>      check also the product id for 'SSD' substring to automatically
+>      detect SSD devices and apply relevant block layer optimizations.
+>
+>      This is based on earlier Jeff Garzik's patch from April 2009:
+>      http://lkml.org/lkml/2009/4/7/495
+>
+>      While at it:
+>      - cleanup ata_scsi_dev_config() a bit
+>
+>      Tested with ASUS-PHISON SSD devices found in Asus Eee 901.
+>
+>      Cc: Jeff Garzik<jeff@garzik.org>
+>      Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
 
-Hello,
+Yes, I agree we need something like this.  I will review for atang 
+dependencies, and then make sure it gets applied to upstream.
 
-On 02/22/2010 06:28 AM, Cengiz Günay wrote:
-> On Sat, Feb 20, 2010 at 8:01 PM, Tejun Heo <tj@kernel.org> wrote:
->> Hmmm... So, DRQ gets cleared?  That's strange.  When then the 18 extra
->> bytes happen?  Can you please try this one?
-> 
-> It worked!
-> 
-> $ lsscsi
-> ...
-> [4:0:0:0]    cd/dvd  ATAPI    iHOS104          WL08  /dev/sr0
-> ...
-> 
-> I was able to read a regular DVD in the drive. According to dmesg the
-> negotiated speed was down to UDMA/33, so I am not sure about the
-> performance of the drive.
+The previous discussion of this approach concluded weakly with "poor 
+heuristic", but a better approach did not materialize.
 
-Hmmm.... it could be that the drive is sending more data then
-requested and the state machine in the controller doesn't like that
-and fails to assert IRQ on the host side.  You're still getting
-timeouts on 96 byte dma inquiries.  Can you please this patch?
+One question, though:  why did you drop ata_id_is_ssd() test?
 
--- 
-tejun
+	Jeff
 
---------------040603050803040501090108
-Content-Type: text/x-patch;
- name="swncq-atapi-pio.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="swncq-atapi-pio.patch"
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 0c82d33..4ad76f1 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -307,6 +307,7 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
- 
- static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 			unsigned long deadline);
-+static int nv_check_atapi_dma(struct ata_queued_cmd *qc);
- static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
- static void nv_ck804_freeze(struct ata_port *ap);
-@@ -470,6 +471,7 @@ static struct ata_port_operations nv_generic_ops = {
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
- 	.hardreset		= nv_hardreset,
-+	.check_atapi_dma	= nv_check_atapi_dma,
- };
- 
- static struct ata_port_operations nv_nf2_ops = {
-@@ -585,7 +587,7 @@ static const struct ata_port_info nv_port_info[] = {
- 	/* SWNCQ */
- 	{
- 		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_NCQ,
-+				  ATA_FLAG_NCQ | ATA_FLAG_PIO_POLLING,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -1614,6 +1616,24 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 	return -EAGAIN;
- }
- 
-+#include <scsi/scsi_cmnd.h>
-+static int nv_check_atapi_dma(struct ata_queued_cmd *qc)
-+{
-+	/* Whitelist commands that may use DMA. */
-+	switch (qc->scsicmd->cmnd[0]) {
-+	case WRITE_12:
-+	case WRITE_10:
-+	case WRITE_6:
-+	case READ_12:
-+	case READ_10:
-+	case READ_6:
-+	case 0xad: /* READ_DVD_STRUCTURE */
-+	case 0xbe: /* READ_CD */
-+		return 0;
-+	}
-+	return 1;
-+}
-+
- static void nv_nf2_freeze(struct ata_port *ap)
- {
- 	void __iomem *scr_addr = ap->host->ports[0]->ioaddr.scr_addr;
 
---------------040603050803040501090108--
