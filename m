@@ -1,85 +1,44 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patch] atang tree: enhanced SSD detection
-Date: Tue, 23 Feb 2010 13:13:52 +0100
-Message-ID: <201002231313.52569.bzolnier@gmail.com>
-References: <201002211841.24936.bzolnier@gmail.com> <4B8370D5.1070302@garzik.org>
+Subject: Re: [git patch] atang tree: fix 2.6.32 SSD performance regression
+Date: Tue, 23 Feb 2010 13:17:01 +0100
+Message-ID: <201002231317.01128.bzolnier@gmail.com>
+References: <201002222224.35860.bzolnier@gmail.com> <20100223062324.GI1025@kernel.dk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:43176 "EHLO
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:63342 "EHLO
 	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752480Ab0BWMVF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 07:21:05 -0500
-In-Reply-To: <4B8370D5.1070302@garzik.org>
+	with ESMTP id S1752539Ab0BWMVI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Feb 2010 07:21:08 -0500
+In-Reply-To: <20100223062324.GI1025@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Benjamin S." <sbenni@gmx.de>
 
-On Tuesday 23 February 2010 07:08:21 am Jeff Garzik wrote:
-> On 02/21/2010 12:41 PM, Bartlomiej Zolnierkiewicz wrote:
+On Tuesday 23 February 2010 07:23:24 am Jens Axboe wrote:
+> On Mon, Feb 22 2010, Bartlomiej Zolnierkiewicz wrote:
 > > DISCLAIMER: the fact of getting patches merged into atang tree means
 > > that from now on they will be getting updates for changes happening
 > > in atang tree and it should not be treated as an indication regarding
 > > decisions taken by 'upstream' kernel trees
-> >
-> >
-> > Improve SSD detection so block layer optimizations can be applied
-> > to many more SSD devices.
-> >
-> >
-> > The following changes since commit 17c619273d412ed7b6120e448f87b2329457fc90:
-> >    Bartlomiej Zolnierkiewicz (1):
-> >          pata_oldpiix: enable parallel scan
-> >
-> > are available in the git repository at:
-> >
-> >    git://git.kernel.org/pub/scm/linux/kernel/git/bart/misc.git atang-v4.7
-> >
-> > Bartlomiej Zolnierkiewicz (1):
-> >        libata: enhanced SSD detection
-> >
-> >   drivers/ata/libata-core.c |    3 +++
-> >   drivers/ata/libata-scsi.c |   18 ++++++++++--------
-> >   include/linux/libata.h    |    1 +
-> >   3 files changed, 14 insertions(+), 8 deletions(-)
-> >
-> >
-> > commit ded92e0d01fbb7f27bec7a35606847a2547e95e0
-> > Author: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> > Date:   Sun Feb 21 18:31:18 2010 +0100
-> >
-> >      libata: enhanced SSD detection
-> >
-> >      Many SSD devices predate or just don't implement non-rotational
-> >      media type advertisement through the word 217 of the id block so
-> >      check also the product id for 'SSD' substring to automatically
-> >      detect SSD devices and apply relevant block layer optimizations.
-> >
-> >      This is based on earlier Jeff Garzik's patch from April 2009:
-> >      http://lkml.org/lkml/2009/4/7/495
-> >
-> >      While at it:
-> >      - cleanup ata_scsi_dev_config() a bit
-> >
-> >      Tested with ASUS-PHISON SSD devices found in Asus Eee 901.
-> >
-> >      Cc: Jeff Garzik<jeff@garzik.org>
-> >      Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > 
+> > 
+> > Fix 2.6.32 regression bringing back the desired SSD performance.
+> > 
+> > [ 'upstream' may want to wait for a proper resolution, for atang tree
+> >   performance of big non-ATA boxes owned by a very few people is not
+> >   of such a big concern as a major regression on a commodity hardware ]
 > 
-> Yes, I agree we need something like this.  I will review for atang 
-> dependencies, and then make sure it gets applied to upstream.
-> 
-> The previous discussion of this approach concluded weakly with "poor 
-> heuristic", but a better approach did not materialize.
-> 
-> One question, though:  why did you drop ata_id_is_ssd() test?
+> What is the point of this, other than continuing your past history of
+> political tirades?
 
-This test is not in the 'upstream' any longer as 'standard' detection
-is now handled through libata-scsi emulation layer (after SSD related
-SCSI changes made by Martin K. Petersen, commit f17259a etc).
+I worry that you may be reading too much into it -- I don't use Linus'
+tree or linux-next tree any longer so the next kernel I would see fix
+for the issue is most likely 2.6.34 and there is a little point from my
+personal perspective in waiting for such long time..
 
 --
 Bartlomiej Zolnierkiewicz
