@@ -1,64 +1,54 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: SB600 64-bit DMA BIOS misconfiguration (formerly RE: [PATCH 2.6.34] ehci-hcd: add option to enable 64-bit DMA support)
-Date: Wed, 24 Feb 2010 21:30:33 +0800
-Message-ID: <C8E4BD7D001E44499280E0884BD9DB300183FB6B@sshaexmb1.amd.com>
-References: <4B7CAF95.6020306@gmail.com> <20100218042626.GB11649@kroah.com> <51f3faa71002172113o65a85ed6y5fa39d0b3a96f7ce@mail.gmail.com> <SNT125-W3300E8CCB5A9BD2D7B9942C3410@phx.gbl> <51f3faa71002232030u4679b6d0yc8df0679d8e19106@mail.gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: bad performance with SSD since kernel version 2.6.32
+Date: Wed, 24 Feb 2010 10:09:42 -0500
+Message-ID: <4B854136.5080305@teksavvy.com>
+References: <20100220142826.62dd5989@pluto-lenny.milky.way> <4B802B54.1080009@gmail.com> <20100221022613.1096fd12@uranus> <51f3faa71002210922i542c37f0j9e0e4a84d0977f90@mail.gmail.com> <20100221225544.5a9ded51@pluto-lenny.milky.way> <51f3faa71002211400u2177660ei1c0dc3d9306b146e@mail.gmail.com> <20100222141802.2bcbf607@pluto-lenny.milky.way> <20100222190522.GD1025@kernel.dk> <4B82FBF4.10702@teksavvy.com> <51f3faa71002221522p74744f28ue1bb3db4558818c9@mail.gmail.com> <20100223062123.GG1025@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:31588
-	"EHLO VA3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757057Ab0BXNau convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Feb 2010 08:30:50 -0500
-Content-Class: urn:content-classes:message
-In-Reply-To: <51f3faa71002232030u4679b6d0yc8df0679d8e19106@mail.gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:28273 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753623Ab0BXPJp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Feb 2010 10:09:45 -0500
+In-Reply-To: <20100223062123.GG1025@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>, Yuhong Bao <yuhongbao_386@hotmail.com>
-Cc: greg@kroah.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "Benjamin S." <sbenni@gmx.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hi Robert and Yuhong,
+On 02/23/10 01:21, Jens Axboe wrote:
+> On Mon, Feb 22 2010, Robert Hancock wrote:
+>> On Mon, Feb 22, 2010 at 3:49 PM, Mark Lord<kernel@teksavvy.com>  wrote:
+>>> On 02/22/10 14:05, Jens Axboe wrote:
+>>>
+>>> --- a/block/blk-core.c
+>>> +++ b/block/blk-core.c
+>>> ...
+>>> @@ -1857,8 +1857,15 @@ void blk_dequeue_request(struct request *rq)
+>>>          * and to it is freed is accounted as io that is in progress at
+>>>          * the driver side.
+>>>          */
+>>> -       if (blk_account_rq(rq))
+>>> +       if (blk_account_rq(rq)) {
+>>>                 q->in_flight[rq_is_sync(rq)]++;
+>>> +               /*
+>>> +                * Mark this device as supporting hardware queuing, if
+>>> +                * we have more IOs in flight than 4.
+>>> +                */
+>>> +               if (!blk_queue_queuing(q)&&  queue_in_flight(q)>  4)
+>>> +                       set_bit(QUEUE_FLAG_CQ,&q->queue_flags);
+>>> +       }
+>>>   }
+>>> ...
+>>>
+>>> Mmm.. So is this code actually trying to rely upon the software being quick
+>>> enough to queue five or more commands before the drive completes one of
+>>> them?
+>
+> Yes, it'll trigger easily. If it's the boot drive, it'll be on before
+> booting has completed.
+...
 
-> >> it doesn't work. Based on the libata experience with AHCI which has
-a
-> >> similar 64-bit feature flag, there are some controllers that didn't
-do
-> >> it properly, but not many (only ATI SB600 it appears, and only on
-> >> certain boards, as it seems it was a BIOS configuration issue).
-> > It seems it was solved by a DMI whitelist, but if it is a BIOS
-configuration issue, I think it would be better if it could be detected
-directly
-> instead by reading the configuration directly from the device and
-correcting it if possible. Is that possible?
-> 
-> That would likely be the ideal solution, but only AMD would likely
-> have the info needed to do that, if it's possible..
-
-Yes, I did see SB600 64 bit DMA issue on several SB600 platforms,
-especially the SATA controller and HD audio controller.
-But we do not know the root cause, which seems to be BIOS related
-after debug. So far what I know is:
-
-1. The 64bit DMA issue only appears on few SB600 platforms, while
-We do NOT see it on SB700, SB800 and our own SB600 reference boards.
-
-2. According to the debug to ASUS M2A-VM SATA controller, some
-BIOS change between version 1404 and 1501 lead to the issue:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commi
-t;h=58a09b38cfcd700b796ea07ae3d2e0efbb28b561
-
-3. I do not get any related SB600 errata or known issue confirmation
-from our HW team, we do not think it is HW issue.
-
-So I do not have too much suggestion but one:
-If you have any contact window to ASUS, is it possible for you to
-ask ASUS to check the difference between 1404 and 1501?
-We might get clue from the change list.
-
-
-Thanks,
-Shane
-
-
+Mmm.. but that all assumes (1) a fast CPU and (2) a slow mechanical drive.
+Neither of which are true in many modern systems.
