@@ -1,47 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/5] Subject: [PATCH] pata_efar: add locking for parallel
- scanning
-Date: Mon, 01 Mar 2010 15:12:14 -0500
-Message-ID: <4B8C1F9E.8040703@garzik.org>
-References: <20100217131532.16884.21696.stgit@localhost.localdomain> <20100217131556.16884.47082.stgit@localhost.localdomain>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata: Detect Delkin Devices compact flash
+Date: Mon, 01 Mar 2010 15:12:24 -0500
+Message-ID: <4B8C1FA8.7000706@pobox.com>
+References: <808c8e9d1002231041la0d2cd9y35e9bce347d4d2db@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f182.google.com ([209.85.210.182]:56213 "EHLO
-	mail-yx0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751231Ab0CAUM2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Mar 2010 15:12:28 -0500
-In-Reply-To: <20100217131556.16884.47082.stgit@localhost.localdomain>
+Received: from mail-yw0-f197.google.com ([209.85.211.197]:39736 "EHLO
+	mail-yw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751231Ab0CAUMe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Mar 2010 15:12:34 -0500
+Received: by ywh35 with SMTP id 35so1371121ywh.4
+        for <linux-ide@vger.kernel.org>; Mon, 01 Mar 2010 12:12:33 -0800 (PST)
+In-Reply-To: <808c8e9d1002231041la0d2cd9y35e9bce347d4d2db@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: jeff@garzik.org.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Ben Gardner <gardner.ben@gmail.com>
+Cc: linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 02/17/2010 08:16 AM, Alan Cox wrote:
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+On 02/23/2010 01:41 PM, Ben Gardner wrote:
+> I have a Delkin Devices compact flash card that isn't being recognized using the
+> SATA/PATA drivers.
+> The card is recognized and works with the deprecated ATA drivers.
 >
-> Add clearing of UDMA enable bit also for PIO modes and then add
-> an extra locking for parallel scanning.
+> The error I am seeing is:
+> ata1.00: failed to IDENTIFY (device reports invalid type, err_mask=0x0)
 >
-> This is similar change as commit 60c3be3 for ata_piix host driver
-> and while pata_efar doesn't enable parallel scan yet the race could
-> probably also be triggered by requesting re-scanning of both ports
-> at the same time using SCSI sysfs interface.
+> I tracked it down to ata_id_is_cfa() in include/linux/ata.h.
+> The Delkin card has id[0] set to 0x844a and id[83] set to 0.
+> This isn't what the kernel expects and is probably incorrect.
 >
-> [Ported to current kernel without other patch dependancies by
->   Alan Cox]
+> The simplest work-around is to add a check for 0x844a to ata_id_is_cfa().
 >
-> Original is
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->
-> This one is
-> Signed-off-by: Alan Cox<alan@linux.intel.com>
-> ---
->
->   drivers/ata/pata_efar.c |   15 +++++++++++++++
->   1 files changed, 15 insertions(+), 0 deletions(-)
+> Signed-off-by: Ben Gardner<gardner.ben@gmail.com>
 
-applied 2-5
+applied
 
 
