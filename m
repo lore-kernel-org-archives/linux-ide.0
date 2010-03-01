@@ -1,34 +1,61 @@
-From: Daniel Nilsson <gnuffel@gmail.com>
-Subject: Intel ICH8 errata for ata_piix.c
-Date: Mon, 1 Mar 2010 19:31:48 +0100
-Message-ID: <ba87a861003011031o5fd78d25n492cddf7a2bdeb2c@mail.gmail.com>
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH 3/3] ide: move dcache flushing to generic ide code
+Date: Mon, 1 Mar 2010 20:58:58 +0100
+Message-ID: <20100301195858.GA27906@Chamillionaire.breakpoint.cc>
+References: <1267371341-16684-1-git-send-email-sebastian@breakpoint.cc>
+ <1267371341-16684-4-git-send-email-sebastian@breakpoint.cc>
+ <20100228.183417.52179576.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:60653 "EHLO
-	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905Ab0CASbu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Mar 2010 13:31:50 -0500
-Received: by ewy20 with SMTP id 20so1453613ewy.21
-        for <linux-ide@vger.kernel.org>; Mon, 01 Mar 2010 10:31:49 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <20100228.183417.52179576.davem@davemloft.net>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: David Miller <davem@davemloft.net>
+Cc: ralf@linux-mips.org, linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi,
+* David Miller | 2010-02-28 18:34:17 [-0800]:
 
-I have a laptop running Linux 2.6.33 with the following SATA chip:
-"Intel Corporation 82801HBM/HEM (ICH8M/ICH8M-E) IDE Controller (rev
-03)", and I am experiencing random loss of data and a bouncing SATA
-link.
+>From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+>Date: Sun, 28 Feb 2010 16:35:41 +0100
+>
+>> the pio callbacks are called with different kind of buffers. It could be
+>> a straight kernel addr, kernel stack or a kmaped highmem page.
+>> Some of this break the virt_to_page() assumptions.
+>> This patch moves the dcache flush from architecture code into generic
+>> ide code. ide_pio_bytes() is the only place where user pages might be
+>> written as far as I can see.
+>> The dcache flush is avoided in two cases:
+>> - data which is written to the device (i.e. they are comming from the
+>>   userland)
+>
+>This needs a flush on sparc, otherwise an alias now exists in the
+>kernel side copy of the buffer.  The D-cache flush is intentionally
+>unconditional for PIO mode.  I definitely don't want to take the same
+>risks you guys seem to be willing to take for this optimization which
+>is of questionable value.
+It is not us guys it is just me. And if it is a stupid thing to do then
+I get probably punched by Ralf as well once he gets back.
+The part I don't get is why you have to flush dcache after the copy
+process. I would understand a flush before reading. The dcache alias in
+kernel shouldn't hurt since it is not used anymore. Unless we read twice
+from the same page. Is this the trick?
 
-The problem seems to be described by other people in
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/297058 . After
-investigating for a while, I found the errata
-http://www.intel.com/Assets/PDF/specupdate/313057.pdf , see especially
-errata #19 which handles MSI. Is this something that is handled in the
-driver?
+>I also, intrinsically, really don't like these changes.
+>
+>For one thing, you're optimizing PIO mode.
+>
+>Secondly, IDE is in deep maintainence mode, if you want to optimize
+>cache flushing do it in the ATA layer.
+This patch patch was mostly driven by the fact that the buffer can be a
+normal kernel mapping or a virtual address. The latter doesn't work with
+virt_to_page().
+Anyway I should probably spent more time getting ATA layer wokring than
+on the IDE layer since it is somehow working since patch#1.
 
-I have disabled MSI interrupts by using "pci=nomsi" on the kernel boot
-line for now, and will see if it fixes anything - hopefully it does.
+>
+>Thanks.
+
+Sebastian
