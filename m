@@ -1,104 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_nv times out for BD-ROM iHOS104-08
-Date: Tue, 02 Mar 2010 20:48:04 +0900
-Message-ID: <4B8CFAF4.7030303@kernel.org>
-References: <Pine.LNX.4.64.0912221105010.5876@stg.biology.emory.edu> 	<4B5A70E5.6050106@kernel.org> <d2d378041001231339o1d1b0984y2b2a85b717987d93@mail.gmail.com> 	<4B67A149.10406@kernel.org> <d2d378041002170814l1da6b022p4902128c604fc84b@mail.gmail.com> 	<4B7C9CEE.4080902@kernel.org> <d2d378041002201111g7af41a3dpdb2fa300a65d56bf@mail.gmail.com> 	<4B8085E7.5000501@kernel.org> <d2d378041002211328w6355d2f9ued625de53964cee5@mail.gmail.com> 	<4B833FA1.8030207@kernel.org> <d2d378041002280924q26b4a159g5ad22a3476ec3e18@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [RFC 1/4] libata: cache device select
+Date: Tue, 2 Mar 2010 17:28:47 +0000
+Message-ID: <20100302172847.2e87de07@lxorguk.ukuu.org.uk>
+References: <20100217130847.16338.55586.stgit@localhost.localdomain>
+	<4B8C2079.7010607@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020103000700030706070403"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44288 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750833Ab0CBLhG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Mar 2010 06:37:06 -0500
-In-Reply-To: <d2d378041002280924q26b4a159g5ad22a3476ec3e18@mail.gmail.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:50729 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752433Ab0CBRZg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Mar 2010 12:25:36 -0500
+In-Reply-To: <4B8C2079.7010607@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?Q2VuZ2l6IEfDvG5heQ==?= <cgunay@emory.edu>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@linux.intel.com>, jeff@garzik.org.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------020103000700030706070403
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-Hello,
-
-On 03/01/2010 02:24 AM, Cengiz Günay wrote:
-> Before and after the swncq-atapi-pio patch I still get awful read
-> times from the BD-ROM drive:
+> > -	ata_dev_select(ap, qc->dev->devno, 1, 0);
+> > +	if (qc->dev->devno != ap->sff_selected)
+> > +        	ata_dev_select(ap, qc->dev->devno, 1, 0);
+> >
+> >   	/* start the command */
+> >   	switch (qc->tf.protocol) {
 > 
-> $ time dd if=/dev/sr0 of=/dev/null bs=64k count=1024
-> 67108864 bytes (67 MB) copied, 106.945 seconds, 628 kB/s
-> => real	1m46.977s
+> My main worry here is that this logic excises the 150ms wait in 
+> ata_dev_select() that has been used effectively to allow ATAPI devices 
+> to "collect themselves" after waiting for idle, prior to command issuance.
 
-Hmmm... the drive is timing out even on 4k READ10's.  This shouldn't
-really be happening.  Can you please try this one?
+It doesn't. You call it with wait = 1, can_sleep = 0 so it will never do
+the 150ms magic delay here anyway (good job or it would kill us for
+performance ;))
 
--- 
-tejun
+It does mean we don't do the device idle wait in that situation but there
+are no code paths where we try to overlap commands by spinning on the
+drive busy bit (again for obvious reasons)
 
---------------020103000700030706070403
-Content-Type: text/x-patch;
- name="swncq-atapi-pio-2.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="swncq-atapi-pio-2.patch"
-
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 0c82d33..84d3eba 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -307,6 +307,7 @@ static int nv_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
- 
- static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 			unsigned long deadline);
-+static int nv_check_atapi_dma(struct ata_queued_cmd *qc);
- static void nv_nf2_freeze(struct ata_port *ap);
- static void nv_nf2_thaw(struct ata_port *ap);
- static void nv_ck804_freeze(struct ata_port *ap);
-@@ -470,6 +471,7 @@ static struct ata_port_operations nv_generic_ops = {
- 	.scr_read		= nv_scr_read,
- 	.scr_write		= nv_scr_write,
- 	.hardreset		= nv_hardreset,
-+	.check_atapi_dma	= nv_check_atapi_dma,
- };
- 
- static struct ata_port_operations nv_nf2_ops = {
-@@ -585,7 +587,7 @@ static const struct ata_port_info nv_port_info[] = {
- 	/* SWNCQ */
- 	{
- 		.flags	        = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
--				  ATA_FLAG_NCQ,
-+				  ATA_FLAG_NCQ | ATA_FLAG_PIO_POLLING,
- 		.pio_mask	= NV_PIO_MASK,
- 		.mwdma_mask	= NV_MWDMA_MASK,
- 		.udma_mask	= NV_UDMA_MASK,
-@@ -1614,6 +1616,25 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
- 	return -EAGAIN;
- }
- 
-+#include <scsi/scsi_cmnd.h>
-+static int nv_check_atapi_dma(struct ata_queued_cmd *qc)
-+{
-+	/* Whitelist commands that may use DMA. */
-+	switch (qc->scsicmd->cmnd[0]) {
-+	case WRITE_12:
-+	case WRITE_10:
-+	case WRITE_6:
-+	case READ_12:
-+	case READ_10:
-+	case READ_6:
-+	case 0xad: /* READ_DVD_STRUCTURE */
-+	case 0xbe: /* READ_CD */
-+		if (ata_qc_raw_nbytes(qc) > 4096)
-+			return 0;
-+	}
-+	return 1;
-+}
-+
- static void nv_nf2_freeze(struct ata_port *ap)
- {
- 	void __iomem *scr_addr = ap->host->ports[0]->ioaddr.scr_addr;
-
---------------020103000700030706070403--
+Alan
