@@ -1,7 +1,7 @@
 From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
-Date: Tue, 2 Mar 2010 21:29:39 +0300
-Message-ID: <20100302182939.GI3445@oksana.dev.rtsoft.ru>
+Subject: [PATCH 12/12] ahci: Add platform driver
+Date: Tue, 2 Mar 2010 21:29:47 +0300
+Message-ID: <20100302182947.GL3445@oksana.dev.rtsoft.ru>
 References: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -13,72 +13,287 @@ To: Jeff Garzik <jgarzik@redhat.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Factor out some ahci_em_messages handling code from ahci_init_one().
-We would like to reuse it for non-PCI devices.
+This can be used for AHCI-compatible interfaces implemented inside
+a System-On-Chip solutions, or AHCI devices connected via localbus.
 
 Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
 ---
- drivers/ata/ahci.c |   41 ++++++++++++++++++++++++-----------------
- 1 files changed, 24 insertions(+), 17 deletions(-)
+ drivers/ata/Kconfig         |    9 ++
+ drivers/ata/Makefile        |    1 +
+ drivers/ata/ahci_platform.c |  196 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/ahci_platform.h |   29 +++++++
+ 4 files changed, 235 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/ahci_platform.c
+ create mode 100644 drivers/ata/ahci_platform.h
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 18443e9..6694b17 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -3040,6 +3040,29 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 4656782..a81013d 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -61,6 +61,15 @@ config SATA_AHCI_PCI
+ 	help
+ 	  This option enables support for PCI AHCI Serial ATA controllers.
  
-+static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
-+				 struct ata_port_info *pi)
++config SATA_AHCI_PLATFORM
++	tristate "Platform AHCI SATA support"
++	depends on SATA_AHCI
++	help
++	  This option enables support for Platform AHCI Serial ATA
++	  controllers.
++
++	  If unsure, say N.
++
+ config SATA_SIL24
+ 	tristate "Silicon Image 3124/3132 SATA support"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index a220e90..c734c75 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -3,6 +3,7 @@ obj-$(CONFIG_ATA)		+= libata.o
+ 
+ obj-$(CONFIG_SATA_AHCI)		+= ahci.o
+ obj-$(CONFIG_SATA_AHCI_PCI)	+= ahci_pci.o
++obj-$(CONFIG_SATA_AHCI_PLATFORM)+= ahci_platform.o
+ obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
+ obj-$(CONFIG_ATA_PIIX)		+= ata_piix.o
+ obj-$(CONFIG_SATA_PROMISE)	+= sata_promise.o
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+new file mode 100644
+index 0000000..f3f96d6
+--- /dev/null
++++ b/drivers/ata/ahci_platform.c
+@@ -0,0 +1,196 @@
++/*
++ * AHCI SATA platform driver
++ *
++ * Copyright 2004-2005  Red Hat, Inc.
++ *   Jeff Garzik <jgarzik@pobox.com>
++ * Copyright 2010  MontaVista Software, LLC.
++ *   Anton Vorontsov <avorontsov@ru.mvista.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <linux/device.h>
++#include <linux/libata.h>
++#include <linux/platform_device.h>
++#include "ahci.h"
++#include "ahci_platform.h"
++
++static int __devinit ahci_probe(struct platform_device *pdev)
 +{
-+	u8 messages;
-+	void __iomem *mmio = hpriv->mmio;
-+	u32 em_loc = readl(mmio + HOST_EM_LOC);
-+	u32 em_ctl = readl(mmio + HOST_EM_CTL);
++	struct device *dev = &pdev->dev;
++	struct ahci_platform_data *pdata = pdev->dev.platform_data;
++	struct ata_port_info pi = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	};
++	const struct ata_port_info *ppi[] = { &pi, NULL };
++	struct ahci_host_priv *hpriv;
++	struct ata_host *host;
++	struct resource *res;
++	int n_ports;
++	int i;
++	int rc;
 +
-+	if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
-+		return;
++	WARN_ON(ATA_MAX_QUEUE > AHCI_MAX_CMDS);
 +
-+	messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
-+
-+	/* we only support LED message type right now */
-+	if ((messages & 0x01) && (ahci_em_messages == 1)) {
-+		/* store em_loc */
-+		hpriv->em_loc = ((em_loc >> 16) * 4);
-+		pi->flags |= ATA_FLAG_EM;
-+		if (!(em_ctl & EM_CTL_ALHD))
-+			pi->flags |= ATA_FLAG_SW_ACTIVITY;
++	if (pdata && pdata->init) {
++		rc = pdata->init(dev);
++		if (rc)
++			return rc;
 +	}
++
++	if (pdata && pdata->ata_port_info)
++		pi = *pdata->ata_port_info;
++
++	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
++	if (!hpriv) {
++		rc = -ENOMEM;
++		goto err0;
++	}
++
++	hpriv->flags |= (unsigned long)pi.private_data;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		dev_err(dev, "no mmio space\n");
++		rc = -ENODEV;
++		goto err0;
++	}
++
++	hpriv->mmio = devm_ioremap(dev, res->start, resource_size(res));
++	if (!hpriv->mmio) {
++		dev_err(dev, "can't map %pR\n", res);
++		rc = -ENODEV;
++		goto err0;
++	}
++
++	ahci_save_initial_config(dev, hpriv,
++		pdata ? pdata->force_port_map : 0,
++		pdata ? pdata->mask_port_map  : 0);
++
++	/* prepare host */
++	if (hpriv->cap & HOST_CAP_NCQ)
++		pi.flags |= ATA_FLAG_NCQ;
++
++	if (hpriv->cap & HOST_CAP_PMP)
++		pi.flags |= ATA_FLAG_PMP;
++
++	ahci_set_em_messages(hpriv, &pi);
++
++
++	/* CAP.NP sometimes indicate the index of the last enabled
++	 * port, at other times, that of the last possible port, so
++	 * determining the maximum port number requires looking at
++	 * both CAP.NP and port_map.
++	 */
++	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
++
++	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
++	if (!host) {
++		rc = -ENOMEM;
++		goto err0;
++	}
++
++	host->private_data = hpriv;
++
++	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
++		host->flags |= ATA_HOST_PARALLEL_SCAN;
++	else
++		printk(KERN_INFO "ahci: SSS flag set, parallel bus scan disabled\n");
++
++	if (pi.flags & ATA_FLAG_EM)
++		ahci_reset_em(host);
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		ata_port_desc(ap, "mmio %pR", res);
++		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
++
++		/* set initial link pm policy */
++		ap->pm_policy = NOT_AVAILABLE;
++
++		/* set enclosure management message type */
++		if (ap->flags & ATA_FLAG_EM)
++			ap->em_message_type = ahci_em_messages;
++
++
++		/* disabled/not-implemented port */
++		if (!(hpriv->port_map & (1 << i)))
++			ap->ops = &ata_dummy_port_ops;
++	}
++
++	rc = ahci_reset_controller(host);
++	if (rc)
++		goto err0;
++
++	ahci_init_controller(host);
++	ahci_print_info(host, "platform");
++
++	res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!res) {
++		dev_err(dev, "no irq\n");
++		rc = -EINVAL;
++		goto err0;
++	}
++
++	rc = ata_host_activate(host, res->start, ahci_interrupt, IRQF_SHARED,
++			       &ahci_sht);
++	if (rc)
++		goto err0;
++
++	return 0;
++err0:
++	if (pdata && pdata->exit)
++		pdata->exit(dev);
++	return rc;
 +}
 +
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	static int printed_version;
-@@ -3143,23 +3166,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (hpriv->cap & HOST_CAP_PMP)
- 		pi.flags |= ATA_FLAG_PMP;
- 
--	if (ahci_em_messages && (hpriv->cap & HOST_CAP_EMS)) {
--		u8 messages;
--		void __iomem *mmio = hpriv->mmio;
--		u32 em_loc = readl(mmio + HOST_EM_LOC);
--		u32 em_ctl = readl(mmio + HOST_EM_CTL);
--
--		messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
--
--		/* we only support LED message type right now */
--		if ((messages & 0x01) && (ahci_em_messages == 1)) {
--			/* store em_loc */
--			hpriv->em_loc = ((em_loc >> 16) * 4);
--			pi.flags |= ATA_FLAG_EM;
--			if (!(em_ctl & EM_CTL_ALHD))
--				pi.flags |= ATA_FLAG_SW_ACTIVITY;
--		}
--	}
-+	ahci_set_em_messages(hpriv, &pi);
- 
- 	if (ahci_broken_system_poweroff(pdev)) {
- 		pi.flags |= ATA_FLAG_NO_POWEROFF_SPINDOWN;
++static int __devexit ahci_remove(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_platform_data *pdata = pdev->dev.platform_data;
++
++	ata_host_detach(host);
++
++	if (pdata && pdata->exit)
++		pdata->exit(dev);
++
++	return 0;
++}
++
++static struct platform_driver ahci_driver = {
++	.probe = ahci_probe,
++	.remove = __devexit_p(ahci_remove),
++	.driver = {
++		.name = DRV_NAME,
++		.owner = THIS_MODULE,
++	},
++};
++
++static int __init ahci_init(void)
++{
++	return platform_driver_register(&ahci_driver);
++}
++module_init(ahci_init);
++
++static void __exit ahci_exit(void)
++{
++	platform_driver_unregister(&ahci_driver);
++}
++module_exit(ahci_exit);
++
++MODULE_DESCRIPTION("AHCI SATA platform driver");
++MODULE_AUTHOR("Anton Vorontsov <avorontsov@ru.mvista.com>");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" DRV_NAME);
+diff --git a/drivers/ata/ahci_platform.h b/drivers/ata/ahci_platform.h
+new file mode 100644
+index 0000000..f7dd576
+--- /dev/null
++++ b/drivers/ata/ahci_platform.h
+@@ -0,0 +1,29 @@
++/*
++ * AHCI SATA platform driver
++ *
++ * Copyright 2004-2005  Red Hat, Inc.
++ *   Jeff Garzik <jgarzik@pobox.com>
++ * Copyright 2010  MontaVista Software, LLC.
++ *   Anton Vorontsov <avorontsov@ru.mvista.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2, or (at your option)
++ * any later version.
++ */
++
++#ifndef _AHCI_PLATFORM_H
++#define _AHCI_PLATFORM_H
++
++struct device;
++struct ata_port_info;
++
++struct ahci_platform_data {
++	int (*init)(struct device *dev);
++	void (*exit)(struct device *dev);
++	const struct ata_port_info *ata_port_info;
++	unsigned int force_port_map;
++	unsigned int mask_port_map;
++};
++
++#endif /* _AHCI_PLATFORM_H */
 -- 
 1.7.0
