@@ -1,31 +1,62 @@
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: Re: [PATCH 3/3] ide: move dcache flushing to generic ide code
-Date: Tue, 2 Mar 2010 22:14:15 +0100
-Message-ID: <20100302211414.GA4065@Chamillionaire.breakpoint.cc>
-References: <1267371341-16684-4-git-send-email-sebastian@breakpoint.cc>
- <20100228.183417.52179576.davem@davemloft.net>
- <20100301195858.GA27906@Chamillionaire.breakpoint.cc>
- <20100301.163959.177031088.davem@davemloft.net>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
+Date: Wed, 03 Mar 2010 00:18:59 +0300
+Message-ID: <4B8D80C3.1050006@ru.mvista.com>
+References: <20100302182850.GA32057@oksana.dev.rtsoft.ru> <20100302182939.GI3445@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:52423 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752117Ab0CBVOT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Mar 2010 16:14:19 -0500
-Content-Disposition: inline
-In-Reply-To: <20100301.163959.177031088.davem@davemloft.net>
+Received: from mail-bw0-f209.google.com ([209.85.218.209]:46413 "EHLO
+	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905Ab0CBVTa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Mar 2010 16:19:30 -0500
+In-Reply-To: <20100302182939.GI3445@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: sebastian@breakpoint.cc, ralf@linux-mips.org, linux-mips@linux-mips.org, linux-ide@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-* David Miller | 2010-03-01 16:39:59 [-0800]:
+Hello.
 
->All buffers passed to the architecture IDE ops should be PAGE_OFFSET
->relative kernel virtual addresses for which __pa() works.
+Anton Vorontsov wrote:
+
+> Factor out some ahci_em_messages handling code from ahci_init_one().
+> We would like to reuse it for non-PCI devices.
 >
->Are kmap()'d things ending up here?
-Ah, bounce buffers are used. So no, there no highmem which get kmap()ed.
+> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+> ---
+>  drivers/ata/ahci.c |   41 ++++++++++++++++++++++++-----------------
+>  1 files changed, 24 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 18443e9..6694b17 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -3040,6 +3040,29 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>  {}
+>  #endif
+>  
+> +static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+> +				 struct ata_port_info *pi)
+> +{
+> +	u8 messages;
+> +	void __iomem *mmio = hpriv->mmio;
+> +	u32 em_loc = readl(mmio + HOST_EM_LOC);
+> +	u32 em_ctl = readl(mmio + HOST_EM_CTL);
+> +
+> +	if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
+> +		return;
+> +
+> +	messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
+> +
+> +	/* we only support LED message type right now */
+> +	if ((messages & 0x01) && (ahci_em_messages == 1)) {
+> +		/* store em_loc */
+> +		hpriv->em_loc = ((em_loc >> 16) * 4);
+>   
 
-Sebastian
+   Could drop unneeded parens, while at it...
+
+MBR, Sergei
+
