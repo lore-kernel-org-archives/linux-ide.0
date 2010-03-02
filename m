@@ -1,7 +1,8 @@
 From: Anton Vorontsov <avorontsov@ru.mvista.com>
-Subject: [PATCH 06/12] ahci: Get rid of pci_dev argument in ahci_port_init()
-Date: Tue, 2 Mar 2010 21:29:35 +0300
-Message-ID: <20100302182935.GF3445@oksana.dev.rtsoft.ru>
+Subject: [PATCH 07/12] ahci: Factor out PCI specifics from
+ ahci_init_controller()
+Date: Tue, 2 Mar 2010 21:29:36 +0300
+Message-ID: <20100302182936.GG3445@oksana.dev.rtsoft.ru>
 References: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
@@ -13,45 +14,93 @@ To: Jeff Garzik <jgarzik@redhat.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-To make the function bus-independand we have to get rid of
-"struct pci_dev *", so let's pass just "struct devce *".
+Move PCI stuff into ahci_pci_init_controller().
 
 Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
 ---
- drivers/ata/ahci.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/ata/ahci.c |   45 +++++++++++++++++++++++++++------------------
+ 1 files changed, 27 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c46a064..1afb35e 100644
+index 1afb35e..aaeac15 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1613,7 +1613,7 @@ static ssize_t ahci_activity_show(struct ata_device *dev, char *buf)
- 	return sprintf(buf, "%d\n", emp->blink_policy);
- }
- 
--static void ahci_port_init(struct pci_dev *pdev, struct ata_port *ap,
-+static void ahci_port_init(struct device *dev, struct ata_port *ap,
- 			   int port_no, void __iomem *mmio,
- 			   void __iomem *port_mmio)
+@@ -1643,11 +1643,34 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ static void ahci_init_controller(struct ata_host *host)
  {
-@@ -1624,8 +1624,7 @@ static void ahci_port_init(struct pci_dev *pdev, struct ata_port *ap,
- 	/* make sure port is not active */
- 	rc = ahci_deinit_port(ap, &emsg);
- 	if (rc)
--		dev_printk(KERN_WARNING, &pdev->dev,
--			   "%s (%d)\n", emsg, rc);
-+		dev_warn(dev, "%s (%d)\n", emsg, rc);
- 
- 	/* clear SError */
- 	tmp = readl(port_mmio + PORT_SCR_ERR);
-@@ -1674,7 +1673,7 @@ static void ahci_init_controller(struct ata_host *host)
- 		if (ata_port_is_dummy(ap))
- 			continue;
- 
--		ahci_port_init(pdev, ap, i, mmio, port_mmio);
+ 	struct ahci_host_priv *hpriv = host->private_data;
+-	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	void __iomem *mmio = hpriv->mmio;
+ 	int i;
+ 	void __iomem *port_mmio;
+ 	u32 tmp;
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		port_mmio = ahci_port_base(ap);
++		if (ata_port_is_dummy(ap))
++			continue;
++
 +		ahci_port_init(host->dev, ap, i, mmio, port_mmio);
++	}
++
++	tmp = readl(mmio + HOST_CTL);
++	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
++	tmp = readl(mmio + HOST_CTL);
++	VPRINTK("HOST_CTL 0x%x\n", tmp);
++}
++
++static void ahci_pci_init_controller(struct ata_host *host)
++{
++	struct ahci_host_priv *hpriv = host->private_data;
++	struct pci_dev *pdev = to_pci_dev(host->dev);
++	void __iomem *port_mmio;
++	u32 tmp;
+ 	int mv;
+ 
+ 	if (hpriv->flags & AHCI_HFLAG_MV_PATA) {
+@@ -1666,21 +1689,7 @@ static void ahci_init_controller(struct ata_host *host)
+ 			writel(tmp, port_mmio + PORT_IRQ_STAT);
  	}
  
- 	tmp = readl(mmio + HOST_CTL);
+-	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap = host->ports[i];
+-
+-		port_mmio = ahci_port_base(ap);
+-		if (ata_port_is_dummy(ap))
+-			continue;
+-
+-		ahci_port_init(host->dev, ap, i, mmio, port_mmio);
+-	}
+-
+-	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
+-	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
+-	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	ahci_init_controller(host);
+ }
+ 
+ static void ahci_dev_config(struct ata_device *dev)
+@@ -2511,7 +2520,7 @@ static int ahci_pci_device_resume(struct pci_dev *pdev)
+ 		if (rc)
+ 			return rc;
+ 
+-		ahci_init_controller(host);
++		ahci_pci_init_controller(host);
+ 	}
+ 
+ 	ata_host_resume(host);
+@@ -3219,7 +3228,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	ahci_init_controller(host);
++	ahci_pci_init_controller(host);
+ 	ahci_print_info(host);
+ 
+ 	pci_set_master(pdev);
 -- 
 1.7.0
