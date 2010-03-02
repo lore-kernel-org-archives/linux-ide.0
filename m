@@ -1,62 +1,71 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH RFC 0/12] ahci: Add support for non-PCI devices
-Date: Tue, 02 Mar 2010 16:34:39 -0500
-Message-ID: <4B8D846F.3080400@garzik.org>
-References: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
+Subject: Re: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
+Date: Tue, 02 Mar 2010 18:19:09 -0500
+Message-ID: <4B8D9CED.7040603@garzik.org>
+References: <20100302182850.GA32057@oksana.dev.rtsoft.ru> <20100302182939.GI3445@oksana.dev.rtsoft.ru> <4B8D80C3.1050006@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f220.google.com ([209.85.219.220]:48482 "EHLO
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:64341 "EHLO
 	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552Ab0CBVep (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Mar 2010 16:34:45 -0500
-In-Reply-To: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
+	with ESMTP id S1752746Ab0CBXTS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Mar 2010 18:19:18 -0500
+In-Reply-To: <4B8D80C3.1050006@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Anton Vorontsov <avorontsov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/02/2010 01:28 PM, Anton Vorontsov wrote:
-> Hi all,
+On 03/02/2010 04:18 PM, Sergei Shtylyov wrote:
+> Hello.
 >
-> This patch set refactors AHCI code to make it more generic, plus
-> adds a new platform driver to support AHCI interfaces integrated
-> into System-On-Chip devices.
+> Anton Vorontsov wrote:
 >
-> The patches should apply on top of v2.6.33 (soon will be rebased
-> on top of linux-next).
+>> Factor out some ahci_em_messages handling code from ahci_init_one().
+>> We would like to reuse it for non-PCI devices.
+>>
+>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+>> ---
+>> drivers/ata/ahci.c | 41 ++++++++++++++++++++++++-----------------
+>> 1 files changed, 24 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index 18443e9..6694b17 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -3040,6 +3040,29 @@ static inline void
+>> ahci_gtf_filter_workaround(struct ata_host *host)
+>> {}
+>> #endif
+>>
+>> +static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+>> + struct ata_port_info *pi)
+>> +{
+>> + u8 messages;
+>> + void __iomem *mmio = hpriv->mmio;
+>> + u32 em_loc = readl(mmio + HOST_EM_LOC);
+>> + u32 em_ctl = readl(mmio + HOST_EM_CTL);
+>> +
+>> + if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
+>> + return;
+>> +
+>> + messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
+>> +
+>> + /* we only support LED message type right now */
+>> + if ((messages & 0x01) && (ahci_em_messages == 1)) {
+>> + /* store em_loc */
+>> + hpriv->em_loc = ((em_loc >> 16) * 4);
 >
-> I don't have any PCI AHCI handy (yet, but I plan to find one), so
-> PCI AHCI was only compile-tested.
+> Could drop unneeded parens, while at it...
 
-As demonstrated in libata-dev.git#libahci, I think the best route is to 
-move generic code into libahci.  In #libahci you will see
-
-	libahci -> common code
-	ahci -> standard PCI driver, req's libahci
-	mv-ahci -> Marvell AHCI driver, req's libahci
-	acard-ahci -> ACard AHCI driver, req's libahci
-
-and to this we could easily add
-
-	platform-ahci -> platform AHCI driver, req's libahci
-
-WARNING:  #libahci should not be used directly, it is meant for 
-illustration purposes only.  It has not been properly updated for 
-several recent ahci.c changes upstream, which implies that the 
-trivial-and-obvious task of moving generic code from ahci.c to libahci.c 
-must be redone.
+While not strictly necessary, parens often help with readability.  I 
+think the above code looks fine as-is.  If the reader has to waste a few 
+seconds recalling C's operator precedence, that detracts from the easy 
+reading of the code.  Not everyone is like me and has worked on a C 
+compiler, you know ;-)
 
 	Jeff
 
 
-
-P.S.  Please use the email addresses in MAINTAINERS,
-
-	M:      Jeff Garzik <jgarzik@pobox.com>
-	L:      linux-ide@vger.kernel.org
-
-The redhat.com email address is only used for legal (sign-off) purposes, 
-not normal use.
 
