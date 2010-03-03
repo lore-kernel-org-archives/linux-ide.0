@@ -1,96 +1,59 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
-Date: Wed, 3 Mar 2010 09:38:46 -0500
-Message-ID: <87f94c371003030638x4f8a4e13l4145829cb81db33f@mail.gmail.com>
-References: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
-	 <20100302182939.GI3445@oksana.dev.rtsoft.ru>
-	 <4B8D80C3.1050006@ru.mvista.com> <4B8D9CED.7040603@garzik.org>
-	 <4B8E3CB1.10902@ru.mvista.com> <4B8E4B06.6060405@garzik.org>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
+Subject: [PATCH 0/11] ahci: Add support for non-PCI devices
+Date: Wed, 3 Mar 2010 20:17:13 +0300
+Message-ID: <20100303171713.GA6322@oksana.dev.rtsoft.ru>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f198.google.com ([209.85.221.198]:58558 "EHLO
-	mail-qy0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754467Ab0CCOog convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 09:44:36 -0500
-In-Reply-To: <4B8E4B06.6060405@garzik.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:37311 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753967Ab0CCRRP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 12:17:15 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 3, 2010 at 6:41 AM, Jeff Garzik <jeff@garzik.org> wrote:
-> On 03/03/2010 05:40 AM, Sergei Shtylyov wrote:
->>
->> Hello.
->>
->> Jeff Garzik wrote:
->>
->>>>> Factor out some ahci_em_messages handling code from ahci_init_one=
-().
->>>>> We would like to reuse it for non-PCI devices.
->>>>>
->>>>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
->>>>> ---
->>>>> drivers/ata/ahci.c | 41 ++++++++++++++++++++++++-----------------
->>>>> 1 files changed, 24 insertions(+), 17 deletions(-)
->>>>>
->>>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>>> index 18443e9..6694b17 100644
->>>>> --- a/drivers/ata/ahci.c
->>>>> +++ b/drivers/ata/ahci.c
->>>>> @@ -3040,6 +3040,29 @@ static inline void
->>>>> ahci_gtf_filter_workaround(struct ata_host *host)
->>>>> {}
->>>>> #endif
->>>>>
->>>>> +static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
->>>>> + struct ata_port_info *pi)
->>>>> +{
->>>>> + u8 messages;
->>>>> + void __iomem *mmio =3D hpriv->mmio;
->>>>> + u32 em_loc =3D readl(mmio + HOST_EM_LOC);
->>>>> + u32 em_ctl =3D readl(mmio + HOST_EM_CTL);
->>>>> +
->>>>> + if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
->>>>> + return;
->>>>> +
->>>>> + messages =3D (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
->>>>> +
->>>>> + /* we only support LED message type right now */
->>>>> + if ((messages & 0x01) && (ahci_em_messages =3D=3D 1)) {
->>>>> + /* store em_loc */
->>>>> + hpriv->em_loc =3D ((em_loc >> 16) * 4);
->>>>
->>>> Could drop unneeded parens, while at it...
->>>
->>> While not strictly necessary, parens often help with readability. I
->>> think the above code looks fine as-is. If the reader has to waste a
->>> few seconds recalling C's operator precedence, that detracts from t=
-he
->>> easy reading of the code. Not everyone is like me and has worked on=
- a
->>> C compiler, you know ;-)
->>
->> Come on, parens around the right arg of =3D are pretty counter-intui=
-tive
->> and so don't add to the readability. :-)
->
-> <shrug> =A0I respectfully disagree. =A0It is wasteful but does not de=
-tract from
-> readability at all, IMO.
->
-> =A0 =A0 =A0 =A0Jeff
+On Wed, Mar 03, 2010 at 08:40:30AM -0500, Jeff Garzik wrote:
+[...]
+> Well, the general idea is to have a kernel module libahci.ko, upon
+> which ahci.ko, mv-ahci.ko, acard-ahci.ko and platform-ahci.ko
+> depends.
 
+Yep, that's exactly the purpose of my patches.
 
-Re:      hpriv->em_loc =3D ((em_loc >> 16) * 4);
+> That would imply a bunch of exports, when the library code
+> is moved from ahci.c to libahci.c, because libahci should be a
+> separate kernel module.
 
-I think the way it is leaves the reader wondering what used to be
-there.  ie. It makes me think there used to be a function call that
-was removed, but the parens left in place.
+Yep. Though, I don't bother with exporting symbols that neither
+ahci (PCI driver) nor platform driver need. Later we might export
+some more for mv/acard-ahci...
 
-I agree with Sergei that it is a readability issue because it sends
-the readers brain off into tangents.
+> I'm not overly picky about file naming.  However, in existing
+> installations, people, scripts, knowledgebase articles and
+> configuration files expect "ahci" to be the driver for PCI AHCI
+> devices.  We don't want to break that if we can avoid it.  Simply
+> using a different name avoids any breakage related to name changes.
 
-Greg
+OK. So in these series:
+
+- I kept PCI driver in ahci.c (built as ahci.ko);
+- Moved generic code into libahci.{c,h} (built as libahci.ko)
+
+Also in these series:
+
+- Rebased on top of linux-next (the patches also apply onto the
+  current Linus' git tree, fwiw).
+- Dropped sparse fixes patch, as the issue appears to be already
+  fixed in linux-next.
+- Addressed Sergei's comments on ahci_platform driver.
+
+Thanks,
+
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
