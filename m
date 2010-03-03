@@ -1,51 +1,47 @@
-From: Anton Vorontsov <cbouatmailru@gmail.com>
-Subject: Re: [PATCH 10/11] ahci: Export generic AHCI symbols, turn libahci
- into a separate module
-Date: Wed, 3 Mar 2010 21:42:28 +0300
-Message-ID: <20100303184228.GA3492@oksana.dev.rtsoft.ru>
-References: <20100303171713.GA6322@oksana.dev.rtsoft.ru>
- <20100303171749.GJ12362@oksana.dev.rtsoft.ru>
- <4B8EA21A.2040601@ru.mvista.com>
- <20100303180834.GA11184@oksana.dev.rtsoft.ru>
- <20100303181402.GA22792@oksana.dev.rtsoft.ru>
- <4B8EAB99.5080804@pobox.com>
-Reply-To: avorontsov@ru.mvista.com
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 01/11] ahci: Get rid of host->iomap usage
+Date: Wed, 03 Mar 2010 13:45:36 -0500
+Message-ID: <4B8EAE50.2090800@pobox.com>
+References: <20100303171713.GA6322@oksana.dev.rtsoft.ru> <20100303171734.GA12362@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:37794 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755416Ab0CCSme (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 13:42:34 -0500
-Content-Disposition: inline
-In-Reply-To: <4B8EAB99.5080804@pobox.com>
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:56276 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755416Ab0CCSpj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 13:45:39 -0500
+In-Reply-To: <20100303171734.GA12362@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
 Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 03, 2010 at 01:34:01PM -0500, Jeff Garzik wrote:
-[...]
-> >OTOH, we can introduce invisible SATA_LIBAHCI, which is better,
-> >I think.
-> 
-> There is no need for any Kconfig wrangling.  Just do it in the Makefile:
-> 
-> obj-$(SATA_AHCI_EXAMPLE1) += sata_example1.o libahci.o
-> obj-$(SATA_AHCI_EXAMPLE2) += sata_example2.o libahci.o
-> 
-> Thus,
-> 
-> 1) update PCI ahci's Makefile entry
-> 2) add Kconfig and Makefile entry for platform_ahci
-> 
-> No need to touch PCI AHCI's Kconfig bits at all.
+On 03/03/2010 12:17 PM, Anton Vorontsov wrote:
+> Currently the driver uses host->iomap to store all the iomapped BARs
+> of a PCI device (while AHCI devices actually use just a single memory
+> window).
+>
+> We're going to teach AHCI to work with non-PCI buses, so there are two
+> options to make this work:
+>
+> 1. "fake" host->iomap array for non-PCI devices, and place the needed
+>     address at iomap[AHCI_PCI_BAR];
+> 2. Get rid of host->iomap usage, instead introduce a private mmio
+>     field.
+>
+> This patch implements the second option.
+>
+> Signed-off-by: Anton Vorontsov<avorontsov@ru.mvista.com>
+> ---
+>   drivers/ata/ahci.c |   34 ++++++++++++++++++++--------------
+>   1 files changed, 20 insertions(+), 14 deletions(-)
 
-Ah, I see. Will do.
+Does platform code not contain any devres support?
 
-Thanks!
+At a minimum, you should be using devm_ioremap(), yes?
 
--- 
-Anton Vorontsov
-email: cbouatmailru@gmail.com
-irc://irc.freenode.net/bd2
+	Jeff
+
+
+
