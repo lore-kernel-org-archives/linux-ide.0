@@ -1,59 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
+From: Anton Vorontsov <avorontsov@ru.mvista.com>
 Subject: Re: [PATCH 09/11] ahci: Move generic code into libahci
-Date: Wed, 03 Mar 2010 20:33:47 +0300
-Message-ID: <4B8E9D7B.6040709@ru.mvista.com>
-References: <20100303171713.GA6322@oksana.dev.rtsoft.ru> <20100303171747.GI12362@oksana.dev.rtsoft.ru>
+Date: Wed, 3 Mar 2010 20:45:23 +0300
+Message-ID: <20100303174523.GA15173@oksana.dev.rtsoft.ru>
+References: <20100303171713.GA6322@oksana.dev.rtsoft.ru>
+ <20100303171747.GI12362@oksana.dev.rtsoft.ru>
+ <4B8E9D7B.6040709@ru.mvista.com>
+Reply-To: avorontsov@ru.mvista.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:34829 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754971Ab0CCRf7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 12:35:59 -0500
-In-Reply-To: <20100303171747.GI12362@oksana.dev.rtsoft.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4B8E9D7B.6040709@ru.mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Wed, Mar 03, 2010 at 08:33:47PM +0300, Sergei Shtylyov wrote:
+[...]
+> >diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> >index b7d4923..75e3abd 100644
+> >--- a/drivers/ata/Makefile
+> >+++ b/drivers/ata/Makefile
+> >@@ -1,7 +1,7 @@
+> > obj-$(CONFIG_ATA)		+= libata.o
+> >-obj-$(CONFIG_SATA_AHCI)		+= ahci.o
+> >+obj-$(CONFIG_SATA_AHCI)		+= libahci.o ahci.o
+> 
+>   This means 2 different modules: libahci.ko and ahci.ko.
 
-Anton Vorontsov wrote:
+Right you are. And we can't do ahci-objs += libahci.o ahci.o,
+since that would be a circular dependency. Oh well, I'll merge
+09 and 10 patches.
 
-> This patch should contain no functional changes, just moves code
-> around.
->
-> Currently libahci.c and ahci.c are built into a single module,
-> so there is no need for EXPORT_SYMBOL_GPL()s, yet. Exports will be
-> added in a subsequent patch.
->   
+Thanks!
 
-   This is not true anymore, so the exports are probably needed.
-
-> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
-> ---
->  drivers/ata/Makefile  |    2 +-
->  drivers/ata/ahci.c    | 2271 +------------------------------------------------
->  drivers/ata/libahci.c | 2059 ++++++++++++++++++++++++++++++++++++++++++++
->  drivers/ata/libahci.h |  330 +++++++
->  4 files changed, 2391 insertions(+), 2271 deletions(-)
->  create mode 100644 drivers/ata/libahci.c
->  create mode 100644 drivers/ata/libahci.h
->
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index b7d4923..75e3abd 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -1,7 +1,7 @@
->  
->  obj-$(CONFIG_ATA)		+= libata.o
->  
-> -obj-$(CONFIG_SATA_AHCI)		+= ahci.o
-> +obj-$(CONFIG_SATA_AHCI)		+= libahci.o ahci.o
->   
-
-   This means 2 different modules: libahci.ko and ahci.ko.
-
-MBR, Sergei
-
+-- 
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
