@@ -1,70 +1,43 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
-Date: Wed, 03 Mar 2010 06:41:58 -0500
-Message-ID: <4B8E4B06.6060405@garzik.org>
-References: <20100302182850.GA32057@oksana.dev.rtsoft.ru> <20100302182939.GI3445@oksana.dev.rtsoft.ru> <4B8D80C3.1050006@ru.mvista.com> <4B8D9CED.7040603@garzik.org> <4B8E3CB1.10902@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14438] IDE Probe fails to find CD drive
+Date: Wed, 3 Mar 2010 12:07:22 GMT
+Message-ID: <201003031207.o23C7Moc005083@demeter.kernel.org>
+References: <bug-14438-11633@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B8E3CB1.10902@ru.mvista.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Anton Vorontsov <avorontsov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:50321 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753742Ab0CCMHX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 07:07:23 -0500
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o23C7MgE005084
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 3 Mar 2010 12:07:22 GMT
+In-Reply-To: <bug-14438-11633@http.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 03/03/2010 05:40 AM, Sergei Shtylyov wrote:
-> Hello.
->
-> Jeff Garzik wrote:
->
->>>> Factor out some ahci_em_messages handling code from ahci_init_one().
->>>> We would like to reuse it for non-PCI devices.
->>>>
->>>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
->>>> ---
->>>> drivers/ata/ahci.c | 41 ++++++++++++++++++++++++-----------------
->>>> 1 files changed, 24 insertions(+), 17 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>> index 18443e9..6694b17 100644
->>>> --- a/drivers/ata/ahci.c
->>>> +++ b/drivers/ata/ahci.c
->>>> @@ -3040,6 +3040,29 @@ static inline void
->>>> ahci_gtf_filter_workaround(struct ata_host *host)
->>>> {}
->>>> #endif
->>>>
->>>> +static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
->>>> + struct ata_port_info *pi)
->>>> +{
->>>> + u8 messages;
->>>> + void __iomem *mmio = hpriv->mmio;
->>>> + u32 em_loc = readl(mmio + HOST_EM_LOC);
->>>> + u32 em_ctl = readl(mmio + HOST_EM_CTL);
->>>> +
->>>> + if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
->>>> + return;
->>>> +
->>>> + messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
->>>> +
->>>> + /* we only support LED message type right now */
->>>> + if ((messages & 0x01) && (ahci_em_messages == 1)) {
->>>> + /* store em_loc */
->>>> + hpriv->em_loc = ((em_loc >> 16) * 4);
->>>
->>> Could drop unneeded parens, while at it...
->>
->> While not strictly necessary, parens often help with readability. I
->> think the above code looks fine as-is. If the reader has to waste a
->> few seconds recalling C's operator precedence, that detracts from the
->> easy reading of the code. Not everyone is like me and has worked on a
->> C compiler, you know ;-)
->
-> Come on, parens around the right arg of = are pretty counter-intuitive
-> and so don't add to the readability. :-)
+http://bugzilla.kernel.org/show_bug.cgi?id=14438
 
-<shrug>  I respectfully disagree.  It is wasteful but does not detract 
-from readability at all, IMO.
 
-	Jeff
+Thomas Jarosch <thomas.jarosch@intra2net.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |thomas.jarosch@intra2net.co
+                   |                            |m
+
+
+
+
+--- Comment #8 from Thomas Jarosch <thomas.jarosch@intra2net.com>  2010-03-03 12:07:18 ---
+Same issue here on vmware server 1.08: The IDE cdrom is not detected anymore on
+kernel 2.6.32.9. I've reapplied the patch to 2.6.32.9 and will attach it here
+for easier access.
+
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
