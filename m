@@ -1,71 +1,96 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH RFC 0/12] ahci: Add support for non-PCI devices
-Date: Wed, 03 Mar 2010 08:40:30 -0500
-Message-ID: <4B8E66CE.7070608@garzik.org>
-References: <20100302182850.GA32057@oksana.dev.rtsoft.ru> <4B8D846F.3080400@garzik.org> <20100303131504.GA25973@oksana.dev.rtsoft.ru>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [PATCH 09/12] ahci: Introduce ahci_set_em_messages()
+Date: Wed, 3 Mar 2010 09:38:46 -0500
+Message-ID: <87f94c371003030638x4f8a4e13l4145829cb81db33f@mail.gmail.com>
+References: <20100302182850.GA32057@oksana.dev.rtsoft.ru>
+	 <20100302182939.GI3445@oksana.dev.rtsoft.ru>
+	 <4B8D80C3.1050006@ru.mvista.com> <4B8D9CED.7040603@garzik.org>
+	 <4B8E3CB1.10902@ru.mvista.com> <4B8E4B06.6060405@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:65475 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541Ab0CCNkj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 08:40:39 -0500
-In-Reply-To: <20100303131504.GA25973@oksana.dev.rtsoft.ru>
+Received: from mail-qy0-f198.google.com ([209.85.221.198]:58558 "EHLO
+	mail-qy0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754467Ab0CCOog convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 09:44:36 -0500
+In-Reply-To: <4B8E4B06.6060405@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: avorontsov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/03/2010 08:15 AM, Anton Vorontsov wrote:
-> On Tue, Mar 02, 2010 at 04:34:39PM -0500, Jeff Garzik wrote:
-> [...]
->> As demonstrated in libata-dev.git#libahci, I think the best route is
->> to move generic code into libahci.  In #libahci you will see
+On Wed, Mar 3, 2010 at 6:41 AM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 03/03/2010 05:40 AM, Sergei Shtylyov wrote:
 >>
->> 	libahci ->  common code
->> 	ahci ->  standard PCI driver, req's libahci
->> 	mv-ahci ->  Marvell AHCI driver, req's libahci
->> 	acard-ahci ->  ACard AHCI driver, req's libahci
+>> Hello.
 >>
->> and to this we could easily add
+>> Jeff Garzik wrote:
 >>
->> 	platform-ahci ->  platform AHCI driver, req's libahci
+>>>>> Factor out some ahci_em_messages handling code from ahci_init_one=
+().
+>>>>> We would like to reuse it for non-PCI devices.
+>>>>>
+>>>>> Signed-off-by: Anton Vorontsov <avorontsov@ru.mvista.com>
+>>>>> ---
+>>>>> drivers/ata/ahci.c | 41 ++++++++++++++++++++++++-----------------
+>>>>> 1 files changed, 24 insertions(+), 17 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>>>> index 18443e9..6694b17 100644
+>>>>> --- a/drivers/ata/ahci.c
+>>>>> +++ b/drivers/ata/ahci.c
+>>>>> @@ -3040,6 +3040,29 @@ static inline void
+>>>>> ahci_gtf_filter_workaround(struct ata_host *host)
+>>>>> {}
+>>>>> #endif
+>>>>>
+>>>>> +static void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+>>>>> + struct ata_port_info *pi)
+>>>>> +{
+>>>>> + u8 messages;
+>>>>> + void __iomem *mmio =3D hpriv->mmio;
+>>>>> + u32 em_loc =3D readl(mmio + HOST_EM_LOC);
+>>>>> + u32 em_ctl =3D readl(mmio + HOST_EM_CTL);
+>>>>> +
+>>>>> + if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
+>>>>> + return;
+>>>>> +
+>>>>> + messages =3D (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
+>>>>> +
+>>>>> + /* we only support LED message type right now */
+>>>>> + if ((messages & 0x01) && (ahci_em_messages =3D=3D 1)) {
+>>>>> + /* store em_loc */
+>>>>> + hpriv->em_loc =3D ((em_loc >> 16) * 4);
+>>>>
+>>>> Could drop unneeded parens, while at it...
+>>>
+>>> While not strictly necessary, parens often help with readability. I
+>>> think the above code looks fine as-is. If the reader has to waste a
+>>> few seconds recalling C's operator precedence, that detracts from t=
+he
+>>> easy reading of the code. Not everyone is like me and has worked on=
+ a
+>>> C compiler, you know ;-)
 >>
->> WARNING:  #libahci should not be used directly, it is meant for
->> illustration purposes only.  It has not been properly updated for
->> several recent ahci.c changes upstream, which implies that the
->> trivial-and-obvious task of moving generic code from ahci.c to
->> libahci.c must be redone.
+>> Come on, parens around the right arg of =3D are pretty counter-intui=
+tive
+>> and so don't add to the readability. :-)
 >
-> Well, do I understand correctly that the only issue is the
-> file names? I.e. in my patches, instead of keeping the library
-> code in ahci.c, I should move the library code into libahci.c,
-> and keep the PCI code in ahci.c?
+> <shrug> =A0I respectfully disagree. =A0It is wasteful but does not de=
+tract from
+> readability at all, IMO.
 >
-> Because, as far as I can see, the result of my patches is pretty
-> much the same as in #libahci, except the file names and more
-> things that can be reused (i.e. ahci_sht, ahci_ops -- I kept
-> all this in the library part, since we want to share it with
-> the platform driver).
->
-> Also, I don't export function that aren't currently used
-> by PCI or platform drivers, but in #libahci there are all
-> exported. Should I keep it my way, or should I export all the
-> functions (even if there are no any users of these)?
-
-Well, the general idea is to have a kernel module libahci.ko, upon which 
-ahci.ko, mv-ahci.ko, acard-ahci.ko and platform-ahci.ko depends.  That 
-would imply a bunch of exports, when the library code is moved from 
-ahci.c to libahci.c, because libahci should be a separate kernel module.
-
-I'm not overly picky about file naming.  However, in existing 
-installations, people, scripts, knowledgebase articles and configuration 
-files expect "ahci" to be the driver for PCI AHCI devices.  We don't 
-want to break that if we can avoid it.  Simply using a different name 
-avoids any breakage related to name changes.
-
-	Jeff
+> =A0 =A0 =A0 =A0Jeff
 
 
+Re:      hpriv->em_loc =3D ((em_loc >> 16) * 4);
 
+I think the way it is leaves the reader wondering what used to be
+there.  ie. It makes me think there used to be a function call that
+was removed, but the parens left in place.
+
+I agree with Sergei that it is a readability issue because it sends
+the readers brain off into tangents.
+
+Greg
