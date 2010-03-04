@@ -1,37 +1,42 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: Linux kernel - Libata bad block error handling to user mode
- program
-Date: Thu, 04 Mar 2010 12:49:55 -0500
-Message-ID: <4B8FF2C3.1060808@teksavvy.com>
-References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>	 <87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>	 <4B8FC6AC.4060801@teksavvy.com> <f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/2] ahci: Add platform driver
+Date: Thu, 04 Mar 2010 13:04:22 -0500
+Message-ID: <4B8FF626.6060704@pobox.com>
+References: <20100304170525.GA8126@oksana.dev.rtsoft.ru> <20100304170606.GB29022@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: foo saa <foosaa@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:62002 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365Ab0CDSEZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Mar 2010 13:04:25 -0500
+In-Reply-To: <20100304170606.GB29022@oksana.dev.rtsoft.ru>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Anton Vorontsov <avorontsov@ru.mvista.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/04/10 10:33, foo saa wrote:
-..
-> hdparm is good, but I don't want to use the internal ATA SECURE ERASE
-> because I can never get the amount of bad sectors the drive had.
-..
+On 03/04/2010 12:06 PM, Anton Vorontsov wrote:
+> This can be used for AHCI-compatible interfaces implemented inside
+> System-On-Chip solutions, or AHCI devices connected via localbus.
+>
+> Signed-off-by: Anton Vorontsov<avorontsov@ru.mvista.com>
+> ---
+>   drivers/ata/Kconfig           |    8 ++
+>   drivers/ata/Makefile          |    1 +
+>   drivers/ata/ahci_platform.c   |  191 +++++++++++++++++++++++++++++++++++++++++
+>   include/linux/ahci_platform.h |   29 ++++++
+>   4 files changed, 229 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/ata/ahci_platform.c
+>   create mode 100644 include/linux/ahci_platform.h
 
-Oh.. but isn't that information in the S.M.A.R.T. data ??
+applied 1-2 to #upstream
 
-You'll not find the bad sectors by writing -- a true WRITE nearly never
-reports a media error.  Instead, the drive simply remaps to a good sector
-on the fly and returns success.
+Thanks for this work, this will give me the kick-in-the-pants necessary 
+to move forward on mv-ahci and acard-ahci.
 
-Generally, only READs report media errors.
+	Jeff
 
-Cheers
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+
