@@ -1,168 +1,130 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE
-Date: Thu, 04 Mar 2010 00:25:17 -0800 (PST)
-Message-ID: <20100304.002517.194287089.davem@davemloft.net>
+From: foo saa <foosaa@gmail.com>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode
+	program
+Date: Thu, 4 Mar 2010 07:58:07 -0500
+Message-ID: <f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
+References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
+	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54087
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752777Ab0CDIY7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Mar 2010 03:24:59 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hi Andrew,
 
-1) ide-cs resource releasing bug fix from Wolfram Sang
+Thanks for adding the mailing lists.
 
-2) Cleanups and refactoring from Bart, including ->{pio,dma}_mode
-   handling consolidation so the drivers are formed more like PATA
-   counterparts.
+I have tried fsync(), fdatasync() after the write calls, but still the
+write() passes without propagating any error. dmesg still shows
+multiples of thousands of bad i/o errors for logical sectors.
 
-3) Section mismatch warning fix in cmd640.c
+Also, one noted behavior is that if I use fsync / fdatasync, the write
+process becomes extremely slow when it encounters the bad sectors and
+grinds the hdd for longer durations.
 
-4) pdc202xx_old regression fix from Russell King.
+Is there any user specified timeout that can set on it too?
 
-5) Bring back icside use of ->maskproc method to fix a regression,
-   from Bart.
+You are right about the error propagation failure. The errors are
+caught the driver level (atleast at the lidata driver) as it logs the
+messages from drivers/ata/libata-eh.c / libata-scsi.c to the syslog.
 
-6) Wrap ide-tape's ioctl in lock_kernel() and use ->unlocked_ioctl,
-   from Alan Cox.
+I have spend much time in analysing the kernel source code because I
+have been trying multiple combinations for my program to work and each
+testing consumes about 3-4 hours. (Testing atleast one sample from a
+good and bad drives).
 
-7) Kernel message continuation fixes from Joe Perches.
+On Thu, Mar 4, 2010 at 1:42 AM, Andrew Morton <akpm@linux-foundation.org> w=
+rote:
+> (lots of cc's added)
+>
+> On Wed, 3 Mar 2010 23:52:20 -0500 foo saa <foosaa@gmail.com> wrote:
+>
+>> hi everyone,
+>>
+>> I am in the process of writing a disk erasure application in C. The
+>> program does zerofill the drive (Good or Bad) before someone destroys
+>> it. During the erasure process, I need to record the number of bad
+>> sectors during the zerofill operation.
+>>
+>> The method used to write to the hdd involves opening the appropriate
+>> /dev block device using open() call with O_WRONLY flag, start issuing
+>> write() calls to fill the sectors. A 512 byte buffer filled with
+>> zero's is used. All calls are of 64bit enabled. (I am using
+>> _LARGEFILE64_SOURCE define).
+>>
+>> The problem is (mostly with the bad hdd's), when the write call
+>> encounters a bad sector, it takes a bit longer than usual and writes
+>> the sector without any errors. (dmesg shows a lot of error messages
+>> embedded in the LIBATA error handling code!). The call never fails for
+>> any reason.
+>>
+>> I am using 2.6.27-7-generic =A0and gcc version 4.3.2 =A0on ubuntu 8.10. =
+I
+>> have tried upto 2.6.30.10 and multiple distros with similar behavior.
+>>
+>> Here is a summary of things I have attempted.
+>>
+>> I know about the bad sector and it's location on the hdd, since it has
+>> been verified by using Windows based hex editor utilities, DOS based
+>> erasure applications, MHDD and many other HDD utilities.
+>>
+>> I have tried using O_DIRECT with aligned buffers, but still could not
+>> identify the bad sectors during the writing process.
+>>
+>> I have tried using fadvise, posix_fadvise functions to get of the
+>> caching, but still failed.
+>>
+>> I have tried using SG_IO and SAT translation (direct ATA commands with
+>> device addressing) and it fails too. Raw devices is out of question
+>> now.
+>>
+>> The libata is not letting / informing the user mode program (executing
+>> under root) about the media / write errors / bad blocks and failures,
+>> though it notifies the kernel and logs to syslog. It also tries to
+>> reallocate, softreset, hardreset the block device which is evident
+>> from the dmesg logs.
+>>
+>> What has to be done for my program to identify / receive the bad block
+>> / sector information during the read / write process?
+>>
+>> How can I receive the bad sector / physical and media write errors in
+>> my program? This is my only requirement and question.
+>>
+>> I am currently out of options unless anyone from here can show some
+>> new direction!
+>>
+>> My only option is to recompile the kernel with libata customization
+>> and changes according to my requirement. (Can I instruct to libata to
+>> skip the error handling process and pass certain errors to my
+>> program?).
+>>
+>> Is this a good approach and recommended one? If not what should be
+>> done to achieve it? If yes, can somebody throw some light on it?
+>>
+>> Please let me know if you have any queries in my above explanation.
+>>
+>
+> OK, this is bad.
+>
+> Did you try running fsync() after a write(), check the return value?
+>
+> I doubt if this is a VFS bug. =A0As O_DIRECT writes are also failing to
+> report errors, I'd suspect that the driver or block layers really are
+> failing to propagate the error back.
+>
+> Do the ata guys know of a way of deliberately injecting errors to test
+> these codepaths? =A0If we don't have that, something using the
+> fault-injection code would be nice. =A0As low-level as possible,
+> preferably at interrupt time.
+>
 
-8) Kill stale references in ide-cd documentation, from Thadeu Lima de
-   Souza Cascardo.
-
-Please pull, thanks a lot!
-
-The following changes since commit 066000dd856709b6980123eb39b957fe26993f7b:
-  Ananth N Mavinakayanahalli (1):
-        Revert "x86, apic: Use logical flat on intel with <= 8 logical cpus"
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-next-2.6.git master
-
-Alan Cox (1):
-      ide_tape: kill off use of the ->ioctl operation
-
-Bartlomiej Zolnierkiewicz (43):
-      scc_pata: fix module unloading
-      icside: bring back ->maskproc method
-      ide: use standard timing for XFER_PIO_SLOW mode in ide_timing_compute()
-      alim15x3: fix PIO timings calculations
-      alim15x3: add ali_fifo_control() helper
-      alim15x3: remove superfluous locking from ali_set_pio_mode()
-      alim15x3: cleanup ali_cable_detect()
-      amd74xx: don't change UDMA settings when programming PIO timings
-      cmd64x: fix PIO and MWDMA timings calculations
-      cmd64x: remove superfluous checks from cmd64x_set_dma_mode()
-      cy82c693: fix PIO timings calculations
-      cy82c693: remove stale driver history
-      opti621: remove stale driver history
-      pdc202xx_old: add ->init_hwif method
-      serverworks: cleanup svwks_udma_filter()
-      serverworks: add missing pci_dev_put() call
-      via82cxxx: vx855 is a single channel controller
-      ide: add SATA cable detection support
-      via82cxxx: fix SATA cable detection
-      via82cxxx: workaround h/w bugs
-      via82cxxx: add support for vt8261 and future chips
-      via82cxxx: add support for VT6415 PCIE PATA IDE Host Controller
-      via82cxxx: fix UDMA settings programming
-      ide: add drive->pio_mode field
-      ide: add drive->dma_mode field
-      ide: change ->set_pio_mode method parameters
-      ide: change ->set_dma_mode method parameters
-      ide-timings: use ->pio_mode value to determine fastest PIO speed
-      alim15x3: fix handling of address setup timings
-      alim15x3: fix handling of command timings
-      alim15x3: fix handling of DMA timings
-      alim15x3: fix handling of UDMA enable bit
-      amd74xx: use ->pio_mode value to determine pair device speed
-      cmd64x: fix handling of address setup timings
-      cs5535: use ->pio_mode value to determine pair device speed
-      cs5536: use ->pio_mode value to determine pair device speed
-      it821x: use ->pio_mode value to determine pair device speed
-      palm_bk3710: use ->pio_mode value to determine pair device speed
-      siimage: use ->pio_mode value to determine pair device speed
-      tx493xide: use ->pio_mode value to determine pair device speed
-      via82cxxx: use ->pio_mode value to determine pair device speed
-      ide: make ide_get_best_pio_mode() static
-      ide: ide_timing_compute() fixup
-
-Chris Frey (1):
-      ide: fixed section mismatch warning in cmd640.c
-
-David S. Miller (1):
-      Merge branch 'master' of master.kernel.org:/.../davem/ide-2.6
-
-Joe Perches (1):
-      drivers/ide: Fix continuation line formats
-
-Russell King (1):
-      ide: Fix Promise UDMA33 IDE driver (pdc202xx_old)
-
-Thadeu Lima de Souza Cascardo (1):
-      ide: doc: remove compilation options section from ide-cd documentation
-
-Wolfram Sang (1):
-      ide/ide-cs: fix order of releasing resources
-
- Documentation/cdrom/ide-cd  |   39 +---------
- drivers/ide/aec62xx.c       |   13 ++--
- drivers/ide/ali14xx.c       |    3 +-
- drivers/ide/alim15x3.c      |  171 +++++++++++++++++++++++--------------------
- drivers/ide/amd74xx.c       |   18 +++--
- drivers/ide/at91_ide.c      |    5 +-
- drivers/ide/atiixp.c        |   14 ++--
- drivers/ide/au1xxx-ide.c    |   13 ++--
- drivers/ide/cmd640.c        |    5 +-
- drivers/ide/cmd64x.c        |  114 +++++++++++------------------
- drivers/ide/cs5520.c        |    9 +-
- drivers/ide/cs5530.c        |   13 ++--
- drivers/ide/cs5535.c        |   14 ++--
- drivers/ide/cs5536.c        |   16 ++--
- drivers/ide/cy82c693.c      |  146 ++++++-------------------------------
- drivers/ide/dtc2278.c       |    4 +-
- drivers/ide/hpt366.c        |    9 +-
- drivers/ide/ht6560b.c       |    3 +-
- drivers/ide/icside.c        |   67 ++++++++++++++++-
- drivers/ide/ide-cs.c        |   23 +++---
- drivers/ide/ide-devsets.c   |    6 +-
- drivers/ide/ide-iops.c      |    2 +-
- drivers/ide/ide-probe.c     |    2 +
- drivers/ide/ide-tape.c      |   14 +++-
- drivers/ide/ide-timings.c   |   18 ++--
- drivers/ide/ide-xfer-mode.c |   18 +++--
- drivers/ide/it8172.c        |   14 ++--
- drivers/ide/it8213.c        |   20 +++---
- drivers/ide/it821x.c        |   14 ++--
- drivers/ide/jmicron.c       |    6 +-
- drivers/ide/opti621.c       |   77 +-------------------
- drivers/ide/palm_bk3710.c   |   12 ++-
- drivers/ide/pdc202xx_new.c  |    8 +-
- drivers/ide/pdc202xx_old.c  |   31 ++++----
- drivers/ide/piix.c          |   20 +++---
- drivers/ide/pmac.c          |   13 ++--
- drivers/ide/qd65xx.c        |   10 +--
- drivers/ide/sc1200.c        |    8 +-
- drivers/ide/scc_pata.c      |   24 +++---
- drivers/ide/serverworks.c   |   50 ++++--------
- drivers/ide/sgiioc4.c       |    2 +-
- drivers/ide/siimage.c       |   14 ++--
- drivers/ide/sis5513.c       |    8 +-
- drivers/ide/sl82c105.c      |    8 +-
- drivers/ide/slc90e66.c      |   17 ++--
- drivers/ide/tc86c001.c      |    9 +-
- drivers/ide/triflex.c       |   10 +-
- drivers/ide/tx4938ide.c     |    7 +-
- drivers/ide/tx4939ide.c     |   10 +-
- drivers/ide/umc8672.c       |    5 +-
- drivers/ide/via82cxxx.c     |  132 +++++++++++++++++++++++++++------
- include/linux/ide.h         |    7 +-
- 52 files changed, 617 insertions(+), 678 deletions(-)
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
