@@ -1,130 +1,102 @@
-From: foo saa <foosaa@gmail.com>
-Subject: Re: Linux kernel - Libata bad block error handling to user mode
-	program
-Date: Thu, 4 Mar 2010 07:58:07 -0500
-Message-ID: <f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
-References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
-	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+From: Rafal Prylowski <prylowski@metasoft.pl>
+Subject: Re: DMA timeouts with JM20330 based SATA<->IDE bridge
+Date: Thu, 04 Mar 2010 14:36:36 +0100
+Message-ID: <4B8FB764.5000108@metasoft.pl>
+References: <20100304014558.GA8837@florz.florz.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metasoft.pl ([195.149.224.191]:58638 "EHLO smtp.metasoft.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755832Ab0CDNnT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Mar 2010 08:43:19 -0500
+In-Reply-To: <20100304014558.GA8837@florz.florz.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Florian Zumbiehl <florz@florz.de>
+Cc: linux-ide@vger.kernel.org
 
-Hi Andrew,
+Hi,
 
-Thanks for adding the mailing lists.
+I have similar problem with JM20330, but in my case it's connected
+to arm board ide port (Cirrus Logic ep9315 SoC).
+I'm using pata driver written long time ago by Alessandro Zumo
+and Lennert Buytenhek, to which I added dma functionality (the driver
+is not in mainline).
 
-I have tried fsync(), fdatasync() after the write calls, but still the
-write() passes without propagating any error. dmesg still shows
-multiples of thousands of bad i/o errors for logical sectors.
+> At the other end, it's connected to a Seagate ST31500341AS
+> SATA harddisk (well, that's kinda redundant ... ;-).
+In my case, it's Seagate ST9120822AS.
 
-Also, one noted behavior is that if I use fsync / fdatasync, the write
-process becomes extremely slow when it encounters the bad sectors and
-grinds the hdd for longer durations.
+>=20
+> Now, reading from the disk seems to work perfectly, but writing
+> (dding /dev/zero to the block device) causes DMA timeouts every
+> few hundred megabytes - in between the timeouts, though,
+> throughput seems to be ok (~ 20 MB/s).
+I can observe dma timeouts only when reading from disk, never when
+writing.
 
-Is there any user specified timeout that can set on it too?
+> In the kernel log, the errors look something like this, with
+> small variations (at least to my eyes ;-):
+>=20
+> | ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> | ata2.00: failed command: WRITE DMA EXT
+> | ata2.00: cmd 35/00:00:67:19:4f/00:04:00:00:00/e0 tag 0 dma 524288 o=
+ut
+> |          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout=
+)
+> | ata2.00: status: { DRDY }
+> | ata2: link is slow to respond, please be patient (ready=3D0)
+> | ata2: device not ready (errno=3D-16), forcing hardreset
+> | ata2: soft resetting link
+> | ata2.00: configured for UDMA/66
+> | ata2.00: device reported invalid CHS sector 0
+> | ata2: EH complete
+>=20
+> That's all happening with a vanilla 2.6.33 (plus tuxonice, in case th=
+at
+> could have any effect on this). The legacy IDE drivers behave similar=
+ly.
+>=20
 
-You are right about the error propagation failure. The errors are
-caught the driver level (atleast at the lidata driver) as it logs the
-messages from drivers/ata/libata-eh.c / libata-scsi.c to the syslog.
+My kernel log:
 
-I have spend much time in analysing the kernel source code because I
-have been trying multiple combinations for my program to work and each
-testing consumes about 3-4 hours. (Testing atleast one sample from a
-good and bad drives).
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata1.00: failed command: READ DMA
+ata1.00: cmd c8/00:08:70:39:a3/00:00:00:00:00/e3 tag 0 dma 4096 in
+         res 40/00:80:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata1.00: failed command: READ DMA EXT
+ata1.00: cmd 25/00:00:d0:2e:27/00:02:04:00:00/e0 tag 0 dma 262144 in
+         res 40/00:80:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata1.00: failed command: READ DMA EXT
+ata1.00: cmd 25/00:00:d0:28:9b/00:02:04:00:00/e0 tag 0 dma 262144 in
+         res 40/00:80:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata1.00: status: { DRDY }
 
-On Thu, Mar 4, 2010 at 1:42 AM, Andrew Morton <akpm@linux-foundation.org> w=
-rote:
-> (lots of cc's added)
->
-> On Wed, 3 Mar 2010 23:52:20 -0500 foo saa <foosaa@gmail.com> wrote:
->
->> hi everyone,
->>
->> I am in the process of writing a disk erasure application in C. The
->> program does zerofill the drive (Good or Bad) before someone destroys
->> it. During the erasure process, I need to record the number of bad
->> sectors during the zerofill operation.
->>
->> The method used to write to the hdd involves opening the appropriate
->> /dev block device using open() call with O_WRONLY flag, start issuing
->> write() calls to fill the sectors. A 512 byte buffer filled with
->> zero's is used. All calls are of 64bit enabled. (I am using
->> _LARGEFILE64_SOURCE define).
->>
->> The problem is (mostly with the bad hdd's), when the write call
->> encounters a bad sector, it takes a bit longer than usual and writes
->> the sector without any errors. (dmesg shows a lot of error messages
->> embedded in the LIBATA error handling code!). The call never fails for
->> any reason.
->>
->> I am using 2.6.27-7-generic =A0and gcc version 4.3.2 =A0on ubuntu 8.10. =
-I
->> have tried upto 2.6.30.10 and multiple distros with similar behavior.
->>
->> Here is a summary of things I have attempted.
->>
->> I know about the bad sector and it's location on the hdd, since it has
->> been verified by using Windows based hex editor utilities, DOS based
->> erasure applications, MHDD and many other HDD utilities.
->>
->> I have tried using O_DIRECT with aligned buffers, but still could not
->> identify the bad sectors during the writing process.
->>
->> I have tried using fadvise, posix_fadvise functions to get of the
->> caching, but still failed.
->>
->> I have tried using SG_IO and SAT translation (direct ATA commands with
->> device addressing) and it fails too. Raw devices is out of question
->> now.
->>
->> The libata is not letting / informing the user mode program (executing
->> under root) about the media / write errors / bad blocks and failures,
->> though it notifies the kernel and logs to syslog. It also tries to
->> reallocate, softreset, hardreset the block device which is evident
->> from the dmesg logs.
->>
->> What has to be done for my program to identify / receive the bad block
->> / sector information during the read / write process?
->>
->> How can I receive the bad sector / physical and media write errors in
->> my program? This is my only requirement and question.
->>
->> I am currently out of options unless anyone from here can show some
->> new direction!
->>
->> My only option is to recompile the kernel with libata customization
->> and changes according to my requirement. (Can I instruct to libata to
->> skip the error handling process and pass certain errors to my
->> program?).
->>
->> Is this a good approach and recommended one? If not what should be
->> done to achieve it? If yes, can somebody throw some light on it?
->>
->> Please let me know if you have any queries in my above explanation.
->>
->
-> OK, this is bad.
->
-> Did you try running fsync() after a write(), check the return value?
->
-> I doubt if this is a VFS bug. =A0As O_DIRECT writes are also failing to
-> report errors, I'd suspect that the driver or block layers really are
-> failing to propagate the error back.
->
-> Do the ata guys know of a way of deliberately injecting errors to test
-> these codepaths? =A0If we don't have that, something using the
-> fault-injection code would be nice. =A0As low-level as possible,
-> preferably at interrupt time.
->
+Kernel version doesn't have any impact (it was first observed about
+two years ago, and with 2.6.32.8 behaviour is the same, during this
+time I've never had any problems with ide drives connected directly).
+I also tested jm20330 connected to old Celeron box (with VIA VT82C596B)=
+ and
+it works reliably.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+I think that the problem is with ep93xx ide controller (maybe working
+too close to ide specs or so..), or maybe between drive and jm20330
+(however I don't have any non-Seagate sata drive to test it).
+Reading is probably much faster in my configuration (the green led
+on converter board is constantly turned on during read, then suddenly
+turns off and timeout occurs, during write I can only observe fast blin=
+king,
+maybe this is normal).
+
+If there is any interest, I can post ep93xx pata driver to the list,
+but it depends on ep93xx-dma-m2m patch, which is not in mainline too.
+
+Rafa=B3
+
+
