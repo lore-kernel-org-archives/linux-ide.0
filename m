@@ -1,55 +1,44 @@
-From: "Kalra Ashish-B00888" <B00888@freescale.com>
-Subject: RE: Linux kernel - Libata bad block error handling to user mode  program
-Date: Fri, 5 Mar 2010 00:11:01 +0530
-Message-ID: <292801cabbca$829e365e$2303d30a@fsl.freescale.net>
+From: s ponnusa <foosaa@gmail.com>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode
+	program
+Date: Thu, 4 Mar 2010 14:50:53 -0500
+Message-ID: <f875e2fe1003041150k2e29c813w4149c73277c051d@mail.gmail.com>
+References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
+	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+	 <87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>
+	 <4B8FC6AC.4060801@teksavvy.com>
+	 <f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
+	 <4B8FF2C3.1060808@teksavvy.com>
+	 <f875e2fe1003041020t7cbab2c2x585df9b2dfc10dd2@mail.gmail.com>
+	 <87f94c371003041141y1bcd30fdkdca7349eea5930b4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-Content-class: 
-Sender: owner-linux-mm@kvack.org
-To: Mark Lord <kernel@teksavvy.com>, foo saa <foosaa@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:63141 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932149Ab0CDTuy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Mar 2010 14:50:54 -0500
+In-Reply-To: <87f94c371003041141y1bcd30fdkdca7349eea5930b4@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Mark Lord <kernel@teksavvy.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
 
+Oops! ATA Specifications! It is a block device. HDD.
 
-
-Sent from my HTC
-
------Original Message-----
-From: Mark Lord <kernel@teksavvy.com>
-Sent: 04 March 2010 11:20 PM
-To: foo saa <foosaa@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>; Andrew Morton <akpm@linux-foun=
-dation.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; l=
-inux-ide@vger.kernel.org <linux-ide@vger.kernel.org>; Jens Axboe <jens.axbo=
-e@oracle.com>; linux-mm@kvack.org <linux-mm@kvack.org>
-Subject: Re: Linux kernel - Libata bad block error handling to user mode  p=
-rogram
-
-On 03/04/10 10:33, foo saa wrote:
-..
-> hdparm is good, but I don't want to use the internal ATA SECURE ERASE
-> because I can never get the amount of bad sectors the drive had.
-..
-
-Oh.. but isn't that information in the S.M.A.R.T. data ??
-
-You'll not find the bad sectors by writing -- a true WRITE nearly never
-reports a media error.  Instead, the drive simply remaps to a good sector
-on the fly and returns success.
-
-Generally, only READs report media errors.
-
-Cheers
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+On Thu, Mar 4, 2010 at 2:41 PM, Greg Freemyer <greg.freemyer@gmail.com> wrote:
+> On Thu, Mar 4, 2010 at 1:20 PM, s ponnusa <foosaa@gmail.com> wrote:
+>> SMART data consists only the count of remapped sectors, seek failures,
+>> raw read error rate, uncorrectable sector counts, crc errors etc., and
+>> technically one should be aware of the error during write operation as
+>> well.
+>>
+>> As per the ATAPI specifications\
+>
+>
+> ATAPI?
+>
+> What sort of device is this?
+>
+> Greg
+>
