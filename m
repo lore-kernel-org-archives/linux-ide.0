@@ -1,21 +1,17 @@
 From: "Kalra Ashish-B00888" <B00888@freescale.com>
 Subject: RE: Linux kernel - Libata bad block error handling to user mode  program
-Date: Fri, 5 Mar 2010 00:10:42 +0530
-Message-ID: <292701cabbca$7f5e1ef2$2303d30a@fsl.freescale.net>
+Date: Fri, 5 Mar 2010 00:11:01 +0530
+Message-ID: <292801cabbca$829e365e$2303d30a@fsl.freescale.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="utf-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from az33egw02.freescale.net ([192.88.158.103]:34392 "EHLO
-	az33egw02.freescale.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753276Ab0CDSm4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Mar 2010 13:42:56 -0500
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
 Content-class: 
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: owner-linux-mm@kvack.org
 To: Mark Lord <kernel@teksavvy.com>, foo saa <foosaa@gmail.com>
 Cc: Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+List-Id: linux-ide@vger.kernel.org
 
 
 
@@ -25,8 +21,12 @@ Sent from my HTC
 From: Mark Lord <kernel@teksavvy.com>
 Sent: 04 March 2010 11:20 PM
 To: foo saa <foosaa@gmail.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>; Andrew Morton <akpm@linux-foundation.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; linux-ide@vger.kernel.org <linux-ide@vger.kernel.org>; Jens Axboe <jens.axboe@oracle.com>; linux-mm@kvack.org <linux-mm@kvack.org>
-Subject: Re: Linux kernel - Libata bad block error handling to user mode  program
+Cc: Greg Freemyer <greg.freemyer@gmail.com>; Andrew Morton <akpm@linux-foun=
+dation.org>; linux-kernel@vger.kernel.org <linux-kernel@vger.kernel.org>; l=
+inux-ide@vger.kernel.org <linux-ide@vger.kernel.org>; Jens Axboe <jens.axbo=
+e@oracle.com>; linux-mm@kvack.org <linux-mm@kvack.org>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode  p=
+rogram
 
 On 03/04/10 10:33, foo saa wrote:
 ..
@@ -48,3 +48,8 @@ To unsubscribe from this list: send the line "unsubscribe linux-ide" in
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
