@@ -1,71 +1,102 @@
-From: Florian Zumbiehl <florz@florz.de>
-Subject: DMA timeouts with JM20330 based SATA<->IDE bridge
-Date: Thu, 4 Mar 2010 02:45:58 +0100
-Message-ID: <20100304014558.GA8837@florz.florz.dyndns.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode
+ program
+Date: Wed, 3 Mar 2010 22:42:45 -0800
+Message-ID: <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rain.florz.de ([62.216.164.86]:37425 "EHLO
-	rain.florz.dyndns.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755708Ab0CDCJe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2010 21:09:34 -0500
-Received: from florz.florz.dyndns.org ([192.168.0.121])
-	by rain.florz.dyndns.org with esmtp (Exim 4.69)
-	(envelope-from <florz@florz.de>)
-	id 1Nn08V-0007WK-53
-	for linux-ide@vger.kernel.org; Thu, 04 Mar 2010 02:45:59 +0100
-Received: from florz by florz.florz.dyndns.org with local (Exim 4.69)
-	(envelope-from <florz@florz.de>)
-	id 1Nn08U-0002Xt-V5
-	for linux-ide@vger.kernel.org; Thu, 04 Mar 2010 02:45:59 +0100
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: foo saa <foosaa@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi,
+(lots of cc's added)
 
-I have here a SATA<->IDE bridge based on a JM20330 connected to
-what the old IDE driver reported like this:
+On Wed, 3 Mar 2010 23:52:20 -0500 foo saa <foosaa@gmail.com> wrote:
 
-| via82cxxx 0000:00:07.1: VIA vt82c686a (rev 22) IDE UDMA66
-| via82cxxx 0000:00:07.1: IDE controller (0x1106:0x0571 rev 0x10)
+> hi everyone,
+> 
+> I am in the process of writing a disk erasure application in C. The
+> program does zerofill the drive (Good or Bad) before someone destroys
+> it. During the erasure process, I need to record the number of bad
+> sectors during the zerofill operation.
+> 
+> The method used to write to the hdd involves opening the appropriate
+> /dev block device using open() call with O_WRONLY flag, start issuing
+> write() calls to fill the sectors. A 512 byte buffer filled with
+> zero's is used. All calls are of 64bit enabled. (I am using
+> _LARGEFILE64_SOURCE define).
+> 
+> The problem is (mostly with the bad hdd's), when the write call
+> encounters a bad sector, it takes a bit longer than usual and writes
+> the sector without any errors. (dmesg shows a lot of error messages
+> embedded in the LIBATA error handling code!). The call never fails for
+> any reason.
+> 
+> I am using 2.6.27-7-generic  and gcc version 4.3.2  on ubuntu 8.10. I
+> have tried upto 2.6.30.10 and multiple distros with similar behavior.
+> 
+> Here is a summary of things I have attempted.
+> 
+> I know about the bad sector and it's location on the hdd, since it has
+> been verified by using Windows based hex editor utilities, DOS based
+> erasure applications, MHDD and many other HDD utilities.
+> 
+> I have tried using O_DIRECT with aligned buffers, but still could not
+> identify the bad sectors during the writing process.
+> 
+> I have tried using fadvise, posix_fadvise functions to get of the
+> caching, but still failed.
+> 
+> I have tried using SG_IO and SAT translation (direct ATA commands with
+> device addressing) and it fails too. Raw devices is out of question
+> now.
+> 
+> The libata is not letting / informing the user mode program (executing
+> under root) about the media / write errors / bad blocks and failures,
+> though it notifies the kernel and logs to syslog. It also tries to
+> reallocate, softreset, hardreset the block device which is evident
+> from the dmesg logs.
+> 
+> What has to be done for my program to identify / receive the bad block
+> / sector information during the read / write process?
+> 
+> How can I receive the bad sector / physical and media write errors in
+> my program? This is my only requirement and question.
+> 
+> I am currently out of options unless anyone from here can show some
+> new direction!
+> 
+> My only option is to recompile the kernel with libata customization
+> and changes according to my requirement. (Can I instruct to libata to
+> skip the error handling process and pass certain errors to my
+> program?).
+> 
+> Is this a good approach and recommended one? If not what should be
+> done to achieve it? If yes, can somebody throw some light on it?
+> 
+> Please let me know if you have any queries in my above explanation.
+> 
 
-At the other end, it's connected to a Seagate ST31500341AS
-SATA harddisk (well, that's kinda redundant ... ;-).
+OK, this is bad.
 
-Now, reading from the disk seems to work perfectly, but writing
-(dding /dev/zero to the block device) causes DMA timeouts every
-few hundred megabytes - in between the timeouts, though,
-throughput seems to be ok (~ 20 MB/s).
+Did you try running fsync() after a write(), check the return value?
 
-Once the fallback mechanism has switched back to PIO4, things seem
-to work perfectly, albeit slowly :-)
+I doubt if this is a VFS bug.  As O_DIRECT writes are also failing to
+report errors, I'd suspect that the driver or block layers really are
+failing to propagate the error back.
 
-In the kernel log, the errors look something like this, with
-small variations (at least to my eyes ;-):
+Do the ata guys know of a way of deliberately injecting errors to test
+these codepaths?  If we don't have that, something using the
+fault-injection code would be nice.  As low-level as possible,
+preferably at interrupt time.
 
-| ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-| ata2.00: failed command: WRITE DMA EXT
-| ata2.00: cmd 35/00:00:67:19:4f/00:04:00:00:00/e0 tag 0 dma 524288 out
-|          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-| ata2.00: status: { DRDY }
-| ata2: link is slow to respond, please be patient (ready=0)
-| ata2: device not ready (errno=-16), forcing hardreset
-| ata2: soft resetting link
-| ata2.00: configured for UDMA/66
-| ata2.00: device reported invalid CHS sector 0
-| ata2: EH complete
-
-That's all happening with a vanilla 2.6.33 (plus tuxonice, in case that
-could have any effect on this). The legacy IDE drivers behave similarly.
-
-So: Is there anything one could do about that, other than forcing
-PIO-only operation? If you need any further information, please let
-me know.
-
-BTW, the datasheet of the JM20330 can be found at
-http://www.mcuol.com/aspx/down.aspx?id=1266, just in case you didn't
-know that yet ...
-
-Florian
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
