@@ -1,64 +1,40 @@
-From: foo saa <foosaa@gmail.com>
+From: Mike Hayward <hayward@loup.net>
 Subject: Re: Linux kernel - Libata bad block error handling to user mode
 	program
-Date: Thu, 4 Mar 2010 10:33:52 -0500
-Message-ID: <f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
+Date: Thu, 4 Mar 2010 09:31:47 -0700
+Message-ID: <201003041631.o24GVl51005720@alien.loup.net>
 References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
-	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
-	 <87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>
-	 <4B8FC6AC.4060801@teksavvy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org> <f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4B8FC6AC.4060801@teksavvy.com>
+In-reply-to: <f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
+	(message from foo saa on Thu, 4 Mar 2010 07:58:07 -0500)
 Sender: owner-linux-mm@kvack.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+To: foosaa@gmail.com
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
 
-I am using 4k aligned buffers for writing and reading.
+I have seen a couple of your posts on this and thought I'd chime in
+since I know a bit about storage.
 
-Kernel / driver catches the error during the write cycle and I can get
-the error messages about the media being bad or sector i/o errors. But
-it is not propagated to the program and write always passes (even in
-the case of the device being out of control. (i.e., the device fails
-to respond to any further open / read / write queries and inaccessible
-from the core). Isn't the error has to be notified to the program that
-makes the call?
+I frequently see io errors come through to user space (both read and
+write requests) from usb flash drives, so there is a functioning error
+path there to some degree.  When I see the errors, the kernel is also
+logging the sector and eventually resetting the device.
 
-Reading is a completely different scenario and I am disabling the
-read-ahead cache completely with fadvise call.
+There is no doubt a disk drive will slow down when it hits a bad spot
+since it will retry numerous times, most likely trying to remap bad
+blocks.  Of course your write succeeded because you probably have the
+drive cache enabled.  Flush or a full cache hangs while the drive
+retries all of the sectors that are bad, remapping them until finally
+it can remap no more.  At some point it probably returns an error if
+flush is timing out or it can't remap any more sectors, but it won't
+include the bad sector.
 
-hdparm is good, but I don't want to use the internal ATA SECURE ERASE
-because I can never get the amount of bad sectors the drive had.
+I would suggest turning the drive cache off.  Then the drive won't lie
+to you about completing writes and you'll at least know which sectors
+are bad.  Just a thought :-)
 
-On Thu, Mar 4, 2010 at 9:41 AM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 03/04/10 09:17, Greg Freemyer wrote:
-> ..
->>
->> I think / suspect your major problem is you say above that you use a
->> 512-byte buffer to wipe with. =A0The kernel is using 4K pages. =A0So whe=
-n
->> you write to a 4K section of the drive for the first time, the kernel
->> implements read-modify-write logic.
->>
->> Your i/o failures are almost certainly on the read cycle of the above,
->> not the write cycle. =A0You need to move to 4K buffers and you need to
->> ensure your 4K writes are aligned with how the kernel is working with
->> the disk. =A0ie. You need your 4K buffer to perfectly align with the
->> kernels 4K block handling so you never have a read-modify-write cycle.
->
-> ..
->
-> You'll also need to disable Linux read-ahead for the drive,
-> or it may try reading beyond even the 4KB block.
->
-> But really.. isn't "hdparm --security-erase NULL /dev/sdX" good enough ??=
-?
->
-> Cheers
->
+- Mike
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
