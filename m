@@ -1,95 +1,94 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [git patches] libata updates for 2.6.34
-Date: Fri, 5 Mar 2010 21:12:58 +0100
-Message-ID: <201003052112.58271.bzolnier@gmail.com>
-References: <20100301202330.GA14977@havoc.gtf.org> <201003051958.24987.bzolnier@gmail.com> <4B915EEF.1040307@garzik.org>
+From: s ponnusa <foosaa@gmail.com>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode
+	program
+Date: Fri, 5 Mar 2010 17:27:50 -0500
+Message-ID: <f875e2fe1003051427u70aa1a4cl56c51c73cab4f1b0@mail.gmail.com>
+References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
+	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+	 <87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>
+	 <4B8FC6AC.4060801@teksavvy.com>
+	 <f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
+	 <4B8FF2C3.1060808@teksavvy.com>
+	 <f875e2fe1003041020t7cbab2c2x585df9b2dfc10dd2@mail.gmail.com>
+	 <4B90655B.4000005@gmail.com>
+	 <f875e2fe1003041811p5aa934ecob90836a8d0a6b605@mail.gmail.com>
+	 <20100305120355.6b161572@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:34124 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755708Ab0CEUOf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 15:14:35 -0500
-In-Reply-To: <4B915EEF.1040307@garzik.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45887 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755288Ab0CEW14 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 17:27:56 -0500
+In-Reply-To: <20100305120355.6b161572@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@linux.intel.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <kernel@teksavvy.com>, Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
 
-On Friday 05 March 2010 08:43:43 pm Jeff Garzik wrote:
-> On 03/05/2010 01:58 PM, Bartlomiej Zolnierkiewicz wrote:
-> > On Monday 01 March 2010 09:23:30 pm Jeff Garzik wrote:
-> >
-> >>        libata: Pass host flags into the pci helper
-> >
-> > It introduces a subtle bug:
-> >
-> > struct ata_host {
-> > ...
-> > 	unsigned long		flags;
-> >
-> >> @@ -1642,8 +1643,8 @@ extern int ata_pci_sff_activate_host(struct ata_host *host,
-> >>   				     irq_handler_t irq_handler,
-> >>   				     struct scsi_host_template *sht);
-> >>   extern int ata_pci_sff_init_one(struct pci_dev *pdev,
-> >> -				const struct ata_port_info * const * ppi,
-> >> -				struct scsi_host_template *sht, void *host_priv);
-> >> +		const struct ata_port_info * const * ppi,
-> >> +		struct scsi_host_template *sht, void *host_priv, int hflags);
-> >
-> > 'int' type is not equal 'unsigned long' one on 64-bit architectures.
-> 
-> True but largely irrelevant as we will never use more than 32 bits worth 
-> of host flags.
-> 
-> 
-> > Besides doing it this way is clearly suboptimal as the same effect
-> > could have been achieved by doing:
-> >
-> > extern int __ata_pci_sff_init_one(struct pci_dev *pdev,
-> > 				const struct ata_port_info * const *ppi,
-> > 				struct scsi_host_template *sht, void *host_priv,
-> > 				int hflag);
-> > static inline int ata_pci_sff_init_one(struct pci_dev *pdev,
-> > 				const struct ata_port_info * const *ppi,
-> > 				struct scsi_host_template *sht, void *host_priv)
-> > {
-> > 	return __ata_pci_sff_init_one(pdev, ppi, sht, host_priv, 0);
-> > }
-> 
-> This is far uglier than simply changing the API.
-> 
-> > without the need to update all drivers and without breaking pending
-> > out-of-tree driver patches (yeah, it breaks my pata_ep93xx patches)..
-> 
-> Every post you include a disclaimer about "my patches are not intended 
-> for upstream" yet you still complain?
+Having fsync / fdatasync results in the below mentioned behavior.
 
-You've interpreted the disclaimer wrong -- "if you want my patches
-upstream do it yourself or pay for it cause I have neither time nor
-interest in an added bureaucracy and clean-yet-buggy mentality"..
+> - sectors being corrupted/dying that were not written by near to it
+> - writes that the drive thinks were successful and reports that way b=
+ut
+> =A0turn out not to be readable
 
-Lets put things in the right perspective, look at your pull request:
+Always the write passes after much delay, but it turns out that the
+sector is not readable.
+But for my scenario, I need to know when a sector timeouts / errors
+during the write process and move on to the next sector. Apparently I
+have changed my program to do the following steps:
 
- 48 files changed, 663 insertions(+), 417 deletions(-)
+Open the drive in O_RDWR mode.
+write a sector.
+reposition the file pointer.
+read the sector.
+verify the read buffer contents with write buffer contents.
 
-then at Dave's IDE pull request:
+This scenario always passes and does not identify the bad sectors if
+the program does it sequentially (even on a hdd with bad sectors).
 
- 52 files changed, 617 insertions(+), 678 deletions(-)
+But if I write using an independent program (prg A) and verify using
+another independent program (prg B), all the writes done using prg A
+passes (expected behavior) and the read operations from prg B fails on
+bad sectors (again expected behavior) and I am able to detect the bad
+sectors.
 
-and finally at my atang tree (I'm just testing 2.6.33 rebase):
+Is there any issue, if I perform both the operations simultaneously?
+(Initially I tried using the O_DIRECT mode and as it was extremely
+slow reverted to opening the device in O_RDWR mode and used fadvise
+with don'tneed flag).
 
- 328 files changed, 11528 insertions(+), 14491 deletions(-)
+Thanks.
 
-This is a whole different scale of changes and you shouldn't be
-surprised that it requires a bit different set of strategies to
-handle it effectively..
-
-> Some people are never satisfied...
-
-When did it become a bad thing? :)
-
---
-Bartlomiej Zolnierkiewicz
+On Fri, Mar 5, 2010 at 7:03 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wro=
+te:
+>> cannot be read back by any other means. And the program which wrote
+>> the data is unaware of the error that has happened at the lower leve=
+l.
+>> But the error log clearly has the issue caught but is trying to hand=
+le
+>> differently.
+>
+> This is standard behaviour on pretty much every OS. If each write was
+> back verified by the OS you wouldn't get any work done due fact it to=
+ok
+> so long to do any I/O and all I/O was synchronoous.
+>
+> Where it matters you can mount some file systems synchronous, you can=
+ do
+> synchronous I/O (O_SYNC) or you can use and check fsync/fdatasync res=
+ults
+> which should give you pretty good coverage providing barriers are ena=
+bled.
+>
+> It still won't catch a lot of cases because you sometimes see
+>
+> - sectors being corrupted/dying that were not written by near to it
+> - writes that the drive thinks were successful and reports that way b=
+ut
+> =A0turn out not to be readable
+>
+> Alan
+>
