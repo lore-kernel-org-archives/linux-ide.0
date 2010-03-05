@@ -1,62 +1,196 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Linux kernel - Libata bad block error handling to user mode
-	program
-Date: Fri, 5 Mar 2010 01:01:07 -0500
-Message-ID: <87f94c371003042201n72ce8578vc01331678b52da75@mail.gmail.com>
-References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
-	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
-	 <f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
-	 <201003041631.o24GVl51005720@alien.loup.net>
-	 <f875e2fe1003041012m680ffc87i50099ed011526440@mail.gmail.com>
-	 <201003050042.o250gsUC007947@alien.loup.net>
+From: Roman Fietze <roman.fietze@telemotive.de>
+Subject: [PATCH] pata_mpc52xx: reduce code size by simple change of constant data types
+Date: Fri, 5 Mar 2010 08:27:39 +0100
+Message-ID: <201003050827.40384.roman.fietze@telemotive.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:60451 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180Ab0CEGBJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 01:01:09 -0500
-In-Reply-To: <201003050042.o250gsUC007947@alien.loup.net>
+Received: from coyote.quickmin.net ([217.14.112.24]:53185 "EHLO
+	coyote.quickmin.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754038Ab0CEH1s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 02:27:48 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Hayward <hayward@loup.net>
-Cc: foosaa@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-mm@kvack.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>
 
-> Please let me know if you can prove data corruption. =A0I'm writing a
-> sophisticated storage app and would like to know if kernel has such a
-> defect. =A0My bet is it's just a drive that is slowly remapping.
->
-> - Mike
+Hello List members, hello Jeff,
 
-=46or clarity, most ATA class disk drives are spec'ed to have one
-non-recoverable error per 150TB or so of writes.  Disk drives do blind
-writes.  (ie. They are not verified).  So we should all expect to have
-the occasional silent data corruption on write.  The problem is
-compounded with bad cables, controllers, RAM, etc.
+I've prepared a totally simple patch that, if I did it and measured it
+correctly, reduces the text size as of the ppc-6xx-size command of
+pata-mpc52xx by more than 10%, by reducing the rodata size from 0x4a4
+to 0x17e bytes. This is simply done by changing the data types of the
+ATA timing constants.
 
-The only way for the linux kernel even attempt to fix that is for it
-to do a read verify on everything it writes.  For the vast majority of
-uses that is just not acceptable for performance reasons.
+If you are interested at all, and it's worth the trouble, here the
+details:
 
-OTOH, if data integrity is of the utmost for you, then you should
-maintain a md5hash or similar for your critical files and verify them
-any time you make a copy.  btrfs may offer a auto read-verify.  I
-don't know much about btrfs.
+ppc-6xx-size:
+     text data bss  dec  hex filename
+old: 6532 1068   0 7600 1db0 pata-mpc52xx.o
+new: 5718 1068   0 6786 1a82 pata-mpc52xx.o
 
-Greg
+The (assembler) code itself doesn't really change very much. I double
+checked the final results inside mpc52xx-ata-apply-timings() and they
+match. The driver is still working fine of course.
 
+
+
+Signed-off-by: Roman Fietze <roman.fietze@telemotive.de>
+---
+ drivers/ata/pata_mpc52xx.c |   78 ++++++++++++++++++++++--------------=
+--------
+ 1 files changed, 39 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index 2bc2dbe..e4e5e82 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -64,13 +64,13 @@ struct mpc52xx_ata_priv {
+=20
+=20
+ /* ATAPI-4 PIO specs (in ns) */
+-static const int ataspec_t0[5]    =3D {600, 383, 240, 180, 120};
+-static const int ataspec_t1[5]    =3D { 70,  50,  30,  30,  25};
+-static const int ataspec_t2_8[5]  =3D {290, 290, 290,  80,  70};
+-static const int ataspec_t2_16[5] =3D {165, 125, 100,  80,  70};
+-static const int ataspec_t2i[5]   =3D {  0,   0,   0,  70,  25};
+-static const int ataspec_t4[5]    =3D { 30,  20,  15,  10,  10};
+-static const int ataspec_ta[5]    =3D { 35,  35,  35,  35,  35};
++static const u16 ataspec_t0[5]		=3D {600, 383, 240, 180, 120};
++static const u16 ataspec_t1[5]		=3D { 70,  50,  30,  30,  25};
++static const u16 ataspec_t2_8[5]	=3D {290, 290, 290,  80,  70};
++static const u16 ataspec_t2_16[5]	=3D {165, 125, 100,  80,  70};
++static const u16 ataspec_t2i[5]		=3D {  0,   0,   0,  70,  25};
++static const u16 ataspec_t4[5]		=3D { 30,  20,  15,  10,  10};
++static const u16 ataspec_ta[5]		=3D { 35,  35,  35,  35,  35};
+=20
+ #define CALC_CLKCYC(c,v) ((((v)+(c)-1)/(c)))
+=20
+@@ -78,13 +78,13 @@ static const int ataspec_ta[5]    =3D { 35,  35,  3=
+5,  35,  35};
+=20
+ /* ATAPI-4 MDMA specs (in clocks) */
+ struct mdmaspec {
+-	u32 t0M;
+-	u32 td;
+-	u32 th;
+-	u32 tj;
+-	u32 tkw;
+-	u32 tm;
+-	u32 tn;
++	u8 t0M;
++	u8 td;
++	u8 th;
++	u8 tj;
++	u8 tkw;
++	u8 tm;
++	u8 tn;
+ };
+=20
+ static const struct mdmaspec mdmaspec66[3] =3D {
+@@ -101,23 +101,23 @@ static const struct mdmaspec mdmaspec132[3] =3D {
+=20
+ /* ATAPI-4 UDMA specs (in clocks) */
+ struct udmaspec {
+-	u32 tcyc;
+-	u32 t2cyc;
+-	u32 tds;
+-	u32 tdh;
+-	u32 tdvs;
+-	u32 tdvh;
+-	u32 tfs;
+-	u32 tli;
+-	u32 tmli;
+-	u32 taz;
+-	u32 tzah;
+-	u32 tenv;
+-	u32 tsr;
+-	u32 trfs;
+-	u32 trp;
+-	u32 tack;
+-	u32 tss;
++	u8 tcyc;
++	u8 t2cyc;
++	u8 tds;
++	u8 tdh;
++	u8 tdvs;
++	u8 tdvh;
++	u8 tfs;
++	u8 tli;
++	u8 tmli;
++	u8 taz;
++	u8 tzah;
++	u8 tenv;
++	u8 tsr;
++	u8 trfs;
++	u8 trp;
++	u8 tack;
++	u8 tss;
+ };
+=20
+ static const struct udmaspec udmaspec66[6] =3D {
+@@ -270,7 +270,7 @@ mpc52xx_ata_compute_pio_timings(struct mpc52xx_ata_=
+priv *priv, int dev, int pio)
+ {
+ 	struct mpc52xx_ata_timings *timing =3D &priv->timings[dev];
+ 	unsigned int ipb_period =3D priv->ipb_period;
+-	unsigned int t0, t1, t2_8, t2_16, t2i, t4, ta;
++	u32 t0, t1, t2_8, t2_16, t2i, t4, ta;
+=20
+ 	if ((pio < 0) || (pio > 4))
+ 		return -EINVAL;
+@@ -299,8 +299,8 @@ mpc52xx_ata_compute_mdma_timings(struct mpc52xx_ata=
+_priv *priv, int dev,
+ 	if (speed < 0 || speed > 2)
+ 		return -EINVAL;
+=20
+-	t->mdma1 =3D (s->t0M << 24) | (s->td << 16) | (s->tkw << 8) | (s->tm)=
+;
+-	t->mdma2 =3D (s->th << 24) | (s->tj << 16) | (s->tn << 8);
++	t->mdma1 =3D ((u32)s->t0M << 24) | ((u32)s->td << 16) | ((u32)s->tkw =
+<< 8) | s->tm;
++	t->mdma2 =3D ((u32)s->th << 24) | ((u32)s->tj << 16) | ((u32)s->tn <<=
+ 8);
+ 	t->using_udma =3D 0;
+=20
+ 	return 0;
+@@ -316,11 +316,11 @@ mpc52xx_ata_compute_udma_timings(struct mpc52xx_a=
+ta_priv *priv, int dev,
+ 	if (speed < 0 || speed > 2)
+ 		return -EINVAL;
+=20
+-	t->udma1 =3D (s->t2cyc << 24) | (s->tcyc << 16) | (s->tds << 8) | s->=
+tdh;
+-	t->udma2 =3D (s->tdvs << 24) | (s->tdvh << 16) | (s->tfs << 8) | s->t=
+li;
+-	t->udma3 =3D (s->tmli << 24) | (s->taz << 16) | (s->tenv << 8) | s->t=
+sr;
+-	t->udma4 =3D (s->tss << 24) | (s->trfs << 16) | (s->trp << 8) | s->ta=
+ck;
+-	t->udma5 =3D (s->tzah << 24);
++	t->udma1 =3D ((u32)s->t2cyc << 24) | ((u32)s->tcyc << 16) | ((u32)s->=
+tds << 8) | s->tdh;
++	t->udma2 =3D ((u32)s->tdvs << 24) | ((u32)s->tdvh << 16) | ((u32)s->t=
+fs << 8) | s->tli;
++	t->udma3 =3D ((u32)s->tmli << 24) | ((u32)s->taz << 16) | ((u32)s->te=
+nv << 8) | s->tsr;
++	t->udma4 =3D ((u32)s->tss << 24) | ((u32)s->trfs << 16) | ((u32)s->tr=
+p << 8) | s->tack;
++	t->udma5 =3D (u32)s->tzah << 24;
+ 	t->using_udma =3D 1;
+=20
+ 	return 0;
+--=20
+1.7.0.1
+
+
+
+
+Roman
 
 --=20
-Greg Freemyer
-Head of EDD Tape Extraction and Processing team
-Litigation Triage Solutions Specialist
-http://www.linkedin.com/in/gregfreemyer
-Preservation and Forensic processing of Exchange Repositories White Pap=
-er -
-<http://www.norcrossgroup.com/forms/whitepapers/tng_whitepaper_fpe.html=
->
-
-The Norcross Group
-The Intersection of Evidence & Technology
-http://www.norcrossgroup.com
+Roman Fietze                Telemotive AG B=FCro M=FChlhausen
+Breitwiesen                              73347 M=FChlhausen
+Tel.: +49(0)7335/18493-45        http://www.telemotive.de
