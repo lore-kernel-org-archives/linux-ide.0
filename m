@@ -1,47 +1,50 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: Linux kernel - Libata bad block error handling to user mode
  program
-Date: Fri, 5 Mar 2010 12:03:55 +0000
-Message-ID: <20100305120355.6b161572@lxorguk.ukuu.org.uk>
+Date: Fri, 5 Mar 2010 13:04:26 +0000
+Message-ID: <20100305130426.1c9414d1@lxorguk.ukuu.org.uk>
 References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
 	<20100303224245.ae8d1f7a.akpm@linux-foundation.org>
-	<87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>
-	<4B8FC6AC.4060801@teksavvy.com>
-	<f875e2fe1003040733h20d5523ex5d18b84f47fee8c7@mail.gmail.com>
-	<4B8FF2C3.1060808@teksavvy.com>
-	<f875e2fe1003041020t7cbab2c2x585df9b2dfc10dd2@mail.gmail.com>
-	<4B90655B.4000005@gmail.com>
-	<f875e2fe1003041811p5aa934ecob90836a8d0a6b605@mail.gmail.com>
+	<f875e2fe1003040458o3e13de97v3d839482939b687b@mail.gmail.com>
+	<201003041631.o24GVl51005720@alien.loup.net>
+	<f875e2fe1003041012m680ffc87i50099ed011526440@mail.gmail.com>
+	<201003050042.o250gsUC007947@alien.loup.net>
+	<87f94c371003042201n72ce8578vc01331678b52da75@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <f875e2fe1003041811p5aa934ecob90836a8d0a6b605@mail.gmail.com>
+In-Reply-To: <87f94c371003042201n72ce8578vc01331678b52da75@mail.gmail.com>
 Sender: owner-linux-mm@kvack.org
-To: s ponnusa <foosaa@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Mark Lord <kernel@teksavvy.com>, Greg Freemyer <greg.freemyer@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Mike Hayward <hayward@loup.net>, foosaa@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
 
-> cannot be read back by any other means. And the program which wrote
-> the data is unaware of the error that has happened at the lower level.
-> But the error log clearly has the issue caught but is trying to handle
-> differently.
+> For clarity, most ATA class disk drives are spec'ed to have one
+> non-recoverable error per 150TB or so of writes.  Disk drives do blind
+> writes.  (ie. They are not verified).  So we should all expect to have
+> the occasional silent data corruption on write.  The problem is
+> compounded with bad cables, controllers, RAM, etc.
 
-This is standard behaviour on pretty much every OS. If each write was
-back verified by the OS you wouldn't get any work done due fact it took
-so long to do any I/O and all I/O was synchronoous.
+Cable errors should only be a PATA issue, SATA protects the command block
+and the data.
 
-Where it matters you can mount some file systems synchronous, you can do
-synchronous I/O (O_SYNC) or you can use and check fsync/fdatasync results
-which should give you pretty good coverage providing barriers are enabled.
+> The only way for the linux kernel even attempt to fix that is for it
+> to do a read verify on everything it writes.  For the vast majority of
+> uses that is just not acceptable for performance reasons.
 
-It still won't catch a lot of cases because you sometimes see
+It's also the wrong layer
 
-- sectors being corrupted/dying that were not written by near to it
-- writes that the drive thinks were successful and reports that way but
-  turn out not to be readable
+> OTOH, if data integrity is of the utmost for you, then you should
+> maintain a md5hash or similar for your critical files and verify them
+> any time you make a copy.  btrfs may offer a auto read-verify.  I
+> don't know much about btrfs.
 
-Alan
+If you deal with utterly enormous amounts of data (as some clusters and
+the like do) you protect your data from application to application layer.
+It leaves ECC protected memory and it comes back to ECC protected memory
+with a hash. That covers a lot of the errors by the OS, hardware, cables,
+busses - even drive memory.
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
