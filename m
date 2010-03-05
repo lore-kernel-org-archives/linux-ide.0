@@ -1,42 +1,60 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15445] pata_jmicron incorrectly downgrades CompactFlash to
- UDMA/33
-Date: Fri, 5 Mar 2010 17:53:53 GMT
-Message-ID: <201003051753.o25HrrQ2026037@demeter.kernel.org>
-References: <bug-15445-11633@http.bugzilla.kernel.org/>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [git patches] libata updates for 2.6.34
+Date: Fri, 5 Mar 2010 19:58:24 +0100
+Message-ID: <201003051958.24987.bzolnier@gmail.com>
+References: <20100301202330.GA14977@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59768 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755286Ab0CERxy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 12:53:54 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o25HrrW0026038
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Fri, 5 Mar 2010 17:53:53 GMT
-In-Reply-To: <bug-15445-11633@http.bugzilla.kernel.org/>
+Received: from fg-out-1718.google.com ([72.14.220.155]:10486 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755416Ab0CETAR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2010 14:00:17 -0500
+In-Reply-To: <20100301202330.GA14977@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@linux.intel.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15445
+On Monday 01 March 2010 09:23:30 pm Jeff Garzik wrote:
 
+>       libata: Pass host flags into the pci helper
 
+It introduces a subtle bug:
 
+struct ata_host {
+...
+	unsigned long		flags;
 
+> @@ -1642,8 +1643,8 @@ extern int ata_pci_sff_activate_host(struct ata_host *host,
+>  				     irq_handler_t irq_handler,
+>  				     struct scsi_host_template *sht);
+>  extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+> -				const struct ata_port_info * const * ppi,
+> -				struct scsi_host_template *sht, void *host_priv);
+> +		const struct ata_port_info * const * ppi,
+> +		struct scsi_host_template *sht, void *host_priv, int hflags);
 
---- Comment #2 from Solomon Peachy <pizza@shaftnet.org>  2010-03-05 17:53:49 ---
-the problem with libata.force= is that the id of the port/device change each
-time the card is inserted/removed.. I suppose I can set it globally and
-override the settings for the hard disk and DVD drive...
+'int' type is not equal 'unsigned long' one on 64-bit architectures.
 
-I'll see if I can get this to work; it's not ideal, but better than nothing.
+Besides doing it this way is clearly suboptimal as the same effect
+could have been achieved by doing:
 
-(meanwhile, I also have a problem in that a suspend/resume cycle b0rks the
-pciehp subsystem, but that's another matter...)
+extern int __ata_pci_sff_init_one(struct pci_dev *pdev,
+				const struct ata_port_info * const *ppi,
+				struct scsi_host_template *sht, void *host_priv,
+				int hflag);
+static inline int ata_pci_sff_init_one(struct pci_dev *pdev,
+				const struct ata_port_info * const *ppi,
+				struct scsi_host_template *sht, void *host_priv)
+{
+	return __ata_pci_sff_init_one(pdev, ppi, sht, host_priv, 0);
+}
 
--- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+without the need to update all drivers and without breaking pending
+out-of-tree driver patches (yeah, it breaks my pata_ep93xx patches)..
+
+--
+Bartlomiej Zolnierkiewicz
