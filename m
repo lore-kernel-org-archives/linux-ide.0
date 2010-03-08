@@ -1,79 +1,69 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Mon, 08 Mar 2010 10:18:27 -0500
-Message-ID: <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+Date: Mon, 08 Mar 2010 10:33:00 -0500
+Message-ID: <yq1vdd6bzgz.fsf@sermon.lab.mkp.net>
 References: <4B947393.2050002@kernel.org>
+	<1268031640.4389.11.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet12.oracle.com ([148.87.113.124]:22190 "EHLO
-	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755185Ab0CHPUj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 10:20:39 -0500
-In-Reply-To: <4B947393.2050002@kernel.org> (Tejun Heo's message of "Mon, 08
-	Mar 2010 12:48:35 +0900")
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1268031640.4389.11.camel@mulgrave.site> (James Bottomley's
+	message of "Mon, 08 Mar 2010 12:30:40 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>
 
->>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+>>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
 
-Tejun> The [Windows Vista/7] partitioner seems to be using 1M as the
-Tejun> basic alignment unit and offsetting from there if explicitly
-Tejun> requested by the drive
+James> However, for 4k sectors, the main issues which have shown up in
+James> testing by others (mostly Martin) are
 
-Yep.
+James>      1. In native 4k mode, we work perfectly fine.  *however*,
+James>         most BIOSs can't boot native 4k drives.
 
-
-Tejun> Please note that hdparm is misreporting the alignment offset.  It
-Tejun> should be reporting 512 instead of 256 for offset-by-one drives.
-
-Already fixed.  Your hdparm must be old.
+Correct.  I have engaged with pretty much all the big OEMs in the
+industry and so far the interest has been near zero.
 
 
+James>      4. The aligment problem is made more complex by drives that
+James>         make use of the offset exponent feature (what you refer
+James>         to as offset by one) ... fortunately very few of these
+James>         have been seen in the wild and we're hopeful they can be
+James>         shot before they breed.
 
-Tejun> Partitioners maybe should only align partitions which will be
-Tejun> used by Linux and default to the traditional layout for others
-Tejun> while allowing explicit override.
-
-I don't think we take the partition type into account.  Karel?
-
-
-Tejun> Reportedly, commonly used partitioners aren't ready to handle
-Tejun> drives larger than 2 TiB in any configuration and alignment isn't
-Tejun> done properly for drives with 4 KiB physical sectors.  4 KiB
-Tejun> logical sector support is broken in both the kernel 
-
-Huh, what?  My homedir is on a 4KiB LBS/PBS drive and has been for ~2
-years.
+This topic is constantly up for debate in IDEMA.  However, it looks like
+we might win because of the impending demise of XP.
 
 
-Tejun> (need more details and probably a whole section on partitioner
-Tejun> behaviors)
+James> so the bottom line seems to be that if you want the device as a
+James> non boot disk, use native 4k sectors and a non-msdos partition
+James> label.  If you want to boot from the drive and your bios won't
+James> book 4k natively, partition everything using the 512 emulation
+James> and try to align the partitions correctly.  If your bios/uefi
+James> will boot 4k natively, just use it and whatever partition label
+James> the bios/uefi supports.
 
-I'm Cc:'ing Karel Zak and Jim Meyering who have been doing all the
-alignment work for fdisk and parted respectively.  Karel, Jim: The full
-writeup is here:
+James> Martin can fill in the pieces I've left out.
 
-	http://ata.wiki.kernel.org/index.php/ATA_4_KiB_sector_issues
+Here's my latest take given what I hear on the grapevine:
 
-It'd be great if you guys could share what you have been doing to the
-tooling.
+1. 512-byte logical block size drives will be around forever for legacy
+   deployments because nobody is willing to do the required BIOS int13
+   work.  It's not just a BIOS thing, this requires heavy changes to HBA
+   boot ROMs as well.
 
+2. Some vendors are working on EFI firmware and will support booting off
+   of 4KB LBS drives there.  This is mostly aimed at the server space.
 
-Tejun> Unfortunately, the transition to 4 KiB sector size, physical only
-Tejun> or logical too, is looking fairly ugly.  Hopefully, a reasonable
-Tejun> solution can be reached in not too distant future but even with
-Tejun> all the software side updated, it looks like it's gonna cause
-Tejun> significant amount of confusion and frustration.
+3. 4 KB logical block size drives will mainly be targeted for use inside
+   arrays.  Off the shelf enterprise drive models will most likely
+   continue to ship with a 512-byte LBS.
 
-With regards to XP compatibility I don't think we should go too much out
-of our way to accommodate it.  XP has been disowned by its master and I
-think virtualization will take care of the rest.
-
-FWIW, recent fdisk has a command line flag that will enable/disable DOS
-compatible layout.
+4. Part of the hesitation to work on booting off of 4 KB lbs drives is
+   motivated by a general trend in the industry to move boot
+   functionality to SSD.  There are 4 KB LBS SSDs out there but in
+   general the industry is sticking to ATA for local boot.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
