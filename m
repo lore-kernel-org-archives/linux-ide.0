@@ -1,36 +1,39 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Sun, 07 Mar 2010 23:56:11 -0800
-Message-ID: <4B94AD9B.8020505@zytor.com>
-References: <4B947393.2050002@kernel.org> <1268031640.4389.11.camel@mulgrave.site>
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: reference to unknown "CONFIG_MPC8315_DS" variable
+Date: Mon, 8 Mar 2010 05:42:04 -0500 (EST)
+Message-ID: <alpine.LFD.2.00.1003080540470.14702@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:39195 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612Ab0CHH5E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Mar 2010 02:57:04 -0500
-In-Reply-To: <1268031640.4389.11.camel@mulgrave.site>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:51260 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022Ab0CHLHy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 06:07:54 -0500
+Received: from cpe00142a336e11-cm001ac318e826.cpe.net.cable.rogers.com ([174.113.191.234] helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1NoaR5-00015O-Oz
+	for linux-ide@vger.kernel.org; Mon, 08 Mar 2010 05:43:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, mkp@mkp.net
+To: linux-ide@vger.kernel.org
 
-On 03/07/2010 11:00 PM, James Bottomley wrote:
->
-> The 2TB size for msdos partitions is a problem independent of the 4k
-> sector issue.  Traditional 512 byte sector drives are now available in
-> those sizes.  It looks like we're going to have to move to a new
-> partitioning label to solve this.
->
-> There's actually another barrier at 8 or 16TB, which is where a 4k
-> logical sector filesystem tops out using 32 bit block offsets (it's 8TB
-> if the fs hasn't been proof checked against sign extension problems).
->
 
-The limit for the MS-DOS partition tables is 2^32 sectors.  The patch 
-that Daniel posted was for a Linux kernel internal limit that set the 
-limit to 2 TB.
+  from drivers/ata/sata_fsl.c:
 
-	-hpa
+  #ifdef CONFIG_MPC8315_DS
+
+there appears to be no such CONFIG variable.
+
+rday
+--
+
+========================================================================
+Robert P. J. Day                               Waterloo, Ontario, CANADA
+
+            Linux Consulting, Training and Kernel Pedantry.
+
+Web page:                                          http://crashcourse.ca
+Twitter:                                       http://twitter.com/rpjday
+========================================================================
