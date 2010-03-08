@@ -1,42 +1,43 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Mon, 08 Mar 2010 12:12:39 -0800
-Message-ID: <4B955A37.2030206@zytor.com>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+Date: Mon, 08 Mar 2010 15:19:05 -0500
+Message-ID: <yq1fx4aa7nq.fsf@sermon.lab.mkp.net>
+References: <4B947393.2050002@kernel.org>
+	<1268031640.4389.11.camel@mulgrave.site>
+	<yq1vdd6bzgz.fsf@sermon.lab.mkp.net>
+	<yq1mxyibz7o.fsf@sermon.lab.mkp.net>
+	<yq1iq96bz22.fsf@sermon.lab.mkp.net> <4B9546E6.6050006@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:43554 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755523Ab0CHUOE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Mar 2010 15:14:04 -0500
-In-Reply-To: <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+Received: from rcsinet11.oracle.com ([148.87.113.123]:55069 "EHLO
+	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755714Ab0CHUWG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 15:22:06 -0500
+In-Reply-To: <4B9546E6.6050006@zytor.com> (H. Peter Anvin's message of "Mon,
+	08 Mar 2010 10:50:14 -0800")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On 03/08/2010 07:18 AM, Martin K. Petersen wrote:
-> 
-> I'm Cc:'ing Karel Zak and Jim Meyering who have been doing all the
-> alignment work for fdisk and parted respectively.  Karel, Jim: The full
-> writeup is here:
-> 
-> 	http://ata.wiki.kernel.org/index.php/ATA_4_KiB_sector_issues
-> 
-> It'd be great if you guys could share what you have been doing to the
-> tooling.
-> 
+>>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
 
-Please correct the following bit in C-3:
+hpa> On the flipside, though, there really is very little net benefit to
+hpa> 4K as opposed to 512 byte logical sectors: the additional protocol
+hpa> overhead is relatively minimal, and as long as writes are aligned
+hpa> full blocks, there shouldn't be any additional overhead on either
+hpa> the OS or the drive side.  On the plus side, you get full
+hpa> compatibility with the existing software stack.  The equation
+hpa> really seems rather simple.
 
-"A different partition format - GPT[6] - should be used beyond 2^32
-sectors, which could harm compatibility with older BIOSs or other
-operating systems which don't recognize the new format."
+4KB sectors are not a win for anybody except the drive vendors.
 
-BIOS does not care about the partition table format.  There might be
-issues with > 2^32 sectors for BIOSes (e.g. truncating sector counts),
-but that would be unrelated.
+There is a push in the industry right now to keep the 512-byte logical
+blocks forever.  The first step would be to report misaligned accesses
+or accesses that are not a multiple of the physical block size.  Second
+step would be to eventually reject any write that's not a properly
+aligned multiple of the physical block size.
 
-	-hpa
+-- 
+Martin K. Petersen	Oracle Linux Engineering
