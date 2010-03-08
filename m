@@ -1,39 +1,79 @@
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: reference to unknown "CONFIG_MPC8315_DS" variable
-Date: Mon, 8 Mar 2010 05:42:04 -0500 (EST)
-Message-ID: <alpine.LFD.2.00.1003080540470.14702@localhost>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Mon, 08 Mar 2010 10:18:27 -0500
+Message-ID: <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+References: <4B947393.2050002@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:51260 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754022Ab0CHLHy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 06:07:54 -0500
-Received: from cpe00142a336e11-cm001ac318e826.cpe.net.cable.rogers.com ([174.113.191.234] helo=crashcourse.ca)
-	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <rpjday@crashcourse.ca>)
-	id 1NoaR5-00015O-Oz
-	for linux-ide@vger.kernel.org; Mon, 08 Mar 2010 05:43:43 -0500
+Received: from rcsinet12.oracle.com ([148.87.113.124]:22190 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755185Ab0CHPUj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 10:20:39 -0500
+In-Reply-To: <4B947393.2050002@kernel.org> (Tejun Heo's message of "Mon, 08
+	Mar 2010 12:48:35 +0900")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>
+
+>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+
+Tejun> The [Windows Vista/7] partitioner seems to be using 1M as the
+Tejun> basic alignment unit and offsetting from there if explicitly
+Tejun> requested by the drive
+
+Yep.
 
 
-  from drivers/ata/sata_fsl.c:
+Tejun> Please note that hdparm is misreporting the alignment offset.  It
+Tejun> should be reporting 512 instead of 256 for offset-by-one drives.
 
-  #ifdef CONFIG_MPC8315_DS
+Already fixed.  Your hdparm must be old.
 
-there appears to be no such CONFIG variable.
 
-rday
---
 
-========================================================================
-Robert P. J. Day                               Waterloo, Ontario, CANADA
+Tejun> Partitioners maybe should only align partitions which will be
+Tejun> used by Linux and default to the traditional layout for others
+Tejun> while allowing explicit override.
 
-            Linux Consulting, Training and Kernel Pedantry.
+I don't think we take the partition type into account.  Karel?
 
-Web page:                                          http://crashcourse.ca
-Twitter:                                       http://twitter.com/rpjday
-========================================================================
+
+Tejun> Reportedly, commonly used partitioners aren't ready to handle
+Tejun> drives larger than 2 TiB in any configuration and alignment isn't
+Tejun> done properly for drives with 4 KiB physical sectors.  4 KiB
+Tejun> logical sector support is broken in both the kernel 
+
+Huh, what?  My homedir is on a 4KiB LBS/PBS drive and has been for ~2
+years.
+
+
+Tejun> (need more details and probably a whole section on partitioner
+Tejun> behaviors)
+
+I'm Cc:'ing Karel Zak and Jim Meyering who have been doing all the
+alignment work for fdisk and parted respectively.  Karel, Jim: The full
+writeup is here:
+
+	http://ata.wiki.kernel.org/index.php/ATA_4_KiB_sector_issues
+
+It'd be great if you guys could share what you have been doing to the
+tooling.
+
+
+Tejun> Unfortunately, the transition to 4 KiB sector size, physical only
+Tejun> or logical too, is looking fairly ugly.  Hopefully, a reasonable
+Tejun> solution can be reached in not too distant future but even with
+Tejun> all the software side updated, it looks like it's gonna cause
+Tejun> significant amount of confusion and frustration.
+
+With regards to XP compatibility I don't think we should go too much out
+of our way to accommodate it.  XP has been disowned by its master and I
+think virtualization will take care of the rest.
+
+FWIW, recent fdisk has a command line flag that will enable/disable DOS
+compatible layout.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
