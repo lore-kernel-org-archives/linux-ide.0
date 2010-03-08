@@ -1,59 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: =?UTF-8?B?Q2zDoXVkaW8=?= Martins <ctpm@ist.utl.pt>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Mon, 08 Mar 2010 15:01:06 -0500
-Message-ID: <yq1pr3ea8hp.fsf@sermon.lab.mkp.net>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
-	<4B954224.6010208@zytor.com>
+Date: Mon, 8 Mar 2010 20:02:06 +0000
+Message-ID: <20100308200206.dac60db7.ctpm@ist.utl.pt>
+References: <4B947393.2050002@kernel.org>
+	<1268031640.4389.11.camel@mulgrave.site>
+	<yq1vdd6bzgz.fsf@sermon.lab.mkp.net>
+	<yq1mxyibz7o.fsf@sermon.lab.mkp.net>
+	<yq1iq96bz22.fsf@sermon.lab.mkp.net>
+	<4B9546E6.6050006@zytor.com>
+	<1268074705.10660.23.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet11.oracle.com ([148.87.113.123]:37106 "EHLO
-	rcsinet11.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755598Ab0CHUDS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 15:03:18 -0500
-In-Reply-To: <4B954224.6010208@zytor.com> (H. Peter Anvin's message of "Mon,
-	08 Mar 2010 10:29:56 -0800")
+Received: from smtp2.ist.utl.pt ([193.136.128.22]:59134 "EHLO smtp2.ist.utl.pt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755187Ab0CHULt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Mar 2010 15:11:49 -0500
+In-Reply-To: <1268074705.10660.23.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>
-
->>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
-
->> Huh, what?  My homedir is on a 4KiB LBS/PBS drive and has been for ~2
->> years.
-
-hpa> For > 2 TiB drives with 4 KiB logical sectors and MS-DOS partition
-hpa> tables, it is.
-
-Ah, that.  Already fixed, I believe.
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
 
->> With regards to XP compatibility I don't think we should go too much
->> out of our way to accommodate it.  XP has been disowned by its master
->> and I think virtualization will take care of the rest.
+On Tue, 09 Mar 2010 00:28:25 +0530 James Bottomley <James.Bottomley@sus=
+e.de> wrote:
+>=20
+> There's another problem that afflicts 4k drives emulating 512b: they
+> have to do a read modify write for any isolated 512b write ... that
+> leads to potential corruption of adjacent 512b blocks if power is los=
+t
+> at the moment the write is being done.  Since most Linux filesystems =
+are
+> 4k sectors, misalignment really hammers this, plus most journal write=
+s
+> seem to be done in 512 byte increments.  I suppose for USB this could=
+ be
+> regarded as flakey as usual, though.
+>=20
 
-hpa> I think that's is wildly optimistic, 
+ Most users assume that a single 512B sector write is atomic as far as
+power failure is concerned. Hasn't this requirement been carried over
+to the new 4k physical sector?
 
-I don't expect XP to go away any time soon.  But do I think that the
-number of fresh XP installs in combination with Linux will be fairly
-limited.  And general lack of hardware enablement will eventually kill
-off XP on raw metal.
+ It seems reasonable that if a 512B sector write is atomic in the older
+drives, a 4k sector write would also be atomic on the newer drives,
+since the time required to write it is negligible when compared to
+capacitor voltage decay and inertia of the disk platters.
 
-I think it's ok that we have stop-gap solutions in place for
-interoperability.  But I wouldn't want to waste all our resources on
-designing for the past.  I'm much more interested in making sure that
-single-boot Linux is doing the right thing.
+ Anyway, I suppose most of the energy/time required for a sector write
+operation, is being expended on head assembly positioning and the wait
+for the correct sector passing under the write head. That is, the write
+operation itself takes so little time that it should make no difference
+whether you write 512B or 4k.
 
+ So the question is: what are hard drive makers guaranteeing (if
+anything at all)? Was a 512B sector write really atomic? Is a 4k one?
+Or was it completely manufacturer-dependent to start?
 
->> FWIW, recent fdisk has a command line flag that will enable/disable
->> DOS compatible layout.
+ Regards
 
-hpa> Yes, unfortunately it is still on by default.
+Cl=C3=A1udio
 
-I agree that this is a don't-be-broken option and I would prefer it the
-other way around (I know that's the plan for the next release.  I just
-hope the distributions get things right).
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
