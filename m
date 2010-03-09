@@ -1,85 +1,61 @@
-From: Jim Meyering <jim@meyering.net>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 09 Mar 2010 08:27:24 +0100
-Message-ID: <878wa20xb7.fsf@meyering.net>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
-	<20100308195847.GC18077@nb.net.home>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
+Date: Tue, 9 Mar 2010 09:13:18 +0100 (CET)
+Message-ID: <alpine.DEB.1.10.1003090906450.9819@uplift.swm.pp.se>
+References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc> <4B96013F.1050904@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100308195847.GC18077@nb.net.home> (Karel Zak's message of
-	"Mon, 8 Mar 2010 20:58:47 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Karel Zak <kzak@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from swm.pp.se ([212.247.200.143]:55360 "EHLO uplift.swm.pp.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751569Ab0CIINT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 03:13:19 -0500
+In-Reply-To: <4B96013F.1050904@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Al Bogner <suse-linux@ml082.pinguin.uni.cc>, linux-ide@vger.kernel.org
 
-Karel Zak wrote:
-> On Mon, Mar 08, 2010 at 10:18:27AM -0500, Martin K. Petersen wrote:
-...
->> It'd be great if you guys could share what you have been doing to the
->> tooling.
->
->  small summary:
->
->  - libblkid provides unified API to topology information, it supports:
->     - ioctls (kernel >= 2.6.32)
->     - sysfs (kernel >= 2.6.31)
->     - stripe chunk size and stripe width for DM, MD. LVM and evms on
->       old kernels
->  - libparted and fdisk are linked against libblkid
->
->  - fdisk supports 4KiB logical sector size (util-linux-ng >= 2.15
->  - fdisk supports 4KiB physical sector size (util-linux-ng >= 2.17)
->  - fdisk uses 1MiB alignment (or more if optimal I/O size is bigger)
->    and alignment_offset for all partitions in non-DOS mode
->    (util-linux-ng >= 2.17.1)
->
->  - parted supports 4KiB physical sector size
->  - parted uses 1MiB alignment for disks with unknown topology, disks
->    with topology information are aligned to optimal (or minimum) I/O
->    size (parted >= 2.1)
->
->  - EFI GPT code in the kernel has been updated to works properly with
->    4KiB sectors (kernel >= 2.6.33)
->
->  - mkfs.{ext,xfs,gfs2,ocfs2} have been update to work properly with
->    topology information, mkfs.{ext,xfs} are linked against libblkid
->    for compatibility with old kernel (for stripe chunk size / width)
->
->  - Fedora-13/RHEL6 installer uses libparted with 4KiB support
->
->  - alignment_offset & 4KiB support is planned for LUKS (cryptsetup)
+On Tue, 9 Mar 2010, Tejun Heo wrote:
 
-Thanks for the summary, Karel.
-In case anyone wants more high-level detail on the parted front,
-here's its NEWS file:
+> How fast does it increase?  ie. counts / hour.
 
-    http://git.debian.org/?p=parted/parted.git;a=blob;f=NEWS
+I can confirm this, and it seems to differ between different firmware 
+versions and WD20-models:
 
-Currently, I'm not planning much for Parted, other than clean-up.
-For example, I want to remove all of the FS-related code (it's
-horribly bit-rotted) from the package, with the exception of
-HFS/HFS+ and FAT resizing capabilities, since AFAIK, Parted
-has the only free implementations.  If any of you know of other
-implementations or work in progress, please let me know.
+# smartctl -a /dev/sdc | egrep 
+'Power_On_Hours|Load_Cycle_Count|Device|Firmware'
+Device Model:     WDC WD20EADS-32S2B0
+Firmware Version: 01.00A01
+Device is:        Not in smartctl database [for details use: -P showall]
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       905
+193 Load_Cycle_Count        0x0032   193   193   000    Old_age   Always       -       22562
+# smartctl -a /dev/sdd | egrep 
+'Power_On_Hours|Load_Cycle_Count|Device|Firmware'
+Device Model:     WDC WD20EADS-32S2B0
+Firmware Version: 01.00A01
+Device is:        Not in smartctl database [for details use: -P showall]
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       919
+193 Load_Cycle_Count        0x0032   193   193   000    Old_age   Always       -       22520
+# smartctl -a /dev/sde | egrep 'Power_On_Hours|Load_Cycle_Count|Device|Firmware'
+Device Model:     WDC WD20EADS-00R6B0
+Firmware Version: 01.00A01
+Device is:        Not in smartctl database [for details use: -P showall]
+   9 Power_On_Hours          0x0032   089   089   000    Old_age   Always       -       8581
+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       45
+# smartctl -a /dev/sdf | egrep 'Power_On_Hours|Load_Cycle_Count|Device|Firmware'
+Device Model:     WDC WD20EADS-00R6B0
+Firmware Version: 01.00A01
+Device is:        Not in smartctl database [for details use: -P showall]
+   9 Power_On_Hours          0x0032   092   092   000    Old_age   Always       -       5849
+193 Load_Cycle_Count        0x0032   200   200   000    Old_age   Always       -       30
+# smartctl -a /dev/sdg | egrep 'Power_On_Hours|Load_Cycle_Count|Device|Firmware'
+Device Model:     WDC WD20EARS-00S8B1
+Firmware Version: 80.00A80
+Device is:        Not in smartctl database [for details use: -P showall]
+   9 Power_On_Hours          0x0032   099   099   000    Old_age   Always       -       760
+193 Load_Cycle_Count        0x0032   195   195   000    Old_age   Always       -       16615
 
 
-Related information, prompted by my recent encounter with a
-tool that refused to let me use a GPT partition table.
-
-Partition table formats: prefer GUID/GPT:
-
-  Having spent more than my share of time looking at partition table
-  formats recently, I am now strongly biased against DOS partition
-  tables, and for GUID/GPT ones.  In addition to allowing for >2GiB
-  partition offsets and lengths, GPT tables provide for better
-  protection in case of corruption (checksums, backup table at end
-  of disk) and don't have the anachronistic distinction of primary
-  and extended/logical partitions (all partitions are "primary").
-  You can even give each partition a name.  The only reason to use a
-  DOS partition table on a new installation is if you're stuck with
-  a requirement of using an OS like XP on bare metal.
-
-Please consider encouraging the use of GPT partition tables...
-or at least do not *dis*courage their use.
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
