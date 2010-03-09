@@ -1,42 +1,47 @@
-From: Arnd Bergmann <arnd@arndb.de>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 00:46:24 +0100
-Message-ID: <201003100046.24695.arnd@arndb.de>
-References: <4B947393.2050002@kernel.org>
+Date: Wed, 10 Mar 2010 08:56:27 +0900
+Message-ID: <4B96E02B.7060200@kernel.org>
+References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>	<20100308195847.GC18077@nb.net.home> <878wa20xb7.fsf@meyering.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:62655 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625Ab0CIXqe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Mar 2010 18:46:34 -0500
-In-Reply-To: <4B947393.2050002@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:41198 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753592Ab0CIX5Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 18:57:25 -0500
+In-Reply-To: <878wa20xb7.fsf@meyering.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+To: Jim Meyering <jim@meyering.net>
+Cc: Karel Zak <kzak@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On Monday 08 March 2010 04:48:35 Tejun Heo wrote:
-> Unfortunately, while Windows can assume that newer releases won't
-> share the hard drive with older releases including Windows XP, Linux
-> distros can't do that.  There will be many installations where a
-> modern Linux distros share a hard drive with older releases of
-> Windows.  At this point, I can't see a silver bullet solution.
+Hello,
+
+On 03/09/2010 04:27 PM, Jim Meyering wrote:
+> Related information, prompted by my recent encounter with a
+> tool that refused to let me use a GPT partition table.
 > 
-> Partitioners maybe should only align partitions which will be used by
-> Linux and default to the traditional layout for others while allowing
-> explicit override.  I think Windows XP wouldn't have problem with
-> differently aligned partitions as long as it doesn't actually use them
-> but haven't tested it.
+> Partition table formats: prefer GUID/GPT:
+> 
+>   Having spent more than my share of time looking at partition table
+>   formats recently, I am now strongly biased against DOS partition
+>   tables, and for GUID/GPT ones.  In addition to allowing for >2GiB
+>   partition offsets and lengths, GPT tables provide for better
+>   protection in case of corruption (checksums, backup table at end
+>   of disk) and don't have the anachronistic distinction of primary
+>   and extended/logical partitions (all partitions are "primary").
+>   You can even give each partition a name.  The only reason to use a
+>   DOS partition table on a new installation is if you're stuck with
+>   a requirement of using an OS like XP on bare metal.
+> 
+> Please consider encouraging the use of GPT partition tables...
+> or at least do not *dis*courage their use.
 
-Any idea if XP can cope with partition tables that use a 32-sector, 128-head
-geometry rather than the default 63-sector, 255-head one? That seems to
-be what some flash memory cards are using and it would make any cylinder
-aligned partition also 4096-byte aligned, at the cost of moving the
-1024-cylinder boundary from 7.88 GiB to 2 GiB.
+I'll surely include it.
 
-Do we know of anything that requires 63s/255h?
+Thanks.
 
-	Arnd
+-- 
+tejun
