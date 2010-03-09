@@ -1,72 +1,80 @@
-From: Tomasz Palac <palac@uci.agh.edu.pl>
-Subject: Re: Comment on ATA 4 KiB sector issues
-Date: Tue, 9 Mar 2010 10:22:39 +0100 (CET)
-Message-ID: <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
-References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl>
- <4B95AEF6.8030906@kernel.org>
+From: Karel Zak <kzak@redhat.com>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Tue, 9 Mar 2010 13:18:59 +0100
+Message-ID: <20100309121858.GA2020@nb.net.home>
+References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net> <170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com> <4B95F071.3070400@msgid.tls.msk.ru> <20100309100153.GD18077@nb.net.home> <4B961FE1.5040105@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from galaxy.agh.edu.pl ([149.156.96.9]:42470 "EHLO galaxy.agh.edu.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753458Ab0CIJmt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Mar 2010 04:42:49 -0500
-In-Reply-To: <4B95AEF6.8030906@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4B961FE1.5040105@msgid.tls.msk.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Jim Meyering <jim@meyering.net>, Neil Brown <neilb@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, 9 Mar 2010, Tejun Heo wrote:
+On Tue, Mar 09, 2010 at 01:16:01PM +0300, Michael Tokarev wrote:
+> Karel Zak wrote:
+> >  # mdadm --create /dev/md8 --level=5 --raid-devices=4 /dev/sdb{1,2,3,4}
+> 
+> That's 3-disk stripe size with default 64Kb chunk size, which makes
+> 3x64=320KiB - the number to which everything should be aligned.
+> 
+> >  # fdisk -lcu /dev/md8
+> > 
+> >  Disk /dev/md8: 1572 MB, 1572667392 bytes
+> >  2 heads, 4 sectors/track, 383952 cylinders, total 3071616 sectors
+> >  Units = sectors of 1 * 512 = 512 bytes
+> >  Sector size (logical/physical): 512 bytes / 4096 bytes
+> >  I/O size (minimum/optimal): 65536 bytes / 65536 bytes
+> 
+> And here we go: fdisk does not see the right number: nothing
+> is dividable by 3.
 
-> Hello,
->
-> I prefer if linux-ide@vger.kernel.org is cc'd so if you're okay with
-> it, please add cc when you reply.
+ Well, the same setup with 2.6.34-0.9.rc0.git13.fc14.x86_64:
 
-OK.
+ # fdisk -luc /dev/sdb
 
-> On 03/08/2010 05:53 PM, Tomasz Palac wrote:
->> I've read your document on ATA 4 KiB sector issues and I have a simple
->> solution for partitioning 4 KiB physical/512 B logical drives with no
->> offset.
->>
->> I use geometry of 64 heads and 32 (logical) sectors. This way cylinder
->> is exactly 1 MiB. First partition starts at 2nd cylinder and is aligned
->> at 1 MiB. Other primary partition are aligned at 1 MiB too. If one of
->> them is extended partition, then logical partitions within it will be
->> aligned at 16 KiB (32 logical sectors).
->>
->> This scheme can be applied to SSDs, with the exception of logical
->> partitions (16 KiB alignment will probably not be enough).
->>
->> I don't know if older Windows will accept such partitioning scheme, but
->> if it uses CHS values, then it should.
->
-> Well, the thing is that there is no way to reliably communicate those
-> geometry values and 255*63 is hardcoded everywhere.  The only way you
-> can deduce the geometry is by solving equation with the CHS address
-> and LBA in the partition table but for that to work the first
-> partition should end before CHS limit.
+ Disk /dev/sdb: 2621 MB, 2621440000 bytes
+ 255 heads, 63 sectors/track, 318 cylinders, total 5120000 sectors
+ Units = sectors of 1 * 512 = 512 bytes
+ Sector size (logical/physical): 512 bytes / 4096 bytes
+ I/O size (minimum/optimal): 4096 bytes / 32768 bytes
+ Disk identifier: 0x77fbab55
 
-This limit is 8 GiB and there is no problem with first partitions 
-extending beyond that. This is because such partitions are described in 
-partition table as ending at 1023/255/63 (or something like that). Real 
-size of partition is specified by LBA values.
+ Device Boot         Start         End      Blocks   Id  System
+ /dev/sdb1            2048     1026047      512000   83  Linux
+ /dev/sdb2         1026048     2050047      512000   83  Linux
+ /dev/sdb3         2050048     3074047      512000   83  Linux
+ /dev/sdb4         3074048     4098047      512000   83  Linux
 
-> Using custom geometry is a good way to trick a partitioner which
-> partitions based on CHS alignment to align to larger units but it
-> isn't meaningful outside of that.  If CHS dosen't follow 255*63, a lot
-> of code (firmware, BIOS, boot loader, OS...) will just assume CHS is
-> incorrect.
 
-As of firmware, Large Disk Howto states that a lot of SCSI host adapters 
-are using 64/32 geometry (at least for disks smaller than 8 GiB). If BIOS 
-supports EDD (INT13h Extensions), then disk geometry is irrelevant. If 
-not, then geometry can be read from partition table. The only problem with 
-64/32 geometry is 1 GiB (as opposed to 8 GiB) limit for boot partition 
-(without using EDD). The same applies to boot loaders. Modern OSes don't 
-use CHS.
+ # mdadm --create /dev/md8 --level=5 --raid-devices=4 /dev/sdb{1,2,3,4}
+
+
+ # fdisk -luc /dev/md8
+
+ Disk /dev/md8: 1572 MB, 1572667392 bytes
+ 2 heads, 4 sectors/track, 383952 cylinders, total 3071616 sectors
+ Units = sectors of 1 * 512 = 512 bytes
+ Sector size (logical/physical): 512 bytes / 4096 bytes
+ I/O size (minimum/optimal): 65536 bytes / 65536 bytes
+
+
+ # cat /sys/block/md8/queue/{minimum,optimal}_io_size 
+ 65536
+ 65536
+
+> >  # cat /sys/block/md8/md8p{1,2}/alignment_offset
+> >  0
+> >  0
+> 
+> And that's where the issue is.  md does not {sup,re}port all
+> this stuff yet.
+
+ Hmm...
+
+    Karel
 
 -- 
-Tomasz Palac, AGH University of Science and Technology
+ Karel Zak  <kzak@redhat.com>
