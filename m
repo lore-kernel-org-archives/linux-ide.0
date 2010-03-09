@@ -1,50 +1,32 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Mon, 08 Mar 2010 13:16:48 -0800
-Message-ID: <4B956940.1060304@zytor.com>
-References: <4B947393.2050002@kernel.org>	<1268031640.4389.11.camel@mulgrave.site>	<yq1vdd6bzgz.fsf@sermon.lab.mkp.net>	<yq1mxyibz7o.fsf@sermon.lab.mkp.net>	<yq1iq96bz22.fsf@sermon.lab.mkp.net> <4B9546E6.6050006@zytor.com> <yq1fx4aa7nq.fsf@sermon.lab.mkp.net>
+Date: Mon, 08 Mar 2010 22:20:41 -0500
+Message-ID: <yq17hpm89km.fsf@sermon.lab.mkp.net>
+References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+	<170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com>
+	<4B95B843.6030900@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:50160 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755744Ab0CHVRU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 8 Mar 2010 16:17:20 -0500
-In-Reply-To: <yq1fx4aa7nq.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B95B843.6030900@kernel.org> (Tejun Heo's message of "Tue, 09
+	Mar 2010 11:53:55 +0900")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On 03/08/2010 12:19 PM, Martin K. Petersen wrote:
->>>>>> "hpa" == H Peter Anvin <hpa@zytor.com> writes:
-> 
-> hpa> On the flipside, though, there really is very little net benefit to
-> hpa> 4K as opposed to 512 byte logical sectors: the additional protocol
-> hpa> overhead is relatively minimal, and as long as writes are aligned
-> hpa> full blocks, there shouldn't be any additional overhead on either
-> hpa> the OS or the drive side.  On the plus side, you get full
-> hpa> compatibility with the existing software stack.  The equation
-> hpa> really seems rather simple.
-> 
-> 4KB sectors are not a win for anybody except the drive vendors.
-> 
+>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
 
-Obviously.  However, larger physical storage unit sizes -- 4K for
-spinning media, but frequently much larger for flash, for example -- is
-already in wide use, and having a huge mishmash of logical block sizes
-isn't going to work very well.
+>> http://people.redhat.com/msnitzer/docs/io-limits.txt
 
-> There is a push in the industry right now to keep the 512-byte logical
-> blocks forever.  The first step would be to report misaligned accesses
-> or accesses that are not a multiple of the physical block size.  Second
-> step would be to eventually reject any write that's not a properly
-> aligned multiple of the physical block size.
+Tejun> Ah... this is great.  I'll link the doc and shamelessly steal
+Tejun> parts of it if that's okay with you.
 
-I personally suspect that that is the way it is going to go, rather than
-trying to change the software ecosystem to a different logical block
-size.  It has been tried in the past and failed, with the sole exception
-of CD-ROMs, pretty much.
+There's also this one:
 
-	-hpa
+    http://oss.oracle.com/~mkp/docs/linux-advanced-storage.pdf
+
+It is more aimed at storage vendors than end users, though.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
