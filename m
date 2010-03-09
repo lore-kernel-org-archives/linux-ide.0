@@ -1,93 +1,72 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Handling Asynchronous Notification when IO are outstanding
-Date: Mon, 8 Mar 2010 16:27:49 -0800
-Message-ID: <e7510f761003081627o1134b77eud719e033f68488bb@mail.gmail.com>
+From: Tomasz Palac <palac@uci.agh.edu.pl>
+Subject: Re: Comment on ATA 4 KiB sector issues
+Date: Tue, 9 Mar 2010 10:22:39 +0100 (CET)
+Message-ID: <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
+References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl>
+ <4B95AEF6.8030906@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:51471 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756080Ab0CIA1x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2010 19:27:53 -0500
-Received: from kpbe18.cbf.corp.google.com (kpbe18.cbf.corp.google.com [172.25.105.82])
-	by smtp-out.google.com with ESMTP id o290Rqa5019759
-	for <linux-ide@vger.kernel.org>; Mon, 8 Mar 2010 16:27:52 -0800
-Received: from qw-out-1920.google.com (qwc5.prod.google.com [10.241.193.133])
-	by kpbe18.cbf.corp.google.com with ESMTP id o290RQ2R002794
-	for <linux-ide@vger.kernel.org>; Mon, 8 Mar 2010 16:27:51 -0800
-Received: by qw-out-1920.google.com with SMTP id 5so1680747qwc.28
-        for <linux-ide@vger.kernel.org>; Mon, 08 Mar 2010 16:27:50 -0800 (PST)
+Received: from galaxy.agh.edu.pl ([149.156.96.9]:42470 "EHLO galaxy.agh.edu.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753458Ab0CIJmt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 04:42:49 -0500
+In-Reply-To: <4B95AEF6.8030906@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-I am working with Marvell 7042 controller and SiI3276 port multiplier
-[PMP] and would like to handle asynchronous notification [AN]
-properly.
-However, if a command is outstanding when the PMP raises an AN, the
-port is frozen, preventing _autopsy_ error code from doing its work.
+On Tue, 9 Mar 2010, Tejun Heo wrote:
 
-For example, here is a case where a disk has a power glitch behind a
-port multiplier while a command is outstanding. The PMP detects the
-signal loss and send an AN.
-In sata_mv.c  mv_err_intr() is called and detect the notification: it
-pushes info in error descriptor and call ata_port_schedule_eh() via
-sata_async_notification().
+> Hello,
+>
+> I prefer if linux-ide@vger.kernel.org is cc'd so if you're okay with
+> it, please add cc when you reply.
 
-However, when we enter ata_scsi_error(), if a command is outstanding,
-__ata_port_freeze() is called, preventing  sata_scr_read() to succeed
-in ata_eh_link_autopsy():
+OK.
 
+> On 03/08/2010 05:53 PM, Tomasz Palac wrote:
+>> I've read your document on ATA 4 KiB sector issues and I have a simple
+>> solution for partitioning 4 KiB physical/512 B logical drives with no
+>> offset.
+>>
+>> I use geometry of 64 heads and 32 (logical) sectors. This way cylinder
+>> is exactly 1 MiB. First partition starts at 2nd cylinder and is aligned
+>> at 1 MiB. Other primary partition are aligned at 1 MiB too. If one of
+>> them is extended partition, then logical partitions within it will be
+>> aligned at 16 KiB (32 logical sectors).
+>>
+>> This scheme can be applied to SSDs, with the exception of logical
+>> partitions (16 KiB alignment will probably not be enough).
+>>
+>> I don't know if older Windows will accept such partitioning scheme, but
+>> if it uses CHS values, then it should.
+>
+> Well, the thing is that there is no way to reliably communicate those
+> geometry values and 255*63 is hardcoded everywhere.  The only way you
+> can deduce the geometry is by solving equation with the CHS address
+> and LBA in the partition table but for that to work the first
+> partition should end before CHS limit.
 
-Feb 25 02:11:57 bdfl11 kernel: ata4.00: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.01: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.02: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.03: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.04: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.05: failed to read SCR 1 (Emask=0x40)
-Feb 25 02:11:57 bdfl11 kernel: ata4.15: exception Emask 0x4 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.15: edma_err_cause=02000100
-pp_flags=00000005, fis_cause=00008200
-Feb 25 02:11:57 bdfl11 kernel: ata4.00: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.01: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.02: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.03: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.04: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.04: cmd
-ca/00:80:e7:78:56/00:00:00:00:00/e8 tag 3 dma 65536 out
-Feb 25 02:11:57 bdfl11 kernel: res 50/00:00:4e:10:45/00:00:00:00:00/e8
-Emask 0x4 (timeout)
-Feb 25 02:11:57 bdfl11 kernel: ata4.04: status: { DRDY }
-Feb 25 02:11:57 bdfl11 kernel: ata4.05: exception Emask 0x100 SAct 0x0
-SErr 0x0 action 0x6 frozen
-Feb 25 02:11:57 bdfl11 kernel: ata4.15: hard resetting link
-Feb 25 02:11:58 bdfl11 kernel: ata4.15: SATA link up 3.0 Gbps (SStatus
-123 SControl 300)
-Feb 25 02:11:58 bdfl11 kernel: ata4.00: hard resetting link
+This limit is 8 GiB and there is no problem with first partitions 
+extending beyond that. This is because such partitions are described in 
+partition table as ending at 1023/255/63 (or something like that). Real 
+size of partition is specified by LBA values.
 
-I haven't found the right solution to handle this problem yet:
+> Using custom geometry is a good way to trick a partitioner which
+> partitions based on CHS alignment to align to larger units but it
+> isn't meaningful outside of that.  If CHS dosen't follow 255*63, a lot
+> of code (firmware, BIOS, boot loader, OS...) will just assume CHS is
+> incorrect.
 
-1: removing __ata_port_freeze() in ata_scsi_error() unilaterally is
-very dangerous, it opens a new race condition and may schedule the
-error handler several time.
-2: in sata_mv, we can not wait for commands to complete like we do for
-NCQ, because in the case above, the command sent to the failed disk
-will never come back.
+As of firmware, Large Disk Howto states that a lot of SCSI host adapters 
+are using 64/32 geometry (at least for disks smaller than 8 GiB). If BIOS 
+supports EDD (INT13h Extensions), then disk geometry is irrelevant. If 
+not, then geometry can be read from partition table. The only problem with 
+64/32 geometry is 1 GiB (as opposed to 8 GiB) limit for boot partition 
+(without using EDD). The same applies to boot loaders. Modern OSes don't 
+use CHS.
 
-I am thinking of waiting for all IO to complete on all port but the
-impacted one(s), adding a new action in ehi descriptor to indicate an
-AN is scheduled, and preventing the error to froze the port if only
-IOs to the failed ports are outstanding.
-Then _autopsy_ code would collect and decode SERROR register for the
-failed port.
-
-Is it the right approach?
-
-Thanks,
-Gwendal.
+-- 
+Tomasz Palac, AGH University of Science and Technology
