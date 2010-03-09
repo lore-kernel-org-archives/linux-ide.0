@@ -1,45 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SuperMicro X8DTL-6F motherboard, Intel ICH10 SATA, SiI3726 SATA
- port multiplier
-Date: Tue, 09 Mar 2010 17:14:22 +0900
-Message-ID: <4B96035E.80503@kernel.org>
-References: <alpine.LMD.2.00.1002201350570.16281@rhpcserv> <alpine.LMD.2.00.1002221542010.28521@rhpcserv>
+Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
+Date: Tue, 09 Mar 2010 17:05:19 +0900
+Message-ID: <4B96013F.1050904@kernel.org>
+References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49414 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:59137 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751813Ab0CIIO0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Mar 2010 03:14:26 -0500
-In-Reply-To: <alpine.LMD.2.00.1002221542010.28521@rhpcserv>
+	id S1751237Ab0CIIFY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 03:05:24 -0500
+In-Reply-To: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Todd Pfaff <pfaff@rhpcs.mcmaster.ca>
+To: Al Bogner <suse-linux@ml082.pinguin.uni.cc>
 Cc: linux-ide@vger.kernel.org
 
-On 02/23/2010 06:02 AM, Todd Pfaff wrote:
-> Despite the appearance of partial success in my syslog messages below (ie.
-> PMP appeared to sorta kinda be trying to work, almost), I've since read
-> some more that leads me to believe that Intel ICH10 does not support PMP.
-> And Intel authoritatively says so here:
-> 
->   http://www.intel.com/Assets/PDF/datasheet/319973.pdf
-> 
->     page 538, section 14.4.1.1, Bit 17
-> 
->     Supports Port Multiplier (PMS) - R/WO.  ICH10 does not support port
->     multiplier.
->     NOTE: This bit must be set to 0.  Port multiplier is not supported by
->     ICH10.
-> 
-> So, I give up.  I edited the wiki page here accordingly since it was
-> wrong:
-> 
->   http://ata.wiki.kernel.org/index.php/SATA_hardware_features
+Hello,
 
-Eh... some variants of ich8/9/10's definitely support PMP as indicated
-by the PMS bit.  Reverting the edit.
+Sorry about very late reply.
+
+On 02/09/2010 03:33 AM, Al Bogner wrote:
+> I append info of an 1.5 TB WD Caviar green drive with a lot of start/stop 
+> cycles. I would like to mention, that I have 4 1 TB Caviar green (WD10EADS) 
+> which work fine!
+> 
+> The e-SATA drive is used with this machine:
+> http://www.smolts.org/client/show/pub_b214fce2-b5b5-4a32-ba7e-cf9de6d55757
+> but has problems with other machines too.
+> 
+> I use Openesuse 11.1
+> Kernel 2.6.27.42-0.1-default
+> FANTEC Fanbox FB-35US2 (probably JMicron 20360/20363 AHCI Controller)
+> storage-fixup-0.2-25.3 is installed, but not especially configured
+> 
+> If you need more info let me know.
+
+How fast does it increase?  ie. counts / hour.
 
 Thanks.
 
