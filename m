@@ -1,50 +1,34 @@
-From: Karel Zak <kzak@redhat.com>
+From: Michal Soltys <soltys@ziu.info>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 9 Mar 2010 12:50:18 +0100
-Message-ID: <20100309115017.GF18077@nb.net.home>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net> <170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com> <4B95F071.3070400@msgid.tls.msk.ru> <20100309100153.GD18077@nb.net.home> <4B961FE1.5040105@msgid.tls.msk.ru>
+Date: Tue, 09 Mar 2010 11:06:07 +0100
+Message-ID: <4B961D8F.3010500@ziu.info>
+References: <4B947393.2050002@kernel.org> <alpine.DEB.1.10.1003090733330.9819@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B961FE1.5040105@msgid.tls.msk.ru>
+In-Reply-To: <alpine.DEB.1.10.1003090733330.9819@uplift.swm.pp.se>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Jim Meyering <jim@meyering.net>, Neil Brown <neilb@suse.de>
+To: Mikael Abrahamsson <swmike@swm.pp.se>
+Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Mar 09, 2010 at 01:16:01PM +0300, Michael Tokarev wrote:
-> Karel Zak wrote:
-> >  # mdadm --create /dev/md8 --level=5 --raid-devices=4 /dev/sdb{1,2,3,4}
+Mikael Abrahamsson wrote:
+> On Mon, 8 Mar 2010, Tejun Heo wrote:
 > 
-> That's 3-disk stripe size with default 64Kb chunk size, which makes
-> 3x64=320KiB - the number to which everything should be aligned.
+>>  http://ata.wiki.kernel.org/index.php/ATA_4_KiB_sector_issues
 > 
-> >  # fdisk -lcu /dev/md8
-> > 
-> >  Disk /dev/md8: 1572 MB, 1572667392 bytes
-> >  2 heads, 4 sectors/track, 383952 cylinders, total 3071616 sectors
-> >  Units = sectors of 1 * 512 = 512 bytes
-> >  Sector size (logical/physical): 512 bytes / 4096 bytes
-> >  I/O size (minimum/optimal): 65536 bytes / 65536 bytes
+> Excellent summary.
 > 
-> And here we go: fdisk does not see the right number: nothing
-> is dividable by 3.
+>> C-2. Windows XP depends on the traditional partition layout.
 > 
-> []
-> >  # cat /sys/block/md8/md8p{1,2}/alignment_offset
-> >  0
-> >  0
+> Is this really true? WD ships their EARS drives with an alignment tool 
+> that as far as I can understand, moves the partition so
+> it's aligned to 4KiB:
 > 
-> And that's where the issue is.  md does not {sup,re}port all
-> this stuff yet.
-> 
-> This is what I'm talking about.
 
-Note that I have 2.6.31.12-174.2.22.fc12.x86_64 kernel on my laptop.
-It would be better for serious tests to use 2.6.33.
-
-    Karel
- 
--- 
- Karel Zak  <kzak@redhat.com>
+XP SP2 (or later) can boot from any place, including logical partitions 
+(tested that recently). Most important thing is "hidden sectors" (recent 
+chain.c32 can set that automatically through ntldr and/or sethidden 
+options). No idea about pre-SP2 ; Win 2000 will not boot from "misaligned" 
+(with reference to cylinder boundary) partition.
