@@ -1,7 +1,7 @@
 From: Karel Zak <kzak@redhat.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 9 Mar 2010 13:18:59 +0100
-Message-ID: <20100309121858.GA2020@nb.net.home>
+Date: Tue, 9 Mar 2010 12:50:18 +0100
+Message-ID: <20100309115017.GF18077@nb.net.home>
 References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net> <170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com> <4B95F071.3070400@msgid.tls.msk.ru> <20100309100153.GD18077@nb.net.home> <4B961FE1.5040105@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -30,51 +30,21 @@ On Tue, Mar 09, 2010 at 01:16:01PM +0300, Michael Tokarev wrote:
 > 
 > And here we go: fdisk does not see the right number: nothing
 > is dividable by 3.
-
- Well, the same setup with 2.6.34-0.9.rc0.git13.fc14.x86_64:
-
- # fdisk -luc /dev/sdb
-
- Disk /dev/sdb: 2621 MB, 2621440000 bytes
- 255 heads, 63 sectors/track, 318 cylinders, total 5120000 sectors
- Units = sectors of 1 * 512 = 512 bytes
- Sector size (logical/physical): 512 bytes / 4096 bytes
- I/O size (minimum/optimal): 4096 bytes / 32768 bytes
- Disk identifier: 0x77fbab55
-
- Device Boot         Start         End      Blocks   Id  System
- /dev/sdb1            2048     1026047      512000   83  Linux
- /dev/sdb2         1026048     2050047      512000   83  Linux
- /dev/sdb3         2050048     3074047      512000   83  Linux
- /dev/sdb4         3074048     4098047      512000   83  Linux
-
-
- # mdadm --create /dev/md8 --level=5 --raid-devices=4 /dev/sdb{1,2,3,4}
-
-
- # fdisk -luc /dev/md8
-
- Disk /dev/md8: 1572 MB, 1572667392 bytes
- 2 heads, 4 sectors/track, 383952 cylinders, total 3071616 sectors
- Units = sectors of 1 * 512 = 512 bytes
- Sector size (logical/physical): 512 bytes / 4096 bytes
- I/O size (minimum/optimal): 65536 bytes / 65536 bytes
-
-
- # cat /sys/block/md8/queue/{minimum,optimal}_io_size 
- 65536
- 65536
-
+> 
+> []
 > >  # cat /sys/block/md8/md8p{1,2}/alignment_offset
 > >  0
 > >  0
 > 
 > And that's where the issue is.  md does not {sup,re}port all
 > this stuff yet.
+> 
+> This is what I'm talking about.
 
- Hmm...
+Note that I have 2.6.31.12-174.2.22.fc12.x86_64 kernel on my laptop.
+It would be better for serious tests to use 2.6.33.
 
     Karel
-
+ 
 -- 
  Karel Zak  <kzak@redhat.com>
