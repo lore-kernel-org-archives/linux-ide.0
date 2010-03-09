@@ -1,57 +1,96 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
-Date: Tue, 09 Mar 2010 09:40:39 -0500
-Message-ID: <4B965DE7.7000109@teksavvy.com>
-References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc> <4B96013F.1050904@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates for 2.6.34
+Date: Tue, 9 Mar 2010 13:17:58 -0800 (PST)
+Message-ID: <alpine.LFD.2.00.1003091304400.3583@i5.linux-foundation.org>
+References: <20100301202330.GA14977@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:35496 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752090Ab0CIOky (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Mar 2010 09:40:54 -0500
-In-Reply-To: <4B96013F.1050904@kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:57355 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751326Ab0CIVUS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Mar 2010 16:20:18 -0500
+In-Reply-To: <20100301202330.GA14977@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Al Bogner <suse-linux@ml082.pinguin.uni.cc>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On 03/09/10 03:05, Tejun Heo wrote:
-> Hello,
->
-> Sorry about very late reply.
->
-> On 02/09/2010 03:33 AM, Al Bogner wrote:
->> I append info of an 1.5 TB WD Caviar green drive with a lot of start/stop
->> cycles. I would like to mention, that I have 4 1 TB Caviar green (WD10EADS)
->> which work fine!
->>
->> The e-SATA drive is used with this machine:
->> http://www.smolts.org/client/show/pub_b214fce2-b5b5-4a32-ba7e-cf9de6d55757
->> but has problems with other machines too.
->>
->> I use Openesuse 11.1
->> Kernel 2.6.27.42-0.1-default
->> FANTEC Fanbox FB-35US2 (probably JMicron 20360/20363 AHCI Controller)
->> storage-fixup-0.2-25.3 is installed, but not especially configured
->>
->> If you need more info let me know.
->
-> How fast does it increase?  ie. counts / hour.
-..
 
-The default on these drives is to unload heads
-after a mere eight (8) seconds of inactivity.
+Jeff,
+ this is a new machine, so I don't know when it started, but it was 
+running a couple of Fedora 2.6.31/32 kernels for a while with no trouble. 
+So I _think_ it's recent.
 
-Ugh.
+I'd guess it's due to commit 27943620cb ("libata: implement spurious irq 
+handling for SFF and apply it to piix"), in fact.
 
-The wdidle3-1.03 DOS tool can fix that.  Google it.
+With current -git I got a 30 second pause, and it was accompanied with 
+this kernel log:
 
-I have disassembled that tool here, and found a few
-vendor-unique commands inside it.  But thus far have
-not managed to get them working natively in Linux.
+	Mar  9 12:51:05 i5 kernel: [    7.040194] ata4: clearing spurious IRQ
+	Mar  9 12:51:05 i5 kernel: [   37.978933] ata4: lost interrupt (Status 0x50)
+	Mar  9 12:51:05 i5 kernel: [   37.978948] ata4.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0 frozen
+	Mar  9 12:51:05 i5 kernel: [   37.978951] ata4.01: failed command: READ DMA
+	Mar  9 12:51:05 i5 kernel: [   37.978954] ata4.01: cmd c8/00:08:ef:44:47/00:00:00:00:00/f0 tag 0 dma 4096 in
+	Mar  9 12:51:05 i5 kernel: [   37.978955]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+	Mar  9 12:51:05 i5 kernel: [   37.978957] ata4.01: status: { DRDY }
+	Mar  9 12:51:05 i5 kernel: [   37.978963] ata4.00: hard resetting link
+	Mar  9 12:51:05 i5 kernel: [   38.306451] ata4.01: hard resetting link
+	Mar  9 12:51:05 i5 kernel: [   38.785773] ata4.00: SATA link down (SStatus 0 SControl 300)
+	Mar  9 12:51:05 i5 kernel: [   38.785787] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+	Mar  9 12:51:05 i5 kernel: [   38.809900] ata4.01: configured for UDMA/133
+	Mar  9 12:51:05 i5 kernel: [   38.809903] ata4.01: device reported invalid CHS sector 0
+	Mar  9 12:51:05 i5 kernel: [   38.809907] ata4: EH complete
 
-I really need a SATA tracer/analyser..
+and notice how it first complains about a spurious interrupt, and then 
+thirty seconds later the timeout for a _lost_ interrupt happens. Looks 
+like a race condition in SATA irq handling.
 
--ml
+This is a Core i5 with intel controller and intel SSD:
+
+	Mar  9 12:51:05 i5 kernel: [    1.431579] ata_piix 0000:00:1f.2: PCI INT D -> GSI 21 (level, low) -> IRQ 21
+	Mar  9 12:51:05 i5 kernel: [    1.431607] ata_piix 0000:00:1f.2: MAP [ P0 P2 P1 P3 ]
+	Mar  9 12:51:05 i5 kernel: [    1.431698] scsi3 : ata_piix
+	Mar  9 12:51:05 i5 kernel: [    1.431760] scsi4 : ata_piix
+	Mar  9 12:51:05 i5 kernel: [    1.432800] ata4: SATA max UDMA/133 cmd 0x9880 ctl 0x9800 bmdma 0x9080 irq 21
+	Mar  9 12:51:05 i5 kernel: [    1.432829] ata5: SATA max UDMA/133 cmd 0x9480 ctl 0x9400 bmdma 0x9088 irq 21
+	...
+	Mar  9 12:51:05 i5 kernel: [    2.236210] ata4.00: SATA link down (SStatus 0 SControl 300)
+	Mar  9 12:51:05 i5 kernel: [    2.237724] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+	Mar  9 12:51:05 i5 kernel: [    2.256250] ata4.01: ATA-7: INTEL SSDSA2M160G2GC, 2CV102HA, max UDMA/133
+	Mar  9 12:51:05 i5 kernel: [    2.257747] ata4.01: 312581808 sectors, multi 16: LBA48 NCQ (depth 0/32)
+	Mar  9 12:51:05 i5 kernel: [    2.268256] ata4.01: configured for UDMA/133
+
+yeah, yeah, I realize it's ata_piix, and I need to go into the BIOS and 
+turn it into AHCI mode, but I thought I'd make a report about this before 
+I do anything else.
+
+The 30 second pause was annoying, but then half an hour later it just hung 
+entirely, with the disk light blinking at 1Hz. Which I assume is related.
+
+Oh, just happened again:
+
+	Mar  9 13:12:29 i5 kernel: [  540.453163] ata4: clearing spurious IRQ
+	Mar  9 13:12:59 i5 kernel: [  571.133725] ata4: lost interrupt (Status 0x50)
+	Mar  9 13:12:59 i5 kernel: [  571.133749] ata4.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0 frozen
+	Mar  9 13:12:59 i5 kernel: [  571.133755] ata4.01: failed command: READ DMA
+	Mar  9 13:12:59 i5 kernel: [  571.133764] ata4.01: cmd c8/00:08:c7:9a:47/00:00:00:00:00/f5 tag 0 dma 4096 in
+	Mar  9 13:12:59 i5 kernel: [  571.133766]          res 40/00:00:00:4f:c2/00:00:00:00:00/10 Emask 0x4 (timeout)
+	Mar  9 13:12:59 i5 kernel: [  571.133771] ata4.01: status: { DRDY }
+	Mar  9 13:12:59 i5 kernel: [  571.133783] ata4.00: hard resetting link
+	Mar  9 13:13:00 i5 kernel: [  571.453215] ata4.01: hard resetting link
+	Mar  9 13:13:00 i5 kernel: [  571.928512] ata4.00: SATA link down (SStatus 0 SControl 300)
+	Mar  9 13:13:00 i5 kernel: [  571.928526] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+	Mar  9 13:13:00 i5 kernel: [  571.952699] ata4.01: configured for UDMA/133
+	Mar  9 13:13:00 i5 kernel: [  571.952707] ata4.01: device reported invalid CHS sector 0
+	Mar  9 13:13:00 i5 kernel: [  571.952716] ata4: EH complete
+
+so I really think PIIX is screwed up in current -git. And it really must 
+be fairly recent, since none of this happened with the Fedora kernels, and 
+it's clearly not a one-time event.
+
+In fact, grepping for this, it's happened at least four times since I 
+upgraded the machine to 2.6.34-rc1-00005-g522dba7. 
+
+		Linus
