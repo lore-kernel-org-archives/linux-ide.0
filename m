@@ -1,73 +1,40 @@
-From: Dave Chinner <david@fromorbit.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 9 Mar 2010 23:20:29 +1100
-Message-ID: <20100309122029.GO28189@discord.disaster>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net> <170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com> <4B95F071.3070400@msgid.tls.msk.ru> <20100309100153.GD18077@nb.net.home> <4B961FE1.5040105@msgid.tls.msk.ru> <20100309111523.GL28189@discord.disaster> <4B963351.50707@msgid.tls.msk.ru>
+Date: Tue, 09 Mar 2010 14:38:57 +0300
+Message-ID: <4B963351.50707@msgid.tls.msk.ru>
+References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net> <170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com> <4B95F071.3070400@msgid.tls.msk.ru> <20100309100153.GD18077@nb.net.home> <4B961FE1.5040105@msgid.tls.msk.ru> <20100309111523.GL28189@discord.disaster>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4B963351.50707@msgid.tls.msk.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Karel Zak <kzak@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Jim Meyering <jim@meyering.net>, Neil Brown <neilb@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from isrv.corpit.ru ([81.13.33.159]:42171 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754592Ab0CILi7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 06:38:59 -0500
+In-Reply-To: <20100309111523.GL28189@discord.disaster>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Karel Zak <kzak@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Jim Meyering <jim@meyering.net>, Neil Brown <neilb@suse.de>
 
-On Tue, Mar 09, 2010 at 02:38:57PM +0300, Michael Tokarev wrote:
-> Dave Chinner wrote:
-> > On Tue, Mar 09, 2010 at 01:16:01PM +0300, Michael Tokarev wrote:
-> >> Karel Zak wrote:
-> >>> I did almost all my tests with scsi_debug or MD RAID0 on scsi_deb=
-ug.
-> >>> It works as expected.
-> >> Actually, for raid0, the alignment is questionable.  Should it be =
-a
-> >> multiple of chunk size or whole stripe size?  I'm not sure, both w=
-ays
-> >> has bad and good sides..  But if it is the latter, the same issues
-> >> pops up again: do a 3-disk raid0 and you'll have to align to 3*2^N=
-=2E
-> >=20
-> > Yes, alignment is still needed, especially for filesystems that can
-> > do stripe unit aligned allocation like XFS. If you don't align the
-> > filesystem properly, all the data IO will be mis-aligned to the
-> > underlying disks and stripe unit sized IO will hit multiple disks
-> > rather than just one....
->=20
-> I understand alignment is needed, the question is if the alignment
-> should be to chunk size or full-stripe size.  In neither case it
-> will be bad for underlying disks.
+Dave Chinner wrote:
+> On Tue, Mar 09, 2010 at 01:16:01PM +0300, Michael Tokarev wrote:
+>> Karel Zak wrote:
+>>> I did almost all my tests with scsi_debug or MD RAID0 on scsi_debug.
+>>> It works as expected.
+>> Actually, for raid0, the alignment is questionable.  Should it be a
+>> multiple of chunk size or whole stripe size?  I'm not sure, both ways
+>> has bad and good sides..  But if it is the latter, the same issues
+>> pops up again: do a 3-disk raid0 and you'll have to align to 3*2^N.
+> 
+> Yes, alignment is still needed, especially for filesystems that can
+> do stripe unit aligned allocation like XFS. If you don't align the
+> filesystem properly, all the data IO will be mis-aligned to the
+> underlying disks and stripe unit sized IO will hit multiple disks
+> rather than just one....
 
-Depends on the RAID implementation. High end RAID arrays often have
-cache bypass features that are triggered by stripe width aligned and
-sized IOs. cwWhen receiving well formed IO they can more than double
-write performance because they are not limited by internal cache
-mirroring bandwidth (e.g. the controller magically switches to
-write-through for those well formed IOs instead of writeback).
+I understand alignment is needed, the question is if the alignment
+should be to chunk size or full-stripe size.  In neither case it
+will be bad for underlying disks.
 
-So from that perspective, alignment needs to be to stripe width,
-not stripe unit. Similarly for RAID5/6 alignment needs to be to
-stripe width, so that a well formed IO issued by the filesystem
-only hits one RAID5/6 stripe.
-
-=46WIW, XFS takes great care to ensure that it doesn't place all it's
-allocation group headers on the same stripe unit.  Failing to
-distribute the AG headers across all the =D1=95tripe units evenly loads
-the disks/luns in the stripe unevenly. As soon as you have uneven
-load on a stripe the performance tanks as stripe is only as fast as
-it's slowest member.
-
-Also, while XFS prefers to align to stripe unit, there are mount
-options to change the default allocation alignment to be stripe
-width based. Hence if you have large files and applications that are
-doing well formed IO, stripe width alignment of the filesystem to
-the underlying block device is critical to acheiving deterministic
-throughput close to the maximum the hardware can support.....
-
-Cheers,
-
-Dave.
---=20
-Dave Chinner
-david@fromorbit.com
+/mjt
