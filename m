@@ -1,30 +1,32 @@
-From: Gabor Gombas <gombasg@digikabel.hu>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 08:09:29 +0100
-Message-ID: <20100310070929.GA6188@twister.home>
-References: <4B947393.2050002@kernel.org>
- <1268031640.4389.11.camel@mulgrave.site>
- <4B94ACE8.4060400@zytor.com>
- <87f94c371003091446h62e50257qf884b278c69cfbfa@mail.gmail.com>
- <4B96E25B.7050200@kernel.org>
- <3E0C3AE547FA504DA5E89EA5A24AC85803E2BD80@wdscexbe01.sc.wdc.com>
+Date: Tue, 09 Mar 2010 23:57:21 -0500
+Message-ID: <yq1mxyg7ozy.fsf@sermon.lab.mkp.net>
+References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
+	<170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com>
+	<4B95F071.3070400@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3E0C3AE547FA504DA5E89EA5A24AC85803E2BD80@wdscexbe01.sc.wdc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Daniel Taylor <Daniel.Taylor@wdc.com>
-Cc: Tejun Heo <tj@kernel.org>, Greg Freemyer <greg.freemyer@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, mkp@mkp.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rcsinet12.oracle.com ([148.87.113.124]:33211 "EHLO
+	rcsinet12.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756296Ab0CJE67 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Mar 2010 23:58:59 -0500
+In-Reply-To: <4B95F071.3070400@msgid.tls.msk.ru> (Michael Tokarev's message of
+	"Tue, 09 Mar 2010 09:53:37 +0300")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, Karel Zak <kzak@redhat.com>, Jim Meyering <jim@meyering.net>, Neil Brown <neilb@suse.de>
 
-On Tue, Mar 09, 2010 at 04:14:30PM -0800, Daniel Taylor wrote:
+>>>>> "Michael" == Michael Tokarev <mjt@tls.msk.ru> writes:
 
-> I will run some experiments to see if any of the systems on my desk can boot
-> Linux from a GPT.
+[MD I/O topology support]
 
-My desktop with a BIOS from 2005 has no problems with GPT. AFAIK a
-recent Debian installer automatically chooses GPT if the disk is 2 TB or
-larger.
+Michael> But apparently it does not implement anything of this sort.
+Michael> Adding Neilb to the Cc list.......
 
-Gabor
+git show 8f6c2e4b
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
