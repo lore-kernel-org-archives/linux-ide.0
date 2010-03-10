@@ -1,61 +1,37 @@
-From: Denys Vlasenko <vda.linux@googlemail.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 10:14:07 +0100
-Message-ID: <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
-References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>
+Date: Tue, 09 Mar 2010 16:36:44 -0800
+Message-ID: <4B96E99C.7010005@zytor.com>
+References: <4B947393.2050002@kernel.org>	 <1268031640.4389.11.camel@mulgrave.site> <4B94ACE8.4060400@zytor.com> <87f94c371003091446h62e50257qf884b278c69cfbfa@mail.gmail.com> <4B96E25B.7050200@kernel.org> <3E0C3AE547FA504DA5E89EA5A24AC85803E2BD80@wdscexbe01.sc.wdc.com> <4B96E71A.9070701@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201003100046.24695.arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:44272 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755340Ab0CJAh1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 9 Mar 2010 19:37:27 -0500
+In-Reply-To: <4B96E71A.9070701@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Daniel Taylor <Daniel.Taylor@wdc.com>, Greg Freemyer <greg.freemyer@gmail.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, mkp@mkp.net
 
-On Wed, Mar 10, 2010 at 12:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 08 March 2010 04:48:35 Tejun Heo wrote:
->> Unfortunately, while Windows can assume that newer releases won't
->> share the hard drive with older releases including Windows XP, Linux
->> distros can't do that. =A0There will be many installations where a
->> modern Linux distros share a hard drive with older releases of
->> Windows. =A0At this point, I can't see a silver bullet solution.
->>
->> Partitioners maybe should only align partitions which will be used b=
-y
->> Linux and default to the traditional layout for others while allowin=
-g
->> explicit override. =A0I think Windows XP wouldn't have problem with
->> differently aligned partitions as long as it doesn't actually use th=
-em
->> but haven't tested it.
+On 03/09/2010 04:26 PM, Tejun Heo wrote:
 >
-> Any idea if XP can cope with partition tables that use a 32-sector, 1=
-28-head
-> geometry rather than the default 63-sector, 255-head one? That seems =
-to
-> be what some flash memory cards are using and it would make any cylin=
-der
-> aligned partition also 4096-byte aligned, at the cost of moving the
-> 1024-cylinder boundary from 7.88 GiB to 2 GiB.
+>> I will run some experiments to see if any of the systems on my desk can boot
+>> Linux from a GPT.
 >
-> Do we know of anything that requires 63s/255h?
+> I'm not sure about grub although I strongly suspect recent version of
+> it should work but AFAICS lilo should definitely work as it doesn't
+> care how the disk is logically organized at all.
+>
 
-63s/255h is more or less "standard" now.
+In the case of Syslinux, you have to install gptmbr.bin, but otherwise 
+it works unmodified (Syslinux itself doesn't care about the partition 
+table at all.)
 
-Alignment issues can be solved by picking a good multiple of
-_heads_ or _cylinders_:
+Note: the official standard for GPT booting on BIOS is still evolving, 
+so I might change gptmbr to match the new standard.
 
-=46or first partition, pick the start at 8th head:
-
-cyl 0 head 1 sector 1: LBA sector 63) - bad
-cyl 0 head 8 sector 1: LBA sector 8*63) - good (4k aligned)
-
-=46or any other partition, pick start cylinder which is a multiple of 8=
-:
-
-cyl 8*x head 0 sector 1: LBA sector 8*x*255*63 - good (4k aligned)
-
-This will actually work well for *any* geometry, not only for 63s/255h.
---=20
-vda
+	-hpa
