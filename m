@@ -1,47 +1,45 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 09:26:02 +0900
-Message-ID: <4B96E71A.9070701@kernel.org>
-References: <4B947393.2050002@kernel.org>	 <1268031640.4389.11.camel@mulgrave.site> <4B94ACE8.4060400@zytor.com> <87f94c371003091446h62e50257qf884b278c69cfbfa@mail.gmail.com> <4B96E25B.7050200@kernel.org> <3E0C3AE547FA504DA5E89EA5A24AC85803E2BD80@wdscexbe01.sc.wdc.com>
+Date: Wed, 10 Mar 2010 09:34:46 +0900
+Message-ID: <4B96E926.90400@kernel.org>
+References: <4B947393.2050002@kernel.org>	<1268031640.4389.11.camel@mulgrave.site>	<yq1vdd6bzgz.fsf@sermon.lab.mkp.net>	<yq1mxyibz7o.fsf@sermon.lab.mkp.net> <yq1iq96bz22.fsf@sermon.lab.mkp.net> <4B9546E6.6050006@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39015 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755788Ab0CJA1B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 9 Mar 2010 19:27:01 -0500
-In-Reply-To: <3E0C3AE547FA504DA5E89EA5A24AC85803E2BD80@wdscexbe01.sc.wdc.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B9546E6.6050006@zytor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Taylor <Daniel.Taylor@wdc.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de, mkp@mkp.net
 
 Hello,
 
-On 03/10/2010 09:14 AM, Daniel Taylor wrote:
-> The MBR in a GPT installation doesn't map the first GPT partition,
-> it maps the entire drive drive after the first sector, as well as
-> marking it type 0xEE.
+On 03/09/2010 03:50 AM, H. Peter Anvin wrote:
+> Well, apparently Western Digital are looking at it for USB drives due to
+> XP compatibility requirements -- those presumably are ATA internally and
+> use a USB-ATA bridge.
 
-Yeah, yeah, that was exactly what I was saying by "describing the rest
-of the whole disk as a single chunk containing GPT managed area" with
-a typo making "whole" "while".
+This should work right now as long as the bridge chip doesn't screw
+up, which we can't do much about anyway.  USB is used as SCSI
+transport and SCSI layer has been working fine with devices with
+differing sector sizes for quite some time.
 
-> The start LBA of the file system is not correctly located in the
-> MBR.
+> On the flipside, though, there really is very little net benefit to 4K
+> as opposed to 512 byte logical sectors: the additional protocol overhead
+> is relatively minimal, and as long as writes are aligned full blocks,
+> there shouldn't be any additional overhead on either the OS or the drive
+> side.  On the plus side, you get full compatibility with the existing
+> software stack.  The equation really seems rather simple.
 
-Sure it's not but MBR belongs to the boot loader not the BIOS.  BIOS
-just needs to load MBR and handles control to it.  If the MBR or more
-likely later stages of the bootloader loaded by MBR knows how to boot
-from GPT, it should work.
-
-> I will run some experiments to see if any of the systems on my desk can boot
-> Linux from a GPT.
-
-I'm not sure about grub although I strongly suspect recent version of
-it should work but AFAICS lilo should definitely work as it doesn't
-care how the disk is logically organized at all.
+Yeap, for addressing, whether 9 bit is shifted or 12 doesn't really
+matter.  That's only 8 times difference which may be breached in
+probably under three years.  If the current 48 bit addressing limit is
+reached, we would be far better off introducing 64 or 128 bit
+addressing.  That was the reason why I thought that I would never see
+an ATA disk w/ 4KiB logical sector and got pretty surprised that it
+was being considered for XP compatibility where 3 year offset could be
+pretty meaningful.
 
 Thanks.
 
