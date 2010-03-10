@@ -1,44 +1,57 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 01:08:16 -0500
-Message-ID: <4B973750.3050103@teksavvy.com>
-References: <4B947393.2050002@kernel.org> <4B965348.3050201@teksavvy.com> <4B96E136.3030001@kernel.org>
+From: Tomasz Palac <palac@uci.agh.edu.pl>
+Subject: Re: Comment on ATA 4 KiB sector issues
+Date: Wed, 10 Mar 2010 09:15:35 +0100 (CET)
+Message-ID: <Pine.GSO.4.63.1003100853360.21647@galaxy.agh.edu.pl>
+References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl>
+ <4B95AEF6.8030906@kernel.org> <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
+ <4B97323E.1040807@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:18647 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753247Ab0CJGIZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 01:08:25 -0500
-In-Reply-To: <4B96E136.3030001@kernel.org>
+Received: from galaxy.agh.edu.pl ([149.156.96.9]:38532 "EHLO galaxy.agh.edu.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750990Ab0CJIPh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Mar 2010 03:15:37 -0500
+In-Reply-To: <4B97323E.1040807@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+Cc: linux-ide@vger.kernel.org
 
-On 03/09/10 19:00, Tejun Heo wrote:
-> On 03/09/2010 10:55 PM, Mark Lord wrote:
->> On 03/07/10 22:48, Tejun Heo wrote:
->> ..
->>> Please note that hdparm is misreporting the alignment offset.  It
->>> should be reporting 512 instead of 256 for offset-by-one drives.
->> ..
->>
->> That issue was fixed quite a while ago.
->> Upgrade your elderly copy of hdparm.
+On Wed, 10 Mar 2010, Tejun Heo wrote:
+
+> Yes, the geometry is basically arbitrary values which can be queried
+> using a BIOS call and the reason why SCSI hosts can choose them is
+> they implement BIOS extensions themselves.
+
+I mentioned SCSI host adapters to show that 64/32 geometry is no problem 
+for Linux (and other OS-es). Really is 255/63 hardcoded in many places?
+
+>> If not, then geometry can be read from partition table.
 >
-> Heh heh, *you* were keeping it from me!  Anyways, is there hdparm
-> devel tree published somewhere?  I wandared the SF page for quite a
-> bit (which for some reason is very difficult to find things in) but I
-> couldn't find one.  If it's not, it might be a good idea to put it on
-> SF or git.kernel.org?
-..
+> From where?
 
-No tree.  There's just my working copy (private),
-and the published versions at SF.
+>From the ending CHS values of partition if it ends at cylinder boundary.
+How do you calculate geometry from newer Windows partition tables (cases 
+W-1, W-2 and W-3)?
 
-But yes, SF has gotten incredibly more cryptic to use of late,
-and I might have to move it somewhere more accessible soon.
+> For modern OSes, geometry doesn't matter at all.  Older ones are the
+> ones having problems (I've been corrected: XP seems okay while 2000
+> depends on CHS).
 
-Cheers!
+You are proposing "doing what Windows is doing". This way:
+
+1. Partitions are aligned at 1 MiB (which is very good).
+2. Geometry is "standard", i.e. 255/63 (which is good).
+3. Partitions don't start and end at cylinder boundary (which is not so
+    good).
+
+With 64/32 you can have:
+
+1. Partitions aligned at 1 MiB.
+2. Geometry is not standard, but is widely used (SCSI disks, USB flash
+    disks).
+3. Partitions start and end at cylinder boundary.
+
+-- 
+Tomasz Palac, AGH University of Science and Technology
