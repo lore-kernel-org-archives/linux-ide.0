@@ -1,52 +1,35 @@
-From: Felix Miata <mrmazda@earthlink.net>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 06:02:06 -0500
-Message-ID: <4B977C2E.10003@earthlink.net>
-References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de> <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
+Date: Wed, 10 Mar 2010 00:53:34 -0700
+Message-ID: <20100310075334.GA26763@parisc-linux.org>
+References: <4B947393.2050002@kernel.org> <1268031640.4389.11.camel@mulgrave.site> <yq1vdd6bzgz.fsf@sermon.lab.mkp.net> <yq1mxyibz7o.fsf@sermon.lab.mkp.net> <yq1iq96bz22.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pop-cowbird.atl.sa.earthlink.net ([207.69.195.68]:34339 "EHLO
-	pop-cowbird.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755698Ab0CJLBy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 06:01:54 -0500
-Received: from user-142grkd.cable.mindspring.com ([72.40.110.141] helo=[192.168.0.51])
-	by pop-cowbird.atl.sa.earthlink.net with esmtp (Exim 3.36 #1)
-	id 1NpJfm-0005MJ-00
-	for linux-ide@vger.kernel.org; Wed, 10 Mar 2010 06:01:54 -0500
-In-Reply-To: <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:41279 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758Ab0CJHxg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 02:53:36 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1iq96bz22.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On 2010/03/10 10:14 (GMT+0100) Denys Vlasenko composed:
+On Mon, Mar 08, 2010 at 10:41:57AM -0500, Martin K. Petersen wrote:
+> What I meant to say was that I know ATA supports 4 KB LBS and that
+> nobody appears to care about it.
 
->> Do we know of anything that requires 63s/255h?
+I sent patches to add support ... they were ignored.
 
-> 63s/255h is more or less "standard" now.
+Part of the problem is that ATA is heinously broken wrt non-512 byte
+sector sizes.  You have to know which commands work in multiples of
+the block size, and which commands work in multiples of 512-bytes.
+There's no easy way to figure it out; you need a table.
 
-When did this change? AFAICT, this "standard" only applies to desktops, while
-63s/240h applies to laptops, older Compaqs, and some brain dead external/USB
-drive case controllers.
-
-> Alignment issues can be solved by picking a good multiple of
-> _heads_ or _cylinders_:
-
-> For first partition, pick the start at 8th head:
-
-> cyl 0 head 1 sector 1: LBA sector 63) - bad
-> cyl 0 head 8 sector 1: LBA sector 8*63) - good (4k aligned)
-
-> For any other partition, pick start cylinder which is a multiple of 8:
-
-> cyl 8*x head 0 sector 1: LBA sector 8*x*255*63 - good (4k aligned)
-
-> This will actually work well for *any* geometry, not only for 63s/255h.
 -- 
-"The wise are known for their understanding, and pleasant
-words are persuasive." Proverbs 16:21 (New Living Translation)
-
- Team OS/2 ** Reg. Linux User #211409
-
-Felix Miata  ***  http://fm.no-ip.com/
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
