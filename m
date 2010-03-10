@@ -1,114 +1,32 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: Hotplug issue with Marvell 6121
-Date: Tue, 9 Mar 2010 16:51:09 -0800
-Message-ID: <150c16851003091651r4ce4259v693f1310d0aa95ef@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Wed, 10 Mar 2010 08:47:10 -0500
+Message-ID: <4B97A2DE.2030901@garzik.org>
+References: <4B947393.2050002@kernel.org> <1268031640.4389.11.camel@mulgrave.site> <yq1vdd6bzgz.fsf@sermon.lab.mkp.net> <yq1mxyibz7o.fsf@sermon.lab.mkp.net> <yq1iq96bz22.fsf@sermon.lab.mkp.net> <20100310075334.GA26763@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:41118 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755692Ab0CJAvK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Mar 2010 19:51:10 -0500
-Received: by pvb32 with SMTP id 32so1973784pvb.19
-        for <linux-ide@vger.kernel.org>; Tue, 09 Mar 2010 16:51:09 -0800 (PST)
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:56935 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932216Ab0CJNrP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 08:47:15 -0500
+In-Reply-To: <20100310075334.GA26763@parisc-linux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-I've been experiencing some issues with disk hotplugging using the
-AHCI driver with a Marvell 6121 controller.  It varies a bit when the
-driver gives up, but it's almost always within the first three
-remove/add attempts.  I was using 2.6.27.6 for quite some time and
-never had any issues with hotplug, even after many hotplugs.  The
-problems started when I updated to 2.6.29, and they still exist today
-on 2.6.33.  I'm running a regular i686 non-SMP kernel.  Anyone have
-any ideas?
+On 03/10/2010 02:53 AM, Matthew Wilcox wrote:
+> On Mon, Mar 08, 2010 at 10:41:57AM -0500, Martin K. Petersen wrote:
+>> What I meant to say was that I know ATA supports 4 KB LBS and that
+>> nobody appears to care about it.
+>
+> I sent patches to add support ... they were ignored.
 
-Below are some relevant portions of the kernel log from 2.6.27 and
-2.6.33.  If anyone needs any more information from me, please let me
-know.
+Not true, read the rest of the thread.
 
-Thanks,
--Justin
+	Jeff
 
-=== Removing disk, 2.6.27.6 ===
-ata3: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-ata3: irq_stat 0x04400000, PHY RDY changed
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3.00: disabled
-ata3: EH complete
-ata3.00: detaching (SCSI 2:0:0:0)
-sd 2:0:0:0: [sdc] Synchronizing SCSI cache
-sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
-sd 2:0:0:0: [sdc] Stopping disk
-sd 2:0:0:0: [sdc] START_STOP FAILED
-sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET
-driverbyte=DRIVER_OK,SUGGEST_OK
 
-=== Removing disk, 2.6.33 ===
-ata3: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-ata3: irq_stat 0x04400000, PHY RDY changed
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: limiting SATA link speed to 1.5 Gbps
-ata3: hard resetting link
-ata3: SATA link down (SStatus 0 SControl 310)
-ata3.00: disabled
-ata3: EH complete
-ata3.00: detaching (SCSI 2:0:0:0)
-sd 2:0:0:0: [sdc] Synchronizing SCSI cache
-sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-sd 2:0:0:0: [sdc] Stopping disk
-sd 2:0:0:0: [sdc] START_STOP FAILED
-sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
 
-=== Adding disk, 2.6.27.6 ===
-ata3: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-ata3: irq_stat 0x02400000, PHY RDY changed
-ata3: hard resetting link
-ata3: link is slow to respond, please be patient (ready=0)
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata3.00: ATA-8: ST3750330AS, SD15, max UDMA/133
-ata3.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata3.00: configured for UDMA/133
-ata3: EH complete
-scsi 2:0:0:0: Direct-Access     ATA      ST3750330AS      SD15 PQ: 0 ANSI: 5
-sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors (750156 MB)
-sd 2:0:0:0: [sdc] Write Protect is off
-sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 2:0:0:0: [sdc] 1465149168 512-byte hardware sectors (750156 MB)
-sd 2:0:0:0: [sdc] Write Protect is off
-sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sdc: sdc1 sdc2 sdc4 < sdc5 >
-sd 2:0:0:0: [sdc] Attached SCSI disk
-sd 2:0:0:0: Attached scsi generic sg2 type 0
-
-=== Adding disk, 2.6.33 ===
-ata3: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-ata3: irq_stat 0x02400000, PHY RDY changed
-ata3: hard resetting link
-ata3: link is slow to respond, please be patient (ready=0)
-ata3: COMRESET failed (errno=-16)
-ata3: hard resetting link
-ata3: link is slow to respond, please be patient (ready=0)
-ata3: COMRESET failed (errno=-16)
-ata3: hard resetting link
-ata3: link is slow to respond, please be patient (ready=0)
-ata3: COMRESET failed (errno=-16)
-ata3: limiting SATA link speed to 1.5 Gbps
-ata3: hard resetting link
-ata3: COMRESET failed (errno=-16)
-ata3: reset failed, giving up
-ata3: EH complete
