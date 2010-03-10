@@ -1,57 +1,53 @@
-From: Tomasz Palac <palac@uci.agh.edu.pl>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: Comment on ATA 4 KiB sector issues
-Date: Wed, 10 Mar 2010 09:15:35 +0100 (CET)
-Message-ID: <Pine.GSO.4.63.1003100853360.21647@galaxy.agh.edu.pl>
-References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl>
- <4B95AEF6.8030906@kernel.org> <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
- <4B97323E.1040807@kernel.org>
+Date: Wed, 10 Mar 2010 14:46:38 +0900
+Message-ID: <4B97323E.1040807@kernel.org>
+References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl> <4B95AEF6.8030906@kernel.org> <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from galaxy.agh.edu.pl ([149.156.96.9]:38532 "EHLO galaxy.agh.edu.pl"
+Received: from hera.kernel.org ([140.211.167.34]:39066 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750990Ab0CJIPh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Mar 2010 03:15:37 -0500
-In-Reply-To: <4B97323E.1040807@kernel.org>
+	id S1752551Ab0CJFqw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Mar 2010 00:46:52 -0500
+In-Reply-To: <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Tomasz Palac <palac@uci.agh.edu.pl>
 Cc: linux-ide@vger.kernel.org
 
-On Wed, 10 Mar 2010, Tejun Heo wrote:
+Hello,
 
-> Yes, the geometry is basically arbitrary values which can be queried
-> using a BIOS call and the reason why SCSI hosts can choose them is
-> they implement BIOS extensions themselves.
+On 03/09/2010 06:22 PM, Tomasz Palac wrote:
+>> Using custom geometry is a good way to trick a partitioner which
+>> partitions based on CHS alignment to align to larger units but it
+>> isn't meaningful outside of that.  If CHS dosen't follow 255*63, a lot
+>> of code (firmware, BIOS, boot loader, OS...) will just assume CHS is
+>> incorrect.
+> 
+> As of firmware, Large Disk Howto states that a lot of SCSI host
+> adapters are using 64/32 geometry (at least for disks smaller than 8
+> GiB).  If BIOS supports EDD (INT13h Extensions), then disk geometry
+> is irrelevant.
 
-I mentioned SCSI host adapters to show that 64/32 geometry is no problem 
-for Linux (and other OS-es). Really is 255/63 hardcoded in many places?
+Yes, the geometry is basically arbitrary values which can be queried
+using a BIOS call and the reason why SCSI hosts can choose them is
+they implement BIOS extensions themselves.
 
->> If not, then geometry can be read from partition table.
->
-> From where?
+> If not, then geometry can be read from partition table.
 
->From the ending CHS values of partition if it ends at cylinder boundary.
-How do you calculate geometry from newer Windows partition tables (cases 
-W-1, W-2 and W-3)?
+>From where?
 
-> For modern OSes, geometry doesn't matter at all.  Older ones are the
-> ones having problems (I've been corrected: XP seems okay while 2000
-> depends on CHS).
+> The only problem with 64/32 geometry is 1 GiB (as opposed to 8 GiB)
+> limit for boot partition (without using EDD). The same applies to
+> boot loaders. Modern OSes don't use CHS.
 
-You are proposing "doing what Windows is doing". This way:
+For modern OSes, geometry doesn't matter at all.  Older ones are the
+ones having problems (I've been corrected: XP seems okay while 2000
+depends on CHS).
 
-1. Partitions are aligned at 1 MiB (which is very good).
-2. Geometry is "standard", i.e. 255/63 (which is good).
-3. Partitions don't start and end at cylinder boundary (which is not so
-    good).
-
-With 64/32 you can have:
-
-1. Partitions aligned at 1 MiB.
-2. Geometry is not standard, but is widely used (SCSI disks, USB flash
-    disks).
-3. Partitions start and end at cylinder boundary.
+Thanks.
 
 -- 
-Tomasz Palac, AGH University of Science and Technology
+tejun
