@@ -1,42 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15445] pata_jmicron incorrectly downgrades CompactFlash to
- UDMA/33
-Date: Wed, 10 Mar 2010 16:25:20 GMT
-Message-ID: <201003101625.o2AGPKQE013706@demeter.kernel.org>
-References: <bug-15445-11633@http.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Matthew Garrett <mjg@redhat.com>
+Subject: [PATCH] ahci: Turn off DMA engines when there's no device attached
+Date: Wed, 10 Mar 2010 15:32:30 -0500
+Message-ID: <1268253150-24050-1-git-send-email-mjg@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:60145 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756366Ab0CJQZW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 11:25:22 -0500
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o2AGPLgf013709
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 10 Mar 2010 16:25:21 GMT
-In-Reply-To: <bug-15445-11633@http.bugzilla.kernel.org/>
+Received: from mx1.redhat.com ([209.132.183.28]:21237 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757034Ab0CJUtq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Mar 2010 15:49:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, Matthew Garrett <mjg@redhat.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-http://bugzilla.kernel.org/show_bug.cgi?id=15445
+According to section 10.3.1 of the AHCI spec, PxCMD.ST must not be set
+unless there's a device attached. Following this saves us a measurable
+quantity of power and does not impair hotplug support. Based on a patch
+by Kristen Carlson Accardi.
 
+Signed-off-by: Matthew Garrett <mjg@redhat.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+---
+ drivers/ata/ahci.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
-
-
-
---- Comment #3 from Solomon Peachy <pizza@shaftnet.org>  2010-03-10 16:24:35 ---
-When you say 'the card doesn't implement cable detection properly' do you mean
-the expresscard PCIe->CF/PATA adapter and/or the CF card itself?
-
-Neanwhile, using "libata.force=short40c,1:sata,2:sata" seems to do the trick,
-and I see ~44MB/s sustained throughput off of this CF card now, even though the
-device ID changes with each hotplug cycle.  So I have a workaround in place,
-but it would be nice if a proper solution could be concocted so things will
-JustWork for others down the line...
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6bd930b..ff08317 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1016,11 +1016,30 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ 	return -EINVAL;
+ }
+ 
++static int ahci_is_device_present(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u8 status = readl(port_mmio + PORT_TFDATA) & 0xff;
++
++	/* Make sure PxTFD.STS.BSY and PxTFD.STS.DRQ are 0 */
++	if (status & (ATA_BUSY | ATA_DRQ))
++		return 0;
++
++	/* Make sure PxSSTS.DET is 3h */
++	status = readl(port_mmio + PORT_SCR_STAT) & 0xf;
++	if (status != 3)
++		return 0;
++	return 1;
++}
++
+ static void ahci_start_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
+ 
++	if (!ahci_is_device_present(ap))
++		return;
++
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp |= PORT_CMD_START;
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.6.1
+
