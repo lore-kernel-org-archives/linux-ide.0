@@ -1,41 +1,61 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Denys Vlasenko <vda.linux@googlemail.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Wed, 10 Mar 2010 00:06:25 -0500
-Message-ID: <yq1iq947oku.fsf@sermon.lab.mkp.net>
-References: <4B947393.2050002@kernel.org> <yq1zl2ic058.fsf@sermon.lab.mkp.net>
-	<170fa0d21003081134g491034e5v4aad4d43853e48ec@mail.gmail.com>
-	<4B95F071.3070400@msgid.tls.msk.ru>
-	<20100309100153.GD18077@nb.net.home>
-	<4B961FE1.5040105@msgid.tls.msk.ru>
-	<20100309121858.GA2020@nb.net.home>
+Date: Wed, 10 Mar 2010 10:14:07 +0100
+Message-ID: <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100309121858.GA2020@nb.net.home> (Karel Zak's message of "Tue,
-	9 Mar 2010 13:18:59 +0100")
+In-Reply-To: <201003100046.24695.arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Karel Zak <kzak@redhat.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Mike Snitzer <snitzer@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 List-Id: linux-ide@vger.kernel.org
 
->>>>> "Karel" == Karel Zak <kzak@redhat.com> writes:
+On Wed, Mar 10, 2010 at 12:46 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 08 March 2010 04:48:35 Tejun Heo wrote:
+>> Unfortunately, while Windows can assume that newer releases won't
+>> share the hard drive with older releases including Windows XP, Linux
+>> distros can't do that. =A0There will be many installations where a
+>> modern Linux distros share a hard drive with older releases of
+>> Windows. =A0At this point, I can't see a silver bullet solution.
+>>
+>> Partitioners maybe should only align partitions which will be used b=
+y
+>> Linux and default to the traditional layout for others while allowin=
+g
+>> explicit override. =A0I think Windows XP wouldn't have problem with
+>> differently aligned partitions as long as it doesn't actually use th=
+em
+>> but haven't tested it.
+>
+> Any idea if XP can cope with partition tables that use a 32-sector, 1=
+28-head
+> geometry rather than the default 63-sector, 255-head one? That seems =
+to
+> be what some flash memory cards are using and it would make any cylin=
+der
+> aligned partition also 4096-byte aligned, at the cost of moving the
+> 1024-cylinder boundary from 7.88 GiB to 2 GiB.
+>
+> Do we know of anything that requires 63s/255h?
 
-[Cleaned up the CC: list from hell]
+63s/255h is more or less "standard" now.
 
-Karel>  # cat /sys/block/md8/queue/{minimum,optimal}_io_size
-Karel>  65536 65536
+Alignment issues can be solved by picking a good multiple of
+_heads_ or _cylinders_:
 
-This one had me puzzled.  We set min_io and opt_io correctly in raid5.c
-depending on number of non-parity disks.  And yet it turns into
-something nonsensical after.
+=46or first partition, pick the start at 8th head:
 
-Turns out we overrun unsigned int calculating the lowest common multiple
-in the stacking function.  That's why we ended up with the wrong value.
+cyl 0 head 1 sector 1: LBA sector 63) - bad
+cyl 0 head 8 sector 1: LBA sector 8*63) - good (4k aligned)
 
-I never noticed this because my userland topology regression test tool
-uses unsigned long.
+=46or any other partition, pick start cylinder which is a multiple of 8=
+:
 
-I'll get a patch off to Jens right away.
+cyl 8*x head 0 sector 1: LBA sector 8*x*255*63 - good (4k aligned)
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+This will actually work well for *any* geometry, not only for 63s/255h.
+--=20
+vda
