@@ -1,17 +1,17 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 20/27] drivers/mmc/of: don't use deprecated field in
+Subject: [PATCH 21/27] drivers/hwmon/of: don't use deprecated field in
 	of_platform_driver
-Date: Thu, 11 Mar 2010 11:23:38 -0700
-Message-ID: <20100311182338.13103.88443.stgit__19661.7160378539$1268331984$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:23:44 -0700
+Message-ID: <20100311182343.13103.98096.stgit__33190.4233470142$1268331988$gmane$org@angua>
 References: <20100311181604.13103.30088.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:50452 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934218Ab0CKSXn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:23:43 -0500
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:52515 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934225Ab0CKSXq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:23:46 -0500
 In-Reply-To: <20100311181604.13103.30088.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,25 +23,25 @@ and device_driver, so the of_platform_driver copies will be removed soon.
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/mmc/host/sdhci-of-core.c |    7 +++++--
+ drivers/hwmon/ultra45_env.c |    7 +++++--
  1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mmc/host/sdhci-of-core.c b/drivers/mmc/host/sdhci-of-core.c
-index dfe5cea..7802a54 100644
---- a/drivers/mmc/host/sdhci-of-core.c
-+++ b/drivers/mmc/host/sdhci-of-core.c
-@@ -205,8 +205,11 @@ static const struct of_device_id sdhci_of_match[] = {
- MODULE_DEVICE_TABLE(of, sdhci_of_match);
+diff --git a/drivers/hwmon/ultra45_env.c b/drivers/hwmon/ultra45_env.c
+index 68e90ab..5da5942 100644
+--- a/drivers/hwmon/ultra45_env.c
++++ b/drivers/hwmon/ultra45_env.c
+@@ -300,8 +300,11 @@ static const struct of_device_id env_match[] = {
+ MODULE_DEVICE_TABLE(of, env_match);
  
- static struct of_platform_driver sdhci_of_driver = {
--	.driver.name = "sdhci-of",
--	.match_table = sdhci_of_match,
+ static struct of_platform_driver env_driver = {
+-	.name		= "ultra45_env",
+-	.match_table	= env_match,
 +	.driver = {
-+		.name = "sdhci-of",
++		.name = "ultra45_env",
 +		.owner = THIS_MODULE,
-+		.of_match_table = sdhci_of_match,
++		.of_match_table = env_match,
 +	},
- 	.probe = sdhci_of_probe,
- 	.remove = __devexit_p(sdhci_of_remove),
- 	.suspend = sdhci_of_suspend,
+ 	.probe		= env_probe,
+ 	.remove		= __devexit_p(env_remove),
+ };
 
