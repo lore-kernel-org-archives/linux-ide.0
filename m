@@ -1,117 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes 3/3] ahci: implement AHCI_HFLAG_NO_FPDMA_AA
- and update NV quirks
-Date: Thu, 11 Mar 2010 11:40:15 +0900
-Message-ID: <4B98580F.8010908@kernel.org>
-References: <4B98575C.5050508@kernel.org> <4B9857EA.5090101@kernel.org>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: Hotplug issue with Marvell 6121
+Date: Wed, 10 Mar 2010 22:33:16 -0500
+Message-ID: <4B98647C.6010604@teksavvy.com>
+References: <150c16851003091651r4ce4259v693f1310d0aa95ef@mail.gmail.com>	 <150c16851003101446m633ad174tc784a94e2a2a5a5b@mail.gmail.com>	 <4B983F08.6080701@gmail.com> <4B9840D3.7050109@kernel.org> <150c16851003101832o358a8b4aj760384020658d1fc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35392 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753361Ab0CKCkY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Mar 2010 21:40:24 -0500
-In-Reply-To: <4B9857EA.5090101@kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:12992 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751621Ab0CKDdT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 22:33:19 -0500
+In-Reply-To: <150c16851003101832o358a8b4aj760384020658d1fc@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pchen@nvidia.com, kernel-bugzilla.20.drkshadow@spamgourmet.com
+To: Justin Maggard <jmaggard10@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-It turns out different generations of MCPs have differing quirks.
+On 03/10/10 21:32, Justin Maggard wrote:
+>
+> It's not the 1.5Gbps that is causing the problem.  It appears to be
+> the act of changing speeds.  I added "libata.force=3:1.5Gbps" to my
+> kernel command line, and hotplugs seemed to work fine on that port
+> (presumably due to the fact that libata EH won't change the link speed
+> limit if it's already at 1.5Gbps).  The other port on the controller
+> still had hotplug problems.  So everything seems to be pointing to the
+> Marvell controller having problems when you change speeds.
+...
 
-* MCP 65-73 : FPDMA AA broken, lies about PMP support, forgets to report NCQ
-* MCP 77-79 : FPDMA AA broken, lies about PMP support
-* MCP 89    : FPDMA AA broken
+If it's like their non-AHCI controllers (sata_mv), then the chipset/phy
+could be very particular about the sequence/timing used when changing speeds.
 
-Instead of turngin off FPDMA AA on all NVIDIAs, implement
-HFLAG_NO_FPDMA_AA, define additional board IDs and apply necessary
-quirks.
-
-This fixes bko#15481 and the list of quirks is verified by Peer Chen.
-
-  http://bugzilla.kernel.org/show_bug.cgi?id=15481
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Peer Chen <pchen@nvidia.com>
----
- drivers/ata/ahci.c |   39 +++++++++++++++++++++++++++++----------
- 1 file changed, 29 insertions(+), 10 deletions(-)
-
-Index: ata/drivers/ata/ahci.c
-===================================================================
---- ata.orig/drivers/ata/ahci.c
-+++ ata/drivers/ata/ahci.c
-@@ -239,6 +239,7 @@ enum {
- 	AHCI_HFLAG_SRST_TOUT_IS_OFFLINE	= (1 << 11), /* treat SRST timeout as
- 							link offline */
- 	AHCI_HFLAG_NO_SNTF		= (1 << 12), /* no sntf */
-+	AHCI_HFLAG_NO_FPDMA_AA		= (1 << 13), /* no FPDMA AA */
- 
- 	/* ap->flags bits */
- 
-@@ -267,6 +268,8 @@ enum board_ids {
- 
- 	/* board IDs for specific chipsets in alphabetical order */
- 	board_ahci_mcp65,
-+	board_ahci_mcp77,
-+	board_ahci_mcp89,
- 	board_ahci_mv,
- 	board_ahci_sb600,
- 	board_ahci_sb700,	/* for SB700 and SB800 */
-@@ -276,9 +279,7 @@ enum board_ids {
- 	board_ahci_mcp_linux	= board_ahci_mcp65,
- 	board_ahci_mcp67	= board_ahci_mcp65,
- 	board_ahci_mcp73	= board_ahci_mcp65,
--	board_ahci_mcp77	= board_ahci,
--	board_ahci_mcp79	= board_ahci,
--	board_ahci_mcp89	= board_ahci,
-+	board_ahci_mcp79	= board_ahci_mcp77,
- };
- 
- struct ahci_cmd_hdr {
-@@ -500,7 +501,24 @@ static const struct ata_port_info ahci_p
- 	/* by chipsets */
- 	[board_ahci_mcp65] =
- 	{
--		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
-+				 AHCI_HFLAG_YES_NCQ),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
-+	[board_ahci_mcp77] =
-+	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP),
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
-+	[board_ahci_mcp89] =
-+	{
-+		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= ATA_PIO4,
- 		.udma_mask	= ATA_UDMA6,
-@@ -3287,12 +3305,13 @@ static int ahci_init_one(struct pci_dev
- 	/* prepare host */
- 	if (hpriv->cap & HOST_CAP_NCQ) {
- 		pi.flags |= ATA_FLAG_NCQ;
--		/* Auto-activate optimization is supposed to be supported on
--		   all AHCI controllers indicating NCQ support, but it seems
--		   to be broken at least on some NVIDIA MCP79 chipsets.
--		   Until we get info on which NVIDIA chipsets don't have this
--		   issue, if any, disable AA on all NVIDIA AHCIs. */
--		if (pdev->vendor != PCI_VENDOR_ID_NVIDIA)
-+		/*
-+		 * Auto-activate optimization is supposed to be
-+		 * supported on all AHCI controllers indicating NCQ
-+		 * capability, but it seems to be broken on some
-+		 * chipsets including NVIDIAs.
-+		 */
-+		if (!(hpriv->flags & AHCI_HFLAG_NO_FPDMA_AA))
- 			pi.flags |= ATA_FLAG_FPDMA_AA;
- 	}
- 
+-ml
