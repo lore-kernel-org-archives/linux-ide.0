@@ -1,52 +1,55 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: Re: Hotplug issue with Marvell 6121
-Date: Wed, 10 Mar 2010 18:32:31 -0800
-Message-ID: <150c16851003101832o358a8b4aj760384020658d1fc@mail.gmail.com>
-References: <150c16851003091651r4ce4259v693f1310d0aa95ef@mail.gmail.com>
-	 <150c16851003101446m633ad174tc784a94e2a2a5a5b@mail.gmail.com>
-	 <4B983F08.6080701@gmail.com> <4B9840D3.7050109@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes 1/3] ahci: add missing nv IDs
+Date: Thu, 11 Mar 2010 11:37:16 +0900
+Message-ID: <4B98575C.5050508@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:1150 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184Ab0CKCcc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Mar 2010 21:32:32 -0500
-Received: by qw-out-2122.google.com with SMTP id 9so335496qwb.37
-        for <linux-ide@vger.kernel.org>; Wed, 10 Mar 2010 18:32:31 -0800 (PST)
-In-Reply-To: <4B9840D3.7050109@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:46272 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753184Ab0CKCh3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Mar 2010 21:37:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pchen@nvidia.com, kernel-bugzilla.20.drkshadow@spamgourmet.com
 
-On Wed, Mar 10, 2010 at 5:01 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On 03/11/2010 09:53 AM, Robert Hancock wrote:
->> That doesn't sound like a great solution. I'd think that the speed
->> limiting should be reset upon disabling the device so that we start =
-over
->> at 3Gbps again when you reconnect..
->
-> libata EH already does that. =A0It resets the speed limit mask after =
-the
-> device is disabled and when the *next* reset happens on device
-> hotplug, the highest speed will be applied. =A0It's just that there
-> usually is no need to do an extra reset right after disabling a
-> device.
->
-> Does 1.5Gbps work at all on those marvell controllers? =A0It's *very*
-> strange to miss hotplug under 1.5Gbps. =A0Those signals are OOB and
-> don't even follow the usual signal frequency.
+bko#15481 shows that we're missing some NVIDIA ahci PCI IDs.  Peer
+Chen confirms that IDs 0x580-0x58f are reserved for cases where Linux
+ID option is selected in the BIOS and are only used for mcp65-73.  Add
+0x0581-0x058f.
 
-It's not the 1.5Gbps that is causing the problem.  It appears to be
-the act of changing speeds.  I added "libata.force=3D3:1.5Gbps" to my
-kernel command line, and hotplugs seemed to work fine on that port
-(presumably due to the fact that libata EH won't change the link speed
-limit if it's already at 1.5Gbps).  The other port on the controller
-still had hotplug problems.  So everything seems to be pointing to the
-Marvell controller having problems when you change speeds.
+  http://bugzilla.kernel.org/show_bug.cgi?id=15481
 
--Justin
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peer Chen <pchen@nvidia.com>
+---
+ drivers/ata/ahci.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+Index: ata/drivers/ata/ahci.c
+===================================================================
+--- ata.orig/drivers/ata/ahci.c
++++ ata/drivers/ata/ahci.c
+@@ -641,6 +641,21 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci_yesncq },	/* MCP67 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci_yesncq },	/* MCP67 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x0580), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0581), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0582), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0583), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0584), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0585), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0586), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0587), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0588), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0589), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058a), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058b), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058c), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058d), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058e), board_ahci_yesncq },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058f), board_ahci_yesncq },	/* Linux ID */
+ 	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci_yesncq },	/* MCP73 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci_yesncq },	/* MCP73 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci_yesncq },	/* MCP73 */
