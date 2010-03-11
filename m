@@ -1,98 +1,143 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 03/37] of/sparc: use dev->of_node instead of
-	dev->archdata.prom_node
-Date: Thu, 11 Mar 2010 11:04:04 -0700
-Message-ID: <20100311180403.4824.90589.stgit__12549.7717563578$1268331752$gmane$org@angua>
-References: <20100311174830.4824.19820.stgit@angua>
+Subject: [PATCH 24/27] sound/of: don't use deprecated fields in
+	of_platform_driver
+Date: Thu, 11 Mar 2010 11:24:00 -0700
+Message-ID: <20100311182400.13103.45617.stgit@angua>
+References: <20100311181604.13103.30088.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:34774 "EHLO
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:49500 "EHLO
 	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933530Ab0CKSEH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:04:07 -0500
-In-Reply-To: <20100311174830.4824.19820.stgit@angua>
+	with ESMTP id S934254Ab0CKSYD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:24:03 -0500
+In-Reply-To: <20100311181604.13103.30088.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-The prom_node pointer is being moved out of archdata to dev->of_node.
-This patch changes users of prom_node to use the new location.
+.name, .match_table and .owner are duplicated in both of_platform_driver
+and device_driver, so the of_platform_driver copies will be removed soon.
 
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- arch/sparc/include/asm/fb.h      |    2 +-
- arch/sparc/kernel/of_device_32.c |    3 ++-
- arch/sparc/kernel/of_device_64.c |    3 ++-
- arch/sparc/kernel/pci.c          |    4 ++--
- 4 files changed, 7 insertions(+), 5 deletions(-)
+ sound/soc/fsl/mpc5200_psc_ac97.c |    2 +-
+ sound/soc/fsl/mpc5200_psc_i2s.c  |    2 +-
+ sound/soc/fsl/mpc8610_hpcd.c     |    8 +++++---
+ sound/sparc/amd7930.c            |    7 +++++--
+ sound/sparc/cs4231.c             |    7 +++++--
+ sound/sparc/dbri.c               |    7 +++++--
+ 6 files changed, 22 insertions(+), 11 deletions(-)
 
-diff --git a/arch/sparc/include/asm/fb.h b/arch/sparc/include/asm/fb.h
-index b83e447..e834880 100644
---- a/arch/sparc/include/asm/fb.h
-+++ b/arch/sparc/include/asm/fb.h
-@@ -18,7 +18,7 @@ static inline int fb_is_primary_device(struct fb_info *info)
- 	struct device *dev = info->device;
- 	struct device_node *node;
+diff --git a/sound/soc/fsl/mpc5200_psc_ac97.c b/sound/soc/fsl/mpc5200_psc_ac97.c
+index 3dbc7f7..e2ee220 100644
+--- a/sound/soc/fsl/mpc5200_psc_ac97.c
++++ b/sound/soc/fsl/mpc5200_psc_ac97.c
+@@ -317,12 +317,12 @@ static struct of_device_id psc_ac97_match[] __devinitdata = {
+ MODULE_DEVICE_TABLE(of, psc_ac97_match);
  
--	node = dev->archdata.prom_node;
-+	node = dev->of_node;
- 	if (node &&
- 	    node == of_console_device)
- 		return 1;
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index da527b3..5a5509c 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -345,8 +345,9 @@ static struct of_device * __init scan_one_device(struct device_node *dp,
- 		return NULL;
+ static struct of_platform_driver psc_ac97_driver = {
+-	.match_table = psc_ac97_match,
+ 	.probe = psc_ac97_of_probe,
+ 	.remove = __devexit_p(psc_ac97_of_remove),
+ 	.driver = {
+ 		.name = "mpc5200-psc-ac97",
+ 		.owner = THIS_MODULE,
++		.of_match_table = psc_ac97_match,
+ 	},
+ };
  
- 	sd = &op->dev.archdata;
--	sd->prom_node = dp;
-+	sd->prom_node = dp; /* temporary */
- 	sd->op = op;
-+	op->dev.of_node = dp;
+diff --git a/sound/soc/fsl/mpc5200_psc_i2s.c b/sound/soc/fsl/mpc5200_psc_i2s.c
+index ce8de90..f6c507c 100644
+--- a/sound/soc/fsl/mpc5200_psc_i2s.c
++++ b/sound/soc/fsl/mpc5200_psc_i2s.c
+@@ -220,12 +220,12 @@ static struct of_device_id psc_i2s_match[] __devinitdata = {
+ MODULE_DEVICE_TABLE(of, psc_i2s_match);
  
- 	op->node = dp;
+ static struct of_platform_driver psc_i2s_driver = {
+-	.match_table = psc_i2s_match,
+ 	.probe = psc_i2s_of_probe,
+ 	.remove = __devexit_p(psc_i2s_of_remove),
+ 	.driver = {
+ 		.name = "mpc5200-psc-i2s",
+ 		.owner = THIS_MODULE,
++		.of_match_table = psc_i2s_match,
+ 	},
+ };
  
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index b3d4cb5..9d30b07 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -640,9 +640,10 @@ static struct of_device * __init scan_one_device(struct device_node *dp,
- 		return NULL;
+diff --git a/sound/soc/fsl/mpc8610_hpcd.c b/sound/soc/fsl/mpc8610_hpcd.c
+index d7e1b9a..511d721 100644
+--- a/sound/soc/fsl/mpc8610_hpcd.c
++++ b/sound/soc/fsl/mpc8610_hpcd.c
+@@ -579,9 +579,11 @@ static struct of_device_id mpc8610_hpcd_match[] = {
+ MODULE_DEVICE_TABLE(of, mpc8610_hpcd_match);
  
- 	sd = &op->dev.archdata;
--	sd->prom_node = dp;
-+	sd->prom_node = dp; /* temporary */
- 	sd->op = op;
+ static struct of_platform_driver mpc8610_hpcd_of_driver = {
+-	.owner  	= THIS_MODULE,
+-	.name   	= "mpc8610_hpcd",
+-	.match_table    = mpc8610_hpcd_match,
++	.driver = {
++		.name = "mpc8610_hpcd",
++		.owner = THIS_MODULE,
++		.of_match_table = mpc8610_hpcd_match,
++	},
+ 	.probe  	= mpc8610_hpcd_probe,
+ 	.remove 	= mpc8610_hpcd_remove,
+ };
+diff --git a/sound/sparc/amd7930.c b/sound/sparc/amd7930.c
+index 574af56..71221fd 100644
+--- a/sound/sparc/amd7930.c
++++ b/sound/sparc/amd7930.c
+@@ -1065,8 +1065,11 @@ static const struct of_device_id amd7930_match[] = {
+ };
  
-+	op->dev.of_node = dp;
- 	op->node = dp;
+ static struct of_platform_driver amd7930_sbus_driver = {
+-	.name		= "audio",
+-	.match_table	= amd7930_match,
++	.driver = {
++		.name = "audio",
++		.owner = THIS_MODULE,
++		.of_match_table = amd7930_match,
++	},
+ 	.probe		= amd7930_sbus_probe,
+ };
  
- 	op->clock_freq = of_getintprop_default(dp, "clock-frequency",
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index cf73f43..40861ed 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -654,7 +654,7 @@ show_pciobppath_attr(struct device * dev, struct device_attribute * attr, char *
- 	struct device_node *dp;
+diff --git a/sound/sparc/cs4231.c b/sound/sparc/cs4231.c
+index 14cb87c..47db872 100644
+--- a/sound/sparc/cs4231.c
++++ b/sound/sparc/cs4231.c
+@@ -2110,8 +2110,11 @@ static const struct of_device_id cs4231_match[] = {
+ MODULE_DEVICE_TABLE(of, cs4231_match);
  
- 	pdev = to_pci_dev(dev);
--	dp = pdev->dev.archdata.prom_node;
-+	dp = pdev->dev.of_node;
+ static struct of_platform_driver cs4231_driver = {
+-	.name		= "audio",
+-	.match_table	= cs4231_match,
++	.driver = {
++		.name = "audio",
++		.owner = THIS_MODULE,
++		.of_match_table = cs4231_match,
++	},
+ 	.probe		= cs4231_probe,
+ 	.remove		= __devexit_p(cs4231_remove),
+ };
+diff --git a/sound/sparc/dbri.c b/sound/sparc/dbri.c
+index 2734c36..6e5d1dd 100644
+--- a/sound/sparc/dbri.c
++++ b/sound/sparc/dbri.c
+@@ -2686,8 +2686,11 @@ static const struct of_device_id dbri_match[] = {
+ MODULE_DEVICE_TABLE(of, dbri_match);
  
- 	return snprintf (buf, PAGE_SIZE, "%s\n", dp->full_name);
- }
-@@ -1023,7 +1023,7 @@ void arch_teardown_msi_irq(unsigned int virt_irq)
- 
- struct device_node *pci_device_to_OF_node(struct pci_dev *pdev)
- {
--	return pdev->dev.archdata.prom_node;
-+	return pdev->dev.of_node;
- }
- EXPORT_SYMBOL(pci_device_to_OF_node);
- 
+ static struct of_platform_driver dbri_sbus_driver = {
+-	.name		= "dbri",
+-	.match_table	= dbri_match,
++	.driver = {
++		.name = "dbri",
++		.owner = THIS_MODULE,
++		.of_match_table = dbri_match,
++	},
+ 	.probe		= dbri_probe,
+ 	.remove		= __devexit_p(dbri_remove),
+ };
 
