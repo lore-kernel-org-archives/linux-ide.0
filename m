@@ -1,61 +1,35 @@
-From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
-Subject: [RFC] ata/core: don't enable the interrupt while activating the
- host
-Date: Thu, 11 Mar 2010 23:04:17 +0100
-Message-ID: <20100311220417.GA16022@Chamillionaire.breakpoint.cc>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Hotplug issue with Marvell 6121
+Date: Fri, 12 Mar 2010 07:28:32 +0900
+Message-ID: <4B996E90.2010206@kernel.org>
+References: <150c16851003091651r4ce4259v693f1310d0aa95ef@mail.gmail.com>	 <150c16851003101446m633ad174tc784a94e2a2a5a5b@mail.gmail.com>	 <4B983F08.6080701@gmail.com> <4B9840D3.7050109@kernel.org>	 <150c16851003101832o358a8b4aj760384020658d1fc@mail.gmail.com>	 <4B98647C.6010604@teksavvy.com> <4B986745.305@kernel.org> <150c16851003111042r1ccc5e2bv3649f9817c36ad9a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:48610 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758243Ab0CKWES (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 17:04:18 -0500
-Received: id: bigeasy by Chamillionaire.breakpoint.cc with local
-	(easymta 1.00 BETA 1)
-	id 1NpqUL-0004B9-3W
-	for linux-ide@vger.kernel.org; Thu, 11 Mar 2010 23:04:17 +0100
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:45955 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758481Ab0CKWZn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Mar 2010 17:25:43 -0500
+In-Reply-To: <150c16851003111042r1ccc5e2bv3649f9817c36ad9a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Justin Maggard <jmaggard10@gmail.com>
+Cc: Mark Lord <kernel@teksavvy.com>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-I just migrated from ide_platform to pata_platform on my Swarm/Mips
-board. This resulted in "nobody cared" during request_irq().
-The only difference I noticed between ATA and IDE before registering the
-interrupt handler is that IDE does not enable the interrupt.
-After removing the flag it looks like the controller is working with the
-ATA layer.
+On 03/12/2010 03:42 AM, Justin Maggard wrote:
+>> BTW, if not allowing PHY speed adjustment is necessary, the correct
+>> way to implement that is in ->port_start() by modifying
+>> link->hw_sata_spd_limit.  But I really hope there's some other way to
+>> solve this.
+> 
+> I assume you're talking about setting hw_sata_spd_limit to 1.5Gbps so
+> that sata_down_spd_limit() doesn't do anything?  That will work, but
+> it would still be nice to be able to run at 3.0Gbps on these ports.
 
-If I flip the polarity of the interrupt, I see the "nobody cared"
-message shortly after seeing ata_sff_softreset() during boot. So I tried
-to perform the software reset with ATA_SRST before requesting the
-interrupt hoping that it makes interrupt go away. It did not so.
+Hmmm... you can peg it at 3 Gbps.  That should work, I think.
 
-Does anyone have an idea what might go wrong here?
+Thanks.
 
-Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
----
- drivers/ata/libata-core.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6728328..8484223 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6274,6 +6274,13 @@ int ata_host_activate(struct ata_host *host, int irq,
- 		return ata_host_register(host, sht);
- 	}
- 
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap;
-+
-+		ap = host->ports[i];
-+		iowrite8(ap->ctl & ~ATA_NIEN, ap->ioaddr.ctl_addr);
-+	}
-+
- 	rc = devm_request_irq(host->dev, irq, irq_handler, irq_flags,
- 			      dev_driver_string(host->dev), host);
- 	if (rc)
 -- 
-1.6.6
-
+tejun
