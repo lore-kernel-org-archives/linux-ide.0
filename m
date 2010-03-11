@@ -1,39 +1,54 @@
-From: Justin Maggard <jmaggard10@gmail.com>
-Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
-Date: Thu, 11 Mar 2010 11:10:41 -0800
-Message-ID: <150c16851003111110v558e852al78934cd200cb57ca@mail.gmail.com>
-References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc>
-	 <4B96013F.1050904@kernel.org> <4B965DE7.7000109@teksavvy.com>
-	 <4B9881C8.10506@kernel.org>
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
+ struct of_device
+Date: Thu, 11 Mar 2010 19:34:58 +0000
+Message-ID: <20100311193458.GA13289@opensource.wolfsonmicro.com>
+References: <20100311174830.4824.19820.stgit@angua>
+ <20100311180649.4824.10368.stgit@angua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:50728 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758070Ab0CKTKm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 14:10:42 -0500
-Received: by pwi1 with SMTP id 1so194789pwi.19
-        for <linux-ide@vger.kernel.org>; Thu, 11 Mar 2010 11:10:41 -0800 (PST)
-In-Reply-To: <4B9881C8.10506@kernel.org>
+Received: from opensource.wolfsonmicro.com ([80.75.67.52]:47047 "EHLO
+	opensource2.wolfsonmicro.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758096Ab0CKTez (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 14:34:55 -0500
+Content-Disposition: inline
+In-Reply-To: <20100311180649.4824.10368.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Lord <kernel@teksavvy.com>, Al Bogner <suse-linux@ml082.pinguin.uni.cc>, linux-ide@vger.kernel.org
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infradead.org, jeremy.kerr@canonical.com, James.Bottomley@suse.de, microblaze-uclinux@itee.uq.edu.au, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-i2c@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, timur@freescale.com, lrg@slimlogic.co.uk
 
-On Wed, Mar 10, 2010 at 9:38 PM, Tejun Heo <tj@kernel.org> wrote:
-> On 03/09/2010 11:40 PM, Mark Lord wrote:
->> The wdidle3-1.03 DOS tool can fix that. =A0Google it.
->>
->> I have disassembled that tool here, and found a few
->> vendor-unique commands inside it. =A0But thus far have
->> not managed to get them working natively in Linux.
->>
->> I really need a SATA tracer/analyser..
->
-> Hmmm... so they don't respond to ATA APM command?
+On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
+> .node is being removed
+> 
+> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
-I believe only the enterprise-class models do.  The desktop class
-drives, from what I've seen, don't.
+Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
 
--Justin
+but please ensure that Liam and especially Timur also check this (both
+CCed).
+
+For enormous patch serieses like this it's really nice if you can ensure
+that each person is only CCed on the patches that they need to review.
+Much less stuff in the inbox.
+
+> ---
+> 
+>  sound/soc/fsl/mpc8610_hpcd.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/sound/soc/fsl/mpc8610_hpcd.c b/sound/soc/fsl/mpc8610_hpcd.c
+> index ef67d1c..d7e1b9a 100644
+> --- a/sound/soc/fsl/mpc8610_hpcd.c
+> +++ b/sound/soc/fsl/mpc8610_hpcd.c
+> @@ -202,7 +202,7 @@ static struct snd_soc_ops mpc8610_hpcd_ops = {
+>  static int mpc8610_hpcd_probe(struct of_device *ofdev,
+>  	const struct of_device_id *match)
+>  {
+> -	struct device_node *np = ofdev->node;
+> +	struct device_node *np = ofdev->dev.of_node;
+>  	struct device_node *codec_np = NULL;
+>  	struct device_node *guts_np = NULL;
+>  	struct device_node *dma_np = NULL;
+> 
