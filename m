@@ -1,43 +1,36 @@
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 02/27] drivers/gpio/of: don't use deprecated fields in
-	of_platform_driver
-Date: Thu, 11 Mar 2010 11:21:59 -0700
-Message-ID: <20100311182158.13103.93206.stgit__44251.3360096656$1268332193$gmane$org@angua>
-References: <20100311181604.13103.30088.stgit@angua>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Linux kernel - Libata bad block error handling to user mode
+	program
+Date: Thu, 11 Mar 2010 13:29:43 -0500
+Message-ID: <87f94c371003111029s7c7daebgf691ab11e6bdda25@mail.gmail.com>
+References: <f875e2fe1003032052p944f32ayfe9fe8cfbed056d4@mail.gmail.com>
+	 <20100303224245.ae8d1f7a.akpm@linux-foundation.org>
+	 <87f94c371003040617t4a4fcd0dt1c9fc0f50e6002c4@mail.gmail.com>
+	 <4B8FC6AC.4060801@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:47893 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367Ab0CKS2O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:28:14 -0500
-In-Reply-To: <20100311181604.13103.30088.stgit@angua>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <4B8FC6AC.4060801@teksavvy.com>
+Sender: owner-linux-mm@kvack.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, foo saa <foosaa@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
-To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-.name, .match_table and .owner are duplicated in both of_platform_driver
-and device_driver, so the of_platform_driver copies will be removed soon.
+>
+> But really.. isn't "hdparm --security-erase NULL /dev/sdX" good enough ???
+>
 
-Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
----
+This thread seems to have died off.  If there is a real problem, I
+hope it picks back up.
 
- drivers/leds/leds-gpio.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Mark, as to your question the few times I've tried that the bios on
+the test machine blocked the command.  So it may have some specific
+utility, but it's a not a generic solution in my mind.
 
-diff --git a/drivers/leds/leds-gpio.c b/drivers/leds/leds-gpio.c
-index 7ff758a..0e6e9ac 100644
---- a/drivers/leds/leds-gpio.c
-+++ b/drivers/leds/leds-gpio.c
-@@ -291,8 +291,8 @@ static struct of_platform_driver of_gpio_leds_driver = {
- 	.driver = {
- 		.name = "of_gpio_leds",
- 		.owner = THIS_MODULE,
-+		.of_match_table = of_gpio_leds_match,
- 	},
--	.match_table = of_gpio_leds_match,
- 	.probe = of_gpio_leds_probe,
- 	.remove = __devexit_p(of_gpio_leds_remove),
- };
+Greg
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
