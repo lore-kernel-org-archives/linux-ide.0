@@ -1,17 +1,17 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 10/37] drivers/video: use .dev.of_node instead of .node in
+Subject: [PATCH 08/37] drivers/watchdog: use .dev.of_node instead of .node in
 	struct of_device
-Date: Thu, 11 Mar 2010 11:04:43 -0700
-Message-ID: <20100311180442.4824.14836.stgit__15551.7894695096$1268331569$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:04:32 -0700
+Message-ID: <20100311180431.4824.39881.stgit__42027.7822217487$1268331569$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:34774 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933606Ab0CKSEu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:04:50 -0500
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933585Ab0CKSEf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:04:35 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,34 +22,20 @@ To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-found
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/video/cg6.c |    2 +-
- drivers/video/ffb.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/watchdog/cpwd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/video/cg6.c b/drivers/video/cg6.c
-index 0d47c60..978c15f 100644
---- a/drivers/video/cg6.c
-+++ b/drivers/video/cg6.c
-@@ -741,7 +741,7 @@ static void cg6_unmap_regs(struct of_device *op, struct fb_info *info,
- static int __devinit cg6_probe(struct of_device *op,
- 				const struct of_device_id *match)
- {
--	struct device_node *dp = op->node;
-+	struct device_node *dp = op->dev.of_node;
- 	struct fb_info *info;
- 	struct cg6_par *par;
- 	int linebytes, err;
-diff --git a/drivers/video/ffb.c b/drivers/video/ffb.c
-index 9dbb964..be0c982 100644
---- a/drivers/video/ffb.c
-+++ b/drivers/video/ffb.c
-@@ -897,7 +897,7 @@ static void ffb_init_fix(struct fb_info *info)
- static int __devinit ffb_probe(struct of_device *op,
- 			       const struct of_device_id *match)
- {
--	struct device_node *dp = op->node;
-+	struct device_node *dp = op->dev.of_node;
- 	struct ffb_fbc __iomem *fbc;
- 	struct ffb_dac __iomem *dac;
- 	struct fb_info *info;
+diff --git a/drivers/watchdog/cpwd.c b/drivers/watchdog/cpwd.c
+index 37ea052..89da14f 100644
+--- a/drivers/watchdog/cpwd.c
++++ b/drivers/watchdog/cpwd.c
+@@ -576,7 +576,7 @@ static int __devinit cpwd_probe(struct of_device *op,
+ 	 * interrupt_mask register cannot be written, so no timer
+ 	 * interrupts can be masked within the PLD.
+ 	 */
+-	str_prop = of_get_property(op->node, "model", NULL);
++	str_prop = of_get_property(op->dev.of_node, "model", NULL);
+ 	p->broken = (str_prop && !strcmp(str_prop, WD_BADMODEL));
+ 
+ 	if (!p->enabled)
 
