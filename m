@@ -1,47 +1,35 @@
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 09/27] drivers/atm/of: don't use deprecated field in
-	of_platform_driver
-Date: Thu, 11 Mar 2010 11:22:37 -0700
-Message-ID: <20100311182237.13103.61327.stgit__30722.0669150867$1268332668$gmane$org@angua>
-References: <20100311181604.13103.30088.stgit@angua>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 21/37] drivers/ata: use .dev.of_node
+ instead of .node in struct of_device
+Date: Thu, 11 Mar 2010 10:38:36 -0800 (PST)
+Message-ID: <20100311.103836.13755632.davem@davemloft.net>
+References: <20100311174830.4824.19820.stgit@angua>
+	<20100311180543.4824.70491.stgit@angua>
+	<4B9936F2.3020105@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:37677 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755735Ab0CKSbG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:31:06 -0500
-In-Reply-To: <20100311181604.13103.30088.stgit@angua>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <4B9936F2.3020105@ru.mvista.com>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+To: sshtylyov@mvista.com
+Cc: alsa-devel@alsa-project.org, gregkh@suse.de, benh@kernel.crashing.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, James.Bottomley@suse.de, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, broonie@opensource.wolfsonmicro.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-.name, .match_table and .owner are duplicated in both of_platform_driver
-and device_driver, so the of_platform_driver copies will be removed soon.
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Date: Thu, 11 Mar 2010 21:31:14 +0300
 
-Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
----
+>   Should probably have been 2 patches instead of one, as drivers/ata/
+>   and drivers/ide/ are different subsystems...
 
- drivers/atm/fore200e.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+No, he should consolidate these changes _MORE_ not less.
 
-diff --git a/drivers/atm/fore200e.c b/drivers/atm/fore200e.c
-index 593a03a..da8f176 100644
---- a/drivers/atm/fore200e.c
-+++ b/drivers/atm/fore200e.c
-@@ -2695,8 +2695,11 @@ static const struct of_device_id fore200e_sba_match[] = {
- MODULE_DEVICE_TABLE(of, fore200e_sba_match);
- 
- static struct of_platform_driver fore200e_sba_driver = {
--	.name		= "fore_200e",
--	.match_table	= fore200e_sba_match,
-+	.driver = {
-+		.name = "fore_200e",
-+		.owner = THIS_MODULE,
-+		.of_match_table = fore200e_sba_match,
-+	},
- 	.probe		= fore200e_sba_probe,
- 	.remove		= __devexit_p(fore200e_sba_remove),
- };
-
+The patch set is already too large to review at it is!
