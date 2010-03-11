@@ -1,8 +1,8 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 09/37] drivers/atm: use .dev.of_node instead of .node in
+Subject: [PATCH 11/37] drivers/scsi: use .dev.of_node instead of .node in
 	struct of_device
-Date: Thu, 11 Mar 2010 11:04:37 -0700
-Message-ID: <20100311180437.4824.86345.stgit__28550.3166066066$1268331522$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:04:48 -0700
+Message-ID: <20100311180448.4824.67773.stgit__15729.7818492681$1268331567$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-pw0-f46.google.com ([209.85.160.46]:63703 "EHLO
 	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933595Ab0CKSEt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:04:49 -0500
+	with ESMTP id S933572Ab0CKSEv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:04:51 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,58 +22,123 @@ To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-found
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/atm/fore200e.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/scsi/qlogicpti.c |   10 +++++-----
+ drivers/scsi/sun_esp.c   |   16 ++++++++--------
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/atm/fore200e.c b/drivers/atm/fore200e.c
-index f7d6eba..593a03a 100644
---- a/drivers/atm/fore200e.c
-+++ b/drivers/atm/fore200e.c
-@@ -789,7 +789,7 @@ static int __init fore200e_sba_map(struct fore200e *fore200e)
- 	fore200e->bus->write(0x02, fore200e->regs.sba.isr); /* XXX hardwired interrupt level */
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index fa34b92..7374fbe 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -755,7 +755,7 @@ static void __devinit qpti_get_scsi_id(struct qlogicpti *qpti)
+ 	struct of_device *op = qpti->op;
+ 	struct device_node *dp;
  
- 	/* get the supported DVMA burst sizes */
--	bursts = of_getintprop_default(op->node->parent, "burst-sizes", 0x00);
-+	bursts = of_getintprop_default(op->dev.of_node->parent, "burst-sizes", 0x00);
+-	dp = op->node;
++	dp = op->dev.of_node;
  
- 	if (sbus_can_dma_64bit())
- 		sbus_set_sbus64(&op->dev, bursts);
-@@ -820,18 +820,20 @@ static int __init fore200e_sba_prom_read(struct fore200e *fore200e, struct prom_
- 	const u8 *prop;
- 	int len;
+ 	qpti->scsi_id = of_getintprop_default(dp, "initiator-id", -1);
+ 	if (qpti->scsi_id == -1)
+@@ -776,8 +776,8 @@ static void qpti_get_bursts(struct qlogicpti *qpti)
+ 	struct of_device *op = qpti->op;
+ 	u8 bursts, bmask;
  
--	prop = of_get_property(op->node, "madaddrlo2", &len);
-+	prop = of_get_property(op->dev.of_node, "madaddrlo2", &len);
- 	if (!prop)
- 		return -ENODEV;
- 	memcpy(&prom->mac_addr[4], prop, 4);
+-	bursts = of_getintprop_default(op->node, "burst-sizes", 0xff);
+-	bmask = of_getintprop_default(op->node->parent, "burst-sizes", 0xff);
++	bursts = of_getintprop_default(op->dev.of_node, "burst-sizes", 0xff);
++	bmask = of_getintprop_default(op->dev.of_node->parent, "burst-sizes", 0xff);
+ 	if (bmask != 0xff)
+ 		bursts &= bmask;
+ 	if (bursts == 0xff ||
+@@ -1293,7 +1293,7 @@ static struct scsi_host_template qpti_template = {
+ static int __devinit qpti_sbus_probe(struct of_device *op, const struct of_device_id *match)
+ {
+ 	struct scsi_host_template *tpnt = match->data;
+-	struct device_node *dp = op->node;
++	struct device_node *dp = op->dev.of_node;
+ 	struct Scsi_Host *host;
+ 	struct qlogicpti *qpti;
+ 	static int nqptis;
+@@ -1315,7 +1315,7 @@ static int __devinit qpti_sbus_probe(struct of_device *op, const struct of_devic
+ 	qpti->qhost = host;
+ 	qpti->op = op;
+ 	qpti->qpti_id = nqptis;
+-	strcpy(qpti->prom_name, op->node->name);
++	strcpy(qpti->prom_name, op->dev.of_node->name);
+ 	qpti->is_pti = strcmp(qpti->prom_name, "QLGC,isp");
  
--	prop = of_get_property(op->node, "madaddrhi4", &len);
-+	prop = of_get_property(op->dev.of_node, "madaddrhi4", &len);
- 	if (!prop)
- 		return -ENODEV;
- 	memcpy(&prom->mac_addr[2], prop, 4);
+ 	if (qpti_map_regs(qpti) < 0)
+diff --git a/drivers/scsi/sun_esp.c b/drivers/scsi/sun_esp.c
+index 3d73aad..4369b76 100644
+--- a/drivers/scsi/sun_esp.c
++++ b/drivers/scsi/sun_esp.c
+@@ -124,7 +124,7 @@ static void __devinit esp_get_scsi_id(struct esp *esp, struct of_device *espdma)
+ 	struct of_device *op = esp->dev;
+ 	struct device_node *dp;
  
--	prom->serial_number = of_getintprop_default(op->node, "serialnumber", 0);
--	prom->hw_revision = of_getintprop_default(op->node, "promversion", 0);
-+	prom->serial_number = of_getintprop_default(op->dev.of_node,
-+						    "serialnumber", 0);
-+	prom->hw_revision = of_getintprop_default(op->dev.of_node,
-+						  "promversion", 0);
-     
- 	return 0;
- }
-@@ -841,10 +843,10 @@ static int fore200e_sba_proc_read(struct fore200e *fore200e, char *page)
- 	struct of_device *op = fore200e->bus_dev;
- 	const struct linux_prom_registers *regs;
+-	dp = op->node;
++	dp = op->dev.of_node;
+ 	esp->scsi_id = of_getintprop_default(dp, "initiator-id", 0xff);
+ 	if (esp->scsi_id != 0xff)
+ 		goto done;
+@@ -133,7 +133,7 @@ static void __devinit esp_get_scsi_id(struct esp *esp, struct of_device *espdma)
+ 	if (esp->scsi_id != 0xff)
+ 		goto done;
  
--	regs = of_get_property(op->node, "reg", NULL);
-+	regs = of_get_property(op->dev.of_node, "reg", NULL);
+-	esp->scsi_id = of_getintprop_default(espdma->node,
++	esp->scsi_id = of_getintprop_default(espdma->dev.of_node,
+ 					     "scsi-initiator-id", 7);
  
- 	return sprintf(page, "   SBUS slot/device:\t\t%d/'%s'\n",
--		       (regs ? regs->which_io : 0), op->node->name);
-+		       (regs ? regs->which_io : 0), op->dev.of_node->name);
- }
- #endif /* CONFIG_SBUS */
+ done:
+@@ -146,7 +146,7 @@ static void __devinit esp_get_differential(struct esp *esp)
+ 	struct of_device *op = esp->dev;
+ 	struct device_node *dp;
  
+-	dp = op->node;
++	dp = op->dev.of_node;
+ 	if (of_find_property(dp, "differential", NULL))
+ 		esp->flags |= ESP_FLAG_DIFFERENTIAL;
+ 	else
+@@ -159,7 +159,7 @@ static void __devinit esp_get_clock_params(struct esp *esp)
+ 	struct device_node *bus_dp, *dp;
+ 	int fmhz;
+ 
+-	dp = op->node;
++	dp = op->dev.of_node;
+ 	bus_dp = dp->parent;
+ 
+ 	fmhz = of_getintprop_default(dp, "clock-frequency", 0);
+@@ -171,12 +171,12 @@ static void __devinit esp_get_clock_params(struct esp *esp)
+ 
+ static void __devinit esp_get_bursts(struct esp *esp, struct of_device *dma_of)
+ {
+-	struct device_node *dma_dp = dma_of->node;
++	struct device_node *dma_dp = dma_of->dev.of_node;
+ 	struct of_device *op = esp->dev;
+ 	struct device_node *dp;
+ 	u8 bursts, val;
+ 
+-	dp = op->node;
++	dp = op->dev.of_node;
+ 	bursts = of_getintprop_default(dp, "burst-sizes", 0xff);
+ 	val = of_getintprop_default(dma_dp, "burst-sizes", 0xff);
+ 	if (val != 0xff)
+@@ -564,7 +564,7 @@ fail:
+ static int __devinit esp_sbus_probe(struct of_device *op, const struct of_device_id *match)
+ {
+ 	struct device_node *dma_node = NULL;
+-	struct device_node *dp = op->node;
++	struct device_node *dp = op->dev.of_node;
+ 	struct of_device *dma_of = NULL;
+ 	int hme = 0;
+ 
+@@ -573,7 +573,7 @@ static int __devinit esp_sbus_probe(struct of_device *op, const struct of_device
+ 	     !strcmp(dp->parent->name, "dma")))
+ 		dma_node = dp->parent;
+ 	else if (!strcmp(dp->name, "SUNW,fas")) {
+-		dma_node = op->node;
++		dma_node = op->dev.of_node;
+ 		hme = 1;
+ 	}
+ 	if (dma_node)
 
