@@ -1,8 +1,8 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 19/27] drivers/pcmcia/of: don't use deprecated field in
+Subject: [PATCH 18/27] drivers/parport/of: don't use deprecated field in
 	of_platform_driver
-Date: Thu, 11 Mar 2010 11:23:33 -0700
-Message-ID: <20100311182332.13103.33898.stgit__24769.7753868581$1268332103$gmane$org@angua>
+Date: Thu, 11 Mar 2010 11:23:27 -0700
+Message-ID: <20100311182327.13103.91141.stgit__28347.3809053705$1268332180$gmane$org@angua>
 References: <20100311181604.13103.30088.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-pz0-f194.google.com ([209.85.222.194]:49500 "EHLO
 	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934205Ab0CKSXf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:23:35 -0500
+	with ESMTP id S934193Ab0CKSXa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:23:30 -0500
 In-Reply-To: <20100311181604.13103.30088.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,44 +23,25 @@ and device_driver, so the of_platform_driver copies will be removed soon.
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/pcmcia/electra_cf.c  |    7 +++++--
- drivers/pcmcia/m8xx_pcmcia.c |    7 +++++--
- 2 files changed, 10 insertions(+), 4 deletions(-)
+ drivers/parport/parport_sunbpp.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pcmcia/electra_cf.c b/drivers/pcmcia/electra_cf.c
-index a4d821f..4ea8530 100644
---- a/drivers/pcmcia/electra_cf.c
-+++ b/drivers/pcmcia/electra_cf.c
-@@ -356,8 +356,11 @@ static const struct of_device_id electra_cf_match[] = {
- MODULE_DEVICE_TABLE(of, electra_cf_match);
+diff --git a/drivers/parport/parport_sunbpp.c b/drivers/parport/parport_sunbpp.c
+index 065f229..9a5b4b8 100644
+--- a/drivers/parport/parport_sunbpp.c
++++ b/drivers/parport/parport_sunbpp.c
+@@ -382,8 +382,11 @@ static const struct of_device_id bpp_match[] = {
+ MODULE_DEVICE_TABLE(of, bpp_match);
  
- static struct of_platform_driver electra_cf_driver = {
--	.name	   = (char *)driver_name,
--	.match_table    = electra_cf_match,
+ static struct of_platform_driver bpp_sbus_driver = {
+-	.name		= "bpp",
+-	.match_table	= bpp_match,
 +	.driver = {
-+		.name = (char *)driver_name,
++		.name = "bpp",
 +		.owner = THIS_MODULE,
-+		.of_match_table = electra_cf_match,
++		.of_match_table = bpp_match,
 +	},
- 	.probe	  = electra_cf_probe,
- 	.remove   = electra_cf_remove,
+ 	.probe		= bpp_probe,
+ 	.remove		= __devexit_p(bpp_remove),
  };
-diff --git a/drivers/pcmcia/m8xx_pcmcia.c b/drivers/pcmcia/m8xx_pcmcia.c
-index 61c2159..af60745 100644
---- a/drivers/pcmcia/m8xx_pcmcia.c
-+++ b/drivers/pcmcia/m8xx_pcmcia.c
-@@ -1314,8 +1314,11 @@ static const struct of_device_id m8xx_pcmcia_match[] = {
- MODULE_DEVICE_TABLE(of, m8xx_pcmcia_match);
- 
- static struct of_platform_driver m8xx_pcmcia_driver = {
--	.name = driver_name,
--	.match_table = m8xx_pcmcia_match,
-+	.driver = {
-+		.name = driver_name,
-+		.owner = THIS_MODULE,
-+		.match_table = m8xx_pcmcia_match,
-+	},
- 	.probe = m8xx_probe,
- 	.remove = m8xx_remove,
- 	.suspend = m8xx_suspend,
 
