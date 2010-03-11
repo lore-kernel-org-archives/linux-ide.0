@@ -1,103 +1,66 @@
 From: Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 27/37] drivers/of: use .dev.of_node instead of .node in struct
-	of_device
-Date: Thu, 11 Mar 2010 11:06:17 -0700
-Message-ID: <20100311180616.4824.50413.stgit__49121.909045107$1268331153$gmane$org@angua>
+Subject: [PATCH 31/37] drivers/of: use .of_node instead of .archdata.of_node
+	in struct device
+Date: Thu, 11 Mar 2010 11:06:39 -0700
+Message-ID: <20100311180638.4824.71650.stgit__33472.4574037411$1268331155$gmane$org@angua>
 References: <20100311174830.4824.19820.stgit@angua>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:43634 "EHLO
+Received: from mail-pz0-f194.google.com ([209.85.222.194]:34774 "EHLO
 	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933759Ab0CKSGd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:06:33 -0500
+	with ESMTP id S933807Ab0CKSGm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 13:06:42 -0500
 In-Reply-To: <20100311174830.4824.19820.stgit@angua>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infrade
 
-.node is being removed
+.archdata.node is being removed from Microblaze, SPARC and PowerPC.
 
 Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 ---
 
- drivers/of/device.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/of/of_i2c.c  |    1 -
+ drivers/of/of_mdio.c |    1 -
+ drivers/of/of_spi.c  |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 224ae6b..24068bb 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -21,9 +21,9 @@
- const struct of_device_id *of_match_device(const struct of_device_id *matches,
- 					const struct of_device *dev)
- {
--	if (!dev->node)
-+	if (!dev->dev.of_node)
- 		return NULL;
--	return of_match_node(matches, dev->node);
-+	return of_match_node(matches, dev->dev.of_node);
- }
- EXPORT_SYMBOL(of_match_device);
+diff --git a/drivers/of/of_i2c.c b/drivers/of/of_i2c.c
+index 43f803e..ab6522c 100644
+--- a/drivers/of/of_i2c.c
++++ b/drivers/of/of_i2c.c
+@@ -42,7 +42,6 @@ void of_register_i2c_devices(struct i2c_adapter *adap,
  
-@@ -54,7 +54,7 @@ static ssize_t devspec_show(struct device *dev,
- 	struct of_device *ofdev;
+ 		info.addr = be32_to_cpup(addr);
  
- 	ofdev = to_of_device(dev);
--	return sprintf(buf, "%s\n", ofdev->node->full_name);
-+	return sprintf(buf, "%s\n", ofdev->dev.of_node->full_name);
- }
+-		dev_archdata_set_node(&dev_ad, node); /* temporary */
+ 		info.of_node = node;
+ 		info.archdata = &dev_ad;
  
- static ssize_t name_show(struct device *dev,
-@@ -63,7 +63,7 @@ static ssize_t name_show(struct device *dev,
- 	struct of_device *ofdev;
+diff --git a/drivers/of/of_mdio.c b/drivers/of/of_mdio.c
+index 64e08d7..794fbc2 100644
+--- a/drivers/of/of_mdio.c
++++ b/drivers/of/of_mdio.c
+@@ -79,7 +79,6 @@ int of_mdiobus_register(struct mii_bus *mdio, struct device_node *np)
+ 		/* Associate the OF node with the device structure so it
+ 		 * can be looked up later */
+ 		of_node_get(child);
+-		dev_archdata_set_node(&phy->dev.archdata, child); /* temp */
+ 		phy->dev.of_node = child;
  
- 	ofdev = to_of_device(dev);
--	return sprintf(buf, "%s\n", ofdev->node->name);
-+	return sprintf(buf, "%s\n", ofdev->dev.of_node->name);
- }
+ 		/* All data is now stored in the phy struct; register it */
+diff --git a/drivers/of/of_spi.c b/drivers/of/of_spi.c
+index 433d76d..5fed7e3 100644
+--- a/drivers/of/of_spi.c
++++ b/drivers/of/of_spi.c
+@@ -80,7 +80,6 @@ void of_register_spi_devices(struct spi_master *master, struct device_node *np)
+ 		/* Store a pointer to the node in the device structure */
+ 		of_node_get(nc);
+ 		spi->dev.of_node = nc;
+-		spi->dev.archdata.of_node = nc; /* temporary */
  
- static ssize_t modalias_show(struct device *dev,
-@@ -97,14 +97,14 @@ void of_release_dev(struct device *dev)
- 	struct of_device *ofdev;
- 
- 	ofdev = to_of_device(dev);
--	of_node_put(ofdev->node);
-+	of_node_put(ofdev->dev.of_node);
- 	kfree(ofdev);
- }
- EXPORT_SYMBOL(of_release_dev);
- 
- int of_device_register(struct of_device *ofdev)
- {
--	BUG_ON(ofdev->node == NULL);
-+	BUG_ON(ofdev->dev.of_node == NULL);
- 
- 	device_initialize(&ofdev->dev);
- 
-@@ -112,7 +112,7 @@ int of_device_register(struct of_device *ofdev)
- 	 * the parent. If there is no parent defined, set the node
- 	 * explicitly */
- 	if (!ofdev->dev.parent)
--		set_dev_node(&ofdev->dev, of_node_to_nid(ofdev->node));
-+		set_dev_node(&ofdev->dev, of_node_to_nid(ofdev->dev.of_node));
- 
- 	return device_add(&ofdev->dev);
- }
-@@ -132,11 +132,11 @@ ssize_t of_device_get_modalias(struct of_device *ofdev,
- 	ssize_t tsize, csize, repend;
- 
- 	/* Name & Type */
--	csize = snprintf(str, len, "of:N%sT%s",
--				ofdev->node->name, ofdev->node->type);
-+	csize = snprintf(str, len, "of:N%sT%s", ofdev->dev.of_node->name,
-+			 ofdev->dev.of_node->type);
- 
- 	/* Get compatible property if any */
--	compat = of_get_property(ofdev->node, "compatible", &cplen);
-+	compat = of_get_property(ofdev->dev.of_node, "compatible", &cplen);
- 	if (!compat)
- 		return csize;
- 
+ 		/* Register the new device */
+ 		request_module(spi->modalias);
 
