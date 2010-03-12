@@ -1,57 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates for 2.6.34
-Date: Thu, 11 Mar 2010 19:16:13 -0500
-Message-ID: <4B9987CD.4060907@garzik.org>
-References: <20100301202330.GA14977@havoc.gtf.org> <alpine.LFD.2.00.1003091304400.3583@i5.linux-foundation.org> <4B96C7B2.3080008@garzik.org> <4B971F83.4030505@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Fri, 12 Mar 2010 10:09:59 +0900
+Message-ID: <4B999467.4000501@kernel.org>
+References: <4B947393.2050002@kernel.org>	 <472A4C80-30CE-4875-8073-F7E61659B6F0@mit.edu>	 <1268318374.2798.2.camel@mulgrave.site>	 <201003112035.26743.knikanth@suse.de>	 <20100311152551.GG1497@thunk.org> <87f94c371003110834t37235274yc641258ac5939c24@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f172.google.com ([209.85.221.172]:44352 "EHLO
-	mail-qy0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007Ab0CLAQQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 19:16:16 -0500
-In-Reply-To: <4B971F83.4030505@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:53754 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754460Ab0CLBKc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Mar 2010 20:10:32 -0500
+In-Reply-To: <87f94c371003110834t37235274yc641258ac5939c24@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: tytso@mit.edu, Nikanth Karthikesan <knikanth@suse.de>, James Bottomley <James.Bottomley@suse.de>, Damian Lukowski <damian@tvk.rwth-aachen.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, "Martin K. Petersen" <martin.petersen@oracle.com>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Mark Lord <kernel@teksavvy.com>, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, aschnell@suse.de, jdelvare@suse.de
 
-On 03/09/2010 11:26 PM, Tejun Heo wrote:
-> Hello, Linus, Jeff.
->
-> On 03/10/2010 07:12 AM, Jeff Garzik wrote:
->> Coincedentally, it looks like someone else just reported the same
->> problem, with 2.6.34-rc1.
->>
->> It definitely sounds like a race.  READ DMA is a DMA command as the name
->> implies, so that eliminates the possibility of polling-related paths in
->> ata_sff_interrupt (libata-sff.c).
->>
->> I'll flip some of my machines to the icky slow boring piix mode, rather
->> than sexy AHCI mode :) to see if I can reproduce.  I have had a feeling
->> that we needed a more sophisticated IRQ handling setup, this may be what
->> was needed.  Lost interrupt recovery should occur faster than 30 seconds
->> in any case, and should not require a hard reset if the hardware
->> functions just fine outside of the lost-interrupt / race that just
->> occurred.
->
-> Yeap, there is a race condition with clearing which I don't think we
-> can solve completely but with some modification I think we can at
-> least cover known failure cases.
->
-> For longer term, I don't think we can solve this by diddling with the
-> SFF registers.  The interface is just way too ancient and horrid to
-> build anything reliable on top of.  I'm planning on implementing
-> smarter IRQ storm handling and stepped timeouts for ATA commands.
+Hello,
 
-Another ata_piix report on l-i & lkml indicates that 2.6.33 is fine and 
-libata timeouts occur on 2.6.34-rc1.
+On 03/12/2010 01:34 AM, Greg Freemyer wrote:
+> I do think the linux partitioners should provide a way to force a
+> cylinder alignment.  Tejun, I would like to see your doc describe how
+> to force a win2k compatible partition layout.
 
-I was able to reproduce once, during disk stress.  I think I can do so 
-again and hopefully verify a fix.
+I suppose I can play with fdisk and list it as an example but if
+anyone knows better/proper way to force certain partitions to legacy
+alignment while leaving others properly aligned, I'll be happy to
+include it.
 
-	Jeff
+Thanks.
 
-
-
+-- 
+tejun
