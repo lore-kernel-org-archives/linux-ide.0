@@ -1,28 +1,36 @@
-From: Alexander Schmidt <alexs@linux.vnet.ibm.com>
-Subject: Re: [PATCH 25/37] drivers/infiniband: use .dev.of_node instead of
- .node in struct of_device
-Date: Fri, 12 Mar 2010 14:30:22 +0100
-Message-ID: <20100312143022.18b954a5@alex-laptop>
-References: <20100311174830.4824.19820.stgit@angua>
-	<20100311180605.4824.3613.stgit@angua>
-	<adavdd2d41q.fsf@roland-alpha.cisco.com>
+From: Sean MacLennan <smaclennan@pikatech.com>
+Subject: Re: [PATCH 12/27] drivers/mtd/of: don't use deprecated field in
+	of_platform_driver
+Date: Fri, 12 Mar 2010 12:31:02 -0500
+Message-ID: <20100312123102.453ff2d0@lappy.seanm.ca>
+References: <20100311181604.13103.30088.stgit@angua>
+	<20100311182253.13103.92479.stgit@angua>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <adavdd2d41q.fsf@roland-alpha.cisco.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Roland Dreier <rdreier@cisco.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>, alsa-devel@alsa-project.org, broonie@opensource.wolfsonmicro.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, Christoph Raisch <raisch@de.ibm.com>, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org, davem@davemloft.net
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20100311182253.13103.92479.stgit@angua>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: alsa-devel@alsa-project.org, gregkh@suse.de, linux-ide@vger.kernel.org, James.Bottomley@suse.de, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, broonie@opensource.wolfsonmicro.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org, davem@davemloft.net
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 11 Mar 2010 11:57:53 -0800
-Roland Dreier <rdreier@cisco.com> wrote:
+On Thu, 11 Mar 2010 11:22:54 -0700
+Grant Likely <grant.likely@secretlab.ca> wrote:
 
-> Seems fine... adding EHCA guys just to make sure.
+> .name, .match_table and .owner are duplicated in both
+> of_platform_driver and device_driver, so the of_platform_driver
+> copies will be removed soon.
 > 
->  > .node is being removed
->  > 
->  > Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 
-Acked-by: Alexander Schmidt <alexs@linux.vnet.ibm.com>
+NDFC
+Acked-by: Sean MacLennan <smaclennan@pikatech.com>
