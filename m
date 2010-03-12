@@ -1,37 +1,55 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Thu, 11 Mar 2010 19:10:43 -0800
-Message-ID: <6d5f68da-fa38-48e3-9af0-567f8b381601@email.android.com>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
+  struct of_device
+Date: Fri, 12 Mar 2010 09:26:19 +0100
+Message-ID: <20100312092619.6a6f5e20@hyperion.delvare>
+References: <20100311174830.4824.19820.stgit@angua>
+	<20100311180649.4824.10368.stgit@angua>
+	<20100311193458.GA13289@opensource.wolfsonmicro.com>
+	<fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----5DY4AP7D8GMRUOBJV9C0F72VOFTQQY"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:54900 "EHLO mail.zytor.com"
+Received: from poutre.nerim.net ([62.4.16.124]:52546 "EHLO poutre.nerim.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753367Ab0CLDL4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Mar 2010 22:11:56 -0500
+	id S1756300Ab0CLI0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Mar 2010 03:26:23 -0500
+In-Reply-To: <fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Greg Freemyer <greg.freemyer@gmail.com>
-Cc: tytso@mit.edu, Nikanth Karthikesan <knikanth@suse.de>, James Bottomley <James.Bottomley@suse.de>, Damian Lukowski <damian@tvk.rwth-aachen.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, "Martin K. Petersen" <martin.petersen@oracle.com>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Mark Lord <kernel@teksavvy.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, aschnell@suse.de, jdelvare@suse.de
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infradead.org, jeremy.kerr@canonical.com, James.Bottomley@suse.de, microblaze-uclinux@itee.uq.edu.au, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-i2c@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, timur@freescale.com, lrg@slimlogic.co.uk
 
-------5DY4AP7D8GMRUOBJV9C0F72VOFTQQY
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: base64
+On Thu, 11 Mar 2010 14:22:37 -0700, Grant Likely wrote:
+> On Thu, Mar 11, 2010 at 12:34 PM, Mark Brown
+> <broonie@opensource.wolfsonmicro.com> wrote:
+> > On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
+> >> .node is being removed
+> >>
+> >> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+> >
+> > Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
+> >
+> > but please ensure that Liam and especially Timur also check this (both
+> > CCed).
+> >
+> > For enormous patch serieses like this it's really nice if you can ensure
+> > that each person is only CCed on the patches that they need to review.
+> > Much less stuff in the inbox.
+> 
+> Yeah, sorry about that (and to everyone receiving this thread, I'm
+> really sorry.  I won't do it again).  I've already been yelled at for
+> that.  What happened is that on a previous series I was yelled at for
+> not sending all patches to everyone (so that the patches could be
+> reviewed in context).  So, naturally, I made sure to include everyone
+> on the whole series this time....  doh.
+> 
+> Next time I post I'll constrain it to small chunks.
 
-SSB0aGluayBpZiB5b3UgdXNlIHRoZSBET1MgY29tcGF0IG9wdGlvbiB0byBjcmVhdGUgdGhlIGxl
-Z2FjeSBwYXJ0aXRpb25zIG9ubHksIHlvdSBzaG91bGQgYmUgZmluZS4KCiJUZWp1biBIZW8iIDx0
-akBrZXJuZWwub3JnPiB3cm90ZToKCj5IZWxsbywNCj4NCj5PbiAwMy8xMi8yMDEwIDAxOjM0IEFN
-LCBHcmVnIEZyZWVteWVyIHdyb3RlOg0KPj4gSSBkbyB0aGluayB0aGUgbGludXggcGFydGl0aW9u
-ZXJzIHNob3VsZCBwcm92aWRlIGEgd2F5IHRvIGZvcmNlIGENCj4+IGN5bGluZGVyIGFsaWdubWVu
-dC4gIFRlanVuLCBJIHdvdWxkIGxpa2UgdG8gc2VlIHlvdXIgZG9jIGRlc2NyaWJlIGhvdw0KPj4g
-dG8gZm9yY2UgYSB3aW4yayBjb21wYXRpYmxlIHBhcnRpdGlvbiBsYXlvdXQuDQo+DQo+SSBzdXBw
-b3NlIEkgY2FuIHBsYXkgd2l0aCBmZGlzayBhbmQgbGlzdCBpdCBhcyBhbiBleGFtcGxlIGJ1dCBp
-Zg0KPmFueW9uZSBrbm93cyBiZXR0ZXIvcHJvcGVyIHdheSB0byBmb3JjZSBjZXJ0YWluIHBhcnRp
-dGlvbnMgdG8gbGVnYWN5DQo+YWxpZ25tZW50IHdoaWxlIGxlYXZpbmcgb3RoZXJzIHByb3Blcmx5
-IGFsaWduZWQsIEknbGwgYmUgaGFwcHkgdG8NCj5pbmNsdWRlIGl0Lg0KPg0KPlRoYW5rcy4NCj4N
-Cj4tLSANCj50ZWp1bg0KCi0tClNlbnQgZnJvbSBteSBtb2JpbGUgcGhvbmUsIHBhcmRvbiBhbnkg
-bGFjayBvZiBmb3JtYXR0aW5nLg==
+A good compromise IMHO is to send only the pieces they really have to
+see and ack to each person, and provide a pointer to somewhere the full
+series can be seen and downloaded for the interested.
 
-------5DY4AP7D8GMRUOBJV9C0F72VOFTQQY--
-
+-- 
+Jean Delvare
