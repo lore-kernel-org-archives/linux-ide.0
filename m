@@ -1,129 +1,57 @@
-From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
-Subject: Re: 2.9.29.2: ide-tape: panic when probing device at boot
-Date: Fri, 12 Mar 2010 12:01:43 +1030 (CST)
-Message-ID: <201003120131.o2C1Vhcr030787@turbo.physics.adelaide.edu.au>
-References: <201001050538.o055c5eF021739@turbo.physics.adelaide.edu.au>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Comment on ATA 4 KiB sector issues
+Date: Fri, 12 Mar 2010 10:37:20 +0900
+Message-ID: <4B999AD0.2090309@kernel.org>
+References: <Pine.GSO.4.63.1003080933100.4114@galaxy.agh.edu.pl> <4B95AEF6.8030906@kernel.org> <Pine.GSO.4.63.1003090947570.29136@galaxy.agh.edu.pl> <4B97323E.1040807@kernel.org> <Pine.GSO.4.63.1003100853360.21647@galaxy.agh.edu.pl> <4B97595C.7010104@kernel.org> <Pine.GSO.4.63.1003101012480.8035@galaxy.agh.edu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201001050538.o055c5eF021739@turbo.physics.adelaide.edu.au> from "Jonathan Woithe" at Jan 05, 2010 04:08:04 PM
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: Borislav Petkov <petkovbb@googlemail.com>, hancockrwd@gmail.com, Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:51945 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750934Ab0CLBh2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Mar 2010 20:37:28 -0500
+In-Reply-To: <Pine.GSO.4.63.1003101012480.8035@galaxy.agh.edu.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tomasz Palac <palac@uci.agh.edu.pl>
+Cc: linux-ide@vger.kernel.org
 
-Hi
+Hello,
 
-Following up on my email from several months ago.  Sorry for the delay.
-
-> > On Mon, Jan 04, 2010 at 11:45:12AM +1030, Jonathan Woithe wrote:
-> > > Has there been any movement on this in recent months?  I gave 2.6.30 a whirl
-> > > on the machine when that was released but it still gave major problems with
-> > > the ide-tape driver.  Is 2.6.32 likely to be improved?  If so I'll make
-> > > arrangements to test that version.
-> > 
-> > Yes, please do test 2.6.32 to see whether it fixes your problem. If you still
-> > get that oops, please apply the following patch and send me the _whole_ dmesg
-> > output of the machine.
+On 03/10/2010 06:40 PM, Tomasz Palac wrote:
+>> By solving the equations matching CHSs and LBAs.  It only works if the
+>> first partition ends before the CHS address limit (2 variables to
+>> solve for so we need 2 different equations).
 > 
-> Ok, will do.  Since it is a production machine and I've got linux.conf.au
-> coming up it may be a couple of weeks before I get to do the test.  I'll
-> advise the outcome once I have tested it.
+> Thanks for explanation. So with 64/32 geometry this should work for
+> partitions smaller than 1 GiB. With 255/63 geometry this limit is 8 GiB
+> and there are partitions bigger than that. Maybe for bigger partitions
+> BIOSes use ending CHS?
+
+I suspect more BIOSs would just assume 255/63 regardless of the
+partition layout these days.  For bigger partitions, the ending CHS is
+just a marker saying that it's off the limit and there really isn't
+any information to calculate from.
+
+>> The only reason we're talking about geometry is for compatibility w/
+>> older operating systems.  So, at this point, diddling with geometry
+>> just doesn't make any sense at all.
 > 
-> Robert Hancock wrote:
-> > You could also try using libata instead of IDE drivers and see if they 
-> > work any better for you..
-> 
-> Yes, a good suggestion (I'm not sure why I neglected to try that initially). 
-> I'll test that too and report back.
+> If we "do as Windows do" and make partitions aligned at 1 MiB but not
+> aligned at cylinder boundary, then there is no way to boot Windows 2000
+> or older OS. If we use 64/32 geometry, there is a chance (maybe small)
+> that BIOS will calculate or assume correct CHS values and older OS can
+> boot. And this geometry cannot hurt newer OSes.
 
-I've finally had an opportunity to test a few things.  I grabbed 2.6.33 and
-configured libata support for the PATA controller (a VIA TV82CXXX) using the
-"VIA PATA" option.  I disabled support for the legacy IDE driver.  Upon
-booting 2.6.33's libata drivers correctly identified the two SATA HDDs in
-the system, the PATA CDROM drive (secondary master) and the PATA tape unit
-(primary master).  However, at this point things stopped - it seemed as if
-the kernel lost the ability to communicate with either SATA HDD since it
-reported timeouts on accesses to sda and sdb.
+Going forward, I think it would be simply better and less painful to
+stick to the simpler scheme which is also employed by Windows and
+allowing some way to use the old alignment for certain partitions for
+those few special cases where really old OSs need to be used.  The
+benefit of 64/32 or any other custom geometry seems marginal at best
+and mostly imaginary to me.
 
-I haven't had a chance to test whether the inability to access the HDDs
-comes as a result of the use of the VIA PATA libata driver or whether 2.6.33
-has some inherant problem with VIA SATA controllers.  If I get a chance I'll
-test that later today.  In any case, where do you suggest we go from here?
+Thanks.
 
-Unfortunately I didn't have time to note the precise errors seeen under
-2.6.33 since I couldn't keep the machine down for very long.  I'll see if I
-can repeat the test in a less busy part of the day later to get this
-information.
-
-Some system details:
-  00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAID
-    Controller (rev 80)
-  00:0f.1 IDE interface: VIA Technologies, Inc.
-    VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 06)
-
-00:0f.0 has two WD2502ABYS SATA HDDs connected.  Both drives have the
-"1.5Gbps" jumper set because this chipset only supports 1.5Gbps but the
-drives by default won't auto-negotiate down to this speed.  00:0f.1 has
-an IDE tape drive (SONY SDX-260V) attached to primary master and a CD writer
-(LITE-ON LTR-32123S) attached to secondary master.
-
-Interface notes during boot on 2.6.24.2:
-
-  Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-  ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-  VP_IDE: IDE controller (0x1106:0x0571 rev 0x06) at  PCI slot 0000:00:0f.1
-  ACPI: PCI Interrupt Link [LNKE] enabled at IRQ 5
-  PCI: setting IRQ 5 as level-triggered
-  ACPI: PCI Interrupt 0000:00:0f.1[A] -> Link [LNKE] -> GSI 5 (level, low) ->
-    IRQ 5
-  PCI: VIA VLink IRQ fixup for 0000:00:0f.1, from 255 to 5
-  VP_IDE: not 100% native mode: will probe irqs later
-  VP_IDE: VIA vt8237 (rev 00) IDE UDMA133 controller on pci0000:00:0f.1
-      ide0: BM-DMA at 0xa000-0xa007, BIOS settings: hda:DMA, hdb:pio
-      ide1: BM-DMA at 0xa008-0xa00f, BIOS settings: hdc:DMA, hdd:pio
-  Probing IDE interface ide0...  
-  hda: SONY SDX-260V, ATAPI TAPE drive
-  hda: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-  hda: UDMA/100 mode selected 
-  ide0 at 0x1f0-0x1f7,0x3f6 on irq 14 
-  Probing IDE interface ide1...
-  hdc: LITE-ON LTR-32123S, ATAPI CD/DVD-ROM drive
-  hdc: host max PIO5 wanted PIO255(auto-tune) selected PIO4
-  hdc: UDMA/33 mode selected
-  ide1 at 0x170-0x177,0x376 on irq 15
-  hdc: ATAPI 40X CD-ROM CD-R/RW drive, 2048kB Cache
-  Uniform CD-ROM driver Revision: 3.20
-  ide-tape: hda <-> ht0: SONY SDX-260V rev 0100
-  ide-tape: hda: overriding capabilities->speed (assuming 650KB/sec)
-  ide-tape: hda: overriding capabilities->max_speed (assuming 650KB/sec)
-  ide-tape: decreasing stage size
-  ide-tape: decreasing stage size
-  ide-tape: decreasing stage size
-  ide-tape: hda <-> ht0: 650KBps, 126*32kB buffer, 6336kB pipeline, 100ms
-    tDSC, DMA
-  st: Version 20070203, fixed bufsize 32768, s/g segs 256 
-  :
-  sata_via 0000:00:0f.0: version 2.3
-  ACPI: PCI Interrupt Link [LNKF] BIOS reported IRQ 0, using IRQ 9
-  ACPI: PCI Interrupt Link [LNKF] enabled at IRQ 9
-  PCI: setting IRQ 9 as level-triggered
-  ACPI: PCI Interrupt 0000:00:0f.0[B] -> Link [LNKF] -> GSI 9 (level, low) ->
-    IRQ 9
-  PCI: VIA VLink IRQ fixup for 0000:00:0f.0, from 5 to 9
-  sata_via 0000:00:0f.0: routed to hard irq line 9
-  scsi0 : sata_via
-  scsi1 : sata_via
-  ata1: SATA max UDMA/133 cmd 0xd000 ctl 0xb800 bmdma 0xa800 irq 9
-  ata2: SATA max UDMA/133 cmd 0xb400 ctl 0xb000 bmdma 0xa808 irq 9
-  ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-  ata1.00: ATA-8: WDC WD2502ABYS-01B7A0, 02.03B02, max UDMA/133
-  ata1.00: 490350672 sectors, multi 16: LBA48 NCQ (depth 0/32) 
-  ata1.00: configured for UDMA/133
-  ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-  ata2.00: ATA-8: WDC WD2502ABYS-01B7A0, 02.03B02, max UDMA/133
-  ata2.00: 490350672 sectors, multi 16: LBA48 NCQ (depth 0/32) 
-  ata2.00: configured for UDMA/133
-
-Regards
-  jonathan
+-- 
+tejun
