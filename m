@@ -1,36 +1,36 @@
-From: Sean MacLennan <smaclennan@pikatech.com>
-Subject: Re: [PATCH 22/27] drivers/i2c/of: don't use deprecated field in
-	of_platform_driver
-Date: Fri, 12 Mar 2010 12:31:58 -0500
-Message-ID: <20100312123158.7ed9d9a0@lappy.seanm.ca>
-References: <20100311181604.13103.30088.stgit@angua>
-	<20100311182349.13103.39322.stgit@angua>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: CHS to LBA mapping for SCSI 6/10/12/16 byte RW CDB
+Date: Sat, 13 Mar 2010 07:06:06 +0900
+Message-ID: <4B9ABACE.6010402@kernel.org>
+References: <9edb119c1003120346r34c1c145t2be07595f9b151c6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20100311182349.13103.39322.stgit@angua>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: alsa-devel@alsa-project.org, gregkh@suse.de, linux-ide@vger.kernel.org, James.Bottomley@suse.de, linux-i2c@vger.kernel.org, sparclinux@vger.kernel.org, jeremy.kerr@canonical.com, sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, jgarzik@pobox.com, microblaze-uclinux@itee.uq.edu.au, devicetree-discuss@lists.ozlabs.org, ben-linux@fluff.org, monstr@monstr.eu, linuxppc-dev@ozlabs.org, netdev@vger.kernel.org, broonie@opensource.wolfsonmicro.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, dwmw2@infradead.org, davem@davemloft.net
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:53758 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753938Ab0CLWDP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Mar 2010 17:03:15 -0500
+In-Reply-To: <9edb119c1003120346r34c1c145t2be07595f9b151c6@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: amruth pattanada <amruth.vamadev@gmail.com>
+Cc: linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Thu, 11 Mar 2010 11:23:49 -0700
-Grant Likely <grant.likely@secretlab.ca> wrote:
+On 03/12/2010 08:46 PM, amruth pattanada wrote:
+> Hi
+> All
+> I require clarification regarding how bytes are stored in scsi_rw
+> Command Descriptor Block for READ_6/WRITE_6 commands. In the
+> structures below addr is either defined as 3 bytes or 4 bytes or 8
+> bytes.How does it correspond to CHS in ATA. I assume addr[0]=Cylinder,
+> addr[1]=head and addr[2]=sectors.Is my assumption correct. How does it
+> map if it is 4/8 bytes addr.Is 3 bytes addr corresponds to 24 bit LBA,
+> then how do we map 48 bit LBA. All scsi CDB structures are below.Any
+> inputs will be highly appreciated.
 
-> .name, .match_table and .owner are duplicated in both
-> of_platform_driver and device_driver, so the of_platform_driver
-> copies will be removed soon.
-> 
-> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+They are all LBAs.  You can find relevant documentation at
+www.t10.org.  RW commands are defined in SBC.
 
-i2c-ibm_iic
-Acked-by: Sean MacLennan <smaclennan@pikatech.com>
+-- 
+tejun
