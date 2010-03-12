@@ -1,43 +1,57 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [PATCH #upstream-fixes 3/3] ahci: implement AHCI_HFLAG_NO_FPDMA_AA
- and update NV quirks
-Date: Thu, 11 Mar 2010 18:08:09 -0600
-Message-ID: <4B9985E9.5010909@gmail.com>
-References: <4B98575C.5050508@kernel.org> <4B9857EA.5090101@kernel.org> <4B98580F.8010908@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [git patches] libata updates for 2.6.34
+Date: Thu, 11 Mar 2010 19:16:13 -0500
+Message-ID: <4B9987CD.4060907@garzik.org>
+References: <20100301202330.GA14977@havoc.gtf.org> <alpine.LFD.2.00.1003091304400.3583@i5.linux-foundation.org> <4B96C7B2.3080008@garzik.org> <4B971F83.4030505@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:43969 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755297Ab0CLAIM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 19:08:12 -0500
-Received: by pwi1 with SMTP id 1so344107pwi.19
-        for <linux-ide@vger.kernel.org>; Thu, 11 Mar 2010 16:08:11 -0800 (PST)
-In-Reply-To: <4B98580F.8010908@kernel.org>
+Received: from mail-qy0-f172.google.com ([209.85.221.172]:44352 "EHLO
+	mail-qy0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab0CLAQQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 19:16:16 -0500
+In-Reply-To: <4B971F83.4030505@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pchen@nvidia.com, kernel-bugzilla.20.drkshadow@spamgourmet.com
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 03/10/2010 08:40 PM, Tejun Heo wrote:
-> It turns out different generations of MCPs have differing quirks.
+On 03/09/2010 11:26 PM, Tejun Heo wrote:
+> Hello, Linus, Jeff.
 >
-> * MCP 65-73 : FPDMA AA broken, lies about PMP support, forgets to report NCQ
-> * MCP 77-79 : FPDMA AA broken, lies about PMP support
-> * MCP 89    : FPDMA AA broken
+> On 03/10/2010 07:12 AM, Jeff Garzik wrote:
+>> Coincedentally, it looks like someone else just reported the same
+>> problem, with 2.6.34-rc1.
+>>
+>> It definitely sounds like a race.  READ DMA is a DMA command as the name
+>> implies, so that eliminates the possibility of polling-related paths in
+>> ata_sff_interrupt (libata-sff.c).
+>>
+>> I'll flip some of my machines to the icky slow boring piix mode, rather
+>> than sexy AHCI mode :) to see if I can reproduce.  I have had a feeling
+>> that we needed a more sophisticated IRQ handling setup, this may be what
+>> was needed.  Lost interrupt recovery should occur faster than 30 seconds
+>> in any case, and should not require a hard reset if the hardware
+>> functions just fine outside of the lost-interrupt / race that just
+>> occurred.
 >
-> Instead of turngin off FPDMA AA on all NVIDIAs, implement
-> HFLAG_NO_FPDMA_AA, define additional board IDs and apply necessary
-> quirks.
+> Yeap, there is a race condition with clearing which I don't think we
+> can solve completely but with some modification I think we can at
+> least cover known failure cases.
 >
-> This fixes bko#15481 and the list of quirks is verified by Peer Chen.
->
->    http://bugzilla.kernel.org/show_bug.cgi?id=15481
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Peer Chen<pchen@nvidia.com>
+> For longer term, I don't think we can solve this by diddling with the
+> SFF registers.  The interface is just way too ancient and horrid to
+> build anything reliable on top of.  I'm planning on implementing
+> smarter IRQ storm handling and stepped timeouts for ATA commands.
 
-Is the FPDMA AA problem going to be fixed in whatever follows MCP89? 
-This change is only safe if it will be, since a new chipset will fall 
-into the generic case and it'll get turned back on.
+Another ata_piix report on l-i & lkml indicates that 2.6.33 is fine and 
+libata timeouts occur on 2.6.34-rc1.
+
+I was able to reproduce once, during disk stress.  I think I can do so 
+again and hopefully verify a fix.
+
+	Jeff
+
+
+
