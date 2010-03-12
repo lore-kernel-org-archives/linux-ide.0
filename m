@@ -1,55 +1,84 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH 33/37] sound/soc: use .dev.of_node instead of .node in
-  struct of_device
-Date: Fri, 12 Mar 2010 09:26:19 +0100
-Message-ID: <20100312092619.6a6f5e20@hyperion.delvare>
-References: <20100311174830.4824.19820.stgit@angua>
-	<20100311180649.4824.10368.stgit@angua>
-	<20100311193458.GA13289@opensource.wolfsonmicro.com>
-	<fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
+From: amruth pattanada <amruth.vamadev@gmail.com>
+Subject: CHS to LBA mapping for SCSI 6/10/12/16 byte RW CDB
+Date: Fri, 12 Mar 2010 17:16:17 +0530
+Message-ID: <9edb119c1003120346r34c1c145t2be07595f9b151c6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from poutre.nerim.net ([62.4.16.124]:52546 "EHLO poutre.nerim.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756300Ab0CLI0X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Mar 2010 03:26:23 -0500
-In-Reply-To: <fa686aa41003111322wc1f15b2hd3f653af060f56bf@mail.gmail.com>
+Received: from mail-iw0-f196.google.com ([209.85.223.196]:59500 "EHLO
+	mail-iw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756784Ab0CLLqT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Mar 2010 06:46:19 -0500
+Received: by iwn34 with SMTP id 34so965677iwn.15
+        for <linux-ide@vger.kernel.org>; Fri, 12 Mar 2010 03:46:17 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Likely <grant.likely@secretlab.ca>
-Cc: Mark Brown <broonie@opensource.wolfsonmicro.com>, monstr@monstr.eu, gregkh@suse.de, benh@kernel.crashing.org, akpm@linux-foundation.org, davem@davemloft.net, sfr@canb.auug.org.au, jgarzik@pobox.com, ben-linux@fluff.org, dwmw2@infradead.org, jeremy.kerr@canonical.com, James.Bottomley@suse.de, microblaze-uclinux@itee.uq.edu.au, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, sparclinux@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-i2c@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, linux-scsi@vger.kernel.org, alsa-devel@alsa-project.org, timur@freescale.com, lrg@slimlogic.co.uk
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-On Thu, 11 Mar 2010 14:22:37 -0700, Grant Likely wrote:
-> On Thu, Mar 11, 2010 at 12:34 PM, Mark Brown
-> <broonie@opensource.wolfsonmicro.com> wrote:
-> > On Thu, Mar 11, 2010 at 11:06:50AM -0700, Grant Likely wrote:
-> >> .node is being removed
-> >>
-> >> Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
-> >
-> > Acked-by: Mark Brown <broonie@opensource.wolfsonmicro.com>
-> >
-> > but please ensure that Liam and especially Timur also check this (both
-> > CCed).
-> >
-> > For enormous patch serieses like this it's really nice if you can ensure
-> > that each person is only CCed on the patches that they need to review.
-> > Much less stuff in the inbox.
-> 
-> Yeah, sorry about that (and to everyone receiving this thread, I'm
-> really sorry.  I won't do it again).  I've already been yelled at for
-> that.  What happened is that on a previous series I was yelled at for
-> not sending all patches to everyone (so that the patches could be
-> reviewed in context).  So, naturally, I made sure to include everyone
-> on the whole series this time....  doh.
-> 
-> Next time I post I'll constrain it to small chunks.
+Hi
+All
+I require clarification regarding how bytes are stored in scsi_rw
+Command Descriptor Block for READ_6/WRITE_6 commands. In the
+structures below addr is either defined as 3 bytes or 4 bytes or 8
+bytes.How does it correspond to CHS in ATA. I assume addr[0]=Cylinder,
+addr[1]=head and addr[2]=sectors.Is my assumption correct. How does it
+map if it is 4/8 bytes addr.Is 3 bytes addr corresponds to 24 bit LBA,
+then how do we map 48 bit LBA. All scsi CDB structures are below.Any
+inputs will be highly appreciated.
 
-A good compromise IMHO is to send only the pieces they really have to
-see and ack to each person, and provide a pointer to somewhere the full
-series can be seen and downloaded for the interested.
+//6 byte CDB
+struct scsi_rw_6
+{
+        u_int8_t opcode;
+        u_int8_t addr[3];
+/* only 5 bits are valid in the MSB address byte */
+#define SRW_TOPADDR     0x1F
+        u_int8_t length;
+        u_int8_t control;
+};
+//10 bytes CDB
+struct scsi_rw_10
+{
+        u_int8_t opcode;
+#define SRW10_RELADDR   0x01
+/* EBP defined for WRITE(10) only */
+#define SRW10_EBP       0x04
+#define SRW10_FUA       0x08
+#define SRW10_DPO       0x10
+        u_int8_t byte2;
+        u_int8_t addr[4];
+        u_int8_t reserved;
+        u_int8_t length[2];
+        u_int8_t control;
+};
+//12 bytes CDB
+struct scsi_rw_12
+{
+        u_int8_t opcode;
+#define SRW12_RELADDR   0x01
+#define SRW12_FUA       0x08
+#define SRW12_DPO       0x10
+        u_int8_t byte2;
+        u_int8_t addr[4];
+        u_int8_t length[4];
+        u_int8_t reserved;
+        u_int8_t control;
+};
 
--- 
-Jean Delvare
+//16 bytes CDB
+struct scsi_rw_16
+{
+        u_int8_t opcode;
+#define        SRW16_RELADDR   0x01
+#define        SRW16_FUA       0x08
+#define        SRW16_DPO       0x10
+        u_int8_t byte2;
+        u_int8_t addr[8];
+        u_int8_t length[4];
+        u_int8_t reserved;
+        u_int8_t control;
+};
+
+Thanks
+Amruth p.v
