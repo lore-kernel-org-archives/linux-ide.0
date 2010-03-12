@@ -1,37 +1,43 @@
-From: Andrew Benton <b3nton@gmail.com>
-Subject: Re: ata2: lost interrupt with kernel 2.6.34-rc1
-Date: Fri, 12 Mar 2010 00:01:41 +0000
-Message-ID: <4B998465.2080009@gmail.com>
-References: <4B992110.2090300@gmail.com> <4B997FB1.3000404@garzik.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH #upstream-fixes 3/3] ahci: implement AHCI_HFLAG_NO_FPDMA_AA
+ and update NV quirks
+Date: Thu, 11 Mar 2010 18:08:09 -0600
+Message-ID: <4B9985E9.5010909@gmail.com>
+References: <4B98575C.5050508@kernel.org> <4B9857EA.5090101@kernel.org> <4B98580F.8010908@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f209.google.com ([209.85.218.209]:50684 "EHLO
-	mail-bw0-f209.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755166Ab0CLABq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 19:01:46 -0500
-In-Reply-To: <4B997FB1.3000404@garzik.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:43969 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755297Ab0CLAIM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2010 19:08:12 -0500
+Received: by pwi1 with SMTP id 1so344107pwi.19
+        for <linux-ide@vger.kernel.org>; Thu, 11 Mar 2010 16:08:11 -0800 (PST)
+In-Reply-To: <4B98580F.8010908@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pchen@nvidia.com, kernel-bugzilla.20.drkshadow@spamgourmet.com
 
-On 11/03/10 23:41, Jeff Garzik wrote:
-> On 03/11/2010 11:57 AM, Andrew Benton wrote:
->> Hello,
->> I'm not subscribed to this list, sorry if it's the wrong place to send
->> this.
->> I've been having problems with 2.6.34-rc1, when the system tries to
->> access a
->> lot of files (eg, if I recompile the kernel) it freezes for about 10
->> seconds
->> or so and then I get a message like this in the sys.log:
+On 03/10/2010 08:40 PM, Tejun Heo wrote:
+> It turns out different generations of MCPs have differing quirks.
 >
-> Does 2.6.33 also have this behavior?
+> * MCP 65-73 : FPDMA AA broken, lies about PMP support, forgets to report NCQ
+> * MCP 77-79 : FPDMA AA broken, lies about PMP support
+> * MCP 89    : FPDMA AA broken
 >
+> Instead of turngin off FPDMA AA on all NVIDIAs, implement
+> HFLAG_NO_FPDMA_AA, define additional board IDs and apply necessary
+> quirks.
+>
+> This fixes bko#15481 and the list of quirks is verified by Peer Chen.
+>
+>    http://bugzilla.kernel.org/show_bug.cgi?id=15481
+>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Cc: Peer Chen<pchen@nvidia.com>
 
-No, 2.6.33 works fine. This freezing, waiting for the disk to be reset is
-new behavior in 2.6.34-rc1
-
-Andy
+Is the FPDMA AA problem going to be fixed in whatever follows MCP89? 
+This change is only safe if it will be, since a new chipset will fall 
+into the generic case and it'll get turned back on.
