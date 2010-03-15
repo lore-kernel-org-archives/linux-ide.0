@@ -1,47 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
-Date: Mon, 15 Mar 2010 09:02:44 +0900
-Message-ID: <4B9D7924.1020908@kernel.org>
-References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc> <4B96013F.1050904@kernel.org> <4B965DE7.7000109@teksavvy.com> <4B9881C8.10506@kernel.org> <4B9D0772.4080306@teksavvy.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Sun, 14 Mar 2010 18:21:54 -0700
+Message-ID: <4B9D8BB2.1010507@zytor.com>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de> <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33842 "EHLO hera.kernel.org"
+Received: from terminus.zytor.com ([198.137.202.10]:35328 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755265Ab0COACu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Mar 2010 20:02:50 -0400
-In-Reply-To: <4B9D0772.4080306@teksavvy.com>
+	id S935078Ab0COBWu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 Mar 2010 21:22:50 -0400
+In-Reply-To: <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Al Bogner <suse-linux@ml082.pinguin.uni.cc>, linux-ide@vger.kernel.org
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-Hello,
+On 03/10/2010 01:14 AM, Denys Vlasenko wrote:
+>
+> 63s/255h is more or less "standard" now.
+>
+> Alignment issues can be solved by picking a good multiple of
+> _heads_ or _cylinders_:
+>
+> For first partition, pick the start at 8th head:
+>
+> cyl 0 head 1 sector 1: LBA sector 63) - bad
+> cyl 0 head 8 sector 1: LBA sector 8*63) - good (4k aligned)
+>
+> For any other partition, pick start cylinder which is a multiple of 8:
+>
+> cyl 8*x head 0 sector 1: LBA sector 8*x*255*63 - good (4k aligned)
+>
+> This will actually work well for *any* geometry, not only for 63s/255h.
 
-On 03/15/2010 12:57 AM, Mark Lord wrote:
-> No.  The vendor-unique commands appear to download a small firmware
-> packet to the drive, which reprograms it for a longer "IDLE-3" timeout.
-> 
-> "IDLE-3" is what WD call this vendor-specific "powersaving" mode,
-> and it is not intended to be adjustable.  Except via that little
-> DOS utility hack, and even WD no longer make that available.
-> 
-> But I found it by googling for it, and it can change the timeout
-> up to 30 seconds from the default of 8.  So I set my WD 1.5TB drive
-> to use 30, and things are now acceptable.
-> 
-> Ugh (again)!
+Yes, but it does squat for a flash disk that wants, say, 256K alignment.
 
-I'm currently talking with WD but in general I'm leaning toward simply
-leaving it alone.  The manufacturer is actively preventing those
-timesouts from being adjusted and they probably have a pretty good
-rationale for that.  If those drives expire before their warrnty, it's
-a matter between the customer and the vendor.  I really don't see much
-point in trying to circumvent it.  Anyways, I'll let you guys know
-where the conversation w/ WDC leads to.
-
-Thanks.
-
--- 
-tejun
+	-hpa
