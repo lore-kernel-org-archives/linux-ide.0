@@ -1,40 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 15:42:58 +0900
-Message-ID: <4B9F2872.4060309@kernel.org>
-References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site> <4B9F2388.2030803@kernel.org> <4B9F2746.3010105@earthlink.net>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH] ahci: pp->active_link is not reliable when FBS is enabled
+Date: Tue, 16 Mar 2010 18:08:55 +0800
+Message-ID: <1268734135.3515.4.camel@zm-desktop>
+Reply-To: shane.huang@amd.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51947 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752763Ab0CPGnC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2010 02:43:02 -0400
-In-Reply-To: <4B9F2746.3010105@earthlink.net>
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:16841
+	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S937675Ab0CPKJK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 06:09:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Felix Miata <mrmazda@earthlink.net>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-Hello,
+pp->active_link is not reliable when FBS is enabled.
+Both PORT_SCR_ACT and PORT_CMD_ISSUE should be checked
+because mixed NCQ and non-NCQ commands may be in flight.
 
-On 03/16/2010 03:37 PM, Felix Miata wrote:
-> On 2010/03/16 15:22 (GMT+0900) Tejun Heo composed:
-> 
->> Most BIOSs these days will simply report the geometry as
->> being 255/63 regardless of the geometry used during partitioning
-> 
-> In my experience this "most" only applies to desktop motherboard BIOS. Most
-> laptop BIOS seem to prefer 240, as do many external USB HD case controllers,
-> and older but not that antique Compaq desktops.
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+---
+ drivers/ata/ahci.c |   23 +++++++++++++++++------
+ 1 files changed, 17 insertions(+), 6 deletions(-)
 
-Hmmm... interesting, does that hold for modern laptops too?  It
-doesn't really change the situation much tho.  It's just another
-arbitrary geometry that BIOS reports that we can't really do much
-about.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6bd930b..e009a66 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2263,7 +2263,7 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
+-	u32 status, qc_active;
++	u32 status, qc_active = 0;
+ 	int rc;
+ 
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+@@ -2321,11 +2321,22 @@ static void ahci_port_intr(struct ata_port *ap)
+ 		}
+ 	}
+ 
+-	/* pp->active_link is valid iff any command is in flight */
+-	if (ap->qc_active && pp->active_link->sactive)
+-		qc_active = readl(port_mmio + PORT_SCR_ACT);
+-	else
+-		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
++	/* pp->active_link is not reliable once FBS is enabled, both
++	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
++	 * NCQ and non-NCQ commands may be in flight at the same time.
++	 */
++	if (pp->fbs_enabled) {
++		if (ap->qc_active) {
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
++		}
++	} else {
++		/* pp->active_link is valid iff any command is in flight */
++		if (ap->qc_active && pp->active_link->sactive)
++			qc_active = readl(port_mmio + PORT_SCR_ACT);
++		else
++			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
++	}
+ 
+ 	rc = ata_qc_complete_multiple(ap, qc_active);
+ 
 
-Thanks.
 
--- 
-tejun
