@@ -1,39 +1,60 @@
-From: Arnd Bergmann <arnd@arndb.de>
+From: Denys Vlasenko <vda.linux@googlemail.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 15:25:58 +0100
-Message-ID: <201003161525.59364.arnd@arndb.de>
-References: <4B947393.2050002@kernel.org> <4B9F8E1A.2020608@kernel.org> <1268749297.21384.15.camel@mulgrave.site>
+Date: Tue, 16 Mar 2010 15:38:26 +0100
+Message-ID: <201003161538.27015.vda.linux@googlemail.com>
+References: <4B947393.2050002@kernel.org> <1268745897.21384.14.camel@mulgrave.site> <4B9F8E1A.2020608@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
+Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:59227 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752678Ab0CPO0s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 10:26:48 -0400
-In-Reply-To: <1268749297.21384.15.camel@mulgrave.site>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:42080 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966305Ab0CPOie (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 10:38:34 -0400
+In-Reply-To: <4B9F8E1A.2020608@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Denys Vlasenko <vda.linux@googlemail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On Tuesday 16 March 2010, James Bottomley wrote:
-> On Tue, 2010-03-16 at 22:56 +0900, Tejun Heo wrote:
-> > Hello, James.
-> > 
-> > On 03/16/2010 10:24 PM, James Bottomley wrote:
-> > > For msdos labels, it's embedded in the label ... for all other labels,
-> > > it's made up on the spot.
-> > 
-> > Where in the label?
+On Tuesday 16 March 2010 14:56, Tejun Heo wrote:
+> Hello, James.
 > 
-> No idea ... I only know you can use fdisk expert mode to change the
-> C/H/S layout and the change is preserved across reboots.
+> On 03/16/2010 10:24 PM, James Bottomley wrote:
+> > For msdos labels, it's embedded in the label ... for all other labels,
+> > it's made up on the spot.
+> 
+> Where in the label?
 
-IIRC, the layout is guessed from the partition end locations, in the
-assumption that each partition is aligned to full cylinders. That
-gives you the heads/sectors number, while the cylinder number can be
-calculated from the total number of sectors using these numbers.
+The "end of partition" is expected to be at the last head and sector.
+Of course this heuristic fails if there are more than one primary
+partition and they have differing last head and sector.
 
-	Arnd
+But on most "sanely" partitioned disks they are the same:
+
+Disk /dev/sda: 255 heads, 63 sectors, 36481 cylinders
+
+Nr AF  Hd Sec  Cyl  Hd Sec  Cyl      Start       Size ID
+ 1 00   1   1    0 254  63  850         63   13671252 0b
+ 2 80   0   1  851 254  63 1023   13671315  572395950 05
+ 3 00   0   0    0   0   0    0          0          0 00
+ 4 00   0   0    0   0   0    0          0          0 00
+ 5 00   1   1  851 254  63  972         63    1959867 83
+ 6 00   1   1  973 254  63 1023         63   31246362 83
+ 7 00 254  63 1023 254  63 1023         63  195318207 83
+ 8 00 254  63 1023 254  63 1023         63  343871262 83
+                   ^^^  ^^
+
+Which suggests another idea how to align a partition:
+since there is no requirement on the partition *start*,
+we don't have to start at head1,sector1 or head0,sector1
+
+In the example above, 1st partition might be modified to start
+at head1,sector2, IOW, LBA 64, thus making it 32k aligned.
+
+As long as partition *ends* adhere to the convention
+of being exactly at last_head,last_sector, nothing should break.
+-- 
+vda
