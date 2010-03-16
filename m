@@ -1,61 +1,92 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Denys Vlasenko <vda.linux@googlemail.com>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 08:23:13 -0700
-Message-ID: <1268752993.21384.23.camel@mulgrave.site>
-References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>
-	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
-	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>
-	 <4B9F2388.2030803@kernel.org> <1268745897.21384.14.camel@mulgrave.site>
-	 <4B9F8E1A.2020608@kernel.org> <1268749297.21384.15.camel@mulgrave.site>
-	 <4B9F9AAF.6080709@kernel.org> <1268751748.21384.18.camel@mulgrave.site>
-	 <4B9FA1C6.7090305@kernel.org>
+Date: Tue, 16 Mar 2010 16:25:49 +0100
+Message-ID: <1158166a1003160825j16ce6573h73e64d85b58bb202@mail.gmail.com>
+References: <4B947393.2050002@kernel.org>
+	 <1268745897.21384.14.camel@mulgrave.site>
+	 <4B9F8E1A.2020608@kernel.org>
+	 <201003161538.27015.vda.linux@googlemail.com>
+	 <4B9F9FD0.8040303@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35491 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757904Ab0CPPX1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2010 11:23:27 -0400
-In-Reply-To: <4B9FA1C6.7090305@kernel.org>
+Received: from mail-fx0-f219.google.com ([209.85.220.219]:47620 "EHLO
+	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966483Ab0CPPZu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 11:25:50 -0400
+In-Reply-To: <4B9F9FD0.8040303@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+Cc: James Bottomley <James.Bottomley@suse.de>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On Wed, 2010-03-17 at 00:20 +0900, Tejun Heo wrote:
-> On 03/17/2010 12:02 AM, James Bottomley wrote:
-> > On Tue, 2010-03-16 at 23:50 +0900, Tejun Heo wrote:
-> >> e.g.  If the first partition begins at CHS 0/32/33 and ends at
-> >> 12/233/19 and the corresponding LBA addresses are 2048 and 206848, you
-> >> can solve the equation and determine that the parameters gotta be 63
-> >> secs/trk and 255 heads/cyl to make those two pairs of addresses match
-> >> each other and in fact some BIOSs try to do this depending on
-> >> configuration (and sometimes falls into infinite loop or causes other
-> >> boot related problems if the parameters are too uncommon).
-> > 
-> > for an msdos label, this is illegal, that was Arnd's point.  The
-> > partitions have to begin and end on cylinder boundaries*.  Knowing that,
-> > you can deduce the geometry from the last sector entry.
-> >
-> > * at least if you want to preserve windows compatibility, which is what
-> > most of our partitioning tools seem to do.
-> 
-> Well, the thing is that
-> 
-> * Anything remotely modern (>= XP) doesn't give a hoot about cylinder
->   alignment.
-> 
-> * Anything older (<= 2000) is very likely to get confused with custom
->   geometry starting from the BIOS itself.  For those cases, the only
->   thing we can do is aligning partitions to cylinders abiding BIOS
->   supplied geometry parameters which will usually be 255/63.
-> 
-> So, using custom geometry doesn't help compatibility at all.
+On Tue, Mar 16, 2010 at 4:12 PM, Tejun Heo <tj@kernel.org> wrote:
+>> The "end of partition" is expected to be at the last head and sector=
+=2E
+>> Of course this heuristic fails if there are more than one primary
+>> partition and they have differing last head and sector.
+>>
+>> But on most "sanely" partitioned disks they are the same:
+>>
+>> Disk /dev/sda: 255 heads, 63 sectors, 36481 cylinders
+>>
+>> Nr AF =A0Hd Sec =A0Cyl =A0Hd Sec =A0Cyl =A0 =A0 =A0Start =A0 =A0 =A0=
+ Size ID
+>> =A01 00 =A0 1 =A0 1 =A0 =A00 254 =A063 =A0850 =A0 =A0 =A0 =A0 63 =A0=
+ 13671252 0b
+>> =A02 80 =A0 0 =A0 1 =A0851 254 =A063 1023 =A0 13671315 =A0572395950 =
+05
+>> =A03 00 =A0 0 =A0 0 =A0 =A00 =A0 0 =A0 0 =A0 =A00 =A0 =A0 =A0 =A0 =A0=
+0 =A0 =A0 =A0 =A0 =A00 00
+>> =A04 00 =A0 0 =A0 0 =A0 =A00 =A0 0 =A0 0 =A0 =A00 =A0 =A0 =A0 =A0 =A0=
+0 =A0 =A0 =A0 =A0 =A00 00
+>> =A05 00 =A0 1 =A0 1 =A0851 254 =A063 =A0972 =A0 =A0 =A0 =A0 63 =A0 =A0=
+1959867 83
+>> =A06 00 =A0 1 =A0 1 =A0973 254 =A063 1023 =A0 =A0 =A0 =A0 63 =A0 312=
+46362 83
+>> =A07 00 254 =A063 1023 254 =A063 1023 =A0 =A0 =A0 =A0 63 =A019531820=
+7 83
+>> =A08 00 254 =A063 1023 254 =A063 1023 =A0 =A0 =A0 =A0 63 =A034387126=
+2 83
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0^^^ =A0^^
+>
+> C/H/S of 1023/254/63 is a special marker indicating the value there i=
+s
+> out-of-range.
 
-Our partitioning tool still obey the integral cylinder rule ... we can
-argue about whether they should, but what we need is a strategy for
-fixing what is rather than what should be.
+You misunderstood my ^^^ markers. I was trying to highlight
+the whole columns of "end head" and "end sector", not the
+last partition's 1023/254/63 values.
 
-James
+In the partition table like shown above it is obvious
+that geometry is 255/63.
 
+>> Which suggests another idea how to align a partition: since there is
+>> no requirement on the partition *start*, we don't have to start at
+>> head1,sector1 or head0,sector1
+>
+> We don't have to align to cylinders either.
+
+If neither the start nor the end is aligned to cylinder's end
+and disk has just one partition and it's bigger than 8G,
+there is not way to determine geometry.
+
+If everybody adopts the convention of ending the partitions
+at the cylinder end, geometry can be trivially determined by
+looking at partition end values. Sans "no of cylinders" value,
+which can be easily determined by other means.
+
+>> In the example above, 1st partition might be modified to start at
+>> head1,sector2, IOW, LBA 64, thus making it 32k aligned.
+>>
+>> As long as partition *ends* adhere to the convention of being
+>> exactly at last_head,last_sector, nothing should break.
+>
+> That has almost nothing to do with compatibility. =A0Just let the
+> cylinder alignment go.
+
+Then (some) bootloaders will stop working.
+
+--=20
+vda
