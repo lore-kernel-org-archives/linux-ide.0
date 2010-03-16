@@ -1,70 +1,47 @@
-From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH] ahci: pp->active_link is not reliable when FBS is enabled
-Date: Tue, 16 Mar 2010 18:08:55 +0800
-Message-ID: <1268734135.3515.4.camel@zm-desktop>
-Reply-To: shane.huang@amd.com
+From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
+Subject: Re: [PATCH 0/4] Some typo fixing
+Date: Tue, 16 Mar 2010 11:32:24 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1003161127340.18642@pobox.suse.cz>
+References: <1268686558-28171-1-git-send-email-swirl@gmx.li>
+	<4B9EA214.7010203@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:16841
-	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S937675Ab0CPKJK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 06:09:10 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <4B9EA214.7010203-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/containers>
+List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
+	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+Cc: Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Lin Ming <ming.m.lin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>, David Brownell <dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Bjorn Helgaas <bjorn.helgaas-VXdhtT5mjnY@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, "John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Steve Conklin <sconklin-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Ralph Campbell <infinipath-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Anton Vorontsov <avorontsov-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>, cbe-oss-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, Liam Girdwood <lrg-kDsPt+C1G03kYMGBc/C6ZA@public.gmane.org>, Anthony Liguori <aliguori-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andrew Morton <akpm>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-pp->active_link is not reliable when FBS is enabled.
-Both PORT_SCR_ACT and PORT_CMD_ISSUE should be checked
-because mixed NCQ and non-NCQ commands may be in flight.
+On Mon, 15 Mar 2010, Randy Dunlap wrote:
 
-Signed-off-by: Shane Huang <shane.huang@amd.com>
----
- drivers/ata/ahci.c |   23 +++++++++++++++++------
- 1 files changed, 17 insertions(+), 6 deletions(-)
+> > I have fixed some typos.
+> 
+> Acked-by: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+> 
+> Jiri, can you merge these, please, unless someone objects (?).
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 6bd930b..e009a66 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -2263,7 +2263,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 	struct ahci_port_priv *pp = ap->private_data;
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
--	u32 status, qc_active;
-+	u32 status, qc_active = 0;
- 	int rc;
- 
- 	status = readl(port_mmio + PORT_IRQ_STAT);
-@@ -2321,11 +2321,22 @@ static void ahci_port_intr(struct ata_port *ap)
- 		}
- 	}
- 
--	/* pp->active_link is valid iff any command is in flight */
--	if (ap->qc_active && pp->active_link->sactive)
--		qc_active = readl(port_mmio + PORT_SCR_ACT);
--	else
--		qc_active = readl(port_mmio + PORT_CMD_ISSUE);
-+	/* pp->active_link is not reliable once FBS is enabled, both
-+	 * PORT_SCR_ACT and PORT_CMD_ISSUE should be checked because
-+	 * NCQ and non-NCQ commands may be in flight at the same time.
-+	 */
-+	if (pp->fbs_enabled) {
-+		if (ap->qc_active) {
-+			qc_active = readl(port_mmio + PORT_SCR_ACT);
-+			qc_active |= readl(port_mmio + PORT_CMD_ISSUE);
-+		}
-+	} else {
-+		/* pp->active_link is valid iff any command is in flight */
-+		if (ap->qc_active && pp->active_link->sactive)
-+			qc_active = readl(port_mmio + PORT_SCR_ACT);
-+		else
-+			qc_active = readl(port_mmio + PORT_CMD_ISSUE);
-+	}
- 
- 	rc = ata_qc_complete_multiple(ap, qc_active);
- 
+Yes, I will take it, thanks. A couple comments though:
 
+- [important!] Thomas, it's not necessary to CC zillions of people on such 
+  patches. Just submit them to trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org (and eventually CC 
+  lkml), and that's it. I believe many people might get annoyed by this.
+- I will not be applying the drivers/staging hunks. Staging patches are 
+  moving target, the code is changing quickly (including complete 
+  drops/rewrites) so we'll likely be getting conflicts there. I will 
+  reroute them to Greg.
+- I will fold all the patches into one. We don't need one commit per one 
+  specific typo.
 
+-- 
+Jiri Kosina
+SUSE Labs, Novell Inc.
