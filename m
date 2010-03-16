@@ -1,51 +1,41 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 16:42:26 -0400
-Message-ID: <4B9FED32.6080400@redhat.com>
-References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>	 <4B9F2388.2030803@kernel.org> <1268745897.21384.14.camel@mulgrave.site>	 <4B9F8E1A.2020608@kernel.org> <1268749297.21384.15.camel@mulgrave.site>	 <4B9F9AAF.6080709@kernel.org> <1268751748.21384.18.camel@mulgrave.site>	 <4B9FA1C6.7090305@kernel.org> <1268752993.21384.23.camel@mulgrave.site> <4B9FA59E.1000402@kernel.org>
+From: Tino Keitel <tino.keitel@tikei.de>
+Subject: Intel X25-M and device-initiated interface power management
+Date: Tue, 16 Mar 2010 23:05:22 +0100
+Message-ID: <20100316220522.GA14120@x61.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2872 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752915Ab0CPUnY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2010 16:43:24 -0400
-In-Reply-To: <4B9FA59E.1000402@kernel.org>
+Received: from eazy.amigager.de ([213.239.192.238]:40501 "EHLO
+	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820Ab0CPWOL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 18:14:11 -0400
+Received: from x61.home (port-92-206-33-132.dynamic.qsc.de [92.206.33.132])
+	by eazy.amigager.de (Postfix) with ESMTPA id 49D1CFA8008
+	for <linux-ide@vger.kernel.org>; Tue, 16 Mar 2010 23:05:29 +0100 (CET)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de
+To: linux-ide@vger.kernel.org
 
-On 03/16/2010 11:37 AM, Tejun Heo wrote:
-> Hello,
->
-> On 03/17/2010 12:23 AM, James Bottomley wrote:
->    
->>> So, using custom geometry doesn't help compatibility at all.
->>>        
->> Our partitioning tool still obey the integral cylinder rule ... we can
->> argue about whether they should, but what we need is a strategy for
->> fixing what is rather than what should be.
->>      
-> The updated ones don't anymore.  They just align to 1MiB + whatever
-> the drive requests for offset (the offset-by-one thing).  They will
-> basically behave the same as windows vista/7 ones, so it's already
-> fixed.  What we can argue is whether adding CHS tricks on top to make
-> those larger alignments somewhat meaningful w/ CHS interpretation too,
-> which I'm objecting on the ground that it doesn't help compatibility
-> at all.
->
-> Thanks.
->
->    
+Hi,
 
-Dropping any mention of CHS seems to be the only sensible thing. Why 
-waste any time to continue some myth about drives that no modern 
-hardware supports (and then have the joy of explaining that to users)?
+I read that the Intel X25-M SSD consumes less than 0,3W during typical
+usage if DIPM is enabled.  This would give noticable power saving even
+compared to a spinned down hard disk.  I checked the hdparm -I output
+on my notebook with the current hard disk, and it shows this:
 
-Talking about it only confuses people and in the worst case, could cause 
-them to misalign their partitions by clinging to these pretend borders :-)
+*	Device-initiated interface power management
 
-ric
+When searching for the corresponding hdparm output with X25-M in
+google, I found only hdparm output with this feature unset.
 
+What can I expect with a X25-M on my hardware regarding DIPM? It is a
+ThinkPad X61s, lspci shows this:
+
+00:1f.2 SATA controller [0106]: Intel Corporation 82801HBM/HEM
+(ICH8M/ICH8M-E) SATA AHCI Controller [8086:2829] (rev 03)
+
+Please CC: me in replies, as I'm not subscribed.
+
+Regards,
+Tino
