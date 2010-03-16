@@ -1,60 +1,79 @@
-From: Denys Vlasenko <vda.linux@googlemail.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 15:38:26 +0100
-Message-ID: <201003161538.27015.vda.linux@googlemail.com>
-References: <4B947393.2050002@kernel.org> <1268745897.21384.14.camel@mulgrave.site> <4B9F8E1A.2020608@kernel.org>
+Date: Tue, 16 Mar 2010 23:50:23 +0900
+Message-ID: <4B9F9AAF.6080709@kernel.org>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>	 <4B9F2388.2030803@kernel.org> <1268745897.21384.14.camel@mulgrave.site>	 <4B9F8E1A.2020608@kernel.org> <1268749297.21384.15.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f219.google.com ([209.85.220.219]:42080 "EHLO
-	mail-fx0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966305Ab0CPOie (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 10:38:34 -0400
-In-Reply-To: <4B9F8E1A.2020608@kernel.org>
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:44572 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965256Ab0CPOr5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Mar 2010 10:47:57 -0400
+In-Reply-To: <1268749297.21384.15.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On Tuesday 16 March 2010 14:56, Tejun Heo wrote:
-> Hello, James.
+Hello,
+
+On 03/16/2010 11:21 PM, James Bottomley wrote:
+>>> For msdos labels, it's embedded in the label ... for all other labels,
+>>> it's made up on the spot.
+>>
+>> Where in the label?
 > 
-> On 03/16/2010 10:24 PM, James Bottomley wrote:
-> > For msdos labels, it's embedded in the label ... for all other labels,
-> > it's made up on the spot.
-> 
-> Where in the label?
+> No idea ... I only know you can use fdisk expert mode to change the
+> C/H/S layout and the change is preserved across reboots.
 
-The "end of partition" is expected to be at the last head and sector.
-Of course this heuristic fails if there are more than one primary
-partition and they have differing last head and sector.
+The CHS addresses are stored alongside with the LBA addresses.  The
+problem is that the geometry parameters (sectors/track and heads/cyl)
+are not stored anywhere and CHS addresses don't make any sense without
+the two parameters.  The only way to figure out the geometry
+parameters is to solve two equations involving CHS addresses and LBA
+addresses.
 
-But on most "sanely" partitioned disks they are the same:
+e.g.  If the first partition begins at CHS 0/32/33 and ends at
+12/233/19 and the corresponding LBA addresses are 2048 and 206848, you
+can solve the equation and determine that the parameters gotta be 63
+secs/trk and 255 heads/cyl to make those two pairs of addresses match
+each other and in fact some BIOSs try to do this depending on
+configuration (and sometimes falls into infinite loop or causes other
+boot related problems if the parameters are too uncommon).
 
-Disk /dev/sda: 255 heads, 63 sectors, 36481 cylinders
+This method can't work reliably even at theoretical level because it
+requires at least two pairs of CHS/LBA addresses to match (two unknown
+parameters to solve for) and there is only single pair available if
+the first partition goes over the CHS limit which at maximum is 8GiB.
 
-Nr AF  Hd Sec  Cyl  Hd Sec  Cyl      Start       Size ID
- 1 00   1   1    0 254  63  850         63   13671252 0b
- 2 80   0   1  851 254  63 1023   13671315  572395950 05
- 3 00   0   0    0   0   0    0          0          0 00
- 4 00   0   0    0   0   0    0          0          0 00
- 5 00   1   1  851 254  63  972         63    1959867 83
- 6 00   1   1  973 254  63 1023         63   31246362 83
- 7 00 254  63 1023 254  63 1023         63  195318207 83
- 8 00 254  63 1023 254  63 1023         63  343871262 83
-                   ^^^  ^^
+So, CHS *values* are preserved if it falls below the CHS limit of the
+geometry used during partitioning but the geometry information is lost
+making the CHS values completely meaningless, so the only sane thing
+to do is to stick to whatever geometry parameters provided by the BIOS
+which usually is 255/63 these days.  Otherwise, the results are...
 
-Which suggests another idea how to align a partition:
-since there is no requirement on the partition *start*,
-we don't have to start at head1,sector1 or head0,sector1
+* If the first partition ends before the CHS limit and BIOS is
+  configured to calculate back the parameters, BIOS may be able to
+  report the geometry correctly.
 
-In the example above, 1st partition might be modified to start
-at head1,sector2, IOW, LBA 64, thus making it 32k aligned.
+* If the first partition goes over the CHS limit,
 
-As long as partition *ends* adhere to the convention
-of being exactly at last_head,last_sector, nothing should break.
+  * BIOS can use 255/63 or whatever default parameters and CHS and LBA
+    addresses won't match each other which won't be a problem for
+    modern OSes as they don't look at the CHS addresses at all but
+    older operating systems which consider both CHS and LBA addresses
+    may get confused.
+
+  * BIOS can set up arbitrary parameters such that the CHS and LBA for
+    the start of the first partition match and maybe also try to
+    cylinder align further LBA addresses but there is no guarantee
+    these parameters match the original parameters used during
+    partitioning and this seems to cause more compatibility problems
+    than it solves.
+
+Thanks.
+
 -- 
-vda
+tejun
