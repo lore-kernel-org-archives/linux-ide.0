@@ -1,47 +1,60 @@
-From: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Subject: Re: [PATCH 0/4] Some typo fixing
-Date: Tue, 16 Mar 2010 11:32:24 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1003161127340.18642@pobox.suse.cz>
-References: <1268686558-28171-1-git-send-email-swirl@gmx.li>
-	<4B9EA214.7010203@xenotime.net>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Tue, 16 Mar 2010 06:24:57 -0700
+Message-ID: <1268745897.21384.14.camel@mulgrave.site>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>
+	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>
+	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>
+	 <4B9F2388.2030803@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <4B9EA214.7010203-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/containers>
-List-Post: <mailto:containers-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/containers>,
-	<mailto:containers-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: containers-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
-Cc: Karsten Keil <isdn-iHCpqvpFUx0uJkBD2foKsQ@public.gmane.org>, Lin Ming <ming.m.lin-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Jaroslav Kysela <perex-/Fr2/VpizcU@public.gmane.org>, Pavel Machek <pavel-AlSwsSmVLrQ@public.gmane.org>, David Brownell <dbrownell-Rn4VEauK+AKRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, KOSAKI Motohiro <kosaki.motohiro-+CUm20s59erQFUHtdCDX3A@public.gmane.org>, Bjorn Helgaas <bjorn.helgaas-VXdhtT5mjnY@public.gmane.org>, Rusty Russell <rusty-8n+1lVoiYb80n/F98K4Iww@public.gmane.org>, "John W. Linville" <linville-2XuSBdqkA4R54TAoqtyWWQ@public.gmane.org>, Steve Conklin <sconklin-Z7WLFzj8eWMS+FvcfC7Uqw@public.gmane.org>, Ralph Campbell <infinipath-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Anton Vorontsov <avorontsov-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>, cbe-oss-dev-mnsaURCQ41sdnm+yROfE0A@public.gmane.org, Liam Girdwood <lrg-kDsPt+C1G03kYMGBc/C6ZA@public.gmane.org>, Anthony Liguori <aliguori-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>, Andrew Morton <akpm>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:59721 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966007Ab0CPNZN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Mar 2010 09:25:13 -0400
+In-Reply-To: <4B9F2388.2030803@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-On Mon, 15 Mar 2010, Randy Dunlap wrote:
-
-> > I have fixed some typos.
+On Tue, 2010-03-16 at 15:22 +0900, Tejun Heo wrote:
+> Hello, James.
 > 
-> Acked-by: Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>
+> On 03/16/2010 03:14 PM, James Bottomley wrote:
+> > So, it is true to say that picking a certain H/S geometry (which is
+> > entirely withing the gift of the partitioner) will align msdos label
+> > partitions, but will be don't care for all other labels: all other
+> > partition labels (like gpt) use block as offset and don't have any truck
+> > with the fictitious C/H/S stuff.
 > 
-> Jiri, can you merge these, please, unless someone objects (?).
+> For any modern Linux and Windows, CHS simply doesn't matter.  They
+> don't look at it at all.
 
-Yes, I will take it, thanks. A couple comments though:
+If they have a msdos label, they do.
 
-- [important!] Thomas, it's not necessary to CC zillions of people on such 
-  patches. Just submit them to trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org (and eventually CC 
-  lkml), and that's it. I believe many people might get annoyed by this.
-- I will not be applying the drivers/staging hunks. Staging patches are 
-  moving target, the code is changing quickly (including complete 
-  drops/rewrites) so we'll likely be getting conflicts there. I will 
-  reroute them to Greg.
-- I will fold all the patches into one. We don't need one commit per one 
-  specific typo.
+> > The big problem is that 99% of the x86 systems out there still use the
+> > ancient msdos label for their boot disks, so aligning H/S going forwards
+> > will give us a nice "just works" for x86 boxes.
+> 
+> What I don't get is that how picking up a custom geometry can make
+> things work when there is *no* reliable way to determine which
+> geometry was used during partitioning once the partitioning is
+> complete.
 
--- 
-Jiri Kosina
-SUSE Labs, Novell Inc.
+For msdos labels, it's embedded in the label ... for all other labels,
+it's made up on the spot.
+
+>   Most BIOSs these days will simply report the geometry as
+> being 255/63 regardless of the geometry used during partitioning.  So,
+> how can using a custom geometry give that nice "just works" for x86
+> boxes when nobody knows what geometry is in use?
+
+Because the msdos label can only partition in units of cylinders.  If
+you're using an msdos label, picking the right H/S gets you alignment.
+
+James
+
+
