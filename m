@@ -1,50 +1,34 @@
-From: Stefan Roese <sr@denx.de>
-Subject: Re: [PATCH] 460EX on-chip SATA driver<kernel 2.6.33> < resubmission :
-	01>
-Date: Wed, 17 Mar 2010 13:03:06 +0100
-Message-ID: <201003171303.06258.sr@denx.de>
-References: <1268646854-27387-1-git-send-email-rsarmah@appliedmicro.com>
-	<AC311A8E81420D4EBC1F26E6479848FE065B7F30@SDCEXCHANGE01.ad.amcc.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Wed, 17 Mar 2010 11:08:07 -0400
+Message-ID: <4BA0F057.7020909@redhat.com>
+References: <6af388e7-e313-4212-86c8-30ffa327411c@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <AC311A8E81420D4EBC1F26E6479848FE065B7F30@SDCEXCHANGE01.ad.amcc.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Rupjyoti Sarmah <rupjyoti.sarmah@appliedmicro.com>, linuxppc-dev@ozlabs.org, Rupjyoti Sarmah <rsarmah@amcc.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Rupjyoti Sarmah <rupjyoti.sarmah@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:21659 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750974Ab0CQPHt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Mar 2010 11:07:49 -0400
+In-Reply-To: <6af388e7-e313-4212-86c8-30ffa327411c@email.android.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de
 
-Hi Rup,
+On 03/16/2010 06:21 PM, H. Peter Anvin wrote:
+> The only reason I see to care about CHS at all is that there are systems in the field which can only boot from USB in CHS mode, and which often look at the MBR partition table to guess the geometry.  Of course, some then *report* the detected geometry but don't *use* the detected geometry...
+>
+>    
 
-On Wednesday 17 March 2010 05:23:16 Rupjyoti Sarmah wrote:
-> This patch enables the on-chip DWC SATA controller of the AppliedMicro
-> processor 460EX.
+These systems, given the changes in modern microsoft releases, must be 
+doomed even without any effort on our part.
 
-Apart from the other comments, did you take a look at the latest version of 
-this driver in our linux-2.6-denx repository? We did some work on this driver 
-for a new Canyonlands release last year. It's hard to check this for me now, 
-with this line wrapped patch (the drivers diverged somewhat). So either check 
-for yourself, or send a new, not line-wrapped, patch version so that I can 
-better check myself.
+I still think that we should work to make this ancient stuff disappear & 
+help force the legacy edge cases to modernize. It has been some huge 
+amount of time since storage vendors pretty much abandoned CHS (15 
+years? 20?) :-)
 
-BTW: It would be nice if you would add me to Cc on DWC-SATA related patches, 
-since I've been involved in the development at some time.
+ric
 
-Thanks.
-
-Cheers,
-Stefan
-
---
-DENX Software Engineering GmbH,      MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich,  Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-0 Fax: (+49)-8142-66989-80 Email: office@denx.de
