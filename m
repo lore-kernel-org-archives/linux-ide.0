@@ -1,47 +1,33 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Intel X25-M and device-initiated interface power management
-Date: Tue, 16 Mar 2010 18:10:51 -0600
-Message-ID: <4BA01E0B.5050906@gmail.com>
-References: <20100316220522.GA14120@x61.home>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Wed, 17 Mar 2010 11:04:59 +0900
+Message-ID: <4BA038CB.8050400@kernel.org>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>	 <4B9F2388.2030803@kernel.org> <1268745897.21384.14.camel@mulgrave.site>	 <4B9F8E1A.2020608@kernel.org> <1268749297.21384.15.camel@mulgrave.site>	 <4B9F9AAF.6080709@kernel.org> <1268751748.21384.18.camel@mulgrave.site>	 <4B9FA1C6.7090305@kernel.org> <1268752993.21384.23.camel@mulgrave.site> <4B9FA59E.1000402@kernel.org> <4B9FED32.6080400@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:44418 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751509Ab0CQAKz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 20:10:55 -0400
-Received: by gyg8 with SMTP id 8so211060gyg.19
-        for <linux-ide@vger.kernel.org>; Tue, 16 Mar 2010 17:10:54 -0700 (PDT)
-In-Reply-To: <20100316220522.GA14120@x61.home>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B9FED32.6080400@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, "H. Peter Anvin" <hpa@zytor.com>, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de
 List-Id: linux-ide@vger.kernel.org
-To: Tino Keitel <tino.keitel@tikei.de>
-Cc: linux-ide@vger.kernel.org
 
-On 03/16/2010 04:05 PM, Tino Keitel wrote:
-> Hi,
->
-> I read that the Intel X25-M SSD consumes less than 0,3W during typical
-> usage if DIPM is enabled.  This would give noticable power saving even
-> compared to a spinned down hard disk.  I checked the hdparm -I output
-> on my notebook with the current hard disk, and it shows this:
->
-> *	Device-initiated interface power management
->
-> When searching for the corresponding hdparm output with X25-M in
-> google, I found only hdparm output with this feature unset.
->
-> What can I expect with a X25-M on my hardware regarding DIPM? It is a
-> ThinkPad X61s, lspci shows this:
->
-> 00:1f.2 SATA controller [0106]: Intel Corporation 82801HBM/HEM
-> (ICH8M/ICH8M-E) SATA AHCI Controller [8086:2829] (rev 03)
->
-> Please CC: me in replies, as I'm not subscribed.
+Hello, Ric.
 
-Have a look here:
+On 03/17/2010 05:42 AM, Ric Wheeler wrote:
+> Dropping any mention of CHS seems to be the only sensible thing. Why
+> waste any time to continue some myth about drives that no modern
+> hardware supports (and then have the joy of explaining that to users)?
+> 
+> Talking about it only confuses people and in the worst case, could cause
+> them to misalign their partitions by clinging to these pretend borders :-)
 
-http://www.thinkwiki.org/wiki/How_to_reduce_power_consumption#SATA_Link_Power_Management
+I don't think not mentioning it would clear up the myth.  It would
+probably be a good idea to beef up the document to clear
+misconceptions around disk geometry.  I'll give a shot at it.
 
-Replace host0, host1, etc. with the appropriate numbers..
+Thanks.
+
+-- 
+tejun
