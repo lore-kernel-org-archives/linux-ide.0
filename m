@@ -1,38 +1,50 @@
-From: Tino Keitel <tino.keitel@tikei.de>
-Subject: Re: Intel X25-M and device-initiated interface power management
-Date: Wed, 17 Mar 2010 12:48:23 +0100
-Message-ID: <20100317114823.GA9557@mac.home>
-References: <20100316220522.GA14120@x61.home>
- <4BA01E0B.5050906@gmail.com>
+From: Stefan Roese <sr@denx.de>
+Subject: Re: [PATCH] 460EX on-chip SATA driver<kernel 2.6.33> < resubmission :
+	01>
+Date: Wed, 17 Mar 2010 13:03:06 +0100
+Message-ID: <201003171303.06258.sr@denx.de>
+References: <1268646854-27387-1-git-send-email-rsarmah@appliedmicro.com>
+	<AC311A8E81420D4EBC1F26E6479848FE065B7F30@SDCEXCHANGE01.ad.amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eazy.amigager.de ([213.239.192.238]:50616 "EHLO
-	eazy.amigager.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754381Ab0CQLsa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Mar 2010 07:48:30 -0400
-Received: from mac.home (port-92-206-33-132.dynamic.qsc.de [92.206.33.132])
-	by eazy.amigager.de (Postfix) with ESMTPA id 3E400FA8008
-	for <linux-ide@vger.kernel.org>; Wed, 17 Mar 2010 12:48:28 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <4BA01E0B.5050906@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <AC311A8E81420D4EBC1F26E6479848FE065B7F30@SDCEXCHANGE01.ad.amcc.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Rupjyoti Sarmah <rupjyoti.sarmah@appliedmicro.com>, linuxppc-dev@ozlabs.org, Rupjyoti Sarmah <rsarmah@amcc.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Rupjyoti Sarmah <rupjyoti.sarmah@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-On Tue, Mar 16, 2010 at 18:10:51 -0600, Robert Hancock wrote:
+Hi Rup,
 
-[...]
+On Wednesday 17 March 2010 05:23:16 Rupjyoti Sarmah wrote:
+> This patch enables the on-chip DWC SATA controller of the AppliedMicro
+> processor 460EX.
 
-> Have a look here:
-> 
-> http://www.thinkwiki.org/wiki/How_to_reduce_power_consumption#SATA_Link_Power_Management
-> 
-> Replace host0, host1, etc. with the appropriate numbers..
+Apart from the other comments, did you take a look at the latest version of 
+this driver in our linux-2.6-denx repository? We did some work on this driver 
+for a new Canyonlands release last year. It's hard to check this for me now, 
+with this line wrapped patch (the drivers diverged somewhat). So either check 
+for yourself, or send a new, not line-wrapped, patch version so that I can 
+better check myself.
 
-I set it to max_performance for all scsi_host sysfs entries, but the
-DIPM feature in hdparm -I was still shown es enabled.  So this can't be
-the reason for the disabled DIPM I saw in the google hits.
+BTW: It would be nice if you would add me to Cc on DWC-SATA related patches, 
+since I've been involved in the development at some time.
 
-Regards,
-Tino
+Thanks.
+
+Cheers,
+Stefan
+
+--
+DENX Software Engineering GmbH,      MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich,  Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-0 Fax: (+49)-8142-66989-80 Email: office@denx.de
