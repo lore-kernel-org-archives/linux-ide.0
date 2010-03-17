@@ -1,55 +1,39 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: something is dramatically wrong with buffered read performance in
- 2.6.32.9
-Date: Wed, 17 Mar 2010 17:33:49 -0500
-Message-ID: <4BA158CD.6060402@hardwarefreak.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH #upstream-fixes 2/3] ahci: clean up board IDs
+Date: Thu, 18 Mar 2010 07:58:48 +0900
+Message-ID: <4BA15EA8.8000707@kernel.org>
+References: <4B98575C.5050508@kernel.org> <4B9857EA.5090101@kernel.org> <4BA11518.30500@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53189 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756125Ab0CQWdu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Mar 2010 18:33:50 -0400
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 9DBC86C3DC
-	for <linux-ide@vger.kernel.org>; Wed, 17 Mar 2010 17:33:49 -0500 (CDT)
+Received: from hera.kernel.org ([140.211.167.34]:51101 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751976Ab0CQW7A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Mar 2010 18:59:00 -0400
+In-Reply-To: <4BA11518.30500@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, pchen@nvidia.com, kernel-bugzilla.20.drkshadow@spamgourmet.com
 
-I recently upgraded from kernel 2.6.31.1 to 2.6.32.9.  Upon kicking the
-tires on the new kernel I discovered that my two data partitions are
-suffering a ~30MB/s performance loss compared to my root partition.  That's
-a loss of nearly half the performance of my disk.
+Hello,
 
-The root partition is a primary, formatted with EXT2.  The two data
-partitions are logicals within an extended partition, both formatted with
-XFS.  hdparm O_DIRECT tests show identical throughput for all 3 partitions.
- Going through the buffer cache, however, shows a huge performance drop for
-the two logical partitions.  Throughput is nearly cut in half through the
-buffer cache:
+On 03/18/2010 02:44 AM, Jeff Garzik wrote:
+> It actually makes merging a lot more difficult, considering that libahci
+> -- which includes large amounts of ahci code movement -- was committed
+> to #upstream a week before this patch was posted.
+> 
+> Because of libahci changes, I think patch #2 (this patch) and patch #3
+> are more appropriate for #upstream.
+> 
+> The "(pdev->vendor != PCI_VENDOR_ID_NVIDIA)" may be overly broad, but
+> it's not wrong for 2.6.34, IMO.
 
-/dev/sda2:
- Timing O_DIRECT disk reads:  238 MB in  3.02 seconds =  78.79 MB/sec
-/dev/sda2:
- Timing buffered disk reads:  208 MB in  3.00 seconds =  69.26 MB/sec
+Hmmm... the actual fix is in #3.  I'll prep separate patches for
+upstream and upstream-fixes.
 
-/dev/sda6:
- Timing O_DIRECT disk reads:  236 MB in  3.02 seconds =  78.14 MB/sec
-/dev/sda6:
- Timing buffered disk reads:  126 MB in  3.01 seconds =  41.79 MB/sec
-
-/dev/sda7:
- Timing O_DIRECT disk reads:  238 MB in  3.00 seconds =  79.27 MB/sec
-/dev/sda7:
- Timing buffered disk reads:  126 MB in  3.03 seconds =  41.65 MB/sec
-
-Any ideas what I'm running into here?  Did I somehow fubar something in
-menuconfig?
-
-I get the same results with dd copy tests through the buffer cache to
-/dev/null.  Any idea what's wrong?  Is this a known bug?
+Thanks.
 
 -- 
-Stan
+tejun
