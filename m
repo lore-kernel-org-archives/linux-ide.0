@@ -1,39 +1,33 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] ahci: use BIOS date in broken_suspend
- list
-Date: Wed, 17 Mar 2010 13:48:01 -0400
-Message-ID: <4BA115D1.5010507@garzik.org>
-References: <4B9ED5D2.2030805@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ahci: pp->active_link is not reliable when FBS is enabled
+Date: Wed, 17 Mar 2010 15:59:15 -0400
+Message-ID: <4BA13493.3040002@pobox.com>
+References: <1268734135.3515.4.camel@zm-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f200.google.com ([209.85.222.200]:52982 "EHLO
-	mail-pz0-f200.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285Ab0CQRsD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Mar 2010 13:48:03 -0400
-Received: by mail-pz0-f200.google.com with SMTP id 38so1041510pzk.33
-        for <linux-ide@vger.kernel.org>; Wed, 17 Mar 2010 10:48:03 -0700 (PDT)
-In-Reply-To: <4B9ED5D2.2030805@kernel.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:43495 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755854Ab0CQT7S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Mar 2010 15:59:18 -0400
+Received: by gwaa12 with SMTP id a12so456714gwa.19
+        for <linux-ide@vger.kernel.org>; Wed, 17 Mar 2010 12:59:17 -0700 (PDT)
+In-Reply-To: <1268734135.3515.4.camel@zm-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, stable@kernel.org, tigerfishdaisy@gmail.com
+To: shane.huang@amd.com
+Cc: linux-ide@vger.kernel.org
 
-On 03/15/2010 08:50 PM, Tejun Heo wrote:
-> HP is recycling both DMI_PRODUCT_NAME and DMI_BIOS_VERSION making
-> ahci_broken_suspend() trigger for later products which are not
-> affected by the original problems.  Match BIOS date instead of version
-> and add references to bko's so that full information can be found
-> easier later.
+On 03/16/2010 06:08 AM, Shane Huang wrote:
+> pp->active_link is not reliable when FBS is enabled.
+> Both PORT_SCR_ACT and PORT_CMD_ISSUE should be checked
+> because mixed NCQ and non-NCQ commands may be in flight.
 >
-> This fixes http://bugzilla.kernel.org/show_bug.cgi?id=15462
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Reported-by: tigerfishdaisy@gmail.com
+> Signed-off-by: Shane Huang<shane.huang@amd.com>
 > ---
->   drivers/ata/ahci.c |   28 ++++++++++++++++++++--------
->   1 file changed, 20 insertions(+), 8 deletions(-)
+>   drivers/ata/ahci.c |   23 +++++++++++++++++------
+>   1 files changed, 17 insertions(+), 6 deletions(-)
 
 applied #upstream-fixes
 
