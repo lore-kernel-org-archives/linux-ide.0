@@ -1,74 +1,36 @@
-From: "Rupjyoti Sarmah" <rsarmah@amcc.com>
-Subject: RE: [PATCH] 460EX on-chip SATA driver<kernel 2.6.33> < resubmission : 01>
-Date: Tue, 16 Mar 2010 22:55:51 -0700
-Message-ID: <AC311A8E81420D4EBC1F26E6479848FE065B7F54@SDCEXCHANGE01.ad.amcc.com>
-References: <1268646854-27387-1-git-send-email-rsarmah@appliedmicro.com><AC311A8E81420D4EBC1F26E6479848FE065B7F30@SDCEXCHANGE01.ad.amcc.com> <20100317155959.208eea21.sfr@canb.auug.org.au>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: ATA 4 KiB sector issues.
+Date: Tue, 16 Mar 2010 23:48:32 -0700
+Message-ID: <4BA07B40.9090400@zytor.com>
+References: <4B947393.2050002@kernel.org> <201003100046.24695.arnd@arndb.de>	 <1158166a1003100114j6ea329fbh84bfad65dcac90bf@mail.gmail.com>	 <4B9EED55.10201@kernel.org> <1268720060.21384.10.camel@mulgrave.site>	 <4B9F2388.2030803@kernel.org> <1268745897.21384.14.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <20100317155959.208eea21.sfr@canb.auug.org.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Rupjyoti Sarmah <rupjyoti.sarmah@gmail.com>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:41516 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751981Ab0CQGtM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Mar 2010 02:49:12 -0400
+In-Reply-To: <1268745897.21384.14.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de, jdelvare@suse.de
 
-Hi Stephen,
-
-Thanks for your suggestions. 
-I used git-send-email earlier and emails never appeared in the archive.
-This time I sent through outlook & the message appeared in the archive.
-Looks like outlook did that word wrap.
-
-I am not sure why the emails from the git-send-email did not get
-delivered. At the time of sending I got message delivered  logs.
-
-Regards,
-Rupjyoti Sarmah
-
-
-
-
------Original Message-----
-From: Stephen Rothwell [mailto:sfr@canb.auug.org.au] 
-Sent: Wednesday, March 17, 2010 10:30 AM
-To: Rupjyoti Sarmah
-Cc: linux-ide@vger.kernel.org; Jeff Garzik; Rupjyoti Sarmah;
-linuxppc-dev@ozlabs.org; Rupjyoti Sarmah; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] 460EX on-chip SATA driver<kernel 2.6.33> <
-resubmission : 01>
-
-Hi,
-
-Just a couple of quick points ...
-
-On Tue, 16 Mar 2010 21:23:16 -0700 "Rupjyoti Sarmah" <rsarmah@amcc.com>
-wrote:
+On 03/16/2010 06:24 AM, James Bottomley wrote:
 >
-> This patch enables the on-chip DWC SATA controller of the AppliedMicro
+> Because the msdos label can only partition in units of cylinders.  If
+> you're using an msdos label, picking the right H/S gets you alignment.
+>
 
-> processor 460EX.
-> 
-> Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com> ,Mark 
-> Miesfeld <mmiesfeld@appliedmicro.com>, Prodyut Hazarika 
-> <phazarika@appliedmicro.com>
+This is doubly false.
 
-Please put one Signed-off-by line per person.
+An MS-DOS partition table can partition at any boundary.  Some OSes 
+(like some versions of MS-DOS) needed track alignment because their boot 
+loaders did not support crossing track boundaries.
 
-> ---
->  arch/powerpc/boot/dts/canyonlands.dts |    8 +
->  drivers/ata/Kconfig                   |    9 +
->  drivers/ata/Makefile                  |    1 +
->  drivers/ata/sata_dwc.c                | 1965
-> +++++++++++++++++++++++++++++++++
->  4 files changed, 1983 insertions(+), 0 deletions(-)  create mode 
-> 100644 drivers/ata/sata_dwc.c
+Second, the primary field in the (modern) MS-DOS partition table is an 
+LBA field.  The CHS fields are largely historic and useless because of 
+the 1024-cylinder limitation, and by only being 24 bits total.
 
-This patch has been word wrapped by your mailer (or something along the
-way).
---
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+	-hpa
