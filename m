@@ -1,54 +1,47 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: ATA 4 KiB sector issues.
-Date: Tue, 16 Mar 2010 15:21:51 -0700
-Message-ID: <6af388e7-e313-4212-86c8-30ffa327411c@email.android.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Intel X25-M and device-initiated interface power management
+Date: Tue, 16 Mar 2010 18:10:51 -0600
+Message-ID: <4BA01E0B.5050906@gmail.com>
+References: <20100316220522.GA14120@x61.home>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----R4P7GXUBOJY3GGG2REK2WVOLNBAU4H"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:58131 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751048Ab0CPXtb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Mar 2010 19:49:31 -0400
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:44418 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751509Ab0CQAKz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Mar 2010 20:10:55 -0400
+Received: by gyg8 with SMTP id 8so211060gyg.19
+        for <linux-ide@vger.kernel.org>; Tue, 16 Mar 2010 17:10:54 -0700 (PDT)
+In-Reply-To: <20100316220522.GA14120@x61.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Denys Vlasenko <vda.linux@googlemail.com>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Daniel Taylor <Daniel.Taylor@wdc.com>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, tytso@mit.edu, hirofumi@mail.parknet.co.jp, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, irtiger@gmail.com, Matthew Wilcox <matthew@wil.cx>, aschnell@suse.de, knikanth@suse.de
+To: Tino Keitel <tino.keitel@tikei.de>
+Cc: linux-ide@vger.kernel.org
 
-------R4P7GXUBOJY3GGG2REK2WVOLNBAU4H
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: base64
+On 03/16/2010 04:05 PM, Tino Keitel wrote:
+> Hi,
+>
+> I read that the Intel X25-M SSD consumes less than 0,3W during typical
+> usage if DIPM is enabled.  This would give noticable power saving even
+> compared to a spinned down hard disk.  I checked the hdparm -I output
+> on my notebook with the current hard disk, and it shows this:
+>
+> *	Device-initiated interface power management
+>
+> When searching for the corresponding hdparm output with X25-M in
+> google, I found only hdparm output with this feature unset.
+>
+> What can I expect with a X25-M on my hardware regarding DIPM? It is a
+> ThinkPad X61s, lspci shows this:
+>
+> 00:1f.2 SATA controller [0106]: Intel Corporation 82801HBM/HEM
+> (ICH8M/ICH8M-E) SATA AHCI Controller [8086:2829] (rev 03)
+>
+> Please CC: me in replies, as I'm not subscribed.
 
-VGhlIG9ubHkgcmVhc29uIEkgc2VlIHRvIGNhcmUgYWJvdXQgQ0hTIGF0IGFsbCBpcyB0aGF0IHRo
-ZXJlIGFyZSBzeXN0ZW1zIGluIHRoZSBmaWVsZCB3aGljaCBjYW4gb25seSBib290IGZyb20gVVNC
-IGluIENIUyBtb2RlLCBhbmQgd2hpY2ggb2Z0ZW4gbG9vayBhdCB0aGUgTUJSIHBhcnRpdGlvbiB0
-YWJsZSB0byBndWVzcyB0aGUgZ2VvbWV0cnkuICBPZiBjb3Vyc2UsIHNvbWUgdGhlbiAqcmVwb3J0
-KiB0aGUgZGV0ZWN0ZWQgZ2VvbWV0cnkgYnV0IGRvbid0ICp1c2UqIHRoZSBkZXRlY3RlZCBnZW9t
-ZXRyeS4uLgoKIlJpYyBXaGVlbGVyIiA8cndoZWVsZXJAcmVkaGF0LmNvbT4gd3JvdGU6Cgo+T24g
-MDMvMTYvMjAxMCAxMTozNyBBTSwgVGVqdW4gSGVvIHdyb3RlOg0KPj4gSGVsbG8sDQo+Pg0KPj4g
-T24gMDMvMTcvMjAxMCAxMjoyMyBBTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0KPj4gICAgDQo+
-Pj4+IFNvLCB1c2luZyBjdXN0b20gZ2VvbWV0cnkgZG9lc24ndCBoZWxwIGNvbXBhdGliaWxpdHkg
-YXQgYWxsLg0KPj4+PiAgICAgICAgDQo+Pj4gT3VyIHBhcnRpdGlvbmluZyB0b29sIHN0aWxsIG9i
-ZXkgdGhlIGludGVncmFsIGN5bGluZGVyIHJ1bGUgLi4uIHdlIGNhbg0KPj4+IGFyZ3VlIGFib3V0
-IHdoZXRoZXIgdGhleSBzaG91bGQsIGJ1dCB3aGF0IHdlIG5lZWQgaXMgYSBzdHJhdGVneSBmb3IN
-Cj4+PiBmaXhpbmcgd2hhdCBpcyByYXRoZXIgdGhhbiB3aGF0IHNob3VsZCBiZS4NCj4+PiAgICAg
-IA0KPj4gVGhlIHVwZGF0ZWQgb25lcyBkb24ndCBhbnltb3JlLiAgVGhleSBqdXN0IGFsaWduIHRv
-IDFNaUIgKyB3aGF0ZXZlcg0KPj4gdGhlIGRyaXZlIHJlcXVlc3RzIGZvciBvZmZzZXQgKHRoZSBv
-ZmZzZXQtYnktb25lIHRoaW5nKS4gIFRoZXkgd2lsbA0KPj4gYmFzaWNhbGx5IGJlaGF2ZSB0aGUg
-c2FtZSBhcyB3aW5kb3dzIHZpc3RhLzcgb25lcywgc28gaXQncyBhbHJlYWR5DQo+PiBmaXhlZC4g
-IFdoYXQgd2UgY2FuIGFyZ3VlIGlzIHdoZXRoZXIgYWRkaW5nIENIUyB0cmlja3Mgb24gdG9wIHRv
-IG1ha2UNCj4+IHRob3NlIGxhcmdlciBhbGlnbm1lbnRzIHNvbWV3aGF0IG1lYW5pbmdmdWwgdy8g
-Q0hTIGludGVycHJldGF0aW9uIHRvbywNCj4+IHdoaWNoIEknbSBvYmplY3Rpbmcgb24gdGhlIGdy
-b3VuZCB0aGF0IGl0IGRvZXNuJ3QgaGVscCBjb21wYXRpYmlsaXR5DQo+PiBhdCBhbGwuDQo+Pg0K
-Pj4gVGhhbmtzLg0KPj4NCj4+ICAgIA0KPg0KPkRyb3BwaW5nIGFueSBtZW50aW9uIG9mIENIUyBz
-ZWVtcyB0byBiZSB0aGUgb25seSBzZW5zaWJsZSB0aGluZy4gV2h5IA0KPndhc3RlIGFueSB0aW1l
-IHRvIGNvbnRpbnVlIHNvbWUgbXl0aCBhYm91dCBkcml2ZXMgdGhhdCBubyBtb2Rlcm4gDQo+aGFy
-ZHdhcmUgc3VwcG9ydHMgKGFuZCB0aGVuIGhhdmUgdGhlIGpveSBvZiBleHBsYWluaW5nIHRoYXQg
-dG8gdXNlcnMpPw0KPg0KPlRhbGtpbmcgYWJvdXQgaXQgb25seSBjb25mdXNlcyBwZW9wbGUgYW5k
-IGluIHRoZSB3b3JzdCBjYXNlLCBjb3VsZCBjYXVzZSANCj50aGVtIHRvIG1pc2FsaWduIHRoZWly
-IHBhcnRpdGlvbnMgYnkgY2xpbmdpbmcgdG8gdGhlc2UgcHJldGVuZCBib3JkZXJzIDotKQ0KPg0K
-PnJpYw0KPg0KCi0tClNlbnQgZnJvbSBteSBtb2JpbGUgcGhvbmUsIHBhcmRvbiBhbnkgbGFjayBv
-ZiBmb3JtYXR0aW5nLg==
+Have a look here:
 
-------R4P7GXUBOJY3GGG2REK2WVOLNBAU4H--
+http://www.thinkwiki.org/wiki/How_to_reduce_power_consumption#SATA_Link_Power_Management
 
+Replace host0, host1, etc. with the appropriate numbers..
