@@ -1,65 +1,69 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: understanding the cause of ATA failures
-Date: Thu, 18 Mar 2010 18:39:42 -0500
-Message-ID: <4BA2B9BE.5030607@hardwarefreak.com>
-References: <4BA2A02F.7040200@gmail.com> <4BA2A27E.9040704@buttersideup.com> <4BA2A590.4030505@gmail.com> <4BA2AA34.70105@hardwarefreak.com> <4BA2B15E.6000301@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
+Date: Fri, 19 Mar 2010 11:26:48 +0900
+Message-ID: <4BA2E0E8.1050001@kernel.org>
+References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc> <4B9D0772.4080306@teksavvy.com> <4B9D7924.1020908@kernel.org> <201003181716.00173.suse-linux@ml082.pinguin.uni.cc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:54492 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752470Ab0CRXjo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2010 19:39:44 -0400
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 3564C6C002
-	for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2010 18:39:43 -0500 (CDT)
-In-Reply-To: <4BA2B15E.6000301@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:33936 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752624Ab0CSC1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Mar 2010 22:27:00 -0400
+In-Reply-To: <201003181716.00173.suse-linux@ml082.pinguin.uni.cc>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Al Bogner <suse-linux@ml082.pinguin.uni.cc>
+Cc: Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org
 
-Ludovico Cavedon put forth on 3/18/2010 6:03 PM:
-> Stan Hoeppner wrote:
->> Is there a SATA backplane involved or is each drive cabled directly to the
->> controller?  If backplane, is it active or passive?  Whose product is it?
+(cc'ing Daniel, Hi)
+
+Hello,
+
+On 03/19/2010 01:15 AM, Al Bogner wrote:
+> WD said to me I can send them the disk, but didn't accept, that this is a 
+> firmware bug.
 > 
-> no backplance.
-> This is the machine
-> http://www.supermicro.com/products/system/2U/6026/SYS-6026T-URF.cfm
+> Today I got a brandnew WD20EARS (2TB) and it is the same. After about an 1/2 
+> hr. I had 12 cycles with an _un_formatted disk.
 
-It most certainly does have a backplane, and an active backplane at that.
-Defective or marginal backplanes are known to cause intermittent problems of
-the nature you're describing, especially active backplanes.  This is why I
-asked.  "Enclosure Management" below is a feature of only active backplanes.
- The difference between active and passive is that active units have one or
-more ASICs (chips) on the circuit board to control various functions of the
-backplane such as fan control, alarms, drive monitoring circuits to sense
-drive failures, etc.  Have you configured an I2C module to monitor the
-backplane?  If so, check those logs.  If not, do so now.  It's possible that
-the backplane controller is erroneously kicking the drives off-line.  This
-could explain the SATA bus errors.  It's also possible there is a problem
-with the backplane controller chip itself or other circuitry on the PCB
-causing problems.
+That would reach 1.43 years of operation hour w/ 300k limit.  Maybe
+that's the number they are aiming for?  I don't know.  I haven't heard
+from WDC yet.
 
-SAS Backplane
-1x 2U SAS backplane w/ Enclosure Management
+> I cannot accept, that it should be a warranty issue, because this
+> reduces the lifetime _after_ the warranty and increases the
+> possibility to loose data, at least for those who don't use a raid.
+>
+> I would be happy to have a native linux utility to change this.
 
-http://www.supermicro.com/products/chassis/2U/825/SC825TQ-R720U.cfm
+Yeah, that will be nice but it's of very limited use.  How many would
+look that up, install it and use it to adjust the parameter?  For it
+to have meaningful effect, it should be applied automatically, and at
+that point, I'm not sure it's a good idea because I don't want to
+unconditionally disable power saving feature without a very good
+rationale.
 
->> Is this a relatively new machine or has it been running for some months
->> without problems until recently?
-> 
-> It is new machine, running only for two months.
+If WDC thinks < 1.5 years of uptime is good enough for those products
+in exchange of lowered power consumption, which I think might be
+acceptable for certain products considering that most people don't use
+their computers 24/7 and the load/unload cycle limit isn't exactly an
+accurate timebomb like limit.  Well, then, that's the trade off WDC
+made and the consumers can choose accordingly.
 
-You need to call SuperMicro support and tell them about your issue.
-Backplane boards are relatively cheap.  Get them to send you a warranty
-advance replacement backplane and see if that fixes the problem.  If you're
-not a hardware person, replacing it may not be a job for you.  In that case,
-I'm not sure what to tell you, as last I knew SuperMicro doesn't offer
-onsite service.  If indeed the backplane is the problem, you may have to
-ship the unit back for repair.  This is the main reason (lack of onsite
-service) than most companies stick with IBM, Dell, HP, etc servers.
+And, if that's the case, I think we can and probably should try to let
+people know about the particular tradeoff of those drives and if
+possible provide a utility to adjust that but I'm still kind of
+against automatically disabling it because it doesn't help solving the
+situation in the long run while forcing us to apply a sub-optimal
+workaround without knowing whether it's really necessary.
+
+Daniel, I think we really need some clarification from WDC at this
+point.  I'm sure WDC wouldn't want Linux distros to go ahead and
+disable powersaving feature unconditionally, so please let us know.
+
+Thanks.
 
 -- 
-Stan
+tejun
