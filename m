@@ -1,74 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WDC WD15EARS-00Z5B1: harddrive which does crazy unloading
-Date: Fri, 19 Mar 2010 11:27:38 +0900
-Message-ID: <4BA2E11A.5030600@kernel.org>
-References: <201002081933.10144.suse-linux@ml082.pinguin.uni.cc> <4B9D0772.4080306@teksavvy.com> <4B9D7924.1020908@kernel.org> <201003181716.00173.suse-linux@ml082.pinguin.uni.cc> <4BA2E0E8.1050001@kernel.org>
+From: Ludovico Cavedon <ludovico.cavedon@gmail.com>
+Subject: Re: understanding the cause of ATA failures
+Date: Thu, 18 Mar 2010 20:38:05 -0700
+Message-ID: <4BA2F19D.1090501@gmail.com>
+References: <4BA2A02F.7040200@gmail.com> <4BA2A27E.9040704@buttersideup.com> <4BA2A590.4030505@gmail.com> <4BA2AA34.70105@hardwarefreak.com> <4BA2B15E.6000301@gmail.com> <4BA2B9BE.5030607@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33949 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751951Ab0CSC1l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 18 Mar 2010 22:27:41 -0400
-In-Reply-To: <4BA2E0E8.1050001@kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33318 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527Ab0CSDiJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2010 23:38:09 -0400
+Received: by gyg8 with SMTP id 8so1390736gyg.19
+        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2010 20:38:08 -0700 (PDT)
+In-Reply-To: <4BA2B9BE.5030607@hardwarefreak.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Al Bogner <suse-linux@ml082.pinguin.uni.cc>
-Cc: Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org, Daniel Taylor <Daniel.Taylor@wdc.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: linux-ide@vger.kernel.org
 
-(sorry, forgot to actually cc Daniel.  cc'ing and quoting whole body)
+Stan Hoeppner wrote:
+> Ludovico Cavedon put forth on 3/18/2010 6:03 PM:
+>> Stan Hoeppner wrote:
+>>> Is there a SATA backplane involved or is each drive cabled directly to the
+>>> controller?  If backplane, is it active or passive?  Whose product is it?
+>> no backplance.
+>> This is the machine
+>> http://www.supermicro.com/products/system/2U/6026/SYS-6026T-URF.cfm
+> 
+> It most certainly does have a backplane, and an active backplane at that.
 
-On 03/19/2010 11:26 AM, Tejun Heo wrote:
-> (cc'ing Daniel, Hi)
+Uhm, yes, you are right, it has a backplane with SES-2 over I2C support.
+At first I though that backplanes were used only on external enclosures.
+
+> drive failures, etc.  Have you configured an I2C module to monitor the
+> backplane?  If so, check those logs.  If not, do so now.  It's possible that
+
+Unfortunately the I2C connectors on the backplane are not connected to
+anything. The motherboard has a "IPMB I2C" connector", but I guess I
+cannot connect a generic I2C device... I should probably get a USB-I2C
+module...
+
+Btw, once I am able to access the I2C device on the backplane, what tool
+is able to query the state? I am having troubles finding documentation
+about that. lm-sensors does not seem to mention that... Is the ses
+kernel module able to work over i2c?
+
+> the backplane controller is erroneously kicking the drives off-line.  This
+> could explain the SATA bus errors.  It's also possible there is a problem
+> with the backplane controller chip itself or other circuitry on the PCB
+> causing problems.
+
+I see.
+
+>>> Is this a relatively new machine or has it been running for some months
+>>> without problems until recently?
+>> It is new machine, running only for two months.
 > 
-> Hello,
-> 
-> On 03/19/2010 01:15 AM, Al Bogner wrote:
->> WD said to me I can send them the disk, but didn't accept, that this is a 
->> firmware bug.
->>
->> Today I got a brandnew WD20EARS (2TB) and it is the same. After about an 1/2 
->> hr. I had 12 cycles with an _un_formatted disk.
-> 
-> That would reach 1.43 years of operation hour w/ 300k limit.  Maybe
-> that's the number they are aiming for?  I don't know.  I haven't heard
-> from WDC yet.
-> 
->> I cannot accept, that it should be a warranty issue, because this
->> reduces the lifetime _after_ the warranty and increases the
->> possibility to loose data, at least for those who don't use a raid.
->>
->> I would be happy to have a native linux utility to change this.
-> 
-> Yeah, that will be nice but it's of very limited use.  How many would
-> look that up, install it and use it to adjust the parameter?  For it
-> to have meaningful effect, it should be applied automatically, and at
-> that point, I'm not sure it's a good idea because I don't want to
-> unconditionally disable power saving feature without a very good
-> rationale.
-> 
-> If WDC thinks < 1.5 years of uptime is good enough for those products
-> in exchange of lowered power consumption, which I think might be
-> acceptable for certain products considering that most people don't use
-> their computers 24/7 and the load/unload cycle limit isn't exactly an
-> accurate timebomb like limit.  Well, then, that's the trade off WDC
-> made and the consumers can choose accordingly.
-> 
-> And, if that's the case, I think we can and probably should try to let
-> people know about the particular tradeoff of those drives and if
-> possible provide a utility to adjust that but I'm still kind of
-> against automatically disabling it because it doesn't help solving the
-> situation in the long run while forcing us to apply a sub-optimal
-> workaround without knowing whether it's really necessary.
-> 
-> Daniel, I think we really need some clarification from WDC at this
-> point.  I'm sure WDC wouldn't want Linux distros to go ahead and
-> disable powersaving feature unconditionally, so please let us know.
-> 
-> Thanks.
-> 
+> You need to call SuperMicro support and tell them about your issue.
+
+Makes sense.
+
+> Backplane boards are relatively cheap.  Get them to send you a warranty
+> advance replacement backplane and see if that fixes the problem.  If you're
+> not a hardware person, replacing it may not be a job for you.  In that case,
+
+That would not be a problem.
 
 
--- 
-tejun
+Thank you for the information!
+
+Cheers,
+Ludovico
