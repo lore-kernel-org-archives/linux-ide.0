@@ -1,43 +1,151 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] libata: disable preemption during PIO copy
-Date: Tue, 23 Mar 2010 20:51:34 +0900
-Message-ID: <20100323205030G.fujita.tomonori@lab.ntt.co.jp>
-References: <20100321215308.GB27709@Chamillionaire.breakpoint.cc>
-	<20100323184836W.fujita.tomonori@lab.ntt.co.jp>
-	<20100323110124.GA10046@Chamillionaire.breakpoint.cc>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Tue, 23 Mar 2010 09:42:26 -0400
+Message-ID: <20100323134226.GA14752@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:43377 "EHLO sh.osrg.net"
+Received: from havoc.gtf.org ([69.61.125.42]:55033 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751008Ab0CWLwP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Mar 2010 07:52:15 -0400
-In-Reply-To: <20100323110124.GA10046@Chamillionaire.breakpoint.cc>
+	id S1753131Ab0CWNm1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Mar 2010 09:42:27 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sebastian@breakpoint.cc
-Cc: fujita.tomonori@lab.ntt.co.jp, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 23 Mar 2010 12:01:24 +0100
-Sebastian Andrzej Siewior <sebastian@breakpoint.cc> wrote:
 
-> * FUJITA Tomonori | 2010-03-23 18:49:04 [+0900]:
-> 
-> >On Sun, 21 Mar 2010 22:53:08 +0100
-> >Sebastian Andrzej Siewior <sebastian@breakpoint.cc> wrote:
-> >
-> >> If the request has been made in user context it could be moved to a
-> >> different CPU on a SMP machine between the copy and cache flush. Thus we
-> >> could flush the dcache on the wrong CPU.
-> >
-> >This issue should be addressed in flush_dcache_page() inside?
-> 
-> How so? You have to remain on the same CPU on which you started the copy
-> process. Once you get to flush_dcache_page() you may have allready
-> switched the CPU.
+This push includes a fix for the ata_piix timeouts people have been
+seeing...  it has seen several successful test reports, and is ready for
+wider testing in 2.6.34-rc.
 
-Oops, I thought that you trying to address on the deferred
-flush_dcache_page() issue. I don't know enough about how this pio code
-works, but if your description is correct, then the patch is fine, I
-guess.
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/libata-sff.c |   43 ++++++++++++++++++++++++++++++++++++-------
+ drivers/ata/pata_via.c   |    1 +
+ 2 files changed, 37 insertions(+), 7 deletions(-)
+
+JosephChan@via.com.tw (1):
+      pata_via: Add VIA VX900 support
+
+Tejun Heo (1):
+      libata-sff: fix spurious IRQ handling
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 561dec2..2774772 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1667,6 +1667,7 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
+ {
+ 	struct ata_eh_info *ehi = &ap->link.eh_info;
+ 	u8 status, host_stat = 0;
++	bool bmdma_stopped = false;
+ 
+ 	VPRINTK("ata%u: protocol %d task_state %d\n",
+ 		ap->print_id, qc->tf.protocol, ap->hsm_task_state);
+@@ -1699,6 +1700,7 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
+ 
+ 			/* before we do anything else, clear DMA-Start bit */
+ 			ap->ops->bmdma_stop(qc);
++			bmdma_stopped = true;
+ 
+ 			if (unlikely(host_stat & ATA_DMA_ERR)) {
+ 				/* error when transfering data to/from memory */
+@@ -1716,8 +1718,14 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
+ 
+ 	/* check main status, clearing INTRQ if needed */
+ 	status = ata_sff_irq_status(ap);
+-	if (status & ATA_BUSY)
+-		goto idle_irq;
++	if (status & ATA_BUSY) {
++		if (bmdma_stopped) {
++			/* BMDMA engine is already stopped, we're screwed */
++			qc->err_mask |= AC_ERR_HSM;
++			ap->hsm_task_state = HSM_ST_ERR;
++		} else
++			goto idle_irq;
++	}
+ 
+ 	/* ack bmdma irq events */
+ 	ap->ops->sff_irq_clear(ap);
+@@ -1762,13 +1770,16 @@ EXPORT_SYMBOL_GPL(ata_sff_host_intr);
+ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
++	bool retried = false;
+ 	unsigned int i;
+-	unsigned int handled = 0, polling = 0;
++	unsigned int handled, idle, polling;
+ 	unsigned long flags;
+ 
+ 	/* TODO: make _irqsave conditional on x86 PCI IDE legacy mode */
+ 	spin_lock_irqsave(&host->lock, flags);
+ 
++retry:
++	handled = idle = polling = 0;
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+ 		struct ata_queued_cmd *qc;
+@@ -1782,7 +1793,8 @@ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+ 				handled |= ata_sff_host_intr(ap, qc);
+ 			else
+ 				polling |= 1 << i;
+-		}
++		} else
++			idle |= 1 << i;
+ 	}
+ 
+ 	/*
+@@ -1790,7 +1802,9 @@ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+ 	 * asserting IRQ line, nobody cared will ensue.  Check IRQ
+ 	 * pending status if available and clear spurious IRQ.
+ 	 */
+-	if (!handled) {
++	if (!handled && !retried) {
++		bool retry = false;
++
+ 		for (i = 0; i < host->n_ports; i++) {
+ 			struct ata_port *ap = host->ports[i];
+ 
+@@ -1805,8 +1819,23 @@ irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
+ 				ata_port_printk(ap, KERN_INFO,
+ 						"clearing spurious IRQ\n");
+ 
+-			ap->ops->sff_check_status(ap);
+-			ap->ops->sff_irq_clear(ap);
++			if (idle & (1 << i)) {
++				ap->ops->sff_check_status(ap);
++				ap->ops->sff_irq_clear(ap);
++			} else {
++				/* clear INTRQ and check if BUSY cleared */
++				if (!(ap->ops->sff_check_status(ap) & ATA_BUSY))
++					retry |= true;
++				/*
++				 * With command in flight, we can't do
++				 * sff_irq_clear() w/o racing with completion.
++				 */
++			}
++		}
++
++		if (retry) {
++			retried = true;
++			goto retry;
+ 		}
+ 	}
+ 
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 3059ec0..95d39c3 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -677,6 +677,7 @@ static const struct pci_device_id via[] = {
+ 	{ PCI_VDEVICE(VIA, 0x3164), },
+ 	{ PCI_VDEVICE(VIA, 0x5324), },
+ 	{ PCI_VDEVICE(VIA, 0xC409), VIA_IDFLAG_SINGLE },
++	{ PCI_VDEVICE(VIA, 0x9001), VIA_IDFLAG_SINGLE },
+ 
+ 	{ },
+ };
