@@ -1,45 +1,37 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ahci: Turn off DMA engines when there's no device attached
-Date: Wed, 24 Mar 2010 10:43:51 -0400
-Message-ID: <4BAA2527.4030204@pobox.com>
-References: <1268253150-24050-1-git-send-email-mjg@redhat.com> <20100324141912.GA18644@srcf.ucam.org>
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH 2/2] libata: disable preemption during PIO copy
+Date: Wed, 24 Mar 2010 22:52:01 +0100
+Message-ID: <20100324215201.GC22847@Chamillionaire.breakpoint.cc>
+References: <20100321215308.GB27709@Chamillionaire.breakpoint.cc>
+ <20100323184836W.fujita.tomonori@lab.ntt.co.jp>
+ <20100323110124.GA10046@Chamillionaire.breakpoint.cc>
+ <20100323205030G.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f194.google.com ([209.85.222.194]:53434 "EHLO
-	mail-pz0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756400Ab0CXOnz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Mar 2010 10:43:55 -0400
-Received: by pzk32 with SMTP id 32so943147pzk.4
-        for <linux-ide@vger.kernel.org>; Wed, 24 Mar 2010 07:43:53 -0700 (PDT)
-In-Reply-To: <20100324141912.GA18644@srcf.ucam.org>
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:34161 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750739Ab0CXVwI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Mar 2010 17:52:08 -0400
+Content-Disposition: inline
+In-Reply-To: <20100323205030G.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg@redhat.com>
-Cc: linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: sebastian@breakpoint.cc, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 03/24/2010 10:19 AM, Matthew Garrett wrote:
-> On Wed, Mar 10, 2010 at 03:32:30PM -0500, Matthew Garrett wrote:
->> According to section 10.3.1 of the AHCI spec, PxCMD.ST must not be set
->> unless there's a device attached. Following this saves us a measurable
->> quantity of power and does not impair hotplug support. Based on a patch
->> by Kristen Carlson Accardi.
->>
->> Signed-off-by: Matthew Garrett<mjg@redhat.com>
->> Cc: Kristen Carlson Accardi<kristen.c.accardi@intel.com>
->> ---
->>   drivers/ata/ahci.c |   19 +++++++++++++++++++
->>   1 files changed, 19 insertions(+), 0 deletions(-)
+* FUJITA Tomonori | 2010-03-23 20:51:34 [+0900]:
 
+>> How so? You have to remain on the same CPU on which you started the copy
+>> process. Once you get to flush_dcache_page() you may have allready
+>> switched the CPU.
+>
+>Oops, I thought that you trying to address on the deferred
+>flush_dcache_page() issue. I don't know enough about how this pio code
+>works, but if your description is correct, then the patch is fine, I
+>guess.
 
-(please don't top-post, it makes replying more difficult)
+No, it is not. The dcache flush is a global one so a CPU switch does not
+matter. So I NAK that one myself.
 
-> Any feedback on this?
-
-It should be fine, but I have to rebase it onto the latest upstream ahci 
-(libata-dev.git#upstream), so it's been waiting on that...
-
-	Jeff
-
-
+Sebastian
