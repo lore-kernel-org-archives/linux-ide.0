@@ -1,45 +1,56 @@
-From: Pavel Roskin <proski@gnu.org>
-Subject: Re: [git patches] libata fixes
-Date: Tue, 23 Mar 2010 14:06:59 -0400
-Message-ID: <1269367619.13592.12.camel@mj>
-References: <20100323134226.GA14752@havoc.gtf.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Regression: my systems can no longer boot from an ide hard drive
+Date: Tue, 23 Mar 2010 18:20:33 -0600
+Message-ID: <4BA95AD1.2090906@gmail.com>
+References: <201003230801.o2N81UKg009750@alien.loup.net> <20100323091718.5a57b6e1.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:27486 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753967Ab0CWSHE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Mar 2010 14:07:04 -0400
-In-Reply-To: <20100323134226.GA14752@havoc.gtf.org>
+Received: from mail-yw0-f172.google.com ([209.85.211.172]:51098 "EHLO
+	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505Ab0CXAUh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Mar 2010 20:20:37 -0400
+In-Reply-To: <20100323091718.5a57b6e1.randy.dunlap@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Mike Hayward <hayward@loup.net>, linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
 
-On Tue, 2010-03-23 at 09:42 -0400, Jeff Garzik wrote:
-> This push includes a fix for the ata_piix timeouts people have been
-> seeing...  it has seen several successful test reports, and is ready for
-> wider testing in 2.6.34-rc.
+On 03/23/2010 10:17 AM, Randy Dunlap wrote:
+> [adding linux-ide mailing list]
+>
+> On Tue, 23 Mar 2010 02:01:30 -0600 Mike Hayward wrote:
+>
+>> Three identical known good opteron systems can no longer boot freshly
+>> installed distros from an ide hard drive.  The systems have one ide
+>> drive and eight sata drives.  If distro is installed to ide drive,
+>> Ubuntu 9.10 server moves cursor down the screen twice, then hangs
+>> while Fedora 12 grub loads but then claims it can't find root to mount
+>> and it and hangs 'forever'.  Numerous distros have all booted fine
+>> before 2.6.25... I don't know where it went wrong between 25 and 31.
+>>
+>> This is despite partitioning with and without lvm, despite making sure
+>> kernel/boot loader are in partition in first 2 gigs of ide drive.
+>>
+>> Both distros boot just fine on each system when os is installed on a
+>> sata drive so this isn't a hardware defect.
+>>
+>> Distro that boots fine from ide:
+>> Linux opt1 2.6.25-14.fc9.x86_64 #1 SMP Thu May 1 06:06:21 EDT 2008 x86_64 x86_64 x86_64 GNU/Linux
+>>
+>> Distros that no longer boot via ide drive:
+>> Linux opt2 2.6.31-14-server #48-Ubuntu SMP Fri Oct 16 15:07:34 UTC 2009 x86_64 GNU/Linux
+>> Linux opt3 2.6.31.5-127.fc12.x86_64 #1 SMP Sat Nov 7 21:11:14 EST 2009 x86_64 x86_64 x86_64 GNU/Linux
+>>
+>> Maybe this can be worked around with some options to grub or
+>> kernel... if so, shouldn't distros detect that ide drives are being
+>> set up and configure the boot loader properly?  It would be very hard
+>> for newbie to figure this one out.
 
-Tested-by: Pavel Roskin <proski@gnu.org>
-
-My OCZ Solid was giving me timeouts.  I thought it was about to die, so
-I bought an Intel X-25M urgently, copied my data, but the timeouts
-continued.
-
-After some googling I found that a patch for that was sent this very
-morning!  After applying the patch, the timeouts have stopped.  They
-would appear minutes after reboot, but it has been over an hour since I
-rebooted and no timeouts.
-
-My motherboard is ECS G31T-M, which is not AHCI capable, so I was using
-ata_piix, which explains why I was affected.  My kernel is 2.6.34-rc2
-(actually, wireless-testing.git).
-
-By all means, please push this patch to all stable kernels, or more
-money will be wasted on hard drives ;-)
-
--- 
-Regards,
-Pavel Roskin
+Most likely the IDE drive isn't being detected properly, but we need 
+more info on the hardware. Can you post the dmesg output from bootup 
+with a working kernel? (If you can, the boot messages from the ones that 
+fail to boot would be ideal. For the Fedora one, you can edit the kernel 
+command line in grub and take the "quiet" off the end to see more of 
+them on the screen, any ata output would be useful..)
