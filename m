@@ -1,47 +1,24 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [Patch 1/1] pata_via: HDD of VT6410/6415/6330 cannot be detected
- issue
-Date: Thu, 25 Mar 2010 15:02:58 +0300
-Message-ID: <4BAB50F2.5070902@ru.mvista.com>
-References: <9E058EE846170743AF7338FE064CB5AB38B400@exchtp04.taipei.via.com.tw>
+From: <JosephChan@via.com.tw>
+Subject: RE: [Patch 1/1] pata_via: HDD of VT6410/6415/6330 cannot be detected issue
+Date: Thu, 25 Mar 2010 20:41:30 +0800
+Message-ID: <9E058EE846170743AF7338FE064CB5AB38B475@exchtp04.taipei.via.com.tw>
+References: <9E058EE846170743AF7338FE064CB5AB38B400@exchtp04.taipei.via.com.tw> <4BAB50F2.5070902@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ey-out-2122.google.com ([74.125.78.26]:28808 "EHLO
-	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750Ab0CYMDb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Mar 2010 08:03:31 -0400
-Received: by ey-out-2122.google.com with SMTP id 9so523124eyd.5
-        for <linux-ide@vger.kernel.org>; Thu, 25 Mar 2010 05:03:30 -0700 (PDT)
-In-Reply-To: <9E058EE846170743AF7338FE064CB5AB38B400@exchtp04.taipei.via.com.tw>
+Received: from exchtp08.via.com.tw ([61.66.243.7]:61490 "EHLO
+	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469Ab0CYMld (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Mar 2010 08:41:33 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4BAB50F2.5070902@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: JosephChan@via.com.tw
+To: sshtylyov@mvista.com
 Cc: linux-ide@vger.kernel.org, stable@kernel.org, jeff@garzik.org, tj@kernel.org
 
-Hello.
-
-JosephChan@via.com.tw wrote:
-
-> When using VT6410/6415/6330 chips on some VIA's platforms, the HDD connects to VT6410/6415/6330 cannot be detected.
-> It is because the driver detects wrong via_isa_bridge ID, and then cause the this issue happen.
-> This patch will fix this problem.
->
->
-> Signed-off-by: Joseph Chan<josephchan@via.com.tw>
->
-> --- a/drivers/ata/pata_via.c	2010-03-16 06:00:01.000000000 -0400
-> +++ b/drivers/ata/pata_via.c	2010-03-19 10:21:59.000000000 -0400
-> @@ -576,6 +576,10 @@
-> 			u8 rev = isa->revision;
-> 			pci_dev_put(isa);
->  
-> +			if ( (id->device == 0x0415 || id->device == 0x3164) &&
-> +			      (config->id != id->device ))
->   
-
-   Don't put spaces before parens.
-
-MBR, Sergei
-
+ID4+ICAgRG9uJ3QgcHV0IHNwYWNlcyBiZWZvcmUgcGFyZW5zLg0KDQpTZXJnZWksDQoNClRoYW5r
+cyBmb3IgcmVtaW5kaW5nLCBJIGZvcmdvdCB0byBjaGVjayBpdC4NCkkgd2lsbCByZS1zdWJtaXQg
+dGhlIHBhdGNoIGxhdGVyLg0KDQpCUnMsDQpKb3NlcGggQ2hhbg0K
