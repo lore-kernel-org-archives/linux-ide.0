@@ -1,55 +1,51 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Handling Asynchronous Notification when IO are outstanding
-Date: Thu, 25 Mar 2010 08:48:35 +0900
-Message-ID: <4BAAA4D3.9050103@kernel.org>
-References: <e7510f761003081627o1134b77eud719e033f68488bb@mail.gmail.com>
+Subject: Re: nvidia controller failed command, possibly related to SMART selftest
+ (2.6.32)
+Date: Thu, 25 Mar 2010 09:29:50 +0900
+Message-ID: <4BAAAE7E.4020608@kernel.org>
+References: <20100313092559.GA14213@piper.oerlikon.madduck.net> <4B9D0BDD.4030706@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46635 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46642 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752177Ab0CYHNv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Mar 2010 03:13:51 -0400
-In-Reply-To: <e7510f761003081627o1134b77eud719e033f68488bb@mail.gmail.com>
+	id S1752677Ab0CYHN5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Mar 2010 03:13:57 -0400
+In-Reply-To: <4B9D0BDD.4030706@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux kernel mailing list <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-Hello, Gwendal.
+Hello,
 
-On 03/09/2010 09:27 AM, Gwendal Grignou wrote:
-> However, when we enter ata_scsi_error(), if a command is outstanding,
-> __ata_port_freeze() is called, preventing  sata_scr_read() to succeed
-> in ata_eh_link_autopsy():
+On 03/15/2010 01:16 AM, Robert Hancock wrote:
+>> If it's of any relevance, the problems also occured with 2.6.26, but
+>> the RAID code didn't always eject the disks on that kernel; the
+>> first time I encountered a degraded array due to this was shortly
+>> after the upgrade to 2.6.32. However, this is speculation, I have
+>> not verified the causality.
 
-Ah... that's an interesting problem.
+nv reset code has received several changes during that time frame one
+of which being avoiding hardreset unless it's a hotplug situation.
+This was necessary because some controllers fail to re-recognize the
+attached drive after a hardreset.  This decision was made as losing
+drives which can be recovered by SRST is less dangerous than losing
+drives which require hardreset after a failure.  NV reset protocols
+are very messed up and at this point I don't think it's possible to
+make it behave as well as other controllers.  If you're on earlier
+NVs, losing disk after an exception condition is something which can
+happen from time to time.
 
-> 1: removing __ata_port_freeze() in ata_scsi_error() unilaterally is
-> very dangerous, it opens a new race condition and may schedule the
-> error handler several time.
-> 2: in sata_mv, we can not wait for commands to complete like we do for
-> NCQ, because in the case above, the command sent to the failed disk
-> will never come back.
+>> Generally, SMART self-tests should be a transparent operation that
+>> doesn't affect the operating system's use of the devices, right? Is
+>> it conceivable or even common that the disks' own controllers are
+>> broken to the point where they fall over SMART tests?
 
-I don't think there will be race conditions even if you remove
-__ata_port_freeze() there.  Port freezing is mostly to protect the
-host from malfunctioning controller which could often lead to IRQ
-nobody cared issues in the early days.  For FIS based controllers, I
-don't think removing it from there would be such a bad idea.
-
-> I am thinking of waiting for all IO to complete on all port but the
-> impacted one(s), adding a new action in ehi descriptor to indicate an
-> AN is scheduled, and preventing the error to froze the port if only
-> IOs to the failed ports are outstanding.
-> Then _autopsy_ code would collect and decode SERROR register for the
-> failed port.
-> 
-> Is it the right approach?
-
-My reply is very late but can you please try removing
-__ata_port_freeze() and see how it works?
+Yeah, sure, it definitely is possible.  A good hardreset usually would
+put some sense back into the firmware but NV can't do that safely, so
+it loses the drive.
 
 Thanks.
 
