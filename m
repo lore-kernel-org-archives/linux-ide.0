@@ -1,42 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: PMP failure decoding help
-Date: Fri, 26 Mar 2010 15:06:31 +0900
-Message-ID: <4BAC4EE7.4000207@kernel.org>
-References: <20100325182109.GZ4442@merlins.org> <4BAC14F9.4070109@gmail.com> <20100326030846.GI4442@merlins.org>
+From: Pavel Roskin <proski@gnu.org>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 26 Mar 2010 16:17:52 -0400
+Message-ID: <1269634672.8534.2.camel@mj>
+References: <20100323134226.GA14752@havoc.gtf.org>
+	 <1269367619.13592.12.camel@mj>  <4BAB8D76.5040104@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54821 "EHLO hera.kernel.org"
+Received: from c60.cesmail.net ([216.154.195.49]:21847 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753128Ab0CZGKO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Mar 2010 02:10:14 -0400
-In-Reply-To: <20100326030846.GI4442@merlins.org>
+	id S1750792Ab0CZURz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Mar 2010 16:17:55 -0400
+In-Reply-To: <4BAB8D76.5040104@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hello,
+On Fri, 2010-03-26 at 01:21 +0900, Tejun Heo wrote:
+> On 03/24/2010 03:06 AM, Pavel Roskin wrote:
+> > By all means, please push this patch to all stable kernels, or more
+> > money will be wasted on hard drives ;-)
+> 
+> Oh, the original patch which caused the problem never saw the light of
+> the day before 2.6.34-rc1 so there's no stable kernel to push the
+> patch into.
 
-On 03/26/2010 12:08 PM, Marc MERLIN wrote:
-> Wep. I snipped it not to muddle the logs.
-> scsi_eh_7: page allocation failure. order:4, mode:0x10
-> Pid: 1798, comm: scsi_eh_7 Not tainted 2.6.31.6-core2smp-1khznohz-preempt-noticks-noide-4gb-20091118 #1
-> Call Trace:
->  [<c03a2203>] ? printk+0xf/0x14
->  [<c017735b>] __alloc_pages_nodemask+0x3da/0x41c
->  [<c01907ff>] cache_alloc_refill+0x245/0x404
->  [<c0190b23>] kmem_cache_alloc+0x4f/0xe4
->  [<c02f035c>] sata_pmp_attach+0xde/0x355
->  [<c02ebcfa>] ata_eh_recover+0x5d6/0xa8b
+It looks like I'm still getting "clearing spurious IRQ".  In most cases,
+it's not followed by anything, but in one case, there was a lost
+interrupt followed by a link reset.
 
-Ugh... that's probably
+[ 5030.881191] ata2: clearing spurious IRQ
+[ 5060.950036] ata2: lost interrupt (Status 0x50)
+[ 5060.950055] ata2.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+frozen
+[ 5060.950059] ata2.01: failed command: WRITE DMA
+[ 5060.950066] ata2.01: cmd ca/00:08:b7:11:a9/00:00:00:00:00/f0 tag 0
+dma 4096 out
+[ 5060.950068]          res 40/00:00:00:4f:c2/00:00:00:00:00/10 Emask
+0x4 (timeout)
+[ 5060.950071] ata2.01: status: { DRDY }
+[ 5060.950080] ata2: soft resetting link
+[ 5061.160268] ata2.01: configured for UDMA/133
+[ 5061.160275] ata2.01: device reported invalid CHS sector 0
+[ 5061.160283] ata2: EH complete
+[80540.010652] ata2: clearing spurious IRQ
 
-	pmp_link = kzalloc(sizeof(pmp_link[0]) * SATA_PMP_MAX_PORTS, GFP_NOIO);
-
-in sata_pmp_init_links().  We probably should either put that in
-vmalloc space or make it an indirect array.
+That last line is apparently a separate event.
 
 -- 
-tejun
+Regards,
+Pavel Roskin
