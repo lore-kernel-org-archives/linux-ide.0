@@ -1,37 +1,70 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT]: IDE
-Date: Sat, 27 Mar 2010 19:29:29 -0700 (PDT)
-Message-ID: <20100327.192929.35046895.davem@davemloft.net>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: 2.6.34-rc2 breaks via82cxxx Host Protected Area
+Date: Sun, 28 Mar 2010 14:01:41 +1100
+Message-ID: <20100328140141.f4a86697.sfr@canb.auug.org.au>
+References: <4BAD5472.9050303@garzik.org>
+	<201003271119.53757.bzolnier@gmail.com>
+	<20100327.074434.193717071.davem@davemloft.net>
+	<201003271634.08054.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36749
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751710Ab0C1C3F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Mar 2010 22:29:05 -0400
+Received: from chilli.pcug.org.au ([203.10.76.44]:35732 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752087Ab0C1DBz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Mar 2010 23:01:55 -0400
+In-Reply-To: <201003271634.08054.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, david@fries.net, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
+--Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Please pull to get this revert which should fix regressions
-reported by users with VIA IDE chips.
+Hi Bart,
 
-Thanks!
+On Sat, 27 Mar 2010 16:34:08 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
+l.com> wrote:
+>
+> On Saturday 27 March 2010 03:44:34 pm David Miller wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Date: Sat, 27 Mar 2010 11:19:53 +0100
+> >=20
+> > > The commit itself may also have a problem but since it was _never_ in
+> > > linux-next tree it never saw a wider upstream testing.
+> >=20
+> > This is not true Bart.
+>=20
+> Uh?  I had verified my claims before writing previous mail..
+>=20
+> The patch ("via82cxxx: workaround h/w bugs") appeared in Linus'
+> tree on 19th January and it was neither in next-20100101 nor in
+> next-20100119.. etc.
 
-The following changes since commit b72c40949b0f04728f2993a1434598d3bad094ea:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://git.kernel.org/.../jbarnes/pci-2.6
+That commit first appeared in linux-next in next-20100120 as part of
+Dave's ide tree.  It was merged into Linus' tree on March 5th (commit
+4c10c937cc2eb197db565392db91d429eec71176 "Merge
+git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide-next-2.6").
 
-are available in the git repository at:
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+--Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL
+Content-Type: application/pgp-signature
 
-David S. Miller (1):
-      Revert "via82cxxx: workaround h/w bugs"
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
- drivers/ide/via82cxxx.c |   57 -----------------------------------------------
- 1 files changed, 0 insertions(+), 57 deletions(-)
+iEYEARECAAYFAkuuxpUACgkQjjKRsyhoI8z+hACcCdX6Gfmpx98FQU82fQmlrbAf
+8kEAoIllxYcIFrVTXd1Ozxbzl/yYY1Bk
+=ZLJx
+-----END PGP SIGNATURE-----
 
+--Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL--
