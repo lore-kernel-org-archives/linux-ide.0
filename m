@@ -1,40 +1,54 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: revert request "ide: skip probe if there are no devices on the port (v2)"
-Date: Sun, 28 Mar 2010 23:37:01 +0200
-Message-ID: <201003282337.01747.bzolnier@gmail.com>
-References: <20100328212728.GA2674@spacedout.fries.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ata2.00: failed to set xfermode (err_mask=0x100),ata2.00: disabled,
+ CD-ROM drive dead
+Date: Mon, 29 Mar 2010 08:47:06 +0900
+Message-ID: <4BAFEA7A.50904@kernel.org>
+References: <4B9EA02F.2070704@hardwarefreak.com> <4B9EC67A.3020201@gmail.com> <4B9ED027.30800@hardwarefreak.com> <4BAAB080.3010401@kernel.org> <4BAB2A94.8010001@hardwarefreak.com> <20100325215242.GA9785@localhost.localdomain> <4BAF9670.6010706@hardwarefreak.com> <4BAFB58C.5050702@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f223.google.com ([209.85.220.223]:34830 "EHLO
-	mail-fx0-f223.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755235Ab0C1Vhc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2010 17:37:32 -0400
-In-Reply-To: <20100328212728.GA2674@spacedout.fries.net>
+Received: from hera.kernel.org ([140.211.167.34]:47327 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755381Ab0C1Xn6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2010 19:43:58 -0400
+In-Reply-To: <4BAFB58C.5050702@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Fries <david@fries.net>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Stan Hoeppner <stan@hardwarefreak.com>, linux-ide@vger.kernel.org
 
-On Sunday 28 March 2010 11:27:28 pm David Fries wrote:
-> Now that I have 2.6.34-rc2 booting it no longer detects the cdrom
-> drive.  That is looking at the kernel messages, partition dump, and
-> after booting hdparm etc does not find the drive.  I expect it is
-> because the cdrom is a slave drive without a master on that ribbon.
-> Reverting
-> -------------------------------
-> commit a20b2a44eca52818ef52a94959480b7e6ea2f528
-> Author: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date:   Mon Jun 8 22:07:28 2009 +0200
+Hello,
 
-It was reported to upstream maintainer on 2009-10-18.
+On 03/29/2010 05:01 AM, Robert Hancock wrote:
+>> ata2.00: ATAPI: Pioneer CD-ROM ATAPI Model DR-A24X  0102, E1.02, max
+>> MWDMA2
+>> ata2.00: NOSETXFER but PATA detected - can't skip SETXFER, might
+>> malfunction
+> 
+> Yeah, NOSETXFER doesn't take effect on PATA drives. It could, but it
+> would assume that the BIOS has set the right mode which seems rather
+> dangerous.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14438
+Well, we can issue the command, ignore the error and then check the
+correct mode is configured during revalidation.  For now, the
+following should show us whether something like that would work.
 
-PS Please do not cc: me on upstream kernel problems, I don't have any
-time to work on them (maintainer change happened on Jun 21 2009)..
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4a28420..ca4a50a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3446,6 +3446,10 @@ static int ata_dev_set_mode(struct ata_device *dev)
+ 				       "NOSETXFER but PATA detected - can't "
+ 				       "skip SETXFER, might malfunction\n");
+ 		err_mask = ata_dev_set_xfermode(dev);
++		if (err_mask)
++			ata_dev_printk(dev, KERN_WARNING, "SETXFER failed w/ %x\n",
++				       err_mask);
++		err_mask = 0;
+ 	}
 
---
-Bartlomiej Zolnierkiewicz
+ 	if (err_mask & ~AC_ERR_DEV)
+
+-- 
+tejun
