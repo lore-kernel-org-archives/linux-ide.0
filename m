@@ -1,40 +1,36 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [RFT] ahci rebase in libata #upstream
-Date: Sun, 28 Mar 2010 00:46:35 -0400
-Message-ID: <4BAEDF2B.3020808@garzik.org>
+Subject: Re: [Patch 1/1 v2] pata_via: HDD of VT6410/6415/6330 cannot be detected
+ issue
+Date: Sun, 28 Mar 2010 00:53:53 -0400
+Message-ID: <4BAEE0E1.5030306@garzik.org>
+References: <9E058EE846170743AF7338FE064CB5AB38B477@exchtp04.taipei.via.com.tw>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f191.google.com ([209.85.210.191]:48493 "EHLO
-	mail-yx0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948Ab0C1Eqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2010 00:46:38 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <9E058EE846170743AF7338FE064CB5AB38B477@exchtp04.taipei.via.com.tw>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JosephChan@via.com.tw
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, linux-kernel@vger.kernel.org, sshtylyov@mvista.com, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, harry.zhang@amd.com, Shane Huang <Shane.Huang@amd.com>, turmlos@comcast.net, Tejun Heo <tj@kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 
+On 03/25/2010 08:51 AM, JosephChan@via.com.tw wrote:
+> When using VT6410/6415/6330 chips on some VIA's platforms, the HDD connects to VT6410/6415/6330 cannot be detected.
+> It is because the driver detects wrong via_isa_bridge ID, and then cause the this issue happen.
+> This patch will fix this problem.
+>
+>
+> Signed-off-by: Joseph Chan<josephchan@via.com.tw>
+>
+> --- a/drivers/ata/pata_via.c	2010-03-16 06:00:01.000000000 -0400
+> +++ b/drivers/ata/pata_via.c	2010-03-25 08:47:15.000000000 -0400
+> @@ -576,6 +576,10 @@
+>   			u8 rev = isa->revision;
+>   			pci_dev_put(isa);
+>
+> +			if ((id->device == 0x0415 || id->device == 0x3164)&&
+> +			      (config->id != id->device))
+> +				continue;
+> +
 
-The 'upstream' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
-
-was just rebased.  This is the branch normally exported to linux-next, 
-and is intended for merging into 2.6.35, when the merge window for 
-2.6.35 opens.
-
-This rebase merges in ahci changes from torvalds/linux-2.6.git into the 
-major AHCI driver reorganization authored by Anton Vorontsov, which 
-creates a new kernel module libahci.
-
-Please test and make sure your ahci driver continues working as expected!
-
-People who have authored patches for ahci, and have not received an 
-"applied" email acknowledgment need to rebase and resend their changes 
-on top of the new 'upstream' branch of libata-dev.git.
-
-	Jeff
-
-
-
-
+applied
