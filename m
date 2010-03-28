@@ -1,70 +1,50 @@
 From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: 2.6.34-rc2 breaks via82cxxx Host Protected Area
-Date: Sun, 28 Mar 2010 14:01:41 +1100
-Message-ID: <20100328140141.f4a86697.sfr@canb.auug.org.au>
-References: <4BAD5472.9050303@garzik.org>
-	<201003271119.53757.bzolnier@gmail.com>
-	<20100327.074434.193717071.davem@davemloft.net>
-	<201003271634.08054.bzolnier@gmail.com>
+Subject: Re: ide-next-2.6
+Date: Sun, 28 Mar 2010 14:28:12 +1100
+Message-ID: <20100328142812.cb407e97.sfr@canb.auug.org.au>
+References: <20100327.083935.115940167.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pgp-signature";
  micalg="PGP-SHA1";
- boundary="Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:35732 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752087Ab0C1DBz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Mar 2010 23:01:55 -0400
-In-Reply-To: <201003271634.08054.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+ boundary="Signature=_Sun__28_Mar_2010_14_28_12_+1100_0r3wN26tUcqD5IGu"
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20100327.083935.115940167.davem@davemloft.net>
+Sender: linux-next-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, david@fries.net, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 
---Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL
+--Signature=_Sun__28_Mar_2010_14_28_12_+1100_0r3wN26tUcqD5IGu
 Content-Type: text/plain; charset=US-ASCII
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi Bart,
+Hi Dave,
 
-On Sat, 27 Mar 2010 16:34:08 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmai=
-l.com> wrote:
+On Sat, 27 Mar 2010 08:39:35 -0700 (PDT) David Miller <davem@davemloft.net>=
+ wrote:
 >
-> On Saturday 27 March 2010 03:44:34 pm David Miller wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Date: Sat, 27 Mar 2010 11:19:53 +0100
-> >=20
-> > > The commit itself may also have a problem but since it was _never_ in
-> > > linux-next tree it never saw a wider upstream testing.
-> >=20
-> > This is not true Bart.
+> Stephen, please ensure that my ide-next-2.6 tree:
 >=20
-> Uh?  I had verified my claims before writing previous mail..
+> 	master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-next-2.6.git
 >=20
-> The patch ("via82cxxx: workaround h/w bugs") appeared in Linus'
-> tree on 19th January and it was neither in next-20100101 nor in
-> next-20100119.. etc.
+> appears in your -next tree.
 
-That commit first appeared in linux-next in next-20100120 as part of
-Dave's ide tree.  It was merged into Linus' tree on March 5th (commit
-4c10c937cc2eb197db565392db91d429eec71176 "Merge
-git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide-next-2.6").
-
+Always has (since you asked me to include it).
 --=20
 Cheers,
 Stephen Rothwell                    sfr@canb.auug.org.au
 http://www.canb.auug.org.au/~sfr/
 
---Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL
+--Signature=_Sun__28_Mar_2010_14_28_12_+1100_0r3wN26tUcqD5IGu
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.10 (GNU/Linux)
 
-iEYEARECAAYFAkuuxpUACgkQjjKRsyhoI8z+hACcCdX6Gfmpx98FQU82fQmlrbAf
-8kEAoIllxYcIFrVTXd1Ozxbzl/yYY1Bk
-=ZLJx
+iEYEARECAAYFAkuuzMwACgkQjjKRsyhoI8wPjwCfdncVv56qI2Y+iWEinui+ZjYg
+tR8An3NPnG5P67zgxpwD0yCBrqL4/7IN
+=U9eK
 -----END PGP SIGNATURE-----
 
---Signature=_Sun__28_Mar_2010_14_01_41_+1100_v9.R/19XUj091tkL--
+--Signature=_Sun__28_Mar_2010_14_28_12_+1100_0r3wN26tUcqD5IGu--
