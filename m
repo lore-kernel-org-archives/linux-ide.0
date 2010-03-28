@@ -1,36 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [Patch 1/1 v2] pata_via: HDD of VT6410/6415/6330 cannot be detected
- issue
-Date: Sun, 28 Mar 2010 00:53:53 -0400
-Message-ID: <4BAEE0E1.5030306@garzik.org>
-References: <9E058EE846170743AF7338FE064CB5AB38B477@exchtp04.taipei.via.com.tw>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: 2.6.34-rc2 breaks via82cxxx Host Protected Area
+Date: Sun, 28 Mar 2010 13:48:00 +0200
+Message-ID: <201003281348.00697.bzolnier@gmail.com>
+References: <4BAD5472.9050303@garzik.org> <201003271634.08054.bzolnier@gmail.com> <20100328140141.f4a86697.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <9E058EE846170743AF7338FE064CB5AB38B477@exchtp04.taipei.via.com.tw>
+In-Reply-To: <20100328140141.f4a86697.sfr@canb.auug.org.au>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JosephChan@via.com.tw
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, linux-kernel@vger.kernel.org, sshtylyov@mvista.com, tj@kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: David Miller <davem@davemloft.net>, david@fries.net, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 03/25/2010 08:51 AM, JosephChan@via.com.tw wrote:
-> When using VT6410/6415/6330 chips on some VIA's platforms, the HDD connects to VT6410/6415/6330 cannot be detected.
-> It is because the driver detects wrong via_isa_bridge ID, and then cause the this issue happen.
-> This patch will fix this problem.
->
->
-> Signed-off-by: Joseph Chan<josephchan@via.com.tw>
->
-> --- a/drivers/ata/pata_via.c	2010-03-16 06:00:01.000000000 -0400
-> +++ b/drivers/ata/pata_via.c	2010-03-25 08:47:15.000000000 -0400
-> @@ -576,6 +576,10 @@
->   			u8 rev = isa->revision;
->   			pci_dev_put(isa);
->
-> +			if ((id->device == 0x0415 || id->device == 0x3164)&&
-> +			      (config->id != id->device))
-> +				continue;
-> +
 
-applied
+Hi Stephen,
+
+On Sunday 28 March 2010 05:01:41 am Stephen Rothwell wrote:
+> Hi Bart,
+> 
+> On Sat, 27 Mar 2010 16:34:08 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> >
+> > On Saturday 27 March 2010 03:44:34 pm David Miller wrote:
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Date: Sat, 27 Mar 2010 11:19:53 +0100
+> > > 
+> > > > The commit itself may also have a problem but since it was _never_ in
+> > > > linux-next tree it never saw a wider upstream testing.
+> > > 
+> > > This is not true Bart.
+> > 
+> > Uh?  I had verified my claims before writing previous mail..
+> > 
+> > The patch ("via82cxxx: workaround h/w bugs") appeared in Linus'
+> > tree on 19th January and it was neither in next-20100101 nor in
+> > next-20100119.. etc.
+> 
+> That commit first appeared in linux-next in next-20100120 as part of
+> Dave's ide tree.  It was merged into Linus' tree on March 5th (commit
+> 4c10c937cc2eb197db565392db91d429eec71176 "Merge
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide-next-2.6").
+
+Which doesn't change a bit the fundamental fact that the patch was not
+meant for upstream by me and was clearly marked as such.  If David wanted
+it upstream he should either be ready to provide support for it himself
+or solve it in a more formal way..
+
+--
+Bartlomiej Zolnierkiewicz
