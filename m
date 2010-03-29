@@ -1,33 +1,52 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC PATCH 19/19] pata_pcmcia: get rid of extra indirection
-Date: Mon, 29 Mar 2010 16:15:16 -0400
-Message-ID: <4BB10A54.30108@garzik.org>
-References: <20100321230617.GA24791@comet.dominikbrodowski.net> <1269212857-25364-19-git-send-email-linux@dominikbrodowski.net>
+Subject: Re: [PATCH #upstream 1/2] ahci: clean up board IDs
+Date: Mon, 29 Mar 2010 16:20:08 -0400
+Message-ID: <4BB10B78.9070409@garzik.org>
+References: <4BB00337.1030302@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:57189 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753719Ab0C2UPT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:15:19 -0400
-Received: by vws20 with SMTP id 20so233576vws.19
-        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:15:18 -0700 (PDT)
-In-Reply-To: <1269212857-25364-19-git-send-email-linux@dominikbrodowski.net>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47910 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab0C2UUK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:20:10 -0400
+Received: by pwi5 with SMTP id 5so6985059pwi.19
+        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:20:10 -0700 (PDT)
+In-Reply-To: <4BB00337.1030302@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 03/21/2010 07:07 PM, Dominik Brodowski wrote:
-> We don't need ata_pcmcia_info any more.
+On 03/28/2010 09:32 PM, Tejun Heo wrote:
+> ahci over time has grown a number of board IDs and it's a bit of mess
+> right now.  Clean it up such that,
 >
-> CC: linux-ide@vger.kernel.org
-> Signed-off-by: Dominik Brodowski<linux@dominikbrodowski.net>
+> * board_id_* now live in a separate enum board_ids and numbers are
+>    assigned automatically.
+>
+> * Board IDs assigned to features are separated from the ones assigned
+>    to specific implementations and both are ordered alphabetically.
+>
+> * For NV MCPs, define per-generation alias board_ids and assign
+>    matching aliases in the pci id table.  This makes mcp_linux, 67-73
+>    use board_ahci_mcp65 instead of board_ahci_yesncq.  Both are
+>    identical in content.
+>
+> * Kill now unused board_ahci_nopmp and board_ahci_yesncq.
+>
+> This patch doesn't cause any functional change but will make future
+> changes to board_ids and quirks much less painful.
+>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Cc: Peer Chen<pchen@nvidia.com>
 > ---
->   drivers/ata/pata_pcmcia.c |   41 ++++++-----------------------------------
->   1 files changed, 6 insertions(+), 35 deletions(-)
+> Updated against the new #upstream.  Thanks.
+>
+>   drivers/ata/ahci.c |  237 ++++++++++++++++++++++++++---------------------------
+>   1 file changed, 117 insertions(+), 120 deletions(-)
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+applied
 
 
