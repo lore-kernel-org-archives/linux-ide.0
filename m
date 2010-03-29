@@ -1,29 +1,350 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata2.00: failed to set xfermode (err_mask=0x100),ata2.00: disabled,
- CD-ROM drive dead
-Date: Mon, 29 Mar 2010 09:31:04 +0900
-Message-ID: <4BAFF4C8.9030402@kernel.org>
-References: <4B9EA02F.2070704@hardwarefreak.com> <4B9EC67A.3020201@gmail.com> <4B9ED027.30800@hardwarefreak.com> <4BAAB080.3010401@kernel.org> <4BAB2A94.8010001@hardwarefreak.com> <20100325215242.GA9785@localhost.localdomain> <4BAF9670.6010706@hardwarefreak.com> <4BAFB58C.5050702@gmail.com> <4BAFEA7A.50904@kernel.org> <4BAFEFA3.3090502@hardwarefreak.com> <4BAFF3B7.4060604@hardwarefreak.com>
+Subject: [PATCH #upstream 1/2] ahci: clean up board IDs
+Date: Mon, 29 Mar 2010 10:32:39 +0900
+Message-ID: <4BB00337.1030302@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42441 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41593 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755423Ab0C2AbI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Mar 2010 20:31:08 -0400
-In-Reply-To: <4BAFF3B7.4060604@hardwarefreak.com>
+	id S1755537Ab0C2Bcw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 28 Mar 2010 21:32:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 03/29/2010 09:26 AM, Stan Hoeppner wrote:
->> I'm still using 2.6.32.9.  Is it ok to apply this against 2.6.32.9?
-> 
-> Oh, and do I need to keep the black list entry or get rid of it?
+ahci over time has grown a number of board IDs and it's a bit of mess
+right now.  Clean it up such that,
 
-It doesn't matter.  It has no effect anyway.
+* board_id_* now live in a separate enum board_ids and numbers are
+  assigned automatically.
 
--- 
-tejun
+* Board IDs assigned to features are separated from the ones assigned
+  to specific implementations and both are ordered alphabetically.
+
+* For NV MCPs, define per-generation alias board_ids and assign
+  matching aliases in the pci id table.  This makes mcp_linux, 67-73
+  use board_ahci_mcp65 instead of board_ahci_yesncq.  Both are
+  identical in content.
+
+* Kill now unused board_ahci_nopmp and board_ahci_yesncq.
+
+This patch doesn't cause any functional change but will make future
+changes to board_ids and quirks much less painful.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peer Chen <pchen@nvidia.com>
+---
+Updated against the new #upstream.  Thanks.
+
+ drivers/ata/ahci.c |  237 ++++++++++++++++++++++++++---------------------------
+ 1 file changed, 117 insertions(+), 120 deletions(-)
+
+Index: ata/drivers/ata/ahci.c
+===================================================================
+--- ata.orig/drivers/ata/ahci.c
++++ ata/drivers/ata/ahci.c
+@@ -52,17 +52,28 @@
+
+ enum {
+ 	AHCI_PCI_BAR		= 5,
++};
+
+-	board_ahci		= 0,
+-	board_ahci_vt8251	= 1,
+-	board_ahci_ign_iferr	= 2,
+-	board_ahci_sb600	= 3,
+-	board_ahci_mv		= 4,
+-	board_ahci_sb700	= 5, /* for SB700 and SB800 */
+-	board_ahci_mcp65	= 6,
+-	board_ahci_nopmp	= 7,
+-	board_ahci_yesncq	= 8,
+-	board_ahci_nosntf	= 9,
++enum board_ids {
++	/* board IDs by feature in alphabetical order */
++	board_ahci,
++	board_ahci_ign_iferr,
++	board_ahci_nosntf,
++
++	/* board IDs for specific chipsets in alphabetical order */
++	board_ahci_mcp65,
++	board_ahci_mv,
++	board_ahci_sb600,
++	board_ahci_sb700,	/* for SB700 and SB800 */
++	board_ahci_vt8251,
++
++	/* aliases */
++	board_ahci_mcp_linux	= board_ahci_mcp65,
++	board_ahci_mcp67	= board_ahci_mcp65,
++	board_ahci_mcp73	= board_ahci_mcp65,
++	board_ahci_mcp77	= board_ahci,
++	board_ahci_mcp79	= board_ahci,
++	board_ahci_mcp89	= board_ahci,
+ };
+
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+@@ -96,6 +107,7 @@ static struct ata_port_operations ahci_s
+ #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
+
+ static const struct ata_port_info ahci_port_info[] = {
++	/* by features */
+ 	[board_ahci] =
+ 	{
+ 		.flags		= AHCI_FLAG_COMMON,
+@@ -103,31 +115,30 @@ static const struct ata_port_info ahci_p
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+-	[board_ahci_vt8251] =
++	[board_ahci_ign_iferr] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_PMP),
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_vt8251_ops,
++		.port_ops	= &ahci_ops,
+ 	},
+-	[board_ahci_ign_iferr] =
++	[board_ahci_nosntf] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_IGN_IRQ_IF_ERR),
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+-	[board_ahci_sb600] =
++	/* by chipsets */
++	[board_ahci_mcp65] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
+-				 AHCI_HFLAG_NO_MSI | AHCI_HFLAG_SECT255 |
+-				 AHCI_HFLAG_32BIT_ONLY),
++		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_sb600_ops,
++		.port_ops	= &ahci_ops,
+ 	},
+ 	[board_ahci_mv] =
+ 	{
+@@ -139,45 +150,31 @@ static const struct ata_port_info ahci_p
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
+-	[board_ahci_sb700] =	/* for SB700 and SB800 */
++	[board_ahci_sb600] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
++				 AHCI_HFLAG_NO_MSI | AHCI_HFLAG_SECT255 |
++				 AHCI_HFLAG_32BIT_ONLY),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_sb600_ops,
+ 	},
+-	[board_ahci_mcp65] =
+-	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	},
+-	[board_ahci_nopmp] =
+-	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_NO_PMP),
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	},
+-	[board_ahci_yesncq] =
++	[board_ahci_sb700] =	/* for SB700 and SB800 */
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
++		.port_ops	= &ahci_sb600_ops,
+ 	},
+-	[board_ahci_nosntf] =
++	[board_ahci_vt8251] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_NO_SNTF),
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ | AHCI_HFLAG_NO_PMP),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
++		.port_ops	= &ahci_vt8251_ops,
+ 	},
+ };
+
+@@ -262,82 +259,82 @@ static const struct pci_device_id ahci_p
+ 	{ PCI_VDEVICE(NVIDIA, 0x045d), board_ahci_mcp65 },	/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x045e), board_ahci_mcp65 },	/* MCP65 */
+ 	{ PCI_VDEVICE(NVIDIA, 0x045f), board_ahci_mcp65 },	/* MCP65 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0557), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0558), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci_yesncq },	/* MCP67 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0580), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0581), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0582), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0583), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0584), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0585), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0586), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0587), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0588), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x0589), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058a), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058b), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058c), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058d), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058e), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x058f), board_ahci_yesncq },	/* Linux ID */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f3), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f4), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f5), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f6), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f7), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f8), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07f9), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07fa), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x07fb), board_ahci_yesncq },	/* MCP73 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad0), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad1), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad2), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad3), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad4), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad5), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad6), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad7), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad8), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ad9), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ada), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0adb), board_ahci },		/* MCP77 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab4), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab5), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab6), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab7), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab8), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0ab9), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0aba), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0abb), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0abc), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0abd), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0abe), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0abf), board_ahci },		/* MCP79 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d84), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d85), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d86), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d87), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d88), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d89), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8a), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8b), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8c), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8d), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8e), board_ahci },		/* MCP89 */
+-	{ PCI_VDEVICE(NVIDIA, 0x0d8f), board_ahci },		/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0550), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0551), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0552), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0553), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0554), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0555), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0556), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0557), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0558), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0559), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x055a), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x055b), board_ahci_mcp67 },	/* MCP67 */
++	{ PCI_VDEVICE(NVIDIA, 0x0580), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0581), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0582), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0583), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0584), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0585), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0586), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0587), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0588), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x0589), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058a), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058b), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058c), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058d), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058e), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x058f), board_ahci_mcp_linux },	/* Linux ID */
++	{ PCI_VDEVICE(NVIDIA, 0x07f0), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f1), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f2), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f3), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f4), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f5), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f6), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f7), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f8), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07f9), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07fa), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x07fb), board_ahci_mcp73 },	/* MCP73 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad0), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad1), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad2), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad3), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad4), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad5), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad6), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad7), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad8), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ad9), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ada), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0adb), board_ahci_mcp77 },	/* MCP77 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab4), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab5), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab6), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab7), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab8), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0ab9), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0aba), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0abb), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0abc), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0abd), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0abe), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0abf), board_ahci_mcp79 },	/* MCP79 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d84), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d85), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d86), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d87), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d88), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d89), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8a), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8b), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8c), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8d), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8e), board_ahci_mcp89 },	/* MCP89 */
++	{ PCI_VDEVICE(NVIDIA, 0x0d8f), board_ahci_mcp89 },	/* MCP89 */
+
+ 	/* SiS */
+ 	{ PCI_VDEVICE(SI, 0x1184), board_ahci },		/* SiS 966 */
