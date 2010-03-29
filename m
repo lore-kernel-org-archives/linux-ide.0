@@ -1,53 +1,45 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] pata_mpc52xx: reduce code size by simple change of constant
- data types
-Date: Mon, 29 Mar 2010 16:19:56 -0400
-Message-ID: <4BB10B6C.4070402@pobox.com>
-References: <201003050827.40384.roman.fietze@telemotive.de>
+Subject: Re: [PATCH] ahci: Turn off DMA engines when there's no device attached
+Date: Mon, 29 Mar 2010 17:30:55 -0400
+Message-ID: <4BB11C0F.2090308@pobox.com>
+References: <1268253150-24050-1-git-send-email-mjg@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f182.google.com ([209.85.223.182]:41198 "EHLO
-	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728Ab0C2U1e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:27:34 -0400
-Received: by iwn12 with SMTP id 12so958559iwn.21
-        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:27:33 -0700 (PDT)
-In-Reply-To: <201003050827.40384.roman.fietze@telemotive.de>
+Received: from mail-yw0-f172.google.com ([209.85.211.172]:33139 "EHLO
+	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872Ab0C2Va5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 17:30:57 -0400
+Received: by ywh2 with SMTP id 2so5279917ywh.33
+        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 14:30:57 -0700 (PDT)
+In-Reply-To: <1268253150-24050-1-git-send-email-mjg@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roman Fietze <roman.fietze@telemotive.de>
-Cc: linux-ide@vger.kernel.org
+To: Matthew Garrett <mjg@redhat.com>
+Cc: linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-On 03/05/2010 02:27 AM, Roman Fietze wrote:
-> Hello List members, hello Jeff,
->
-> I've prepared a totally simple patch that, if I did it and measured it
-> correctly, reduces the text size as of the ppc-6xx-size command of
-> pata-mpc52xx by more than 10%, by reducing the rodata size from 0x4a4
-> to 0x17e bytes. This is simply done by changing the data types of the
-> ATA timing constants.
->
-> If you are interested at all, and it's worth the trouble, here the
-> details:
->
-> ppc-6xx-size:
->       text data bss  dec  hex filename
-> old: 6532 1068   0 7600 1db0 pata-mpc52xx.o
-> new: 5718 1068   0 6786 1a82 pata-mpc52xx.o
->
-> The (assembler) code itself doesn't really change very much. I double
-> checked the final results inside mpc52xx-ata-apply-timings() and they
-> match. The driver is still working fine of course.
->
->
->
-> Signed-off-by: Roman Fietze<roman.fietze@telemotive.de>
-> ---
->   drivers/ata/pata_mpc52xx.c |   78 ++++++++++++++++++++++----------------------
->   1 files changed, 39 insertions(+), 39 deletions(-)
+On 03/10/2010 03:32 PM, Matthew Garrett wrote:
+> +static int ahci_is_device_present(struct ata_port *ap)
+> +{
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	u8 status = readl(port_mmio + PORT_TFDATA)&  0xff;
+> +
+> +	/* Make sure PxTFD.STS.BSY and PxTFD.STS.DRQ are 0 */
+> +	if (status&  (ATA_BUSY | ATA_DRQ))
+> +		return 0;
+> +
+> +	/* Make sure PxSSTS.DET is 3h */
+> +	status = readl(port_mmio + PORT_SCR_STAT)&  0xf;
+> +	if (status != 3)
+> +		return 0;
+> +	return 1;
 
-applied
+
+Note that this last test, reading SATA Control Register (SCR) Status, 
+does not account for in-transition status, ie. devices that were just 
+plugged in.
+
+	Jeff
 
 
