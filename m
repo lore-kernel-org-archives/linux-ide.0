@@ -1,46 +1,49 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [GIT]: IDE
-Date: Sun, 28 Mar 2010 19:01:28 -0700 (PDT)
-Message-ID: <20100328.190128.187555861.davem@davemloft.net>
-References: <20100327.192929.35046895.davem@davemloft.net>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ahci: add "em_buffer" attribute for AHCI hosts
+Date: Mon, 29 Mar 2010 16:15:56 -0400
+Message-ID: <4BB10A7C.7000400@pobox.com>
+References: <1268131075.2000.6.camel@harry-desktop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41422
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755629Ab0C2CBE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Mar 2010 22:01:04 -0400
-In-Reply-To: <20100327.192929.35046895.davem@davemloft.net>
+Received: from qw-out-2122.google.com ([74.125.92.26]:31872 "EHLO
+	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753661Ab0C2UP6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:15:58 -0400
+Received: by qw-out-2122.google.com with SMTP id 8so3345793qwh.37
+        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:15:58 -0700 (PDT)
+In-Reply-To: <1268131075.2000.6.camel@harry-desktop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Harry Zhang <harry.zhang@amd.com>
+Cc: linux-ide@vger.kernel.org, tj@kernel.org, "Huang, Shane" <Shane.Huang@amd.com>
 
-From: David Miller <davem@davemloft.net>
-Date: Sat, 27 Mar 2010 19:29:29 -0700 (PDT)
+On 03/09/2010 05:37 AM, Harry Zhang wrote:
+> Add "em_buffer" attribute for SATA AHCI hosts to enable user access AHCI EM
+> (enclosure management) buffer in user space if the host support EM.
+>
+> AHCI driver should support SGPIO EM message. However the SATA/AHCI spec does no
+> define the SGPIO message format filled in EM buffer. Different HW vendors may
+> have different definitions. The mainly purpose of "em_buffer" attribute is to
+> solve this issue by allowing HW vendors to provide user space SGPIO drivers and
+> tools.
+>
+> Signed-off-by: Harry Zhang<harry.zhang@amd.com>
+> ---
+>   drivers/ata/ahci.c        |   73 +++++++++++++++++++++++++++++++++++++++++---
+>   drivers/ata/libata-scsi.c |   14 ++++++++
+>   include/linux/libata.h    |    3 ++
+>   3 files changed, 85 insertions(+), 5 deletions(-)
 
-> 
-> Please pull to get this revert which should fix regressions
-> reported by users with VIA IDE chips.
+As noted in the email about ahci rebase, please update this patch 
+against the latest libata-dev.git#upstream, which includes copious ahci 
+changes.
 
-Linus, if you haven't pulled yet I pushed another revert
-which fixes disappearing slave CDROM devices.
+Thanks,
 
-Just FYI...
+	Jeff
 
-The following changes since commit b72c40949b0f04728f2993a1434598d3bad094ea:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://git.kernel.org/.../jbarnes/pci-2.6
 
-are available in the git repository at:
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
 
-David S. Miller (2):
-      Revert "via82cxxx: workaround h/w bugs"
-      Revert "ide: skip probe if there are no devices on the port (v2)"
-
- drivers/ide/ide-probe.c |   12 ++-------
- drivers/ide/via82cxxx.c |   57 -----------------------------------------------
- 2 files changed, 3 insertions(+), 66 deletions(-)
