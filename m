@@ -1,52 +1,55 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream 1/2] ahci: clean up board IDs
-Date: Mon, 29 Mar 2010 16:20:08 -0400
-Message-ID: <4BB10B78.9070409@garzik.org>
-References: <4BB00337.1030302@kernel.org>
+Subject: Re: [PATCH #upstream 2/2] ahci: implement AHCI_HFLAG_NO_FPDMA_AA
+ and update NV quirks
+Date: Mon, 29 Mar 2010 16:20:33 -0400
+Message-ID: <4BB10B91.7040206@garzik.org>
+References: <4BB00337.1030302@kernel.org> <4BB00364.40701@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47910 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045Ab0C2UUK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:20:10 -0400
-Received: by pwi5 with SMTP id 5so6985059pwi.19
-        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:20:10 -0700 (PDT)
-In-Reply-To: <4BB00337.1030302@kernel.org>
+Received: from mail-iw0-f182.google.com ([209.85.223.182]:45878 "EHLO
+	mail-iw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab0C2UUg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 16:20:36 -0400
+Received: by iwn12 with SMTP id 12so950532iwn.21
+        for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 13:20:35 -0700 (PDT)
+In-Reply-To: <4BB00364.40701@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 03/28/2010 09:32 PM, Tejun Heo wrote:
-> ahci over time has grown a number of board IDs and it's a bit of mess
-> right now.  Clean it up such that,
+On 03/28/2010 09:33 PM, Tejun Heo wrote:
+> It turns out different generations of MCPs have differing quirks.
 >
-> * board_id_* now live in a separate enum board_ids and numbers are
->    assigned automatically.
+> * MCP 65-73 : FPDMA AA broken, lies about PMP support, forgets to rep=
+ort NCQ
+> * MCP 77-79 : FPDMA AA broken, lies about PMP support
+> * MCP 89    : FPDMA AA broken
 >
-> * Board IDs assigned to features are separated from the ones assigned
->    to specific implementations and both are ordered alphabetically.
+> Instead of turngin off FPDMA AA on all NVIDIAs, implement
+> HFLAG_NO_FPDMA_AA, define additional board IDs and apply necessary
+> quirks.
 >
-> * For NV MCPs, define per-generation alias board_ids and assign
->    matching aliases in the pci id table.  This makes mcp_linux, 67-73
->    use board_ahci_mcp65 instead of board_ahci_yesncq.  Both are
->    identical in content.
+> This fixes bko#15481 and the list of quirks is verified by Peer Chen.
 >
-> * Kill now unused board_ahci_nopmp and board_ahci_yesncq.
->
-> This patch doesn't cause any functional change but will make future
-> changes to board_ids and quirks much less painful.
+>    http://bugzilla.kernel.org/show_bug.cgi?id=3D15481
 >
 > Signed-off-by: Tejun Heo<tj@kernel.org>
 > Cc: Peer Chen<pchen@nvidia.com>
 > ---
-> Updated against the new #upstream.  Thanks.
->
->   drivers/ata/ahci.c |  237 ++++++++++++++++++++++++++---------------------------
->   1 file changed, 117 insertions(+), 120 deletions(-)
+>   drivers/ata/ahci.c |   38 ++++++++++++++++++++++++++++----------
+>   1 file changed, 28 insertions(+), 10 deletions(-)
 
-applied
+ACK in theory, but NAK due to failed build:
 
+
+drivers/ata/ahci.c:137: error: =91AHCI_HFLAG_NO_FPDMA_AA=92 undeclared =
+here=20
+(not in a function)
+drivers/ata/ahci.c: In function =91ahci_init_one=92:
+drivers/ata/ahci.c:1128: error: invalid operands to binary & (have=20
+=91unsigned int=92 and =91const struct ata_port_info *=92)
 
