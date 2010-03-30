@@ -1,67 +1,131 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: ata2.00: failed to set xfermode (err_mask=0x100),ata2.00: disabled,
- CD-ROM drive dead
-Date: Mon, 29 Mar 2010 18:20:48 -0500
-Message-ID: <4BB135D0.5060507@hardwarefreak.com>
-References: <4B9EA02F.2070704@hardwarefreak.com> <4B9EC67A.3020201@gmail.com> <4B9ED027.30800@hardwarefreak.com> <4BAAB080.3010401@kernel.org> <4BAB2A94.8010001@hardwarefreak.com> <20100325215242.GA9785@localhost.localdomain> <4BAF9670.6010706@hardwarefreak.com> <4BAFB58C.5050702@gmail.com> <4BAFEA7A.50904@kernel.org> <4BAFEFA3.3090502@hardwarefreak.com> <4BAFF370.6090207@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream RESEND 2/2] ahci: implement AHCI_HFLAG_NO_FPDMA_AA
+ and update NV quirks
+Date: Tue, 30 Mar 2010 10:28:32 +0900
+Message-ID: <4BB153C0.50306@kernel.org>
+References: <4BB00337.1030302@kernel.org> <4BB00364.40701@kernel.org> <4BB10B91.7040206@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:55254 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472Ab0C2XUu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Mar 2010 19:20:50 -0400
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 601CA6C3CE
-	for <linux-ide@vger.kernel.org>; Mon, 29 Mar 2010 18:20:49 -0500 (CDT)
-In-Reply-To: <4BAFF370.6090207@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:38310 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753288Ab0C3B2p (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Mar 2010 21:28:45 -0400
+In-Reply-To: <4BB10B91.7040206@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Tejun Heo put forth on 3/28/2010 7:25 PM:
-> On 03/29/2010 09:09 AM, Stan Hoeppner wrote:
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index 4a28420..ca4a50a 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -3446,6 +3446,10 @@ static int ata_dev_set_mode(struct ata_device *dev)
->>>  				       "NOSETXFER but PATA detected - can't "
->>>  				       "skip SETXFER, might malfunction\n");
->>>  		err_mask = ata_dev_set_xfermode(dev);
->>> +		if (err_mask)
->>> +			ata_dev_printk(dev, KERN_WARNING, "SETXFER failed w/ %x\n",
->>> +				       err_mask);
->>> +		err_mask = 0;
->>>  	}
->>>
->>>  	if (err_mask & ~AC_ERR_DEV)
->>
->>
->> I'm still using 2.6.32.9.  Is it ok to apply this against 2.6.32.9?
-> 
-> Yeah, that part hasn't changed lately so it should be okay.
+Subject: ahci: implement AHCI_HFLAG_NO_FPDMA_AA and update NV quirks
 
-This patch seems to have done the trick Tejun.  Thank you.  Device mount and
-read access seem to be slower than with the IDE driver.  But given how
-little I use the CD-ROM drive this initial impression may not accurately
-describe reality.  Here's relevant dmesg entries from the patched kernel:
+It turns out different generations of MCPs have differing quirks.
 
-scsi0 : ata_piix
-scsi1 : ata_piix
-ata1: PATA max UDMA/33 cmd 0x1f0 ctl 0x3f6 bmdma 0xf000 irq 14
-ata2: PATA max UDMA/33 cmd 0x170 ctl 0x376 bmdma 0xf008 irq 15
-ata1: port disabled. ignoring.
-ata2.00: ATAPI: Pioneer CD-ROM ATAPI Model DR-A24X  0102, E1.02, max MWDMA2
-ata2.00: SETXFER failed w/ 100
-ata2.00: configured for MWDMA2
-scsi 1:0:0:0: CD-ROM            PIONEER  CD-ROM DR-A01S   1.02 PQ: 0 ANSI: 5
-sr0: scsi3-mmc drive: 20x/20x xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 1:0:0:0: Attached scsi CD-ROM sr0
+* MCP 65-73 : FPDMA AA broken, lies about PMP support, forgets to report NCQ
+* MCP 77-79 : FPDMA AA broken, lies about PMP support
+* MCP 89    : FPDMA AA broken
+
+Instead of turngin off FPDMA AA on all NVIDIAs, implement
+HFLAG_NO_FPDMA_AA, define additional board IDs and apply necessary
+quirks.
+
+This fixes bko#15481 and the list of quirks is verified by Peer Chen.
+
+  http://bugzilla.kernel.org/show_bug.cgi?id=15481
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Peer Chen <pchen@nvidia.com>
+---
+Crap, that was me doing quilt add include/linux/ahci.h instead of
+drivers/ata/ahci.h and not checking diffstats afterwards.  Sorry about
+that.  Here's the working version.
 
 Thanks.
 
--- 
-Stan
+ drivers/ata/ahci.c |   38 ++++++++++++++++++++++++++++----------
+ drivers/ata/ahci.h |    1 +
+ 2 files changed, 29 insertions(+), 10 deletions(-)
+
+Index: ata/drivers/ata/ahci.c
+===================================================================
+--- ata.orig/drivers/ata/ahci.c
++++ ata/drivers/ata/ahci.c
+@@ -62,6 +62,8 @@ enum board_ids {
+
+ 	/* board IDs for specific chipsets in alphabetical order */
+ 	board_ahci_mcp65,
++	board_ahci_mcp77,
++	board_ahci_mcp89,
+ 	board_ahci_mv,
+ 	board_ahci_sb600,
+ 	board_ahci_sb700,	/* for SB700 and SB800 */
+@@ -71,9 +73,7 @@ enum board_ids {
+ 	board_ahci_mcp_linux	= board_ahci_mcp65,
+ 	board_ahci_mcp67	= board_ahci_mcp65,
+ 	board_ahci_mcp73	= board_ahci_mcp65,
+-	board_ahci_mcp77	= board_ahci,
+-	board_ahci_mcp79	= board_ahci,
+-	board_ahci_mcp89	= board_ahci,
++	board_ahci_mcp79	= board_ahci_mcp77,
+ };
+
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+@@ -134,7 +134,24 @@ static const struct ata_port_info ahci_p
+ 	/* by chipsets */
+ 	[board_ahci_mcp65] =
+ 	{
+-		AHCI_HFLAGS	(AHCI_HFLAG_YES_NCQ),
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
++				 AHCI_HFLAG_YES_NCQ),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[board_ahci_mcp77] =
++	{
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[board_ahci_mcp89] =
++	{
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA),
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+@@ -1102,12 +1119,13 @@ static int ahci_init_one(struct pci_dev
+ 	/* prepare host */
+ 	if (hpriv->cap & HOST_CAP_NCQ) {
+ 		pi.flags |= ATA_FLAG_NCQ;
+-		/* Auto-activate optimization is supposed to be supported on
+-		   all AHCI controllers indicating NCQ support, but it seems
+-		   to be broken at least on some NVIDIA MCP79 chipsets.
+-		   Until we get info on which NVIDIA chipsets don't have this
+-		   issue, if any, disable AA on all NVIDIA AHCIs. */
+-		if (pdev->vendor != PCI_VENDOR_ID_NVIDIA)
++		/*
++		 * Auto-activate optimization is supposed to be
++		 * supported on all AHCI controllers indicating NCQ
++		 * capability, but it seems to be broken on some
++		 * chipsets including NVIDIAs.
++		 */
++		if (!(hpriv->flags & AHCI_HFLAG_NO_FPDMA_AA))
+ 			pi.flags |= ATA_FLAG_FPDMA_AA;
+ 	}
+
+Index: ata/drivers/ata/ahci.h
+===================================================================
+--- ata.orig/drivers/ata/ahci.h
++++ ata/drivers/ata/ahci.h
+@@ -208,6 +208,7 @@ enum {
+ 	AHCI_HFLAG_SRST_TOUT_IS_OFFLINE	= (1 << 11), /* treat SRST timeout as
+ 							link offline */
+ 	AHCI_HFLAG_NO_SNTF		= (1 << 12), /* no sntf */
++	AHCI_HFLAG_NO_FPDMA_AA		= (1 << 13), /* no FPDMA AA */
+
+ 	/* ap->flags bits */
+
