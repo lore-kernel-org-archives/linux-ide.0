@@ -1,55 +1,46 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: ide: Requeue request after DMA timeout
-Date: Thu, 1 Apr 2010 12:32:01 +0800
-Message-ID: <20100401043201.GA20470@gondor.apana.org.au>
-References: <20100331061731.GA11480@gondor.apana.org.au> <4BB40D4C.7010204@kernel.org>
+Date: Thu, 01 Apr 2010 13:56:53 +0900
+Message-ID: <4BB42795.5070008@kernel.org>
+References: <20100331061731.GA11480@gondor.apana.org.au> <4BB40D4C.7010204@kernel.org> <20100401043201.GA20470@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ringil.hengli.com.au ([216.59.3.182]:39562 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750796Ab0DAEcK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Apr 2010 00:32:10 -0400
-Content-Disposition: inline
-In-Reply-To: <4BB40D4C.7010204@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:59154 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752648Ab0DAE5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Apr 2010 00:57:21 -0400
+In-Reply-To: <20100401043201.GA20470@gondor.apana.org.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
 Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Thu, Apr 01, 2010 at 12:04:44PM +0900, Tejun Heo wrote:
->
-> > diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-> > index ee58c88..62a257f 100644
-> > --- a/drivers/ide/ide-dma.c
-> > +++ b/drivers/ide/ide-dma.c
-> > @@ -492,6 +492,7 @@ ide_startstop_t ide_dma_timeout_retry(ide_drive_t *drive, int error)
-> >  	if (rq) {
-> >  		hwif->rq = NULL;
-> >  		rq->errors = 0;
-> > +		ide_requeue_request(drive, rq);
-> >  	}
-> >  	return ret;
-> >  }
+Hello,
+
+On 04/01/2010 01:32 PM, Herbert Xu wrote:
+>> Does the above change make the request to be requeued twice?
 > 
-> Hmmm... ide_dma_timeout_retry() is called from ide_timer_expiry() if
-> !hwif->polling.  The former returns ide_stopped if the current request
-> processing should be stopped, in which case ide_timer_expiry() calls
-> plug_device to 1 which makes it call ide_requeue_and_plug() at the end
-> of the function.  Does the above change make the request to be
-> requeued twice?
+> No, we clear hwif->rq in ide_dma_timeout_retry so ide_timer_expiry
+> will have nothing to requeue.
 
-No, we clear hwif->rq in ide_dma_timeout_retry so ide_timer_expiry
-will have nothing to requeue.
+OIC.  It's also cleared in ide_timer_expiry() too.  Asymmetry among
+different failure paths worries me.  e.g. looking at the code, I can't
+find how ide_error() would requeue the request either.  It looks like
+each hwif->rq = NULL in failure path should be investigated and the
+affected ones should be replaced with a function which requeues and
+clears hwif->rq.  Hmmm.... am I misunderstanding something?
 
-Besides, we want to requeue here regardless of whether we return
-ide_stopped.  For example, we may return ide_started in case of
-a pending reset, but as the original request hasn't been completed
-it must still be requeued.
+> Besides, we want to requeue here regardless of whether we return
+> ide_stopped.  For example, we may return ide_started in case of
+> a pending reset, but as the original request hasn't been completed
+> it must still be requeued.
 
-Cheers,
+Yeap, right.  ide_started/stopped doesn't have much bearing with the
+current request.  It indicates the current controller/driver state.
+
+Thanks.
+
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+tejun
