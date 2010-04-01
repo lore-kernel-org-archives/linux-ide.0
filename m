@@ -1,51 +1,51 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: v2: ide: Must hold queue lock when requeueing
-Date: Thu, 1 Apr 2010 14:13:39 +0800
-Message-ID: <20100401061339.GA21145@gondor.apana.org.au>
-References: <20100331061731.GA11480@gondor.apana.org.au> <20100331062029.GA11559@gondor.apana.org.au> <4BB40DD0.6050306@kernel.org> <20100401061159.GA21077@gondor.apana.org.au>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ide: Requeue request after DMA timeout
+Date: Thu, 01 Apr 2010 15:25:50 +0900
+Message-ID: <4BB43C6E.3050900@kernel.org>
+References: <20100331061731.GA11480@gondor.apana.org.au> <4BB40D4C.7010204@kernel.org> <20100401043201.GA20470@gondor.apana.org.au> <4BB42795.5070008@kernel.org> <20100401055455.GA20865@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ringil.hengli.com.au ([216.59.3.182]:53848 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753198Ab0DAGNo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Apr 2010 02:13:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20100401061159.GA21077@gondor.apana.org.au>
+Received: from hera.kernel.org ([140.211.167.34]:55885 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753337Ab0DAG0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Apr 2010 02:26:17 -0400
+In-Reply-To: <20100401055455.GA20865@gondor.apana.org.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Herbert Xu <herbert@gondor.apana.org.au>
 Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Thu, Apr 01, 2010 at 02:11:59PM +0800, Herbert Xu wrote:
+Hello,
+
+On 04/01/2010 02:54 PM, Herbert Xu wrote:
+> On Thu, Apr 01, 2010 at 01:56:53PM +0900, Tejun Heo wrote:
+>>
+>> OIC.  It's also cleared in ide_timer_expiry() too.  Asymmetry among
+>> different failure paths worries me.  e.g. looking at the code, I can't
+>> find how ide_error() would requeue the request either.  It looks like
+>> each hwif->rq = NULL in failure path should be investigated and the
+>> affected ones should be replaced with a function which requeues and
+>> clears hwif->rq.  Hmmm.... am I misunderstanding something?
 > 
-> OK, here are the two patches again using ide_requeue_and_plug.
+> I had a look at the rest of them and they seemed to be fine.
 
-ide: Must hold queue lock when requeueing
+In ide_timer_expiry() if drive->waiting_for_dma is false, ide_error()
+is called, which in turn calls __ide_error() for fs requests.
+ide_ata_error() will be called if the device is a disk.  If the
+request hasn't reached the retry limit and reset is not necessary,
+ide_ata_error() will return ide_stopped without requeueing the
+request.  ide_timer_expiry() will clear hwif->rq without requeueing
+the request and the request will be lost.  No?
 
-ide-atapi requeues requests without holding the queue lock.
-This patch fixes it by using ide_requeue_and_plug.
+> So are you OK for this patch to go in?
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+Yeah yeah, I think those patches are okay by themselves and am just
+trying to find out whether anything similar is missing, in which case
+the requeue might fit better somewhere higher in the call chain.
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index eb2181a..9aedb9a 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -263,8 +263,8 @@ void ide_retry_pc(ide_drive_t *drive)
- 	 * of it.  The failed command will be retried after sense data
- 	 * is acquired.
- 	 */
--	blk_requeue_request(failed_rq->q, failed_rq);
- 	drive->hwif->rq = NULL;
-+	ide_requeue_and_plug(drive, failed_rq);
- 	if (ide_queue_sense_rq(drive, pc)) {
- 		blk_start_request(failed_rq);
- 		ide_complete_rq(drive, -EIO, blk_rq_bytes(failed_rq));
+Thanks.
 
-Cheers,
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+tejun
