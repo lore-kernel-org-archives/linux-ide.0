@@ -1,148 +1,158 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: Working around bogus HPAs in libata
-Date: Fri, 02 Apr 2010 22:57:30 +0100
-Message-ID: <1270245450.12516.187.camel@localhost>
-References: <1269192318.18314.218.camel@localhost>
-	 <4BB5637E.4050604@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH upstream-fixes] libata: unlock HPA if device shrunk
+Date: Mon, 05 Apr 2010 10:33:13 +0900
+Message-ID: <4BB93DD9.7030909@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-TciLRN3TJbS0Zw6kLohX"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:38966 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755401Ab0DBV5f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Apr 2010 17:57:35 -0400
-In-Reply-To: <4BB5637E.4050604@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:53266 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753445Ab0DEBd0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 4 Apr 2010 21:33:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, debian-kernel@lists.debian.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, yaa.bta@gmail.com
 
+Some BIOSes don't configure HPA during boot but do so while resuming.
+This causes harddrives to shrink during resume making libata detach
+and reattach them.  This can be worked around by unlocking HPA if old
+size equals native size.
 
---=-TciLRN3TJbS0Zw6kLohX
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Add ATA_DFLAG_UNLOCK_HPA so that HPA unlocking can be controlled
+per-device and update ata_dev_revalidate() such that it sets
+ATA_DFLAG_UNLOCK_HPA and fails with -EIO when the above condition is
+detected.
 
-On Fri, 2010-04-02 at 12:24 +0900, Tejun Heo wrote:
-> On 03/22/2010 02:25 AM, Ben Hutchings wrote:
-> > Since SCSI has no concept of the Host Protected Area (HPA) supported by
-> > ATA, ATA disks handled by libata have no set_capacity() operation and i=
-t
-> > appears to be impossible to override an HPA except through the libata
-> > module parameter.
-> >=20
-> > In particular, this means that the workaround for bogus HPAs in
-> > rescan_partitions() does not work:
-> >=20
-> > 			if (bdops->set_capacity &&
-> > 			    (disk->flags & GENHD_FL_NATIVE_CAPACITY) =3D=3D 0) {
-> > 				printk(KERN_CONT "enabling native capacity\n");
-> > 				capacity =3D bdops->set_capacity(disk, ~0ULL);
-> > 				disk->flags |=3D GENHD_FL_NATIVE_CAPACITY;
-> > 				if (capacity > get_capacity(disk)) {
-> > 					set_capacity(disk, capacity);
-> > 					check_disk_size_change(disk, bdev);
-> > 					bdev->bd_invalidated =3D 0;
-> > 				}
->=20
-> Hmmm, yeah, this is much better than the dumb switch we have now.  I
-> wonder why nobody pointed it out before.
+This patch fixes the following bug.
 
-Several distributions have turned on the switch by default.  As I said
-previously, this turned out to be a bad idea.
+  https://bugzilla.kernel.org/show_bug.cgi?id=15396
 
-> Does the following patch work as expected?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Oleksandr Yermolenko <yaa.bta@gmail.com>
+---
+ drivers/ata/libata-core.c |   74 +++++++++++++++++++++++++++-------------------
+ include/linux/libata.h    |    1
+ 2 files changed, 46 insertions(+), 29 deletions(-)
 
-Without the patch:
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4a28420..8b97609 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1493,6 +1493,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ {
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
+ 	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
++	bool unlock_hpa = ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_HPA;
+ 	u64 sectors = ata_id_n_sectors(dev->id);
+ 	u64 native_sectors;
+ 	int rc;
+@@ -1509,7 +1510,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ 		/* If device aborted the command or HPA isn't going to
+ 		 * be unlocked, skip HPA resizing.
+ 		 */
+-		if (rc == -EACCES || !ata_ignore_hpa) {
++		if (rc == -EACCES || !unlock_hpa) {
+ 			ata_dev_printk(dev, KERN_WARNING, "HPA support seems "
+ 				       "broken, skipping HPA handling\n");
+ 			dev->horkage |= ATA_HORKAGE_BROKEN_HPA;
+@@ -1524,7 +1525,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ 	dev->n_native_sectors = native_sectors;
 
-[    2.853930] sd 0:0:1:0: [sdb] 150000000 512-byte logical blocks: (76.8 G=
-B/71.5 GiB)
-[    2.854220] sd 0:0:1:0: [sdb] Write Protect is off
-[    2.856273] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled,=
- doesn't support DPO or FUA
-[    2.856786]  sdb: sdb1 sdb2 < >
-[    2.914459] sdb: p1 size 150866352 exceeds device capacity, limited to e=
-nd of disk
-[    2.914631] sdb: p2 ignored, start 150866415 is behind the end of the di=
-sk
-[    2.938499] sd 0:0:1:0: [sdb] Attached SCSI disk
+ 	/* nothing to do? */
+-	if (native_sectors <= sectors || !ata_ignore_hpa) {
++	if (native_sectors <= sectors || !unlock_hpa) {
+ 		if (!print_info || native_sectors == sectors)
+ 			return 0;
 
-With the patch:
+@@ -4185,36 +4186,51 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+ 		goto fail;
 
-[    2.871114] sd 0:0:1:0: [sdb] 150000000 512-byte logical blocks: (76.8 G=
-B/71.5 GiB)
-[    2.871395] sd 0:0:1:0: [sdb] Write Protect is off
-[    2.871601] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: enabled,=
- doesn't support DPO or FUA
-[    2.872177]  sdb: sdb1 sdb2 < >
-[    2.914556] sdb: p1 size 150866352 exceeds device capacity, enabling nat=
-ive capacity
-[    2.914753] ata1: soft resetting link
-[    3.116372] ata1.01: n_sectors mismatch 150000000 !=3D 156301488
-[    3.116433] ata1.01: new n_sectors matches native, probably late HPA unl=
-ock, n_sectors adjusted
-[    3.164409] ata1.01: configured for UDMA/100
-[    3.164471] ata1: EH complete
-[    3.164723] sdb: detected capacity change from 76800000000 to 8002636185=
-6
-[    3.179393] sd 0:0:1:0: [sdb] 156301488 512-byte logical blocks: (80.0 G=
-B/74.5 GiB)
-[    3.179842] sd 0:0:1:0: [sdb] Attached SCSI disk
-[    3.213602] sdb: detected capacity change from 0 to 80026361856
-[    3.214000] sdb: detected capacity change from 0 to 80026361856
+ 	/* verify n_sectors hasn't changed */
+-	if (dev->class == ATA_DEV_ATA && n_sectors &&
+-	    dev->n_sectors != n_sectors) {
+-		ata_dev_printk(dev, KERN_WARNING, "n_sectors mismatch "
+-			       "%llu != %llu\n",
+-			       (unsigned long long)n_sectors,
+-			       (unsigned long long)dev->n_sectors);
+-		/*
+-		 * Something could have caused HPA to be unlocked
+-		 * involuntarily.  If n_native_sectors hasn't changed
+-		 * and the new size matches it, keep the device.
+-		 */
+-		if (dev->n_native_sectors == n_native_sectors &&
+-		    dev->n_sectors > n_sectors &&
+-		    dev->n_sectors == n_native_sectors) {
+-			ata_dev_printk(dev, KERN_WARNING,
+-				       "new n_sectors matches native, probably "
+-				       "late HPA unlock, continuing\n");
+-			/* keep using the old n_sectors */
+-			dev->n_sectors = n_sectors;
+-		} else {
+-			/* restore original n_[native]_sectors and fail */
+-			dev->n_native_sectors = n_native_sectors;
+-			dev->n_sectors = n_sectors;
+-			rc = -ENODEV;
+-			goto fail;
+-		}
++	if (dev->class != ATA_DEV_ATA || !n_sectors ||
++	    dev->n_sectors == n_sectors)
++		return 0;
++
++	/* n_sectors has changed */
++	ata_dev_printk(dev, KERN_WARNING, "n_sectors mismatch %llu != %llu\n",
++		       (unsigned long long)n_sectors,
++		       (unsigned long long)dev->n_sectors);
++
++	/*
++	 * Something could have caused HPA to be unlocked
++	 * involuntarily.  If n_native_sectors hasn't changed and the
++	 * new size matches it, keep the device.
++	 */
++	if (dev->n_native_sectors == n_native_sectors &&
++	    dev->n_sectors > n_sectors && dev->n_sectors == n_native_sectors) {
++		ata_dev_printk(dev, KERN_WARNING,
++			       "new n_sectors matches native, probably "
++			       "late HPA unlock, continuing\n");
++		/* keep using the old n_sectors */
++		dev->n_sectors = n_sectors;
++		return 0;
+ 	}
 
-For comparison, using an IDE driver:
+-	return 0;
++	/*
++	 * Some BIOSes boot w/o HPA but resume w/ HPA locked.  Try
++	 * unlocking HPA in those cases.
++	 *
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=15396
++	 */
++	if (dev->n_native_sectors == n_native_sectors &&
++	    dev->n_sectors < n_sectors && n_sectors == n_native_sectors &&
++	    !(dev->horkage & ATA_HORKAGE_BROKEN_HPA)) {
++		ata_dev_printk(dev, KERN_WARNING,
++			       "old n_sectors matches native, probably "
++			       "late HPA lock, will try to unlock HPA\n");
++		/* try unlocking HPA */
++		dev->flags |= ATA_DFLAG_UNLOCK_HPA;
++		rc = -EIO;
++	} else
++		rc = -ENODEV;
 
-[    4.172438] hdb: max request size: 128KiB
-[    4.173740] hdb: Host Protected Area detected.
-[    4.173743] 	current capacity is 150000000 sectors (76800 MB)
-[    4.173745] 	native  capacity is 156301488 sectors (80026 MB)
-[    4.173922] hdb: 150000000 sectors (76800 MB) w/8192KiB Cache, CHS=3D655=
-35/16/63
-[    4.177393] hdb: cache flushes supported
-[    4.177549]  hdb: hdb1 hdb2 < >
-[    4.183025] hdb: p1 size 150866352 exceeds device capacity, enabling nat=
-ive capacity
-[    4.183842] hdb: detected capacity change from 76800000000 to 8002636185=
-6
++	/* restore original n_[native_]sectors and fail */
++	dev->n_native_sectors = n_native_sectors;
++	dev->n_sectors = n_sectors;
+  fail:
+ 	ata_dev_printk(dev, KERN_ERR, "revalidation failed (errno=%d)\n", rc);
+ 	return rc;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index f8ea71e..b2f2003 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -146,6 +146,7 @@ enum {
+ 	ATA_DFLAG_SLEEPING	= (1 << 15), /* device is sleeping */
+ 	ATA_DFLAG_DUBIOUS_XFER	= (1 << 16), /* data transfer not verified */
+ 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
++	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
 
-So, this looks good, but I'm slightly disturbed by the multiple
-'capacity change' messages when using libata.  Also, the warnings in
-ata_dev_revalidate() should not be shown when we are deliberately
-changing capacity.
-
-My test case also revealed a bug in the partition scanning retry:
-partition 2 is an extended partition and wholly within the HPA, so the
-extended partition table is not accessible until the HPA is disabled.
-But it is not rescanned after the HPA is disabled.  However, this is is
-consistent between IDE and libata drivers and will not be a regression
-when making the transition.
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-TciLRN3TJbS0Zw6kLohX
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUAS7ZoRee/yOyVhhEJAQInXQ//awSjnOJDppERK0YYWp6G4XlI7iJWktUk
-DtL3bL3Kqcj9fQb7r1YbernWPXale16fEnIDl32YvK2A3ld8pQvBnWZInubfsplz
-NYnRjMt0E+mFyO9zYrhlXko4t8t7tEhgvq+yPzieZip8MSIyoevHRcYgyMY+1fmM
-ulI97wAXirzbDQ/EI1sgPGCOX7NQSKoUyohNoVtE9QW+vK0Mcc80dQE57MIIkULb
-6e2d977N95xOxO87ygZfeRaIwStlTTzsyoHqbiQirKxm+RMOZOZPbzhGytSWDxOZ
-Mrw87yursJjK6EeYrtp5tpx324H1kWXrXu04cCnINZdUkkJfzDS5/eypMI21pi38
-lW0UrDzfRJygtoAGiEcKNW6EBWfhzwEVcikPpCT7u4T8RG6Wqyh0QnmUXLqWKvhd
-ZFv0TIM+ZOWStuuQ4StHRQXDIhmHmAkRkyfWoUJr2GPHJF5XA4g8OpTV0YRJ4O9a
-by8tzIUjLy2akJXYzjuRw7YCXEuhAYFNDN6qi5HwJaJ79yy0iRSGUys7+3hcmQA0
-AjtgyjbPUc1cX0BxpKQzf3aTYCPpB2MwwLN7N9cnw0v2V29n9+DVI65EFSIovM/+
-PAbFP1VI/Z88QKiwv52Kam3HAiBptn7BRTBe6XgpSUE51q891PuJuYMMrPOm8QVp
-tWnqMsNIlys=
-=A2YE
------END PGP SIGNATURE-----
-
---=-TciLRN3TJbS0Zw6kLohX--
+ 	ATA_DFLAG_DETACH	= (1 << 24),
