@@ -1,33 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] ata/core: don't enable the interrupt while activating the
- host
-Date: Wed, 07 Apr 2010 06:56:10 +0900
-Message-ID: <4BBBADFA.10903@kernel.org>
-References: <20100311220417.GA16022@Chamillionaire.breakpoint.cc> <4BAAAEA1.9040906@kernel.org> <20100325220421.GA1051@Chamillionaire.breakpoint.cc> <4BABF7CE.6060908@kernel.org> <20100406094535.GA30917@Chamillionaire.breakpoint.cc> <4BBB0641.3040500@ru.mvista.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty)
+Date: Tue, 06 Apr 2010 18:45:09 -0400
+Message-ID: <4BBBB975.7000203@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:48017 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754662Ab0DFVw5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Apr 2010 17:52:57 -0400
-In-Reply-To: <4BBB0641.3040500@ru.mvista.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:39450 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757512Ab0DFWpM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Apr 2010 18:45:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <rwheeler@redhat.com>
 
-On 04/06/2010 07:00 PM, Sergei Shtylyov wrote:
->> ata_sff_check_status() does not report ATA_DRQ set so I don't know why
->> the interrupt is comming.
-> 
->   Perhaps the drive incorrectly triggers interrupt on setting the nIEN
-> bit -- some drives are known to do this; there is a blacklist of such
-> drives in the IDE core so that it avoids setting nIEN bit for them.
+Most drives from Seagate, Hitachi, and possibly other brands,
+do not allow LBA28 access to sector number 0x0fffffff (2^28 - 1).
+So instead use LBA48 for such accesses.
 
-Arghh.... that stinks.  Maybe we should port the list over?  What is
-the ATA device in question here?
+This bug could bite a lot of systems, especially when the user has
+taken care to align partitions to 4KB boundaries.  On misaligned systems,
+it is less likely to be encountered, since a 4KB read would end at 0x10000000
+rather than at 0x0fffffff.
 
--- 
-tejun
+Signed-off-by: Mark Lord <mlord@pobox.com>
+
+--- linux-2.6.34-rc3/include/linux/ata.h	2010-03-30 12:24:39.000000000 -0400
++++ linux/include/linux/ata.h	2010-04-06 18:39:41.167702612 -0400
+@@ -1025,8 +1025,8 @@
+  
+  static inline int lba_28_ok(u64 block, u32 n_block)
+  {
+-	/* check the ending block number */
+-	return ((block + n_block) < ((u64)1 << 28)) && (n_block <= 256);
++	/* check the ending block number: must be LESS THAN 0x0fffffff */
++	return ((block + n_block) < (u64)((1 << 28) - 1)) && (n_block <= 256);
+  }
+  
+  static inline int lba_48_ok(u64 block, u32 n_block)
