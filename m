@@ -1,164 +1,70 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty)
-Date: Tue, 06 Apr 2010 18:47:22 -0400
-Message-ID: <4BBBB9FA.3060803@teksavvy.com>
-References: <4BBBB975.7000203@teksavvy.com>
+From: Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: linux-ide: hda: possibly failed opcode: 0x25 on Alpha with
+ 2.6.34-rc3
+Date: Wed, 7 Apr 2010 01:26:59 +0200
+Message-ID: <20100406232659.GA4788@physik.fu-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:17970 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752343Ab0DFWrY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Apr 2010 18:47:24 -0400
-In-Reply-To: <4BBBB975.7000203@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <rwheeler@redhat.com>
 
-Here is a test program, to see if a drive
-On 06/04/10 06:45 PM, Mark Lord wrote:
-> Most drives from Seagate, Hitachi, and possibly other brands,
-> do not allow LBA28 access to sector number 0x0fffffff (2^28 - 1).
-> So instead use LBA48 for such accesses.
-...
+Dear IDE maintainers,
 
-Here is a test program, to see if a particular drive has this problem or not.
-It works only on drives larger than 128GB.
+I recently installed Debian unstable on an old digital personal
+workstation 433au alpha (Miata) [1] with the default kernel 2.6.32
+from Debian unstable. There were no obvious problems except for the
+tulip network driver which produced a lot of noise [2]. Joe Perches was
+so kind to provide a patch to reduce the noise. I applied the patch
+against 2.6.34-rc3 and rebuilt the kernel with the 2.6.32 Debian
+config using "make oldconfig". The kernel build took around 18 hours ;).
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+Anyway, after rebooting the machine into the new kernel (2.6.34-rc3), the
+IDE driver obviously triggered a lot of errors [3] resulting in the kernel
+not being able to mount the root partition.
 
-#include <linux/fs.h>
-#include <linux/hdreg.h>
-#include <scsi/scsi.h>
-#include <scsi/sg.h>
+The error message is always the same:
 
-typedef unsigned long long u64;
+hda: possibly failed opcode: 0x25
+drive not ready for command
+status error: status=0x5a { DriveReady SeekComplete DataRequest Index }
 
-enum {
-	ATA_CMD_DMA_READ		= 0xc8,
-	ATA_CMD_DMA_READ_EXT		= 0x25,
-	ATA_SECT_SIZE			= 512,
-	ATA_16				= 0x85,
-	ATA_16_LEN			= 16,
-	ATA_DEV_REG_LBA			= (1 << 6),
-	ATA_LBA48			= 1,
-	ATA_PROTO_DMA			= ( 6 << 1),
-};
+But please see the screenshots in [3].
 
-static int sg_read (int fd, u64 lba, unsigned int nsects, void *buf, int force_lba28)
-{
-	unsigned char cdb[ATA_16_LEN] = { ATA_16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	struct sg_io_hdr hdr;
-	unsigned char sense[32];
+The system finally dropped into a busybox. I issued a "reboot" and tried
+to reboot into the Debian stock 2.6.32 kernel. However, after the IDE problem
+with 2.6.34-rc3, aboot was unable to read the bootsector. When I powercycled
+the machine, I could reboot properly into 2.6.32 without any problems. I
+already checked the IDE cabling, the harddisk is new, btw. The problem
+reproduces every time I boot into 2.6.34-rc3.
 
-	cdb[ 1] = ATA_PROTO_DMA;
-	cdb[ 6] = nsects;
-	cdb[ 8] = lba;
-	cdb[10] = lba >>  8;
-	cdb[12] = lba >> 16;
-	cdb[13] = ATA_DEV_REG_LBA;
+It looks like that some changes in the IDE driver between 2.6.32 and
+2.6.34-rc3 somehow messed up the code on Alpha. I didn't test the
+whole thing on 2.6.33.2 yet, however the machine is busy right now
+building that kernel so I can try tomorrow.
 
-	if (force_lba28 || (nsects <= 256 && (lba + nsects) < (1ULL << 28))) {
-		cdb[13] |= (lba >> 24) & 0x0f;
-		cdb[14]  = ATA_CMD_DMA_READ;
-	} else {
-		cdb[ 1] |= ATA_LBA48;
-		cdb[ 5]  = nsects >> 8;
-		cdb[ 7]  = lba >> 24;
-		cdb[ 9]  = lba >> 32;
-		cdb[11]  = lba >> 40;
-		cdb[14]  = ATA_CMD_DMA_READ_EXT;
-	}
+The lspci output of the hardware looks like this:
 
-	memset(&hdr, 0, sizeof(struct sg_io_hdr));
-	hdr.interface_id	= 'S';
-	hdr.cmd_len		= ATA_16_LEN;
-	hdr.mx_sb_len		= sizeof(sense);
-	hdr.dxfer_direction	= SG_DXFER_FROM_DEV;
-	hdr.dxfer_len		= nsects * ATA_SECT_SIZE;
-	hdr.dxferp		= buf;
-	hdr.cmdp		= cdb;
-	hdr.sbp			= sense;
-	hdr.pack_id		= lba;
-	hdr.timeout		= 5000; /* milliseconds */
+test-adrian1:~# lspci
+00:03.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 30)
+00:07.0 ISA bridge: Contaq Microsystems 82c693
+00:07.1 IDE interface: Contaq Microsystems 82c693
+00:07.2 IDE interface: Contaq Microsystems 82c693
+00:07.3 USB Controller: Contaq Microsystems 82c693
+00:0b.0 VGA compatible controller: Matrox Graphics, Inc. MGA 2064W [Millennium] (rev 01)
+00:14.0 PCI bridge: Digital Equipment Corporation DECchip 21152 (rev 03)
+01:04.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
+01:09.0 Ethernet controller: Intel Corporation 82541GI Gigabit Ethernet Controller
 
-	memset(sense, 0, sizeof(sense));
-	if (ioctl(fd, SG_IO, &hdr) < 0) {
-		perror("ioctl(SG_IO)");
-		return (-1);
-	}
-	if (hdr.status == 0 && hdr.host_status == 0 && hdr.driver_status == 0)
-		return 0; /* success */
+If you need anymore verbose or debug output, please let me know.
 
-	if (hdr.status > 0) {
-		unsigned char *s = sense + 8;
-		/* SCSI status is non-zero, let's go for the error LBA */
-		lba = ((u64)s[10] << 40) | ((u64)s[8] << 32) | (s[6] << 24) |
-			(s[11] << 16) | (s[9] << 8) | s[7];
-		if (0) fprintf(stderr, "SG_IO error: SCSI sense=0x%x/%02x/%02x, ATA=0x%02x/%02x, LBA=%llu (0x%llx)\n",
-			sense[1] & 0xf, sense[2], sense[3], s[13], s[3], lba, lba);
-		return -1;
-	}
+Regards,
 
-	/* some other error we don't know about yet */
-	fprintf(stderr, "SG_IO returned: SCSI status=0x%x, host_status=0x%x, driver_status=0x%x",
-		hdr.status, hdr.host_status, hdr.driver_status);
-	return -1;
-}
+Adrian
 
-static void print_drive_model (const char *devpath)
-{
-	char cmd[256];
-
-	snprintf(cmd, sizeof(cmd), "hdparm -I %s | grep 'Model Number' | sed '-es/^[ 	]*//'", devpath);
-	system(cmd);
-	snprintf(cmd, sizeof(cmd), "hdparm -I %s | grep 'Firmware Revision' | sed '-es/^[ 	]*//'", devpath);
-	system(cmd);
-}
-
-int main (int argc, char *argv[])
-{
-	unsigned char buf[8 * ATA_SECT_SIZE];
-	const char *devpath;
-	int rc, fd, nsects;
-	u64 lba;
-
-	if (argc != 2) {
-		fprintf(stderr, "%s: bad/missing parms: expected <devpath>\n", argv[0]);
-		exit(1);
-	}
-	devpath = argv[1];
-
-	fd = open(devpath, O_RDONLY);
-	if (fd == -1) {
-		perror(devpath);
-		exit(1);
-	}
-
-	print_drive_model(devpath);
-
-	nsects = 8;
-	lba = 0x0ffffff8;
-	printf("Reading %u sectors starting at LBA=%llu (0x%llx): ", nsects, lba, lba);
-	fflush(stdout);
-	rc = sg_read(fd, lba, nsects, buf, 1);
-	printf("%s\n", rc ? "FAILED" : "succeeded");
-
-	nsects = 1;
-	lba = 0x0fffffff;
-	printf("Reading %u sectors starting at LBA=%llu (0x%llx): ", nsects, lba, lba);
-	fflush(stdout);
-	rc = sg_read(fd, lba, nsects, buf, 1);
-	printf("%s\n", rc ? "FAILED" : "succeeded");
-
-	exit(0);
-}
+[1] http://en.wikipedia.org/wiki/Digital_Personal_Workstation
+[2] http://lkml.org/lkml/2010/4/5/104
+[3] http://users.physik.fu-berlin.de/~glaubitz/alpha-crash/
