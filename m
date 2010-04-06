@@ -1,70 +1,72 @@
-From: Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: linux-ide: hda: possibly failed opcode: 0x25 on Alpha with
- 2.6.34-rc3
-Date: Wed, 7 Apr 2010 01:26:59 +0200
-Message-ID: <20100406232659.GA4788@physik.fu-berlin.de>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] fix BUG with IDE taskfile ioctl and cfq
+Date: Tue, 6 Apr 2010 19:29:57 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1004061924430.27367@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2668 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757706Ab0DFXaM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Apr 2010 19:30:12 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org
 
-Dear IDE maintainers,
+Hi
 
-I recently installed Debian unstable on an old digital personal
-workstation 433au alpha (Miata) [1] with the default kernel 2.6.32
-from Debian unstable. There were no obvious problems except for the
-tulip network driver which produced a lot of noise [2]. Joe Perches was
-so kind to provide a patch to reduce the noise. I applied the patch
-against 2.6.34-rc3 and rebuilt the kernel with the 2.6.32 Debian
-config using "make oldconfig". The kernel build took around 18 hours ;).
+This fixes a crash when using hdparm --security-* on IDE devices with CFQ 
+scheduler.
 
-Anyway, after rebooting the machine into the new kernel (2.6.34-rc3), the
-IDE driver obviously triggered a lot of errors [3] resulting in the kernel
-not being able to mount the root partition.
+BTW. I found out that it's impossible to use these security commands on 
+sparc64 because of 64-bit kernel, 32-bit userspace and a lack of ioctl 
+emulation (I succeeded when I recompiled hdparm on my own in 64-bit mode). 
+What do you think is the best fix for it? Put it to fs/compat_ioctl.c 
+(like SG_IO)? Or make a compat_ioctl method in IDE? Or don't fix it and 
+persuade distros to compile hdparm as 64-bit?
 
-The error message is always the same:
+Mikulas
 
-hda: possibly failed opcode: 0x25
-drive not ready for command
-status error: status=0x5a { DriveReady SeekComplete DataRequest Index }
+---
 
-But please see the screenshots in [3].
+Fix IDE taskfile with cfq scheduler
 
-The system finally dropped into a busybox. I issued a "reboot" and tried
-to reboot into the Debian stock 2.6.32 kernel. However, after the IDE problem
-with 2.6.34-rc3, aboot was unable to read the bootsector. When I powercycled
-the machine, I could reboot properly into 2.6.32 without any problems. I
-already checked the IDE cabling, the harddisk is new, btw. The problem
-reproduces every time I boot into 2.6.34-rc3.
+When ide taskfile access is being used (for example with hdparm --security
+commands) and cfq scheduler is selected, the scheduler crashes on BUG in
+cfq_put_request.
 
-It looks like that some changes in the IDE driver between 2.6.32 and
-2.6.34-rc3 somehow messed up the code on Alpha. I didn't test the
-whole thing on 2.6.33.2 yet, however the machine is busy right now
-building that kernel so I can try tomorrow.
+The reason is that the cfq scheduler is tracking counts of read and write
+requests separately; the ide-taskfile subsystem allocates a read request and
+then flips the flag to make it a write request. The counters in cfq will
+mismatch.
 
-The lspci output of the hardware looks like this:
+This patch changes ide-taskfile to allocate the READ or WRITE request as
+required and don't change the flag later.
 
-test-adrian1:~# lspci
-00:03.0 Ethernet controller: Digital Equipment Corporation DECchip 21142/43 (rev 30)
-00:07.0 ISA bridge: Contaq Microsystems 82c693
-00:07.1 IDE interface: Contaq Microsystems 82c693
-00:07.2 IDE interface: Contaq Microsystems 82c693
-00:07.3 USB Controller: Contaq Microsystems 82c693
-00:0b.0 VGA compatible controller: Matrox Graphics, Inc. MGA 2064W [Millennium] (rev 01)
-00:14.0 PCI bridge: Digital Equipment Corporation DECchip 21152 (rev 03)
-01:04.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-01:09.0 Ethernet controller: Intel Corporation 82541GI Gigabit Ethernet Controller
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-If you need anymore verbose or debug output, please let me know.
+---
+ drivers/ide/ide-taskfile.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Regards,
-
-Adrian
-
-[1] http://en.wikipedia.org/wiki/Digital_Personal_Workstation
-[2] http://lkml.org/lkml/2010/4/5/104
-[3] http://users.physik.fu-berlin.de/~glaubitz/alpha-crash/
+Index: linux-2.6.34-rc2-fast/drivers/ide/ide-taskfile.c
+===================================================================
+--- linux-2.6.34-rc2-fast.orig/drivers/ide/ide-taskfile.c	2010-03-29 21:44:59.000000000 +0200
++++ linux-2.6.34-rc2-fast/drivers/ide/ide-taskfile.c	2010-03-29 21:52:04.000000000 +0200
+@@ -428,13 +428,11 @@ int ide_raw_taskfile(ide_drive_t *drive,
+ {
+ 	struct request *rq;
+ 	int error;
++	int rw = !(cmd->tf_flags & IDE_TFLAG_WRITE) ? READ : WRITE;
+ 
+-	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
++	rq = blk_get_request(drive->queue, rw, __GFP_WAIT);
+ 	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
+ 
+-	if (cmd->tf_flags & IDE_TFLAG_WRITE)
+-		rq->cmd_flags |= REQ_RW;
+-
+ 	/*
+ 	 * (ks) We transfer currently only whole sectors.
+ 	 * This is suffient for now.  But, it would be great,
