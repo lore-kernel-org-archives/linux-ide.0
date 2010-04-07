@@ -1,57 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
 Subject: Re: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty)
-Date: Wed, 07 Apr 2010 10:29:07 +0900
-Message-ID: <4BBBDFE3.4000602@gmail.com>
-References: <4BBBB975.7000203@teksavvy.com>
+Date: Tue, 06 Apr 2010 23:30:02 -0400
+Message-ID: <4BBBFC3A.3000605@teksavvy.com>
+References: <4BBBB975.7000203@teksavvy.com> <4BBBDFE3.4000602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:58790 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932397Ab0DGB3P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Apr 2010 21:29:15 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so196615qwh.37
-        for <linux-ide@vger.kernel.org>; Tue, 06 Apr 2010 18:29:14 -0700 (PDT)
-In-Reply-To: <4BBBB975.7000203@teksavvy.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:38187 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753490Ab0DGDaG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Apr 2010 23:30:06 -0400
+In-Reply-To: <4BBBDFE3.4000602@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
+To: Tejun Heo <htejun@gmail.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <rwheeler@redhat.com>
 
-Hello, Mark.
-
-On 04/07/2010 07:45 AM, Mark Lord wrote:
-> Most drives from Seagate, Hitachi, and possibly other brands,
-> do not allow LBA28 access to sector number 0x0fffffff (2^28 - 1).
-> So instead use LBA48 for such accesses.
-> 
-> This bug could bite a lot of systems, especially when the user has
-> taken care to align partitions to 4KB boundaries.  On misaligned systems,
-> it is less likely to be encountered, since a 4KB read would end at
-> 0x10000000 rather than at 0x0fffffff.
-
-Oh, nice catch.  Kinda scary.
-
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+On 06/04/10 09:29 PM, Tejun Heo wrote:
+..
+>> -    /* check the ending block number */
+>> -    return ((block + n_block)<  ((u64)1<<  28))&&  (n_block<= 256);
+>> +    /* check the ending block number: must be LESS THAN 0x0fffffff */
+>> +    return ((block + n_block)<  (u64)((1<<  28) - 1))&&  (n_block<= 256);
 >
-> --- linux-2.6.34-rc3/include/linux/ata.h    2010-03-30
-> 12:24:39.000000000 -0400
-> +++ linux/include/linux/ata.h    2010-04-06 18:39:41.167702612 -0400
-> @@ -1025,8 +1025,8 @@
->  
->  static inline int lba_28_ok(u64 block, u32 n_block)
->  {
-> -    /* check the ending block number */
-> -    return ((block + n_block) < ((u64)1 << 28)) && (n_block <= 256);
-> +    /* check the ending block number: must be LESS THAN 0x0fffffff */
-> +    return ((block + n_block) < (u64)((1 << 28) - 1)) && (n_block <= 256);
+> But why move the type casting?  The cast isn't required to begin with
+> but starting with u64 constant means the whole compile time
+> calculation will be in u64 (the intention of that cast I guess).
+..
 
-But why move the type casting?  The cast isn't required to begin with
-but starting with u64 constant means the whole compile time
-calculation will be in u64 (the intention of that cast I guess).
+The cast was there already, so I left it there.
+Just moved it to cover the entire compile-time expression as a unit,
+rather than just the (u64)1  as the existing code did it.
 
-Thanks.
-
--- 
-tejun
+If you prefer a different format for that line, then chirp up!  :)
