@@ -1,41 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty)
-Date: Wed, 07 Apr 2010 14:11:28 +0900
-Message-ID: <4BBC1400.6030106@gmail.com>
-References: <4BBBB975.7000203@teksavvy.com> <4BBBDFE3.4000602@gmail.com> <4BBBFC3A.3000605@teksavvy.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] 460EX on-chip SATA driver<kernel 2.6.33> <
+ resubmission : 02>
+Date: Wed, 07 Apr 2010 17:41:56 +1000
+Message-ID: <1270626116.2300.68.camel@pasglop>
+References: <201004061141.o36BfTsr028163@amcc.com>
+	 <4BBB5045.5020004@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.211.172]:42553 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655Ab0DGFLk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2010 01:11:40 -0400
-Received: by ywh2 with SMTP id 2so421711ywh.33
-        for <linux-ide@vger.kernel.org>; Tue, 06 Apr 2010 22:11:40 -0700 (PDT)
-In-Reply-To: <4BBBFC3A.3000605@teksavvy.com>
+Received: from gate.crashing.org ([63.228.1.57]:37926 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751013Ab0DGHmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Apr 2010 03:42:14 -0400
+In-Reply-To: <4BBB5045.5020004@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <rwheeler@redhat.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Rupjyoti Sarmah <rsarmah@amcc.com>, linux-ide@vger.kernel.org, sr@denx.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-Hello,
+On Tue, 2010-04-06 at 11:16 -0400, Jeff Garzik wrote:
+> > +static irqreturn_t dma_dwc_interrupt(int irq, void *hsdev_instance)
+> > +{
+> > +     int chan;
+> > +     u32 tfr_reg, err_reg;
+> > +
+> > +     struct sata_dwc_device *hsdev =
+> > +             (struct sata_dwc_device *) hsdev_instance;
+> > +     struct ata_host *host = (struct ata_host *) hsdev->host;
+> > +     struct ata_port *ap;
+> > +     struct sata_dwc_device_port *hsdevp;
+> > +     u8 tag = 0;
+> > +     unsigned int port = 0;
+> > +     struct sata_dwc_host_priv *hp;
+> > +     hp = kmalloc(sizeof(*hp), GFP_KERNEL);
+> 
+> 1) interrupt is not GFP_KERNEL
+> 
+> 2) you must failure kmalloc failure
+> 
+> 3) it is not clear to me where you initialize this structure???
 
-On 04/07/2010 12:30 PM, Mark Lord wrote:
-> The cast was there already, so I left it there.
-> Just moved it to cover the entire compile-time expression as a unit,
-> rather than just the (u64)1  as the existing code did it.
+And why the heck would you want to allocate it at interrupt time ? ? ?
 
-Oh, but there's functional difference between the two.  In the
-original place, the initial casting ripples through the whole
-expression making each step of the calculation u64.  It's meant to
-prevent int overflow during calculation (which isn't necessary in the
-current expression BTW) but if you cast the end result, it doesn't
-really mean anything.  If you want to kill the casting, kill it but
-moving the casting outside doesn't make much sense.  Can you repost
-without moving the cast?
+BTW. Stefan mentioned earlier that they had some fixes for that driver
+in the Denx tree. Are those fixes now included in that variant ?
 
-Thanks.
+Cheers,
+Ben.
 
--- 
-tejun
+
