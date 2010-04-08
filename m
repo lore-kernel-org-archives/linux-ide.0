@@ -1,50 +1,35 @@
-From: =?UTF-8?B?RMOibmllbA==?= Fraga <fragabr@gmail.com>
-Subject: Re: ICH10 not working with AHCI kernel option
-Date: Thu, 8 Apr 2010 11:15:16 -0300
-Message-ID: <4bbde4f7.1702be0a.5f6c.028e@mx.google.com>
-References: <eo2197-4lb.ln1@tux.abusar.org.br>
-	<20100408144525.2f3f5718@lxorguk.ukuu.org.uk>
-	<4bbdde49.e302be0a.3106.0220@mx.google.com>
-	<20100408145916.50dbe8de@lxorguk.ukuu.org.uk>
-	<4bbde1ea.c701be0a.60ec.0270@mx.google.com>
-	<20100408150920.5689564b@lxorguk.ukuu.org.uk>
+From: Yegor Yefremov <yegorslists@googlemail.com>
+Subject: [PATCH] IDE: pass IRQ flags to the IDE core
+Date: Thu, 8 Apr 2010 16:26:29 +0200
+Message-ID: <q2rf69abfc31004080726scbf96429ub4d84a318835d53d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53882 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752720Ab0DHOPW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2010 10:15:22 -0400
-Received: by pwj9 with SMTP id 9so1902254pwj.19
-        for <linux-ide@vger.kernel.org>; Thu, 08 Apr 2010 07:15:21 -0700 (PDT)
-In-Reply-To: <20100408150920.5689564b@lxorguk.ukuu.org.uk>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:53343 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754695Ab0DHO0a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2010 10:26:30 -0400
+Received: by gyg13 with SMTP id 13so1194888gyg.19
+        for <linux-ide@vger.kernel.org>; Thu, 08 Apr 2010 07:26:29 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: davem@davemloft.net
 
-On Thu, 8 Apr 2010 15:09:20 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+IDE: pass IRQ flags to the IDE core
 
-> Yes
+This enables shared IRQs and other features to be used with platform devices
 
-	Ok, problem solved. You're right, the BIOS option was wrong.
-The problem is that it's called "RAID mode" and I found it not
-intuitive since I don't use RAID (so I didn't touch it). I changed it
-from IDE to AHCI and it worked.
+Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
 
-	So just a quick and last question. I read here the following:
+Index: b/drivers/ide/ide_platform.c
+===================================================================
+--- a/drivers/ide/ide_platform.c	2010-04-02 01:02:33.000000000 +0200
++++ b/drivers/ide/ide_platform.c	2010-04-08 16:04:21.000000000 +0200
+@@ -95,6 +95,7 @@
+ 	plat_ide_setup_ports(&hw, base, alt_base, pdata, res_irq->start);
+ 	hw.dev = &pdev->dev;
 
-http://forum-en.msi.com/index.php?topic=106575.120
-
-"AHCI is a native SATA Mode.  There is not necessarely a major
-performance difference between IDE/Legacy Mode and AHCI Mode".
-
-	Of course this guy is talking about Windows, but can it be
-applied to Linux too? I mean, does AHCI offers no significant
-performance improvement over SFF/Legacy mode?
-
-	Thanks.
-
--- 
++	d.irq_flags = res_irq->flags;
+ 	if (mmio)
+ 		d.host_flags |= IDE_HFLAG_MMIO;
