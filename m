@@ -1,47 +1,34 @@
-From: =?UTF-8?B?RMOibmllbA==?= Fraga <fragabr@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: ICH10 not working with AHCI kernel option
-Date: Thu, 8 Apr 2010 10:46:46 -0300
-Message-ID: <4bbdde49.e302be0a.3106.0220@mx.google.com>
+Date: Thu, 8 Apr 2010 14:59:16 +0100
+Message-ID: <20100408145916.50dbe8de@lxorguk.ukuu.org.uk>
 References: <eo2197-4lb.ln1@tux.abusar.org.br>
 	<20100408144525.2f3f5718@lxorguk.ukuu.org.uk>
+	<4bbdde49.e302be0a.3106.0220@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f193.google.com ([209.85.222.193]:53342 "EHLO
-	mail-pz0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758597Ab0DHNqw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2010 09:46:52 -0400
-Received: by pzk31 with SMTP id 31so2182056pzk.33
-        for <linux-ide@vger.kernel.org>; Thu, 08 Apr 2010 06:46:51 -0700 (PDT)
-In-Reply-To: <20100408144525.2f3f5718@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33838 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753880Ab0DHNzE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2010 09:55:04 -0400
+In-Reply-To: <4bbdde49.e302be0a.3106.0220@mx.google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: =?ISO-8859-14?B?ROJuaWVs?= Fraga <fragabr@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Thu, 8 Apr 2010 14:45:25 +0100
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> 	But the important thing here is: should it work with just the
+> AHCI kernel support? I tested it with 2 machines and it gave me the
+> same behaviour.
 
-> Hint - we are not telepathic, nor do we have a secret backlink into your
-> machine and copies of all your boot logs.
+If you have the device name right (and if you are not using labels
+remember it might change depending upon whether the pata port has disks
+or not), your controller is in AHCI mode in the BIOS and your disk is on
+the SATA cables then yes.
 
-	Yes, of course not Alan, but if you tell me what info you need,
-I'll be glad in providing it. I just thought it was a trivial issue.
+And in those cases it should always use the AHCI driver for those devices
+even if the PIIX driver is also present
 
-	Regarding the boot log, it just says the usual:
-
-ode: VFS: Cannot open root device "802" ...
-
-	But the important thing here is: should it work with just the
-AHCI kernel support? I tested it with 2 machines and it gave me the
-same behaviour.
-
-	At first, my question was more theorical than practical.
-
-	Thanks.
-
-	Ps: if you tell me that it will never work with just the AHCI
-kernel option, then there's no problem here.
-
--- 
+Alan
