@@ -1,41 +1,88 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty) (v2)
-Date: Thu, 08 Apr 2010 06:01:53 +0900
-Message-ID: <4BBCF2C1.90308@gmail.com>
-References: <4BBBB975.7000203@teksavvy.com> <4BBCC648.30807@teksavvy.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH ide-2.6#master REPOST] ide: clean up timed out request handling
+Date: Thu, 08 Apr 2010 16:52:16 +0900
+Message-ID: <4BBD8B30.6040407@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from qw-out-2122.google.com ([74.125.92.27]:54944 "EHLO
-	qw-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342Ab0DGU6d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2010 16:58:33 -0400
-Received: by qw-out-2122.google.com with SMTP id 8so535845qwh.37
-        for <linux-ide@vger.kernel.org>; Wed, 07 Apr 2010 13:58:31 -0700 (PDT)
-In-Reply-To: <4BBCC648.30807@teksavvy.com>
+Received: from hera.kernel.org ([140.211.167.34]:50412 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932228Ab0DHHs6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 8 Apr 2010 03:48:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ric Wheeler <rwheeler@redhat.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, davem@davemloft.net
+Cc: herbert@gondor.hengli.com.au
 
-On 04/08/2010 02:52 AM, Mark Lord wrote:
-> Most drives from Seagate, Hitachi, and possibly other brands,
-> do not allow LBA28 access to sector number 0x0fffffff (2^28 - 1).
-> So instead use LBA48 for such accesses.
-> 
-> This bug could bite a lot of systems, especially when the user has
-> taken care to align partitions to 4KB boundaries. On misaligned systems,
-> it is less likely to be encountered, since a 4KB read would end at
-> 0x10000000 rather than at 0x0fffffff.
-> 
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+8f6205cd572fece673da0255d74843680f67f879 introduced a bug where a
+timed out DMA request is never requeued and lost.
+6072f7491f5ef391a575e18a1165e72a3eef1601 fixed this by making
+ide_dma_timeout_retry() requeue the request itself.  While the fix is
+correct, it makes DMA and non-DMA paths asymmetric regarding how the
+in flight request is requeued.
 
-Heh, yeah, killing the cast works too.
+As long as hwif->rq is set, the IDE driver is assuming ownership of
+the request and the request should either be completed or requeued
+when clearing hwif->rq.  In the timeout path, the ide driver holds
+onto the request as long as the recovery action (ie. reset) is in
+progress and clears it after the state machine is stopped (ide_stopped
+return), so the existing requeueing logic is correct.  The bug
+occurred because ide_dma_timeout_retry() explicitly clears hwif->rq
+without requeueing it.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+ide_dma_timeout_retry() is called only by ide_timer_expiry() and
+returns ide_started only when ide_error() would return it - ie. after
+reset state machine has started in which case the state machine will
+eventually end up executing the ide_stopped path in ide_timer_expiry()
+after reset protocol is complete.  So, there is no need to clear
+hwif->rq from ide_dma_timeout_retry().  ide_timer_expiry() will handle
+it the same way as PIO timeout path.
 
-Thanks.
+Kill hwif->rq clearing and requeueing from ide_dma_timeout_retry() and
+let ide_timer_expiry() deal with it.  The end result should remain the
+same.
 
--- 
-tejun
+grepping shows ide_dma_timeout_retry() is the only site which clears
+hwif->rq without taking care of the request, so there shouldn't be
+similar fallouts.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+David, here's the repost.  Thanks.
+
+ drivers/ide/ide-dma.c |   11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+index fd40a81..963bc8b 100644
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -448,7 +448,6 @@ ide_startstop_t ide_dma_timeout_retry(ide_drive_t *drive, int error)
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	const struct ide_dma_ops *dma_ops = hwif->dma_ops;
+ 	struct ide_cmd *cmd = &hwif->cmd;
+-	struct request *rq;
+ 	ide_startstop_t ret = ide_stopped;
+
+ 	/*
+@@ -486,14 +485,10 @@ ide_startstop_t ide_dma_timeout_retry(ide_drive_t *drive, int error)
+ 	ide_dma_off_quietly(drive);
+
+ 	/*
+-	 * un-busy drive etc and make sure request is sane
++	 * make sure request is sane
+ 	 */
+-	rq = hwif->rq;
+-	if (rq) {
+-		hwif->rq = NULL;
+-		rq->errors = 0;
+-		ide_requeue_and_plug(drive, rq);
+-	}
++	if (hwif->rq)
++		hwif->rq->errors = 0;
+ 	return ret;
+ }
+
