@@ -1,107 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream] libata: use longer 0xff wait if parallel scan is
- enabled
-Date: Fri, 09 Apr 2010 19:46:38 +0900
-Message-ID: <4BBF058E.6080300@kernel.org>
+From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+Subject: Re: 2.6.33: libata issues with VIA SATA/PATA controller
+Date: Fri, 9 Apr 2010 20:44:18 +0930 (CST)
+Message-ID: <201004091114.o39BEILl018939@mercury.physics.adelaide.edu.au>
+References: <4BBEAC83.9060301@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49119 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752043Ab0DIKnX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Apr 2010 06:43:23 -0400
+Received: from adelphi.physics.adelaide.edu.au ([129.127.102.1]:49716 "EHLO
+	adelphi.physics.adelaide.edu.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751927Ab0DILOb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 07:14:31 -0400
+In-Reply-To: <4BBEAC83.9060301@garzik.org> from "Jeff Garzik" at Apr 09, 2010 12:26:43 AM
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: garyhade@us.ibm.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-There are some SATA devices which take relatively long to get out of
-0xff status after reset.  In libata, this timeout is determined by
-ATA_TMOUT_FF_WAIT.  Quantum GoVault is the worst requring about 2s for
-reliable detection.  However, because 2s 0xff timeout can introduce
-rather long spurious delay during boot, libata has been compromising
-at the next longest timeout of 800ms for HHD424020F7SV00 iVDR drive.
+Hi Jeff
 
-Now that parallel scan is in place for common drivers, libata can
-afford 2s 0xff timeout.  Use 2s 0xff timeout if parallel scan is
-enabled.
+Following up on my previous reply:
 
-Please note that the chance of spurious wait is pretty slim w/ working
-SCR access so this will only affect SATA controllers w/o SCR access
-which isn't too common these days.
+> Also, please try the latest 2.6.34-rc kernel, as that has several fixes 
+> for both pata_via and sata_via which did not make 2.6.33.
 
-Please read the following thread for more information on the GoVault
-drive.
+I was able to try this on the machine just before I left.  Unfortunately
+2.6.34-rc3 does not fix the problem - it behaves exactly like 2.6.33.  In
+terms of error messages, there is nothing more displayed beyond that which I
+reported in the initial email except for this:
 
-  http://thread.gmane.org/gmane.linux.ide/14545/focus=14663
+  SStatus 113, SControl 300
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Gary Hade <garyhade@us.ibm.com>
----
- drivers/ata/libata-core.c |   18 ++++++++++++------
- include/linux/libata.h    |   11 ++++++-----
- 2 files changed, 18 insertions(+), 11 deletions(-)
+As far as I can tell, that (plus the previously reported details) is all
+that's printed by the kernel in connection with the failure.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 49cffb6..134b5df 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3631,9 +3631,15 @@ int ata_wait_ready(struct ata_link *link, unsigned long deadline,
- 		   int (*check_ready)(struct ata_link *link))
- {
- 	unsigned long start = jiffies;
--	unsigned long nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT);
-+	unsigned long nodev_deadline;
- 	int warned = 0;
+I'll look into the alternative console methods to see if I can capture a
+full output from the failing kernel.  However, it will be at least two weeks
+before I can do this because that's the earliest I'll be physically back at
+the machine for an extended period of time (I could probably run quick tests
+sooner).
 
-+	/* choose which 0xff timeout to use, read comment in libata.h */
-+	if (link->ap->host->flags & ATA_HOST_PARALLEL_SCAN)
-+		nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT_LONG);
-+	else
-+		nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT);
-+
- 	/* Slave readiness can't be tested separately from master.  On
- 	 * M/S emulation configuration, this function should be called
- 	 * only on the master and it will handle both master and slave.
-@@ -3651,12 +3657,12 @@ int ata_wait_ready(struct ata_link *link, unsigned long deadline,
- 		if (ready > 0)
- 			return 0;
-
--		/* -ENODEV could be transient.  Ignore -ENODEV if link
-+		/*
-+		 * -ENODEV could be transient.  Ignore -ENODEV if link
- 		 * is online.  Also, some SATA devices take a long
--		 * time to clear 0xff after reset.  For example,
--		 * HHD424020F7SV00 iVDR needs >= 800ms while Quantum
--		 * GoVault needs even more than that.  Wait for
--		 * ATA_TMOUT_FF_WAIT on -ENODEV if link isn't offline.
-+		 * time to clear 0xff after reset.  Wait for
-+		 * ATA_TMOUT_FF_WAIT[_LONG] on -ENODEV if link isn't
-+		 * offline.
- 		 *
- 		 * Note that some PATA controllers (pata_ali) explode
- 		 * if status register is read more than once when
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b2f2003..06b689b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -256,12 +256,13 @@ enum {
- 	ATA_TMOUT_INTERNAL_QUICK = 5000,
- 	ATA_TMOUT_MAX_PARK	= 30000,
-
--	/* FIXME: GoVault needs 2s but we can't afford that without
--	 * parallel probing.  800ms is enough for iVDR disk
--	 * HHD424020F7SV00.  Increase to 2secs when parallel probing
--	 * is in place.
-+	/*
-+	 * GoVault needs 2s and iVDR disk HHD424020F7SV00 800ms.  2s
-+	 * is too much without parallel probing.  Use 2s if parallel
-+	 * probing is available, 800ms otherwise.
- 	 */
--	ATA_TMOUT_FF_WAIT	=  800,
-+	ATA_TMOUT_FF_WAIT_LONG	=  2000,
-+	ATA_TMOUT_FF_WAIT	=   800,
-
- 	/* Spec mandates to wait for ">= 2ms" before checking status
- 	 * after reset.  We wait 150ms, because that was the magic
+Regards
+  jonathan
