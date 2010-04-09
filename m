@@ -1,60 +1,109 @@
-From: =?UTF-8?B?RMOibmllbA==?= Fraga <fragabr@gmail.com>
-Subject: Re: ICH10 not working with AHCI kernel option
-Date: Fri, 9 Apr 2010 00:16:31 -0300
-Message-ID: <4bbe9c12.1502be0a.0f89.1047@mx.google.com>
-References: <eo2197-4lb.ln1@tux.abusar.org.br>
-	<4bbdde49.e302be0a.3106.0220@mx.google.com>
-	<20100408145916.50dbe8de@lxorguk.ukuu.org.uk>
-	<4bbde1ea.c701be0a.60ec.0270@mx.google.com>
-	<20100408150920.5689564b@lxorguk.ukuu.org.uk>
-	<4bbde4f7.1702be0a.5f6c.028e@mx.google.com>
-	<4BBE6CA6.1010808@gmail.com>
-	<4bbe8a6a.8602be0a.7951.0fb8@mx.google.com>
-	<n2x51f3faa71004081909la494824ds60fcb5d26b53027a@mail.gmail.com>
-	<4bbe8f84.1502be0a.0f89.0f16@mx.google.com>
-	<o2i51f3faa71004081952s68d4861w28b9b73da284c91d@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: 2.6.33: libata issues with VIA SATA/PATA controller
+Date: Fri, 09 Apr 2010 00:26:43 -0400
+Message-ID: <4BBEAC83.9060301@garzik.org>
+References: <201004090043.o390hSjL014351@turbo.physics.adelaide.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.211.194]:52448 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753279Ab0DIDl1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Apr 2010 23:41:27 -0400
-Received: by ywh32 with SMTP id 32so251863ywh.33
-        for <linux-ide@vger.kernel.org>; Thu, 08 Apr 2010 20:41:26 -0700 (PDT)
-In-Reply-To: <o2i51f3faa71004081952s68d4861w28b9b73da284c91d@mail.gmail.com>
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:57665 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab0DIE0q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 00:26:46 -0400
+In-Reply-To: <201004090043.o390hSjL014351@turbo.physics.adelaide.edu.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Thu, 8 Apr 2010 20:52:34 -0600
-Robert Hancock <hancockrwd@gmail.com> wrote:
+On 04/08/2010 08:43 PM, Jonathan Woithe wrote:
+> Hi
+>
+> I have a machine equipped with the following SATA/PATA controllers:
+>
+>   * 00:0f.1 IDE interface: VIA Technologies, Inc. VT82C586A/B/VT82C686/A/B/
+>     VT823x/A/C PIPC Bus Master IDE (rev 06)
+>
+>   * 00:0f.0 RAID bus controller: VIA Technologies, Inc. VIA VT6420 SATA RAID
+>     Controller (rev 80)
+>
+> Two hard drives are attached to the SATA controller (messages from 2.6.24.2):
+>
+>    scsi 0:0:0:0: Direct-Access     ATA      WDC WD2502ABYS-0 02.0 PQ: 0 ANSI: 5
+>    scsi 1:0:0:0: Direct-Access     ATA      WDC WD2502ABYS-0 02.0 PQ: 0 ANSI: 5
+>
+> Both drives are jumpered to force 1.5 Gbps SATA speed.  This is needed
+> because these WD drives won't automatically fall back to 1.5 Gbps if 3.0
+> Gbps isn't requested, and the VIA controller in use is only capable of
+> 1.5 Gbps.
+>
+> The PATA interface has a tape drive attached as primary master and a CD
+> writer attached as secondary master.  Under 2.6.24.2 these show up as
+>
+>    hda: SONY SDX-260V, ATAPI TAPE drive
+>    hdc: ATAPI 40X CD-ROM CD-R/RW drive, 2048kB Cache
+>
+> The problem I have is that I am unable to boot 2.6.33 (or 2.6.33.2).  The
+> interfaces are probed but it seems the system has trouble communicating
+> reliably over the SATA links.  Sometimes both drives are identified
+> correctly, only to encounter I/O errors when the partition table is read.
+> Other times failures occur during the drive detection phase.  The problem
+> persists even when both PATA devices have been unplugged, so the PATA
+> devices themselves are not the cause.  In all cases the end result is the
+> same: the rootfs can't be found, the kernel panics.
+>
+> The 2.6.33.2 I have tried to boot today is configured to use libata VIA PATA
+> support.  The 2.6.24.2 kernel (which mostly works, except for some issues
+> with ide-tape which might be hardware related) instead uses the old ide
+> driver for the PATA interface.  I have not yet been able to test whether
+> disabling the VIA PATA component of libata works around the problem.  The
+> reason for enabling libata VIA PATA support is due to ongoing issues with
+> ide-tape in recent kernels (I've tried from 2.6.29 on).  The suggestion was
+> made to try libata since its tape driver was in better shape.
+>
+> Unfortunately the machine in question is a production machine and I have
+> limited opportunities to reboot and test kernels.  I also didn't have a
+> camera handy to take screen shots this morning during testing.  The
+> following are messages I noted by hand before they were scrolled away by the
+> panic.
+>
+>    ata1: lost interrupt status 0x50
+>    unhandled error code
+>    Result: hostbyte=0x00, driverbyte=0x06
+>    CDB: cdb[0] = 0x28 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x08 0x00
+>    end request: I/O error, dev sda, sector 0
+>
+> The same was repeated for ata2 / sdb.
+>
+> Another group of messages which crops up during drive detection is:
+>
+>    qc timeout cmd 0x27
+>    failed to read native max address (error mask 0x4)
+>    HPA suport seems broken, skipping HPA handling
+>
+> I would like to try to get to the bottom of what's happening here.  This
+> problem does not occur in 2.6.24.2 (using the VIA ide PATA driver).  Both
+> 2.6.33 and 2.6.33.2 (with the VIA libata PATA driver) suffer from the
+> problem.  If there are further tests I can do please let me know and I'll do
+> my best to schedule them (given that the machine in question is a production
+> system).  Also ask if you require more information about the machine.
+>
+> Finally, there's a complete dmsg output I get from 2.6.24.2 at the end of
+> this email in case it contains additional useful information on the hardware
+> configuration of this system.  Please CC me any replies to ensure I see them
+> (I monitor lkml via web gateways, so it's easy to miss followups at times).
 
-> We can detect an AHCI-capable Intel chipsets (in most cases anyway),
-> but problem is that a lot of systems with such chipsets, especially
-> laptops, unfortunately have no way to actually put the controller into
-> AHCI mode (no BIOS option for it). We could whine about it, but in a
-> lot of cases there's not much that can be done about it..
-> 
-> Intel chipsets are pretty much the only ones that have the separate
-> modes in the BIOS for AHCI - others like NVIDIA AHCI-compliant
-> controllers support both legacy mode and AHCI in the same device,
-> which is a lot more convenient in some ways..
+(adding linux-ide to CC)
 
-	Yes, I agree completely!
+A complete dmesg is definitely useful.  Posting one from the failing 
+kernel would be preferred, though.  That will show us libata boot 
+messages as well as the failures you are seeing, in full detail.
 
-	It's absurd that in plain XXI century, hardware makers still
-default to legacy mode without a chance for the user to change that in
-BIOS.
+Also, please try the latest 2.6.34-rc kernel, as that has several fixes 
+for both pata_via and sata_via which did not make 2.6.33.
 
-	I understand that Linus Torvalds complained about EFI some time
-ago (http://kerneltrap.org/node/6884), citing it as "other Intel
-brain-damage" but at least EFI would give a chance for the user to
-interact better with the system than the limited, ugly and old "BIOS".
+	Jeff
 
-	When every motherboard maker adopt EFI, I hope this limitation
-will go away. I can't understand why new Core i7 systems still use BIOS
-instead of EFI.
 
--- 
+
