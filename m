@@ -1,41 +1,107 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: ICH10 not working with AHCI kernel option
-Date: Fri, 09 Apr 2010 11:12:49 +0100
-Message-ID: <4BBEFDA1.5050607@buttersideup.com>
-References: <eo2197-4lb.ln1@tux.abusar.org.br>	 <4bbdde49.e302be0a.3106.0220@mx.google.com>	 <20100408145916.50dbe8de@lxorguk.ukuu.org.uk>	 <4bbde1ea.c701be0a.60ec.0270@mx.google.com>	 <20100408150920.5689564b@lxorguk.ukuu.org.uk>	 <4bbde4f7.1702be0a.5f6c.028e@mx.google.com>	 <4BBE6CA6.1010808@gmail.com>	 <4bbe8a6a.8602be0a.7951.0fb8@mx.google.com>	 <n2x51f3faa71004081909la494824ds60fcb5d26b53027a@mail.gmail.com>	 <4bbe8f84.1502be0a.0f89.0f16@mx.google.com> <o2i51f3faa71004081952s68d4861w28b9b73da284c91d@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] libata: use longer 0xff wait if parallel scan is
+ enabled
+Date: Fri, 09 Apr 2010 19:46:38 +0900
+Message-ID: <4BBF058E.6080300@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:39596 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757504Ab0DIKM4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 06:12:56 -0400
-In-Reply-To: <o2i51f3faa71004081952s68d4861w28b9b73da284c91d@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:49119 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752043Ab0DIKnX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Apr 2010 06:43:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: garyhade@us.ibm.com
 
-Robert Hancock wrote:
-> We can detect an AHCI-capable Intel chipsets (in most cases anyway),
-> but problem is that a lot of systems with such chipsets, especially
-> laptops, unfortunately have no way to actually put the controller into
-> AHCI mode (no BIOS option for it). We could whine about it, but in a
-> lot of cases there's not much that can be done about it..
->   
+There are some SATA devices which take relatively long to get out of
+0xff status after reset.  In libata, this timeout is determined by
+ATA_TMOUT_FF_WAIT.  Quantum GoVault is the worst requring about 2s for
+reliable detection.  However, because 2s 0xff timeout can introduce
+rather long spurious delay during boot, libata has been compromising
+at the next longest timeout of 800ms for HHD424020F7SV00 iVDR drive.
 
-I have a couple of machines with those BIOSes, and apart from the fact
-that the Intel ICH datasheets say something like "none but the saintly
-BIOS writers shall program this register", it does seem to be possible
-to put an ICH9R into AHCI mode using setpci and the fake hot plug driver...
+Now that parallel scan is in place for common drivers, libata can
+afford 2s 0xff timeout.  Use 2s 0xff timeout if parallel scan is
+enabled.
 
-I just wondered what the potential pitfalls might be of doing this? 
-Obviously you wouldn't want to be doing anything with the controller at
-the time that you change it's mode.  Is there also the risk of the
-bloody bios fiddling with the device after the OS has booted (and then
-getting surprised about it no longer being in piix mode)?
+Please note that the chance of spurious wait is pretty slim w/ working
+SCR access so this will only affect SATA controllers w/o SCR access
+which isn't too common these days.
 
-Cheers,
+Please read the following thread for more information on the GoVault
+drive.
 
-Tim.
+  http://thread.gmane.org/gmane.linux.ide/14545/focus=14663
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Gary Hade <garyhade@us.ibm.com>
+---
+ drivers/ata/libata-core.c |   18 ++++++++++++------
+ include/linux/libata.h    |   11 ++++++-----
+ 2 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 49cffb6..134b5df 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3631,9 +3631,15 @@ int ata_wait_ready(struct ata_link *link, unsigned long deadline,
+ 		   int (*check_ready)(struct ata_link *link))
+ {
+ 	unsigned long start = jiffies;
+-	unsigned long nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT);
++	unsigned long nodev_deadline;
+ 	int warned = 0;
+
++	/* choose which 0xff timeout to use, read comment in libata.h */
++	if (link->ap->host->flags & ATA_HOST_PARALLEL_SCAN)
++		nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT_LONG);
++	else
++		nodev_deadline = ata_deadline(start, ATA_TMOUT_FF_WAIT);
++
+ 	/* Slave readiness can't be tested separately from master.  On
+ 	 * M/S emulation configuration, this function should be called
+ 	 * only on the master and it will handle both master and slave.
+@@ -3651,12 +3657,12 @@ int ata_wait_ready(struct ata_link *link, unsigned long deadline,
+ 		if (ready > 0)
+ 			return 0;
+
+-		/* -ENODEV could be transient.  Ignore -ENODEV if link
++		/*
++		 * -ENODEV could be transient.  Ignore -ENODEV if link
+ 		 * is online.  Also, some SATA devices take a long
+-		 * time to clear 0xff after reset.  For example,
+-		 * HHD424020F7SV00 iVDR needs >= 800ms while Quantum
+-		 * GoVault needs even more than that.  Wait for
+-		 * ATA_TMOUT_FF_WAIT on -ENODEV if link isn't offline.
++		 * time to clear 0xff after reset.  Wait for
++		 * ATA_TMOUT_FF_WAIT[_LONG] on -ENODEV if link isn't
++		 * offline.
+ 		 *
+ 		 * Note that some PATA controllers (pata_ali) explode
+ 		 * if status register is read more than once when
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b2f2003..06b689b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -256,12 +256,13 @@ enum {
+ 	ATA_TMOUT_INTERNAL_QUICK = 5000,
+ 	ATA_TMOUT_MAX_PARK	= 30000,
+
+-	/* FIXME: GoVault needs 2s but we can't afford that without
+-	 * parallel probing.  800ms is enough for iVDR disk
+-	 * HHD424020F7SV00.  Increase to 2secs when parallel probing
+-	 * is in place.
++	/*
++	 * GoVault needs 2s and iVDR disk HHD424020F7SV00 800ms.  2s
++	 * is too much without parallel probing.  Use 2s if parallel
++	 * probing is available, 800ms otherwise.
+ 	 */
+-	ATA_TMOUT_FF_WAIT	=  800,
++	ATA_TMOUT_FF_WAIT_LONG	=  2000,
++	ATA_TMOUT_FF_WAIT	=   800,
+
+ 	/* Spec mandates to wait for ">= 2ms" before checking status
+ 	 * after reset.  We wait 150ms, because that was the magic
