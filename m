@@ -1,44 +1,32 @@
-From: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: 2.6.33: libata issues with VIA SATA/PATA controller
-Date: Fri, 9 Apr 2010 20:44:18 +0930 (CST)
-Message-ID: <201004091114.o39BEILl018939@mercury.physics.adelaide.edu.au>
-References: <4BBEAC83.9060301@garzik.org>
+Date: Fri, 09 Apr 2010 07:29:23 -0400
+Message-ID: <4BBF0F93.2010601@garzik.org>
+References: <201004091114.o39BEILl018939@mercury.physics.adelaide.edu.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adelphi.physics.adelaide.edu.au ([129.127.102.1]:49716 "EHLO
-	adelphi.physics.adelaide.edu.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751927Ab0DILOb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 07:14:31 -0400
-In-Reply-To: <4BBEAC83.9060301@garzik.org> from "Jeff Garzik" at Apr 09, 2010 12:26:43 AM
+Received: from mail-qy0-f179.google.com ([209.85.221.179]:39993 "EHLO
+	mail-qy0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292Ab0DIL30 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 07:29:26 -0400
+In-Reply-To: <201004091114.o39BEILl018939@mercury.physics.adelaide.edu.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Jonathan Woithe <jwoithe@physics.adelaide.edu.au>
+Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hi Jeff
+On 04/09/2010 07:14 AM, Jonathan Woithe wrote:
+> I'll look into the alternative console methods to see if I can capture a
+> full output from the failing kernel.  However, it will be at least two weeks
+> before I can do this because that's the earliest I'll be physically back at
+> the machine for an extended period of time (I could probably run quick tests
+> sooner).
 
-Following up on my previous reply:
 
-> Also, please try the latest 2.6.34-rc kernel, as that has several fixes 
-> for both pata_via and sata_via which did not make 2.6.33.
+We won't be able to help without the full dmesg from the failing kernel...
 
-I was able to try this on the machine just before I left.  Unfortunately
-2.6.34-rc3 does not fix the problem - it behaves exactly like 2.6.33.  In
-terms of error messages, there is nothing more displayed beyond that which I
-reported in the initial email except for this:
+	Jeff
 
-  SStatus 113, SControl 300
 
-As far as I can tell, that (plus the previously reported details) is all
-that's printed by the kernel in connection with the failure.
-
-I'll look into the alternative console methods to see if I can capture a
-full output from the failing kernel.  However, it will be at least two weeks
-before I can do this because that's the earliest I'll be physically back at
-the machine for an extended period of time (I could probably run quick tests
-sooner).
-
-Regards
-  jonathan
