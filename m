@@ -1,76 +1,42 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ICH10 not working with AHCI kernel option
-Date: Fri, 9 Apr 2010 17:04:32 -0600
-Message-ID: <n2o51f3faa71004091604w91e65e58m3ed972ac10226f1a@mail.gmail.com>
-References: <eo2197-4lb.ln1@tux.abusar.org.br> <4BBE6CA6.1010808@gmail.com>
-	 <4bbe8a6a.8602be0a.7951.0fb8@mx.google.com>
-	 <n2x51f3faa71004081909la494824ds60fcb5d26b53027a@mail.gmail.com>
-	 <4bbe8f84.1502be0a.0f89.0f16@mx.google.com>
-	 <o2i51f3faa71004081952s68d4861w28b9b73da284c91d@mail.gmail.com>
-	 <4BBEFDA1.5050607@buttersideup.com>
-	 <z2x51f3faa71004090747n908c389ez17cba33301c4c998@mail.gmail.com>
-	 <20100409160707.6116965e@lxorguk.ukuu.org.uk>
-	 <4BBF57D8.6040800@buttersideup.com>
+Subject: Re: How to make kernel block layer generate bigger request in the
+ request queue?
+Date: Fri, 09 Apr 2010 17:54:38 -0600
+Message-ID: <4BBFBE3E.5070605@gmail.com>
+References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f171.google.com ([209.85.210.171]:38419 "EHLO
-	mail-yx0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750918Ab0DIXJu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Apr 2010 19:09:50 -0400
-Received: by yxe1 with SMTP id 1so1599158yxe.33
-        for <linux-ide@vger.kernel.org>; Fri, 09 Apr 2010 16:09:50 -0700 (PDT)
-In-Reply-To: <4BBF57D8.6040800@buttersideup.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@buttersideup.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, =?ISO-8859-1?Q?D=E2niel_Fraga?= <fragabr@gmail.com>, linux-ide@vger.kernel.org
 
-On Fri, Apr 9, 2010 at 10:37 AM, Tim Small <tim@buttersideup.com> wrote=
-:
-> Alan Cox wrote:
->>> Some laptop BIOSes do try to access the controller at certain point=
-s,
->>> like suspend or powerdown (presumably to make sure the drive heads =
-are
->>> unloaded or something) - we've run into problems in the past when t=
-he
->>> controller was disabled at points where the BIOS didn't expect it t=
-o
->>> be and it was trying to poke at it, causing a big delay until it
->>> finally gave up.
->>>
->>
->>
->> Suspend/powerdown are less of a problem because any patch to put it =
-into
->> AHCI mode should put it back as it was before during suspend/powerof=
-f.
->>
+On 04/09/2010 08:07 AM, Gao, Yunpeng wrote:
+> Hi,
 >
-> Using DECLARE_PCI_FIXUP_SUSPEND etc? =A0I'll see if I can get some ti=
-me to
-> have a go at this. =A0The hardware I have access to without AHCI BIOS
-> options are Dell Poweredge R200s and R300s.
-
-Yeah, you'll really want to enable AHCI mode in the header stage on
-boot and on resume, and disable it on suspend and shutdown (not sure
-if we actually have a hook for the shutdown case?)
-
+> I'm working on a block device driver (NAND flash driver with FTL layer) on 2.6.31 Kernel. And try to improve sequential read/write performance of the block driver.
 >
-> As far as I can workout, from my experiments using setpci+fakehp two =
-of
-> the port IO regions get coalesced, and an additional memory IO BAR ge=
-ts
-> set up on the ICH9R when in AHCI mode, so I'll have to try and work o=
-ut
-> how to handle this properly in the quirk.
+> When I debug the driver, I found that the sector numbers of every r/w request in the request queue is always not bigger than 8. That means, for every r/w request, it only handle 512 * 8 = 4KB bytes at most. And I think the sequential r/w speed can be improved if the Linux block layer generates bigger size data (for example, 64KB) for every request in the request queue.
 >
-> As Robert said, the "off-by-default + if it breaks, you get to keep b=
-oth
-> pieces" policy is what I had in mind, and I think this should go into
-> arch/x86/pci/fixup.c ? =A0Any obvious pit-falls to avoid?
+> To implement this, I have added some code as below (My hardware doesn't support scatter/gather, but can do 512KB DMA data transfer):
+> 	...
+> 	blk_queue_max_sectors(dev->queue, 1024);
+> 	blk_queue_max_phys_segments(dev->queue, 128);
+> 	blk_queue_max_hw_segments(dev->queue, 1);
+> 	blk_queue_max_segment_size(dev->queue, 524288);
+> 	...
+> And also set NOOP as the default IO Scheduler (because the underlying 'block' device is NAND flash, not a real hard disk).
+>
+> But seems it doesn't work. The block layer still generate at most 8 sector r/w request in request queue even if I read/write 1GB data from/to the device with dd command.
+>
+> Did I miss something to make the block layer generate bigger size data for every request in the request queue?
+> Below is part of my source code. Any comments are highly appreciated. Thank you in advance.
 
-We seem to have most related quirks for this in drivers/pci/quirks.c,
-but I guess it could go into either..
+8 sectors is 4KB, that's the size of a page. If the pages that are being 
+written are not physically contiguous that may be the best the block 
+layer can do with the constraints you've given it (not supporting any 
+more than 1 DMA segment). I don't think it will try to copy pages around 
+in order to try and generate a bigger request.
