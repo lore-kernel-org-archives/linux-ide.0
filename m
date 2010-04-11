@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
  NULL pointer dereference at 00000024(?)
-Date: Sun, 11 Apr 2010 09:51:22 GMT
-Message-ID: <201004110951.o3B9pM3X017674@demeter.kernel.org>
+Date: Sun, 11 Apr 2010 11:09:51 GMT
+Message-ID: <201004111109.o3BB9pff021216@demeter.kernel.org>
 References: <bug-14994-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:42161 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:57184 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751303Ab0DKJvY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Apr 2010 05:51:24 -0400
+	with ESMTP id S1751801Ab0DKLJy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Apr 2010 07:09:54 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3B9pMIq017691
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3BB9q11021218
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sun, 11 Apr 2010 09:51:22 GMT
+	for <linux-ide@vger.kernel.org>; Sun, 11 Apr 2010 11:09:52 GMT
 In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,77 +23,58 @@ To: linux-ide@vger.kernel.org
 https://bugzilla.kernel.org/show_bug.cgi?id=14994
 
 
-Marc H. Thoben <kernelbug@develz.org> changed:
+Borislav Petkov <bbpetkov@yahoo.de> changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-                 CC|                            |kernelbug@develz.org
+                 CC|                            |bbpetkov@yahoo.de
 
 
 
 
---- Comment #3 from Marc H. Thoben <kernelbug@develz.org>  2010-04-11 09:51:05 ---
-I'm having the same kernel panics. i5 750, P55A-UD4, 4 sata harddisks, 1 ide
-cdrom. Running Debian's latest 2.6.32 kernel from sid/unstable.
+--- Comment #4 from Borislav Petkov <bbpetkov@yahoo.de>  2010-04-11 11:09:38 ---
+Hi,
 
-Like Dario I've been using netconsole to see this:
+can you send me the whole dmesg with the oops, also your kernel config.
+Also, you could try reproducing the bug after having enabled ide-cd
+debugging. For that, you'll need to apply the following patchlet and
+rebuild your kernel:
 
-Kernel panic - not syncing: Fatal exception in interrupt
-...
-# BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
-# IP: [<ffffffffa0afe288>] ide_complete_rq+0x10/0x3b [ide_core]
-...
-Call Trace of the kernel oops:
- <IRQ>
- [<ffffffffa0e2fe01>] ? cdrom_newpc_intr+0x6f9/0x72a [ide_cd_mod]
- [<ffffffffa0e2f708>] ? cdrom_newpc_intr+0x0/0x72a [ide_cd_mod]
- [<ffffffffa0afdedd>] ? ide_intr+0x170/0x1ff [ide_core]
- [<ffffffff81093c50>] ? handle_IRQ_event+0x58/0x126
- [<ffffffff810170cd>] ? read_tsc+0xa/0x20
- [<ffffffff81095536>] ? handle_fasteoi_irq+0x7d/0xb5
- [<ffffffff81013957>] ? handle_irq+0x17/0x1d
- [<ffffffff81012fb1>] ? do_IRQ+0x57/0xb6
- [<ffffffff810114d3>] ? ret_from_intr+0x0/0x11
- <EOI>
- [<ffffffff8102b5ac>] ? hpet_msi_next_event+0x0/0x8
- [<ffffffffa00e14ff>] ? acpi_idle_enter_bm+0x273/0x2a5 [processor]
- [<ffffffffa00e14f8>] ? acpi_idle_enter_bm+0x26c/0x2a5 [processor]
- [<ffffffff81231ae3>] ? cpuidle_idle_call+0x95/0xee
- [<ffffffff8100fea5>] ? cpu_idle+0xa2/0xda
 
-Call Trace of the kernel panic:
- <IRQ>
- [<ffffffff812f19e9>] ? panic+0x86/0x141
- [<ffffffff81068078>] ? up+0xe/0x36
- [<ffffffff8104e215>] ? release_console_sem+0x17e/0x1af
- [<ffffffff81014a7a>] ? oops_end+0xa7/0xb4
- [<ffffffff810322b8>] ? no_context+0x1e9/0x1f8
- [<ffffffff8103246d>] ? __bad_area_nosemaphore+0x1a6/0x1ca
- [<ffffffff8103fa5c>] ? __wake_up+0x30/0x44
- [<ffffffff811ef53c>] ? credit_entropy_bits+0x7b/0x97
- [<ffffffff812f3c35>] ? page_fault+0x25/0x30
- [<ffffffffa0afe288>] ? ide_complete_rq+0x10/0x3b [ide_core]
- [<ffffffffa0afe2a2>] ? ide_complete_rq+0x2a/0x3b [ide_core]
- [<ffffffffa0e2fe01>] ? cdrom_newpc_intr+0x6f9/0x72a [ide_cd_mod]
- [<ffffffffa0e2f708>] ? cdrom_newpc_intr+0x0/0x72a [ide_cd_mod]
- [<ffffffffa0afdedd>] ? ide_intr+0x170/0x1ff [ide_core]
- [<ffffffff81093c50>] ? handle_IRQ_event+0x58/0x126
- [<ffffffff810170cd>] ? read_tsc+0xa/0x20
- [<ffffffff81095536>] ? handle_fasteoi_irq+0x7d/0xb5
- [<ffffffff81013957>] ? handle_irq+0x17/0x1d
- [<ffffffff81012fb1>] ? do_IRQ+0x57/0xb6
- [<ffffffff810114d3>] ? ret_from_intr+0x0/0x11
- <EOI>
- [<ffffffff8102b5ac>] ? hpet_msi_next_event+0x0/0x8
- [<ffffffffa00e14ff>] ? acpi_idle_enter_bm+0x273/0x2a5 [processor]
- [<ffffffffa00e14f8>] ? acpi_idle_enter_bm+0x26c/0x2a5 [processor]
- [<ffffffff81231ae3>] ? cpuidle_idle_call+0x95/0xee
- [<ffffffff8100fea5>] ? cpu_idle+0xa2/0xda
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 64207df..4713094 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1707,6 +1707,8 @@ static int ide_cd_probe(ide_drive_t *drive)
+     struct gendisk *g;
+     struct request_sense sense;
 
-As a workaround I have blacklisted ide-cd_mod from loading.
++    drive->debug_mask = 0xffffffff;
++
+     ide_debug_log(IDE_DBG_PROBE, "driver_req: %s, media: 0x%x",
+                      drive->driver_req, drive->media);
 
-Please let me know if I can help by providing more data. I'd really like to get
-this cdrom going again :)
+@@ -1716,7 +1718,6 @@ static int ide_cd_probe(ide_drive_t *drive)
+     if (drive->media != ide_cdrom && drive->media != ide_optical)
+         goto failed;
+
+-    drive->debug_mask = debug_mask;
+     drive->irq_handler = cdrom_newpc_intr;
+
+     info = kzalloc(sizeof(struct cdrom_info), GFP_KERNEL);
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 93a3cf1..613542a 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -8,7 +8,7 @@
+ #include <linux/cdrom.h>
+ #include <asm/byteorder.h>
+
+-#define IDECD_DEBUG_LOG        0
++#define IDECD_DEBUG_LOG        1
+
+ #if IDECD_DEBUG_LOG
+ #define ide_debug_log(lvl, fmt, args...) __ide_debug_log(lvl, fmt, ## args)
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
