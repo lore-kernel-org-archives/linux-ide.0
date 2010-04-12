@@ -1,49 +1,52 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
- NULL pointer dereference at 00000024(?)
-Date: Mon, 12 Apr 2010 19:06:44 GMT
-Message-ID: <201004121906.o3CJ6ibx030293@demeter.kernel.org>
-References: <bug-14994-11633@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: How to make kernel block layer generate bigger request in the
+ request queue?
+Date: Mon, 12 Apr 2010 14:58:29 -0500
+Message-ID: <1271102309.4428.85.camel@mulgrave.site>
+References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
+	 <4BBFBE3E.5070605@gmail.com> <yq1y6gwt62p.fsf@sermon.lab.mkp.net>
+	 <1270911503.2806.194.camel@mulgrave.site>
+	 <yq1d3y4msri.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:47004 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776Ab0DLTGq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 15:06:46 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3CJ6jZ5030295
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Mon, 12 Apr 2010 19:06:45 GMT
-In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <yq1d3y4msri.fsf@sermon.lab.mkp.net>
+Sender: linux-mmc-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "Gao, Yunpeng" <yunpeng.gao@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14994
+On Mon, 2010-04-12 at 14:26 -0400, Martin K. Petersen wrote:
+> >>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
+> 
+> >> Correct.  It's quite unlikely for pages to be contiguous so this is
+> >> the best we can do.
+> 
+> James> Actually, average servers do about 50% contiguous on average
+> James> since we changed the mm layer to allocate in ascending physical
+> James> page order ...  this figure is highly sensitive to mm changes
+> James> though, and can vary from release to release.
+> 
+> Interesting.  When did this happen?
+
+The initial work was done by Bill Irwin, years ago.  For a while it was
+good, but then after Mel Gorman did the page reclaim code, we became
+highly sensitive to the reclaim algorithms for this, so it's fluctuated
+a bit ever since.  Even with all this, the efficiency is highly
+dependent on the amount of free memory: once the machine starts running
+to exhaustion (excluding page cache, since that usually allocates
+correctly to begin with) the contiguity really drops.
+
+> Last time I gathered data on segment merge efficiency (1 year+ ago) I
+> found that adjacent pages were quite rare for a normal fs type workload.
+> Certainly not in the 50% ballpark.  I'll take another look when I have a
+> moment...
+
+I got 60% with an I/O bound test with about a gigabyte of free memory a
+while ago (2.6.31, I think).  Even for machines approaching memory
+starvation, 30% seems achievable.
+
+James
 
 
-
-
-
---- Comment #18 from Marc H. Thoben <kernelbug@develz.org>  2010-04-12 19:06:27 ---
-Created an attachment (id=25968)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=25968)
-dmesg, debug ide-cd_mod, untainted kernel, request sense failure
-
-Not sure this is connected.. while trying to force the kernel panic.. I
-mounted, unmounted, opened, closed.. ran some applications and suddenly got
-this (without CD in drive):
-
-hda: request sense failure: status=0xc0 { Busy }
-hda: status error: status=0x58 { DriveReady SeekComplete DataRequest }
-hda: possibly failed opcode: 0xa0
-hda: drive not ready for command
-
-There's a call trace following. I rebooted, since the ide-cd module no longer
-logged anything.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
