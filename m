@@ -1,48 +1,39 @@
-From: Karel Zak <kzak@redhat.com>
-Subject: Re: 4k sector size and WD20EARS
-Date: Mon, 12 Apr 2010 14:34:14 +0200
-Message-ID: <20100412123414.GK7858@nb.net.home>
-References: <4BBDE620.3040601@gc-web.de> <yq17hoix78i.fsf@sermon.lab.mkp.net> <4BBE0C85.2020904@gc-web.de> <yq1wrwhv0ca.fsf@sermon.lab.mkp.net>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 54/64] alim15x3: fix handling of UDMA enable bit
+Date: Mon, 12 Apr 2010 17:53:28 +0400
+Message-ID: <4BC325D8.9040607@ru.mvista.com>
+References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118172126.14623.55960.sendpatchset@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57228 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751359Ab0DLMeV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Apr 2010 08:34:21 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1wrwhv0ca.fsf@sermon.lab.mkp.net>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:44718 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750782Ab0DLNyX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 09:54:23 -0400
+In-Reply-To: <20100118172126.14623.55960.sendpatchset@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Apr 08, 2010 at 10:14:29PM -0400, Martin K. Petersen wrote:
-> >>>>> "Alexander" == Alexander Clausen <alex@gc-web.de> writes:
-> 
-> >> For unknown reasons these drive report themselves as 512-byte drives
-> >> despite using 4096-byte sectors internally.
-> 
-> Alexander> ouch.
-> 
-> Yeah, I know...
-> 
-> 
-> Alexander> $ sudo cfdisk -P s /dev/sdb FATAL ERROR: Bad primary
-> Alexander> partition 0: Partition ends in the final partial cylinder
-> 
-> Alexander> bug?
-> 
-> I'm not sure cfdisk has been kept in sync with the alignment and block
-> size changes.  Karel?
+Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] alim15x3: fix handling of UDMA enable bit
+>
+> Clear UDMA enable bit also for PIO modes.
+>   
 
- Unfortunately, sfdisk and cfdisk have no clue about alignment and 
- disks topology.
+   Sorry for late mail but I fail to understand why this was done and 
+what this patch fixes.
 
- Now only the fdisk and parted commands are ready for new disks.
+> Based on libata pata_ali host driver.
+>   
 
-    Karel
+   libata has different mode programming code where first always the PIO 
+mode and then DMA mode is set. With IDE core, the order can be 
+different, PIO mode programming shouldn't affect DMA mode bits -- and 
+does not affect it in the other drivers...
 
--- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
+MBR, Sergei
+
