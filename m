@@ -1,54 +1,68 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
- NULL pointer dereference at 00000024(?)
-Date: Sun, 11 Apr 2010 20:22:31 GMT
-Message-ID: <201004112022.o3BKMVtg021065@demeter.kernel.org>
-References: <bug-14994-11633@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Akinobu Mita <akinobu.mita@gmail.com>
+Subject: [PATCH] libata: use __ratelimit
+Date: Mon, 12 Apr 2010 21:11:41 +0900
+Message-ID: <1271074301-3812-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41390 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab0DKUWv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Apr 2010 16:22:51 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3BKMd2n021114
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sun, 11 Apr 2010 20:22:39 GMT
-In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:64254 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab0DLMPP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 08:15:15 -0400
+Received: by gwj19 with SMTP id 19so930335gwj.19
+        for <linux-ide@vger.kernel.org>; Mon, 12 Apr 2010 05:15:14 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14994
+Use __ratelimit() instead of its own private rate limit implementation.
 
+Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/libata-core.c |   19 +++----------------
+ 1 files changed, 3 insertions(+), 16 deletions(-)
 
-
-
-
---- Comment #15 from Borislav Petkov <bbpetkov@yahoo.de>  2010-04-11 20:21:56 ---
-(In reply to comment #14)
-> There is no way to reduce the amount of debugging messages, is there? The
-> server with the remote syslog only has a small /var/log partition..
-
-You could try changing /etc/syslog.conf settings like so:
-
-change:
-
-*.*;auth,authpriv.none        -/var/log/syslog
-
-to
-
-auth,authpriv.none        -/var/log/syslog
-
-and comment out all lines which have the kern.* facility:
-
-kern.*                -/var/log/kern.log
-
-(at least this is what I have here). netconsole logging should still work
-though.
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 49cffb6..1e0ce69 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -65,6 +65,7 @@
+ #include <linux/libata.h>
+ #include <asm/byteorder.h>
+ #include <linux/cdrom.h>
++#include <linux/ratelimit.h>
+ 
+ #include "libata.h"
+ 
+@@ -6700,25 +6701,11 @@ static void __exit ata_exit(void)
+ subsys_initcall(ata_init);
+ module_exit(ata_exit);
+ 
+-static unsigned long ratelimit_time;
+-static DEFINE_SPINLOCK(ata_ratelimit_lock);
++static DEFINE_RATELIMIT_STATE(ratelimit, HZ / 5, 1);
+ 
+ int ata_ratelimit(void)
+ {
+-	int rc;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&ata_ratelimit_lock, flags);
+-
+-	if (time_after(jiffies, ratelimit_time)) {
+-		rc = 1;
+-		ratelimit_time = jiffies + (HZ/5);
+-	} else
+-		rc = 0;
+-
+-	spin_unlock_irqrestore(&ata_ratelimit_lock, flags);
+-
+-	return rc;
++	return __ratelimit(&ratelimit);
+ }
+ 
+ /**
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.6.0.6
+
