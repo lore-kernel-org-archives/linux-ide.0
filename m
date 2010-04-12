@@ -1,49 +1,44 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] <linux/ide.h>: fix comment typo
-Date: Mon, 12 Apr 2010 19:43:19 +0400
-Message-ID: <201004121943.19556.sshtylyov@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
+ NULL pointer dereference at 00000024(?)
+Date: Mon, 12 Apr 2010 18:07:14 GMT
+Message-ID: <201004121807.o3CI7EHW017007@demeter.kernel.org>
+References: <bug-14994-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:48763 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752446Ab0DLPoM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 11:44:12 -0400
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:60502 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827Ab0DLSHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 14:07:16 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3CI7FYQ017008
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Mon, 12 Apr 2010 18:07:15 GMT
+In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Fix typo in the comment to the 'dma_mode' field of the 'struct ide_drive_s'
-introduced by the commit 3fccaa192b9501e79a57e02e62b6bf420d2b461e (ide: add
-drive->dma_mode field).
+https://bugzilla.kernel.org/show_bug.cgi?id=14994
 
-Whilt at it, convert spaces to a tab in the declaration of the neighbouring
-'dn' field...
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
----
-The patch is atop of ide-2.6.git tree...
 
- include/linux/ide.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Index: ide-2.6/include/linux/ide.h
-===================================================================
---- ide-2.6.orig/include/linux/ide.h
-+++ ide-2.6/include/linux/ide.h
-@@ -516,8 +516,8 @@ struct ide_drive_s {
-         u8	current_speed;	/* current transfer rate set */
- 	u8	desired_speed;	/* desired transfer rate set */
- 	u8	pio_mode;	/* for ->set_pio_mode _only_ */
--	u8	dma_mode;	/* for ->dma_pio_mode _only_ */
--        u8	dn;		/* now wide spread use */
-+	u8	dma_mode;	/* for ->set_dma_mode _only_ */
-+	u8	dn;		/* now wide spread use */
- 	u8	acoustic;	/* acoustic management */
- 	u8	media;		/* disk, cdrom, tape, floppy, ... */
- 	u8	ready_stat;	/* min status value for drive ready */
+--- Comment #16 from Marc H. Thoben <kernelbug@develz.org>  2010-04-12 18:06:59 ---
+Created an attachment (id=25967)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=25967)
+dmesg, normal ide-cd_mod, untainted kernel
+
+This is still with the non-debug ide-cd_mod module. Crash happened randomly,
+without nvidia module on harddisk, Xorg running with nouveau driver.
+
+Will run the debug module now with modified syslog.conf.
+
+Thank you!
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
