@@ -1,68 +1,48 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH] libata: use __ratelimit
-Date: Mon, 12 Apr 2010 21:11:41 +0900
-Message-ID: <1271074301-3812-1-git-send-email-akinobu.mita@gmail.com>
+From: Karel Zak <kzak@redhat.com>
+Subject: Re: 4k sector size and WD20EARS
+Date: Mon, 12 Apr 2010 14:34:14 +0200
+Message-ID: <20100412123414.GK7858@nb.net.home>
+References: <4BBDE620.3040601@gc-web.de> <yq17hoix78i.fsf@sermon.lab.mkp.net> <4BBE0C85.2020904@gc-web.de> <yq1wrwhv0ca.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:64254 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776Ab0DLMPP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 08:15:15 -0400
-Received: by gwj19 with SMTP id 19so930335gwj.19
-        for <linux-ide@vger.kernel.org>; Mon, 12 Apr 2010 05:15:14 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:57228 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751359Ab0DLMeV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Apr 2010 08:34:21 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1wrwhv0ca.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alexander Clausen <alex@gc-web.de>, linux-ide@vger.kernel.org
 
-Use __ratelimit() instead of its own private rate limit implementation.
+On Thu, Apr 08, 2010 at 10:14:29PM -0400, Martin K. Petersen wrote:
+> >>>>> "Alexander" == Alexander Clausen <alex@gc-web.de> writes:
+> 
+> >> For unknown reasons these drive report themselves as 512-byte drives
+> >> despite using 4096-byte sectors internally.
+> 
+> Alexander> ouch.
+> 
+> Yeah, I know...
+> 
+> 
+> Alexander> $ sudo cfdisk -P s /dev/sdb FATAL ERROR: Bad primary
+> Alexander> partition 0: Partition ends in the final partial cylinder
+> 
+> Alexander> bug?
+> 
+> I'm not sure cfdisk has been kept in sync with the alignment and block
+> size changes.  Karel?
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/libata-core.c |   19 +++----------------
- 1 files changed, 3 insertions(+), 16 deletions(-)
+ Unfortunately, sfdisk and cfdisk have no clue about alignment and 
+ disks topology.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 49cffb6..1e0ce69 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -65,6 +65,7 @@
- #include <linux/libata.h>
- #include <asm/byteorder.h>
- #include <linux/cdrom.h>
-+#include <linux/ratelimit.h>
- 
- #include "libata.h"
- 
-@@ -6700,25 +6701,11 @@ static void __exit ata_exit(void)
- subsys_initcall(ata_init);
- module_exit(ata_exit);
- 
--static unsigned long ratelimit_time;
--static DEFINE_SPINLOCK(ata_ratelimit_lock);
-+static DEFINE_RATELIMIT_STATE(ratelimit, HZ / 5, 1);
- 
- int ata_ratelimit(void)
- {
--	int rc;
--	unsigned long flags;
--
--	spin_lock_irqsave(&ata_ratelimit_lock, flags);
--
--	if (time_after(jiffies, ratelimit_time)) {
--		rc = 1;
--		ratelimit_time = jiffies + (HZ/5);
--	} else
--		rc = 0;
--
--	spin_unlock_irqrestore(&ata_ratelimit_lock, flags);
--
--	return rc;
-+	return __ratelimit(&ratelimit);
- }
- 
- /**
+ Now only the fdisk and parted commands are ready for new disks.
+
+    Karel
+
 -- 
-1.6.0.6
-
+ Karel Zak  <kzak@redhat.com>
+ http://karelzak.blogspot.com
