@@ -1,52 +1,60 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: How to make kernel block layer generate bigger request in the
- request queue?
-Date: Mon, 12 Apr 2010 14:58:29 -0500
-Message-ID: <1271102309.4428.85.camel@mulgrave.site>
-References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
-	 <4BBFBE3E.5070605@gmail.com> <yq1y6gwt62p.fsf@sermon.lab.mkp.net>
-	 <1270911503.2806.194.camel@mulgrave.site>
-	 <yq1d3y4msri.fsf@sermon.lab.mkp.net>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 8/10] pdc202xx_old: implement test_irq() method (take
+ 2)
+Date: Tue, 13 Apr 2010 01:07:53 +0400
+Message-ID: <4BC38BA9.3090808@ru.mvista.com>
+References: <200702140101.26639.sshtylyov@ru.mvista.com> <200906131738.16931.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <yq1d3y4msri.fsf@sermon.lab.mkp.net>
-Sender: linux-mmc-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "Gao, Yunpeng" <yunpeng.gao@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f219.google.com ([209.85.218.219]:49141 "EHLO
+	mail-bw0-f219.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab0DLVNo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Apr 2010 17:13:44 -0400
+Received: by bwz19 with SMTP id 19so2349bwz.21
+        for <linux-ide@vger.kernel.org>; Mon, 12 Apr 2010 14:13:41 -0700 (PDT)
+In-Reply-To: <200906131738.16931.sshtylyov@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bzolnier@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 2010-04-12 at 14:26 -0400, Martin K. Petersen wrote:
-> >>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
-> 
-> >> Correct.  It's quite unlikely for pages to be contiguous so this is
-> >> the best we can do.
-> 
-> James> Actually, average servers do about 50% contiguous on average
-> James> since we changed the mm layer to allocate in ascending physical
-> James> page order ...  this figure is highly sensitive to mm changes
-> James> though, and can vary from release to release.
-> 
-> Interesting.  When did this happen?
+Hello, I wrote:
 
-The initial work was done by Bill Irwin, years ago.  For a while it was
-good, but then after Mel Gorman did the page reclaim code, we became
-highly sensitive to the reclaim algorithms for this, so it's fluctuated
-a bit ever since.  Even with all this, the efficiency is highly
-dependent on the amount of free memory: once the machine starts running
-to exhaustion (excluding page cache, since that usually allocates
-correctly to begin with) the contiguity really drops.
+> Implement test_irq() method based on the driver's former dma_test_irq() method.
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>
+> ---
+> The patch is atop of ide-2.6.git 'for-next' branch.
+> Hopefully it won't break the driver -- previosly the bits have been effectively
+> ignored...
+>
+> Changes sice previos take:
+> - decided to document the register bits...
+>
+>  drivers/ide/pdc202xx_old.c |   22 ++++++++++++++++++++++
+>  1 files changed, 22 insertions(+)
+>
+> Index: ide-2.6/drivers/ide/pdc202xx_old.c
+> ===================================================================
+> --- ide-2.6.orig/drivers/ide/pdc202xx_old.c
+> +++ ide-2.6/drivers/ide/pdc202xx_old.c
+>   
+[...]
+> @@ -231,6 +252,7 @@ static void __devinit pdc202ata4_fixup_i
+>  static const struct ide_port_ops pdc20246_port_ops = {
+>  	.set_pio_mode		= pdc202xx_set_pio_mode,
+>  	.set_dma_mode		= pdc202xx_set_mode,
+> +	.test_irq		= pdc202xx_test_irq,
+>  };
+>  
+>  static const struct ide_port_ops pdc2026x_port_ops = {
+>   
 
-> Last time I gathered data on segment merge efficiency (1 year+ ago) I
-> found that adjacent pages were quite rare for a normal fs type workload.
-> Certainly not in the 50% ballpark.  I'll take another look when I have a
-> moment...
+   Ugh, I forgot to modify this structure, it seems... no wonder Russell 
+has emphasized that the bug he's fixed only concerns PDC2024x. :-)
 
-I got 60% with an I/O bound test with about a gigabyte of free memory a
-while ago (2.6.31, I think).  Even for machines approaching memory
-starvation, 30% seems achievable.
-
-James
-
+WBR, Sergei
 
