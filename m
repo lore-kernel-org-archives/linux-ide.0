@@ -1,61 +1,46 @@
-From: Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: Re: linux-ide: hda: possibly failed opcode: 0x25 on Alpha with
- 2.6.34-rc3
-Date: Tue, 13 Apr 2010 18:46:40 +0200
-Message-ID: <20100413164640.GD10612@physik.fu-berlin.de>
-References: <20100406232659.GA4788@physik.fu-berlin.de>
- <201004131734.57365.bzolnier@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
+ NULL pointer dereference at 00000024(?)
+Date: Tue, 13 Apr 2010 18:23:05 GMT
+Message-ID: <201004131823.o3DIN5t1018540@demeter.kernel.org>
+References: <bug-14994-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:38341 "EHLO
-	outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753302Ab0DMQqo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 12:46:44 -0400
-Content-Disposition: inline
-In-Reply-To: <201004131734.57365.bzolnier@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:56003 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753673Ab0DMSXF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 14:23:05 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3DIN5wm018542
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 13 Apr 2010 18:23:05 GMT
+In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
-
-thank you very much for your kind reply!
-
-On Tue, Apr 13, 2010 at 05:34:57PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday 07 April 2010 01:26:59 am Adrian Glaubitz wrote:
-> > Dear IDE maintainers,
-> 
-> I'm flattered but nowadays I'm just a maintainer of a modest
-> out-of-tree project or two.. ;-)
-
-Hehe, just trying to keep good manners in public ;).
-
-> 
-> > I recently installed Debian unstable on an old digital personal
-> > workstation 433au alpha (Miata) [1] with the default kernel 2.6.32
-> > from Debian unstable. There were no obvious problems except for the
-> > tulip network driver which produced a lot of noise [2]. Joe Perches was
-> > so kind to provide a patch to reduce the noise. I applied the patch
-> > against 2.6.34-rc3 and rebuilt the kernel with the 2.6.32 Debian
-> > config using "make oldconfig". The kernel build took around 18 hours ;).
-> > 
-> > Anyway, after rebooting the machine into the new kernel (2.6.34-rc3), the
-> > IDE driver obviously triggered a lot of errors [3] resulting in the kernel
-> > not being able to mount the root partition.
-> 
-> I think that the highest chance of bringing the right people's
-> attention to this kernel regression would be achieved by filling
-> the official bug-report at https://bugzilla.kernel.org/.
-
-Ok, I will report the problem there. Btw, the problem doesn't occur
-with 2.6.33.2 either so it definetely seems to be a regression with
-2.6.34. Unfortunately, I don't have the machine at hand anymore, so I
-won't be able to test in near future :(. Very sorry. However, I know
-someone who still has such a workstation, I will ask him to test.
+https://bugzilla.kernel.org/show_bug.cgi?id=14994
 
 
-Thanks,
 
-Adrian
+
+
+--- Comment #19 from Marc H. Thoben <kernelbug@develz.org>  2010-04-13 18:22:58 ---
+Created an attachment (id=25992)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=25992)
+dmesg, debug ide-cd_mod, untainted kernel, request sense failure 2
+
+Same as last time. Didn't touch the cdrom this time - didn't even run anything
+that could possibly try to check for an inserted medium.
+
+Borislav, is this even slightly interesting? Or rather some bug with
+hald-addon-storage?
+
+Couldn't make the kernel panic with the module being in debug mode.. about to
+give up soon.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
