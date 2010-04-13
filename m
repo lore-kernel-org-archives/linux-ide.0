@@ -1,52 +1,52 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 54/64] alim15x3: fix handling of UDMA enable bit
-Date: Tue, 13 Apr 2010 17:15:06 +0200
-Message-ID: <201004131715.06225.bzolnier@gmail.com>
-References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118172126.14623.55960.sendpatchset@localhost> <4BC325D8.9040607@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: How to make kernel block layer generate bigger request in the
+ request queue?
+Date: Tue, 13 Apr 2010 16:20:34 +0100
+Message-ID: <20100413162034.445a388b@lxorguk.ukuu.org.uk>
+References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
+	<4BBFBE3E.5070605@gmail.com>
+	<yq1y6gwt62p.fsf@sermon.lab.mkp.net>
+	<1270911503.2806.194.camel@mulgrave.site>
+	<yq1d3y4msri.fsf@sermon.lab.mkp.net>
+	<1271102309.4428.85.camel@mulgrave.site>
+	<CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.153]:10143 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983Ab0DMPQH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 11:16:07 -0400
-In-Reply-To: <4BC325D8.9040607@ru.mvista.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53175 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752706Ab0DMPQi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 11:16:38 -0400
+In-Reply-To: <CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
 
+> And I just curious why the block layer does not merge these contiguous sectors into one single request? For example, if > the block layer generate 'start_sect: 48776, nsect: 64, rw: r' instead of below requests, I think the performance will 
+> be better.
 
-Hi Sergei,
+You said earlier "My hardware doesn't support scatter/gather"
 
-On Monday 12 April 2010 03:53:28 pm Sergei Shtylyov wrote:
-> Bartlomiej Zolnierkiewicz wrote:
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] alim15x3: fix handling of UDMA enable bit
-> >
-> > Clear UDMA enable bit also for PIO modes.
-> >   
-> 
->    Sorry for late mail but I fail to understand why this was done and 
-> what this patch fixes.
-> 
-> > Based on libata pata_ali host driver.
-> 
->    libata has different mode programming code where first always the PIO 
-> mode and then DMA mode is set. With IDE core, the order can be 
-> different, PIO mode programming shouldn't affect DMA mode bits -- and 
-> does not affect it in the other drivers...
+> start_sect: 48776, nsect: 8, rw: r
+> start_sect: 48784, nsect: 8, rw: r
+> start_sect: 48792, nsect: 8, rw: r
+> start_sect: 48800, nsect: 8, rw: r
+> start_sect: 48808, nsect: 8, rw: r
+> start_sect: 48816, nsect: 8, rw: r
+> start_sect: 48824, nsect: 8, rw: r
+> start_sect: 48832, nsect: 8, rw: r
 
-This was just a tiny part of larger patchset preparing alim15x3 for
-conversion to ide2libata framework and it seems the problem is only
-affecting user-initiated transfer mode changes (which are strongly
-discouraged anyway) as both libata and IDE core use quite similar
-transfer mode programming sequence by default.
+Print the bus address of each request and you will probably find they are
+not contiguous so they have not been merged because your hardware could
+not do that transfer and you have no IOMMU.
 
-However thanks for noticing the issue, I will fix it for both drivers
-during the next update of atang tree (unless somebody sends me a patch
-sooner).
---
-Bartlomiej Zolnierkiewicz
+If the overhead per command is really really huge you can preallocate an
+internal buffer of say 32K or 64K in your driver and tell the block layer
+you do scatter gather, then copy the buffers into a linear chunk. I'd be
+very surprised if that was a win overall on any vaguely sane hardware but
+flash with erase block overhead and the like might be one of the less
+sane cases.
+
+Alan
