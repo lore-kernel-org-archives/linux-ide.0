@@ -1,52 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: How to make kernel block layer generate bigger request in the
- request queue?
-Date: Tue, 13 Apr 2010 16:20:34 +0100
-Message-ID: <20100413162034.445a388b@lxorguk.ukuu.org.uk>
-References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
-	<4BBFBE3E.5070605@gmail.com>
-	<yq1y6gwt62p.fsf@sermon.lab.mkp.net>
-	<1270911503.2806.194.camel@mulgrave.site>
-	<yq1d3y4msri.fsf@sermon.lab.mkp.net>
-	<1271102309.4428.85.camel@mulgrave.site>
-	<CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: linux-ide: hda: possibly failed opcode: 0x25 on Alpha with 2.6.34-rc3
+Date: Tue, 13 Apr 2010 17:34:57 +0200
+Message-ID: <201004131734.57365.bzolnier@gmail.com>
+References: <20100406232659.GA4788@physik.fu-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:53175 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752706Ab0DMPQi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 11:16:38 -0400
-In-Reply-To: <CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
+Received: from fg-out-1718.google.com ([72.14.220.159]:36009 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab0DMPgo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 11:36:44 -0400
+In-Reply-To: <20100406232659.GA4788@physik.fu-berlin.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+To: Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Cc: "David S. Miller" <davem@davemloft.net>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> And I just curious why the block layer does not merge these contiguous sectors into one single request? For example, if > the block layer generate 'start_sect: 48776, nsect: 64, rw: r' instead of below requests, I think the performance will 
-> be better.
+On Wednesday 07 April 2010 01:26:59 am Adrian Glaubitz wrote:
+> Dear IDE maintainers,
 
-You said earlier "My hardware doesn't support scatter/gather"
+I'm flattered but nowadays I'm just a maintainer of a modest
+out-of-tree project or two.. ;-)
 
-> start_sect: 48776, nsect: 8, rw: r
-> start_sect: 48784, nsect: 8, rw: r
-> start_sect: 48792, nsect: 8, rw: r
-> start_sect: 48800, nsect: 8, rw: r
-> start_sect: 48808, nsect: 8, rw: r
-> start_sect: 48816, nsect: 8, rw: r
-> start_sect: 48824, nsect: 8, rw: r
-> start_sect: 48832, nsect: 8, rw: r
+> I recently installed Debian unstable on an old digital personal
+> workstation 433au alpha (Miata) [1] with the default kernel 2.6.32
+> from Debian unstable. There were no obvious problems except for the
+> tulip network driver which produced a lot of noise [2]. Joe Perches was
+> so kind to provide a patch to reduce the noise. I applied the patch
+> against 2.6.34-rc3 and rebuilt the kernel with the 2.6.32 Debian
+> config using "make oldconfig". The kernel build took around 18 hours ;).
+> 
+> Anyway, after rebooting the machine into the new kernel (2.6.34-rc3), the
+> IDE driver obviously triggered a lot of errors [3] resulting in the kernel
+> not being able to mount the root partition.
 
-Print the bus address of each request and you will probably find they are
-not contiguous so they have not been merged because your hardware could
-not do that transfer and you have no IOMMU.
+I think that the highest chance of bringing the right people's
+attention to this kernel regression would be achieved by filling
+the official bug-report at https://bugzilla.kernel.org/.
 
-If the overhead per command is really really huge you can preallocate an
-internal buffer of say 32K or 64K in your driver and tell the block layer
-you do scatter gather, then copy the buffers into a linear chunk. I'd be
-very surprised if that was a win overall on any vaguely sane hardware but
-flash with erase block overhead and the like might be one of the less
-sane cases.
-
-Alan
+Thanks.
+--
+Bartlomiej Zolnierkiewicz
