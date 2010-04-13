@@ -1,75 +1,52 @@
-From: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Subject: RE: How to make kernel block layer generate bigger request in the
- request queue?
-Date: Tue, 13 Apr 2010 23:06:40 +0800
-Message-ID: <CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
-References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
-	 <4BBFBE3E.5070605@gmail.com> <yq1y6gwt62p.fsf@sermon.lab.mkp.net>
-	 <1270911503.2806.194.camel@mulgrave.site>
-	 <yq1d3y4msri.fsf@sermon.lab.mkp.net>
- <1271102309.4428.85.camel@mulgrave.site>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 54/64] alim15x3: fix handling of UDMA enable bit
+Date: Tue, 13 Apr 2010 17:15:06 +0200
+Message-ID: <201004131715.06225.bzolnier@gmail.com>
+References: <20100118171349.14623.90030.sendpatchset@localhost> <20100118172126.14623.55960.sendpatchset@localhost> <4BC325D8.9040607@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:54908 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752653Ab0DMPHN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 13 Apr 2010 11:07:13 -0400
-In-Reply-To: <1271102309.4428.85.camel@mulgrave.site>
-Content-Language: en-US
+Received: from fg-out-1718.google.com ([72.14.220.153]:10143 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983Ab0DMPQH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Apr 2010 11:16:07 -0400
+In-Reply-To: <4BC325D8.9040607@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-VGhhbmtzIGEgbG90IGZvciBhbGwgdGhlIHJlc3BvbnNlcyB0byBteSBxdWVzdGlvbi4NClRvIGJl
-IGhvbmVzdCwgSSBjYW4gbm90IGZ1bGx5IHVuZGVyc3RhbmQgd2hhdCB5b3UgYXJlIGRpc2N1c3Np
-bmcgYnV0IGp1c3QgdHJ5IHRvIHVuZGVyc3RhbmQgaXQgYmV0dGVyIC0NCkJlbG93IGlzIHBhcnQg
-b2YgdGhlIGxvZyB3aGVuIEkgZGVidWdnaW5nIG15IGRyaXZlciBjb2RlLiBJdCBvdXRwdXRzIHRo
-ZSBzdGFydCBzZWN0b3IgYW5kIHRoZSBzZWN0b3IgbnVtYmVyIG9mIGV2ZXJ5IHJlYWQvd3JpdGUg
-cmVxdWVzdCBpbiB0aGUgcmVxdWVzdCBxdWV1ZSBvZiBibG9jayBsYXllci4NCkl0IHNlZW1zIHRo
-YXQgbWFueSBvZiB0aGUgcmVxdWVzdGVkIHNlY3RvcnMgYXJlIGNvbnRpZ3VvdXMuIEFuZCBJIGp1
-c3QgY3VyaW91cyB3aHkgdGhlIGJsb2NrIGxheWVyIGRvZXMgbm90IG1lcmdlIHRoZXNlIGNvbnRp
-Z3VvdXMgc2VjdG9ycyBpbnRvIG9uZSBzaW5nbGUgcmVxdWVzdD8gRm9yIGV4YW1wbGUsIGlmIHRo
-ZSBibG9jayBsYXllciBnZW5lcmF0ZSAnc3RhcnRfc2VjdDogNDg3NzYsIG5zZWN0OiA2NCwgcnc6
-IHInIGluc3RlYWQgb2YgYmVsb3cgcmVxdWVzdHMsIEkgdGhpbmsgdGhlIHBlcmZvcm1hbmNlIHdp
-bGwgYmUgYmV0dGVyLg0KLi4uDQpzdGFydF9zZWN0OiA0ODc3NiwgbnNlY3Q6IDgsIHJ3OiByDQpz
-dGFydF9zZWN0OiA0ODc4NCwgbnNlY3Q6IDgsIHJ3OiByDQpzdGFydF9zZWN0OiA0ODc5MiwgbnNl
-Y3Q6IDgsIHJ3OiByDQpzdGFydF9zZWN0OiA0ODgwMCwgbnNlY3Q6IDgsIHJ3OiByDQpzdGFydF9z
-ZWN0OiA0ODgwOCwgbnNlY3Q6IDgsIHJ3OiByDQpzdGFydF9zZWN0OiA0ODgxNiwgbnNlY3Q6IDgs
-IHJ3OiByDQpzdGFydF9zZWN0OiA0ODgyNCwgbnNlY3Q6IDgsIHJ3OiByDQpzdGFydF9zZWN0OiA0
-ODgzMiwgbnNlY3Q6IDgsIHJ3OiByDQouLi4NCg0KVGhhbmtzLg0KDQpSZWdhcmRzLA0KWXVucGVu
-Zw0KDQo+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj5Gcm9tOiBKYW1lcyBCb3R0b21sZXkg
-W21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0NCj5TZW50OiAyMDEwxOo01MIxM8jVIDM6
-NTgNCj5UbzogTWFydGluIEsuIFBldGVyc2VuDQo+Q2M6IFJvYmVydCBIYW5jb2NrOyBHYW8sIFl1
-bnBlbmc7IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7DQo+bGludXgtbW1jQHZnZXIua2VybmVs
-Lm9yZw0KPlN1YmplY3Q6IFJlOiBIb3cgdG8gbWFrZSBrZXJuZWwgYmxvY2sgbGF5ZXIgZ2VuZXJh
-dGUgYmlnZ2VyIHJlcXVlc3QgaW4gdGhlDQo+cmVxdWVzdCBxdWV1ZT8NCj4NCj5PbiBNb24sIDIw
-MTAtMDQtMTIgYXQgMTQ6MjYgLTA0MDAsIE1hcnRpbiBLLiBQZXRlcnNlbiB3cm90ZToNCj4+ID4+
-Pj4+ICJKYW1lcyIgPT0gSmFtZXMgQm90dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZT4g
-d3JpdGVzOg0KPj4NCj4+ID4+IENvcnJlY3QuICBJdCdzIHF1aXRlIHVubGlrZWx5IGZvciBwYWdl
-cyB0byBiZSBjb250aWd1b3VzIHNvIHRoaXMgaXMNCj4+ID4+IHRoZSBiZXN0IHdlIGNhbiBkby4N
-Cj4+DQo+PiBKYW1lcz4gQWN0dWFsbHksIGF2ZXJhZ2Ugc2VydmVycyBkbyBhYm91dCA1MCUgY29u
-dGlndW91cyBvbiBhdmVyYWdlDQo+PiBKYW1lcz4gc2luY2Ugd2UgY2hhbmdlZCB0aGUgbW0gbGF5
-ZXIgdG8gYWxsb2NhdGUgaW4gYXNjZW5kaW5nIHBoeXNpY2FsDQo+PiBKYW1lcz4gcGFnZSBvcmRl
-ciAuLi4gIHRoaXMgZmlndXJlIGlzIGhpZ2hseSBzZW5zaXRpdmUgdG8gbW0gY2hhbmdlcw0KPj4g
-SmFtZXM+IHRob3VnaCwgYW5kIGNhbiB2YXJ5IGZyb20gcmVsZWFzZSB0byByZWxlYXNlLg0KPj4N
-Cj4+IEludGVyZXN0aW5nLiAgV2hlbiBkaWQgdGhpcyBoYXBwZW4/DQo+DQo+VGhlIGluaXRpYWwg
-d29yayB3YXMgZG9uZSBieSBCaWxsIElyd2luLCB5ZWFycyBhZ28uICBGb3IgYSB3aGlsZSBpdCB3
-YXMNCj5nb29kLCBidXQgdGhlbiBhZnRlciBNZWwgR29ybWFuIGRpZCB0aGUgcGFnZSByZWNsYWlt
-IGNvZGUsIHdlIGJlY2FtZQ0KPmhpZ2hseSBzZW5zaXRpdmUgdG8gdGhlIHJlY2xhaW0gYWxnb3Jp
-dGhtcyBmb3IgdGhpcywgc28gaXQncyBmbHVjdHVhdGVkDQo+YSBiaXQgZXZlciBzaW5jZS4gIEV2
-ZW4gd2l0aCBhbGwgdGhpcywgdGhlIGVmZmljaWVuY3kgaXMgaGlnaGx5DQo+ZGVwZW5kZW50IG9u
-IHRoZSBhbW91bnQgb2YgZnJlZSBtZW1vcnk6IG9uY2UgdGhlIG1hY2hpbmUgc3RhcnRzIHJ1bm5p
-bmcNCj50byBleGhhdXN0aW9uIChleGNsdWRpbmcgcGFnZSBjYWNoZSwgc2luY2UgdGhhdCB1c3Vh
-bGx5IGFsbG9jYXRlcw0KPmNvcnJlY3RseSB0byBiZWdpbiB3aXRoKSB0aGUgY29udGlndWl0eSBy
-ZWFsbHkgZHJvcHMuDQo+DQo+PiBMYXN0IHRpbWUgSSBnYXRoZXJlZCBkYXRhIG9uIHNlZ21lbnQg
-bWVyZ2UgZWZmaWNpZW5jeSAoMSB5ZWFyKyBhZ28pIEkNCj4+IGZvdW5kIHRoYXQgYWRqYWNlbnQg
-cGFnZXMgd2VyZSBxdWl0ZSByYXJlIGZvciBhIG5vcm1hbCBmcyB0eXBlIHdvcmtsb2FkLg0KPj4g
-Q2VydGFpbmx5IG5vdCBpbiB0aGUgNTAlIGJhbGxwYXJrLiAgSSdsbCB0YWtlIGFub3RoZXIgbG9v
-ayB3aGVuIEkgaGF2ZSBhDQo+PiBtb21lbnQuLi4NCj4NCj5JIGdvdCA2MCUgd2l0aCBhbiBJL08g
-Ym91bmQgdGVzdCB3aXRoIGFib3V0IGEgZ2lnYWJ5dGUgb2YgZnJlZSBtZW1vcnkgYQ0KPndoaWxl
-IGFnbyAoMi42LjMxLCBJIHRoaW5rKS4gIEV2ZW4gZm9yIG1hY2hpbmVzIGFwcHJvYWNoaW5nIG1l
-bW9yeQ0KPnN0YXJ2YXRpb24sIDMwJSBzZWVtcyBhY2hpZXZhYmxlLg0KPg0KPkphbWVzDQo+DQoN
-Cg==
+
+Hi Sergei,
+
+On Monday 12 April 2010 03:53:28 pm Sergei Shtylyov wrote:
+> Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Subject: [PATCH] alim15x3: fix handling of UDMA enable bit
+> >
+> > Clear UDMA enable bit also for PIO modes.
+> >   
+> 
+>    Sorry for late mail but I fail to understand why this was done and 
+> what this patch fixes.
+> 
+> > Based on libata pata_ali host driver.
+> 
+>    libata has different mode programming code where first always the PIO 
+> mode and then DMA mode is set. With IDE core, the order can be 
+> different, PIO mode programming shouldn't affect DMA mode bits -- and 
+> does not affect it in the other drivers...
+
+This was just a tiny part of larger patchset preparing alim15x3 for
+conversion to ide2libata framework and it seems the problem is only
+affecting user-initiated transfer mode changes (which are strongly
+discouraged anyway) as both libata and IDE core use quite similar
+transfer mode programming sequence by default.
+
+However thanks for noticing the issue, I will fix it for both drivers
+during the next update of atang tree (unless somebody sends me a patch
+sooner).
+--
+Bartlomiej Zolnierkiewicz
