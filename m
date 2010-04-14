@@ -1,54 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] pdc202xx_old: ignore "FIFO empty" bit in test_irq() method
-Date: Wed, 14 Apr 2010 19:52:59 +0400
-Message-ID: <201004141952.59445.sshtylyov@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
+ NULL pointer dereference at 00000024(?)
+Date: Wed, 14 Apr 2010 18:43:08 GMT
+Message-ID: <201004141843.o3EIh8fT032602@demeter.kernel.org>
+References: <bug-14994-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:47312 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755653Ab0DNPxt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Apr 2010 11:53:49 -0400
-Content-Disposition: inline
+Received: from demeter.kernel.org ([140.211.167.39]:46481 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756064Ab0DNSnK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Apr 2010 14:43:10 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3EIh9SW032613
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 14 Apr 2010 18:43:09 GMT
+In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net, linux-ide@vger.kernel.org
-Cc: rmk@arm.linux.org.uk
+To: linux-ide@vger.kernel.org
 
-The driver takes into account not only the interrupt status bit but also "FIFO
-empty" bit in its test_irq() method. This actually is a superfluous check since
-for the DMA commands calling the dma_test_irq() method further in the interrupt
-handler makes sure FIFO is emptied.
+https://bugzilla.kernel.org/show_bug.cgi?id=14994
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
----
-The patch is atop of ide-2.6.git tree...
 
-Russell, would you mind giving this patch a test?
 
- drivers/ide/pdc202xx_old.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Index: ide-2.6/drivers/ide/pdc202xx_old.c
-===================================================================
---- ide-2.6.orig/drivers/ide/pdc202xx_old.c
-+++ ide-2.6/drivers/ide/pdc202xx_old.c
-@@ -93,13 +93,13 @@ static int pdc202xx_test_irq(ide_hwif_t 
- 		 * bit 7: error, bit 6: interrupting,
- 		 * bit 5: FIFO full, bit 4: FIFO empty
- 		 */
--		return ((sc1d & 0x50) == 0x50) ? 1 : 0;
-+		return (sc1d & 0x40) ? 1 : 0;
- 	} else	{
- 		/*
- 		 * bit 3: error, bit 2: interrupting,
- 		 * bit 1: FIFO full, bit 0: FIFO empty
- 		 */
--		return ((sc1d & 0x05) == 0x05) ? 1 : 0;
-+		return (sc1d & 0x04) ? 1 : 0;
- 	}
- }
- 
+--- Comment #21 from Marc H. Thoben <kernelbug@develz.org>  2010-04-14 18:42:53 ---
+Created an attachment (id=26001)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=26001)
+dmesg, normal ide-cd_mod, tainted kernel 2.6.34-rc4
+
+Pity I couldn't get Nouveau working with 2.6.34-rc4 without recompiling X/Mesa
+- which I am not able to.
+
+So I ran Nvidia again - but it's the same kernel panic, I believe.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
