@@ -1,102 +1,155 @@
 From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH] 2.6.34-rc3 Disable R_OK (Early ACK) on SII 3726/4726 PMP
-Date: Wed, 14 Apr 2010 17:57:04 -0700
-Message-ID: <i2qda824cf31004141757m8eb09beek86a41470bcdc9262@mail.gmail.com>
-References: <m2gda824cf31004131746o15be77b1n7af6fac42ce25280@mail.gmail.com>
-	 <4BC65E7C.5080203@kernel.org>
+Subject: [PATCH] 2.6.34-rc3 v2 Disable R_OK (Early ACK) on SII 3726 PMP
+Date: Wed, 14 Apr 2010 18:43:32 -0700
+Message-ID: <g2ida824cf31004141843p41f7b21fz25927e3c6faeeed7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed; boundary=0016e640d17482202504843c9f45
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:57828 "EHLO
+Received: from smtp-out.google.com ([74.125.121.35]:1499 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753410Ab0DOA5J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Apr 2010 20:57:09 -0400
-In-Reply-To: <4BC65E7C.5080203@kernel.org>
+	with ESMTP id S1755820Ab0DOBnj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Apr 2010 21:43:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, LKML <linux-kernel@vger.kernel.org>
+To: Linux IDE mailing list <linux-ide@vger.kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Apr 14, 2010 at 5:31 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On 04/14/2010 09:46 AM, Grant Grundler wrote:
->> In 2009, While running "cache read" performance test of drives behin=
-d
->> SII PMP we encountered a "all 5 drives" timeout on more than 30% of =
-the
->> machines under test. =C2=A0This patch reduces the rate by a factor o=
-f about 70.
->> Low enough that we didn't care to further investigate the issue.
->
-> Interesting.
->
->> Performance impact with any sort of "normal" use was ~2%+ CPU and le=
-ss
->> than 1% throughput degradation. =C2=A0Worst case impact (cached read=
-) was
->> 6% IOPS reduction. This is with NCQ off (q=3D1) but I believe FIS ba=
-sed
->> switching enabled in the SATA driver.
->
-> Given the general flakiness of the device, I'm more than willing to
-> pay some overhead for stability and the performance hit seems pretty
-> small.
->
->> @@ -260,12 +262,28 @@ static int sata_pmp_configure(struct ata_devic=
-e
->> *dev, int print_info)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto fail;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
->>
->> + =C2=A0 =C2=A0 =C2=A0 /* For Sil3726, disable sending Early R_OK */
->> + =C2=A0 =C2=A0 =C2=A0 if (vendor =3D=3D 0x1095 && devid =3D=3D 0x37=
-26) {
->
-> Isn't this also applicable to 4723 and 4726?
+--0016e640d17482202504843c9f45
+Content-Type: text/plain; charset=UTF-8
 
-Sorry, I don't know why I included 4726 in the Subject line since I
-only tested with 3726.
+In 2009, While running "cache read" performance test of drives behind
+SII PMP we encountered a "all 5 drives" timeout on more than 30% of the
+machines under test.  This patch reduces the rate by a factor of about 70.
+Low enough that we didn't care to further investigate the issue.
 
-I expect it would apply to 4726 but someone who knows the internals of
-both would have to confirm that.
+Performance impact with any sort of "normal" use was ~2%+ CPU and less
+than 1% throughput degradation.  Worst case impact (cached read) was
+6% IOPS reduction. This is with NCQ off (q=1) but I believe FIS based
+switching enabled in the SATA driver.
 
-I don't know anything about 4723.
+The patch disables "Early ACK" in the 3726 port multiplier.
+"Early ACK" is issued when device sends a FIS to the host (via PMP)
+and the PMP sends an ACK immediately back to the device - well before
+the host gets the response. Under worst case IOPs load (cached read
+test) and more than 2 PMPs connected to a 4-port SATA controller,
+I suspect the time to service all of the PMPs is exceeding the PMPs
+ability to keep track of outstanding FIS it owes the Host. Reducing
+the number of PMPs to 2 (or 1) reduces the frequency by several orders
+of magnitude. Kudos to Gwendal for initial debugging of this issue.
+[Any errors in the description are mine, not his.]
 
+Patch is currently in production on Google servers.
 
->
->> diff --git a/include/linux/ata.h b/include/linux/ata.h
->> index 700c5b9..18fc208 100644
->> --- a/include/linux/ata.h
->> +++ b/include/linux/ata.h
->> @@ -386,6 +386,7 @@ enum {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 SATA_PMP_GSCR_ERROR_EN =C2=A0=3D 33,
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 SATA_PMP_GSCR_FEAT =C2=A0 =C2=A0 =C2=A0=3D=
- 64,
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 SATA_PMP_GSCR_FEAT_EN =C2=A0 =3D 96,
->> + =C2=A0 =C2=A0 =C2=A0 SATA_PMP_GSCR_SII_POL =C2=A0 =3D 129, =C2=A0/=
-* VENDOR : Silicon Image 3726/4726 */
->
-> Can you plesae define it inside libata-pmp.c?
+Signed-off-by: Grant Grundler <grundler@google.com>
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Yes. I'll resubmit with "SII_POL" defined "locally".
+---
 
-> ata.h only contains stuff defined by the ATA standard.
+v2: dropped references to 4726 since I didn't test 4726,
+    moved register definition directly into libata-pmp.c, and
+    expanded the comment in the code to summarize the above description.
 
-Ah ok. I didn't realize that.
+Code below is white space mangled. Please use attached file.
 
->
-> Other than the above nitpicks,
->
-> Acked-by: Tejun Heo <tj@kernel.org>
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 00305f4..487227a 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -231,10 +231,14 @@ static const char *sata_pmp_spec_rev_str(const u32 *gscr)
+        return "<unknown>";
+ }
 
-Thanks for the Ack/Review!
-grant
++#define PMP_GSCR_SII_POL 129
++
+ static int sata_pmp_configure(struct ata_device *dev, int print_info)
+ {
+        struct ata_port *ap = dev->link->ap;
+        u32 *gscr = dev->gscr;
++       u16 vendor = sata_pmp_gscr_vendor(gscr);
++       u16 devid = sata_pmp_gscr_devid(gscr);
+        unsigned int err_mask = 0;
+        const char *reason;
+        int nr_ports, rc;
+@@ -260,12 +264,34 @@ static int sata_pmp_configure(struct ata_device
+*dev, int print_info)
+                goto fail;
+        }
 
->
-> Thanks.
->
-> --
-> tejun
->
++       /* Disable sending Early R_OK.
++        * With "cached read" HDD testing and multiple ports busy on a SATA
++        * host controller, 3726 PMP will very rarely drop a deferred
++        * R_OK that was intended for the host. Symptom will be all
++        * 5 drives under test will timeout, get reset, and recover.
++        */
++       if (vendor == 0x1095 && devid == 0x3726) {
++               u32 reg;
++
++               err_mask = sata_pmp_read(&ap->link, PMP_GSCR_SII_POL, &reg);
++               if (err_mask) {
++                       rc = -EIO;
++                       reason = "failed to read Sil3726 Private Register";
++                       goto fail;
++               }
++               reg &= ~0x1;
++               err_mask = sata_pmp_write(&ap->link, PMP_GSCR_SII_POL, reg);
++               if (err_mask) {
++                       rc = -EIO;
++                       reason = "failed to write Sil3726 Private Register";
++                       goto fail;
++               }
++       }
++
+        if (print_info) {
+                ata_dev_printk(dev, KERN_INFO, "Port Multiplier %s, "
+                               "0x%04x:0x%04x r%d, %d ports, feat 0x%x/0x%x\n",
+-                              sata_pmp_spec_rev_str(gscr),
+-                              sata_pmp_gscr_vendor(gscr),
+-                              sata_pmp_gscr_devid(gscr),
++                              sata_pmp_spec_rev_str(gscr), vendor, devid,
+                               sata_pmp_gscr_rev(gscr),
+                               nr_ports, gscr[SATA_PMP_GSCR_FEAT_EN],
+                               gscr[SATA_PMP_GSCR_FEAT]);
+
+--0016e640d17482202504843c9f45
+Content-Type: application/octet-stream;
+	name="2.6.34-rc3-libata_pmp-disable_ImdAck-04"
+Content-Disposition: attachment;
+	filename="2.6.34-rc3-libata_pmp-disable_ImdAck-04"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_g80wdrpm1
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2xpYmF0YS1wbXAuYyBiL2RyaXZlcnMvYXRhL2xpYmF0
+YS1wbXAuYwppbmRleCAwMDMwNWY0Li40ODcyMjdhIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9s
+aWJhdGEtcG1wLmMKKysrIGIvZHJpdmVycy9hdGEvbGliYXRhLXBtcC5jCkBAIC0yMzEsMTAgKzIz
+MSwxNCBAQCBzdGF0aWMgY29uc3QgY2hhciAqc2F0YV9wbXBfc3BlY19yZXZfc3RyKGNvbnN0IHUz
+MiAqZ3NjcikKIAlyZXR1cm4gIjx1bmtub3duPiI7CiB9CiAKKyNkZWZpbmUgUE1QX0dTQ1JfU0lJ
+X1BPTCAxMjkKKwogc3RhdGljIGludCBzYXRhX3BtcF9jb25maWd1cmUoc3RydWN0IGF0YV9kZXZp
+Y2UgKmRldiwgaW50IHByaW50X2luZm8pCiB7CiAJc3RydWN0IGF0YV9wb3J0ICphcCA9IGRldi0+
+bGluay0+YXA7CiAJdTMyICpnc2NyID0gZGV2LT5nc2NyOworCXUxNiB2ZW5kb3IgPSBzYXRhX3Bt
+cF9nc2NyX3ZlbmRvcihnc2NyKTsKKwl1MTYgZGV2aWQgPSBzYXRhX3BtcF9nc2NyX2RldmlkKGdz
+Y3IpOwogCXVuc2lnbmVkIGludCBlcnJfbWFzayA9IDA7CiAJY29uc3QgY2hhciAqcmVhc29uOwog
+CWludCBucl9wb3J0cywgcmM7CkBAIC0yNjAsMTIgKzI2NCwzNCBAQCBzdGF0aWMgaW50IHNhdGFf
+cG1wX2NvbmZpZ3VyZShzdHJ1Y3QgYXRhX2RldmljZSAqZGV2LCBpbnQgcHJpbnRfaW5mbykKIAkJ
+Z290byBmYWlsOwogCX0KIAorCS8qIERpc2FibGUgc2VuZGluZyBFYXJseSBSX09LLgorCSAqIFdp
+dGggImNhY2hlZCByZWFkIiBIREQgdGVzdGluZyBhbmQgbXVsdGlwbGUgcG9ydHMgYnVzeSBvbiBh
+IFNBVEEKKwkgKiBob3N0IGNvbnRyb2xsZXIsIDM3MjYgUE1QIHdpbGwgdmVyeSByYXJlbHkgZHJv
+cCBhIGRlZmVycmVkCisJICogUl9PSyB0aGF0IHdhcyBpbnRlbmRlZCBmb3IgdGhlIGhvc3QuIFN5
+bXB0b20gd2lsbCBiZSBhbGwKKwkgKiA1IGRyaXZlcyB1bmRlciB0ZXN0IHdpbGwgdGltZW91dCwg
+Z2V0IHJlc2V0LCBhbmQgcmVjb3Zlci4KKwkgKi8KKwlpZiAodmVuZG9yID09IDB4MTA5NSAmJiBk
+ZXZpZCA9PSAweDM3MjYpIHsKKwkJdTMyIHJlZzsKKworCQllcnJfbWFzayA9IHNhdGFfcG1wX3Jl
+YWQoJmFwLT5saW5rLCBQTVBfR1NDUl9TSUlfUE9MLCAmcmVnKTsKKwkJaWYgKGVycl9tYXNrKSB7
+CisJCQlyYyA9IC1FSU87CisJCQlyZWFzb24gPSAiZmFpbGVkIHRvIHJlYWQgU2lsMzcyNiBQcml2
+YXRlIFJlZ2lzdGVyIjsKKwkJCWdvdG8gZmFpbDsKKwkJfQorCQlyZWcgJj0gfjB4MTsKKwkJZXJy
+X21hc2sgPSBzYXRhX3BtcF93cml0ZSgmYXAtPmxpbmssIFBNUF9HU0NSX1NJSV9QT0wsIHJlZyk7
+CisJCWlmIChlcnJfbWFzaykgeworCQkJcmMgPSAtRUlPOworCQkJcmVhc29uID0gImZhaWxlZCB0
+byB3cml0ZSBTaWwzNzI2IFByaXZhdGUgUmVnaXN0ZXIiOworCQkJZ290byBmYWlsOworCQl9CisJ
+fQorCiAJaWYgKHByaW50X2luZm8pIHsKIAkJYXRhX2Rldl9wcmludGsoZGV2LCBLRVJOX0lORk8s
+ICJQb3J0IE11bHRpcGxpZXIgJXMsICIKIAkJCSAgICAgICAiMHglMDR4OjB4JTA0eCByJWQsICVk
+IHBvcnRzLCBmZWF0IDB4JXgvMHgleFxuIiwKLQkJCSAgICAgICBzYXRhX3BtcF9zcGVjX3Jldl9z
+dHIoZ3NjciksCi0JCQkgICAgICAgc2F0YV9wbXBfZ3Njcl92ZW5kb3IoZ3NjciksCi0JCQkgICAg
+ICAgc2F0YV9wbXBfZ3Njcl9kZXZpZChnc2NyKSwKKwkJCSAgICAgICBzYXRhX3BtcF9zcGVjX3Jl
+dl9zdHIoZ3NjciksIHZlbmRvciwgZGV2aWQsCiAJCQkgICAgICAgc2F0YV9wbXBfZ3Njcl9yZXYo
+Z3NjciksCiAJCQkgICAgICAgbnJfcG9ydHMsIGdzY3JbU0FUQV9QTVBfR1NDUl9GRUFUX0VOXSwK
+IAkJCSAgICAgICBnc2NyW1NBVEFfUE1QX0dTQ1JfRkVBVF0pOwo=
+--0016e640d17482202504843c9f45--
