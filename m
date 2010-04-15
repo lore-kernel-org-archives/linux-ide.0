@@ -1,52 +1,70 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: fix locking around blk_abort_request()
-Date: Thu, 15 Apr 2010 08:57:37 +0900
-Message-ID: <4BC65671.6000309@kernel.org>
+Subject: Re: [PATCH] 2.6.34-rc3 Disable R_OK (Early ACK) on SII 3726/4726
+ PMP
+Date: Thu, 15 Apr 2010 09:31:56 +0900
+Message-ID: <4BC65E7C.5080203@kernel.org>
+References: <m2gda824cf31004131746o15be77b1n7af6fac42ce25280@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33593 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41790 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751597Ab0DNXyQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Apr 2010 19:54:16 -0400
+	id S1752514Ab0DOA3l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Apr 2010 20:29:41 -0400
+In-Reply-To: <m2gda824cf31004131746o15be77b1n7af6fac42ce25280@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Grant Grundler <grundler@google.com>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, LKML <linux-kernel@vger.kernel.org>
 
-blk_abort_request() expectes queue lock to be held by the caller.
-Grab it before calling the function.
+Hello,
 
-Lack of this synchronization led to infinite loop on corrupt
-q->timeout_list.
+On 04/14/2010 09:46 AM, Grant Grundler wrote:
+> In 2009, While running "cache read" performance test of drives behind
+> SII PMP we encountered a "all 5 drives" timeout on more than 30% of the
+> machines under test.  This patch reduces the rate by a factor of about 70.
+> Low enough that we didn't care to further investigate the issue.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: stable@kernel.org
----
- drivers/ata/libata-eh.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Interesting.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9f6cfac..9e18cc9 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -879,6 +879,8 @@ static void ata_eh_set_pending(struct ata_port *ap, int fastdrain)
- void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-+	struct request_queue *q = qc->scsicmd->device->request_queue;
-+	unsigned long flags;
+> Performance impact with any sort of "normal" use was ~2%+ CPU and less
+> than 1% throughput degradation.  Worst case impact (cached read) was
+> 6% IOPS reduction. This is with NCQ off (q=1) but I believe FIS based
+> switching enabled in the SATA driver.
 
- 	WARN_ON(!ap->ops->error_handler);
+Given the general flakiness of the device, I'm more than willing to
+pay some overhead for stability and the performance hit seems pretty
+small.
 
-@@ -890,7 +892,9 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
- 	 * Note that ATA_QCFLAG_FAILED is unconditionally set after
- 	 * this function completes.
- 	 */
-+	spin_lock_irqsave(q->queue_lock, flags);
- 	blk_abort_request(qc->scsicmd->request);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
- }
+> @@ -260,12 +262,28 @@ static int sata_pmp_configure(struct ata_device
+> *dev, int print_info)
+>                 goto fail;
+>         }
+> 
+> +       /* For Sil3726, disable sending Early R_OK */
+> +       if (vendor == 0x1095 && devid == 0x3726) {
 
- /**
+Isn't this also applicable to 4723 and 4726?
+
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 700c5b9..18fc208 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -386,6 +386,7 @@ enum {
+>         SATA_PMP_GSCR_ERROR_EN  = 33,
+>         SATA_PMP_GSCR_FEAT      = 64,
+>         SATA_PMP_GSCR_FEAT_EN   = 96,
+> +       SATA_PMP_GSCR_SII_POL   = 129,  /* VENDOR : Silicon Image 3726/4726 */
+
+Can you plesae define it inside libata-pmp.c?  ata.h only contains
+stuff defined by the ATA standard.
+
+Other than the above nitpicks,
+
+Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
