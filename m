@@ -1,43 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] IDE: pass IRQ flags to the IDE core
-Date: Thu, 15 Apr 2010 12:07:48 +0100
-Message-ID: <20100415120748.12b2ef62@lxorguk.ukuu.org.uk>
-References: <q2rf69abfc31004080726scbf96429ub4d84a318835d53d@mail.gmail.com>
-	<20100415.021612.213438899.davem@davemloft.net>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH] Fix accesses at LBA28 boundary (old bug, but nasty) (v2)
+Date: Thu, 15 Apr 2010 09:46:15 -0400
+Message-ID: <4BC718A7.7070006@teksavvy.com>
+References: <4BBBB975.7000203@teksavvy.com> <4BBCC648.30807@teksavvy.com> <4BBE0B96.6070007@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55160 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751686Ab0DOLD1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2010 07:03:27 -0400
-In-Reply-To: <20100415.021612.213438899.davem@davemloft.net>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:57152 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753457Ab0DONqS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Apr 2010 09:46:18 -0400
+In-Reply-To: <4BBE0B96.6070007@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: yegorslists@googlemail.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Thu, 15 Apr 2010 02:16:12 -0700 (PDT)
-David Miller <davem@davemloft.net> wrote:
+On 08/04/10 01:00 PM, Jeff Garzik wrote:
+> On 04/07/2010 01:52 PM, Mark Lord wrote:
+>> Most drives from Seagate, Hitachi, and possibly other brands,
+>> do not allow LBA28 access to sector number 0x0fffffff (2^28 - 1).
+>> So instead use LBA48 for such accesses.
+>>
+>> This bug could bite a lot of systems, especially when the user has
+>> taken care to align partitions to 4KB boundaries. On misaligned systems,
+>> it is less likely to be encountered, since a 4KB read would end at
+>> 0x10000000 rather than at 0x0fffffff.
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+>> ---
+>>
+>> Reposting with the pre-existing (u64) cast removed.
+>>
+>> --- linux-2.6.34-rc3/include/linux/ata.h 2010-03-30 12:24:39.000000000
+>> -0400
+>> +++ linux/include/linux/ata.h 2010-04-06 18:39:41.167702612 -0400
+>> @@ -1025,8 +1025,8 @@
+>>
+>> static inline int lba_28_ok(u64 block, u32 n_block)
+>> {
+>> - /* check the ending block number */
+>> - return ((block + n_block) < ((u64)1 << 28)) && (n_block <= 256);
+>> + /* check the ending block number: must be LESS THAN 0x0fffffff */
+>> + return ((block + n_block) < ((1 << 28) - 1)) && (n_block <= 256);
+>> }
+>
+> applied.
+>
+> Neither 'git am' nor patch(1) would apply the patch for some reason, so
+> I applied it manually. Weird... I could not spot obvious whitespace or
+> word-wrap corruption.
+..
 
-> From: Yegor Yefremov <yegorslists@googlemail.com>
-> Date: Thu, 8 Apr 2010 16:26:29 +0200
-> 
-> > IDE: pass IRQ flags to the IDE core
-> > 
-> > This enables shared IRQs and other features to be used with platform devices
-> > 
-> > Signed-off-by: Yegor Yefremov <yegorslists@googlemail.com>
-> 
-> If you need this for a new device, please use the ATA layer
-> instead of adding support for new features in IDE which is
-> in deep maintainence mode only.
+I figured this this out (paritially) today:
+Somehow, the (v2) repost ended up with MS-DOS line separators (CR-LF).
 
-Actually Dave I think that one should go in. pata_platform (libata) and
-ide_platform both match the same platform objects so you can flip between
-them easily (eg for testing work). The fact the IRQ flags are only
-honoured in libata but not in the matching IDE driver is probably a good
-thing to fix.
+I imagine those would confuse most of the tools,
+yet remain transparent (hidden) in editors and email programs.
 
-Alan
+Dunno how they got in there, though.
+
+Cheers
+  
