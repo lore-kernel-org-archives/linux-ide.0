@@ -1,24 +1,19 @@
 From: Harry Zhang <harry.zhang@amd.com>
 Subject: [PATCH v3] ahci: add "em_buffer" attribute for AHCI hosts
-Date: Fri, 16 Apr 2010 12:38:46 +0800
-Message-ID: <1271392726.3967.7.camel@zm-desktop>
-References: <1268131075.2000.6.camel@harry-desktop>
-	 <1270539831.1963.29.camel@harry-desktop>
-	 <1270800011.1942.8.camel@harry-desktop> <4BBEFDEC.7020506@kernel.org>
-	 <1793EC4BDC456040AA0FC17136E1732B207127@sshaexmb1.amd.com>
-	 <4BBFD965.8020603@kernel.org>
+Date: Fri, 16 Apr 2010 12:46:48 +0800
+Message-ID: <1271393208.5078.2.camel@zm-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:26544
-	"EHLO VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751637Ab0DPEjD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Apr 2010 00:39:03 -0400
-In-Reply-To: <4BBFD965.8020603@kernel.org>
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:50530 "EHLO
+	TX2EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab0DPErE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Apr 2010 00:47:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: tj@kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, "Huang, Shane" <Shane.Huang@amd.com>, "Zhang, Harry" <Harry.Zhang@amd.com>
+To: jgarzik@pobox.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, Shane.Huang@amd.com, Harry.Zhang@amd.com
 
 Add "em_buffer" attribute for SATA AHCI hosts to provide a way for
 userland to access AHCI EM (enclosure management) buffer directly if the
@@ -41,7 +36,7 @@ v3: do not use "ahci_em_messages" module parameter as EM message type
     Move write function for this attribute from libata-scsi.c to
     libachi.c.
     Add read function.
-    Add necessary definitions for EM in ahci.h.
+    Add mecessary definitions for EM in ahci.h.
 
  drivers/ata/ahci.c    |    2 +-
  drivers/ata/ahci.h    |   16 ++++---
@@ -177,17 +172,7 @@ index 34fc57d..5002254 100644
 +
 +	spin_unlock_irqrestore(ap->lock, flags);
 +
-+	return i;Add "em_buffer" attribute for SATA AHCI hosts to provide a way for
-userland to access AHCI EM (enclosure management) buffer directly if the
-host supports EM.
-
-AHCI driver should support SGPIO EM messages. However the SATA/AHCI
-specs did not define the SGPIO message format filled in EM buffer.
-Different HW vendors may have different definitions. The mainly purpose
-of this attribute is to solve this issue by allowing HW vendors to
-provide userland drivers and tools for their SGPIO initiators.
-
-Signed-off-by: Harry Zhang <harry.zhang@am
++	return i;
 +}
 +
 +static ssize_t ahci_store_em_buffer(struct device *dev,
@@ -268,18 +253,8 @@ Signed-off-by: Harry Zhang <harry.zhang@am
  	void __iomem *mmio = hpriv->mmio;
  	u32 em_loc = readl(mmio + HOST_EM_LOC);
  	u32 em_ctl = readl(mmio + HOST_EM_CTL);
--
- 	if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))Add "em_buffer" attribute for SATA AHCI hosts to provide a way for
-userland to access AHCI EM (enclosure management) buffer directly if the
-host supports EM.
-
-AHCI driver should support SGPIO EM messages. However the SATA/AHCI
-specs did not define the SGPIO message format filled in EM buffer.
-Different HW vendors may have different definitions. The mainly purpose
-of this attribute is to solve this issue by allowing HW vendors to
-provide userland drivers and tools for their SGPIO initiators.
-
-Signed-off-by: Harry Zhang <harry.zhang@am
+-[PATCH v3] ahci: add "em_buffer" attribute for AHCI hosts
+ 	if (!ahci_em_messages || !(hpriv->cap & HOST_CAP_EMS))
  		return;
  
  	messages = (em_ctl & EM_CTRL_MSG_TYPE) >> 16;
@@ -294,4 +269,8 @@ Signed-off-by: Harry Zhang <harry.zhang@am
  		pi->flags |= ATA_FLAG_EM;
  		if (!(em_ctl & EM_CTL_ALHD))
  			pi->flags |= ATA_FLAG_SW_ACTIVITY;
+-- 
+1.6.4.2
+
+
 
