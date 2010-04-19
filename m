@@ -1,59 +1,28 @@
-From: "Gao, Yunpeng" <yunpeng.gao@intel.com>
-Subject: RE: How to make kernel block layer generate bigger request in the
- request queue?
-Date: Mon, 19 Apr 2010 14:42:38 +0800
-Message-ID: <CE761E84DADF2947A4AF22FB8D97A4731CC5D11D@shsmsx501.ccr.corp.intel.com>
-References: <CE761E84DADF2947A4AF22FB8D97A4731CAF351C@shsmsx501.ccr.corp.intel.com>
-	<4BBFBE3E.5070605@gmail.com>	<yq1y6gwt62p.fsf@sermon.lab.mkp.net>
-	<1270911503.2806.194.camel@mulgrave.site>
-	<yq1d3y4msri.fsf@sermon.lab.mkp.net>
-	<1271102309.4428.85.camel@mulgrave.site>
-	<CE761E84DADF2947A4AF22FB8D97A4731CB7230B@shsmsx501.ccr.corp.intel.com>
- <20100413162034.445a388b@lxorguk.ukuu.org.uk>
+From: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+Subject: Re: [PATCH 1/2] libata: don't flush dcache on slab pages
+Date: Mon, 19 Apr 2010 21:46:18 +0200
+Message-ID: <20100419194618.GA10886@Chamillionaire.breakpoint.cc>
+References: <20100321215222.GA27709@Chamillionaire.breakpoint.cc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:27859 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018Ab0DSGnL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Apr 2010 02:43:11 -0400
-In-Reply-To: <20100413162034.445a388b@lxorguk.ukuu.org.uk>
-Content-Language: en-US
+Received: from Chamillionaire.breakpoint.cc ([85.10.199.196]:36305 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752125Ab0DSTqY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Apr 2010 15:46:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20100321215222.GA27709@Chamillionaire.breakpoint.cc>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-VGhhbmtzIGEgbG90IHRvIEFsYW4gZm9yIHRoaXMgc3VnZ2VzdGlvbi4gSSB0aGluayBpdCBtYWtl
-cyBzZW5zZSB0byBzaW11bGF0ZSBhIHNjYXR0ZXIgZ2F0aGVyIGluIGRyaXZlciBmb3IgdGhpcyBj
-YXNlLiBJJ2xsIHRyeSBpdCBsYXRlciBhbmQgZXhwZWN0IHRvIHNlZSB0aGUgaW1wcm92ZWQgcGVy
-Zm9ybWFuY2UuDQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IEFsYW4gQ294
-IFttYWlsdG86YWxhbkBseG9yZ3VrLnVrdXUub3JnLnVrXQ0KPlNlbnQ6IDIwMTDE6jTUwjEzyNUg
-MjM6MjENCj5UbzogR2FvLCBZdW5wZW5nDQo+Q2M6IEphbWVzIEJvdHRvbWxleTsgTWFydGluIEsu
-IFBldGVyc2VuOyBSb2JlcnQgSGFuY29jazsNCj5saW51eC1pZGVAdmdlci5rZXJuZWwub3JnOyBs
-aW51eC1tbWNAdmdlci5rZXJuZWwub3JnDQo+U3ViamVjdDogUmU6IEhvdyB0byBtYWtlIGtlcm5l
-bCBibG9jayBsYXllciBnZW5lcmF0ZSBiaWdnZXIgcmVxdWVzdCBpbiB0aGUNCj5yZXF1ZXN0IHF1
-ZXVlPw0KPg0KPj4gQW5kIEkganVzdCBjdXJpb3VzIHdoeSB0aGUgYmxvY2sgbGF5ZXIgZG9lcyBu
-b3QgbWVyZ2UgdGhlc2UgY29udGlndW91cyBzZWN0b3JzDQo+aW50byBvbmUgc2luZ2xlIHJlcXVl
-c3Q/IEZvciBleGFtcGxlLCBpZiA+IHRoZSBibG9jayBsYXllciBnZW5lcmF0ZSAnc3RhcnRfc2Vj
-dDoNCj40ODc3NiwgbnNlY3Q6IDY0LCBydzogcicgaW5zdGVhZCBvZiBiZWxvdyByZXF1ZXN0cywg
-SSB0aGluayB0aGUgcGVyZm9ybWFuY2Ugd2lsbA0KPj4gYmUgYmV0dGVyLg0KPg0KPllvdSBzYWlk
-IGVhcmxpZXIgIk15IGhhcmR3YXJlIGRvZXNuJ3Qgc3VwcG9ydCBzY2F0dGVyL2dhdGhlciINCj4N
-Cj4+IHN0YXJ0X3NlY3Q6IDQ4Nzc2LCBuc2VjdDogOCwgcnc6IHINCj4+IHN0YXJ0X3NlY3Q6IDQ4
-Nzg0LCBuc2VjdDogOCwgcnc6IHINCj4+IHN0YXJ0X3NlY3Q6IDQ4NzkyLCBuc2VjdDogOCwgcnc6
-IHINCj4+IHN0YXJ0X3NlY3Q6IDQ4ODAwLCBuc2VjdDogOCwgcnc6IHINCj4+IHN0YXJ0X3NlY3Q6
-IDQ4ODA4LCBuc2VjdDogOCwgcnc6IHINCj4+IHN0YXJ0X3NlY3Q6IDQ4ODE2LCBuc2VjdDogOCwg
-cnc6IHINCj4+IHN0YXJ0X3NlY3Q6IDQ4ODI0LCBuc2VjdDogOCwgcnc6IHINCj4+IHN0YXJ0X3Nl
-Y3Q6IDQ4ODMyLCBuc2VjdDogOCwgcnc6IHINCj4NCj5QcmludCB0aGUgYnVzIGFkZHJlc3Mgb2Yg
-ZWFjaCByZXF1ZXN0IGFuZCB5b3Ugd2lsbCBwcm9iYWJseSBmaW5kIHRoZXkgYXJlDQo+bm90IGNv
-bnRpZ3VvdXMgc28gdGhleSBoYXZlIG5vdCBiZWVuIG1lcmdlZCBiZWNhdXNlIHlvdXIgaGFyZHdh
-cmUgY291bGQNCj5ub3QgZG8gdGhhdCB0cmFuc2ZlciBhbmQgeW91IGhhdmUgbm8gSU9NTVUuDQo+
-DQo+SWYgdGhlIG92ZXJoZWFkIHBlciBjb21tYW5kIGlzIHJlYWxseSByZWFsbHkgaHVnZSB5b3Ug
-Y2FuIHByZWFsbG9jYXRlIGFuDQo+aW50ZXJuYWwgYnVmZmVyIG9mIHNheSAzMksgb3IgNjRLIGlu
-IHlvdXIgZHJpdmVyIGFuZCB0ZWxsIHRoZSBibG9jayBsYXllcg0KPnlvdSBkbyBzY2F0dGVyIGdh
-dGhlciwgdGhlbiBjb3B5IHRoZSBidWZmZXJzIGludG8gYSBsaW5lYXIgY2h1bmsuIEknZCBiZQ0K
-PnZlcnkgc3VycHJpc2VkIGlmIHRoYXQgd2FzIGEgd2luIG92ZXJhbGwgb24gYW55IHZhZ3VlbHkg
-c2FuZSBoYXJkd2FyZSBidXQNCj5mbGFzaCB3aXRoIGVyYXNlIGJsb2NrIG92ZXJoZWFkIGFuZCB0
-aGUgbGlrZSBtaWdodCBiZSBvbmUgb2YgdGhlIGxlc3MNCj5zYW5lIGNhc2VzLg0KPg0KPkFsYW4N
-Cg==
+* Sebastian Andrzej Siewior | 2010-03-21 22:52:22 [+0100]:
+
+>page_mapping() check this via VM_BUG_ON(PageSlab(page)) so we bug here
+>with the according debuging turned on.
+
+David, I've seen that you set this patch to "Not Applicable". May I know
+why?
+
+Sebastian
