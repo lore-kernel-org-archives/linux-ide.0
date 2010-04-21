@@ -1,24 +1,31 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [Bug 15815] New: pata_legacy causes machine check
-Date: Tue, 20 Apr 2010 18:58:19 -0600
-Message-ID: <4BCE4DAB.9020304@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15815] pata_legacy causes machine check
+Date: Wed, 21 Apr 2010 01:06:54 GMT
+Message-ID: <201004210106.o3L16s0Z032521@demeter.kernel.org>
 References: <bug-15815-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:46997 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753787Ab0DUA6W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Apr 2010 20:58:22 -0400
-Received: by gyg13 with SMTP id 13so3515401gyg.19
-        for <linux-ide@vger.kernel.org>; Tue, 20 Apr 2010 17:58:21 -0700 (PDT)
+Received: from demeter.kernel.org ([140.211.167.39]:55665 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754127Ab0DUBGz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Apr 2010 21:06:55 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3L16sED032522
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 21 Apr 2010 01:06:55 GMT
 In-Reply-To: <bug-15815-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=15815
+
+
+
+
+
+--- Comment #1 from Robert Hancock <hancockrwd@gmail.com>  2010-04-21 01:06:49 ---
 On 04/20/2010 04:47 AM, bugzilla-daemon@bugzilla.kernel.org wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=15815
 >
@@ -150,3 +157,8 @@ to see if there's anything there. It seems like this machine doesn't
 like that very much.
 
 Does it really make sense for this driver to be enabled for non-x86?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
