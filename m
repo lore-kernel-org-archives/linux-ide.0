@@ -1,50 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: WARN_ON() in drivers/ata/libata-core.c:5211 ata_qc_issue
-Date: Tue, 20 Apr 2010 21:55:09 -0400
-Message-ID: <4BCE5AFD.4030108@garzik.org>
-References: <20100420141616.GP4586@mail.wantstofly.org> <4BCE43FD.1080303@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15815] pata_legacy causes machine check
+Date: Wed, 21 Apr 2010 08:56:59 GMT
+Message-ID: <201004210856.o3L8uxIJ025777@demeter.kernel.org>
+References: <bug-15815-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.211.194]:60655 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755069Ab0DUBzM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Apr 2010 21:55:12 -0400
-In-Reply-To: <4BCE43FD.1080303@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:51933 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134Ab0DUI5A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Apr 2010 04:57:00 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3L8uxlU025778
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 21 Apr 2010 08:56:59 GMT
+In-Reply-To: <bug-15815-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Lennert Buytenhek <buytenh@wantstofly.org>, Andy Yan <ayan@marvell.com>, Ke Wei <kewei@marvell.com>, Ying Chu <jasonchu@marvell.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 04/20/2010 08:17 PM, Robert Hancock wrote:
-> On 04/20/2010 08:16 AM, Lennert Buytenhek wrote:
->> On mvsas, when I issue a SMART command (smartctl -a) while a dd
->> from /dev/sda to /dev/null is in progress, I hit the following
->> WARN_ON_ONCE in ata_qc_issue():
->>
->> if (ata_is_ncq(prot)) {
->> WARN_ON_ONCE(link->sactive& (1<< qc->tag));
->>
->> if (!link->sactive)
->> ap->nr_active_links++;
->> link->sactive |= 1<< qc->tag;
->> } else {
->> WARN_ON_ONCE(link->sactive); <===============
->>
->> ap->nr_active_links++;
->> link->active_tag = qc->tag;
->> }
->>
->> This is on 2.6.34-rc4 ish.
->
-> That would indicate that for some reason, non-NCQ commands aren't being
-> deferred while an NCQ command is in progress. Presumably something wrong
-> in mvsas or libsas code in general..
+https://bugzilla.kernel.org/show_bug.cgi?id=15815
 
-Yep, definitely a problem in the mvsas (or libsas) area.
 
-	Jeff
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
 
 
 
+
+--- Comment #2 from Alan <alan@lxorguk.ukuu.org.uk>  2010-04-21 08:56:55 ---
+Generally no - there are some platforms with legacy ATA mappings however.
+
+Probably the VLB probes should only be done on x86.
+
+I'm tempted to close the bug as "So don't do that then" ?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
