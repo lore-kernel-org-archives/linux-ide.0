@@ -1,44 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15815] pata_legacy causes machine check
-Date: Wed, 21 Apr 2010 08:56:59 GMT
-Message-ID: <201004210856.o3L8uxIJ025777@demeter.kernel.org>
-References: <bug-15815-11633@https.bugzilla.kernel.org/>
+From: Roman Fietze <roman.fietze@telemotive.de>
+Subject: [PATCH] libata: port and device of libata.force ID separated by point
+Date: Wed, 21 Apr 2010 12:17:12 +0200
+Message-ID: <201004211217.12697.roman.fietze@telemotive.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:51933 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752134Ab0DUI5A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Apr 2010 04:57:00 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o3L8uxlU025778
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 21 Apr 2010 08:56:59 GMT
-In-Reply-To: <bug-15815-11633@https.bugzilla.kernel.org/>
+Received: from coyote.quickmin.net ([217.14.112.24]:59434 "EHLO
+	coyote.quickmin.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753910Ab0DUKX6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Apr 2010 06:23:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15815
+Hello,
+
+If I understand libata-core correctly, esp. arround line 6572:
+
+	/* parse id */
+	p =3D strchr(id, '.');
+	...
+
+the optional device is separated from the port in the libata.force ID
+by a point or dot instead of by a colon.
+
+If my assumption is correct, this patch will fix the documentation:
+
+Signed-off-by: Roman Fietze <roman.fietze@telemotive.de>
+---
+ Documentation/kernel-parameters.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel=
+-parameters.txt
+index e7848a0..ea5a826 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -1193,7 +1193,7 @@ and is between 256 and 4096 characters. It is def=
+ined in the file
+=20
+ 	libata.force=3D	[LIBATA] Force configurations.  The format is comma
+ 			separated list of "[ID:]VAL" where ID is
+-			PORT[:DEVICE].  PORT and DEVICE are decimal numbers
++			PORT[.DEVICE].  PORT and DEVICE are decimal numbers
+ 			matching port, link or device.  Basically, it matches
+ 			the ATA ID string printed on console by libata.  If
+ 			the whole ID part is omitted, the last PORT and DEVICE
+--=20
+1.7.0.3
 
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
 
 
+Roman
 
-
---- Comment #2 from Alan <alan@lxorguk.ukuu.org.uk>  2010-04-21 08:56:55 ---
-Generally no - there are some platforms with legacy ATA mappings however.
-
-Probably the VLB probes should only be done on x86.
-
-I'm tempted to close the bug as "So don't do that then" ?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--=20
+Roman Fietze                Telemotive AG B=FCro M=FChlhausen
+Breitwiesen                              73347 M=FChlhausen
+Tel.: +49(0)7335/18493-45        http://www.telemotive.de
