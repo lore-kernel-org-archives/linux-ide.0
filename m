@@ -1,171 +1,50 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] libata-sff: kill ata_bus_reset()
-Date: Thu, 22 Apr 2010 20:03:35 +0400
-Message-ID: <201004222003.36076.sshtylyov@ru.mvista.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH] When a disk wakes up from sleep, ensure that the command
+	is retried by SCSI EH.
+Date: Thu, 22 Apr 2010 10:43:36 -0700
+Message-ID: <v2ne7510f761004221043y4b92ab7csa96b5b45fb07ea6b@mail.gmail.com>
+References: <4A7CB4D6.7020902@kernel.org>
+	 <1249687069-31011-1-git-send-email-gwendal@google.com>
+	 <4A7CB769.4040309@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:34101 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755913Ab0DVQEY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 12:04:24 -0400
-Content-Disposition: inline
+Received: from smtp-out.google.com ([74.125.121.35]:26328 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754829Ab0DVRnk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 13:43:40 -0400
+Received: from wpaz17.hot.corp.google.com (wpaz17.hot.corp.google.com [172.24.198.81])
+	by smtp-out.google.com with ESMTP id o3MHhb8K027248
+	for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 19:43:38 +0200
+Received: from vws14 (vws14.prod.google.com [10.241.21.142])
+	by wpaz17.hot.corp.google.com with ESMTP id o3MHgq0l007306
+	for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 10:43:37 -0700
+Received: by vws14 with SMTP id 14so30878vws.33
+        for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 10:43:36 -0700 (PDT)
+In-Reply-To: <4A7CB769.4040309@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-... since I see no callers of it.
+Just looking into 2.6.33 code, and I did not find this patch. Is there
+anything I should do to have it merge?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Thanks,
+Gwendal.
 
----
-The patch is against the recent Linus' tree.
-
- Documentation/DocBook/libata.tmpl |    6 --
- drivers/ata/libata-sff.c          |   94 --------------------------------------
- include/linux/libata.h            |    1 
- 3 files changed, 2 insertions(+), 99 deletions(-)
-
-Index: linux-2.6/Documentation/DocBook/libata.tmpl
-===================================================================
---- linux-2.6.orig/Documentation/DocBook/libata.tmpl
-+++ linux-2.6/Documentation/DocBook/libata.tmpl
-@@ -81,16 +81,14 @@ void (*port_disable) (struct ata_port *)
- 	</programlisting>
- 
- 	<para>
--	Called from ata_bus_probe() and ata_bus_reset() error paths,
--	as well as when unregistering from the SCSI module (rmmod, hot
--	unplug).
-+	Called from ata_bus_probe() error path, as well as when
-+	unregistering from the SCSI module (rmmod, hot unplug).
- 	This function should do whatever needs to be done to take the
- 	port out of use.  In most cases, ata_port_disable() can be used
- 	as this hook.
- 	</para>
- 	<para>
- 	Called from ata_bus_probe() on a failed probe.
--	Called from ata_bus_reset() on a failed bus reset.
- 	Called from ata_scsi_release().
- 	</para>
- 
-Index: linux-2.6/drivers/ata/libata-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-sff.c
-+++ linux-2.6/drivers/ata/libata-sff.c
-@@ -2631,100 +2631,6 @@ u8 ata_bmdma_status(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_bmdma_status);
- 
--/**
-- *	ata_bus_reset - reset host port and associated ATA channel
-- *	@ap: port to reset
-- *
-- *	This is typically the first time we actually start issuing
-- *	commands to the ATA channel.  We wait for BSY to clear, then
-- *	issue EXECUTE DEVICE DIAGNOSTIC command, polling for its
-- *	result.  Determine what devices, if any, are on the channel
-- *	by looking at the device 0/1 error register.  Look at the signature
-- *	stored in each device's taskfile registers, to determine if
-- *	the device is ATA or ATAPI.
-- *
-- *	LOCKING:
-- *	PCI/etc. bus probe sem.
-- *	Obtains host lock.
-- *
-- *	SIDE EFFECTS:
-- *	Sets ATA_FLAG_DISABLED if bus reset fails.
-- *
-- *	DEPRECATED:
-- *	This function is only for drivers which still use old EH and
-- *	will be removed soon.
-- */
--void ata_bus_reset(struct ata_port *ap)
--{
--	struct ata_device *device = ap->link.device;
--	struct ata_ioports *ioaddr = &ap->ioaddr;
--	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
--	u8 err;
--	unsigned int dev0, dev1 = 0, devmask = 0;
--	int rc;
--
--	DPRINTK("ENTER, host %u, port %u\n", ap->print_id, ap->port_no);
--
--	/* determine if device 0/1 are present */
--	if (ap->flags & ATA_FLAG_SATA_RESET)
--		dev0 = 1;
--	else {
--		dev0 = ata_devchk(ap, 0);
--		if (slave_possible)
--			dev1 = ata_devchk(ap, 1);
--	}
--
--	if (dev0)
--		devmask |= (1 << 0);
--	if (dev1)
--		devmask |= (1 << 1);
--
--	/* select device 0 again */
--	ap->ops->sff_dev_select(ap, 0);
--
--	/* issue bus reset */
--	if (ap->flags & ATA_FLAG_SRST) {
--		rc = ata_bus_softreset(ap, devmask,
--				       ata_deadline(jiffies, 40000));
--		if (rc && rc != -ENODEV)
--			goto err_out;
--	}
--
--	/*
--	 * determine by signature whether we have ATA or ATAPI devices
--	 */
--	device[0].class = ata_sff_dev_classify(&device[0], dev0, &err);
--	if ((slave_possible) && (err != 0x81))
--		device[1].class = ata_sff_dev_classify(&device[1], dev1, &err);
--
--	/* is double-select really necessary? */
--	if (device[1].class != ATA_DEV_NONE)
--		ap->ops->sff_dev_select(ap, 1);
--	if (device[0].class != ATA_DEV_NONE)
--		ap->ops->sff_dev_select(ap, 0);
--
--	/* if no devices were detected, disable this port */
--	if ((device[0].class == ATA_DEV_NONE) &&
--	    (device[1].class == ATA_DEV_NONE))
--		goto err_out;
--
--	if (ap->flags & (ATA_FLAG_SATA_RESET | ATA_FLAG_SRST)) {
--		/* set up device control for ATA_FLAG_SATA_RESET */
--		iowrite8(ap->ctl, ioaddr->ctl_addr);
--		ap->last_ctl = ap->ctl;
--	}
--
--	DPRINTK("EXIT\n");
--	return;
--
--err_out:
--	ata_port_printk(ap, KERN_ERR, "disabling port\n");
--	ata_port_disable(ap);
--
--	DPRINTK("EXIT\n");
--}
--EXPORT_SYMBOL_GPL(ata_bus_reset);
--
- #ifdef CONFIG_PCI
- 
- /**
-Index: linux-2.6/include/linux/libata.h
-===================================================================
---- linux-2.6.orig/include/linux/libata.h
-+++ linux-2.6/include/linux/libata.h
-@@ -1631,7 +1631,6 @@ extern void ata_bmdma_setup(struct ata_q
- extern void ata_bmdma_start(struct ata_queued_cmd *qc);
- extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
- extern u8 ata_bmdma_status(struct ata_port *ap);
--extern void ata_bus_reset(struct ata_port *ap);
- 
- #ifdef CONFIG_PCI
- extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
+On Fri, Aug 7, 2009 at 4:23 PM, Tejun Heo <tj@kernel.org> wrote:
+> Gwendal Grignou wrote:
+>> Without this fix, ATA passthrough commands are not resend to the drive, and no
+>> error is signalled to the caller because:
+>> - allowed retry count is 1
+>> - ata_eh_qc_complete fill the sense data, so result is valid
+>> - sense data is filled with untouched ATA registers.
+>>
+>> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+>
+> Acked-by: Tejun Heo <tj@kernel.org>
+>
+> --
+> tejun
+>
