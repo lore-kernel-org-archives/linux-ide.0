@@ -1,61 +1,84 @@
-From: Grant Grundler <grundler@google.com>
-Subject: Re: [PATCH] 2.6.34-rc3 v2 Disable R_OK (Early ACK) on SII 3726 PMP
-Date: Fri, 23 Apr 2010 08:41:24 -0700
-Message-ID: <w2qda824cf31004230841t4fabd0a4l11b54668b642b0c6@mail.gmail.com>
-References: <g2ida824cf31004141843p41f7b21fz25927e3c6faeeed7@mail.gmail.com>
-	 <l2jda824cf31004201352y5fcdfa40g2ecb5dbb1706bf88@mail.gmail.com>
-	 <4BD102E5.7080006@pobox.com>
+From: Richard Mawson <richard@crow.mawsonit.co.uk>
+Subject: Re: SATA driver sata_sil24
+Date: Fri, 23 Apr 2010 21:34:46 +0100
+Message-ID: <20100423203446.GF1883@crow.mawsonit.co.uk>
+References: <20100422083226.GA6018@crow.mawsonit.co.uk> <4BD0203C.7010903@gmail.com> <20100422121747.GC6018@crow.mawsonit.co.uk> <4BD05043.10709@gmail.com> <20100422223309.GA1883@crow.mawsonit.co.uk> <4BD1129E.6030104@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7lMq7vMTJT4tNk0a"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:1411 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757711Ab0DWPl1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Apr 2010 11:41:27 -0400
-In-Reply-To: <4BD102E5.7080006@pobox.com>
+Received: from smarthost02.mail.zen.net.uk ([212.23.3.141]:51366 "EHLO
+	smarthost02.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755905Ab0DXAQa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Apr 2010 20:16:30 -0400
+Content-Disposition: inline
+In-Reply-To: <4BD1129E.6030104@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On Thu, Apr 22, 2010 at 7:16 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 04/20/2010 04:52 PM, Grant Grundler wrote:
->>
->> ping? Can this patch please be applied?
->
-> Apologies for the delay, I had been pulled away from libata this week=
- by
-> baby stuff :/
 
-No problem.
+--7lMq7vMTJT4tNk0a
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, Apr 22, 2010 at 09:23:10PM -0600, Robert Hancock wrote:
+> Hmm, that seems like this line in drivers/ata/sata_sil24.c:
 >
+>         /* Set max read request size to 4096.  This slightly increases
+>          * write throughput for pci-e variants.
+>          */
+>         pcie_set_readrq(pdev, 4096);
 >
->> I was assuming this will show up here:
->>
->> =C2=A0http://git.kernel.org/?p=3Dlinux/kernel/git/jgarzik/libata-dev=
-=2Egit;a=3Dshortlog;h=3Drefs/heads/upstream-linus
->
-> Nope, upstream-linus is always a temporary branch.
->
-> #upstream-fixes is where 2.6.X-rcY changes are found (though typicall=
-y these
-> are pushed upstream ASAP)
->
-> #upstream is the development branch for 2.6.(X+1), where this change =
-can
-> [now] be found.
+> Can you try commenting out or deleting that line and rebuilding, and see =
+=20
+> if things work better? That's not really a solution, but if it worked, =
+=20
+> it would indicate there's something about the system configuration with =
+=20
+> that converter card installed that explodes when trying to set the max =
+=20
+> read request size. In that case can you post the output of "lspci -vv" =
+=20
+> and the full dmesg boot log?
 
-Ok! Thanks for pulling in the patch (manually) and explaining the branc=
-hes.
+Having put printk messages all over the driver, I see it currently locks up
+during this readl call:
 
-cheers,
-grant
+                /* Clear port RST */
+                tmp =3D readl(port + PORT_CTRL_STAT);
 
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0Jeff
->
->
->
->
+=2E. but as this is clearly later on from the previously mentioned stack, I=
+'m
+starting to suspect that this is failing in random places when talking acro=
+ss
+this pci-pcie bridge. Do you agree that this sounds plausible?
+
+I did attempt to get a crash dump, but failed to get any joy from using the
+nmi watchdog to trigger the use of the debug kernel in this state.
+
+I will attempt using a different machine, hopefully tomorrow, but I have no
+native pcie machines so can't eliminate the pci-pcie bridge being at fault.
+
+Thanks for your help.
+
+--=20
+Richard Mawson
+Mawson IT Services
+
+--7lMq7vMTJT4tNk0a
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkvSBGYACgkQEqu+mbnN8VKZTgCeMu3flpdyVdp7smp8qaaJPGIp
+8h8AnReBz04O1NVYqD16zLnYcnN9NNHZ
+=bANg
+-----END PGP SIGNATURE-----
+
+--7lMq7vMTJT4tNk0a--
