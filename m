@@ -1,50 +1,53 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] drivers/ata/libata-eh.c: fix unused variable warning
-Date: Thu, 22 Apr 2010 21:54:55 -0400
-Message-ID: <4BD0FDEF.1070504@garzik.org>
-References: <1271858846-1706-1-git-send-email-antonf@turbolinux.com.cn>
+Subject: Re: [PATCH #upstream] libata: use longer 0xff wait if parallel scan
+ is enabled
+Date: Thu, 22 Apr 2010 22:05:08 -0400
+Message-ID: <4BD10054.8030102@garzik.org>
+References: <4BBF058E.6080300@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:63692 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785Ab0DWBzA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 21:55:00 -0400
-Received: by gyg13 with SMTP id 13so4850596gyg.19
-        for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 18:54:59 -0700 (PDT)
-In-Reply-To: <1271858846-1706-1-git-send-email-antonf@turbolinux.com.cn>
+Received: from mail-yw0-f194.google.com ([209.85.211.194]:49393 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752760Ab0DWCFL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 22:05:11 -0400
+Received: by ywh32 with SMTP id 32so5299600ywh.33
+        for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 19:05:11 -0700 (PDT)
+In-Reply-To: <4BBF058E.6080300@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fang Wenqi <anton.fang@gmail.com>
-Cc: jgarzik@redhat.com, linux-ide@vger.kernel.org, antonf@turbolinux.com.cn
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, garyhade@us.ibm.com
 
-On 04/21/2010 10:07 AM, Fang Wenqi wrote:
->    CC      drivers/ata/libata-eh.o
-> drivers/ata/libata-eh.c: In function =E2=80=98ata_eh_analyze_ncq_erro=
-r=E2=80=99:
-> drivers/ata/libata-eh.c:1642: warning: =E2=80=98tf.flags=E2=80=99 may=
- be used uninitialized in this function
+On 04/09/2010 06:46 AM, Tejun Heo wrote:
+> There are some SATA devices which take relatively long to get out of
+> 0xff status after reset.  In libata, this timeout is determined by
+> ATA_TMOUT_FF_WAIT.  Quantum GoVault is the worst requring about 2s for
+> reliable detection.  However, because 2s 0xff timeout can introduce
+> rather long spurious delay during boot, libata has been compromising
+> at the next longest timeout of 800ms for HHD424020F7SV00 iVDR drive.
 >
-> Signed-off-by: Fang Wenqi<antonf@turbolinux.com.cn>
+> Now that parallel scan is in place for common drivers, libata can
+> afford 2s 0xff timeout.  Use 2s 0xff timeout if parallel scan is
+> enabled.
+>
+> Please note that the chance of spurious wait is pretty slim w/ working
+> SCR access so this will only affect SATA controllers w/o SCR access
+> which isn't too common these days.
+>
+> Please read the following thread for more information on the GoVault
+> drive.
+>
+>    http://thread.gmane.org/gmane.linux.ide/14545/focus=14663
+>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Cc: Gary Hade<garyhade@us.ibm.com>
 > ---
->   drivers/ata/libata-eh.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 9f6cfac..125ec25 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1601,7 +1601,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *=
-link)
->   	struct ata_eh_context *ehc =3D&link->eh_context;
->   	struct ata_device *dev =3D link->device;
->   	struct ata_queued_cmd *qc;
-> -	struct ata_taskfile tf;
-> +	struct ata_taskfile uninitialized_var(tf);
->   	int tag, rc;
+>   drivers/ata/libata-core.c |   18 ++++++++++++------
+>   include/linux/libata.h    |   11 ++++++-----
+>   2 files changed, 18 insertions(+), 11 deletions(-)
 
-NAK - the warning reflects an actual bug.
+applied
 
 
