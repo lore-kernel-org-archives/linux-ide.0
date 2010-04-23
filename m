@@ -1,53 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream] libata: use longer 0xff wait if parallel scan
- is enabled
-Date: Thu, 22 Apr 2010 22:05:08 -0400
-Message-ID: <4BD10054.8030102@garzik.org>
-References: <4BBF058E.6080300@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] 2.6.34-rc3 v2 Disable R_OK (Early ACK) on SII 3726 PMP
+Date: Thu, 22 Apr 2010 22:05:48 -0400
+Message-ID: <4BD1007C.2000300@pobox.com>
+References: <g2ida824cf31004141843p41f7b21fz25927e3c6faeeed7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.211.194]:49393 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752760Ab0DWCFL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 22:05:11 -0400
-Received: by ywh32 with SMTP id 32so5299600ywh.33
-        for <linux-ide@vger.kernel.org>; Thu, 22 Apr 2010 19:05:11 -0700 (PDT)
-In-Reply-To: <4BBF058E.6080300@kernel.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:64887 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755039Ab0DWCFu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Apr 2010 22:05:50 -0400
+In-Reply-To: <g2ida824cf31004141843p41f7b21fz25927e3c6faeeed7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, garyhade@us.ibm.com
+To: Grant Grundler <grundler@google.com>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 04/09/2010 06:46 AM, Tejun Heo wrote:
-> There are some SATA devices which take relatively long to get out of
-> 0xff status after reset.  In libata, this timeout is determined by
-> ATA_TMOUT_FF_WAIT.  Quantum GoVault is the worst requring about 2s for
-> reliable detection.  However, because 2s 0xff timeout can introduce
-> rather long spurious delay during boot, libata has been compromising
-> at the next longest timeout of 800ms for HHD424020F7SV00 iVDR drive.
+On 04/14/2010 09:43 PM, Grant Grundler wrote:
+> In 2009, While running "cache read" performance test of drives behind
+> SII PMP we encountered a "all 5 drives" timeout on more than 30% of the
+> machines under test.  This patch reduces the rate by a factor of about 70.
+> Low enough that we didn't care to further investigate the issue.
 >
-> Now that parallel scan is in place for common drivers, libata can
-> afford 2s 0xff timeout.  Use 2s 0xff timeout if parallel scan is
-> enabled.
+> Performance impact with any sort of "normal" use was ~2%+ CPU and less
+> than 1% throughput degradation.  Worst case impact (cached read) was
+> 6% IOPS reduction. This is with NCQ off (q=1) but I believe FIS based
+> switching enabled in the SATA driver.
 >
-> Please note that the chance of spurious wait is pretty slim w/ working
-> SCR access so this will only affect SATA controllers w/o SCR access
-> which isn't too common these days.
+> The patch disables "Early ACK" in the 3726 port multiplier.
+> "Early ACK" is issued when device sends a FIS to the host (via PMP)
+> and the PMP sends an ACK immediately back to the device - well before
+> the host gets the response. Under worst case IOPs load (cached read
+> test) and more than 2 PMPs connected to a 4-port SATA controller,
+> I suspect the time to service all of the PMPs is exceeding the PMPs
+> ability to keep track of outstanding FIS it owes the Host. Reducing
+> the number of PMPs to 2 (or 1) reduces the frequency by several orders
+> of magnitude. Kudos to Gwendal for initial debugging of this issue.
+> [Any errors in the description are mine, not his.]
 >
-> Please read the following thread for more information on the GoVault
-> drive.
+> Patch is currently in production on Google servers.
 >
->    http://thread.gmane.org/gmane.linux.ide/14545/focus=14663
+> Signed-off-by: Grant Grundler<grundler@google.com>
+> Signed-off-by: Gwendal Grignou<gwendal@google.com>
+> Acked-by: Tejun Heo<tj@kernel.org>
 >
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Gary Hade<garyhade@us.ibm.com>
 > ---
->   drivers/ata/libata-core.c |   18 ++++++++++++------
->   include/linux/libata.h    |   11 ++++++-----
->   2 files changed, 18 insertions(+), 11 deletions(-)
+>
+> v2: dropped references to 4726 since I didn't test 4726,
+>      moved register definition directly into libata-pmp.c, and
+>      expanded the comment in the code to summarize the above description.
+>
+> Code below is white space mangled. Please use attached file.
 
-applied
+applied manually, please figure out a way to send patches that can be 
+applied directly using the standard automated tools (== git am) that 
+everyone uses
 
 
