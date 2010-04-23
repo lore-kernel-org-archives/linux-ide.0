@@ -1,405 +1,226 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 09/14] m68k: amiga - Amiga Gayle IDE platform device
-	conversion
-Date: Fri, 23 Apr 2010 10:32:26 +0200
-Message-ID: <t2z10f740e81004230132w9d9caccbjf3c83e1aa3e45a23@mail.gmail.com>
-References: <1272009635-6504-1-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-2-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-3-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-4-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-5-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-6-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-7-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-8-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-9-git-send-email-geert@linux-m68k.org>
-	 <1272009635-6504-10-git-send-email-geert@linux-m68k.org>
+From: Harry Zhang <harry.zhang@amd.com>
+Subject: [PATCH 2/2 v5] ahci: add "em_buffer" attribute for AHCI hosts
+Date: Fri, 23 Apr 2010 17:28:38 +0800
+Message-ID: <1272014918.3594.43.camel@zm-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1272009635-6504-10-git-send-email-geert@linux-m68k.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:36501 "EHLO
+	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756806Ab0DWJ2v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Apr 2010 05:28:51 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, tj@kernel.org, "Zhang, Harry" <Harry.Zhang@amd.com>, shane.huang@amd.com
 
-On Fri, Apr 23, 2010 at 10:00, Geert Uytterhoeven <geert@linux-m68k.org=
-> wrote:
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: linux-ide@vger.kernel.org
-> ---
-> =C2=A0arch/m68k/amiga/platform.c =C2=A0 =C2=A0 =C2=A0 | =C2=A0 63 +++=
-+++++++++++++-
-> =C2=A0arch/m68k/include/asm/amigayle.h | =C2=A0 =C2=A06 ++
-> =C2=A0drivers/ide/gayle.c =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0| =C2=A0150 +++++++++++++++++++++----------------
-> =C2=A03 files changed, 153 insertions(+), 66 deletions(-)
+Add "em_buffer" attribute for SATA AHCI hosts to provide a way for
+userland to access AHCI EM (enclosure management) buffer directly if the
+host supports EM.
 
-> --- a/drivers/ide/gayle.c
-> +++ b/drivers/ide/gayle.c
+AHCI driver should support SGPIO EM messages. However the SATA/AHCI
+specs did not define the SGPIO message format filled in EM buffer.
+Different HW vendors may have different definitions. The mainly purpose
+of this attribute is to solve this issue by allowing HW vendors to
+provide userland drivers and tools for their SGPIO initiators.
 
-> +{
-> + =C2=A0 =C2=A0 =C2=A0 // FIXME
-> + =C2=A0 =C2=A0 =C2=A0 if (pdata->explicit_ack)
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 d.port_ops =3D &ga=
-yle_a1200_port_ops;
-> + =C2=A0 =C2=A0 =C2=A0 else
-> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 d.port_ops =3D &ga=
-yle_a4000_port_ops;
-> +}
-
-Sorry, that was the wrong one. The FIXME and braces should have been re=
-moved.
-Updated patch below.
-
-=46rom 8dc07b6150772f3ff17b597424cf29d8fc4912f7 Mon Sep 17 00:00:00 200=
-1
-=46rom: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 8 Dec 2009 20:12:20 +0100
-Subject: [PATCH] m68k: amiga - Amiga Gayle IDE platform device conversi=
-on
-
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Harry Zhang <harry.zhang@amd.com>
 ---
- arch/m68k/amiga/platform.c       |   63 ++++++++++++++++-
- arch/m68k/include/asm/amigayle.h |    6 ++
- drivers/ide/gayle.c              |  147 +++++++++++++++++++++---------=
---------
- 3 files changed, 150 insertions(+), 66 deletions(-)
+v2: rebase this patch on the new upstream branch of linux-next.git
 
-diff --git a/arch/m68k/amiga/platform.c b/arch/m68k/amiga/platform.c
-index 027e4ca..907f6f5 100644
---- a/arch/m68k/amiga/platform.c
-+++ b/arch/m68k/amiga/platform.c
-@@ -11,6 +11,7 @@
- #include <linux/zorro.h>
+v3: do not use "ahci_em_messages" module parameter as EM message type
+    control, instead by detecting supported types at initialization.
+    Remove EM message structure shared with userland, instead by
+    simply writing the raw message into the buffer.
+    Move write function for this attribute from libata-scsi.c to
+    libahci.c.
+    Add read function.
+    Add necessary definitions for EM in ahci.h.
 
- #include <asm/amigahw.h>
-+#include <asm/amigayle.h>
+v4: remove changes for EM message types.
+    Add PAGE_SIZE check for em_buffer read function.
+    Report EAGAIN for read function when no message in the buffer.
 
+v5: move this patch to second one.
+    Exam EM message type for SGPIO when enter r/w method.
+    Use ata_port_printk to report warning for large read buffer.
 
- #ifdef CONFIG_ZORRO
-@@ -55,7 +56,24 @@ static int __init amiga_init_bus(void)
+ drivers/ata/ahci.h    |   10 +++-
+ drivers/ata/libahci.c |  104 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 111 insertions(+), 3 deletions(-)
 
- subsys_initcall(amiga_init_bus);
-
--#endif /* CONFIG_ZORRO */
-+
-+static int z_dev_present(zorro_id id)
-+{
-+	unsigned int i;
-+
-+	for (i =3D 0; i < zorro_num_autocon; i++)
-+		if (zorro_autocon[i].rom.er_Manufacturer =3D=3D ZORRO_MANUF(id) &&
-+		    zorro_autocon[i].rom.er_Product =3D=3D ZORRO_PROD(id))
-+			return 1;
-+
-+	return 0;
-+}
-+
-+#else /* !CONFIG_ZORRO */
-+
-+static inline int z_dev_present(zorro_id id) { return 0; }
-+
-+#endif /* !CONFIG_ZORRO */
-
-
- static const struct resource a3000_scsi_resource __initconst =3D {
-@@ -72,8 +90,36 @@ static const struct resource a4000t_scsi_resource
-__initconst =3D {
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 5edce44..7113c57 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -224,9 +224,12 @@ enum {
+ 	EM_MAX_RETRY			= 5,
+ 
+ 	/* em_ctl bits */
+-	EM_CTL_RST			= (1 << 9), /* Reset */
+-	EM_CTL_TM			= (1 << 8), /* Transmit Message */
+-	EM_CTL_ALHD			= (1 << 26), /* Activity LED */
++	EM_CTL_RST		= (1 << 9), /* Reset */
++	EM_CTL_TM		= (1 << 8), /* Transmit Message */
++	EM_CTL_MR		= (1 << 0), /* Message Recieved */
++	EM_CTL_ALHD		= (1 << 26), /* Activity LED */
++	EM_CTL_XMT		= (1 << 25), /* Transmit Only */
++	EM_CTL_SMB		= (1 << 24), /* Single Message Buffer */
+ 
+ 	/* em message type */
+ 	EM_MSG_TYPE_LED		= (1 << 0), /* LED */
+@@ -288,6 +291,7 @@ struct ahci_host_priv {
+ 	u32			saved_cap2;	/* saved initial cap2 */
+ 	u32			saved_port_map;	/* saved initial port_map */
+ 	u32 			em_loc; /* enclosure management location */
++	u32			em_buf_sz;	/* EM buffer size in byte */
+ 	u32			em_msg_type;	/* EM message type */
  };
-
-
-+static const struct resource a1200_ide_resource __initconst =3D {
-+	.start	=3D 0xda0000,
-+	.end	=3D 0xda1fff,
-+	.flags	=3D IORESOURCE_MEM,
-+};
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 817bcd0..1984a6e 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -108,11 +108,18 @@ static ssize_t ahci_show_host_version(struct device *dev,
+ 				      struct device_attribute *attr, char *buf);
+ static ssize_t ahci_show_port_cmd(struct device *dev,
+ 				  struct device_attribute *attr, char *buf);
++static ssize_t ahci_read_em_buffer(struct device *dev,
++				   struct device_attribute *attr, char *buf);
++static ssize_t ahci_store_em_buffer(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t size);
+ 
+ static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
+ static DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
+ static DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
+ static DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
++static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
++		   ahci_read_em_buffer, ahci_store_em_buffer);
+ 
+ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+@@ -122,6 +129,7 @@ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_ahci_host_cap2,
+ 	&dev_attr_ahci_host_version,
+ 	&dev_attr_ahci_port_cmd,
++	&dev_attr_em_buffer,
+ 	NULL
+ };
+ 
+@@ -252,6 +260,101 @@ static ssize_t ahci_show_port_cmd(struct device *dev,
+ 	return sprintf(buf, "%x\n", readl(port_mmio + PORT_CMD));
+ }
+ 
++static ssize_t ahci_read_em_buffer(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	void __iomem *em_mmio = mmio + hpriv->em_loc;
++	u32 em_ctl, msg;
++	unsigned long flags;
++	size_t count;
++	int i;
 +
-+static const struct gayle_ide_platform_data a1200_ide_pdata __initcons=
-t =3D {
-+	.base		=3D 0xda0000,
-+	.irqport	=3D 0xda9000,
-+	.explicit_ack	=3D 1,
-+};
++	spin_lock_irqsave(ap->lock, flags);
 +
-+
-+static const struct resource a4000_ide_resource __initconst =3D {
-+	.start	=3D 0xdd2000,
-+	.end	=3D 0xdd3fff,
-+	.flags	=3D IORESOURCE_MEM,
-+};
-+
-+static const struct gayle_ide_platform_data a4000_ide_pdata __initcons=
-t =3D {
-+	.base		=3D 0xdd2020,
-+	.irqport	=3D 0xdd3020,
-+	.explicit_ack	=3D 0,
-+};
-+
-+
- static int __init amiga_init_devices(void)
- {
-+	struct platform_device *pdev;
-+
- 	if (!MACH_IS_AMIGA)
- 		return -ENODEV;
-
-@@ -99,6 +145,21 @@ static int __init amiga_init_devices(void)
- 		platform_device_register_simple("amiga-a4000t-scsi", -1,
- 						&a4000t_scsi_resource, 1);
-
-+	if (AMIGAHW_PRESENT(A1200_IDE) ||
-+	    z_dev_present(ZORRO_PROD_MTEC_VIPER_MK_V_E_MATRIX_530_SCSI_IDE)) =
-{
-+		pdev =3D platform_device_register_simple("amiga-gayle-ide", -1,
-+						       &a1200_ide_resource, 1);
-+		platform_device_add_data(pdev, &a1200_ide_pdata,
-+					 sizeof(a1200_ide_pdata));
++	em_ctl = readl(mmio + HOST_EM_CTL);
++	if (!(ap->flags & ATA_FLAG_EM) || em_ctl & EM_CTL_XMT ||
++	    !(hpriv->em_msg_type & EM_MSG_TYPE_SGPIO)) {
++		spin_unlock_irqrestore(ap->lock, flags);
++		return -EINVAL;
 +	}
 +
-+	if (AMIGAHW_PRESENT(A4000_IDE)) {
-+		pdev =3D platform_device_register_simple("amiga-gayle-ide", -1,
-+						       &a4000_ide_resource, 1);
-+		platform_device_add_data(pdev, &a4000_ide_pdata,
-+					 sizeof(a4000_ide_pdata));
++	if (!(em_ctl & EM_CTL_MR)) {
++		spin_unlock_irqrestore(ap->lock, flags);
++		return -EAGAIN;
 +	}
 +
- 	return 0;
- }
-
-diff --git a/arch/m68k/include/asm/amigayle.h b/arch/m68k/include/asm/a=
-migayle.h
-index bb5a6aa..a01453d 100644
---- a/arch/m68k/include/asm/amigayle.h
-+++ b/arch/m68k/include/asm/amigayle.h
-@@ -104,4 +104,10 @@ struct GAYLE {
- #define GAYLE_CFG_250NS		0x00
- #define GAYLE_CFG_720NS		0x0c
-
-+struct gayle_ide_platform_data {
-+	unsigned long base;
-+	unsigned long irqport;
-+	int explicit_ack;	/* A1200 IDE needs explicit ack */
-+};
++	if (!(em_ctl & EM_CTL_SMB))
++		em_mmio += hpriv->em_buf_sz;
 +
- #endif /* asm-m68k/amigayle.h */
-diff --git a/drivers/ide/gayle.c b/drivers/ide/gayle.c
-index b9e517d..3feaa26 100644
---- a/drivers/ide/gayle.c
-+++ b/drivers/ide/gayle.c
-@@ -16,6 +16,7 @@
- #include <linux/init.h>
- #include <linux/zorro.h>
- #include <linux/module.h>
-+#include <linux/platform_device.h>
-
- #include <asm/setup.h>
- #include <asm/amigahw.h>
-@@ -24,15 +25,6 @@
-
-
-     /*
--     *  Bases of the IDE interfaces
--     */
--
--#define GAYLE_BASE_4000	0xdd2020	/* A4000/A4000T */
--#define GAYLE_BASE_1200	0xda0000	/* A1200/A600 and E-Matrix 530 */
--
--#define GAYLE_IDEREG_SIZE	0x2000
--
--    /*
-      *  Offsets from one of the above bases
-      */
-
-@@ -68,20 +60,20 @@ MODULE_PARM_DESC(doubler, "enable support for IDE
-doublers");
-
- static int gayle_test_irq(ide_hwif_t *hwif)
- {
--    unsigned char ch;
-+	unsigned char ch;
-
--    ch =3D z_readb(hwif->io_ports.irq_addr);
--    if (!(ch & GAYLE_IRQ_IDE))
--	return 0;
--    return 1;
-+	ch =3D z_readb(hwif->io_ports.irq_addr);
-+	if (!(ch & GAYLE_IRQ_IDE))
-+		return 0;
-+	return 1;
- }
-
- static void gayle_a1200_clear_irq(ide_drive_t *drive)
- {
--    ide_hwif_t *hwif =3D drive->hwif;
-+	ide_hwif_t *hwif =3D drive->hwif;
-
--    (void)z_readb(hwif->io_ports.status_addr);
--    z_writeb(0x7c, hwif->io_ports.irq_addr);
-+	(void)z_readb(hwif->io_ports.status_addr);
-+	z_writeb(0x7c, hwif->io_ports.irq_addr);
- }
-
- static void __init gayle_setup_ports(struct ide_hw *hw, unsigned long =
-base,
-@@ -122,64 +114,89 @@ static const struct ide_port_info gayle_port_info=
- =3D {
-      *  Probe for a Gayle IDE interface (and optionally for an IDE dou=
-bler)
-      */
-
--static int __init gayle_init(void)
-+static int __init amiga_gayle_ide_probe(struct platform_device *pdev)
- {
--    unsigned long phys_base, res_start, res_n;
--    unsigned long base, ctrlport, irqport;
--    int a4000, i, rc;
--    struct ide_hw hw[GAYLE_NUM_HWIFS], *hws[GAYLE_NUM_HWIFS];
--    struct ide_port_info d =3D gayle_port_info;
--
--    if (!MACH_IS_AMIGA)
--	return -ENODEV;
--
--    if ((a4000 =3D AMIGAHW_PRESENT(A4000_IDE)) || AMIGAHW_PRESENT(A120=
-0_IDE))
--	goto found;
--
--#ifdef CONFIG_ZORRO
--    if (zorro_find_device(ZORRO_PROD_MTEC_VIPER_MK_V_E_MATRIX_530_SCSI=
-_IDE,
--			  NULL))
--	goto found;
--#endif
--    return -ENODEV;
--
--found:
--	printk(KERN_INFO "ide: Gayle IDE controller (A%d style%s)\n",
--			 a4000 ? 4000 : 1200,
--			 ide_doubler ? ", IDE doubler" : "");
--
--	if (a4000) {
--	    phys_base =3D GAYLE_BASE_4000;
--	    irqport =3D (unsigned long)ZTWO_VADDR(GAYLE_IRQ_4000);
--	    d.port_ops =3D &gayle_a4000_port_ops;
--	} else {
--	    phys_base =3D GAYLE_BASE_1200;
--	    irqport =3D (unsigned long)ZTWO_VADDR(GAYLE_IRQ_1200);
--	    d.port_ops =3D &gayle_a1200_port_ops;
-+	struct resource *res;
-+	struct gayle_ide_platform_data *pdata;
-+	unsigned long base, ctrlport, irqport;
-+	unsigned int i;
-+	int error;
-+	struct ide_hw hw[GAYLE_NUM_HWIFS], *hws[GAYLE_NUM_HWIFS];
-+	struct ide_port_info d =3D gayle_port_info;
-+	struct ide_host *host;
++	count = hpriv->em_buf_sz;
 +
-+	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -ENODEV;
++	/* the count should not be larger than PAGE_SIZE */
++	if (count > PAGE_SIZE) {
++		if (printk_ratelimit())
++			ata_port_printk(ap, KERN_WARNING,
++					"EM read buffer size too large: "
++					"buffer size %u, page size %lu\n",
++					hpriv->em_buf_sz, PAGE_SIZE);
++		count = PAGE_SIZE;
++	}
 +
-+	if (!request_mem_region(res->start, resource_size(res), "IDE"))
++	for (i = 0; i < count; i += 4) {
++		msg = readl(em_mmio + i);
++		buf[i] = msg & 0xff;
++		buf[i + 1] = (msg >> 8) & 0xff;
++		buf[i + 2] = (msg >> 16) & 0xff;
++		buf[i + 3] = (msg >> 24) & 0xff;
++	}
++
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	return i;
++}
++
++static ssize_t ahci_store_em_buffer(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t size)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	void __iomem *em_mmio = mmio + hpriv->em_loc;
++	u32 em_ctl, msg;
++	unsigned long flags;
++	int i;
++
++	/* check size validity */
++	if (!(ap->flags & ATA_FLAG_EM) ||
++	    !(hpriv->em_msg_type & EM_MSG_TYPE_SGPIO) ||
++	    size % 4 || size > hpriv->em_buf_sz)
++		return -EINVAL;
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	em_ctl = readl(mmio + HOST_EM_CTL);
++	if (em_ctl & EM_CTL_TM) {
++		spin_unlock_irqrestore(ap->lock, flags);
 +		return -EBUSY;
++	}
 +
-+	pdata =3D pdev->dev.platform_data;
-+	pr_info("ide: Gayle IDE controller (A%u style%s)\n",
-+		pdata->explicit_ack ? 1200 : 4000,
-+		ide_doubler ? ", IDE doubler" : "");
++	for (i = 0; i < size; i += 4) {
++		msg = buf[i] | buf[i + 1] << 8 |
++		      buf[i + 2] << 16 | buf[i + 3] << 24;
++		writel(msg, em_mmio + i);
++	}
 +
-+	base =3D (unsigned long)ZTWO_VADDR(pdata->base);
-+	ctrlport =3D 0;
-+	irqport =3D (unsigned long)ZTWO_VADDR(pdata->irqport);
-+	if (pdata->explicit_ack)
-+		d.port_ops =3D &gayle_a1200_port_ops;
-+	else
-+		d.port_ops =3D &gayle_a4000_port_ops;
++	writel(em_ctl | EM_CTL_TM, mmio + HOST_EM_CTL);
 +
-+	for (i =3D 0; i < GAYLE_NUM_PROBE_HWIFS; i++, base +=3D GAYLE_NEXT_PO=
-RT) {
-+		if (GAYLE_HAS_CONTROL_REG)
-+			ctrlport =3D base + GAYLE_CONTROL;
++	spin_unlock_irqrestore(ap->lock, flags);
 +
-+		gayle_setup_ports(&hw[i], base, ctrlport, irqport);
-+		hws[i] =3D &hw[i];
- 	}
-
--	res_start =3D ((unsigned long)phys_base) & ~(GAYLE_NEXT_PORT-1);
--	res_n =3D GAYLE_IDEREG_SIZE;
-+	error =3D ide_host_add(&d, hws, i, &host);
-+	if (error)
-+		goto out;
-
--	if (!request_mem_region(res_start, res_n, "IDE"))
--		return -EBUSY;
-+	platform_set_drvdata(pdev, host);
-+	return 0;
-
--    for (i =3D 0; i < GAYLE_NUM_PROBE_HWIFS; i++) {
--	base =3D (unsigned long)ZTWO_VADDR(phys_base + i * GAYLE_NEXT_PORT);
--	ctrlport =3D GAYLE_HAS_CONTROL_REG ? (base + GAYLE_CONTROL) : 0;
-+out:
-+	release_mem_region(res->start, resource_size(res));
-+	return error;
++	return size;
 +}
 +
-+static int __exit amiga_gayle_ide_remove(struct platform_device *pdev)
-+{
-+	struct ide_host *host =3D platform_get_drvdata(pdev);
-+	struct resource *res =3D platform_get_resource(pdev, IORESOURCE_MEM, =
-0);
-+
-+	ide_host_remove(host);
-+	release_mem_region(res->start, resource_size(res));
-+	return 0;
-+}
+ /**
+  *	ahci_save_initial_config - Save and fixup initial config values
+  *	@dev: target AHCI device
+@@ -2099,6 +2202,7 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+ 	if (messages) {
+ 		/* store em_loc */
+ 		hpriv->em_loc = ((em_loc >> 16) * 4);
++		hpriv->em_buf_sz = ((em_loc & 0xff) * 4);
+ 		hpriv->em_msg_type = messages;
+ 		pi->flags |= ATA_FLAG_EM;
+ 		if (!(em_ctl & EM_CTL_ALHD))
+-- 
+1.6.4.2
 
--	gayle_setup_ports(&hw[i], base, ctrlport, irqport);
-+static struct platform_driver amiga_gayle_ide_driver =3D {
-+	.remove =3D __exit_p(amiga_gayle_ide_remove),
-+	.driver   =3D {
-+		.name	=3D "amiga-gayle-ide",
-+		.owner	=3D THIS_MODULE,
-+	},
-+};
 
--	hws[i] =3D &hw[i];
--    }
-+static int __init amiga_gayle_ide_init(void)
-+{
-+	return platform_driver_probe(&amiga_gayle_ide_driver,
-+				     amiga_gayle_ide_probe);
-+}
 
--    rc =3D ide_host_add(&d, hws, i, NULL);
--    if (rc)
--	release_mem_region(res_start, res_n);
-+module_init(amiga_gayle_ide_init);
-
--    return rc;
-+static void __exit amiga_gayle_ide_exit(void)
-+{
-+	platform_driver_unregister(&amiga_gayle_ide_driver);
- }
-
--module_init(gayle_init);
-+module_exit(amiga_gayle_ide_exit);
-
- MODULE_LICENSE("GPL");
-+MODULE_ALIAS("platform:amiga-gayle-ide");
---=20
-1.6.0.4
-
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-							    -- Linus Torvalds
