@@ -1,46 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Working around bogus HPAs in libata
-Date: Sat, 24 Apr 2010 07:35:03 +0200
-Message-ID: <4BD28307.3090003@kernel.org>
-References: <1269192318.18314.218.camel@localhost>	 <4BB5637E.4050604@kernel.org> <1270245450.12516.187.camel@localhost>	 <4BBA95F8.7070909@kernel.org> <1270520930.24287.102.camel@localhost>	 <4BBA9D83.2040909@kernel.org> <1272075995.11697.41.camel@localhost>
+From: Richard Mawson <richard@crow.mawsonit.co.uk>
+Subject: Re: SATA driver sata_sil24
+Date: Sat, 24 Apr 2010 06:10:21 +0100
+Message-ID: <20100424051021.GG1883@crow.mawsonit.co.uk>
+References: <20100422083226.GA6018@crow.mawsonit.co.uk> <4BD0203C.7010903@gmail.com> <20100422121747.GC6018@crow.mawsonit.co.uk> <4BD05043.10709@gmail.com> <20100422223309.GA1883@crow.mawsonit.co.uk> <4BD1129E.6030104@gmail.com> <20100423203446.GF1883@crow.mawsonit.co.uk> <y2i51f3faa71004231734hbcda3ad5p61798db712cc87c5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9jHkwA2TBA/ec6v+"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55175 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752050Ab0DXFfp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 24 Apr 2010 01:35:45 -0400
-In-Reply-To: <1272075995.11697.41.camel@localhost>
+Received: from smarthost01.mail.zen.net.uk ([212.23.3.140]:58451 "EHLO
+	smarthost01.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752987Ab0DXJMi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Apr 2010 05:12:38 -0400
+Content-Disposition: inline
+In-Reply-To: <y2i51f3faa71004231734hbcda3ad5p61798db712cc87c5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-ide@vger.kernel.org, debian-kernel@lists.debian.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Hello,
 
-On 04/24/2010 04:26 AM, Ben Hutchings wrote:
->> The patch I posted is rolled up version which contained currently
->> pending HPA unlock on shrink patch.
->>
->>   http://article.gmane.org/gmane.linux.ide/45662
-> 
-> It sounds like that should go to stable as well.
+--9jHkwA2TBA/ec6v+
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I think it's a bit too pervasive for -stable inclusion.  The number of
-affected systems is very low after all.
+Robert, Tejun,
 
->> Multiple messages are probably sd doing revalidation of the device.  I
->> don't think it will cause any problem but I'll look into it later
->> today and let you know.
-> 
-> What did you find?
+On Fri, Apr 23, 2010 at 06:34:36PM -0600, Robert Hancock wrote:
+> > Having put printk messages all over the driver, I see it currently lock=
+s up
+> > during this readl call:
+> >
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Clear port RST */
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0tmp =3D readl(port + PORT_CTRL_STAT);
+> >
+> > .. but as this is clearly later on from the previously mentioned stack,=
+ I'm
+> > starting to suspect that this is failing in random places when talking =
+across
+> > this pci-pcie bridge. Do you agree that this sounds plausible?
+>=20
+> I suspect it's something like that - not sure what else could cause
+> things to explode at that point..
 
-Nothing yet.  I just moved and my stuff are still in transit, so I
-couldn't test anything.  I'll get to it once my things arrive (they're
-expected to next week).
+Thank you for your help with this. I believe this was a hardware problem, a=
+s the same
+pci-pcie converter with the same pcie sata adapter work perfectly in a diff=
+erent=20
+system (now why didn't I try that first..?).
 
-Thanks.
+--=20
+Richard Mawson
+Mawson IT Services
 
--- 
-tejun
+--9jHkwA2TBA/ec6v+
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkvSfT0ACgkQEqu+mbnN8VKpBQCfZnPV2cHic7WGogyRsij9UVxl
+1pMAoIaUDfd4+AY7Rup7PQiVMb8Oi0GU
+=zIMc
+-----END PGP SIGNATURE-----
+
+--9jHkwA2TBA/ec6v+--
