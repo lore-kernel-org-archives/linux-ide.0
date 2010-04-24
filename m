@@ -1,69 +1,44 @@
-From: Richard Mawson <richard@crow.mawsonit.co.uk>
-Subject: Re: SATA driver sata_sil24
-Date: Sat, 24 Apr 2010 06:10:21 +0100
-Message-ID: <20100424051021.GG1883@crow.mawsonit.co.uk>
-References: <20100422083226.GA6018@crow.mawsonit.co.uk> <4BD0203C.7010903@gmail.com> <20100422121747.GC6018@crow.mawsonit.co.uk> <4BD05043.10709@gmail.com> <20100422223309.GA1883@crow.mawsonit.co.uk> <4BD1129E.6030104@gmail.com> <20100423203446.GF1883@crow.mawsonit.co.uk> <y2i51f3faa71004231734hbcda3ad5p61798db712cc87c5@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_scc: make scc_wait_after_reset() static
+Date: Sat, 24 Apr 2010 19:34:48 +0400
+Message-ID: <201004241934.48631.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="9jHkwA2TBA/ec6v+"
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smarthost01.mail.zen.net.uk ([212.23.3.140]:58451 "EHLO
-	smarthost01.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752987Ab0DXJMi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Apr 2010 05:12:38 -0400
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:46249 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751986Ab0DXPfh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Apr 2010 11:35:37 -0400
 Content-Disposition: inline
-In-Reply-To: <y2i51f3faa71004231734hbcda3ad5p61798db712cc87c5@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
+... since, of course, it's not used outside this driver.
 
---9jHkwA2TBA/ec6v+
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Robert, Tejun,
+---
+The patch is against the recent Linus' tree.
 
-On Fri, Apr 23, 2010 at 06:34:36PM -0600, Robert Hancock wrote:
-> > Having put printk messages all over the driver, I see it currently lock=
-s up
-> > during this readl call:
-> >
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Clear port RST */
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0tmp =3D readl(port + PORT_CTRL_STAT);
-> >
-> > .. but as this is clearly later on from the previously mentioned stack,=
- I'm
-> > starting to suspect that this is failing in random places when talking =
-across
-> > this pci-pcie bridge. Do you agree that this sounds plausible?
->=20
-> I suspect it's something like that - not sure what else could cause
-> things to explode at that point..
+ drivers/ata/pata_scc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thank you for your help with this. I believe this was a hardware problem, a=
-s the same
-pci-pcie converter with the same pcie sata adapter work perfectly in a diff=
-erent=20
-system (now why didn't I try that first..?).
-
---=20
-Richard Mawson
-Mawson IT Services
-
---9jHkwA2TBA/ec6v+
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkvSfT0ACgkQEqu+mbnN8VKpBQCfZnPV2cHic7WGogyRsij9UVxl
-1pMAoIaUDfd4+AY7Rup7PQiVMb8Oi0GU
-=zIMc
------END PGP SIGNATURE-----
-
---9jHkwA2TBA/ec6v+--
+Index: linux-2.6/drivers/ata/pata_scc.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_scc.c
++++ linux-2.6/drivers/ata/pata_scc.c
+@@ -512,8 +512,8 @@ static unsigned int scc_devchk (struct a
+  *	Note: Original code is ata_sff_wait_after_reset
+  */
+ 
+-int scc_wait_after_reset(struct ata_link *link, unsigned int devmask,
+-			 unsigned long deadline)
++static int scc_wait_after_reset(struct ata_link *link, unsigned int devmask,
++				unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
