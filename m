@@ -1,84 +1,90 @@
-From: Richard Mawson <richard@crow.mawsonit.co.uk>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: SATA driver sata_sil24
-Date: Fri, 23 Apr 2010 21:34:46 +0100
-Message-ID: <20100423203446.GF1883@crow.mawsonit.co.uk>
-References: <20100422083226.GA6018@crow.mawsonit.co.uk> <4BD0203C.7010903@gmail.com> <20100422121747.GC6018@crow.mawsonit.co.uk> <4BD05043.10709@gmail.com> <20100422223309.GA1883@crow.mawsonit.co.uk> <4BD1129E.6030104@gmail.com>
+Date: Fri, 23 Apr 2010 18:34:36 -0600
+Message-ID: <y2i51f3faa71004231734hbcda3ad5p61798db712cc87c5@mail.gmail.com>
+References: <20100422083226.GA6018@crow.mawsonit.co.uk>
+	 <4BD0203C.7010903@gmail.com>
+	 <20100422121747.GC6018@crow.mawsonit.co.uk> <4BD05043.10709@gmail.com>
+	 <20100422223309.GA1883@crow.mawsonit.co.uk>
+	 <4BD1129E.6030104@gmail.com>
+	 <20100423203446.GF1883@crow.mawsonit.co.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7lMq7vMTJT4tNk0a"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smarthost02.mail.zen.net.uk ([212.23.3.141]:51366 "EHLO
-	smarthost02.mail.zen.net.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755905Ab0DXAQa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Apr 2010 20:16:30 -0400
-Content-Disposition: inline
-In-Reply-To: <4BD1129E.6030104@gmail.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:37821 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757363Ab0DXAei convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Apr 2010 20:34:38 -0400
+Received: by gwj19 with SMTP id 19so2995665gwj.19
+        for <linux-ide@vger.kernel.org>; Fri, 23 Apr 2010 17:34:37 -0700 (PDT)
+In-Reply-To: <20100423203446.GF1883@crow.mawsonit.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
+To: Richard Mawson <richard@crow.mawsonit.co.uk>
 Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-
---7lMq7vMTJT4tNk0a
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Apr 22, 2010 at 09:23:10PM -0600, Robert Hancock wrote:
-> Hmm, that seems like this line in drivers/ata/sata_sil24.c:
+On Fri, Apr 23, 2010 at 2:34 PM, Richard Mawson
+<richard@crow.mawsonit.co.uk> wrote:
+> On Thu, Apr 22, 2010 at 09:23:10PM -0600, Robert Hancock wrote:
+>> Hmm, that seems like this line in drivers/ata/sata_sil24.c:
+>>
+>> =A0 =A0 =A0 =A0 /* Set max read request size to 4096. =A0This slight=
+ly increases
+>> =A0 =A0 =A0 =A0 =A0* write throughput for pci-e variants.
+>> =A0 =A0 =A0 =A0 =A0*/
+>> =A0 =A0 =A0 =A0 pcie_set_readrq(pdev, 4096);
+>>
+>> Can you try commenting out or deleting that line and rebuilding, and=
+ see
+>> if things work better? That's not really a solution, but if it worke=
+d,
+>> it would indicate there's something about the system configuration w=
+ith
+>> that converter card installed that explodes when trying to set the m=
+ax
+>> read request size. In that case can you post the output of "lspci -v=
+v"
+>> and the full dmesg boot log?
 >
->         /* Set max read request size to 4096.  This slightly increases
->          * write throughput for pci-e variants.
->          */
->         pcie_set_readrq(pdev, 4096);
+> Having put printk messages all over the driver, I see it currently lo=
+cks up
+> during this readl call:
 >
-> Can you try commenting out or deleting that line and rebuilding, and see =
-=20
-> if things work better? That's not really a solution, but if it worked, =
-=20
-> it would indicate there's something about the system configuration with =
-=20
-> that converter card installed that explodes when trying to set the max =
-=20
-> read request size. In that case can you post the output of "lspci -vv" =
-=20
-> and the full dmesg boot log?
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Clear port RST */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0tmp =3D readl(port + PORT_CTRL_STAT);
+>
+> .. but as this is clearly later on from the previously mentioned stac=
+k, I'm
+> starting to suspect that this is failing in random places when talkin=
+g across
+> this pci-pcie bridge. Do you agree that this sounds plausible?
 
-Having put printk messages all over the driver, I see it currently locks up
-during this readl call:
+I suspect it's something like that - not sure what else could cause
+things to explode at that point..
 
-                /* Clear port RST */
-                tmp =3D readl(port + PORT_CTRL_STAT);
-
-=2E. but as this is clearly later on from the previously mentioned stack, I=
-'m
-starting to suspect that this is failing in random places when talking acro=
-ss
-this pci-pcie bridge. Do you agree that this sounds plausible?
-
-I did attempt to get a crash dump, but failed to get any joy from using the
-nmi watchdog to trigger the use of the debug kernel in this state.
-
-I will attempt using a different machine, hopefully tomorrow, but I have no
-native pcie machines so can't eliminate the pci-pcie bridge being at fault.
-
-Thanks for your help.
-
---=20
-Richard Mawson
-Mawson IT Services
-
---7lMq7vMTJT4tNk0a
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkvSBGYACgkQEqu+mbnN8VKZTgCeMu3flpdyVdp7smp8qaaJPGIp
-8h8AnReBz04O1NVYqD16zLnYcnN9NNHZ
-=bANg
------END PGP SIGNATURE-----
-
---7lMq7vMTJT4tNk0a--
+>
+> I did attempt to get a crash dump, but failed to get any joy from usi=
+ng the
+> nmi watchdog to trigger the use of the debug kernel in this state.
+>
+> I will attempt using a different machine, hopefully tomorrow, but I h=
+ave no
+> native pcie machines so can't eliminate the pci-pcie bridge being at =
+fault.
+>
+> Thanks for your help.
+>
+> --
+> Richard Mawson
+> Mawson IT Services
+>
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.9 (GNU/Linux)
+>
+> iEYEARECAAYFAkvSBGYACgkQEqu+mbnN8VKZTgCeMu3flpdyVdp7smp8qaaJPGIp
+> 8h8AnReBz04O1NVYqD16zLnYcnN9NNHZ
+> =3DbANg
+> -----END PGP SIGNATURE-----
+>
+>
