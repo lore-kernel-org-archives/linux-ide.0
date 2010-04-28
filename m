@@ -1,43 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Weird ahci init failure possibly caused by PCI layer
-Date: Wed, 28 Apr 2010 16:30:53 +0200
-Message-ID: <4BD8469D.6080409@kernel.org>
+From: Maxime Bizon <mbizon@freebox.fr>
+Subject: Re: [RFC] add port information for ATA devices in sysfs
+Date: Wed, 28 Apr 2010 16:57:20 +0200
+Message-ID: <1272466640.12455.253.camel@sakura.staff.proxad.net>
+References: <201004261829.04687.nschichan@freebox.fr>
+	 <20100427034210.GB4759@kroah.com> <201004271518.13611.nschichan@freebox.fr>
+	 <20100428055013.GA14913@kroah.com>
+Reply-To: mbizon@freebox.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39782 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751093Ab0D1Oa5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Apr 2010 10:30:57 -0400
+Received: from smtpfb1-g21.free.fr ([212.27.42.9]:58321 "EHLO
+	smtpfb1-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753820Ab0D1O61 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Apr 2010 10:58:27 -0400
+Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
+	by smtpfb1-g21.free.fr (Postfix) with ESMTP id 8CEE977CF71
+	for <linux-ide@vger.kernel.org>; Wed, 28 Apr 2010 16:58:22 +0200 (CEST)
+In-Reply-To: <20100428055013.GA14913@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Reinhard Max <max@novell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: Nicolas Schichan <nschichan@freebox.fr>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello, Jesse.
 
-There is a pretty weird ahci init failure[1] reported by Reinhard Max
-against openSUSE 11.3 on Dell Optiplex 960[2].  It looks like
-something between the cpu and the controller isn't properly set up and
-register reads on the controller return garbage values.  The problem
-appeared somewhere between 2.6.33 and 2.6.34-rc3 and is still present
-in -rc5.
+On Tue, 2010-04-27 at 22:50 -0700, Greg KH wrote:
 
-The following log from -rc3 seemed :-) relevant to me.
+Hi Greg,
 
- <3>pci 0000:00:1f.2: no compatible bridge window for [mem 0xff970000-0xff9707ff]
- <4>Expanded resource reserved due to conflict with PCI Bus 0000:00
- <7>reserve RAM buffer: 000000000009e400 - 000000000009ffff
- <7>reserve RAM buffer: 00000000cfdffc00 - 00000000cfffffff
+> As for the whole idea of the extra device (which it doesn't look like
+> you ever initialize anywhere), it's not good to have one sitting in the
+> middle of the device chain that isn't owned by a bus somehow.  That just
+> looks wierd and can cause problems with udev rules.
+> 
+> why is this really needed at all?  Can't you just export the port number
+> in the device as an attribute instead?
 
-The full log from -rc3 is available[3].  Any ideas?
+You're right, please disregard this. We got fooled by the incrementing
+scsi host id in the device path.
 
-Thanks.
+The misleading part (for me) is that even if a device sysfs devpath
+*seems* to represent its topology, some parts of the path are not
+"persistent" (across simple rmmod/modprobe)
+
+I just read udev path_id source code and saw the trick for the scsi host
+number (which would have been broken with this patch). Since the ata
+code always creates scsi hosts in ata port order, we can assume that
+lowest scsi host number is the first ata port, so the patch is not
+needed.
 
 -- 
-tejun
+Maxime
 
-[1] https://bugzilla.novell.com/show_bug.cgi?id=598520
-[2] https://bugzillafiles.novell.org/attachment.cgi?id=356199
-[3] https://bugzillafiles.novell.org/attachment.cgi?id=356197
+
