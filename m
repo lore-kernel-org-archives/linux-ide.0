@@ -1,55 +1,63 @@
-From: Maxime Bizon <mbizon@freebox.fr>
-Subject: Re: [RFC] add port information for ATA devices in sysfs
-Date: Wed, 28 Apr 2010 16:57:20 +0200
-Message-ID: <1272466640.12455.253.camel@sakura.staff.proxad.net>
-References: <201004261829.04687.nschichan@freebox.fr>
-	 <20100427034210.GB4759@kroah.com> <201004271518.13611.nschichan@freebox.fr>
-	 <20100428055013.GA14913@kroah.com>
-Reply-To: mbizon@freebox.fr
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: Weird ahci init failure possibly caused by PCI layer
+Date: Wed, 28 Apr 2010 09:48:38 -0600
+Message-ID: <201004280948.39263.bjorn.helgaas@hp.com>
+References: <4BD8469D.6080409@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpfb1-g21.free.fr ([212.27.42.9]:58321 "EHLO
-	smtpfb1-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753820Ab0D1O61 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Apr 2010 10:58:27 -0400
-Received: from smtp2-g21.free.fr (smtp2-g21.free.fr [212.27.42.2])
-	by smtpfb1-g21.free.fr (Postfix) with ESMTP id 8CEE977CF71
-	for <linux-ide@vger.kernel.org>; Wed, 28 Apr 2010 16:58:22 +0200 (CEST)
-In-Reply-To: <20100428055013.GA14913@kroah.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4BD8469D.6080409@kernel.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>, Reinhard Max <max@novell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Nicolas Schichan <nschichan@freebox.fr>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-
-On Tue, 2010-04-27 at 22:50 -0700, Greg KH wrote:
-
-Hi Greg,
-
-> As for the whole idea of the extra device (which it doesn't look like
-> you ever initialize anywhere), it's not good to have one sitting in the
-> middle of the device chain that isn't owned by a bus somehow.  That just
-> looks wierd and can cause problems with udev rules.
+On Wednesday 28 April 2010 08:30:53 am Tejun Heo wrote:
+> Hello, Jesse.
 > 
-> why is this really needed at all?  Can't you just export the port number
-> in the device as an attribute instead?
+> There is a pretty weird ahci init failure[1] reported by Reinhard Max
+> against openSUSE 11.3 on Dell Optiplex 960[2].  It looks like
+> something between the cpu and the controller isn't properly set up and
+> register reads on the controller return garbage values.  The problem
+> appeared somewhere between 2.6.33 and 2.6.34-rc3 and is still present
+> in -rc5.
+> 
+> The following log from -rc3 seemed :-) relevant to me.
+> 
+>  <3>pci 0000:00:1f.2: no compatible bridge window for [mem 0xff970000-0xff9707ff]
+>  <4>Expanded resource reserved due to conflict with PCI Bus 0000:00
+>  <7>reserve RAM buffer: 000000000009e400 - 000000000009ffff
+>  <7>reserve RAM buffer: 00000000cfdffc00 - 00000000cfffffff
+> 
+> The full log from -rc3 is available[3].  Any ideas?
 
-You're right, please disregard this. We got fooled by the incrementing
-scsi host id in the device path.
+This is the same problem as https://bugzilla.kernel.org/show_bug.cgi?id=15744
 
-The misleading part (for me) is that even if a device sysfs devpath
-*seems* to represent its topology, some parts of the path are not
-"persistent" (across simple rmmod/modprobe)
+The snippet below shows that BIOS left the 00:1f.2 BAR at
+[mem 0xff970000-0xff9707ff], which is not in any of the host bridge
+MMIO windows, so Linux moved it.  Unfortunately, we moved it to 0xa0000,
+which was not a good choice.
 
-I just read udev path_id source code and saw the trick for the scsi host
-number (which would have been broken with this patch). Since the ata
-code always creates scsi hosts in ata port order, we can assume that
-lowest scsi host number is the first ata port, so the patch is not
-needed.
+The patch here: https://bugzilla.kernel.org/attachment.cgi?id=26149
+(attached as comment #11 to 15744) should fix the problem.
 
--- 
-Maxime
+Let me know if it doesn't.
+
+Bjorn
 
 
+  pci_root PNP0A03:00: host bridge window [mem 0x000a0000-0x000bffff]
+  pci_root PNP0A03:00: host bridge window [mem 0x000c0000-0x000effff]
+  pci_root PNP0A03:00: host bridge window [mem 0x000f0000-0x000fffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xf0000000-0xfebfffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xcff00000-0xdfffffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xff980000-0xff980fff]
+  pci_root PNP0A03:00: host bridge window [mem 0xff97c000-0xff97ffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xfed20000-0xfed9ffff]
+  pci_root PNP0A03:00: host bridge window [mem 0xfeda7000-0xfeda7fff]
+  pci 0000:00:1f.2: reg 24: [mem 0xff970000-0xff9707ff]
+  pci 0000:00:1f.2: no compatible bridge window for [mem 0xff970000-0xff9707ff]
+  pci 0000:00:1f.2: BAR 5: assigned [mem 0x000a0000-0x000a07ff]
