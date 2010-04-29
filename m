@@ -1,143 +1,87 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] libata: update developer's guide
-Date: Fri, 30 Apr 2010 17:56:36 +0400
-Message-ID: <201004301756.36355.sshtylyov@ru.mvista.com>
+From: Olof Johansson <olof@lixom.net>
+Subject: link resets with SSD on AHCI
+Date: Thu, 29 Apr 2010 16:59:35 -0500
+Message-ID: <20100429215935.GA9796@lixom.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:39761 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933473Ab0D3R50 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Apr 2010 13:57:26 -0400
+Received: from mail.lixom.net ([66.141.50.11]:48162 "EHLO mail.lixom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759099Ab0D3SDs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Apr 2010 14:03:48 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-Commit 6bfff31e77cfa1b13490337e5a4dbaa3407e83ac (libata: kill probe_ent
-and related helpers) killed ata_device_add() but didn't remove references
-to it from the libata developer's guide.
+Hi,
 
-Commit 9363c3825ea9ad76561eb48a395349dd29211ed6 (libata: rename SFF
-functions) renamed the taskfile access methods but didn't update the
-developer's guide.  Commit c9f75b04ed5ed65a058d18a8a8dda50632a96de8
-(libata: kill ata_noop_dev_select()) didn't update the developer's
-guide as well.
+I've been investigating a puzzling error here. It seems to happen on my
+netbook, the chipset/controller is "82801GR/GH (ICH7 Family) SATA AHCI
+Controller (rev 02)".
 
-The guide also refers to the long gone ata_pio_data_xfer_noirq(),
-ata_pio_data_xfer(), and ata_mmio_data_xfer() -- replace those by
-the modern ata_sff_data_xfer_noirq(), ata_sff_data_xfer(), and
-ata_sff_data_xfer32().
+The problem is: Once per boot, it will pop an error:
 
-Also, remove the reference to non-existant ata_port_stop()...
+[  282.701448] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  282.701465] ata1.00: failed command: WRITE DMA
+[  282.701492] ata1.00: cmd ca/00:00:00:ae:cc/00:00:00:00:00/e0 tag 0 dma 131072 out
+[  282.701498]          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+[  282.701509] ata1.00: status: { DRDY }
+[  282.701527] ata1: hard resetting link
+[  283.006179] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[  283.007491] ata1.00: configured for UDMA/100
+[  283.007506] ata1.00: device reported invalid CHS sector 0
+[  283.007529] ata1: EH complete
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+This will happen only once. I've found reasonably reliable ways to
+trigger it within a few minutes by running dbench (which does not stress
+the disks hard). Errors are of the exact same format as above, just LBA
+numbers and transfer sizes/directions differing.
 
----
-The patch is against the recent Linus' tree.
+Things I have tried without helping:
 
- Documentation/DocBook/libata.tmpl |   35 +++++++++--------------------------
- 1 file changed, 9 insertions(+), 26 deletions(-)
+* acpi=off
+* pci=nomsi
+* running single cpu / no ht (makes it take much longer to happen but still does)
+* making sure no laptop-mode hdparm tunings are done
+* various other combinations of the above
 
-Index: linux-2.6/Documentation/DocBook/libata.tmpl
-===================================================================
---- linux-2.6.orig/Documentation/DocBook/libata.tmpl
-+++ linux-2.6/Documentation/DocBook/libata.tmpl
-@@ -105,10 +105,6 @@ void (*dev_config) (struct ata_port *, s
- 	issue of SET FEATURES - XFER MODE, and prior to operation.
- 	</para>
- 	<para>
--	Called by ata_device_add() after ata_dev_identify() determines
--	a device is present.
--	</para>
--	<para>
- 	This entry may be specified as NULL in ata_port_operations.
- 	</para>
- 
-@@ -162,7 +158,7 @@ void (*tf_read) (struct ata_port *ap, st
- 	hardware registers / DMA buffers, to obtain the current set of
- 	taskfile register values.
- 	Most drivers for taskfile-based hardware (PIO or MMIO) use
--	ata_tf_load() and ata_tf_read() for these hooks.
-+	ata_sff_tf_load() and ata_sff_tf_read() for these hooks.
- 	</para>
- 
- 	</sect2>
-@@ -176,9 +172,8 @@ void (*data_xfer) (struct ata_device *, 
- All bmdma-style drivers must implement this hook.  This is the low-level
- operation that actually copies the data bytes during a PIO data
- transfer.
--Typically the driver
--will choose one of ata_pio_data_xfer_noirq(), ata_pio_data_xfer(), or
--ata_mmio_data_xfer().
-+Typically the driver will choose one of ata_sff_data_xfer_noirq(),
-+ata_sff_data_xfer(), or ata_sff_data_xfer32().
- 	</para>
- 
- 	</sect2>
-@@ -191,7 +186,7 @@ void (*exec_command)(struct ata_port *ap
- 	<para>
- 	causes an ATA command, previously loaded with
- 	->tf_load(), to be initiated in hardware.
--	Most drivers for taskfile-based hardware use ata_exec_command()
-+	Most drivers for taskfile-based hardware use ata_sff_exec_command()
- 	for this hook.
- 	</para>
- 
-@@ -225,13 +220,7 @@ u8   (*check_altstatus)(struct ata_port 
- 	hardware.  On some hardware, reading the Status register has
- 	the side effect of clearing the interrupt condition.
- 	Most drivers for taskfile-based hardware use
--	ata_check_status() for this hook.
--	</para>
--	<para>
--	Note that because this is called from ata_device_add(), at
--	least a dummy function that clears device interrupts must be
--	provided for all drivers, even if the controller doesn't
--	actually have a taskfile status register.
-+	ata_sff_check_status() for this hook.
- 	</para>
- 
- 	</sect2>
-@@ -249,9 +238,7 @@ void (*dev_select)(struct ata_port *ap, 
- 	</para>
- 	<para>
- 	Most drivers for taskfile-based hardware use
--	ata_std_dev_select() for this hook.  Controllers which do not
--	support second drives on a port (such as SATA contollers) will
--	use ata_noop_dev_select().
-+	ata_sff_dev_select() for this hook.
- 	</para>
- 
- 	</sect2>
-@@ -439,13 +426,13 @@ void (*irq_clear) (struct ata_port *);
- 	to struct ata_host_set.
- 	</para>
- 	<para>
--	Most legacy IDE drivers use ata_interrupt() for the
-+	Most legacy IDE drivers use ata_sff_interrupt() for the
- 	irq_handler hook, which scans all ports in the host_set,
- 	determines which queued command was active (if any), and calls
--	ata_host_intr(ap,qc).
-+	ata_sff_host_intr(ap,qc).
- 	</para>
- 	<para>
--	Most legacy IDE drivers use ata_bmdma_irq_clear() for the
-+	Most legacy IDE drivers use ata_sff_irq_clear() for the
- 	irq_clear() hook, which simply clears the interrupt and error
- 	flags in the DMA status register.
- 	</para>
-@@ -494,10 +481,6 @@ void (*host_stop) (struct ata_host_set *
- 	data from port at this time.
- 	</para>
- 	<para>
--	Many drivers use ata_port_stop() as this hook, which frees the
--	PRD table.
--	</para>
--	<para>
- 	->host_stop() is called after all ->port_stop() calls
- have completed.  The hook must finalize hardware shutdown, release DMA
- and other resources, etc.
+I have seen it with different SSD vendors and products, as well as
+possibly on another chipset but I can't confirm that at the moment.
+
+It only happens exactly once, and never again.
+
+Boot time messages are:
+
+[    1.310632] ahci 0000:00:1f.2: version 3.0
+[    1.310662] ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
+[    1.310750] ahci: SSS flag set, parallel bus scan disabled
+[    1.310801] ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0x3 impl SATA mode
+[    1.310810] ahci 0000:00:1f.2: flags: 64bit ncq stag pm led clo pio slum part 
+[    1.310820] ahci 0000:00:1f.2: setting latency timer to 64
+[...]
+[    1.621051] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    1.630878] ata1.00: ATA-7: TOSHIBA THNSA16G1P4L, A090228a, max UDMA/100
+[    1.630886] ata1.00: 31309824 sectors, multi 1: LBA 
+[    1.631590] ata1.00: configured for UDMA/100
+[    1.643227] scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA THNSA16G A090 PQ: 0 ANSI: 5
+[    1.643829] sd 0:0:0:0: [sda] 31309824 512-byte logical blocks: (16.0 GB/14.9 GiB)
+[    1.644000] sd 0:0:0:0: Attached scsi generic sg0 type 0
+[    1.644095] sd 0:0:0:0: [sda] Write Protect is off
+[    1.644105] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    1.644198] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+
+I did notice that ALPM is enabled at boot, and doesn't seem to be
+re-enabled after the error reset. Based on this, I experimented with
+disabling it (just returning -EINVAL in ahci_enable_alpm). That did make
+the problem not happen after a significant test run (overnight vs 4.5
+minutes above).
+
+Jeff, any known issues with this chipset? I tried doing a decent amount
+of searching of similar issues, but besides the ones from running the
+chipset in PIIX mode I'm not seeing anything out there.
+
+
+-Olof
+
