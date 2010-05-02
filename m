@@ -1,38 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Using PATA Platform Driver to access Memory Mapped CF Card
-Date: Sun, 2 May 2010 13:29:13 +0100
-Message-ID: <20100502132913.1e531bfd@lxorguk.ukuu.org.uk>
-References: <4BDAE529.20903@gmail.com>
-	<201005010524.40949.marek.vasut@gmail.com>
-	<4BDBD4AB.8020200@gmail.com>
-	<20100501113346.29225519@lxorguk.ukuu.org.uk>
-	<4BDD6897.7000002@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14994] Random Panic/Freeze due to BUG: unable to handle kernel
+ NULL pointer dereference at 00000024(?)
+Date: Sun, 2 May 2010 19:13:59 GMT
+Message-ID: <201005021913.o42JDxN4014556@demeter.kernel.org>
+References: <bug-14994-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52449 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752649Ab0EBMX2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 May 2010 08:23:28 -0400
-In-Reply-To: <4BDD6897.7000002@gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58459 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757246Ab0EBTOA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 May 2010 15:14:00 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o42JE01q014557
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Sun, 2 May 2010 19:14:00 GMT
+In-Reply-To: <bug-14994-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Graeme Russ <graeme.russ@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> pata_platform_port_ops (.sff_data_xfer = ata_sff_data_xfer_noirq). So I
-> will need to create custom data_xfer_noirq and data_xfer functions for the
-> 8-bit transfers. Is there an elegant way to override pata_platform's use of
-> ata_sff_data_xfer_noirq or will I need to also write a new version of
-> pata_platform as well?
+https://bugzilla.kernel.org/show_bug.cgi?id=14994
 
-Extending pata_platform_info is probably the right thing to do - and
-allow it to override the data_xfer operation if a new data_xfer field is
-non NULL. See include/linux/ata_platform.h.
 
-So you'll need to tweak pata_platform a spot. Alternatively you could
-write a small libata driver specifically for your device - which may make
-sense if it supports higher speed modes and speed setting stuff.
 
-Alan
+
+
+--- Comment #26 from Dario Ernst <kernelbugs@nebuk.de>  2010-05-02 19:13:50 ---
+Okay, tried switching, now it actually seems to work.
+Thanks alot!
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
