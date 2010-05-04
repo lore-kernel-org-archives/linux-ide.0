@@ -1,49 +1,45 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Using PATA Platform Driver to access Memory Mapped CF Card
-Date: Mon, 3 May 2010 11:57:19 +0100
-Message-ID: <20100503115719.50566cef@lxorguk.ukuu.org.uk>
-References: <4BDAE529.20903@gmail.com>
-	<201005010524.40949.marek.vasut@gmail.com>
-	<4BDBD4AB.8020200@gmail.com>
-	<20100501113346.29225519@lxorguk.ukuu.org.uk>
-	<4BDD6897.7000002@gmail.com>
-	<20100502132913.1e531bfd@lxorguk.ukuu.org.uk>
-	<4BDE2949.6030301@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: timg@tpi.com (Tim Gardner)
+Subject: ata: blacklist FUJITSU MHW2160BH PL
+Date: Tue,  4 May 2010 10:32:57 -0600 (MDT)
+Message-ID: <20100504163257.5DFE5F899A@sepang.rtg.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39718 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757439Ab0ECKva (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 May 2010 06:51:30 -0400
-In-Reply-To: <4BDE2949.6030301@gmail.com>
+Received: from mail.tpi.com ([70.99.223.143]:4064 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753102Ab0EDREr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 May 2010 13:04:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Graeme Russ <graeme.russ@gmail.com>
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org
 
-> and implemented an 8-bit version of ata_sff_data_xfer() in my board
-> specific code. Should I submit a patch (or is this considered too esoteric
-> for mainline?)
+>From e21186c4fc02cdd1932365d39d1ba7b2e48417f3 Mon Sep 17 00:00:00 2001
+From: Chuck Short <zulcss@ubuntu.com>
+Date: Fri, 18 Jan 2008 13:21:16 -0500
+Subject: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
 
-Please submit a patch.
+OriginalAuthor: Chuck Short <zulcss@ubuntu.com>
+BugLink: http://bugs.launchpad.net/bugs/175834
 
-> 
-> I now have another problem - My board has two CF slots (one at base address
-> 0x20000000 and one at base address 0x20001000. I would like to be able to
-> access them both, but if I try to init two pata_platform devices I get:
-> 
-> sysfs: cannot create duplicate filename '/devices/platform/pata_platform'
-> 
-> and
-> 
-> kobject_add_internal failed for pata_platform with -EEXIST, don't try to
-> register things with the same name in the same directory
-> 
-> Is it possible to register two devices using the pata platform driver?
+Signed-off-by: Chuck Short <zulcss@ubuntu.com>
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 
-Yes but you cannot have two devices with the same name/id so make sure
-you are setting the id etc. See
+Signed-off-by: Ben Collins <ben.collins@canonical.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
- arch/arm/mach-s3c2440/mach-anubis.c
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 49cffb6..3100827 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4369,6 +4369,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
+ 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
++	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
+ 
+ 	/* https://bugzilla.kernel.org/show_bug.cgi?id=15573 */
+ 	{ "C300-CTFDDAC128MAG",	"0001",		ATA_HORKAGE_NONCQ, },
+-- 
+1.7.0.4
+
