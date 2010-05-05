@@ -1,45 +1,41 @@
-From: timg@tpi.com (Tim Gardner)
-Subject: ata: blacklist FUJITSU MHW2160BH PL
-Date: Tue,  4 May 2010 10:32:57 -0600 (MDT)
-Message-ID: <20100504163257.5DFE5F899A@sepang.rtg.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15884] cd-burning reduces other simultaneous IO performance
+Date: Wed, 5 May 2010 09:46:25 GMT
+Message-ID: <201005050946.o459kP8f008602@demeter.kernel.org>
+References: <bug-15884-11633@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:4064 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753102Ab0EDREr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 May 2010 13:04:47 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:41033 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933727Ab0EEJq0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 May 2010 05:46:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o459kPU4008603
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 5 May 2010 09:46:25 GMT
+In-Reply-To: <bug-15884-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->From e21186c4fc02cdd1932365d39d1ba7b2e48417f3 Mon Sep 17 00:00:00 2001
-From: Chuck Short <zulcss@ubuntu.com>
-Date: Fri, 18 Jan 2008 13:21:16 -0500
-Subject: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
+https://bugzilla.kernel.org/show_bug.cgi?id=15884
 
-OriginalAuthor: Chuck Short <zulcss@ubuntu.com>
-BugLink: http://bugs.launchpad.net/bugs/175834
 
-Signed-off-by: Chuck Short <zulcss@ubuntu.com>
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Tejun Heo <tj@kernel.org> changed:
 
-Signed-off-by: Ben Collins <ben.collins@canonical.com>
----
- drivers/ata/libata-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |tj@kernel.org
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 49cffb6..3100827 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4369,6 +4369,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
- 	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
- 	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
-+	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
- 
- 	/* https://bugzilla.kernel.org/show_bug.cgi?id=15573 */
- 	{ "C300-CTFDDAC128MAG",	"0001",		ATA_HORKAGE_NONCQ, },
+
+
+
+--- Comment #3 from Tejun Heo <tj@kernel.org>  2010-05-05 09:46:20 ---
+Hmm... can you please attach kernel boot log?  They don't need to occupy the
+same channel.  Maybe windows is switching the controller to another mode?
+
 -- 
-1.7.0.4
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
