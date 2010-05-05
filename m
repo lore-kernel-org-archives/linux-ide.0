@@ -1,190 +1,88 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v2] libata: update developer's guide
-Date: Wed, 5 May 2010 17:27:10 +0400
-Message-ID: <201005051727.10803.sshtylyov@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: New entry for storage-fixup.conf: Belinea home.pc 1xs = Pegatron
+ Cape 7 - Corrected and completed version
+Date: Wed, 05 May 2010 15:49:20 +0200
+Message-ID: <4BE17760.2090908@kernel.org>
+References: <201004111236.24103.ms@mschilling.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:41774 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755191Ab0EEN2A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 May 2010 09:28:00 -0400
-Content-Disposition: inline
+Received: from hera.kernel.org ([140.211.167.34]:55578 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760112Ab0EENta (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 May 2010 09:49:30 -0400
+In-Reply-To: <201004111236.24103.ms@mschilling.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
+To: Monika Schilling <ms@mschilling.com>
 Cc: linux-ide@vger.kernel.org
 
-Commit 6bfff31e77cfa1b13490337e5a4dbaa3407e83ac (libata: kill probe_ent
-and related helpers) killed ata_device_add() but didn't remove references
-to it from the libata developer's guide.
+Hello,
 
-Commits 9363c3825ea9ad76561eb48a395349dd29211ed6 (libata: rename SFF
-functions) and 5682ed33aae05d10a25c95633ef9d9c062825888 (libata: rename
-SFF port ops) renamed the taskfile access methods but didn't update the
-developer's guide.  Commit c9f75b04ed5ed65a058d18a8a8dda50632a96de8
-(libata: kill ata_noop_dev_select()) didn't update the developer's
-guide as well.
+On 04/11/2010 01:36 PM, Monika Schilling wrote:
+> The Belinea home.pc 1xs = Pegatron Cape 7 is a nettop.
+> 
+> Without storage-fixup the "load cycle count" under idle condition
+> increased by 19 in 10 minutes, that is about 114 per hour. Setting
+> the disk APM level to 254 resulted in no more increase.
 
-The guide also refers to the long gone ata_pio_data_xfer_noirq(),
-ata_pio_data_xfer(), and ata_mmio_data_xfer() -- replace those by
-the modern ata_sff_data_xfer_noirq(), ata_sff_data_xfer(), and
-ata_sff_data_xfer32().
+Ouch, that's a lot.
 
-Also, remove the reference to non-existant ata_port_stop()...
+> Model Family:     Seagate Momentus 5400.5 series
+> Device Model:     ST9160310AS
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+The family is rated at >600,000 load cycle.  I have no idea how high
+that '>' means tho.  The drive will reach the limit after about ~0.6
+years of uptime which is rather quick.
 
----
-The patch is against the recent Linus' tree.
+> Handle 0x0001, DMI type 1, 27 bytes
+> System Information
+>         Manufacturer: To Be Filled By O.E.M.
+>         Product Name: To Be Filled By O.E.M.
+>         Version: To Be Filled By O.E.M.
+>         Serial Number: To Be Filled By O.E.M.
+>         UUID: E0DD7A77-8DFE-D511-92CC-00248CA78567
+>         Wake-up Type: Power Switch
+>         SKU Number: To Be Filled By O.E.M.
+>         Family: To Be Filled By O.E.M.
+> 
+> Handle 0x0002, DMI type 2, 15 bytes
+> Base Board Information
+>         Manufacturer: To be filled by O.E.M.
+>         Product Name: To be filled by O.E.M.
+>         Version: To be filled by O.E.M.
+>         Serial Number: MS1C94D17W00138
+>         Asset Tag: To Be Filled By O.E.M.
+>         Features:
+>                 Board is a hosting board
+>                 Board is replaceable
+>         Location In Chassis: To Be Filled By O.E.M.
+>         Chassis Handle: 0x0003
+>         Type: Motherboard
+>         Contained Object Handles: 0
+> 
+> Handle 0x0003, DMI type 3, 21 bytes
+> Chassis Information
+>         Manufacturer: To Be Filled By O.E.M.
+>         Type: Desktop
+>         Lock: Not Present
+>         Version: To Be Filled By O.E.M.
+>         Serial Number: To Be Filled By O.E.M.
+>         Asset Tag: To Be Filled By O.E.M.
+>         Boot-up State: Safe
+>         Power Supply State: Safe
+>         Thermal State: Safe
+>         Security Status: None
+>         OEM Information: 0x00000000
+>         Height: Unspecified
+>         Number Of Power Cords: 1
+>         Contained Elements: 0
 
-Changes since the previous version:
-- I've just realized that I forgot to rename the taskfile methods themselves.
+Unfortunately, your system is not identifiable.  Maybe the whole drive
+series should be added as an entry.  At this point, I don't really
+have much idea.  If vendors think that this default is good, maybe it
+is.  :-(
 
- Documentation/DocBook/libata.tmpl |   49 ++++++++++++--------------------------
- 1 file changed, 16 insertions(+), 33 deletions(-)
-
-Index: linux-2.6/Documentation/DocBook/libata.tmpl
-===================================================================
---- linux-2.6.orig/Documentation/DocBook/libata.tmpl
-+++ linux-2.6/Documentation/DocBook/libata.tmpl
-@@ -105,10 +105,6 @@ void (*dev_config) (struct ata_port *, s
- 	issue of SET FEATURES - XFER MODE, and prior to operation.
- 	</para>
- 	<para>
--	Called by ata_device_add() after ata_dev_identify() determines
--	a device is present.
--	</para>
--	<para>
- 	This entry may be specified as NULL in ata_port_operations.
- 	</para>
- 
-@@ -152,8 +148,8 @@ unsigned int (*mode_filter) (struct ata_
- 
- 	<sect2><title>Taskfile read/write</title>
- 	<programlisting>
--void (*tf_load) (struct ata_port *ap, struct ata_taskfile *tf);
--void (*tf_read) (struct ata_port *ap, struct ata_taskfile *tf);
-+void (*sff_tf_load) (struct ata_port *ap, struct ata_taskfile *tf);
-+void (*sff_tf_read) (struct ata_port *ap, struct ata_taskfile *tf);
- 	</programlisting>
- 
- 	<para>
-@@ -162,36 +158,35 @@ void (*tf_read) (struct ata_port *ap, st
- 	hardware registers / DMA buffers, to obtain the current set of
- 	taskfile register values.
- 	Most drivers for taskfile-based hardware (PIO or MMIO) use
--	ata_tf_load() and ata_tf_read() for these hooks.
-+	ata_sff_tf_load() and ata_sff_tf_read() for these hooks.
- 	</para>
- 
- 	</sect2>
- 
- 	<sect2><title>PIO data read/write</title>
- 	<programlisting>
--void (*data_xfer) (struct ata_device *, unsigned char *, unsigned int, int);
-+void (*sff_data_xfer) (struct ata_device *, unsigned char *, unsigned int, int);
- 	</programlisting>
- 
- 	<para>
- All bmdma-style drivers must implement this hook.  This is the low-level
- operation that actually copies the data bytes during a PIO data
- transfer.
--Typically the driver
--will choose one of ata_pio_data_xfer_noirq(), ata_pio_data_xfer(), or
--ata_mmio_data_xfer().
-+Typically the driver will choose one of ata_sff_data_xfer_noirq(),
-+ata_sff_data_xfer(), or ata_sff_data_xfer32().
- 	</para>
- 
- 	</sect2>
- 
- 	<sect2><title>ATA command execute</title>
- 	<programlisting>
--void (*exec_command)(struct ata_port *ap, struct ata_taskfile *tf);
-+void (*sff_exec_command)(struct ata_port *ap, struct ata_taskfile *tf);
- 	</programlisting>
- 
- 	<para>
- 	causes an ATA command, previously loaded with
- 	->tf_load(), to be initiated in hardware.
--	Most drivers for taskfile-based hardware use ata_exec_command()
-+	Most drivers for taskfile-based hardware use ata_sff_exec_command()
- 	for this hook.
- 	</para>
- 
-@@ -216,8 +211,8 @@ command.
- 
- 	<sect2><title>Read specific ATA shadow registers</title>
- 	<programlisting>
--u8   (*check_status)(struct ata_port *ap);
--u8   (*check_altstatus)(struct ata_port *ap);
-+u8   (*sff_check_status)(struct ata_port *ap);
-+u8   (*sff_check_altstatus)(struct ata_port *ap);
- 	</programlisting>
- 
- 	<para>
-@@ -225,20 +220,14 @@ u8   (*check_altstatus)(struct ata_port 
- 	hardware.  On some hardware, reading the Status register has
- 	the side effect of clearing the interrupt condition.
- 	Most drivers for taskfile-based hardware use
--	ata_check_status() for this hook.
--	</para>
--	<para>
--	Note that because this is called from ata_device_add(), at
--	least a dummy function that clears device interrupts must be
--	provided for all drivers, even if the controller doesn't
--	actually have a taskfile status register.
-+	ata_sff_check_status() for this hook.
- 	</para>
- 
- 	</sect2>
- 
- 	<sect2><title>Select ATA device on bus</title>
- 	<programlisting>
--void (*dev_select)(struct ata_port *ap, unsigned int device);
-+void (*sff_dev_select)(struct ata_port *ap, unsigned int device);
- 	</programlisting>
- 
- 	<para>
-@@ -249,9 +238,7 @@ void (*dev_select)(struct ata_port *ap, 
- 	</para>
- 	<para>
- 	Most drivers for taskfile-based hardware use
--	ata_std_dev_select() for this hook.  Controllers which do not
--	support second drives on a port (such as SATA contollers) will
--	use ata_noop_dev_select().
-+	ata_sff_dev_select() for this hook.
- 	</para>
- 
- 	</sect2>
-@@ -439,13 +426,13 @@ void (*irq_clear) (struct ata_port *);
- 	to struct ata_host_set.
- 	</para>
- 	<para>
--	Most legacy IDE drivers use ata_interrupt() for the
-+	Most legacy IDE drivers use ata_sff_interrupt() for the
- 	irq_handler hook, which scans all ports in the host_set,
- 	determines which queued command was active (if any), and calls
--	ata_host_intr(ap,qc).
-+	ata_sff_host_intr(ap,qc).
- 	</para>
- 	<para>
--	Most legacy IDE drivers use ata_bmdma_irq_clear() for the
-+	Most legacy IDE drivers use ata_sff_irq_clear() for the
- 	irq_clear() hook, which simply clears the interrupt and error
- 	flags in the DMA status register.
- 	</para>
-@@ -494,10 +481,6 @@ void (*host_stop) (struct ata_host_set *
- 	data from port at this time.
- 	</para>
- 	<para>
--	Many drivers use ata_port_stop() as this hook, which frees the
--	PRD table.
--	</para>
--	<para>
- 	->host_stop() is called after all ->port_stop() calls
- have completed.  The hook must finalize hardware shutdown, release DMA
- and other resources, etc.
+-- 
+tejun
