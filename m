@@ -1,82 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: link resets with SSD on AHCI
-Date: Wed, 05 May 2010 12:15:06 +0200
-Message-ID: <4BE1452A.6040607@kernel.org>
-References: <20100429215935.GA9796@lixom.net>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/3] libata: Remove excess delay in the tf_load path
+Date: Wed, 05 May 2010 14:24:14 +0400
+Message-ID: <4BE1474E.6080400@ru.mvista.com>
+References: <20100505092350.586.46344.stgit@localhost.localdomain> <20100505092448.586.25299.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030003080707090701010408"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37700 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934221Ab0EEKPr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 May 2010 06:15:47 -0400
-In-Reply-To: <20100429215935.GA9796@lixom.net>
+Received: from mail-ew0-f222.google.com ([209.85.219.222]:46912 "EHLO
+	mail-ew0-f222.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689Ab0EEKY6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 May 2010 06:24:58 -0400
+Received: by ewy22 with SMTP id 22so1432785ewy.37
+        for <linux-ide@vger.kernel.org>; Wed, 05 May 2010 03:24:56 -0700 (PDT)
+In-Reply-To: <20100505092448.586.25299.stgit@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Alan Cox <alan@linux.intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------030003080707090701010408
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hello.
 
-Hello,
+Alan Cox wrote:
 
-On 04/29/2010 11:59 PM, Olof Johansson wrote:
-> I did notice that ALPM is enabled at boot, and doesn't seem to be
-> re-enabled after the error reset. Based on this, I experimented with
-> disabling it (just returning -EINVAL in ahci_enable_alpm). That did make
-> the problem not happen after a significant test run (overnight vs 4.5
-> minutes above).
+> We don't need to stall and wait after loading the task file and before
+>   
 
-It could be that libata's ALPM enable sequence isn't liked by the
-controller.  libata first resets the link disabling all powersave
-transitions, then turn on ALPM then allows powersave transitions.
-It's possible that the controller or device somehow gets upset by this
-(ie. the device is told to go to powersave mode only to find out that
-the host side isn't allowing it).
+   You mean *before* loading the taskfile?
 
-Does the attached patch make any difference?  Can you please post the
-kernel boot log with the patch applied?
+> issuing a command, so don't do it. This shows up on profiles and is not
+> needed.
+>   
 
-Thanks.
+   The same wait is in sff_irq_on() method, I doubt that it's really 
+necessary as well, given that its result is always ignored...
 
--- 
-tejun
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
+>
+>  drivers/ata/libata-sff.c |    3 ---
+>  drivers/ata/pata_via.c   |    2 --
+>  2 files changed, 0 insertions(+), 5 deletions(-)
+>
+>
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index b313896..17754a7 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -579,7 +579,6 @@ void ata_sff_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+>  		if (ioaddr->ctl_addr)
+>  			iowrite8(tf->ctl, ioaddr->ctl_addr);
+>  		ap->last_ctl = tf->ctl;
+> -		ata_wait_idle(ap);
+>  	}
+>  
+>  	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+> @@ -615,8 +614,6 @@ void ata_sff_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+>  		iowrite8(tf->device, ioaddr->device_addr);
+>  		VPRINTK("device 0x%X\n", tf->device);
+>  	}
+> -
+> -	ata_wait_idle(ap);
+>  }
+>  EXPORT_SYMBOL_GPL(ata_sff_tf_load);
+>  
+> diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+> index 741e7cb..87fb89e 100644
+> --- a/drivers/ata/pata_via.c
+> +++ b/drivers/ata/pata_via.c
+> @@ -417,8 +417,6 @@ static void via_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+>  			tf->lbam,
+>  			tf->lbah);
+>  	}
+> -
+> -	ata_wait_idle(ap);
+>  }
+>  
+>  static int via_port_start(struct ata_port *ap)
+>   
 
---------------030003080707090701010408
-Content-Type: text/x-patch;
- name="dont-inhibit-ps-on-reset.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="dont-inhibit-ps-on-reset.patch"
+WBR, Sergei
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 49cffb6..696be5f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3810,7 +3810,7 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 	 * cleared.
- 	 */
- 	do {
--		scontrol = (scontrol & 0x0f0) | 0x300;
-+		scontrol = (scontrol & 0x0f0)/* | 0x300*/;
- 		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
- 			return rc;
- 		/*
-@@ -3823,9 +3823,9 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 		/* is SControl restored correctly? */
- 		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
- 			return rc;
--	} while ((scontrol & 0xf0f) != 0x300 && --tries);
-+	} while ((scontrol & 0xf0f) != /*0x300*/0 && --tries);
- 
--	if ((scontrol & 0xf0f) != 0x300) {
-+	if ((scontrol & 0xf0f) != /*0x300*/0) {
- 		ata_link_printk(link, KERN_ERR,
- 				"failed to resume link (SControl %X)\n",
- 				scontrol);
-
---------------030003080707090701010408--
