@@ -1,37 +1,49 @@
-From: Arjan van de Ven <arjan@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: ahci: CAP_SSS and parallel scan
-Date: Thu, 06 May 2010 02:30:55 -0700
-Message-ID: <4BE28C4F.9000903@linux.intel.com>
-References: <4BE27C49.5090809@kernel.org>
+Date: Thu, 06 May 2010 16:44:38 +0200
+Message-ID: <4BE2D5D6.1010705@kernel.org>
+References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:9878 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755364Ab0EFJa6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 May 2010 05:30:58 -0400
-In-Reply-To: <4BE27C49.5090809@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:51160 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753071Ab0EFOpH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 6 May 2010 10:45:07 -0400
+In-Reply-To: <4BE28C4F.9000903@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Arjan van de Ven <arjan@linux.intel.com>
 Cc: Jeff Garzik <jeff@garzik.org>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 5/6/2010 1:22, Tejun Heo wrote:
-> Hello,
->
-> Artem reported on bko#15918 that on his machine ahci probing takes too
-> long (well, if you ask me, that's not too long but anyways).  This is
-> caused by CAP_SSS disabling parallel scan.  The code was added by
-> Arjan in commit 886ad09fc83342aa1c5a02a0b6d3298b78a8067f.  There is a
-> module parameter to skip this but I'm curious whether the change was
-> based on an actual problem as on most PC hardware by the time ahci
-> driver kick in, the BIOS has spun up everything already.
+Hello,
 
-This was based on Jeff's review comments on an earlier patch that did not use SSS.
+On 05/06/2010 11:30 AM, Arjan van de Ven wrote:
+> The thing is, SSS means the system requests (well, demands) that we
+> don't spin up the disks up in parallel.... which we really really
+> ought to honor... Jeff had a very valid point.
 
-The thing is, SSS means the system requests (well, demands) that we don't spin up the disks
-up in parallel.... which we really really ought to honor... Jeff had a very valid point.
+Hmmm... yeah but SSS doesn't really demand it.  It just says "I can do
+staggered spin up".  I wish this thing had been implemented in the
+form of "stay spin down till necessary (ie. start in standby mode)".
+Currently, there's no way to tell whether staggered spin up is needed
+or drives are already spun up.
 
-While today some bioses may spin everything up, that's not going to be the case going forward...
-the industry as a whole is moving away from that (slowly but steadily).
+> While today some bioses may spin everything up, that's not going to
+> be the case going forward...  the industry as a whole is moving away
+> from that (slowly but steadily).
+
+Yeah, sure, in the long run maybe but I'm skeptical how useful this is
+at this point.  Going forward, the right thing to do would be
+implementing some sort of token infrastructure so that drivers can
+request and hold the token while spinning up a drive so that the
+concurrency of spin ups can be controlled.
+
+Jeff, what do you think about lifting the check for now unless there
+are known cases where this can cause problems?
+
+Thanks.
+
+-- 
+tejun
