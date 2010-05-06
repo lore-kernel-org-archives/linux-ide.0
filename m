@@ -1,53 +1,45 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ata: blacklist FUJITSU MHW2160BH PL
-Date: Wed, 05 May 2010 17:33:38 -0600
-Message-ID: <4BE20052.8000902@gmail.com>
-References: <20100504163257.5DFE5F899A@sepang.rtg.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15884] cd-burning reduces other simultaneous IO performance
+Date: Thu, 6 May 2010 01:09:00 GMT
+Message-ID: <201005060109.o46190GG002190@demeter.kernel.org>
+References: <bug-15884-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f197.google.com ([209.85.223.197]:50774 "EHLO
-	mail-iw0-f197.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab0EEXdm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 May 2010 19:33:42 -0400
-Received: by iwn35 with SMTP id 35so7133164iwn.21
-        for <linux-ide@vger.kernel.org>; Wed, 05 May 2010 16:33:41 -0700 (PDT)
-In-Reply-To: <20100504163257.5DFE5F899A@sepang.rtg.net>
+Received: from demeter.kernel.org ([140.211.167.39]:49472 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750812Ab0EFBJE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 May 2010 21:09:04 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o461904R002192
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 6 May 2010 01:09:01 GMT
+In-Reply-To: <bug-15884-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Gardner <timg@tpi.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 05/04/2010 10:32 AM, Tim Gardner wrote:
->  From e21186c4fc02cdd1932365d39d1ba7b2e48417f3 Mon Sep 17 00:00:00 2001
-> From: Chuck Short<zulcss@ubuntu.com>
-> Date: Fri, 18 Jan 2008 13:21:16 -0500
-> Subject: [PATCH] ata: blacklist FUJITSU MHW2160BH PL
->
-> OriginalAuthor: Chuck Short<zulcss@ubuntu.com>
-> BugLink: http://bugs.launchpad.net/bugs/175834
->
-> Signed-off-by: Chuck Short<zulcss@ubuntu.com>
-> Signed-off-by: Tim Gardner<tim.gardner@canonical.com>
->
-> Signed-off-by: Ben Collins<ben.collins@canonical.com>
-> ---
->   drivers/ata/libata-core.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 49cffb6..3100827 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4369,6 +4369,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->   	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
->   	{ "HTS541080G9SA00",    "MB4OC60D",     ATA_HORKAGE_NONCQ, },
->   	{ "HTS541010G9SA00",    "MBZOC60D",     ATA_HORKAGE_NONCQ, },
-> +	{ "FUJITSU MHW2160BH PL", "0084001E",   ATA_HORKAGE_NONCQ, },
->
->   	/* https://bugzilla.kernel.org/show_bug.cgi?id=15573 */
->   	{ "C300-CTFDDAC128MAG",	"0001",		ATA_HORKAGE_NONCQ, },
+https://bugzilla.kernel.org/show_bug.cgi?id=15884
 
-NACK. The spurious completion detection in AHCI, which the bug report 
-said was being triggered, was incorrect and was removed long ago.
+
+Dan Hollocher <danielhollocher@gmail.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+  Attachment #26235|0                           |1
+        is obsolete|                            |
+
+
+
+
+--- Comment #6 from Dan Hollocher <danielhollocher@gmail.com>  2010-05-06 01:08:32 ---
+Created an attachment (id=26252)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=26252)
+fresh boot dmesg
+
+oops, I'm sorry.  I didn't realize that kern.log would contain so little.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
