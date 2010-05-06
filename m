@@ -1,49 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci: CAP_SSS and parallel scan
-Date: Thu, 06 May 2010 16:44:38 +0200
-Message-ID: <4BE2D5D6.1010705@kernel.org>
-References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] libata: kill ata_irq_on() prototype
+Date: Thu, 6 May 2010 22:15:22 +0400
+Message-ID: <201005062215.22697.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:51160 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753071Ab0EFOpH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 May 2010 10:45:07 -0400
-In-Reply-To: <4BE28C4F.9000903@linux.intel.com>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:44588 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752448Ab0EFSQM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 May 2010 14:16:12 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arjan van de Ven <arjan@linux.intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Commit 9363c3825ea9ad76561eb48a395349dd29211ed6 renamed ata_irq_on() to
+ata_sff_irq_on() but forgot to rename its prototype in "libata.h". This
+prototype is duplicate anyway, as the function is already declared in
+<linux/libata.h>, so remove it...
 
-On 05/06/2010 11:30 AM, Arjan van de Ven wrote:
-> The thing is, SSS means the system requests (well, demands) that we
-> don't spin up the disks up in parallel.... which we really really
-> ought to honor... Jeff had a very valid point.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Hmmm... yeah but SSS doesn't really demand it.  It just says "I can do
-staggered spin up".  I wish this thing had been implemented in the
-form of "stay spin down till necessary (ie. start in standby mode)".
-Currently, there's no way to tell whether staggered spin up is needed
-or drives are already spun up.
+---
+The patch is against the recent Linus' tree.
 
-> While today some bioses may spin everything up, that's not going to
-> be the case going forward...  the industry as a whole is moving away
-> from that (slowly but steadily).
+ drivers/ata/libata.h |    1 -
+ 1 file changed, 1 deletion(-)
 
-Yeah, sure, in the long run maybe but I'm skeptical how useful this is
-at this point.  Going forward, the right thing to do would be
-implementing some sort of token infrastructure so that drivers can
-request and hold the token while spinning up a drive so that the
-concurrency of spin ups can be controlled.
-
-Jeff, what do you think about lifting the check for now unless there
-are known cases where this can cause problems?
-
-Thanks.
-
--- 
-tejun
+Index: linux-2.6/drivers/ata/libata.h
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata.h
++++ linux-2.6/drivers/ata/libata.h
+@@ -204,7 +204,6 @@ static inline int sata_pmp_attach(struct
+ #ifdef CONFIG_ATA_SFF
+ extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+                            unsigned int wait, unsigned int can_sleep);
+-extern u8 ata_irq_on(struct ata_port *ap);
+ extern void ata_pio_task(struct work_struct *work);
+ #endif /* CONFIG_ATA_SFF */
+ 
