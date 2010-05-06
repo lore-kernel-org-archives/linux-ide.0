@@ -1,44 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] libata: kill ata_irq_on() prototype
-Date: Thu, 6 May 2010 22:15:22 +0400
-Message-ID: <201005062215.22697.sshtylyov@ru.mvista.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: ahci: CAP_SSS and parallel scan
+Date: Thu, 06 May 2010 15:49:43 -0400
+Message-ID: <4BE31D57.6020400@garzik.org>
+References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com> <4BE2D5D6.1010705@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:44588 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752448Ab0EFSQM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 May 2010 14:16:12 -0400
-Content-Disposition: inline
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:50111 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757122Ab0EFTtr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 May 2010 15:49:47 -0400
+Received: by vws18 with SMTP id 18so106075vws.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 May 2010 12:49:45 -0700 (PDT)
+In-Reply-To: <4BE2D5D6.1010705@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Commit 9363c3825ea9ad76561eb48a395349dd29211ed6 renamed ata_irq_on() to
-ata_sff_irq_on() but forgot to rename its prototype in "libata.h". This
-prototype is duplicate anyway, as the function is already declared in
-<linux/libata.h>, so remove it...
+On 05/06/2010 10:44 AM, Tejun Heo wrote:
+> Hello,
+>
+> On 05/06/2010 11:30 AM, Arjan van de Ven wrote:
+>> The thing is, SSS means the system requests (well, demands) that we
+>> don't spin up the disks up in parallel.... which we really really
+>> ought to honor... Jeff had a very valid point.
+>
+> Hmmm... yeah but SSS doesn't really demand it.  It just says "I can do
+> staggered spin up".  I wish this thing had been implemented in the
+> form of "stay spin down till necessary (ie. start in standby mode)".
+> Currently, there's no way to tell whether staggered spin up is needed
+> or drives are already spun up.
+>
+>> While today some bioses may spin everything up, that's not going to
+>> be the case going forward...  the industry as a whole is moving away
+>> from that (slowly but steadily).
+>
+> Yeah, sure, in the long run maybe but I'm skeptical how useful this is
+> at this point.  Going forward, the right thing to do would be
+> implementing some sort of token infrastructure so that drivers can
+> request and hold the token while spinning up a drive so that the
+> concurrency of spin ups can be controlled.
+>
+> Jeff, what do you think about lifting the check for now unless there
+> are known cases where this can cause problems?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+The problem being...  that we are honoring SSS bit, and thus thing are 
+slower?  :)  I don't see any reason to change that, seeing as how people 
+may be using it to avoid power spikes.
 
----
-The patch is against the recent Linus' tree.
+I agree there's no way to tell whether SSS is needed, but we cannot 
+ignore SSS on that basis alone.  We should avoid making the assumption 
+that BIOS w/ SSS bit has already spun up all drives regardless.
 
- drivers/ata/libata.h |    1 -
- 1 file changed, 1 deletion(-)
+	Jeff
 
-Index: linux-2.6/drivers/ata/libata.h
-===================================================================
---- linux-2.6.orig/drivers/ata/libata.h
-+++ linux-2.6/drivers/ata/libata.h
-@@ -204,7 +204,6 @@ static inline int sata_pmp_attach(struct
- #ifdef CONFIG_ATA_SFF
- extern void ata_dev_select(struct ata_port *ap, unsigned int device,
-                            unsigned int wait, unsigned int can_sleep);
--extern u8 ata_irq_on(struct ata_port *ap);
- extern void ata_pio_task(struct work_struct *work);
- #endif /* CONFIG_ATA_SFF */
- 
+
+
