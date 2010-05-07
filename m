@@ -1,118 +1,281 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Fri, 07 May 2010 17:59:41 +0400
-Message-ID: <4BE41CCD.8000005@ru.mvista.com>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2] libata: introduce sff_set_devctl() method
+Date: Fri, 7 May 2010 22:47:50 +0400
+Message-ID: <201005072247.50318.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1224580680-13698-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:58705 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754050Ab0EGSsi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 May 2010 14:48:38 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+The set of libata's taskfile access methods is clearly incomplete as it lacks
+a method to write to the device control register -- which forces drivers like
+'pata_bf54x' and 'pata_scc' to implement more "high level" (and more weighty)
+methods like freeze() and postreset().
 
-Tejun Heo wrote:
+So, introduce the optional sff_set_devctl() method which the drivers only have
+to implement if the standard iowrite8() can't be used (just like the existing
+sff_check_altstatus() method) and make use of it in the freeze() and postreset()
+method implementations (I could also have used it in softreset() method but it
+also reads other taskfile registers without using tf_read() making that quite
+pointless); this makes freeze() method implementations in the 'pata_bf54x' and
+'pata_scc' methods virtually identical to ata_sff_freeze(), so we can get rid
+of them completely.
 
-> This is the first take of separate-out-SFF-and-BMDMA patchset.
->
-> Historically, ATA meant SFF (or TASKFILE interface) plus BMDMA and
-> that holds true for many modern SATA controllers.  This was reflected
-> in libata implementation and libata core layer and SFF/BMDMA support
-> used to be all tangled in one piece.
->
-> For SFF/BMDMA drivers, this assumption is fine but for drivers which
-> have native interfaces (e.g. ahci, sata_sil24), this meant that those
-> drivers had to emulate SFF/BMDMA to ceratin not-so-well defined level
-> libata core layer expects.  A lot of this vague dependency on
-> SFF/BMDMA was removed during recent SFF/BMDMA separation but there
-> still are SFF/BMDMA specific assumptions in libata core layer.
->
-> Another issue which surpassed with the addition of all the legacy,
-> platform and somewhat peculiar PATA drivers is that now there are
-> enough drivers which use SFF interface but use its own DMA interface
-> or don't support DMA at all.  This, in similar fashion, led those
-> drivers to fake certain level of BMDMA functionality to please the
-> libata SFF/BMDMA layer.  This led to the following interesting
-> solutions in low level drivers.
->
-> 1. For BMDMA drivers which don't use traditional BMDMA register,
->    ata_bmdma_mode_filter() incorrectly inhibits DMA modes.  Those
->    drivers either have to inherit from ata_sff_port_ops or clear
->    ->mode_filter explicitly.
->
-> 2. non-BMDMA drivers call into BMDMA PRD table allocation.  It doesn't
->    actually allocate PRD table if bmdma_addr is not initialized but is
->    still confusing.
->
-> 3. For BMDMA drivers which don't use traditional BMDMA register, some
->    methods might not be invoked as expected (e.g. bmdma_stop from
->    ata_sff_post_internal_cmd()).
->
-> 4. SFF drivers w/ custom DMA interface implement noop BMDMA ops
->    worrying libata core might call into one of them.
->
-> This patchset further separates SFF/BMDMA support from the rest of the
-> libata and separate out BMDMA from SFF.  This patchset contains the
-> following 22 patches.
->
->  0001-pata_sch-use-ata_pci_sff_init_one.patch
->  0002-sata_inic162x-inic162x-is-not-dependent-on-CONFIG_A.patch
->  0003-sata_mv-remove-unnecessary-initialization.patch
->  0004-libata-sff-clear-IRQ-from-ata_sff_error_handler-o.patch
->  0005-libata-sff-kill-unused-prototype-and-make-ata_dev_s.patch
->  0006-libata-kill-ATA_FLAG_DISABLED.patch
->  0007-sata_inic162x-kill-PORT_PRD_ADDR-initialization.patch
->  0008-libata-sff-reorder-SFF-BMDMA-functions.patch
->  0009-pata_cmd640-bf54x-icside-fix-inheritance.patch
->  0010-libata-sff-clean-up-BMDMA-initialization.patch
->  0011-libata-sff-introduce-ata_sff_init-exit-and-ata_sf.patch
->  0012-libata-sff-ap-last_-ctl-are-SFF-specific.patch
->  0013-libata-sff-port_task-is-SFF-specific.patch
->  0014-libata-sff-separate-out-BMDMA-EHs.patch
->  0015-libata-sff-ata_sff_-dumb_-qc_prep-are-BMDMA-specifi.patch
->  0016-libata-sff-prd-is-BMDMA-specific.patch
->  0017-libata-sff-separate-out-BMDMA-qc_issue.patch
->  0018-libata-sff-ata_sff_irq_clear-is-BMDMA-specific.patch
->  0019-libata-sff-separate-out-BMDMA-irq-handler.patch
->  0020-libata-sff-separate-out-BMDMA-init.patch
->  0021-sata_qstor-kill-dummy-BMDMA-ops.patch
->  0022-libata-sff-make-BMDMA-optional.patch
->
-> 0001-0010 make things aligned for the future changes.
->
->  0004 changes the default SFF error handler behavior such that
->  unnecessary register accesses are removed.  I'm fairly sure this
->  change is safe (tested on various SFF/BMDMA controllers) but we'll
->  need to look out for problem reports.
->
->  0006 kills ATA_FLAG_DISABLED (finally).  This patch touches SCSI SAS
->  drivers.
->
->  0010 cleans up BMDMA initialization and bmdma_addr condition checks.
->
-> 0011-0013 further separate out SFF assumptions from libata core layer.
->
-> 0014-0021 separate out BMDMA from SFF.
->
-> 0022 makes BMDMA optional and reorganizes Kconfig options according to
-> the groups of drivers they belong to.
->
-> This patchset is on top of
->
->   linus#master (2515ddc6db8eb49a79f0fe5e67ff09ac7c81eab4)
-> + [1] libata-sff-fix-ata_sff_post_internal_cmd
-> + [2] libata-initialize-port_task-when-!CONFIG_ATA_SFF
-> + [3] libata-eh-fix-slave-link-EH-action-mask-handling
-> + [4] libata-transfer-EHI-control-flags-to-slave-ehc_i
->
-> and makes the followings changes.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-   Tejun, what was the fate of this patchset? Looks like it ended up 
-ignored...
+---
+The patch is against the recent Linus' tree.
 
-MBR, Sergei
+ Documentation/DocBook/libata.tmpl |   12 +++++++++++
+ drivers/ata/libata-sff.c          |   31 +++++++++++++++++++++++------
+ drivers/ata/pata_bf54x.c          |   40 ++++++++++++--------------------------
+ drivers/ata/pata_scc.c            |   38 +++++++++++-------------------------
+ include/linux/libata.h            |    1 
+ 5 files changed, 63 insertions(+), 59 deletions(-)
 
+Index: linux-2.6/Documentation/DocBook/libata.tmpl
+===================================================================
+--- linux-2.6.orig/Documentation/DocBook/libata.tmpl
++++ linux-2.6/Documentation/DocBook/libata.tmpl
+@@ -225,6 +225,18 @@ u8   (*sff_check_altstatus)(struct ata_p
+ 
+ 	</sect2>
+ 
++	<sect2><title>Write specific ATA shadow register</title>
++	<programlisting>
++void (*sff_set_devctl)(struct ata_port *ap, u8 ctl);
++	</programlisting>
++
++	<para>
++	Write the device control ATA shadow register to the hardware.
++	Most drivers don't need to define this.
++	</para>
++
++	</sect2>
++
+ 	<sect2><title>Select ATA device on bus</title>
+ 	<programlisting>
+ void (*sff_dev_select)(struct ata_port *ap, unsigned int device);
+Index: linux-2.6/drivers/ata/libata-sff.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-sff.c
++++ linux-2.6/drivers/ata/libata-sff.c
+@@ -446,6 +446,27 @@ int ata_sff_wait_ready(struct ata_link *
+ EXPORT_SYMBOL_GPL(ata_sff_wait_ready);
+ 
+ /**
++ *	ata_sff_set_devctl - Write device control reg
++ *	@ap: port where the device is
++ *	@ctl: value to write
++ *
++ *	Writes ATA taskfile device control register.
++ *
++ *	Note: may NOT be used as the sff_set_devctl() entry in
++ *	ata_port_operations.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++static void ata_sff_set_devctl(struct ata_port *ap, u8 ctl)
++{
++	if (ap->ops->sff_set_devctl)
++		ap->ops->sff_set_devctl(ap, ctl);
++	else
++		iowrite8(ctl, ap->ioaddr.ctl_addr);
++}
++
++/**
+  *	ata_sff_dev_select - Select device 0/1 on ATA bus
+  *	@ap: ATA channel to manipulate
+  *	@device: ATA device (numbered from zero) to select
+@@ -1895,13 +1916,11 @@ EXPORT_SYMBOL_GPL(ata_sff_lost_interrupt
+  */
+ void ata_sff_freeze(struct ata_port *ap)
+ {
+-	struct ata_ioports *ioaddr = &ap->ioaddr;
+-
+ 	ap->ctl |= ATA_NIEN;
+ 	ap->last_ctl = ap->ctl;
+ 
+-	if (ioaddr->ctl_addr)
+-		iowrite8(ap->ctl, ioaddr->ctl_addr);
++	if (ap->ops->sff_set_devctl || ap->ioaddr.ctl_addr)
++		ata_sff_set_devctl(ap, ap->ctl);
+ 
+ 	/* Under certain circumstances, some controllers raise IRQ on
+ 	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+@@ -2301,8 +2320,8 @@ void ata_sff_postreset(struct ata_link *
+ 	}
+ 
+ 	/* set up device control */
+-	if (ap->ioaddr.ctl_addr) {
+-		iowrite8(ap->ctl, ap->ioaddr.ctl_addr);
++	if (ap->ops->sff_set_devctl || ap->ioaddr.ctl_addr) {
++		ata_sff_set_devctl(ap, ap->ctl);
+ 		ap->last_ctl = ap->ctl;
+ 	}
+ }
+Index: linux-2.6/drivers/ata/pata_bf54x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_bf54x.c
++++ linux-2.6/drivers/ata/pata_bf54x.c
+@@ -821,6 +821,18 @@ static void bfin_dev_select(struct ata_p
+ }
+ 
+ /**
++ *	bfin_set_devctl - Write device control reg
++ *	@ap: port where the device is
++ *	@ctl: value to write
++ */
++
++static u8 bfin_set_devctl(struct ata_port *ap, u8 ctl)
++{
++	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
++	write_atapi_register(base, ATA_REG_CTRL, ctl);
++}
++
++/**
+  *	bfin_bmdma_setup - Set up IDE DMA transaction
+  *	@qc: Info associated with this ATA transaction.
+  *
+@@ -1240,32 +1252,6 @@ static unsigned char bfin_irq_on(struct 
+ }
+ 
+ /**
+- *	bfin_freeze - Freeze DMA controller port
+- *	@ap: port to freeze
+- *
+- *	Note: Original code is ata_sff_freeze().
+- */
+-
+-static void bfin_freeze(struct ata_port *ap)
+-{
+-	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+-
+-	dev_dbg(ap->dev, "in atapi dma freeze\n");
+-	ap->ctl |= ATA_NIEN;
+-	ap->last_ctl = ap->ctl;
+-
+-	write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
+-
+-	/* Under certain circumstances, some controllers raise IRQ on
+-	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+-	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
+-	 */
+-	ap->ops->sff_check_status(ap);
+-
+-	bfin_irq_clear(ap);
+-}
+-
+-/**
+  *	bfin_thaw - Thaw DMA controller port
+  *	@ap: port to thaw
+  *
+@@ -1476,6 +1462,7 @@ static struct ata_port_operations bfin_p
+ 	.sff_check_status	= bfin_check_status,
+ 	.sff_check_altstatus	= bfin_check_altstatus,
+ 	.sff_dev_select		= bfin_dev_select,
++	.sff_set_devctl		= bfin_set_devctl,
+ 
+ 	.bmdma_setup		= bfin_bmdma_setup,
+ 	.bmdma_start		= bfin_bmdma_start,
+@@ -1485,7 +1472,6 @@ static struct ata_port_operations bfin_p
+ 
+ 	.qc_prep		= ata_noop_qc_prep,
+ 
+-	.freeze			= bfin_freeze,
+ 	.thaw			= bfin_thaw,
+ 	.softreset		= bfin_softreset,
+ 	.postreset		= bfin_postreset,
+Index: linux-2.6/drivers/ata/pata_scc.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_scc.c
++++ linux-2.6/drivers/ata/pata_scc.c
+@@ -416,6 +416,17 @@ static void scc_dev_select (struct ata_p
+ }
+ 
+ /**
++ *	scc_set_devctl - Write device control reg
++ *	@ap: port where the device is
++ *	@ctl: value to write
++ */
++
++static void scc_set_devctl(struct ata_port *ap, u8 ctl)
++{
++	out_be32(ap->ioaddr.ctl_addr, ctl);
++}
++
++/**
+  *	scc_bmdma_setup - Set up PCI IDE BMDMA transaction
+  *	@qc: Info associated with this ATA transaction.
+  *
+@@ -840,31 +851,6 @@ static u8 scc_irq_on (struct ata_port *a
+ }
+ 
+ /**
+- *	scc_freeze - Freeze BMDMA controller port
+- *	@ap: port to freeze
+- *
+- *	Note: Original code is ata_sff_freeze().
+- */
+-
+-static void scc_freeze (struct ata_port *ap)
+-{
+-	struct ata_ioports *ioaddr = &ap->ioaddr;
+-
+-	ap->ctl |= ATA_NIEN;
+-	ap->last_ctl = ap->ctl;
+-
+-	out_be32(ioaddr->ctl_addr, ap->ctl);
+-
+-	/* Under certain circumstances, some controllers raise IRQ on
+-	 * ATA_NIEN manipulation.  Also, many controllers fail to mask
+-	 * previously pending IRQ on ATA_NIEN assertion.  Clear it.
+-	 */
+-	ap->ops->sff_check_status(ap);
+-
+-	ap->ops->sff_irq_clear(ap);
+-}
+-
+-/**
+  *	scc_pata_prereset - prepare for reset
+  *	@ap: ATA port to be reset
+  *	@deadline: deadline jiffies for the operation
+@@ -977,6 +963,7 @@ static struct ata_port_operations scc_pa
+ 	.sff_check_status	= scc_check_status,
+ 	.sff_check_altstatus	= scc_check_altstatus,
+ 	.sff_dev_select		= scc_dev_select,
++	.sff_set_devctl		= scc_set_devctl,
+ 
+ 	.bmdma_setup		= scc_bmdma_setup,
+ 	.bmdma_start		= scc_bmdma_start,
+@@ -984,7 +971,6 @@ static struct ata_port_operations scc_pa
+ 	.bmdma_status		= scc_bmdma_status,
+ 	.sff_data_xfer		= scc_data_xfer,
+ 
+-	.freeze			= scc_freeze,
+ 	.prereset		= scc_pata_prereset,
+ 	.softreset		= scc_softreset,
+ 	.postreset		= scc_postreset,
+Index: linux-2.6/include/linux/libata.h
+===================================================================
+--- linux-2.6.orig/include/linux/libata.h
++++ linux-2.6/include/linux/libata.h
+@@ -849,6 +849,7 @@ struct ata_port_operations {
+ 	 * SFF / taskfile oriented ops
+ 	 */
+ 	void (*sff_dev_select)(struct ata_port *ap, unsigned int device);
++	void (*sff_set_devctl)(struct ata_port *ap, u8 ctl);
+ 	u8   (*sff_check_status)(struct ata_port *ap);
+ 	u8   (*sff_check_altstatus)(struct ata_port *ap);
+ 	void (*sff_tf_load)(struct ata_port *ap, const struct ata_taskfile *tf);
