@@ -1,259 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] libata: make sff_irq_on() method optional
-Date: Fri, 7 May 2010 22:49:02 +0400
-Message-ID: <201005072249.02373.sshtylyov@ru.mvista.com>
+From: vanetta15238354@ovi.com
+Subject: =?utf-8?B?KOadsemiqDM35Y+wKeWPs+iFpuWcluWDj+iomOaGtuazleWPquimgTE2MDDlhYMhIQ==?=
+Date: Sat, 08 May 2010 03:06:33 +0800
+Message-ID: <20100507190633.D10DD6DAE98@c-in3ws--02-01.sv2.lotusliveops.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:58709 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752803Ab0EGStu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 May 2010 14:49:50 -0400
+Received: from outbound2.messaging.lotuslive.com ([8.12.152.117]:31131 "EHLO
+	outbound2.messaging.lotuslive.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757799Ab0EGTMO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 May 2010 15:12:14 -0400
+Received: from outbound2.messaging.lotuslive.com (43.32.6.10.in-addr.arpa [10.6.32.43])
+	by c-in3ofal02-02.sv2.lotusliveops.com (Postfix) with ESMTP id 72F5E11B3B67
+	for <linux-ide@vger.kernel.org>; Fri,  7 May 2010 19:08:03 +0000 (GMT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: charlene1991329@yahoo.com.tw, mlyeh@mail2000.com.tw, tfhircfth@lycos.com, p3367984@livemail.tw, wongleelin@hotmail.com, em052257092@gmail.com, mtheirin@ci.idaho.gov, linux-ide@vger.ke
 
-Now, with the introduction of the sff_set_devctl() method, we can use it in
-sff_irq_on() method too -- that way its implementations in 'pata_bf54x' and
-'pata_scc' become virtually identical to ata_sff_irq_on().  The sff_irq_on()
-method now becomes quite superfluous, and the only reason not to remove it
-completely is the existence of the 'pata_octeon_cf' driver which implements it
-as an empty function. Just make the method optional then, with ata_sff_irq_on()
-becoming generic taskfile-bound function, still global for the 'pata_bf54x'
-driver to be able to call it from its thaw() and postreset() methods.
+=E5=AD=B8=E7=BF=92=E8=A8=98=E6=86=B6=E6=B3=95=E7=9C=9F=E7=9A=84=E8=A6=81=
+=E9=82=A3=E9=BA=BC=E8=B2=B4=E5=97=8E?
+=E7=8F=BE=E5=9C=A8=E6=82=A8=E6=9C=89=E6=9B=B4=E5=B9=B3=E6=B0=91=E5=8C=96=
+=E7=9A=84=E9=81=B8=E6=93=87!!
+=E8=80=8C=E4=B8=94=E4=BE=BF=E5=AE=9C=E7=B5=95=E5=B0=8D=E6=9C=89=E5=A5=BD=
+=E8=B2=A8!!
+=E6=9D=B1=E9=A2=A837=E5=8F=B0 =E6=B0=91=E8=A6=96 =E8=B6=85=E8=A6=96..=E5=
+=A4=9A=E5=AE=B6=E8=A1=9B=E6=98=9F=E9=9B=BB=E8=A6=96=E8=A8=98=E6=86=B6=E7=
+=AF=80=E7=9B=AE=E8=AA=B2=E7=A8=8B=E8=AC=9B=E5=B8=AB
+=E4=BF=9D=E8=AD=89=E5=9C=8B=E7=AB=8B=E5=A4=A7=E5=AD=B8=E7=9A=84=E5=B8=AB=
+=E8=B3=87=E8=A6=AA=E8=87=AA=E9=8C=84=E8=A3=BD
+=E5=8F=AA=E8=B3=A31600=E5=85=83!!
+=E5=AE=8C=E5=85=A8=E7=84=A1=E4=BF=9D=E7=95=99=E7=9A=84=E6=95=99=E5=AD=B8
+=E8=A9=B3=E7=B4=B0=E5=9C=96=E6=96=87=E8=AA=AA=E6=98=8E=E8=AB=8B=E6=8C=89=
+=E4=B8=8B=E9=9D=A2=E7=B6=B2=E5=9D=80
+http://fly2.ws/JMPgq-R
 
-While at it, make the sff_irq_on() method and ata_sff_irq_on() return 'void' as
-the result is always ignored anyway.
+--------------------------------------------------------------
+Ovi Mail: Being used in over 200 countries
+http://mail.ovi.com
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
----
-The patch is against the recent Linus' tree.
-
- drivers/ata/libata-sff.c     |   26 +++++++++++++++-----------
- drivers/ata/pata_bf54x.c     |   29 ++---------------------------
- drivers/ata/pata_octeon_cf.c |    3 +--
- drivers/ata/pata_scc.c       |   24 ------------------------
- include/linux/libata.h       |    4 ++--
- 5 files changed, 20 insertions(+), 66 deletions(-)
-
-Index: linux-2.6/drivers/ata/libata-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-sff.c
-+++ linux-2.6/drivers/ata/libata-sff.c
-@@ -63,7 +63,6 @@ const struct ata_port_operations ata_sff
- 	.sff_tf_read		= ata_sff_tf_read,
- 	.sff_exec_command	= ata_sff_exec_command,
- 	.sff_data_xfer		= ata_sff_data_xfer,
--	.sff_irq_on		= ata_sff_irq_on,
- 	.sff_irq_clear		= ata_sff_irq_clear,
- 
- 	.lost_interrupt		= ata_sff_lost_interrupt,
-@@ -538,24 +537,29 @@ void ata_dev_select(struct ata_port *ap,
-  *	Enable interrupts on a legacy IDE device using MMIO or PIO,
-  *	wait for idle, clear any pending interrupts.
-  *
-+ *	Note: may NOT be used as the sff_irq_on() entry in
-+ *	ata_port_operations.
-+ *
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--u8 ata_sff_irq_on(struct ata_port *ap)
-+void ata_sff_irq_on(struct ata_port *ap)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
--	u8 tmp;
-+
-+	if (ap->ops->sff_irq_on) {
-+		ap->ops->sff_irq_on(ap);
-+		return;
-+	}
- 
- 	ap->ctl &= ~ATA_NIEN;
- 	ap->last_ctl = ap->ctl;
- 
--	if (ioaddr->ctl_addr)
--		iowrite8(ap->ctl, ioaddr->ctl_addr);
--	tmp = ata_wait_idle(ap);
-+	if (ap->ops->sff_set_devctl || ioaddr->ctl_addr)
-+		ata_sff_set_devctl(ap, ap->ctl);
-+	ata_wait_idle(ap);
- 
- 	ap->ops->sff_irq_clear(ap);
--
--	return tmp;
- }
- EXPORT_SYMBOL_GPL(ata_sff_irq_on);
- 
-@@ -1186,7 +1190,7 @@ static void ata_hsm_qc_complete(struct a
- 			qc = ata_qc_from_tag(ap, qc->tag);
- 			if (qc) {
- 				if (likely(!(qc->err_mask & AC_ERR_HSM))) {
--					ap->ops->sff_irq_on(ap);
-+					ata_sff_irq_on(ap);
- 					ata_qc_complete(qc);
- 				} else
- 					ata_port_freeze(ap);
-@@ -1202,7 +1206,7 @@ static void ata_hsm_qc_complete(struct a
- 	} else {
- 		if (in_wq) {
- 			spin_lock_irqsave(ap->lock, flags);
--			ap->ops->sff_irq_on(ap);
-+			ata_sff_irq_on(ap);
- 			ata_qc_complete(qc);
- 			spin_unlock_irqrestore(ap->lock, flags);
- 		} else
-@@ -1946,7 +1950,7 @@ void ata_sff_thaw(struct ata_port *ap)
- 	/* clear & re-enable interrupts */
- 	ap->ops->sff_check_status(ap);
- 	ap->ops->sff_irq_clear(ap);
--	ap->ops->sff_irq_on(ap);
-+	ata_sff_irq_on(ap);
- }
- EXPORT_SYMBOL_GPL(ata_sff_thaw);
- 
-Index: linux-2.6/drivers/ata/pata_bf54x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_bf54x.c
-+++ linux-2.6/drivers/ata/pata_bf54x.c
-@@ -1228,30 +1228,6 @@ static void bfin_irq_clear(struct ata_po
- }
- 
- /**
-- *	bfin_irq_on - Enable interrupts on a port.
-- *	@ap: Port on which interrupts are enabled.
-- *
-- *	Note: Original code is ata_sff_irq_on().
-- */
--
--static unsigned char bfin_irq_on(struct ata_port *ap)
--{
--	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
--	u8 tmp;
--
--	dev_dbg(ap->dev, "in atapi irq on\n");
--	ap->ctl &= ~ATA_NIEN;
--	ap->last_ctl = ap->ctl;
--
--	write_atapi_register(base, ATA_REG_CTRL, ap->ctl);
--	tmp = ata_wait_idle(ap);
--
--	bfin_irq_clear(ap);
--
--	return tmp;
--}
--
--/**
-  *	bfin_thaw - Thaw DMA controller port
-  *	@ap: port to thaw
-  *
-@@ -1262,7 +1238,7 @@ void bfin_thaw(struct ata_port *ap)
- {
- 	dev_dbg(ap->dev, "in atapi dma thaw\n");
- 	bfin_check_status(ap);
--	bfin_irq_on(ap);
-+	ata_sff_irq_on(ap);
- }
- 
- /**
-@@ -1279,7 +1255,7 @@ static void bfin_postreset(struct ata_li
- 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
- 
- 	/* re-enable interrupts */
--	bfin_irq_on(ap);
-+	ata_sff_irq_on(ap);
- 
- 	/* is double-select really necessary? */
- 	if (classes[0] != ATA_DEV_NONE)
-@@ -1477,7 +1453,6 @@ static struct ata_port_operations bfin_p
- 	.postreset		= bfin_postreset,
- 
- 	.sff_irq_clear		= bfin_irq_clear,
--	.sff_irq_on		= bfin_irq_on,
- 
- 	.port_start		= bfin_port_start,
- 	.port_stop		= bfin_port_stop,
-Index: linux-2.6/drivers/ata/pata_octeon_cf.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_octeon_cf.c
-+++ linux-2.6/drivers/ata/pata_octeon_cf.c
-@@ -489,9 +489,8 @@ static void octeon_cf_exec_command16(str
- 	ata_wait_idle(ap);
- }
- 
--static u8 octeon_cf_irq_on(struct ata_port *ap)
-+static void octeon_cf_irq_on(struct ata_port *ap)
- {
--	return 0;
- }
- 
- static void octeon_cf_irq_clear(struct ata_port *ap)
-Index: linux-2.6/drivers/ata/pata_scc.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_scc.c
-+++ linux-2.6/drivers/ata/pata_scc.c
-@@ -828,29 +828,6 @@ static unsigned int scc_data_xfer (struc
- }
- 
- /**
-- *	scc_irq_on - Enable interrupts on a port.
-- *	@ap: Port on which interrupts are enabled.
-- *
-- *	Note: Original code is ata_sff_irq_on().
-- */
--
--static u8 scc_irq_on (struct ata_port *ap)
--{
--	struct ata_ioports *ioaddr = &ap->ioaddr;
--	u8 tmp;
--
--	ap->ctl &= ~ATA_NIEN;
--	ap->last_ctl = ap->ctl;
--
--	out_be32(ioaddr->ctl_addr, ap->ctl);
--	tmp = ata_wait_idle(ap);
--
--	ap->ops->sff_irq_clear(ap);
--
--	return tmp;
--}
--
--/**
-  *	scc_pata_prereset - prepare for reset
-  *	@ap: ATA port to be reset
-  *	@deadline: deadline jiffies for the operation
-@@ -977,7 +954,6 @@ static struct ata_port_operations scc_pa
- 	.post_internal_cmd	= scc_bmdma_stop,
- 
- 	.sff_irq_clear		= scc_irq_clear,
--	.sff_irq_on		= scc_irq_on,
- 
- 	.port_start		= scc_port_start,
- 	.port_stop		= scc_port_stop,
-Index: linux-2.6/include/linux/libata.h
-===================================================================
---- linux-2.6.orig/include/linux/libata.h
-+++ linux-2.6/include/linux/libata.h
-@@ -858,7 +858,7 @@ struct ata_port_operations {
- 				 const struct ata_taskfile *tf);
- 	unsigned int (*sff_data_xfer)(struct ata_device *dev,
- 			unsigned char *buf, unsigned int buflen, int rw);
--	u8   (*sff_irq_on)(struct ata_port *);
-+	void (*sff_irq_on)(struct ata_port *);
- 	bool (*sff_irq_check)(struct ata_port *);
- 	void (*sff_irq_clear)(struct ata_port *);
- 
-@@ -1598,7 +1598,7 @@ extern unsigned int ata_sff_data_xfer32(
- 			unsigned char *buf, unsigned int buflen, int rw);
- extern unsigned int ata_sff_data_xfer_noirq(struct ata_device *dev,
- 			unsigned char *buf, unsigned int buflen, int rw);
--extern u8 ata_sff_irq_on(struct ata_port *ap);
-+extern void ata_sff_irq_on(struct ata_port *ap);
- extern void ata_sff_irq_clear(struct ata_port *ap);
- extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			    u8 status, int in_wq);
