@@ -1,36 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci: CAP_SSS and parallel scan
-Date: Fri, 07 May 2010 07:16:07 +0200
-Message-ID: <4BE3A217.2030407@kernel.org>
-References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com> <4BE2D5D6.1010705@kernel.org> <4BE3244A.7060607@teksavvy.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 05/22] libata-sff: kill unused prototype and make ata_dev_select()
+ static
+Date: Fri, 07 May 2010 17:47:12 +0400
+Message-ID: <4BE419E0.9080802@ru.mvista.com>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <1224580680-13698-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45286 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028Ab0EGFQg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 May 2010 01:16:36 -0400
-In-Reply-To: <4BE3244A.7060607@teksavvy.com>
+Received: from mail-ew0-f220.google.com ([209.85.219.220]:39330 "EHLO
+	mail-ew0-f220.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754366Ab0EGNsE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 May 2010 09:48:04 -0400
+In-Reply-To: <1224580680-13698-6-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, Jeff Garzik <jeff@garzik.org>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: jeff@garzik.org
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 05/06/2010 10:19 PM, Mark Lord wrote:
-> On 06/05/10 03:49 PM, Jeff Garzik wrote:
->>
->>> Currently, there's no way to tell whether staggered spin up is needed
->>> or drives are already spun up.
-> 
-> Perhaps by issuing a "CHECK POWER MODE" command?
-> For many drives, a non-spinning drive is detectable from its IDENTIFY data.
+Hello.
 
-Heh, yeah, I wish it were like that.  IIRC, there are two different
-staggered spin up scheme.  The one implemented by CAP_SSS uses link
-init sequence as signal to spin up which means you don't even know
-whether there's a device attached before committing to spinning it up.
-Gotta love ATA.  :-)
+Tejun Heo wrote:
 
--- 
-tejun
+> ata_irq_on() was renamed to ata_sff_irq_on() and exported a while ago
+> but prototype for the original function lingered in
+> drivers/ata/libata.h.  Kill it.  Also, ata_dev_select() is only used
+> inside drivers/ata/libata-sff.c.  Make it static.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/ata/libata-sff.c |    2 +-
+>  drivers/ata/libata.h     |    3 ---
+>  2 files changed, 1 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index b9fb068..edcd72c 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -468,7 +468,7 @@ void ata_sff_dev_select(struct ata_port *ap, unsigned int device)
+>   *	LOCKING:
+>   *	caller.
+>   */
+> -void ata_dev_select(struct ata_port *ap, unsigned int device,
+> +static void ata_dev_select(struct ata_port *ap, unsigned int device,
+>  			   unsigned int wait, unsigned int can_sleep)
+>  {
+>  	if (ata_msg_probe(ap))
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index fe2839e..1f626b5 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -201,9 +201,6 @@ static inline int sata_pmp_attach(struct ata_device *dev)
+>  
+>  /* libata-sff.c */
+>  #ifdef CONFIG_ATA_SFF
+> -extern void ata_dev_select(struct ata_port *ap, unsigned int device,
+> -                           unsigned int wait, unsigned int can_sleep);
+> -extern u8 ata_irq_on(struct ata_port *ap);
+>  extern void ata_pio_task(struct work_struct *work);
+>  #endif /* CONFIG_ATA_SFF */
+>   
+
+   Hey, why this Tejun's patch ended up ignored? I've just submitted the 
+patch killing that orphan proto and am pondering what to do with 
+ata_dev_select() and now it turns out that Tejun has taken care of both 
+back in 2008... :-/
+
+WBR, Sergei
+
