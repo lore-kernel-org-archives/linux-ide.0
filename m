@@ -1,33 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
-Date: Sat, 08 May 2010 17:33:02 +0200
-Message-ID: <4BE5842E.5010001@kernel.org>
-References: <1224580680-13698-1-git-send-email-tj@kernel.org> <4BE41CCD.8000005@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] cmd640: fix kernel oops in test_irq() method
+Date: Sat, 8 May 2010 22:07:14 +0400
+Message-ID: <201005082207.14690.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43591 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752527Ab0EHPdM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 May 2010 11:33:12 -0400
-In-Reply-To: <4BE41CCD.8000005@ru.mvista.com>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:41668 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751352Ab0EHSIC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 May 2010 14:08:02 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org
 
-On 05/07/2010 03:59 PM, Sergei Shtylyov wrote:
->   Tejun, what was the fate of this patchset? Looks like it ended up
-> ignored...
+When implementing the test_iqr() method, I forgot that this driver is not an
+ordinary PCI driver and also needs to support VLB variant of the chip. Moreover,
+'hwif->dev' should be NULL, potentially causing oops in pci_read_config_byte().
 
-Hmm... I frankly don't remember anything about it.  2008 is way beyond
-the scope of my feeble memory.  :-)
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-It looks like both Jeff and I dropped the ball there.  I'll find out
-whether any patch can be salvaged and resubmit.
+---
+The patch is atop of ide-2.6.git tree...
 
-Thanks for digging it up.
+ drivers/ide/cmd640.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
--- 
-tejun
+Index: ide-2.6/drivers/ide/cmd640.c
+===================================================================
+--- ide-2.6.orig/drivers/ide/cmd640.c
++++ ide-2.6/drivers/ide/cmd640.c
+@@ -633,12 +633,10 @@ static void __init cmd640_init_dev(ide_d
+ 
+ static int cmd640_test_irq(ide_hwif_t *hwif)
+ {
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+ 	int irq_reg		= hwif->channel ? ARTTIM23 : CFR;
+-	u8  irq_stat, irq_mask	= hwif->channel ? ARTTIM23_IDE23INTR :
++	u8  irq_mask		= hwif->channel ? ARTTIM23_IDE23INTR :
+ 						  CFR_IDE01INTR;
+-
+-	pci_read_config_byte(dev, irq_reg, &irq_stat);
++	u8  irq_stat		= get_cmd640_reg(irq_reg);
+ 
+ 	return (irq_stat & irq_mask) ? 1 : 0;
+ }
