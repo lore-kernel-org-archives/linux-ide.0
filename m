@@ -1,50 +1,47 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] cmd640: fix kernel oops in test_irq() method
-Date: Sat, 8 May 2010 22:07:14 +0400
-Message-ID: <201005082207.14690.sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_cmd640: don't read CFR pointlessly
+Date: Sat, 8 May 2010 22:27:18 +0400
+Message-ID: <201005082227.19096.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:41668 "HELO
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:48114 "HELO
 	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751352Ab0EHSIC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 May 2010 14:08:02 -0400
+	with SMTP id S1751213Ab0EHS2G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 May 2010 14:28:06 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
+To: jgarzik@pobox.com
 Cc: linux-ide@vger.kernel.org
 
-When implementing the test_iqr() method, I forgot that this driver is not an
-ordinary PCI driver and also needs to support VLB variant of the chip. Moreover,
-'hwif->dev' should be NULL, potentially causing oops in pci_read_config_byte().
+cmd640_hardware_init() reads CFR but doesn't use the value read...
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-The patch is atop of ide-2.6.git tree...
+The patch is against the recent Linus' tree.
 
- drivers/ide/cmd640.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/ata/pata_cmd640.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
-Index: ide-2.6/drivers/ide/cmd640.c
+Index: linux-2.6/drivers/ata/pata_cmd640.c
 ===================================================================
---- ide-2.6.orig/drivers/ide/cmd640.c
-+++ ide-2.6/drivers/ide/cmd640.c
-@@ -633,12 +633,10 @@ static void __init cmd640_init_dev(ide_d
+--- linux-2.6.orig/drivers/ata/pata_cmd640.c
++++ linux-2.6/drivers/ata/pata_cmd640.c
+@@ -181,13 +181,10 @@ static struct ata_port_operations cmd640
  
- static int cmd640_test_irq(ide_hwif_t *hwif)
+ static void cmd640_hardware_init(struct pci_dev *pdev)
  {
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
- 	int irq_reg		= hwif->channel ? ARTTIM23 : CFR;
--	u8  irq_stat, irq_mask	= hwif->channel ? ARTTIM23_IDE23INTR :
-+	u8  irq_mask		= hwif->channel ? ARTTIM23_IDE23INTR :
- 						  CFR_IDE01INTR;
--
--	pci_read_config_byte(dev, irq_reg, &irq_stat);
-+	u8  irq_stat		= get_cmd640_reg(irq_reg);
+-	u8 r;
+ 	u8 ctrl;
  
- 	return (irq_stat & irq_mask) ? 1 : 0;
- }
+ 	/* CMD640 detected, commiserations */
+ 	pci_write_config_byte(pdev, 0x5B, 0x00);
+-	/* Get version info */
+-	pci_read_config_byte(pdev, CFR, &r);
+ 	/* PIO0 command cycles */
+ 	pci_write_config_byte(pdev, CMDTIM, 0);
+ 	/* 512 byte bursts (sector) */
