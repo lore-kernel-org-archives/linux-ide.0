@@ -1,36 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci: CAP_SSS and parallel scan
-Date: Sat, 08 May 2010 10:40:35 +0200
-Message-ID: <4BE52383.9080908@kernel.org>
-References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com> <4BE2D5D6.1010705@kernel.org> <4BE31D57.6020400@garzik.org> <4BE3A1A6.1040106@kernel.org> <4BE48742.8060604@garzik.org>
+Subject: Re: [PATCHSET #upstream] libata: separate out SFF and BMDMA
+Date: Sat, 08 May 2010 17:33:02 +0200
+Message-ID: <4BE5842E.5010001@kernel.org>
+References: <1224580680-13698-1-git-send-email-tj@kernel.org> <4BE41CCD.8000005@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37532 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:43591 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752617Ab0EHIkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 May 2010 04:40:49 -0400
-In-Reply-To: <4BE48742.8060604@garzik.org>
+	id S1752527Ab0EHPdM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 May 2010 11:33:12 -0400
+In-Reply-To: <4BE41CCD.8000005@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 05/07/2010 11:33 PM, Jeff Garzik wrote:
-> I'm not sure the usefulness is limited, as it definitely avoids power
-> spikes on server BIOSen that care.
+On 05/07/2010 03:59 PM, Sergei Shtylyov wrote:
+>   Tejun, what was the fate of this patchset? Looks like it ended up
+> ignored...
 
-So, are there actually machines which get affected by this?  In that
-case, sure, the current behavior is the right one.
+Hmm... I frankly don't remember anything about it.  2008 is way beyond
+the scope of my feeble memory.  :-)
 
-> Also, it seems unwise for the Linux SATA driver to do the exact
-> -opposite- of what the SSS bit intends, by default.
+It looks like both Jeff and I dropped the ball there.  I'll find out
+whether any patch can be salvaged and resubmit.
 
-Yeah, well, the thing is that SSS in itself doesn't really indicate
-need for staggered spin up.  It just says it knows how to.
-
-Thanks.
+Thanks for digging it up.
 
 -- 
 tejun
