@@ -1,53 +1,63 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: ahci: CAP_SSS and parallel scan
-Date: Sat, 08 May 2010 17:53:30 -0400
-Message-ID: <4BE5DD5A.8030701@garzik.org>
-References: <4BE27C49.5090809@kernel.org> <4BE28C4F.9000903@linux.intel.com> <4BE2D5D6.1010705@kernel.org> <4BE31D57.6020400@garzik.org> <4BE3A1A6.1040106@kernel.org> <4BE48742.8060604@garzik.org> <4BE52383.9080908@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Graeme Russ <graeme.russ@gmail.com>
+Subject: [PATCH] Add hook for custom xfer function in PATA Platform driver
+Date: Sun,  9 May 2010 15:21:33 +1000
+Message-ID: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55642 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753625Ab0EHVxd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 May 2010 17:53:33 -0400
-Received: by vws3 with SMTP id 3so625441vws.19
-        for <linux-ide@vger.kernel.org>; Sat, 08 May 2010 14:53:33 -0700 (PDT)
-In-Reply-To: <4BE52383.9080908@kernel.org>
+Received: from mail-pz0-f204.google.com ([209.85.222.204]:38404 "EHLO
+	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753Ab0EIFVj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 May 2010 01:21:39 -0400
+Received: by pzk42 with SMTP id 42so1139716pzk.4
+        for <linux-ide@vger.kernel.org>; Sat, 08 May 2010 22:21:38 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>, t.artem@mailcity.com, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: Graeme Russ <graeme.russ@gmail.com>
 
-On 05/08/2010 04:40 AM, Tejun Heo wrote:
-> On 05/07/2010 11:33 PM, Jeff Garzik wrote:
->> I'm not sure the usefulness is limited, as it definitely avoids power
->> spikes on server BIOSen that care.
->
-> So, are there actually machines which get affected by this?  In that
-> case, sure, the current behavior is the right one.
+Allows the existing 16-bit data transfer function used by the PATA Platform
+driver to be overriden by a vendor specific fuction. This is useful if,
+for example, the PATA device is only capable of 8-bit data transfers
 
-The current behavior is the safe, conservative interpretation.  The 
-alternative is risking unwanted power spikes for the sake of boot speed.
+Signed-off-by: Graeme Russ <graeme.russ@gmail.com>
+---
+ drivers/ata/pata_platform.c  |    7 +++++++
+ include/linux/ata_platform.h |    5 +++++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
 
-I would set a high barrier for taking that risk:  polling multiple 
-hardware vendors about in-the-field SSS usage.
-
-
->> Also, it seems unwise for the Linux SATA driver to do the exact
->> -opposite- of what the SSS bit intends, by default.
->
-> Yeah, well, the thing is that SSS in itself doesn't really indicate
-> need for staggered spin up.  It just says it knows how to.
-
-A valid point, I agree.  But absent any other method of communicating 
-that SSS behavior is desired, activating staggered spin-up based on SSS 
-is the only logical interpretation, AFAICS.  SSS bit set implies SSS 
--might- be needed.  If SSS might be needed, then one must stagger 
-spin-up or risk failing to meet the requirement.  !SSS is the only case 
-where you are -guaranteed- not to need staggered spin-up.
-
-	Jeff
-
-
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 3f6ebc6..dc516b4 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -238,6 +238,13 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
+ 	if (irq_res)
+ 		irq_res->flags = pp_info ? pp_info->irq_flags : 0;
+ 
++	/*
++	 * Assign custom data transfer function (if defined)
++	 */
++	if (pp_info)
++		if (unlikely(pp_info->data_xfer))
++			pata_platform_port_ops.sff_data_xfer = pp_info->data_xfer;
++
+ 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
+ 				     pp_info ? pp_info->ioport_shift : 0,
+ 				     pio_mask);
+diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
+index 9a26c83..0913633 100644
+--- a/include/linux/ata_platform.h
++++ b/include/linux/ata_platform.h
+@@ -13,6 +13,11 @@ struct pata_platform_info {
+ 	 * IRQ flags when call request_irq()
+ 	 */
+ 	unsigned int irq_flags;
++	/*
++	 * Custom data transfer function
++	 */
++	unsigned int (*data_xfer)(struct ata_device *dev,
++			unsigned char *buf, unsigned int buflen, int rw);
+ };
+ 
+ extern int __devinit __pata_platform_probe(struct device *dev,
+-- 
+1.7.1.rc1.12.ga601
 
