@@ -1,63 +1,64 @@
 From: Graeme Russ <graeme.russ@gmail.com>
-Subject: [PATCH] Add hook for custom xfer function in PATA Platform driver
-Date: Sun,  9 May 2010 15:21:33 +1000
-Message-ID: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>
+Subject: Re: [PATCH] Add hook for custom xfer function in PATA Platform driver
+Date: Sun, 09 May 2010 21:29:05 +1000
+Message-ID: <4BE69C81.2070703@gmail.com>
+References: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com> <4BE6910D.9070504@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f204.google.com ([209.85.222.204]:38404 "EHLO
-	mail-pz0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753Ab0EIFVj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 May 2010 01:21:39 -0400
-Received: by pzk42 with SMTP id 42so1139716pzk.4
-        for <linux-ide@vger.kernel.org>; Sat, 08 May 2010 22:21:38 -0700 (PDT)
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:51819 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745Ab0EIL3K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 May 2010 07:29:10 -0400
+Received: by pva18 with SMTP id 18so1227468pva.19
+        for <linux-ide@vger.kernel.org>; Sun, 09 May 2010 04:29:09 -0700 (PDT)
+In-Reply-To: <4BE6910D.9070504@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Graeme Russ <graeme.russ@gmail.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org
 
-Allows the existing 16-bit data transfer function used by the PATA Platform
-driver to be overriden by a vendor specific fuction. This is useful if,
-for example, the PATA device is only capable of 8-bit data transfers
+[Added linux-ide back onto distribution list]
 
-Signed-off-by: Graeme Russ <graeme.russ@gmail.com>
----
- drivers/ata/pata_platform.c  |    7 +++++++
- include/linux/ata_platform.h |    5 +++++
- 2 files changed, 12 insertions(+), 0 deletions(-)
+Sergei Shtylyov wrote:
+> Hello.
+> 
+> Graeme Russ wrote:
+> 
+>> +    /*
+>> +     * Assign custom data transfer function (if defined)
+>> +     */
+>> +    if (pp_info)
+>> +        if (unlikely(pp_info->data_xfer))
+>>   
+> 
+>   Could be folded into a signle *if* statement.
 
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 3f6ebc6..dc516b4 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -238,6 +238,13 @@ static int __devinit pata_platform_probe(struct platform_device *pdev)
- 	if (irq_res)
- 		irq_res->flags = pp_info ? pp_info->irq_flags : 0;
- 
-+	/*
-+	 * Assign custom data transfer function (if defined)
-+	 */
-+	if (pp_info)
-+		if (unlikely(pp_info->data_xfer))
-+			pata_platform_port_ops.sff_data_xfer = pp_info->data_xfer;
-+
- 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
- 				     pp_info ? pp_info->ioport_shift : 0,
- 				     pio_mask);
-diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-index 9a26c83..0913633 100644
---- a/include/linux/ata_platform.h
-+++ b/include/linux/ata_platform.h
-@@ -13,6 +13,11 @@ struct pata_platform_info {
- 	 * IRQ flags when call request_irq()
- 	 */
- 	unsigned int irq_flags;
-+	/*
-+	 * Custom data transfer function
-+	 */
-+	unsigned int (*data_xfer)(struct ata_device *dev,
-+			unsigned char *buf, unsigned int buflen, int rw);
- };
- 
- extern int __devinit __pata_platform_probe(struct device *dev,
--- 
-1.7.1.rc1.12.ga601
+I thought so - I didn't exactly know what the linux coding standards are in
+regards to this shortcut though.
+
+> 
+>   You should have also taught the symmetric ide-platfrom driver the same
+> trick. However, IDE core's data transfer methods has a different prototype.
+
+I did think about the other drivers (OF Platform etc) but I have no way of
+testing them.
+
+> I suggest to rather add a new flag, indicating 8-bit data I/O, and have
+> the alternate sff_data_xfer() method defined inside the driver.
+> 
+
+Well actually it goes beyond simply implementing 8-bit data transfers - On
+my particular board, the PATA devices (2x CF slots) are on a General
+Purpose Bus with a few other peripherals. The timing requirements for the
+bus when accessing the CF cards are very strict (and very slow compared to
+other devices on the bus). By overriding the data transfer function I can
+arbitrate access to the bus and switch the bus timings based on the
+peripheral being accessed. This cannot be done be a generic data transfer
+function.
+
+Regards,
+
+Graeme
 
