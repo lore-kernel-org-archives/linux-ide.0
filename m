@@ -1,490 +1,104 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 16/23] libata-sff: ata_sff_[dumb_]qc_prep are BMDMA specific
-Date: Mon, 10 May 2010 21:41:40 +0200
-Message-ID: <1273520507-32459-17-git-send-email-tj@kernel.org>
+Subject: [PATCH 22/23] libata-sff: kill dummy BMDMA ops from sata_qstor and pata_octeon_cf
+Date: Mon, 10 May 2010 21:41:46 +0200
+Message-ID: <1273520507-32459-23-git-send-email-tj@kernel.org>
 References: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44977 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44981 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756035Ab0EJTmp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2010 15:42:45 -0400
+	id S1756206Ab0EJTmr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2010 15:42:47 -0400
 In-Reply-To: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
 Cc: Tejun Heo <tj@kernel.org>
 
-Both qc_prep functions deal only with BMDMA PRD setup and PIO only SFF
-drivers don't need them.  Rename to ata_bmdma_[dumb_]qc_prep() and
-relocate.
-
-All usages are renamed except for pdc_adma and sata_qstor.  Those two
-drivers are not BMDMA drivers and don't need to call BMDMA qc_prep
-functions.  Calls to ata_sff_qc_prep() in the two drivers are removed.
+Now that SFF and BMDMA are completely separate, sata_qstor and
+pata_octeon_cf which inherit from ata_sff_port_ops don't need to worry
+about BMDMA ops being called.  Kill the dummy BMDMA ops.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-sff.c  |  290 +++++++++++++++++++++++----------------------
- drivers/ata/pata_atiixp.c |    2 +-
- drivers/ata/pata_cs5520.c |    2 +-
- drivers/ata/pata_cs5530.c |    2 +-
- drivers/ata/pata_sc1200.c |    2 +-
- drivers/ata/pdc_adma.c    |    4 +-
- drivers/ata/sata_nv.c     |    4 +-
- drivers/ata/sata_qstor.c  |    4 +-
- include/linux/libata.h    |    4 +-
- 9 files changed, 156 insertions(+), 158 deletions(-)
+ drivers/ata/pata_octeon_cf.c |   18 ------------------
+ drivers/ata/sata_qstor.c     |   14 --------------
+ 2 files changed, 0 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 4f12b2f..3dba070 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -45,7 +45,7 @@ static struct workqueue_struct *ata_sff_wq;
- const struct ata_port_operations ata_sff_port_ops = {
- 	.inherits		= &ata_base_port_ops,
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index a8c09e4..21b6c1f 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -751,20 +751,6 @@ static void octeon_cf_dev_config(struct ata_device *dev)
+ }
  
--	.qc_prep		= ata_sff_qc_prep,
-+	.qc_prep		= ata_noop_qc_prep,
- 	.qc_issue		= ata_sff_qc_issue,
- 	.qc_fill_rtf		= ata_sff_qc_fill_rtf,
- 
-@@ -72,149 +72,6 @@ const struct ata_port_operations ata_sff_port_ops = {
- EXPORT_SYMBOL_GPL(ata_sff_port_ops);
- 
- /**
-- *	ata_fill_sg - Fill PCI IDE PRD table
-- *	@qc: Metadata associated with taskfile to be transferred
-- *
-- *	Fill PCI IDE PRD (scatter-gather) table with segments
-- *	associated with the current disk command.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
+ /*
+- * Trap if driver tries to do standard bmdma commands.  They are not
+- * supported.
 - */
--static void ata_fill_sg(struct ata_queued_cmd *qc)
+-static void unreachable_qc(struct ata_queued_cmd *qc)
 -{
--	struct ata_port *ap = qc->ap;
--	struct scatterlist *sg;
--	unsigned int si, pi;
--
--	pi = 0;
--	for_each_sg(qc->sg, sg, qc->n_elem, si) {
--		u32 addr, offset;
--		u32 sg_len, len;
--
--		/* determine if physical DMA addr spans 64K boundary.
--		 * Note h/w doesn't support 64-bit, so we unconditionally
--		 * truncate dma_addr_t to u32.
--		 */
--		addr = (u32) sg_dma_address(sg);
--		sg_len = sg_dma_len(sg);
--
--		while (sg_len) {
--			offset = addr & 0xffff;
--			len = sg_len;
--			if ((offset + sg_len) > 0x10000)
--				len = 0x10000 - offset;
--
--			ap->prd[pi].addr = cpu_to_le32(addr);
--			ap->prd[pi].flags_len = cpu_to_le32(len & 0xffff);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
--
--			pi++;
--			sg_len -= len;
--			addr += len;
--		}
--	}
--
--	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
+-	BUG();
 -}
 -
--/**
-- *	ata_fill_sg_dumb - Fill PCI IDE PRD table
-- *	@qc: Metadata associated with taskfile to be transferred
-- *
-- *	Fill PCI IDE PRD (scatter-gather) table with segments
-- *	associated with the current disk command. Perform the fill
-- *	so that we avoid writing any length 64K records for
-- *	controllers that don't follow the spec.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- */
--static void ata_fill_sg_dumb(struct ata_queued_cmd *qc)
+-static u8 unreachable_port(struct ata_port *ap)
 -{
--	struct ata_port *ap = qc->ap;
--	struct scatterlist *sg;
--	unsigned int si, pi;
--
--	pi = 0;
--	for_each_sg(qc->sg, sg, qc->n_elem, si) {
--		u32 addr, offset;
--		u32 sg_len, len, blen;
--
--		/* determine if physical DMA addr spans 64K boundary.
--		 * Note h/w doesn't support 64-bit, so we unconditionally
--		 * truncate dma_addr_t to u32.
--		 */
--		addr = (u32) sg_dma_address(sg);
--		sg_len = sg_dma_len(sg);
--
--		while (sg_len) {
--			offset = addr & 0xffff;
--			len = sg_len;
--			if ((offset + sg_len) > 0x10000)
--				len = 0x10000 - offset;
--
--			blen = len & 0xffff;
--			ap->prd[pi].addr = cpu_to_le32(addr);
--			if (blen == 0) {
--				/* Some PATA chipsets like the CS5530 can't
--				   cope with 0x0000 meaning 64K as the spec
--				   says */
--				ap->prd[pi].flags_len = cpu_to_le32(0x8000);
--				blen = 0x8000;
--				ap->prd[++pi].addr = cpu_to_le32(addr + 0x8000);
--			}
--			ap->prd[pi].flags_len = cpu_to_le32(blen);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
--
--			pi++;
--			sg_len -= len;
--			addr += len;
--		}
--	}
--
--	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
+-	BUG();
 -}
 -
--/**
-- *	ata_sff_qc_prep - Prepare taskfile for submission
-- *	@qc: Metadata associated with taskfile to be prepared
-- *
-- *	Prepare ATA taskfile for submission.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--void ata_sff_qc_prep(struct ata_queued_cmd *qc)
--{
--	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
--		return;
--
--	ata_fill_sg(qc);
--}
--EXPORT_SYMBOL_GPL(ata_sff_qc_prep);
--
--/**
-- *	ata_sff_dumb_qc_prep - Prepare taskfile for submission
-- *	@qc: Metadata associated with taskfile to be prepared
-- *
-- *	Prepare ATA taskfile for submission.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--void ata_sff_dumb_qc_prep(struct ata_queued_cmd *qc)
--{
--	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
--		return;
--
--	ata_fill_sg_dumb(qc);
--}
--EXPORT_SYMBOL_GPL(ata_sff_dumb_qc_prep);
--
--/**
-  *	ata_sff_check_status - Read device status reg & clear interrupt
-  *	@ap: port where the device is
-  *
-@@ -2740,6 +2597,8 @@ const struct ata_port_operations ata_bmdma_port_ops = {
- 	.error_handler		= ata_bmdma_error_handler,
- 	.post_internal_cmd	= ata_bmdma_post_internal_cmd,
- 
-+	.qc_prep		= ata_bmdma_qc_prep,
-+
- 	.bmdma_setup		= ata_bmdma_setup,
- 	.bmdma_start		= ata_bmdma_start,
- 	.bmdma_stop		= ata_bmdma_stop,
-@@ -2758,6 +2617,149 @@ const struct ata_port_operations ata_bmdma32_port_ops = {
- EXPORT_SYMBOL_GPL(ata_bmdma32_port_ops);
- 
- /**
-+ *	ata_bmdma_fill_sg - Fill PCI IDE PRD table
-+ *	@qc: Metadata associated with taskfile to be transferred
-+ *
-+ *	Fill PCI IDE PRD (scatter-gather) table with segments
-+ *	associated with the current disk command.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ */
-+static void ata_bmdma_fill_sg(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct scatterlist *sg;
-+	unsigned int si, pi;
-+
-+	pi = 0;
-+	for_each_sg(qc->sg, sg, qc->n_elem, si) {
-+		u32 addr, offset;
-+		u32 sg_len, len;
-+
-+		/* determine if physical DMA addr spans 64K boundary.
-+		 * Note h/w doesn't support 64-bit, so we unconditionally
-+		 * truncate dma_addr_t to u32.
-+		 */
-+		addr = (u32) sg_dma_address(sg);
-+		sg_len = sg_dma_len(sg);
-+
-+		while (sg_len) {
-+			offset = addr & 0xffff;
-+			len = sg_len;
-+			if ((offset + sg_len) > 0x10000)
-+				len = 0x10000 - offset;
-+
-+			ap->prd[pi].addr = cpu_to_le32(addr);
-+			ap->prd[pi].flags_len = cpu_to_le32(len & 0xffff);
-+			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
-+
-+			pi++;
-+			sg_len -= len;
-+			addr += len;
-+		}
-+	}
-+
-+	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
-+}
-+
-+/**
-+ *	ata_bmdma_fill_sg_dumb - Fill PCI IDE PRD table
-+ *	@qc: Metadata associated with taskfile to be transferred
-+ *
-+ *	Fill PCI IDE PRD (scatter-gather) table with segments
-+ *	associated with the current disk command. Perform the fill
-+ *	so that we avoid writing any length 64K records for
-+ *	controllers that don't follow the spec.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ */
-+static void ata_bmdma_fill_sg_dumb(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct scatterlist *sg;
-+	unsigned int si, pi;
-+
-+	pi = 0;
-+	for_each_sg(qc->sg, sg, qc->n_elem, si) {
-+		u32 addr, offset;
-+		u32 sg_len, len, blen;
-+
-+		/* determine if physical DMA addr spans 64K boundary.
-+		 * Note h/w doesn't support 64-bit, so we unconditionally
-+		 * truncate dma_addr_t to u32.
-+		 */
-+		addr = (u32) sg_dma_address(sg);
-+		sg_len = sg_dma_len(sg);
-+
-+		while (sg_len) {
-+			offset = addr & 0xffff;
-+			len = sg_len;
-+			if ((offset + sg_len) > 0x10000)
-+				len = 0x10000 - offset;
-+
-+			blen = len & 0xffff;
-+			ap->prd[pi].addr = cpu_to_le32(addr);
-+			if (blen == 0) {
-+				/* Some PATA chipsets like the CS5530 can't
-+				   cope with 0x0000 meaning 64K as the spec
-+				   says */
-+				ap->prd[pi].flags_len = cpu_to_le32(0x8000);
-+				blen = 0x8000;
-+				ap->prd[++pi].addr = cpu_to_le32(addr + 0x8000);
-+			}
-+			ap->prd[pi].flags_len = cpu_to_le32(blen);
-+			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
-+
-+			pi++;
-+			sg_len -= len;
-+			addr += len;
-+		}
-+	}
-+
-+	ap->prd[pi - 1].flags_len |= cpu_to_le32(ATA_PRD_EOT);
-+}
-+
-+/**
-+ *	ata_bmdma_qc_prep - Prepare taskfile for submission
-+ *	@qc: Metadata associated with taskfile to be prepared
-+ *
-+ *	Prepare ATA taskfile for submission.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ */
-+void ata_bmdma_qc_prep(struct ata_queued_cmd *qc)
-+{
-+	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
-+		return;
-+
-+	ata_bmdma_fill_sg(qc);
-+}
-+EXPORT_SYMBOL_GPL(ata_bmdma_qc_prep);
-+
-+/**
-+ *	ata_bmdma_dumb_qc_prep - Prepare taskfile for submission
-+ *	@qc: Metadata associated with taskfile to be prepared
-+ *
-+ *	Prepare ATA taskfile for submission.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ */
-+void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc)
-+{
-+	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
-+		return;
-+
-+	ata_bmdma_fill_sg_dumb(qc);
-+}
-+EXPORT_SYMBOL_GPL(ata_bmdma_dumb_qc_prep);
-+
-+/**
-  *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
-  *	@ap: port to handle error for
-  *
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index cbaf2ed..44d88b3 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -217,7 +217,7 @@ static struct scsi_host_template atiixp_sht = {
- static struct ata_port_operations atiixp_port_ops = {
- 	.inherits	= &ata_bmdma_port_ops,
- 
--	.qc_prep 	= ata_sff_dumb_qc_prep,
-+	.qc_prep 	= ata_bmdma_dumb_qc_prep,
- 	.bmdma_start 	= atiixp_bmdma_start,
- 	.bmdma_stop	= atiixp_bmdma_stop,
- 
-diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
-index 95ebdac..17c5f34 100644
---- a/drivers/ata/pata_cs5520.c
-+++ b/drivers/ata/pata_cs5520.c
-@@ -110,7 +110,7 @@ static struct scsi_host_template cs5520_sht = {
- 
- static struct ata_port_operations cs5520_port_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
--	.qc_prep		= ata_sff_dumb_qc_prep,
-+	.qc_prep		= ata_bmdma_dumb_qc_prep,
+-/*
+  * We don't do ATAPI DMA so return 0.
+  */
+ static int octeon_cf_check_atapi_dma(struct ata_queued_cmd *qc)
+@@ -805,10 +791,6 @@ static struct ata_port_operations octeon_cf_ops = {
+ 	.sff_dev_select		= octeon_cf_dev_select,
+ 	.sff_irq_on		= octeon_cf_irq_on,
+ 	.sff_irq_clear		= octeon_cf_irq_clear,
+-	.bmdma_setup		= unreachable_qc,
+-	.bmdma_start		= unreachable_qc,
+-	.bmdma_stop		= unreachable_qc,
+-	.bmdma_status		= unreachable_port,
  	.cable_detect		= ata_cable_40wire,
- 	.set_piomode		= cs5520_set_piomode,
- };
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index 738ad2e..4b9a66f 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -167,7 +167,7 @@ static struct scsi_host_template cs5530_sht = {
- static struct ata_port_operations cs5530_port_ops = {
- 	.inherits	= &ata_bmdma_port_ops,
- 
--	.qc_prep 	= ata_sff_dumb_qc_prep,
-+	.qc_prep 	= ata_bmdma_dumb_qc_prep,
- 	.qc_issue	= cs5530_qc_issue,
- 
- 	.cable_detect	= ata_cable_40wire,
-diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
-index dfecc6f..599e648 100644
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -209,7 +209,7 @@ static struct scsi_host_template sc1200_sht = {
- 
- static struct ata_port_operations sc1200_port_ops = {
- 	.inherits	= &ata_bmdma_port_ops,
--	.qc_prep 	= ata_sff_dumb_qc_prep,
-+	.qc_prep 	= ata_bmdma_dumb_qc_prep,
- 	.qc_issue	= sc1200_qc_issue,
- 	.qc_defer	= sc1200_qc_defer,
- 	.cable_detect	= ata_cable_40wire,
-diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
-index bb4f838..adbe042 100644
---- a/drivers/ata/pdc_adma.c
-+++ b/drivers/ata/pdc_adma.c
-@@ -324,10 +324,8 @@ static void adma_qc_prep(struct ata_queued_cmd *qc)
- 	VPRINTK("ENTER\n");
- 
- 	adma_enter_reg_mode(qc->ap);
--	if (qc->tf.protocol != ATA_PROT_DMA) {
--		ata_sff_qc_prep(qc);
-+	if (qc->tf.protocol != ATA_PROT_DMA)
- 		return;
--	}
- 
- 	buf[i++] = 0;	/* Response flags */
- 	buf[i++] = 0;	/* reserved */
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index e6fd73e..71168e8 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1409,7 +1409,7 @@ static void nv_adma_qc_prep(struct ata_queued_cmd *qc)
- 		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
- 			(qc->flags & ATA_QCFLAG_DMAMAP));
- 		nv_adma_register_mode(qc->ap);
--		ata_sff_qc_prep(qc);
-+		ata_bmdma_qc_prep(qc);
- 		return;
- 	}
- 
-@@ -2012,7 +2012,7 @@ static int nv_swncq_port_start(struct ata_port *ap)
- static void nv_swncq_qc_prep(struct ata_queued_cmd *qc)
- {
- 	if (qc->tf.protocol != ATA_PROT_NCQ) {
--		ata_sff_qc_prep(qc);
-+		ata_bmdma_qc_prep(qc);
- 		return;
- 	}
- 
+ 	.set_piomode		= octeon_cf_set_piomode,
+ 	.set_dmamode		= octeon_cf_set_dmamode,
 diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index d3a22f2..d533b3d 100644
+index 0074351..daeebf1 100644
 --- a/drivers/ata/sata_qstor.c
 +++ b/drivers/ata/sata_qstor.c
-@@ -303,10 +303,8 @@ static void qs_qc_prep(struct ata_queued_cmd *qc)
- 	VPRINTK("ENTER\n");
+@@ -120,8 +120,6 @@ static void qs_host_stop(struct ata_host *host);
+ static void qs_qc_prep(struct ata_queued_cmd *qc);
+ static unsigned int qs_qc_issue(struct ata_queued_cmd *qc);
+ static int qs_check_atapi_dma(struct ata_queued_cmd *qc);
+-static void qs_bmdma_stop(struct ata_queued_cmd *qc);
+-static u8 qs_bmdma_status(struct ata_port *ap);
+ static void qs_freeze(struct ata_port *ap);
+ static void qs_thaw(struct ata_port *ap);
+ static int qs_prereset(struct ata_link *link, unsigned long deadline);
+@@ -137,8 +135,6 @@ static struct ata_port_operations qs_ata_ops = {
+ 	.inherits		= &ata_sff_port_ops,
  
- 	qs_enter_reg_mode(qc->ap);
--	if (qc->tf.protocol != ATA_PROT_DMA) {
--		ata_sff_qc_prep(qc);
-+	if (qc->tf.protocol != ATA_PROT_DMA)
- 		return;
--	}
+ 	.check_atapi_dma	= qs_check_atapi_dma,
+-	.bmdma_stop		= qs_bmdma_stop,
+-	.bmdma_status		= qs_bmdma_status,
+ 	.qc_prep		= qs_qc_prep,
+ 	.qc_issue		= qs_qc_issue,
  
- 	nelem = qs_fill_sg(qc);
+@@ -190,16 +186,6 @@ static int qs_check_atapi_dma(struct ata_queued_cmd *qc)
+ 	return 1;	/* ATAPI DMA not supported */
+ }
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 7b96c2d..61ff9a1 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1569,8 +1569,6 @@ extern const struct ata_port_operations ata_bmdma32_port_ops;
- 	.sg_tablesize		= LIBATA_MAX_PRD,		\
- 	.dma_boundary		= ATA_DMA_BOUNDARY
- 
--extern void ata_sff_qc_prep(struct ata_queued_cmd *qc);
--extern void ata_sff_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_sff_dev_select(struct ata_port *ap, unsigned int device);
- extern u8 ata_sff_check_status(struct ata_port *ap);
- extern void ata_sff_pause(struct ata_port *ap);
-@@ -1627,6 +1625,8 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
- 		struct scsi_host_template *sht, void *host_priv, int hflags);
- #endif /* CONFIG_PCI */
- 
-+extern void ata_bmdma_qc_prep(struct ata_queued_cmd *qc);
-+extern void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_bmdma_error_handler(struct ata_port *ap);
- extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
- extern void ata_bmdma_setup(struct ata_queued_cmd *qc);
+-static void qs_bmdma_stop(struct ata_queued_cmd *qc)
+-{
+-	/* nothing */
+-}
+-
+-static u8 qs_bmdma_status(struct ata_port *ap)
+-{
+-	return 0;
+-}
+-
+ static inline void qs_enter_reg_mode(struct ata_port *ap)
+ {
+ 	u8 __iomem *chan = qs_mmio_base(ap->host) + (ap->port_no * 0x4000);
 -- 
 1.6.4.2
 
