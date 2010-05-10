@@ -1,809 +1,642 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 21/23] libata-sff: separate out BMDMA init
-Date: Mon, 10 May 2010 21:41:45 +0200
-Message-ID: <1273520507-32459-22-git-send-email-tj@kernel.org>
+Subject: [PATCH 20/23] libata-sff: separate out BMDMA irq handler
+Date: Mon, 10 May 2010 21:41:44 +0200
+Message-ID: <1273520507-32459-21-git-send-email-tj@kernel.org>
 References: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44898 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44901 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755767Ab0EJTmA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2010 15:42:00 -0400
+	id S1755782Ab0EJTmB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2010 15:42:01 -0400
 In-Reply-To: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
 Cc: Tejun Heo <tj@kernel.org>
 
-Separate out ata_pci_bmdma_prepare_host() and ata_pci_bmdma_init_one()
-from their SFF counterparts.  SFF ones no longer try to initialize
-BMDMA or set PCI master.
+Separate out BMDMA irq handler from SFF irq handler.  The misnamed
+host_intr() functions are renamed to ata_sff_port_intr() and
+ata_bmdma_port_intr().  Common parts are factored into
+__ata_sff_port_intr() and __ata_sff_interrupt() and used by sff and
+bmdma interrupt routines.
+
+All BMDMA drivers now use ata_bmdma_interrupt() or
+ata_bmdma_port_intr() while all non-BMDMA SFF ones use
+ata_sff_interrupt() or ata_sff_port_intr().
+
+For now, ata_pci_sff_init_one() uses ata_bmdma_interrupt() as it's
+used by both SFF and BMDMA drivers.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/ata_generic.c       |    2 +-
- drivers/ata/ata_piix.c          |    2 +-
- drivers/ata/libata-sff.c        |  138 ++++++++++++++++++++++++++++++++-------
- drivers/ata/pata_acpi.c         |    2 +-
- drivers/ata/pata_ali.c          |    5 +-
- drivers/ata/pata_amd.c          |    2 +-
- drivers/ata/pata_artop.c        |    2 +-
- drivers/ata/pata_atiixp.c       |    4 +-
- drivers/ata/pata_cmd64x.c       |    2 +-
- drivers/ata/pata_cs5530.c       |    2 +-
- drivers/ata/pata_cs5535.c       |    2 +-
- drivers/ata/pata_cs5536.c       |    2 +-
- drivers/ata/pata_cypress.c      |    2 +-
- drivers/ata/pata_efar.c         |    4 +-
- drivers/ata/pata_hpt366.c       |    2 +-
- drivers/ata/pata_hpt37x.c       |    2 +-
- drivers/ata/pata_hpt3x2n.c      |    2 +-
- drivers/ata/pata_it8213.c       |    2 +-
- drivers/ata/pata_it821x.c       |    2 +-
- drivers/ata/pata_jmicron.c      |    2 +-
- drivers/ata/pata_marvell.c      |    2 +-
- drivers/ata/pata_netcell.c      |    2 +-
- drivers/ata/pata_ns87415.c      |    2 +-
- drivers/ata/pata_oldpiix.c      |    2 +-
- drivers/ata/pata_optidma.c      |    2 +-
- drivers/ata/pata_pdc202xx_old.c |    2 +-
- drivers/ata/pata_piccolo.c      |    2 +-
- drivers/ata/pata_radisys.c      |    2 +-
- drivers/ata/pata_rdc.c          |    2 +-
- drivers/ata/pata_sc1200.c       |    2 +-
- drivers/ata/pata_sch.c          |    2 +-
- drivers/ata/pata_serverworks.c  |    2 +-
- drivers/ata/pata_sil680.c       |    2 +-
- drivers/ata/pata_sis.c          |    2 +-
- drivers/ata/pata_sl82c105.c     |    2 +-
- drivers/ata/pata_triflex.c      |    2 +-
- drivers/ata/pata_via.c          |    2 +-
- drivers/ata/sata_nv.c           |    2 +-
- drivers/ata/sata_sis.c          |    2 +-
- drivers/ata/sata_via.c          |    4 +-
- include/linux/libata.h          |    7 ++
- 41 files changed, 166 insertions(+), 66 deletions(-)
+ drivers/ata/ata_piix.c      |    2 +-
+ drivers/ata/libata-sff.c    |  208 +++++++++++++++++++++++++++----------------
+ drivers/ata/pata_atp867x.c  |    2 +-
+ drivers/ata/pata_cs5520.c   |    2 +-
+ drivers/ata/pata_hpt3x3.c   |    2 +-
+ drivers/ata/pata_icside.c   |    2 +-
+ drivers/ata/pata_macio.c    |    2 +-
+ drivers/ata/pata_mpc52xx.c  |    2 +-
+ drivers/ata/pata_ninja32.c  |    2 +-
+ drivers/ata/pata_pdc2027x.c |    2 +-
+ drivers/ata/pata_rdc.c      |    2 +-
+ drivers/ata/pata_scc.c      |    2 +-
+ drivers/ata/pata_sil680.c   |    2 +-
+ drivers/ata/sata_mv.c       |    2 +-
+ drivers/ata/sata_nv.c       |    4 +-
+ drivers/ata/sata_qstor.c    |    2 +-
+ drivers/ata/sata_sis.c      |    2 +-
+ drivers/ata/sata_svw.c      |    2 +-
+ drivers/ata/sata_uli.c      |    2 +-
+ drivers/ata/sata_via.c      |    2 +-
+ drivers/ata/sata_vsc.c      |    2 +-
+ include/linux/libata.h      |    5 +-
+ 22 files changed, 155 insertions(+), 100 deletions(-)
 
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 33fb614..573158a 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -155,7 +155,7 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
- 			return rc;
- 		pcim_pin_device(dev);
- 	}
--	return ata_pci_sff_init_one(dev, ppi, &generic_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &generic_sht, NULL, 0);
- }
- 
- static struct pci_device_id ata_generic[] = {
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 9ee2427..18fcd32 100644
+index 83bc49f..9ee2427 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -1589,7 +1589,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 		hpriv->map = piix_init_sata_map(pdev, port_info,
- 					piix_map_db_table[ent->driver_data]);
+@@ -1626,7 +1626,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	host->flags |= ATA_HOST_PARALLEL_SCAN;
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	host->private_data = hpriv;
+ 	pci_set_master(pdev);
+-	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &piix_sht);
++	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, &piix_sht);
+ }
+ 
+ static void piix_remove_one(struct pci_dev *pdev)
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 9c8b0ae..200b583 100644
+index 6b93ace..9c8b0ae 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -2294,13 +2294,13 @@ int ata_pci_sff_init_host(struct ata_host *host)
- EXPORT_SYMBOL_GPL(ata_pci_sff_init_host);
- 
- /**
-- *	ata_pci_sff_prepare_host - helper to prepare native PCI ATA host
-+ *	ata_pci_sff_prepare_host - helper to prepare PCI PIO-only SFF ATA host
-  *	@pdev: target PCI device
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@r_host: out argument for the initialized ATA host
-  *
-- *	Helper to allocate ATA host for @pdev, acquire all native PCI
-- *	resources and initialize it accordingly in one go.
-+ *	Helper to allocate PIO-only SFF ATA host for @pdev, acquire
-+ *	all PCI resources and initialize it accordingly in one go.
-  *
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-@@ -2330,9 +2330,6 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
- 	if (rc)
- 		goto err_out;
- 
--	/* init DMA related stuff */
--	ata_pci_bmdma_init(host);
--
- 	devres_remove_group(&pdev->dev, NULL);
- 	*r_host = host;
- 	return 0;
-@@ -2437,8 +2434,21 @@ out:
+@@ -1447,27 +1447,27 @@ bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
  }
- EXPORT_SYMBOL_GPL(ata_pci_sff_activate_host);
+ EXPORT_SYMBOL_GPL(ata_sff_qc_fill_rtf);
  
-+static const struct ata_port_info *ata_sff_find_valid_pi(
-+					const struct ata_port_info * const *ppi)
-+{
-+	int i;
+-/**
+- *	ata_sff_host_intr - Handle host interrupt for given (port, task)
+- *	@ap: Port on which interrupt arrived (possibly...)
+- *	@qc: Taskfile currently active in engine
+- *
+- *	Handle host interrupt for given queued command.  Currently,
+- *	only DMA interrupts are handled.  All other commands are
+- *	handled via polling with interrupts disabled (nIEN bit).
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- *
+- *	RETURNS:
+- *	One if interrupt was handled, zero if not (shared irq).
+- */
+-unsigned int ata_sff_host_intr(struct ata_port *ap,
+-				      struct ata_queued_cmd *qc)
++static unsigned int ata_sff_idle_irq(struct ata_port *ap)
+ {
+-	struct ata_eh_info *ehi = &ap->link.eh_info;
+-	u8 status, host_stat = 0;
+-	bool bmdma_stopped = false;
++	ap->stats.idle_irq++;
 +
-+	/* look up the first valid port_info */
-+	for (i = 0; i < 2 && ppi[i]; i++)
-+		if (ppi[i]->port_ops != &ata_dummy_port_ops)
-+			return ppi[i];
-+
-+	return NULL;
++#ifdef ATA_IRQ_TRAP
++	if ((ap->stats.idle_irq % 1000) == 0) {
++		ap->ops->sff_check_status(ap);
++		if (ap->ops->sff_irq_clear)
++			ap->ops->sff_irq_clear(ap);
++		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
++		return 1;
++	}
++#endif
++	return 0;	/* irq not handled */
 +}
 +
- /**
-- *	ata_pci_sff_init_one - Initialize/register PCI IDE host controller
-+ *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-  *	@pdev: Controller to be initialized
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@sht: scsi_host_template to use when registering the host
-@@ -2447,11 +2457,7 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_activate_host);
-  *
-  *	This is a helper function which can be called from a driver's
-  *	xxx_init_one() probe function if the hardware uses traditional
-- *	IDE taskfile registers.
-- *
-- *	This function calls pci_enable_device(), reserves its register
-- *	regions, sets the dma mask, enables bus master mode, and calls
-- *	ata_device_add()
-+ *	IDE taskfile registers and is PIO only.
-  *
-  *	ASSUMPTION:
-  *	Nobody makes a single channel controller that appears solely as
-@@ -2468,20 +2474,13 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
- 		 struct scsi_host_template *sht, void *host_priv, int hflag)
- {
- 	struct device *dev = &pdev->dev;
--	const struct ata_port_info *pi = NULL;
-+	const struct ata_port_info *pi;
- 	struct ata_host *host = NULL;
--	int i, rc;
-+	int rc;
++static unsigned int __ata_sff_port_intr(struct ata_port *ap,
++					struct ata_queued_cmd *qc,
++					bool hsmv_on_idle)
++{
++	u8 status;
  
- 	DPRINTK("ENTER\n");
- 
--	/* look up the first valid port_info */
--	for (i = 0; i < 2 && ppi[i]; i++) {
--		if (ppi[i]->port_ops != &ata_dummy_port_ops) {
--			pi = ppi[i];
--			break;
--		}
--	}
+ 	VPRINTK("ata%u: protocol %d task_state %d\n",
+ 		ap->print_id, qc->tf.protocol, ap->hsm_task_state);
+@@ -1484,47 +1484,24 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
+ 		 * need to check ata_is_atapi(qc->tf.protocol) again.
+ 		 */
+ 		if (!(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+-			goto idle_irq;
+-		break;
+-	case HSM_ST_LAST:
+-		if (qc->tf.protocol == ATA_PROT_DMA ||
+-		    qc->tf.protocol == ATAPI_PROT_DMA) {
+-			/* check status of DMA engine */
+-			host_stat = ap->ops->bmdma_status(ap);
+-			VPRINTK("ata%u: host_stat 0x%X\n",
+-				ap->print_id, host_stat);
 -
-+	pi = ata_sff_find_valid_pi(ppi);
- 	if (!pi) {
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "no valid port_info specified\n");
-@@ -2502,8 +2501,7 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
- 	host->private_data = host_priv;
+-			/* if it's not our irq... */
+-			if (!(host_stat & ATA_DMA_INTR))
+-				goto idle_irq;
+-
+-			/* before we do anything else, clear DMA-Start bit */
+-			ap->ops->bmdma_stop(qc);
+-			bmdma_stopped = true;
+-
+-			if (unlikely(host_stat & ATA_DMA_ERR)) {
+-				/* error when transfering data to/from memory */
+-				qc->err_mask |= AC_ERR_HOST_BUS;
+-				ap->hsm_task_state = HSM_ST_ERR;
+-			}
+-		}
++			return ata_sff_idle_irq(ap);
+ 		break;
+ 	case HSM_ST:
++	case HSM_ST_LAST:
+ 		break;
+ 	default:
+-		goto idle_irq;
++		return ata_sff_idle_irq(ap);
+ 	}
+ 
+-
+ 	/* check main status, clearing INTRQ if needed */
+ 	status = ata_sff_irq_status(ap);
+ 	if (status & ATA_BUSY) {
+-		if (bmdma_stopped) {
++		if (hsmv_on_idle) {
+ 			/* BMDMA engine is already stopped, we're screwed */
+ 			qc->err_mask |= AC_ERR_HSM;
+ 			ap->hsm_task_state = HSM_ST_ERR;
+ 		} else
+-			goto idle_irq;
++			return ata_sff_idle_irq(ap);
+ 	}
+ 
+ 	/* clear irq events */
+@@ -1533,43 +1510,30 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
+ 
+ 	ata_sff_hsm_move(ap, qc, status, 0);
+ 
+-	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
+-				       qc->tf.protocol == ATAPI_PROT_DMA))
+-		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
+-
+ 	return 1;	/* irq handled */
+-
+-idle_irq:
+-	ap->stats.idle_irq++;
+-
+-#ifdef ATA_IRQ_TRAP
+-	if ((ap->stats.idle_irq % 1000) == 0) {
+-		ap->ops->sff_check_status(ap);
+-		if (ap->ops->sff_irq_clear)
+-			ap->ops->sff_irq_clear(ap);
+-		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
+-		return 1;
+-	}
+-#endif
+-	return 0;	/* irq not handled */
+ }
+-EXPORT_SYMBOL_GPL(ata_sff_host_intr);
+ 
+ /**
+- *	ata_sff_interrupt - Default ATA host interrupt handler
+- *	@irq: irq line (unused)
+- *	@dev_instance: pointer to our ata_host information structure
++ *	ata_sff_port_intr - Handle SFF port interrupt
++ *	@ap: Port on which interrupt arrived (possibly...)
++ *	@qc: Taskfile currently active in engine
+  *
+- *	Default interrupt handler for PCI IDE devices.  Calls
+- *	ata_sff_host_intr() for each port that is not disabled.
++ *	Handle port interrupt for given queued command.
+  *
+  *	LOCKING:
+- *	Obtains host lock during operation.
++ *	spin_lock_irqsave(host lock)
+  *
+  *	RETURNS:
+- *	IRQ_NONE or IRQ_HANDLED.
++ *	One if interrupt was handled, zero if not (shared irq).
+  */
+-irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
++unsigned int ata_sff_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
++{
++	return __ata_sff_port_intr(ap, qc, false);
++}
++EXPORT_SYMBOL_GPL(ata_sff_port_intr);
++
++static inline irqreturn_t __ata_sff_interrupt(int irq, void *dev_instance,
++	unsigned int (*port_intr)(struct ata_port *, struct ata_queued_cmd *))
+ {
+ 	struct ata_host *host = dev_instance;
+ 	bool retried = false;
+@@ -1589,7 +1553,7 @@ retry:
+ 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
+ 		if (qc) {
+ 			if (!(qc->tf.flags & ATA_TFLAG_POLLING))
+-				handled |= ata_sff_host_intr(ap, qc);
++				handled |= port_intr(ap, qc);
+ 			else
+ 				polling |= 1 << i;
+ 		} else
+@@ -1638,6 +1602,25 @@ retry:
+ 
+ 	return IRQ_RETVAL(handled);
+ }
++
++/**
++ *	ata_sff_interrupt - Default SFF ATA host interrupt handler
++ *	@irq: irq line (unused)
++ *	@dev_instance: pointer to our ata_host information structure
++ *
++ *	Default interrupt handler for PCI IDE devices.  Calls
++ *	ata_sff_port_intr() for each port that is not disabled.
++ *
++ *	LOCKING:
++ *	Obtains host lock during operation.
++ *
++ *	RETURNS:
++ *	IRQ_NONE or IRQ_HANDLED.
++ */
++irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
++{
++	return __ata_sff_interrupt(irq, dev_instance, ata_sff_port_intr);
++}
+ EXPORT_SYMBOL_GPL(ata_sff_interrupt);
+ 
+ /**
+@@ -1675,7 +1658,7 @@ void ata_sff_lost_interrupt(struct ata_port *ap)
+ 								status);
+ 	/* Run the host interrupt logic as if the interrupt had not been
+ 	   lost */
+-	ata_sff_host_intr(ap, qc);
++	ata_sff_port_intr(ap, qc);
+ }
+ EXPORT_SYMBOL_GPL(ata_sff_lost_interrupt);
+ 
+@@ -2520,7 +2503,7 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
  	host->flags |= hflag;
  
--	pci_set_master(pdev);
--	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-+	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
+ 	pci_set_master(pdev);
+-	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
++	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
  out:
  	if (rc == 0)
  		devres_remove_group(&pdev->dev, NULL);
-@@ -3175,6 +3173,98 @@ void ata_pci_bmdma_init(struct ata_host *host)
- }
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
- 
-+/**
-+ *	ata_pci_bmdma_prepare_host - helper to prepare PCI BMDMA ATA host
-+ *	@pdev: target PCI device
-+ *	@ppi: array of port_info, must be enough for two ports
-+ *	@r_host: out argument for the initialized ATA host
-+ *
-+ *	Helper to allocate BMDMA ATA host for @pdev, acquire all PCI
-+ *	resources and initialize it accordingly in one go.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+			       const struct ata_port_info * const * ppi,
-+			       struct ata_host **r_host)
-+{
-+	int rc;
-+
-+	rc = ata_pci_sff_prepare_host(pdev, ppi, r_host);
-+	if (rc)
-+		return rc;
-+
-+	ata_pci_bmdma_init(*r_host);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_pci_bmdma_prepare_host);
-+
-+/**
-+ *	ata_pci_bmdma_init_one - Initialize/register BMDMA PCI IDE controller
-+ *	@pdev: Controller to be initialized
-+ *	@ppi: array of port_info, must be enough for two ports
-+ *	@sht: scsi_host_template to use when registering the host
-+ *	@host_priv: host private_data
-+ *	@hflags: host flags
-+ *
-+ *	This function is similar to ata_pci_sff_init_one() but also
-+ *	takes care of BMDMA initialization.
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, negative on errno-based value on error.
-+ */
-+int ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+			   const struct ata_port_info * const * ppi,
-+			   struct scsi_host_template *sht, void *host_priv,
-+			   int hflags)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct ata_port_info *pi;
-+	struct ata_host *host = NULL;
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	pi = ata_sff_find_valid_pi(ppi);
-+	if (!pi) {
-+		dev_printk(KERN_ERR, &pdev->dev,
-+			   "no valid port_info specified\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-+		return -ENOMEM;
-+
-+	rc = pcim_enable_device(pdev);
-+	if (rc)
-+		goto out;
-+
-+	/* prepare and activate BMDMA host */
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
-+	if (rc)
-+		goto out;
-+	host->private_data = host_priv;
-+	host->flags |= hflags;
-+
-+	pci_set_master(pdev);
-+	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-+ out:
-+	if (rc == 0)
-+		devres_remove_group(&pdev->dev, NULL);
-+	else
-+		devres_release_group(&pdev->dev, NULL);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
-+
- #endif /* CONFIG_PCI */
+@@ -2767,6 +2750,75 @@ unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
+ EXPORT_SYMBOL_GPL(ata_bmdma_qc_issue);
  
  /**
-diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index 066b9f3..c8d4703 100644
---- a/drivers/ata/pata_acpi.c
-+++ b/drivers/ata/pata_acpi.c
-@@ -260,7 +260,7 @@ static int pacpi_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
++ *	ata_bmdma_port_intr - Handle BMDMA port interrupt
++ *	@ap: Port on which interrupt arrived (possibly...)
++ *	@qc: Taskfile currently active in engine
++ *
++ *	Handle port interrupt for given queued command.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ *
++ *	RETURNS:
++ *	One if interrupt was handled, zero if not (shared irq).
++ */
++unsigned int ata_bmdma_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
++{
++	struct ata_eh_info *ehi = &ap->link.eh_info;
++	u8 host_stat = 0;
++	bool bmdma_stopped = false;
++	unsigned int handled;
++
++	if (ap->hsm_task_state == HSM_ST_LAST && ata_is_dma(qc->tf.protocol)) {
++		/* check status of DMA engine */
++		host_stat = ap->ops->bmdma_status(ap);
++		VPRINTK("ata%u: host_stat 0x%X\n", ap->print_id, host_stat);
++
++		/* if it's not our irq... */
++		if (!(host_stat & ATA_DMA_INTR))
++			return ata_sff_idle_irq(ap);
++
++		/* before we do anything else, clear DMA-Start bit */
++		ap->ops->bmdma_stop(qc);
++		bmdma_stopped = true;
++
++		if (unlikely(host_stat & ATA_DMA_ERR)) {
++			/* error when transfering data to/from memory */
++			qc->err_mask |= AC_ERR_HOST_BUS;
++			ap->hsm_task_state = HSM_ST_ERR;
++		}
++	}
++
++	handled = __ata_sff_port_intr(ap, qc, bmdma_stopped);
++
++	if (unlikely(qc->err_mask) && ata_is_dma(qc->tf.protocol))
++		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
++
++	return handled;
++}
++EXPORT_SYMBOL_GPL(ata_bmdma_port_intr);
++
++/**
++ *	ata_bmdma_interrupt - Default BMDMA ATA host interrupt handler
++ *	@irq: irq line (unused)
++ *	@dev_instance: pointer to our ata_host information structure
++ *
++ *	Default interrupt handler for PCI IDE devices.  Calls
++ *	ata_bmdma_port_intr() for each port that is not disabled.
++ *
++ *	LOCKING:
++ *	Obtains host lock during operation.
++ *
++ *	RETURNS:
++ *	IRQ_NONE or IRQ_HANDLED.
++ */
++irqreturn_t ata_bmdma_interrupt(int irq, void *dev_instance)
++{
++	return __ata_sff_interrupt(irq, dev_instance, ata_bmdma_port_intr);
++}
++EXPORT_SYMBOL_GPL(ata_bmdma_interrupt);
++
++/**
+  *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
+  *	@ap: port to handle error for
+  *
+diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
+index bb6e074..9529593 100644
+--- a/drivers/ata/pata_atp867x.c
++++ b/drivers/ata/pata_atp867x.c
+@@ -525,7 +525,7 @@ static int atp867x_init_one(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	rc = ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	rc = ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				IRQF_SHARED, &atp867x_sht);
+ 	if (rc)
+ 		dev_printk(KERN_ERR, &pdev->dev, "failed to activate host\n");
+diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
+index 17c5f34..030952f 100644
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -221,7 +221,7 @@ static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_devi
+ 			continue;
+ 
+ 		rc = devm_request_irq(&pdev->dev, irq[ap->port_no],
+-				      ata_sff_interrupt, 0, DRV_NAME, host);
++				      ata_bmdma_interrupt, 0, DRV_NAME, host);
+ 		if (rc)
  			return rc;
- 		pcim_pin_device(pdev);
+ 
+diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
+index 727a81c..b63d5e2 100644
+--- a/drivers/ata/pata_hpt3x3.c
++++ b/drivers/ata/pata_hpt3x3.c
+@@ -248,7 +248,7 @@ static int hpt3x3_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ata_port_pbar_desc(ap, 4, offset_cmd[i], "cmd");
  	}
--	return ata_pci_sff_init_one(pdev, ppi, &pacpi_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &pacpi_sht, NULL, 0);
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &hpt3x3_sht);
  }
  
- static const struct pci_device_id pacpi_pci_tbl[] = {
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index f306e10..794ec6e 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -583,7 +583,10 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	        	ppi[0] = &info_20_udma;
- 	}
- 
--	return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL, 0);
-+	if (!ppi[0]->mwdma_mask && !ppi[0]->udma_mask)
-+		return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL, 0);
-+	else
-+		return ata_pci_bmdma_init_one(pdev, ppi, &ali_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index d95eca9..620a07c 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -574,7 +574,7 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+index b56e8f7..9f2889f 100644
+--- a/drivers/ata/pata_icside.c
++++ b/drivers/ata/pata_icside.c
+@@ -470,7 +470,7 @@ static int __devinit pata_icside_add_ports(struct pata_icside_info *info)
+ 		pata_icside_setup_ioaddr(ap, info->base, info, info->port[i]);
  	}
  
- 	/* And fire it up */
--	return ata_pci_sff_init_one(pdev, ppi, &amd_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &amd_sht, hpriv, 0);
+-	return ata_host_activate(host, ec->irq, ata_sff_interrupt, 0,
++	return ata_host_activate(host, ec->irq, ata_bmdma_interrupt, 0,
+ 				 &pata_icside_sht);
  }
  
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index 4d066d6..ba43f0f 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -421,7 +421,7 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 25df50f..1ea30fd 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1110,7 +1110,7 @@ static int __devinit pata_macio_common_init(struct pata_macio_priv	*priv,
  
- 	BUG_ON(ppi[0] == NULL);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &artop_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &artop_sht, NULL, 0);
+ 	/* Start it up */
+ 	priv->irq = irq;
+-	return ata_host_activate(priv->host, irq, ata_sff_interrupt, 0,
++	return ata_host_activate(priv->host, irq, ata_bmdma_interrupt, 0,
+ 				 &pata_macio_sht);
  }
  
- static const struct pci_device_id artop_pci_tbl[] = {
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 44d88b3..4375561 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -246,8 +246,8 @@ static int atiixp_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		if (!pci_test_config_bits(pdev, &atiixp_enable_bits[i]))
- 			ppi[i] = &ata_dummy_port_info;
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index 96b11b6..da752ef 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -659,7 +659,7 @@ mpc52xx_ata_init_one(struct device *dev, struct mpc52xx_ata_priv *priv,
+ 	ata_port_desc(ap, "ata_regs 0x%lx", raw_ata_regs);
  
--	return ata_pci_sff_init_one(pdev, ppi, &atiixp_sht, NULL,
--						ATA_HOST_PARALLEL_SCAN);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
+ 	/* activate host */
+-	return ata_host_activate(host, priv->ata_irq, ata_sff_interrupt, 0,
++	return ata_host_activate(host, priv->ata_irq, ata_bmdma_interrupt, 0,
+ 				 &mpc52xx_ata_sht);
  }
  
- static const struct pci_device_id atiixp[] = {
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index 4c81a71..9f5da1c 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -367,7 +367,7 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
- #endif
+diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
+index dd53a66..cc50bd0 100644
+--- a/drivers/ata/pata_ninja32.c
++++ b/drivers/ata/pata_ninja32.c
+@@ -149,7 +149,7 @@ static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
  
--	return ata_pci_sff_init_one(pdev, ppi, &cmd64x_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cmd64x_sht, NULL, 0);
+ 	ninja32_program(base);
+ 	/* FIXME: Should we disable them at remove ? */
+-	return ata_host_activate(host, dev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, dev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &ninja32_sht);
  }
  
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index e809a42..f792330 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -324,7 +324,7 @@ static int cs5530_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ppi[1] = &info_palmax_secondary;
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index 09f1f22..b183511 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -754,7 +754,7 @@ static int __devinit pdc2027x_init_one(struct pci_dev *pdev, const struct pci_de
+ 		return -EIO;
  
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(pdev, ppi, &cs5530_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cs5530_sht, NULL, 0);
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &pdc2027x_sht);
  }
  
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-index a02e645..03a9318 100644
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -198,7 +198,7 @@ static int cs5535_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	rdmsr(ATAC_CH0D1_PIO, timings, dummy);
- 	if (CS5535_BAD_PIO(timings))
- 		wrmsr(ATAC_CH0D1_PIO, 0xF7F4F7F4UL, 0);
--	return ata_pci_sff_init_one(dev, ppi, &cs5535_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &cs5535_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cs5535[] = {
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 914ae35..21ee23f 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -260,7 +260,7 @@ static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENODEV;
- 	}
- 
--	return ata_pci_sff_init_one(dev, ppi, &cs5536_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &cs5536_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cs5536[] = {
-diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
-index 0fcc096..6d915b0 100644
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -138,7 +138,7 @@ static int cy82c693_init_one(struct pci_dev *pdev, const struct pci_device_id *i
- 	if (PCI_FUNC(pdev->devfn) != 1)
- 		return -ENODEV;
- 
--	return ata_pci_sff_init_one(pdev, ppi, &cy82c693_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cy82c693_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cy82c693[] = {
-diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index 3bac0e0..a088347 100644
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -277,8 +277,8 @@ static int efar_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &efar_sht, NULL,
--					ATA_HOST_PARALLEL_SCAN);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &efar_sht, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
- }
- 
- static const struct pci_device_id efar_pci_tbl[] = {
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 8580eb3..7688868 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -361,7 +361,7 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 			break;
- 	}
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt36x_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt36x_sht, hpriv, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 98b498b..9ae4c08 100644
---- a/drivers/ata/pata_hpt37x.c
-+++ b/drivers/ata/pata_hpt37x.c
-@@ -987,7 +987,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	}
- 
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt37x_sht, private_data, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt37x_sht, private_data, 0);
- }
- 
- static const struct pci_device_id hpt37x[] = {
-diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index 8b95aeb..32f3463 100644
---- a/drivers/ata/pata_hpt3x2n.c
-+++ b/drivers/ata/pata_hpt3x2n.c
-@@ -548,7 +548,7 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		outb(inb(iobase + 0x9c) | 0x04, iobase + 0x9c);
- 
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt3x2n_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt3x2n_sht, hpriv, 0);
- }
- 
- static const struct pci_device_id hpt3x2n[] = {
-diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index f971f0d..4d142a2 100644
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -273,7 +273,7 @@ static int it8213_init_one (struct pci_dev *pdev, const struct pci_device_id *en
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &it8213_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &it8213_sht, NULL, 0);
- }
- 
- static const struct pci_device_id it8213_pci_tbl[] = {
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 2bd2b00..bf88f71 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -933,7 +933,7 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		else
- 			ppi[0] = &info_smart;
- 	}
--	return ata_pci_sff_init_one(pdev, ppi, &it821x_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &it821x_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 565e01e..cb3babb 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -144,7 +144,7 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
- 
--	return ata_pci_sff_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
- }
- 
- static const struct pci_device_id jmicron_pci_tbl[] = {
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index e8ca02e..dd38083 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -153,7 +153,7 @@ static int marvell_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 		return -ENODEV;
- 	}
- #endif
--	return ata_pci_sff_init_one(pdev, ppi, &marvell_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &marvell_sht, NULL, 0);
- }
- 
- static const struct pci_device_id marvell_pci_tbl[] = {
-diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
-index 94f979a..3eb921c 100644
---- a/drivers/ata/pata_netcell.c
-+++ b/drivers/ata/pata_netcell.c
-@@ -82,7 +82,7 @@ static int netcell_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 	ata_pci_bmdma_clear_simplex(pdev);
- 
- 	/* And let the library code do the work */
--	return ata_pci_sff_init_one(pdev, port_info, &netcell_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, port_info, &netcell_sht, NULL, 0);
- }
- 
- static const struct pci_device_id netcell_pci_tbl[] = {
-diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
-index fdbba2d..605f198 100644
---- a/drivers/ata/pata_ns87415.c
-+++ b/drivers/ata/pata_ns87415.c
-@@ -380,7 +380,7 @@ static int ns87415_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 
- 	ns87415_fixup(pdev);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &ns87415_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &ns87415_sht, NULL, 0);
- }
- 
- static const struct pci_device_id ns87415_pci_tbl[] = {
-diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-index 988ef26..b811c16 100644
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -248,7 +248,7 @@ static int oldpiix_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &oldpiix_sht, NULL, 0);
- }
- 
- static const struct pci_device_id oldpiix_pci_tbl[] = {
-diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index 76b7d12..0852cd0 100644
---- a/drivers/ata/pata_optidma.c
-+++ b/drivers/ata/pata_optidma.c
-@@ -429,7 +429,7 @@ static int optidma_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (optiplus_with_udma(dev))
- 		ppi[0] = &info_82c700_udma;
- 
--	return ata_pci_sff_init_one(dev, ppi, &optidma_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &optidma_sht, NULL, 0);
- }
- 
- static const struct pci_device_id optidma[] = {
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index fa1e2f3..c39f213 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -337,7 +337,7 @@ static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 				return -ENODEV;
- 		}
- 	}
--	return ata_pci_sff_init_one(dev, ppi, &pdc202xx_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &pdc202xx_sht, NULL, 0);
- }
- 
- static const struct pci_device_id pdc202xx[] = {
-diff --git a/drivers/ata/pata_piccolo.c b/drivers/ata/pata_piccolo.c
-index 9816154..cb01bf9 100644
---- a/drivers/ata/pata_piccolo.c
-+++ b/drivers/ata/pata_piccolo.c
-@@ -95,7 +95,7 @@ static int ata_tosh_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 	};
- 	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
- 	/* Just one port for the moment */
--	return ata_pci_sff_init_one(dev, ppi, &tosh_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &tosh_sht, NULL, 0);
- }
- 
- static struct pci_device_id ata_tosh[] = {
-diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
-index a5fa388..8574b31 100644
---- a/drivers/ata/pata_radisys.c
-+++ b/drivers/ata/pata_radisys.c
-@@ -227,7 +227,7 @@ static int radisys_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &radisys_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &radisys_sht, NULL, 0);
- }
- 
- static const struct pci_device_id radisys_pci_tbl[] = {
 diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
-index 2dd7748..5fbe9b1 100644
+index 37092cf..2dd7748 100644
 --- a/drivers/ata/pata_rdc.c
 +++ b/drivers/ata/pata_rdc.c
-@@ -344,7 +344,7 @@ static int __devinit rdc_init_one(struct pci_dev *pdev,
- 	 */
- 	pci_read_config_dword(pdev, 0x54, &hpriv->saved_iocfg);
+@@ -354,7 +354,7 @@ static int __devinit rdc_init_one(struct pci_dev *pdev,
+ 	host->flags |= ATA_HOST_PARALLEL_SCAN;
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+ 	pci_set_master(pdev);
+-	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &rdc_sht);
++	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, &rdc_sht);
+ }
+ 
+ static void rdc_remove_one(struct pci_dev *pdev)
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index 35445d0..8479910 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -1144,7 +1144,7 @@ static int scc_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
  	if (rc)
  		return rc;
- 	host->private_data = hpriv;
-diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
-index 6b5b63a..e2c1825 100644
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -237,7 +237,7 @@ static int sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
  
--	return ata_pci_sff_init_one(dev, ppi, &sc1200_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &sc1200_sht, NULL, 0);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &scc_sht);
  }
  
- static const struct pci_device_id sc1200[] = {
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-index 86b3d01..e97b32f 100644
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -179,7 +179,7 @@ static int __devinit sch_init_one(struct pci_dev *pdev,
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &sch_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sch_sht, NULL, 0);
- }
- 
- static int __init sch_init(void)
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 43ea389..86dd714 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -460,7 +460,7 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
- 	if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE)
- 		ata_pci_bmdma_clear_simplex(pdev);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &serverworks_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &serverworks_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
 diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index 5a0e406..9e41c47 100644
+index c6c589c..5a0e406 100644
 --- a/drivers/ata/pata_sil680.c
 +++ b/drivers/ata/pata_sil680.c
-@@ -356,7 +356,7 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
+@@ -352,7 +352,7 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
+ 	ata_sff_std_ports(&host->ports[1]->ioaddr);
+ 
+ 	/* Register & activate */
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
  				 IRQF_SHARED, &sil680_sht);
  
  use_ioports:
--	return ata_pci_sff_init_one(pdev, ppi, &sil680_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sil680_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index b670803..60cea13 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -826,7 +826,7 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	sis_fixup(pdev, chipset);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &sis_sht, chipset, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sis_sht, chipset, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index 733b042..98548f6 100644
---- a/drivers/ata/pata_sl82c105.c
-+++ b/drivers/ata/pata_sl82c105.c
-@@ -316,7 +316,7 @@ static int sl82c105_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
- 	pci_write_config_dword(dev, 0x40, val);
- 
--	return ata_pci_sff_init_one(dev, ppi, &sl82c105_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &sl82c105_sht, NULL, 0);
- }
- 
- static const struct pci_device_id sl82c105[] = {
-diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
-index 48f5060..0d1f89e 100644
---- a/drivers/ata/pata_triflex.c
-+++ b/drivers/ata/pata_triflex.c
-@@ -201,7 +201,7 @@ static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &dev->dev, "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(dev, ppi, &triflex_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &triflex_sht, NULL, 0);
- }
- 
- static const struct pci_device_id triflex[] = {
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index e68d9bb..ac8d7d9 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -629,7 +629,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 16bacd3..a476cd9 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2811,7 +2811,7 @@ static void mv_port_intr(struct ata_port *ap, u32 port_cause)
+ 	} else if (!edma_was_enabled) {
+ 		struct ata_queued_cmd *qc = mv_get_active_qc(ap);
+ 		if (qc)
+-			ata_sff_host_intr(ap, qc);
++			ata_bmdma_port_intr(ap, qc);
+ 		else
+ 			mv_unexpected_intr(ap, edma_was_enabled);
  	}
- 
- 	/* We have established the device type, now fire it up */
--	return ata_pci_sff_init_one(pdev, ppi, &via_sht, (void *)config, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &via_sht, (void *)config, 0);
- }
- 
- #ifdef CONFIG_PM
 diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index f1164aa..8f36ca0 100644
+index bf133b6..f1164aa 100644
 --- a/drivers/ata/sata_nv.c
 +++ b/drivers/ata/sata_nv.c
-@@ -2430,7 +2430,7 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	ppi[0] = &nv_port_info[type];
- 	ipriv = ppi[0]->private_data;
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index fff1045..2bfe3ae 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -279,7 +279,7 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		break;
+@@ -920,7 +920,7 @@ static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
  	}
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
+ 	/* handle interrupt */
+-	return ata_sff_host_intr(ap, qc);
++	return ata_bmdma_port_intr(ap, qc);
+ }
+ 
+ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
+@@ -1505,7 +1505,7 @@ static irqreturn_t nv_generic_interrupt(int irq, void *dev_instance)
+ 
+ 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
+ 		if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
+-			handled += ata_sff_host_intr(ap, qc);
++			handled += ata_bmdma_port_intr(ap, qc);
+ 		} else {
+ 			/*
+ 			 * No request pending?  Clear interrupt status
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index d533b3d..0074351 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -454,7 +454,7 @@ static inline unsigned int qs_intr_mmio(struct ata_host *host)
+ 		if (!pp || pp->state != qs_state_mmio)
+ 			continue;
+ 		if (!(qc->tf.flags & ATA_TFLAG_POLLING))
+-			handled |= ata_sff_host_intr(ap, qc);
++			handled |= ata_sff_port_intr(ap, qc);
+ 	}
+ 	return handled;
+ }
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index f8a91bf..fff1045 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -308,7 +308,7 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	pci_set_master(pdev);
+ 	pci_intx(pdev, 1);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &sis_sht);
+ }
+ 
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 101fd6a..7d9db4a 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -502,7 +502,7 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
+ 	writel(0x0, mmio_base + K2_SATA_SIM_OFFSET);
+ 
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &k2_sata_sht);
+ }
+ 
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index d8dac17..b8578c3 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -242,7 +242,7 @@ static int uli_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	pci_set_master(pdev);
+ 	pci_intx(pdev, 1);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &uli_sht);
+ }
  
 diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 7da5d01..101d8c2 100644
+index 7737dd5..7da5d01 100644
 --- a/drivers/ata/sata_via.c
 +++ b/drivers/ata/sata_via.c
-@@ -463,7 +463,7 @@ static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	struct ata_host *host;
- 	int rc;
+@@ -628,7 +628,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	svia_configure(pdev);
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	*r_host = host;
-@@ -520,7 +520,7 @@ static int vt8251_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	struct ata_host *host;
- 	int i, rc;
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
++	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &svia_sht);
+ }
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	*r_host = host;
+diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
+index 2107952..b777176 100644
+--- a/drivers/ata/sata_vsc.c
++++ b/drivers/ata/sata_vsc.c
+@@ -245,7 +245,7 @@ static void vsc_port_intr(u8 port_status, struct ata_port *ap)
+ 
+ 	qc = ata_qc_from_tag(ap, ap->link.active_tag);
+ 	if (qc && likely(!(qc->tf.flags & ATA_TFLAG_POLLING)))
+-		handled = ata_sff_host_intr(ap, qc);
++		handled = ata_bmdma_port_intr(ap, qc);
+ 
+ 	/* We received an interrupt during a polled command,
+ 	 * or some other spurious condition.  Interrupt reporting
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 34c589d..388c7c6 100644
+index abf02df..34c589d 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1642,6 +1642,13 @@ extern int ata_bmdma_port_start32(struct ata_port *ap);
- #ifdef CONFIG_PCI
- extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
- extern void ata_pci_bmdma_init(struct ata_host *host);
-+extern int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+				      const struct ata_port_info * const * ppi,
-+				      struct ata_host **r_host);
-+extern int ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+				  const struct ata_port_info * const * ppi,
-+				  struct scsi_host_template *sht,
-+				  void *host_priv, int hflags);
- #endif /* CONFIG_PCI */
- 
- /**
+@@ -1591,7 +1591,7 @@ extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+ extern void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay);
+ extern unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc);
+ extern bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc);
+-extern unsigned int ata_sff_host_intr(struct ata_port *ap,
++extern unsigned int ata_sff_port_intr(struct ata_port *ap,
+ 				      struct ata_queued_cmd *qc);
+ extern irqreturn_t ata_sff_interrupt(int irq, void *dev_instance);
+ extern void ata_sff_lost_interrupt(struct ata_port *ap);
+@@ -1626,6 +1626,9 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+ extern void ata_bmdma_qc_prep(struct ata_queued_cmd *qc);
+ extern unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc);
+ extern void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc);
++extern unsigned int ata_bmdma_port_intr(struct ata_port *ap,
++				      struct ata_queued_cmd *qc);
++extern irqreturn_t ata_bmdma_interrupt(int irq, void *dev_instance);
+ extern void ata_bmdma_error_handler(struct ata_port *ap);
+ extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
+ extern void ata_bmdma_irq_clear(struct ata_port *ap);
 -- 
 1.6.4.2
 
