@@ -1,179 +1,159 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 09/23] libata-sff: clean up inheritance in several drivers
-Date: Mon, 10 May 2010 21:41:33 +0200
-Message-ID: <1273520507-32459-10-git-send-email-tj@kernel.org>
-References: <1273520507-32459-1-git-send-email-tj@kernel.org>
+Subject: [PATCHSET #upstream] libata: separate out SFF and BMDMA, take#2
+Date: Mon, 10 May 2010 21:41:24 +0200
+Message-ID: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44944 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44949 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756035Ab0EJTmU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2010 15:42:20 -0400
-In-Reply-To: <1273520507-32459-1-git-send-email-tj@kernel.org>
+	id S1756069Ab0EJTmZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2010 15:42:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
-Cc: Tejun Heo <tj@kernel.org>
 
-1. pata_cmd640 is PIO only.  Inherit from sff.
+Hello, Jeff, Sergei.
 
-2. pata_macio is BMDMA.  Inherit from bmdma and drop explicit
-   bmdma_mode_filter() setting.
+This is the second take of separate-out-SFF-and-BMDMA patchset.  The
+initial take[L] was posted back in 2008.  It got mostly acked but
+somehow forgotten in the middle of patch logistics by Jeff and me
+both.  Thankfully, Sergei somehow digged this up. :-)
 
-3. In pata_marvell, unlike mv5, mv6 is BMDMA.  Inherit from bmdma and
-   don't clear ->post_internal_cmd().
+Other than refreshing on top of the current #upstream including
+reflecting the changes in core code and addition of new drivers, the
+bulk of patchset is about the same.
 
-4. bf54x and icside are quasi-BMDMA controllers which don't use the
-   standard BMDMA registers so they don't initialize bmdma_addr and
-   inherit from sff to avoid the default mode_filter which disables
-   DMA modes if bmdma_addr is not initialized.
+The patchset separates out SFF and BMDMA code and categorizes low
+level drivers as such.  This has marginal benefit of having the
+ability not to include unneded core code but the main point is
+clearing the muddy line between SFF and BMDMA so that drivers don't
+end up needing dummy functions or explicit boilerplate overrides not
+knowing what's gonna be called.  It also makes verifying which driver
+depends on which core functions much easier during both code review
+(simply searching for sff in bmdma driver and dma in !bmdma driver
+gives pretty good picture) and compile.
 
-For 2 and 3, this patch makes the drivers explicitly specify
-->mode_filter to ATA_OP_NULL while inheriting from ata_bmdma_port_ops.
-These will be removed by the next patch.
+Please read patchset description of the initial take for more details.
 
-This patch makes all and only BMDMA drivers inherit from
-ata_bmdma_port_ops to ease further SFF/BMDMA separation.
+Build tested on x86.  Tested on ahci and ata_piix.  Couldn't test more
+as I'm away from my test equipments. :-( I think breakages from this
+patchset wouldn't be too hard to catch but it definitely needs some
+testing time in linux-next or whereever before hitting mainline.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/pata_bf54x.c  |    4 +++-
- drivers/ata/pata_cmd640.c |    4 ++--
- drivers/ata/pata_icside.c |    4 +++-
- drivers/ata/pata_macio.c  |    3 +--
- drivers/ata/sata_mv.c     |   24 ++++++++++++++++++++----
- 5 files changed, 29 insertions(+), 10 deletions(-)
+This patchset is on top of the current #upstream
+(3d02d7242c513f945009f74e8d59d45d861195e4) and contains the following
+23 patches.
 
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 7df072a..5c189ff 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -1459,7 +1459,7 @@ static struct scsi_host_template bfin_sht = {
- };
- 
- static struct ata_port_operations bfin_pata_ops = {
--	.inherits		= &ata_sff_port_ops,
-+	.inherits		= &ata_bmdma_port_ops,
- 
- 	.set_piomode		= bfin_set_piomode,
- 	.set_dmamode		= bfin_set_dmamode,
-@@ -1489,6 +1489,8 @@ static struct ata_port_operations bfin_pata_ops = {
- 
- 	.port_start		= bfin_port_start,
- 	.port_stop		= bfin_port_stop,
-+
-+	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
- };
- 
- static struct ata_port_info bfin_port_info[] = {
-diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
-index 45896b3..a792eb3 100644
---- a/drivers/ata/pata_cmd640.c
-+++ b/drivers/ata/pata_cmd640.c
-@@ -166,11 +166,11 @@ static int cmd640_port_start(struct ata_port *ap)
- }
- 
- static struct scsi_host_template cmd640_sht = {
--	ATA_BMDMA_SHT(DRV_NAME),
-+	ATA_PIO_SHT(DRV_NAME),
- };
- 
- static struct ata_port_operations cmd640_port_ops = {
--	.inherits	= &ata_bmdma_port_ops,
-+	.inherits	= &ata_sff_port_ops,
- 	/* In theory xfer_noirq is not needed once we kill the prefetcher */
- 	.sff_data_xfer	= ata_sff_data_xfer_noirq,
- 	.qc_issue	= cmd640_qc_issue,
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index fa812e2..832c8cc 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -321,7 +321,7 @@ static void pata_icside_postreset(struct ata_link *link, unsigned int *classes)
- }
- 
- static struct ata_port_operations pata_icside_port_ops = {
--	.inherits		= &ata_sff_port_ops,
-+	.inherits		= &ata_bmdma_port_ops,
- 	/* no need to build any PRD tables for DMA */
- 	.qc_prep		= ata_noop_qc_prep,
- 	.sff_data_xfer		= ata_sff_data_xfer_noirq,
-@@ -334,6 +334,8 @@ static struct ata_port_operations pata_icside_port_ops = {
- 	.set_dmamode		= pata_icside_set_dmamode,
- 	.postreset		= pata_icside_postreset,
- 	.post_internal_cmd	= pata_icside_bmdma_stop,
-+
-+	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
- };
- 
- static void __devinit
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 211b643..17e4e5d 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -917,7 +917,7 @@ static struct scsi_host_template pata_macio_sht = {
- };
- 
- static struct ata_port_operations pata_macio_ops = {
--	.inherits		= &ata_sff_port_ops,
-+	.inherits		= &ata_bmdma_port_ops,
- 
- 	.freeze			= pata_macio_freeze,
- 	.set_piomode		= pata_macio_set_timings,
-@@ -925,7 +925,6 @@ static struct ata_port_operations pata_macio_ops = {
- 	.cable_detect		= pata_macio_cable_detect,
- 	.sff_dev_select		= pata_macio_dev_select,
- 	.qc_prep		= pata_macio_qc_prep,
--	.mode_filter		= ata_bmdma_mode_filter,
- 	.bmdma_setup		= pata_macio_bmdma_setup,
- 	.bmdma_start		= pata_macio_bmdma_start,
- 	.bmdma_stop		= pata_macio_bmdma_stop,
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 318862e..a033710 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -686,16 +686,27 @@ static struct ata_port_operations mv5_ops = {
- };
- 
- static struct ata_port_operations mv6_ops = {
--	.inherits		= &mv5_ops,
-+	.inherits		= &ata_bmdma_port_ops,
-+
-+	.lost_interrupt		= ATA_OP_NULL,
-+
-+	.qc_defer		= mv_qc_defer,
-+	.qc_prep		= mv_qc_prep,
-+	.qc_issue		= mv_qc_issue,
-+
- 	.dev_config             = mv6_dev_config,
--	.scr_read		= mv_scr_read,
--	.scr_write		= mv_scr_write,
- 
-+	.freeze			= mv_eh_freeze,
-+	.thaw			= mv_eh_thaw,
-+	.hardreset		= mv_hardreset,
-+	.softreset		= mv_softreset,
- 	.pmp_hardreset		= mv_pmp_hardreset,
- 	.pmp_softreset		= mv_softreset,
--	.softreset		= mv_softreset,
- 	.error_handler		= mv_pmp_error_handler,
- 
-+	.scr_read		= mv_scr_read,
-+	.scr_write		= mv_scr_write,
-+
- 	.sff_check_status	= mv_sff_check_status,
- 	.sff_irq_clear		= mv_sff_irq_clear,
- 	.check_atapi_dma	= mv_check_atapi_dma,
-@@ -703,6 +714,11 @@ static struct ata_port_operations mv6_ops = {
- 	.bmdma_start		= mv_bmdma_start,
- 	.bmdma_stop		= mv_bmdma_stop,
- 	.bmdma_status		= mv_bmdma_status,
-+
-+	.port_start		= mv_port_start,
-+	.port_stop		= mv_port_stop,
-+
-+	.mode_filter            = ATA_OP_NULL,  /* will be removed soon */
- };
- 
- static struct ata_port_operations mv_iie_ops = {
--- 
-1.6.4.2
+ 0001-pata_sch-use-ata_pci_sff_init_one.patch
+ 0002-sata_inic162x-inic162x-is-not-dependent-on-CONFIG_AT.patch
+ 0003-sata_mv-remove-unnecessary-initialization.patch
+ 0004-libata-sff-update-bmdma-host-bus-error-handling.patch
+ 0005-libata-sff-kill-unused-prototype-and-make-ata_dev_se.patch
+ 0006-libata-kill-ATA_FLAG_DISABLED.patch
+ 0007-sata_inic162x-kill-PORT_PRD_ADDR-initialization.patch
+ 0008-libata-sff-reorder-SFF-BMDMA-functions.patch
+ 0009-libata-sff-clean-up-inheritance-in-several-drivers.patch
+ 0010-libata-sff-clean-up-BMDMA-initialization.patch
+ 0011-libata-sff-introduce-ata_sff_init-exit-and-ata_sff_p.patch
+ 0012-libata-sff-rename-ap-ops-drain_fifo-to-sff_drain_fif.patch
+ 0013-libata-sff-ap-last_-ctl-are-SFF-specific.patch
+ 0014-libata-sff-port_task-is-SFF-specific.patch
+ 0015-libata-sff-separate-out-BMDMA-EH.patch
+ 0016-libata-sff-ata_sff_-dumb_-qc_prep-are-BMDMA-specific.patch
+ 0017-libata-sff-prd-is-BMDMA-specific.patch
+ 0018-libata-sff-separate-out-BMDMA-qc_issue.patch
+ 0019-libata-sff-ata_sff_irq_clear-is-BMDMA-specific.patch
+ 0020-libata-sff-separate-out-BMDMA-irq-handler.patch
+ 0021-libata-sff-separate-out-BMDMA-init.patch
+ 0022-libata-sff-kill-dummy-BMDMA-ops-from-sata_qstor-and-.patch
+ 0023-libata-sff-make-BMDMA-optional.patch
 
+It's also available in the following git branch.
+
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git modularize-SFF
+
+and contains the following changes.
+
+ drivers/ata/Kconfig                 |  521 +++++------
+ drivers/ata/Makefile                |   83 +
+ drivers/ata/ata_generic.c           |    2 
+ drivers/ata/ata_piix.c              |    4 
+ drivers/ata/libata-core.c           |  179 ---
+ drivers/ata/libata-eh.c             |    6 
+ drivers/ata/libata-scsi.c           |    3 
+ drivers/ata/libata-sff.c            | 1640 +++++++++++++++++++++---------------
+ drivers/ata/libata.h                |   29 
+ drivers/ata/pata_acpi.c             |   10 
+ drivers/ata/pata_ali.c              |    7 
+ drivers/ata/pata_amd.c              |    2 
+ drivers/ata/pata_artop.c            |    2 
+ drivers/ata/pata_at91.c             |    1 
+ drivers/ata/pata_atiixp.c           |    6 
+ drivers/ata/pata_atp867x.c          |    2 
+ drivers/ata/pata_bf54x.c            |   20 
+ drivers/ata/pata_cmd640.c           |   10 
+ drivers/ata/pata_cmd64x.c           |    2 
+ drivers/ata/pata_cs5520.c           |    4 
+ drivers/ata/pata_cs5530.c           |    6 
+ drivers/ata/pata_cs5535.c           |    2 
+ drivers/ata/pata_cs5536.c           |    2 
+ drivers/ata/pata_cypress.c          |    2 
+ drivers/ata/pata_efar.c             |    4 
+ drivers/ata/pata_hpt366.c           |    4 
+ drivers/ata/pata_hpt37x.c           |    6 
+ drivers/ata/pata_hpt3x2n.c          |    4 
+ drivers/ata/pata_hpt3x3.c           |    2 
+ drivers/ata/pata_icside.c           |    7 
+ drivers/ata/pata_it8213.c           |    2 
+ drivers/ata/pata_it821x.c           |    8 
+ drivers/ata/pata_jmicron.c          |    2 
+ drivers/ata/pata_macio.c            |    7 
+ drivers/ata/pata_marvell.c          |    2 
+ drivers/ata/pata_mpc52xx.c          |    2 
+ drivers/ata/pata_netcell.c          |    2 
+ drivers/ata/pata_ninja32.c          |    2 
+ drivers/ata/pata_ns87415.c          |    4 
+ drivers/ata/pata_octeon_cf.c        |   27 
+ drivers/ata/pata_oldpiix.c          |    4 
+ drivers/ata/pata_optidma.c          |    2 
+ drivers/ata/pata_pcmcia.c           |    2 
+ drivers/ata/pata_pdc2027x.c         |    6 
+ drivers/ata/pata_pdc202xx_old.c     |    4 
+ drivers/ata/pata_piccolo.c          |    2 
+ drivers/ata/pata_platform.c         |    1 
+ drivers/ata/pata_radisys.c          |    4 
+ drivers/ata/pata_rdc.c              |    4 
+ drivers/ata/pata_sc1200.c           |    6 
+ drivers/ata/pata_scc.c              |   15 
+ drivers/ata/pata_sch.c              |   12 
+ drivers/ata/pata_serverworks.c      |    8 
+ drivers/ata/pata_sil680.c           |    4 
+ drivers/ata/pata_sis.c              |    2 
+ drivers/ata/pata_sl82c105.c         |    2 
+ drivers/ata/pata_triflex.c          |    2 
+ drivers/ata/pata_via.c              |    6 
+ drivers/ata/pdc_adma.c              |   74 -
+ drivers/ata/sata_inic162x.c         |   25 
+ drivers/ata/sata_mv.c               |   51 -
+ drivers/ata/sata_nv.c               |  266 ++---
+ drivers/ata/sata_promise.c          |   32 
+ drivers/ata/sata_qstor.c            |  104 --
+ drivers/ata/sata_sil.c              |   13 
+ drivers/ata/sata_sil24.c            |    9 
+ drivers/ata/sata_sis.c              |    4 
+ drivers/ata/sata_svw.c              |    4 
+ drivers/ata/sata_sx4.c              |   10 
+ drivers/ata/sata_uli.c              |    6 
+ drivers/ata/sata_via.c              |    8 
+ drivers/ata/sata_vsc.c              |   12 
+ drivers/scsi/ipr.c                  |    6 
+ drivers/scsi/libsas/sas_scsi_host.c |    2 
+ include/linux/ata.h                 |    2 
+ include/linux/libata.h              |   99 +-
+ 76 files changed, 1743 insertions(+), 1700 deletions(-)
+
+Thanks.
+
+--
+tejun
+
+[L] http://thread.gmane.org/gmane.linux.scsi/45344
