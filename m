@@ -1,269 +1,878 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 19/23] libata-sff: ata_sff_irq_clear() is BMDMA specific
-Date: Mon, 10 May 2010 21:41:43 +0200
-Message-ID: <1273520507-32459-20-git-send-email-tj@kernel.org>
+Subject: [PATCH 10/23] libata-sff: clean up BMDMA initialization
+Date: Mon, 10 May 2010 21:41:34 +0200
+Message-ID: <1273520507-32459-11-git-send-email-tj@kernel.org>
 References: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45020 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:45024 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756211Ab0EJTmz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 May 2010 15:42:55 -0400
+	id S1756214Ab0EJTm6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 May 2010 15:42:58 -0400
 In-Reply-To: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
 Cc: Tejun Heo <tj@kernel.org>
 
-ata_sff_irq_clear() is BMDMA specific.  Rename it to
-ata_bmdma_irq_clear(), move it to ata_bmdma_port_ops and make
-->sff_irq_clear() optional.
+When BMDMA initialization failed or BMDMA was not available for
+whatever reason, bmdma_addr was left at zero and used as an indication
+that BMDMA shouldn't be used.  This leads to the following problems.
 
-Note: ata_bmdma_irq_clear() is actually only needed by ata_piix and
-      possibly by sata_sil.  This should be moved to respective low
-      level drivers later.
+p1. For BMDMA drivers which don't use traditional BMDMA register,
+    ata_bmdma_mode_filter() incorrectly inhibits DMA modes.  Those
+    drivers either have to inherit from ata_sff_port_ops or clear
+    ->mode_filter explicitly.
+
+p2. non-BMDMA drivers call into BMDMA PRD table allocation.  It
+    doesn't actually allocate PRD table if bmdma_addr is not
+    initialized but is still confusing.
+
+p3. For BMDMA drivers which don't use traditional BMDMA register, some
+    methods might not be invoked as expected (e.g. bmdma_stop from
+    ata_sff_post_internal_cmd()).
+
+p4. SFF drivers w/ custom DMA interface implement noop BMDMA ops
+    worrying libata core might call into one of them.
+
+These problems are caused by the muddy line between SFF and BMDMA and
+the assumption that all BMDMA controllers initialize bmdma_addr.
+
+This patch fixes p1 and p2 by removing the bmdma_addr assumption and
+moving prd allocation to BMDMA port start.  Later patches will fix the
+remaining issues.
+
+This patch improves BMDMA initialization such that
+
+* When BMDMA register initialization fails, falls back to PIO instead
+  of failing.  ata_pci_bmdma_init() never fails now.
+
+* When ata_pci_bmdma_init() falls back to PIO, it clears
+  ap->mwdma_mask and udma_mask instead of depending on
+  ata_bmdma_mode_filter().  This makes ata_bmdma_mode_filter()
+  unnecessary thus resolving p1.
+
+* ata_port_start() which actually is BMDMA specific is moved to
+  ata_bmdma_port_start().  ata_port_start() and ata_sff_port_start()
+  are killed.
+
+* ata_sff_port_start32() is moved and renamed to
+  ata_bmdma_port_start32().
+
+Drivers which no longer call into PRD table allocation are...
+
+  pdc_adma, sata_inic162x, sata_qstor, sata_sx4, pata_cmd640 and all
+  drivers which inherit from ata_sff_port_ops.
+
+pata_icside sets ->port_start to ATA_OP_NULL as it doesn't need PRD
+but is a BMDMA controller and doesn't have custom port_start like
+other such controllers.
+
+Note that with the previous patch which makes all and only BMDMA
+drivers inherit from ata_bmdma_port_ops, this change doesn't break
+drivers which need PRD table.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-sff.c |   64 +++++++++++++++++++++++++---------------------
- drivers/ata/pata_bf54x.c |    2 +-
- drivers/ata/pata_scc.c   |    2 +-
- drivers/ata/sata_nv.c    |    2 +-
- drivers/ata/sata_sil.c   |    4 +-
- drivers/ata/sata_via.c   |    2 +-
- include/linux/libata.h   |    2 +-
- 7 files changed, 42 insertions(+), 36 deletions(-)
+ drivers/ata/libata-core.c       |   25 ------
+ drivers/ata/libata-sff.c        |  170 +++++++++++++++++++--------------------
+ drivers/ata/pata_acpi.c         |    4 +-
+ drivers/ata/pata_ali.c          |    2 +-
+ drivers/ata/pata_at91.c         |    1 -
+ drivers/ata/pata_bf54x.c        |    2 -
+ drivers/ata/pata_cmd640.c       |    6 +-
+ drivers/ata/pata_hpt366.c       |    2 +-
+ drivers/ata/pata_hpt37x.c       |    4 +-
+ drivers/ata/pata_icside.c       |    2 +-
+ drivers/ata/pata_it821x.c       |    2 +-
+ drivers/ata/pata_macio.c        |    2 +
+ drivers/ata/pata_pdc2027x.c     |    4 +-
+ drivers/ata/pata_pdc202xx_old.c |    2 +-
+ drivers/ata/pata_platform.c     |    1 -
+ drivers/ata/pata_scc.c          |    6 +-
+ drivers/ata/pata_serverworks.c  |    6 +-
+ drivers/ata/pata_via.c          |    4 +-
+ drivers/ata/pdc_adma.c          |    4 -
+ drivers/ata/sata_inic162x.c     |    5 -
+ drivers/ata/sata_mv.c           |    2 -
+ drivers/ata/sata_nv.c           |    6 +-
+ drivers/ata/sata_promise.c      |    3 +-
+ drivers/ata/sata_qstor.c        |    4 -
+ drivers/ata/sata_sx4.c          |    5 -
+ drivers/ata/sata_uli.c          |    4 +-
+ include/linux/libata.h          |    9 +--
+ 27 files changed, 116 insertions(+), 171 deletions(-)
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index e350eb1..6b93ace 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -64,7 +64,6 @@ const struct ata_port_operations ata_sff_port_ops = {
- 	.sff_exec_command	= ata_sff_exec_command,
- 	.sff_data_xfer		= ata_sff_data_xfer,
- 	.sff_irq_on		= ata_sff_irq_on,
--	.sff_irq_clear		= ata_sff_irq_clear,
- 	.sff_drain_fifo		= ata_sff_drain_fifo,
- 
- 	.lost_interrupt		= ata_sff_lost_interrupt,
-@@ -368,35 +367,14 @@ u8 ata_sff_irq_on(struct ata_port *ap)
- 		iowrite8(ap->ctl, ioaddr->ctl_addr);
- 	tmp = ata_wait_idle(ap);
- 
--	ap->ops->sff_irq_clear(ap);
-+	if (ap->ops->sff_irq_clear)
-+		ap->ops->sff_irq_clear(ap);
- 
- 	return tmp;
- }
- EXPORT_SYMBOL_GPL(ata_sff_irq_on);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3d8b62f..cc49a0d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5506,30 +5506,6 @@ void ata_host_resume(struct ata_host *host)
+ #endif
  
  /**
-- *	ata_sff_irq_clear - Clear PCI IDE BMDMA interrupt.
-- *	@ap: Port associated with this ATA transaction.
+- *	ata_port_start - Set port up for dma.
+- *	@ap: Port to initialize
 - *
-- *	Clear interrupt and error flags in DMA status register.
+- *	Called just after data structures for each port are
+- *	initialized.  Allocates space for PRD table.
 - *
-- *	May be used as the irq_clear() entry in ata_port_operations.
+- *	May be used as the port_start() entry in ata_port_operations.
 - *
 - *	LOCKING:
-- *	spin_lock_irqsave(host lock)
+- *	Inherited from caller.
 - */
--void ata_sff_irq_clear(struct ata_port *ap)
+-int ata_port_start(struct ata_port *ap)
 -{
--	void __iomem *mmio = ap->ioaddr.bmdma_addr;
+-	struct device *dev = ap->dev;
 -
--	if (!mmio)
--		return;
+-	ap->prd = dmam_alloc_coherent(dev, ATA_PRD_TBL_SZ, &ap->prd_dma,
+-				      GFP_KERNEL);
+-	if (!ap->prd)
+-		return -ENOMEM;
 -
--	iowrite8(ioread8(mmio + ATA_DMA_STATUS), mmio + ATA_DMA_STATUS);
+-	return 0;
 -}
--EXPORT_SYMBOL_GPL(ata_sff_irq_clear);
 -
 -/**
-  *	ata_sff_tf_load - send taskfile registers to host controller
-  *	@ap: Port to which output is sent
-  *	@tf: ATA taskfile register set
-@@ -1550,7 +1528,8 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
- 	}
+  *	ata_dev_init - Initialize an ata_device structure
+  *	@dev: Device structure to initialize
+  *
+@@ -6757,7 +6733,6 @@ EXPORT_SYMBOL_GPL(ata_xfer_mode2mask);
+ EXPORT_SYMBOL_GPL(ata_xfer_mode2shift);
+ EXPORT_SYMBOL_GPL(ata_mode_string);
+ EXPORT_SYMBOL_GPL(ata_id_xfermask);
+-EXPORT_SYMBOL_GPL(ata_port_start);
+ EXPORT_SYMBOL_GPL(ata_do_set_mode);
+ EXPORT_SYMBOL_GPL(ata_std_qc_defer);
+ EXPORT_SYMBOL_GPL(ata_noop_qc_prep);
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 5ec17f9..bc52a75 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -67,8 +67,6 @@ const struct ata_port_operations ata_sff_port_ops = {
+ 	.sff_irq_clear		= ata_sff_irq_clear,
  
- 	/* clear irq events */
--	ap->ops->sff_irq_clear(ap);
-+	if (ap->ops->sff_irq_clear)
-+		ap->ops->sff_irq_clear(ap);
+ 	.lost_interrupt		= ata_sff_lost_interrupt,
+-
+-	.port_start		= ata_sff_port_start,
+ };
+ EXPORT_SYMBOL_GPL(ata_sff_port_ops);
  
- 	ata_sff_hsm_move(ap, qc, status, 0);
+@@ -2424,50 +2422,6 @@ void ata_sff_post_internal_cmd(struct ata_queued_cmd *qc)
+ EXPORT_SYMBOL_GPL(ata_sff_post_internal_cmd);
  
-@@ -1566,7 +1545,8 @@ idle_irq:
- #ifdef ATA_IRQ_TRAP
- 	if ((ap->stats.idle_irq % 1000) == 0) {
- 		ap->ops->sff_check_status(ap);
--		ap->ops->sff_irq_clear(ap);
-+		if (ap->ops->sff_irq_clear)
-+			ap->ops->sff_irq_clear(ap);
- 		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
- 		return 1;
- 	}
-@@ -1724,7 +1704,8 @@ void ata_sff_freeze(struct ata_port *ap)
- 	 */
- 	ap->ops->sff_check_status(ap);
+ /**
+- *	ata_sff_port_start - Set port up for dma.
+- *	@ap: Port to initialize
+- *
+- *	Called just after data structures for each port are
+- *	initialized.  Allocates space for PRD table if the device
+- *	is DMA capable SFF.
+- *
+- *	May be used as the port_start() entry in ata_port_operations.
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-int ata_sff_port_start(struct ata_port *ap)
+-{
+-	if (ap->ioaddr.bmdma_addr)
+-		return ata_port_start(ap);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(ata_sff_port_start);
+-
+-/**
+- *	ata_sff_port_start32 - Set port up for dma.
+- *	@ap: Port to initialize
+- *
+- *	Called just after data structures for each port are
+- *	initialized.  Allocates space for PRD table if the device
+- *	is DMA capable SFF.
+- *
+- *	May be used as the port_start() entry in ata_port_operations for
+- *	devices that are capable of 32bit PIO.
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-int ata_sff_port_start32(struct ata_port *ap)
+-{
+-	ap->pflags |= ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE;
+-	if (ap->ioaddr.bmdma_addr)
+-		return ata_port_start(ap);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(ata_sff_port_start32);
+-
+-/**
+  *	ata_sff_std_ports - initialize ioaddr with standard port offsets.
+  *	@ioaddr: IO address structure to be initialized
+  *
+@@ -2626,21 +2580,12 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
+ 		goto err_out;
  
--	ap->ops->sff_irq_clear(ap);
-+	if (ap->ops->sff_irq_clear)
-+		ap->ops->sff_irq_clear(ap);
- }
- EXPORT_SYMBOL_GPL(ata_sff_freeze);
+ 	/* init DMA related stuff */
+-	rc = ata_pci_bmdma_init(host);
+-	if (rc)
+-		goto err_bmdma;
++	ata_pci_bmdma_init(host);
  
-@@ -1741,7 +1722,8 @@ void ata_sff_thaw(struct ata_port *ap)
- {
- 	/* clear & re-enable interrupts */
- 	ap->ops->sff_check_status(ap);
--	ap->ops->sff_irq_clear(ap);
-+	if (ap->ops->sff_irq_clear)
-+		ap->ops->sff_irq_clear(ap);
- 	ap->ops->sff_irq_on(ap);
- }
- EXPORT_SYMBOL_GPL(ata_sff_thaw);
-@@ -2560,6 +2542,7 @@ const struct ata_port_operations ata_bmdma_port_ops = {
- 	.qc_prep		= ata_bmdma_qc_prep,
- 	.qc_issue		= ata_bmdma_qc_issue,
+ 	devres_remove_group(&pdev->dev, NULL);
+ 	*r_host = host;
+ 	return 0;
  
-+	.sff_irq_clear		= ata_bmdma_irq_clear,
+-err_bmdma:
+-	/* This is necessary because PCI and iomap resources are
+-	 * merged and releasing the top group won't release the
+-	 * acquired resources if some of those have been acquired
+-	 * before entering this function.
+-	 */
+-	pcim_iounmap_regions(pdev, 0xf);
+ err_out:
+ 	devres_release_group(&pdev->dev, NULL);
+ 	return rc;
+@@ -2823,12 +2768,12 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
+ const struct ata_port_operations ata_bmdma_port_ops = {
+ 	.inherits		= &ata_sff_port_ops,
+ 
+-	.mode_filter		= ata_bmdma_mode_filter,
+-
  	.bmdma_setup		= ata_bmdma_setup,
  	.bmdma_start		= ata_bmdma_start,
  	.bmdma_stop		= ata_bmdma_stop,
-@@ -2828,7 +2811,8 @@ void ata_bmdma_error_handler(struct ata_port *ap)
- 		/* if we're gonna thaw, make sure IRQ is clear */
- 		if (thaw) {
- 			ap->ops->sff_check_status(ap);
--			ap->ops->sff_irq_clear(ap);
-+			if (ap->ops->sff_irq_clear)
-+				ap->ops->sff_irq_clear(ap);
- 		}
- 	}
+ 	.bmdma_status		= ata_bmdma_status,
++
++	.port_start		= ata_bmdma_port_start,
+ };
+ EXPORT_SYMBOL_GPL(ata_bmdma_port_ops);
  
-@@ -2862,6 +2846,28 @@ void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc)
- EXPORT_SYMBOL_GPL(ata_bmdma_post_internal_cmd);
+@@ -2836,22 +2781,10 @@ const struct ata_port_operations ata_bmdma32_port_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
  
+ 	.sff_data_xfer		= ata_sff_data_xfer32,
+-	.port_start		= ata_sff_port_start32,
++	.port_start		= ata_bmdma_port_start32,
+ };
+ EXPORT_SYMBOL_GPL(ata_bmdma32_port_ops);
+ 
+-unsigned long ata_bmdma_mode_filter(struct ata_device *adev,
+-				    unsigned long xfer_mask)
+-{
+-	/* Filter out DMA modes if the device has been configured by
+-	   the BIOS as PIO only */
+-
+-	if (adev->link->ap->ioaddr.bmdma_addr == NULL)
+-		xfer_mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+-	return xfer_mask;
+-}
+-EXPORT_SYMBOL_GPL(ata_bmdma_mode_filter);
+-
  /**
-+ *	ata_bmdma_irq_clear - Clear PCI IDE BMDMA interrupt.
-+ *	@ap: Port associated with this ATA transaction.
-+ *
-+ *	Clear interrupt and error flags in DMA status register.
-+ *
-+ *	May be used as the irq_clear() entry in ata_port_operations.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ */
-+void ata_bmdma_irq_clear(struct ata_port *ap)
-+{
-+	void __iomem *mmio = ap->ioaddr.bmdma_addr;
-+
-+	if (!mmio)
-+		return;
-+
-+	iowrite8(ioread8(mmio + ATA_DMA_STATUS), mmio + ATA_DMA_STATUS);
-+}
-+EXPORT_SYMBOL_GPL(ata_bmdma_irq_clear);
-+
-+/**
   *	ata_bmdma_setup - Set up PCI IDE BMDMA transaction
   *	@qc: Info associated with this ATA transaction.
+@@ -2956,6 +2889,53 @@ u8 ata_bmdma_status(struct ata_port *ap)
+ }
+ EXPORT_SYMBOL_GPL(ata_bmdma_status);
+ 
++
++/**
++ *	ata_bmdma_port_start - Set port up for bmdma.
++ *	@ap: Port to initialize
++ *
++ *	Called just after data structures for each port are
++ *	initialized.  Allocates space for PRD table.
++ *
++ *	May be used as the port_start() entry in ata_port_operations.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++int ata_bmdma_port_start(struct ata_port *ap)
++{
++	if (ap->mwdma_mask || ap->udma_mask) {
++		ap->prd = dmam_alloc_coherent(ap->host->dev, ATA_PRD_TBL_SZ,
++					      &ap->prd_dma, GFP_KERNEL);
++		if (!ap->prd)
++			return -ENOMEM;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ata_bmdma_port_start);
++
++/**
++ *	ata_bmdma_port_start32 - Set port up for dma.
++ *	@ap: Port to initialize
++ *
++ *	Called just after data structures for each port are
++ *	initialized.  Enables 32bit PIO and allocates space for PRD
++ *	table.
++ *
++ *	May be used as the port_start() entry in ata_port_operations for
++ *	devices that are capable of 32bit PIO.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++int ata_bmdma_port_start32(struct ata_port *ap)
++{
++	ap->pflags |= ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE;
++	return ata_bmdma_port_start(ap);
++}
++EXPORT_SYMBOL_GPL(ata_bmdma_port_start32);
++
+ #ifdef CONFIG_PCI
+ 
+ /**
+@@ -2984,6 +2964,19 @@ int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
+ 
++static void ata_bmdma_nodma(struct ata_host *host, const char *reason)
++{
++	int i;
++
++	dev_printk(KERN_ERR, host->dev, "BMDMA: %s, falling back to PIO\n",
++		   reason);
++
++	for (i = 0; i < 2; i++) {
++		host->ports[i]->mwdma_mask = 0;
++		host->ports[i]->udma_mask = 0;
++	}
++}
++
+ /**
+  *	ata_pci_bmdma_init - acquire PCI BMDMA resources and init ATA host
+  *	@host: target ATA host
+@@ -2992,33 +2985,40 @@ EXPORT_SYMBOL_GPL(ata_pci_bmdma_clear_simplex);
   *
-diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-index 831e87a..20bcc5b 100644
---- a/drivers/ata/pata_bf54x.c
-+++ b/drivers/ata/pata_bf54x.c
-@@ -1202,7 +1202,7 @@ static unsigned int bfin_data_xfer(struct ata_device *dev, unsigned char *buf,
-  *	bfin_irq_clear - Clear ATAPI interrupt.
-  *	@ap: Port associated with this ATA transaction.
-  *
-- *	Note: Original code is ata_sff_irq_clear().
-+ *	Note: Original code is ata_bmdma_irq_clear().
+  *	LOCKING:
+  *	Inherited from calling layer (may sleep).
+- *
+- *	RETURNS:
+- *	0 on success, -errno otherwise.
   */
+-int ata_pci_bmdma_init(struct ata_host *host)
++void ata_pci_bmdma_init(struct ata_host *host)
+ {
+ 	struct device *gdev = host->dev;
+ 	struct pci_dev *pdev = to_pci_dev(gdev);
+ 	int i, rc;
  
- static void bfin_irq_clear(struct ata_port *ap)
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 9a65c5e..35445d0 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -913,7 +913,7 @@ static void scc_postreset(struct ata_link *link, unsigned int *classes)
-  *	scc_irq_clear - Clear PCI IDE BMDMA interrupt.
-  *	@ap: Port associated with this ATA transaction.
-  *
-- *	Note: Original code is ata_sff_irq_clear().
-+ *	Note: Original code is ata_bmdma_irq_clear().
-  */
+ 	/* No BAR4 allocation: No DMA */
+-	if (pci_resource_start(pdev, 4) == 0)
+-		return 0;
++	if (pci_resource_start(pdev, 4) == 0) {
++		ata_bmdma_nodma(host, "BAR4 is zero");
++		return;
++	}
  
- static void scc_irq_clear (struct ata_port *ap)
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index ef1fdfb..bf133b6 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1100,7 +1100,7 @@ static void nv_adma_irq_clear(struct ata_port *ap)
- 	u32 notifier_clears[2];
+-	/* TODO: If we get no DMA mask we should fall back to PIO */
++	/*
++	 * Some controllers require BMDMA region to be initialized
++	 * even if DMA is not in use to clear IRQ status via
++	 * ->sff_irq_clear method.  Try to initialize bmdma_addr
++	 * regardless of dma masks.
++	 */
+ 	rc = pci_set_dma_mask(pdev, ATA_DMA_MASK);
+ 	if (rc)
+-		return rc;
+-	rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
+-	if (rc)
+-		return rc;
++		ata_bmdma_nodma(host, "failed to set dma mask");
++	if (!rc) {
++		rc = pci_set_consistent_dma_mask(pdev, ATA_DMA_MASK);
++		if (rc)
++			ata_bmdma_nodma(host,
++					"failed to set consistent dma mask");
++	}
  
- 	if (pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) {
--		ata_sff_irq_clear(ap);
-+		ata_bmdma_irq_clear(ap);
- 		return;
+ 	/* request and iomap DMA region */
+ 	rc = pcim_iomap_regions(pdev, 1 << 4, dev_driver_string(gdev));
+ 	if (rc) {
+-		dev_printk(KERN_ERR, gdev, "failed to request/iomap BAR4\n");
+-		return -ENOMEM;
++		ata_bmdma_nodma(host, "failed to request/iomap BAR4");
++		return;
  	}
+ 	host->iomap = pcim_iomap_table(pdev);
  
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 2dda312..3a4f842 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -503,7 +503,7 @@ static void sil_host_intr(struct ata_port *ap, u32 bmdma2)
- 		goto err_hsm;
+@@ -3037,8 +3037,6 @@ int ata_pci_bmdma_init(struct ata_host *host)
+ 		ata_port_desc(ap, "bmdma 0x%llx",
+ 		    (unsigned long long)pci_resource_start(pdev, 4) + 8 * i);
+ 	}
+-
+-	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
  
- 	/* ack bmdma irq events */
--	ata_sff_irq_clear(ap);
-+	ata_bmdma_irq_clear(ap);
- 
- 	/* kick HSM in the ass */
- 	ata_sff_hsm_move(ap, qc, status, 0);
-@@ -584,7 +584,7 @@ static void sil_thaw(struct ata_port *ap)
- 
- 	/* clear IRQ */
- 	ap->ops->sff_check_status(ap);
--	ata_sff_irq_clear(ap);
-+	ata_bmdma_irq_clear(ap);
- 
- 	/* turn on SATA IRQ if supported */
- 	if (!(ap->flags & SIL_FLAG_NO_SATA_IRQ))
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 08f6549..7737dd5 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -308,7 +308,7 @@ static void svia_noop_freeze(struct ata_port *ap)
- 	 * certain way.  Leave it alone and just clear pending IRQ.
- 	 */
- 	ap->ops->sff_check_status(ap);
--	ata_sff_irq_clear(ap);
-+	ata_bmdma_irq_clear(ap);
+diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+index 1ea2be0..1a5a309 100644
+--- a/drivers/ata/pata_acpi.c
++++ b/drivers/ata/pata_acpi.c
+@@ -101,7 +101,7 @@ static unsigned long pacpi_discover_modes(struct ata_port *ap, struct ata_device
+ static unsigned long pacpi_mode_filter(struct ata_device *adev, unsigned long mask)
+ {
+ 	struct pata_acpi *acpi = adev->link->ap->private_data;
+-	return ata_bmdma_mode_filter(adev, mask & acpi->mask[adev->devno]);
++	return mask & acpi->mask[adev->devno];
  }
  
  /**
+@@ -205,7 +205,7 @@ static int pacpi_port_start(struct ata_port *ap)
+ 		return -ENOMEM;
+ 	acpi->mask[0] = pacpi_discover_modes(ap, &ap->link.device[0]);
+ 	acpi->mask[1] = pacpi_discover_modes(ap, &ap->link.device[1]);
+-	ret = ata_sff_port_start(ap);
++	ret = ata_bmdma_port_start(ap);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index dc61b72..f306e10 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -124,7 +124,7 @@ static unsigned long ali_20_filter(struct ata_device *adev, unsigned long mask)
+ 	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+ 	if (strstr(model_num, "WDC"))
+ 		return mask &= ~ATA_MASK_UDMA;
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index c6a946a..0da0dcc 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -202,7 +202,6 @@ static struct ata_port_operations pata_at91_port_ops = {
+ 	.sff_data_xfer	= pata_at91_data_xfer_noirq,
+ 	.set_piomode	= pata_at91_set_piomode,
+ 	.cable_detect	= ata_cable_40wire,
+-	.port_start	= ATA_OP_NULL,
+ };
+ 
+ static int __devinit pata_at91_probe(struct platform_device *pdev)
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index 5c189ff..831e87a 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -1489,8 +1489,6 @@ static struct ata_port_operations bfin_pata_ops = {
+ 
+ 	.port_start		= bfin_port_start,
+ 	.port_stop		= bfin_port_stop,
+-
+-	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
+ };
+ 
+ static struct ata_port_info bfin_port_info[] = {
+diff --git a/drivers/ata/pata_cmd640.c b/drivers/ata/pata_cmd640.c
+index a792eb3..2ab0c8e 100644
+--- a/drivers/ata/pata_cmd640.c
++++ b/drivers/ata/pata_cmd640.c
+@@ -153,16 +153,12 @@ static int cmd640_port_start(struct ata_port *ap)
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	struct cmd640_reg *timing;
+ 
+-	int ret = ata_sff_port_start(ap);
+-	if (ret < 0)
+-		return ret;
+-
+ 	timing = devm_kzalloc(&pdev->dev, sizeof(struct cmd640_reg), GFP_KERNEL);
+ 	if (timing == NULL)
+ 		return -ENOMEM;
+ 	timing->last = -1;	/* Force a load */
+ 	ap->private_data = timing;
+-	return ret;
++	return 0;
+ }
+ 
+ static struct scsi_host_template cmd640_sht = {
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index af49bfb..8580eb3 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -182,7 +182,7 @@ static unsigned long hpt366_filter(struct ata_device *adev, unsigned long mask)
+ 	} else if (adev->class == ATA_DEV_ATAPI)
+ 		mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+ 
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ static int hpt36x_cable_detect(struct ata_port *ap)
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 8839307..98b498b 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -282,7 +282,7 @@ static unsigned long hpt370_filter(struct ata_device *adev, unsigned long mask)
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+ 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+@@ -298,7 +298,7 @@ static unsigned long hpt370a_filter(struct ata_device *adev, unsigned long mask)
+ 		if (hpt_dma_blacklisted(adev, "UDMA100", bad_ata100_5))
+ 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+index 832c8cc..ee85a9c 100644
+--- a/drivers/ata/pata_icside.c
++++ b/drivers/ata/pata_icside.c
+@@ -335,7 +335,7 @@ static struct ata_port_operations pata_icside_port_ops = {
+ 	.postreset		= pata_icside_postreset,
+ 	.post_internal_cmd	= pata_icside_bmdma_stop,
+ 
+-	.mode_filter		= ATA_OP_NULL,	/* will be removed soon */
++	.port_start		= ATA_OP_NULL,	/* don't need PRD table */
+ };
+ 
+ static void __devinit
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index 5cb286f..8d73438 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -739,7 +739,7 @@ static int it821x_port_start(struct ata_port *ap)
+ 	struct it821x_dev *itdev;
+ 	u8 conf;
+ 
+-	int ret = ata_sff_port_start(ap);
++	int ret = ata_bmdma_port_start(ap);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 17e4e5d..25df50f 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -720,6 +720,8 @@ static int pata_macio_port_start(struct ata_port *ap)
+ 	if (priv->dma_table_cpu == NULL) {
+ 		dev_err(priv->dev, "Unable to allocate DMA command list\n");
+ 		ap->ioaddr.bmdma_addr = NULL;
++		ap->mwdma_mask = 0;
++		ap->udma_mask = 0;
+ 	}
+ 	return 0;
+ }
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index ca5cad0..09f1f22 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -265,7 +265,7 @@ static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long
+ 	struct ata_device *pair = ata_dev_pair(adev);
+ 
+ 	if (adev->class != ATA_DEV_ATA || adev->devno == 0 || pair == NULL)
+-		return ata_bmdma_mode_filter(adev, mask);
++		return mask;
+ 
+ 	/* Check for slave of a Maxtor at UDMA6 */
+ 	ata_id_c_string(pair->id, model_num, ATA_ID_PROD,
+@@ -274,7 +274,7 @@ static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long
+ 	if (strstr(model_num, "Maxtor") == NULL && pair->dma_mode == XFER_UDMA_6)
+ 		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
+ 
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
+index 9ac0897..fa1e2f3 100644
+--- a/drivers/ata/pata_pdc202xx_old.c
++++ b/drivers/ata/pata_pdc202xx_old.c
+@@ -249,7 +249,7 @@ static int pdc2026x_port_start(struct ata_port *ap)
+ 		u8 burst = ioread8(bmdma + 0x1f);
+ 		iowrite8(burst | 0x01, bmdma + 0x1f);
+ 	}
+-	return ata_sff_port_start(ap);
++	return ata_bmdma_port_start(ap);
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 3f6ebc6..50400fa 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -53,7 +53,6 @@ static struct ata_port_operations pata_platform_port_ops = {
+ 	.sff_data_xfer		= ata_sff_data_xfer_noirq,
+ 	.cable_detect		= ata_cable_unknown,
+ 	.set_mode		= pata_platform_set_mode,
+-	.port_start		= ATA_OP_NULL,
+ };
+ 
+ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index 4257d6b..1f64806 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -265,7 +265,7 @@ unsigned long scc_mode_filter(struct ata_device *adev, unsigned long mask)
+ 		printk(KERN_INFO "%s: limit ATAPI UDMA to UDMA4\n", DRV_NAME);
+ 		mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+@@ -930,7 +930,7 @@ static void scc_irq_clear (struct ata_port *ap)
+  *	scc_port_start - Set port up for dma.
+  *	@ap: Port to initialize
+  *
+- *	Allocate space for PRD table using ata_port_start().
++ *	Allocate space for PRD table using ata_bmdma_port_start().
+  *	Set PRD table address for PTERADD. (PRD Transfer End Read)
+  */
+ 
+@@ -939,7 +939,7 @@ static int scc_port_start (struct ata_port *ap)
+ 	void __iomem *mmio = ap->ioaddr.bmdma_addr;
+ 	int rc;
+ 
+-	rc = ata_port_start(ap);
++	rc = ata_bmdma_port_start(ap);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
+index 9524d54..43ea389 100644
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -198,7 +198,7 @@ static unsigned long serverworks_osb4_filter(struct ata_device *adev, unsigned l
+ {
+ 	if (adev->class == ATA_DEV_ATA)
+ 		mask &= ~ATA_MASK_UDMA;
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ 
+@@ -218,7 +218,7 @@ static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned lo
+ 
+ 	/* Disk, UDMA */
+ 	if (adev->class != ATA_DEV_ATA)
+-		return ata_bmdma_mode_filter(adev, mask);
++		return mask;
+ 
+ 	/* Actually do need to check */
+ 	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+@@ -227,7 +227,7 @@ static unsigned long serverworks_csb_filter(struct ata_device *adev, unsigned lo
+ 		if (!strcmp(p, model_num))
+ 			mask &= ~(0xE0 << ATA_SHIFT_UDMA);
+ 	}
+-	return ata_bmdma_mode_filter(adev, mask);
++	return mask;
+ }
+ 
+ /**
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index 741e7cb..e68d9bb 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -355,7 +355,7 @@ static unsigned long via_mode_filter(struct ata_device *dev, unsigned long mask)
+ 			mask &= ~ ATA_MASK_UDMA;
+ 		}
+ 	}
+-	return ata_bmdma_mode_filter(dev, mask);
++	return mask;
+ }
+ 
+ /**
+@@ -426,7 +426,7 @@ static int via_port_start(struct ata_port *ap)
+ 	struct via_port *vp;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 
+-	int ret = ata_sff_port_start(ap);
++	int ret = ata_bmdma_port_start(ap);
+ 	if (ret < 0)
+ 		return ret;
+ 
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index ed18d8b..bb4f838 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -556,11 +556,7 @@ static int adma_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+ 	struct adma_port_priv *pp;
+-	int rc;
+ 
+-	rc = ata_port_start(ap);
+-	if (rc)
+-		return rc;
+ 	adma_enter_reg_mode(ap);
+ 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+ 	if (!pp)
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index d3e1bab..a36149e 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -682,7 +682,6 @@ static int inic_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+ 	struct inic_port_priv *pp;
+-	int rc;
+ 
+ 	/* alloc and initialize private data */
+ 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+@@ -691,10 +690,6 @@ static int inic_port_start(struct ata_port *ap)
+ 	ap->private_data = pp;
+ 
+ 	/* Alloc resources */
+-	rc = ata_port_start(ap);
+-	if (rc)
+-		return rc;
+-
+ 	pp->pkt = dmam_alloc_coherent(dev, sizeof(struct inic_pkt),
+ 				      &pp->pkt_dma, GFP_KERNEL);
+ 	if (!pp->pkt)
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index a033710..8349186 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -717,8 +717,6 @@ static struct ata_port_operations mv6_ops = {
+ 
+ 	.port_start		= mv_port_start,
+ 	.port_stop		= mv_port_stop,
+-
+-	.mode_filter            = ATA_OP_NULL,  /* will be removed soon */
+ };
+ 
+ static struct ata_port_operations mv_iie_ops = {
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index b3bf324..0a45d89 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1156,7 +1156,8 @@ static int nv_adma_port_start(struct ata_port *ap)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = ata_port_start(ap);
++	/* we might fallback to bmdma, allocate bmdma resources */
++	rc = ata_bmdma_port_start(ap);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1985,7 +1986,8 @@ static int nv_swncq_port_start(struct ata_port *ap)
+ 	struct nv_swncq_port_priv *pp;
+ 	int rc;
+ 
+-	rc = ata_port_start(ap);
++	/* we might fallback to bmdma, allocate bmdma resources */
++	rc = ata_bmdma_port_start(ap);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index 2c029ea..e80628a 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -333,7 +333,8 @@ static int pdc_common_port_start(struct ata_port *ap)
+ 	struct pdc_port_priv *pp;
+ 	int rc;
+ 
+-	rc = ata_port_start(ap);
++	/* we use the same prd table as bmdma, allocate it */
++	rc = ata_bmdma_port_start(ap);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+index febc6e7..da84ea9 100644
+--- a/drivers/ata/sata_qstor.c
++++ b/drivers/ata/sata_qstor.c
+@@ -504,11 +504,7 @@ static int qs_port_start(struct ata_port *ap)
+ 	void __iomem *mmio_base = qs_mmio_base(ap->host);
+ 	void __iomem *chan = mmio_base + (ap->port_no * 0x4000);
+ 	u64 addr;
+-	int rc;
+ 
+-	rc = ata_port_start(ap);
+-	if (rc)
+-		return rc;
+ 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+ 	if (!pp)
+ 		return -ENOMEM;
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index 7e3a25e..a4e552a 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -302,11 +302,6 @@ static int pdc_port_start(struct ata_port *ap)
+ {
+ 	struct device *dev = ap->host->dev;
+ 	struct pdc_port_priv *pp;
+-	int rc;
+-
+-	rc = ata_port_start(ap);
+-	if (rc)
+-		return rc;
+ 
+ 	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+ 	if (!pp)
+diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+index 011e098..d8dac17 100644
+--- a/drivers/ata/sata_uli.c
++++ b/drivers/ata/sata_uli.c
+@@ -181,9 +181,7 @@ static int uli_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = ata_pci_bmdma_init(host);
+-	if (rc)
+-		return rc;
++	ata_pci_bmdma_init(host);
+ 
+ 	iomap = host->iomap;
+ 
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 739e416..abf02df 100644
+index 7d40e46..7f438e1 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1586,7 +1586,6 @@ extern unsigned int ata_sff_data_xfer32(struct ata_device *dev,
- extern unsigned int ata_sff_data_xfer_noirq(struct ata_device *dev,
- 			unsigned char *buf, unsigned int buflen, int rw);
- extern u8 ata_sff_irq_on(struct ata_port *ap);
--extern void ata_sff_irq_clear(struct ata_port *ap);
- extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			    u8 status, int in_wq);
- extern void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay);
-@@ -1629,6 +1628,7 @@ extern unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc);
- extern void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_bmdma_error_handler(struct ata_port *ap);
- extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
-+extern void ata_bmdma_irq_clear(struct ata_port *ap);
+@@ -999,7 +999,6 @@ extern unsigned long ata_xfer_mode2mask(u8 xfer_mode);
+ extern int ata_xfer_mode2shift(unsigned long xfer_mode);
+ extern const char *ata_mode_string(unsigned long xfer_mask);
+ extern unsigned long ata_id_xfermask(const u16 *id);
+-extern int ata_port_start(struct ata_port *ap);
+ extern int ata_std_qc_defer(struct ata_queued_cmd *qc);
+ extern void ata_noop_qc_prep(struct ata_queued_cmd *qc);
+ extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+@@ -1615,8 +1614,6 @@ extern void ata_sff_postreset(struct ata_link *link, unsigned int *classes);
+ extern void ata_sff_drain_fifo(struct ata_queued_cmd *qc);
+ extern void ata_sff_error_handler(struct ata_port *ap);
+ extern void ata_sff_post_internal_cmd(struct ata_queued_cmd *qc);
+-extern int ata_sff_port_start(struct ata_port *ap);
+-extern int ata_sff_port_start32(struct ata_port *ap);
+ extern void ata_sff_std_ports(struct ata_ioports *ioaddr);
+ #ifdef CONFIG_PCI
+ extern int ata_pci_sff_init_host(struct ata_host *host);
+@@ -1631,16 +1628,16 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+ 		struct scsi_host_template *sht, void *host_priv, int hflags);
+ #endif /* CONFIG_PCI */
+ 
+-extern unsigned long ata_bmdma_mode_filter(struct ata_device *dev,
+-					   unsigned long xfer_mask);
  extern void ata_bmdma_setup(struct ata_queued_cmd *qc);
  extern void ata_bmdma_start(struct ata_queued_cmd *qc);
  extern void ata_bmdma_stop(struct ata_queued_cmd *qc);
+ extern u8 ata_bmdma_status(struct ata_port *ap);
++extern int ata_bmdma_port_start(struct ata_port *ap);
++extern int ata_bmdma_port_start32(struct ata_port *ap);
+ 
+ #ifdef CONFIG_PCI
+ extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
+-extern int ata_pci_bmdma_init(struct ata_host *host);
++extern void ata_pci_bmdma_init(struct ata_host *host);
+ #endif /* CONFIG_PCI */
+ 
+ /**
 -- 
 1.6.4.2
 
