@@ -1,12 +1,12 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 20/23] libata-sff: separate out BMDMA irq handler
-Date: Mon, 10 May 2010 21:41:44 +0200
-Message-ID: <1273520507-32459-21-git-send-email-tj@kernel.org>
+Subject: [PATCH 23/23] libata-sff: make BMDMA optional
+Date: Mon, 10 May 2010 21:41:47 +0200
+Message-ID: <1273520507-32459-24-git-send-email-tj@kernel.org>
 References: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:44901 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:44902 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755782Ab0EJTmB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1755891Ab0EJTmB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Mon, 10 May 2010 15:42:01 -0400
 In-Reply-To: <1273520507-32459-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,629 +14,1018 @@ List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
 Cc: Tejun Heo <tj@kernel.org>
 
-Separate out BMDMA irq handler from SFF irq handler.  The misnamed
-host_intr() functions are renamed to ata_sff_port_intr() and
-ata_bmdma_port_intr().  Common parts are factored into
-__ata_sff_port_intr() and __ata_sff_interrupt() and used by sff and
-bmdma interrupt routines.
+Make BMDMA optional depending on new config variable CONFIG_ATA_BMDMA.
+In Kconfig, drivers are grouped into five groups - non-SFF native, SFF
+w/ custom DMA interface, SFF w/ BMDMA, PIO-only SFF, and generic
+fallback / legacy ones.  Kconfig and Makefile are reorganized
+according to the groups and ordered alphabetically inside each group.
 
-All BMDMA drivers now use ata_bmdma_interrupt() or
-ata_bmdma_port_intr() while all non-BMDMA SFF ones use
-ata_sff_interrupt() or ata_sff_port_intr().
+ata_ioports.bmdma_addr and ata_port.bmdma_prd[_dma] are put into
+CONFIG_ATA_BMDMA, as are all bmdma related ops, variables and
+functions.
 
-For now, ata_pci_sff_init_one() uses ata_bmdma_interrupt() as it's
-used by both SFF and BMDMA drivers.
+This increase the binary size slightly when BMDMA is enabled but on
+both native-only and PIO-only configurations the size is slightly
+reduced.  Either way, the size difference is insignificant.  This
+change is more meaningful to signify the separation between SFF and
+BMDMA and as a tool to verify the separation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/ata_piix.c      |    2 +-
- drivers/ata/libata-sff.c    |  208 +++++++++++++++++++++++++++----------------
- drivers/ata/pata_atp867x.c  |    2 +-
- drivers/ata/pata_cs5520.c   |    2 +-
- drivers/ata/pata_hpt3x3.c   |    2 +-
- drivers/ata/pata_icside.c   |    2 +-
- drivers/ata/pata_macio.c    |    2 +-
- drivers/ata/pata_mpc52xx.c  |    2 +-
- drivers/ata/pata_ninja32.c  |    2 +-
- drivers/ata/pata_pdc2027x.c |    2 +-
- drivers/ata/pata_rdc.c      |    2 +-
- drivers/ata/pata_scc.c      |    2 +-
- drivers/ata/pata_sil680.c   |    2 +-
- drivers/ata/sata_mv.c       |    2 +-
- drivers/ata/sata_nv.c       |    4 +-
- drivers/ata/sata_qstor.c    |    2 +-
- drivers/ata/sata_sis.c      |    2 +-
- drivers/ata/sata_svw.c      |    2 +-
- drivers/ata/sata_uli.c      |    2 +-
- drivers/ata/sata_via.c      |    2 +-
- drivers/ata/sata_vsc.c      |    2 +-
- include/linux/libata.h      |    5 +-
- 22 files changed, 155 insertions(+), 100 deletions(-)
+ drivers/ata/Kconfig      |  511 ++++++++++++++++++++++++----------------------
+ drivers/ata/Makefile     |   83 ++++----
+ drivers/ata/libata-sff.c |   11 +
+ include/linux/libata.h   |   22 ++-
+ 4 files changed, 341 insertions(+), 286 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 83bc49f..9ee2427 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1626,7 +1626,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	host->flags |= ATA_HOST_PARALLEL_SCAN;
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e68541f..73f8833 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -57,6 +57,8 @@ config SATA_PMP
+ 	  This option adds support for SATA Port Multipliers
+ 	  (the SATA version of an ethernet hub, or SAS expander).
  
- 	pci_set_master(pdev);
--	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &piix_sht);
-+	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, &piix_sht);
- }
++comment "Controllers with non-SFF native interface"
++
+ config SATA_AHCI
+ 	tristate "AHCI SATA support"
+ 	depends on PCI
+@@ -73,11 +75,12 @@ config SATA_AHCI_PLATFORM
  
- static void piix_remove_one(struct pci_dev *pdev)
+ 	  If unsure, say N.
+ 
+-config SATA_SIL24
+-	tristate "Silicon Image 3124/3132 SATA support"
+-	depends on PCI
++config SATA_FSL
++	tristate "Freescale 3.0Gbps SATA support"
++	depends on FSL_SOC
+ 	help
+-	  This option enables support for Silicon Image 3124/3132 Serial ATA.
++	  This option enables support for Freescale 3.0Gbps SATA controller.
++	  It can be found on MPC837x and MPC8315.
+ 
+ 	  If unsure, say N.
+ 
+@@ -87,12 +90,11 @@ config SATA_INIC162X
+ 	help
+ 	  This option enables support for Initio 162x Serial ATA.
+ 
+-config SATA_FSL
+-	tristate "Freescale 3.0Gbps SATA support"
+-	depends on FSL_SOC
++config SATA_SIL24
++	tristate "Silicon Image 3124/3132 SATA support"
++	depends on PCI
+ 	help
+-	  This option enables support for Freescale 3.0Gbps SATA controller.
+-	  It can be found on MPC837x and MPC8315.
++	  This option enables support for Silicon Image 3124/3132 Serial ATA.
+ 
+ 	  If unsure, say N.
+ 
+@@ -116,15 +118,65 @@ config ATA_SFF
+ 
+ if ATA_SFF
+ 
+-config SATA_SVW
+-	tristate "ServerWorks Frodo / Apple K2 SATA support"
++comment "SFF controllers with custom DMA interface"
++
++config PDC_ADMA
++	tristate "Pacific Digital ADMA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for Broadcom/Serverworks/Apple K2
+-	  SATA support.
++	  This option enables support for Pacific Digital ADMA controllers
++
++	  If unsure, say N.
++
++config PATA_MPC52xx
++	tristate "Freescale MPC52xx SoC internal IDE"
++	depends on PPC_MPC52xx && PPC_BESTCOMM
++	select PPC_BESTCOMM_ATA
++	help
++	  This option enables support for integrated IDE controller
++	  of the Freescale MPC52xx SoC.
++
++	  If unsure, say N.
++
++config PATA_OCTEON_CF
++	tristate "OCTEON Boot Bus Compact Flash support"
++	depends on CPU_CAVIUM_OCTEON
++	help
++	  This option enables a polled compact flash driver for use with
++	  compact flash cards attached to the OCTEON boot bus.
++
++	  If unsure, say N.
++
++config SATA_QSTOR
++	tristate "Pacific Digital SATA QStor support"
++	depends on PCI
++	help
++	  This option enables support for Pacific Digital Serial ATA QStor.
++
++	  If unsure, say N.
++
++config SATA_SX4
++	tristate "Promise SATA SX4 support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for Promise Serial ATA SX4.
+ 
+ 	  If unsure, say N.
+ 
++config ATA_BMDMA
++	bool "ATA BMDMA support"
++	default y
++	help
++	  This option adds support for SFF ATA controllers with BMDMA
++	  capability.  BMDMA stands for bus-master DMA and the
++	  de-facto DMA interface for SFF controllers.
++
++	  If unuser, say Y.
++
++if ATA_BMDMA
++
++comment "SATA SFF controllers with BMDMA"
++
+ config ATA_PIIX
+ 	tristate "Intel ESB, ICH, PIIX3, PIIX4 PATA/SATA support"
+ 	depends on PCI
+@@ -152,22 +204,6 @@ config SATA_NV
+ 
+ 	  If unsure, say N.
+ 
+-config PDC_ADMA
+-	tristate "Pacific Digital ADMA support"
+-	depends on PCI
+-	help
+-	  This option enables support for Pacific Digital ADMA controllers
+-
+-	  If unsure, say N.
+-
+-config SATA_QSTOR
+-	tristate "Pacific Digital SATA QStor support"
+-	depends on PCI
+-	help
+-	  This option enables support for Pacific Digital Serial ATA QStor.
+-
+-	  If unsure, say N.
+-
+ config SATA_PROMISE
+ 	tristate "Promise SATA TX2/TX4 support"
+ 	depends on PCI
+@@ -176,14 +212,6 @@ config SATA_PROMISE
+ 
+ 	  If unsure, say N.
+ 
+-config SATA_SX4
+-	tristate "Promise SATA SX4 support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
+-	help
+-	  This option enables support for Promise Serial ATA SX4.
+-
+-	  If unsure, say N.
+-
+ config SATA_SIL
+ 	tristate "Silicon Image SATA support"
+ 	depends on PCI
+@@ -203,6 +231,15 @@ config SATA_SIS
+ 	  enable the PATA_SIS driver in the config.
+ 	  If unsure, say N.
+ 
++config SATA_SVW
++	tristate "ServerWorks Frodo / Apple K2 SATA support"
++	depends on PCI
++	help
++	  This option enables support for Broadcom/Serverworks/Apple K2
++	  SATA support.
++
++	  If unsure, say N.
++
+ config SATA_ULI
+ 	tristate "ULi Electronics SATA support"
+ 	depends on PCI
+@@ -227,14 +264,7 @@ config SATA_VITESSE
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ACPI
+-	tristate "ACPI firmware driver for PATA"
+-	depends on ATA_ACPI
+-	help
+-	  This option enables an ACPI method driver which drives
+-	  motherboard PATA controller interfaces through the ACPI
+-	  firmware in the BIOS. This driver can sometimes handle
+-	  otherwise unsupported hardware.
++comment "PATA SFF controllers with BMDMA"
+ 
+ config PATA_ALI
+ 	tristate "ALi PATA support"
+@@ -262,40 +292,30 @@ config PATA_ARTOP
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ATP867X
+-	tristate "ARTOP/Acard ATP867X PATA support"
++config PATA_ATIIXP
++	tristate "ATI PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for ARTOP/Acard ATP867X PATA
+-	  controllers.
+-
+-	  If unsure, say N.
+-
+-config PATA_AT32
+-	tristate "Atmel AVR32 PATA support (Experimental)"
+-	depends on AVR32 && PLATFORM_AT32AP && EXPERIMENTAL
+-	help
+-	  This option enables support for the IDE devices on the
+-	  Atmel AT32AP platform.
++	  This option enables support for the ATI ATA interfaces
++	  found on the many ATI chipsets.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ATIIXP
+-	tristate "ATI PATA support"
++config PATA_ATP867X
++	tristate "ARTOP/Acard ATP867X PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for the ATI ATA interfaces
+-	  found on the many ATI chipsets.
++	  This option enables support for ARTOP/Acard ATP867X PATA
++	  controllers.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_CMD640_PCI
+-	tristate "CMD640 PCI PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
++config PATA_BF54X
++	tristate "Blackfin 54x ATAPI support"
++	depends on BF542 || BF548 || BF549
+ 	help
+-	  This option enables support for the CMD640 PCI IDE
+-	  interface chip. Only the primary channel is currently
+-	  supported.
++	  This option enables support for the built-in ATAPI controller on
++	  Blackfin 54x family chips.
+ 
+ 	  If unsure, say N.
+ 
+@@ -362,15 +382,6 @@ config PATA_EFAR
+ 
+ 	  If unsure, say N.
+ 
+-config ATA_GENERIC
+-	tristate "Generic ATA support"
+-	depends on PCI
+-	help
+-	  This option enables support for generic BIOS configured
+-	  ATA controllers via the new ATA layer
+-
+-	  If unsure, say N.
+-
+ config PATA_HPT366
+ 	tristate "HPT 366/368 PATA support"
+ 	depends on PCI
+@@ -415,12 +426,20 @@ config PATA_HPT3X3_DMA
+ 	  controllers. Enable with care as there are still some
+ 	  problems with DMA on this chipset.
+ 
+-config PATA_ISAPNP
+-	tristate "ISA Plug and Play PATA support"
+-	depends on ISAPNP
++config PATA_ICSIDE
++	tristate "Acorn ICS PATA support"
++	depends on ARM && ARCH_ACORN
+ 	help
+-	  This option enables support for ISA plug & play ATA
+-	  controllers such as those found on old soundcards.
++	  On Acorn systems, say Y here if you wish to use the ICS PATA
++	  interface card.  This is not required for ICS partition support.
++	  If you are unsure, say N to this.
++
++config PATA_IT8213
++	tristate "IT8213 PATA support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for the ITE 821 PATA
++          controllers via the new ATA layer.
+ 
+ 	  If unsure, say N.
+ 
+@@ -434,15 +453,6 @@ config PATA_IT821X
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_IT8213
+-	tristate "IT8213 PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
+-	help
+-	  This option enables support for the ITE 821 PATA
+-          controllers via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+ config PATA_JMICRON
+ 	tristate "JMicron PATA support"
+ 	depends on PCI
+@@ -452,23 +462,14 @@ config PATA_JMICRON
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_LEGACY
+-	tristate "Legacy ISA PATA support (Experimental)"
+-	depends on (ISA || PCI)  && EXPERIMENTAL
+-	help
+-	  This option enables support for ISA/VLB/PCI bus legacy PATA
+-	  ports and allows them to be accessed via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+-config PATA_TRIFLEX
+-	tristate "Compaq Triflex PATA support"
+-	depends on PCI
++config PATA_MACIO
++	tristate "Apple PowerMac/PowerBook internal 'MacIO' IDE"
++	depends on PPC_PMAC
+ 	help
+-	  Enable support for the Compaq 'Triflex' IDE controller as found
+-	  on many Compaq Pentium-Pro systems, via the new ATA layer.
+-
+-	  If unsure, say N.
++	  Most IDE capable PowerMacs have IDE busses driven by a variant
++          of this controller which is part of the Apple chipset used on
++          most PowerMac models. Some models have multiple busses using
++          different chipsets, though generally, MacIO is one of them.
+ 
+ config PATA_MARVELL
+ 	tristate "Marvell PATA support via legacy mode"
+@@ -481,32 +482,6 @@ config PATA_MARVELL
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_MPC52xx
+-	tristate "Freescale MPC52xx SoC internal IDE"
+-	depends on PPC_MPC52xx && PPC_BESTCOMM
+-	select PPC_BESTCOMM_ATA
+-	help
+-	  This option enables support for integrated IDE controller
+-	  of the Freescale MPC52xx SoC.
+-
+-	  If unsure, say N.
+-
+-config PATA_MPIIX
+-	tristate "Intel PATA MPIIX support"
+-	depends on PCI
+-	help
+-	  This option enables support for MPIIX PATA support.
+-
+-	  If unsure, say N.
+-
+-config PATA_OLDPIIX
+-	tristate "Intel PATA old PIIX support"
+-	depends on PCI
+-	help
+-	  This option enables support for early PIIX PATA support.
+-
+-	  If unsure, say N.
+-
+ config PATA_NETCELL
+ 	tristate "NETCELL Revolution RAID support"
+ 	depends on PCI
+@@ -525,15 +500,6 @@ config PATA_NINJA32
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_NS87410
+-	tristate "Nat Semi NS87410 PATA support"
+-	depends on PCI
+-	help
+-	  This option enables support for the National Semiconductor
+-	  NS87410 PCI-IDE controller.
+-
+-	  If unsure, say N.
+-
+ config PATA_NS87415
+ 	tristate "Nat Semi NS87415 PATA support"
+ 	depends on PCI
+@@ -543,12 +509,11 @@ config PATA_NS87415
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_OPTI
+-	tristate "OPTI621/6215 PATA support (Very Experimental)"
+-	depends on PCI && EXPERIMENTAL
++config PATA_OLDPIIX
++	tristate "Intel PATA old PIIX support"
++	depends on PCI
+ 	help
+-	  This option enables full PIO support for the early Opti ATA
+-	  controllers found on some old motherboards.
++	  This option enables support for early PIIX PATA support.
+ 
+ 	  If unsure, say N.
+ 
+@@ -562,24 +527,6 @@ config PATA_OPTIDMA
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_PALMLD
+-	tristate "Palm LifeDrive PATA support"
+-	depends on MACH_PALMLD
+-	help
+-	  This option enables support for Palm LifeDrive's internal ATA
+-	  port via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+-config PATA_PCMCIA
+-	tristate "PCMCIA PATA support"
+-	depends on PCMCIA
+-	help
+-	  This option enables support for PCMCIA ATA interfaces, including
+-	  compact flash card adapters via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+ config PATA_PDC2027X
+ 	tristate "Promise PATA 2027x support"
+ 	depends on PCI
+@@ -597,12 +544,6 @@ config PATA_PDC_OLD
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_QDI
+-	tristate "QDI VLB PATA support"
+-	depends on ISA
+-	help
+-	  Support for QDI 6500 and 6580 PATA controllers on VESA local bus.
+-
+ config PATA_RADISYS
+ 	tristate "RADISYS 82600 PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
+@@ -612,15 +553,6 @@ config PATA_RADISYS
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_RB532
+-	tristate "RouterBoard 532 PATA CompactFlash support"
+-	depends on MIKROTIK_RB532
+-	help
+-	  This option enables support for the RouterBoard 532
+-	  PATA CompactFlash controller.
+-
+-	  If unsure, say N.
+-
+ config PATA_RDC
+ 	tristate "RDC PATA support"
+ 	depends on PCI
+@@ -631,21 +563,30 @@ config PATA_RDC
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_RZ1000
+-	tristate "PC Tech RZ1000 PATA support"
++config PATA_SC1200
++	tristate "SC1200 PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables basic support for the PC Tech RZ1000/1
+-	  PATA controllers via the new ATA layer
++	  This option enables support for the NatSemi/AMD SC1200 SoC
++	  companion chip used with the Geode processor family.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_SC1200
+-	tristate "SC1200 PATA support"
++config PATA_SCC
++	tristate "Toshiba's Cell Reference Set IDE support"
++	depends on PCI && PPC_CELLEB
++	help
++	  This option enables support for the built-in IDE controller on
++	  Toshiba Cell Reference Board.
++
++	  If unsure, say N.
++
++config PATA_SCH
++	tristate "Intel SCH PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for the NatSemi/AMD SC1200 SoC
+-	  companion chip used with the Geode processor family.
++	  This option enables support for Intel SCH PATA on the Intel
++	  SCH (US15W, US15L, UL11L) series host controllers.
+ 
+ 	  If unsure, say N.
+ 
+@@ -683,6 +624,15 @@ config PATA_TOSHIBA
+ 
+ 	  If unsure, say N.
+ 
++config PATA_TRIFLEX
++	tristate "Compaq Triflex PATA support"
++	depends on PCI
++	help
++	  Enable support for the Compaq 'Triflex' IDE controller as found
++	  on many Compaq Pentium-Pro systems, via the new ATA layer.
++
++	  If unsure, say N.
++
+ config PATA_VIA
+ 	tristate "VIA PATA support"
+ 	depends on PCI
+@@ -701,12 +651,99 @@ config PATA_WINBOND
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_WINBOND_VLB
+-	tristate "Winbond W83759A VLB PATA support (Experimental)"
+-	depends on ISA && EXPERIMENTAL
++endif # ATA_BMDMA
++
++comment "PIO-only SFF controllers"
++
++config PATA_AT32
++	tristate "Atmel AVR32 PATA support (Experimental)"
++	depends on AVR32 && PLATFORM_AT32AP && EXPERIMENTAL
+ 	help
+-	  Support for the Winbond W83759A controller on Vesa Local Bus
+-	  systems.
++	  This option enables support for the IDE devices on the
++	  Atmel AT32AP platform.
++
++	  If unsure, say N.
++
++config PATA_AT91
++	tristate "PATA support for AT91SAM9260"
++	depends on ARM && ARCH_AT91
++	help
++	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
++
++	  If unsure, say N.
++
++config PATA_CMD640_PCI
++	tristate "CMD640 PCI PATA support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for the CMD640 PCI IDE
++	  interface chip. Only the primary channel is currently
++	  supported.
++
++	  If unsure, say N.
++
++config PATA_ISAPNP
++	tristate "ISA Plug and Play PATA support"
++	depends on ISAPNP
++	help
++	  This option enables support for ISA plug & play ATA
++	  controllers such as those found on old soundcards.
++
++	  If unsure, say N.
++
++config PATA_IXP4XX_CF
++	tristate "IXP4XX Compact Flash support"
++	depends on ARCH_IXP4XX
++	help
++	  This option enables support for a Compact Flash connected on
++	  the ixp4xx expansion bus. This driver had been written for
++	  Loft/Avila boards in mind but can work with others.
++
++	  If unsure, say N.
++
++config PATA_MPIIX
++	tristate "Intel PATA MPIIX support"
++	depends on PCI
++	help
++	  This option enables support for MPIIX PATA support.
++
++	  If unsure, say N.
++
++config PATA_NS87410
++	tristate "Nat Semi NS87410 PATA support"
++	depends on PCI
++	help
++	  This option enables support for the National Semiconductor
++	  NS87410 PCI-IDE controller.
++
++	  If unsure, say N.
++
++config PATA_OPTI
++	tristate "OPTI621/6215 PATA support (Very Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables full PIO support for the early Opti ATA
++	  controllers found on some old motherboards.
++
++	  If unsure, say N.
++
++config PATA_PALMLD
++	tristate "Palm LifeDrive PATA support"
++	depends on MACH_PALMLD
++	help
++	  This option enables support for Palm LifeDrive's internal ATA
++	  port via the new ATA layer.
++
++	  If unsure, say N.
++
++config PATA_PCMCIA
++	tristate "PCMCIA PATA support"
++	depends on PCMCIA
++	help
++	  This option enables support for PCMCIA ATA interfaces, including
++	  compact flash card adapters via the new ATA layer.
++
++	  If unsure, say N.
+ 
+ config HAVE_PATA_PLATFORM
+ 	bool
+@@ -725,14 +762,6 @@ config PATA_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_AT91
+-	tristate "PATA support for AT91SAM9260"
+-	depends on ARM && ARCH_AT91
+-	help
+-	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+-
+-	  If unsure, say N.
+-
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+ 	depends on PATA_PLATFORM && PPC_OF
+@@ -743,69 +772,65 @@ config PATA_OF_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ICSIDE
+-	tristate "Acorn ICS PATA support"
+-	depends on ARM && ARCH_ACORN
++config PATA_QDI
++	tristate "QDI VLB PATA support"
++	depends on ISA
+ 	help
+-	  On Acorn systems, say Y here if you wish to use the ICS PATA
+-	  interface card.  This is not required for ICS partition support.
+-	  If you are unsure, say N to this.
++	  Support for QDI 6500 and 6580 PATA controllers on VESA local bus.
+ 
+-config PATA_IXP4XX_CF
+-	tristate "IXP4XX Compact Flash support"
+-	depends on ARCH_IXP4XX
++config PATA_RB532
++	tristate "RouterBoard 532 PATA CompactFlash support"
++	depends on MIKROTIK_RB532
+ 	help
+-	  This option enables support for a Compact Flash connected on
+-	  the ixp4xx expansion bus. This driver had been written for
+-	  Loft/Avila boards in mind but can work with others.
++	  This option enables support for the RouterBoard 532
++	  PATA CompactFlash controller.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_OCTEON_CF
+-	tristate "OCTEON Boot Bus Compact Flash support"
+-	depends on CPU_CAVIUM_OCTEON
++config PATA_RZ1000
++	tristate "PC Tech RZ1000 PATA support"
++	depends on PCI
+ 	help
+-	  This option enables a polled compact flash driver for use with
+-	  compact flash cards attached to the OCTEON boot bus.
++	  This option enables basic support for the PC Tech RZ1000/1
++	  PATA controllers via the new ATA layer
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_SCC
+-	tristate "Toshiba's Cell Reference Set IDE support"
+-	depends on PCI && PPC_CELLEB
++config PATA_WINBOND_VLB
++	tristate "Winbond W83759A VLB PATA support (Experimental)"
++	depends on ISA && EXPERIMENTAL
+ 	help
+-	  This option enables support for the built-in IDE controller on
+-	  Toshiba Cell Reference Board.
++	  Support for the Winbond W83759A controller on Vesa Local Bus
++	  systems.
+ 
+-	  If unsure, say N.
++comment "Generic fallback / legacy drivers"
+ 
+-config PATA_SCH
+-	tristate "Intel SCH PATA support"
+-	depends on PCI
++config PATA_ACPI
++	tristate "ACPI firmware driver for PATA"
++	depends on ATA_ACPI && ATA_BMDMA
+ 	help
+-	  This option enables support for Intel SCH PATA on the Intel
+-	  SCH (US15W, US15L, UL11L) series host controllers.
+-
+-	  If unsure, say N.
++	  This option enables an ACPI method driver which drives
++	  motherboard PATA controller interfaces through the ACPI
++	  firmware in the BIOS. This driver can sometimes handle
++	  otherwise unsupported hardware.
+ 
+-config PATA_BF54X
+-	tristate "Blackfin 54x ATAPI support"
+-	depends on BF542 || BF548 || BF549
++config ATA_GENERIC
++	tristate "Generic ATA support"
++	depends on PCI && ATA_BMDMA
+ 	help
+-	  This option enables support for the built-in ATAPI controller on
+-	  Blackfin 54x family chips.
++	  This option enables support for generic BIOS configured
++	  ATA controllers via the new ATA layer
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_MACIO
+-	tristate "Apple PowerMac/PowerBook internal 'MacIO' IDE"
+-	depends on PPC_PMAC
++config PATA_LEGACY
++	tristate "Legacy ISA PATA support (Experimental)"
++	depends on (ISA || PCI) && EXPERIMENTAL
+ 	help
+-	  Most IDE capable PowerMacs have IDE busses driven by a variant
+-          of this controller which is part of the Apple chipset used on
+-          most PowerMac models. Some models have multiple busses using
+-          different chipsets, though generally, MacIO is one of them.
++	  This option enables support for ISA/VLB/PCI bus legacy PATA
++	  ports and allows them to be accessed via the new ATA layer.
+ 
++	  If unsure, say N.
+ 
+ endif # ATA_SFF
+ endif # ATA
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index d0a93c4..7ef89d7 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -1,33 +1,39 @@
+ 
+ obj-$(CONFIG_ATA)		+= libata.o
+ 
++# non-SFF interface
+ obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
+ obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o
+-obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
++obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
++obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
++obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
++
++# SFF w/ custom DMA
++obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
++obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
++obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
++obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
++obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
++
++# SFF SATA w/ BMDMA
+ obj-$(CONFIG_ATA_PIIX)		+= ata_piix.o
++obj-$(CONFIG_SATA_MV)		+= sata_mv.o
++obj-$(CONFIG_SATA_NV)		+= sata_nv.o
+ obj-$(CONFIG_SATA_PROMISE)	+= sata_promise.o
+-obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
+ obj-$(CONFIG_SATA_SIL)		+= sata_sil.o
+-obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+-obj-$(CONFIG_SATA_VIA)		+= sata_via.o
+-obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+ obj-$(CONFIG_SATA_SIS)		+= sata_sis.o
+-obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+-obj-$(CONFIG_SATA_NV)		+= sata_nv.o
++obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
+ obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
+-obj-$(CONFIG_SATA_MV)		+= sata_mv.o
+-obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+-obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+-obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+-obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
++obj-$(CONFIG_SATA_VIA)		+= sata_via.o
++obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+ 
++# SFF PATA w/ BMDMA
+ obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
+ obj-$(CONFIG_PATA_AMD)		+= pata_amd.o
+ obj-$(CONFIG_PATA_ARTOP)	+= pata_artop.o
+-obj-$(CONFIG_PATA_ATP867X)	+= pata_atp867x.o
+-obj-$(CONFIG_PATA_AT32)		+= pata_at32.o
+ obj-$(CONFIG_PATA_ATIIXP)	+= pata_atiixp.o
+-obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
++obj-$(CONFIG_PATA_ATP867X)	+= pata_atp867x.o
++obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+ obj-$(CONFIG_PATA_CMD64X)	+= pata_cmd64x.o
+ obj-$(CONFIG_PATA_CS5520)	+= pata_cs5520.o
+ obj-$(CONFIG_PATA_CS5530)	+= pata_cs5530.o
+@@ -39,47 +45,50 @@ obj-$(CONFIG_PATA_HPT366)	+= pata_hpt366.o
+ obj-$(CONFIG_PATA_HPT37X)	+= pata_hpt37x.o
+ obj-$(CONFIG_PATA_HPT3X2N)	+= pata_hpt3x2n.o
+ obj-$(CONFIG_PATA_HPT3X3)	+= pata_hpt3x3.o
+-obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+-obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
++obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+ obj-$(CONFIG_PATA_IT8213)	+= pata_it8213.o
++obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
+ obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
++obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
++obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
+ obj-$(CONFIG_PATA_NETCELL)	+= pata_netcell.o
+ obj-$(CONFIG_PATA_NINJA32)	+= pata_ninja32.o
+-obj-$(CONFIG_PATA_NS87410)	+= pata_ns87410.o
+ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
+-obj-$(CONFIG_PATA_OPTI)		+= pata_opti.o
+-obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+-obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
+-obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
+-obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
+ obj-$(CONFIG_PATA_OLDPIIX)	+= pata_oldpiix.o
+-obj-$(CONFIG_PATA_PALMLD)	+= pata_palmld.o
+-obj-$(CONFIG_PATA_PCMCIA)	+= pata_pcmcia.o
++obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+ obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2027x.o
+ obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
+-obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
+ obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
+-obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
+ obj-$(CONFIG_PATA_RDC)		+= pata_rdc.o
+-obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
+ obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
++obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
++obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+ obj-$(CONFIG_PATA_SERVERWORKS)	+= pata_serverworks.o
+ obj-$(CONFIG_PATA_SIL680)	+= pata_sil680.o
++obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
+ obj-$(CONFIG_PATA_TOSHIBA)	+= pata_piccolo.o
++obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
+ obj-$(CONFIG_PATA_VIA)		+= pata_via.o
+ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
+-obj-$(CONFIG_PATA_WINBOND_VLB)	+= pata_winbond.o
+-obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
+-obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
++
++# SFF PIO only
++obj-$(CONFIG_PATA_AT32)		+= pata_at32.o
++obj-$(CONFIG_PATA_AT91)		+= pata_at91.o
++obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
++obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+-obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+-obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+-obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+-obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
++obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
++obj-$(CONFIG_PATA_NS87410)	+= pata_ns87410.o
++obj-$(CONFIG_PATA_OPTI)		+= pata_opti.o
++obj-$(CONFIG_PATA_PCMCIA)	+= pata_pcmcia.o
++obj-$(CONFIG_PATA_PALMLD)	+= pata_palmld.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
+-obj-$(CONFIG_PATA_AT91)	+= pata_at91.o
+ obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+-obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
++obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
++obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
++obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
++obj-$(CONFIG_PATA_WINBOND_VLB)	+= pata_winbond.o
++
+ # Should be last but two libata driver
+ obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+ # Should be last but one libata driver
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 6b93ace..9c8b0ae 100644
+index 200b583..b64f49e 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -1447,27 +1447,27 @@ bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc)
- }
- EXPORT_SYMBOL_GPL(ata_sff_qc_fill_rtf);
- 
--/**
-- *	ata_sff_host_intr - Handle host interrupt for given (port, task)
-- *	@ap: Port on which interrupt arrived (possibly...)
-- *	@qc: Taskfile currently active in engine
-- *
-- *	Handle host interrupt for given queued command.  Currently,
-- *	only DMA interrupts are handled.  All other commands are
-- *	handled via polling with interrupts disabled (nIEN bit).
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- *	RETURNS:
-- *	One if interrupt was handled, zero if not (shared irq).
-- */
--unsigned int ata_sff_host_intr(struct ata_port *ap,
--				      struct ata_queued_cmd *qc)
-+static unsigned int ata_sff_idle_irq(struct ata_port *ap)
- {
--	struct ata_eh_info *ehi = &ap->link.eh_info;
--	u8 status, host_stat = 0;
--	bool bmdma_stopped = false;
-+	ap->stats.idle_irq++;
-+
-+#ifdef ATA_IRQ_TRAP
-+	if ((ap->stats.idle_irq % 1000) == 0) {
-+		ap->ops->sff_check_status(ap);
-+		if (ap->ops->sff_irq_clear)
-+			ap->ops->sff_irq_clear(ap);
-+		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
-+		return 1;
-+	}
-+#endif
-+	return 0;	/* irq not handled */
-+}
-+
-+static unsigned int __ata_sff_port_intr(struct ata_port *ap,
-+					struct ata_queued_cmd *qc,
-+					bool hsmv_on_idle)
-+{
-+	u8 status;
- 
- 	VPRINTK("ata%u: protocol %d task_state %d\n",
- 		ap->print_id, qc->tf.protocol, ap->hsm_task_state);
-@@ -1484,47 +1484,24 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
- 		 * need to check ata_is_atapi(qc->tf.protocol) again.
- 		 */
- 		if (!(qc->dev->flags & ATA_DFLAG_CDB_INTR))
--			goto idle_irq;
--		break;
--	case HSM_ST_LAST:
--		if (qc->tf.protocol == ATA_PROT_DMA ||
--		    qc->tf.protocol == ATAPI_PROT_DMA) {
--			/* check status of DMA engine */
--			host_stat = ap->ops->bmdma_status(ap);
--			VPRINTK("ata%u: host_stat 0x%X\n",
--				ap->print_id, host_stat);
--
--			/* if it's not our irq... */
--			if (!(host_stat & ATA_DMA_INTR))
--				goto idle_irq;
--
--			/* before we do anything else, clear DMA-Start bit */
--			ap->ops->bmdma_stop(qc);
--			bmdma_stopped = true;
--
--			if (unlikely(host_stat & ATA_DMA_ERR)) {
--				/* error when transfering data to/from memory */
--				qc->err_mask |= AC_ERR_HOST_BUS;
--				ap->hsm_task_state = HSM_ST_ERR;
--			}
--		}
-+			return ata_sff_idle_irq(ap);
+@@ -776,11 +776,15 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	case ATAPI_PROT_NODATA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
  		break;
- 	case HSM_ST:
-+	case HSM_ST_LAST:
++#ifdef CONFIG_ATA_BMDMA
+ 	case ATAPI_PROT_DMA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		/* initiate bmdma */
+ 		ap->ops->bmdma_start(qc);
  		break;
- 	default:
--		goto idle_irq;
-+		return ata_sff_idle_irq(ap);
++#endif /* CONFIG_ATA_BMDMA */
++	default:
++		BUG();
  	}
- 
--
- 	/* check main status, clearing INTRQ if needed */
- 	status = ata_sff_irq_status(ap);
- 	if (status & ATA_BUSY) {
--		if (bmdma_stopped) {
-+		if (hsmv_on_idle) {
- 			/* BMDMA engine is already stopped, we're screwed */
- 			qc->err_mask |= AC_ERR_HSM;
- 			ap->hsm_task_state = HSM_ST_ERR;
- 		} else
--			goto idle_irq;
-+			return ata_sff_idle_irq(ap);
- 	}
- 
- 	/* clear irq events */
-@@ -1533,43 +1510,30 @@ unsigned int ata_sff_host_intr(struct ata_port *ap,
- 
- 	ata_sff_hsm_move(ap, qc, status, 0);
- 
--	if (unlikely(qc->err_mask) && (qc->tf.protocol == ATA_PROT_DMA ||
--				       qc->tf.protocol == ATAPI_PROT_DMA))
--		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
--
- 	return 1;	/* irq handled */
--
--idle_irq:
--	ap->stats.idle_irq++;
--
--#ifdef ATA_IRQ_TRAP
--	if ((ap->stats.idle_irq % 1000) == 0) {
--		ap->ops->sff_check_status(ap);
--		if (ap->ops->sff_irq_clear)
--			ap->ops->sff_irq_clear(ap);
--		ata_port_printk(ap, KERN_WARNING, "irq trap\n");
--		return 1;
--	}
--#endif
--	return 0;	/* irq not handled */
  }
--EXPORT_SYMBOL_GPL(ata_sff_host_intr);
+ 
+@@ -2514,6 +2518,12 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
+ 
+ #endif /* CONFIG_PCI */
+ 
++/*
++ *	BMDMA support
++ */
++
++#ifdef CONFIG_ATA_BMDMA
++
+ const struct ata_port_operations ata_bmdma_port_ops = {
+ 	.inherits		= &ata_sff_port_ops,
+ 
+@@ -3266,6 +3276,7 @@ int ata_pci_bmdma_init_one(struct pci_dev *pdev,
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
+ 
+ #endif /* CONFIG_PCI */
++#endif /* CONFIG_ATA_BMDMA */
  
  /**
-- *	ata_sff_interrupt - Default ATA host interrupt handler
-- *	@irq: irq line (unused)
-- *	@dev_instance: pointer to our ata_host information structure
-+ *	ata_sff_port_intr - Handle SFF port interrupt
-+ *	@ap: Port on which interrupt arrived (possibly...)
-+ *	@qc: Taskfile currently active in engine
-  *
-- *	Default interrupt handler for PCI IDE devices.  Calls
-- *	ata_sff_host_intr() for each port that is not disabled.
-+ *	Handle port interrupt for given queued command.
-  *
-  *	LOCKING:
-- *	Obtains host lock during operation.
-+ *	spin_lock_irqsave(host lock)
-  *
-  *	RETURNS:
-- *	IRQ_NONE or IRQ_HANDLED.
-+ *	One if interrupt was handled, zero if not (shared irq).
-  */
--irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
-+unsigned int ata_sff_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
-+{
-+	return __ata_sff_port_intr(ap, qc, false);
-+}
-+EXPORT_SYMBOL_GPL(ata_sff_port_intr);
-+
-+static inline irqreturn_t __ata_sff_interrupt(int irq, void *dev_instance,
-+	unsigned int (*port_intr)(struct ata_port *, struct ata_queued_cmd *))
- {
- 	struct ata_host *host = dev_instance;
- 	bool retried = false;
-@@ -1589,7 +1553,7 @@ retry:
- 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 		if (qc) {
- 			if (!(qc->tf.flags & ATA_TFLAG_POLLING))
--				handled |= ata_sff_host_intr(ap, qc);
-+				handled |= port_intr(ap, qc);
- 			else
- 				polling |= 1 << i;
- 		} else
-@@ -1638,6 +1602,25 @@ retry:
- 
- 	return IRQ_RETVAL(handled);
- }
-+
-+/**
-+ *	ata_sff_interrupt - Default SFF ATA host interrupt handler
-+ *	@irq: irq line (unused)
-+ *	@dev_instance: pointer to our ata_host information structure
-+ *
-+ *	Default interrupt handler for PCI IDE devices.  Calls
-+ *	ata_sff_port_intr() for each port that is not disabled.
-+ *
-+ *	LOCKING:
-+ *	Obtains host lock during operation.
-+ *
-+ *	RETURNS:
-+ *	IRQ_NONE or IRQ_HANDLED.
-+ */
-+irqreturn_t ata_sff_interrupt(int irq, void *dev_instance)
-+{
-+	return __ata_sff_interrupt(irq, dev_instance, ata_sff_port_intr);
-+}
- EXPORT_SYMBOL_GPL(ata_sff_interrupt);
- 
- /**
-@@ -1675,7 +1658,7 @@ void ata_sff_lost_interrupt(struct ata_port *ap)
- 								status);
- 	/* Run the host interrupt logic as if the interrupt had not been
- 	   lost */
--	ata_sff_host_intr(ap, qc);
-+	ata_sff_port_intr(ap, qc);
- }
- EXPORT_SYMBOL_GPL(ata_sff_lost_interrupt);
- 
-@@ -2520,7 +2503,7 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
- 	host->flags |= hflag;
- 
- 	pci_set_master(pdev);
--	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
-+	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
- out:
- 	if (rc == 0)
- 		devres_remove_group(&pdev->dev, NULL);
-@@ -2767,6 +2750,75 @@ unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
- EXPORT_SYMBOL_GPL(ata_bmdma_qc_issue);
- 
- /**
-+ *	ata_bmdma_port_intr - Handle BMDMA port interrupt
-+ *	@ap: Port on which interrupt arrived (possibly...)
-+ *	@qc: Taskfile currently active in engine
-+ *
-+ *	Handle port interrupt for given queued command.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	One if interrupt was handled, zero if not (shared irq).
-+ */
-+unsigned int ata_bmdma_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
-+{
-+	struct ata_eh_info *ehi = &ap->link.eh_info;
-+	u8 host_stat = 0;
-+	bool bmdma_stopped = false;
-+	unsigned int handled;
-+
-+	if (ap->hsm_task_state == HSM_ST_LAST && ata_is_dma(qc->tf.protocol)) {
-+		/* check status of DMA engine */
-+		host_stat = ap->ops->bmdma_status(ap);
-+		VPRINTK("ata%u: host_stat 0x%X\n", ap->print_id, host_stat);
-+
-+		/* if it's not our irq... */
-+		if (!(host_stat & ATA_DMA_INTR))
-+			return ata_sff_idle_irq(ap);
-+
-+		/* before we do anything else, clear DMA-Start bit */
-+		ap->ops->bmdma_stop(qc);
-+		bmdma_stopped = true;
-+
-+		if (unlikely(host_stat & ATA_DMA_ERR)) {
-+			/* error when transfering data to/from memory */
-+			qc->err_mask |= AC_ERR_HOST_BUS;
-+			ap->hsm_task_state = HSM_ST_ERR;
-+		}
-+	}
-+
-+	handled = __ata_sff_port_intr(ap, qc, bmdma_stopped);
-+
-+	if (unlikely(qc->err_mask) && ata_is_dma(qc->tf.protocol))
-+		ata_ehi_push_desc(ehi, "BMDMA stat 0x%x", host_stat);
-+
-+	return handled;
-+}
-+EXPORT_SYMBOL_GPL(ata_bmdma_port_intr);
-+
-+/**
-+ *	ata_bmdma_interrupt - Default BMDMA ATA host interrupt handler
-+ *	@irq: irq line (unused)
-+ *	@dev_instance: pointer to our ata_host information structure
-+ *
-+ *	Default interrupt handler for PCI IDE devices.  Calls
-+ *	ata_bmdma_port_intr() for each port that is not disabled.
-+ *
-+ *	LOCKING:
-+ *	Obtains host lock during operation.
-+ *
-+ *	RETURNS:
-+ *	IRQ_NONE or IRQ_HANDLED.
-+ */
-+irqreturn_t ata_bmdma_interrupt(int irq, void *dev_instance)
-+{
-+	return __ata_sff_interrupt(irq, dev_instance, ata_bmdma_port_intr);
-+}
-+EXPORT_SYMBOL_GPL(ata_bmdma_interrupt);
-+
-+/**
-  *	ata_bmdma_error_handler - Stock error handler for BMDMA controller
-  *	@ap: port to handle error for
-  *
-diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
-index bb6e074..9529593 100644
---- a/drivers/ata/pata_atp867x.c
-+++ b/drivers/ata/pata_atp867x.c
-@@ -525,7 +525,7 @@ static int atp867x_init_one(struct pci_dev *pdev,
- 
- 	pci_set_master(pdev);
- 
--	rc = ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	rc = ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				IRQF_SHARED, &atp867x_sht);
- 	if (rc)
- 		dev_printk(KERN_ERR, &pdev->dev, "failed to activate host\n");
-diff --git a/drivers/ata/pata_cs5520.c b/drivers/ata/pata_cs5520.c
-index 17c5f34..030952f 100644
---- a/drivers/ata/pata_cs5520.c
-+++ b/drivers/ata/pata_cs5520.c
-@@ -221,7 +221,7 @@ static int __devinit cs5520_init_one(struct pci_dev *pdev, const struct pci_devi
- 			continue;
- 
- 		rc = devm_request_irq(&pdev->dev, irq[ap->port_no],
--				      ata_sff_interrupt, 0, DRV_NAME, host);
-+				      ata_bmdma_interrupt, 0, DRV_NAME, host);
- 		if (rc)
- 			return rc;
- 
-diff --git a/drivers/ata/pata_hpt3x3.c b/drivers/ata/pata_hpt3x3.c
-index 727a81c..b63d5e2 100644
---- a/drivers/ata/pata_hpt3x3.c
-+++ b/drivers/ata/pata_hpt3x3.c
-@@ -248,7 +248,7 @@ static int hpt3x3_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ata_port_pbar_desc(ap, 4, offset_cmd[i], "cmd");
- 	}
- 	pci_set_master(pdev);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &hpt3x3_sht);
- }
- 
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index b56e8f7..9f2889f 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -470,7 +470,7 @@ static int __devinit pata_icside_add_ports(struct pata_icside_info *info)
- 		pata_icside_setup_ioaddr(ap, info->base, info, info->port[i]);
- 	}
- 
--	return ata_host_activate(host, ec->irq, ata_sff_interrupt, 0,
-+	return ata_host_activate(host, ec->irq, ata_bmdma_interrupt, 0,
- 				 &pata_icside_sht);
- }
- 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 25df50f..1ea30fd 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -1110,7 +1110,7 @@ static int __devinit pata_macio_common_init(struct pata_macio_priv	*priv,
- 
- 	/* Start it up */
- 	priv->irq = irq;
--	return ata_host_activate(priv->host, irq, ata_sff_interrupt, 0,
-+	return ata_host_activate(priv->host, irq, ata_bmdma_interrupt, 0,
- 				 &pata_macio_sht);
- }
- 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 96b11b6..da752ef 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -659,7 +659,7 @@ mpc52xx_ata_init_one(struct device *dev, struct mpc52xx_ata_priv *priv,
- 	ata_port_desc(ap, "ata_regs 0x%lx", raw_ata_regs);
- 
- 	/* activate host */
--	return ata_host_activate(host, priv->ata_irq, ata_sff_interrupt, 0,
-+	return ata_host_activate(host, priv->ata_irq, ata_bmdma_interrupt, 0,
- 				 &mpc52xx_ata_sht);
- }
- 
-diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
-index dd53a66..cc50bd0 100644
---- a/drivers/ata/pata_ninja32.c
-+++ b/drivers/ata/pata_ninja32.c
-@@ -149,7 +149,7 @@ static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 
- 	ninja32_program(base);
- 	/* FIXME: Should we disable them at remove ? */
--	return ata_host_activate(host, dev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, dev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &ninja32_sht);
- }
- 
-diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-index 09f1f22..b183511 100644
---- a/drivers/ata/pata_pdc2027x.c
-+++ b/drivers/ata/pata_pdc2027x.c
-@@ -754,7 +754,7 @@ static int __devinit pdc2027x_init_one(struct pci_dev *pdev, const struct pci_de
- 		return -EIO;
- 
- 	pci_set_master(pdev);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &pdc2027x_sht);
- }
- 
-diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
-index 37092cf..2dd7748 100644
---- a/drivers/ata/pata_rdc.c
-+++ b/drivers/ata/pata_rdc.c
-@@ -354,7 +354,7 @@ static int __devinit rdc_init_one(struct pci_dev *pdev,
- 	host->flags |= ATA_HOST_PARALLEL_SCAN;
- 
- 	pci_set_master(pdev);
--	return ata_pci_sff_activate_host(host, ata_sff_interrupt, &rdc_sht);
-+	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, &rdc_sht);
- }
- 
- static void rdc_remove_one(struct pci_dev *pdev)
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 35445d0..8479910 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -1144,7 +1144,7 @@ static int scc_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &scc_sht);
- }
- 
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index c6c589c..5a0e406 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -352,7 +352,7 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
- 	ata_sff_std_ports(&host->ports[1]->ioaddr);
- 
- 	/* Register & activate */
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &sil680_sht);
- 
- use_ioports:
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 16bacd3..a476cd9 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2811,7 +2811,7 @@ static void mv_port_intr(struct ata_port *ap, u32 port_cause)
- 	} else if (!edma_was_enabled) {
- 		struct ata_queued_cmd *qc = mv_get_active_qc(ap);
- 		if (qc)
--			ata_sff_host_intr(ap, qc);
-+			ata_bmdma_port_intr(ap, qc);
- 		else
- 			mv_unexpected_intr(ap, edma_was_enabled);
- 	}
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index bf133b6..f1164aa 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -920,7 +920,7 @@ static int nv_host_intr(struct ata_port *ap, u8 irq_stat)
- 	}
- 
- 	/* handle interrupt */
--	return ata_sff_host_intr(ap, qc);
-+	return ata_bmdma_port_intr(ap, qc);
- }
- 
- static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
-@@ -1505,7 +1505,7 @@ static irqreturn_t nv_generic_interrupt(int irq, void *dev_instance)
- 
- 		qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 		if (qc && (!(qc->tf.flags & ATA_TFLAG_POLLING))) {
--			handled += ata_sff_host_intr(ap, qc);
-+			handled += ata_bmdma_port_intr(ap, qc);
- 		} else {
- 			/*
- 			 * No request pending?  Clear interrupt status
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index d533b3d..0074351 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -454,7 +454,7 @@ static inline unsigned int qs_intr_mmio(struct ata_host *host)
- 		if (!pp || pp->state != qs_state_mmio)
- 			continue;
- 		if (!(qc->tf.flags & ATA_TFLAG_POLLING))
--			handled |= ata_sff_host_intr(ap, qc);
-+			handled |= ata_sff_port_intr(ap, qc);
- 	}
- 	return handled;
- }
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index f8a91bf..fff1045 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -308,7 +308,7 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	pci_set_master(pdev);
- 	pci_intx(pdev, 1);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &sis_sht);
- }
- 
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 101fd6a..7d9db4a 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -502,7 +502,7 @@ static int k2_sata_init_one(struct pci_dev *pdev, const struct pci_device_id *en
- 	writel(0x0, mmio_base + K2_SATA_SIM_OFFSET);
- 
- 	pci_set_master(pdev);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &k2_sata_sht);
- }
- 
-diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
-index d8dac17..b8578c3 100644
---- a/drivers/ata/sata_uli.c
-+++ b/drivers/ata/sata_uli.c
-@@ -242,7 +242,7 @@ static int uli_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	pci_set_master(pdev);
- 	pci_intx(pdev, 1);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &uli_sht);
- }
- 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 7737dd5..7da5d01 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -628,7 +628,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	svia_configure(pdev);
- 
- 	pci_set_master(pdev);
--	return ata_host_activate(host, pdev->irq, ata_sff_interrupt,
-+	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &svia_sht);
- }
- 
-diff --git a/drivers/ata/sata_vsc.c b/drivers/ata/sata_vsc.c
-index 2107952..b777176 100644
---- a/drivers/ata/sata_vsc.c
-+++ b/drivers/ata/sata_vsc.c
-@@ -245,7 +245,7 @@ static void vsc_port_intr(u8 port_status, struct ata_port *ap)
- 
- 	qc = ata_qc_from_tag(ap, ap->link.active_tag);
- 	if (qc && likely(!(qc->tf.flags & ATA_TFLAG_POLLING)))
--		handled = ata_sff_host_intr(ap, qc);
-+		handled = ata_bmdma_port_intr(ap, qc);
- 
- 	/* We received an interrupt during a polled command,
- 	 * or some other spurious condition.  Interrupt reporting
+  *	ata_sff_port_init - Initialize SFF/BMDMA ATA port
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index abf02df..34c589d 100644
+index 388c7c6..b8dbfca 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1591,7 +1591,7 @@ extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- extern void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay);
- extern unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc);
- extern bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc);
--extern unsigned int ata_sff_host_intr(struct ata_port *ap,
-+extern unsigned int ata_sff_port_intr(struct ata_port *ap,
- 				      struct ata_queued_cmd *qc);
- extern irqreturn_t ata_sff_interrupt(int irq, void *dev_instance);
- extern void ata_sff_lost_interrupt(struct ata_port *ap);
-@@ -1626,6 +1626,9 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+@@ -513,7 +513,9 @@ struct ata_ioports {
+ 	void __iomem		*command_addr;
+ 	void __iomem		*altstatus_addr;
+ 	void __iomem		*ctl_addr;
++#ifdef CONFIG_ATA_BMDMA
+ 	void __iomem		*bmdma_addr;
++#endif /* CONFIG_ATA_BMDMA */
+ 	void __iomem		*scr_addr;
+ };
+ #endif /* CONFIG_ATA_SFF */
+@@ -721,8 +723,10 @@ struct ata_port {
+ 	u8			ctl;	/* cache of ATA control register */
+ 	u8			last_ctl;	/* Cache last written value */
+ 	struct delayed_work	sff_pio_task;
++#ifdef CONFIG_ATA_BMDMA
+ 	struct ata_bmdma_prd	*bmdma_prd;	/* BMDMA SG list */
+ 	dma_addr_t		bmdma_prd_dma;	/* and its DMA mapping */
++#endif /* CONFIG_ATA_BMDMA */
+ #endif /* CONFIG_ATA_SFF */
+ 
+ 	unsigned int		pio_mask;
+@@ -855,10 +859,12 @@ struct ata_port_operations {
+ 	void (*sff_irq_clear)(struct ata_port *);
+ 	void (*sff_drain_fifo)(struct ata_queued_cmd *qc);
+ 
++#ifdef CONFIG_ATA_BMDMA
+ 	void (*bmdma_setup)(struct ata_queued_cmd *qc);
+ 	void (*bmdma_start)(struct ata_queued_cmd *qc);
+ 	void (*bmdma_stop)(struct ata_queued_cmd *qc);
+ 	u8   (*bmdma_status)(struct ata_port *ap);
++#endif /* CONFIG_ATA_BMDMA */
+ #endif /* CONFIG_ATA_SFF */
+ 
+ 	ssize_t (*em_show)(struct ata_port *ap, char *buf);
+@@ -1554,7 +1560,6 @@ extern void sata_pmp_error_handler(struct ata_port *ap);
+ #ifdef CONFIG_ATA_SFF
+ 
+ extern const struct ata_port_operations ata_sff_port_ops;
+-extern const struct ata_port_operations ata_bmdma_port_ops;
+ extern const struct ata_port_operations ata_bmdma32_port_ops;
+ 
+ /* PIO only, sg_tablesize and dma_boundary limits can be removed */
+@@ -1563,11 +1568,6 @@ extern const struct ata_port_operations ata_bmdma32_port_ops;
+ 	.sg_tablesize		= LIBATA_MAX_PRD,		\
+ 	.dma_boundary		= ATA_DMA_BOUNDARY
+ 
+-#define ATA_BMDMA_SHT(drv_name)					\
+-	ATA_BASE_SHT(drv_name),					\
+-	.sg_tablesize		= LIBATA_MAX_PRD,		\
+-	.dma_boundary		= ATA_DMA_BOUNDARY
+-
+ extern void ata_sff_dev_select(struct ata_port *ap, unsigned int device);
+ extern u8 ata_sff_check_status(struct ata_port *ap);
+ extern void ata_sff_pause(struct ata_port *ap);
+@@ -1623,6 +1623,15 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+ 		struct scsi_host_template *sht, void *host_priv, int hflags);
+ #endif /* CONFIG_PCI */
+ 
++#ifdef CONFIG_ATA_BMDMA
++
++extern const struct ata_port_operations ata_bmdma_port_ops;
++
++#define ATA_BMDMA_SHT(drv_name)					\
++	ATA_BASE_SHT(drv_name),					\
++	.sg_tablesize		= LIBATA_MAX_PRD,		\
++	.dma_boundary		= ATA_DMA_BOUNDARY
++
  extern void ata_bmdma_qc_prep(struct ata_queued_cmd *qc);
  extern unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc);
  extern void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc);
-+extern unsigned int ata_bmdma_port_intr(struct ata_port *ap,
-+				      struct ata_queued_cmd *qc);
-+extern irqreturn_t ata_bmdma_interrupt(int irq, void *dev_instance);
- extern void ata_bmdma_error_handler(struct ata_port *ap);
- extern void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc);
- extern void ata_bmdma_irq_clear(struct ata_port *ap);
+@@ -1650,6 +1659,7 @@ extern int ata_pci_bmdma_init_one(struct pci_dev *pdev,
+ 				  struct scsi_host_template *sht,
+ 				  void *host_priv, int hflags);
+ #endif /* CONFIG_PCI */
++#endif /* CONFIG_ATA_BMDMA */
+ 
+ /**
+  *	ata_sff_busy_wait - Wait for a port status register
 -- 
 1.6.4.2
 
