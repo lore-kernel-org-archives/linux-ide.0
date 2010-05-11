@@ -1,62 +1,82 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Add hook for custom xfer function in PATA Platform
- driver
-Date: Tue, 11 May 2010 10:55:31 +0100
-Message-ID: <20100511105531.39670354@lxorguk.ukuu.org.uk>
-References: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>
-	<4BE6910D.9070504@ru.mvista.com>
-	<4BE69C81.2070703@gmail.com>
-	<4BE6BA74.10200@mvista.com>
-	<4BE74EEE.5060307@gmail.com>
-	<4BE7D714.9010006@ru.mvista.com>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: [BUG] bug when enabling VM DEBUG
+Date: Tue, 11 May 2010 18:27:52 +0300
+Message-ID: <AANLkTikoNc6oAY5JthYX1jWx1w2KeJ1fGab72Z-OvIVG@mail.gmail.com>
+References: <AANLkTikkSRI6u_mp6mNQReECB84t3oh-_MPVzAYEQULN@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:58799 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751606Ab0EKJtI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 May 2010 05:49:08 -0400
-In-Reply-To: <4BE7D714.9010006@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <AANLkTikkSRI6u_mp6mNQReECB84t3oh-_MPVzAYEQULN@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: DE/ATA development list <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Graeme Russ <graeme.russ@gmail.com>, linux-ide@vger.kernel.org
 
->    As I said, we *can't* implement the driver methods at the board 
-> level. Especially if they involve messing with timings -- that's the 
-> point where the ATA driver stops being generic, like pata_platform, and 
-> there arises a need for the dedicated driver. Also, your patch would 
-> bring in disparity with the ide-platfrom driver (which should be 
-> interchangeable with pata_platfrom). For me, the need of a separate 
-> driver is clear now, so I'll remain opposed to your patch. Of course, 
-> the maintainer (Jeff Garzik) will decide but if I could veto this patch 
-> I would.
-
-I don't think ide-platform matters in this case. You can certainly add
-the same support to the old ide_platform driver, but the old code can't
-be allowed to block progress with newer stuff. It's also trivial to add
-
-	if (we have an xfer method) {
-		printk("Oh poo");
-		return -ENODEV;
-	}
-
-to the IDE one so it simply refuses to bind to more featureful
-implementatins.
-
-I also don't see a problem with the transfer function needing to do
-arbitration, byte stuffing and other magic - that's quite common on
-embedded weirdnesses.
-
-The point it ceases to make sense is where you need to do mode setting.
-If the GPIO frobbing is managing the platform bus requirements then it
-makes sense as a platform function. If it's going to grow into full ATA
-set xfer mode support it probably turns into a new driver at some point.
-
-Either way it makes sense to support overriding the data_xfer operation,
-and we've done something analogous for years with 8250 serial and it has
-been a *huge* success and saved us having about thirty similar
-platform serial drivers.
-
-Alan
+SmVmZiwKc2VlbXMgdGhhdCB0aGUgbGliYXRhIGRvIHBpbyB0byBidWZmZXIgd2hpY2ggd2FzIGFs
+bG9jYXRlZCB3aXRoCmttYWxsb2MsIGFuZCB1bmRlciBhcm0gYXJjaCwgdGhlIGZsdXNoX2RjYWNo
+ZV9wYWdlKCkgaXMgbmVlZGVkIHRvCnByZXZlbnQgY2FjaGUgYWxpYXNpbmcsIHRoZSBsYXRlciBm
+dW5jdGlvbiBjYWxscyB0aGUgcGFnZV9tYXBwaW5nCndoaWNoIGZhbGxzIG9uIFBhZ2VTbGFiKHBh
+Z2UpCgphcyB0aGUgZmx1c2hfZGNhY2hlX3BhZ2UoKSBpcyBuZWVkZWQgdG8gcHJldmVudCBhbGlh
+c2luZywgaXQgY2FuIGJlCnNraXBwZWQgaWYgdGhlIHBhZ2UgaXMgU2xhYiBhcyBzdWNoIHBhZ2Vz
+IGFyZSB1c2VkIG9ubHkgYnkgdGhlIGtlcm5lbC4KaGVyZSBhIHN1Z2dlc3RlZCBwYXRjaDoKCi0t
+LSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zZmYuYworKysgYi9kcml2ZXJzL2F0YS9saWJhdGEtc2Zm
+LmMKQEAgLTg5NCw3ICs4OTQsNyBAQCBzdGF0aWMgdm9pZCBhdGFfcGlvX3NlY3RvcihzdHJ1Y3Qg
+YXRhX3F1ZXVlZF9jbWQgKnFjKQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICBkb193cml0ZSk7CiAgICAgICAgfQoKLSAgICAgICBpZiAoIWRvX3dyaXRlKQorICAgICAgIGlm
+ICghZG9fd3JpdGUgJiYgIVBhZ2VTbGFiKHBhZ2UpKQogICAgICAgICAgICAgICAgZmx1c2hfZGNh
+Y2hlX3BhZ2UocGFnZSk7CgpzYWVlZAoKCk9uIE1vbiwgTWF5IDEwLCAyMDEwIGF0IDQ6MDYgUE0s
+IHNhZWVkIGJpc2hhcmEgPHNhZWVkLmJpc2hhcmFAZ21haWwuY29tPiB3cm90ZToKPiBIaSwKPiDC
+oEkgZ290IHRoZSBmb2xsb3dpbmcgYnVnIHdoZW4gZW5hYmxpbmcgdGhlIFZNX0RFQkdVIG9uIDIu
+Ni4zNC1yYzY6Cj4KPiBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZl
+cmVuY2UgYXQgdmlydHVhbCBhZGRyZXNzIDAwMDAwMDAwCj4gcGdkID0gYzAwMDQwMDAKPiBbMDAw
+MDAwMDBdICpwZ2Q9MDAwMDAwMDAKPiBJbnRlcm5hbCBlcnJvcjogT29wczogODA1IFsjMV0KPiBs
+YXN0IHN5c2ZzIGZpbGU6Cj4gTW9kdWxlcyBsaW5rZWQgaW46Cj4gQ1BVOiAwIMKgIMKgTm90IHRh
+aW50ZWQgwqAoMi42LjM0LXJjNi0wMDE3Ni1nMDAwNDdiOC1kaXJ0eSAjMzMxKQo+IFBDIGlzIGF0
+IGZsdXNoX2RjYWNoZV9wYWdlKzB4MmMvMHhjNAo+IExSIGlzIGF0IGF0YV9waW9fc2VjdG9yKzB4
+ZDgvMHgxMjQKPiBwYyA6IFs8YzAwMmQzMGM+XSDCoCDCoGxyIDogWzxjMDFjMjlkND5dIMKgIMKg
+cHNyOiAyMDAwMDAxMwo+IHNwIDogZjU1MTNlZTggwqBpcCA6IDc5YTUwMDAwIMKgZnAgOiAwMDAw
+MWVlOAo+IHIxMDogMDAwMDAwNTggwqByOSA6IGY1NGYwMDAwIMKgcjggOiAwMDAwMDAwMAo+IHI3
+IDogZjU0ZjEzNTggwqByNiA6IGMwM2U2Yjg0IMKgcjUgOiAwMDAwMDAwMCDCoHI0IDogMDAwMDAw
+MDAKPiByMyA6IDAwMDAwMDAwIMKgcjIgOiAwMDAwMDAwMCDCoHIxIDogZjU0ZjE3YjggwqByMCA6
+IGMwYWM0ZTIwCj4gRmxhZ3M6IG56Q3YgwqBJUlFzIG9uIMKgRklRcyBvbiDCoE1vZGUgU1ZDXzMy
+IMKgSVNBIEFSTSDCoFNlZ21lbnQga2VybmVsCj4gQ29udHJvbDogMTBjNTM4N2QgwqBUYWJsZTog
+MDAwMDQwMTkgwqBEQUM6IDAwMDAwMDE3Cj4gUHJvY2VzcyBhdGEvMCAocGlkOiAxNDUsIHN0YWNr
+IGxpbWl0ID0gMHhmNTUxMjJmMCkKPiBTdGFjazogKDB4ZjU1MTNlZTggdG8gMHhmNTUxNDAwMCkK
+PiAzZWUwOiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBjMGFjNGUyMCBjMDFjMjlkNCAwMDAw
+MDAwOSBmNTRmMTM1OCBmNTRmMTM1OCAwMDAwMDAwMQo+IDNmMDA6IGMwNDBkMThjIGMwMWMyYWQ4
+IDAwMDAwMDA1IDAwMDAwMDA5IGY1NGYwMDAwIGMwMWMzMjA0IGMwM2NmZTc4IDAwMDAwMDAwCj4g
+M2YyMDogMDAyMDAyMDAgZjU0ZjEzZDQgYzAwNDQ2ZTQgMDAwMDAwMDEgZjU0ZjE0MjQgMDAwMDAw
+MDAgMDAwMDAwMDAgMDAwMDAwMDAKPiAzZjQwOiAwMDAwMDAwMCAwMDAwMDAwMCBmZmZmZmZmZiAw
+MDAwMDAwOSBmNTRmMDAwMCBmNTRmMTM1OCAwMDAwMDAwMSBjMDQwZDE4Ywo+IDNmNjA6IDAwMDAw
+MDA1IDAwMDAwMDBhIDAwMDAxZWU4IGMwMWM0NmQ4IGY1NDEzYzcwIGY1NGI1YjY4IGMwMWM0NWQ0
+IGY1NGI1YjYwCj4gM2Y4MDogZjU1MTIwMDAgZjU1MTNmOWMgMDAwMDAwMDAgMDAwMDAwMDAgMDAw
+MDAwMDAgYzAwNGIyYzAgMDAwMDAwMDAgMDAwMDAwMDAKPiAzZmEwOiBmNTRiZTBjMCBjMDA0ZTEy
+YyBmNTUxM2ZhOCBmNTUxM2ZhOCBmNTQyOWVjOCBmNTUxM2ZkNCBmNTQyOWVjOCBmNTRiNWI2MAo+
+IDNmYzA6IGMwMDRiMWM4IDAwMDAwMDAwIDAwMDAwMDAwIGMwMDRlMDE0IDAwMDAwMDAwIDAwMDAw
+MDAwIGY1NTEzZmQ4IGY1NTEzZmQ4Cj4gM2ZlMDogMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAg
+MDAwMDAwMDAgMDAwMDAwMDAgYzAwMjZkZWMgYmM3ZTRhZmIgNmEzYThhMzAKPiBbPGMwMDJkMzBj
+Pl0gKGZsdXNoX2RjYWNoZV9wYWdlKzB4MmMvMHhjNCkgZnJvbSBbPGMwMWMyOWQ0Pl0KPiAoYXRh
+X3Bpb19zZWN0b3IrMHhkOC8weDEyNCkKPiBbPGMwMWMyOWQ0Pl0gKGF0YV9waW9fc2VjdG9yKzB4
+ZDgvMHgxMjQpIGZyb20gWzxjMDFjMmFkOD5dCj4gKGF0YV9waW9fc2VjdG9ycysweGI4LzB4YzQp
+Cj4gWzxjMDFjMmFkOD5dIChhdGFfcGlvX3NlY3RvcnMrMHhiOC8weGM0KSBmcm9tIFs8YzAxYzMy
+MDQ+XQo+IChhdGFfc2ZmX2hzbV9tb3ZlKzB4NjE4LzB4NzZjKQo+IFs8YzAxYzMyMDQ+XSAoYXRh
+X3NmZl9oc21fbW92ZSsweDYxOC8weDc2YykgZnJvbSBbPGMwMWM0NmQ4Pl0KPiAoYXRhX3Bpb190
+YXNrKzB4MTA0LzB4MTI0KQo+IFs8YzAxYzQ2ZDg+XSAoYXRhX3Bpb190YXNrKzB4MTA0LzB4MTI0
+KSBmcm9tIFs8YzAwNGIyYzA+XQo+ICh3b3JrZXJfdGhyZWFkKzB4ZjgvMHgxNzApCj4gWzxjMDA0
+YjJjMD5dICh3b3JrZXJfdGhyZWFkKzB4ZjgvMHgxNzApIGZyb20gWzxjMDA0ZTAxND5dIChrdGhy
+ZWFkKzB4NzgvMHg4MCkKPiBbPGMwMDRlMDE0Pl0gKGt0aHJlYWQrMHg3OC8weDgwKSBmcm9tIFs8
+YzAwMjZkZWM+XSAoa2VybmVsX3RocmVhZF9leGl0KzB4MC8weDgpCj4gQ29kZTogZTU5MDQwMTAg
+ZTMxMzAwODAgMGEwMDAwMDIgZTNhMDMwMDAgKGU1ODMzMDAwKQo+IC0tLVsgZW5kIHRyYWNlIDhh
+N2NlMWFlNjYyNTAwMDUgXS0tLQo+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2Vy
+bmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1h
+bi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
