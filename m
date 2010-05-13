@@ -1,66 +1,88 @@
-From: Graeme Russ <graeme.russ@gmail.com>
-Subject: Re: [PATCH] Add hook for custom xfer function in PATA Platform driver
-Date: Thu, 13 May 2010 14:09:29 +1000
-Message-ID: <4BEB7B79.9050808@gmail.com>
-References: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>	<4BE6910D.9070504@ru.mvista.com>	<4BE69C81.2070703@gmail.com>	<4BE6BA74.10200@mvista.com>	<4BE74EEE.5060307@gmail.com>	<4BE7D714.9010006@ru.mvista.com>	<20100511105531.39670354@lxorguk.ukuu.org.uk>	<4BEB0FFD.1090701@ru.mvista.com> <20100513001315.149bbb66@lxorguk.ukuu.org.uk>
+From: Catalin Marinas <catalin.marinas@arm.com>
+Subject: Re: [BUG] bug when enabling VM DEBUG
+Date: Thu, 13 May 2010 12:30:33 +0100
+Message-ID: <1273750233.30713.39.camel@e102109-lin.cambridge.arm.com>
+References: <AANLkTikkSRI6u_mp6mNQReECB84t3oh-_MPVzAYEQULN@mail.gmail.com>
+	 <AANLkTikoNc6oAY5JthYX1jWx1w2KeJ1fGab72Z-OvIVG@mail.gmail.com>
+	 <4BEA1559.9000107@gmail.com>
+	 <1273662639.23818.67.camel@e102109-lin.cambridge.arm.com>
+	 <20100512115340.GA11261@Chamillionaire.breakpoint.cc>
+	 <1273667099.23818.86.camel@e102109-lin.cambridge.arm.com>
+	 <20100512130638.GB19314@shareable.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:51200 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741Ab0EMEJf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 May 2010 00:09:35 -0400
-Received: by pvg12 with SMTP id 12so142733pvg.19
-        for <linux-ide@vger.kernel.org>; Wed, 12 May 2010 21:09:35 -0700 (PDT)
-In-Reply-To: <20100513001315.149bbb66@lxorguk.ukuu.org.uk>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:34281 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758696Ab0EMLbJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 May 2010 07:31:09 -0400
+In-Reply-To: <20100512130638.GB19314@shareable.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org
+To: Jamie Lokier <jamie@shareable.org>
+Cc: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>, Jeff Garzik <jeff@garzik.org>, lkml <linux-kernel@vger.kernel.org>, DE/ATA development list <linux-ide@vger.kernel.org>, saeed bishara <saeed.bishara@gmail.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Robert Hancock <hancockrwd@gmail.com>
 
-On 13/05/10 09:13, Alan Cox wrote:
->>> I don't think ide-platform matters in this case.
->>
->>    You've just supported a patch restoring feature parity between 
->> pata_platform and ide-platfrom WRT IRQ flags. ;-)
+On Wed, 2010-05-12 at 14:06 +0100, Jamie Lokier wrote:
+> Catalin Marinas wrote:
+> > On Wed, 2010-05-12 at 12:53 +0100, Sebastian Andrzej Siewior wrote:
+> > > * Catalin Marinas | 2010-05-12 12:10:39 [+0100]:
+> > >
+> > > >> > --- a/drivers/ata/libata-sff.c
+> > > >> > +++ b/drivers/ata/libata-sff.c
+> > > >> > @@ -894,7 +894,7 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+> > > >> >                                         do_write);
+> > > >> >          }
+> > > >> >
+> > > >> > -       if (!do_write)
+> > > >> > +       if (!do_write&&  !PageSlab(page))
+> > > >> >                  flush_dcache_page(page);
+> > > >>
+> > > >> I would think that check belongs inside flush_dcache_page itself, rather
+> > > >> than forcing every driver to include it..
+> > > >
+> > > >Sebastian (cc'ed) reported this as well for MIPS.
+> > > Thx. The patch above looks what I've sent a while ago. Jeff was going to
+> > > merge it afaik.
+> > >
+> > > >I think it makes sense for this check to be done in the
+> > > >flush_dcache_page() function.
+> > >
+> > > Why should flush_dcache_page() not flush pages you tell it?
+> > > From Documentation/cachetlb.txt:
+> > > |   NOTE: This routine need only be called for page cache pages
+> > > |          which can potentially ever be mapped into the address
+> > > |          space of a user process.  So for example, VFS layer code
+> > > |          handling vfs symlinks in the page cache need not call
+> > > |          this interface at all.
+> > >
+> > > A page from slab or stack is not going to see the sky of user land and
+> > > therefore it should not be fed into flush_dcache_page().
+> >
+> > You are right :), so fixing the driver is the best approach.
 > 
-> Because it was trivial to do.
+> It worries me that a driver has any knowledge of the PageSlab() flag,
+> though.  Especially uncommented knowledge.  That flag seems VM
+> internal, and it's conceptually iffy: Kernel code using
+> get_free_pages() and using that for I/O also does not see the sky of
+> user land.
 > 
->>    Yes, but this needs to be *done* too, preferrably by the author of 
->> the original patch and simultaneously with it. We can't accept a single 
->> patch that only touches pata_platform.
+> If all the PIO drivers have to be changed, I'd be happier with:
+> 
+>     flush_dcache_page_for_pio()
+> 
+> which wraps the check, explains it, and provides a single place to
+> change if needed.
 
-I'm happy to expand the patch, but why would we implement such a thing in a
-legacy driver. Odds are that nobody would ever use it. If I had developed
-my code prior to pata_platform and used the old IDE driver instead I would
-of patched it then (and it may have been included in pata_platform). If
-anyone requires this hook from today on, odds on it is for a new system and
-the old IDE driver will not even be considered for the task. Besides, by
-only implementing these features in the latest (supported) drivers, it will
-encourage people to move away from the legacy drivers which is a Good Thing(tm)
+I already proposed a PIO cache flushing API on linux-arch. I tried to
+revive the discussion with another patch for cachetlb.txt but it hasn't
+drawn much interest.
 
-> 
-> Sure - or support it in both. I've no problem with both supporting that
-> function, just with legacy code blocking progress.
-> 
->>    Well, with 8250 we still don't allow for overriding things at the 
->> board level, via the platform data callbacks.
-> 
-> Oh yes we do. Platform specific drivers can directly override the access
-> operators and they do some truely horrible platform specific stuff in the
-> overridden operators.
-> 
-> And the great thing - nobody else has to know what the board vendors have
-> been on..
-> 
+On ARM we are trying to change the I/D cache handling similar to IA-64
+and PowerPC (PG_arch_1 would mean "clean" rather than "dirty"). With
+this change, my original patch to libata-sff.c can be dropped (well,
+other architectures may still be broken).
 
-Exactly - This is good driver design. Implement the fundamentals for the
-majority of use-cases and provide overrides to allow individual
-implementations which can do anything weird and wonderful without polluting
-the code space of everyone else.
-
-Regards,
-
-Graeme
+-- 
+Catalin
 
