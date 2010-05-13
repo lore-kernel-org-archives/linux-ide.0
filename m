@@ -1,48 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] libata: implement ->set_capacity()
-Date: Thu, 13 May 2010 20:40:02 +0200
-Message-ID: <4BEC4782.7010109@kernel.org>
-References: <1273766206-17402-1-git-send-email-tj@kernel.org>	 <1273766778.4353.200.camel@mulgrave.site>  <4BEC272E.10508@kernel.org>	 <1273768687.4353.235.camel@mulgrave.site>  <4BEC2ED7.9080001@kernel.org> <1273771131.4353.300.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15884] cd-burning reduces other simultaneous IO performance
+Date: Thu, 13 May 2010 20:57:25 GMT
+Message-ID: <201005132057.o4DKvPXc019161@demeter.kernel.org>
+References: <bug-15884-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:41116 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756288Ab0EMSkY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 May 2010 14:40:24 -0400
-In-Reply-To: <1273771131.4353.300.camel@mulgrave.site>
+Received: from demeter.kernel.org ([140.211.167.39]:37423 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751600Ab0EMU50 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 May 2010 16:57:26 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4DKvPto019162
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 13 May 2010 20:57:25 GMT
+In-Reply-To: <bug-15884-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ben@decadent.org.uk
+To: linux-ide@vger.kernel.org
 
-Hello, James.
+https://bugzilla.kernel.org/show_bug.cgi?id=15884
 
-On 05/13/2010 07:18 PM, James Bottomley wrote:
-> So I think the bit I missed was you're trying to do this programatically
-> from boot time partition read to detect if the user previously disabled
-> the HPA and partitioned the device?  In which case you still have user
-> context, you can call BLKRRPART here too.
 
-Yeah, that's what I'm trying to do but the functionality is already in
-the block layer and has been used by IDE layer for a long time.  We
-just forgot to implement it for libata.  The only thing I did was
-fixing up corner case handling in block layer a bit and adding a
-callback to sd so that the block layer call can be passed down to
-libata.  So, it doesn't have anything to do with sysfs attributes,
-block or libata.
 
-We sure can trigger the rescan by invoking BLKRRPART from inside the
-partition scan code but I'm afraid that would be more convoluted than
-the currently existing implementation of restarting the scan inside
-the scan function.
 
-The only thing is that the existing block method is somewhat overly
-generic without any good reason, so simplifying that would be a good
-idea.
 
-Thanks.
+--- Comment #9 from Dan Hollocher <danielhollocher@gmail.com>  2010-05-13 20:57:19 ---
+That is an awesome find Robert!  I will test and report back.  Btw, I tested
+with nerolinux, and that performs allot better, so it looks like you are
+correct.  Testing with -immed should firm that up.
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
