@@ -1,49 +1,159 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15884] cd-burning reduces other simultaneous IO performance
-Date: Fri, 14 May 2010 01:20:26 GMT
-Message-ID: <201005140120.o4E1KQFN023150@demeter.kernel.org>
-References: <bug-15884-11633@https.bugzilla.kernel.org/>
+From: Graeme Russ <graeme.russ@gmail.com>
+Subject: Re: [PATCH] Add hook for custom xfer function in PATA Platform driver
+Date: Fri, 14 May 2010 14:04:23 +1000
+Message-ID: <AANLkTikruHKM8W7m9sMHtyApxwLdi6R-I62S54vDsXcO@mail.gmail.com>
+References: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>
+	 <4BE6910D.9070504@ru.mvista.com> <4BE69C81.2070703@gmail.com>
+	 <4BE6BA74.10200@mvista.com> <4BE74EEE.5060307@gmail.com>
+	 <4BE7D714.9010006@ru.mvista.com> <4BE8A3FE.4070402@gmail.com>
+	 <4BEB166B.5030007@ru.mvista.com> <4BEB7960.40007@gmail.com>
+	 <4BEC68E6.1020305@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:35559 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375Ab0ENBU1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 May 2010 21:20:27 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4E1KQ8w023151
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Fri, 14 May 2010 01:20:26 GMT
-In-Reply-To: <bug-15884-11633@https.bugzilla.kernel.org/>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49655 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750767Ab0ENEEZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 May 2010 00:04:25 -0400
+Received: by vws16 with SMTP id 16so617767vws.19
+        for <linux-ide@vger.kernel.org>; Thu, 13 May 2010 21:04:24 -0700 (PDT)
+In-Reply-To: <4BEC68E6.1020305@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15884
+On Fri, May 14, 2010 at 7:02 AM, Sergei Shtylyov <sshtylyov@mvista.com> wrote:
+> Hello.
+>
+> Graeme Russ wrote:
+>
 
+[snip]
 
-Dan Hollocher <danielhollocher@gmail.com> changed:
+>>>> it shouldn't be growing support for new hardware, which I assume this
+>>>> is.
+>>>>
+>>>
+>>>  This is not a new hardware as it's going to use an existing driver.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |INVALID
+That is a really daft sentance on my behalf - I should have said that the
+hardware design is not conceptually new (i.e. directly wiring a CF card
+onto an 8-bit bus is nothing new) and therefore should be able to use an
+existing driver
 
+>
+>  If it ends up using it. I tend to think about it as a truly new hardware
+> needing a separate driver, so IDE support would really be out of question.
+>
+>> Correct - it is a direct attachment of a CF card onto an 8-bit data bus
+>>
+>
+>  And we have several *separate* drivers for the alike CF cases.
 
+Can you elaborate - I thought the PATA Platform driver was designed to
+unify the very discontguous approaches that have previously been taken
+in the embedded designs. As such, the need for these various drivers
+should diminished.
 
+[snip]
 
---- Comment #10 from Dan Hollocher <danielhollocher@gmail.com>  2010-05-14 01:20:19 ---
-Tested and confirmed.
+>>>
+>>>  Besides, Graeme, for what arch is your hardware? If it's PowerPC, you
+>>> should be using pata_of_platform -- but as I said you can't really do it.
+>>>
+>>>
+>>
+>> This is for an embedded x86 solutions (AMD SC520). Note: By embedded I
+>> really do mean embedded, not mini-PC or the like (i.e. no BIOS)
+>>
+>
+>  Ah, I saw your initial request on u-boot maling list which mentioned OF
+> platfrom driver and assumed you might be on a PowerPC machine...
 
-Here are directions on how to apply this to k3b (for others that may stop by):
-Settings > Configure K3b... > Programs > User Parameters
-Click near cdrecord, and add the option -immed.
+Pardon my ignorance but when I asked that question I did not realise that
+'OF' was 'Open Firmware' and, ergo, PPC
 
-You may need to ensure that cdrecord is selected by:
-Settings > Configure K3b... > Advanced > Show advanced GUI elements
-During the burning setup, you will have an option to select cdrecord.
+[snip]
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+>> if a driver has override hooks for over 50% of its functions and you are
+>> using all of those hooks then perhaps a dedicated driver is the way to go,
+>> but adding a 8-bit versus 16-bit access hook is probably the most trivial
+>> and fundamental hook you could add to a device driver (even more
+>> fundamental than the existing byte stuffing hook IMHO)
+>>
+>
+>  What byte stuffing do you mean?
+
+Sorry, I meant the 'Port Shifting' (I/O port shift, for platforms with ports
+that are constantly spaced and need larger than the 1-byte spacing used by
+ata_std_ports())
+
+So yes, in theory, your original idea of adding an '8-bit flag' would be
+more in keeping with Port Shift (i.e. tell the driver to use a specifically
+non-standard function which *is* implemented in the driver core). But this
+goes back to my prior arguments - why pollute the driver core with non-
+standard functions when a simple hook which is ignored if NULL will do.
+Now if we then find that many different developers are using a particular
+hook to do the same thing, that 'thing' becomes 'common' and gets merged
+into the driver core later.
+
+>
+>>>   You propose something like pata_of_platform (riding on top of
+>>> pata_platform)? Anyway, I suspect that we have fully programmable bus
+>>> hardware here, which should allow for PIO mode setting, and hence woud
+>>> really need a whole new driver...
+>>>
+>>
+>> Yes, the bus timing is fully programmable - It allows the insertion of an
+>> integer number of 33MHz bus cycles into various stages of the bus access.
+>>
+>> I don't really care for changing bus timings wrt PIO mode supported by the
+>>
+>
+>  Let's not allow laziness to be our guide in making fundamental decisions.
+> ;-)
+
+True, and well very well said. This is only a hobby platform for me - it is
+not likely to leave my bench but I would still like to contribute something
+for the greater good.
+
+>
+>> CF card. It is not a really high speed CPU (486 DX4100 equivalent) so
+>> supporting high speed data transfers without DMA is a bit pointless. The
+>>
+>
+>  People wrote a lot of VLB drivers in order to get high PIO speeds on i486.
+> And PIO4 gives *significant* speed increase over PIO0. Although I suspect
+> libata's PIO speeds are still painfully low compared to IDE core -- need to
+> re-check this with the recent kernel. So, chosing libata over IDE might not
+> be so obvious advantage as it seems...
+
+You will have tp pardon my ignorance - Until a few weeks ago I knew nothing
+about CF / IDE / ATA / PIO etc. I do not fully understand how the various
+PIO modes are implemented.
+
+>
+>> only timing switch I care for is 'Accessing CF / Not Accessing CF' which
+>> has a timing difference of 5 or so bus cycles.
+>>
+>
+>  There could be *negative* difference with high PIO modes -- PIO4-to-PIO0
+> cycle ratio is 5 (600:120).
+>
+
+Sorry, I do not understand.
+
+>> And truthfully, I don't even think I need to mutex the bus - The other
+>> devices can use the bus using the slower timings anyway so it does not
+>> really matter if a context switch occurs during the CF read/write in order
+>> to access another device
+>>
+>
+>  You'd better be careful anyway.
+
+Yes, I would prefer to do the right thing anyway
+
+Regards,
+
+Graeme
