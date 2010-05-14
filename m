@@ -1,439 +1,296 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH]460EX on-chip SATA driver <Kernel 2.6.33> < resubmission
- >
-Date: Fri, 14 May 2010 17:56:59 -0400
-Message-ID: <4BEDC72B.10507@pobox.com>
-References: <201005051757.o45HvPmY005954@amcc.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] PXA DMA-capable PATA driver
+Date: Fri, 14 May 2010 18:03:45 -0400
+Message-ID: <4BEDC8C1.30703@garzik.org>
+References: <1273460525-25662-1-git-send-email-marek.vasut@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201005051757.o45HvPmY005954@amcc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sr@denx.de, linuxppc-dev@ozlabs.org, Sergei Shtylyov <sshtylyov@mvista.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f217.google.com ([209.85.217.217]:52576 "EHLO
+	mail-gx0-f217.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754417Ab0ENWDs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 May 2010 18:03:48 -0400
+Received: by gxk9 with SMTP id 9so2003260gxk.8
+        for <linux-ide@vger.kernel.org>; Fri, 14 May 2010 15:03:47 -0700 (PDT)
+In-Reply-To: <1273460525-25662-1-git-send-email-marek.vasut@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, eric.y.miao@gmail.com, haojian.zhuang@gmail.com
 
-On 05/05/2010 01:57 PM, Rupjyoti Sarmah wrote:
-> +static  void clear_interrupt_bit(struct sata_dwc_device *hsdev, u32 bit)
+On 05/09/2010 11:02 PM, Marek Vasut wrote:
+> This patch adds a driver for a harddrive attached to PXA address and data bus.
+> Unlike pata_platform, this driver allows usage of PXA DMA controller, making the
+> transmission speed 3x higher.
+>
+> Signed-off-by: Marek Vasut<marek.vasut@gmail.com>
+> ---
+>   arch/arm/mach-pxa/include/mach/pata_pxa.h |   33 +++
+>   drivers/ata/Kconfig                       |   11 +
+>   drivers/ata/Makefile                      |    1 +
+>   drivers/ata/pata_pxa.c                    |  383 +++++++++++++++++++++++++++++
+>   4 files changed, 428 insertions(+), 0 deletions(-)
+>   create mode 100644 arch/arm/mach-pxa/include/mach/pata_pxa.h
+>   create mode 100644 drivers/ata/pata_pxa.c
+>
+> diff --git a/arch/arm/mach-pxa/include/mach/pata_pxa.h b/arch/arm/mach-pxa/include/mach/pata_pxa.h
+> new file mode 100644
+> index 0000000..6cf7df1
+> --- /dev/null
+> +++ b/arch/arm/mach-pxa/include/mach/pata_pxa.h
+> @@ -0,0 +1,33 @@
+> +/*
+> + * Generic PXA PATA driver
+> + *
+> + * Copyright (C) 2010 Marek Vasut<marek.vasut@gmail.com>
+> + *
+> + *  This program is free software; you can redistribute it and/or modify
+> + *  it under the terms of the GNU General Public License as published by
+> + *  the Free Software Foundation; either version 2, or (at your option)
+> + *  any later version.
+> + *
+> + *  This program is distributed in the hope that it will be useful,
+> + *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + *  GNU General Public License for more details.
+> + *
+> + *  You should have received a copy of the GNU General Public License
+> + *  along with this program; see the file COPYING.  If not, write to
+> + *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+> + */
+> +
+> +#ifndef	__MACH_PATA_PXA_H__
+> +#define	__MACH_PATA_PXA_H__
+> +
+> +struct pata_pxa_pdata {
+> +	/* PXA DMA DREQ<0:2>  pin */
+> +	uint32_t	dma_dreq;
+> +	/* Register shift */
+> +	uint32_t	reg_shift;
+> +	/* IRQ flags */
+> +	uint32_t	irq_flags;
+> +};
+> +
+> +#endif	/* __MACH_PATA_PXA_H__ */
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 01c52c4..5cd3e8c 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -684,6 +684,17 @@ config PATA_VIA
+>
+>   	  If unsure, say N.
+>
+> +config PATA_PXA
+> +	tristate "PXA DMA-capable PATA support"
+> +	depends on ARCH_PXA
+> +	help
+> +	  This option enables support for harddrive attached to PXA CPU's bus.
+> +	
+> +	  NOTE: This driver utilizes PXA DMA controller, in case your hardware
+> +	        is not capable of doing MWDMA, use pata_platform instead.
+> +
+> +	  If unsure, say N.
+> +
+>   config PATA_WINBOND
+>   	tristate "Winbond SL82C105 PATA support"
+>   	depends on PCI
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index fc936d4..5ecf45a 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -79,6 +79,7 @@ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
+>   obj-$(CONFIG_PATA_AT91)	+= pata_at91.o
+>   obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+>   obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+> +obj-$(CONFIG_PATA_PXA)		+= pata_pxa.o
+>   # Should be last but two libata driver
+>   obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+>   # Should be last but one libata driver
+> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+> new file mode 100644
+> index 0000000..66ab1ac
+> --- /dev/null
+> +++ b/drivers/ata/pata_pxa.c
+> @@ -0,0 +1,383 @@
+> +/*
+> + * Generic PXA PATA driver
+> + *
+> + * Copyright (C) 2010 Marek Vasut<marek.vasut@gmail.com>
+> + *
+> + *  This program is free software; you can redistribute it and/or modify
+> + *  it under the terms of the GNU General Public License as published by
+> + *  the Free Software Foundation; either version 2, or (at your option)
+> + *  any later version.
+> + *
+> + *  This program is distributed in the hope that it will be useful,
+> + *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + *  GNU General Public License for more details.
+> + *
+> + *  You should have received a copy of the GNU General Public License
+> + *  along with this program; see the file COPYING.  If not, write to
+> + *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+> + */
+> +
+> +#include<linux/kernel.h>
+> +#include<linux/module.h>
+> +#include<linux/init.h>
+> +#include<linux/blkdev.h>
+> +#include<linux/ata.h>
+> +#include<linux/libata.h>
+> +#include<linux/platform_device.h>
+> +#include<linux/gpio.h>
+> +#include<linux/slab.h>
+> +#include<linux/completion.h>
+> +
+> +#include<scsi/scsi_host.h>
+> +
+> +#include<mach/pxa2xx-regs.h>
+> +#include<mach/pata_pxa.h>
+> +#include<mach/dma.h>
+> +
+> +#define DRV_NAME	"pata_pxa"
+> +#define DRV_VERSION	"0.1"
+> +
+> +struct pata_pxa_data {
+> +	uint32_t		dma_channel;
+> +	struct pxa_dma_desc	*dma_desc;
+> +	dma_addr_t		dma_desc_addr;
+> +	uint32_t		dma_desc_id;
+> +
+> +	/* DMA IO physical address */
+> +	uint32_t		dma_io_addr;
+> +	/* PXA DREQ<0:2>  pin selector */
+> +	uint32_t		dma_dreq;
+> +
+> +	struct completion	dma_done;
+> +};
+> +
+> +/*
+> + * Setup the DMA descriptors. The size is transfer capped at 4k per descriptor,
+> + * if the transfer is longer, it is split into multiple chained descriptors.
+> + */
+> +static void pxa_load_dmac(struct scatterlist *sg, struct ata_queued_cmd *qc)
 > +{
-> +	out_le32(&hsdev->sata_dwc_regs->intpr,
-> +		 in_le32(&hsdev->sata_dwc_regs->intpr));
-> +}
+> +	struct pata_pxa_data *pd = qc->ap->private_data;
 > +
-> +static  u32 qcmd_tag_to_mask(u8 tag)
-> +{
-> +	return 0x00000001<<  (tag&  0x1f);
-> +}
+> +	uint32_t cpu_len, seg_len;
+> +	dma_addr_t cpu_addr;
 > +
-> +/* See ahci.c */
-> +static void sata_dwc_error_intr(struct ata_port *ap,
-> +				struct sata_dwc_device *hsdev, uint intpr)
-> +{
-> +	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
-> +	struct ata_eh_info *ehi =&ap->link.eh_info;
-> +	unsigned int err_mask = 0, action = 0;
-> +	struct ata_queued_cmd *qc;
-> +	u32 serror;
-> +	u8 status, tag;
-> +	u32 err_reg;
+> +	cpu_addr = sg_dma_address(sg);
+> +	cpu_len = sg_dma_len(sg);
 > +
-> +	ata_ehi_clear_desc(ehi);
+> +	do {
+> +		seg_len = (cpu_len>  0x1000) ? 0x1000 : cpu_len;
 > +
-> +	serror = core_scr_read(SCR_ERROR);
-> +	status = ap->ops->sff_check_status(ap);
+> +		pd->dma_desc[pd->dma_desc_id].ddadr = pd->dma_desc_addr +
+> +			((pd->dma_desc_id + 1) * sizeof(struct pxa_dma_desc));
 > +
-> +	err_reg = in_le32(&(host_pvt.sata_dma_regs->interrupt_status.error.\
-> +			low));
-> +	tag = ap->link.active_tag;
+> +		pd->dma_desc[pd->dma_desc_id].dcmd = DCMD_BURST32 | DCMD_WIDTH2 |
+> +					(DCMD_LENGTH&  seg_len);
 > +
-> +	dev_err(ap->dev, "%s SCR_ERROR=0x%08x intpr=0x%08x status=0x%08x "
-> +		"dma_intp=%d pending=%d issued=%d dma_err_status=0x%08x\n",
-> +		__func__, serror, intpr, status, host_pvt.dma_interrupt_count,
-> +		hsdevp->dma_pending[tag], hsdevp->cmd_issued[tag], err_reg);
-> +
-> +	/* Clear error register and interrupt bit */
-> +	clear_serror();
-> +	clear_interrupt_bit(hsdev, SATA_DWC_INTPR_ERR);
-> +
-> +	/* This is the only error happening now.  TODO check for exact error */
-> +	err_mask |= AC_ERR_HOST_BUS;
-> +	action |= ATA_EH_RESET;
-
-this is a rather poor error mapping.
-
-
-> +/******************************************************************************
-> + * Function : sata_dwc_isr
-> + * arguments : irq, void *dev_instance, struct pt_regs *regs
-> + * Return value : irqreturn_t - status of IRQ
-> + * This Interrupt handler called via port ops registered function.
-> + * .irq_handler = sata_dwc_isr
-> + *****************************************************************************/
-> +static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
-> +{
-> +	struct ata_host *host = (struct ata_host *)dev_instance;
-> +	struct sata_dwc_device *hsdev = HSDEV_FROM_HOST(host);
-> +	struct ata_port *ap;
-> +	struct ata_queued_cmd *qc;
-> +	unsigned long flags;
-> +	u8 status, tag;
-> +	int handled, num_processed, port = 0;
-> +	uint intpr, sactive, sactive2, tag_mask;
-> +	struct sata_dwc_device_port *hsdevp;
-> +	host_pvt.sata_dwc_sactive_issued = 0;
-> +
-> +	spin_lock_irqsave(&host->lock, flags);
-> +
-> +	/* Read the interrupt register */
-> +	intpr = in_le32(&hsdev->sata_dwc_regs->intpr);
-> +
-> +	ap = host->ports[port];
-> +	hsdevp = HSDEVP_FROM_AP(ap);
-> +
-> +	dev_dbg(ap->dev, "%s intpr=0x%08x active_tag=%d\n", __func__, intpr,
-> +		ap->link.active_tag);
-> +
-> +	/* Check for error interrupt */
-> +	if (intpr&  SATA_DWC_INTPR_ERR) {
-> +		sata_dwc_error_intr(ap, hsdev, intpr);
-> +		handled = 1;
-> +		goto DONE;
-> +	}
-> +
-> +	/* Check for DMA SETUP FIS (FP DMA) interrupt */
-> +	if (intpr&  SATA_DWC_INTPR_NEWFP) {
-> +		clear_interrupt_bit(hsdev, SATA_DWC_INTPR_NEWFP);
-> +
-> +		tag = (u8)(in_le32(&hsdev->sata_dwc_regs->fptagr));
-> +		dev_dbg(ap->dev, "%s: NEWFP tag=%d\n", __func__, tag);
-> +		if (hsdevp->cmd_issued[tag] != SATA_DWC_CMD_ISSUED_PEND)
-> +			dev_warn(ap->dev, "CMD tag=%d not pending?\n", tag);
-> +
-> +		host_pvt.sata_dwc_sactive_issued |= qcmd_tag_to_mask(tag);
-> +
-> +		qc = ata_qc_from_tag(ap, tag);
-> +		/* Start FP DMA for NCQ command.  At this point the tag is the
-> +		 * active tag.  It is the tag that matches the command about to
-> +		 * be completed.
-> +		 */
-> +		qc->ap->link.active_tag = tag;
-> +		sata_dwc_bmdma_start_by_tag(qc, tag);
-> +
-> +		handled = 1;
-> +		goto DONE;
-> +	}
-> +
-> +	sactive = core_scr_read(SCR_ACTIVE);
-> +	tag_mask = (host_pvt.sata_dwc_sactive_issued | sactive) ^ sactive;
-> +
-> +	/* If no sactive issued and tag_mask is zero then this is not NCQ */
-> +	if (host_pvt.sata_dwc_sactive_issued == 0&&  tag_mask == 0) {
-> +		if (ap->link.active_tag == ATA_TAG_POISON)
-> +			tag = 0;
-> +		else
-> +			tag = ap->link.active_tag;
-> +		qc = ata_qc_from_tag(ap, tag);
-> +
-> +		/* DEV interrupt w/ no active qc? */
-> +		if (unlikely(!qc || (qc->tf.flags&  ATA_TFLAG_POLLING))) {
-> +			dev_err(ap->dev, "%s interrupt with no active qc "
-> +				"qc=%p\n", __func__, qc);
-> +			ap->ops->sff_check_status(ap);
-> +			handled = 1;
-> +			goto DONE;
-> +		}
-> +
-> +		status = ap->ops->sff_check_status(ap);
-> +
-> +		qc->ap->link.active_tag = tag;
-> +		hsdevp->cmd_issued[tag] = SATA_DWC_CMD_ISSUED_NOT;
-> +
-> +		if (status&  ATA_ERR) {
-> +			dev_dbg(ap->dev, "interrupt ATA_ERR (0x%x)\n", status);
-> +			sata_dwc_qc_complete(ap, qc, 1);
-> +			handled = 1;
-> +			goto DONE;
-> +		}
-> +
-> +		dev_dbg(ap->dev, "%s non-NCQ cmd interrupt, protocol: %s\n",
-> +			__func__, ata_get_cmd_descript(qc->tf.protocol));
-> +DRVSTILLBUSY:
-> +		if (ata_is_dma(qc->tf.protocol)) {
-> +			/* Each DMA transaction produces 2 interrupts. The DMAC
-> +			 * transfer complete interrupt and the SATA controller
-> +			 * operation done interrupt. The command should be
-> +			 * completed only after both interrupts are seen.
-> +			 */
-> +			host_pvt.dma_interrupt_count++;
-> +			if (hsdevp->dma_pending[tag] == \
-> +					SATA_DWC_DMA_PENDING_NONE) {
-> +				dev_err(ap->dev, "%s: DMA not pending "
-> +					"intpr=0x%08x status=0x%08x pending"
-> +					"=%d\n", __func__, intpr, status,
-> +					hsdevp->dma_pending[tag]);
-> +			}
-> +
-> +			if ((host_pvt.dma_interrupt_count % 2) == 0)
-> +				sata_dwc_dma_xfer_complete(ap, 1);
-> +		} else if (ata_is_pio(qc->tf.protocol)) {
-> +			ata_sff_hsm_move(ap, qc, status, 0);
-> +			handled = 1;
-> +			goto DONE;
+> +		if (qc->tf.flags&  ATA_TFLAG_WRITE) {
+> +			pd->dma_desc[pd->dma_desc_id].dsadr = cpu_addr;
+> +			pd->dma_desc[pd->dma_desc_id].dtadr = pd->dma_io_addr;
+> +			pd->dma_desc[pd->dma_desc_id].dcmd |= DCMD_INCSRCADDR |
+> +						DCMD_FLOWTRG;
 > +		} else {
-> +			if (unlikely(sata_dwc_qc_complete(ap, qc, 1)))
-> +				goto DRVSTILLBUSY;
+> +			pd->dma_desc[pd->dma_desc_id].dsadr = pd->dma_io_addr;
+> +			pd->dma_desc[pd->dma_desc_id].dtadr = cpu_addr;
+> +			pd->dma_desc[pd->dma_desc_id].dcmd |= DCMD_INCTRGADDR |
+> +						DCMD_FLOWSRC;
 > +		}
+> +	
+> +		cpu_len -= seg_len;
+> +		cpu_addr += seg_len;
+> +		pd->dma_desc_id++;
 > +
-> +		handled = 1;
-> +		goto DONE;
-> +	}
+> +	} while(cpu_len);
 > +
-> +	/*
-> +	 * This is a NCQ command. At this point we need to figure out for which
-> +	 * tags we have gotten a completion interrupt.  One interrupt may serve
-> +	 * as completion for more than one operation when commands are queued
-> +	 * (NCQ).  We need to process each completed command.
-> +	 */
-> +
-> +	 /* process completed commands */
-> +	sactive = core_scr_read(SCR_ACTIVE);
-> +	tag_mask = (host_pvt.sata_dwc_sactive_issued | sactive) ^ sactive;
-> +
-> +	if (sactive != 0 || (host_pvt.sata_dwc_sactive_issued)>  1 || \
-> +							tag_mask>  1) {
-> +		dev_dbg(ap->dev, "%s NCQ:sactive=0x%08x  sactive_issued=0x%08x"
-> +			"tag_mask=0x%08x\n", __func__, sactive,
-> +			host_pvt.sata_dwc_sactive_issued, tag_mask);
-> +	}
-> +
-> +	if ((tag_mask | (host_pvt.sata_dwc_sactive_issued)) != \
-> +					(host_pvt.sata_dwc_sactive_issued)) {
-> +		dev_warn(ap->dev, "Bad tag mask?  sactive=0x%08x "
-> +			 "(host_pvt.sata_dwc_sactive_issued)=0x%08x  tag_mask"
-> +			 "=0x%08x\n", sactive, host_pvt.sata_dwc_sactive_issued,
-> +			  tag_mask);
-> +	}
-> +
-> +	/* read just to clear ... not bad if currently still busy */
-> +	status = ap->ops->sff_check_status(ap);
-> +	dev_dbg(ap->dev, "%s ATA status register=0x%x\n", __func__, status);
-> +
-> +	tag = 0;
-> +	num_processed = 0;
-> +	while (tag_mask) {
-> +		num_processed++;
-> +		while (!(tag_mask&  0x00000001)) {
-> +			tag++;
-> +			tag_mask<<= 1;
-> +		}
-> +		tag_mask&= (~0x00000001);
-> +		qc = ata_qc_from_tag(ap, tag);
-> +
-> +		/* To be picked up by completion functions */
-> +		qc->ap->link.active_tag = tag;
-> +		hsdevp->cmd_issued[tag] = SATA_DWC_CMD_ISSUED_NOT;
-> +
-> +		/* Let libata/scsi layers handle error */
-> +		if (status&  ATA_ERR) {
-> +			dev_dbg(ap->dev, "%s ATA_ERR (0x%x)\n", __func__,
-> +				status);
-> +			sata_dwc_qc_complete(ap, qc, 1);
-> +			handled = 1;
-> +			goto DONE;
-> +		}
-> +
-> +		/* Process completed command */
-> +		dev_dbg(ap->dev, "%s NCQ command, protocol: %s\n", __func__,
-> +			ata_get_cmd_descript(qc->tf.protocol));
-> +		if (ata_is_dma(qc->tf.protocol)) {
-> +			host_pvt.dma_interrupt_count++;
-> +			if (hsdevp->dma_pending[tag] == \
-> +					SATA_DWC_DMA_PENDING_NONE)
-> +				dev_warn(ap->dev, "%s: DMA not pending?\n",
-> +					__func__);
-> +			if ((host_pvt.dma_interrupt_count % 2) == 0)
-> +				sata_dwc_dma_xfer_complete(ap, 1);
-> +		} else {
-> +			if (unlikely(sata_dwc_qc_complete(ap, qc, 1)))
-> +				goto STILLBUSY;
-> +		}
-> +		continue;
-> +
-> +STILLBUSY:
-> +		ap->stats.idle_irq++;
-> +		dev_warn(ap->dev, "STILL BUSY IRQ ata%d: irq trap\n",
-> +			ap->print_id);
-> +	} /* while tag_mask */
+> +	/* Should not happen */
+> +	if (seg_len&  0x1f)
+> +		DALGN |= (1<<  pd->dma_dreq);
+> +}
 
-why not use ata_qc_complete_multiple?
+normally this is done in the fill_sg step, part of qc_prep.  is that 
+doable for pata_pxa?
 
 
-> +static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
+> +static void pxa_bmdma_setup(struct ata_queued_cmd *qc)
 > +{
-> +	struct sata_dwc_device *hsdev = HSDEV_FROM_HSDEVP(hsdevp);
+> +	struct pata_pxa_data *pd = qc->ap->private_data;
+> +	int si = 0;
+> +	struct scatterlist *sg;
 > +
-> +	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_RX) {
-> +		out_le32(&(hsdev->sata_dwc_regs->dmacr),
-> +			 SATA_DWC_DMACR_RX_CLEAR(
-> +				 in_le32(&(hsdev->sata_dwc_regs->dmacr))));
-> +	} else if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX) {
-> +		out_le32(&(hsdev->sata_dwc_regs->dmacr),
-> +			 SATA_DWC_DMACR_TX_CLEAR(
-> +				 in_le32(&(hsdev->sata_dwc_regs->dmacr))));
-> +	} else {
-> +		/* This should not happen, it indicates the driver is out of
-> +		 * sync.  If it does happen, clear dmacr anyway.
-> +		 */
-> +		dev_err(host_pvt.dwc_dev, "%s DMA protocol RX and"
-> +			"TX DMA not pending tag=0x%02x pending=%d"
-> +			" dmacr: 0x%08x\n", __func__, tag,
-> +			hsdevp->dma_pending[tag],
-> +			in_le32(&(hsdev->sata_dwc_regs->dmacr)));
-> +		out_le32(&(hsdev->sata_dwc_regs->dmacr),
-> +			SATA_DWC_DMACR_TXRXCH_CLEAR);
-> +	}
+> +	pd->dma_desc_id = 0;
+> +
+> +	DCSR(pd->dma_channel) = 0;
+> +	DALGN&= ~(1<<  pd->dma_dreq);
+> +
+> +	for_each_sg(qc->sg, sg, qc->n_elem, si)
+> +		pxa_load_dmac(sg, qc);
+> +
+> +	pd->dma_desc[pd->dma_desc_id - 1].ddadr = DDADR_STOP;
+> +
+> +	/* Fire IRQ only at the end of last block */
+> +	pd->dma_desc[pd->dma_desc_id - 1].dcmd |= DCMD_ENDIRQEN;
+> +
+> +	DDADR(pd->dma_channel) = pd->dma_desc_addr;
+> +	DRCMR(pd->dma_dreq) = DRCMR_MAPVLD | pd->dma_channel;
+> +	qc->ap->ops->sff_exec_command(qc->ap,&qc->tf);
 > +}
 > +
-> +static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32 check_status)
+> +/*
+> + * Execute the DMA transfer.
+> + */
+> +static void pxa_bmdma_start(struct ata_queued_cmd *qc)
 > +{
-> +	struct ata_queued_cmd *qc;
-> +	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
-> +	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
-> +	u8 tag = 0;
-> +
-> +	tag = ap->link.active_tag;
-> +	qc = ata_qc_from_tag(ap, tag);
-
-Note that qc may equal NULL!
-
-
-> +#ifdef DEBUG_NCQ
-> +	if (tag>  0) {
-> +		dev_info(ap->dev, "%s tag=%u cmd=0x%02x dma dir=%s proto=%s "
-> +			 "dmacr=0x%08x\n", __func__, qc->tag, qc->tf.command,
-> +			 ata_get_cmd_descript(qc->dma_dir),
-> +			 ata_get_cmd_descript(qc->tf.protocol),
-> +			 in_le32(&(hsdev->sata_dwc_regs->dmacr)));
-> +	}
-> +#endif
-> +
-> +	if (ata_is_dma(qc->tf.protocol)) {
-> +		if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_NONE) {
-> +			dev_err(ap->dev, "%s DMA protocol RX and TX DMA not "
-> +				"pending dmacr: 0x%08x\n", __func__,
-> +				in_le32(&(hsdev->sata_dwc_regs->dmacr)));
-> +		}
-> +
-> +		hsdevp->dma_pending[tag] = SATA_DWC_DMA_PENDING_NONE;
-> +		sata_dwc_qc_complete(ap, qc, check_status);
-> +		ap->link.active_tag = ATA_TAG_POISON;
-> +	} else {
-> +		sata_dwc_qc_complete(ap, qc, check_status);
-> +	}
+> +	struct pata_pxa_data *pd = qc->ap->private_data;
+> +	init_completion(&pd->dma_done);
+> +	DCSR(pd->dma_channel) = DCSR_RUN;
 > +}
 > +
-> +static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
-> +				u32 check_status)
+> +/*
+> + * Wait until the DMA transfer completes, then stop the DMA controller.
+> + */
+> +static void pxa_bmdma_stop(struct ata_queued_cmd *qc)
 > +{
-> +	u8 status = 0;
-> +	int i = 0;
-> +	u32 mask = 0x0;
-> +	u8 tag = qc->tag;
-> +	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
-> +	u32 serror;
-> +	host_pvt.sata_dwc_sactive_queued = 0;
-> +	dev_dbg(ap->dev, "%s checkstatus? %x\n", __func__, check_status);
+> +	struct pata_pxa_data *pd = qc->ap->private_data;
 > +
-> +	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX)
-> +		dev_err(ap->dev, "TX DMA PENDING\n");
-> +	else if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_RX)
-> +		dev_err(ap->dev, "RX DMA PENDING\n");
+> +	if (DCSR(pd->dma_channel)&  DCSR_RUN)
+> +		if (wait_for_completion_timeout(&pd->dma_done, HZ))
+> +			BUG();
 > +
-> +	if (check_status) {
-> +		i = 0;
-> +		do {
-> +			/* check main status, clearing INTRQ */
-> +			status = ap->ops->sff_check_status(ap);
-> +			if (status&  ATA_BUSY) {
-> +				dev_dbg(ap->dev, "STATUS BUSY (0x%02x) [%d]\n",
-> +						status, i);
-> +			}
-> +			if (++i>  10)
-> +				break;
-> +		} while (status&  ATA_BUSY);
-> +
-> +		status = ap->ops->sff_check_status(ap);
-> +		if (unlikely(status&  ATA_BUSY))
-> +			dev_err(ap->dev, "QC complete cmd=0x%02x STATUS BUSY"
-> +				" (0x%02x)[%d]\n", qc->tf.command, status, i);
-> +		serror = core_scr_read(SCR_ERROR);
-> +		if (serror&  SATA_DWC_SERROR_ERR_BITS)
-> +			dev_err(ap->dev, "****** SERROR=0x%08x ******\n",
-> +				serror);
-> +	}
-> +	dev_dbg(ap->dev, "QC complete cmd=0x%02x status=0x%02x ata%u:"
-> +		" protocol=%d\n", qc->tf.command, status, ap->print_id,
-> +		 qc->tf.protocol);
-> +
-> +	/* clear active bit */
-> +	mask = (~(qcmd_tag_to_mask(tag)));
-> +	host_pvt.sata_dwc_sactive_queued = (host_pvt.sata_dwc_sactive_queued) \
-> +						&  mask;
-> +	host_pvt.sata_dwc_sactive_issued = (host_pvt.sata_dwc_sactive_issued) \
-> +						&  mask;
-> +
-> +	/* Complete taskfile transaction (does not read SCR registers) */
-> +	ata_qc_complete(qc);
-> +
-> +	return 0;
+> +	DCSR(pd->dma_channel) = 0;
 
-why is this loop in qc_complete?  That is highly unusual.
+a little bit more description than BUG() would be useful.  BUG() is a 
+bit unfriendly and vague way to report errors.
 
-
-> +/******************************************************************************
-> + * Function : sata_dwc_qc_prep
-> + * arguments : ata_queued_cmd *qc
-> + * Return value : None
-> + * qc_prep for a particular queued command
-> + *****************************************************************************/
-> +#if 1
-> +static void sata_dwc_qc_prep(struct ata_queued_cmd *qc)
+> + * Read DMA status. The bmdma_stop() will take care of properly finishing the
+> + * DMA transfer so we always have DMA-complete interrupt here.
+> + */
+> +static unsigned char pxa_bmdma_status(struct ata_port *ap)
 > +{
-> +	if ((qc->dma_dir == DMA_NONE) || (qc->tf.protocol == ATA_PROT_PIO))
-> +		return;
-> +
-> +#ifdef DEBUG_NCQ
-> +	if (qc->tag>  0)
-> +		dev_info(qc->ap->dev, "%s: qc->tag=%d ap->active_tag=0x%08x\n",
-> +			 __func__, tag, qc->ap->link.active_tag);
-> +
-> +	return ;
-> +#endif
+> +	return ATA_DMA_INTR;
 > +}
-> +#endif
-> +static void sata_dwc_error_handler(struct ata_port *ap)
+
+are you able to detect bus error?
+
+
+> + */
+> +static void pxa_irq_clear(struct ata_port *ap)
 > +{
-> +	ap->link.flags |= ATA_LFLAG_NO_HRST;
-> +	ata_sff_error_handler(ap);
-> +	ap->link.flags&= ~ATA_LFLAG_NO_HRST;
-
-why do you mess with ATA_LFLAG_NO_HRST in this way?
-
-
-> +	/* Get SATA interrupt number */
-> +	irq = irq_of_parse_and_map(ofdev->node, 0);
-> +	if (irq == NO_IRQ) {
-> +		dev_err(&ofdev->dev, "no SATA DMA irq\n");
-> +		err = -ENODEV;
-> +		goto error_out;
-> +	}
+> +}
 > +
-> +	/*
-> +	 * Now, register with libATA core, this will also initiate the
-> +	 * device discovery process, invoking our port_start() handler&
-> +	 * error_handler() to execute a dummy Softreset EH session
-> +	 */
-> +	ata_host_activate(host, irq, sata_dwc_isr, 0,&sata_dwc_sht);
+> +/*
+> + * Check for ATAPI DMA. ATAPI DMA is unsupported by this driver. It's still
+> + * unclear why ATAPI has DMA issues.
+> + */
+> +static int pxa_check_atapi_dma(struct ata_queued_cmd *qc)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
 
-handle ata_host_activate failure
+This is a bug.  Return 1 or 0.  This statement actually tells libata to 
+-enable- DMA!
