@@ -1,51 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/8] block,ide: simplify bdops->set_capacity() to ->unlock_native_capacity()
-Date: Sat, 15 May 2010 20:58:02 +0200
-Message-ID: <4BEEEEBA.9050506@kernel.org>
-References: <1273946974-29131-1-git-send-email-tj@kernel.org> <1273946974-29131-4-git-send-email-tj@kernel.org> <201005152048.00259.bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 7/8] libata: use the enlarged capacity after late HPA
+ unlock
+Date: Sat, 15 May 2010 15:22:15 -0400
+Message-ID: <4BEEF467.9030300@garzik.org>
+References: <1273946974-29131-1-git-send-email-tj@kernel.org> <1273946974-29131-8-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47484 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751564Ab0EOS60 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 May 2010 14:58:26 -0400
-In-Reply-To: <201005152048.00259.bzolnier@gmail.com>
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:40354 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542Ab0EOTWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 May 2010 15:22:17 -0400
+In-Reply-To: <1273946974-29131-8-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@davemloft.net
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, ben@decadent.org.uk, davem@davemloft.net, bzolnier@gmail.com
 
-Hello, Bartlomiej.
-
-On 05/15/2010 08:48 PM, Bartlomiej Zolnierkiewicz wrote:
-> This seems to rely on an optimistic assumption that command execution
-> will always be successful and that no errors on disk or host level can
-> ever happen..
+On 05/15/2010 02:09 PM, Tejun Heo wrote:
+> After late HPA unlock, libata kept using the original capacity
+> ignoring the new larger native capacity.  Enlarging device on the fly
+> doesn't cause any harm.  Use the larger native capacity instead.  This
+> will enable on-demand HPA unlocking.
 >
-> [ The assumption in question was introduced in the previous patch:
-...
-> originally if the command execution failed the 'capacity' would be 0 ]
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Cc: Ben Hutchings<ben@decadent.org.uk>
 
-Hmm... nothing really changes by this tho.  Whether unlocking succeeds
-or not, the block layer will revalidate the disk and the state at that
-point will be taken as the configuration to use.  There really is
-nothing much else to do.  You try unlocking, if it unlocks, use new
-capacity.  If unlocking fails, revalidation will report the limited
-size and block layer will have to use that.  If the device dies due to
-the unlocking attempt, well, the device is dead all the same.
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-> It also seems that the original code could be improved a lot to handle
-> (very unlikely but not impossible) error situations better..
 
-If retry is deemed necessary, it's best handled inside the per-driver
-unlock handler.  I don't think pushing EH logic upto block layer in
-this case would be a good idea.  Block layer is basically telling the
-driver "do whatever you can do to unlock the native capacity, when
-you're done, I'll restart from the beginning".
-
-Thanks.
-
--- 
-tejun
