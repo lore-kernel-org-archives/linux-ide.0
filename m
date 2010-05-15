@@ -1,34 +1,33 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/3] libata: Make sil680 do its own exec_command posting
-Date: Fri, 14 May 2010 22:34:56 -0400
-Message-ID: <4BEE0850.5060502@garzik.org>
-References: <20100505092350.586.46344.stgit@localhost.localdomain> <20100505092542.586.16410.stgit@localhost.localdomain>
+Subject: Re: [PATCH 01/23] pata_sch: use ata_pci_sff_init_one()
+Date: Fri, 14 May 2010 22:39:14 -0400
+Message-ID: <4BEE0952.1010809@garzik.org>
+References: <1273520507-32459-1-git-send-email-tj@kernel.org> <1273520507-32459-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f191.google.com ([209.85.210.191]:59427 "EHLO
-	mail-yx0-f191.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811Ab0EOCe7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 May 2010 22:34:59 -0400
-Received: by yxe29 with SMTP id 29so1353242yxe.4
-        for <linux-ide@vger.kernel.org>; Fri, 14 May 2010 19:34:57 -0700 (PDT)
-In-Reply-To: <20100505092542.586.16410.stgit@localhost.localdomain>
+Received: from mail-yw0-f198.google.com ([209.85.211.198]:42319 "EHLO
+	mail-yw0-f198.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753026Ab0EOCjR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 May 2010 22:39:17 -0400
+Received: by ywh36 with SMTP id 36so1588682ywh.4
+        for <linux-ide@vger.kernel.org>; Fri, 14 May 2010 19:39:16 -0700 (PDT)
+In-Reply-To: <1273520507-32459-2-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com
 
-On 05/05/2010 05:25 AM, Alan Cox wrote:
-> Use our own mmio area to avoid PCI posting. This avoids the rather slow
-> paranoid implementation in the default handler.
+On 05/10/2010 03:41 PM, Tejun Heo wrote:
+> pata_sch is standard SFF.  No reason to open code init.  Use
+> ata_pci_sff_init_one() instead.
 >
-> Signed-off-by: Alan Cox<alan@linux.intel.com>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
 > ---
->
->   drivers/ata/pata_sil680.c |   30 ++++++++++++++++++++++++++----
->   1 files changed, 26 insertions(+), 4 deletions(-)
+>   drivers/ata/pata_sch.c |   12 +-----------
+>   1 files changed, 1 insertions(+), 11 deletions(-)
 
-applied
+applied 1-5
 
 
