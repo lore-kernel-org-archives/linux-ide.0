@@ -1,18 +1,18 @@
 From: Marek Vasut <marek.vasut@gmail.com>
-Subject: [PATCH v2] PXA DMA-capable PATA driver
-Date: Tue, 18 May 2010 01:05:13 +0200
-Message-ID: <1274137513-27625-1-git-send-email-marek.vasut@gmail.com>
+Subject: [PATCH v3] PXA DMA-capable PATA driver
+Date: Tue, 18 May 2010 01:09:28 +0200
+Message-ID: <1274137768-27707-1-git-send-email-marek.vasut@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62449 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:64075 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756407Ab0EQXGt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 May 2010 19:06:49 -0400
-Received: by fxm10 with SMTP id 10so445689fxm.19
-        for <linux-ide@vger.kernel.org>; Mon, 17 May 2010 16:06:48 -0700 (PDT)
+	with ESMTP id S1754535Ab0EQXLF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 May 2010 19:11:05 -0400
+Received: by fxm10 with SMTP id 10so448149fxm.19
+        for <linux-ide@vger.kernel.org>; Mon, 17 May 2010 16:11:02 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: eric.y.miao@gmail.com, haojian.zhuang@gmail.com, Marek Vasut <marek.vasut@gmail.com>
+Cc: eric.y.miao@gmail.com, haojian.zhuang@gmail.com, jeff@garzik.org, robert.jarzmik@free.fr, Marek Vasut <marek.vasut@gmail.com>
 
 This patch adds a driver for a harddrive attached to PXA address and data bus.
 Unlike pata_platform, this driver allows usage of PXA DMA controller, making the
