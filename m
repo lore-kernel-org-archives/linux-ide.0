@@ -1,516 +1,299 @@
 From: Marek Vasut <marek.vasut@gmail.com>
-Subject: [PATCH v3] PXA DMA-capable PATA driver
-Date: Tue, 18 May 2010 01:09:28 +0200
-Message-ID: <1274137768-27707-1-git-send-email-marek.vasut@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64075 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535Ab0EQXLF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 May 2010 19:11:05 -0400
-Received: by fxm10 with SMTP id 10so448149fxm.19
-        for <linux-ide@vger.kernel.org>; Mon, 17 May 2010 16:11:02 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Subject: Re: [PATCH v3] PXA DMA-capable PATA driver
+Date: Tue, 18 May 2010 01:12:30 +0200
+Message-ID: <201005180112.30792.marek.vasut@gmail.com>
+References: <1274137768-27707-1-git-send-email-marek.vasut@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1274137768-27707-1-git-send-email-marek.vasut@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-ide@vger.kernel.org
+Cc: eric.y.miao@gmail.com, jeff@garzik.org, haojian.zhuang@gmail.com, radoslav.deak@voipac.com, robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: eric.y.miao@gmail.com, haojian.zhuang@gmail.com, jeff@garzik.org, robert.jarzmik@free.fr, Marek Vasut <marek.vasut@gmail.com>
 
-This patch adds a driver for a harddrive attached to PXA address and data bus.
-Unlike pata_platform, this driver allows usage of PXA DMA controller, making the
-transmission speed 3x higher.
-
-Signed-off-by: Marek Vasut <marek.vasut@gmail.com>
----
- arch/arm/mach-pxa/include/mach/pata_pxa.h |   33 +++
- drivers/ata/Kconfig                       |   11 +
- drivers/ata/Makefile                      |    1 +
- drivers/ata/pata_pxa.c                    |  404 +++++++++++++++++++++++++++++
- 4 files changed, 449 insertions(+), 0 deletions(-)
- create mode 100644 arch/arm/mach-pxa/include/mach/pata_pxa.h
- create mode 100644 drivers/ata/pata_pxa.c
-
-diff --git a/arch/arm/mach-pxa/include/mach/pata_pxa.h b/arch/arm/mach-pxa/include/mach/pata_pxa.h
-new file mode 100644
-index 0000000..6cf7df1
---- /dev/null
-+++ b/arch/arm/mach-pxa/include/mach/pata_pxa.h
-@@ -0,0 +1,33 @@
-+/*
-+ * Generic PXA PATA driver
-+ *
-+ * Copyright (C) 2010 Marek Vasut <marek.vasut@gmail.com>
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2, or (at your option)
-+ *  any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; see the file COPYING.  If not, write to
-+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+
-+#ifndef	__MACH_PATA_PXA_H__
-+#define	__MACH_PATA_PXA_H__
-+
-+struct pata_pxa_pdata {
-+	/* PXA DMA DREQ<0:2> pin */
-+	uint32_t	dma_dreq;
-+	/* Register shift */
-+	uint32_t	reg_shift;
-+	/* IRQ flags */
-+	uint32_t	irq_flags;
-+};
-+
-+#endif	/* __MACH_PATA_PXA_H__ */
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 01c52c4..5cd3e8c 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -684,6 +684,17 @@ config PATA_VIA
- 
- 	  If unsure, say N.
- 
-+config PATA_PXA
-+	tristate "PXA DMA-capable PATA support"
-+	depends on ARCH_PXA
-+	help
-+	  This option enables support for harddrive attached to PXA CPU's bus.
-+	  
-+	  NOTE: This driver utilizes PXA DMA controller, in case your hardware
-+	        is not capable of doing MWDMA, use pata_platform instead.
-+
-+	  If unsure, say N.
-+
- config PATA_WINBOND
- 	tristate "Winbond SL82C105 PATA support"
- 	depends on PCI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index fc936d4..5ecf45a 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -79,6 +79,7 @@ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
- obj-$(CONFIG_PATA_AT91)	+= pata_at91.o
- obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
- obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
-+obj-$(CONFIG_PATA_PXA)		+= pata_pxa.o
- # Should be last but two libata driver
- obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
- # Should be last but one libata driver
-diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-new file mode 100644
-index 0000000..3f3071e
---- /dev/null
-+++ b/drivers/ata/pata_pxa.c
-@@ -0,0 +1,404 @@
-+/*
-+ * Generic PXA PATA driver
-+ *
-+ * Copyright (C) 2010 Marek Vasut <marek.vasut@gmail.com>
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2, or (at your option)
-+ *  any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; see the file COPYING.  If not, write to
-+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/blkdev.h>
-+#include <linux/ata.h>
-+#include <linux/libata.h>
-+#include <linux/platform_device.h>
-+#include <linux/gpio.h>
-+#include <linux/slab.h>
-+#include <linux/completion.h>
-+
-+#include <scsi/scsi_host.h>
-+
-+#include <mach/pxa2xx-regs.h>
-+#include <mach/pata_pxa.h>
-+#include <mach/dma.h>
-+
-+#define DRV_NAME	"pata_pxa"
-+#define DRV_VERSION	"0.1"
-+
-+struct pata_pxa_data {
-+	uint32_t		dma_channel;
-+	struct pxa_dma_desc	*dma_desc;
-+	dma_addr_t		dma_desc_addr;
-+	uint32_t		dma_desc_id;
-+
-+	/* DMA IO physical address */
-+	uint32_t		dma_io_addr;
-+	/* PXA DREQ<0:2> pin selector */
-+	uint32_t		dma_dreq;
-+	/* DMA DCSR register value */
-+	uint32_t		dma_dcsr;
-+
-+	struct completion	dma_done;
-+};
-+
-+/*
-+ * Setup the DMA descriptors. The size is transfer capped at 4k per descriptor,
-+ * if the transfer is longer, it is split into multiple chained descriptors.
-+ */
-+static void pxa_load_dmac(struct scatterlist *sg, struct ata_queued_cmd *qc)
-+{
-+	struct pata_pxa_data *pd = qc->ap->private_data;
-+
-+	uint32_t cpu_len, seg_len;
-+	dma_addr_t cpu_addr;
-+
-+	cpu_addr = sg_dma_address(sg);
-+	cpu_len = sg_dma_len(sg);
-+
-+	do {
-+		seg_len = (cpu_len > 0x1000) ? 0x1000 : cpu_len;
-+
-+		pd->dma_desc[pd->dma_desc_id].ddadr = pd->dma_desc_addr +
-+			((pd->dma_desc_id + 1) * sizeof(struct pxa_dma_desc));
-+
-+		pd->dma_desc[pd->dma_desc_id].dcmd = DCMD_BURST32 | DCMD_WIDTH2 |
-+					(DCMD_LENGTH & seg_len);
-+
-+		if (qc->tf.flags & ATA_TFLAG_WRITE) {
-+			pd->dma_desc[pd->dma_desc_id].dsadr = cpu_addr;
-+			pd->dma_desc[pd->dma_desc_id].dtadr = pd->dma_io_addr;
-+			pd->dma_desc[pd->dma_desc_id].dcmd |= DCMD_INCSRCADDR |
-+						DCMD_FLOWTRG;
-+		} else {
-+			pd->dma_desc[pd->dma_desc_id].dsadr = pd->dma_io_addr;
-+			pd->dma_desc[pd->dma_desc_id].dtadr = cpu_addr;
-+			pd->dma_desc[pd->dma_desc_id].dcmd |= DCMD_INCTRGADDR |
-+						DCMD_FLOWSRC;
-+		}
-+	
-+		cpu_len -= seg_len;
-+		cpu_addr += seg_len;
-+		pd->dma_desc_id++;
-+
-+	} while(cpu_len);
-+
-+	/* Should not happen */
-+	if (seg_len & 0x1f)
-+		DALGN |= (1 << pd->dma_dreq);
-+}
-+
-+/*
-+ * Prepare taskfile for submission.
-+ */
-+static void pxa_qc_prep(struct ata_queued_cmd *qc)
-+{
-+	struct pata_pxa_data *pd = qc->ap->private_data;
-+	int si = 0;
-+	struct scatterlist *sg;
-+
-+	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
-+		return;
-+
-+	pd->dma_desc_id = 0;
-+
-+	DCSR(pd->dma_channel) = 0;
-+	DALGN &= ~(1 << pd->dma_dreq);
-+
-+	for_each_sg(qc->sg, sg, qc->n_elem, si)
-+		pxa_load_dmac(sg, qc);
-+
-+	pd->dma_desc[pd->dma_desc_id - 1].ddadr = DDADR_STOP;
-+
-+	/* Fire IRQ only at the end of last block */
-+	pd->dma_desc[pd->dma_desc_id - 1].dcmd |= DCMD_ENDIRQEN;
-+
-+	DDADR(pd->dma_channel) = pd->dma_desc_addr;
-+	DRCMR(pd->dma_dreq) = DRCMR_MAPVLD | pd->dma_channel;
-+
-+}
-+
-+/*
-+ * Configure the DMA controller, load the DMA descriptors, but don't start the
-+ * DMA controller yet. Only issue the ATA command.
-+ */
-+static void pxa_bmdma_setup(struct ata_queued_cmd *qc)
-+{
-+	qc->ap->ops->sff_exec_command(qc->ap, &qc->tf);
-+}
-+
-+/*
-+ * Execute the DMA transfer.
-+ */
-+static void pxa_bmdma_start(struct ata_queued_cmd *qc)
-+{
-+	struct pata_pxa_data *pd = qc->ap->private_data;
-+	init_completion(&pd->dma_done);
-+	DCSR(pd->dma_channel) = DCSR_RUN;
-+}
-+
-+/*
-+ * Wait until the DMA transfer completes, then stop the DMA controller.
-+ */
-+static void pxa_bmdma_stop(struct ata_queued_cmd *qc)
-+{
-+	struct pata_pxa_data *pd = qc->ap->private_data;
-+
-+	if ((DCSR(pd->dma_channel) & DCSR_RUN) &&
-+		wait_for_completion_timeout(&pd->dma_done, HZ))
-+		dev_err(qc->ap->dev, "Timeout waiting for DMA completion!");
-+
-+	DCSR(pd->dma_channel) = 0;
-+}
-+
-+/*
-+ * Read DMA status. The bmdma_stop() will take care of properly finishing the
-+ * DMA transfer so we always have DMA-complete interrupt here.
-+ */
-+static unsigned char pxa_bmdma_status(struct ata_port *ap)
-+{
-+	struct pata_pxa_data *pd = ap->private_data;
-+	unsigned char ret = ATA_DMA_INTR;
-+
-+	if (pd->dma_dcsr & DCSR_BUSERR)
-+		ret |= ATA_DMA_ERR;
-+
-+	return ret;
-+}
-+
-+/*
-+ * No IRQ register present so we do nothing.
-+ */
-+static void pxa_irq_clear(struct ata_port *ap)
-+{
-+}
-+
-+/*
-+ * Check for ATAPI DMA. ATAPI DMA is unsupported by this driver. It's still
-+ * unclear why ATAPI has DMA issues.
-+ */
-+static int pxa_check_atapi_dma(struct ata_queued_cmd *qc)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static struct scsi_host_template pxa_ata_sht = {
-+	ATA_BMDMA_SHT(DRV_NAME),
-+};
-+
-+static struct ata_port_operations pxa_ata_port_ops = {
-+	.inherits		= &ata_bmdma_port_ops,
-+	.cable_detect		= ata_cable_40wire,
-+
-+	.bmdma_setup		= pxa_bmdma_setup,
-+	.bmdma_start		= pxa_bmdma_start,
-+	.bmdma_stop		= pxa_bmdma_stop,
-+	.bmdma_status		= pxa_bmdma_status,
-+
-+	.check_atapi_dma	= pxa_check_atapi_dma,
-+
-+	.sff_irq_clear		= pxa_irq_clear,
-+
-+	.qc_prep		= pxa_qc_prep,
-+};
-+
-+/*
-+ * DMA interrupt handler.
-+ */
-+static void pxa_ata_dma_irq(int dma, void *port)
-+{
-+	struct ata_port *ap = port;
-+	struct pata_pxa_data *pd = ap->private_data;
-+
-+	pd->dma_dcsr = DCSR(dma);
-+	DCSR(dma) = pd->dma_dcsr;
-+
-+	if (pd->dma_dcsr & DCSR_STOPSTATE)
-+		complete(&pd->dma_done);
-+}
-+
-+static int __devinit pxa_ata_probe(struct platform_device *pdev)
-+{
-+	struct ata_host *host;
-+	struct ata_port *ap;
-+	struct pata_pxa_data *data;
-+	struct resource *cmd_res;
-+	struct resource *ctl_res;
-+	struct resource *dma_res;
-+	struct resource *irq_res;
-+	struct pata_pxa_pdata *pdata = pdev->dev.platform_data;
-+
-+	/*
-+	 * Resource validation, three resources are needed:
-+	 *  - CMD port base address
-+	 *  - CTL port base address
-+	 *  - DMA port base address
-+	 *  - IRQ pin
-+	 */
-+	if (pdev->num_resources != 4) {
-+		dev_err(&pdev->dev, "invalid number of resources\n");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * CMD port base address
-+	 */
-+	cmd_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (unlikely(cmd_res == NULL))
-+		return -EINVAL;
-+
-+	/*
-+	 * CTL port base address
-+	 */
-+	ctl_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (unlikely(ctl_res == NULL))
-+		return -EINVAL;
-+
-+	/*
-+	 * DMA port base address
-+	 */
-+	dma_res = platform_get_resource(pdev, IORESOURCE_DMA, 0);
-+	if (unlikely(dma_res == NULL))
-+		return -EINVAL;
-+
-+	/*
-+	 * IRQ pin
-+	 */
-+	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (unlikely(irq_res == NULL))
-+		return -EINVAL;
-+
-+	/*
-+	 * Allocate the host
-+	 */
-+	host = ata_host_alloc(&pdev->dev, 1);
-+	if (!host)
-+		return -ENOMEM;
-+
-+	ap		= host->ports[0];
-+	ap->ops		= &pxa_ata_port_ops;
-+	ap->pio_mask	= ATA_PIO4;
-+	ap->mwdma_mask	= ATA_MWDMA2;
-+	ap->flags	= ATA_FLAG_MMIO;
-+
-+	ap->ioaddr.cmd_addr	= devm_ioremap(&pdev->dev, cmd_res->start,
-+						resource_size(cmd_res));
-+	ap->ioaddr.ctl_addr	= devm_ioremap(&pdev->dev, ctl_res->start,
-+						resource_size(ctl_res));
-+	ap->ioaddr.bmdma_addr	= devm_ioremap(&pdev->dev, dma_res->start,
-+						resource_size(dma_res));
-+
-+	/*
-+	 * Adjust register offsets
-+	 */
-+	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
-+	ap->ioaddr.data_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_DATA << pdata->reg_shift);
-+	ap->ioaddr.error_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_ERR << pdata->reg_shift);
-+	ap->ioaddr.feature_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_FEATURE << pdata->reg_shift);
-+	ap->ioaddr.nsect_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_NSECT << pdata->reg_shift);
-+	ap->ioaddr.lbal_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_LBAL << pdata->reg_shift);
-+	ap->ioaddr.lbam_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_LBAM << pdata->reg_shift);
-+	ap->ioaddr.lbah_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_LBAH << pdata->reg_shift);
-+	ap->ioaddr.device_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_DEVICE << pdata->reg_shift);
-+	ap->ioaddr.status_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_STATUS << pdata->reg_shift);
-+	ap->ioaddr.command_addr	= ap->ioaddr.cmd_addr +
-+					(ATA_REG_CMD << pdata->reg_shift);
-+
-+	/*
-+	 * Allocate and load driver's internal data structure
-+	 */
-+	data = devm_kzalloc(&pdev->dev, sizeof(struct pata_pxa_data),
-+								GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	ap->private_data = data;
-+	data->dma_dreq = pdata->dma_dreq;
-+	data->dma_io_addr = dma_res->start;
-+
-+	/*
-+	 * Request the DMA channel
-+	 */
-+	data->dma_channel = pxa_request_dma(DRV_NAME, DMA_PRIO_LOW,
-+						pxa_ata_dma_irq, ap);
-+	if (data->dma_channel < 0)
-+		return -EBUSY;
-+
-+	/*
-+	 * Stop and clear the DMA channel
-+	 */
-+	DCSR(data->dma_channel) = 0;
-+
-+	/*
-+	 * Allocate space for the DMA descriptors
-+	 */
-+	data->dma_desc = dmam_alloc_coherent(&pdev->dev, PAGE_SIZE,
-+					&data->dma_desc_addr, GFP_KERNEL);
-+
-+	/*
-+	 * Activate the ATA host
-+	 */
-+	return ata_host_activate(host, irq_res->start, ata_sff_interrupt,
-+				pdata->irq_flags, &pxa_ata_sht);
-+}
-+
-+static int __devexit pxa_ata_remove(struct platform_device *pdev)
-+{
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	struct pata_pxa_data *data = host->ports[0]->private_data;
-+
-+	pxa_free_dma(data->dma_channel);
-+
-+	ata_host_detach(host);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver pxa_ata_driver = {
-+	.probe		= pxa_ata_probe,
-+	.remove		= __devexit_p(pxa_ata_remove),
-+	.driver		= {
-+		.name		= DRV_NAME,
-+		.owner		= THIS_MODULE,
-+	},
-+};
-+
-+static int __init pxa_ata_init(void)
-+{
-+	return platform_driver_register(&pxa_ata_driver);
-+}
-+
-+static void __exit pxa_ata_exit(void)
-+{
-+	platform_driver_unregister(&pxa_ata_driver);
-+}
-+
-+module_init(pxa_ata_init);
-+module_exit(pxa_ata_exit);
-+
-+MODULE_AUTHOR("Marek Vasut <marek.vasut@gmail.com>");
-+MODULE_DESCRIPTION("DMA-capable driver for PATA on PXA CPU");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION(DRV_VERSION);
-+MODULE_ALIAS("platform:" DRV_NAME);
--- 
-1.7.0
-
+RG5lIMOadCAxOC4ga3bEm3RuYSAyMDEwIDAxOjA5OjI4IE1hcmVrIFZhc3V0IG5hcHNhbChhKToK
+PiBUaGlzIHBhdGNoIGFkZHMgYSBkcml2ZXIgZm9yIGEgaGFyZGRyaXZlIGF0dGFjaGVkIHRvIFBY
+QSBhZGRyZXNzIGFuZCBkYXRhCj4gYnVzLiBVbmxpa2UgcGF0YV9wbGF0Zm9ybSwgdGhpcyBkcml2
+ZXIgYWxsb3dzIHVzYWdlIG9mIFBYQSBETUEgY29udHJvbGxlciwKPiBtYWtpbmcgdGhlIHRyYW5z
+bWlzc2lvbiBzcGVlZCAzeCBoaWdoZXIuCgpIZXkgZ3V5cywgYWxsIHRoZSBpc3N1ZXMgcG9pbnRl
+ZCBvdXQgc2hvdWxkIGJlIGFkZHJlc3NlZC4gU2VlIGJlbG93LgpDaGVlcnMhCgo+IAo+IFNpZ25l
+ZC1vZmYtYnk6IE1hcmVrIFZhc3V0IDxtYXJlay52YXN1dEBnbWFpbC5jb20+Cj4gLS0tCj4gIGFy
+Y2gvYXJtL21hY2gtcHhhL2luY2x1ZGUvbWFjaC9wYXRhX3B4YS5oIHwgICAzMyArKysKPiAgZHJp
+dmVycy9hdGEvS2NvbmZpZyAgICAgICAgICAgICAgICAgICAgICAgfCAgIDExICsKPiAgZHJpdmVy
+cy9hdGEvTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAgfCAgICAxICsKPiAgZHJpdmVycy9h
+dGEvcGF0YV9weGEuYyAgICAgICAgICAgICAgICAgICAgfCAgNDA0Cj4gKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysgNCBmaWxlcyBjaGFuZ2VkLCA0NDkgaW5zZXJ0aW9ucygrKSwgMAo+IGRl
+bGV0aW9ucygtKQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgYXJjaC9hcm0vbWFjaC1weGEvaW5jbHVk
+ZS9tYWNoL3BhdGFfcHhhLmgKPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvYXRhL3BhdGFf
+cHhhLmMKPiAKPiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm0vbWFjaC1weGEvaW5jbHVkZS9tYWNoL3Bh
+dGFfcHhhLmgKPiBiL2FyY2gvYXJtL21hY2gtcHhhL2luY2x1ZGUvbWFjaC9wYXRhX3B4YS5oIG5l
+dyBmaWxlIG1vZGUgMTAwNjQ0Cj4gaW5kZXggMDAwMDAwMC4uNmNmN2RmMQo+IC0tLSAvZGV2L251
+bGwKPiArKysgYi9hcmNoL2FybS9tYWNoLXB4YS9pbmNsdWRlL21hY2gvcGF0YV9weGEuaAo+IEBA
+IC0wLDAgKzEsMzMgQEAKPiArLyoKPiArICogR2VuZXJpYyBQWEEgUEFUQSBkcml2ZXIKPiArICoK
+PiArICogQ29weXJpZ2h0IChDKSAyMDEwIE1hcmVrIFZhc3V0IDxtYXJlay52YXN1dEBnbWFpbC5j
+b20+Cj4gKyAqCj4gKyAqICBUaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiBy
+ZWRpc3RyaWJ1dGUgaXQgYW5kL29yIG1vZGlmeQo+ICsgKiAgaXQgdW5kZXIgdGhlIHRlcm1zIG9m
+IHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZSBhcyBwdWJsaXNoZWQgYnkKPiArICogIHRo
+ZSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb247IGVpdGhlciB2ZXJzaW9uIDIsIG9yIChhdCB5b3Vy
+IG9wdGlvbikKPiArICogIGFueSBsYXRlciB2ZXJzaW9uLgo+ICsgKgo+ICsgKiAgVGhpcyBwcm9n
+cmFtIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBob3BlIHRoYXQgaXQgd2lsbCBiZSB1c2VmdWwsCj4g
+KyAqICBidXQgV0lUSE9VVCBBTlkgV0FSUkFOVFk7IHdpdGhvdXQgZXZlbiB0aGUgaW1wbGllZCB3
+YXJyYW50eSBvZgo+ICsgKiAgTUVSQ0hBTlRBQklMSVRZIG9yIEZJVE5FU1MgRk9SIEEgUEFSVElD
+VUxBUiBQVVJQT1NFLiAgU2VlIHRoZQo+ICsgKiAgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2Ug
+Zm9yIG1vcmUgZGV0YWlscy4KPiArICoKPiArICogIFlvdSBzaG91bGQgaGF2ZSByZWNlaXZlZCBh
+IGNvcHkgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlCj4gKyAqICBhbG9uZyB3aXRo
+IHRoaXMgcHJvZ3JhbTsgc2VlIHRoZSBmaWxlIENPUFlJTkcuICBJZiBub3QsIHdyaXRlIHRvCj4g
+KyAqICB0aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uLCA2NzUgTWFzcyBBdmUsIENhbWJyaWRn
+ZSwgTUEgMDIxMzksIFVTQS4KPiArICovCj4gKwo+ICsjaWZuZGVmCV9fTUFDSF9QQVRBX1BYQV9I
+X18KPiArI2RlZmluZQlfX01BQ0hfUEFUQV9QWEFfSF9fCj4gKwo+ICtzdHJ1Y3QgcGF0YV9weGFf
+cGRhdGEgewo+ICsJLyogUFhBIERNQSBEUkVRPDA6Mj4gcGluICovCj4gKwl1aW50MzJfdAlkbWFf
+ZHJlcTsKPiArCS8qIFJlZ2lzdGVyIHNoaWZ0ICovCj4gKwl1aW50MzJfdAlyZWdfc2hpZnQ7Cj4g
+KwkvKiBJUlEgZmxhZ3MgKi8KPiArCXVpbnQzMl90CWlycV9mbGFnczsKPiArfTsKPiArCj4gKyNl
+bmRpZgkvKiBfX01BQ0hfUEFUQV9QWEFfSF9fICovCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRh
+L0tjb25maWcgYi9kcml2ZXJzL2F0YS9LY29uZmlnCj4gaW5kZXggMDFjNTJjNC4uNWNkM2U4YyAx
+MDA2NDQKPiAtLS0gYS9kcml2ZXJzL2F0YS9LY29uZmlnCj4gKysrIGIvZHJpdmVycy9hdGEvS2Nv
+bmZpZwo+IEBAIC02ODQsNiArNjg0LDE3IEBAIGNvbmZpZyBQQVRBX1ZJQQo+IAo+ICAJICBJZiB1
+bnN1cmUsIHNheSBOLgo+IAo+ICtjb25maWcgUEFUQV9QWEEKPiArCXRyaXN0YXRlICJQWEEgRE1B
+LWNhcGFibGUgUEFUQSBzdXBwb3J0Igo+ICsJZGVwZW5kcyBvbiBBUkNIX1BYQQo+ICsJaGVscAo+
+ICsJICBUaGlzIG9wdGlvbiBlbmFibGVzIHN1cHBvcnQgZm9yIGhhcmRkcml2ZSBhdHRhY2hlZCB0
+byBQWEEgQ1BVJ3MgYnVzLgo+ICsKPiArCSAgTk9URTogVGhpcyBkcml2ZXIgdXRpbGl6ZXMgUFhB
+IERNQSBjb250cm9sbGVyLCBpbiBjYXNlIHlvdXIgaGFyZHdhcmUKPiArCSAgICAgICAgaXMgbm90
+IGNhcGFibGUgb2YgZG9pbmcgTVdETUEsIHVzZSBwYXRhX3BsYXRmb3JtIGluc3RlYWQuCj4gKwo+
+ICsJICBJZiB1bnN1cmUsIHNheSBOLgo+ICsKPiAgY29uZmlnIFBBVEFfV0lOQk9ORAo+ICAJdHJp
+c3RhdGUgIldpbmJvbmQgU0w4MkMxMDUgUEFUQSBzdXBwb3J0Igo+ICAJZGVwZW5kcyBvbiBQQ0kK
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvTWFrZWZpbGUgYi9kcml2ZXJzL2F0YS9NYWtlZmls
+ZQo+IGluZGV4IGZjOTM2ZDQuLjVlY2Y0NWEgMTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9hdGEvTWFr
+ZWZpbGUKPiArKysgYi9kcml2ZXJzL2F0YS9NYWtlZmlsZQo+IEBAIC03OSw2ICs3OSw3IEBAIG9i
+ai0kKENPTkZJR19QQVRBX1BMQVRGT1JNKQkrPSBwYXRhX3BsYXRmb3JtLm8KPiAgb2JqLSQoQ09O
+RklHX1BBVEFfQVQ5MSkJKz0gcGF0YV9hdDkxLm8KPiAgb2JqLSQoQ09ORklHX1BBVEFfT0ZfUExB
+VEZPUk0pCSs9IHBhdGFfb2ZfcGxhdGZvcm0ubwo+ICBvYmotJChDT05GSUdfUEFUQV9JQ1NJREUp
+CSs9IHBhdGFfaWNzaWRlLm8KPiArb2JqLSQoQ09ORklHX1BBVEFfUFhBKQkJKz0gcGF0YV9weGEu
+bwo+ICAjIFNob3VsZCBiZSBsYXN0IGJ1dCB0d28gbGliYXRhIGRyaXZlcgo+ICBvYmotJChDT05G
+SUdfUEFUQV9BQ1BJKQkJKz0gcGF0YV9hY3BpLm8KPiAgIyBTaG91bGQgYmUgbGFzdCBidXQgb25l
+IGxpYmF0YSBkcml2ZXIKPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvcGF0YV9weGEuYyBiL2Ry
+aXZlcnMvYXRhL3BhdGFfcHhhLmMKPiBuZXcgZmlsZSBtb2RlIDEwMDY0NAo+IGluZGV4IDAwMDAw
+MDAuLjNmMzA3MWUKPiAtLS0gL2Rldi9udWxsCj4gKysrIGIvZHJpdmVycy9hdGEvcGF0YV9weGEu
+Ywo+IEBAIC0wLDAgKzEsNDA0IEBACj4gKy8qCj4gKyAqIEdlbmVyaWMgUFhBIFBBVEEgZHJpdmVy
+Cj4gKyAqCj4gKyAqIENvcHlyaWdodCAoQykgMjAxMCBNYXJlayBWYXN1dCA8bWFyZWsudmFzdXRA
+Z21haWwuY29tPgo+ICsgKgo+ICsgKiAgVGhpcyBwcm9ncmFtIGlzIGZyZWUgc29mdHdhcmU7IHlv
+dSBjYW4gcmVkaXN0cmlidXRlIGl0IGFuZC9vciBtb2RpZnkKPiArICogIGl0IHVuZGVyIHRoZSB0
+ZXJtcyBvZiB0aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgYXMgcHVibGlzaGVkIGJ5Cj4g
+KyAqICB0aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uOyBlaXRoZXIgdmVyc2lvbiAyLCBvciAo
+YXQgeW91ciBvcHRpb24pCj4gKyAqICBhbnkgbGF0ZXIgdmVyc2lvbi4KPiArICoKPiArICogIFRo
+aXMgcHJvZ3JhbSBpcyBkaXN0cmlidXRlZCBpbiB0aGUgaG9wZSB0aGF0IGl0IHdpbGwgYmUgdXNl
+ZnVsLAo+ICsgKiAgYnV0IFdJVEhPVVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGlt
+cGxpZWQgd2FycmFudHkgb2YKPiArICogIE1FUkNIQU5UQUJJTElUWSBvciBGSVRORVNTIEZPUiBB
+IFBBUlRJQ1VMQVIgUFVSUE9TRS4gIFNlZSB0aGUKPiArICogIEdOVSBHZW5lcmFsIFB1YmxpYyBM
+aWNlbnNlIGZvciBtb3JlIGRldGFpbHMuCj4gKyAqCj4gKyAqICBZb3Ugc2hvdWxkIGhhdmUgcmVj
+ZWl2ZWQgYSBjb3B5IG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5zZQo+ICsgKiAgYWxv
+bmcgd2l0aCB0aGlzIHByb2dyYW07IHNlZSB0aGUgZmlsZSBDT1BZSU5HLiAgSWYgbm90LCB3cml0
+ZSB0bwo+ICsgKiAgdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbiwgNjc1IE1hc3MgQXZlLCBD
+YW1icmlkZ2UsIE1BIDAyMTM5LCBVU0EuCj4gKyAqLwo+ICsKPiArI2luY2x1ZGUgPGxpbnV4L2tl
+cm5lbC5oPgo+ICsjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+Cj4gKyNpbmNsdWRlIDxsaW51eC9p
+bml0Lmg+Cj4gKyNpbmNsdWRlIDxsaW51eC9ibGtkZXYuaD4KPiArI2luY2x1ZGUgPGxpbnV4L2F0
+YS5oPgo+ICsjaW5jbHVkZSA8bGludXgvbGliYXRhLmg+Cj4gKyNpbmNsdWRlIDxsaW51eC9wbGF0
+Zm9ybV9kZXZpY2UuaD4KPiArI2luY2x1ZGUgPGxpbnV4L2dwaW8uaD4KPiArI2luY2x1ZGUgPGxp
+bnV4L3NsYWIuaD4KPiArI2luY2x1ZGUgPGxpbnV4L2NvbXBsZXRpb24uaD4KPiArCj4gKyNpbmNs
+dWRlIDxzY3NpL3Njc2lfaG9zdC5oPgo+ICsKPiArI2luY2x1ZGUgPG1hY2gvcHhhMnh4LXJlZ3Mu
+aD4KPiArI2luY2x1ZGUgPG1hY2gvcGF0YV9weGEuaD4KPiArI2luY2x1ZGUgPG1hY2gvZG1hLmg+
+Cj4gKwo+ICsjZGVmaW5lIERSVl9OQU1FCSJwYXRhX3B4YSIKPiArI2RlZmluZSBEUlZfVkVSU0lP
+TgkiMC4xIgo+ICsKPiArc3RydWN0IHBhdGFfcHhhX2RhdGEgewo+ICsJdWludDMyX3QJCWRtYV9j
+aGFubmVsOwo+ICsJc3RydWN0IHB4YV9kbWFfZGVzYwkqZG1hX2Rlc2M7Cj4gKwlkbWFfYWRkcl90
+CQlkbWFfZGVzY19hZGRyOwo+ICsJdWludDMyX3QJCWRtYV9kZXNjX2lkOwo+ICsKPiArCS8qIERN
+QSBJTyBwaHlzaWNhbCBhZGRyZXNzICovCj4gKwl1aW50MzJfdAkJZG1hX2lvX2FkZHI7Cj4gKwkv
+KiBQWEEgRFJFUTwwOjI+IHBpbiBzZWxlY3RvciAqLwo+ICsJdWludDMyX3QJCWRtYV9kcmVxOwo+
+ICsJLyogRE1BIERDU1IgcmVnaXN0ZXIgdmFsdWUgKi8KPiArCXVpbnQzMl90CQlkbWFfZGNzcjsK
+PiArCj4gKwlzdHJ1Y3QgY29tcGxldGlvbglkbWFfZG9uZTsKPiArfTsKPiArCj4gKy8qCj4gKyAq
+IFNldHVwIHRoZSBETUEgZGVzY3JpcHRvcnMuIFRoZSBzaXplIGlzIHRyYW5zZmVyIGNhcHBlZCBh
+dCA0ayBwZXIKPiBkZXNjcmlwdG9yLCArICogaWYgdGhlIHRyYW5zZmVyIGlzIGxvbmdlciwgaXQg
+aXMgc3BsaXQgaW50byBtdWx0aXBsZQo+IGNoYWluZWQgZGVzY3JpcHRvcnMuICsgKi8KPiArc3Rh
+dGljIHZvaWQgcHhhX2xvYWRfZG1hYyhzdHJ1Y3Qgc2NhdHRlcmxpc3QgKnNnLCBzdHJ1Y3QgYXRh
+X3F1ZXVlZF9jbWQKPiAqcWMpICt7Cj4gKwlzdHJ1Y3QgcGF0YV9weGFfZGF0YSAqcGQgPSBxYy0+
+YXAtPnByaXZhdGVfZGF0YTsKPiArCj4gKwl1aW50MzJfdCBjcHVfbGVuLCBzZWdfbGVuOwo+ICsJ
+ZG1hX2FkZHJfdCBjcHVfYWRkcjsKPiArCj4gKwljcHVfYWRkciA9IHNnX2RtYV9hZGRyZXNzKHNn
+KTsKPiArCWNwdV9sZW4gPSBzZ19kbWFfbGVuKHNnKTsKPiArCj4gKwlkbyB7Cj4gKwkJc2VnX2xl
+biA9IChjcHVfbGVuID4gMHgxMDAwKSA/IDB4MTAwMCA6IGNwdV9sZW47Cj4gKwo+ICsJCXBkLT5k
+bWFfZGVzY1twZC0+ZG1hX2Rlc2NfaWRdLmRkYWRyID0gcGQtPmRtYV9kZXNjX2FkZHIgKwo+ICsJ
+CQkoKHBkLT5kbWFfZGVzY19pZCArIDEpICogc2l6ZW9mKHN0cnVjdCBweGFfZG1hX2Rlc2MpKTsK
+PiArCj4gKwkJcGQtPmRtYV9kZXNjW3BkLT5kbWFfZGVzY19pZF0uZGNtZCA9IERDTURfQlVSU1Qz
+MiB8IERDTURfV0lEVEgyIAp8Cj4gKwkJCQkJKERDTURfTEVOR1RIICYgc2VnX2xlbik7Cj4gKwo+
+ICsJCWlmIChxYy0+dGYuZmxhZ3MgJiBBVEFfVEZMQUdfV1JJVEUpIHsKPiArCQkJcGQtPmRtYV9k
+ZXNjW3BkLT5kbWFfZGVzY19pZF0uZHNhZHIgPSBjcHVfYWRkcjsKPiArCQkJcGQtPmRtYV9kZXNj
+W3BkLT5kbWFfZGVzY19pZF0uZHRhZHIgPSBwZC0+ZG1hX2lvX2FkZHI7Cj4gKwkJCXBkLT5kbWFf
+ZGVzY1twZC0+ZG1hX2Rlc2NfaWRdLmRjbWQgfD0gRENNRF9JTkNTUkNBRERSIHwKPiArCQkJCQkJ
+RENNRF9GTE9XVFJHOwo+ICsJCX0gZWxzZSB7Cj4gKwkJCXBkLT5kbWFfZGVzY1twZC0+ZG1hX2Rl
+c2NfaWRdLmRzYWRyID0gcGQtPmRtYV9pb19hZGRyOwo+ICsJCQlwZC0+ZG1hX2Rlc2NbcGQtPmRt
+YV9kZXNjX2lkXS5kdGFkciA9IGNwdV9hZGRyOwo+ICsJCQlwZC0+ZG1hX2Rlc2NbcGQtPmRtYV9k
+ZXNjX2lkXS5kY21kIHw9IERDTURfSU5DVFJHQUREUiB8Cj4gKwkJCQkJCURDTURfRkxPV1NSQzsK
+PiArCQl9Cj4gKwo+ICsJCWNwdV9sZW4gLT0gc2VnX2xlbjsKPiArCQljcHVfYWRkciArPSBzZWdf
+bGVuOwo+ICsJCXBkLT5kbWFfZGVzY19pZCsrOwo+ICsKPiArCX0gd2hpbGUoY3B1X2xlbik7Cj4g
+Kwo+ICsJLyogU2hvdWxkIG5vdCBoYXBwZW4gKi8KPiArCWlmIChzZWdfbGVuICYgMHgxZikKPiAr
+CQlEQUxHTiB8PSAoMSA8PCBwZC0+ZG1hX2RyZXEpOwo+ICt9Cj4gKwo+ICsvKgo+ICsgKiBQcmVw
+YXJlIHRhc2tmaWxlIGZvciBzdWJtaXNzaW9uLgo+ICsgKi8KPiArc3RhdGljIHZvaWQgcHhhX3Fj
+X3ByZXAoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYykKPiArewo+ICsJc3RydWN0IHBhdGFfcHhh
+X2RhdGEgKnBkID0gcWMtPmFwLT5wcml2YXRlX2RhdGE7Cj4gKwlpbnQgc2kgPSAwOwo+ICsJc3Ry
+dWN0IHNjYXR0ZXJsaXN0ICpzZzsKPiArCj4gKwlpZiAoIShxYy0+ZmxhZ3MgJiBBVEFfUUNGTEFH
+X0RNQU1BUCkpCj4gKwkJcmV0dXJuOwo+ICsKPiArCXBkLT5kbWFfZGVzY19pZCA9IDA7Cj4gKwo+
+ICsJRENTUihwZC0+ZG1hX2NoYW5uZWwpID0gMDsKPiArCURBTEdOICY9IH4oMSA8PCBwZC0+ZG1h
+X2RyZXEpOwo+ICsKPiArCWZvcl9lYWNoX3NnKHFjLT5zZywgc2csIHFjLT5uX2VsZW0sIHNpKQo+
+ICsJCXB4YV9sb2FkX2RtYWMoc2csIHFjKTsKPiArCj4gKwlwZC0+ZG1hX2Rlc2NbcGQtPmRtYV9k
+ZXNjX2lkIC0gMV0uZGRhZHIgPSBEREFEUl9TVE9QOwo+ICsKPiArCS8qIEZpcmUgSVJRIG9ubHkg
+YXQgdGhlIGVuZCBvZiBsYXN0IGJsb2NrICovCj4gKwlwZC0+ZG1hX2Rlc2NbcGQtPmRtYV9kZXNj
+X2lkIC0gMV0uZGNtZCB8PSBEQ01EX0VORElSUUVOOwo+ICsKPiArCUREQURSKHBkLT5kbWFfY2hh
+bm5lbCkgPSBwZC0+ZG1hX2Rlc2NfYWRkcjsKPiArCURSQ01SKHBkLT5kbWFfZHJlcSkgPSBEUkNN
+Ul9NQVBWTEQgfCBwZC0+ZG1hX2NoYW5uZWw7Cj4gKwo+ICt9CgpKZWZmLCB0aGlzIGlzIG5vdyBt
+b3ZlZC4KCj4gKwo+ICsvKgo+ICsgKiBDb25maWd1cmUgdGhlIERNQSBjb250cm9sbGVyLCBsb2Fk
+IHRoZSBETUEgZGVzY3JpcHRvcnMsIGJ1dCBkb24ndCBzdGFydAo+IHRoZSArICogRE1BIGNvbnRy
+b2xsZXIgeWV0LiBPbmx5IGlzc3VlIHRoZSBBVEEgY29tbWFuZC4KPiArICovCj4gK3N0YXRpYyB2
+b2lkIHB4YV9ibWRtYV9zZXR1cChzdHJ1Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjKQo+ICt7Cj4gKwlx
+Yy0+YXAtPm9wcy0+c2ZmX2V4ZWNfY29tbWFuZChxYy0+YXAsICZxYy0+dGYpOwo+ICt9Cj4gKwo+
+ICsvKgo+ICsgKiBFeGVjdXRlIHRoZSBETUEgdHJhbnNmZXIuCj4gKyAqLwo+ICtzdGF0aWMgdm9p
+ZCBweGFfYm1kbWFfc3RhcnQoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYykKPiArewo+ICsJc3Ry
+dWN0IHBhdGFfcHhhX2RhdGEgKnBkID0gcWMtPmFwLT5wcml2YXRlX2RhdGE7Cj4gKwlpbml0X2Nv
+bXBsZXRpb24oJnBkLT5kbWFfZG9uZSk7Cj4gKwlEQ1NSKHBkLT5kbWFfY2hhbm5lbCkgPSBEQ1NS
+X1JVTjsKPiArfQo+ICsKPiArLyoKPiArICogV2FpdCB1bnRpbCB0aGUgRE1BIHRyYW5zZmVyIGNv
+bXBsZXRlcywgdGhlbiBzdG9wIHRoZSBETUEgY29udHJvbGxlci4KPiArICovCj4gK3N0YXRpYyB2
+b2lkIHB4YV9ibWRtYV9zdG9wKHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMpCj4gK3sKPiArCXN0
+cnVjdCBwYXRhX3B4YV9kYXRhICpwZCA9IHFjLT5hcC0+cHJpdmF0ZV9kYXRhOwo+ICsKPiArCWlm
+ICgoRENTUihwZC0+ZG1hX2NoYW5uZWwpICYgRENTUl9SVU4pICYmCj4gKwkJd2FpdF9mb3JfY29t
+cGxldGlvbl90aW1lb3V0KCZwZC0+ZG1hX2RvbmUsIEhaKSkKPiArCQlkZXZfZXJyKHFjLT5hcC0+
+ZGV2LCAiVGltZW91dCB3YWl0aW5nIGZvciBETUEgY29tcGxldGlvbiEiKTsKPiArCj4gKwlEQ1NS
+KHBkLT5kbWFfY2hhbm5lbCkgPSAwOwo+ICt9Cj4gKwo+ICsvKgo+ICsgKiBSZWFkIERNQSBzdGF0
+dXMuIFRoZSBibWRtYV9zdG9wKCkgd2lsbCB0YWtlIGNhcmUgb2YgcHJvcGVybHkgZmluaXNoaW5n
+Cj4gdGhlICsgKiBETUEgdHJhbnNmZXIgc28gd2UgYWx3YXlzIGhhdmUgRE1BLWNvbXBsZXRlIGlu
+dGVycnVwdCBoZXJlLgo+ICsgKi8KPiArc3RhdGljIHVuc2lnbmVkIGNoYXIgcHhhX2JtZG1hX3N0
+YXR1cyhzdHJ1Y3QgYXRhX3BvcnQgKmFwKQo+ICt7Cj4gKwlzdHJ1Y3QgcGF0YV9weGFfZGF0YSAq
+cGQgPSBhcC0+cHJpdmF0ZV9kYXRhOwo+ICsJdW5zaWduZWQgY2hhciByZXQgPSBBVEFfRE1BX0lO
+VFI7Cj4gKwo+ICsJaWYgKHBkLT5kbWFfZGNzciAmIERDU1JfQlVTRVJSKQo+ICsJCXJldCB8PSBB
+VEFfRE1BX0VSUjsKPiArCj4gKwlyZXR1cm4gcmV0Owo+ICt9CgpZZXMgUm9iZXJ0LCB5b3Ugd2Vy
+ZSByaWdodC4gRml4ZWQuIFRoYW5rcwo+ICsKPiArLyoKPiArICogTm8gSVJRIHJlZ2lzdGVyIHBy
+ZXNlbnQgc28gd2UgZG8gbm90aGluZy4KPiArICovCj4gK3N0YXRpYyB2b2lkIHB4YV9pcnFfY2xl
+YXIoc3RydWN0IGF0YV9wb3J0ICphcCkKPiArewo+ICt9Cj4gKwo+ICsvKgo+ICsgKiBDaGVjayBm
+b3IgQVRBUEkgRE1BLiBBVEFQSSBETUEgaXMgdW5zdXBwb3J0ZWQgYnkgdGhpcyBkcml2ZXIuIEl0
+J3MKPiBzdGlsbCArICogdW5jbGVhciB3aHkgQVRBUEkgaGFzIERNQSBpc3N1ZXMuCj4gKyAqLwo+
+ICtzdGF0aWMgaW50IHB4YV9jaGVja19hdGFwaV9kbWEoc3RydWN0IGF0YV9xdWV1ZWRfY21kICpx
+YykKPiArewo+ICsJcmV0dXJuIC1FT1BOT1RTVVBQOwo+ICt9Cj4gKwoKU2VlIGxpYmF0YS1jb3Jl
+LmM6Cgo0NzY2IC8qKgo0NzY3ICAqICAgICAgYXRhcGlfY2hlY2tfZG1hIC0gQ2hlY2sgd2hldGhl
+ciBBVEFQSSBETUEgY2FuIGJlIHN1cHBvcnRlZAo0NzY4ICAqICAgICAgQHFjOiBNZXRhZGF0YSBh
+c3NvY2lhdGVkIHdpdGggdGFza2ZpbGUgdG8gY2hlY2sKNDc2OSAgKgo0NzcwICAqICAgICAgQWxs
+b3cgbG93LWxldmVsIGRyaXZlciB0byBmaWx0ZXIgQVRBIFBBQ0tFVCBjb21tYW5kcywgcmV0dXJu
+aW5nCjQ3NzEgICogICAgICBhIHN0YXR1cyBpbmRpY2F0aW5nIHdoZXRoZXIgb3Igbm90IGl0IGlz
+IE9LIHRvIHVzZSBETUEgZm9yIHRoZQo0NzcyICAqICAgICAgc3VwcGxpZWQgUEFDS0VUIGNvbW1h
+bmQuCjQ3NzMgICoKNDc3NCAgKiAgICAgIExPQ0tJTkc6CjQ3NzUgICogICAgICBzcGluX2xvY2tf
+aXJxc2F2ZShob3N0IGxvY2spCjQ3NzYgICoKNDc3NyAgKiAgICAgIFJFVFVSTlM6IDAgd2hlbiBB
+VEFQSSBETUEgY2FuIGJlIHVzZWQKNDc3OCAgKiAgICAgICAgICAgICAgIG5vbnplcm8gb3RoZXJ3
+aXNlCjQ3NzkgICovCgpBbmQgc2luY2UgQVRBUEkgRE1BIGNhbiBOT1QgYmUgdXNlZCBhbmQgLUVP
+UE5PVFNVUFAgaXMgbm9uemVybywgdGhpcyBpcyBmaW5lLgoKPiArc3RhdGljIHN0cnVjdCBzY3Np
+X2hvc3RfdGVtcGxhdGUgcHhhX2F0YV9zaHQgPSB7Cj4gKwlBVEFfQk1ETUFfU0hUKERSVl9OQU1F
+KSwKPiArfTsKPiArCj4gK3N0YXRpYyBzdHJ1Y3QgYXRhX3BvcnRfb3BlcmF0aW9ucyBweGFfYXRh
+X3BvcnRfb3BzID0gewo+ICsJLmluaGVyaXRzCQk9ICZhdGFfYm1kbWFfcG9ydF9vcHMsCj4gKwku
+Y2FibGVfZGV0ZWN0CQk9IGF0YV9jYWJsZV80MHdpcmUsCj4gKwo+ICsJLmJtZG1hX3NldHVwCQk9
+IHB4YV9ibWRtYV9zZXR1cCwKPiArCS5ibWRtYV9zdGFydAkJPSBweGFfYm1kbWFfc3RhcnQsCj4g
+KwkuYm1kbWFfc3RvcAkJPSBweGFfYm1kbWFfc3RvcCwKPiArCS5ibWRtYV9zdGF0dXMJCT0gcHhh
+X2JtZG1hX3N0YXR1cywKPiArCj4gKwkuY2hlY2tfYXRhcGlfZG1hCT0gcHhhX2NoZWNrX2F0YXBp
+X2RtYSwKPiArCj4gKwkuc2ZmX2lycV9jbGVhcgkJPSBweGFfaXJxX2NsZWFyLAo+ICsKPiArCS5x
+Y19wcmVwCQk9IHB4YV9xY19wcmVwLAo+ICt9Owo+ICsKPiArLyoKPiArICogRE1BIGludGVycnVw
+dCBoYW5kbGVyLgo+ICsgKi8KPiArc3RhdGljIHZvaWQgcHhhX2F0YV9kbWFfaXJxKGludCBkbWEs
+IHZvaWQgKnBvcnQpCj4gK3sKPiArCXN0cnVjdCBhdGFfcG9ydCAqYXAgPSBwb3J0Owo+ICsJc3Ry
+dWN0IHBhdGFfcHhhX2RhdGEgKnBkID0gYXAtPnByaXZhdGVfZGF0YTsKPiArCj4gKwlwZC0+ZG1h
+X2Rjc3IgPSBEQ1NSKGRtYSk7Cj4gKwlEQ1NSKGRtYSkgPSBwZC0+ZG1hX2Rjc3I7Cj4gKwo+ICsJ
+aWYgKHBkLT5kbWFfZGNzciAmIERDU1JfU1RPUFNUQVRFKQo+ICsJCWNvbXBsZXRlKCZwZC0+ZG1h
+X2RvbmUpOwo+ICt9Cj4gKwo+ICtzdGF0aWMgaW50IF9fZGV2aW5pdCBweGFfYXRhX3Byb2JlKHN0
+cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpCj4gK3sKPiArCXN0cnVjdCBhdGFfaG9zdCAqaG9z
+dDsKPiArCXN0cnVjdCBhdGFfcG9ydCAqYXA7Cj4gKwlzdHJ1Y3QgcGF0YV9weGFfZGF0YSAqZGF0
+YTsKPiArCXN0cnVjdCByZXNvdXJjZSAqY21kX3JlczsKPiArCXN0cnVjdCByZXNvdXJjZSAqY3Rs
+X3JlczsKPiArCXN0cnVjdCByZXNvdXJjZSAqZG1hX3JlczsKPiArCXN0cnVjdCByZXNvdXJjZSAq
+aXJxX3JlczsKPiArCXN0cnVjdCBwYXRhX3B4YV9wZGF0YSAqcGRhdGEgPSBwZGV2LT5kZXYucGxh
+dGZvcm1fZGF0YTsKPiArCj4gKwkvKgo+ICsJICogUmVzb3VyY2UgdmFsaWRhdGlvbiwgdGhyZWUg
+cmVzb3VyY2VzIGFyZSBuZWVkZWQ6Cj4gKwkgKiAgLSBDTUQgcG9ydCBiYXNlIGFkZHJlc3MKPiAr
+CSAqICAtIENUTCBwb3J0IGJhc2UgYWRkcmVzcwo+ICsJICogIC0gRE1BIHBvcnQgYmFzZSBhZGRy
+ZXNzCj4gKwkgKiAgLSBJUlEgcGluCj4gKwkgKi8KPiArCWlmIChwZGV2LT5udW1fcmVzb3VyY2Vz
+ICE9IDQpIHsKPiArCQlkZXZfZXJyKCZwZGV2LT5kZXYsICJpbnZhbGlkIG51bWJlciBvZiByZXNv
+dXJjZXNcbiIpOwo+ICsJCXJldHVybiAtRUlOVkFMOwo+ICsJfQo+ICsKPiArCS8qCj4gKwkgKiBD
+TUQgcG9ydCBiYXNlIGFkZHJlc3MKPiArCSAqLwo+ICsJY21kX3JlcyA9IHBsYXRmb3JtX2dldF9y
+ZXNvdXJjZShwZGV2LCBJT1JFU09VUkNFX01FTSwgMCk7Cj4gKwlpZiAodW5saWtlbHkoY21kX3Jl
+cyA9PSBOVUxMKSkKPiArCQlyZXR1cm4gLUVJTlZBTDsKPiArCj4gKwkvKgo+ICsJICogQ1RMIHBv
+cnQgYmFzZSBhZGRyZXNzCj4gKwkgKi8KPiArCWN0bF9yZXMgPSBwbGF0Zm9ybV9nZXRfcmVzb3Vy
+Y2UocGRldiwgSU9SRVNPVVJDRV9NRU0sIDEpOwo+ICsJaWYgKHVubGlrZWx5KGN0bF9yZXMgPT0g
+TlVMTCkpCj4gKwkJcmV0dXJuIC1FSU5WQUw7Cj4gKwo+ICsJLyoKPiArCSAqIERNQSBwb3J0IGJh
+c2UgYWRkcmVzcwo+ICsJICovCj4gKwlkbWFfcmVzID0gcGxhdGZvcm1fZ2V0X3Jlc291cmNlKHBk
+ZXYsIElPUkVTT1VSQ0VfRE1BLCAwKTsKPiArCWlmICh1bmxpa2VseShkbWFfcmVzID09IE5VTEwp
+KQo+ICsJCXJldHVybiAtRUlOVkFMOwo+ICsKPiArCS8qCj4gKwkgKiBJUlEgcGluCj4gKwkgKi8K
+PiArCWlycV9yZXMgPSBwbGF0Zm9ybV9nZXRfcmVzb3VyY2UocGRldiwgSU9SRVNPVVJDRV9JUlEs
+IDApOwo+ICsJaWYgKHVubGlrZWx5KGlycV9yZXMgPT0gTlVMTCkpCj4gKwkJcmV0dXJuIC1FSU5W
+QUw7Cj4gKwo+ICsJLyoKPiArCSAqIEFsbG9jYXRlIHRoZSBob3N0Cj4gKwkgKi8KPiArCWhvc3Qg
+PSBhdGFfaG9zdF9hbGxvYygmcGRldi0+ZGV2LCAxKTsKPiArCWlmICghaG9zdCkKPiArCQlyZXR1
+cm4gLUVOT01FTTsKPiArCj4gKwlhcAkJPSBob3N0LT5wb3J0c1swXTsKPiArCWFwLT5vcHMJCT0g
+JnB4YV9hdGFfcG9ydF9vcHM7Cj4gKwlhcC0+cGlvX21hc2sJPSBBVEFfUElPNDsKPiArCWFwLT5t
+d2RtYV9tYXNrCT0gQVRBX01XRE1BMjsKPiArCWFwLT5mbGFncwk9IEFUQV9GTEFHX01NSU87Cj4g
+Kwo+ICsJYXAtPmlvYWRkci5jbWRfYWRkcgk9IGRldm1faW9yZW1hcCgmcGRldi0+ZGV2LCBjbWRf
+cmVzLT5zdGFydCwKPiArCQkJCQkJcmVzb3VyY2Vfc2l6ZShjbWRfcmVzKSk7Cj4gKwlhcC0+aW9h
+ZGRyLmN0bF9hZGRyCT0gZGV2bV9pb3JlbWFwKCZwZGV2LT5kZXYsIGN0bF9yZXMtPnN0YXJ0LAo+
+ICsJCQkJCQlyZXNvdXJjZV9zaXplKGN0bF9yZXMpKTsKPiArCWFwLT5pb2FkZHIuYm1kbWFfYWRk
+cgk9IGRldm1faW9yZW1hcCgmcGRldi0+ZGV2LCBkbWFfcmVzLT5zdGFydCwKPiArCQkJCQkJcmVz
+b3VyY2Vfc2l6ZShkbWFfcmVzKSk7Cj4gKwo+ICsJLyoKPiArCSAqIEFkanVzdCByZWdpc3RlciBv
+ZmZzZXRzCj4gKwkgKi8KPiArCWFwLT5pb2FkZHIuYWx0c3RhdHVzX2FkZHIgPSBhcC0+aW9hZGRy
+LmN0bF9hZGRyOwo+ICsJYXAtPmlvYWRkci5kYXRhX2FkZHIJPSBhcC0+aW9hZGRyLmNtZF9hZGRy
+ICsKPiArCQkJCQkoQVRBX1JFR19EQVRBIDw8IHBkYXRhLT5yZWdfc2hpZnQpOwo+ICsJYXAtPmlv
+YWRkci5lcnJvcl9hZGRyCT0gYXAtPmlvYWRkci5jbWRfYWRkciArCj4gKwkJCQkJKEFUQV9SRUdf
+RVJSIDw8IHBkYXRhLT5yZWdfc2hpZnQpOwo+ICsJYXAtPmlvYWRkci5mZWF0dXJlX2FkZHIJPSBh
+cC0+aW9hZGRyLmNtZF9hZGRyICsKPiArCQkJCQkoQVRBX1JFR19GRUFUVVJFIDw8IHBkYXRhLT5y
+ZWdfc2hpZnQpOwo+ICsJYXAtPmlvYWRkci5uc2VjdF9hZGRyCT0gYXAtPmlvYWRkci5jbWRfYWRk
+ciArCj4gKwkJCQkJKEFUQV9SRUdfTlNFQ1QgPDwgcGRhdGEtPnJlZ19zaGlmdCk7Cj4gKwlhcC0+
+aW9hZGRyLmxiYWxfYWRkcgk9IGFwLT5pb2FkZHIuY21kX2FkZHIgKwo+ICsJCQkJCShBVEFfUkVH
+X0xCQUwgPDwgcGRhdGEtPnJlZ19zaGlmdCk7Cj4gKwlhcC0+aW9hZGRyLmxiYW1fYWRkcgk9IGFw
+LT5pb2FkZHIuY21kX2FkZHIgKwo+ICsJCQkJCShBVEFfUkVHX0xCQU0gPDwgcGRhdGEtPnJlZ19z
+aGlmdCk7Cj4gKwlhcC0+aW9hZGRyLmxiYWhfYWRkcgk9IGFwLT5pb2FkZHIuY21kX2FkZHIgKwo+
+ICsJCQkJCShBVEFfUkVHX0xCQUggPDwgcGRhdGEtPnJlZ19zaGlmdCk7Cj4gKwlhcC0+aW9hZGRy
+LmRldmljZV9hZGRyCT0gYXAtPmlvYWRkci5jbWRfYWRkciArCj4gKwkJCQkJKEFUQV9SRUdfREVW
+SUNFIDw8IHBkYXRhLT5yZWdfc2hpZnQpOwo+ICsJYXAtPmlvYWRkci5zdGF0dXNfYWRkcgk9IGFw
+LT5pb2FkZHIuY21kX2FkZHIgKwo+ICsJCQkJCShBVEFfUkVHX1NUQVRVUyA8PCBwZGF0YS0+cmVn
+X3NoaWZ0KTsKPiArCWFwLT5pb2FkZHIuY29tbWFuZF9hZGRyCT0gYXAtPmlvYWRkci5jbWRfYWRk
+ciArCj4gKwkJCQkJKEFUQV9SRUdfQ01EIDw8IHBkYXRhLT5yZWdfc2hpZnQpOwo+ICsKPiArCS8q
+Cj4gKwkgKiBBbGxvY2F0ZSBhbmQgbG9hZCBkcml2ZXIncyBpbnRlcm5hbCBkYXRhIHN0cnVjdHVy
+ZQo+ICsJICovCj4gKwlkYXRhID0gZGV2bV9remFsbG9jKCZwZGV2LT5kZXYsIHNpemVvZihzdHJ1
+Y3QgcGF0YV9weGFfZGF0YSksCj4gKwkJCQkJCQkJR0ZQX0tFUk5FTCk7Cj4gKwlpZiAoIWRhdGEp
+Cj4gKwkJcmV0dXJuIC1FTk9NRU07Cj4gKwo+ICsJYXAtPnByaXZhdGVfZGF0YSA9IGRhdGE7Cj4g
+KwlkYXRhLT5kbWFfZHJlcSA9IHBkYXRhLT5kbWFfZHJlcTsKPiArCWRhdGEtPmRtYV9pb19hZGRy
+ID0gZG1hX3Jlcy0+c3RhcnQ7Cj4gKwo+ICsJLyoKPiArCSAqIFJlcXVlc3QgdGhlIERNQSBjaGFu
+bmVsCj4gKwkgKi8KPiArCWRhdGEtPmRtYV9jaGFubmVsID0gcHhhX3JlcXVlc3RfZG1hKERSVl9O
+QU1FLCBETUFfUFJJT19MT1csCj4gKwkJCQkJCXB4YV9hdGFfZG1hX2lycSwgYXApOwo+ICsJaWYg
+KGRhdGEtPmRtYV9jaGFubmVsIDwgMCkKPiArCQlyZXR1cm4gLUVCVVNZOwo+ICsKPiArCS8qCj4g
+KwkgKiBTdG9wIGFuZCBjbGVhciB0aGUgRE1BIGNoYW5uZWwKPiArCSAqLwo+ICsJRENTUihkYXRh
+LT5kbWFfY2hhbm5lbCkgPSAwOwo+ICsKPiArCS8qCj4gKwkgKiBBbGxvY2F0ZSBzcGFjZSBmb3Ig
+dGhlIERNQSBkZXNjcmlwdG9ycwo+ICsJICovCj4gKwlkYXRhLT5kbWFfZGVzYyA9IGRtYW1fYWxs
+b2NfY29oZXJlbnQoJnBkZXYtPmRldiwgUEFHRV9TSVpFLAo+ICsJCQkJCSZkYXRhLT5kbWFfZGVz
+Y19hZGRyLCBHRlBfS0VSTkVMKTsKPiArCj4gKwkvKgo+ICsJICogQWN0aXZhdGUgdGhlIEFUQSBo
+b3N0Cj4gKwkgKi8KPiArCXJldHVybiBhdGFfaG9zdF9hY3RpdmF0ZShob3N0LCBpcnFfcmVzLT5z
+dGFydCwgYXRhX3NmZl9pbnRlcnJ1cHQsCj4gKwkJCQlwZGF0YS0+aXJxX2ZsYWdzLCAmcHhhX2F0
+YV9zaHQpOwo+ICt9Cj4gKwo+ICtzdGF0aWMgaW50IF9fZGV2ZXhpdCBweGFfYXRhX3JlbW92ZShz
+dHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+ICt7Cj4gKwlzdHJ1Y3QgYXRhX2hvc3QgKmhv
+c3QgPSBkZXZfZ2V0X2RydmRhdGEoJnBkZXYtPmRldik7Cj4gKwlzdHJ1Y3QgcGF0YV9weGFfZGF0
+YSAqZGF0YSA9IGhvc3QtPnBvcnRzWzBdLT5wcml2YXRlX2RhdGE7Cj4gKwo+ICsJcHhhX2ZyZWVf
+ZG1hKGRhdGEtPmRtYV9jaGFubmVsKTsKPiArCj4gKwlhdGFfaG9zdF9kZXRhY2goaG9zdCk7Cj4g
+Kwo+ICsJcmV0dXJuIDA7Cj4gK30KPiArCj4gK3N0YXRpYyBzdHJ1Y3QgcGxhdGZvcm1fZHJpdmVy
+IHB4YV9hdGFfZHJpdmVyID0gewo+ICsJLnByb2JlCQk9IHB4YV9hdGFfcHJvYmUsCj4gKwkucmVt
+b3ZlCQk9IF9fZGV2ZXhpdF9wKHB4YV9hdGFfcmVtb3ZlKSwKPiArCS5kcml2ZXIJCT0gewo+ICsJ
+CS5uYW1lCQk9IERSVl9OQU1FLAo+ICsJCS5vd25lcgkJPSBUSElTX01PRFVMRSwKPiArCX0sCj4g
+K307Cj4gKwo+ICtzdGF0aWMgaW50IF9faW5pdCBweGFfYXRhX2luaXQodm9pZCkKPiArewo+ICsJ
+cmV0dXJuIHBsYXRmb3JtX2RyaXZlcl9yZWdpc3RlcigmcHhhX2F0YV9kcml2ZXIpOwo+ICt9Cj4g
+Kwo+ICtzdGF0aWMgdm9pZCBfX2V4aXQgcHhhX2F0YV9leGl0KHZvaWQpCj4gK3sKPiArCXBsYXRm
+b3JtX2RyaXZlcl91bnJlZ2lzdGVyKCZweGFfYXRhX2RyaXZlcik7Cj4gK30KPiArCj4gK21vZHVs
+ZV9pbml0KHB4YV9hdGFfaW5pdCk7Cj4gK21vZHVsZV9leGl0KHB4YV9hdGFfZXhpdCk7Cj4gKwo+
+ICtNT0RVTEVfQVVUSE9SKCJNYXJlayBWYXN1dCA8bWFyZWsudmFzdXRAZ21haWwuY29tPiIpOwo+
+ICtNT0RVTEVfREVTQ1JJUFRJT04oIkRNQS1jYXBhYmxlIGRyaXZlciBmb3IgUEFUQSBvbiBQWEEg
+Q1BVIik7Cj4gK01PRFVMRV9MSUNFTlNFKCJHUEwiKTsKPiArTU9EVUxFX1ZFUlNJT04oRFJWX1ZF
+UlNJT04pOwo+ICtNT0RVTEVfQUxJQVMoInBsYXRmb3JtOiIgRFJWX05BTUUpOwoKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBt
+YWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9s
+aXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
