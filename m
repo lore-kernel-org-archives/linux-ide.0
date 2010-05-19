@@ -1,39 +1,39 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH]460EX on-chip SATA driver <Kernel 2.6.33> < resubmission
- >
-Date: Wed, 19 May 2010 10:53:05 +0100
-Message-ID: <20100519105305.54804b57@lxorguk.ukuu.org.uk>
-References: <201005051757.o45HvPmY005954@amcc.com>
-	<AANLkTiljlMJKimdT-ptwXrMMBhSxFuPdVdyUuKJ8BZve@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
+Date: Wed, 19 May 2010 11:16:50 GMT
+Message-ID: <201005191116.o4JBGopD031980@demeter.kernel.org>
+References: <bug-3094-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46284 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751326Ab0ESJqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 05:46:38 -0400
-In-Reply-To: <AANLkTiljlMJKimdT-ptwXrMMBhSxFuPdVdyUuKJ8BZve@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:37730 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756041Ab0ESLQu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 07:16:50 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4JBGo0g031981
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 19 May 2010 11:16:50 GMT
+In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jassi Brar <jassisinghbrar@gmail.com>
-Cc: Rupjyoti Sarmah <rsarmah@amcc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, sr@denx.de, linuxppc-dev@ozlabs.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 19 May 2010 10:49:59 +0900
-Jassi Brar <jassisinghbrar@gmail.com> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3094
 
-> On Thu, May 6, 2010 at 2:57 AM, Rupjyoti Sarmah <rsarmah@amcc.com> wrote:
-> > This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
-> 
-> The controller seems to be a thrid party IP (from Synopsys) in your
-> SoC and there are many chances the IP will appear in some other
-> SOCs too. This implementation doesn't seem to take care of that
-> scenario.
 
-I'd question if that is worth it seriously. At the point there are
-multiple users of the device you know what it will look like. Until then
-you neither know if the work is needed nor what will require abstracting.
 
-Lazy evaluation is good for code too ;)
 
-Alan
+
+--- Comment #20 from Alan <alan@lxorguk.ukuu.org.uk>  2010-05-19 11:16:44 ---
+I/O wait is measuring the amount of time the machine is waiting for the disk,
+not how much it is using CPU. Disks haven't gotten much faster in the past ten
+years (SSD aside) while processors dramatically did. There isn't a lot that can
+be done about the speed of disks,. Getting the kernel to schedule I/O better
+can help a bit but the fundamental problem is that a disk on a good day can
+only really do about 200 operations/second.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
