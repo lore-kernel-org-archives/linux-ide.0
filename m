@@ -1,809 +1,1031 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/6] libata-sff: separate out BMDMA init
-Date: Wed, 19 May 2010 22:10:22 +0200
-Message-ID: <1274299824-15691-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/6] libata-sff: make BMDMA optional
+Date: Wed, 19 May 2010 22:10:24 +0200
+Message-ID: <1274299824-15691-7-git-send-email-tj@kernel.org>
 References: <1274299824-15691-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43335 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:43337 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754805Ab0ESUK7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 May 2010 16:10:59 -0400
+	id S1756023Ab0ESULB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 May 2010 16:11:01 -0400
 In-Reply-To: <1274299824-15691-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 
-Separate out ata_pci_bmdma_prepare_host() and ata_pci_bmdma_init_one()
-from their SFF counterparts.  SFF ones no longer try to initialize
-BMDMA or set PCI master.
+Make BMDMA optional depending on new config variable CONFIG_ATA_BMDMA.
+In Kconfig, drivers are grouped into five groups - non-SFF native, SFF
+w/ custom DMA interface, SFF w/ BMDMA, PIO-only SFF, and generic
+fallback / legacy ones.  Kconfig and Makefile are reorganized
+according to the groups and ordered alphabetically inside each group.
+
+ata_ioports.bmdma_addr and ata_port.bmdma_prd[_dma] are put into
+CONFIG_ATA_BMDMA, as are all bmdma related ops, variables and
+functions.
+
+This increase the binary size slightly when BMDMA is enabled but on
+both native-only and PIO-only configurations the size is slightly
+reduced.  Either way, the size difference is insignificant.  This
+change is more meaningful to signify the separation between SFF and
+BMDMA and as a tool to verify the separation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/ata_generic.c       |    2 +-
- drivers/ata/ata_piix.c          |    2 +-
- drivers/ata/libata-sff.c        |  138 ++++++++++++++++++++++++++++++++-------
- drivers/ata/pata_acpi.c         |    2 +-
- drivers/ata/pata_ali.c          |    5 +-
- drivers/ata/pata_amd.c          |    2 +-
- drivers/ata/pata_artop.c        |    2 +-
- drivers/ata/pata_atiixp.c       |    4 +-
- drivers/ata/pata_cmd64x.c       |    2 +-
- drivers/ata/pata_cs5530.c       |    2 +-
- drivers/ata/pata_cs5535.c       |    2 +-
- drivers/ata/pata_cs5536.c       |    2 +-
- drivers/ata/pata_cypress.c      |    2 +-
- drivers/ata/pata_efar.c         |    4 +-
- drivers/ata/pata_hpt366.c       |    2 +-
- drivers/ata/pata_hpt37x.c       |    2 +-
- drivers/ata/pata_hpt3x2n.c      |    2 +-
- drivers/ata/pata_it8213.c       |    2 +-
- drivers/ata/pata_it821x.c       |    2 +-
- drivers/ata/pata_jmicron.c      |    2 +-
- drivers/ata/pata_marvell.c      |    2 +-
- drivers/ata/pata_netcell.c      |    2 +-
- drivers/ata/pata_ns87415.c      |    2 +-
- drivers/ata/pata_oldpiix.c      |    2 +-
- drivers/ata/pata_optidma.c      |    2 +-
- drivers/ata/pata_pdc202xx_old.c |    2 +-
- drivers/ata/pata_piccolo.c      |    2 +-
- drivers/ata/pata_radisys.c      |    2 +-
- drivers/ata/pata_rdc.c          |    2 +-
- drivers/ata/pata_sc1200.c       |    2 +-
- drivers/ata/pata_sch.c          |    2 +-
- drivers/ata/pata_serverworks.c  |    2 +-
- drivers/ata/pata_sil680.c       |    2 +-
- drivers/ata/pata_sis.c          |    2 +-
- drivers/ata/pata_sl82c105.c     |    2 +-
- drivers/ata/pata_triflex.c      |    2 +-
- drivers/ata/pata_via.c          |    2 +-
- drivers/ata/sata_nv.c           |    2 +-
- drivers/ata/sata_sis.c          |    2 +-
- drivers/ata/sata_via.c          |    4 +-
- include/linux/libata.h          |    7 ++
- 41 files changed, 166 insertions(+), 66 deletions(-)
+ drivers/ata/Kconfig      |  511 ++++++++++++++++++++++++----------------------
+ drivers/ata/Makefile     |   83 ++++----
+ drivers/ata/libata-sff.c |   11 +
+ include/linux/libata.h   |   22 ++-
+ 4 files changed, 341 insertions(+), 286 deletions(-)
 
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 33fb614..573158a 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -155,7 +155,7 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
- 			return rc;
- 		pcim_pin_device(dev);
- 	}
--	return ata_pci_sff_init_one(dev, ppi, &generic_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &generic_sht, NULL, 0);
- }
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e68541f..73f8833 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -57,6 +57,8 @@ config SATA_PMP
+ 	  This option adds support for SATA Port Multipliers
+ 	  (the SATA version of an ethernet hub, or SAS expander).
  
- static struct pci_device_id ata_generic[] = {
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 9ee2427..18fcd32 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1589,7 +1589,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 		hpriv->map = piix_init_sata_map(pdev, port_info,
- 					piix_map_db_table[ent->driver_data]);
++comment "Controllers with non-SFF native interface"
++
+ config SATA_AHCI
+ 	tristate "AHCI SATA support"
+ 	depends on PCI
+@@ -73,11 +75,12 @@ config SATA_AHCI_PLATFORM
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	host->private_data = hpriv;
+ 	  If unsure, say N.
+ 
+-config SATA_SIL24
+-	tristate "Silicon Image 3124/3132 SATA support"
+-	depends on PCI
++config SATA_FSL
++	tristate "Freescale 3.0Gbps SATA support"
++	depends on FSL_SOC
+ 	help
+-	  This option enables support for Silicon Image 3124/3132 Serial ATA.
++	  This option enables support for Freescale 3.0Gbps SATA controller.
++	  It can be found on MPC837x and MPC8315.
+ 
+ 	  If unsure, say N.
+ 
+@@ -87,12 +90,11 @@ config SATA_INIC162X
+ 	help
+ 	  This option enables support for Initio 162x Serial ATA.
+ 
+-config SATA_FSL
+-	tristate "Freescale 3.0Gbps SATA support"
+-	depends on FSL_SOC
++config SATA_SIL24
++	tristate "Silicon Image 3124/3132 SATA support"
++	depends on PCI
+ 	help
+-	  This option enables support for Freescale 3.0Gbps SATA controller.
+-	  It can be found on MPC837x and MPC8315.
++	  This option enables support for Silicon Image 3124/3132 Serial ATA.
+ 
+ 	  If unsure, say N.
+ 
+@@ -116,15 +118,65 @@ config ATA_SFF
+ 
+ if ATA_SFF
+ 
+-config SATA_SVW
+-	tristate "ServerWorks Frodo / Apple K2 SATA support"
++comment "SFF controllers with custom DMA interface"
++
++config PDC_ADMA
++	tristate "Pacific Digital ADMA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for Broadcom/Serverworks/Apple K2
+-	  SATA support.
++	  This option enables support for Pacific Digital ADMA controllers
++
++	  If unsure, say N.
++
++config PATA_MPC52xx
++	tristate "Freescale MPC52xx SoC internal IDE"
++	depends on PPC_MPC52xx && PPC_BESTCOMM
++	select PPC_BESTCOMM_ATA
++	help
++	  This option enables support for integrated IDE controller
++	  of the Freescale MPC52xx SoC.
++
++	  If unsure, say N.
++
++config PATA_OCTEON_CF
++	tristate "OCTEON Boot Bus Compact Flash support"
++	depends on CPU_CAVIUM_OCTEON
++	help
++	  This option enables a polled compact flash driver for use with
++	  compact flash cards attached to the OCTEON boot bus.
++
++	  If unsure, say N.
++
++config SATA_QSTOR
++	tristate "Pacific Digital SATA QStor support"
++	depends on PCI
++	help
++	  This option enables support for Pacific Digital Serial ATA QStor.
++
++	  If unsure, say N.
++
++config SATA_SX4
++	tristate "Promise SATA SX4 support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for Promise Serial ATA SX4.
+ 
+ 	  If unsure, say N.
+ 
++config ATA_BMDMA
++	bool "ATA BMDMA support"
++	default y
++	help
++	  This option adds support for SFF ATA controllers with BMDMA
++	  capability.  BMDMA stands for bus-master DMA and the
++	  de-facto DMA interface for SFF controllers.
++
++	  If unuser, say Y.
++
++if ATA_BMDMA
++
++comment "SATA SFF controllers with BMDMA"
++
+ config ATA_PIIX
+ 	tristate "Intel ESB, ICH, PIIX3, PIIX4 PATA/SATA support"
+ 	depends on PCI
+@@ -152,22 +204,6 @@ config SATA_NV
+ 
+ 	  If unsure, say N.
+ 
+-config PDC_ADMA
+-	tristate "Pacific Digital ADMA support"
+-	depends on PCI
+-	help
+-	  This option enables support for Pacific Digital ADMA controllers
+-
+-	  If unsure, say N.
+-
+-config SATA_QSTOR
+-	tristate "Pacific Digital SATA QStor support"
+-	depends on PCI
+-	help
+-	  This option enables support for Pacific Digital Serial ATA QStor.
+-
+-	  If unsure, say N.
+-
+ config SATA_PROMISE
+ 	tristate "Promise SATA TX2/TX4 support"
+ 	depends on PCI
+@@ -176,14 +212,6 @@ config SATA_PROMISE
+ 
+ 	  If unsure, say N.
+ 
+-config SATA_SX4
+-	tristate "Promise SATA SX4 support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
+-	help
+-	  This option enables support for Promise Serial ATA SX4.
+-
+-	  If unsure, say N.
+-
+ config SATA_SIL
+ 	tristate "Silicon Image SATA support"
+ 	depends on PCI
+@@ -203,6 +231,15 @@ config SATA_SIS
+ 	  enable the PATA_SIS driver in the config.
+ 	  If unsure, say N.
+ 
++config SATA_SVW
++	tristate "ServerWorks Frodo / Apple K2 SATA support"
++	depends on PCI
++	help
++	  This option enables support for Broadcom/Serverworks/Apple K2
++	  SATA support.
++
++	  If unsure, say N.
++
+ config SATA_ULI
+ 	tristate "ULi Electronics SATA support"
+ 	depends on PCI
+@@ -227,14 +264,7 @@ config SATA_VITESSE
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ACPI
+-	tristate "ACPI firmware driver for PATA"
+-	depends on ATA_ACPI
+-	help
+-	  This option enables an ACPI method driver which drives
+-	  motherboard PATA controller interfaces through the ACPI
+-	  firmware in the BIOS. This driver can sometimes handle
+-	  otherwise unsupported hardware.
++comment "PATA SFF controllers with BMDMA"
+ 
+ config PATA_ALI
+ 	tristate "ALi PATA support"
+@@ -262,40 +292,30 @@ config PATA_ARTOP
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ATP867X
+-	tristate "ARTOP/Acard ATP867X PATA support"
++config PATA_ATIIXP
++	tristate "ATI PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for ARTOP/Acard ATP867X PATA
+-	  controllers.
+-
+-	  If unsure, say N.
+-
+-config PATA_AT32
+-	tristate "Atmel AVR32 PATA support (Experimental)"
+-	depends on AVR32 && PLATFORM_AT32AP && EXPERIMENTAL
+-	help
+-	  This option enables support for the IDE devices on the
+-	  Atmel AT32AP platform.
++	  This option enables support for the ATI ATA interfaces
++	  found on the many ATI chipsets.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ATIIXP
+-	tristate "ATI PATA support"
++config PATA_ATP867X
++	tristate "ARTOP/Acard ATP867X PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for the ATI ATA interfaces
+-	  found on the many ATI chipsets.
++	  This option enables support for ARTOP/Acard ATP867X PATA
++	  controllers.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_CMD640_PCI
+-	tristate "CMD640 PCI PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
++config PATA_BF54X
++	tristate "Blackfin 54x ATAPI support"
++	depends on BF542 || BF548 || BF549
+ 	help
+-	  This option enables support for the CMD640 PCI IDE
+-	  interface chip. Only the primary channel is currently
+-	  supported.
++	  This option enables support for the built-in ATAPI controller on
++	  Blackfin 54x family chips.
+ 
+ 	  If unsure, say N.
+ 
+@@ -362,15 +382,6 @@ config PATA_EFAR
+ 
+ 	  If unsure, say N.
+ 
+-config ATA_GENERIC
+-	tristate "Generic ATA support"
+-	depends on PCI
+-	help
+-	  This option enables support for generic BIOS configured
+-	  ATA controllers via the new ATA layer
+-
+-	  If unsure, say N.
+-
+ config PATA_HPT366
+ 	tristate "HPT 366/368 PATA support"
+ 	depends on PCI
+@@ -415,12 +426,20 @@ config PATA_HPT3X3_DMA
+ 	  controllers. Enable with care as there are still some
+ 	  problems with DMA on this chipset.
+ 
+-config PATA_ISAPNP
+-	tristate "ISA Plug and Play PATA support"
+-	depends on ISAPNP
++config PATA_ICSIDE
++	tristate "Acorn ICS PATA support"
++	depends on ARM && ARCH_ACORN
+ 	help
+-	  This option enables support for ISA plug & play ATA
+-	  controllers such as those found on old soundcards.
++	  On Acorn systems, say Y here if you wish to use the ICS PATA
++	  interface card.  This is not required for ICS partition support.
++	  If you are unsure, say N to this.
++
++config PATA_IT8213
++	tristate "IT8213 PATA support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for the ITE 821 PATA
++          controllers via the new ATA layer.
+ 
+ 	  If unsure, say N.
+ 
+@@ -434,15 +453,6 @@ config PATA_IT821X
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_IT8213
+-	tristate "IT8213 PATA support (Experimental)"
+-	depends on PCI && EXPERIMENTAL
+-	help
+-	  This option enables support for the ITE 821 PATA
+-          controllers via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+ config PATA_JMICRON
+ 	tristate "JMicron PATA support"
+ 	depends on PCI
+@@ -452,23 +462,14 @@ config PATA_JMICRON
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_LEGACY
+-	tristate "Legacy ISA PATA support (Experimental)"
+-	depends on (ISA || PCI)  && EXPERIMENTAL
+-	help
+-	  This option enables support for ISA/VLB/PCI bus legacy PATA
+-	  ports and allows them to be accessed via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+-config PATA_TRIFLEX
+-	tristate "Compaq Triflex PATA support"
+-	depends on PCI
++config PATA_MACIO
++	tristate "Apple PowerMac/PowerBook internal 'MacIO' IDE"
++	depends on PPC_PMAC
+ 	help
+-	  Enable support for the Compaq 'Triflex' IDE controller as found
+-	  on many Compaq Pentium-Pro systems, via the new ATA layer.
+-
+-	  If unsure, say N.
++	  Most IDE capable PowerMacs have IDE busses driven by a variant
++          of this controller which is part of the Apple chipset used on
++          most PowerMac models. Some models have multiple busses using
++          different chipsets, though generally, MacIO is one of them.
+ 
+ config PATA_MARVELL
+ 	tristate "Marvell PATA support via legacy mode"
+@@ -481,32 +482,6 @@ config PATA_MARVELL
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_MPC52xx
+-	tristate "Freescale MPC52xx SoC internal IDE"
+-	depends on PPC_MPC52xx && PPC_BESTCOMM
+-	select PPC_BESTCOMM_ATA
+-	help
+-	  This option enables support for integrated IDE controller
+-	  of the Freescale MPC52xx SoC.
+-
+-	  If unsure, say N.
+-
+-config PATA_MPIIX
+-	tristate "Intel PATA MPIIX support"
+-	depends on PCI
+-	help
+-	  This option enables support for MPIIX PATA support.
+-
+-	  If unsure, say N.
+-
+-config PATA_OLDPIIX
+-	tristate "Intel PATA old PIIX support"
+-	depends on PCI
+-	help
+-	  This option enables support for early PIIX PATA support.
+-
+-	  If unsure, say N.
+-
+ config PATA_NETCELL
+ 	tristate "NETCELL Revolution RAID support"
+ 	depends on PCI
+@@ -525,15 +500,6 @@ config PATA_NINJA32
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_NS87410
+-	tristate "Nat Semi NS87410 PATA support"
+-	depends on PCI
+-	help
+-	  This option enables support for the National Semiconductor
+-	  NS87410 PCI-IDE controller.
+-
+-	  If unsure, say N.
+-
+ config PATA_NS87415
+ 	tristate "Nat Semi NS87415 PATA support"
+ 	depends on PCI
+@@ -543,12 +509,11 @@ config PATA_NS87415
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_OPTI
+-	tristate "OPTI621/6215 PATA support (Very Experimental)"
+-	depends on PCI && EXPERIMENTAL
++config PATA_OLDPIIX
++	tristate "Intel PATA old PIIX support"
++	depends on PCI
+ 	help
+-	  This option enables full PIO support for the early Opti ATA
+-	  controllers found on some old motherboards.
++	  This option enables support for early PIIX PATA support.
+ 
+ 	  If unsure, say N.
+ 
+@@ -562,24 +527,6 @@ config PATA_OPTIDMA
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_PALMLD
+-	tristate "Palm LifeDrive PATA support"
+-	depends on MACH_PALMLD
+-	help
+-	  This option enables support for Palm LifeDrive's internal ATA
+-	  port via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+-config PATA_PCMCIA
+-	tristate "PCMCIA PATA support"
+-	depends on PCMCIA
+-	help
+-	  This option enables support for PCMCIA ATA interfaces, including
+-	  compact flash card adapters via the new ATA layer.
+-
+-	  If unsure, say N.
+-
+ config PATA_PDC2027X
+ 	tristate "Promise PATA 2027x support"
+ 	depends on PCI
+@@ -597,12 +544,6 @@ config PATA_PDC_OLD
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_QDI
+-	tristate "QDI VLB PATA support"
+-	depends on ISA
+-	help
+-	  Support for QDI 6500 and 6580 PATA controllers on VESA local bus.
+-
+ config PATA_RADISYS
+ 	tristate "RADISYS 82600 PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
+@@ -612,15 +553,6 @@ config PATA_RADISYS
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_RB532
+-	tristate "RouterBoard 532 PATA CompactFlash support"
+-	depends on MIKROTIK_RB532
+-	help
+-	  This option enables support for the RouterBoard 532
+-	  PATA CompactFlash controller.
+-
+-	  If unsure, say N.
+-
+ config PATA_RDC
+ 	tristate "RDC PATA support"
+ 	depends on PCI
+@@ -631,21 +563,30 @@ config PATA_RDC
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_RZ1000
+-	tristate "PC Tech RZ1000 PATA support"
++config PATA_SC1200
++	tristate "SC1200 PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables basic support for the PC Tech RZ1000/1
+-	  PATA controllers via the new ATA layer
++	  This option enables support for the NatSemi/AMD SC1200 SoC
++	  companion chip used with the Geode processor family.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_SC1200
+-	tristate "SC1200 PATA support"
++config PATA_SCC
++	tristate "Toshiba's Cell Reference Set IDE support"
++	depends on PCI && PPC_CELLEB
++	help
++	  This option enables support for the built-in IDE controller on
++	  Toshiba Cell Reference Board.
++
++	  If unsure, say N.
++
++config PATA_SCH
++	tristate "Intel SCH PATA support"
+ 	depends on PCI
+ 	help
+-	  This option enables support for the NatSemi/AMD SC1200 SoC
+-	  companion chip used with the Geode processor family.
++	  This option enables support for Intel SCH PATA on the Intel
++	  SCH (US15W, US15L, UL11L) series host controllers.
+ 
+ 	  If unsure, say N.
+ 
+@@ -683,6 +624,15 @@ config PATA_TOSHIBA
+ 
+ 	  If unsure, say N.
+ 
++config PATA_TRIFLEX
++	tristate "Compaq Triflex PATA support"
++	depends on PCI
++	help
++	  Enable support for the Compaq 'Triflex' IDE controller as found
++	  on many Compaq Pentium-Pro systems, via the new ATA layer.
++
++	  If unsure, say N.
++
+ config PATA_VIA
+ 	tristate "VIA PATA support"
+ 	depends on PCI
+@@ -701,12 +651,99 @@ config PATA_WINBOND
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_WINBOND_VLB
+-	tristate "Winbond W83759A VLB PATA support (Experimental)"
+-	depends on ISA && EXPERIMENTAL
++endif # ATA_BMDMA
++
++comment "PIO-only SFF controllers"
++
++config PATA_AT32
++	tristate "Atmel AVR32 PATA support (Experimental)"
++	depends on AVR32 && PLATFORM_AT32AP && EXPERIMENTAL
+ 	help
+-	  Support for the Winbond W83759A controller on Vesa Local Bus
+-	  systems.
++	  This option enables support for the IDE devices on the
++	  Atmel AT32AP platform.
++
++	  If unsure, say N.
++
++config PATA_AT91
++	tristate "PATA support for AT91SAM9260"
++	depends on ARM && ARCH_AT91
++	help
++	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
++
++	  If unsure, say N.
++
++config PATA_CMD640_PCI
++	tristate "CMD640 PCI PATA support (Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables support for the CMD640 PCI IDE
++	  interface chip. Only the primary channel is currently
++	  supported.
++
++	  If unsure, say N.
++
++config PATA_ISAPNP
++	tristate "ISA Plug and Play PATA support"
++	depends on ISAPNP
++	help
++	  This option enables support for ISA plug & play ATA
++	  controllers such as those found on old soundcards.
++
++	  If unsure, say N.
++
++config PATA_IXP4XX_CF
++	tristate "IXP4XX Compact Flash support"
++	depends on ARCH_IXP4XX
++	help
++	  This option enables support for a Compact Flash connected on
++	  the ixp4xx expansion bus. This driver had been written for
++	  Loft/Avila boards in mind but can work with others.
++
++	  If unsure, say N.
++
++config PATA_MPIIX
++	tristate "Intel PATA MPIIX support"
++	depends on PCI
++	help
++	  This option enables support for MPIIX PATA support.
++
++	  If unsure, say N.
++
++config PATA_NS87410
++	tristate "Nat Semi NS87410 PATA support"
++	depends on PCI
++	help
++	  This option enables support for the National Semiconductor
++	  NS87410 PCI-IDE controller.
++
++	  If unsure, say N.
++
++config PATA_OPTI
++	tristate "OPTI621/6215 PATA support (Very Experimental)"
++	depends on PCI && EXPERIMENTAL
++	help
++	  This option enables full PIO support for the early Opti ATA
++	  controllers found on some old motherboards.
++
++	  If unsure, say N.
++
++config PATA_PALMLD
++	tristate "Palm LifeDrive PATA support"
++	depends on MACH_PALMLD
++	help
++	  This option enables support for Palm LifeDrive's internal ATA
++	  port via the new ATA layer.
++
++	  If unsure, say N.
++
++config PATA_PCMCIA
++	tristate "PCMCIA PATA support"
++	depends on PCMCIA
++	help
++	  This option enables support for PCMCIA ATA interfaces, including
++	  compact flash card adapters via the new ATA layer.
++
++	  If unsure, say N.
+ 
+ config HAVE_PATA_PLATFORM
+ 	bool
+@@ -725,14 +762,6 @@ config PATA_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_AT91
+-	tristate "PATA support for AT91SAM9260"
+-	depends on ARM && ARCH_AT91
+-	help
+-	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+-
+-	  If unsure, say N.
+-
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+ 	depends on PATA_PLATFORM && PPC_OF
+@@ -743,69 +772,65 @@ config PATA_OF_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_ICSIDE
+-	tristate "Acorn ICS PATA support"
+-	depends on ARM && ARCH_ACORN
++config PATA_QDI
++	tristate "QDI VLB PATA support"
++	depends on ISA
+ 	help
+-	  On Acorn systems, say Y here if you wish to use the ICS PATA
+-	  interface card.  This is not required for ICS partition support.
+-	  If you are unsure, say N to this.
++	  Support for QDI 6500 and 6580 PATA controllers on VESA local bus.
+ 
+-config PATA_IXP4XX_CF
+-	tristate "IXP4XX Compact Flash support"
+-	depends on ARCH_IXP4XX
++config PATA_RB532
++	tristate "RouterBoard 532 PATA CompactFlash support"
++	depends on MIKROTIK_RB532
+ 	help
+-	  This option enables support for a Compact Flash connected on
+-	  the ixp4xx expansion bus. This driver had been written for
+-	  Loft/Avila boards in mind but can work with others.
++	  This option enables support for the RouterBoard 532
++	  PATA CompactFlash controller.
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_OCTEON_CF
+-	tristate "OCTEON Boot Bus Compact Flash support"
+-	depends on CPU_CAVIUM_OCTEON
++config PATA_RZ1000
++	tristate "PC Tech RZ1000 PATA support"
++	depends on PCI
+ 	help
+-	  This option enables a polled compact flash driver for use with
+-	  compact flash cards attached to the OCTEON boot bus.
++	  This option enables basic support for the PC Tech RZ1000/1
++	  PATA controllers via the new ATA layer
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_SCC
+-	tristate "Toshiba's Cell Reference Set IDE support"
+-	depends on PCI && PPC_CELLEB
++config PATA_WINBOND_VLB
++	tristate "Winbond W83759A VLB PATA support (Experimental)"
++	depends on ISA && EXPERIMENTAL
+ 	help
+-	  This option enables support for the built-in IDE controller on
+-	  Toshiba Cell Reference Board.
++	  Support for the Winbond W83759A controller on Vesa Local Bus
++	  systems.
+ 
+-	  If unsure, say N.
++comment "Generic fallback / legacy drivers"
+ 
+-config PATA_SCH
+-	tristate "Intel SCH PATA support"
+-	depends on PCI
++config PATA_ACPI
++	tristate "ACPI firmware driver for PATA"
++	depends on ATA_ACPI && ATA_BMDMA
+ 	help
+-	  This option enables support for Intel SCH PATA on the Intel
+-	  SCH (US15W, US15L, UL11L) series host controllers.
+-
+-	  If unsure, say N.
++	  This option enables an ACPI method driver which drives
++	  motherboard PATA controller interfaces through the ACPI
++	  firmware in the BIOS. This driver can sometimes handle
++	  otherwise unsupported hardware.
+ 
+-config PATA_BF54X
+-	tristate "Blackfin 54x ATAPI support"
+-	depends on BF542 || BF548 || BF549
++config ATA_GENERIC
++	tristate "Generic ATA support"
++	depends on PCI && ATA_BMDMA
+ 	help
+-	  This option enables support for the built-in ATAPI controller on
+-	  Blackfin 54x family chips.
++	  This option enables support for generic BIOS configured
++	  ATA controllers via the new ATA layer
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_MACIO
+-	tristate "Apple PowerMac/PowerBook internal 'MacIO' IDE"
+-	depends on PPC_PMAC
++config PATA_LEGACY
++	tristate "Legacy ISA PATA support (Experimental)"
++	depends on (ISA || PCI) && EXPERIMENTAL
+ 	help
+-	  Most IDE capable PowerMacs have IDE busses driven by a variant
+-          of this controller which is part of the Apple chipset used on
+-          most PowerMac models. Some models have multiple busses using
+-          different chipsets, though generally, MacIO is one of them.
++	  This option enables support for ISA/VLB/PCI bus legacy PATA
++	  ports and allows them to be accessed via the new ATA layer.
+ 
++	  If unsure, say N.
+ 
+ endif # ATA_SFF
+ endif # ATA
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index d0a93c4..7ef89d7 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -1,33 +1,39 @@
+ 
+ obj-$(CONFIG_ATA)		+= libata.o
+ 
++# non-SFF interface
+ obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
+ obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o
+-obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
++obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
++obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
++obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
++
++# SFF w/ custom DMA
++obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
++obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
++obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
++obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
++obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
++
++# SFF SATA w/ BMDMA
+ obj-$(CONFIG_ATA_PIIX)		+= ata_piix.o
++obj-$(CONFIG_SATA_MV)		+= sata_mv.o
++obj-$(CONFIG_SATA_NV)		+= sata_nv.o
+ obj-$(CONFIG_SATA_PROMISE)	+= sata_promise.o
+-obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
+ obj-$(CONFIG_SATA_SIL)		+= sata_sil.o
+-obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+-obj-$(CONFIG_SATA_VIA)		+= sata_via.o
+-obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+ obj-$(CONFIG_SATA_SIS)		+= sata_sis.o
+-obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+-obj-$(CONFIG_SATA_NV)		+= sata_nv.o
++obj-$(CONFIG_SATA_SVW)		+= sata_svw.o
+ obj-$(CONFIG_SATA_ULI)		+= sata_uli.o
+-obj-$(CONFIG_SATA_MV)		+= sata_mv.o
+-obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+-obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+-obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+-obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
++obj-$(CONFIG_SATA_VIA)		+= sata_via.o
++obj-$(CONFIG_SATA_VITESSE)	+= sata_vsc.o
+ 
++# SFF PATA w/ BMDMA
+ obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
+ obj-$(CONFIG_PATA_AMD)		+= pata_amd.o
+ obj-$(CONFIG_PATA_ARTOP)	+= pata_artop.o
+-obj-$(CONFIG_PATA_ATP867X)	+= pata_atp867x.o
+-obj-$(CONFIG_PATA_AT32)		+= pata_at32.o
+ obj-$(CONFIG_PATA_ATIIXP)	+= pata_atiixp.o
+-obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
++obj-$(CONFIG_PATA_ATP867X)	+= pata_atp867x.o
++obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+ obj-$(CONFIG_PATA_CMD64X)	+= pata_cmd64x.o
+ obj-$(CONFIG_PATA_CS5520)	+= pata_cs5520.o
+ obj-$(CONFIG_PATA_CS5530)	+= pata_cs5530.o
+@@ -39,47 +45,50 @@ obj-$(CONFIG_PATA_HPT366)	+= pata_hpt366.o
+ obj-$(CONFIG_PATA_HPT37X)	+= pata_hpt37x.o
+ obj-$(CONFIG_PATA_HPT3X2N)	+= pata_hpt3x2n.o
+ obj-$(CONFIG_PATA_HPT3X3)	+= pata_hpt3x3.o
+-obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+-obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
++obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
+ obj-$(CONFIG_PATA_IT8213)	+= pata_it8213.o
++obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
+ obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
++obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
++obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
+ obj-$(CONFIG_PATA_NETCELL)	+= pata_netcell.o
+ obj-$(CONFIG_PATA_NINJA32)	+= pata_ninja32.o
+-obj-$(CONFIG_PATA_NS87410)	+= pata_ns87410.o
+ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
+-obj-$(CONFIG_PATA_OPTI)		+= pata_opti.o
+-obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+-obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
+-obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
+-obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
+ obj-$(CONFIG_PATA_OLDPIIX)	+= pata_oldpiix.o
+-obj-$(CONFIG_PATA_PALMLD)	+= pata_palmld.o
+-obj-$(CONFIG_PATA_PCMCIA)	+= pata_pcmcia.o
++obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+ obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2027x.o
+ obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
+-obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
+ obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
+-obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
+ obj-$(CONFIG_PATA_RDC)		+= pata_rdc.o
+-obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
+ obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
++obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
++obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+ obj-$(CONFIG_PATA_SERVERWORKS)	+= pata_serverworks.o
+ obj-$(CONFIG_PATA_SIL680)	+= pata_sil680.o
++obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
+ obj-$(CONFIG_PATA_TOSHIBA)	+= pata_piccolo.o
++obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
+ obj-$(CONFIG_PATA_VIA)		+= pata_via.o
+ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
+-obj-$(CONFIG_PATA_WINBOND_VLB)	+= pata_winbond.o
+-obj-$(CONFIG_PATA_SIS)		+= pata_sis.o
+-obj-$(CONFIG_PATA_TRIFLEX)	+= pata_triflex.o
++
++# SFF PIO only
++obj-$(CONFIG_PATA_AT32)		+= pata_at32.o
++obj-$(CONFIG_PATA_AT91)		+= pata_at91.o
++obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
++obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+ obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
+-obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
+-obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
+-obj-$(CONFIG_PATA_BF54X)	+= pata_bf54x.o
+-obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
++obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
++obj-$(CONFIG_PATA_NS87410)	+= pata_ns87410.o
++obj-$(CONFIG_PATA_OPTI)		+= pata_opti.o
++obj-$(CONFIG_PATA_PCMCIA)	+= pata_pcmcia.o
++obj-$(CONFIG_PATA_PALMLD)	+= pata_palmld.o
+ obj-$(CONFIG_PATA_PLATFORM)	+= pata_platform.o
+-obj-$(CONFIG_PATA_AT91)	+= pata_at91.o
+ obj-$(CONFIG_PATA_OF_PLATFORM)	+= pata_of_platform.o
+-obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
++obj-$(CONFIG_PATA_QDI)		+= pata_qdi.o
++obj-$(CONFIG_PATA_RB532)	+= pata_rb532_cf.o
++obj-$(CONFIG_PATA_RZ1000)	+= pata_rz1000.o
++obj-$(CONFIG_PATA_WINBOND_VLB)	+= pata_winbond.o
++
+ # Should be last but two libata driver
+ obj-$(CONFIG_PATA_ACPI)		+= pata_acpi.o
+ # Should be last but one libata driver
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index bef7571..c29f146 100644
+index c29f146..efa4a18 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -2315,13 +2315,13 @@ int ata_pci_sff_init_host(struct ata_host *host)
- EXPORT_SYMBOL_GPL(ata_pci_sff_init_host);
- 
- /**
-- *	ata_pci_sff_prepare_host - helper to prepare native PCI ATA host
-+ *	ata_pci_sff_prepare_host - helper to prepare PCI PIO-only SFF ATA host
-  *	@pdev: target PCI device
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@r_host: out argument for the initialized ATA host
-  *
-- *	Helper to allocate ATA host for @pdev, acquire all native PCI
-- *	resources and initialize it accordingly in one go.
-+ *	Helper to allocate PIO-only SFF ATA host for @pdev, acquire
-+ *	all PCI resources and initialize it accordingly in one go.
-  *
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-@@ -2351,9 +2351,6 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
- 	if (rc)
- 		goto err_out;
- 
--	/* init DMA related stuff */
--	ata_pci_bmdma_init(host);
--
- 	devres_remove_group(&pdev->dev, NULL);
- 	*r_host = host;
- 	return 0;
-@@ -2458,8 +2455,21 @@ out:
+@@ -798,11 +798,15 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	case ATAPI_PROT_NODATA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		break;
++#ifdef CONFIG_ATA_BMDMA
+ 	case ATAPI_PROT_DMA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		/* initiate bmdma */
+ 		ap->ops->bmdma_start(qc);
+ 		break;
++#endif /* CONFIG_ATA_BMDMA */
++	default:
++		BUG();
+ 	}
  }
- EXPORT_SYMBOL_GPL(ata_pci_sff_activate_host);
  
-+static const struct ata_port_info *ata_sff_find_valid_pi(
-+					const struct ata_port_info * const *ppi)
-+{
-+	int i;
-+
-+	/* look up the first valid port_info */
-+	for (i = 0; i < 2 && ppi[i]; i++)
-+		if (ppi[i]->port_ops != &ata_dummy_port_ops)
-+			return ppi[i];
-+
-+	return NULL;
-+}
-+
- /**
-- *	ata_pci_sff_init_one - Initialize/register PCI IDE host controller
-+ *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-  *	@pdev: Controller to be initialized
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@sht: scsi_host_template to use when registering the host
-@@ -2468,11 +2478,7 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_activate_host);
-  *
-  *	This is a helper function which can be called from a driver's
-  *	xxx_init_one() probe function if the hardware uses traditional
-- *	IDE taskfile registers.
-- *
-- *	This function calls pci_enable_device(), reserves its register
-- *	regions, sets the dma mask, enables bus master mode, and calls
-- *	ata_device_add()
-+ *	IDE taskfile registers and is PIO only.
-  *
-  *	ASSUMPTION:
-  *	Nobody makes a single channel controller that appears solely as
-@@ -2489,20 +2495,13 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
- 		 struct scsi_host_template *sht, void *host_priv, int hflag)
- {
- 	struct device *dev = &pdev->dev;
--	const struct ata_port_info *pi = NULL;
-+	const struct ata_port_info *pi;
- 	struct ata_host *host = NULL;
--	int i, rc;
-+	int rc;
+@@ -2535,6 +2539,12 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
  
- 	DPRINTK("ENTER\n");
- 
--	/* look up the first valid port_info */
--	for (i = 0; i < 2 && ppi[i]; i++) {
--		if (ppi[i]->port_ops != &ata_dummy_port_ops) {
--			pi = ppi[i];
--			break;
--		}
--	}
--
-+	pi = ata_sff_find_valid_pi(ppi);
- 	if (!pi) {
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "no valid port_info specified\n");
-@@ -2523,8 +2522,7 @@ int ata_pci_sff_init_one(struct pci_dev *pdev,
- 	host->private_data = host_priv;
- 	host->flags |= hflag;
- 
--	pci_set_master(pdev);
--	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-+	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
- out:
- 	if (rc == 0)
- 		devres_remove_group(&pdev->dev, NULL);
-@@ -3196,6 +3194,98 @@ void ata_pci_bmdma_init(struct ata_host *host)
- }
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
- 
-+/**
-+ *	ata_pci_bmdma_prepare_host - helper to prepare PCI BMDMA ATA host
-+ *	@pdev: target PCI device
-+ *	@ppi: array of port_info, must be enough for two ports
-+ *	@r_host: out argument for the initialized ATA host
-+ *
-+ *	Helper to allocate BMDMA ATA host for @pdev, acquire all PCI
-+ *	resources and initialize it accordingly in one go.
-+ *
-+ *	LOCKING:
-+ *	Inherited from calling layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno otherwise.
-+ */
-+int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+			       const struct ata_port_info * const * ppi,
-+			       struct ata_host **r_host)
-+{
-+	int rc;
-+
-+	rc = ata_pci_sff_prepare_host(pdev, ppi, r_host);
-+	if (rc)
-+		return rc;
-+
-+	ata_pci_bmdma_init(*r_host);
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(ata_pci_bmdma_prepare_host);
-+
-+/**
-+ *	ata_pci_bmdma_init_one - Initialize/register BMDMA PCI IDE controller
-+ *	@pdev: Controller to be initialized
-+ *	@ppi: array of port_info, must be enough for two ports
-+ *	@sht: scsi_host_template to use when registering the host
-+ *	@host_priv: host private_data
-+ *	@hflags: host flags
-+ *
-+ *	This function is similar to ata_pci_sff_init_one() but also
-+ *	takes care of BMDMA initialization.
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, negative on errno-based value on error.
-+ */
-+int ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+			   const struct ata_port_info * const * ppi,
-+			   struct scsi_host_template *sht, void *host_priv,
-+			   int hflags)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct ata_port_info *pi;
-+	struct ata_host *host = NULL;
-+	int rc;
-+
-+	DPRINTK("ENTER\n");
-+
-+	pi = ata_sff_find_valid_pi(ppi);
-+	if (!pi) {
-+		dev_printk(KERN_ERR, &pdev->dev,
-+			   "no valid port_info specified\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-+		return -ENOMEM;
-+
-+	rc = pcim_enable_device(pdev);
-+	if (rc)
-+		goto out;
-+
-+	/* prepare and activate BMDMA host */
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
-+	if (rc)
-+		goto out;
-+	host->private_data = host_priv;
-+	host->flags |= hflags;
-+
-+	pci_set_master(pdev);
-+	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-+ out:
-+	if (rc == 0)
-+		devres_remove_group(&pdev->dev, NULL);
-+	else
-+		devres_release_group(&pdev->dev, NULL);
-+
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
-+
  #endif /* CONFIG_PCI */
  
++/*
++ *	BMDMA support
++ */
++
++#ifdef CONFIG_ATA_BMDMA
++
+ const struct ata_port_operations ata_bmdma_port_ops = {
+ 	.inherits		= &ata_sff_port_ops,
+ 
+@@ -3287,6 +3297,7 @@ int ata_pci_bmdma_init_one(struct pci_dev *pdev,
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
+ 
+ #endif /* CONFIG_PCI */
++#endif /* CONFIG_ATA_BMDMA */
+ 
  /**
-diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
-index 066b9f3..c8d4703 100644
---- a/drivers/ata/pata_acpi.c
-+++ b/drivers/ata/pata_acpi.c
-@@ -260,7 +260,7 @@ static int pacpi_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
- 			return rc;
- 		pcim_pin_device(pdev);
- 	}
--	return ata_pci_sff_init_one(pdev, ppi, &pacpi_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &pacpi_sht, NULL, 0);
- }
- 
- static const struct pci_device_id pacpi_pci_tbl[] = {
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index f306e10..794ec6e 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -583,7 +583,10 @@ static int ali_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	        	ppi[0] = &info_20_udma;
- 	}
- 
--	return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL, 0);
-+	if (!ppi[0]->mwdma_mask && !ppi[0]->udma_mask)
-+		return ata_pci_sff_init_one(pdev, ppi, &ali_sht, NULL, 0);
-+	else
-+		return ata_pci_bmdma_init_one(pdev, ppi, &ali_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index d95eca9..620a07c 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -574,7 +574,7 @@ static int amd_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 
- 	/* And fire it up */
--	return ata_pci_sff_init_one(pdev, ppi, &amd_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &amd_sht, hpriv, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index 4d066d6..ba43f0f 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -421,7 +421,7 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	BUG_ON(ppi[0] == NULL);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &artop_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &artop_sht, NULL, 0);
- }
- 
- static const struct pci_device_id artop_pci_tbl[] = {
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 44d88b3..4375561 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -246,8 +246,8 @@ static int atiixp_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		if (!pci_test_config_bits(pdev, &atiixp_enable_bits[i]))
- 			ppi[i] = &ata_dummy_port_info;
- 
--	return ata_pci_sff_init_one(pdev, ppi, &atiixp_sht, NULL,
--						ATA_HOST_PARALLEL_SCAN);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
- }
- 
- static const struct pci_device_id atiixp[] = {
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index 4c81a71..9f5da1c 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -367,7 +367,7 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
- #endif
- 
--	return ata_pci_sff_init_one(pdev, ppi, &cmd64x_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cmd64x_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index e809a42..f792330 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -324,7 +324,7 @@ static int cs5530_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ppi[1] = &info_palmax_secondary;
- 
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(pdev, ppi, &cs5530_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cs5530_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_cs5535.c b/drivers/ata/pata_cs5535.c
-index a02e645..03a9318 100644
---- a/drivers/ata/pata_cs5535.c
-+++ b/drivers/ata/pata_cs5535.c
-@@ -198,7 +198,7 @@ static int cs5535_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	rdmsr(ATAC_CH0D1_PIO, timings, dummy);
- 	if (CS5535_BAD_PIO(timings))
- 		wrmsr(ATAC_CH0D1_PIO, 0xF7F4F7F4UL, 0);
--	return ata_pci_sff_init_one(dev, ppi, &cs5535_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &cs5535_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cs5535[] = {
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 914ae35..21ee23f 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -260,7 +260,7 @@ static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		return -ENODEV;
- 	}
- 
--	return ata_pci_sff_init_one(dev, ppi, &cs5536_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &cs5536_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cs5536[] = {
-diff --git a/drivers/ata/pata_cypress.c b/drivers/ata/pata_cypress.c
-index 0fcc096..6d915b0 100644
---- a/drivers/ata/pata_cypress.c
-+++ b/drivers/ata/pata_cypress.c
-@@ -138,7 +138,7 @@ static int cy82c693_init_one(struct pci_dev *pdev, const struct pci_device_id *i
- 	if (PCI_FUNC(pdev->devfn) != 1)
- 		return -ENODEV;
- 
--	return ata_pci_sff_init_one(pdev, ppi, &cy82c693_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &cy82c693_sht, NULL, 0);
- }
- 
- static const struct pci_device_id cy82c693[] = {
-diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index 3bac0e0..a088347 100644
---- a/drivers/ata/pata_efar.c
-+++ b/drivers/ata/pata_efar.c
-@@ -277,8 +277,8 @@ static int efar_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &efar_sht, NULL,
--					ATA_HOST_PARALLEL_SCAN);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &efar_sht, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
- }
- 
- static const struct pci_device_id efar_pci_tbl[] = {
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 8580eb3..7688868 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -361,7 +361,7 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 			break;
- 	}
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt36x_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt36x_sht, hpriv, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
-index 98b498b..9ae4c08 100644
---- a/drivers/ata/pata_hpt37x.c
-+++ b/drivers/ata/pata_hpt37x.c
-@@ -987,7 +987,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	}
- 
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt37x_sht, private_data, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt37x_sht, private_data, 0);
- }
- 
- static const struct pci_device_id hpt37x[] = {
-diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
-index 8b95aeb..32f3463 100644
---- a/drivers/ata/pata_hpt3x2n.c
-+++ b/drivers/ata/pata_hpt3x2n.c
-@@ -548,7 +548,7 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 		outb(inb(iobase + 0x9c) | 0x04, iobase + 0x9c);
- 
- 	/* Now kick off ATA set up */
--	return ata_pci_sff_init_one(dev, ppi, &hpt3x2n_sht, hpriv, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &hpt3x2n_sht, hpriv, 0);
- }
- 
- static const struct pci_device_id hpt3x2n[] = {
-diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index f971f0d..4d142a2 100644
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -273,7 +273,7 @@ static int it8213_init_one (struct pci_dev *pdev, const struct pci_device_id *en
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &it8213_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &it8213_sht, NULL, 0);
- }
- 
- static const struct pci_device_id it8213_pci_tbl[] = {
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 2bd2b00..bf88f71 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -933,7 +933,7 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		else
- 			ppi[0] = &info_smart;
- 	}
--	return ata_pci_sff_init_one(pdev, ppi, &it821x_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &it821x_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 565e01e..cb3babb 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -144,7 +144,7 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
- 
--	return ata_pci_sff_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
- }
- 
- static const struct pci_device_id jmicron_pci_tbl[] = {
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index e8ca02e..dd38083 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -153,7 +153,7 @@ static int marvell_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 		return -ENODEV;
- 	}
- #endif
--	return ata_pci_sff_init_one(pdev, ppi, &marvell_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &marvell_sht, NULL, 0);
- }
- 
- static const struct pci_device_id marvell_pci_tbl[] = {
-diff --git a/drivers/ata/pata_netcell.c b/drivers/ata/pata_netcell.c
-index 94f979a..3eb921c 100644
---- a/drivers/ata/pata_netcell.c
-+++ b/drivers/ata/pata_netcell.c
-@@ -82,7 +82,7 @@ static int netcell_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 	ata_pci_bmdma_clear_simplex(pdev);
- 
- 	/* And let the library code do the work */
--	return ata_pci_sff_init_one(pdev, port_info, &netcell_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, port_info, &netcell_sht, NULL, 0);
- }
- 
- static const struct pci_device_id netcell_pci_tbl[] = {
-diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
-index fdbba2d..605f198 100644
---- a/drivers/ata/pata_ns87415.c
-+++ b/drivers/ata/pata_ns87415.c
-@@ -380,7 +380,7 @@ static int ns87415_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 
- 	ns87415_fixup(pdev);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &ns87415_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &ns87415_sht, NULL, 0);
- }
- 
- static const struct pci_device_id ns87415_pci_tbl[] = {
-diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
-index 988ef26..b811c16 100644
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -248,7 +248,7 @@ static int oldpiix_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &oldpiix_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &oldpiix_sht, NULL, 0);
- }
- 
- static const struct pci_device_id oldpiix_pci_tbl[] = {
-diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
-index 76b7d12..0852cd0 100644
---- a/drivers/ata/pata_optidma.c
-+++ b/drivers/ata/pata_optidma.c
-@@ -429,7 +429,7 @@ static int optidma_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (optiplus_with_udma(dev))
- 		ppi[0] = &info_82c700_udma;
- 
--	return ata_pci_sff_init_one(dev, ppi, &optidma_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &optidma_sht, NULL, 0);
- }
- 
- static const struct pci_device_id optidma[] = {
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index fa1e2f3..c39f213 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -337,7 +337,7 @@ static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 				return -ENODEV;
- 		}
- 	}
--	return ata_pci_sff_init_one(dev, ppi, &pdc202xx_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &pdc202xx_sht, NULL, 0);
- }
- 
- static const struct pci_device_id pdc202xx[] = {
-diff --git a/drivers/ata/pata_piccolo.c b/drivers/ata/pata_piccolo.c
-index 9816154..cb01bf9 100644
---- a/drivers/ata/pata_piccolo.c
-+++ b/drivers/ata/pata_piccolo.c
-@@ -95,7 +95,7 @@ static int ata_tosh_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 	};
- 	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
- 	/* Just one port for the moment */
--	return ata_pci_sff_init_one(dev, ppi, &tosh_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &tosh_sht, NULL, 0);
- }
- 
- static struct pci_device_id ata_tosh[] = {
-diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
-index a5fa388..8574b31 100644
---- a/drivers/ata/pata_radisys.c
-+++ b/drivers/ata/pata_radisys.c
-@@ -227,7 +227,7 @@ static int radisys_init_one (struct pci_dev *pdev, const struct pci_device_id *e
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &radisys_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &radisys_sht, NULL, 0);
- }
- 
- static const struct pci_device_id radisys_pci_tbl[] = {
-diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
-index 2dd7748..5fbe9b1 100644
---- a/drivers/ata/pata_rdc.c
-+++ b/drivers/ata/pata_rdc.c
-@@ -344,7 +344,7 @@ static int __devinit rdc_init_one(struct pci_dev *pdev,
- 	 */
- 	pci_read_config_dword(pdev, 0x54, &hpriv->saved_iocfg);
- 
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	host->private_data = hpriv;
-diff --git a/drivers/ata/pata_sc1200.c b/drivers/ata/pata_sc1200.c
-index 6b5b63a..e2c1825 100644
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -237,7 +237,7 @@ static int sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	};
- 	const struct ata_port_info *ppi[] = { &info, NULL };
- 
--	return ata_pci_sff_init_one(dev, ppi, &sc1200_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &sc1200_sht, NULL, 0);
- }
- 
- static const struct pci_device_id sc1200[] = {
-diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
-index 86b3d01..e97b32f 100644
---- a/drivers/ata/pata_sch.c
-+++ b/drivers/ata/pata_sch.c
-@@ -179,7 +179,7 @@ static int __devinit sch_init_one(struct pci_dev *pdev,
- 		dev_printk(KERN_DEBUG, &pdev->dev,
- 			   "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(pdev, ppi, &sch_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sch_sht, NULL, 0);
- }
- 
- static int __init sch_init(void)
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 43ea389..86dd714 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -460,7 +460,7 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
- 	if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE)
- 		ata_pci_bmdma_clear_simplex(pdev);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &serverworks_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &serverworks_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_sil680.c b/drivers/ata/pata_sil680.c
-index ac55937..d3190d7 100644
---- a/drivers/ata/pata_sil680.c
-+++ b/drivers/ata/pata_sil680.c
-@@ -378,7 +378,7 @@ static int __devinit sil680_init_one(struct pci_dev *pdev,
- 				 IRQF_SHARED, &sil680_sht);
- 
- use_ioports:
--	return ata_pci_sff_init_one(pdev, ppi, &sil680_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sil680_sht, NULL, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index b670803..60cea13 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -826,7 +826,7 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	sis_fixup(pdev, chipset);
- 
--	return ata_pci_sff_init_one(pdev, ppi, &sis_sht, chipset, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &sis_sht, chipset, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
-index 733b042..98548f6 100644
---- a/drivers/ata/pata_sl82c105.c
-+++ b/drivers/ata/pata_sl82c105.c
-@@ -316,7 +316,7 @@ static int sl82c105_init_one(struct pci_dev *dev, const struct pci_device_id *id
- 	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
- 	pci_write_config_dword(dev, 0x40, val);
- 
--	return ata_pci_sff_init_one(dev, ppi, &sl82c105_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &sl82c105_sht, NULL, 0);
- }
- 
- static const struct pci_device_id sl82c105[] = {
-diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
-index 48f5060..0d1f89e 100644
---- a/drivers/ata/pata_triflex.c
-+++ b/drivers/ata/pata_triflex.c
-@@ -201,7 +201,7 @@ static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 	if (!printed_version++)
- 		dev_printk(KERN_DEBUG, &dev->dev, "version " DRV_VERSION "\n");
- 
--	return ata_pci_sff_init_one(dev, ppi, &triflex_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(dev, ppi, &triflex_sht, NULL, 0);
- }
- 
- static const struct pci_device_id triflex[] = {
-diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
-index 7e3e0a5..5e65988 100644
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -627,7 +627,7 @@ static int via_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 
- 	/* We have established the device type, now fire it up */
--	return ata_pci_sff_init_one(pdev, ppi, &via_sht, (void *)config, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &via_sht, (void *)config, 0);
- }
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 4269b99..6fd1147 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -2430,7 +2430,7 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	ppi[0] = &nv_port_info[type];
- 	ipriv = ppi[0]->private_data;
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index fff1045..2bfe3ae 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -279,7 +279,7 @@ static int sis_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		break;
- 	}
- 
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 7da5d01..101d8c2 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -463,7 +463,7 @@ static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	struct ata_host *host;
- 	int rc;
- 
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	*r_host = host;
-@@ -520,7 +520,7 @@ static int vt8251_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	struct ata_host *host;
- 	int i, rc;
- 
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		return rc;
- 	*r_host = host;
+  *	ata_sff_port_init - Initialize SFF/BMDMA ATA port
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b76d767..fe2be88 100644
+index fe2be88..4c5eca4 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1644,6 +1644,13 @@ extern int ata_bmdma_port_start32(struct ata_port *ap);
- #ifdef CONFIG_PCI
- extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
- extern void ata_pci_bmdma_init(struct ata_host *host);
-+extern int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+				      const struct ata_port_info * const * ppi,
-+				      struct ata_host **r_host);
-+extern int ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+				  const struct ata_port_info * const * ppi,
-+				  struct scsi_host_template *sht,
-+				  void *host_priv, int hflags);
+@@ -513,7 +513,9 @@ struct ata_ioports {
+ 	void __iomem		*command_addr;
+ 	void __iomem		*altstatus_addr;
+ 	void __iomem		*ctl_addr;
++#ifdef CONFIG_ATA_BMDMA
+ 	void __iomem		*bmdma_addr;
++#endif /* CONFIG_ATA_BMDMA */
+ 	void __iomem		*scr_addr;
+ };
+ #endif /* CONFIG_ATA_SFF */
+@@ -721,8 +723,10 @@ struct ata_port {
+ 	u8			ctl;	/* cache of ATA control register */
+ 	u8			last_ctl;	/* Cache last written value */
+ 	struct delayed_work	sff_pio_task;
++#ifdef CONFIG_ATA_BMDMA
+ 	struct ata_bmdma_prd	*bmdma_prd;	/* BMDMA SG list */
+ 	dma_addr_t		bmdma_prd_dma;	/* and its DMA mapping */
++#endif /* CONFIG_ATA_BMDMA */
+ #endif /* CONFIG_ATA_SFF */
+ 
+ 	unsigned int		pio_mask;
+@@ -856,10 +860,12 @@ struct ata_port_operations {
+ 	void (*sff_irq_clear)(struct ata_port *);
+ 	void (*sff_drain_fifo)(struct ata_queued_cmd *qc);
+ 
++#ifdef CONFIG_ATA_BMDMA
+ 	void (*bmdma_setup)(struct ata_queued_cmd *qc);
+ 	void (*bmdma_start)(struct ata_queued_cmd *qc);
+ 	void (*bmdma_stop)(struct ata_queued_cmd *qc);
+ 	u8   (*bmdma_status)(struct ata_port *ap);
++#endif /* CONFIG_ATA_BMDMA */
+ #endif /* CONFIG_ATA_SFF */
+ 
+ 	ssize_t (*em_show)(struct ata_port *ap, char *buf);
+@@ -1555,7 +1561,6 @@ extern void sata_pmp_error_handler(struct ata_port *ap);
+ #ifdef CONFIG_ATA_SFF
+ 
+ extern const struct ata_port_operations ata_sff_port_ops;
+-extern const struct ata_port_operations ata_bmdma_port_ops;
+ extern const struct ata_port_operations ata_bmdma32_port_ops;
+ 
+ /* PIO only, sg_tablesize and dma_boundary limits can be removed */
+@@ -1564,11 +1569,6 @@ extern const struct ata_port_operations ata_bmdma32_port_ops;
+ 	.sg_tablesize		= LIBATA_MAX_PRD,		\
+ 	.dma_boundary		= ATA_DMA_BOUNDARY
+ 
+-#define ATA_BMDMA_SHT(drv_name)					\
+-	ATA_BASE_SHT(drv_name),					\
+-	.sg_tablesize		= LIBATA_MAX_PRD,		\
+-	.dma_boundary		= ATA_DMA_BOUNDARY
+-
+ extern void ata_sff_dev_select(struct ata_port *ap, unsigned int device);
+ extern u8 ata_sff_check_status(struct ata_port *ap);
+ extern void ata_sff_pause(struct ata_port *ap);
+@@ -1625,6 +1625,15 @@ extern int ata_pci_sff_init_one(struct pci_dev *pdev,
+ 		struct scsi_host_template *sht, void *host_priv, int hflags);
  #endif /* CONFIG_PCI */
  
++#ifdef CONFIG_ATA_BMDMA
++
++extern const struct ata_port_operations ata_bmdma_port_ops;
++
++#define ATA_BMDMA_SHT(drv_name)					\
++	ATA_BASE_SHT(drv_name),					\
++	.sg_tablesize		= LIBATA_MAX_PRD,		\
++	.dma_boundary		= ATA_DMA_BOUNDARY
++
+ extern void ata_bmdma_qc_prep(struct ata_queued_cmd *qc);
+ extern unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc);
+ extern void ata_bmdma_dumb_qc_prep(struct ata_queued_cmd *qc);
+@@ -1652,6 +1661,7 @@ extern int ata_pci_bmdma_init_one(struct pci_dev *pdev,
+ 				  struct scsi_host_template *sht,
+ 				  void *host_priv, int hflags);
+ #endif /* CONFIG_PCI */
++#endif /* CONFIG_ATA_BMDMA */
+ 
  /**
+  *	ata_sff_busy_wait - Wait for a port status register
 -- 
 1.6.4.2
 
