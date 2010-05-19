@@ -1,51 +1,39 @@
-From: Nick Bowler <nbowler@elliptictech.com>
-Subject: Re: [PATCH #upstream-fixes] libata: disable ATAPI AN by default
-Date: Wed, 19 May 2010 12:58:40 -0400
-Message-ID: <20100519165840.GA12642@elliptictech.com>
-References: <20100518162350.GA29594@elliptictech.com>
- <AANLkTimgcvrTQWxwldVPfb0xGm2oa6vznJcZcDydIBBk@mail.gmail.com>
- <4BF2D8E8.1040602@kernel.org>
- <AANLkTikJhC3g6aOkKzSGNybNP7s8ODrWBsQ29Lgw9On1@mail.gmail.com>
- <4BF2DC55.5010209@kernel.org>
- <AANLkTimrKbTObcNwZmiYitAXqoqMERYHO9GTRP_FQCfr@mail.gmail.com>
- <20100518192300.GA30821@elliptictech.com>
- <AANLkTilvhCvaDWXMYbQF5vMLDIv58rY__i7nwclNyo2K@mail.gmail.com>
- <4BF3E64D.2040003@kernel.org>
- <4BF3E9F2.9050608@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 09/23] libata-sff: clean up inheritance in several drivers
+Date: Wed, 19 May 2010 13:07:53 -0400
+Message-ID: <4BF41AE9.80603@garzik.org>
+References: <1273520507-32459-1-git-send-email-tj@kernel.org> <1273520507-32459-10-git-send-email-tj@kernel.org> <4BF200D1.6030600@garzik.org> <4BF2519C.1020800@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dsl-67-204-24-19.acanac.net ([67.204.24.19]:46771 "EHLO
-	emergent.ellipticsemi.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751688Ab0ESQ7K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 12:59:10 -0400
-Content-Disposition: inline
-In-Reply-To: <4BF3E9F2.9050608@kernel.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:46573 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754212Ab0ESROA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 13:14:00 -0400
+Received: by gwaa20 with SMTP id a20so1949052gwa.19
+        for <linux-ide@vger.kernel.org>; Wed, 19 May 2010 10:13:59 -0700 (PDT)
+In-Reply-To: <4BF2519C.1020800@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, stable@kernel.org
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com
 
-On 15:38 Wed 19 May     , Tejun Heo wrote:
-> There are ATAPI devices which raise AN when hit by commands issued by
-> open().  This leads to infinite loop of AN -> MEDIA_CHANGE uevent ->
-> udev open() to check media -> AN.
-> 
-> Both ACS and SerialATA standards don't define in which case ATAPI
-> devices are supposed to raise or not raise AN.  They both list media
-> insertion event as a possible use case for ATAPI ANs but there is no
-> clear description of what constitutes such events.  As such, it seems
-> a bit too naive to export ANs directly to userland as MEDIA_CHANGE
-> events without further verification (which should behave similarly to
-> windows as it apparently is the only thing that some hardware vendors
-> are testing against).
-> 
-> This patch adds libata.atapi_an module parameter and disables ATAPI AN
-> by default for now.
+On 05/18/2010 04:36 AM, Tejun Heo wrote:
+> On 05/18/2010 04:52 AM, Jeff Garzik wrote:
+>> applied, sans the sata_mv (mistakenly labelled as pata_marvell) patch
+>
+> Oops.
+>
+>> sata_mv is not standard BMDMA, unless I am confused about something?
+>
+> mv6 uses BMDMA for ATAPI DMA commands, so it's partially bmdma and
+> it's clearer to make anything which uses BMDMA inherit from BMDMA,
+> so...
 
-Works here, drive now spins down properly.
+I had forgotten about that, my apologies.  Can you resend patch #9 and #10?
 
-Tested-By: Nick Bowler <nbowler@draconx.ca>
+	Jeff
 
--- 
-Nick Bowler, Elliptic Technologies (http://www.elliptictech.com/)
+
+
