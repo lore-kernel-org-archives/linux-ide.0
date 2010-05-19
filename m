@@ -1,47 +1,44 @@
-From: Jassi Brar <jassisinghbrar@gmail.com>
-Subject: Re: [PATCH]460EX on-chip SATA driver <Kernel 2.6.33> < resubmission >
-Date: Wed, 19 May 2010 20:19:18 +0900
-Message-ID: <AANLkTikJVJPn6eG8YsM2tDJxxo49cuKdstmZRdNkV1Te@mail.gmail.com>
-References: <201005051757.o45HvPmY005954@amcc.com>
-	 <AANLkTiljlMJKimdT-ptwXrMMBhSxFuPdVdyUuKJ8BZve@mail.gmail.com>
-	 <20100519105305.54804b57@lxorguk.ukuu.org.uk>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH v3] PXA DMA-capable PATA driver
+Date: Wed, 19 May 2010 13:19:14 +0200
+Message-ID: <87pr0s6swd.fsf@free.fr>
+References: <1274137768-27707-1-git-send-email-marek.vasut@gmail.com>
+	<201005180112.30792.marek.vasut@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:36638 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711Ab0ESLTT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 07:19:19 -0400
-In-Reply-To: <20100519105305.54804b57@lxorguk.ukuu.org.uk>
+Received: from smtp6-g21.free.fr ([212.27.42.6]:34323 "EHLO smtp6-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757918Ab0ESLTZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 07:19:25 -0400
+In-Reply-To: <201005180112.30792.marek.vasut@gmail.com> (Marek Vasut's message of "Tue\, 18 May 2010 01\:12\:30 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Rupjyoti Sarmah <rsarmah@amcc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, sr@denx.de, linuxppc-dev@ozlabs.org
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, eric.y.miao@gmail.com, haojian.zhuang@gmail.com, jeff@garzik.org, radoslav.deak@voipac.com
 
-On Wed, May 19, 2010 at 6:53 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Wed, 19 May 2010 10:49:59 +0900
-> Jassi Brar <jassisinghbrar@gmail.com> wrote:
+Marek Vasut <marek.vasut@gmail.com> writes:
+
+> Dne =C3=9At 18. kv=C4=9Btna 2010 01:09:28 Marek Vasut napsal(a):
+>> This patch adds a driver for a harddrive attached to PXA address and=
+ data
+>> bus. Unlike pata_platform, this driver allows usage of PXA DMA contr=
+oller,
+>> making the transmission speed 3x higher.
 >
->> On Thu, May 6, 2010 at 2:57 AM, Rupjyoti Sarmah <rsarmah@amcc.com> wrote:
->> > This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
->>
->> The controller seems to be a thrid party IP (from Synopsys) in your
->> SoC and there are many chances the IP will appear in some other
->> SOCs too. This implementation doesn't seem to take care of that
->> scenario.
->
-> I'd question if that is worth it seriously. At the point there are
-> multiple users of the device you know what it will look like. Until then
-> you neither know if the work is needed nor what will require abstracting.
-Well, am to start writing driver for some dwc sata core in near
-future, not sure of the
-exact version because I've not yet had my hands on the specs.
-Even if my version happens to be different, we don't wanna count on such odds.
-So I believe it's worthwhile.
+> Hey guys, all the issues pointed out should be addressed. See below.
+> Cheers!
 
-Btw, I presented two options and the author can always choose the
-first one - rename
-the driver as SoC specific. And in a way, I'd prefer that :)
+=46or the first iteration, you can have my :
+Reviewed-by: Robert Jarzmik <robert.jarzmik@free.fr>
 
-> Lazy evaluation is good for code too ;)
-Apart from increasing re-usability, that POV brings out neat code too.
+=46or the next iteration, it would be good to :
+ - fix the error path in pxa_ata_probe()
+   =3D> if dmam_alloc_coherent() fails
+   =3D> if pxa_request_dma() fails
+ - in pxa_ata_remove()
+   =3D> maybe call devm_iounmap()
+
+--
+Robert
