@@ -1,42 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: SATA in Target Mode
-Date: Wed, 19 May 2010 11:48:55 -0400
-Message-ID: <4BF40867.9000606@garzik.org>
-References: <AANLkTinSg70pTj2uwnHuB4xT1I88nNU06l080_m9vngl@mail.gmail.com> <AANLkTimLUIShHybcy51NThd2gtkQxFtXWCyVY2iee_c6@mail.gmail.com>
+Subject: Re: [PATCH #upstream-fixes] libata: disable ATAPI AN by default
+Date: Wed, 19 May 2010 12:14:36 -0400
+Message-ID: <4BF40E6C.6020701@garzik.org>
+References: <20100517225405.GA19825@cpu18.student.cs> <20100518132519.GA19658@elliptictech.com> 	<AANLkTimq8xS00gKHjjWh4OKQ2u01OutzCHqb_NgCLojx@mail.gmail.com> 	<20100518162350.GA29594@elliptictech.com> <AANLkTimgcvrTQWxwldVPfb0xGm2oa6vznJcZcDydIBBk@mail.gmail.com> 	<4BF2D8E8.1040602@kernel.org> <AANLkTikJhC3g6aOkKzSGNybNP7s8ODrWBsQ29Lgw9On1@mail.gmail.com> 	<4BF2DC55.5010209@kernel.org> <AANLkTimrKbTObcNwZmiYitAXqoqMERYHO9GTRP_FQCfr@mail.gmail.com> 	<20100518192300.GA30821@elliptictech.com> <AANLkTilvhCvaDWXMYbQF5vMLDIv58rY__i7nwclNyo2K@mail.gmail.com> <4BF3E64D.2040003@kernel.org> <4BF3E9F2.9050608@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:53009 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178Ab0ESPtC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 11:49:02 -0400
-Received: by gwaa20 with SMTP id a20so1870962gwa.19
-        for <linux-ide@vger.kernel.org>; Wed, 19 May 2010 08:48:59 -0700 (PDT)
-In-Reply-To: <AANLkTimLUIShHybcy51NThd2gtkQxFtXWCyVY2iee_c6@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <4BF3E9F2.9050608@kernel.org>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>, Nick Bowler <nbowler@elliptictech.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jayaraman Thiruvady <jayaraman.tg@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-On 05/19/2010 02:12 AM, Jayaraman Thiruvady wrote:
-> Hi,
+On 05/19/2010 09:38 AM, Tejun Heo wrote:
+> There are ATAPI devices which raise AN when hit by commands issued by
+> open().  This leads to infinite loop of AN ->  MEDIA_CHANGE uevent ->
+> udev open() to check media ->  AN.
 >
->        I am trying to make vdisk ( file disk ) to emulate as a SATA
-> drive. To do so, i thought of making a SATA port to target mode and
-> cross wire it with another SATA port ( initiator) and by mapping the
-> SATA target mode port with vdisk, the SATA initiator must detect the
-> vdisk as some SATA device to perform further. Is such scenario doable?
->
-> Is the place where i can find more details on how much scenario is
-> achievable and the details Marvell SATA support as target mode in
-> kernel-tree and its info supported chipsets?.
+> Both ACS and SerialATA standards don't define in which case ATAPI
+> devices are supposed to raise or not raise AN.  They both list media
+> insertion event as a possible use case for ATAPI ANs but there is no
+> clear description of what constitutes such events.  As such, it seems
+> a bit too naive to export ANs directly to userland as MEDIA_CHANGE
+> events without further verification (which should behave similarly to
+> windows as it apparently is the only thing that some hardware vendors
+> are testing against).
 
-Unfortunately, nobody's really worked on it, as far as I know.
+Windows completely disables AN?
 
-It would be great to see SATA target support, though.
+Or do we simply need to be less naive about _delivery_ of AN's?
 
 	Jeff
+
 
 
 
