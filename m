@@ -1,35 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
-Date: Wed, 19 May 2010 03:08:22 GMT
-Message-ID: <201005190308.o4J38MBV032204@demeter.kernel.org>
-References: <bug-3094-11633@https.bugzilla.kernel.org/>
+From: Jayaraman Thiruvady <jayaraman.tg@gmail.com>
+Subject: SATA in Target Mode
+Date: Wed, 19 May 2010 14:12:07 +0800
+Message-ID: <AANLkTimLUIShHybcy51NThd2gtkQxFtXWCyVY2iee_c6@mail.gmail.com>
+References: <AANLkTinSg70pTj2uwnHuB4xT1I88nNU06l080_m9vngl@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:36713 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379Ab0ESDIX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 May 2010 23:08:23 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4J38MDi032205
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 19 May 2010 03:08:22 GMT
-In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40993 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330Ab0ESGM3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2010 02:12:29 -0400
+Received: by iwn6 with SMTP id 6so2610699iwn.19
+        for <linux-ide@vger.kernel.org>; Tue, 18 May 2010 23:12:28 -0700 (PDT)
+In-Reply-To: <AANLkTinSg70pTj2uwnHuB4xT1I88nNU06l080_m9vngl@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
+Cc: Jayaraman Thiruvady <jayaraman.tg@gmail.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3094
+Hi,
 
+=A0=A0=A0=A0=A0 I am trying to make vdisk ( file disk ) to emulate as a=
+ SATA
+drive. To do so, i thought of making a SATA port to target mode and
+cross wire it with another SATA port ( initiator) and by mapping the
+SATA target mode port with vdisk, the SATA initiator must detect the
+vdisk as some SATA device to perform further. Is such scenario doable?
 
+Is the place where i can find more details on how much scenario is
+achievable and the details Marvell SATA support as target mode in
+kernel-tree and its info supported chipsets?.
 
-
-
---- Comment #18 from Zenith88 <zenith22.22.22@gmail.com>  2010-05-19 03:08:16 ---
-It just shows to the world that 6 years is not ehough for you to fix piss poor
-IO subsystem. Ask Microsoft for help - here's the idea.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Regards,
+Jayaraman.T
