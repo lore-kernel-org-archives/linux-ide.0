@@ -1,55 +1,88 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
-Date: Thu, 20 May 2010 09:09:09 GMT
-Message-ID: <201005200909.o4K9999s001489@demeter.kernel.org>
-References: <bug-3094-11633@https.bugzilla.kernel.org/>
+From: Pierre Ossman <pierre-list@ossman.eu>
+Subject: Re: Strange read data corruption on ext4/LVM/md
+Date: Thu, 20 May 2010 11:29:45 +0200
+Message-ID: <20100520112945.61bf9705@mjolnir.ossman.eu>
+References: <20100519225653.1fedb453@mjolnir.ossman.eu>
+	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
+	<20100519232906.3be82279@mjolnir.ossman.eu>
+	<20100519233408.7436bd9b@mjolnir.ossman.eu>
+	<20100520091429.192d560c@mjolnir.ossman.eu>
+	<4BF4F979.4070903@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-3709-1274347789-0001-2"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55855 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753862Ab0ETJJL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 05:09:11 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4K99A6Z001491
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 09:09:10 GMT
-In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
+Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:58860 "EHLO
+	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751470Ab0ETJ3w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 May 2010 05:29:52 -0400
+In-Reply-To: <4BF4F979.4070903@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3094
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
+--=_freyr.ossman.eu-3709-1274347789-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Tejun Heo <tj@kernel.org> changed:
+On Thu, 20 May 2010 10:57:29 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tj@kernel.org
+> On 05/20/2010 09:14 AM, Pierre Ossman wrote:
+> > Note that this is a live system, so there is some chance that something
+> > wrote to than area, then restored it to the previous state. I'm not
+> > sure how likely that is.
+> >=20
+> > If not, then it would seem that this is a problem in either the disks,
+> > the controller or the controller driver. The components are WD
+> > WD1002FAEX, sil3132 and sata_sil24 respectively.
+>=20
+> There is a report that sil3124/32 recognizes FIS corruption but keeps
+> using the payload anyway thus leading to data corruption when the bus
+> condition on pci-e side isn't ideal.  Does moving the controller to
+> different slot make difference?
+>=20
 
+The machine is rather crammed right now, with one controller in each of
+the three available pci-e slots (5 disks). I am running continuous tests
+on the disks right now though to see if the problems is on all disks or
+just some. If just one slot is causing problems then we should see some
+results there.
 
+When you say FIS corruption, do you mean corruption in the sense of
+randomly flipped bits? I don't know if you saw the first couple of
+mails (before linux-ide was added), but the problem is data being moved
+around, not just randomly changed.
 
+Another note is that the problem seems to worsen under load. I'm
+running the dd thing in the background, which seems to make read errors
+more common on my test files on the filesystem level.
 
---- Comment #25 from Tejun Heo <tj@kernel.org>  2010-05-20 09:08:51 ---
-Artem, if some tool is showing iowait as cpu time consumed, that tool needs to
-be fixed.  The kernel is simply exporting what it's doing.  The presentation is
-upto system monitoring tools.  I recall lots of tools which kind of gave the
-wrong signals years ago but these days I don't recall seeing such things too
-often.  There always is a problem with people who are fixated on weird stuff
-but I don't think it's possible to satisfy everyone.  We can't show cached as
-free memory for people who claim the kernel is wasting all memory, right? 
-That's a very bad solution for a virtually non-existing problem.
+I also tried disabling NCQ without any noticeable change.
 
-Zenith88, if Linux grinds your gears that much and makes you angry, go ahead
-and use or do something else.  Life is short.  Do something you like and, well,
-more importantly to me, don't get in the way of other people at the very least.
- If you wanna actually delve into solving a technical issue, please stay
-technical from this point on.
+Rgds
+--=20
+     -- Pierre Ossman
 
-Thanks.
+  WARNING: This correspondence is being monitored by FRA, a
+  Swedish intelligence agency. Make sure your server uses
+  encryption for SMTP traffic and consider using PGP for
+  end-to-end encryption.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--=_freyr.ossman.eu-3709-1274347789-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.13 (GNU/Linux)
+
+iEYEARECAAYFAkv1AQwACgkQ7b8eESbyJLjRbACgyHRN81yFOg20dy+r60eXBVkT
+diAAoKB1wj/AMnJN/jQaxvXooraseGJf
+=pf+E
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-3709-1274347789-0001-2--
