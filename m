@@ -1,43 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] PXA DMA-capable PATA driver
-Date: Thu, 20 May 2010 10:48:51 +0200
-Message-ID: <4BF4F773.102@gmail.com>
-References: <1273460525-25662-1-git-send-email-marek.vasut@gmail.com> <4BEDC8C1.30703@garzik.org> <201005180053.54248.marek.vasut@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Strange read data corruption on ext4/LVM/md
+Date: Thu, 20 May 2010 10:57:29 +0200
+Message-ID: <4BF4F979.4070903@kernel.org>
+References: <20100519225653.1fedb453@mjolnir.ossman.eu>	<20100519230426.47c6c1ed@mjolnir.ossman.eu>	<20100519232906.3be82279@mjolnir.ossman.eu>	<20100519233408.7436bd9b@mjolnir.ossman.eu> <20100520091429.192d560c@mjolnir.ossman.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f46.google.com ([74.125.82.46]:52018 "EHLO
-	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754992Ab0ETIs5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 04:48:57 -0400
-Received: by wwb34 with SMTP id 34so63885wwb.19
-        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 01:48:55 -0700 (PDT)
-In-Reply-To: <201005180053.54248.marek.vasut@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100520091429.192d560c@mjolnir.ossman.eu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pierre Ossman <pierre-list@ossman.eu>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marek.vasut@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, eric.y.miao@gmail.com, haojian.zhuang@gmail.com
 
-On 05/18/2010 12:53 AM, Marek Vasut wrote:
-> 4766 /**
-> 4767  *      atapi_check_dma - Check whether ATAPI DMA can be supported
-> 4768  *      @qc: Metadata associated with taskfile to check
-> 4769  *
-> 4770  *      Allow low-level driver to filter ATA PACKET commands, returning
-> 4771  *      a status indicating whether or not it is OK to use DMA for the
-> 4772  *      supplied PACKET command.
-> 4773  *
-> 4774  *      LOCKING:
-> 4775  *      spin_lock_irqsave(host lock)
-> 4776  *
-> 4777  *      RETURNS: 0 when ATAPI DMA can be used
-> 4778  *               nonzero otherwise
-> 4779  */
+On 05/20/2010 09:14 AM, Pierre Ossman wrote:
+> Note that this is a live system, so there is some chance that something
+> wrote to than area, then restored it to the previous state. I'm not
+> sure how likely that is.
 > 
-> this is from libata-core.c FYI and -EOPNOTSUPP is non-zero.
+> If not, then it would seem that this is a problem in either the disks,
+> the controller or the controller driver. The components are WD
+> WD1002FAEX, sil3132 and sata_sil24 respectively.
 
-Argh... that method needs to be changed to return bool.
+There is a report that sil3124/32 recognizes FIS corruption but keeps
+using the payload anyway thus leading to data corruption when the bus
+condition on pci-e side isn't ideal.  Does moving the controller to
+different slot make difference?
+
+Thanks.
 
 -- 
 tejun
