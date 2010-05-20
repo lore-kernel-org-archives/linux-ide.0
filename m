@@ -1,145 +1,45 @@
-From: Pierre Ossman <pierre-list@ossman.eu>
-Subject: Re: Strange read data corruption on ext4/LVM/md
-Date: Thu, 20 May 2010 12:22:27 +0200
-Message-ID: <20100520122227.16ea1cbc@mjolnir.ossman.eu>
-References: <20100519225653.1fedb453@mjolnir.ossman.eu>
-	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
-	<20100519232906.3be82279@mjolnir.ossman.eu>
-	<20100519233408.7436bd9b@mjolnir.ossman.eu>
-	<20100520091429.192d560c@mjolnir.ossman.eu>
-	<4BF4F979.4070903@kernel.org>
-	<20100520112945.61bf9705@mjolnir.ossman.eu>
-	<4BF50405.4070706@kernel.org>
+From: Marek Vasut <marek.vasut@gmail.com>
+Subject: Re: [PATCH] PXA DMA-capable PATA driver
+Date: Thu, 20 May 2010 12:28:42 +0200
+Message-ID: <201005201228.42325.marek.vasut@gmail.com>
+References: <1273460525-25662-1-git-send-email-marek.vasut@gmail.com> <201005180053.54248.marek.vasut@gmail.com> <4BF4F773.102@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-4156-1274350951-0001-2"
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:50289 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751571Ab0ETKWe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 May 2010 06:22:34 -0400
-In-Reply-To: <4BF50405.4070706@kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51654 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754527Ab0ETKaP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 06:30:15 -0400
+Received: by fxm10 with SMTP id 10so3353749fxm.19
+        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 03:30:13 -0700 (PDT)
+In-Reply-To: <4BF4F773.102@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, eric.y.miao@gmail.com, haojian.zhuang@gmail.com
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
-
---=_freyr.ossman.eu-4156-1274350951-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 20 May 2010 11:42:29 +0200
-Tejun Heo <tj@kernel.org> wrote:
-
-> > randomly flipped bits? I don't know if you saw the first couple of
-> > mails (before linux-ide was added), but the problem is data being moved
-> > around, not just randomly changed.
+Dne =C4=8Ct 20. kv=C4=9Btna 2010 10:48:51 Tejun Heo napsal(a):
+> On 05/18/2010 12:53 AM, Marek Vasut wrote:
+> > 4766 /**
+> > 4767  *      atapi_check_dma - Check whether ATAPI DMA can be suppo=
+rted
+> > 4768  *      @qc: Metadata associated with taskfile to check
+> > 4769  *
+> > 4770  *      Allow low-level driver to filter ATA PACKET commands,
+> > returning 4771  *      a status indicating whether or not it is OK =
+to
+> > use DMA for the 4772  *      supplied PACKET command.
+> > 4773  *
+> > 4774  *      LOCKING:
+> > 4775  *      spin_lock_irqsave(host lock)
+> > 4776  *
+> > 4777  *      RETURNS: 0 when ATAPI DMA can be used
+> > 4778  *               nonzero otherwise
+> > 4779  */
+> >=20
+> > this is from libata-core.c FYI and -EOPNOTSUPP is non-zero.
 >=20
-> I ony saw your previous posting.  TLP corruption can happen during
-> command setup phase and bit flipping in the command address part is
-> definitely possible, so reads and writes can be headed at wrong places
-> in both memory and disk.  I don't know whether this would fit your
-> symptom tho.
->=20
+> Argh... that method needs to be changed to return bool.
 
-Ah. Here's the problem description from a previous mail:
-
-The corruption is 104 bytes. Somewhat odd number. I would have expected
-something more fundamental like a sector or a page.
-
-The data in question seems to come from another part of the file.
-
-The shifts are 015d1380 =3D> 015d0f80 (-1024 bytes) and 02210380 =3D>
-0220ff80 (also -1024 bytes). At least the offset is a nice, sane power
-of two number.
-
-Noteworthy is also that the last three nibbles of the corruption are
-always the same (xxxxx380 =3D> xxxxxf80).
-
-</recap>
-
-Note that the above analysis is from files, so it involves the entire
-stack. I've since focused on raw disks. See below.
-
-> > Another note is that the problem seems to worsen under load. I'm
-> > running the dd thing in the background, which seems to make read errors
-> > more common on my test files on the filesystem level.
->=20
-> It would be great if you can try a different controller in similar
-> setup.
-
-I only stock sil3132 cards as those are the only decent add-on cards
-I've found. AHCI stuff all seems to be onboard.
-
-> But please keep trying to narrow down the problem and if
-> possible please remove filesystem from the stack and test against the
-> block device directly.
-
-That's what I've been doing the last couple of runs. From a previous
-mail:
-
-I did some more testing though, and this might be a low level issue. I
-did the following multiple times:
-
-# dd if=3D/dev/sde skip=3D4k bs=3D4M count=3D500 | md5sum
-
-And the results were:
-
-13aa29adcd16f8d0faf3cb5c39f43826
-d1e3df33c0b0d03c61f880a8f2bb6cfb
-13aa29adcd16f8d0faf3cb5c39f43826
-13aa29adcd16f8d0faf3cb5c39f43826
-13aa29adcd16f8d0faf3cb5c39f43826
-13aa29adcd16f8d0faf3cb5c39f43826
-7a746328b60a63b76847c3e1319a8534
-13aa29adcd16f8d0faf3cb5c39f43826
-
-</recap2>
-
-Since the amount of data is much larger here and the incidents more
-rare, I haven't been able to confirm that the corruption is identical
-to what I've seen in the files. I'm working on the assumption that it
-is...
-
-I've since constructed a script that keeps re-running the above over
-all relevant disks and keeps track of how many unique md5 values we
-get. It's been running for about 1.5 hours right now, and here are the
-results so far:
-
-sdd - 3, sde - 4, sdf - 1, sdb - 1, sdc - 1,=20
-
-sdd and sde are both on the same controller, so the problem you
-mentioned could be relevant.
-
-I'll let the test run for a few more hours and try moving things off
-that controller later tonight.
-
-
-Thanks for looking at this. Unstable data storage is one of those
-things that can keep you up at night. :/
-
-Rgds
---=20
-     -- Pierre Ossman
-
-  WARNING: This correspondence is being monitored by FRA, a
-  Swedish intelligence agency. Make sure your server uses
-  encryption for SMTP traffic and consider using PGP for
-  end-to-end encryption.
-
---=_freyr.ossman.eu-4156-1274350951-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.13 (GNU/Linux)
-
-iEYEARECAAYFAkv1DWYACgkQ7b8eESbyJLiymwCfdo7vtkhLgEa8FPk+NBlBili1
-04UAnjwr7r6lTgFWXzoM0hpH8N6DzbtV
-=pvxB
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-4156-1274350951-0001-2--
+That'd make sense.
