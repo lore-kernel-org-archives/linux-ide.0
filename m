@@ -1,67 +1,64 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: spinlock recursion in scsi_end_request() (kernel 2.6.24)
-Date: Thu, 20 May 2010 10:29:41 -0500
-Message-ID: <1274369381.4458.2.camel@mulgrave.site>
-References: <AANLkTilIYz-UITAugWx08u-AvKB5gI-E1M3LORZ55wro@mail.gmail.com>
-	 <4BF508C8.9050405@kernel.org>
-	 <AANLkTilPaI-b4IUNfUnVKahK299fujgYTXsxC1BROw0L@mail.gmail.com>
-	 <4BF54FAF.6020104@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
+Date: Thu, 20 May 2010 15:49:42 GMT
+Message-ID: <201005201549.o4KFngro010990@demeter.kernel.org>
+References: <bug-3094-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4BF54FAF.6020104@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Prashant <0xfffff0@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:39316 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751961Ab0ETPto (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 11:49:44 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4KFnhvB010991
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 15:49:43 GMT
+In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 2010-05-20 at 17:05 +0200, Tejun Heo wrote:
-> Hello,
+https://bugzilla.kernel.org/show_bug.cgi?id=3094
+
+
+
+
+
+--- Comment #26 from Artem S. Tashkinov <t.artem@mailcity.com>  2010-05-20 15:49:11 ---
+(In reply to comment #25)
+> Artem, if some tool is showing iowait as cpu time consumed, that tool needs to
+> be fixed.  The kernel is simply exporting what it's doing.  The presentation is
+> upto system monitoring tools.  I recall lots of tools which kind of gave the
+> wrong signals years ago but these days I don't recall seeing such things too
+> often.  There always is a problem with people who are fixated on weird stuff
+> but I don't think it's possible to satisfy everyone.  We can't show cached as
+> free memory for people who claim the kernel is wasting all memory, right? 
+> That's a very bad solution for a virtually non-existing problem.
 > 
-> On 05/20/2010 01:33 PM, Prashant wrote:
-> > I have a question related to code which is almost same in the
-> > current kernel.  I don't know whether this is the right mailing list
-> > for the following question.
+
+Are you aware of any other tools except htop and top (from procps package)?
+They both show IO wait as CPU load.
+
+What about kernel itself? load average to my knowledge is statistical data
+exported by kernel itself and according to your words this data can be trusted,
+or I am missing something here?  Why do we have this kind of situation (I need
+to quote myself here):
+
+(In reply to comment #21)
 > 
-> linux-scsi would probably fit better (cc'd).
-> 
-> > When a sata drive is unplugged, its corresponding sdev's state is set
-> > to SDEV_OFFLINE. Now if IO requests are still comming on the same device,
-> > They will be killed by calling scsi_kill_request().
-> > 
-> > 1) scsi_kill_request does following things:
-> >     i) Unlock request queue
-> >     ii) Increment host_busy count
-> >     iii) Lock request queue
-> >     iv) Calls __scsi_done()
-> > 
-> > 2) __scsi_done() does following things:
-> >      i) set request completion data
-> >      ii) Calls blk_completion_request()
-> > 
-> > 3) blk_completion_request() does following things:
-> >      i) Adds request->donelist to blk_cpu_done softirq queue
-> >         and raise the softirq (which is scsi_softirq_done)
-> > 
-> > 4) next sequence is:
-> >     scsi_softirq_done >> scsi_finish_command >> scsi_device_unbusy()
-> > 
-> > 5) scsi_device_unbusy() again locks the request_queue. This is the place where
-> >     we can get into the spinlock recursion.
-> > 
-> >     Is this correct? Please correct me if something is wrong.
-> 
-> Raising softirq defers the work to another context and grabbing the
-> same lock from softirq handler doesn't constitute a recursive locking.
-> Please try to reproduce the problem on recent kernel w/ lockdep
-> enabled.
+> `cat /dev/sda > /dev/null` results in load average rapidly climbing to 1.32 and
+> counting on my PC, that's just insane and wrong.
 
-Just to confirm what Tejun says: the design of the cmd -> done (i.e.
-scsi_done) going through the block sofirq handler is specifically so it
-can be called either locked or unlocked, so this can never be a
-recursion.
+I've just rerun this test for 10 minutes and load average climbed to 2.14 on my
+4 cores SMP system (2 real cores, 2 HT's). That means that intensive I/O
+operations consume a mind boggling 50% of my CPU power and mind that I have a
+really fast CPU (3.4GHz Intel Core i5).
 
-James
+On this issue there are two almost identical bugs filed by me, bug 14531 and
+bug 14648 but it seems like no one cares.
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
