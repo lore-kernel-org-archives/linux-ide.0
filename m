@@ -1,57 +1,52 @@
-From: "Buehl, Reiner" <reiner.buehl@hp.com>
-Subject: ext3 filesystem corruption on md RAID1 device
-Date: Thu, 20 May 2010 10:08:21 +0000
-Message-ID: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
+From: saeed bishara <saeed.bishara@gmail.com>
+Subject: Re: SATA in Target Mode
+Date: Thu, 20 May 2010 13:15:12 +0300
+Message-ID: <AANLkTimGGPVYlMy0ka3NIVZhawDEdjAMwLt96-jn6Bg6@mail.gmail.com>
+References: <AANLkTinSg70pTj2uwnHuB4xT1I88nNU06l080_m9vngl@mail.gmail.com>
+	 <AANLkTimLUIShHybcy51NThd2gtkQxFtXWCyVY2iee_c6@mail.gmail.com>
+	 <4BF40867.9000606@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:22883 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753147Ab0ETKKI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 06:10:08 -0400
-Content-Language: en-US
+Received: from mail-ww0-f46.google.com ([74.125.82.46]:56135 "EHLO
+	mail-ww0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571Ab0ETKPO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 06:15:14 -0400
+Received: by wwb34 with SMTP id 34so112926wwb.19
+        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 03:15:13 -0700 (PDT)
+In-Reply-To: <4BF40867.9000606@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Jayaraman Thiruvady <jayaraman.tg@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Hi,
+On Wed, May 19, 2010 at 6:48 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 05/19/2010 02:12 AM, Jayaraman Thiruvady wrote:
+>>
+>> Hi,
+>>
+>> =C2=A0 =C2=A0 =C2=A0 I am trying to make vdisk ( file disk ) to emul=
+ate as a SATA
+>> drive. To do so, i thought of making a SATA port to target mode and
+>> cross wire it with another SATA port ( initiator) and by mapping the
+>> SATA target mode port with vdisk, the SATA initiator must detect the
+>> vdisk as some SATA device to perform further. Is such scenario doabl=
+e?
+>>
+>> Is the place where i can find more details on how much scenario is
+>> achievable and the details Marvell SATA support as target mode in
+>> kernel-tree and its info supported chipsets?.
+>
+> Unfortunately, nobody's really worked on it, as far as I know.
+>
+> It would be great to see SATA target support, though.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Jeff
+Jayaraman,
+    I've implemented the target mode for the marvell sata controllers
+(supported by sata_mv.c), but that wasn't based on the libata driver,
+it was done on marvell's in house driver (GPL), please let me know if
+you need reference code and information about the HW.
 
-I keep getting ext3 filesystem corruptions on one of my md RAID1 arrays. Shortly after booting, I get messages like the following one:
-
-EXT3-fs error (device md1): htree_dirblock_to_tree: bad entry in directory #17269110: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
-
-This forces an automatic fsck at the next reboot that fails. The manual fsck.ext3 -y /dev/md1 takes a long time but manages to get a clean FS again. After the reboot, it takes just a few minutes until the first of these messages appear again.
-
-The two disks used in the RAID1 md device are both Seagate ST31000528AS that show no errors in long and short SMART test and Seatools. Memtest shows no memory problems. Two other RAID1 systems connected to the same Intel Ibex Peak 6 port SATA AHCI Controller (rev 06) show no such problems. A RAID5 with 4 Seagate ST3750640AS on a Promise PDC40718 (SATA 300 TX4) also works without problems in the same system. 
-
-I saw that sata_sil.c has a blacklist that includes mainly Seagate drives but do not know if this is related to my problem since I my system uses an Intel SATA controller.
-
-Here is the output of sh /usr/lib/linux-kbuild-2.6.32/scripts/ver_linux:
----------
-If some fields are empty or look unusual you may have an old version.
-Compare to the current minimal requirements in Documentation/Changes.
- 
-Linux bilbo.lan.buehl.net 2.6.32-bpo.4-686 #1 SMP Mon Apr 12 16:20:13 UTC 2010 i686 GNU/Linux
- 
-Gnu C                  4.3.2
-Gnu make               3.81
-binutils               2.18.0.20080103
-util-linux             2.13.1.1
-mount                  2.13.1.1
-module-init-tools      3.4
-e2fsprogs              1.41.3
-Linux C Library        2.7
-Dynamic linker (ldd)   2.7
-Procps                 3.2.7
-Net-tools              1.60
-Console-tools          0.2.3
-Sh-utils               6.10
-udev                   125
-Modules Loaded         dvb_ttpci dvb_core saa7146_vv videodev v4l1_compat saa7146 videobuf_dma_sg videobuf_core ttpci_eeprom ppdev parport_pc lp parport autofs4 acpi_cpufreq cpufreq_powersave cpufreq_stats cpufreq_conservative cpufreq_userspace nfsd exportfs nfs lockd fscache nfs_acl auth_rpcgss sunrpc snd_hda_codec_realtek snd_hda_intel i2c_i801 snd_hda_codec snd_hwdep snd_pcm ati_remote pcspkr snd_seq snd_timer snd_seq_device snd evdev soundcore snd_page_alloc button processor ext3 mbcache dm_mirror dm_region_hash dm_log dm_snapshot dm_mod raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy async_tx it8213 ide_core usbhid hid usb_storage ata_generic sata_promise ahci r8169 mii libata ehci_hcd uhci_hcd usbcore nls_base thermal fan thermal_sys radeonfb fb_ddc i2c_algo_bi
- t i2c_core jbd sd_mod scsi_mod crc_t10dif raid1 md_mod
----------
-
-Best regards,
-Reiner.
-
+saeed
