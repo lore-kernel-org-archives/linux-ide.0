@@ -1,45 +1,37 @@
-From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH] PXA DMA-capable PATA driver
-Date: Thu, 20 May 2010 12:28:42 +0200
-Message-ID: <201005201228.42325.marek.vasut@gmail.com>
-References: <1273460525-25662-1-git-send-email-marek.vasut@gmail.com> <201005180053.54248.marek.vasut@gmail.com> <4BF4F773.102@gmail.com>
+From: Jayaraman Thiruvady <jayaraman.tg@gmail.com>
+Subject: Re: SATA in Target Mode
+Date: Thu, 20 May 2010 18:38:01 +0800
+Message-ID: <AANLkTilW_wrbrbzfLjbLb_QlIjfvP28-TIoSRTFakU4k@mail.gmail.com>
+References: <AANLkTinSg70pTj2uwnHuB4xT1I88nNU06l080_m9vngl@mail.gmail.com>
+	<AANLkTimLUIShHybcy51NThd2gtkQxFtXWCyVY2iee_c6@mail.gmail.com>
+	<4BF40867.9000606@garzik.org> <AANLkTimGGPVYlMy0ka3NIVZhawDEdjAMwLt96-jn6Bg6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51654 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754527Ab0ETKaP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 06:30:15 -0400
-Received: by fxm10 with SMTP id 10so3353749fxm.19
-        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 03:30:13 -0700 (PDT)
-In-Reply-To: <4BF4F773.102@gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57308 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755326Ab0ETKi0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 06:38:26 -0400
+Received: by iwn6 with SMTP id 6so4120162iwn.19
+        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 03:38:24 -0700 (PDT)
+In-Reply-To: <AANLkTimGGPVYlMy0ka3NIVZhawDEdjAMwLt96-jn6Bg6@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, eric.y.miao@gmail.com, haojian.zhuang@gmail.com
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-Dne =C4=8Ct 20. kv=C4=9Btna 2010 10:48:51 Tejun Heo napsal(a):
-> On 05/18/2010 12:53 AM, Marek Vasut wrote:
-> > 4766 /**
-> > 4767  *      atapi_check_dma - Check whether ATAPI DMA can be suppo=
-rted
-> > 4768  *      @qc: Metadata associated with taskfile to check
-> > 4769  *
-> > 4770  *      Allow low-level driver to filter ATA PACKET commands,
-> > returning 4771  *      a status indicating whether or not it is OK =
-to
-> > use DMA for the 4772  *      supplied PACKET command.
-> > 4773  *
-> > 4774  *      LOCKING:
-> > 4775  *      spin_lock_irqsave(host lock)
-> > 4776  *
-> > 4777  *      RETURNS: 0 when ATAPI DMA can be used
-> > 4778  *               nonzero otherwise
-> > 4779  */
-> >=20
-> > this is from libata-core.c FYI and -EOPNOTSUPP is non-zero.
->=20
-> Argh... that method needs to be changed to return bool.
+Hi Saeed,
+>
+> =A0 =A0I've implemented the target mode for the marvell sata controll=
+ers
+> (supported by sata_mv.c), but that wasn't based on the libata driver,
+> it was done on marvell's in house driver (GPL), please let me know if
+> you need reference code and information about the HW.
+>
+     I would like try on the Marvell sata controller chip-set (HW).
+Please let me know more details on hardware and its reference code.
+Thanks in advance.
 
-That'd make sense.
+Regards,
+Jayaraman.T
