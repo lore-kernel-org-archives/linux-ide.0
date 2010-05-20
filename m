@@ -1,56 +1,81 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Strange read data corruption on ext4/LVM/md
-Date: Thu, 20 May 2010 11:42:29 +0200
-Message-ID: <4BF50405.4070706@kernel.org>
-References: <20100519225653.1fedb453@mjolnir.ossman.eu>	<20100519230426.47c6c1ed@mjolnir.ossman.eu>	<20100519232906.3be82279@mjolnir.ossman.eu>	<20100519233408.7436bd9b@mjolnir.ossman.eu>	<20100520091429.192d560c@mjolnir.ossman.eu>	<4BF4F979.4070903@kernel.org> <20100520112945.61bf9705@mjolnir.ossman.eu>
+Subject: Re: Fwd: CF card I/O errors on Linux
+Date: Thu, 20 May 2010 11:50:36 +0200
+Message-ID: <4BF505EC.5030102@kernel.org>
+References: <7B56DFFC-819E-46BA-9D06-B9AB97144AD6@usgs.gov> <291D4AE0-82BE-44F8-9AF0-209433D9FA39@usgs.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50354 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37320 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755140Ab0ETJme (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 May 2010 05:42:34 -0400
-In-Reply-To: <20100520112945.61bf9705@mjolnir.ossman.eu>
+	id S1752751Ab0ETJvR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 May 2010 05:51:17 -0400
+In-Reply-To: <291D4AE0-82BE-44F8-9AF0-209433D9FA39@usgs.gov>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pierre Ossman <pierre-list@ossman.eu>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Larry Baker <baker@usgs.gov>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 Hello,
 
-On 05/20/2010 11:29 AM, Pierre Ossman wrote:
-> The machine is rather crammed right now, with one controller in each of
-> the three available pci-e slots (5 disks). I am running continuous tests
-> on the disks right now though to see if the problems is on all disks or
-> just some. If just one slot is causing problems then we should see some
-> results there.
+On 05/12/2010 11:19 PM, Larry Baker wrote:
+> 1.  I needed to see more of the IDENTIFY DEVICE response, so I modified
+> the probe printout to include words 47, 49, 59, and 80-88, like this:
+> 
+> -                   "%s: cfg 49:%04x 82:%04x 83:%04x 84:%04x "
+> -                   "85:%04x 86:%04x 87:%04x 88:%04x\n",
+> +                   "%s: cfg 47:%04x 49:%04x 59:%04x "
+> +                    "80-88:%04x %04x %04x %04x %04x %04x %04x %04x
+> %04x\n",
+>                     __func__,
+> -                   id[49], id[82], id[83], id[84],
+> -                   id[85], id[86], id[87], id[88]);
+> +                   id[47], id[49], id[59], id[80], id[81], id[82],
+> +                    id[83], id[84], id[85], id[86], id[87], id[88]);
 
-I see.
+I think it would be better to include a module parameter which makes
+libata dump the whole thing.  The message is only useful for
+development and debugging anyway.  I'll add such an option.
 
-> When you say FIS corruption, do you mean corruption in the sense of
+> 2.  The device I was having trouble with claims to support multi-sector
+> transfers, with a maximum Sector Count of 1.  There's not much point
+> then, is there?  I suggest adding a test for max >= 2 in the conditional
+> where dev->multi_count is assigned:
+> 
+>         /* get current R/W Multiple count setting */
+>         if ((dev->id[47] >> 8) == 0x80 && (dev->id[59] & 0x100)) {
+>             unsigned int max = dev->id[47] & 0xff;
+>             unsigned int cnt = dev->id[59] & 0xff;
+> +            /* no point unless max >= 2 */
+> +            if (max >= 2)
+>             /* only recognize/allow powers of two here */
+>             if (is_power_of_2(max) && is_power_of_2(cnt))
+>                 if (cnt <= max)
+>                     dev->multi_count = cnt;
+>         }
 
-Oh, not FIS, FIS is the name for SATA packets.  I meant the PCI-e
-packets.  How were they called... yeap TLPs.
+Yeap, this does make sense.  Sergei, Alan, what do you guys think?
 
-> randomly flipped bits? I don't know if you saw the first couple of
-> mails (before linux-ide was added), but the problem is data being moved
-> around, not just randomly changed.
+> 3.  In the error recovery code (in libata-eh.c?), I suggest a way to
+> recover for devices like the one I've got that improperly implement
+> READ/WRITE MULTI commands:
+> 
+> If the failed command is one of the READ/WRITE MULTI commands (entries
+> 0-4 in ata_rw_cmds[]), and the device response is ABORT, use your
+> HORKAGE mechanism to set a flag like ATA_HORKAGE_BROKEN_MULTI to skip
+> setting dev->multi_count in libata-core.c (the code in 2., above), i.e.,
+> disable multi-sector transfers, then reconfigure the device to disable
+> multi-sector transfers (call ata_dev_configure(), I guess, so the new
+> configuration gets printed out in dmesg) and retry the transfer.  Any
+> future calls to ata_dev_configure() for that device will not attempt to
+> enable multi-sector transfers because the ATA_HORKAGE_BROKEN_MULTI is set:
+> 
+> +        /* don't try to enable R/W multi if it is broken */
+> +        if (!(dev->horkage & ATA_HORKAGE_BROKEN_MULTI))
 
-I ony saw your previous posting.  TLP corruption can happen during
-command setup phase and bit flipping in the command address part is
-definitely possible, so reads and writes can be headed at wrong places
-in both memory and disk.  I don't know whether this would fit your
-symptom tho.
-
-> Another note is that the problem seems to worsen under load. I'm
-> running the dd thing in the background, which seems to make read errors
-> more common on my test files on the filesystem level.
-
-It would be great if you can try a different controller in similar
-setup.  But please keep trying to narrow down the problem and if
-possible please remove filesystem from the stack and test against the
-block device directly.
+So, turn off MULTI on ABORT....  Oh yeah, I can add that to the
+existing speed down logic.  Would you be available to test patches?
 
 Thanks.
 
