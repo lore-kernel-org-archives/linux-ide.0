@@ -1,43 +1,86 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
-Date: Thu, 20 May 2010 05:28:30 GMT
-Message-ID: <201005200528.o4K5SUpY008448@demeter.kernel.org>
-References: <bug-3094-11633@https.bugzilla.kernel.org/>
+From: Pierre Ossman <pierre-list@ossman.eu>
+Subject: Re: Strange read data corruption on ext4/LVM/md
+Date: Thu, 20 May 2010 09:14:29 +0200
+Message-ID: <20100520091429.192d560c@mjolnir.ossman.eu>
+References: <20100519225653.1fedb453@mjolnir.ossman.eu>
+	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
+	<20100519232906.3be82279@mjolnir.ossman.eu>
+	<20100519233408.7436bd9b@mjolnir.ossman.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:32882 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752425Ab0ETF2c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 01:28:32 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4K5SUoG008449
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 05:28:30 GMT
-In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-2779-1274339671-0001-2"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100519233408.7436bd9b@mjolnir.ossman.eu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3094
+This is a MIME-formatted message.  If you see this text it means that your
+E-mail software does not support MIME-formatted messages.
 
+--=_freyr.ossman.eu-2779-1274339671-0001-2
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+(adding linux-ide)
 
+On Wed, 19 May 2010 23:34:08 +0200
+Pierre Ossman <pierre@ossman.eu> wrote:
 
+>=20
+> I'm mostly talking to myself at this point, but one thing that occurs
+> to me here is 4096 sectors line up decently with the numbers above.
+> 0x380 is just at the end of a 512 byte sector, and 0xf80 is just at the
+> end of a 4096 byte one. Not sure it's relevant, but then again I've
+> stayed blissfully unaware of how this sector size transformation is
+> going to happen. :)
+>=20
 
---- Comment #24 from Artem S. Tashkinov <t.artem@mailcity.com>  2010-05-20 05:28:07 ---
-(In reply to comment #22)
-> It is how load average is defined in the standards, and how it has been defined
-> since the 1970s. Tools rely on that exact behaviour
-> 
+Ignore the above. Math is hard.
 
-Alan, IO wait should not consume 100% of (even imaginary) CPU time - that's
-_wrong_, in fact I don't know any other OS that treats IO activity this way.
+I did some more testing though, and this might be a low level issue. I
+did the following multiple times:
 
-CPU is _not_ 100% busy waiting for IO operations to complete, however people
-using Linux are made believe it _is_ the case.
+# dd if=3D/dev/sde skip=3D4k bs=3D4M count=3D500 | md5sum
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+And the results were:
+
+13aa29adcd16f8d0faf3cb5c39f43826
+d1e3df33c0b0d03c61f880a8f2bb6cfb
+13aa29adcd16f8d0faf3cb5c39f43826
+13aa29adcd16f8d0faf3cb5c39f43826
+13aa29adcd16f8d0faf3cb5c39f43826
+13aa29adcd16f8d0faf3cb5c39f43826
+7a746328b60a63b76847c3e1319a8534
+13aa29adcd16f8d0faf3cb5c39f43826
+
+Note that this is a live system, so there is some chance that something
+wrote to than area, then restored it to the previous state. I'm not
+sure how likely that is.
+
+If not, then it would seem that this is a problem in either the disks,
+the controller or the controller driver. The components are WD
+WD1002FAEX, sil3132 and sata_sil24 respectively.
+
+Rgds
+--=20
+     -- Pierre Ossman
+
+  WARNING: This correspondence is being monitored by FRA, a
+  Swedish intelligence agency. Make sure your server uses
+  encryption for SMTP traffic and consider using PGP for
+  end-to-end encryption.
+
+--=_freyr.ossman.eu-2779-1274339671-0001-2
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.13 (GNU/Linux)
+
+iEYEARECAAYFAkv04VcACgkQ7b8eESbyJLjnUQCcDlywNYs+N1yxf1SdSLV8tk7L
+4PEAoL6uqr0V1Nw5SrL9T9nZsmlDxspk
+=PQgQ
+-----END PGP SIGNATURE-----
+
+--=_freyr.ossman.eu-2779-1274339671-0001-2--
