@@ -1,88 +1,70 @@
-From: Pierre Ossman <pierre-list@ossman.eu>
-Subject: Re: Strange read data corruption on ext4/LVM/md
-Date: Thu, 20 May 2010 18:28:52 +0200
-Message-ID: <20100520182852.58f504fb@mjolnir.ossman.eu>
-References: <20100519225653.1fedb453@mjolnir.ossman.eu>
-	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
-	<20100519232906.3be82279@mjolnir.ossman.eu>
-	<20100519233408.7436bd9b@mjolnir.ossman.eu>
-	<20100520091429.192d560c@mjolnir.ossman.eu>
-	<4BF4F979.4070903@kernel.org>
-	<20100520112945.61bf9705@mjolnir.ossman.eu>
-	<4BF50405.4070706@kernel.org>
-	<20100520122227.16ea1cbc@mjolnir.ossman.eu>
-	<20100520160049.1528772b@mjolnir.ossman.eu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
+Date: Thu, 20 May 2010 16:56:55 GMT
+Message-ID: <201005201656.o4KGutvk001601@demeter.kernel.org>
+References: <bug-3094-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-6831-1274372934-0001-2"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:57824 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753762Ab0ETQ25 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 May 2010 12:28:57 -0400
-In-Reply-To: <20100520160049.1528772b@mjolnir.ossman.eu>
+Received: from demeter.kernel.org ([140.211.167.39]:36779 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571Ab0ETQ4z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 12:56:55 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4KGut0B001602
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 16:56:55 GMT
+In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+https://bugzilla.kernel.org/show_bug.cgi?id=3094
 
---=_freyr.ossman.eu-6831-1274372934-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
 
-On Thu, 20 May 2010 16:00:49 +0200
-Pierre Ossman <pierre-list@ossman.eu> wrote:
 
-> On Thu, 20 May 2010 12:22:27 +0200
-> Pierre Ossman <pierre-list@ossman.eu> wrote:
->=20
-> >=20
-> > I've since constructed a script that keeps re-running the above over
-> > all relevant disks and keeps track of how many unique md5 values we
-> > get. It's been running for about 1.5 hours right now, and here are the
-> > results so far:
-> >=20
-> > sdd - 3, sde - 4, sdf - 1, sdb - 1, sdc - 1,=20
-> >=20
-> > sdd and sde are both on the same controller, so the problem you
-> > mentioned could be relevant.
-> >=20
-> > I'll let the test run for a few more hours and try moving things off
-> > that controller later tonight.
-> >=20
->=20
-> The trend continues and the numbers are now 9 and 8 for sdd and sde and
-> 1 for the others.
->=20
 
-Controller now taken out of the picture and I no longer see any errors
-on either filesystem nor direct disk level.
 
-I have a sil3132 of a different OEM brand here. I'll try that in that
-pci-e slot next.
+--- Comment #28 from Artem S. Tashkinov <t.artem@mailcity.com>  2010-05-20 16:56:48 ---
+> Load is the average number of threads which are running or willing to run.  It
+> doesn't have much to do with actual cpu usage.  Load average can and does go
+> way above the number of processors.  It doesn't mean the kernel is creating
+> virtual cpus for you.
 
-Rgds
---=20
-     -- Pierre Ossman
+I haven't said anything about creation of virtual CPUs, but I've always thought
+that one can estimate real system load (it maybe above 100%) by diving load
+average by number of CPUs and for "normal" tasks like mathematical calculations
+this principle holds true. E.g. :
 
-  WARNING: This correspondence is being monitored by FRA, a
-  Swedish intelligence agency. Make sure your server uses
-  encryption for SMTP traffic and consider using PGP for
-  end-to-end encryption.
+`cat < /dev/urandom > /dev/null` on all Unixes will result in 1.0 load average.
+That means that one CPU or CPU core is 100% busy. Run this task twice and
+you'll get 2.0 load average or for 4 cores system that means half of the CPUs
+are busy churning random numbers.
 
---=_freyr.ossman.eu-6831-1274372934-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
+Why this principle doesn't hold true for tasks which are bound by IO operations
+is beyond my understanding. Why IO wait time is even included in load average
+statistics is also beyond my understanding.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.13 (GNU/Linux)
+So, on behalf of almost all Linux users I have to ask this hard question: how
+one is supposed to understand/interpret top/htop/whatever_else_utility numbers
+when IDLE time is shown as _0%_ for _all_ IO intensive operations? In OS,
+everyone hates but most people still use, IO wait time is shown as kernel time
+but otherwise CPU is mostly _idle_ (90% of more, depending on chipset, IO
+drivers, etc) - in Linux CPU is _100% busy_ - and it makes no sense, e.g.
 
-iEYEARECAAYFAkv1Y0YACgkQ7b8eESbyJLi1uACfSIskpomv+NLys6JMB9h0Yrw1
-bLYAn3GlS0bbMln/UupIKR+OdMC9pddO
-=9u/J
------END PGP SIGNATURE-----
+`cat /dev/sda > /dev/null`
 
---=_freyr.ossman.eu-6831-1274372934-0001-2--
+will result in top showing:
+
+Cpu(s):  4.3%us,  4.0%sy,  0.0%ni, 75.4%id, 15.8%wa,  0.0%hi,  0.5%si,  0.0%st
+
+As you can clearly see my 4 CPUs system is approximately 25% busy, i.e. one CPU
+is 100% busy doing something.
+
+So, _please_, fix the kernel, fix top/htop/load_average, fix whatever you want,
+but, please, stop confusing people with numbers that make no sense.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
