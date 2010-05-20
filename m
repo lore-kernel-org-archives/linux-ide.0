@@ -1,77 +1,47 @@
-From: Pierre Ossman <pierre-list@ossman.eu>
-Subject: Re: Strange read data corruption on ext4/LVM/md
-Date: Thu, 20 May 2010 16:00:49 +0200
-Message-ID: <20100520160049.1528772b@mjolnir.ossman.eu>
-References: <20100519225653.1fedb453@mjolnir.ossman.eu>
-	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
-	<20100519232906.3be82279@mjolnir.ossman.eu>
-	<20100519233408.7436bd9b@mjolnir.ossman.eu>
-	<20100520091429.192d560c@mjolnir.ossman.eu>
-	<4BF4F979.4070903@kernel.org>
-	<20100520112945.61bf9705@mjolnir.ossman.eu>
-	<4BF50405.4070706@kernel.org>
-	<20100520122227.16ea1cbc@mjolnir.ossman.eu>
+From: tytso@mit.edu
+Subject: Re: ext3 filesystem corruption on md RAID1 device
+Date: Thu, 20 May 2010 10:30:39 -0400
+Message-ID: <20100520143039.GC16634@thunk.org>
+References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-5869-1274364051-0001-2"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:34587 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753209Ab0ETOAy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 May 2010 10:00:54 -0400
-In-Reply-To: <20100520122227.16ea1cbc@mjolnir.ossman.eu>
+Received: from THUNK.ORG ([69.25.196.29]:48812 "EHLO thunker.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755001Ab0ETOap (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 May 2010 10:30:45 -0400
+Content-Disposition: inline
+In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Buehl, Reiner" <reiner.buehl@hp.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+On Thu, May 20, 2010 at 10:08:21AM +0000, Buehl, Reiner wrote:
+> Hi,
+> 
+> I keep getting ext3 filesystem corruptions on one of my md RAID1 arrays. Shortly after booting, I get messages like the following one:
+> 
+> EXT3-fs error (device md1): htree_dirblock_to_tree: bad entry in
+> directory #17269110: rec_len is smaller than minimal - offset=0,
+> inode=0, rec_len=0, name_len=0
 
---=_freyr.ossman.eu-5869-1274364051-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+This looks like a block got completely zero'ed out.  One interesting
+question is whether the corruption is happening on the read side (when
+transfering data from the disk to memory) or on the write side (when
+tranferring data from memory to disk).  So something that's worth
+doing is grab the output of e2fsck, and see if it see if is trying to
+fix the directory inode reported by the EXT3-fs error syslog.
 
-On Thu, 20 May 2010 12:22:27 +0200
-Pierre Ossman <pierre-list@ossman.eu> wrote:
+Another thing that's worth doing is to try running e2fsck -fy /dev/md1
+a second time.  If you see errors in that second fsck run, then it's
+time to suspect that either (a) the storage stack isn't reliably
+reading from disk, or (b) the storage stack isn't reliably writing to
+the disk.  Thers is the possibility of an e2fsck bug, but that seems
+unlikely in this context.  If you save the outputs from each e2fsck
+run, I can look at them and tell you whether it's likely an e2fsck bug
+or, what seems more likely a storage stack failure.
 
->=20
-> I've since constructed a script that keeps re-running the above over
-> all relevant disks and keeps track of how many unique md5 values we
-> get. It's been running for about 1.5 hours right now, and here are the
-> results so far:
->=20
-> sdd - 3, sde - 4, sdf - 1, sdb - 1, sdc - 1,=20
->=20
-> sdd and sde are both on the same controller, so the problem you
-> mentioned could be relevant.
->=20
-> I'll let the test run for a few more hours and try moving things off
-> that controller later tonight.
->=20
+Regards,
 
-The trend continues and the numbers are now 9 and 8 for sdd and sde and
-1 for the others.
-
-Rgds
---=20
-     -- Pierre Ossman
-
-  WARNING: This correspondence is being monitored by FRA, a
-  Swedish intelligence agency. Make sure your server uses
-  encryption for SMTP traffic and consider using PGP for
-  end-to-end encryption.
-
---=_freyr.ossman.eu-5869-1274364051-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.13 (GNU/Linux)
-
-iEYEARECAAYFAkv1QJMACgkQ7b8eESbyJLhZpACg3JozT+SYje+kxZ4+gmCHXlSj
-DEEAoIPGjarKh4eZU25zM37fj/Pm7Acm
-=yri/
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-5869-1274364051-0001-2--
+						- Ted
