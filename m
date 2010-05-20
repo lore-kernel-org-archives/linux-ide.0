@@ -1,84 +1,76 @@
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: ext3 filesystem corruption on md RAID1 device
-Date: Thu, 20 May 2010 15:27:01 +0400
-Message-ID: <871vd624qi.fsf@openvz.org>
-References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
-	<877hmy264p.fsf@openvz.org>
-	<BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DDA7@GVW1115EXC.americas.hpqcorp.net>
+From: Prashant <0xfffff0@gmail.com>
+Subject: Re: spinlock recursion in scsi_end_request() (kernel 2.6.24)
+Date: Thu, 20 May 2010 17:03:16 +0530
+Message-ID: <AANLkTilPaI-b4IUNfUnVKahK299fujgYTXsxC1BROw0L@mail.gmail.com>
+References: <AANLkTilIYz-UITAugWx08u-AvKB5gI-E1M3LORZ55wro@mail.gmail.com>
+	 <4BF508C8.9050405@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:36299 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146Ab0ETL1I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 07:27:08 -0400
-In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DDA7@GVW1115EXC.americas.hpqcorp.net>
-	(Reiner Buehl's message of "Thu, 20 May 2010 11:10:52 +0000")
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44932 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753926Ab0ETLdR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 07:33:17 -0400
+Received: by pxi18 with SMTP id 18so1265468pxi.19
+        for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 04:33:16 -0700 (PDT)
+In-Reply-To: <4BF508C8.9050405@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Buehl, Reiner" <reiner.buehl@hp.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-"Buehl, Reiner" <reiner.buehl@hp.com> writes:
+Hi,
 
-> Hi Dimitry,
+On Thu, May 20, 2010 at 3:32 PM, Tejun Heo <tj@kernel.org> wrote:
+> On 05/17/2010 01:32 PM, Prashant wrote:
+>> Hi,
+>> I have a board with backplane for SATA disks. Sometimes when =A0I un=
+plug
+>> a disk while
+>> IO is going on, I get following problem. Has anybody of you
+>> experienced this before?
+>> Sometimes spinlock owner is kblockd, sometimes it is scsi_eh.
 >
->> How does it happen? Do you remember any power failures happened
->> previously?
+> Sorry but 2.6.24 is way too ancient at this point and too much has
+> changed. =A0Can you please try a recent kernel and see whether the
+> problem is reproducible?
 >
-> I had no power failures. The first such error appears always approx. 2
-> minutes after booting the system. This behavior started after I moved
-> the md RAID fro
-Hm.. So may be this is not a barrier related.
->m two smaller Seagate disks to the currently used 1TB disks. There for my first thought was a failed disk or memory but they seem to be ok based on the SMART and memtest results.
->
-You may possibly force this to happen sooner like follows:
-find /your-mnt/ -ls > /dev/null #fore fstat for all inodes
->> What mount options do you used? Probably you use default options
->> which means that fs was mounted w/o barrier support. Even if was
->> mounted
->> with barriers, your raid driver may simply ignore it.
->
-> I use default options and software raid (mdadm). Does mdadm handle barriers correct?
->
->> Can you please post following info:
->> 1) mount options  and cat /proc/mount
->
-> /dev/md1        /               ext3            defaults                        01
->
-> bilbo:~# cat /proc/mounts 
-> rootfs / rootfs rw 0 0
-> none /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
-> none /proc proc rw,nosuid,nodev,noexec,relatime 0 0
-> udev /dev tmpfs rw,relatime,size=10240k,mode=755 0 0
-> /dev/disk/by-uuid/a059fdf2-4ff6-4c30-ba7f-77c85e7f5d1b / ext3 rw,relatime,errors=continue,data=ordered 0 0
-> tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=755 0 0
-> usbfs /proc/bus/usb usbfs rw,nosuid,nodev,noexec,relatime 0 0
-> tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
-> devpts /dev/pts devpts rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
-> /dev/mapper/vg_data-lv_video /video ext3 rw,relatime,errors=continue,data=ordered 0 0
-> /dev/mapper/vg_data-lv_mpg /video/film/mpg ext3 rw,relatime,errors=continue,data=ordered 0 0
-> rpc_pipefs /var/lib/nfs/rpc_pipefs rpc_pipefs rw,relatime 0 0
-> automount(pid3007) /mnt/auto autofs rw,relatime,fd=4,pgrp=3007,timeout=120,minproto=2,maxproto=4,indirect 0 0
-> automount(pid2964) /mnt/usb autofs rw,relatime,fd=4,pgrp=2964,timeout=2,minproto=2,maxproto=4,indirect 0 0
-> automount(pid3062) /net autofs rw,relatime,fd=4,pgrp=3062,timeout=300,minproto=2,maxproto=4,indirect 0 0
-> nfsd /proc/fs/nfsd nfsd rw,relatime 0 0
->
->
->> 2) Write something to your fs and sync;
->>    like follows "echo test > /path_to_your_mnt/test ; sync"
->
-> Done.
->
->> 3) dmesg log after stage(2)
->
-> Nothing got written to dmesg during step 2.
-This test was necessary to check that your md has barriers support
-but this may happen only if you passed '-obarrier=1' explicitly
-Since you use default mount options, then you use ext3 without barriers
-so this test is not necessary
->
-> I currently have 2 of the EXT3-fs errors in dmesg but writing and syncing did not produce another one. 
->
-> Best regards,
-> Reiner.
+Okay I 'll update If I get same problem with latest kernel (will take
+lot of time).
+
+I have a question related to code which is almost same in the current k=
+ernel.
+I don't know whether this is the right mailing list for the following q=
+uestion.
+
+When a sata drive is unplugged, its corresponding sdev's state is set
+to SDEV_OFFLINE. Now if IO requests are still comming on the same devic=
+e,
+They will be killed by calling scsi_kill_request().
+
+1) scsi_kill_request does following things:
+    i) Unlock request queue
+    ii) Increment host_busy count
+    iii) Lock request queue
+    iv) Calls __scsi_done()
+
+2) __scsi_done() does following things:
+     i) set request completion data
+     ii) Calls blk_completion_request()
+
+3) blk_completion_request() does following things:
+     i) Adds request->donelist to blk_cpu_done softirq queue
+        and raise the softirq (which is scsi_softirq_done)
+
+4) next sequence is:
+    scsi_softirq_done >> scsi_finish_command >> scsi_device_unbusy()
+
+5) scsi_device_unbusy() again locks the request_queue. This is the plac=
+e where
+    we can get into the spinlock recursion.
+
+    Is this correct? Please correct me if something is wrong.
+
+Thanks,
+Prashant
