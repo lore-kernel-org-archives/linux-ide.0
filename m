@@ -1,19 +1,19 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
-Date: Thu, 20 May 2010 15:49:42 GMT
-Message-ID: <201005201549.o4KFngro010990@demeter.kernel.org>
+Date: Thu, 20 May 2010 16:14:50 GMT
+Message-ID: <201005201614.o4KGEo3J019658@demeter.kernel.org>
 References: <bug-3094-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:39316 "EHLO
+Received: from demeter.kernel.org ([140.211.167.39]:58123 "EHLO
 	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961Ab0ETPto (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 11:49:44 -0400
+	with ESMTP id S1751835Ab0ETQOu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 12:14:50 -0400
 Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4KFnhvB010991
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4KGEoSq019659
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 15:49:43 GMT
+	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 16:14:50 GMT
 In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -25,38 +25,51 @@ https://bugzilla.kernel.org/show_bug.cgi?id=3094
 
 
 
---- Comment #26 from Artem S. Tashkinov <t.artem@mailcity.com>  2010-05-20 15:49:11 ---
-(In reply to comment #25)
-> Artem, if some tool is showing iowait as cpu time consumed, that tool needs to
-> be fixed.  The kernel is simply exporting what it's doing.  The presentation is
-> upto system monitoring tools.  I recall lots of tools which kind of gave the
-> wrong signals years ago but these days I don't recall seeing such things too
-> often.  There always is a problem with people who are fixated on weird stuff
-> but I don't think it's possible to satisfy everyone.  We can't show cached as
-> free memory for people who claim the kernel is wasting all memory, right? 
-> That's a very bad solution for a virtually non-existing problem.
-> 
+--- Comment #27 from Tejun Heo <tj@kernel.org>  2010-05-20 16:14:28 ---
+(In reply to comment #26)
+> Are you aware of any other tools except htop and top (from procps package)?
+> They both show IO wait as CPU load.
 
-Are you aware of any other tools except htop and top (from procps package)?
-They both show IO wait as CPU load.
+No, they don't.  They clearly distinguish between sys, user, idle and iowait. 
+You're confusing cpu usage and load average.
 
-What about kernel itself? load average to my knowledge is statistical data
-exported by kernel itself and according to your words this data can be trusted,
-or I am missing something here?  Why do we have this kind of situation (I need
-to quote myself here):
+> What about kernel itself? load average to my knowledge is statistical data
+> exported by kernel itself and according to your words this data can be trusted,
+> or I am missing something here?  Why do we have this kind of situation (I need
+> to quote myself here):
 
-(In reply to comment #21)
-> 
-> `cat /dev/sda > /dev/null` results in load average rapidly climbing to 1.32 and
-> counting on my PC, that's just insane and wrong.
+It just seems that you're misunderstanding what 'load' means.
 
-I've just rerun this test for 10 minutes and load average climbed to 2.14 on my
-4 cores SMP system (2 real cores, 2 HT's). That means that intensive I/O
-operations consume a mind boggling 50% of my CPU power and mind that I have a
-really fast CPU (3.4GHz Intel Core i5).
+> I've just rerun this test for 10 minutes and load average climbed to 2.14 on my
+> 4 cores SMP system (2 real cores, 2 HT's). That means that intensive I/O
+> operations consume a mind boggling 50% of my CPU power and mind that I have a
+> really fast CPU (3.4GHz Intel Core i5).
 
-On this issue there are two almost identical bugs filed by me, bug 14531 and
-bug 14648 but it seems like no one cares.
+Load is the average number of threads which are running or willing to run.  It
+doesn't have much to do with actual cpu usage.  Load average can and does go
+way above the number of processors.  It doesn't mean the kernel is creating
+virtual cpus for you.
+
+> On this issue there are two almost identical bugs filed by me, bug 14531 and
+> bug 14648 but it seems like no one cares.
+
+If you don't clearly understand the issue technically (which is expected for
+anyone who's not working on the specific area), it usually is a much better
+idea to report what problem you're experiencing as a user.  Sure, your
+conjecture or gut feeling can be helpful and it's a good idea to present them
+but please always keep in mind the possibility of them being completely wrong
+and/or irrelevant.
+
+Good: While a large file is being copied, the system is very sluggish.  I can't
+hardly move mouse pointer and simple command like ls takes minutes to complete.
+ While this is happening, the load avg is such and such and I suspect this
+might have something to do with the sluggishness.  My system information is
+such and such...
+
+Bad: While a large file is being copied, 150% of my cpu is being used
+(misinterpreting load avg as cpu usage), please fix.
+
+So, what actual problem are you seeing other than the expected high load avg?
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
