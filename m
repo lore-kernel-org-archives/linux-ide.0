@@ -1,30 +1,46 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ext3 filesystem corruption on md RAID1 device
-Date: Thu, 20 May 2010 22:40:25 -0600
-Message-ID: <4BF60EB9.3090607@gmail.com>
-References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
+Subject: Re: [PATCH #upstream-fixes] libata: disable ATAPI AN by default
+Date: Thu, 20 May 2010 22:49:33 -0600
+Message-ID: <4BF610DD.20502@gmail.com>
+References: <20100517225405.GA19825@cpu18.student.cs> <20100518132519.GA19658@elliptictech.com> 	<AANLkTimq8xS00gKHjjWh4OKQ2u01OutzCHqb_NgCLojx@mail.gmail.com> 	<20100518162350.GA29594@elliptictech.com> <AANLkTimgcvrTQWxwldVPfb0xGm2oa6vznJcZcDydIBBk@mail.gmail.com> 	<4BF2D8E8.1040602@kernel.org> <AANLkTikJhC3g6aOkKzSGNybNP7s8ODrWBsQ29Lgw9On1@mail.gmail.com> 	<4BF2DC55.5010209@kernel.org> <AANLkTimrKbTObcNwZmiYitAXqoqMERYHO9GTRP_FQCfr@mail.gmail.com> 	<20100518192300.GA30821@elliptictech.com> <AANLkTilvhCvaDWXMYbQF5vMLDIv58rY__i7nwclNyo2K@mail.gmail.com> <4BF3E64D.2040003@kernel.org> <4BF3E9F2.9050608@kernel.org> <4BF40E6C.6020701@garzik.org> <4BF4177B.2040108@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Buehl, Reiner" <reiner.buehl@hp.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <4BF4177B.2040108@kernel.org>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>, Nick Bowler <nbowler@elliptictech.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 05/20/2010 04:08 AM, Buehl, Reiner wrote:
-> Hi,
+On 05/19/2010 10:53 AM, Tejun Heo wrote:
+> Hello,
 >
-> I keep getting ext3 filesystem corruptions on one of my md RAID1 arrays. Shortly after booting, I get messages like the following one:
+> On 05/19/2010 06:14 PM, Jeff Garzik wrote:
+>> Windows completely disables AN?
+>>
+>> Or do we simply need to be less naive about _delivery_ of AN's?
 >
-> EXT3-fs error (device md1): htree_dirblock_to_tree: bad entry in directory #17269110: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+> I think we first need to verify what the event is about before
+> delivering it to userland; IOW, it should kick a full polling op.  The
+> problem is the same with periodic polling.  Windows does it with
+> single command but we can't do that from userland as open() involves
+> issuing more commands.  That discrepancy is basically we're having all
+> these problems with periodic polling and AN infinite looping.
 >
-> This forces an automatic fsck at the next reboot that fails. The manual fsck.ext3 -y /dev/md1 takes a long time but manages to get a clean FS again. After the reboot, it takes just a few minutes until the first of these messages appear again.
+> Hardware vendors don't consider cases where their devices are hit with
+> a series of commands periodically or after raising an AN event.  We
+> have quite a few drives which just die after being hit repeatedly with
+> media presence polling commands and this one is causing infinite loop
+> by re-raising AN.
 >
-> The two disks used in the RAID1 md device are both Seagate ST31000528AS that show no errors in long and short SMART test and Seatools. Memtest shows no memory problems. Two other RAID1 systems connected to the same Intel Ibex Peak 6 port SATA AHCI Controller (rev 06) show no such problems. A RAID5 with 4 Seagate ST3750640AS on a Promise PDC40718 (SATA 300 TX4) also works without problems in the same system.
->
-> I saw that sata_sil.c has a blacklist that includes mainly Seagate drives but do not know if this is related to my problem since I my system uses an Intel SATA controller.
+> So, until we can replicate the windows behavior (which actually is
+> pretty reasonable - just use single GET_CONFIGURATION call for polling
+> and status check), I think it's wiser to disable AN.
 
-No, that blacklist relates to problems with the combinations of those 
-older Seagate drives and Silicon Image 311x controllers.
+There are also some drives where AN is just broken - I have a Lite-ON 
+DH-401S BD-ROM drive which raises AN on opening the tray, but not on 
+closing with media inserted.
+
+I don't know if Windows is using AN at all yet or not. Seems like a lot 
+of drives aren't tested well with it though.
