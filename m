@@ -1,35 +1,30 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 3094] POOR I/O perfomance on VIA chipsets
-Date: Thu, 20 May 2010 23:45:34 GMT
-Message-ID: <201005202345.o4KNjYJK005770@demeter.kernel.org>
-References: <bug-3094-11633@https.bugzilla.kernel.org/>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: ext3 filesystem corruption on md RAID1 device
+Date: Thu, 20 May 2010 22:40:25 -0600
+Message-ID: <4BF60EB9.3090607@gmail.com>
+References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:45712 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755025Ab0ETXpe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 May 2010 19:45:34 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o4KNjYgl005771
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 20 May 2010 23:45:34 GMT
-In-Reply-To: <bug-3094-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Buehl, Reiner" <reiner.buehl@hp.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3094
+On 05/20/2010 04:08 AM, Buehl, Reiner wrote:
+> Hi,
+>
+> I keep getting ext3 filesystem corruptions on one of my md RAID1 arrays. Shortly after booting, I get messages like the following one:
+>
+> EXT3-fs error (device md1): htree_dirblock_to_tree: bad entry in directory #17269110: rec_len is smaller than minimal - offset=0, inode=0, rec_len=0, name_len=0
+>
+> This forces an automatic fsck at the next reboot that fails. The manual fsck.ext3 -y /dev/md1 takes a long time but manages to get a clean FS again. After the reboot, it takes just a few minutes until the first of these messages appear again.
+>
+> The two disks used in the RAID1 md device are both Seagate ST31000528AS that show no errors in long and short SMART test and Seatools. Memtest shows no memory problems. Two other RAID1 systems connected to the same Intel Ibex Peak 6 port SATA AHCI Controller (rev 06) show no such problems. A RAID5 with 4 Seagate ST3750640AS on a Promise PDC40718 (SATA 300 TX4) also works without problems in the same system.
+>
+> I saw that sata_sil.c has a blacklist that includes mainly Seagate drives but do not know if this is related to my problem since I my system uses an Intel SATA controller.
 
-
-
-
-
---- Comment #33 from Zenith88 <zenith22.22.22@gmail.com>  2010-05-20 23:45:21 ---
-This would have been credible if linux was not so painfully slow in the same
-operations.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+No, that blacklist relates to problems with the combinations of those 
+older Seagate drives and Silicon Image 311x controllers.
