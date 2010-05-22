@@ -1,37 +1,71 @@
-From: Otavio Salvador <otavio@ossystems.com.br>
-Subject: [PATCH 1/2] pata-it821x: use UDMA_OFF for Vortex86SX for clearness
-Date: Fri, 21 May 2010 19:09:32 -0300
-Message-ID: <1274479772-8631-1-git-send-email-otavio@ossystems.com.br>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:49137 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758708Ab0EUWJm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 May 2010 18:09:42 -0400
-Received: by gyg13 with SMTP id 13so695023gyg.19
-        for <linux-ide@vger.kernel.org>; Fri, 21 May 2010 15:09:40 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 21/27] drivers/ide: Use memdup_user
+Date: Sat, 22 May 2010 10:25:03 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1005221024470.13021@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Otavio Salvador <otavio@ossystems.com.br>
 
-Signed-off-by: Otavio Salvador <otavio@ossystems.com.br>
+From: Julia Lawall <julia@diku.dk>
+
+Use memdup_user when user data is immediately copied into the
+allocated region.
+
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression from,to,size,flag;
+position p;
+identifier l1,l2;
+@@
+
+-  to = \(kmalloc@p\|kzalloc@p\)(size,flag);
++  to = memdup_user(from,size);
+   if (
+-      to==NULL
++      IS_ERR(to)
+                 || ...) {
+   <+... when != goto l1;
+-  -ENOMEM
++  PTR_ERR(to)
+   ...+>
+   }
+-  if (copy_from_user(to, from, size) != 0) {
+-    <+... when != goto l2;
+-    -EFAULT
+-    ...+>
+-  }
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/ata/pata_it821x.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ide/ide-taskfile.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 5cb286f..1b869b6 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -899,7 +899,7 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
--		/* No UDMA */
-+		.udma_mask = UDMA_OFF,
- 		.port_ops = &it821x_rdc_port_ops
- 	};
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 67fb735..34b9872 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -480,13 +480,9 @@ int ide_taskfile_ioctl(ide_drive_t *drive, unsigned long arg)
+ 	u16 nsect		= 0;
+ 	char __user *buf = (char __user *)arg;
  
--- 
-1.7.0.3.291.g5e4f6
-
+-	req_task = kzalloc(tasksize, GFP_KERNEL);
+-	if (req_task == NULL)
+-		return -ENOMEM;
+-	if (copy_from_user(req_task, buf, tasksize)) {
+-		kfree(req_task);
+-		return -EFAULT;
+-	}
++	req_task = memdup_user(buf, tasksize);
++	if (IS_ERR(req_task))
++		return PTR_ERR(req_task);
+ 
+ 	taskout = req_task->out_size;
+ 	taskin  = req_task->in_size;
