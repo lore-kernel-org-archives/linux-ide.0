@@ -1,46 +1,59 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Mon, 24 May 2010 00:11:30 -0700 (PDT)
-Message-ID: <20100524.001130.04664737.davem@davemloft.net>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: raid 5 mismatch_cnt errors
+Date: Mon, 24 May 2010 10:34:28 +0100
+Message-ID: <4BFA4824.10107@seoss.co.uk>
+References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown> <4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BF6B782.3060408@shiftmail.org> <4BF6F3B9.5020405@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51437
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753393Ab0EXHLV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 May 2010 03:11:21 -0400
+Received: from relay1.allsecurenet.com ([63.246.152.102]:53307 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754685Ab0EXJei (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 May 2010 05:34:38 -0400
+In-Reply-To: <4BF6F3B9.5020405@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Doug Ledford <dledford@redhat.com>
+Cc: MRK <mrk@shiftmail.org>, Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
+
+On 21/05/10 21:57, Doug Ledford wrote:
+> On 05/21/2010 12:40 PM, MRK wrote:
+>    
+>> On 05/21/2010 04:16 AM, Doug Ledford wrote:
+>>      
+>> Could the cabling to the drive be causing this? (maybe failing or maybe
+>> it's partly disconnected)
+>> I don't remember at what point Linux is at implementing the checksums
+>> between the controller and the drive.
+>>      
+> I don't know.  I'm not up on the SATA signaling details so I don't know
+> if it uses CRC on the signal, but I suspect it does and a bad cable
+> would cause failed requests.  But I wouldn't bet my house on it, so I
+> would ask some SATA gurus.
+>    
+
+I wouldn't call myself that, but I believe PATA and SATA-level CRC 
+errors show up in the UDMA_CRC_Error_Count SMART variable - look for a 
+non-zero raw value in the smartctl output.  This is presumably just the 
+error-count from the drive's point of view (bad data recd at drive 
+end).  I don't know what happens with CRC errors detected at the Linux 
+end - and whether detection is controller-dependant.  Better ask on 
+linux-ide.
 
 
-A few bug fixes, a comment typo fix, etc.  Ie. nothing really
-interesting, as it should be, for a subsystem in deep
-maintainence mode.
+ From the SMART attribute name, presumably the earlier PATA transfer 
+modes don't support CRC error detection.
 
-Please pull, thanks a lot!
+An easy thing to check might be to reduce the libata transfer speed from 
+3GBps to 1.5GBps.  Similarly, try to test each drive and SATA port in 
+isolation if you can....
 
-The following changes since commit 8777c793d6a24c7f3adf52b1b1086e9706de4589:
-  Linus Torvalds (1):
-        Merge branch 'for-linus' of git://git.kernel.org/.../tj/wq
+Tim.
 
-are available in the git repository at:
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
-
-Sergei Shtylyov (4):
-      ide: fix comment typo in ide.h
-      pdc202xx_old: wire test_irq() method for PDC2026x
-      pdc202xx_old: ignore "FIFO empty" bit in test_irq() method
-      cmd640: fix kernel oops in test_irq() method
-
-Yegor Yefremov (1):
-      IDE: pass IRQ flags to the IDE core
-
- drivers/ide/cmd640.c       |    6 ++----
- drivers/ide/ide_platform.c |    1 +
- drivers/ide/pdc202xx_old.c |    5 +++--
- include/linux/ide.h        |    4 ++--
- 4 files changed, 8 insertions(+), 8 deletions(-)
