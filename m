@@ -1,48 +1,45 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata: disable ATAPI AN by default
-Date: Tue, 25 May 2010 19:41:59 -0400
-Message-ID: <4BFC6047.30405@garzik.org>
-References: <20100517225405.GA19825@cpu18.student.cs> <20100518132519.GA19658@elliptictech.com> 	<AANLkTimq8xS00gKHjjWh4OKQ2u01OutzCHqb_NgCLojx@mail.gmail.com> 	<20100518162350.GA29594@elliptictech.com> <AANLkTimgcvrTQWxwldVPfb0xGm2oa6vznJcZcDydIBBk@mail.gmail.com> 	<4BF2D8E8.1040602@kernel.org> <AANLkTikJhC3g6aOkKzSGNybNP7s8ODrWBsQ29Lgw9On1@mail.gmail.com> 	<4BF2DC55.5010209@kernel.org> <AANLkTimrKbTObcNwZmiYitAXqoqMERYHO9GTRP_FQCfr@mail.gmail.com> 	<20100518192300.GA30821@elliptictech.com> <AANLkTilvhCvaDWXMYbQF5vMLDIv58rY__i7nwclNyo2K@mail.gmail.com> <4BF3E64D.2040003@kernel.org> <4BF3E9F2.9050608@kernel.org>
+Subject: Re: [PATCH 1/6] sata_mv: drop unncessary EH callback resetting
+Date: Tue, 25 May 2010 19:42:07 -0400
+Message-ID: <4BFC604F.5020908@garzik.org>
+References: <1274299824-15691-1-git-send-email-tj@kernel.org> <1274299824-15691-2-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:55673 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933875Ab0EYXmE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 May 2010 19:42:04 -0400
-In-Reply-To: <4BF3E9F2.9050608@kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:49394 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933883Ab0EYXmK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 May 2010 19:42:10 -0400
+Received: by gyg13 with SMTP id 13so2329944gyg.19
+        for <linux-ide@vger.kernel.org>; Tue, 25 May 2010 16:42:09 -0700 (PDT)
+In-Reply-To: <1274299824-15691-2-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>, Nick Bowler <nbowler@elliptictech.com>, David Zeuthen <david@fubar.dk>, linux-hotplug@vger.kernel.org, stable@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On 05/19/2010 09:38 AM, Tejun Heo wrote:
-> There are ATAPI devices which raise AN when hit by commands issued by
-> open().  This leads to infinite loop of AN ->  MEDIA_CHANGE uevent ->
-> udev open() to check media ->  AN.
->
-> Both ACS and SerialATA standards don't define in which case ATAPI
-> devices are supposed to raise or not raise AN.  They both list media
-> insertion event as a possible use case for ATAPI ANs but there is no
-> clear description of what constitutes such events.  As such, it seems
-> a bit too naive to export ANs directly to userland as MEDIA_CHANGE
-> events without further verification (which should behave similarly to
-> windows as it apparently is the only thing that some hardware vendors
-> are testing against).
->
-> This patch adds libata.atapi_an module parameter and disables ATAPI AN
-> by default for now.
+On 05/19/2010 04:10 PM, Tejun Heo wrote:
+> Now that BMDMA EH ops are separated out from SFF ops, mv5_ops doesn't
+> have to explicitly reset ->error_handler() and ->post_internal_cmd().
+> Drop them.
 >
 > Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Kay Sievers<kay.sievers@vrfy.org>
-> Cc: Nick Bowler<nbowler@elliptictech.com>
-> Cc: David Zeuthen<david@fubar.dk>
-> Cc: stable@kernel.org
 > ---
->   drivers/ata/libata-core.c |    7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
+>   drivers/ata/sata_mv.c |    2 --
+>   1 files changed, 0 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index f3471bc..16bacd3 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -675,8 +675,6 @@ static struct ata_port_operations mv5_ops = {
+>   	.freeze			= mv_eh_freeze,
+>   	.thaw			= mv_eh_thaw,
+>   	.hardreset		= mv_hardreset,
+> -	.error_handler		= ata_std_error_handler, /* avoid SFF EH */
+> -	.post_internal_cmd	= ATA_OP_NULL,
 
-applied
+applied 1-6
 
 
