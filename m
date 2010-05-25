@@ -1,59 +1,49 @@
-From: Tim Small <tim@seoss.co.uk>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: raid 5 mismatch_cnt errors
-Date: Mon, 24 May 2010 10:34:28 +0100
-Message-ID: <4BFA4824.10107@seoss.co.uk>
-References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown> <4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BF6B782.3060408@shiftmail.org> <4BF6F3B9.5020405@redhat.com>
+Date: Tue, 25 May 2010 13:09:43 -0600
+Message-ID: <4BFC2077.6070203@gmail.com>
+References: <4BF56B1F.9080205@locallinux.com> <20100521071645.497cdcad@notabene.brown> <4BF5B7D1.3070808@locallinux.com> <20100521083819.54680dfb@notabene.brown> <4BF5ECE7.7020907@redhat.com> <4BF6B782.3060408@shiftmail.org> <4BF6F3B9.5020405@redhat.com> <4BFA4824.10107@seoss.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:53307 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754685Ab0EXJei (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 May 2010 05:34:38 -0400
-In-Reply-To: <4BF6F3B9.5020405@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <4BFA4824.10107@seoss.co.uk>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: Doug Ledford <dledford@redhat.com>, MRK <mrk@shiftmail.org>, Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Doug Ledford <dledford@redhat.com>
-Cc: MRK <mrk@shiftmail.org>, Neil Brown <neilb@suse.de>, Trey Scarborough <treys@locallinux.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 21/05/10 21:57, Doug Ledford wrote:
-> On 05/21/2010 12:40 PM, MRK wrote:
->    
->> On 05/21/2010 04:16 AM, Doug Ledford wrote:
->>      
->> Could the cabling to the drive be causing this? (maybe failing or maybe
->> it's partly disconnected)
->> I don't remember at what point Linux is at implementing the checksums
->> between the controller and the drive.
->>      
-> I don't know.  I'm not up on the SATA signaling details so I don't know
-> if it uses CRC on the signal, but I suspect it does and a bad cable
-> would cause failed requests.  But I wouldn't bet my house on it, so I
-> would ask some SATA gurus.
->    
+On 05/24/2010 03:34 AM, Tim Small wrote:
+> On 21/05/10 21:57, Doug Ledford wrote:
+>> On 05/21/2010 12:40 PM, MRK wrote:
+>>> On 05/21/2010 04:16 AM, Doug Ledford wrote:
+>>> Could the cabling to the drive be causing this? (maybe failing or maybe
+>>> it's partly disconnected)
+>>> I don't remember at what point Linux is at implementing the checksums
+>>> between the controller and the drive.
+>> I don't know. I'm not up on the SATA signaling details so I don't know
+>> if it uses CRC on the signal, but I suspect it does and a bad cable
+>> would cause failed requests. But I wouldn't bet my house on it, so I
+>> would ask some SATA gurus.
+>
+> I wouldn't call myself that, but I believe PATA and SATA-level CRC
+> errors show up in the UDMA_CRC_Error_Count SMART variable - look for a
+> non-zero raw value in the smartctl output. This is presumably just the
+> error-count from the drive's point of view (bad data recd at drive end).
+> I don't know what happens with CRC errors detected at the Linux end -
+> and whether detection is controller-dependant. Better ask on linux-ide.
+>
+>
+>  From the SMART attribute name, presumably the earlier PATA transfer
+> modes don't support CRC error detection.
+>
+> An easy thing to check might be to reduce the libata transfer speed from
+> 3GBps to 1.5GBps. Similarly, try to test each drive and SATA port in
+> isolation if you can....
 
-I wouldn't call myself that, but I believe PATA and SATA-level CRC 
-errors show up in the UDMA_CRC_Error_Count SMART variable - look for a 
-non-zero raw value in the smartctl output.  This is presumably just the 
-error-count from the drive's point of view (bad data recd at drive 
-end).  I don't know what happens with CRC errors detected at the Linux 
-end - and whether detection is controller-dependant.  Better ask on 
-linux-ide.
+ATA transfer errors should cause a bad CRC resulting in a failed 
+transfer which will cause complaints in the kernel log. For PATA, only 
+UDMA modes can detect CRC errors, PIO and MWDMA transfers can't.
 
-
- From the SMART attribute name, presumably the earlier PATA transfer 
-modes don't support CRC error detection.
-
-An easy thing to check might be to reduce the libata transfer speed from 
-3GBps to 1.5GBps.  Similarly, try to test each drive and SATA port in 
-isolation if you can....
-
-Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+There are other places where data corruption can occur however, like 
+inside the controller or the drive itself..
