@@ -1,46 +1,25 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: Re: [PATCH]: ata: fix unused variable warning in sil_host_intr()
-Date: Thu, 27 May 2010 14:02:09 -0400
-Message-ID: <4BFEB3A1.1080608@redhat.com>
-References: <20100527173114.23427.67952.sendpatchset@prarit.bos.redhat.com> <4BFEB082.1040303@ru.mvista.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH 1/4] ARM: S3C64XX: Add support for Compact Flash driver
+	on SMDK6410
+Date: Thu, 27 May 2010 20:45:59 +0100
+Message-ID: <20100527194559.GC25921@n2100.arm.linux.org.uk>
+References: <1274948524-2970-1-git-send-email-kgene.kim@samsung.com> <1274948524-2970-2-git-send-email-kgene.kim@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6897 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752666Ab0E0SGb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 May 2010 14:06:31 -0400
-In-Reply-To: <4BFEB082.1040303@ru.mvista.com>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:33057 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757913Ab0E0TqK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 May 2010 15:46:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1274948524-2970-2-git-send-email-kgene.kim@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Kukjin Kim <kgene.kim@samsung.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, Abhilash Kesavan <a.kesavan@samsung.com>, Thomas Abraham <thomas.ab@samsung.com>, ben-linux@fluff.org
 
-> Hello.
->
-> Prarit Bhargava wrote:
->
->    s/unused/uninitialized/ in the subject. Unused variable is a=20
-> different thing.
+On Thu, May 27, 2010 at 05:22:01PM +0900, Kukjin Kim wrote:
+> +#include <mach/map.h>
+> +#include <mach/gpio.h>
 
-Oops.  Sorry for the typo.
-
-P.
-
-
->
->> Warning seen with 'make -j24 CONFIG_DEBUG_SECTION_MISMATCH=3Dy':
->
->    I don't think any of these matters here...
->
->> drivers/ata/sata_sil.c: In function =E2=80=98sil_host_intr=E2=80=99:
->> drivers/ata/sata_sil.c:442: error: =E2=80=98serror=E2=80=99 may be u=
-sed=20
->> uninitialized in this function
->
->> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->
-> MBR, Sergei
->
+shouldn't this be linux/gpio.h ?
