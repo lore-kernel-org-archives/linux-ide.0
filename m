@@ -1,49 +1,46 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: Re: [pnfs] pnfs code structure
-Date: Thu, 27 May 2010 20:58:13 +0300
-Message-ID: <4BFEB2B5.3050006@panasas.com>
-References: <AANLkTilqCahXkLmgu0EL0Vbje_VcH0msM5o5I2edGglG@mail.gmail.com>
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: Re: [PATCH]: ata: fix unused variable warning in sil_host_intr()
+Date: Thu, 27 May 2010 14:02:09 -0400
+Message-ID: <4BFEB3A1.1080608@redhat.com>
+References: <20100527173114.23427.67952.sendpatchset@prarit.bos.redhat.com> <4BFEB082.1040303@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:22072 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753843Ab0E0R6R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 May 2010 13:58:17 -0400
-In-Reply-To: <AANLkTilqCahXkLmgu0EL0Vbje_VcH0msM5o5I2edGglG@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:6897 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752666Ab0E0SGb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 May 2010 14:06:31 -0400
+In-Reply-To: <4BFEB082.1040303@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: quanli gui <gqlxj1987@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Hi,
+> Hello.
+>
+> Prarit Bhargava wrote:
+>
+>    s/unused/uninitialized/ in the subject. Unused variable is a=20
+> different thing.
 
-[please note that the old pnfs@linux-nfs.org mailing list is deprecated
-and we moved our pnfs discussions to linux-nfs@vger.kernel.org]
+Oops.  Sorry for the typo.
 
-I have very rough and informal design notes I took not too long ago:
-http://linux-nfs.org/pipermail/pnfs/attachments/20100304/f90bede4/attachment.txt
+P.
 
-That said, I hope the code is clear enough to browse and get what it does.
 
-What do you mean by "replication policy for the pnfs"?
-
-Benny
-
-On May. 27, 2010, 4:22 +0300, quanli gui <gqlxj1987@gmail.com> wrote:
-> Our group want to experiment something on the pnfs, for example, the
-> replication policy for the pnfs,and so on. So we want something about
-> the pnfs development, for example, the pnfs code structure, the key data
-> structure for the pnfs. Who has the related things? Please help us.
-> 
-> 
-> 
-> _______________________________________________
-> NOTE: THIS LIST IS DEPRECATED.  Please use linux-nfs@vger.kernel.org
-> instead.  (To subscribe to linux-nfs@vger.kernel.org: send "subscribe
-> linux-nfs" in the body of a message to majordomo@vger.kernel.org.)
-> 
-> pNFS mailing list
-> pNFS@linux-nfs.org
-> http://linux-nfs.org/cgi-bin/mailman/listinfo/pnfs
+>
+>> Warning seen with 'make -j24 CONFIG_DEBUG_SECTION_MISMATCH=3Dy':
+>
+>    I don't think any of these matters here...
+>
+>> drivers/ata/sata_sil.c: In function =E2=80=98sil_host_intr=E2=80=99:
+>> drivers/ata/sata_sil.c:442: error: =E2=80=98serror=E2=80=99 may be u=
+sed=20
+>> uninitialized in this function
+>
+>> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+>
+> MBR, Sergei
+>
