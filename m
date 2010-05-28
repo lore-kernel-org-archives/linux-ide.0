@@ -1,115 +1,235 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Forcing a an Intel ICH8 into AHCI mode after boot - success
-Date: Fri, 28 May 2010 16:58:11 +0100
-Message-ID: <4BFFE813.5030000@seoss.co.uk>
-References: <4BBAE866.4060903@seoss.co.uk>
+From: Alessandro Zummo <a.zummo@towertech.it>
+Subject: sata_sil: freeze on modprobe
+Date: Fri, 28 May 2010 20:38:32 +0200
+Message-ID: <20100528203832.065a2469@linux.lan.towertech.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4BBAE866.4060903@seoss.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from elettra.colt-to.towertech.it ([213.215.222.70]:59332 "EHLO
+	elettra.colt-to.towertech.it" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752397Ab0E1SqX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 May 2010 14:46:23 -0400
+Received: from linux.lan.towertech.it (93-39-36-246.ip74.fastwebnet.it [93.39.36.246])
+	by elettra.colt-to.towertech.it (Postfix) with ESMTPSA id DB2C1116695
+	for <linux-ide@vger.kernel.org>; Fri, 28 May 2010 20:38:23 +0200 (CEST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-I tried to get a Dell PE R300 (ICH9R) working in AHCI mode a few weeks 
-ago - there is no AHCI mode option in the BIOS.
-
-In case anyone is trying the same thing - I just tried the same method 
-on an Abit IB9 (Intel ICH8 - also lacking AHCI BIOS support), and it 
-worked (see below).  I'll try coding this up as a PCI quirk (defaulting 
-to off)...
-
-> setpci -s 00:1f.2 0x90.w=0x0060
-> modprobe fakephp
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.0/power
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.2/power
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.5/power
-> echo 0>  /sys/bus/pci/slots/0000\:00\:1f.2/power
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.2/power
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.0/power
-> echo 1>  /sys/bus/pci/slots/0000\:00\:1f.5/power
-> modprobe ahci
->    
+To: linux-ide@vger.kernel.org
 
 
-This time I got.
+ I'm testing sata_sil with this controller:
 
-[  244.592159] pci 0000:00:1f.2: reg 10 io port: [0xfa00-0xfa07]
-[  244.592165] pci 0000:00:1f.2: reg 14 io port: [0xf900-0xf903]
-[  244.592169] pci 0000:00:1f.2: reg 18 io port: [0xf800-0xf807]
-[  244.592174] pci 0000:00:1f.2: reg 1c io port: [0xf700-0xf703]
-[  244.592179] pci 0000:00:1f.2: reg 20 io port: [0xf600-0xf61f]
-[  244.592184] pci 0000:00:1f.2: reg 24 32bit mmio: [0x00f000-0x00f7ff]
-[  244.592208] pci 0000:00:1f.2: PME# supported from D3hot
-[  244.592244] pci 0000:00:1f.2: PME# disabled
-[  244.640044] ahci 0000:00:1f.2: version 3.0
-[  244.640061] ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
-[  244.640145]   alloc irq_desc for 26 on node -1
-[  244.640147]   alloc kstat_irqs on node -1
-[  244.640156] ahci 0000:00:1f.2: irq 26 for MSI/MSI-X
-[  244.640164] ahci 0000:00:1f.2: forcing PORTS_IMPL to 0xf
-[  244.640214] ahci: SSS flag set, parallel bus scan disabled
-[  244.640267] ahci 0000:00:1f.2: AHCI 0001.0100 32 slots 4 ports 3 Gbps 
-0xf impl SATA mode
-[  244.640304] ahci 0000:00:1f.2: flags: 64bit ncq sntf ilck stag pm led 
-clo pmp pio slum part ccc ems
-[  244.640343] ahci 0000:00:1f.2: setting latency timer to 64
-[  244.656102] scsi6 : ahci
-[  244.656193] scsi7 : ahci
-[  244.656269] scsi8 : ahci
-[  244.656347] scsi9 : ahci
-[  244.656488] ata7: SATA max UDMA/133 abar m2048@0xf0000000 port 
-0xf0000100 irq 26
-[  244.656525] ata8: SATA max UDMA/133 abar m2048@0xf0000000 port 
-0xf0000180 irq 26
-[  244.656561] ata9: SATA max UDMA/133 abar m2048@0xf0000000 port 
-0xf0000200 irq 26
-[  244.656598] ata10: SATA max UDMA/133 abar m2048@0xf0000000 port 
-0xf0000280 irq 26
-[  244.976013] ata7: SATA link down (SStatus 0 SControl 300)
-[  245.312012] ata8: SATA link down (SStatus 0 SControl 300)
-[  246.356006] ata9: failed to resume link (SControl 0)
-[  246.356046] ata9: SATA link down (SStatus 0 SControl 0)
-[  247.400006] ata10: failed to resume link (SControl 0)
-[  247.400046] ata10: SATA link down (SStatus 0 SControl 0)
-[  434.987580] ata7: exception Emask 0x10 SAct 0x0 SErr 0x4000000 action 
-0xe frozen
-[  434.987629] ata7: irq_stat 0x00000040, connection status changed
-[  434.987662] ata7: SError: { DevExch }
-[  434.987697] ata7: hard resetting link
-[  445.000006] ata7: softreset failed (device not ready)
-[  445.000040] ata7: hard resetting link
-[  445.888011] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  445.919259] ata7.00: ATA-7: ST3500641AS, 3.AAD, max UDMA/133
-[  445.919294] ata7.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-[  445.985918] ata7.00: configured for UDMA/133
-[  445.985959] ata7: EH complete
-[  446.804096] scsi 6:0:0:0: Direct-Access     ATA      ST3500641AS      
-3.AA PQ: 0 ANSI: 5
-[  446.890857] sd 6:0:0:0: [sda] 976773168 512-byte logical blocks: (500 
-GB/465 GiB)
-[  446.890941] sd 6:0:0:0: [sda] Write Protect is off
-[  446.890975] sd 6:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  446.890994] sd 6:0:0:0: [sda] Write cache: enabled, read cache: 
-enabled, doesn't support DPO or FUA
-[  446.891149]  sda: sda1 sda2
-[  446.909372] sd 6:0:0:0: [sda] Attached SCSI disk
+00:0b.0 RAID bus controller: Silicon Image, Inc. SiI 3114 [SATALink/SATARaid] Serial ATA Controller (rev 02)
+00:0b.0 0104: 1095:3114 (rev 02)
+
+ with two different hard disks. On modprobe there's an EH situation
+ which freezes the task for several minutes. The device
+ node is not even created. The module device count is incremented to 3.
+
+ an echo 1 >rescan triggers the same situation again.
+
+ I'm running on 2.6.34. 
+
+ how can I help debugging?
 
 
-(sid-netboot)root@netboot:~# hdparm -t /dev/sda
-
-/dev/sda:
-  Timing buffered disk reads:  182 MB in  3.03 seconds =  60.00 MB/sec
-
-(sid-netboot)root@netboot:~# uname -a
-Linux netboot 2.6.32-5-amd64 #1 SMP Mon May 17 17:51:57 UTC 2010 x86_64 
-GNU/Linux
-
+sata_sil 0000:00:0b.0: version 2.4
+sata_sil 0000:00:0b.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+sata_sil 0000:00:0b.0: Applying R_ERR on DMA activate FIS errata fix
+scsi4 : sata_sil
+scsi5 : sata_sil
+scsi6 : sata_sil
+scsi7 : sata_sil
+ata5: SATA max UDMA/100 mmio m1024@0xfde00000 tf 0xfde00080 irq 16
+ata6: SATA max UDMA/100 mmio m1024@0xfde00000 tf 0xfde000c0 irq 16
+ata7: SATA max UDMA/100 mmio m1024@0xfde00000 tf 0xfde00280 irq 16
+ata8: SATA max UDMA/100 mmio m1024@0xfde00000 tf 0xfde002c0 irq 16
+ata5: SATA link down (SStatus 0 SControl 310)
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: ATA-8: WDC WD2502ABYS-18B7A0, 02.03B04, max UDMA/133
+ata6.00: 488281250 sectors, multi 16: LBA48 NCQ (depth 0/32)
+ata6.00: applying Seagate errata fix (mod15write workaround)
+ata6.00: configured for UDMA/100
+scsi 5:0:0:0: Direct-Access     ATA      WDC WD2502ABYS-1 02.0 PQ: 0 ANSI: 5
+sd 5:0:0:0: Attached scsi generic sg2 type 0
+sd 5:0:0:0: [sdc] 488281250 512-byte logical blocks: (250 GB/232 GiB)
+sd 5:0:0:0: [sdc] Write Protect is off
+sd 5:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 5:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+ sdc:
+ata7: SATA link down (SStatus 0 SControl 310)
+ata8: SATA link down (SStatus 0 SControl 310)
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/100
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: limiting speed to UDMA/66:PIO4
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/66
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: limiting speed to UDMA/33:PIO4
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+sd 5:0:0:0: [sdc] Result: hostbyte=0x00 driverbyte=0x08
+sd 5:0:0:0: [sdc] Sense Key : 0xb [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+        00 00 00 00 
+sd 5:0:0:0: [sdc] ASC=0x0 ASCQ=0x0
+sd 5:0:0:0: [sdc] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
+end_request: I/O error, dev sdc, sector 0
+Buffer I/O error on device sdc, logical block 0
+Buffer I/O error on device sdc, logical block 1
+Buffer I/O error on device sdc, logical block 2
+Buffer I/O error on device sdc, logical block 3
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+ata6: EH complete
+ata6: drained 65536 bytes to clear DRQ.
+ata6.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata6.00: failed command: READ DMA
+ata6.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata6.00: status: { DRDY }
+ata6: hard resetting link
+ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata6.00: configured for UDMA/33
+ata6.00: device reported invalid CHS sector 0
+sd 5:0:0:0: [sdc] Result: hostbyte=0x00 driverbyte=0x08
+sd 5:0:0:0: [sdc] Sense Key : 0xb [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+        72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+        00 00 00 00 
+sd 5:0:0:0: [sdc] ASC=0x0 ASCQ=0x0
+sd 5:0:0:0: [sdc] CDB: cdb[0]=0x28: 28 00 00 00 00 00 00 00 08 00
+end_request: I/O error, dev sdc, sector 0
+Buffer I/O error on device sdc, logical block 0
+Buffer I/O error on device sdc, logical block 1
+Buffer I/O error on device sdc, logical block 2
+Buffer I/O error on device sdc, logical block 3
+ unable to read partition table
+ata6: EH complete
+sdc: detected capacity change from 0 to 250000000000
+sd 5:0:0:0: [sdc] Attached SCSI disk
+sdc: detected capacity change from 0 to 250000000000
 
 
 -- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
+ Best regards,
+
+ Alessandro Zummo,
+  Tower Technologies - Torino, Italy
+
+  http://www.towertech.it
+
