@@ -1,55 +1,91 @@
-From: Panard <panard@backzone.net>
-Subject: ahci issue on MCP89 with Macbookpro7,1
-Date: Mon, 31 May 2010 21:17:39 +0200
-Message-ID: <201005312117.39590.panard@backzone.net>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: ext3 filesystem corruption on md RAID1 device
+Date: Mon, 31 May 2010 22:55:47 +0200
+Message-ID: <20100531205547.GH5334@quack.suse.cz>
+References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net>
+ <20100520143039.GC16634@thunk.org>
+ <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B794C8@GVW1115EXC.americas.hpqcorp.net>
+ <20100527201234.GE3576@quack.suse.cz>
+ <BA8A2107B0FD8A48AEB0405BDC36CE4F3F495C3638@GVW1115EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:35007 "EHLO smtp4-g21.free.fr"
+Received: from cantor2.suse.de ([195.135.220.15]:53105 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753093Ab0EaTRz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 May 2010 15:17:55 -0400
-Received: from banquise.localnet (banquise.backzone.net [88.160.158.19])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id 361CD4C8037
-	for <linux-ide@vger.kernel.org>; Mon, 31 May 2010 21:17:46 +0200 (CEST)
+	id S1751582Ab0EaU4A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 May 2010 16:56:00 -0400
+Content-Disposition: inline
+In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F495C3638@GVW1115EXC.americas.hpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Buehl, Reiner" <reiner.buehl@hp.com>
+Cc: Jan Kara <jack@suse.cz>, "tytso@mit.edu" <tytso@mit.edu>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "582275@bugs.debian.org" <582275@bugs.debian.org>
 
-Dear all,
+  Hi,
 
-it seems that the ahci drivers fails with the (apparently supported) MCP89 
-chipset on Macbookpro7,1 machines.
+On Sat 29-05-10 13:48:56, Buehl, Reiner wrote:
+> I have an unused PATA controller on the mainboard - unfortunately I do
+> not have two SATA-to-PATA converters. Do you think that connecting the
+> two disks to the PATA controller is a good option? If so, I would have to
+> buy to adapters.
+  I have heard that the boards with both PATA and SATA slots have just one
+disk controller which has only different kinds of slots. So I'm not sure
+that would change anything. More interesting would be if you could borrow a
+SATA controller that you could plug into a PCI slot or so...  Alternatively
+you could also try shuffling disks in the slots you already have.
 
-Typical error messages are :
-[   12.520091] ata2: COMRESET failed (errno=-16)
-[   12.520102] ata1: COMRESET failed (errno=-16)
-[   17.910090] ata2: link is slow to respond, please be patient (ready=0)
-[   17.910095] ata1: link is slow to respond, please be patient (ready=0)
-[   22.530090] ata2: COMRESET failed (errno=-16)
-[   22.530097] ata1: COMRESET failed (errno=-16)
-[   27.920090] ata1: link is slow to respond, please be patient (ready=0)
-[   27.920094] ata2: link is slow to respond, please be patient (ready=0)
-[   57.560090] ata1: COMRESET failed (errno=-16)
-[   57.560095] ata1: limiting SATA link speed to 1.5 Gbps
-[   57.560102] ata2: COMRESET failed (errno=-16)
-[   57.560105] ata2: limiting SATA link speed to 1.5 Gbps
-[   62.590090] ata1: COMRESET failed (errno=-16)
-[   62.590094] ata1: reset failed, giving up
-[   62.590105] ata2: COMRESET failed (errno=-16)
-[   62.590108] ata2: reset failed, giving up
+> Is there a way to fix the current file system problem with the original
+> setup first since repeated FSCKs always seem to return errors for the
+> same area again and again? 
+  Do you mean that fsck does not fix all the problems? So if you run fsck
+-f -y several times in a row is keeps reporting problems? What kind of
+problems is it?
 
-Hence, no disk nor cdrom work on macbookpro7,1.
-Full dmesgs, etc. can be found at 
-https://bugzilla.kernel.org/show_bug.cgi?id=15923 .
+								Honza
 
-I wonder if there may be any parameters to tune in kernel command line to 
-overcome this issue? Or is this a strong issue with the current driver?
-
-I can provide supplementary debug messages if needed.
-
-Thanks,
-
-Panard
+> > -----Original Message-----
+> > From: Jan Kara [mailto:jack@suse.cz]
+> > Sent: Thursday, May 27, 2010 10:13 PM
+> > To: Buehl, Reiner
+> > Cc: tytso@mit.edu; linux-ide@vger.kernel.org; linux-
+> > fsdevel@vger.kernel.org
+> > Subject: Re: ext3 filesystem corruption on md RAID1 device
+> > 
+> >   Hi,
+> > 
+> > On Sun 23-05-10 05:46:29, Buehl, Reiner wrote:
+> > > Hi Ted,
+> > >
+> > > please find attached the output of two fsck.ext3 -fy /dev/md1 runs
+> > > conducted directly after each other. The ext3 fs error message in
+> > dmesg
+> > > was:
+> >   I took a look at the fsck logs. So there are inodes 17269110-17269115
+> > (from group 2108 if my counting is correct) that have problems.
+> > 17269110 is
+> > the corrupted directory, 17269111 is an unconnected directory (was
+> > subdir of
+> > 17269110), 17269112-17269115 share blocks with some other inodes.
+> >   Interestingly enough, these other inodes are all in group 2120 and
+> > also
+> > the blocks that are shared are in group 2120.
+> >   Multiply claimed blocks in this amount are usually caused by a
+> > corrupted
+> > block bitmap. In your case, it seems as if bitmap for group 2120 was
+> > not
+> > written (or was zeroed?) and thus later some inodes reused the space.
+> > This
+> > kind of corruption is usually caused by HW - flaky memory or disk
+> > controller (I wouldn't suspect disks in your case since the problem
+> > seems to
+> > consistently happen on both the original disk and the mirror). Do you
+> > have
+> > any chance of trying a different HW?
+> > 
+> > 								Honza
+> > --
+> > Jan Kara <jack@suse.cz>
+> > SUSE Labs, CR
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
