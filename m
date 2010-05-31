@@ -1,89 +1,199 @@
-From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
-Subject: Re: via 8237 sata errors
-Date: Sun, 30 May 2010 19:19:16 -0600
-Message-ID: <201005301919.16747.tfjellstrom@strangesoft.net>
-References: <201005292046.06344.tfjellstrom@strangesoft.net> <AANLkTilSg8KZc2ZNobxQUnU105ADOeyxTAvJ3vFvbqEC@mail.gmail.com> <201005301348.50004.tfjellstrom@strangesoft.net>
+From: Heiko Schocher <hs@denx.de>
+Subject: ata, pcmcia: problem with irq and ata_dev_read_id()
+Date: Mon, 31 May 2010 07:57:02 +0200
+Message-ID: <4C034FAE.9090605@denx.de>
+Reply-To: hs@denx.de
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from troy.hostgo.com ([64.62.143.130]:46622 "EHLO troy.hostgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751552Ab0EaBTU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 May 2010 21:19:20 -0400
-In-Reply-To: <201005301348.50004.tfjellstrom@strangesoft.net>
+Received: from a.relay.invitel.net ([62.77.203.3]:54848 "EHLO
+	a.relay.invitel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741Ab0EaGHM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 May 2010 02:07:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On May 30, 2010, Thomas Fjellstrom wrote:
-> On May 30, 2010, Robert Hancock wrote:
-> > On Sun, May 30, 2010 at 1:33 PM, Thomas Fjellstrom
-> > 
-> > <tfjellstrom@strangesoft.net> wrote:
-> > > On May 30, 2010, Thomas Fjellstrom wrote:
-> > >> On May 30, 2010, Robert Hancock wrote:
-> > >> > On 05/29/2010 08:46 PM, Thomas Fjellstrom wrote:
-> > >> > > I'm getting a rather nasty set of messages from dmesg when
-> > >> > > trying to use a couple SATA II WD 2TB Green drives with an
-> > >> > > older system (via 8237 based). They seem to work fine on a
-> > >> > > newer p35 based system.
-> > >> > 
-> > >> > ..
-> > >> > 
-> > >> > > [  283.308963] ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0
-> > >> > > action 0x0 [  283.309007] ata2.00: BMDMA stat 0x4
-> > >> > > [  283.309045] ata2.00: failed command: READ DMA
-> > >> > > [  283.309089] ata2.00: cmd c8/00:08:08:08:30/00:00:00:00:00/e0
-> > >> > > tag 0 dma 4096 in [  283.309091]          res
-> > >> > > 41/04:00:08:08:30/00:00:00:00:00/e0 Emask 0x1 (device error) [
-> > >> > > 283.309171] ata2.00: status: { DRDY ERR }
-> > >> > > [  283.309207] ata2.00: error: { ABRT }
-> > >> > > [  283.324886] ata2.00: configured for UDMA/133
-> > >> > > [  283.324904] ata2: EH complete
-> > >> > 
-> > >> > It's not really clear why the drive is returning command aborted
-> > >> > on a read, there's no other error bits to indicate an
-> > >> > uncorrectable error or a CRC error. Is it only the one drive
-> > >> > that's giving the errors?
-> > >> 
-> > >> I'm not entirely sure if its the same drive each time. I can make
-> > >> sure today. The fun part is it works fine in a different machine.
-> > >> Where as it will start erroring out like that almost right away in
-> > >> the via based machine. When its doing that, its also making some
-> > >> fairly scary (for a hard drive) noises, but since it doesn't do
-> > >> that in the p35 machine I'm really hoping it isn't the drive.
-> > > 
-> > > I've started up a dd on each drive, just for kicks, and reading from
-> > > both of them at the same time seems to work fine on the via chipset.
-> > > Given this little tid-bit, it seems its only once md-raid is setup on
-> > > the drives does one of them freak out.
-> > 
-> > If the problem happens mostly when both drives are in use then it
-> > could be a power supply issue. Some drives are rather sensitive to
-> > power fluctuations. You could try and move the drives to separate
-> > power cables if they're on the same one, or maybe the power supply's
-> > just not up to snuff.
-> 
-> I'll give that a shot too. But I have dd running on both drives right now
-> (dd if=/dev/sdX of=/dev/null), and its running fine. I'm also going to
-> run some other tests, see if maybe there isn't a ram problem, it could
-> be the cause.
+Hello Jeff,
 
-Interesting, after moving each WD drive to its own power cable, that 
-particular problem seems to have gone away. However another problem seems to 
-have popped up, which I'm not sure is related so I'll post another thread 
-(unable to handle kernel paging request).
+I have ported Linux 2.6.34 for a 8xx based board using the m8xx_pcmcia.c
+driver in drivers/pcmcia/ with two slots and CONFIG_ATA, CONFIG_PATA_PCMCIA
+defined.
 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel"
-> > in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
+All works fine, except with one CF card type, I get:
 
+rtc-pcf8563 0-0051: setting system clock to 2010-05-31 05:18:41 UTC (1275283121)
+pcmcia_socket pcmcia_socket0: pccard: PCMCIA card inserted into slot 0
+pcmcia 0.0: pcmcia: registering new device pcmcia0.0
+scsi0 : pata_pcmcia
+ata1: PATA max PIO4 cmd 0x0 ctl 0xe irq 25
+ata1.00: CFA: TOSHIBA THNCF512MDG, 3.00, max MWDMA2
+ata1.00: 1000944 sectors, multi 1: LBA
+ata1.00: configured for PIO4
+ata1.00: configured for PIO4
+ata1: EH complete
+isa bounce pool size: 16 pages
+scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA THNCF512 3.00 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 1000944 512-byte logical blocks: (512 MB/488 MiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4
+pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
+pcmcia 1.0: pcmcia: registering new device pcmcia1.0
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+scsi1 : pata_pcmcia
+ata2: PATA max PIO4 cmd 0x10 ctl 0x1e irq 26
+irq 26: nobody cared (try booting with the "irqpoll" option)
+Call Trace:
+[c0327c70] [c0006ac0] show_stack+0x44/0x16c (unreliable)
+[c0327cb0] [c004b7b4] __report_bad_irq+0x34/0xb8
+[c0327cd0] [c004b9f0] note_interrupt+0x1b8/0x224
+[c0327d00] [c004c9a8] handle_level_irq+0xa8/0x124
+[c0327d10] [c0004de8] do_IRQ+0x98/0xb4
+[c0327d30] [c000e788] ret_from_except+0x0/0x14
+[c0327df0] [00009032] 0x9032
+[c0327e30] [c0004b38] do_softirq+0x58/0x5c
+[c0327e40] [c0023d90] irq_exit+0x98/0x9c
+[c0327e50] [c0004dec] do_IRQ+0x9c/0xb4
+[c0327e70] [c000e788] ret_from_except+0x0/0x14
+[c0327f30] [c00440ac] tick_nohz_stop_sched_tick+0x404/0x4d0
+[c0327f90] [c0007ac8] cpu_idle+0x50/0xe8
+[c0327fb0] [c0002930] rest_init+0x5c/0x6c
+[c0327fc0] [c02f088c] start_kernel+0x240/0x2c4
+[c0327ff0] [c000222c] start_here+0x4c/0xb0
+handlers:
+[<c0193bc4>] (ata_sff_interrupt+0x0/0x208)
+Disabling IRQ #26
+IP-Config: Complete:
+     device=eth0, addr=192.168.120.4, mask=255.255.0.0, gw=192.168.1.254,
+     host=kup4k, domain=, nis-domain=(none),
+     bootserver=192.168.1.1, rootserver=192.168.1.1, rootpath=
+ata2.00: CFA: TOSHIBA THNCF032MBA, 2.00, max PIO2
+ata2.00: 63488 sectors, multi 0: LBA
+ata2.00: configured for PIO2
+ata2.00: configured for PIO2
+ata2: EH complete
+scsi 1:0:0:0: Direct-Access     ATA      TOSHIBA THNCF032 2.00 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sdb] 63488 512-byte logical blocks: (32.5 MB/31.0 MiB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1
+sd 1:0:0:0: [sdb] Attached SCSI removable disk
+Looking up port of RPC 100003/2 on 192.168.1.1
+[...]
 
+-bash-3.2# cat /proc/interrupts
+           CPU0
+ 17:          0   CPM PIC          Level        error
+ 18:          0   MPC8XX SIU       Level        tbint
+ 19:         59   CPM PIC          Level        cpm_uart
+ 21:          4   CPM PIC          Level        mpc8xxx_spi
+ 22:          0   MPC8XX SIU       Edge         ads7846
+ 23:      19950   MPC8XX SIU       Level        fs_enet-mac
+ 24:          0   MPC8XX SIU       Level        m8xx-pcmcia
+ 25:          9   MPC8XX SIU       Level        pata_pcmcia
+ 26:     100000   MPC8XX SIU       Level        pata_pcmcia
+ 27:         55   CPM PIC          Level        cpm_i2c
+LOC:      15403   Local timer interrupts
+SPU:          0   Spurious interrupts
+CNT:          0   Performance monitoring interrupts
+MCE:          0   Machine check exceptions
+-bash-3.2#
+
+I found out, that this card raise an irq when
+ata_dev_read_id() is called, and because
+ata_dev_read_id() sets the ATA_TFLAG_POLLING flag,
+the irq don;t get acked in ata_sff_interrupt()
+(So the irq comes endless (100000 times before it
+ get disabled))
+
+... so I tried the following patch (I think this
+is not the right fix for it, but ...):
+
+ drivers/ata/libata-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 49cffb6..6cad1e9 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2132,7 +2132,7 @@ retry:
+ 	/* Device presence detection is unreliable on some
+ 	 * controllers.  Always poll IDENTIFY if available.
+ 	 */
+-	tf.flags |= ATA_TFLAG_POLLING;
++//	tf.flags |= ATA_TFLAG_POLLING;
+
+ 	if (ap->ops->read_id)
+ 		err_mask = ap->ops->read_id(dev, &tf, id);
+
+... it works:
+
+pcmcia_socket pcmcia_socket0: pccard: PCMCIA card inserted into slot 0
+pcmcia 0.0: pcmcia: registering new device pcmcia0.0
+scsi0 : pata_pcmcia
+ata1: PATA max PIO4 cmd 0x0 ctl 0xe irq 25
+ata1.00: CFA: TOSHIBA THNCF512MDG, 3.00, max MWDMA2
+ata1.00: 1000944 sectors, multi 1: LBA
+ata1.00: configured for PIO4
+ata1.00: configured for PIO4
+ata1: EH complete
+isa bounce pool size: 16 pages
+scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA THNCF512 3.00 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 1000944 512-byte logical blocks: (512 MB/488 MiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
+pcmcia 1.0: pcmcia: registering new device pcmcia1.0
+scsi1 : pata_pcmcia
+ata2: PATA max PIO4 cmd 0x10 ctl 0x1e irq 26
+ata2.00: CFA: TOSHIBA THNCF032MBA, 2.00, max PIO2
+ata2.00: 63488 sectors, multi 0: LBA
+ata2.00: configured for PIO2
+ata2.00: configured for PIO2
+ata2: EH complete
+scsi 1:0:0:0: Direct-Access     ATA      TOSHIBA THNCF032 2.00 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sdb] 63488 512-byte logical blocks: (32.5 MB/31.0 MiB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1
+sd 1:0:0:0: [sdb] Attached SCSI removable disk
+IP-Config: Complete:
+[...]
+cat /-bash-3.2# cat /proc/interrupts
+           CPU0
+ 17:          0   CPM PIC          Level        error
+ 18:          0   MPC8XX SIU       Level        tbint
+ 19:         28   CPM PIC          Level        cpm_uart
+ 21:          4   CPM PIC          Level        mpc8xxx_spi
+ 22:          0   MPC8XX SIU       Edge         ads7846
+ 23:      20083   MPC8XX SIU       Level        fs_enet-mac
+ 24:          0   MPC8XX SIU       Level        m8xx-pcmcia
+ 25:         14   MPC8XX SIU       Level        pata_pcmcia
+ 26:         14   MPC8XX SIU       Level        pata_pcmcia
+ 27:        473   CPM PIC          Level        cpm_i2c
+LOC:       7413   Local timer interrupts
+SPU:          0   Spurious interrupts
+CNT:          0   Performance monitoring interrupts
+MCE:          0   Machine check exceptions
+-bash-3.2#
+
+I mounted a FAT fs on this (buggy?) CF card, also did
+some stress tests with reading/writing the whole card,
+all worked fine with this patch ... (again, all other
+cf cards I have, work fine without this patch)
+
+Do you have an idea for that behaviour? (Or better an idea,
+where to fix it right?)
+
+thanks!
+
+bye
+Heiko
 -- 
-Thomas Fjellstrom
-tfjellstrom@strangesoft.net
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
