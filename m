@@ -1,90 +1,63 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Mon, 31 May 2010 16:22:00 +0200
-Message-ID: <4C03C608.1040600@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] sata_via: magic vt6421 fix for transmission
+ problems w/ WD drives
+Date: Mon, 31 May 2010 16:26:48 +0200
+Message-ID: <4C03C728.9080107@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.154]:12271 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754912Ab0EaOWE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 May 2010 10:22:04 -0400
+Received: from hera.kernel.org ([140.211.167.34]:44698 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755158Ab0EaO1A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 May 2010 10:27:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dzickus@redhat.com
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, JosephChan@via.com.tw
+Cc: sjorrit@gmail.com, stable@kernel.org
 
-Hi,
+vt6421 has problems talking to recent WD drives.  It causes a lot of
+transmission errors while high bandwidth transfer as reported in the
+following bugzilla entry.
 
-with -next I get the following errors while trying to hibernate in
-qemu-kvm after the image is stored on disk:
-sd 0:0:0:0: [sda] Starting disk
-sd 0:0:1:0: [sdb] Starting disk
-e1000: eth0 NIC Link is Up 1000 Mbps Full Duplex, Flow Control: RX
-ata1.00: configured for MWDMA2
-ata1.01: configured for MWDMA2
-PM: thaw of devices complete after 168.017 msecs
-ata2.01: qc timeout (cmd 0xec)
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-sd 0:0:1:0: [sdb] Stopping disk
-sd 0:0:0:0: [sda] Stopping disk
-uhci_hcd 0000:00:01.2: PCI INT D disabled
-e1000 0000:00:03.0: PCI INT A disabled
-ata2.01: qc timeout (cmd 0xec)
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-ata2.01: qc timeout (cmd 0xec)
-ata2.01: failed to IDENTIFY (I/O error, err_mask=0x4)
-...
+  https://bugzilla.kernel.org/show_bug.cgi?id=15173
 
-I bisected it down to:
-commit 58687acba59266735adb8ccd9b5b9aa2c7cd205b
-Author: Don Zickus <dzickus@redhat.com>
-Date:   Fri May 7 17:11:44 2010 -0400
+Joseph Chan provided the following fix.  I don't have any idea what it
+does but I can verify the issue is gone with the patch applied.
 
-    lockup_detector: Combine nmi_watchdog and softlockup detector
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Originally-from: Joseph Chan <JosephChan@via.com.tw>
+Reported-by: Jorrit Tijben <sjorrit@gmail.com>
+Cc: stable@kernel.org
+---
+Joseph, can you please add some documentation of what it does and why?
 
-    The new nmi_watchdog (which uses the perf event subsystem) is very
-    similar in structure to the softlockup detector.  Using Ingo's
-    suggestion, I combined the two functionalities into one file:
-    kernel/watchdog.c.
-...
+Thanks.
 
+ drivers/ata/sata_via.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 101d8c2..0ecd0f6 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -575,6 +575,19 @@ static void svia_configure(struct pci_dev *pdev)
+ 		tmp8 |= NATIVE_MODE_ALL;
+ 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
+ 	}
++
++	/*
++	 * vt6421 has problems talking to some drives.  The following
++	 * is the magic fix from Joseph Chan <JosephChan@via.com.tw>.
++	 * Please add proper documentation if possible.
++	 *
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=15173
++	 */
++	if (pdev->device == 0x3249) {
++		pci_read_config_byte(pdev, 0x52, &tmp8);
++		tmp8 |= 1 << 2;
++		pci_write_config_byte(pdev, 0x52, tmp8);
++	}
+ }
 
-The config difference against 58687acb^:
---- .config.old     2010-05-31 16:01:51.727312636 +0200
-+++ .config 2010-05-31 16:11:08.682136175 +0200
-@@ -1,7 +1,7 @@
- #
- # Automatically generated make config: don't edit
- # Linux kernel version: 2.6.34-rc7
--# Mon May 31 16:01:51 2010
-+# Mon May 31 16:11:08 2010
- #
- CONFIG_64BIT=y
- # CONFIG_X86_32 is not set
-@@ -2133,7 +2133,7 @@
- CONFIG_DEBUG_KERNEL=y
- CONFIG_DEBUG_SHIRQ=y
- CONFIG_DETECT_SOFTLOCKUP=y
--CONFIG_NMI_WATCHDOG=y
-+CONFIG_LOCKUP_DETECTOR=y
- # CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC is not set
- CONFIG_BOOTPARAM_SOFTLOCKUP_PANIC_VALUE=0
- CONFIG_DETECT_HUNG_TASK=y
-
-
-
-
-'nowatchdog' parameter helps.
-
-$ grep PERF .config
-CONFIG_HAVE_PERF_EVENTS=y
-CONFIG_PERF_EVENTS=y
-# CONFIG_PERF_COUNTERS is not set
-# CONFIG_DEBUG_PERF_USE_VMALLOC is not set
-CONFIG_HAVE_PERF_EVENTS_NMI=y
-
--- 
-js
+ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
