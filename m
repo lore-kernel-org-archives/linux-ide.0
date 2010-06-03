@@ -1,128 +1,126 @@
-From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
-Subject: Re: failed command FLUSH CACHE EXT (was: Re: via 8237 sata errors)
-Date: Wed, 2 Jun 2010 17:42:31 -0600
-Message-ID: <201006021742.32232.tfjellstrom@strangesoft.net>
-References: <201005292046.06344.tfjellstrom@strangesoft.net> <201006021510.52463.tfjellstrom@strangesoft.net> <AANLkTingFbJAr9z0AzRJCV23FGVS-UAvIKCr5ULQJawt@mail.gmail.com>
+From: Kukjin Kim <kgene.kim@samsung.com>
+Subject: RE: [PATCH 4/4] pata_samsung: Add Samsung PATA controller driver
+Date: Thu, 03 Jun 2010 09:25:24 +0900
+Message-ID: <002101cb02b3$44d40be0$ce7c23a0$%kim@samsung.com>
+References: <1274948524-2970-1-git-send-email-kgene.kim@samsung.com>
+ <1274948524-2970-5-git-send-email-kgene.kim@samsung.com>
+ <4BFE46C4.5030007@mvista.com>
+ <002a01cb01fd$4cf10a50$e6d31ef0$%kim@samsung.com>
+ <4C0629B7.4060300@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from troy.hostgo.com ([64.62.143.130]:43292 "EHLO troy.hostgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754989Ab0FBXmg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Jun 2010 19:42:36 -0400
-In-Reply-To: <AANLkTingFbJAr9z0AzRJCV23FGVS-UAvIKCr5ULQJawt@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-reply-to: <4C0629B7.4060300@ru.mvista.com>
+Content-language: ko
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: 'Sergei Shtylyov' <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, 'Abhilash Kesavan' <a.kesavan@samsung.com>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On June 2, 2010, Robert Hancock wrote:
-> On Wed, Jun 2, 2010 at 3:10 PM, Thomas Fjellstrom
+Sergei Shtylyov wrote:
 > 
-> <tfjellstrom@strangesoft.net> wrote:
-> > Ok, more testing, I've moved the drives over to the p35 machine semi-
-> > permanently, and after a day or so of uptime I got some new errors:
-> > 
-> > ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> > ata3.00: failed command: FLUSH CACHE EXT
-> > ata3.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-> >         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> > ata3.00: status: { DRDY }
-> > ata3: hard resetting link
-> > ata3: link is slow to respond, please be patient (ready=0)
-> > ata3: SRST failed (errno=-16)
-> > ata3: hard resetting link
-> > ata3: link is slow to respond, please be patient (ready=0)
-> > ata3: SRST failed (errno=-16)
-> > ata3: hard resetting link
-> > ata3: link is slow to respond, please be patient (ready=0)
-> > ata3: SRST failed (errno=-16)
-> > ata3: limiting SATA link speed to 1.5 Gbps
-> > ata3: hard resetting link
-> > ata3: SRST failed (errno=-16)
-> > ata3: reset failed, giving up
-> > ata3.00: disabled
-> > ata3.00: device reported invalid CHS sector 0
-> > ata3: EH complete
-> > end_request: I/O error, dev sdc, sector 0
-> > sd 2:0:0:0: [sdc] Unhandled error code
-> > sd 2:0:0:0: [sdc] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> > sd 2:0:0:0: [sdc] CDB: Write(10): 2a 00 00 00 07 a7 00 00 08 00
-> > end_request: I/O error, dev sdc, sector 1959
-> > Buffer I/O error on device dm-0, logical block 189
-> > lost page write due to I/O error on dm-0
-> > end_request: I/O error, dev sdc, sector 0
-> > end_request: I/O error, dev sdc, sector 0
-> > JBD2 unexpected failure: do_get_write_access:
-> > buffer_uptodate(jh2bh(jh)); Possible IO failure.
-> > 
-> > end_request: I/O error, dev sdc, sector 0
-> > end_request: I/O error, dev sdc, sector 0
-> > ------------[ cut here ]------------
-> > WARNING: at /home/damentz/src/zen/main/linux-
-> > liquorix-2.6-2.6.34/debian/build/source_amd64_none/fs/buffer.c:1199
-> > mark_buffer_dirty+0x74/0x90()
-> > Hardware name: P5K SE
-> > Modules linked in: nfs lockd fscache nfs_acl auth_rpcgss sunrpc ipv6
-> > acpi_cpufreq cpufreq_ondemand freq_table cpufreq_conservative
-> > cpufreq_userspace cpufreq_powersave af_packet ext3 jbd loop
-> > snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm_oss
-> > snd_mixer_oss snd_pcm rtc_cmos rtc_core snd_timer tpm_tis nvidia(P) tpm
-> > rtc_lib tpm_bios evdev snd intel_agp pcspkr asus_atk0110 soundcore
-> > i2c_i801 snd_page_alloc button i2c_core processor dm_mod raid10
-> > raid456 async_raid6_recov async_pq raid6_pq async_xor xor async_memcpy
-> > async_tx raid1 raid0 multipath linear md_mod ext4 mbcache jbd2 crc16
-> > usbhid sd_mod ata_generic pata_acpi uhci_hcd ata_piix libata floppy
-> > scsi_mod thermal atl1 mii ehci_hcd [last unloaded: scsi_wait_scan]
-> > Pid: 3283, comm: jbd2/dm-0-8 Tainted: P          
-> > 2.6.34-0.dmz.8-liquorix- amd64 #1
-> > Call Trace:
-> >  [<ffffffff8103bf23>] ? warn_slowpath_common+0x73/0xb0
-> >  [<ffffffff81101cd4>] ? mark_buffer_dirty+0x74/0x90
-> >  [<ffffffffa005a3c9>] ? __jbd2_journal_unfile_buffer+0x9/0x20 [jbd2]
-> >  [<ffffffffa005d8a3>] ? jbd2_journal_commit_transaction+0xba3/0x12d0
-> > [jbd2] [<ffffffff810542d0>] ? autoremove_wake_function+0x0/0x30
-> >  [<ffffffffa0061701>] ? kjournald2+0xb1/0x210 [jbd2]
-> >  [<ffffffff810542d0>] ? autoremove_wake_function+0x0/0x30
-> >  [<ffffffffa0061650>] ? kjournald2+0x0/0x210 [jbd2]
-> >  [<ffffffff81053e3e>] ? kthread+0x8e/0xa0
-> >  [<ffffffff81033e8d>] ? schedule_tail+0x4d/0xf0
-> >  [<ffffffff81003c94>] ? kernel_thread_helper+0x4/0x10
-> >  [<ffffffff81053db0>] ? kthread+0x0/0xa0
-> >  [<ffffffff81003c90>] ? kernel_thread_helper+0x0/0x10
-> > ---[ end trace c90e4c710c9ef513 ]---
-> > end_request: I/O error, dev sdc, sector 0
-> > 
-> > (and plenty more dmesg lines from lvm and ext4/jbd2 screaming about the
-> > io commands failing)
-> > 
-> > I take it that this means the drive is likely pooched? I'm going to try
-> > some more tests, and make sure both of the WD drives are on their own
-> > power cable first. but I'm betting now that the drive is just failing.
-> > This would make 2 out of 4 in the same batch that had issues. The
-> > first one would increase the sector reallocated count 4 every hour or
-> > so. Now this one fails a flush cache command (and other spurious
-> > errors).
-> > 
-> > I guess its time to break out the WD diagnostics disk.
+> Hello.
+
+Hi ;-)
+
+> Kukjin Kim wrote:
 > 
-> I think it's a fairly safe assumption there's something wrong with the
-> drive - it looks like the drive just pretty much stopped talking..
+> >>> From: Abhilash Kesavan <a.kesavan@samsung.com>
+> >>> Adds support for the Samsung PATA controller. This driver is based on
+the
+> >>> Libata subsystem and references the earlier patches sent for IDE
+subsystem.
+> 
+>     Where I those I wonder? :-)
+>     It's a pity they didn't get accepted.
+> 
+Was told that that only new libata based drivers would be accepted.
 
-I've only managed to see that error once though. The last few times I've 
-booted that machine I get the same old DMA error messages I posted before.
+> >>> Signed-off-by: Abhilash Kesavan <a.kesavan@samsung.com>
+> >>> Signed-off-by: Kukjin Kim <kgene.kim@samsung.com>
+> 
+> [...]
+> 
+> >>> +		for (i = 0; i < words; i++, temp_addr++) {
+> >>> +			wait_for_host_ready(info);
+> >>> +			writel(*temp_addr, data_addr);
+> >>> +		}
+> >>> +	}
+> 
+> >>     Well, if this is pere CF case, 'buflen' can't be odd, but otherwise
+> 
+>     I meant to type "pure". :-)
+> 
+considering CF in true-ide mode..should I still add the check?
 
-Unfortunately I haven't been able to run the WD Diagnostics thing on it so 
-far, it either takes an age to load, or hangs at the screen prior to the 
-license screen.
+> >> you should handle that case...
+> 
+> >>> +	uint pio_teoc[5] = { 240, 43, 10, 70, 25 };
+> 
+> >>     What timing is this? :-O
+> 
+> > Should have been t2i rec.
+> 
+>     If it's t2i timing, it is incorrect for the first 3 PIO modes.
+> 
+Should have been (240, 93, 40, 70, 25)
 
-I seem to have rather bad luck with hard drives. Every time I buy more than 
-two, I tend to get one or two failures out of the batch. 25-50% failure rate 
-almost. Horrible. I at least average 1 dead hard drive a year since I got my 
-first computer.
+> >>> +	if (cpu_type == TYPE_S3C6400) {
+> >>> +		ap->ops = &pata_s3c_port_ops;
+> >>> +		info->sfr_addr = info->ide_addr + 0x1800;
+> >>> +		info->ide_addr = info->ide_addr + 0x1900;
+> >>> +		info->fifo_status_reg = 0x94;
+> >>> +	} else if (cpu_type == TYPE_S5PC100) {
+> >>> +		ap->ops = &pata_s5p_port_ops;
+> >>> +		info->sfr_addr = info->ide_addr + 0x1800;
+> >>> +		info->ide_addr = info->ide_addr + 0x1900;
+> 
+> >>     Does make sense to assign those before *if*.
+> 
+> > Offsets not required for S5PV210/S5PC110.
+> 
+>     pata_s3c_tune_chipset() certainly requires them.
+> 
+yes..but for V210/C110 just the ioremapped info->ide_addr with 0 offset is
+enough.
 
--- 
-Thomas Fjellstrom
-tfjellstrom@strangesoft.net
+> >>> +		info->fifo_status_reg = 0x84;
+> >>> +	} else {
+> >>> +		ap->ops = &pata_s5p_port_ops;
+> 
+> >>     You don't assign 'info->ide_addr' here but you'll need it in
+> >> pata_s3c_tune_chipset() which will be called thru pata_s5p_port_ops!
+> 
+> > The address received at ioremap() is enough for S5PV210/S5PC110..no
+offset
+> > needed.
+> 
+>     I only have to restate that pata_s3c_tune_chipset() does use
+> 'info->ide_addr'. Maybe you shouldn't install this method for
+S5PV210/S5PC110?
+> Or do you mean thgat offset of 0 will work?
+> 
+V210/C110 requires 0 offset as compared to 6410 and C100 which require
+0x1800.
+
+> >>> +release_mem:
+> >>> +	release_mem_region(res->start, res->end - res->start + 1);
+> 
+> >>     But you didn't call request_mem_region()!
+> 
+> > I didn't..will remove.
+> 
+>     But you should call request_mem_region() in one or another form...
+> 
+OK..will request mem_region() before ioremap()..and then the release_mem's
+should be fine.
+
+
+Thanks.
+
+Best regards,
+Kgene.
+--
+Kukjin Kim <kgene.kim@samsung.com>, Senior Engineer,
+SW Solution Development Team, Samsung Electronics Co., Ltd.
