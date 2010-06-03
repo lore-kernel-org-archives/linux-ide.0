@@ -1,47 +1,44 @@
-From: <JosephChan@via.com.tw>
-Subject: RE: [PATCH #upstream-fixes] sata_via: magic vt6421 fix for transmission problems w/ WD drives
-Date: Thu, 3 Jun 2010 09:49:25 +0800
-Message-ID: <8E87DAC797201C4C964A55F98A0E3F02031330@exchtp03.taipei.via.com.tw>
-References: <4C03C728.9080107@kernel.org> <4C069A0B.6030504@garzik.org>
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: Hang during boot, bisected to commit 96d60303fd
+Date: Thu, 3 Jun 2010 03:00:06 +0100
+Message-ID: <20100603020006.GB19123@srcf.ucam.org>
+References: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exchtp08.via.com.tw ([61.66.243.7]:31242 "EHLO
-	exchtp08.via.com.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932590Ab0FCBtb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jun 2010 21:49:31 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4C069A0B.6030504@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Marc Dionne <marc.c.dionne@gmail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, garzik@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, sjorrit@gmail.com, stable@kernel.org
 
-U29ycnkgZm9yIHRoZSBkZWxheSB0byByZXNwb25kLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
-LS0tLQ0KRnJvbTogSmVmZiBHYXJ6aWsgW21haWx0bzpqZ3BvYm94QGdtYWlsLmNvbV0gT24gQmVo
-YWxmIE9mIEplZmYgR2FyemlrDQoNCj4gICAgaHR0cHM6Ly9idWd6aWxsYS5rZXJuZWwub3JnL3No
-b3dfYnVnLmNnaT9pZD0xNTE3Mw0KPg0KPiBKb3NlcGggQ2hhbiBwcm92aWRlZCB0aGUgZm9sbG93
-aW5nIGZpeC4gIEkgZG9uJ3QgaGF2ZSBhbnkgaWRlYSB3aGF0IGl0IA0KPiBkb2VzIGJ1dCBJIGNh
-biB2ZXJpZnkgdGhlIGlzc3VlIGlzIGdvbmUgd2l0aCB0aGUgcGF0Y2ggYXBwbGllZC4NCg0KQWZ0
-ZXIgYW5hbHlzaXMsIHdlIGZvdW5kIHdoZW4gaG9zdCBpc3N1ZWQgSE9MRCwgZGV2aWNlIHN0aWxs
-IHNlbmQgc29tZSBleHRyYSBEVyBkYXRhIGJlZm9yZSBpdCBpc3N1ZXMgSE9MREEuIEFjY29yZGlu
-ZyBTUEVDLCBkZXZpY2UgY2FuIHNlbmQgZGF0YSBvdXQgdXAgdG8gMjBEVy4NCklmIHRoZSBob3N0
-IGlzc3VlIEhPTEQgYW5kIHRoZW4gdGhlIEZJRk8gaXMgZnVsbCwgaG9zdCB3aWxsIGlzc3VlIFJf
-RVJSIGZvciBkZXZpY2UgdG8gbm90aWNlIGRhdGEgY2FuJ3QgYmUgcmVjZWl2ZWQuIEZvciBzb21l
-IGRldmljZSwgaXQgd2lsbCBlbnRlciAzRy8xLjVHIHByb3RvY29sIGhhbmQtc2hha2UgZnJvbSAz
-RyBwcm90b2NvbC4gDQpBY2NvcmRpbmcgb3VyIEZJRk8gZGVmYXVsdCB2YWx1ZSBmb3IgdHdvIFdE
-QyBIRERzLCBpdCB3aWxsIGVuY291bnRlciBtYW55IHRpbWUgRklGTyBmdWxsIGNhc2UgZHVyaW5n
-IERNQSBSZWFkIGJlY2F1c2UgdGhlc2UgdHdvIFdEQyBkZXZpY2VzIHdpbGwgaXNzdWVzIDIwRFcg
-KjIgPTQwRFcgYW5kIHRoZSBob3N0IHdpbGwgYmUgdHJpZ2dlZCB0byBpc3N1ZSBSX0VSUiB0byBk
-ZXZpY2UgaWYgdGhlIEhvc3Qgc2lkZSBjb21wdXRlciBjb25zdW1lcyBkYXRhIGxvd2VyIHRoYW4g
-dGhlIGNvbWluZyBETUEgcmVhZCBkYXRhIGZyb20gZGV2aWNlLg0KDQpSeDUyWzJdIGlzIHRoZSBJ
-bnRlcm5hbCAxMjhEVyBGSUZPIEZsb3cgY29udHJvbCB3YXRlci1tYXJrIGFkanVzdGluZyBtZWNo
-YW5pc20gZW5hYmxlIGJpdCBvZiBWVDY0MjEgYW5kIHRoZSBkZWZhdWx0IHZhbHVlIGlzIDAgdG8g
-bWVhbiBob3N0IHdpbGwgaXNzdWUgSE9MRCB0byBkZXZpY2Ugd2hlbiB0aGUgbGVhdmVkIEZJRk8g
-c2l6ZSBpcyBhbHdheXMgc2V0IGFzIDMyRFcuIFNvLCB3ZSBzZXQgdGhlIFJ4NTJbMl0gdG8gMSB0
-byBlbmFibGUgRklGTyB3YXRlci1tYXJrIGFkanVzdGluZyBtZWNoYW5pc20gYW5kIHRoZW4gYWRq
-dXN0IG91ciBsZWF2ZWQgRklGTyBzaXplIGZyb20gMzIgRFcgdG8gNjQgRFcgKDEyOCoxLzIpIHRo
-cm91Z2ggUlg0MyBGSUZPIHdhdGVyLW1hcmsgRklGTyBzaXplIGNvbnRyb2wgcmVnaXN0ZXJzLg0K
-DQoNCg==
+On Wed, Jun 02, 2010 at 09:49:27PM -0400, Marc Dionne wrote:
+>    Since somewhere early in the 2.6.35 merge window I've been seeing a hang
+>    during boot.  The hang last roughly 30 seconds and is followed by this:
+> 
+>    ata4.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+>    ata4.00: failed command: READ FPDMA QUEUED
+>    ata4.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+>             res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>    ata4.00: status: { DRDY }
+>    ata4: hard resetting link
+>    ahci_is_device_present: status is: 80
+>    ahci_is_device_present: status(2) is: 3
+>    ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>    ata4.00: configured for UDMA/133
+>    ata4.00: device reported invalid CHS sector 0
+>    ata4: EH complete
+> 
+>    The system works normally once booted.  I had some time to do a bisect
+>    today and it cleanly ended up pointing to this commit:
+>        96d60303fd: ahci: Turn off DMA engines when there's no device attached
+> 
+>    Reverting the commit makes the system boot cleanly as before.  System has
+>    an Intel ICH10 based board, in AHCI mode, disk is an Intel X25M SSD.
+
+Hm, interesting. Jeff, any immediate ideas? I don't see this behaviour 
+on my ICH10. Is there actually a device on ata4?
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
