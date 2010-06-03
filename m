@@ -1,37 +1,64 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
 Subject: Re: failed command FLUSH CACHE EXT
-Date: Thu, 03 Jun 2010 10:23:06 +0200
-Message-ID: <4C07666A.7000705@gmail.com>
-References: <201005292046.06344.tfjellstrom@strangesoft.net> <201006021510.52463.tfjellstrom@strangesoft.net> <AANLkTingFbJAr9z0AzRJCV23FGVS-UAvIKCr5ULQJawt@mail.gmail.com> <201006021742.32232.tfjellstrom@strangesoft.net>
+Date: Thu, 3 Jun 2010 02:41:10 -0600
+Message-ID: <201006030241.11102.tfjellstrom@strangesoft.net>
+References: <201005292046.06344.tfjellstrom@strangesoft.net> <201006021742.32232.tfjellstrom@strangesoft.net> <4C07666A.7000705@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40752 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756569Ab0FCIXM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jun 2010 04:23:12 -0400
-In-Reply-To: <201006021742.32232.tfjellstrom@strangesoft.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C07666A.7000705@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
 Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On June 3, 2010, Tejun Heo wrote:
+> Hello,
+> 
+> On 06/03/2010 01:42 AM, Thomas Fjellstrom wrote:
+> > I seem to have rather bad luck with hard drives. Every time I buy more
+> > than two, I tend to get one or two failures out of the batch. 25-50%
+> > failure rate almost. Horrible. I at least average 1 dead hard drive a
+> > year since I got my first computer.
+> 
+> Hmmm... that sounds really high.  Out of how many?  Hard drives do
+> fail sometimes but not that easily even if you put it under relatively
+> heavy use 24/7.  Maybe there is a common cause - say, instable power,
+> vibration, impact or whatever?  Or maybe the universe just doesn't
+> like you?  :-)
+> 
+> Thanks.
 
-On 06/03/2010 01:42 AM, Thomas Fjellstrom wrote:
-> I seem to have rather bad luck with hard drives. Every time I buy more than 
-> two, I tend to get one or two failures out of the batch. 25-50% failure rate 
-> almost. Horrible. I at least average 1 dead hard drive a year since I got my 
-> first computer.
+I think its a combination of factors. But mainly, early on I was cheap. UBER 
+cheap, nor did I know that a power supply is probably the /most/ important 
+component in a machine. If it helps I've also had many motherboards, tons of 
+ram, and some misc other parts fail over the years as well, but I've 
+probably gone through more hard drives than anything else.
 
-Hmmm... that sounds really high.  Out of how many?  Hard drives do
-fail sometimes but not that easily even if you put it under relatively
-heavy use 24/7.  Maybe there is a common cause - say, instable power,
-vibration, impact or whatever?  Or maybe the universe just doesn't
-like you?  :-)
+Let me see if I can count all of them... 
 
-Thanks.
+1x6G   - failed
+1x40G  - failed
+4x80G  - 2 failed (PSU kill)
+2x160G - 1 failed (used drives anyhow, don't really count)
+4x320G - 2 failed (DOA, well after a week each)
+4x640G - 1-2 failed (can't really remember the circumstances with these...)
+6x1T   - 1 failed (DOA)
+4x2T   - 2 failed (1 DOA, 1 after a year)
+
+So about half.
+
+I mostly blame my cheapness when I was younger. Bad PSU's can cause a lot of 
+problems. I've since stopped buying and using cheap power supplies. And it 
+has so far made a difference in death count. If I skip the DOA drives, only 
+one 1TB, 1 2TB and 1 640 failed. Thats far better than a 50% mortality rate.
+
+That list may not be entirely accurate, it spans over 10 years of hd use. I 
+can barely remember what I did the day before, let alone the details of 
+things that happened 10 years ago.
 
 -- 
-tejun
+Thomas Fjellstrom
+tfjellstrom@strangesoft.net
