@@ -1,34 +1,35 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Thu, 03 Jun 2010 10:17:37 +0200
-Message-ID: <4C076521.8050108@gmail.com>
-References: <4C03C608.1040600@gmail.com> <20100601135004.GP15159@redhat.com> <4C051D44.7040203@gmail.com> <20100602184459.GA15159@redhat.com> <20100602191336.GA5164@nowhere> <20100602194336.GB5164@nowhere>
+Subject: Re: failed command FLUSH CACHE EXT
+Date: Thu, 03 Jun 2010 10:23:06 +0200
+Message-ID: <4C07666A.7000705@gmail.com>
+References: <201005292046.06344.tfjellstrom@strangesoft.net> <201006021510.52463.tfjellstrom@strangesoft.net> <AANLkTingFbJAr9z0AzRJCV23FGVS-UAvIKCr5ULQJawt@mail.gmail.com> <201006021742.32232.tfjellstrom@strangesoft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48483 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752988Ab0FCIRo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jun 2010 04:17:44 -0400
-In-Reply-To: <20100602194336.GB5164@nowhere>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40752 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756569Ab0FCIXM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jun 2010 04:23:12 -0400
+In-Reply-To: <201006021742.32232.tfjellstrom@strangesoft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Don Zickus <dzickus@redhat.com>, Jeff Garzik <jgarzik@pobox.com>, Jiri Slaby <jirislaby@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
+To: Thomas Fjellstrom <tfjellstrom@strangesoft.net>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
 Hello,
 
-On 06/02/2010 09:43 PM, Frederic Weisbecker wrote:
-> But I'm eventually surprised about this: stopping the cpu hotplug callbacks
-> prevents some ATA resume callbacks to execute.
-> 
-> Does that mean some ata resume path are done from a cpu hotplug notifier?
-> That looks weird.
+On 06/03/2010 01:42 AM, Thomas Fjellstrom wrote:
+> I seem to have rather bad luck with hard drives. Every time I buy more than 
+> two, I tend to get one or two failures out of the batch. 25-50% failure rate 
+> almost. Horrible. I at least average 1 dead hard drive a year since I got my 
+> first computer.
 
-libata itself doesn't use any cpu hotplug notifier.  It just uses
-suspend and resume callbacks.  It looks like somehow IRQ delivery is
-screwed up?
+Hmmm... that sounds really high.  Out of how many?  Hard drives do
+fail sometimes but not that easily even if you put it under relatively
+heavy use 24/7.  Maybe there is a common cause - say, instable power,
+vibration, impact or whatever?  Or maybe the universe just doesn't
+like you?  :-)
 
 Thanks.
 
