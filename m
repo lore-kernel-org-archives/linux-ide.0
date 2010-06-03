@@ -1,56 +1,71 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] sata_via: explain the magic fix
-Date: Thu, 03 Jun 2010 11:35:03 +0200
-Message-ID: <4C077747.4050006@kernel.org>
+Subject: [PATCH #upstream-fixes] ahci: add pci quirk for JMB362
+Date: Thu, 03 Jun 2010 11:57:04 +0200
+Message-ID: <4C077C70.4030500@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55542 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933332Ab0FCJfP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Jun 2010 05:35:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-pci@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>, Aries Lee <arieslee@jmicron>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>
 
-Add Joseph Chan's explanation of the problem and workaround to the
-VT6421 magic fix.
+JMB362 is a new variant of jmicron controller which is similar to
+JMB360 but has two SATA ports instead of one.  As there is no PATA
+port, single function AHCI mode can be used as in JMB360.  Add pci
+quirk for JMB362.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Joseph Chan <JosephChan@via.com.tw>
+Reported-by: Aries Lee <arieslee@jmicron.com>
+Cc: stable@kernel.org
 ---
- drivers/ata/sata_via.c |   18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+Although this is a pci quirk, I think it's better routed thorugh
+libata tree but either way it's a pretty trivial patch.
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 0ecd0f6..4730c42 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -578,10 +578,24 @@ static void svia_configure(struct pci_dev *pdev)
+Thanks.
 
- 	/*
- 	 * vt6421 has problems talking to some drives.  The following
--	 * is the magic fix from Joseph Chan <JosephChan@via.com.tw>.
--	 * Please add proper documentation if possible.
-+	 * is the fix from Joseph Chan <JosephChan@via.com.tw>.
-+	 *
-+	 * When host issues HOLD, device may send up to 20DW of data
-+	 * before acknowledging it with HOLDA and the host should be
-+	 * able to buffer them in FIFO.  Unfortunately, some WD drives
-+	 * send upto 40DW before acknowledging HOLD and, in the
-+	 * default configuration, this ends up overflowing vt6421's
-+	 * FIFO, making the controller abort the transaction with
-+	 * R_ERR.
-+	 *
-+	 * Rx52[2] is the internal 128DW FIFO Flow control watermark
-+	 * adjusting mechanism enable bit and the default value 0
-+	 * means host will issue HOLD to device when the left FIFO
-+	 * size goes below 32DW.  Setting it to 1 makes the watermark
-+	 * 64DW.
- 	 *
- 	 * https://bugzilla.kernel.org/show_bug.cgi?id=15173
-+	 * http://article.gmane.org/gmane.linux.ide/46352
- 	 */
- 	if (pdev->device == 0x3249) {
- 		pci_read_config_byte(pdev, 0x52, &tmp8);
+ drivers/pci/quirks.c    |    5 ++++-
+ include/linux/pci_ids.h |    1 +
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b7512cf..477345d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -1457,7 +1457,8 @@ static void quirk_jmicron_ata(struct pci_dev *pdev)
+ 	conf5 &= ~(1 << 24);  /* Clear bit 24 */
+
+ 	switch (pdev->device) {
+-	case PCI_DEVICE_ID_JMICRON_JMB360:
++	case PCI_DEVICE_ID_JMICRON_JMB360: /* SATA single port */
++	case PCI_DEVICE_ID_JMICRON_JMB362: /* SATA dual ports */
+ 		/* The controller should be in single function ahci mode */
+ 		conf1 |= 0x0002A100; /* Set 8, 13, 15, 17 */
+ 		break;
+@@ -1493,12 +1494,14 @@ static void quirk_jmicron_ata(struct pci_dev *pdev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB362, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB363, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB365, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB368, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB360, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB361, quirk_jmicron_ata);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB362, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB363, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB365, quirk_jmicron_ata);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_JMICRON, PCI_DEVICE_ID_JMICRON_JMB366, quirk_jmicron_ata);
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ae66851..843883e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2321,6 +2321,7 @@
+ #define PCI_VENDOR_ID_JMICRON		0x197B
+ #define PCI_DEVICE_ID_JMICRON_JMB360	0x2360
+ #define PCI_DEVICE_ID_JMICRON_JMB361	0x2361
++#define PCI_DEVICE_ID_JMICRON_JMB362	0x2362
+ #define PCI_DEVICE_ID_JMICRON_JMB363	0x2363
+ #define PCI_DEVICE_ID_JMICRON_JMB365	0x2365
+ #define PCI_DEVICE_ID_JMICRON_JMB366	0x2366
