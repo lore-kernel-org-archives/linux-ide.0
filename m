@@ -1,20 +1,20 @@
 From: Rupjyoti Sarmah <rsarmah@amcc.com>
 Subject: [PATCH]Device tree update for the 460ex DWC SATA<resubmission>
-Date: Fri, 4 Jun 2010 13:34:58 +0530
-Message-ID: <201006040804.o5484wTs005378@amcc.com>
+Date: Fri, 4 Jun 2010 15:33:12 +0530
+Message-ID: <201006041003.o54A3CIi024533@amcc.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:55562 "EHLO
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:60541 "EHLO
 	denmail01.apm.COM" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753504Ab0FDIqU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jun 2010 04:46:20 -0400
+	with ESMTP id S1753933Ab0FDKDm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jun 2010 06:03:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: rsarmah@appliedmicro.com, sr@denx.de, linuxppc-dev@ozlabs.org
+Cc: rsarmah@apm.com, sr@denx.de, linuxppc-dev@ozlabs.org
 
 
 Device tree update for the Applied micro processor 460ex on-chip SATA
-Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com>
+Signed-off-by: Rupjyoti Sarmah <rsarmah@amcc.com>
 ---
  arch/powerpc/boot/dts/canyonlands.dts |    8 ++++++++
  1 files changed, 8 insertions(+), 0 deletions(-)
