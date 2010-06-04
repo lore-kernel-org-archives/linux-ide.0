@@ -1,55 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] sata_sil24: fix kernel panic on ARM caused
- by unaligned access in sata_sil24
-Date: Fri, 04 Jun 2010 16:19:51 +0200
-Message-ID: <4C090B87.1070109@kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 21/27] drivers/ide: Use memdup_user
+Date: Fri, 04 Jun 2010 16:13:06 -0700 (PDT)
+Message-ID: <20100604.161306.102569610.davem@davemloft.net>
+References: <Pine.LNX.4.64.1005221024470.13021@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58514 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755896Ab0FDOUe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Jun 2010 10:20:34 -0400
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:35032
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757395Ab0FDXM5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jun 2010 19:12:57 -0400
+In-Reply-To: <Pine.LNX.4.64.1005221024470.13021@ask.diku.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: Catalin Marinas <Catalin.Marinas@arm.com>, Robin Randhawa <Robin.Randhawa@arm.com>, Colin Tuckley <colin.tuckley@arm.com>
+To: julia@diku.dk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Colin Tuckley <colin.tuckley@arm.com>
+From: Julia Lawall <julia@diku.dk>
+Date: Sat, 22 May 2010 10:25:03 +0200 (CEST)
 
-The sata_sil24 driver has six 16-bit registers that are initialised with
-32-bit writes. This cause a kernel panic on ARM due to the unaligned
-accesses which result.
+> From: Julia Lawall <julia@diku.dk>
+> 
+> Use memdup_user when user data is immediately copied into the
+> allocated region.
+> 
+> The semantic patch that makes this change is as follows:
+> (http://coccinelle.lip6.fr/)
+ ...
+> Signed-off-by: Julia Lawall <julia@diku.dk>
 
-This patch changes the accesses to the correct 16-bit ones.
-
-Signed-off-by: Colin Tuckley <colin.tuckley@arm.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/sata_sil24.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 433b6b8..62ee924 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -539,12 +539,12 @@ static void sil24_config_port(struct ata_port *ap)
- 		writel(PORT_CS_IRQ_WOC, port + PORT_CTRL_CLR);
-
- 	/* zero error counters. */
--	writel(0x8000, port + PORT_DECODE_ERR_THRESH);
--	writel(0x8000, port + PORT_CRC_ERR_THRESH);
--	writel(0x8000, port + PORT_HSHK_ERR_THRESH);
--	writel(0x0000, port + PORT_DECODE_ERR_CNT);
--	writel(0x0000, port + PORT_CRC_ERR_CNT);
--	writel(0x0000, port + PORT_HSHK_ERR_CNT);
-+	writew(0x8000, port + PORT_DECODE_ERR_THRESH);
-+	writew(0x8000, port + PORT_CRC_ERR_THRESH);
-+	writew(0x8000, port + PORT_HSHK_ERR_THRESH);
-+	writew(0x0000, port + PORT_DECODE_ERR_CNT);
-+	writew(0x0000, port + PORT_CRC_ERR_CNT);
-+	writew(0x0000, port + PORT_HSHK_ERR_CNT);
-
- 	/* always use 64bit activation */
- 	writel(PORT_CS_32BIT_ACTV, port + PORT_CTRL_CLR);
+Applied, t hanks Julia.
