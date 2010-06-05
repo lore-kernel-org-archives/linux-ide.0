@@ -1,7 +1,7 @@
 From: Marc Dionne <marc.c.dionne@gmail.com>
 Subject: Re: Hang during boot, bisected to commit 96d60303fd
-Date: Fri, 4 Jun 2010 21:45:50 -0400
-Message-ID: <AANLkTinKqB95MvThlHShlT6snqf0fKHBuxgcPpNuslAb@mail.gmail.com>
+Date: Fri, 4 Jun 2010 22:01:58 -0400
+Message-ID: <AANLkTinZ7d3WWyO3m9A7GVnaTuSbn1G33ADFW6ixywcT@mail.gmail.com>
 References: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com>
 	<20100603020006.GB19123@srcf.ucam.org>
 	<AANLkTikpv86r5BBPCEOHujpm8uCgY0DxghSKjBufBWiM@mail.gmail.com>
@@ -10,115 +10,90 @@ References: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com>
 	<AANLkTimXcF1pafrSt8dMbUs59AjnqaRwpzDnPIPjdjsn@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ey-out-2122.google.com ([74.125.78.25]:19765 "EHLO
+	ey-out-2122.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824Ab0FECCA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jun 2010 22:02:00 -0400
 In-Reply-To: <AANLkTimXcF1pafrSt8dMbUs59AjnqaRwpzDnPIPjdjsn@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Robert Hancock <hancockrwd@gmail.com>
 Cc: Matthew Garrett <mjg59@srcf.ucam.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, garzik@redhat.com
-List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jun 4, 2010 at 9:37 PM, Robert Hancock <hancockrwd@gmail.com> w=
-rote:
-> =A0Fri, Jun 4, 2010 at 7:23 PM, Marc Dionne <marc.c.dionne@gmail.com>=
- wrote:
->> On Thu, Jun 3, 2010 at 11:42 PM, Robert Hancock <hancockrwd@gmail.co=
-m> wrote:
->>> On 06/03/2010 07:21 PM, Marc Dionne wrote:
->>>>
->>>> On Wed, Jun 2, 2010 at 10:00 PM, Matthew Garrett<mjg59@srcf.ucam.o=
-rg>
->>>> =A0wrote:
->>>>>
->>>>> On Wed, Jun 02, 2010 at 09:49:27PM -0400, Marc Dionne wrote:
->>>>>>
->>>>>> =A0 =A0Since somewhere early in the 2.6.35 merge window I've bee=
-n seeing a
->>>>>> hang
->>>>>> =A0 =A0during boot. =A0The hang last roughly 30 seconds and is f=
-ollowed by
->>>>>> this:
->>>>>>
->>>>>> =A0 =A0ata4.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6=
- frozen
->>>>>> =A0 =A0ata4.00: failed command: READ FPDMA QUEUED
->>>>>> =A0 =A0ata4.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 nc=
-q 4096 in
->>>>>> =A0 =A0 =A0 =A0 =A0 =A0 res 40/00:00:00:00:00/00:00:00:00:00/00 =
-Emask 0x4 (timeout)
->>>>>> =A0 =A0ata4.00: status: { DRDY }
->>>>>> =A0 =A0ata4: hard resetting link
->>>>>> =A0 =A0ahci_is_device_present: status is: 80
->>>>>> =A0 =A0ahci_is_device_present: status(2) is: 3
->>>>>> =A0 =A0ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->>>>>> =A0 =A0ata4.00: configured for UDMA/133
->>>>>> =A0 =A0ata4.00: device reported invalid CHS sector 0
->>>>>> =A0 =A0ata4: EH complete
->>>>>>
->>>>>> =A0 =A0The system works normally once booted. =A0I had some time=
- to do a
->>>>>> bisect
->>>>>> =A0 =A0today and it cleanly ended up pointing to this commit:
->>>>>> =A0 =A0 =A0 =A096d60303fd: ahci: Turn off DMA engines when there=
-'s no device
->>>>>> attached
->>>>>>
->>>>>> =A0 =A0Reverting the commit makes the system boot cleanly as bef=
-ore. =A0System
->>>>>> has
->>>>>> =A0 =A0an Intel ICH10 based board, in AHCI mode, disk is an Inte=
-l X25M SSD.
->>>>>
->>>>> Hm, interesting. Jeff, any immediate ideas? I don't see this beha=
-viour
->>>>> on my ICH10. Is there actually a device on ata4?
->>>>>
->>>>> --
->>>>> Matthew Garrett | mjg59@srcf.ucam.org
->>>>
->>>> If it's helpful, attached are the dmesg output following a normal =
-boot
->>>> and one with the hang.
->>>>
->>>> The only difference in the kernel used for those two boots is that=
- the
->>>> return statement in ahci_start_engine following the call to
->>>> ahci_is_device_present is commented out for the normal boot case.
->>>> When the return statement is active, the 30 second hang occurs.
->>>
->>> Can you try and put a printk in where it's returning out of the
->>> ahci_start_engine method? I wonder if that's getting triggered some=
-where
->>> unexpected..
->>
->> Attached is a dmesg output with some printks added to show the statu=
-s
->> when ahci_is_device_present causes ahci_start_engine to return early=
-=2E.
->>
->> It looks to me like there's two passes through ahci_start_engine for
->> all ports, and during the first pass the port with the disk is showi=
-ng
->> a status of 127, causing the function to return early and skipping t=
-he
->> start DMA part. =A0This seems to cause the hang later on.
->>
->> I noticed that during this first pass all the print_id fields for th=
-e
->> ports are still set to -1, so as a test I made ahci_start_engine onl=
-y
->> do the check for ahci_is_device_present if print_id !=3D -1, and thi=
-s
->> makes the system boot normally.
->
+On Fri, Jun 4, 2010 at 9:37 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
 > Is that the right dmesg? I didn't see where the extra output was. It
 > might be useful to put a WARN_ON(1); inside ahci_start_engine to see
 > the two code paths where it's being called..
 
-It's the right dmesg, look for lines containing
-"ahci_is_device_present" or "ahci_start_engine" - sorry, I should have
-pointed it out.
+The first series of calls to ahci_start_engine have a stack trace that
+looks like this:
 
-I'll try adding a WARN_ON to get the code paths.
+Call Trace:
+ [<ffffffff81077002>] warn_slowpath_common+0x85/0x9d
+ [<ffffffff81077034>] warn_slowpath_null+0x1a/0x1c
+ [<ffffffff813572dd>] ahci_start_engine+0x92/0xa4
+ [<ffffffff8135736a>] ahci_start_port+0x7b/0x16c
+ [<ffffffff81357792>] ahci_port_resume+0x52/0x73
+ [<ffffffff81357901>] ahci_port_start+0x14e/0x164
+ [<ffffffff81341dc5>] ata_host_start+0xdf/0x184
+ [<ffffffff81357b35>] ? ahci_interrupt+0x0/0x5f3
+ [<ffffffff8134266f>] ata_host_activate+0x2a/0xdc
+ [<ffffffff81355aab>] ahci_init_one+0x9dd/0x9fe
+ [<ffffffff81170a9c>] ? __sysfs_add_one+0x38/0x9a
+ [<ffffffff812519bd>] ? kobject_get+0x1a/0x22
+ [<ffffffff81269891>] local_pci_probe+0x17/0x1b
+ [<ffffffff8126a63f>] pci_device_probe+0xca/0xfa
+ [<ffffffff81308fbe>] ? driver_sysfs_add+0x4c/0x71
+ [<ffffffff81309110>] driver_probe_device+0xac/0x13b
+ [<ffffffff813091fc>] __driver_attach+0x5d/0x81
+ [<ffffffff8130919f>] ? __driver_attach+0x0/0x81
+ [<ffffffff81308714>] bus_for_each_dev+0x53/0x88
+ [<ffffffff81308f70>] driver_attach+0x1e/0x20
+ [<ffffffff81308bc3>] bus_add_driver+0xb6/0x203
+ [<ffffffff813094ed>] driver_register+0x9e/0x10f
+ [<ffffffff8126a869>] __pci_register_driver+0x58/0xc8
+ [<ffffffff81b6582c>] ? ahci_init+0x0/0x1b
+ [<ffffffff81b65845>] ahci_init+0x19/0x1b
+ [<ffffffff81002069>] do_one_initcall+0x5e/0x159
+ [<ffffffff81b33713>] kernel_init+0x183/0x211
+ [<ffffffff810319a4>] kernel_thread_helper+0x4/0x10
+ [<ffffffff81b33590>] ? kernel_init+0x0/0x211
+ [<ffffffff810319a0>] ? kernel_thread_helper+0x0/0x10
+
+The later calls:
+
+Call Trace:
+ [<ffffffff81077002>] warn_slowpath_common+0x85/0x9d
+ [<ffffffff81077034>] warn_slowpath_null+0x1a/0x1c
+ [<ffffffff813572dd>] ahci_start_engine+0x92/0xa4
+ [<ffffffff81357a0d>] ahci_hardreset+0xc6/0x124
+ [<ffffffff81357947>] ? ahci_hardreset+0x0/0x124
+ [<ffffffff81342e08>] ? ata_std_prereset+0x0/0xb7
+ [<ffffffff8134aeca>] ata_do_reset+0x59/0x62
+ [<ffffffff8134c3fa>] ata_eh_reset+0x512/0xc99
+ [<ffffffff81356baa>] ? ahci_postreset+0x0/0x5d
+ [<ffffffff81357947>] ? ahci_hardreset+0x0/0x124
+ [<ffffffff81358498>] ? ahci_softreset+0x0/0x44
+ [<ffffffff81357947>] ? ahci_hardreset+0x0/0x124
+ [<ffffffff8134d9a1>] ? ata_eh_schedule_probe+0xc5/0xf3
+ [<ffffffff8134dca7>] ata_eh_recover+0x2d8/0xd6d
+ [<ffffffff81356baa>] ? ahci_postreset+0x0/0x5d
+ [<ffffffff81357947>] ? ahci_hardreset+0x0/0x124
+ [<ffffffff81358498>] ? ahci_softreset+0x0/0x44
+ [<ffffffff81342e08>] ? ata_std_prereset+0x0/0xb7
+ [<ffffffff81352ec9>] sata_pmp_error_handler+0xd3/0xa0a
+ [<ffffffff81067f73>] ? dequeue_entity+0x4a/0x183
+ [<ffffffff8108c1ae>] ? __cancel_work_timer+0xad/0x193
+ [<ffffffff8108395e>] ? lock_timer_base+0x2c/0x52
+ [<ffffffff810839ff>] ? try_to_del_timer_sync+0x7b/0x89
+ [<ffffffff81357943>] ahci_error_handler+0x2c/0x30
+ [<ffffffff8134f2c7>] ata_scsi_error+0x33d/0x697
+ [<ffffffff8131bc10>] scsi_error_handler+0xc2/0x3c5
+ [<ffffffff8131bb4e>] ? scsi_error_handler+0x0/0x3c5
+ [<ffffffff8108f451>] kthread+0x7f/0x87
+ [<ffffffff810319a4>] kernel_thread_helper+0x4/0x10
+ [<ffffffff8108f3d2>] ? kthread+0x0/0x87
+ [<ffffffff810319a0>] ? kernel_thread_helper+0x0/0x10
 
 Marc
