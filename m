@@ -1,102 +1,80 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: [PATCH]460EX on-chip SATA driver<kernel 2.6.33><resubmission>
-Date: Sun, 6 Jun 2010 14:52:40 -0400
-Message-ID: <20100606185240.GD7801@zod.rchland.ibm.com>
+Date: Sun, 06 Jun 2010 23:09:28 +0200
+Message-ID: <20100606210928.1BEE6FA8EE@gemini.denx.de>
 References: <201006041226.o54CQH2V017366@amcc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e39.co.us.ibm.com ([32.97.110.160]:54591 "EHLO
-	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020Ab0FFSwp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jun 2010 14:52:45 -0400
-Content-Disposition: inline
-In-Reply-To: <201006041226.o54CQH2V017366@amcc.com>
+Received: from mail-out.m-online.net ([212.18.0.9]:45226 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752108Ab0FFVJc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jun 2010 17:09:32 -0400
+In-reply-to: <201006041226.o54CQH2V017366@amcc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sr@denx.de, linuxppc-dev@ozlabs.org, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sr@denx.de, Josh Boyer <jwboyer@linux.vnet.ibm.com>, linuxppc-dev@ozlabs.org, jgarzik@pobox.com
 
-On Fri, Jun 04, 2010 at 05:56:17PM +0530, Rupjyoti Sarmah wrote:
->This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
->
->Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com> 
->Signed-off-by: Mark Miesfeld <mmiesfeld@appliedmicro.com>
->Signed-off-by: Prodyut Hazarika <phazarika@appliedmicro.com>
+Dear Rupjyoti Sarmah,
 
-What does the <kernel 2.6.33> mean in the Subject?
+In message <201006041226.o54CQH2V017366@amcc.com> you wrote:
+> This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
+> 
+> Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com> 
+> Signed-off-by: Mark Miesfeld <mmiesfeld@appliedmicro.com>
+> Signed-off-by: Prodyut Hazarika <phazarika@appliedmicro.com>
+> 
+> ---
+>  drivers/ata/Kconfig          |    9 +
+>  drivers/ata/Makefile         |    1 +
+>  drivers/ata/sata_dwc_460ex.c | 1808 ++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 1818 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_dwc_460ex.c
 
->
->---
-> drivers/ata/Kconfig          |    9 +
-> drivers/ata/Makefile         |    1 +
-> drivers/ata/sata_dwc_460ex.c | 1808 ++++++++++++++++++++++++++++++++++++++++++
-> 3 files changed, 1818 insertions(+), 0 deletions(-)
-> create mode 100644 drivers/ata/sata_dwc_460ex.c
->
->diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
->index 56c6374..bba7b8a 100644
->--- a/drivers/ata/Kconfig
->+++ b/drivers/ata/Kconfig
->@@ -82,6 +82,15 @@ config SATA_FSL
->
-> 	  If unsure, say N.
->
->+config SATA_DWC
->+	tristate "DesignWare Cores SATA support"
->+	depends on 460EX
->+	help
->+	  This option enables support for the on-chip SATA controller of the
->+	  AppliedMicro processor 460EX.
->+
->+	  If unsure, say N.
->+
-> config ATA_SFF
-> 	bool "ATA SFF support"
-> 	default y
->diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
->index fc936d4..96ff315 100644
->--- a/drivers/ata/Makefile
->+++ b/drivers/ata/Makefile
->@@ -19,6 +19,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
-> obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
-> obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
-> obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
->+obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
->
-> obj-$(CONFIG_PATA_ALI)		+= pata_ali.o
-> obj-$(CONFIG_PATA_AMD)		+= pata_amd.o
->diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
->new file mode 100644
->index 0000000..e6e2896
->--- /dev/null
->+++ b/drivers/ata/sata_dwc_460ex.c
->@@ -0,0 +1,1808 @@
->+/*
->+ * drivers/ata/sata_dwc_460ex.c
->+ *
->+ * Synopsys DesignWare Cores (DWC) SATA host driver
->+ *
->+ * Author: Mark Miesfeld <mmiesfeld@amcc.com>
->+ *
->+ * Ported from 2.6.19.2 to 2.6.25/26 by Stefan Roese <sr@denx.de>
->+ * Copyright 2008 DENX Software Engineering
+This driver needs fixing. It will not compile against recent kernel
+versions.
 
-I'm pretty sure Denx uses Signed-off-by lines in their trees.  If you've ported
-it from their tree, perhaps you should keep Stefan's S-o-b line intact.
+...
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> new file mode 100644
+> index 0000000..e6e2896
+> --- /dev/null
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -0,0 +1,1808 @@
+...
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/init.h>
+> +#include <linux/device.h>
+> +#include <linux/of_platform.h>
+> +#include <linux/libata.h>
+> +#include "libata.h"
+> +
+> +#include <scsi/scsi_host.h>
+> +#include <scsi/scsi_cmnd.h>
 
->+/******************************************************************************
->+ * Function: get_burst_length_encode
->+ * arguments: datalength: length in bytes of data
->+ * returns value to be programmed in register corrresponding to data length
->+ * This value is effectively the log(base 2) of the length
->+ *****************************************************************************/
->+static  int get_burst_length_encode(int datalength)
->+{
->+	int items = datalength >> 2;	/* div by 4 to get lword count */
+You miss a "#include <linux/slab.h>" here.
 
-A minor suggestion, but if you're going to document the interfaces this way
-you might want to go ahead and use KernelDoc.  It's pretty close to what you 
-have already.
+...
+> +	for (i = 0; i < SATA_DWC_QCMD_MAX; i++)
+> +		hsdevp->cmd_issued[i] = SATA_DWC_CMD_ISSUED_NOT;
+> +
+> +	ap->prd = 0;	/* set these so libata doesn't use them */
+> +	ap->prd_dma = 0;
 
-josh
+s/prd/bmdma_prd/ in these two lines (cf. commit f60d7011).
+
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+He had quite a powerful intellect, but it  was  as  powerful  like  a
+locomotive,  and  ran on rails and was therefore almost impossible to
+steer.                          - Terry Pratchett, _Lords and Ladies_
