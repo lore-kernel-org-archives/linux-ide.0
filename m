@@ -1,63 +1,82 @@
-From: Rupjyoti Sarmah <rsarmah@apm.com>
-Subject: RE: [PATCH]Device tree update for the 460ex DWC SATA<resubmission>
-Date: Mon, 7 Jun 2010 10:26:40 +0530
-Message-ID: <1b881e5f50cb8c104fcbe11778cdbbdf@mail.gmail.com>
-References: <201006041003.o54A3CIi024533@amcc.com>
-	<20100606184748.GC7801@zod.rchland.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Hang during boot, bisected to commit 96d60303fd
+Date: Mon, 07 Jun 2010 11:22:37 +0200
+Message-ID: <4C0CBA5D.5000900@kernel.org>
+References: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com>	<20100603020006.GB19123@srcf.ucam.org>	<AANLkTikpv86r5BBPCEOHujpm8uCgY0DxghSKjBufBWiM@mail.gmail.com>	<4C08760B.8050002@gmail.com>	<AANLkTimFY5YQv8DC-zTQ1RF84rno6svvcyLzHGWL6HOk@mail.gmail.com>	<AANLkTimXcF1pafrSt8dMbUs59AjnqaRwpzDnPIPjdjsn@mail.gmail.com>	<AANLkTinZ7d3WWyO3m9A7GVnaTuSbn1G33ADFW6ixywcT@mail.gmail.com> <AANLkTinIM8swHZTide7MAQsaYbWcFD90FrKUXE9NFG-5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <20100606184748.GC7801@zod.rchland.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Josh Boyer <jwboyer@linux.vnet.ibm.com>, Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, sr@denx.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:44631 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752186Ab0FGJW6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jun 2010 05:22:58 -0400
+In-Reply-To: <AANLkTinIM8swHZTide7MAQsaYbWcFD90FrKUXE9NFG-5@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Marc Dionne <marc.c.dionne@gmail.com>, Matthew Garrett <mjg59@srcf.ucam.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, garzik@redhat.com
 
-Hi Josh,
+Hello,
 
-There was a suggestion from Sergei, I incorporated and resubmitted.
+On 06/07/2010 06:34 AM, Robert Hancock wrote:
+> I'm thinking that the hardreset and device classification makes more
+> sense as a place to do this anyways, since that's the point where we
+> really know if there's a device connected or not.. Tejun, any
+> thoughts?
 
-Regards,
-Rup
+Heh, of course it doesn't work.  Device presence can't be reliably
+determined by sampling status once like that.  We don't have all the
+crap in libata-eh for nothing.  :-)
 
------Original Message-----
-From: Josh Boyer [mailto:jwboyer@linux.vnet.ibm.com]
-Sent: Monday, June 07, 2010 12:18 AM
-To: Rupjyoti Sarmah
-Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org;
-linuxppc-dev@ozlabs.org; sr@denx.de; rsarmah@apm.com
-Subject: Re: [PATCH]Device tree update for the 460ex DWC
-SATA<resubmission>
+Marc, can you please try the following patch?
 
-On Fri, Jun 04, 2010 at 03:33:12PM +0530, Rupjyoti Sarmah wrote:
->
->Device tree update for the Applied micro processor 460ex on-chip SATA
->Signed-off-by: Rupjyoti Sarmah <rsarmah@amcc.com>
+Thanks.
 
-You sent this same patch twice.  Mistake, or was there supposed to be a
-difference?
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 1984a6e..261f86d 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -541,29 +541,11 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ 	return -EINVAL;
+ }
 
-josh
-CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, =
+-static int ahci_is_device_present(void __iomem *port_mmio)
+-{
+-	u8 status = readl(port_mmio + PORT_TFDATA) & 0xff;
+-
+-	/* Make sure PxTFD.STS.BSY and PxTFD.STS.DRQ are 0 */
+-	if (status & (ATA_BUSY | ATA_DRQ))
+-		return 0;
+-
+-	/* Make sure PxSSTS.DET is 3h */
+-	status = readl(port_mmio + PORT_SCR_STAT) & 0xf;
+-	if (status != 3)
+-		return 0;
+-	return 1;
+-}
+-
+ void ahci_start_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
 
-is for the sole use of the intended recipient(s) and contains information=
-=A0
-that is confidential and proprietary to AppliedMicro Corporation or its sub=
-sidiaries. =
+-	if (!ahci_is_device_present(port_mmio))
+-		return;
+-
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp |= PORT_CMD_START;
+@@ -1892,6 +1874,9 @@ static void ahci_error_handler(struct ata_port *ap)
+ 	}
 
-It is to be used solely for the purpose of furthering the parties' business=
- relationship. =
+ 	sata_pmp_error_handler(ap);
++
++	if (!ata_dev_enabled(ap->link.device))
++		ahci_stop_engine(ap);
+ }
 
-All unauthorized review, use, disclosure or distribution is prohibited. =
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
 
-If you are not the intended recipient, please contact the sender by reply e=
--mail and destroy all copies of the original message.
+-- 
+tejun
