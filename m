@@ -1,42 +1,77 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Hang during boot, bisected to commit 96d60303fd
-Date: Mon, 07 Jun 2010 15:09:03 +0200
-Message-ID: <4C0CEF6F.8010108@kernel.org>
-References: <AANLkTiktNufXK_pn6mP2-zyowAIbHlUy5TGu3AtpALv-@mail.gmail.com> <20100603020006.GB19123@srcf.ucam.org> <AANLkTikpv86r5BBPCEOHujpm8uCgY0DxghSKjBufBWiM@mail.gmail.com> <4C08760B.8050002@gmail.com> <AANLkTimFY5YQv8DC-zTQ1RF84rno6svvcyLzHGWL6HOk@mail.gmail.com> <AANLkTimXcF1pafrSt8dMbUs59AjnqaRwpzDnPIPjdjsn@mail.gmail.com> <AANLkTinZ7d3WWyO3m9A7GVnaTuSbn1G33ADFW6ixywcT@mail.gmail.com> <AANLkTinIM8swHZTide7MAQsaYbWcFD90FrKUXE9NFG-5@mail.gmail.com> <4C0CBA5D.5000900@kernel.org> <AANLkTilwtazg_T4cX2EMb2xterwV1lhXdqUe3Q1UcsDN@mail.gmail.com> <20100607130419.GA8661@srcf.ucam.org>
+Subject: [PATCH #upstream-fixes] ahci: redo stopping DMA engines on empty
+ ports
+Date: Mon, 07 Jun 2010 15:15:08 +0200
+Message-ID: <4C0CF0DC.7060901@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42323 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:42373 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751735Ab0FGNJT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jun 2010 09:09:19 -0400
-In-Reply-To: <20100607130419.GA8661@srcf.ucam.org>
+	id S1752239Ab0FGNPa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jun 2010 09:15:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Marc Dionne <marc.c.dionne@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, garzik@redhat.com
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Matthew Garrett <mjg@redhat.com>, Marc Dionne <marc.c.dionne@gmail.com>, Robert Hancock <hancockrwd@gmail.com>
 
-Hello,
+Commit 96d60303fd (ahci: Turn off DMA engines when there's no device)
+implemented stopping DMA engines on empty ports but it used single
+sampling of status registers to determine device presence which led to
+disabling of DMA engines on occupied ports.  Do it after all EH
+actions are complete using device presence state determined by EH.
+This avoids spurious disabling of DMA engines and simplifies the code.
 
-On 06/07/2010 03:04 PM, Matthew Garrett wrote:
-> On Mon, Jun 07, 2010 at 08:21:42AM -0400, Marc Dionne wrote:
-> 
->> With that patch the system boots normally.  Out of curiosity I also
->> instrumented ahci_error_handler a bit, and the stop_engine case
->> triggers once for the 6 unused ports, but doesn't trigger for the 2
->> ports with devices (SSD and DVD), as expected.
->>
->> Feel free to add a Tested-by if you submit it.
-> 
-> Well, that's what trusting the ahci spec gets me. Thanks for testing 
-> that, Marc.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: Marc Dionne <marc.c.dionne@gmail.com>
+Cc: Matthew Garrett <mjg@redhat.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>
+---
+ drivers/ata/libahci.c |   21 +++------------------
+ 1 file changed, 3 insertions(+), 18 deletions(-)
 
-Heh heh, welcome to ATA.  :-)
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 1984a6e..261f86d 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -541,29 +541,11 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
+ 	return -EINVAL;
+ }
 
-Will add Tested-by and send it to Jeff.
+-static int ahci_is_device_present(void __iomem *port_mmio)
+-{
+-	u8 status = readl(port_mmio + PORT_TFDATA) & 0xff;
+-
+-	/* Make sure PxTFD.STS.BSY and PxTFD.STS.DRQ are 0 */
+-	if (status & (ATA_BUSY | ATA_DRQ))
+-		return 0;
+-
+-	/* Make sure PxSSTS.DET is 3h */
+-	status = readl(port_mmio + PORT_SCR_STAT) & 0xf;
+-	if (status != 3)
+-		return 0;
+-	return 1;
+-}
+-
+ void ahci_start_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
 
-Thanks.
+-	if (!ahci_is_device_present(port_mmio))
+-		return;
+-
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp |= PORT_CMD_START;
+@@ -1892,6 +1874,9 @@ static void ahci_error_handler(struct ata_port *ap)
+ 	}
 
--- 
-tejun
+ 	sata_pmp_error_handler(ap);
++
++	if (!ata_dev_enabled(ap->link.device))
++		ahci_stop_engine(ap);
+ }
+
+ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
