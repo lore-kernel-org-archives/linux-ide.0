@@ -1,51 +1,74 @@
-From: Graeme Russ <graeme.russ@gmail.com>
-Subject: Re: [PATCH] Add hook for custom xfer function in PATA Platform driver
-Date: Wed, 09 Jun 2010 22:36:01 +1000
-Message-ID: <4C0F8AB1.3000403@gmail.com>
-References: <1273382493-5859-1-git-send-email-graeme.russ@gmail.com>	 <4BE6910D.9070504@ru.mvista.com> <4BE69C81.2070703@gmail.com>	 <4BE6BA74.10200@mvista.com> <4BE74EEE.5060307@gmail.com>	 <4BE7D714.9010006@ru.mvista.com> <4BE8A3FE.4070402@gmail.com>	 <4BEB166B.5030007@ru.mvista.com> <4BEB7960.40007@gmail.com>	 <4BEC68E6.1020305@mvista.com> <AANLkTikruHKM8W7m9sMHtyApxwLdi6R-I62S54vDsXcO@mail.gmail.com> <4BFD2A8E.7080907@ru.mvista.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH v2 1/5] libata: pata_samsung: Add Samsung PATA controller
+ driver
+Date: Wed, 09 Jun 2010 13:31:23 -0400
+Message-ID: <4C0FCFEB.6030603@pobox.com>
+References: <1275988020-29000-1-git-send-email-kgene.kim@samsung.com> <1275988020-29000-2-git-send-email-kgene.kim@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f176.google.com ([209.85.222.176]:50141 "EHLO
-	mail-pz0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755565Ab0FIMgG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2010 08:36:06 -0400
-Received: by pzk6 with SMTP id 6so2860447pzk.1
-        for <linux-ide@vger.kernel.org>; Wed, 09 Jun 2010 05:36:04 -0700 (PDT)
-In-Reply-To: <4BFD2A8E.7080907@ru.mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1275988020-29000-2-git-send-email-kgene.kim@samsung.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Kukjin Kim <kgene.kim@samsung.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, Abhilash Kesavan <a.kesavan@samsung.com>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On 27/05/10 00:05, Sergei Shtylyov wrote:
-> Hello.
-> 
-> Graeme Russ wrote:
-> 
->    Sorry for the belated reply, I've been somewhat busy.
+On 06/08/2010 05:06 AM, Kukjin Kim wrote:
+> From: Abhilash Kesavan<a.kesavan@samsung.com>
+>
+> Adds support for the Samsung PATA controller. This driver is based on the
+> Libata subsystem and references the earlier patches sent for IDE subsystem.
+>
+> Signed-off-by: Abhilash Kesavan<a.kesavan@samsung.com>
+> Signed-off-by: Kukjin Kim<kgene.kim@samsung.com>
+> ---
+>   drivers/ata/Kconfig           |    9 +
+>   drivers/ata/Makefile          |    1 +
+>   drivers/ata/pata_samsung_cf.c |  608 +++++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 618 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/ata/pata_samsung_cf.c
 
-Ditto - I really have not had much time to think more on this one.
+Looks OK to me, minor nits only...
 
-To briefly sum up all the arguments, I see three options:
 
-1) Write a new driver based on the PATA Platform driver specifically for my
-needs
-2) Add the 'custom data xfer hook' to both the PATA and IDE Platform
-drivers and implement the 8-bit data xfer functions outside the driver
-(board specific code)
-3) Add an '8-bit xfer' flag to the PATA and IDE Platform drivers and add
-the 8-bit data xfer in the driver
 
-I see #1 as the lowest (zero) impact on current kernel code but #2 is by
-far the most flexible and appears to follow driver design philosophy. #3 is
-very restrictive and opens up a Pandora's Box of driver code hacks to
-support each and every esoteric implementation.
+> +#define DRV_NAME "pata_samsung"
 
-If the consensus is on #2, I'll respin a new patch for both the PATA and
-IDE Platform drivers
+this should be "pata_samsung_cf"
 
-Regards,
 
-Graeme
+> +static void pata_s3c_hwinit(struct s3c_ide_info *info,
+> +				struct s3c_ide_platdata *pdata)
+> +{
+> +	switch (info->cpu_type) {
+> +	case TYPE_S3C64XX:
+> +		/* Configure as big endian */
+> +		pata_s3c_cfg_mode(info->sfr_addr);
+> +		pata_s3c_set_endian(info->ide_addr, 1);
+> +		pata_s3c_enable(info->ide_addr, 1);
+> +		mdelay(100);
+> +
+> +		/* Remove IRQ Status */
+> +		writel(0x1f, info->ide_addr + S3C_ATA_IRQ);
+> +		writel(0x1b, info->ide_addr + S3C_ATA_IRQ_MSK);
+> +	break;
+> +
+> +	case TYPE_S5PC100:
+> +		pata_s3c_cfg_mode(info->sfr_addr);
+> +
+> +	case TYPE_S5PV210:
+> +		/* Configure as little endian */
+> +		pata_s3c_set_endian(info->ide_addr, 0);
+> +		pata_s3c_enable(info->ide_addr, 1);
+> +		mdelay(100);
+> +
+> +		/* Remove IRQ Status */
+> +		writel(0x3f, info->ide_addr + S3C_ATA_IRQ);
+> +		writel(0x3f, info->ide_addr + S3C_ATA_IRQ_MSK);
+> +	break;
+> +
+> +	default:
+> +		BUG();
+
+Use of msleep() is preferred, in cases where you can sleep (such as this)
