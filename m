@@ -1,56 +1,76 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 2/3] libata: Remove excess command issue delays
-Date: Thu, 10 Jun 2010 16:01:38 -0400
-Message-ID: <4C1144A2.8070405@garzik.org>
-References: <20100505092350.586.46344.stgit@localhost.localdomain>	<20100505092503.586.89942.stgit@localhost.localdomain>	<4BEE05E5.70904@garzik.org> <20100515150937.746f73ec@lxorguk.ukuu.org.uk>
+Subject: [git patches] libata fixes
+Date: Thu, 10 Jun 2010 16:09:44 -0400
+Message-ID: <20100610200944.GA31500@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35783 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486Ab0FJUBm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jun 2010 16:01:42 -0400
-Received: by gye5 with SMTP id 5so250767gye.19
-        for <linux-ide@vger.kernel.org>; Thu, 10 Jun 2010 13:01:41 -0700 (PDT)
-In-Reply-To: <20100515150937.746f73ec@lxorguk.ukuu.org.uk>
+Received: from havoc.gtf.org ([69.61.125.42]:54932 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759662Ab0FJUJp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Jun 2010 16:09:45 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org
-
-On 05/15/2010 10:09 AM, Alan Cox wrote:
-> On Fri, 14 May 2010 22:24:37 -0400
-> Jeff Garzik<jeff@garzik.org>  wrote:
->
->> On 05/05/2010 05:25 AM, Alan Cox wrote:
->>>    /**
->>> + *	ata_sff_exec_command_nopost - issue ATA command to host controller
->>> + *	@ap: port to which command is being issued
->>> + *	@tf: ATA taskfile register set
->>> + *
->>> + *	Issues ATA command, with proper synchronization with interrupt
->>> + *	handler / other threads. This version of the helper does not protect
->>> + *	against any delayed writes done by the underlying fabric, it must
->>> + *	therefore not be used for MMIO devices unless the device handles
->>> + *	the 400nS command delay stall internally.
->>> + *
->>> + *	LOCKING:
->>> + *	spin_lock_irqsave(host lock)
->>> + */
->>> +void ata_sff_exec_command_nopost(struct ata_port *ap,
->>> +                                        const struct ata_taskfile *tf)
->>> +{
->>> +	DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
->>> +	iowrite8(tf->command, ap->ioaddr.command_addr);
->>> +}
->>> +EXPORT_SYMBOL_GPL(ata_sff_exec_command_nopost);
->>
->> where did the 400ns delay go, for the 'nopost' version?
->
-> Good question. It should indeed have an ndelay(400) after the iowrite8
-> I'll go fix that.
-
-Ping...
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Two sata_sil24 fixes...
+
+1) Add some memory barriers.  Gets ARM working.
+
+2) Fix a longstanding but ultimately harmless over-memset.
+
+
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/sata_sil24.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
+
+Catalin Marinas (1):
+      sata_sil24: Use memory barriers before issuing commands
+
+Dan Carpenter (1):
+      sata_sil24: memset() overflow
+
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 70b58fe..be7726d 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -622,6 +622,11 @@ static int sil24_exec_polled_cmd(struct ata_port *ap, int pmp,
+ 	irq_enabled = readl(port + PORT_IRQ_ENABLE_SET);
+ 	writel(PORT_IRQ_COMPLETE | PORT_IRQ_ERROR, port + PORT_IRQ_ENABLE_CLR);
+ 
++	/*
++	 * The barrier is required to ensure that writes to cmd_block reach
++	 * the memory before the write to PORT_CMD_ACTIVATE.
++	 */
++	wmb();
+ 	writel((u32)paddr, port + PORT_CMD_ACTIVATE);
+ 	writel((u64)paddr >> 32, port + PORT_CMD_ACTIVATE + 4);
+ 
+@@ -865,7 +870,7 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
+ 	} else {
+ 		prb = &cb->atapi.prb;
+ 		sge = cb->atapi.sge;
+-		memset(cb->atapi.cdb, 0, 32);
++		memset(cb->atapi.cdb, 0, sizeof(cb->atapi.cdb));
+ 		memcpy(cb->atapi.cdb, qc->cdb, qc->dev->cdb_len);
+ 
+ 		if (ata_is_data(qc->tf.protocol)) {
+@@ -895,6 +900,11 @@ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc)
+ 	paddr = pp->cmd_block_dma + tag * sizeof(*pp->cmd_block);
+ 	activate = port + PORT_CMD_ACTIVATE + tag * 8;
+ 
++	/*
++	 * The barrier is required to ensure that writes to cmd_block reach
++	 * the memory before the write to PORT_CMD_ACTIVATE.
++	 */
++	wmb();
+ 	writel((u32)paddr, activate);
+ 	writel((u64)paddr >> 32, activate + 4);
+ 
