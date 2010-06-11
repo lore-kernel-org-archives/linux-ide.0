@@ -1,85 +1,201 @@
-From: Nick Piggin <npiggin@suse.de>
-Subject: Re: [PATCH v2] sata_sil24: Use memory barriers before issuing
- commands
-Date: Fri, 11 Jun 2010 11:38:29 +1000
-Message-ID: <20100611013829.GB16436@laptop>
-References: <20100610160212.18091.29856.stgit@e102109-lin.cambridge.arm.com>
- <4C110EDD.2010409@kernel.org>
- <1276187002.24535.88.camel@e102109-lin.cambridge.arm.com>
- <4C118697.9090305@gmail.com>
+From: Ben Dooks <ben-linux@fluff.org>
+Subject: Re: [PATCH v3] libata: pata_samsung_cf: Add Samsung PATA
+	controller driver
+Date: Fri, 11 Jun 2010 02:57:44 +0100
+Message-ID: <20100611015744.GC14272@trinity.fluff.org>
+References: <1276156241-28804-1-git-send-email-kgene.kim@samsung.com> <4C10C1D6.8080708@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4C118697.9090305@gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Colin Tuckley <colin.tuckley@arm.com>, Jeff Garzik <jeff@garzik.org>, linux-arch <linux-arch@vger.kernel.org>
+In-Reply-To: <4C10C1D6.8080708@ru.mvista.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Kukjin Kim <kgene.kim@samsung.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, jgarzik@pobox.com, Abhilash Kesavan <a.kesavan@samsung.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jun 10, 2010 at 06:43:03PM -0600, Robert Hancock wrote:
-> On 06/10/2010 10:23 AM, Catalin Marinas wrote:
-> >On Thu, 2010-06-10 at 17:12 +0100, Tejun Heo wrote:
-> >>On 06/10/2010 06:02 PM, Catalin Marinas wrote:
-> >>>The data in the cmd_block buffers may reach the main memory after the
-> >>>writel() to the device ports. This patch introduces two calls to wmb()
-> >>>to ensure the relative ordering.
-> >>>
-> >>>Signed-off-by: Catalin Marinas<catalin.marinas@arm.com>
-> >>>Tested-by: Colin Tuckley<colin.tuckley@arm.com>
-> >>>Cc: Tejun Heo<tj@kernel.org>
-> >>>Cc: Jeff Garzik<jeff@garzik.org>
-> >>
-> >>I suppose you have tested and verified that this is actually
-> >>necessary, right?
-> >
-> >Yes, otherwise we get random failures with this device on ARM.
-> >
-> >>I've been looking through the docs but couldn't
-> >>find anything which described the ordering between writes to main
-> >>memory and write[bwl]()'s.  One thing that kind of bothers me is that
-> >>r/wmb()'s are for ordering memory accesses among CPUs which
-> >>participate in cache coherency protocol and although it may work right
-> >>in the above case I'm not really sure whether this is the right thing
-> >>to do.  Do you have more information on the subject?
-> >
-> >The mb() are not for ordering accesses among CPUs (though they would
-> >cover this case as well). For inter-CPU ordering, we have smp_mb() and
-> >friends. For all other cases, we have the mandatory barriers mb() and
-> >friends and DMA is one of them.
-> >
-> >Apart from the memory-barriers.txt document, there is the Device I/O
-> >docbook which mentions something about DMA buffers, though not very
-> >clear on which barriers to use (something like just make sure that the
-> >writes to the buffer reached the memory).
-> >
-> >There were some past discussions on linux-arch before and I'm cc'ing
-> >this list again (ARM is not the only architecture with a weakly memory
-> >ordering model).
-> >
-> >I'm copying the patch below again for the linux-arch people that haven't
-> >seen the beginning of the thread:
-> 
-> My memory is fuzzy but I thought this came up before on PPC and I
-> also thought the conclusion was that the platform code (for writel,
-> etc.) should enforce ordering of MMIO accesses with respect to
-> normal RAM accesses. (Or maybe it was just MMIO accesses with
-> respect to each other?) I don't think the answer to that question
-> has been clearly documented anywhere, which is somewhat unfortunate.
-> 
-> If the answer is that this is needed then there are likely a lot of
-> other drivers in libata and elsewhere which need to be fixed as
-> well. For example, I don't see any such barriers in libahci.c when I
-> presume it would need them.
-> 
-> IMHO, it would be better for the platform code to ensure that MMIO
-> access was strongly ordered with respect to each other and to RAM
-> access. Drivers are just too likely to get this wrong, especially
-> when x86, the most tested platform, doesn't have such issues.
+On Thu, Jun 10, 2010 at 02:43:34PM +0400, Sergei Shtylyov wrote:
+> Kukjin Kim wrote:
+>
+>> From: Abhilash Kesavan <a.kesavan@samsung.com>
+>
+>> Adds support for the Samsung PATA controller. This driver is based on the
+>> Libata subsystem and references the earlier patches sent for IDE subsystem.
+>
+>> Signed-off-by: Abhilash Kesavan <a.kesavan@samsung.com>
+>> Signed-off-by: Kukjin Kim <kgene.kim@samsung.com>
+>
+> [...]
+>
+>> diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+>> new file mode 100644
+>> index 0000000..fef5515
+>> --- /dev/null
+>> +++ b/drivers/ata/pata_samsung_cf.c
+>> @@ -0,0 +1,608 @@
+>> +/* linux/drivers/ata/pata_samsung_cf.c
+>
+>    File names in the heading comment are discouraged.
+>
+> [...]
 
-The plan is to make all platforms do this. writes should be
-strongly ordered with memory. That serves to keep them inside
-critical sections as well.
+>> +static void pata_s3c_set_piomode(struct ata_port *ap, struct ata_device *adev)
+>> +{
+>> +	int mode = adev->pio_mode - XFER_PIO_0;
+>> +	struct s3c_ide_info *info = ap->host->private_data;
+>> +	ulong ata_cfg = readl(info->ide_addr + S3C_ATA_CFG);
+>> +	ulong piotime;
+>> +
+>> +	/* Calculates timing parameters for PIO mode */
+>> +	piotime = pata_s3c_setup_timing(info, adev);
+>
+>    In fact, for 8-bit (command) timing you should program the slowest 
+> mode of the two drives. However, with CF, you probably only have only one 
+> drive per channel...
+>
+>> +
+>> +	/* Enables IORDY if mode requires it */
+>> +	if (ata_pio_need_iordy(adev))
+>> +		ata_cfg |= S3C_ATA_CFG_IORDYEN;
+>> +	else
+>> +		ata_cfg &= ~S3C_ATA_CFG_IORDYEN;
+>> +
+>> +	/* Host controller supports upto PIO4 only */
+>> +	if (mode >= 0 && mode <= 4) {
+>
+>    No need to check -- you won't be passed a mode not specified by your pio_mask.
 
-Then write?_relaxed, and memory barriers can be added if performance
-is required.
+probably not even worth bthering with a WARN_ON() for this.
+
+.> +		writel(ata_cfg, info->ide_addr + S3C_ATA_CFG);
+>> +		writel(piotime, info->ide_addr + S3C_ATA_PIO_TIME);
+>> +	}
+>> +}
+>
+> [...]
+>
+>> +/*
+>> + * pata_s3c_data_xfer - Transfer data by PIO
+>> + */
+>> +unsigned int pata_s3c_data_xfer(struct ata_device *dev, unsigned char *buf,
+>> +				unsigned int buflen, int rw)
+>> +{
+>> +	struct ata_port *ap = dev->link->ap;
+>> +	struct s3c_ide_info *info = ap->host->private_data;
+>> +	void __iomem *data_addr = ap->ioaddr.data_addr;
+>> +	unsigned int words = buflen >> 1, i;
+>> +	u16 *data_ptr = (u16 *)buf;
+>> +
+>> +	if (rw == READ)
+>> +		for (i = 0; i < words; i++, data_ptr++) {
+>> +			wait_for_host_ready(info);
+>> +			*data_ptr = readw(data_addr);
+>
+>    Why not just ignore the result?
+
+
+possibly (void)readw(data_addr);
+
+>> +			wait_for_host_ready(info);
+>> +			*data_ptr = readw(info->ide_addr
+>> +					+ S3C_ATA_PIO_RDATA);
+>> +		}
+
+It would be nice to have a description of why we're throwing data
+away from the FIFO.
+
+>> +	else
+>> +		for (i = 0; i < words; i++, data_ptr++) {
+>> +			wait_for_host_ready(info);
+>> +			writel(*data_ptr, data_addr);
+>> +		}
+
+For the write case, would it be better to read the FIFO free lvel
+and then then write that many words each time?
+
+>> +	return words << 1;
+>> +}
+>
+> [...]
+>
+>> +static struct ata_port_operations pata_s3c_port_ops = {
+>> +	.inherits		= &ata_sff_port_ops,
+>> +	.sff_check_status	= pata_s3c_check_status,
+>> +	.sff_check_altstatus    = pata_s3c_check_altstatus,
+>> +	.sff_tf_load		= pata_s3c_tf_load,
+>> +	.sff_tf_read		= pata_s3c_tf_read,
+>> +	.sff_data_xfer		= pata_s3c_data_xfer,
+>> +	.sff_exec_command	= pata_s3c_exec_command,
+>> +	.sff_dev_select         = pata_s3c_dev_select,
+>> +	.sff_set_devctl         = pata_s3c_set_devctl,
+>
+>    I forgot: you also need to override the softreset() method as it 
+> accesses several taskfile registers and ioread8()/iowrite8() won't 
+> suffice -- Jeff was too quick to ack the patch. See ata_bus_softreset(), 
+> ata_devchk(), and ata_sff_wait_after_reset() for the accesses I'm talking 
+> about...
+>
+> [...]
+>
+>> +static int __devinit pata_s3c_probe(struct platform_device *pdev)
+>> +{
+>> +	struct s3c_ide_platdata *pdata = pdev->dev.platform_data;
+>> +	struct device *dev = &pdev->dev;
+>> +	struct s3c_ide_info *info;
+>> +	struct resource *res;
+>> +	struct ata_port *ap;
+>> +	struct ata_host *host;
+>> +	enum s3c_cpu_type cpu_type;
+>> +	int ret;
+>> +
+>> +	cpu_type = platform_get_device_id(pdev)->driver_data;
+>> +
+>> +	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+>> +	if (!info) {
+>> +		dev_err(dev, "failed to allocate memory for device data\n");
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	info->irq = platform_get_irq(pdev, 0);
+>> +	if (info->irq < 0) {
+>> +		dev_err(dev, "could not obtain irq number\n");
+>> +		ret = -EINVAL;
+>> +		goto release_device_mem;
+>> +	}
+>> +
+>> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>> +	if (res == NULL) {
+>> +		dev_err(dev, "failed to get mem resource\n");
+>> +		ret = -EINVAL;
+>> +		goto release_device_mem;
+>> +	}
+>> +
+>> +	if (!request_mem_region(res->start, resource_size(res), DRV_NAME)) {
+>
+>    Probably should call devm_request_mem_region() if you're using  
+> devm_ioremap()...
+>
+>> +		dev_err(dev, "error requesting register region\n");
+>> +		return -EBUSY;
+>> +	}
+>> +
+>> +	info->ide_addr = devm_ioremap(dev, res->start, resource_size(res));
+>> +	if (!info->ide_addr) {
+>> +		dev_err(dev, "failed to map IO base address\n");
+>> +		ret = -ENOMEM;
+>> +		goto release_mem;
+>> +	}
+>> +
+>> +	info->clk = clk_get(&pdev->dev, "cfcon");
+>> +	if (IS_ERR(info->clk)) {
+>> +		dev_err(dev, "failed to get access to cf controller clock\n");
+>> +		ret = PTR_ERR(info->clk);
+>> +		info->clk = NULL;
+
+We really need to get away from passing a clock name here.
+
+-- 
+Ben
+
+Q:      What's a light-year?
+A:      One-third less calories than a regular year.
