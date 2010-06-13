@@ -1,12 +1,12 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/12] irq: misc preparations for further changes
-Date: Sun, 13 Jun 2010 17:31:31 +0200
-Message-ID: <1276443098-20653-6-git-send-email-tj__41689.1314358965$1276443317$gmane$org@kernel.org>
+Subject: [PATCH 06/12] irq: implement irq_schedule_poll()
+Date: Sun, 13 Jun 2010 17:31:32 +0200
+Message-ID: <1276443098-20653-7-git-send-email-tj@kernel.org>
 References: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37723 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37718 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754073Ab0FMPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753992Ab0FMPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 13 Jun 2010 11:32:10 -0400
 In-Reply-To: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,100 +14,105 @@ List-Id: linux-ide@vger.kernel.org
 To: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.orglinux
 Cc: Tejun Heo <tj@kernel.org>
 
-* properly indent irqaction fields.
-
-* factor out print_irq_handler()
+Implement and use irq_schedule_poll() to schedule desc->poll_timer
+instead of calling mod_timer directly.  irq_schedule_poll() is called
+with desc->lock held and schedules the timer iff necessary - ie. if
+the timer is offline or scheduled to expire later than requested.
+This will be used to share desc->poll_timer.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- include/linux/interrupt.h |   20 ++++++++++----------
- kernel/irq/spurious.c     |   28 ++++++++++++++++------------
- 2 files changed, 26 insertions(+), 22 deletions(-)
+ kernel/irq/spurious.c |   47 +++++++++++++++++++++++++++++++++++++++++------
+ 1 files changed, 41 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 61857f1..b20bd65 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -102,16 +102,16 @@ typedef irqreturn_t (*irq_handler_t)(int, void *);
-  * @thread_flags:	flags related to @thread
-  */
- struct irqaction {
--	irq_handler_t handler;
--	unsigned long flags;
--	const char *name;
--	void *dev_id;
--	struct irqaction *next;
--	int irq;
--	struct proc_dir_entry *dir;
--	irq_handler_t thread_fn;
--	struct task_struct *thread;
--	unsigned long thread_flags;
-+	irq_handler_t		handler;
-+	unsigned long		flags;
-+	const char		*name;
-+	void			*dev_id;
-+	struct irqaction	*next;
-+	int			irq;
-+	struct proc_dir_entry	*dir;
-+	irq_handler_t		thread_fn;
-+	struct task_struct	*thread;
-+	unsigned long		thread_flags;
- };
- 
- extern irqreturn_t no_action(int cpl, void *dev_id);
 diff --git a/kernel/irq/spurious.c b/kernel/irq/spurious.c
-index fc18a13..0bce0e3 100644
+index 0bce0e3..0b8fd0a 100644
 --- a/kernel/irq/spurious.c
 +++ b/kernel/irq/spurious.c
-@@ -28,6 +28,21 @@ enum {
- int noirqdebug __read_mostly;
- static int irqfixup __read_mostly = IRQFIXUP_SPURIOUS;
+@@ -23,6 +23,8 @@ enum {
  
-+static void print_irq_handlers(struct irq_desc *desc)
+ 	/* IRQ polling common parameters */
+ 	IRQ_POLL_INTV			= HZ / 100,	/* from the good ol' 100HZ tick */
++
++	IRQ_POLL_SLACK			= HZ / 1000,	/* 10% slack */
+ };
+ 
+ int noirqdebug __read_mostly;
+@@ -43,6 +45,38 @@ static void print_irq_handlers(struct irq_desc *desc)
+ 	}
+ }
+ 
++static unsigned long irq_poll_slack(unsigned long intv)
 +{
-+	struct irqaction *action;
++	return IRQ_POLL_SLACK;
++}
 +
-+	printk(KERN_ERR "handlers:\n");
++/**
++ * irq_schedule_poll - schedule IRQ poll
++ * @desc: IRQ desc to schedule poll for
++ * @intv: poll interval
++ *
++ * Schedules @desc->poll_timer.  If the timer is already scheduled,
++ * it's modified iff jiffies + @intv + slack is before the timer's
++ * expires.  poll_timers aren't taken offline behind this function's
++ * back and the users of this function are guaranteed that poll_irq()
++ * will be called at or before jiffies + @intv + slack.
++ *
++ * CONTEXT:
++ * desc->lock
++ */
++static void irq_schedule_poll(struct irq_desc *desc, unsigned long intv)
++{
++	unsigned long expires = jiffies + intv;
++	int slack = irq_poll_slack(intv);
 +
-+	action = desc->action;
-+	while (action) {
-+		printk(KERN_ERR "[<%p>]", action->handler);
-+		print_symbol(" (%s)", (unsigned long)action->handler);
-+		printk("\n");
-+		action = action->next;
-+	}
++	if (timer_pending(&desc->poll_timer) &&
++	    time_before_eq(desc->poll_timer.expires, expires + slack))
++		return;
++
++	set_timer_slack(&desc->poll_timer, slack);
++	mod_timer(&desc->poll_timer, expires);
 +}
 +
  /*
   * Recovery handler for misrouted interrupts.
   */
-@@ -126,8 +141,6 @@ static void
- __report_bad_irq(unsigned int irq, struct irq_desc *desc,
- 		 irqreturn_t action_ret)
- {
--	struct irqaction *action;
--
- 	if (action_ret != IRQ_HANDLED && action_ret != IRQ_NONE) {
- 		printk(KERN_ERR "irq event %d: bogus return value %x\n",
- 				irq, action_ret);
-@@ -136,16 +149,7 @@ __report_bad_irq(unsigned int irq, struct irq_desc *desc,
- 				"the \"irqpoll\" option)\n", irq);
+@@ -207,7 +241,9 @@ void __note_interrupt(unsigned int irq, struct irq_desc *desc,
+ 		desc->depth++;
+ 		desc->chip->disable(irq);
+ 
+-		mod_timer(&desc->poll_timer, jiffies + IRQ_POLL_INTV);
++		raw_spin_lock(&desc->lock);
++		irq_schedule_poll(desc, IRQ_POLL_INTV);
++		raw_spin_unlock(&desc->lock);
  	}
- 	dump_stack();
--	printk(KERN_ERR "handlers:\n");
+ 	desc->irqs_unhandled = 0;
+ }
+@@ -221,9 +257,8 @@ void poll_irq(unsigned long arg)
+ 
+ 	raw_spin_lock_irq(&desc->lock);
+ 	try_one_irq(desc->irq, desc);
++	irq_schedule_poll(desc, IRQ_POLL_INTV);
+ 	raw_spin_unlock_irq(&desc->lock);
 -
--	action = desc->action;
--	while (action) {
--		printk(KERN_ERR "[<%p>]", action->handler);
--		print_symbol(" (%s)",
--			(unsigned long)action->handler);
--		printk("\n");
--		action = action->next;
--	}
-+	print_irq_handlers(desc);
+-	mod_timer(&desc->poll_timer, jiffies + IRQ_POLL_INTV);
  }
  
- static void
+ void irq_poll_action_added(struct irq_desc *desc, struct irqaction *action)
+@@ -238,10 +273,10 @@ void irq_poll_action_added(struct irq_desc *desc, struct irqaction *action)
+ 		__enable_irq(desc, desc->irq, false);
+ 	}
+ 
+-	raw_spin_unlock_irqrestore(&desc->lock, flags);
+-
+ 	if ((action->flags & IRQF_SHARED) && irqfixup >= IRQFIXUP_POLL)
+-		mod_timer(&desc->poll_timer, jiffies + IRQ_POLL_INTV);
++		irq_schedule_poll(desc, IRQ_POLL_INTV);
++
++	raw_spin_unlock_irqrestore(&desc->lock, flags);
+ }
+ 
+ void irq_poll_action_removed(struct irq_desc *desc, struct irqaction *action)
 -- 
 1.6.4.2
 
