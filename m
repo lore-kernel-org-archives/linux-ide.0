@@ -1,12 +1,12 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 03/12] irq: use desc->poll_timer for irqpoll
-Date: Sun, 13 Jun 2010 17:31:29 +0200
-Message-ID: <1276443098-20653-4-git-send-email-tj__32689.1831741252$1276443316$gmane$org@kernel.org>
+Subject: [PATCH 05/12] irq: misc preparations for further changes
+Date: Sun, 13 Jun 2010 17:31:31 +0200
+Message-ID: <1276443098-20653-6-git-send-email-tj__41689.1314358965$1276443317$gmane$org@kernel.org>
 References: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37722 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37723 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754039Ab0FMPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1754073Ab0FMPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Sun, 13 Jun 2010 11:32:10 -0400
 In-Reply-To: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,82 +14,100 @@ List-Id: linux-ide@vger.kernel.org
 To: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.orglinux
 Cc: Tejun Heo <tj@kernel.org>
 
-Due to tickless and missing IRQF_IRQPOLL flags, irqpoll has been
-broken in many configurations for quite some time.  Make irqpoll
-global polling use desc->poll_timer instead.  It's simpler and more
-reliable.
+* properly indent irqaction fields.
+
+* factor out print_irq_handler()
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- kernel/irq/spurious.c |   41 +++++------------------------------------
- 1 files changed, 5 insertions(+), 36 deletions(-)
+ include/linux/interrupt.h |   20 ++++++++++----------
+ kernel/irq/spurious.c     |   28 ++++++++++++++++------------
+ 2 files changed, 26 insertions(+), 22 deletions(-)
 
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 61857f1..b20bd65 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -102,16 +102,16 @@ typedef irqreturn_t (*irq_handler_t)(int, void *);
+  * @thread_flags:	flags related to @thread
+  */
+ struct irqaction {
+-	irq_handler_t handler;
+-	unsigned long flags;
+-	const char *name;
+-	void *dev_id;
+-	struct irqaction *next;
+-	int irq;
+-	struct proc_dir_entry *dir;
+-	irq_handler_t thread_fn;
+-	struct task_struct *thread;
+-	unsigned long thread_flags;
++	irq_handler_t		handler;
++	unsigned long		flags;
++	const char		*name;
++	void			*dev_id;
++	struct irqaction	*next;
++	int			irq;
++	struct proc_dir_entry	*dir;
++	irq_handler_t		thread_fn;
++	struct task_struct	*thread;
++	unsigned long		thread_flags;
+ };
+ 
+ extern irqreturn_t no_action(int cpl, void *dev_id);
 diff --git a/kernel/irq/spurious.c b/kernel/irq/spurious.c
-index 545f730..fc18a13 100644
+index fc18a13..0bce0e3 100644
 --- a/kernel/irq/spurious.c
 +++ b/kernel/irq/spurious.c
-@@ -159,41 +159,6 @@ report_bad_irq(unsigned int irq, struct irq_desc *desc, irqreturn_t action_ret)
- 	}
- }
+@@ -28,6 +28,21 @@ enum {
+ int noirqdebug __read_mostly;
+ static int irqfixup __read_mostly = IRQFIXUP_SPURIOUS;
  
--static inline int
--try_misrouted_irq(unsigned int irq, struct irq_desc *desc,
--		  irqreturn_t action_ret)
--{
++static void print_irq_handlers(struct irq_desc *desc)
++{
++	struct irqaction *action;
++
++	printk(KERN_ERR "handlers:\n");
++
++	action = desc->action;
++	while (action) {
++		printk(KERN_ERR "[<%p>]", action->handler);
++		print_symbol(" (%s)", (unsigned long)action->handler);
++		printk("\n");
++		action = action->next;
++	}
++}
++
+ /*
+  * Recovery handler for misrouted interrupts.
+  */
+@@ -126,8 +141,6 @@ static void
+ __report_bad_irq(unsigned int irq, struct irq_desc *desc,
+ 		 irqreturn_t action_ret)
+ {
 -	struct irqaction *action;
 -
--	if (irqfixup < IRQFIXUP_MISROUTED)
--		return 0;
+ 	if (action_ret != IRQ_HANDLED && action_ret != IRQ_NONE) {
+ 		printk(KERN_ERR "irq event %d: bogus return value %x\n",
+ 				irq, action_ret);
+@@ -136,16 +149,7 @@ __report_bad_irq(unsigned int irq, struct irq_desc *desc,
+ 				"the \"irqpoll\" option)\n", irq);
+ 	}
+ 	dump_stack();
+-	printk(KERN_ERR "handlers:\n");
 -
--	/* We didn't actually handle the IRQ - see if it was misrouted? */
--	if (action_ret == IRQ_NONE)
--		return 1;
--
--	/*
--	 * But for IRQFIXUP_POLL we also do it for handled interrupts
--	 * if they are marked as IRQF_IRQPOLL (or for irq zero, which
--	 * is the traditional PC timer interrupt.. Legacy)
--	 */
--	if (irqfixup < IRQFIXUP_POLL)
--		return 0;
--
--	if (!irq)
--		return 1;
--
--	/*
--	 * Since we don't get the descriptor lock, "action" can
--	 * change under us.  We don't really care, but we don't
--	 * want to follow a NULL pointer. So tell the compiler to
--	 * just load it once by using a barrier.
--	 */
 -	action = desc->action;
--	barrier();
--	return action && (action->flags & IRQF_IRQPOLL);
--}
--
- void __note_interrupt(unsigned int irq, struct irq_desc *desc,
- 		      irqreturn_t action_ret)
- {
-@@ -213,7 +178,8 @@ void __note_interrupt(unsigned int irq, struct irq_desc *desc,
- 			report_bad_irq(irq, desc, action_ret);
- 	}
- 
--	if (unlikely(try_misrouted_irq(irq, desc, action_ret))) {
-+	if (unlikely(irqfixup >= IRQFIXUP_MISROUTED &&
-+		     action_ret == IRQ_NONE)) {
- 		int ok = misrouted_irq(irq);
- 		if (action_ret == IRQ_NONE)
- 			desc->irqs_unhandled -= ok;
-@@ -269,6 +235,9 @@ void irq_poll_action_added(struct irq_desc *desc, struct irqaction *action)
- 	}
- 
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
-+
-+	if ((action->flags & IRQF_SHARED) && irqfixup >= IRQFIXUP_POLL)
-+		mod_timer(&desc->poll_timer, jiffies + IRQ_POLL_INTV);
+-	while (action) {
+-		printk(KERN_ERR "[<%p>]", action->handler);
+-		print_symbol(" (%s)",
+-			(unsigned long)action->handler);
+-		printk("\n");
+-		action = action->next;
+-	}
++	print_irq_handlers(desc);
  }
  
- void irq_poll_action_removed(struct irq_desc *desc, struct irqaction *action)
+ static void
 -- 
 1.6.4.2
 
