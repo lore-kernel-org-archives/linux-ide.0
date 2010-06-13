@@ -1,179 +1,285 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 11/12] libata: use IRQ expecting
-Date: Sun, 13 Jun 2010 17:31:37 +0200
-Message-ID: <1276443098-20653-12-git-send-email-tj__47255.0858198248$1276443317$gmane$org@kernel.org>
+Subject: [PATCH 01/12] irq: cleanup irqfixup
+Date: Sun, 13 Jun 2010 17:31:27 +0200
+Message-ID: <1276443098-20653-2-git-send-email-tj__1642.44594420797$1276443318$gmane$org@kernel.org>
 References: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37719 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37759 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754034Ab0FMPcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Jun 2010 11:32:10 -0400
+	id S1754036Ab0FMPcO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Jun 2010 11:32:14 -0400
 In-Reply-To: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.orglinux
 Cc: Tejun Heo <tj@kernel.org>
 
-Thanks to its age, ATA is very susceptible to IRQ delivery problems in
-both directions - lost and spurious interrupts.  In traditional PATA,
-the IRQ line is ultimately out of the controller and driver's control.
-Even relatively new SATA isn't free from these issues.  Many
-controllers still emulate the traditional IDE interface which doesn't
-have reliable way to indicate interrupt pending state and there also
-is an issue regarding the interpretation of nIEN on both sides of the
-cable.
+Make the following cleanups to irqfixup.
 
-Most of these problems can be worked around by using the new IRQ
-expecting mechanism without adding noticeable overhead.  In ATA,
-almost all operations are initiated by the host and the controller
-signals progress or completion using IRQ.  IRQ expecting can easily be
-added in libata core and applied to all libata drivers.
+* Define IRQFIXUP_{SPURIOUS|MISROUTED|POLL} and use them instead of
+  hard coding 0, 1 and 2.
+
+* Add an inline note_interrupt() wrapper which checks noirqdebug and
+  calls __note_interrupt() instead of checking noirqdebug from each
+  caller.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/libata-core.c |   15 +++++++++++++--
- drivers/ata/libata-eh.c   |    4 +++-
- drivers/ata/libata-sff.c  |   37 +++++++++++++++++++------------------
- include/linux/libata.h    |    2 ++
- 4 files changed, 37 insertions(+), 21 deletions(-)
+ arch/arm/mach-ns9xxx/irq.c              |    3 ---
+ arch/powerpc/platforms/cell/interrupt.c |    5 +----
+ include/linux/irq.h                     |   13 +++++++++++--
+ kernel/irq/chip.c                       |   18 ++++++------------
+ kernel/irq/handle.c                     |    6 ++----
+ kernel/irq/internals.h                  |    2 --
+ kernel/irq/spurious.c                   |   30 ++++++++++++++++++------------
+ 7 files changed, 38 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ddf8e48..9a0aaa0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4972,6 +4972,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
+diff --git a/arch/arm/mach-ns9xxx/irq.c b/arch/arm/mach-ns9xxx/irq.c
+index 038f24d..6be86e9 100644
+--- a/arch/arm/mach-ns9xxx/irq.c
++++ b/arch/arm/mach-ns9xxx/irq.c
+@@ -82,9 +82,6 @@ static void handle_prio_irq(unsigned int irq, struct irq_desc *desc)
  
-+	unexpect_irq(ap->irq_expect, false);
-+
- 	/* XXX: New EH and old EH use different mechanisms to
- 	 * synchronize EH with regular execution path.
- 	 *
-@@ -5087,6 +5089,9 @@ int ata_qc_complete_multiple(struct ata_port *ap, u32 qc_active)
- 		done_mask &= ~(1 << tag);
- 	}
+ 	action_ret = handle_IRQ_event(irq, action);
  
-+	if (ap->qc_active)
-+		expect_irq(ap->irq_expect);
-+
- 	return nr_done;
+-	/* XXX: There is no direct way to access noirqdebug, so check
+-	 * unconditionally for spurious irqs...
+-	 * Maybe this function should go to kernel/irq/chip.c? */
+ 	note_interrupt(irq, desc, action_ret);
+ 
+ 	raw_spin_lock(&desc->lock);
+diff --git a/arch/powerpc/platforms/cell/interrupt.c b/arch/powerpc/platforms/cell/interrupt.c
+index 10eb1a4..e638fb3 100644
+--- a/arch/powerpc/platforms/cell/interrupt.c
++++ b/arch/powerpc/platforms/cell/interrupt.c
+@@ -233,8 +233,6 @@ static int iic_host_match(struct irq_host *h, struct device_node *node)
+ 				    "IBM,CBEA-Internal-Interrupt-Controller");
  }
  
-@@ -5153,6 +5158,7 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 	qc->err_mask |= ap->ops->qc_issue(qc);
- 	if (unlikely(qc->err_mask))
- 		goto err;
-+	expect_irq(ap->irq_expect);
- 	return;
+-extern int noirqdebug;
+-
+ static void handle_iic_irq(unsigned int irq, struct irq_desc *desc)
+ {
+ 	raw_spin_lock(&desc->lock);
+@@ -267,8 +265,7 @@ static void handle_iic_irq(unsigned int irq, struct irq_desc *desc)
+ 		desc->status &= ~IRQ_PENDING;
+ 		raw_spin_unlock(&desc->lock);
+ 		action_ret = handle_IRQ_event(irq, action);
+-		if (!noirqdebug)
+-			note_interrupt(irq, desc, action_ret);
++		note_interrupt(irq, desc, action_ret);
+ 		raw_spin_lock(&desc->lock);
  
- sg_err:
-@@ -6185,8 +6191,13 @@ int ata_host_activate(struct ata_host *host, int irq,
- 	if (rc)
- 		return rc;
+ 	} while ((desc->status & (IRQ_PENDING | IRQ_DISABLED)) == IRQ_PENDING);
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index c03243a..ec93be4 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -324,8 +324,17 @@ static inline void generic_handle_irq(unsigned int irq)
+ }
  
--	for (i = 0; i < host->n_ports; i++)
--		ata_port_desc(host->ports[i], "irq %d", irq);
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
+ /* Handling of unhandled and spurious interrupts: */
+-extern void note_interrupt(unsigned int irq, struct irq_desc *desc,
+-			   irqreturn_t action_ret);
++extern void __note_interrupt(unsigned int irq, struct irq_desc *desc,
++			     irqreturn_t action_ret);
 +
-+		if (!ata_port_is_dummy(ap))
-+			ap->irq_expect = init_irq_expect(irq, host);
-+		ata_port_desc(ap, "irq %d%s", irq, ap->irq_expect ? "+" : "");
-+	}
++static inline void note_interrupt(unsigned int irq, struct irq_desc *desc,
++				  irqreturn_t action_ret)
++{
++	extern int noirqdebug;
++
++	if (!noirqdebug)
++		__note_interrupt(irq, desc, action_ret);
++}
  
- 	rc = ata_host_register(host, sht);
- 	/* if failed, just free the IRQ and leave ports alone */
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index f77a673..f1ae3ec 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -619,8 +619,10 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		 * handler doesn't diddle with those qcs.  This must
- 		 * be done atomically w.r.t. setting QCFLAG_FAILED.
- 		 */
--		if (nr_timedout)
-+		if (nr_timedout) {
-+			unexpect_irq(ap->irq_expect, true);
- 			__ata_port_freeze(ap);
-+		}
+ /* Resending of interrupts :*/
+ void check_irq_resend(struct irq_desc *desc, unsigned int irq);
+diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
+index b7091d5..db26ff0 100644
+--- a/kernel/irq/chip.c
++++ b/kernel/irq/chip.c
+@@ -406,8 +406,7 @@ void handle_nested_irq(unsigned int irq)
+ 	raw_spin_unlock_irq(&desc->lock);
  
- 		spin_unlock_irqrestore(ap->lock, flags);
+ 	action_ret = action->thread_fn(action->irq, action->dev_id);
+-	if (!noirqdebug)
+-		note_interrupt(irq, desc, action_ret);
++	note_interrupt(irq, desc, action_ret);
  
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index efa4a18..cc96f36 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2388,7 +2388,8 @@ int ata_pci_sff_activate_host(struct ata_host *host,
- 	struct device *dev = host->dev;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	const char *drv_name = dev_driver_string(host->dev);
--	int legacy_mode = 0, rc;
-+	struct ata_port *ap[2] = { host->ports[0], host->ports[1] };
-+	int legacy_mode = 0, i, rc;
+ 	raw_spin_lock_irq(&desc->lock);
+ 	desc->status &= ~IRQ_INPROGRESS;
+@@ -450,8 +449,7 @@ handle_simple_irq(unsigned int irq, struct irq_desc *desc)
+ 	raw_spin_unlock(&desc->lock);
  
- 	rc = ata_host_start(host);
- 	if (rc)
-@@ -2422,29 +2423,29 @@ int ata_pci_sff_activate_host(struct ata_host *host,
- 		if (rc)
- 			goto out;
+ 	action_ret = handle_IRQ_event(irq, action);
+-	if (!noirqdebug)
+-		note_interrupt(irq, desc, action_ret);
++	note_interrupt(irq, desc, action_ret);
  
--		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
--		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
-+		for (i = 0; i < 2; i++) {
-+			if (!ata_port_is_dummy(ap[i]))
-+				ap[i]->irq_expect =
-+					init_irq_expect(pdev->irq, host);
-+			ata_port_desc(ap[i], "irq %d%s",
-+				      pdev->irq, ap[i]->irq_expect ? "+" : "");
-+		}
- 	} else if (legacy_mode) {
--		if (!ata_port_is_dummy(host->ports[0])) {
--			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
--					      irq_handler, IRQF_SHARED,
--					      drv_name, host);
--			if (rc)
--				goto out;
-+		unsigned int irqs[2] = { ATA_PRIMARY_IRQ(pdev),
-+					 ATA_SECONDARY_IRQ(pdev) };
+ 	raw_spin_lock(&desc->lock);
+ 	desc->status &= ~IRQ_INPROGRESS;
+@@ -495,8 +493,7 @@ handle_level_irq(unsigned int irq, struct irq_desc *desc)
+ 	raw_spin_unlock(&desc->lock);
  
--			ata_port_desc(host->ports[0], "irq %d",
--				      ATA_PRIMARY_IRQ(pdev));
--		}
-+		for (i = 0; i < 2; i++) {
-+			if (ata_port_is_dummy(ap[i]))
-+				continue;
+ 	action_ret = handle_IRQ_event(irq, action);
+-	if (!noirqdebug)
+-		note_interrupt(irq, desc, action_ret);
++	note_interrupt(irq, desc, action_ret);
  
--		if (!ata_port_is_dummy(host->ports[1])) {
--			rc = devm_request_irq(dev, ATA_SECONDARY_IRQ(pdev),
--					      irq_handler, IRQF_SHARED,
--					      drv_name, host);
-+			rc = devm_request_irq(dev, irqs[i], irq_handler,
-+					      IRQF_SHARED, drv_name, host);
- 			if (rc)
- 				goto out;
+ 	raw_spin_lock(&desc->lock);
+ 	desc->status &= ~IRQ_INPROGRESS;
+@@ -548,8 +545,7 @@ handle_fasteoi_irq(unsigned int irq, struct irq_desc *desc)
+ 	raw_spin_unlock(&desc->lock);
  
--			ata_port_desc(host->ports[1], "irq %d",
--				      ATA_SECONDARY_IRQ(pdev));
-+			ap[i]->irq_expect = init_irq_expect(irqs[i], host);
-+			ata_port_desc(ap[i], "irq %d%s",
-+				      irqs[i], ap[i]->irq_expect ? "+" : "");
+ 	action_ret = handle_IRQ_event(irq, action);
+-	if (!noirqdebug)
+-		note_interrupt(irq, desc, action_ret);
++	note_interrupt(irq, desc, action_ret);
+ 
+ 	raw_spin_lock(&desc->lock);
+ 	desc->status &= ~IRQ_INPROGRESS;
+@@ -625,8 +621,7 @@ handle_edge_irq(unsigned int irq, struct irq_desc *desc)
+ 		desc->status &= ~IRQ_PENDING;
+ 		raw_spin_unlock(&desc->lock);
+ 		action_ret = handle_IRQ_event(irq, action);
+-		if (!noirqdebug)
+-			note_interrupt(irq, desc, action_ret);
++		note_interrupt(irq, desc, action_ret);
+ 		raw_spin_lock(&desc->lock);
+ 
+ 	} while ((desc->status & (IRQ_PENDING | IRQ_DISABLED)) == IRQ_PENDING);
+@@ -654,8 +649,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
+ 		desc->chip->ack(irq);
+ 
+ 	action_ret = handle_IRQ_event(irq, desc->action);
+-	if (!noirqdebug)
+-		note_interrupt(irq, desc, action_ret);
++	note_interrupt(irq, desc, action_ret);
+ 
+ 	if (desc->chip->eoi)
+ 		desc->chip->eoi(irq);
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 27e5c69..3ae50bf 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -461,8 +461,7 @@ unsigned int __do_IRQ(unsigned int irq)
+ 			desc->chip->ack(irq);
+ 		if (likely(!(desc->status & IRQ_DISABLED))) {
+ 			action_ret = handle_IRQ_event(irq, desc->action);
+-			if (!noirqdebug)
+-				note_interrupt(irq, desc, action_ret);
++			note_interrupt(irq, desc, action_ret);
  		}
- 	}
+ 		desc->chip->end(irq);
+ 		return 1;
+@@ -515,8 +514,7 @@ unsigned int __do_IRQ(unsigned int irq)
+ 		raw_spin_unlock(&desc->lock);
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b85f3ff..3f5f159 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -751,6 +751,8 @@ struct ata_port {
- 	struct ata_host		*host;
- 	struct device 		*dev;
+ 		action_ret = handle_IRQ_event(irq, action);
+-		if (!noirqdebug)
+-			note_interrupt(irq, desc, action_ret);
++		note_interrupt(irq, desc, action_ret);
  
-+	struct irq_expect	*irq_expect;	/* for irq expecting */
+ 		raw_spin_lock(&desc->lock);
+ 		if (likely(!(desc->status & IRQ_PENDING)))
+diff --git a/kernel/irq/internals.h b/kernel/irq/internals.h
+index c63f3bc..341f952 100644
+--- a/kernel/irq/internals.h
++++ b/kernel/irq/internals.h
+@@ -2,8 +2,6 @@
+  * IRQ subsystem internal functions and variables:
+  */
+ 
+-extern int noirqdebug;
+-
+ /* Set default functions for irq_chip structures: */
+ extern void irq_chip_set_defaults(struct irq_chip *chip);
+ 
+diff --git a/kernel/irq/spurious.c b/kernel/irq/spurious.c
+index 89fb90a..5da60a2 100644
+--- a/kernel/irq/spurious.c
++++ b/kernel/irq/spurious.c
+@@ -14,7 +14,15 @@
+ #include <linux/moduleparam.h>
+ #include <linux/timer.h>
+ 
+-static int irqfixup __read_mostly;
++enum {
++	/* irqfixup levels */
++	IRQFIXUP_SPURIOUS		= 0,		/* spurious storm detection */
++	IRQFIXUP_MISROUTED		= 1,		/* misrouted IRQ fixup */
++	IRQFIXUP_POLL			= 2,		/* enable polling by default */
++};
 +
- 	struct delayed_work	hotplug_task;
- 	struct work_struct	scsi_rescan_task;
++int noirqdebug __read_mostly;
++static int irqfixup __read_mostly = IRQFIXUP_SPURIOUS;
  
+ #define POLL_SPURIOUS_IRQ_INTERVAL (HZ/10)
+ static void poll_spurious_irqs(unsigned long dummy);
+@@ -184,7 +192,7 @@ try_misrouted_irq(unsigned int irq, struct irq_desc *desc,
+ {
+ 	struct irqaction *action;
+ 
+-	if (!irqfixup)
++	if (irqfixup < IRQFIXUP_MISROUTED)
+ 		return 0;
+ 
+ 	/* We didn't actually handle the IRQ - see if it was misrouted? */
+@@ -192,11 +200,11 @@ try_misrouted_irq(unsigned int irq, struct irq_desc *desc,
+ 		return 1;
+ 
+ 	/*
+-	 * But for 'irqfixup == 2' we also do it for handled interrupts if
+-	 * they are marked as IRQF_IRQPOLL (or for irq zero, which is the
+-	 * traditional PC timer interrupt.. Legacy)
++	 * But for IRQFIXUP_POLL we also do it for handled interrupts
++	 * if they are marked as IRQF_IRQPOLL (or for irq zero, which
++	 * is the traditional PC timer interrupt.. Legacy)
+ 	 */
+-	if (irqfixup < 2)
++	if (irqfixup < IRQFIXUP_POLL)
+ 		return 0;
+ 
+ 	if (!irq)
+@@ -213,8 +221,8 @@ try_misrouted_irq(unsigned int irq, struct irq_desc *desc,
+ 	return action && (action->flags & IRQF_IRQPOLL);
+ }
+ 
+-void note_interrupt(unsigned int irq, struct irq_desc *desc,
+-		    irqreturn_t action_ret)
++void __note_interrupt(unsigned int irq, struct irq_desc *desc,
++		      irqreturn_t action_ret)
+ {
+ 	if (unlikely(action_ret != IRQ_HANDLED)) {
+ 		/*
+@@ -262,8 +270,6 @@ void note_interrupt(unsigned int irq, struct irq_desc *desc,
+ 	desc->irqs_unhandled = 0;
+ }
+ 
+-int noirqdebug __read_mostly;
+-
+ int noirqdebug_setup(char *str)
+ {
+ 	noirqdebug = 1;
+@@ -278,7 +284,7 @@ MODULE_PARM_DESC(noirqdebug, "Disable irq lockup detection when true");
+ 
+ static int __init irqfixup_setup(char *str)
+ {
+-	irqfixup = 1;
++	irqfixup = max(irqfixup, IRQFIXUP_MISROUTED);
+ 	printk(KERN_WARNING "Misrouted IRQ fixup support enabled.\n");
+ 	printk(KERN_WARNING "This may impact system performance.\n");
+ 
+@@ -290,7 +296,7 @@ module_param(irqfixup, int, 0644);
+ 
+ static int __init irqpoll_setup(char *str)
+ {
+-	irqfixup = 2;
++	irqfixup = IRQFIXUP_POLL;
+ 	printk(KERN_WARNING "Misrouted IRQ fixup and polling support "
+ 				"enabled\n");
+ 	printk(KERN_WARNING "This may significantly impact system "
 -- 
 1.6.4.2
 
