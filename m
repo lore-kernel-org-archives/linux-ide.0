@@ -1,178 +1,397 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET] irq: better lost/spurious irq handling
-Date: Sun, 13 Jun 2010 17:31:26 +0200
-Message-ID: <1276443098-20653-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/12] irq: implement IRQ watching
+Date: Sun, 13 Jun 2010 17:31:34 +0200
+Message-ID: <1276443098-20653-9-git-send-email-tj__36460.6712515981$1276443202$gmane$org@kernel.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37777 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37767 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754306Ab0FMPcV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Jun 2010 11:32:21 -0400
+	id S1754073Ab0FMPcR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 13 Jun 2010 11:32:17 -0400
+In-Reply-To: <1276443098-20653-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.orglinux
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello,
+This patch implements IRQ watching, which is a simple polling
+mechanism drivers can use to work around lost and/or misrouted IRQs.
+IRQ watching is enabled by driver calling watch_irq(irq, dev_id).
+After that, it polls the irqaction for certain amount of time (1min)
+and keeps track of whether IRQ delivery is actually working.  If the
+irqaction is serviced by poll, it's considered to be a possible
+indication of IRQ misdelivery.
 
-This is the first take of better-lost-spurious-irq-handling patchset.
+The watch polling starts slowly at 1HZ and speeds up to 100HZ when it
+sees a possible bad delivery.  After collecting stats for a while, it
+determines whether the IRQ delivery is working for the irqaction.  If
+so or it can't be determined, it steps out.  If not working, IRQ
+polling continues till the irqaction is unregistered.
 
-IRQs can go wrong in two opposite directions.  There can be too many
-or too few.  Currently, the former is handled by spurious IRQ
-detection and polling (the "nobody cared" thing) and the latter by
-irqpoll kernel parameter, which currently is broken on many
-configurations due to tickless timer and missing IRQF_IRQPOLL.
+This can be used by drivers which don't know when to expect the next
+IRQ.  Just by calling watch_irq() after irqaction is registered or a
+timeout, most IRQ misrouting problems can be worked around.
 
-Certain hardware classes are inherently prone to IRQ related problems.
-ATA is one very good example.  When the traditional IDE interface is
-used, regardless of PATA or SATA, handling of IRQ is very fragile.
-There is no reliable way to tell whether the controller is raising an
-interrupt or not and the driver should expect IRQ according to HSM
-transitions and hope that the host controller stays in sync and does
-what it's expected to do.  Occasionally but surely something goes
-wrong and IRQ storm or timeout follows.  Furthermore, the IRQ is
-ultimately under the control of the ATA device not the ATA controller
-making things a whole lot more fragile and prone to permanent and
-transient IRQ problems.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ include/linux/interrupt.h |   12 +++
+ include/linux/irq.h       |    2 +
+ kernel/irq/handle.c       |    1 +
+ kernel/irq/spurious.c     |  209 ++++++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 221 insertions(+), 3 deletions(-)
 
-Even if the controller and hardware themselves are okay, IRQ sharing
-means that any device can be a victim of rogue interrupts.  For
-example, there was an I2C device for which the driver didn't use IRQ
-but when the configuration is right (well, rather, wrong), its IRQ
-line would assert and cause IRQ storm and there wasn't much the driver
-could do to prevent that.  There's also the BIOS and OS expecting
-different things especially during suspend and resume.  On my x61s
-when resuming from STR something funny happens and the IRQ line for a
-USB host gets stuck once in a while.
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index b20bd65..bc0cdbc 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -88,6 +88,14 @@ enum {
+ 
+ typedef irqreturn_t (*irq_handler_t)(int, void *);
+ 
++struct irq_watch {
++	irqreturn_t		last_ret;
++	unsigned int		flags;
++	unsigned long		started;
++	unsigned int		nr_samples;
++	unsigned int		nr_polled;
++};
++
+ /**
+  * struct irqaction - per interrupt action descriptor
+  * @handler:	interrupt handler function
+@@ -100,6 +108,7 @@ typedef irqreturn_t (*irq_handler_t)(int, void *);
+  * @thread_fn:	interupt handler function for threaded interrupts
+  * @thread:	thread pointer for threaded interrupts
+  * @thread_flags:	flags related to @thread
++ * @watch:	data for irq watching
+  */
+ struct irqaction {
+ 	irq_handler_t		handler;
+@@ -112,6 +121,7 @@ struct irqaction {
+ 	irq_handler_t		thread_fn;
+ 	struct task_struct	*thread;
+ 	unsigned long		thread_flags;
++	struct irq_watch	watch;
+ };
+ 
+ extern irqreturn_t no_action(int cpl, void *dev_id);
+@@ -184,6 +194,8 @@ devm_request_irq(struct device *dev, unsigned int irq, irq_handler_t handler,
+ 
+ extern void devm_free_irq(struct device *dev, unsigned int irq, void *dev_id);
+ 
++extern void watch_irq(unsigned int irq, void *dev_id);
++
+ /*
+  * On lockdep we dont want to enable hardirqs in hardirq
+  * context. Use local_irq_enable_in_hardirq() to annotate
+diff --git a/include/linux/irq.h b/include/linux/irq.h
+index b2f73ba..e31954f 100644
+--- a/include/linux/irq.h
++++ b/include/linux/irq.h
+@@ -72,6 +72,7 @@ typedef	void (*irq_flow_handler_t)(unsigned int irq,
+ #define IRQ_SUSPENDED		0x04000000	/* IRQ has gone through suspend sequence */
+ #define IRQ_ONESHOT		0x08000000	/* IRQ is not unmasked after hardirq */
+ #define IRQ_NESTED_THREAD	0x10000000	/* IRQ is nested into another, no own handler thread */
++#define IRQ_CHECK_WATCHES	0x40000000	/* IRQ watch enabled */
+ 
+ #ifdef CONFIG_IRQ_PER_CPU
+ # define CHECK_IRQ_PER_CPU(var) ((var) & IRQ_PER_CPU)
+@@ -214,6 +215,7 @@ struct irq_desc {
+ 
+ 	struct irq_spr		spr;
+ 	struct timer_list	poll_timer;
++	bool			poll_warned;
+ 
+ #ifdef CONFIG_PROC_FS
+ 	struct proc_dir_entry	*dir;
+diff --git a/kernel/irq/handle.c b/kernel/irq/handle.c
+index 3ae50bf..685c3b3 100644
+--- a/kernel/irq/handle.c
++++ b/kernel/irq/handle.c
+@@ -416,6 +416,7 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
+ 		}
+ 
+ 		retval |= ret;
++		action->watch.last_ret = ret;
+ 		action = action->next;
+ 	} while (action);
+ 
+diff --git a/kernel/irq/spurious.c b/kernel/irq/spurious.c
+index 3948666..6f2ea3b 100644
+--- a/kernel/irq/spurious.c
++++ b/kernel/irq/spurious.c
+@@ -23,11 +23,51 @@ enum {
+ 	IRQFIXUP_POLL			= 2,		/* enable polling by default */
+ 
+ 	/* IRQ polling common parameters */
++	IRQ_POLL_SLOW_INTV		= 3 * HZ,	/* not too slow for ppl, slow enough for machine */
+ 	IRQ_POLL_INTV			= HZ / 100,	/* from the good ol' 100HZ tick */
+ 
++	IRQ_POLL_SLOW_SLACK		= HZ,
+ 	IRQ_POLL_SLACK			= HZ / 1000,	/* 10% slack */
+ 
+ 	/*
++	 * IRQ watch parameters.
++	 *
++	 * As IRQ watching has much less information about what's
++	 * going on, the parameters are more conservative.  It will
++	 * terminate unless it can reliably determine that IRQ
++	 * delivery isn't working.
++	 *
++	 * IRQs are watched in timed intervals which is BASE_PERIOD
++	 * long by default.  Polling interval starts at BASE_INTV and
++	 * grows upto SLOW_INTV if no bad delivery is detected.
++	 *
++	 * If a period contains zero sample and no bad delivery was
++	 * seen since watch started, watch terminates.
++	 *
++	 * If a period contains >=1 but <MIN_SAMPLES deliveries,
++	 * collected samples are inherited to the next period.
++	 *
++	 * If it contains enough samples, the ratio between good and
++	 * bad deliveries are examined, if >=BAD_PCT% are bad, the
++	 * irqaction is tagged bad and watched indefinitely.  if
++	 * BAD_PCT% > nr_bad >= WARY_PCT%, WARY_PERIOD is used instead
++	 * of BASE_PERIOD and the whole process is restarted.  If
++	 * <WARY_PCT% are bad, watch terminates.
++	 */
++	IRQ_WAT_MIN_SAMPLES		= 10,
++	IRQ_WAT_BASE_INTV		= HZ / 2,
++	IRQ_WAT_BASE_PERIOD		= 60 * HZ,
++	IRQ_WAT_WARY_PERIOD		= 600 * HZ,
++	IRQ_WAT_WARY_PCT		= 1,
++	IRQ_WAT_BAD_PCT			= 10,
++
++	/* IRQ watch flags */
++	IRQ_WATCHING			= (1 << 0),
++	IRQ_WAT_POLLED			= (1 << 1),
++	IRQ_WAT_WARY			= (1 << 2),
++	IRQ_WAT_BAD			= (1 << 3),
++
++	/*
+ 	 * Spurious IRQ handling parameters.
+ 	 *
+ 	 * As this per-IRQ spurious handling is cheaper than the
+@@ -62,6 +102,16 @@ enum {
+ int noirqdebug __read_mostly;
+ static int irqfixup __read_mostly = IRQFIXUP_SPURIOUS;
+ 
++static struct irqaction *find_irq_action(struct irq_desc *desc, void *dev_id)
++{
++	struct irqaction *act;
++
++	for (act = desc->action; act; act = act->next)
++		if (act->dev_id == dev_id)
++			return act;
++	return NULL;
++}
++
+ static void print_irq_handlers(struct irq_desc *desc)
+ {
+ 	struct irqaction *action;
+@@ -77,9 +127,25 @@ static void print_irq_handlers(struct irq_desc *desc)
+ 	}
+ }
+ 
++static void warn_irq_poll(struct irq_desc *desc, struct irqaction *act)
++{
++	if (desc->poll_warned)
++		return;
++
++	desc->poll_warned = true;
++
++	printk(KERN_WARNING "IRQ %u: %s: can't verify IRQ, will keep polling\n",
++	       desc->irq, act->name);
++	printk(KERN_WARNING "IRQ %u: %s: system performance may be affected\n",
++	       desc->irq, act->name);
++}
++
+ static unsigned long irq_poll_slack(unsigned long intv)
+ {
+-	return IRQ_POLL_SLACK;
++	if (intv >= IRQ_POLL_SLOW_INTV)
++		return IRQ_POLL_SLOW_SLACK;
++	else
++		return IRQ_POLL_SLACK;
+ }
+ 
+ /**
+@@ -109,6 +175,119 @@ static void irq_schedule_poll(struct irq_desc *desc, unsigned long intv)
+ 	mod_timer(&desc->poll_timer, expires);
+ }
+ 
++/**
++ * irq_update_watch - IRQ handled, update watch state
++ * @desc: IRQ desc of interest
++ * @act: IRQ action of interest
++ * @via_poll: IRQ was handled via poll
++ *
++ * Called after IRQ is successfully delievered or polled.  Updates
++ * watch state accordingly and determines which watch interval to use.
++ *
++ * CONTEXT:
++ * desc->lock
++ *
++ * RETURNS:
++ * Watch poll interval to use, MAX_JIFFY_OFFSET if watch polling isn't
++ * necessary.
++ */
++static unsigned long irq_update_watch(struct irq_desc *desc,
++				      struct irqaction *act, bool via_poll)
++{
++	struct irq_watch *wat = &act->watch;
++	unsigned long period = wat->flags & IRQ_WAT_WARY ?
++		IRQ_WAT_WARY_PERIOD : IRQ_WAT_BASE_PERIOD;
++
++	/* if not watching or already determined to be bad, it's easy */
++	if (!(wat->flags & IRQ_WATCHING))
++		return MAX_JIFFY_OFFSET;
++	if (wat->flags & IRQ_WAT_BAD)
++		return IRQ_POLL_INTV;
++
++	/* don't expire watch period while spurious polling is in effect */
++	if (desc->spr.poll_rem) {
++		wat->started = jiffies;
++		return IRQ_POLL_INTV;
++	}
++
++	/* IRQ was handled, record whether it was a good or bad delivery */
++	if (wat->last_ret == IRQ_HANDLED) {
++		wat->nr_samples++;
++		if (via_poll) {
++			wat->nr_polled++;
++			wat->flags |= IRQ_WAT_POLLED;
++		}
++	}
++
++	/* is this watch period over? */
++	if (time_after(jiffies, wat->started + period)) {
++		unsigned int wry_thr = wat->nr_samples * IRQ_WAT_WARY_PCT / 100;
++		unsigned int bad_thr = wat->nr_samples * IRQ_WAT_BAD_PCT / 100;
++
++		if (wat->nr_samples >= IRQ_WAT_MIN_SAMPLES) {
++			/* have enough samples, determine what to do */
++			if (wat->nr_polled <= wry_thr)
++				wat->flags &= ~IRQ_WATCHING;
++			else if (wat->nr_polled <= bad_thr)
++				wat->flags |= IRQ_WAT_WARY;
++			else {
++				warn_irq_poll(desc, act);
++				wat->flags |= IRQ_WAT_BAD;
++			}
++			wat->nr_samples = 0;
++			wat->nr_polled = 0;
++		} else if (!wat->nr_samples || !(wat->flags & IRQ_WAT_POLLED)) {
++			/* not sure but let's not hold onto it */
++			wat->flags &= ~IRQ_WATCHING;
++		}
++
++		wat->started = jiffies;
++	}
++
++	if (!(wat->flags & IRQ_WATCHING))
++		return MAX_JIFFY_OFFSET;
++	if (wat->flags & IRQ_WAT_POLLED)
++		return IRQ_POLL_INTV;
++	/* every delivery upto this point has been successful, grow interval */
++	return clamp_t(unsigned long, jiffies - wat->started,
++		       IRQ_WAT_BASE_INTV, IRQ_POLL_SLOW_INTV);
++}
++
++/**
++ * watch_irq - watch an irqaction
++ * @irq: IRQ the irqaction to watch belongs to
++ * @dev_id: dev_id for the irqaction to watch
++ *
++ * LOCKING:
++ * Grabs and releases desc->lock.
++ */
++void watch_irq(unsigned int irq, void *dev_id)
++{
++	struct irq_desc *desc = irq_to_desc(irq);
++	struct irqaction *act;
++	unsigned long flags;
++
++	if (WARN_ON_ONCE(!desc))
++		return;
++
++	raw_spin_lock_irqsave(&desc->lock, flags);
++
++	act = find_irq_action(desc, dev_id);
++	if (!WARN_ON_ONCE(!act)) {
++		struct irq_watch *wat = &act->watch;
++
++		wat->flags |= IRQ_WATCHING;
++		wat->started = jiffies;
++		wat->nr_samples = 0;
++		wat->nr_polled = 0;
++		desc->status |= IRQ_CHECK_WATCHES;
++		irq_schedule_poll(desc, IRQ_WAT_BASE_INTV);
++	}
++
++	raw_spin_unlock_irqrestore(&desc->lock, flags);
++}
++EXPORT_SYMBOL_GPL(watch_irq);
++
+ /* start a new spurious handling period */
+ static void irq_spr_new_period(struct irq_spr *spr)
+ {
+@@ -151,8 +330,9 @@ static int try_one_irq(int irq, struct irq_desc *desc)
+ 	while (action) {
+ 		/* Only shared IRQ handlers are safe to call */
+ 		if (action->flags & IRQF_SHARED) {
+-			if (action->handler(irq, action->dev_id) ==
+-				IRQ_HANDLED)
++			action->watch.last_ret =
++				action->handler(irq, action->dev_id);
++			if (action->watch.last_ret == IRQ_HANDLED)
+ 				ok = 1;
+ 		}
+ 		action = action->next;
+@@ -219,6 +399,24 @@ void __note_interrupt(unsigned int irq, struct irq_desc *desc,
+ 	unsigned int cnt, abbr;
+ 	char unit = 'k';
+ 
++	/* first, take care of IRQ watches */
++	if (unlikely(desc->status & IRQ_CHECK_WATCHES)) {
++		unsigned long intv = MAX_JIFFY_OFFSET;
++		struct irqaction *act;
++
++		raw_spin_lock(&desc->lock);
++
++		for (act = desc->action; act; act = act->next)
++			intv = min(intv, irq_update_watch(desc, act, false));
++
++		if (intv < MAX_JIFFY_OFFSET)
++			irq_schedule_poll(desc, intv);
++		else
++			desc->status &= ~IRQ_CHECK_WATCHES;
++
++		raw_spin_unlock(&desc->lock);
++	}
++
+ 	/*
+ 	 * Account for unhandled interrupt.  We don't care whether
+ 	 * spurious accounting update races with irq open/close and
+@@ -313,6 +511,7 @@ void poll_irq(unsigned long arg)
+ 	struct irq_spr *spr = &desc->spr;
+ 	unsigned long intv = MAX_JIFFY_OFFSET;
+ 	bool reenable_irq = false;
++	struct irqaction *act;
+ 
+ 	raw_spin_lock_irq(&desc->lock);
+ 
+@@ -331,6 +530,10 @@ void poll_irq(unsigned long arg)
+ 	if (!spr->poll_rem)
+ 		reenable_irq = desc->status & IRQ_SPURIOUS_DISABLED;
+ 
++	/* take care of watches */
++	for (act = desc->action; act; act = act->next)
++		intv = min(irq_update_watch(desc, act, true), intv);
++
+ 	/* need to poll again? */
+ 	if (intv < MAX_JIFFY_OFFSET)
+ 		irq_schedule_poll(desc, intv);
+-- 
+1.6.4.2
 
-Most of these problems can be worked around much more efficiently
-without adding noticeable runtime overhead or driver complexity by
-using polling carefully.  This patchset improves the existing spurious
-IRQ handling and implements two mechanisms to work around lost
-interrupts.
-
-Emphasis was put on making it easy to use for drivers.  Drivers only
-need IRQF_SHARED on the interrupt handler and add some function calls
-here and there.  Functions which can be used in hot paths are
-efficient and can be called without worrying about performance
-implications by virtually any driver which deals with an actual
-hardware.  Except for init functions, all don't care about calling
-context and won't fail catastrophically even if used incorrectly.
-Also, operational parameters are predetermined and/or self regulating.
-
-After this patchset, the following three mechanisms are in place to
-deal with IRQ problems.
-
-* IRQ expecting: Tightly coupled with controller operation.  Provides
-  strong protection against most lost IRQ problems.  Applied to
-  libata.
-
-* IRQ watching: Loosely coupled with controller operation.  Provides
-  protection against common lost IRQ problems (misrouting).  Applied
-  to usb.
-
-* Spurious IRQ handling: More responsive and less expensive than the
-  existing implementation.  Tries to disengage after some period so
-  that transient problems don't end up having prolonged effects.
-
-With the patchset applied, my test machine works fine with IRQ routing
-messed up.  By applying the mechanism to more drivers, things will
-improve but, even in the current state, many systems with IRQ problems
-will be able to cope with transient problems much better and install
-and run the base system well enough to allow bug reporting and
-debugging of persistent ones.
-
-This patchset contains the following 12 patches.
-
- 0001-irq-cleanup-irqfixup.patch
- 0002-irq-make-spurious-poll-timer-per-desc.patch
- 0003-irq-use-desc-poll_timer-for-irqpoll.patch
- 0004-irq-kill-IRQF_IRQPOLL.patch
- 0005-irq-misc-preparations-for-further-changes.patch
- 0006-irq-implement-irq_schedule_poll.patch
- 0007-irq-improve-spurious-IRQ-handling.patch
- 0008-irq-implement-IRQ-watching.patch
- 0009-irq-implement-IRQ-expecting.patch
- 0010-irq-add-comment-about-overall-design-of-lost-spuriou.patch
- 0011-libata-use-IRQ-expecting.patch
- 0012-usb-use-IRQ-watching.patch
-
-0001 is cleanup.
-
-0002-0004 convert the existing polling mechanisms to use per-desc
-timer instead of IRQF_IRQPOLL.  This is more reliable and cheaper and
-easier to maintain.
-
-0005-0006 prepare for further changes.
-
-0007-0010 implement better lost/spurious interrupt handling
-mechanisms.
-
-0011-0012 apply them to libata and usb.
-
-This patchset is available in the following git branch.
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git lost-spurious-irq
-
-and contains the following changes.
-
- arch/arm/mach-aaec2000/core.c            |    2 
- arch/arm/mach-at91/at91rm9200_time.c     |    2 
- arch/arm/mach-at91/at91sam926x_time.c    |    2 
- arch/arm/mach-bcmring/core.c             |    2 
- arch/arm/mach-clps711x/time.c            |    2 
- arch/arm/mach-cns3xxx/core.c             |    2 
- arch/arm/mach-ebsa110/core.c             |    2 
- arch/arm/mach-ep93xx/core.c              |    2 
- arch/arm/mach-footbridge/dc21285-timer.c |    2 
- arch/arm/mach-footbridge/isa-timer.c     |    2 
- arch/arm/mach-h720x/cpu-h7201.c          |    2 
- arch/arm/mach-h720x/cpu-h7202.c          |    2 
- arch/arm/mach-integrator/integrator_ap.c |    2 
- arch/arm/mach-ixp2000/core.c             |    2 
- arch/arm/mach-ixp23xx/core.c             |    2 
- arch/arm/mach-ixp4xx/common.c            |    2 
- arch/arm/mach-lh7a40x/time.c             |    2 
- arch/arm/mach-mmp/time.c                 |    2 
- arch/arm/mach-netx/time.c                |    2 
- arch/arm/mach-ns9xxx/irq.c               |    3 
- arch/arm/mach-ns9xxx/time-ns9360.c       |    2 
- arch/arm/mach-nuc93x/time.c              |    2 
- arch/arm/mach-omap1/time.c               |    2 
- arch/arm/mach-omap1/timer32k.c           |    2 
- arch/arm/mach-omap2/timer-gp.c           |    2 
- arch/arm/mach-pnx4008/time.c             |    2 
- arch/arm/mach-pxa/time.c                 |    2 
- arch/arm/mach-sa1100/time.c              |    2 
- arch/arm/mach-shark/core.c               |    2 
- arch/arm/mach-u300/timer.c               |    2 
- arch/arm/mach-w90x900/time.c             |    2 
- arch/arm/plat-iop/time.c                 |    2 
- arch/arm/plat-mxc/time.c                 |    2 
- arch/arm/plat-samsung/time.c             |    2 
- arch/arm/plat-versatile/timer-sp.c       |    2 
- arch/blackfin/kernel/time-ts.c           |    6 
- arch/ia64/kernel/time.c                  |    2 
- arch/parisc/kernel/irq.c                 |    2 
- arch/powerpc/platforms/cell/interrupt.c  |    5 
- arch/x86/kernel/time.c                   |    2 
- drivers/ata/libata-core.c                |   15 
- drivers/ata/libata-eh.c                  |    4 
- drivers/ata/libata-sff.c                 |   37 -
- drivers/clocksource/sh_cmt.c             |    3 
- drivers/clocksource/sh_mtu2.c            |    3 
- drivers/clocksource/sh_tmu.c             |    3 
- drivers/usb/core/hcd.c                   |    1 
- include/linux/interrupt.h                |   43 -
- include/linux/irq.h                      |   40 +
- include/linux/libata.h                   |    2 
- kernel/irq/chip.c                        |   20 
- kernel/irq/handle.c                      |    7 
- kernel/irq/internals.h                   |   10 
- kernel/irq/manage.c                      |   18 
- kernel/irq/proc.c                        |    5 
- kernel/irq/spurious.c                    |  978 ++++++++++++++++++++++++++-----
- 56 files changed, 1008 insertions(+), 269 deletions(-)
-
-Thanks.
-
---
-tejun
