@@ -1,49 +1,46 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Mon, 14 Jun 2010 15:11:24 -0700
-Message-ID: <20100614221124.GA22801@suse.de>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
- <1276443098-20653-13-git-send-email-tj@kernel.org>
- <20100614214122.GA21064@suse.de>
- <4C16A48A.2070404@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
+ through network interface
+Date: Mon, 14 Jun 2010 22:17:41 GMT
+Message-ID: <201006142217.o5EMHfR1010394@demeter.kernel.org>
+References: <bug-16142-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45638 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751481Ab0FNWRS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2010 18:17:18 -0400
-Content-Disposition: inline
-In-Reply-To: <4C16A48A.2070404@kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:56366 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751481Ab0FNWRm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jun 2010 18:17:42 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5EMHfRE010395
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Mon, 14 Jun 2010 22:17:41 GMT
+In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Jun 14, 2010 at 11:52:10PM +0200, Tejun Heo wrote:
-> Hello,
-> 
-> On 06/14/2010 11:41 PM, Greg KH wrote:
-> > So if there's a routing problem, it turns into a polled interrupt?  Do
-> > we really want that?
-> 
-> Oh yeah, I really want that for libata.  Routing is only part of the
-> problem and flaky IRQ is something we have to learn to cope with.
-> 
-> > I wonder how long people will run without realizing that there are
-> > problems with their system if their devices still work.
-> 
-> I think things would be better this way.  If the drives (both cd and
-> hard) / input devices are not accessible, most people would simply
-> give up rather than reporting, and many cases are transient problems
-> which happen only once in the blue moon.
-> 
-> It would be great if some kind of automatic reporting can be used
-> (similar to kerneloops?).  Hmm... maybe make the warnings scarier?
+https://bugzilla.kernel.org/show_bug.cgi?id=16142
 
-If you throw a WARN(), then kerneloops will pick it up, so you should be
-fine there.
 
-thanks,
+Andrew Morton <akpm@linux-foundation.org> changed:
 
-greg k-h
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|Network                     |IDE
+         AssignedTo|drivers_network@kernel-bugs |io_ide@kernel-bugs.osdl.org
+                   |.osdl.org                   |
+            Product|Drivers                     |IO/Storage
+
+
+
+
+--- Comment #8 from Andrew Morton <akpm@linux-foundation.org>  2010-06-14 22:17:35 ---
+Seems to be an oops in ide_complete_rq(), unrelated to the network driver.
+
+I'll recategorise the bug to IDE, thanks.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
