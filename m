@@ -1,70 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.34 PDC20268 PATA IO error loop makes system unusable
-Date: Mon, 14 Jun 2010 09:59:39 +0200
-Message-ID: <4C15E16B.5000702@kernel.org>
-References: <20100613154808.GA10408@basil.fritz.box> <4C15DDA0.3020409@kernel.org> <20100614075350.GC17092@basil.fritz.box>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [PATCH 09/12] irq: implement IRQ expecting
+Date: Mon, 14 Jun 2010 11:21:59 +0200
+Message-ID: <4C15F4B7.5040601@gmail.com>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-10-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58540 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753438Ab0FNH7o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2010 03:59:44 -0400
-In-Reply-To: <20100614075350.GC17092@basil.fritz.box>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56323 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755783Ab0FNJWD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jun 2010 05:22:03 -0400
+In-Reply-To: <1276443098-20653-10-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-Hello,
+On 06/13/2010 05:31 PM, Tejun Heo wrote:
+> --- a/kernel/irq/spurious.c
+> +++ b/kernel/irq/spurious.c
+...
 
-On 06/14/2010 09:53 AM, Andi Kleen wrote:
-> On Mon, Jun 14, 2010 at 09:43:28AM +0200, Tejun Heo wrote:
->>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f0 08 00 01 00 00
->>> sd 11:0:0:0: [sdd] Unhandled error code
->>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f1 08 00 01 00 00
->>> sd 11:0:0:0: [sdd] Unhandled error code
->>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f2 08 00 01 00 00
->>>
->>> same messages repeating forever, just with CDB changing occasionally.
->>>
->>> ....
->>>
->>> not stopping until I reset the box.
->>
->> Did you have a lot of dirty pages?  It looks like upper layer is
-> 
-> Yes, there was a dd running.
-> 
->> trying to flush all the dirty buffers and SCSI is a tad bit too
->> verbose about failing each IO w/ DID_BAD_TARGET thus taking a very
-> 
-> A bit too verbose?  That's really an euphemism ...
+> @@ -25,9 +26,43 @@ enum {
+>  	/* IRQ polling common parameters */
+>  	IRQ_POLL_SLOW_INTV		= 3 * HZ,	/* not too slow for ppl, slow enough for machine */
+>  	IRQ_POLL_INTV			= HZ / 100,	/* from the good ol' 100HZ tick */
+> +	IRQ_POLL_QUICK_INTV		= HZ / 1000,	/* pretty quick but not too taxing */
+>  
+>  	IRQ_POLL_SLOW_SLACK		= HZ,
+>  	IRQ_POLL_SLACK			= HZ / 1000,	/* 10% slack */
+> +	IRQ_POLL_QUICK_SLACK		= HZ / 10000,	/* 10% slack */
 
-Yeap, of course it was. :-)
+Hi. These are zeros on most systems (assuming distros set HZ=100 and
+250), what is their purpose then?
 
-> During the CDB: Write loop the console was totally unusable!
-> 
-> And I think the fsyncs in syslogd completely made the performance
-> tank.
-
-Console often becomes the bottleneck too when there are a lot of
-kernel messages.
-
-> So basically it was a "reset button only" situation.
-> 
-> When the device is gone what's the point in giving a message 
-> more than once? Can't the requests just be silently failed in this
-> case?
-
-Yeah, it would be better to somehow summarize those error message
-instead of spitting out all of them.
-
-Thanks.
-
+regards,
 -- 
-tejun
+js
