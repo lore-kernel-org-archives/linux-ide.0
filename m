@@ -1,50 +1,92 @@
-From: Andi Kleen <andi@firstfloor.org>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: 2.6.34 PDC20268 PATA IO error loop makes system unusable
-Date: Mon, 14 Jun 2010 13:29:52 +0200
-Message-ID: <20100614112952.GF17092@basil.fritz.box>
-References: <20100613154808.GA10408@basil.fritz.box> <4C15DDA0.3020409@kernel.org> <20100614121753.5723eaa2@lxorguk.ukuu.org.uk>
+Date: Mon, 14 Jun 2010 11:20:26 -0500
+Message-ID: <1276532426.5374.38.camel@mulgrave.site>
+References: <20100613154808.GA10408@basil.fritz.box>
+	 <4C15DDA0.3020409@kernel.org> <20100614075350.GC17092@basil.fritz.box>
+	 <4C15E16B.5000702@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100614121753.5723eaa2@lxorguk.ukuu.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Andi Kleen <andi@firstfloor.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36275 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755716Ab0FNQUe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jun 2010 12:20:34 -0400
+In-Reply-To: <4C15E16B.5000702@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andi Kleen <andi@firstfloor.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jun 14, 2010 at 12:17:53PM +0100, Alan Cox wrote:
-> > > sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> > > sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
+On Mon, 2010-06-14 at 09:59 +0200, Tejun Heo wrote:
+> Hello,
 > 
-> That is the drive complaining about a bad block.
+> On 06/14/2010 09:53 AM, Andi Kleen wrote:
+> > On Mon, Jun 14, 2010 at 09:43:28AM +0200, Tejun Heo wrote:
+> >>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> >>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f0 08 00 01 00 00
+> >>> sd 11:0:0:0: [sdd] Unhandled error code
+> >>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> >>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f1 08 00 01 00 00
+> >>> sd 11:0:0:0: [sdd] Unhandled error code
+> >>> sd 11:0:0:0: [sdd] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+> >>> sd 11:0:0:0: [sdd] CDB: Write(10): 2a 00 00 e5 f2 08 00 01 00 00
+> >>>
+> >>> same messages repeating forever, just with CDB changing occasionally.
+> >>>
+> >>> ....
+> >>>
+> >>> not stopping until I reset the box.
+> >>
+> >> Did you have a lot of dirty pages?  It looks like upper layer is
+> > 
+> > Yes, there was a dd running.
+> > 
+> >> trying to flush all the dirty buffers and SCSI is a tad bit too
+> >> verbose about failing each IO w/ DID_BAD_TARGET thus taking a very
+> > 
+> > A bit too verbose?  That's really an euphemism ...
 > 
-> > > Descriptor sense data with sense descriptors (in hex):
-> > >        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
-> > >        00 5b 23 bb 
-> > > sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
-> > > sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 4f 00 00 80 00
+> Yeap, of course it was. :-)
 > 
-> Which in my experience usually comes from
+> > During the CDB: Write loop the console was totally unusable!
+> > 
+> > And I think the fsyncs in syslogd completely made the performance
+> > tank.
 > 
-> - The disc being unable to find the data block
+> Console often becomes the bottleneck too when there are a lot of
+> kernel messages.
 > 
-> - A corrupt indirect block in the file system leading to a requst for an
->   out of range data block
+> > So basically it was a "reset button only" situation.
+> > 
+> > When the device is gone what's the point in giving a message 
+> > more than once? Can't the requests just be silently failed in this
+> > case?
 > 
-> In theory it could be an on the wire bitflip but thats a bit too
-> consistent to believe.
+> Yeah, it would be better to somehow summarize those error message
+> instead of spitting out all of them.
 
-Thank, Alan. I really don't care about the drive (nothing valuable on it).
-It was an old IDE disk and I am not surprised it has some bad sectors.
-In fact I was clearing it for junking it (although I may keep it now
-just in case I need to test IDE error handling again :)
+I don't think we can summarize.  However, when things start to go wrong,
+it's usually only the first set of errors that are significant, so we
+could do a simple ratelimit.
 
-But I cared about the system becoming unusable due to error handling running
-amok.
+James
 
-That was the point of this bug report.
+---
 
--Andi
--- 
-ak@linux.intel.com -- Speaking for myself only.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1646fe7..c8c7483 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -896,7 +896,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	case ACTION_FAIL:
+ 		/* Give up and fail the remainder of the request */
+ 		scsi_release_buffers(cmd);
+-		if (!(req->cmd_flags & REQ_QUIET)) {
++		if (!(req->cmd_flags & REQ_QUIET) && printk_ratelimit()) {
+ 			if (description)
+ 				scmd_printk(KERN_INFO, cmd, "%s\n",
+ 					    description);
+
+
