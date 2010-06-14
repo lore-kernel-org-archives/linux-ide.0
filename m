@@ -1,50 +1,43 @@
-From: Greg KH <gregkh@suse.de>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Mon, 14 Jun 2010 14:41:22 -0700
-Message-ID: <20100614214122.GA21064@suse.de>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
- <1276443098-20653-13-git-send-email-tj@kernel.org>
+Date: Mon, 14 Jun 2010 23:52:10 +0200
+Message-ID: <4C16A48A.2070404@kernel.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-13-git-send-email-tj@kernel.org> <20100614214122.GA21064@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:50032 "EHLO mx1.suse.de"
+Received: from hera.kernel.org ([140.211.167.34]:47737 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755843Ab0FNVlk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2010 17:41:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1276443098-20653-13-git-send-email-tj@kernel.org>
+	id S1755714Ab0FNVxH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jun 2010 17:53:07 -0400
+In-Reply-To: <20100614214122.GA21064@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Greg KH <gregkh@suse.de>
 Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
 
-On Sun, Jun 13, 2010 at 05:31:38PM +0200, Tejun Heo wrote:
-> Ask IRQ subsystem to watch HCD IRQ line after initialization.  This at
-> least keeps USB ports which are occupied on initialization working and
-> eases bug reporting and debugging.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  drivers/usb/core/hcd.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/usb/core/hcd.c b/drivers/usb/core/hcd.c
-> index 12742f1..383875f 100644
-> --- a/drivers/usb/core/hcd.c
-> +++ b/drivers/usb/core/hcd.c
-> @@ -2270,6 +2270,7 @@ int usb_add_hcd(struct usb_hcd *hcd,
->  					"request interrupt %d failed\n", irqnum);
->  			goto err_request_irq;
->  		}
-> +		watch_irq(irqnum, hcd);
+Hello,
 
-So if there's a routing problem, it turns into a polled interrupt?  Do
-we really want that?  I wonder how long people will run without
-realizing that there are problems with their system if their devices
-still work.
+On 06/14/2010 11:41 PM, Greg KH wrote:
+> So if there's a routing problem, it turns into a polled interrupt?  Do
+> we really want that?
 
-Other than that minor comment, it all looks good to me.
+Oh yeah, I really want that for libata.  Routing is only part of the
+problem and flaky IRQ is something we have to learn to cope with.
 
-thanks,
+> I wonder how long people will run without realizing that there are
+> problems with their system if their devices still work.
 
-greg k-h
+I think things would be better this way.  If the drives (both cd and
+hard) / input devices are not accessible, most people would simply
+give up rather than reporting, and many cases are transient problems
+which happen only once in the blue moon.
+
+It would be great if some kind of automatic reporting can be used
+(similar to kerneloops?).  Hmm... maybe make the warnings scarier?
+
+Thanks.
+
+-- 
+tejun
