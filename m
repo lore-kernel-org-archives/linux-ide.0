@@ -1,51 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 09/12] irq: implement IRQ expecting
-Date: Mon, 14 Jun 2010 11:46:23 +0200
-Message-ID: <4C15FA6F.1070506@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-10-git-send-email-tj@kernel.org> <4C15F4B7.5040601@gmail.com> <4C15F9D0.40706@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: 2.6.34 PDC20268 PATA IO error loop makes system unusable
+Date: Mon, 14 Jun 2010 12:17:53 +0100
+Message-ID: <20100614121753.5723eaa2@lxorguk.ukuu.org.uk>
+References: <20100613154808.GA10408@basil.fritz.box>
+	<4C15DDA0.3020409@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33987 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753295Ab0FNJrd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2010 05:47:33 -0400
-In-Reply-To: <4C15F9D0.40706@kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:39022 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756044Ab0FNLI4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jun 2010 07:08:56 -0400
+In-Reply-To: <4C15DDA0.3020409@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andi Kleen <andi@firstfloor.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 06/14/2010 11:43 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On 06/14/2010 11:21 AM, Jiri Slaby wrote:
->> On 06/13/2010 05:31 PM, Tejun Heo wrote:
->>> --- a/kernel/irq/spurious.c
->>> +++ b/kernel/irq/spurious.c
->> ...
->>
->>> @@ -25,9 +26,43 @@ enum {
->>>  	/* IRQ polling common parameters */
->>>  	IRQ_POLL_SLOW_INTV		= 3 * HZ,	/* not too slow for ppl, slow enough for machine */
->>>  	IRQ_POLL_INTV			= HZ / 100,	/* from the good ol' 100HZ tick */
->>> +	IRQ_POLL_QUICK_INTV		= HZ / 1000,	/* pretty quick but not too taxing */
->>>  
->>>  	IRQ_POLL_SLOW_SLACK		= HZ,
->>>  	IRQ_POLL_SLACK			= HZ / 1000,	/* 10% slack */
->>> +	IRQ_POLL_QUICK_SLACK		= HZ / 10000,	/* 10% slack */
->>
->> Hi. These are zeros on most systems (assuming distros set HZ=100 and
->> 250), what is their purpose then?
-> 
-> On every tick and no slack.  :-)
+> > sd 11:0:0:0: [sdd] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> > sd 11:0:0:0: [sdd] Sense Key : Medium Error [current] [descriptor]
 
-Hmmm... but yeah, it would be better to make IRQ_POLL_SLACK HZ / 250
-so that we at least have one tick slack on 250HZ configs which are
-pretty common these days.
+That is the drive complaining about a bad block.
 
-Thanks.
+> > Descriptor sense data with sense descriptors (in hex):
+> >        72 03 13 00 00 00 00 0c 00 0a 80 00 00 00 00 00 
+> >        00 5b 23 bb 
+> > sd 11:0:0:0: [sdd] Add. Sense: Address mark not found for data field
+> > sd 11:0:0:0: [sdd] CDB: Read(10): 28 00 00 5b 23 4f 00 00 80 00
 
--- 
-tejun
+Which in my experience usually comes from
+
+- The disc being unable to find the data block
+
+- A corrupt indirect block in the file system leading to a requst for an
+  out of range data block
+
+In theory it could be an on the wire bitflip but thats a bit too
+consistent to believe.
+
+Alan
