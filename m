@@ -1,77 +1,59 @@
-From: Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH v2] sata_sil24: Use memory barriers before issuing
- commands
-Date: Tue, 15 Jun 2010 12:10:53 +0100
-Message-ID: <1276600253.26369.46.camel@e102109-lin.cambridge.arm.com>
-References: <AANLkTilxkyOVQU6OjL7ceucxPnbX9qAjWjjM1U16M1Rm@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
+ through network interface
+Date: Tue, 15 Jun 2010 11:17:57 GMT
+Message-ID: <201006151117.o5FBHvbf006933@demeter.kernel.org>
+References: <bug-16142-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:35126 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754849Ab0FOLLK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 07:11:10 -0400
-In-Reply-To: <AANLkTilxkyOVQU6OjL7ceucxPnbX9qAjWjjM1U16M1Rm@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:44913 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225Ab0FOLR6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 07:17:58 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5FBHwrj006934
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 15 Jun 2010 11:17:58 GMT
+In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Nick Piggin <npiggin@suse.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Colin Tuckley <colin.tuckley@arm.com>, Jeff Garzik <jeff@garzik.org>, linux-arch <linux-arch@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Sat, 2010-06-12 at 02:30 +0100, Robert Hancock wrote:
-> On Fri, Jun 11, 2010 at 5:04 AM, Catalin Marinas
-> <catalin.marinas@arm.com> wrote:
-> > On Fri, 2010-06-11 at 11:11 +0100, Nick Piggin wrote:
-> >> On Fri, Jun 11, 2010 at 10:41:46AM +0100, Catalin Marinas wrote:
-> >> > The only reference of DMA buffers vs I/O I found in the DMA-API.txt
-> >> > file:
-> >> >
-> >> >         Consistent memory is memory for which a write by either the
-> >> >         device or the processor can immediately be read by the processor
-> >> >         or device without having to worry about caching effects. (You
-> >> >         may however need to make sure to flush the processor's write
-> >> >         buffers before telling devices to read that memory.)
-> >> >
-> >> > But there is no API for "flushing the processor's write buffers". Does
-> >> > it mean that this should be taken care of in writel()? We would make the
-> >> > I/O accessors pretty expensive on some architectures.
-> >>
-> >> The APIs for that are mb/wmb/rmb ones.
-> >
-> > So if that's the API for the above case and we are strictly referring to
-> > the sata_sil24 patch I sent - shouldn't we just add wmb() in the driver
-> > between the write to the DMA buffer and the writel() to start the DMA
-> > transfer? Do we need to move the wmb() to the writel() macro?
-> 
-> I think it would be best if writel, etc. did the write buffer flushing
-> by default. As Nick said, if there are some performance critical areas
-> then those can use the relaxed versions but it's safest if the default
-> behavior works as drivers expect.
+https://bugzilla.kernel.org/show_bug.cgi?id=16142
 
-I went through the past discussion pointed to by Fujita (thanks!) but I
-wouldn't say it resulted in a definitive guideline on how architectures
-should implement the I/O accessors.
 
->From an ARM perspective, I would prefer to add wmb() in the drivers
-where it matters - basically only those using DMA coherent buffers. A
-lot of drivers already have this in place and that's already documented
-in DMA-API.txt (maybe with a bit of clarification).
 
-Some statistics - grepping drivers/ for alloc_coherent shows 285 files.
-Of these, 69 already use barriers. It's not trivial to go through 200+
-drivers and add barriers but I wouldn't say that's impossible.
 
-If we go the other route of adding mb() in writel() (though I don't
-prefer it), there are two additional issues:
 
-(1) how relaxed would the "writel_relaxed" etc. accessors be? Are they
-relaxed only with regards to coherent DMA buffers or relaxed with other
-I/O operations as well? Can the compiler reorder them?
+--- Comment #10 from Hans42Mueller@googlemail.com  2010-06-15 11:17:33 ---
+First of all: Thank you all for your quick responses.
 
-(2) do we go through all the drivers that currently have *mb() and
-remove them? A quick grep in drivers/ shows over 1600 occurrences of
-*mb().
+
+Switching to libdata solved the problem for me.
+(at least until now  ;) )
+
+----
+But:
+If you are still interested in the bug, I would try to help you as far as I
+can.
+
+Answers to your questions:
+1. Proprietary drivers: I am using the nvidia driver, but it was not loaded
+when the bug occurred. (for the 2.6.34 kernel I didn't even installed them)
+
+2. Serial console: sorry this computer does not have an serial port (there is
+one on the motherboard, but I don't have the matching adapter.)
+
+3. Netconsole: I tried to use it; normal dmesg logging worked, but I did not
+receive the oops messages.
+
+
+Right now my questions are:
+1. Do you still want to take care of this bug?
+2. If so, is there a possibility to use firewire to capture the oops messages?
 
 -- 
-Catalin
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
