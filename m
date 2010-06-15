@@ -1,34 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Tue, 15 Jun 2010 19:52:40 +0200
-Message-ID: <4C17BDE8.9080300@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-13-git-send-email-tj@kernel.org> <20100614214122.GA21064@suse.de> <4C16A48A.2070404@kernel.org> <4C16AAEE.5090204@kernel.org> <AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com> <4C176206.90305@kernel.org> <AANLkTinVL4UuF70E1dR1vbYYkVRTBDh5su5D9k0h-vVA@mail.gmail.com> <4C17BA0C.4010208@kernel.org> <20100615174742.GA21616@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
+ through network interface
+Date: Tue, 15 Jun 2010 19:12:35 GMT
+Message-ID: <201006151912.o5FJCZN0020582@demeter.kernel.org>
+References: <bug-16142-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49968 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752888Ab0FORx1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Jun 2010 13:53:27 -0400
-In-Reply-To: <20100615174742.GA21616@suse.de>
+Received: from demeter.kernel.org ([140.211.167.39]:51223 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab0FOTMh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 15:12:37 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5FJCaCc020584
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 15 Jun 2010 19:12:36 GMT
+In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
+To: linux-ide@vger.kernel.org
 
-On 06/15/2010 07:47 PM, Greg KH wrote:
->> It would really be great to have something like that.  I can easily
->> think of several libata events the user should be notified of from the
->> top of my head but currently are buried in dmesg.
+https://bugzilla.kernel.org/show_bug.cgi?id=16142
+
+
+
+
+
+--- Comment #15 from Andrew Morton <akpm@linux-foundation.org>  2010-06-15 19:12:28 ---
+(In reply to comment #12)
+> Created an attachment (id=26776)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=26776) [details]
+> kernel oops v3
 > 
-> That is what Andi Kleen and others are working on at the moment.  I
-> think he's posted to lkml about it, and there are going to be more talks
-> about it at the Plumbers conference this year.
+> this one is done via firewire
 
-Ah, cool.  Yeah, I'll be happy to be a beta user for such feature.
+This seems impossible.  I think the oops happened in
 
-thanks.
+int ide_complete_rq(ide_drive_t *drive, int error, unsigned int nr_bytes)
+{
+        ide_hwif_t *hwif = drive->hwif;
+
+accessing 0x00000040, so `drive' is NULL.  But it's clearly non-NULL up in
+cdrom_newpc_intr().  Possibly it's a miscompile.  But you've tried several
+different kernel version, which I assume were compiled by someone at gentoo.
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
