@@ -1,35 +1,39 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH 02/12] irq: make spurious poll timer per desc
-Date: Tue, 15 Jun 2010 01:10:27 -0400
-Message-ID: <20100615051027.GA8073@phenom.dumpdata.com>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
- <1276443098-20653-3-git-send-email-tj@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
+ through network interface
+Date: Tue, 15 Jun 2010 15:19:08 GMT
+Message-ID: <201006151519.o5FFJ8hV000483@demeter.kernel.org>
+References: <bug-16142-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:34987 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757188Ab0FONvz (ORCPT
-	<rfc822;<linux-ide@vger.kernel.org>>);
-	Tue, 15 Jun 2010 09:51:55 -0400
-Content-Disposition: inline
-In-Reply-To: <1276443098-20653-3-git-send-email-tj@kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:49549 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758086Ab0FOPTK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 11:19:10 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5FFJ8Qf000486
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 15 Jun 2010 15:19:08 GMT
+In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+To: linux-ide@vger.kernel.org
 
-> @@ -169,6 +170,7 @@ struct irq_2_iommu;
->   * @pending_mask:	pending rebalanced interrupts
->   * @threads_active:	number of irqaction threads currently running
->   * @wait_for_threads:	wait queue for sync_irq to wait for threaded handlers
-> + * @poll_timer:		timer for IRQ polling
+https://bugzilla.kernel.org/show_bug.cgi?id=16142
 
-I looked over the patches and they all look good to my eyes.
 
-The only thing that looked out of place was the above comment.
-Would it make sense to move the comment one tab to the left?
 
->   * @dir:		/proc/irq/ procfs entry
->   * @name:		flow handler name for /proc/interrupts output
->   */
+
+
+--- Comment #12 from Hans42Mueller@googlemail.com  2010-06-15 15:18:58 ---
+Created an attachment (id=26776)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=26776)
+kernel oops v3
+
+this one is done via firewire
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
