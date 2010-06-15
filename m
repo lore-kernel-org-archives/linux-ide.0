@@ -1,51 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Tue, 15 Jun 2010 00:19:26 +0200
-Message-ID: <4C16AAEE.5090204@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-13-git-send-email-tj@kernel.org> <20100614214122.GA21064@suse.de> <4C16A48A.2070404@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
+ through network interface
+Date: Tue, 15 Jun 2010 06:39:07 GMT
+Message-ID: <201006150639.o5F6d7lX027123@demeter.kernel.org>
+References: <bug-16142-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58919 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756955Ab0FNWU2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jun 2010 18:20:28 -0400
-In-Reply-To: <4C16A48A.2070404@kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:50297 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874Ab0FOGjI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 02:39:08 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.3/8.14.3) with ESMTP id o5F6d7uf027125
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 15 Jun 2010 06:39:07 GMT
+In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org, Kay Sievers <kay.sievers@vrfy.org>
+To: linux-ide@vger.kernel.org
 
-cc'ing Kay, hi.
+https://bugzilla.kernel.org/show_bug.cgi?id=16142
 
-On 06/14/2010 11:52 PM, Tejun Heo wrote:
-> Hello,
-> 
-> On 06/14/2010 11:41 PM, Greg KH wrote:
->> So if there's a routing problem, it turns into a polled interrupt?  Do
->> we really want that?
-> 
-> Oh yeah, I really want that for libata.  Routing is only part of the
-> problem and flaky IRQ is something we have to learn to cope with.
-> 
->> I wonder how long people will run without realizing that there are
->> problems with their system if their devices still work.
-> 
-> I think things would be better this way.  If the drives (both cd and
-> hard) / input devices are not accessible, most people would simply
-> give up rather than reporting, and many cases are transient problems
-> which happen only once in the blue moon.
-> 
-> It would be great if some kind of automatic reporting can be used
-> (similar to kerneloops?).  Hmm... maybe make the warnings scarier?
 
-Hmm... maybe what we can do is generating an uevent when an IRQ is
-confirmed to be bad and then let udev notify the user.  That way we'll
-probably have better chance of getting bug reports and users have
-whiny but working system.
+Borislav Petkov <bbpetkov@yahoo.de> changed:
 
-Thanks.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bbpetkov@yahoo.de
+
+
+
+
+--- Comment #9 from Borislav Petkov <bbpetkov@yahoo.de>  2010-06-15 06:38:58 ---
+Hi,
+
+ok, here's what you can do:
+
+1. Switch to libata and done, no bug. IDE is deprecated anyways.
+
+If you'd still like to help us fix this and keep using ide, here are
+some more things to do :)
+
+1. Can you connect your machine to another over a serial
+console so that you can catch a clean OOPS. If you don't have
+a serial cable, you can try doing this with a netconsole, see
+<Documentation/networking/netconsole.txt> in the kernel sources. And
+if even that is not an option, try making a picture which contains the
+first oops from the beginning and doesn't cut off the register dump.
+Something like your https://bugzilla.kernel.org/attachment.cgi?id=26730
+but without the shaky effects :)
+
+2. Go to your kernel source tree and do
+
+objdump -d drivers/ide/ide-io.o | less
+
+then look for the line similar to
+
+"000000000000070b <ide_complete_rq>:"
+
+and copy/paste here the whole block all the way to the end of that
+function, i.e. line that looks like
+
+" 755:   c3                      retq"
+
+3. Just to make sure, I think your "shaky" picture showed that there
+are no proprietary kernel modules your using, e.g. nvidia GPU drivers,
+but let me make sure I see it correctly: you're not installing any
+closed-source, proprietary crap, right?
+
+I think this is all for now, thanks for your help.
+
+Regards,
+Boris.
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
