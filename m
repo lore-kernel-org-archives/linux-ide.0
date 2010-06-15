@@ -1,71 +1,58 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
+From: Jean Delvare <khali@linux-fr.org>
 Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Tue, 15 Jun 2010 12:30:00 +0200
-Message-ID: <AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com>
+Date: Tue, 15 Jun 2010 13:05:18 +0200
+Message-ID: <20100615130518.1a62210a@hyperion.delvare>
 References: <1276443098-20653-1-git-send-email-tj@kernel.org>
-	<1276443098-20653-13-git-send-email-tj@kernel.org> <20100614214122.GA21064@suse.de>
-	<4C16A48A.2070404@kernel.org> <4C16AAEE.5090204@kernel.org>
+	<1276443098-20653-13-git-send-email-tj@kernel.org>
+	<20100614214122.GA21064@suse.de>
+	<4C16A48A.2070404@kernel.org>
+	<4C16AAEE.5090204@kernel.org>
+	<AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f204.google.com ([209.85.211.204]:55564 "EHLO
-	mail-yw0-f204.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169Ab0FOKgo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 06:36:44 -0400
-In-Reply-To: <4C16AAEE.5090204@kernel.org>
+Received: from poutre.nerim.net ([62.4.16.124]:58480 "EHLO poutre.nerim.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757426Ab0FOLFX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jun 2010 07:05:23 -0400
+In-Reply-To: <AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Greg KH <gregkh@suse.de>, mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Tejun Heo <tj@kernel.org>, Greg KH <gregkh@suse.de>, mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu
 
-On Tue, Jun 15, 2010 at 00:19, Tejun Heo <tj@kernel.org> wrote:
-> On 06/14/2010 11:52 PM, Tejun Heo wrote:
->> On 06/14/2010 11:41 PM, Greg KH wrote:
->>> So if there's a routing problem, it turns into a polled interrupt? =
-=C2=A0Do
->>> we really want that?
->>
->> Oh yeah, I really want that for libata. =C2=A0Routing is only part o=
-f the
->> problem and flaky IRQ is something we have to learn to cope with.
->>
->>> I wonder how long people will run without realizing that there are
->>> problems with their system if their devices still work.
->>
->> I think things would be better this way. =C2=A0If the drives (both c=
-d and
->> hard) / input devices are not accessible, most people would simply
->> give up rather than reporting, and many cases are transient problems
->> which happen only once in the blue moon.
->>
->> It would be great if some kind of automatic reporting can be used
->> (similar to kerneloops?). =C2=A0Hmm... maybe make the warnings scari=
-er?
->
-> Hmm... maybe what we can do is generating an uevent when an IRQ is
-> confirmed to be bad and then let udev notify the user. =C2=A0That way=
- we'll
-> probably have better chance of getting bug reports and users have
-> whiny but working system.
+On Tue, 15 Jun 2010 12:30:00 +0200, Kay Sievers wrote:
+> On Tue, Jun 15, 2010 at 00:19, Tejun Heo <tj@kernel.org> wrote:
+> > Hmm... maybe what we can do is generating an uevent when an IRQ is
+> > confirmed to be bad and then let udev notify the user. =C2=A0That w=
+ay we'll
+> > probably have better chance of getting bug reports and users have
+> > whiny but working system.
+>=20
+> Not really, uevents are not picked up by anything that could report a=
+n
+> error to userspace, they are just seen by udev. Also uevents are
+> usually not the proper passing method. They are not meant to ever
+> transport higher frequency events, or structured data. They cause to
+> run the entire udev rule matching machine, and update symlinks and
+> permissions with every event.
+>=20
+> We will need some better error reporting facility. On Linux you don't
+> even get notified when the kernel mounts your filesystem read-only
+> because of an error. It will only end up in 'dmesg' as a pretty much
+> undefined bunch of words. :)
+>=20
+> We will need some generic error reporting facility, with structured
+> data exported, and where userspace stuff can subscribe to.
+> Uevents/udev can not really properly provide such infrastructure.
+> Maybe that can be extended somehow, but using kobject_uevent() and
+> trigger the usual udev rule engine is not what we are looking for, fo=
+r
+> sane error reporting.
 
-Not really, uevents are not picked up by anything that could report an
-error to userspace, they are just seen by udev. Also uevents are
-usually not the proper passing method. They are not meant to ever
-transport higher frequency events, or structured data. They cause to
-run the entire udev rule matching machine, and update symlinks and
-permissions with every event.
+Random idea of the day (I don't know anything about it all): let the
+kernel connect to D-Bus and use it somehow?
 
-We will need some better error reporting facility. On Linux you don't
-even get notified when the kernel mounts your filesystem read-only
-because of an error. It will only end up in 'dmesg' as a pretty much
-undefined bunch of words. :)
-
-We will need some generic error reporting facility, with structured
-data exported, and where userspace stuff can subscribe to.
-Uevents/udev can not really properly provide such infrastructure.
-Maybe that can be extended somehow, but using kobject_uevent() and
-trigger the usual udev rule engine is not what we are looking for, for
-sane error reporting.
-
-Kay
+--=20
+Jean Delvare
