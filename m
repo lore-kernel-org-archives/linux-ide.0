@@ -1,65 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 12/12] usb: use IRQ watching
-Date: Tue, 15 Jun 2010 13:20:38 +0200
-Message-ID: <4C176206.90305@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> 	<1276443098-20653-13-git-send-email-tj@kernel.org> <20100614214122.GA21064@suse.de> 	<4C16A48A.2070404@kernel.org> <4C16AAEE.5090204@kernel.org> <AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com>
+From: Nick Piggin <npiggin@suse.de>
+Subject: Re: [PATCH v2] sata_sil24: Use memory barriers before issuing
+ commands
+Date: Tue, 15 Jun 2010 21:31:50 +1000
+Message-ID: <20100615113150.GM6138@laptop>
+References: <AANLkTilxkyOVQU6OjL7ceucxPnbX9qAjWjjM1U16M1Rm@mail.gmail.com>
+ <1276600253.26369.46.camel@e102109-lin.cambridge.arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56886 "EHLO hera.kernel.org"
+Received: from cantor.suse.de ([195.135.220.2]:41911 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757268Ab0FOLWD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Jun 2010 07:22:03 -0400
-In-Reply-To: <AANLkTilG1KAVOe5DcpLEFAJ-37PQJCgVT-jLZhr1e6tC@mail.gmail.com>
+	id S1752747Ab0FOLby (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Jun 2010 07:31:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1276600253.26369.46.camel@e102109-lin.cambridge.arm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Greg KH <gregkh@suse.de>, mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Colin Tuckley <colin.tuckley@arm.com>, Jeff Garzik <jeff@garzik.org>, linux-arch <linux-arch@vger.kernel.org>
 
-Hello, Kay.
-
-On 06/15/2010 12:30 PM, Kay Sievers wrote:
->> Hmm... maybe what we can do is generating an uevent when an IRQ is
->> confirmed to be bad and then let udev notify the user.  That way we'll
->> probably have better chance of getting bug reports and users have
->> whiny but working system.
+On Tue, Jun 15, 2010 at 12:10:53PM +0100, Catalin Marinas wrote:
+> On Sat, 2010-06-12 at 02:30 +0100, Robert Hancock wrote:
+> > > So if that's the API for the above case and we are strictly referring to
+> > > the sata_sil24 patch I sent - shouldn't we just add wmb() in the driver
+> > > between the write to the DMA buffer and the writel() to start the DMA
+> > > transfer? Do we need to move the wmb() to the writel() macro?
+> > 
+> > I think it would be best if writel, etc. did the write buffer flushing
+> > by default. As Nick said, if there are some performance critical areas
+> > then those can use the relaxed versions but it's safest if the default
+> > behavior works as drivers expect.
 > 
-> Not really, uevents are not picked up by anything that could report an
-> error to userspace, they are just seen by udev. Also uevents are
-> usually not the proper passing method. They are not meant to ever
-> transport higher frequency events, or structured data. They cause to
-> run the entire udev rule matching machine, and update symlinks and
-> permissions with every event.
+> I went through the past discussion pointed to by Fujita (thanks!) but I
+> wouldn't say it resulted in a definitive guideline on how architectures
+> should implement the I/O accessors.
+> 
+> >From an ARM perspective, I would prefer to add wmb() in the drivers
+> where it matters - basically only those using DMA coherent buffers. A
+> lot of drivers already have this in place and that's already documented
+> in DMA-API.txt (maybe with a bit of clarification).
+> 
+> Some statistics - grepping drivers/ for alloc_coherent shows 285 files.
+> Of these, 69 already use barriers. It's not trivial to go through 200+
+> drivers and add barriers but I wouldn't say that's impossible.
 
-Oh, these will be very low frequency event.  At most once per
-irq_expect or irqaction.  e.g. on a machine with four hard drives, it
-can only happen four times after boot unless the driver is unloaded
-and reloaded, so from frequency standpoint it should be okay.
+I disagree. Firstly, you will get subtle bugs, not able to be reproduced
+and situations where driver writers don't even have that architecture to
+test on. Secondly, it is not a one-time audit and be done with it, code
+is constantly being changed and added. Driver code is going to be
+written and tested and run on different archs or even different
+implementations that do different things to ordering.
 
-> We will need some better error reporting facility. On Linux you don't
-> even get notified when the kernel mounts your filesystem read-only
-> because of an error. It will only end up in 'dmesg' as a pretty much
-> undefined bunch of words. :)
+On the other hand, a performance slowdown should be far more reproducible
+and traceable.
 
-That one is a very low frequency too.
+ 
+> If we go the other route of adding mb() in writel() (though I don't
+> prefer it), there are two additional issues:
+> 
+> (1) how relaxed would the "writel_relaxed" etc. accessors be? Are they
+> relaxed only with regards to coherent DMA buffers or relaxed with other
+> I/O operations as well? Can the compiler reorder them?
 
-> We will need some generic error reporting facility, with structured
-> data exported, and where userspace stuff can subscribe to.
-> Uevents/udev can not really properly provide such infrastructure.
-> Maybe that can be extended somehow, but using kobject_uevent() and
-> trigger the usual udev rule engine is not what we are looking for, for
-> sane error reporting.
+That was up for debate. I think totally weak (like SMP ordering)
+should be fine, but that may require that we need some more barriers
+like io_wmb() (which just orders two writels from the same CPU).
+Remember we want to restrict their use outside critical fastpaths
+of important drivers -- this is a far smaller task than auditing all
+accesses in all drivers.
 
-It's true that there are higher frequency events which will be
-horrible to report via kobject_uevent().  Hmmm... but the thing is
-that events which should annoy the user by userland notification can't
-be definition high freq.  There's only so many users can recognize and
-respond, so the frequency limitation of uevent might actually fit here
-although it would be nice to have some kind of safety mechanism.
-Still no go for uevent?
 
-Thanks.
+> (2) do we go through all the drivers that currently have *mb() and
+> remove them? A quick grep in drivers/ shows over 1600 occurrences of
+> *mb().
 
--- 
-tejun
+No need, but the ones that matter will get updated slowly. The ones
+that don't will continue to work (from an ordering point of view) on
+obscure or untested hardware.
+
