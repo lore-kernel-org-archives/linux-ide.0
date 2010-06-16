@@ -1,22 +1,23 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: Very slow disk speed after "IRQ: nobody cared"
-Date: Wed, 16 Jun 2010 13:51:24 +0200
-Message-ID: <4C18BABC.8090301@kernel.org>
+Date: Wed, 16 Jun 2010 13:52:43 +0200
+Message-ID: <4C18BB0B.4050100@kernel.org>
 References: <20100615092818.GF1635@myhost.felk.cvut.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52724 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:52753 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754168Ab0FPLv0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Jun 2010 07:51:26 -0400
+	id S1758812Ab0FPLws (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Jun 2010 07:52:48 -0400
 In-Reply-To: <20100615092818.GF1635@myhost.felk.cvut.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Michal Svoboda <michal.svoboda@agents.felk.cvut.cz>
 Cc: linux-ide@vger.kernel.org
 
+(resending, for some reason TB dropped Michal's email address)
 (cc'ing linux-ide)
 
 On 06/15/2010 11:28 AM, Michal Svoboda wrote:
