@@ -1,52 +1,55 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 09/12] irq: implement IRQ expecting
-Date: Thu, 17 Jun 2010 09:02:29 -0700
-Message-ID: <20100617090229.543af62c@infradead.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
-	<1276443098-20653-10-git-send-email-tj@kernel.org>
-	<20100616204854.4b036f87@infradead.org>
-	<4C19DA64.8000409@kernel.org>
-	<alpine.LFD.2.00.1006171310560.4290@localhost.localdomain>
-	<4C1A05AF.5010405@kernel.org>
-	<20100617124343.5889067c@lxorguk.ukuu.org.uk>
-	<4C1A4548.3020602@kernel.org>
+Date: Thu, 17 Jun 2010 18:47:19 +0200
+Message-ID: <4C1A5197.8060409@kernel.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org>	<1276443098-20653-10-git-send-email-tj@kernel.org>	<20100616204854.4b036f87@infradead.org>	<4C19DA64.8000409@kernel.org>	<alpine.LFD.2.00.1006171310560.4290@localhost.localdomain>	<4C1A05AF.5010405@kernel.org>	<20100617124343.5889067c@lxorguk.ukuu.org.uk>	<4C1A4548.3020602@kernel.org> <20100617090229.543af62c@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:49130 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756416Ab0FQQCy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jun 2010 12:02:54 -0400
-In-Reply-To: <4C1A4548.3020602@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:35353 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756871Ab0FQQsm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 17 Jun 2010 12:48:42 -0400
+In-Reply-To: <20100617090229.543af62c@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
 Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Thomas Gleixner <tglx@linutronix.de>, mingo@elte.hu, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-On Thu, 17 Jun 2010 17:54:48 +0200
-Tejun Heo <tj@kernel.org> wrote:
+On 06/17/2010 06:02 PM, Arjan van de Ven wrote:
+> On Thu, 17 Jun 2010 17:54:48 +0200
+> Tejun Heo <tj@kernel.org> wrote:
+> 
+>> Crazy devices too but I think they would
+>> fall in a single tick any way. 
+> 
+> not sure what ticks have to do with anything but ok ;)
 
-> Crazy devices too but I think they would
-> fall in a single tick any way. 
+Eh... right, I was thinking about something else.  IRQ expect code
+originally had a tick based duration estimator to determine poll
+interval which I ripped out later for simpler stepped adjustments.
+c-state would need higher frequency timing measurements than jiffies.
 
-not sure what ticks have to do with anything but ok ;)
+>> At any rate, let's say I have those
+>> numbers, how would I feed it into c-state selection?
+> 
+> if we have this, we need to put a bit of glue in the backend that
+> tracks (per cpu I suppose) the shortest expected interrupt, which
+> the C state code then queries.
+> (and in that regard, it does not matter if shortest expected is
+> computed via heuristic on a per irq basis, or passed in).
+> 
+> mapping an irq to a cpu is not a 100% science (since interrupts can
+> move in theory), but just assuming that the irq will happen on the same
+> CPU it happened last time is more than good enough.
 
-> At any rate, let's say I have those
-> numbers, how would I feed it into c-state selection?
+Hmmm... the thing is that there will be many cases which won't fit
+irq_expect() model (why irq_watch() exists in the first place) and for
+the time being libata is the only one providing that data.  Would the
+data still be useful to determine which c-state to use?
 
-if we have this, we need to put a bit of glue in the backend that
-tracks (per cpu I suppose) the shortest expected interrupt, which
-the C state code then queries.
-(and in that regard, it does not matter if shortest expected is
-computed via heuristic on a per irq basis, or passed in).
-
-mapping an irq to a cpu is not a 100% science (since interrupts can
-move in theory), but just assuming that the irq will happen on the same
-CPU it happened last time is more than good enough.
-
+Thanks.
 
 -- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+tejun
