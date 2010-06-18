@@ -1,53 +1,47 @@
-From: Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 09/12] irq: implement IRQ expecting
-Date: Fri, 18 Jun 2010 11:45:16 +0200 (CEST)
-Message-ID: <alpine.LFD.2.00.1006181144390.4290@localhost.localdomain>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-10-git-send-email-tj@kernel.org> <20100616204854.4b036f87@infradead.org> <4C19DA64.8000409@kernel.org> <alpine.LFD.2.00.1006171310560.4290@localhost.localdomain>
- <4C1A05AF.5010405@kernel.org> <20100617124343.5889067c@lxorguk.ukuu.org.uk> <4C1A4548.3020602@kernel.org> <20100617090229.543af62c@infradead.org> <4C1A5197.8060409@kernel.org> <20100617232649.6db5cc55@infradead.org> <4C1B3B02.2040209@kernel.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.tglx.de ([62.245.132.106]:39635 "EHLO www.tglx.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757353Ab0FRJqc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jun 2010 05:46:32 -0400
-In-Reply-To: <4C1B3B02.2040209@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Theodore Tso <tytso@MIT.EDU>
+Subject: Bug#582275: ext3 filesystem corruption on md RAID1 device
+Date: Fri, 18 Jun 2010 07:09:06 -0400
+Message-ID: <EE6E2E73-39B6-4D90-B2E2-3BA2C1DD4E91@mit.edu>
+References: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B1DCFD@GVW1115EXC.americas.hpqcorp.net> <20100520143039.GC16634@thunk.org> <BA8A2107B0FD8A48AEB0405BDC36CE4F3F48B794C8@GVW1115EXC.americas.hpqcorp.net> <20100527201234.GE3576@quack.suse.cz> <BA8A2107B0FD8A48AEB0405BDC36CE4F3F495C3638@GVW1115EXC.americas.hpqcorp.net> <20100531205547.GH5334@quack.suse.cz> <BA8A2107B0FD8A48AEB0405BDC36CE4F3F495C3DCB@GVW1115EXC.americas.hpqcorp.net> <20100601102240.GA4275@quack.suse.cz> <BA8A2107B0FD8A48AEB0405BDC36CE4F3F4A113B66@GVW1115EXC.americas.hpqcorp.net>
+Reply-To: Theodore Tso <tytso@MIT.EDU>, 582275@bugs.debian.org
+Mime-Version: 1.0 (Apple Message framework v1078)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bounce-debian-bugs-rc=glddbr-debian-bugs-rc=gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.582275.B582275.127685936028728@bugs.debian.org>
+In-Reply-To: <BA8A2107B0FD8A48AEB0405BDC36CE4F3F4A113B66@GVW1115EXC.americas.hpqcorp.net>
+List-Post: <mailto:debian-bugs-rc@lists.debian.org>
+List-Help: <mailto:debian-bugs-rc-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-rc-request@lists.debian.org?subject=unsubscribe>
+To: "Buehl, Reiner" <reiner.buehl@hp.com>
+Cc: Jan Kara <jack@suse.cz>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "582275@bugs.debian.org" <582275@bugs.debian.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, mingo@elte.hu, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-On Fri, 18 Jun 2010, Tejun Heo wrote:
-> Hello,
-> 
-> On 06/18/2010 08:26 AM, Arjan van de Ven wrote:
-> > On Thu, 17 Jun 2010 18:47:19 +0200
-> > Tejun Heo <tj@kernel.org> wrote:
-> > 
-> >>
-> >> Hmmm... the thing is that there will be many cases which won't fit
-> >> irq_expect() model (why irq_watch() exists in the first place) and for
-> >> the time being libata is the only one providing that data.  Would the
-> >> data still be useful to determine which c-state to use?
-> > 
-> > yes absolutely. One of the hard cases right now that the C state code
-> > has is that it needs to predict the future. While it has a ton of
-> > heuristics, including some is there IO oustanding" ones, libata is a
-> > really good case: libata will know generally that within one seek time
-> > (5 msec on rotating rust, much less on floating electrons) there'll be
-> > an interrupt (give or take, but this is what we can do heuristics for
-> > on a per irq level).
-> > So it's a good suggestion of what the future will be like, MUCH better
-> > than any hint we have right now... all we have right now is some
-> > history, and when the next timer is.... 
-> 
-> Cool, good to know.  It shouldn't be difficult to at all to add.  Once
-> the whole thing gets generally agreed on, I'll work on that.
-> 
-> Thomas, Ingo, through which tree should these patches routed through?
 
-I'm going to pull that into tip/genirq I guess
+On Jun 18, 2010, at 3:12 AM, Buehl, Reiner wrote:
 
-Thanks,
+> Hi Jan,
+>=20
+> I tried for a while with alternate hardware and the original =
+controller but the error did never happen again. I think your idea of a =
+bug in e2fsck's handling of multiply claimed blocks is the only =
+explanation: Maybe during a corruption long ago a number of multiply =
+claimed blocks existed and where reduced with each reboot. Is this =
+possible? How can this be fixed?
+>=20
 
-	tglx
+It could be an e2fsck bug, or it could be a hardware issue.  In my =
+experience, every time
+I've tried digging into problems with e2fsck -fy not fixing all problems =
+in a single
+pass, it's been a hardware problem.  That being said, multiply claimed =
+blocks is
+something that isn't exercised that much, so it's *possible* that it is =
+an e2fsck bug.
+
+I really would need a reproducible test case before I could do anything =
+though.
+
+ -- Ted
