@@ -1,55 +1,21 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH 09/12] irq: implement IRQ expecting
-Date: Sat, 19 Jun 2010 13:07:30 -0700
-Message-ID: <20100619130730.36f8d567@infradead.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
-	<1276443098-20653-10-git-send-email-tj@kernel.org>
-	<20100616204854.4b036f87@infradead.org>
-	<87zkyro1xl.fsf@basil.nowhere.org>
-	<4C1C830B.5020806@kernel.org>
-	<20100619090031.GE18946@basil.fritz.box>
-	<20100619075451.48c13589@infradead.org>
-	<20100619194937.GR18946@basil.fritz.box>
+From: OXFAM <rlahiffe@eircom.net>
+Subject: (unknown)
+Date: Sat, 19 Jun 2010 23:13:50 +0100 (IST)
+Message-ID: <10445193.118101276985630715.JavaMail.root__26960.7176924639$1276986049$gmane$org@webmailbox102.eircom.net>
+Reply-To: OXFAM <ox_fam@yahoo.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:53302 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756794Ab0FSUHr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jun 2010 16:07:47 -0400
-In-Reply-To: <20100619194937.GR18946@basil.fritz.box>
+Received: from mail28.svc.cra.dublin.eircom.net ([159.134.118.224]:40386 "HELO
+	mail28.svc.cra.dublin.eircom.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752530Ab0FSWUb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Jun 2010 18:20:31 -0400
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Tejun Heo <tj@kernel.org>, mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-On Sat, 19 Jun 2010 21:49:37 +0200
-Andi Kleen <andi@firstfloor.org> wrote:
-
-> > Here we have the opportunity to get real good information.. we KNOW
-> > now an interrupt is coming, and we can even estimate how long it'll
-> > be...  Even for the first few after a long time, before a pattern
-> > emerges.
-> 
-> Ok but I thought the driver would just fill in a single number 
-> likely. Is that really that good information?
-
-Tejun suggested tracking this per handler, I'm assuming that instead of
-the driver passed number
-
-> 
-> Alternatively each driver would need to implement some dynamic
-> estimation algorithm, but that would be just mostly equivalent
-> to having it all in the idle governour?
-
-that's the whole point... let the irq layer track this stuff, and
-inform the governor. the governor does not know irqs are expected..
-with tejun's change, the irq layer at least will.
-
-
-
--- 
-Arjan van de Ven 	Intel Open Source Technology Centre
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+You have been officially granted =C2=A3850,000 from the OXFAM GB -UK Co=
+ntact email mrglennmorgan@live.ca
+Qualification Number(OG/N231/E101/BDB)
