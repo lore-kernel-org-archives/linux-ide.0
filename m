@@ -1,44 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/12] libata: use IRQ expecting
-Date: Mon, 21 Jun 2010 15:52:14 +0200
-Message-ID: <4C1F6E8E.6050301@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 12/12] usb: use IRQ watching
+Date: Mon, 21 Jun 2010 13:27:19 -0700
+Message-ID: <20100621202719.GA24796@suse.de>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org>
+ <1276443098-20653-13-git-send-email-tj@kernel.org>
+ <4C1F6E5D.5030809@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:57383 "EHLO hera.kernel.org"
+Received: from cantor2.suse.de ([195.135.220.15]:55927 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757674Ab0FUNww (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Jun 2010 09:52:52 -0400
-In-Reply-To: <1276443098-20653-12-git-send-email-tj@kernel.org>
+	id S1752828Ab0FUUcK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Jun 2010 16:32:10 -0400
+Content-Disposition: inline
+In-Reply-To: <4C1F6E5D.5030809@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+To: Tejun Heo <tj@kernel.org>
+Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, khali@linux-fr.org
 
-On 06/13/2010 05:31 PM, Tejun Heo wrote:
-> Thanks to its age, ATA is very susceptible to IRQ delivery problems in
-> both directions - lost and spurious interrupts.  In traditional PATA,
-> the IRQ line is ultimately out of the controller and driver's control.
-> Even relatively new SATA isn't free from these issues.  Many
-> controllers still emulate the traditional IDE interface which doesn't
-> have reliable way to indicate interrupt pending state and there also
-> is an issue regarding the interpretation of nIEN on both sides of the
-> cable.
+On Mon, Jun 21, 2010 at 03:51:25PM +0200, Tejun Heo wrote:
+> On 06/13/2010 05:31 PM, Tejun Heo wrote:
+> > Ask IRQ subsystem to watch HCD IRQ line after initialization.  This at
+> > least keeps USB ports which are occupied on initialization working and
+> > eases bug reporting and debugging.
+> > 
+> > Signed-off-by: Tejun Heo <tj@kernel.org>
 > 
-> Most of these problems can be worked around by using the new IRQ
-> expecting mechanism without adding noticeable overhead.  In ATA,
-> almost all operations are initiated by the host and the controller
-> signals progress or completion using IRQ.  IRQ expecting can easily be
-> added in libata core and applied to all libata drivers.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Greg, if you think the change is okay, can you please ack it?  Also,
+> would it be okay to route this through irq tree?
 
-Jeff, can you please ack this change if this looks okay to you?  Also,
-would it okay to route this through irq tree?
+Sorry, I thought I did earlier.  Yes, feel free to add:
+	Acked-by: Greg Kroah-Hartman <gregkh@suse.de>
+and take it through what ever tree you want to :)
 
-Thanks.
+thanks,
 
--- 
-tejun
+greg k-h
