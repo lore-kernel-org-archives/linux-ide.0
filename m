@@ -1,30 +1,56 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH v2] sata_sil24: Use memory barriers before issuing commands
-Date: Wed, 23 Jun 2010 09:00:14 -0400
-Message-ID: <4C22055E.5060705@teksavvy.com>
-References: <20100610160212.18091.29856.stgit@e102109-lin.cambridge.arm.com>	 <4C110EDD.2010409@kernel.org> <1276187002.24535.88.camel@e102109-lin.cambridge.arm.com> <4C118697.9090305@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ata link not reset properly
+Date: Wed, 23 Jun 2010 19:28:09 +0200
+Message-ID: <4C224429.6010705@kernel.org>
+References: <4C223F8A.9030306@odi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arch-owner@vger.kernel.org>
-In-Reply-To: <4C118697.9090305@gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Colin Tuckley <colin.tuckley@arm.com>, Jeff Garzik <jeff@garzik.org>, linux-arch <linux-arch@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:45589 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752532Ab0FWR2S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Jun 2010 13:28:18 -0400
+In-Reply-To: <4C223F8A.9030306@odi.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 10/06/10 08:43 PM, Robert Hancock wrote:
-..
-> My memory is fuzzy but I thought this came up before on PPC and I also
-> thought the conclusion was that the platform code (for writel, etc.)
-> should enforce ordering of MMIO accesses with respect to normal RAM
-> accesses. (Or maybe it was just MMIO accesses with respect to each
-> other?) I don't think the answer to that question has been clearly
-> documented anywhere, which is somewhat unfortunate.
-..
+Hello,
 
-Different problem.  That discussion was for PIO reads into the page cache,
-and ensuring coherency from all of that.
+On 06/23/2010 07:08 PM, Ortwin Gl=FCck wrote:
+>>From time to time this nVidia SATA controller chokes on a FLUSH CACHE=
+=2E
+>=20
+> 1. why does the kernel not try to HARD reset the link?
 
-Whereas this patch is just ordinary low-level chipset programming,
-and ensuring the descriptors are visible before issuing the "go" command.
+Because hardreset sometimes brings the link completely offline on
+sata_nv's.  Hardreset on sata_nv controllers is quite fragile.
+
+> 2. it would be nice to have the possibility to manually force a
+> (hard) reset or to re-initialize the device. Other than rebooting I
+> mean :-)
+
+Maybe we can use hardreset as the last resort before ditching the
+device.  Something like the following.  Can you please try it and post
+the kernel log?  Thanks.
+
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 2116113..5105951 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1587,7 +1587,7 @@ static int nv_hardreset(struct ata_link *link, un=
+signed int *class,
+         * comment above port ops for details.
+         */
+        if (!(link->ap->pflags & ATA_PFLAG_LOADING) &&
+-           !ata_dev_enabled(link->device))
++           (!ata_dev_enabled(link->device) || ehc->tries[0] =3D=3D 1))
+                sata_link_hardreset(link, sata_deb_timing_hotplug, dead=
+line,
+                                    NULL, NULL);
+        else {
+
+--=20
+tejun
