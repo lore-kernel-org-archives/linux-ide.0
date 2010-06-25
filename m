@@ -1,58 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 11/12] libata: use IRQ expecting
-Date: Thu, 24 Jun 2010 20:22:25 -0400
-Message-ID: <4C23F6C1.7070603@garzik.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org>
+From: Kukjin Kim <kgene.kim@samsung.com>
+Subject: RE: [PATCH v4] libata: pata_samsung_cf: Add Samsung PATA controller
+ driver
+Date: Fri, 25 Jun 2010 12:38:19 +0900
+Message-ID: <001f01cb1417$dce8f8d0$96baea70$%kim@samsung.com>
+References: <1276499263-12217-1-git-send-email-kgene.kim@samsung.com>
+ <4C22704B.50103@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1276443098-20653-12-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-reply-to: <4C22704B.50103@pobox.com>
+Content-language: ko
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>, 'Russell King - ARM Linux' <linux@arm.linux.org.uk>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, 'Abhilash Kesavan' <a.kesavan@samsung.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 06/13/2010 11:31 AM, Tejun Heo wrote:
-> Thanks to its age, ATA is very susceptible to IRQ delivery problems in
-> both directions - lost and spurious interrupts.  In traditional PATA,
-> the IRQ line is ultimately out of the controller and driver's control.
-> Even relatively new SATA isn't free from these issues.  Many
-> controllers still emulate the traditional IDE interface which doesn't
-> have reliable way to indicate interrupt pending state and there also
-> is an issue regarding the interpretation of nIEN on both sides of the
-> cable.
->
-> Most of these problems can be worked around by using the new IRQ
-> expecting mechanism without adding noticeable overhead.  In ATA,
-> almost all operations are initiated by the host and the controller
-> signals progress or completion using IRQ.  IRQ expecting can easily be
-> added in libata core and applied to all libata drivers.
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> ---
->   drivers/ata/libata-core.c |   15 +++++++++++++--
->   drivers/ata/libata-eh.c   |    4 +++-
->   drivers/ata/libata-sff.c  |   37 +++++++++++++++++++------------------
->   include/linux/libata.h    |    2 ++
->   4 files changed, 37 insertions(+), 21 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ddf8e48..9a0aaa0 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4972,6 +4972,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->   {
->   	struct ata_port *ap = qc->ap;
->
-> +	unexpect_irq(ap->irq_expect, false);
-> +
->   	/* XXX: New EH and old EH use different mechanisms to
->   	 * synchronize EH with regular execution path.
->   	 *
+Jeff Garzik wrote:
+> 
+> On 06/14/2010 03:07 AM, Kukjin Kim wrote:
+> > From: Abhilash Kesavan<a.kesavan@samsung.com>
+> >
+> > Adds support for the Samsung PATA controller. This driver is based on
+the
+> > Libata subsystem and references the earlier patches sent for IDE
+subsystem.
+> >
+> > Signed-off-by: Abhilash Kesavan<a.kesavan@samsung.com>
+> > Signed-off-by: Kukjin Kim<kgene.kim@samsung.com>
+> 
+> Acked-by: Jeff Garzik <jgarzik@redhat.com>
+> 
+> Send it through the appropriate subsystem tree for this platform...
 
-Unconditional use of unexpect_irq() here seems incorrect for some cases, 
-such as sata_mv's use, where ata_qc_complete() is called multiple times 
-rather than a singleton ata_qc_complete_multiple() call.
+Hi,
 
-	Jeff
+You mean in my case, appropriate subsystem tree is ARM tree.
+But I think, as Ben commented, it's better drivers go to upstream via the
+driver's tree.
+And of course, I read your comments about this like below...
+'platform drivers do not build and/or work without additional platform
+glue...'
+
+Hmm.
+I'm not sure which way is better...
+
+Russell,
+
+How do you think?
+May I send this to your patch tracking system?
+Or...how should I handle this?
+
+Thanks.
+
+Best regards,
+Kgene.
+--
+Kukjin Kim <kgene.kim@samsung.com>, Senior Engineer,
+SW Solution Development Team, Samsung Electronics Co., Ltd.
