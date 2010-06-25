@@ -1,48 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 11/12] libata: use IRQ expecting
-Date: Fri, 25 Jun 2010 09:44:16 +0200
-Message-ID: <4C245E50.7090701@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: Re: [PATCH] ahci_platform: Provide for vendor specific init
+Date: Fri, 25 Jun 2010 11:48:24 +0400
+Message-ID: <20100625074824.GA2809@oksana.dev.rtsoft.ru>
+References: <1277441858-26993-1-git-send-email-jassisinghbrar@gmail.com>
+ <4C245A42.1070203@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52357 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751734Ab0FYHo6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jun 2010 03:44:58 -0400
-In-Reply-To: <4C23F6C1.7070603@garzik.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61649 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751821Ab0FYHsb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 03:48:31 -0400
+Received: by bwz7 with SMTP id 7so554229bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jun 2010 00:48:29 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4C245A42.1070203@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Jassi Brar <jassisinghbrar@gmail.com>, linux-ide@vger.kernel.org, Jassi Brar <jassi.brar@samsung.com>
 
-Hello, Jeff.
-
-On 06/25/2010 02:22 AM, Jeff Garzik wrote:
->> @@ -4972,6 +4972,8 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
->>   {
->>       struct ata_port *ap = qc->ap;
->>
->> +    unexpect_irq(ap->irq_expect, false);
->> +
->>       /* XXX: New EH and old EH use different mechanisms to
->>        * synchronize EH with regular execution path.
->>        *
+On Fri, Jun 25, 2010 at 03:26:58AM -0400, Jeff Garzik wrote:
+> On 06/25/2010 12:57 AM, Jassi Brar wrote:
+> >From: Jassi Brar<jassi.brar@samsung.com>
+> >
+> >Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
+> >and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
+> >For that, the platform needs memory mapped address of AHCI registers.
+> >
+> >This patch adds the 'mmio' argument and reorders the call to
+> >platform init function.
+> >
+> >Signed-off-by: Jassi Brar<jassi.brar@samsung.com>
+> >---
+> >  drivers/ata/ahci_platform.c   |   23 +++++++++++++----------
+> >  include/linux/ahci_platform.h |    2 +-
+> >  2 files changed, 14 insertions(+), 11 deletions(-)
 > 
-> Unconditional use of unexpect_irq() here seems incorrect for some cases,
-> such as sata_mv's use, where ata_qc_complete() is called multiple times
-> rather than a singleton ata_qc_complete_multiple() call.
+> It is also possible that platforms may need the init to prep the
+> MMIO area for use?  Anton, does this patch work for you, or
+> introduce such a problem?
 
-Indeed, sata_mv is calling ata_qc_complete() directly multiple times.
-I still think calling unexpect_irq() from ata_qc_complete() is correct
-as ata_qc_complete() is always a good indicator of completion events.
-What's missing is a way for sata_mv to indicate that it has more
-events to expect for, which under the current implementation only
-sata_mv interrupt handler can determine.  I'll see if I can convert it
-to use ata_qc_complete_multiple() instead.
+Currently it doesn't introduce such a problem, but you're right,
+platforms might need to, for example, turn on the clocks before
+the MMIO area becomes accessible (otherwise machine check
+exception might arrive).
 
-Thanks.
+There are two options: introduce a ->post_init() hook, or just
+make sure that ahci_platform driver won't start accessing the
+mmio region between ioremap() and pdata->init() calls. I think
+a simple comment in the code will suffice, so no need for the
+additional hook.
+
+And if we ever need some hook before ioremap(), we can name it
+pre_init().
+
+Thanks,
 
 -- 
-tejun
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
