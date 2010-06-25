@@ -1,76 +1,91 @@
-From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH v4] libata: pata_samsung_cf: Add Samsung PATA controller driver
-Date: Fri, 25 Jun 2010 06:18:36 +0200
-Message-ID: <201006250618.37076.marek.vasut@gmail.com>
-References: <1276499263-12217-1-git-send-email-kgene.kim@samsung.com> <4C22704B.50103@pobox.com> <001f01cb1417$dce8f8d0$96baea70$%kim@samsung.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Jassi Brar <jassisinghbrar@gmail.com>
+Subject: [PATCH] ahci_platform: Provide for vendor specific init
+Date: Fri, 25 Jun 2010 13:57:38 +0900
+Message-ID: <1277441858-26993-1-git-send-email-jassisinghbrar@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.155]:2883 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab0FYEUv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 00:20:51 -0400
-In-Reply-To: <001f01cb1417$dce8f8d0$96baea70$%kim@samsung.com>
+Received: from ganesha.gnumonks.org ([213.95.27.120]:39935 "EHLO
+	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825Ab0FYFBi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 01:01:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kukjin Kim <kgene.kim@samsung.com>
-Cc: 'Jeff Garzik' <jgarzik@pobox.com>, 'Russell King - ARM Linux' <linux@arm.linux.org.uk>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, 'Abhilash Kesavan' <a.kesavan@samsung.com>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, avorontsov@ru.mvista.com, Jassi Brar <jassi.brar@samsung.com>
 
-Dne P=C3=A1 25. =C4=8Dervna 2010 05:38:19 Kukjin Kim napsal(a):
-> Jeff Garzik wrote:
-> > On 06/14/2010 03:07 AM, Kukjin Kim wrote:
-> > > From: Abhilash Kesavan<a.kesavan@samsung.com>
-> > >=20
-> > > Adds support for the Samsung PATA controller. This driver is base=
-d on
->=20
-> the
->=20
-> > > Libata subsystem and references the earlier patches sent for IDE
->=20
-> subsystem.
->=20
-> > > Signed-off-by: Abhilash Kesavan<a.kesavan@samsung.com>
-> > > Signed-off-by: Kukjin Kim<kgene.kim@samsung.com>
-> >=20
-> > Acked-by: Jeff Garzik <jgarzik@redhat.com>
-> >=20
-> > Send it through the appropriate subsystem tree for this platform...
->=20
-> Hi,
->=20
-> You mean in my case, appropriate subsystem tree is ARM tree.
-> But I think, as Ben commented, it's better drivers go to upstream via=
- the
-> driver's tree.
-> And of course, I read your comments about this like below...
-> 'platform drivers do not build and/or work without additional platfor=
-m
-> glue...'
->=20
-> Hmm.
-> I'm not sure which way is better...
+From: Jassi Brar <jassi.brar@samsung.com>
 
-I pushed pata_pxa through Eric as well ... go for the linux-arm tree.
-Cheers
->=20
-> Russell,
->=20
-> How do you think?
-> May I send this to your patch tracking system?
-> Or...how should I handle this?
->=20
-> Thanks.
->=20
-> Best regards,
-> Kgene.
-> --
-> Kukjin Kim <kgene.kim@samsung.com>, Senior Engineer,
-> SW Solution Development Team, Samsung Electronics Co., Ltd.
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
+and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
+For that, the platform needs memory mapped address of AHCI registers.
+
+This patch adds the 'mmio' argument and reorders the call to
+platform init function.
+
+Signed-off-by: Jassi Brar <jassi.brar@samsung.com>
+---
+ drivers/ata/ahci_platform.c   |   23 +++++++++++++----------
+ include/linux/ahci_platform.h |    2 +-
+ 2 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 5e11b16..4403941 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -54,19 +54,13 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (pdata && pdata->init) {
+-		rc = pdata->init(dev);
+-		if (rc)
+-			return rc;
+-	}
+-
+ 	if (pdata && pdata->ata_port_info)
+ 		pi = *pdata->ata_port_info;
+ 
+ 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+ 	if (!hpriv) {
+-		rc = -ENOMEM;
+-		goto err0;
++		dev_err(dev, "can't alloc ahci_host_priv\n");
++		return -ENOMEM;
+ 	}
+ 
+ 	hpriv->flags |= (unsigned long)pi.private_data;
+@@ -74,8 +68,17 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
+ 	if (!hpriv->mmio) {
+ 		dev_err(dev, "can't map %pR\n", mem);
+-		rc = -ENOMEM;
+-		goto err0;
++		devm_kfree(dev, hpriv);
++		return -ENOMEM;
++	}
++
++	if (pdata && pdata->init) {
++		rc = pdata->init(dev, hpriv->mmio);
++		if (rc) {
++			devm_iounmap(dev, hpriv->mmio);
++			devm_kfree(dev, hpriv);
++			return rc;
++		}
+ 	}
+ 
+ 	ahci_save_initial_config(dev, hpriv,
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index f7dd576..f7ffc4c 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -19,7 +19,7 @@ struct device;
+ struct ata_port_info;
+ 
+ struct ahci_platform_data {
+-	int (*init)(struct device *dev);
++	int (*init)(struct device *dev, void __iomem *addr);
+ 	void (*exit)(struct device *dev);
+ 	const struct ata_port_info *ata_port_info;
+ 	unsigned int force_port_map;
+-- 
+1.6.2.5
+
