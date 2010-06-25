@@ -1,26 +1,38 @@
-From: amruth pattanada <amruth.vamadev@gmail.com>
-Subject: Setting up Silicon image 3114 in DMA mode
-Date: Fri, 25 Jun 2010 13:55:32 +0530
-Message-ID: <AANLkTinYuxwsLQKGRd6joRSCcbnns930DDienlhfEB8i@mail.gmail.com>
+From: Jassi Brar <jassisinghbrar@gmail.com>
+Subject: Re: [PATCH] ahci_platform: Provide for vendor specific init
+Date: Fri, 25 Jun 2010 18:25:47 +0900
+Message-ID: <AANLkTingJcByWdlZZFv5vhyRBqTFuLfpEDqARx84hpQu@mail.gmail.com>
+References: <1277441858-26993-1-git-send-email-jassisinghbrar@gmail.com>
+	<20100625074904.GA32340@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57687 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755Ab0FYIZf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 04:25:35 -0400
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41426 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753419Ab0FYJZs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 05:25:48 -0400
+Received: by vws9 with SMTP id 9so3655211vws.19
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jun 2010 02:25:47 -0700 (PDT)
+In-Reply-To: <20100625074904.GA32340@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Anton Vorontsov <cbouatmailru@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Jassi Brar <jassi.brar@samsung.com>
 
-Hi
-Can anybody please guide me what minimal steps to follow for setting
-up 3114 for operating in DMA mode and looked into linux 2.6.32.7 code.
-I am porting 3114 driver to RTOS but have problems in using BAR5 PCI
-config space because of Memory mapped region issues. I can access BAR4
-and plan to set up DMA mode.
-How do we access entire BAR5 memory space without using BAR5, is there
-any indirect way to access BAR5 using BAR4. Please let me know.
-Thanks
-Amruth p.v
-Sr.Embedded Engineer
+On Fri, Jun 25, 2010 at 4:49 PM, Anton Vorontsov <cbouatmailru@gmail.com> wrote:
+> On Fri, Jun 25, 2010 at 01:57:38PM +0900, Jassi Brar wrote:
+>> From: Jassi Brar <jassi.brar@samsung.com>
+>>
+>> Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
+>> and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
+>> For that, the platform needs memory mapped address of AHCI registers.
+>>
+>> This patch adds the 'mmio' argument and reorders the call to
+>> platform init function.
+>>
+>> Signed-off-by: Jassi Brar <jassi.brar@samsung.com>
+>
+> Thanks for the patch. Looks good, but see some comments below.
+> (Plus some comments on Jeff's reply)
+
+Ok, will resend. Thanks.
