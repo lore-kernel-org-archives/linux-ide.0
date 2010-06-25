@@ -1,99 +1,42 @@
-From: Jassi Brar <jassisinghbrar@gmail.com>
-Subject: [PATCHv2] ahci_platform: Provide for vendor specific init
-Date: Fri, 25 Jun 2010 18:21:19 +0900
-Message-ID: <1277457679-14171-1-git-send-email-jassisinghbrar@gmail.com>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: Re: [PATCHv2] ahci_platform: Provide for vendor specific init
+Date: Fri, 25 Jun 2010 13:34:57 +0400
+Message-ID: <20100625093457.GA16436@oksana.dev.rtsoft.ru>
+References: <1277457679-14171-1-git-send-email-jassisinghbrar@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ganesha.gnumonks.org ([213.95.27.120]:33310 "EHLO
-	ganesha.gnumonks.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752563Ab0FYJ0k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 05:26:40 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53380 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754254Ab0FYJfD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jun 2010 05:35:03 -0400
+Received: by bwz7 with SMTP id 7so603699bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jun 2010 02:35:01 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1277457679-14171-1-git-send-email-jassisinghbrar@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, avorontsov@ru.mvista.com, Jassi Brar <jassi.brar@samsung.com>
+To: Jassi Brar <jassisinghbrar@gmail.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, Jassi Brar <jassi.brar@samsung.com>
 
-From: Jassi Brar <jassi.brar@samsung.com>
+On Fri, Jun 25, 2010 at 06:21:19PM +0900, Jassi Brar wrote:
+> From: Jassi Brar <jassi.brar@samsung.com>
+> 
+> Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
+> and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
+> For that, the platform needs memory mapped address of AHCI registers.
+> 
+> This patch adds the 'mmio' argument and reorders the call to
+> platform init function.
+> 
+> Signed-off-by: Jassi Brar <jassi.brar@samsung.com>
+> ---
 
-Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
-and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
-For that, the platform needs memory mapped address of AHCI registers.
+Looks perfect, thanks!
 
-This patch adds the 'mmio' argument and reorders the call to
-platform init function.
+Acked-by: Anton Vorontsov <cbouatmailru@gmail.com>
 
-Signed-off-by: Jassi Brar <jassi.brar@samsung.com>
----
- drivers/ata/ahci_platform.c   |   25 +++++++++++++++----------
- include/linux/ahci_platform.h |    4 +++-
- 2 files changed, 18 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 5e11b16..68ef6b5 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -54,19 +54,13 @@ static int __init ahci_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	if (pdata && pdata->init) {
--		rc = pdata->init(dev);
--		if (rc)
--			return rc;
--	}
--
- 	if (pdata && pdata->ata_port_info)
- 		pi = *pdata->ata_port_info;
- 
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
- 	if (!hpriv) {
--		rc = -ENOMEM;
--		goto err0;
-+		dev_err(dev, "can't alloc ahci_host_priv\n");
-+		return -ENOMEM;
- 	}
- 
- 	hpriv->flags |= (unsigned long)pi.private_data;
-@@ -74,8 +68,19 @@ static int __init ahci_probe(struct platform_device *pdev)
- 	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
- 	if (!hpriv->mmio) {
- 		dev_err(dev, "can't map %pR\n", mem);
--		rc = -ENOMEM;
--		goto err0;
-+		return -ENOMEM;
-+	}
-+
-+	/*
-+	 * Some platforms might need to prepare for mmio region access,
-+	 * which could be done in the following init call. So, the mmio
-+	 * region shouldn't be accessed before init (if provided) has
-+	 * returned successfully.
-+	 */
-+	if (pdata && pdata->init) {
-+		rc = pdata->init(dev, hpriv->mmio);
-+		if (rc)
-+			return rc;
- 	}
- 
- 	ahci_save_initial_config(dev, hpriv,
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index f7dd576..be3d9a7 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -15,11 +15,13 @@
- #ifndef _AHCI_PLATFORM_H
- #define _AHCI_PLATFORM_H
- 
-+#include <linux/compiler.h>
-+
- struct device;
- struct ata_port_info;
- 
- struct ahci_platform_data {
--	int (*init)(struct device *dev);
-+	int (*init)(struct device *dev, void __iomem *addr);
- 	void (*exit)(struct device *dev);
- 	const struct ata_port_info *ata_port_info;
- 	unsigned int force_port_map;
 -- 
-1.6.2.5
-
+Anton Vorontsov
+email: cbouatmailru@gmail.com
+irc://irc.freenode.net/bd2
