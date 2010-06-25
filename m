@@ -1,292 +1,120 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2 #upstream] libata: always use ata_qc_complete_multiple()
- for NCQ command completions
-Date: Fri, 25 Jun 2010 15:03:34 +0200
-Message-ID: <4C24A926.10104@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org> <4C247B54.2050900@garzik.org> <4C247C36.6040007@kernel.org> <4C24A903.4060908@kernel.org>
+Subject: Re: ata link not reset properly
+Date: Fri, 25 Jun 2010 17:19:31 +0200
+Message-ID: <4C24C903.1070705@kernel.org>
+References: <4C223F8A.9030306@odi.ch> <4C224429.6010705@kernel.org> <4C224502.2040206@kernel.org> <4C2305A8.4070708@odi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------020603070400050700040305"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40381 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:55304 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755862Ab0FYNE2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jun 2010 09:04:28 -0400
-In-Reply-To: <4C24A903.4060908@kernel.org>
+	id S1751456Ab0FYPTk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Jun 2010 11:19:40 -0400
+In-Reply-To: <4C2305A8.4070708@odi.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org, Ashish Kalra <ashish.kalra@freescale.com>, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>, Robert Hancock <hancockr@shaw.ca>
+To: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Currently, sata_fsl, mv and nv call ata_qc_complete() multiple times
-from their interrupt handlers to indicate completion of NCQ commands.
-This limits the visibility the libata core layer has into how commands
-are being executed and completed, which is necessary to support IRQ
-expecting in generic way.  libata already has an interface to complete
-multiple commands at once - ata_qc_complete_multiple() which ahci and
-sata_sil24 already use.
+This is a multi-part message in MIME format.
+--------------020603070400050700040305
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-This patch updates the three drivers to use ata_qc_complete_multiple()
-too and updates comments on ata_qc_complete[_multiple]() regarding
-their usages with NCQ completions.  This change not only provides
-better visibility into command execution to the core layer but also
-simplifies low level drivers.
+Hello,
 
-* sata_fsl: It already builds done_mask.  Conversion is straight
-  forward.
+Patch attached, but please see below.
 
-* sata_mv: mv_process_crpb_response() no longer checks for illegal
-  completions, it just returns whether the tag is completed or not.
-  mv_process_crpb_entries() builds done_mask from it and passes it to
-  ata_qc_complete_multiple() which will check for illegal completions.
+On 06/24/2010 09:13 AM, Ortwin Glück wrote:
+> On 23.06.2010 19:31, Tejun Heo wrote:
+>> Meh, it won't work.  It's failing softreset so we should be checking
+>> reset try counts.  I'll try to write up something tomorrow.
+> 
+> I am happy to try patches. The problem shows up maybe once a month
+> only, however. Interestingly it only occurs on ata2 with a IBM hdd,
+> never on the first channel with a maxtor. I can also try and attach
+> the dvd on the first channel and see if that makes any difference.
 
-* sata_nv adma: Similar to sata_mv.  nv_adma_check_cpb() now just
-  returns the tag status and nv_adma_interrupt() builds done_mask from
-  it and passes it to ata_qc_complete_multiple().
+Problems like this definitely can depend on the specific drive.
 
-* sata_nv swncq: It already builds done_mask.  Drop unnecessary
-  illegal transition checks and call ata_qc_complete_multiple().
+> ata1.00: ATA-5: MAXTOR 6L020J1, A93.0500, max UDMA/133
+> ata2.00: ATA-5: IC25N030ATCS04-0, CA3OA71A, max UDMA/100
+> ata2.01: ATAPI: Pioneer DVD-ROM ATAPIModel DVD-115  0127, E1.27, max UDMA/33
 
-In the long run, it might be a good idea to make ata_qc_complete()
-whine if called when multiple NCQ commands are in flight.
+Is it PATA?  Why do you have 2.01?  Can you please attach full boot
+log?
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Ashish Kalra <ashish.kalra@freescale.com>
-Cc: Saeed Bishara <saeed@marvell.com>
-Cc: Mark Lord <liml@rtr.ca>
-Cc: Robert Hancock <hancockr@shaw.ca>
----
- drivers/ata/libata-core.c |   13 ++++++++--
- drivers/ata/sata_fsl.c    |    8 +-----
- drivers/ata/sata_mv.c     |   25 +++++++++-----------
- drivers/ata/sata_nv.c     |   57 ++++++++++------------------------------------
- 4 files changed, 38 insertions(+), 65 deletions(-)
+Thanks.
 
-Index: ata/drivers/ata/libata-core.c
-===================================================================
---- ata.orig/drivers/ata/libata-core.c
-+++ ata/drivers/ata/libata-core.c
-@@ -4962,8 +4962,13 @@ static void ata_verify_xfer(struct ata_q
-  *	ata_qc_complete - Complete an active ATA command
-  *	@qc: Command to complete
-  *
-- *	Indicate to the mid and upper layers that an ATA
-- *	command has completed, with either an ok or not-ok status.
-+ *	Indicate to the mid and upper layers that an ATA command has
-+ *	completed, with either an ok or not-ok status.
-+ *
-+ *	Refrain from calling this function multiple times when
-+ *	successfully completing multiple NCQ commands.
-+ *	ata_qc_complete_multiple() should be used instead, which will
-+ *	properly update IRQ expect state.
-  *
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-@@ -5056,6 +5061,10 @@ void ata_qc_complete(struct ata_queued_c
-  *	requests normally.  ap->qc_active and @qc_active is compared
-  *	and commands are completed accordingly.
-  *
-+ *	Always use this function when completing multiple NCQ commands
-+ *	from IRQ handlers instead of calling ata_qc_complete()
-+ *	multiple times to keep IRQ expect status properly in sync.
-+ *
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-  *
-Index: ata/drivers/ata/sata_fsl.c
-===================================================================
---- ata.orig/drivers/ata/sata_fsl.c
-+++ ata/drivers/ata/sata_fsl.c
-@@ -1137,17 +1137,13 @@ static void sata_fsl_host_intr(struct at
- 			ioread32(hcr_base + CE));
+-- 
+tejun
 
- 		for (i = 0; i < SATA_FSL_QUEUE_DEPTH; i++) {
--			if (done_mask & (1 << i)) {
--				qc = ata_qc_from_tag(ap, i);
--				if (qc) {
--					ata_qc_complete(qc);
--				}
-+			if (done_mask & (1 << i))
- 				DPRINTK
- 				    ("completing ncq cmd,tag=%d,CC=0x%x,CA=0x%x\n",
- 				     i, ioread32(hcr_base + CC),
- 				     ioread32(hcr_base + CA));
--			}
- 		}
-+		ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
- 		return;
+--------------020603070400050700040305
+Content-Type: text/x-patch;
+ name="nv-last-reset.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="nv-last-reset.patch"
 
- 	} else if ((ap->qc_active & (1 << ATA_TAG_INTERNAL))) {
-Index: ata/drivers/ata/sata_mv.c
-===================================================================
---- ata.orig/drivers/ata/sata_mv.c
-+++ ata/drivers/ata/sata_mv.c
-@@ -2713,18 +2713,11 @@ static void mv_err_intr(struct ata_port
- 	}
- }
-
--static void mv_process_crpb_response(struct ata_port *ap,
-+static bool mv_process_crpb_response(struct ata_port *ap,
- 		struct mv_crpb *response, unsigned int tag, int ncq_enabled)
- {
- 	u8 ata_status;
- 	u16 edma_status = le16_to_cpu(response->flags);
--	struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
--
--	if (unlikely(!qc)) {
--		ata_port_printk(ap, KERN_ERR, "%s: no qc for tag=%d\n",
--				__func__, tag);
--		return;
--	}
-
- 	/*
- 	 * edma_status from a response queue entry:
-@@ -2738,13 +2731,14 @@ static void mv_process_crpb_response(str
- 			 * Error will be seen/handled by
- 			 * mv_err_intr().  So do nothing at all here.
- 			 */
--			return;
-+			return false;
- 		}
- 	}
- 	ata_status = edma_status >> CRPB_FLAG_STATUS_SHIFT;
- 	if (!ac_err_mask(ata_status))
--		ata_qc_complete(qc);
-+		return true;
- 	/* else: leave it for mv_err_intr() */
-+	return false;
- }
-
- static void mv_process_crpb_entries(struct ata_port *ap, struct mv_port_priv *pp)
-@@ -2753,6 +2747,7 @@ static void mv_process_crpb_entries(stru
- 	struct mv_host_priv *hpriv = ap->host->private_data;
- 	u32 in_index;
- 	bool work_done = false;
-+	u32 done_mask = 0;
- 	int ncq_enabled = (pp->pp_flags & MV_PP_FLAG_NCQ_EN);
-
- 	/* Get the hardware queue position index */
-@@ -2773,15 +2768,19 @@ static void mv_process_crpb_entries(stru
- 			/* Gen II/IIE: get command tag from CRPB entry */
- 			tag = le16_to_cpu(response->id) & 0x1f;
- 		}
--		mv_process_crpb_response(ap, response, tag, ncq_enabled);
-+		if (mv_process_crpb_response(ap, response, tag, ncq_enabled))
-+			done_mask |= 1 << tag;
- 		work_done = true;
- 	}
-
--	/* Update the software queue position index in hardware */
--	if (work_done)
-+	if (work_done) {
-+		ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index f77a673..5b30776 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2486,6 +2486,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	 */
+ 	while (ata_eh_reset_timeouts[max_tries] != ULONG_MAX)
+ 		max_tries++;
++	if (max_tries > 1)
++		ehc->i.flags &= ~ATA_EHI_LAST_RESET;
++	else
++		ehc->i.flags |= ATA_EHI_LAST_RESET;
 +
-+		/* Update the software queue position index in hardware */
- 		writelfl((pp->crpb_dma & EDMA_RSP_Q_BASE_LO_MASK) |
- 			 (pp->resp_idx << EDMA_RSP_Q_PTR_SHIFT),
- 			 port_mmio + EDMA_RSP_Q_OUT_PTR);
-+	}
- }
-
- static void mv_port_intr(struct ata_port *ap, u32 port_cause)
-Index: ata/drivers/ata/sata_nv.c
-===================================================================
---- ata.orig/drivers/ata/sata_nv.c
-+++ ata/drivers/ata/sata_nv.c
-@@ -873,29 +873,11 @@ static int nv_adma_check_cpb(struct ata_
- 			ata_port_freeze(ap);
- 		else
- 			ata_port_abort(ap);
--		return 1;
-+		return -1;
+ 	if (link->flags & ATA_LFLAG_NO_HRST)
+ 		hardreset = NULL;
+ 	if (link->flags & ATA_LFLAG_NO_SRST)
+@@ -2814,6 +2819,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
  	}
+ 
+ 	if (try == max_tries - 1) {
++		ehc->i.flags |= ATA_EHI_LAST_RESET;
+ 		sata_down_spd_limit(link, 0);
+ 		if (slave)
+ 			sata_down_spd_limit(slave, 0);
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 2116113..5c22f02 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1583,11 +1583,14 @@ static int nv_hardreset(struct ata_link *link, unsigned int *class,
+ {
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 
+-	/* Do hardreset iff it's post-boot probing, please read the
+-	 * comment above port ops for details.
++	/*
++	 * Do hardreset iff it's the last reset attempt or post-boot
++	 * probing, please read the comment above port ops for
++	 * details.
+ 	 */
+-	if (!(link->ap->pflags & ATA_PFLAG_LOADING) &&
+-	    !ata_dev_enabled(link->device))
++	if (ehc->i.flags & ATA_EHI_LAST_RESET ||
++	    (!(link->ap->pflags & ATA_PFLAG_LOADING) &&
++	     !ata_dev_enabled(link->device)))
+ 		sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
+ 				    NULL, NULL);
+ 	else {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index b85f3ff..de61cc3 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -341,6 +341,7 @@ enum {
+ 	ATA_EHI_PRINTINFO	= (1 << 18), /* print configuration info */
+ 	ATA_EHI_SETMODE		= (1 << 19), /* configure transfer mode */
+ 	ATA_EHI_POST_SETMODE	= (1 << 20), /* revaildating after setmode */
++	ATA_EHI_LAST_RESET	= (1 << 21), /* last reset attempt hint */
+ 
+ 	ATA_EHI_DID_RESET	= ATA_EHI_DID_SOFTRESET | ATA_EHI_DID_HARDRESET,
+ 
 
--	if (likely(flags & NV_CPB_RESP_DONE)) {
--		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, cpb_num);
--		VPRINTK("CPB flags done, flags=0x%x\n", flags);
--		if (likely(qc)) {
--			DPRINTK("Completing qc from tag %d\n", cpb_num);
--			ata_qc_complete(qc);
--		} else {
--			struct ata_eh_info *ehi = &ap->link.eh_info;
--			/* Notifier bits set without a command may indicate the drive
--			   is misbehaving. Raise host state machine violation on this
--			   condition. */
--			ata_port_printk(ap, KERN_ERR,
--					"notifier for tag %d with no cmd?\n",
--					cpb_num);
--			ehi->err_mask |= AC_ERR_HSM;
--			ehi->action |= ATA_EH_RESET;
--			ata_port_freeze(ap);
--			return 1;
--		}
--	}
-+	if (likely(flags & NV_CPB_RESP_DONE))
-+		return 1;
- 	return 0;
- }
-
-@@ -1018,6 +1000,7 @@ static irqreturn_t nv_adma_interrupt(int
- 			      NV_ADMA_STAT_CPBERR |
- 			      NV_ADMA_STAT_CMD_COMPLETE)) {
- 			u32 check_commands = notifier_clears[i];
-+			u32 done_mask = 0;
- 			int pos, rc;
-
- 			if (status & NV_ADMA_STAT_CPBERR) {
-@@ -1034,10 +1017,13 @@ static irqreturn_t nv_adma_interrupt(int
- 				pos--;
- 				rc = nv_adma_check_cpb(ap, pos,
- 						notifier_error & (1 << pos));
--				if (unlikely(rc))
-+				if (rc > 0)
-+					done_mask |= 1 << pos;
-+				else if (unlikely(rc < 0))
- 					check_commands = 0;
- 				check_commands &= ~(1 << pos);
- 			}
-+			ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
- 		}
- 	}
-
-@@ -2132,7 +2118,6 @@ static int nv_swncq_sdbfis(struct ata_po
- 	struct ata_eh_info *ehi = &ap->link.eh_info;
- 	u32 sactive;
- 	u32 done_mask;
--	int i;
- 	u8 host_stat;
- 	u8 lack_dhfis = 0;
-
-@@ -2152,27 +2137,11 @@ static int nv_swncq_sdbfis(struct ata_po
- 	sactive = readl(pp->sactive_block);
- 	done_mask = pp->qc_active ^ sactive;
-
--	if (unlikely(done_mask & sactive)) {
--		ata_ehi_clear_desc(ehi);
--		ata_ehi_push_desc(ehi, "illegal SWNCQ:qc_active transition"
--				  "(%08x->%08x)", pp->qc_active, sactive);
--		ehi->err_mask |= AC_ERR_HSM;
--		ehi->action |= ATA_EH_RESET;
--		return -EINVAL;
--	}
--	for (i = 0; i < ATA_MAX_QUEUE; i++) {
--		if (!(done_mask & (1 << i)))
--			continue;
--
--		qc = ata_qc_from_tag(ap, i);
--		if (qc) {
--			ata_qc_complete(qc);
--			pp->qc_active &= ~(1 << i);
--			pp->dhfis_bits &= ~(1 << i);
--			pp->dmafis_bits &= ~(1 << i);
--			pp->sdbfis_bits |= (1 << i);
--		}
--	}
-+	pp->qc_active &= ~done_mask;
-+	pp->dhfis_bits &= ~done_mask;
-+	pp->dmafis_bits &= ~done_mask;
-+	pp->sdbfis_bits |= done_mask;
-+	ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
-
- 	if (!ap->qc_active) {
- 		DPRINTK("over\n");
+--------------020603070400050700040305--
