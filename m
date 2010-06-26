@@ -1,59 +1,66 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 11/12] libata: use IRQ expecting
-Date: Fri, 25 Jun 2010 23:45:54 -0400
-Message-ID: <4C2577F2.4030005@garzik.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: ata link not reset properly
+Date: Fri, 25 Jun 2010 22:07:10 -0600
+Message-ID: <4C257CEE.2070309@gmail.com>
+References: <4C223F8A.9030306@odi.ch> <4C224429.6010705@kernel.org> <4C224502.2040206@kernel.org> <4C2305A8.4070708@odi.ch> <4C24C903.1070705@kernel.org> <4C24EED2.4020300@odi.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C245E50.7090701@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:40538 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085Ab0FZEHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jun 2010 00:07:16 -0400
+In-Reply-To: <4C24EED2.4020300@odi.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 06/25/2010 03:44 AM, Tejun Heo wrote:
-> I still think calling unexpect_irq() from ata_qc_complete() is correct
-> as ata_qc_complete() is always a good indicator of completion events.
+On 06/25/2010 12:00 PM, Ortwin Gl=FCck wrote:
+>
+>
+> On 25.06.2010 17:19, Tejun Heo wrote:
+>> Patch attached, but please see below.
+>
+> Cheers, I will give it a try and provide feedback if "it" happens aga=
+in.
+>
+>> Is it PATA?
+>
+> Yes. This chipset doesn't have SATA, only PATA.
 
-No, it's not.  ata_qc_complete() is an indicator that _one_ completion 
-event occurred, not _all_ completion events for that port.
+Ahh, ok, it's not sata_nv at all then, it's pata_amd. On the same chip,=
+=20
+totally different controller though.
 
-Converting drivers to use ata_qc_complete_multiple() completely misses 
-the point:  ata_qc_complete_multiple() is doing exactly the same thing 
-as those drivers:  calling ata_qc_complete() in a loop.
+PATA doesn't normally use hard-resets as a means of error recovery -=20
+that would mean hitting the RESET line, which I don't think most=20
+controllers can do on software command (it usually only gets asserted o=
+n=20
+power up or hitting the reset button), unlike on SATA where there's a=20
+defined way to trigger a COMRESET which is mostly equivalent. Also, tha=
+t=20
+resets both devices on the channel, unlike soft reset which is specific=
+=20
+to one device.
 
-ata_qc_complete() is -- as its name implies -- completing a single qc. 
-Your patch introduces an unconditional controller-wide unexpect_irq() 
-call.  It's a layering violation.
+>
+> CONFIG_ATA=3Dy
+> CONFIG_ATA_SFF=3Dy
+> CONFIG_SATA_NV=3Dy
+> CONFIG_PATA_AMD=3Dy
+>
+>> Why do you have 2.01?
+>
+> for the DVD drive?
+>
+>> Can you please attach full boot
+>> log?
+>
+> attached.
+>
+> Thanks.
+>   Ortwin
 
-You can trivially trace through ata_qc_complete_multiple() after patch 
-#11 is applied, and see the result...  for $N completion bits passed to 
-ata_qc_complete_multiple(), you call
-	unexpect_irq()
-	expect_irq()
-in rapid succession $N times, once for each ata_qc_complete() call in 
-the loop of ata_qc_complete_multiple().  For something that is not 
-needed for modern SATA controllers.
-
-The preferred solution would be something that only touches legacy 
-controllers, namely:
-
-*) create ata_port_complete(), with the implementation
-
-	ata_qc_complete()
-	unexpect_irq()
-
-*) then call ata_port_complete() in the legacy code that needs 
-unexpect_irq()
-
-We don't want to  burden modern SATA drivers with the overhead of 
-dealing with silly PATA/SATA1 legacy irq nastiness, particularly the 
-ugliness of calling
-
-	unexpect_irq() + expect_irq()
-
-for a number of NCQ commands, in a tight loop!
-
-	Jeff
