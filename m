@@ -1,95 +1,29 @@
-From: amruth pattanada <amruth.vamadev@gmail.com>
-Subject: Re: Setting up Silicon image 3114 in DMA mode
-Date: Sat, 26 Jun 2010 20:36:45 +0530
-Message-ID: <AANLkTikeQO1v-ag_DDbkgxoZRTk1_fomn1kbHKqH9vkD@mail.gmail.com>
-References: <AANLkTinYuxwsLQKGRd6joRSCcbnns930DDienlhfEB8i@mail.gmail.com>
-	<4C257E67.9090101@gmail.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v4] libata: pata_samsung_cf: Add Samsung PATA
+	controller driver
+Date: Sat, 26 Jun 2010 20:33:10 +0100
+Message-ID: <20100626193310.GA19339@n2100.arm.linux.org.uk>
+References: <1276499263-12217-1-git-send-email-kgene.kim@samsung.com> <4C22704B.50103@pobox.com> <001f01cb1417$dce8f8d0$96baea70$%kim@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39566 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752575Ab0FZPGs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jun 2010 11:06:48 -0400
-In-Reply-To: <4C257E67.9090101@gmail.com>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:35705 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753925Ab0FZTdj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jun 2010 15:33:39 -0400
+Content-Disposition: inline
+In-Reply-To: <001f01cb1417$dce8f8d0$96baea70$%kim@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Kukjin Kim <kgene.kim@samsung.com>
+Cc: 'Jeff Garzik' <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, ben-linux@fluff.org, 'Abhilash Kesavan' <a.kesavan@samsung.com>
 
-Thanks for the info Robert. I checked the code for open solaris and
-see the following below. It basically uses BAR5 indirect access
-method.
+On Fri, Jun 25, 2010 at 12:38:19PM +0900, Kukjin Kim wrote:
+> Russell,
+> 
+> How do you think?
+> May I send this to your patch tracking system?
+> Or...how should I handle this?
 
-/* Base Register 5 Indirect Address Offset */
-
-#define	PCI_CONF_BA5_IND_ADDRESS	0xc0
-#define	PCI_CONF_BA5_IND_ACCESS		0xc4
-
-#define	PUT_BAR5_INDIRECT(handle, address, value) \
-{\
-		pci_config_put32(handle, PCI_CONF_BA5_IND_ADDRESS, address); \
-		pci_config_put32(handle, PCI_CONF_BA5_IND_ACCESS, value); \
-}
-
-#define	GET_BAR5_INDIRECT(handle, address, rval) \
-{\
-		pci_config_put32(handle, PCI_CONF_BA5_IND_ADDRESS, address); \
-		rval = pci_config_get32(handle, PCI_CONF_BA5_IND_ACCESS); \
-}
-
-/*
-	 * The following BAR5 registers are accessed via an indirect register
-	 * in the PCI configuration space rather than mapping BAR5.
-	 */
-	for (i = 0; i < ports; i++) {
-		GET_BAR5_INDIRECT(pci_conf_handle, fifocntctl[i],
-		    fifo_cnt_ctl);
-		fifo_cnt_ctl = (fifo_cnt_ctl & ~0x7) | (frrc & 0x7);
-		PUT_BAR5_INDIRECT(pci_conf_handle, fifocntctl[i],
-		    fifo_cnt_ctl);
-		/*
-		 * Correct default setting for FIS0cfg
-		 */
-#ifdef	DEBUG
-		GET_BAR5_INDIRECT(pci_conf_handle, sfiscfg[i],
-			sfiscfg_val);
-		ADBG_WARN(("sil3xxx_init_controller: old val SFISCfg "
-			"ch%d: %x\n", i, sfiscfg_val));
-#endif
-		PUT_BAR5_INDIRECT(pci_conf_handle, sfiscfg[i],
-			SFISCFG_ERRATA);
-#ifdef	DEBUG
-		GET_BAR5_INDIRECT(pci_conf_handle, sfiscfg[i],
-			sfiscfg_val);
-		ADBG_WARN(("sil3xxx_init_controller: new val SFISCfg "
-			"ch%d: %x\n", i, sfiscfg_val));
-#endif
-
-I need to setup DMA transfer mode for silicon image 3114 chipset for
-dma write/read operation.Where can I find the initialisation steps for
-DMA in libata(Programming Bus Master Registers,setup PRD table and
-Issue ATA commands). Do we have any sample implementation in libata.
-Please let me know.
-Thanks
-Amruth p.v
-Sr.Embedded Engineer
-On Sat, Jun 26, 2010 at 9:43 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> On 06/25/2010 02:25 AM, amruth pattanada wrote:
->>
->> Hi
->> Can anybody please guide me what minimal steps to follow for setting
->> up 3114 for operating in DMA mode and looked into linux 2.6.32.7 code.
->> I am porting 3114 driver to RTOS but have problems in using BAR5 PCI
->> config space because of Memory mapped region issues. I can access BAR4
->> and plan to set up DMA mode.
->> How do we access entire BAR5 memory space without using BAR5, is there
->> any indirect way to access BAR5 using BAR4. Please let me know.
->> Thanks
->> Amruth p.v
->> Sr.Embedded Engineer
->
-> See the datasheet (PCI Configuration Space section), there's a way to access
-> BAR5 registers using indirect access registers in configuration space. I
-> expect this will be relatively slow, however.
->
+If Jeff is happy, then I'm happy.  However, shouldn't it also have Ben's
+ack?
