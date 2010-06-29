@@ -1,36 +1,54 @@
 From: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: [PATCH]460EX on-chip SATA driver<kernel 2.6.33><resubmission>
-Date: Tue, 29 Jun 2010 03:33:50 +0200
-Message-ID: <201006290333.50673.marek.vasut@gmail.com>
-References: <201006041226.o54CQH2V017366@amcc.com>
+Subject: Re: Pls help for LibATA caused kernel temporary hung.
+Date: Tue, 29 Jun 2010 03:36:58 +0200
+Message-ID: <201006290336.58540.marek.vasut@gmail.com>
+References: <AANLkTinbQHdo40Drqc5Ydur5lCrAktHHDig45HDrC6s1@mail.gmail.com> <4C28653E.4080908@garzik.org> <AANLkTikwbBANkzepCW1XwbfSi3vvuq8iJNtG0WAZByDV@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:61884 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48735 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320Ab0F2BgM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jun 2010 21:36:12 -0400
-In-Reply-To: <201006041226.o54CQH2V017366@amcc.com>
+	with ESMTP id S1751990Ab0F2BjS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jun 2010 21:39:18 -0400
+Received: by bwz1 with SMTP id 1so466443bwz.19
+        for <linux-ide@vger.kernel.org>; Mon, 28 Jun 2010 18:39:16 -0700 (PDT)
+In-Reply-To: <AANLkTikwbBANkzepCW1XwbfSi3vvuq8iJNtG0WAZByDV@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, sr@denx.de, linuxppc-dev@ozlabs.org
+To: Simon Li <simon.jiyou@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-Dne P=C3=A1 4. =C4=8Dervna 2010 14:26:17 Rupjyoti Sarmah napsal(a):
-> This patch enables the on-chip DWC SATA controller of the AppliedMicr=
-o
-> processor 460EX.
+Dne Po 28. =C4=8Dervna 2010 11:09:10 Simon Li napsal(a):
+> We don't expect kernel goes to temporary hung, any ideas for the fix?
+
+=46ix the hardware ?
+
 >=20
-> Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com>
-> Signed-off-by: Mark Miesfeld <mmiesfeld@appliedmicro.com>
-> Signed-off-by: Prodyut Hazarika <phazarika@appliedmicro.com>
+> On Mon, Jun 28, 2010 at 5:02 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> > On 06/28/2010 03:38 AM, Simon Li wrote:
+> >> May 25 15:55:06 shctc-xq-ems22-me18 kernel: ata3: status=3D0x25 {
+> >> DeviceFault CorrectedError Error }
+> >>=20
+> >> May 25 15:59:59 shctc-xq-ems22-me18 kernel: ata3: status=3D0x25 {
+> >> DeviceFault CorrectedError Error }
+> >>=20
+> >> Jun  2 10:54:06 shctc-xm-ems21-me18 kernel: ata2: status=3D0x25 {
+> >> DeviceFault CorrectedError Error }
+> >>=20
+> >> Jun  2 10:54:08 shctc-xm-ems21-me18 kernel: ata2: status=3D0x25 {
+> >> DeviceFault CorrectedError Error }
+> >>=20
+> >> Jun  2 10:54:18 shctc-xm-ems21-me18 kernel: ata2: status=3D0x25 {
+> >> DeviceFault CorrectedError Error }
+> >=20
+> > Your hardware is returning errors, which libata is dutifully report=
+ing...
+> >=20
+> >        Jeff
 >=20
-
---SNIP--
-
-> +		dev_err(ap->dev, "%s: Command not pending cmd_issued=3D%d "
-> +			"(tag=3D%d) DMA NOT started\n", __func__,
-> +			hsdevp->cmd_issued[tag], tag);
-
-Just a nitpick, but don't break strings if possible.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
