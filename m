@@ -1,58 +1,63 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [PATCH v2]ata:ahci.c Fix warning: comparison between 'enum <anonymous>'
- and 'enum <anonymous>'
-Date: Wed, 30 Jun 2010 00:21:44 -0700
-Message-ID: <4C2AF088.2080609@gmail.com>
-References: <1277879827-18233-1-git-send-email-justinmattock@gmail.com> <4C2AE8FE.3020409@kernel.org> <4C2AED03.7070103@gmail.com> <4C2AEE2A.8060405@kernel.org>
+From: Kukjin Kim <kgene.kim@samsung.com>
+Subject: RE: [PATCH v5] libata: pata_samsung: Add Samsung PATA controller driver
+Date: Wed, 30 Jun 2010 19:35:42 +0900
+Message-ID: <016e01cb1840$00bea9e0$023bfda0$%kim@samsung.com>
+References: <1277809518-1122-1-git-send-email-kgene.kim@samsung.com>
+ <201006291529.45822.schindele@nentec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:45822 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab0F3HVY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 03:21:24 -0400
-Received: by pxi8 with SMTP id 8so236574pxi.19
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jun 2010 00:21:24 -0700 (PDT)
-In-Reply-To: <4C2AEE2A.8060405@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-reply-to: <201006291529.45822.schindele@nentec.de>
+Content-language: ko
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: schindele@nentec.de, linux-arm-kernel@lists.infradead.org
+Cc: linux-ide@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 'Abhilash Kesavan' <a.kesavan@samsung.com>, sshtylyov@mvista.com, jgarzik@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On 06/30/2010 12:11 AM, Tejun Heo wrote:
-> On 06/30/2010 09:06 AM, Justin P. Mattock wrote:
->>> Hmm, is this something we wanna go around the kernel and updating
->>> sources?  Or should we just flick a gcc option?
->>
->> the flick a gcc option seems easier todo, but my guess its probably not
->> the right way of dealing with the issue(even a warning).
->
-> What does the extra warning buy us?  There are several places which
-> use anonymous enums for constants and I can't see what the benefit of
-> this warning would be.
->
+Juergen Schindele wrote:
+> 
+> Am Dienstag, 29. Juni 2010 schrieb Kukjin Kim:
+> > From: Abhilash Kesavan <a.kesavan@samsung.com>
+> >
+> > Adds support for the Samsung PATA controller. This driver is based on
+the
+> > Libata subsystem and references the earlier patches sent for IDE
+subsystem.
+> Dear Kukjin Kim,
 
-I don't think it buys us anything..think it's just saying "hey you have 
-two #defines with the same value" or something in that area(if Im 
-reading the warning correctly)  funny thing is, is gcc should of done 
-the same with the original patch that I sent, as well as the second..
-(but could be wrong).
+Hello, Juergen :-)
 
->>> And, just do WARN_ON((int)ATA_MAX_QUEUE>  (int)AHCI_MAX_CMDS)
->>
->> that builds clean. keep in mind I just compile tested, no rebooting or
->> anything. Should I just resend with what you posted, and call it that,
->> or is this something that needs more?
->
-> I think it would be better to first decide what to do about the
-> new warnings.
->
-> Thanks.
->
+> as i had trouble with CF / trueIDE on PXA, have you read this thread ??
+> <http://www.spinics.net/lists/arm-kernel/msg91461.html>
+> Are you sure you dont need a "dcache_flush-page" ???
+> Its just a thought to help you avoid problems.
+> 
+Thanks for your information.
 
-sure.. no problem.
+Hmm..Abhilash and I have tested booting root fs on CF several times and
+haven't found any problems yet.
+Will test some more to make sure.
 
-cheers,
+> Bye
+> > Signed-off-by: Abhilash Kesavan <a.kesavan@samsung.com>
+> > Signed-off-by: Kukjin Kim <kgene.kim@samsung.com>
+> > Cc: Ben Dooks <ben-linux@fluff.org>
+> > ---
+> >  drivers/ata/Kconfig           |    9 +
+> >  drivers/ata/Makefile          |    1 +
+> >  drivers/ata/pata_samsung_cf.c |  728
+> +++++++++++++++++++++++++++++++++++++++++
+> >  3 files changed, 738 insertions(+), 0 deletions(-)
+> >  create mode 100644 drivers/ata/pata_samsung_cf.c
+> >
 
-Justin P. Mattock
+(snip)
+
+Thanks.
+
+Best regards,
+Kgene.
+--
+Kukjin Kim <kgene.kim@samsung.com>, Senior Engineer,
+SW Solution Development Team, Samsung Electronics Co., Ltd.
