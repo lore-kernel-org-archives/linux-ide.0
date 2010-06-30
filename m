@@ -1,39 +1,49 @@
-From: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
-Subject: Re: [PATCH]ata:ahci.c Fix warning: comparison between 'enum
-	<anonymous>' and 'enum <anonymous>'
-Date: Wed, 30 Jun 2010 08:11:18 +0200
-Message-ID: <AANLkTinetp4EnDl_O89pvccbJnuzRRQc5FHDX3-P3-Jv@mail.gmail.com>
-References: <1277866406-8253-1-git-send-email-justinmattock@gmail.com>
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: Re: [PATCH]ata:ahci.c Fix warning: comparison between 'enum 	<anonymous>'
+ and 'enum <anonymous>'
+Date: Tue, 29 Jun 2010 23:25:16 -0700
+Message-ID: <4C2AE34C.4020103@gmail.com>
+References: <1277866406-8253-1-git-send-email-justinmattock@gmail.com> <AANLkTinetp4EnDl_O89pvccbJnuzRRQc5FHDX3-P3-Jv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40414 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750909Ab0F3GLT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 02:11:19 -0400
-Received: by fxm14 with SMTP id 14so151586fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 29 Jun 2010 23:11:18 -0700 (PDT)
-In-Reply-To: <1277866406-8253-1-git-send-email-justinmattock@gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:37755 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065Ab0F3GYz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 02:24:55 -0400
+Received: by pzk7 with SMTP id 7so71001pzk.19
+        for <linux-ide@vger.kernel.org>; Tue, 29 Jun 2010 23:24:54 -0700 (PDT)
+In-Reply-To: <AANLkTinetp4EnDl_O89pvccbJnuzRRQc5FHDX3-P3-Jv@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
+To: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
 Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, tj@kernel.org
 
-On 30 June 2010 04:53, Justin P. Mattock <justinmattock@gmail.com> wrot=
-e:
-> - =C2=A0 =C2=A0 =C2=A0 int n_ports, i, rc;
-> + =C2=A0 =C2=A0 =C2=A0 int n_ports, i, rc, sum =3D 32;
+On 06/29/2010 11:11 PM, H=C3=A5kon L=C3=B8vdal wrote:
+> On 30 June 2010 04:53, Justin P. Mattock<justinmattock@gmail.com>  wr=
+ote:
+>> -       int n_ports, i, rc;
+>> +       int n_ports, i, rc, sum =3D 32;
+>>
+>>         VPRINTK("ENTER\n");
+>>
+>> -       WARN_ON(ATA_MAX_QUEUE>  AHCI_MAX_CMDS);
+>> +       WARN_ON(ATA_MAX_QUEUE>  sum);
 >
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0VPRINTK("ENTER\n");
+> Should'nt that rather be
 >
-> - =C2=A0 =C2=A0 =C2=A0 WARN_ON(ATA_MAX_QUEUE > AHCI_MAX_CMDS);
-> + =C2=A0 =C2=A0 =C2=A0 WARN_ON(ATA_MAX_QUEUE > sum);
+>         int n_ports, i, rc, sum =3D AHCI_MAX_CMDS;
+>
+> ?
+>
+> BR H=C3=A5kon L=C3=B8vdal
+>
 
-Should'nt that rather be
+I didnt even think todo that. I just rebuilt with that change, and all=20
+is good from the compiling stand point. should I resend?
 
-       int n_ports, i, rc, sum =3D AHCI_MAX_CMDS;
+Thanks for the help.
 
-?
-
-BR H=C3=A5kon L=C3=B8vdal
+Justin P. Mattock
