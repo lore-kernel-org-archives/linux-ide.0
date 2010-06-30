@@ -1,51 +1,34 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+From: Wolfgang Denk <wd@denx.de>
 Subject: Re: [PATCH v1]460EX on-chip SATA driver<resubmisison>
-Date: Wed, 30 Jun 2010 16:03:25 -0400
-Message-ID: <20100630200325.GD7756@zod.rchland.ibm.com>
-References: <201006241327.o5ODRY6m032299@amcc.com> <20100630115808.2D9241524EC@gemini.denx.de> <3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com> <20100630184728.C02D014EBF9@gemini.denx.de> <4C2B9831.9020801@pobox.com>
+Date: Thu, 01 Jul 2010 00:55:16 +0200
+Message-ID: <20100630225516.8F9D3152442@gemini.denx.de>
+References: <201006241327.o5ODRY6m032299@amcc.com> <20100630115808.2D9241524EC@gemini.denx.de> <3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com> <20100630184728.C02D014EBF9@gemini.denx.de> <4C2B9831.9020801@pobox.com> <20100630200325.GD7756@zod.rchland.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C2B9831.9020801@pobox.com>
+In-reply-to: <20100630200325.GD7756@zod.rchland.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Wolfgang Denk <wd@denx.de>, linux-ide@vger.kernel.org, sr@denx.de, Rupjyoti Sarmah <rsarmah@apm.com>, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, sr@denx.de, Rupjyoti Sarmah <rsarmah@apm.com>, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jun 30, 2010 at 03:17:05PM -0400, Jeff Garzik wrote:
-> On 06/30/2010 02:47 PM, Wolfgang Denk wrote:
->> Dear Rupjyoti Sarmah,
->>
->> In message<3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com>  you wrote:
->>>
->>> I took the mainline kernel v2.6.35-rc3 and downloaded using the git
->>> download link.
->>> I created the patch on 6/24/2010 after doing a git pull.
->>
->> I don;t think that you used v2.6.35-rc3; using this version, I still
->> get this:
->>
->> drivers/ata/sata_dwc_460ex.c:43:1: warning: "DRV_NAME" redefined
->> In file included from drivers/ata/sata_dwc_460ex.c:38:
->> drivers/ata/libata.h:31:1: warning: this is the location of the previous definition
->> drivers/ata/sata_dwc_460ex.c:44:1: warning: "DRV_VERSION" redefined
->> drivers/ata/libata.h:32:1: warning: this is the location of the previous definition
->> drivers/ata/sata_dwc_460ex.c: In function 'sata_dwc_scr_read':
->> drivers/ata/sata_dwc_460ex.c:777: error: 'struct ata_port' has no member named 'ioaddr'
->> drivers/ata/sata_dwc_460ex.c: In function 'sata_dwc_scr_write':
->> drivers/ata/sata_dwc_460ex.c:793: error: 'struct ata_port' has no member named 'ioaddr'
->> drivers/ata/sata_dwc_460ex.c: In function 'sata_dwc_error_intr':
->> drivers/ata/sata_dwc_460ex.c:844: error: 'struct ata_port_operations' has no member named 'sff_check_status'
->
-> It looks like -your- build config is missing CONFIG_ATA_SFF or similar.
->
-> If you actually look at include/linux/libata.h, you see that struct  
-> ata_port_operations most definitely has a member named sff_check_status,  
-> for example.  Ditto ata_port and member ioaddr, etc.
+Dear Josh Boyer,
 
-The driver doesn't depend on CONFIG_ATA_SFF in it's Kconfig file, but seems to
-require it at build time.  Isn't that something that needs fixing in the
-driver?
+In message <20100630200325.GD7756@zod.rchland.ibm.com> you wrote:
+>
+> The driver doesn't depend on CONFIG_ATA_SFF in it's Kconfig file, but seems to
+> require it at build time.  Isn't that something that needs fixing in the
+> driver?
 
-josh
+Right.  Next question is if this is really needed for this driver. 
+
+Best regards,
+
+Wolfgang Denk
+
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Copy from one, it's plagiarism; copy from two, it's research.
