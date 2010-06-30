@@ -1,49 +1,48 @@
 From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [PATCH]ata:ahci.c Fix warning: comparison between 'enum 	<anonymous>'
- and 'enum <anonymous>'
-Date: Tue, 29 Jun 2010 23:25:16 -0700
-Message-ID: <4C2AE34C.4020103@gmail.com>
-References: <1277866406-8253-1-git-send-email-justinmattock@gmail.com> <AANLkTinetp4EnDl_O89pvccbJnuzRRQc5FHDX3-P3-Jv@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH v2]ata:ahci.c Fix warning: comparison between 'enum <anonymous>' and 'enum <anonymous>'
+Date: Tue, 29 Jun 2010 23:37:07 -0700
+Message-ID: <1277879827-18233-1-git-send-email-justinmattock@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:37755 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065Ab0F3GYz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 02:24:55 -0400
-Received: by pzk7 with SMTP id 7so71001pzk.19
-        for <linux-ide@vger.kernel.org>; Tue, 29 Jun 2010 23:24:54 -0700 (PDT)
-In-Reply-To: <AANLkTinetp4EnDl_O89pvccbJnuzRRQc5FHDX3-P3-Jv@mail.gmail.com>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:35121 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751387Ab0F3GhM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 02:37:12 -0400
+Received: by pxi8 with SMTP id 8so223512pxi.19
+        for <linux-ide@vger.kernel.org>; Tue, 29 Jun 2010 23:37:11 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?SMOla29uIEzDuHZkYWw=?= <hlovdal@gmail.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, tj@kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, tj@kernel.org, "Justin P. Mattock" <justinmattock@gmail.com>
 
-On 06/29/2010 11:11 PM, H=C3=A5kon L=C3=B8vdal wrote:
-> On 30 June 2010 04:53, Justin P. Mattock<justinmattock@gmail.com>  wr=
-ote:
->> -       int n_ports, i, rc;
->> +       int n_ports, i, rc, sum =3D 32;
->>
->>         VPRINTK("ENTER\n");
->>
->> -       WARN_ON(ATA_MAX_QUEUE>  AHCI_MAX_CMDS);
->> +       WARN_ON(ATA_MAX_QUEUE>  sum);
->
-> Should'nt that rather be
->
->         int n_ports, i, rc, sum =3D AHCI_MAX_CMDS;
->
-> ?
->
-> BR H=C3=A5kon L=C3=B8vdal
->
+The below patch fixes a warning message during compiling of the kernel
+  CC      drivers/ata/ahci.o
+drivers/ata/ahci.c: In function 'ahci_init_one':
+drivers/ata/ahci.c:1045:2: warning: comparison between 'enum <anonymous>' and 'enum <anonymous>'
 
-I didnt even think todo that. I just rebuilt with that change, and all=20
-is good from the compiling stand point. should I resend?
+ Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-Thanks for the help.
+---
+ drivers/ata/ahci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Justin P. Mattock
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8ca16f5..68c9add 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1038,11 +1038,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+-	int n_ports, i, rc;
++	int n_ports, i, rc, sum = AHCI_MAX_CMDS;
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	WARN_ON(ATA_MAX_QUEUE > AHCI_MAX_CMDS);
++	WARN_ON(ATA_MAX_QUEUE > sum);
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
+-- 
+1.7.1.rc1.21.gf3bd6
+
