@@ -1,62 +1,62 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [Bug 16142] r8169: Kernel Panic when a lot of data is
- transferred through network interface
-Date: Wed, 30 Jun 2010 08:54:26 +0200
-Message-ID: <20100630065426.GA1857@liondog.tnic>
-References: <20100617080726.GA13713@liondog.tnic>
- <20100617150008.16a5e653@cpc>
- <20100618074510.GD32368@liondog.tnic>
- <20100619005045.2173fcce@cpc>
- <20100619100511.GA31429@liondog.tnic>
- <20100619132708.030fe408@cpc>
- <20100623080200.GB5010@liondog.tnic>
- <20100625185846.72171be0@cpc>
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: Re: [PATCH v2]ata:ahci.c Fix warning: comparison between 'enum <anonymous>'
+ and 'enum <anonymous>'
+Date: Wed, 30 Jun 2010 00:06:43 -0700
+Message-ID: <4C2AED03.7070103@gmail.com>
+References: <1277879827-18233-1-git-send-email-justinmattock@gmail.com> <4C2AE8FE.3020409@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:33552 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752240Ab0F3Gyb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jun 2010 02:54:31 -0400
-Content-Disposition: inline
-In-Reply-To: <20100625185846.72171be0@cpc>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:43410 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752589Ab0F3HG2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 03:06:28 -0400
+Received: by pvc7 with SMTP id 7so227570pvc.19
+        for <linux-ide@vger.kernel.org>; Wed, 30 Jun 2010 00:06:28 -0700 (PDT)
+In-Reply-To: <4C2AE8FE.3020409@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans Mueller <hans42mueller@googlemail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-From: Hans Mueller <hans42mueller@googlemail.com>
-Date: Fri, Jun 25, 2010 at 06:58:46PM +0200
+On 06/29/2010 11:49 PM, Tejun Heo wrote:
+> Hello,
+>
+> On 06/30/2010 08:37 AM, Justin P. Mattock wrote:
+>> The below patch fixes a warning message during compiling of the kernel
+>>    CC      drivers/ata/ahci.o
+>> drivers/ata/ahci.c: In function 'ahci_init_one':
+>> drivers/ata/ahci.c:1045:2: warning: comparison between 'enum<anonymous>' and 'enum<anonymous>'
+>>
+>>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
+>
+> Hmm, is this something we wanna go around the kernel and updating
+> sources?  Or should we just flick a gcc option?
+>
 
-Hi, sorry for the delay.
+the flick a gcc option seems easier todo, but my guess its probably not 
+the right way of dealing with the issue(even a warning).
 
-Right, and I had a suspicion about sharing IRQs with the NIC:
+>> @@ -1038,11 +1038,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>   	struct device *dev =&pdev->dev;
+>>   	struct ahci_host_priv *hpriv;
+>>   	struct ata_host *host;
+>> -	int n_ports, i, rc;
+>> +	int n_ports, i, rc, sum = AHCI_MAX_CMDS;
+>>
+>>   	VPRINTK("ENTER\n");
+>>
+>> -	WARN_ON(ATA_MAX_QUEUE>  AHCI_MAX_CMDS);
+>> +	WARN_ON(ATA_MAX_QUEUE>  sum);
+>
+> And, just do WARN_ON((int)ATA_MAX_QUEUE>  (int)AHCI_MAX_CMDS)
+>
+> Thanks.
+>
 
-            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
-   0:      42503          0          0          0          0          0          0          0   IO-APIC-edge      timer
-   1:          2          0          0          0          0          0          0          0   IO-APIC-edge      i8042
-   4:          2          0          0          0          0          0          0          0   IO-APIC-edge
-   9:          0          0          0          0          0          0          0          0   IO-APIC-fasteoi   acpi
-  12:          4          0          0          0          0          0          0          0   IO-APIC-edge      i8042
-  14:          0          0          0          0          0          0          0          0   IO-APIC-edge      ide2
-  15:          0          0          0          0          0          0          0          0   IO-APIC-edge      ide3
-  16:         26          0          0          0          0          0          0          0   IO-APIC-fasteoi   ehci_hcd:usb1
-  17:        127          0          0          0          0          0          0          0   IO-APIC-fasteoi   hda_intel
-  18:         47          0          0          0          0          0          0          0   IO-APIC-fasteoi   firewire_ohci, ahci
-  19:        753          0          0          0          0          0          0          0   IO-APIC-fasteoi   ide0, ide1, eth0
-  21:       3989          0          0          0          0          0          0          0   IO-APIC-fasteoi   ahci
+that builds clean. keep in mind I just compile tested, no rebooting or 
+anything. Should I just resend with what you posted, and call it that, 
+or is this something that needs more?
 
-so IRQ19 is shared between the nic and the first ide controller and the
-sata controller is using another irq line which could explain why the
-issue doesn't happen with libata. Is your nick a pluggable card and if
-yes, can you move it to another PCI slot so that ide0 and ide1 don't
-share the same irq line with eth0 and retest again? Before retesting
-though, do 'cat /proc/interrupts' to make sure.
-
-I'm guessing the problem will go away then...
-
-Thanks.
-
--- 
-Regards/Gruss,
-    Boris.
+Justin P. Mattock
