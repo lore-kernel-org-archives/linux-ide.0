@@ -1,61 +1,73 @@
-From: Rupjyoti Sarmah <rsarmah@apm.com>
-Subject: RE: [PATCH v1]460EX on-chip SATA driver<resubmisison>
-Date: Thu, 1 Jul 2010 23:14:14 +0530
-Message-ID: <4645a5c409da26358f3102276bbccf72@mail.gmail.com>
-References: <201006241327.o5ODRY6m032299@amcc.com> <20100630115808.2D9241524EC@gemini.denx.de>
-	<3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com> <20100630184728.C02D014EBF9@gemini.denx.de>
-	<4C2B9831.9020801@pobox.com> <20100630200325.GD7756@zod.rchland.ibm.com>
-	<20100630225516.8F9D3152442@gemini.denx.de>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/3] libata: glob_match for ata_device_blacklist
+Date: Thu, 01 Jul 2010 15:24:32 -0400
+Message-ID: <4C2CEB70.3090209@pobox.com>
+References: <4C2CB497.3000701@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og108.obsmtp.com ([64.18.0.186]:40412 "HELO
-	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752998Ab0GARoS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 13:44:18 -0400
-In-Reply-To: <20100630225516.8F9D3152442@gemini.denx.de>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37658 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050Ab0GATYy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 15:24:54 -0400
+Received: by gye5 with SMTP id 5so40511gye.19
+        for <linux-ide@vger.kernel.org>; Thu, 01 Jul 2010 12:24:46 -0700 (PDT)
+In-Reply-To: <4C2CB497.3000701@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wolfgang Denk <wd@denx.de>, Josh Boyer <jwboyer@linux.vnet.ibm.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, sr@denx.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-Dear All,
-
-The Synopsis design ware core is task file orientated so the driver would
-still need CONFIG_ATA_SFF.
-I would be fixing the Kconfig file to make it dependent on the
-CONFIG_ATA_SFF.
-
-Regards,
-Rup
-
-
-
------Original Message-----
-From: Wolfgang Denk [mailto:wd@denx.de]
-Sent: Thursday, July 01, 2010 4:25 AM
-To: Josh Boyer
-Cc: Jeff Garzik; linux-ide@vger.kernel.org; sr@denx.de; Rupjyoti Sarmah;
-linux-kernel@vger.kernel.org; linuxppc-dev@ozlabs.org
-Subject: Re: [PATCH v1]460EX on-chip SATA driver<resubmisison>
-
-Dear Josh Boyer,
-
-In message <20100630200325.GD7756@zod.rchland.ibm.com> you wrote:
+On 07/01/2010 11:30 AM, Mark Lord wrote:
 >
-> The driver doesn't depend on CONFIG_ATA_SFF in it's Kconfig file, but
-seems to
-> require it at build time.  Isn't that something that needs fixing in the
-> driver?
+> Replace rudimentry pattern matching with more capable shell-style globbing.
+> This will enable shrinking ata_device_blacklist[] table in subsequent
+> patches,
+> and helps with future editions to the table, such as matching only the end
+> of a firmware revision string etc..
+>
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> ---
+>
+> Eventually, this function should move out of libata into lib/string.c or
+> similar (?).
+> But since following patches in this series require it for libata,
+> let's start with it there, and move things later on.
 
-Right.  Next question is if this is really needed for this driver.
+hmmm, can you resend this series as an attachment?  The patch is failing 
+miserably here, both with 'git am' and patch(1).  I don't see anything 
+obviously wrong with the patch other than line numbers -- did you diff 
+against the latest upstream kernel (torvalds/linux-2.6.git)?
 
-Best regards,
+Adding "-l" to patch(1) causes hunk #2 of patch #1 to succeed, but being 
+the smaller hunk, that's the less useful of the two.
 
-Wolfgang Denk
+	Jeff
 
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Copy from one, it's plagiarism; copy from two, it's research.
+
+
+
+[jgarzik@bd libata-dev]$ patch -l --verbose drivers/ata/libata-core.c < 
+.git/rebase-apply/patch
+Hmm...  Looks like a unified diff to me...
+The text leading up to this was:
+--------------------------
+|---
+|
+|Eventually, this function should move out of libata into lib/string.c 
+or similar (?).
+|But since following patches in this series require it for libata,
+|let's start with it there, and move things later on.
+|
+|--- 2.6.34/drivers/ata/libata-core.c	2010-05-16 17:17:36.000000000 -0400
+|+++ linux/drivers/ata/libata-core.c	2010-07-01 11:08:10.509159666 -0400
+--------------------------
+Patching file drivers/ata/libata-core.c using Plan A...
+Hunk #1 FAILED at 4413.
+Hunk #2 succeeded at 4359 (offset -87 lines).
+1 out of 2 hunks FAILED -- saving rejects to file 
+drivers/ata/libata-core.c.rej
+Hmm...  Ignoring the trailing garbage.
+done
+
