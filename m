@@ -1,205 +1,115 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: [PATCH 2/3] libata: reduce blacklist size (v2)
-Date: Thu, 01 Jul 2010 18:17:21 -0400
-Message-ID: <4C2D13F1.9030408@teksavvy.com>
-References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com>
+Subject: [PATCH 3/3] libata: reduce blacklist size even more (v2)
+Date: Thu, 01 Jul 2010 18:18:12 -0400
+Message-ID: <4C2D1424.4050407@teksavvy.com>
+References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------030706030809060308000509"
+ boundary="------------010706000807060902010402"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:14363 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:13387 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932558Ab0GAWRb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 18:17:31 -0400
-In-Reply-To: <4C2D13AE.6090701@teksavvy.com>
+	with ESMTP id S1759815Ab0GAWSP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 18:18:15 -0400
+In-Reply-To: <4C2D13F1.9030408@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
 This is a multi-part message in MIME format.
---------------030706030809060308000509
+--------------010706000807060902010402
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Take advantage of the new glob_match() function to reduce the blacklist size somewhat.
-There are further savings possible, but these are the most obvious biggies.
+Take further advantage of the new glob_match() function to reduce the blacklist size.
+There are even more savings possible, but how far do we want to go with this?
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 ---
 
 (re-diff'd against latest -git, and also attached to bypass mailer issues)
 
---- linux-2.6.35-rc3/drivers/ata/libata-core.c	2010-07-01 18:12:20.631345852 -0400
-+++ linux/drivers/ata/libata-core.c	2010-07-01 18:12:26.870518424 -0400
-@@ -4211,70 +4211,22 @@
-  	{ "OCZ CORE_SSD",	"02.10104",	ATA_HORKAGE_NONCQ },
+--- linux-2.6.35-rc3/drivers/ata/libata-core.c	2010-07-01 18:12:46.488008047 -0400
++++ linux/drivers/ata/libata-core.c	2010-07-01 18:12:52.471339139 -0400
+@@ -4167,15 +4167,13 @@
+  	{ "WDC AC23200L",	"21.10N21",	ATA_HORKAGE_NODMA },
+  	{ "Compaq CRD-8241B", 	NULL,		ATA_HORKAGE_NODMA },
+  	{ "CRD-8400B",		NULL, 		ATA_HORKAGE_NODMA },
+-	{ "CRD-8480B",		NULL,		ATA_HORKAGE_NODMA },
+-	{ "CRD-8482B",		NULL,		ATA_HORKAGE_NODMA },
++	{ "CRD-848[02]B",	NULL,		ATA_HORKAGE_NODMA },
+  	{ "CRD-84",		NULL,		ATA_HORKAGE_NODMA },
+  	{ "SanDisk SDP3B",	NULL,		ATA_HORKAGE_NODMA },
+  	{ "SanDisk SDP3B-64",	NULL,		ATA_HORKAGE_NODMA },
+  	{ "SANYO CD-ROM CRD",	NULL,		ATA_HORKAGE_NODMA },
+  	{ "HITACHI CDR-8",	NULL,		ATA_HORKAGE_NODMA },
+-	{ "HITACHI CDR-8335",	NULL,		ATA_HORKAGE_NODMA },
+-	{ "HITACHI CDR-8435",	NULL,		ATA_HORKAGE_NODMA },
++	{ "HITACHI CDR-8[34]35",NULL,		ATA_HORKAGE_NODMA },
+  	{ "Toshiba CD-ROM XM-6202B", NULL,	ATA_HORKAGE_NODMA },
+  	{ "TOSHIBA CD-ROM XM-1702BC", NULL,	ATA_HORKAGE_NODMA },
+  	{ "CD-532E-A", 		NULL,		ATA_HORKAGE_NODMA },
+@@ -4255,12 +4253,7 @@
+  	/* Devices which get the IVB wrong */
+  	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
+  	/* Maybe we should just blacklist TSSTcorp... */
+-	{ "TSSTcorp CDDVDW SH-S202H", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202H", "SB01",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202J", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202J", "SB01",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202N", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202N", "SB01",	  ATA_HORKAGE_IVB, },
++	{ "TSSTcorp CDDVDW SH-S202[HJN]", "SB0[01]",  ATA_HORKAGE_IVB, },
   
-  	/* Seagate NCQ + FLUSH CACHE firmware bug */
--	{ "ST31500341AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST31500341AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
--	{ "ST31000333AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST31000333AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
--	{ "ST3640623AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3640623AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
--	{ "ST3640323AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3640323AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
--	{ "ST3320813AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3320813AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
--	{ "ST3320613AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3320613AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
-  						ATA_HORKAGE_FIRMWARE_WARN },
-  
-  	/* Blacklist entries taken from Silicon Image 3124/3132
+  	/* Devices that do not need bridging limits applied */
+  	{ "MTRON MSP-SATA*",		NULL,	ATA_HORKAGE_BRIDGE_OK, },
 
---------------030706030809060308000509
+--------------010706000807060902010402
 Content-Type: text/x-diff;
- name="52_libata_blacklist_reduction.patch"
+ name="53_libata_more_blacklist_reduction.patch"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
- filename="52_libata_blacklist_reduction.patch"
+ filename="53_libata_more_blacklist_reduction.patch"
 
-Take advantage of the new glob_match() function to reduce the blacklist size somewhat.
-There are further savings possible, but these are the most obvious biggies.
+Take further advantage of the new glob_match() function to reduce the blacklist size.
+There are even more savings possible, but how far do we want to go with this?
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 
---- linux-2.6.35-rc3/drivers/ata/libata-core.c	2010-07-01 18:12:20.631345852 -0400
-+++ linux/drivers/ata/libata-core.c	2010-07-01 18:12:26.870518424 -0400
-@@ -4211,70 +4211,22 @@
- 	{ "OCZ CORE_SSD",	"02.10104",	ATA_HORKAGE_NONCQ },
+--- linux-2.6.35-rc3/drivers/ata/libata-core.c	2010-07-01 18:12:46.488008047 -0400
++++ linux/drivers/ata/libata-core.c	2010-07-01 18:12:52.471339139 -0400
+@@ -4167,15 +4167,13 @@
+ 	{ "WDC AC23200L",	"21.10N21",	ATA_HORKAGE_NODMA },
+ 	{ "Compaq CRD-8241B", 	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "CRD-8400B",		NULL, 		ATA_HORKAGE_NODMA },
+-	{ "CRD-8480B",		NULL,		ATA_HORKAGE_NODMA },
+-	{ "CRD-8482B",		NULL,		ATA_HORKAGE_NODMA },
++	{ "CRD-848[02]B",	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "CRD-84",		NULL,		ATA_HORKAGE_NODMA },
+ 	{ "SanDisk SDP3B",	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "SanDisk SDP3B-64",	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "SANYO CD-ROM CRD",	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "HITACHI CDR-8",	NULL,		ATA_HORKAGE_NODMA },
+-	{ "HITACHI CDR-8335",	NULL,		ATA_HORKAGE_NODMA },
+-	{ "HITACHI CDR-8435",	NULL,		ATA_HORKAGE_NODMA },
++	{ "HITACHI CDR-8[34]35",NULL,		ATA_HORKAGE_NODMA },
+ 	{ "Toshiba CD-ROM XM-6202B", NULL,	ATA_HORKAGE_NODMA },
+ 	{ "TOSHIBA CD-ROM XM-1702BC", NULL,	ATA_HORKAGE_NODMA },
+ 	{ "CD-532E-A", 		NULL,		ATA_HORKAGE_NODMA },
+@@ -4255,12 +4253,7 @@
+ 	/* Devices which get the IVB wrong */
+ 	{ "QUANTUM FIREBALLlct10 05", "A03.0900", ATA_HORKAGE_IVB, },
+ 	/* Maybe we should just blacklist TSSTcorp... */
+-	{ "TSSTcorp CDDVDW SH-S202H", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202H", "SB01",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202J", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202J", "SB01",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202N", "SB00",	  ATA_HORKAGE_IVB, },
+-	{ "TSSTcorp CDDVDW SH-S202N", "SB01",	  ATA_HORKAGE_IVB, },
++	{ "TSSTcorp CDDVDW SH-S202[HJN]", "SB0[01]",  ATA_HORKAGE_IVB, },
  
- 	/* Seagate NCQ + FLUSH CACHE firmware bug */
--	{ "ST31500341AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31500341AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST31500341AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	{ "ST31000333AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST31000333AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST31000333AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	{ "ST3640623AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640623AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3640623AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	{ "ST3640323AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3640323AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3640323AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	{ "ST3320813AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320813AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3320813AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	{ "ST3320613AS",	"SD15",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD16",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD17",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD18",		ATA_HORKAGE_NONCQ |
--						ATA_HORKAGE_FIRMWARE_WARN },
--	{ "ST3320613AS",	"SD19",		ATA_HORKAGE_NONCQ |
-+	{ "ST3320613AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
- 	/* Blacklist entries taken from Silicon Image 3124/3132
+ 	/* Devices that do not need bridging limits applied */
+ 	{ "MTRON MSP-SATA*",		NULL,	ATA_HORKAGE_BRIDGE_OK, },
 
---------------030706030809060308000509--
+--------------010706000807060902010402--
