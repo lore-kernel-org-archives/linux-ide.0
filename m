@@ -1,34 +1,39 @@
-From: Wolfgang Denk <wd@denx.de>
-Subject: Re: [PATCH v1]460EX on-chip SATA driver<resubmisison>
-Date: Thu, 01 Jul 2010 00:55:16 +0200
-Message-ID: <20100630225516.8F9D3152442@gemini.denx.de>
-References: <201006241327.o5ODRY6m032299@amcc.com> <20100630115808.2D9241524EC@gemini.denx.de> <3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com> <20100630184728.C02D014EBF9@gemini.denx.de> <4C2B9831.9020801@pobox.com> <20100630200325.GD7756@zod.rchland.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Setting up Silicon image 3114 in DMA mode
+Date: Wed, 30 Jun 2010 20:33:07 -0400
+Message-ID: <4C2BE243.5040308@garzik.org>
+References: <AANLkTinYuxwsLQKGRd6joRSCcbnns930DDienlhfEB8i@mail.gmail.com> <4C257E67.9090101@gmail.com> <AANLkTikeQO1v-ag_DDbkgxoZRTk1_fomn1kbHKqH9vkD@mail.gmail.com> <AANLkTimOu5GfUN848EOiMIZONHrRjgYyexmwBL3OCAMs@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20100630200325.GD7756@zod.rchland.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, sr@denx.de, Rupjyoti Sarmah <rsarmah@apm.com>, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:61529 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619Ab0GAAdO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 20:33:14 -0400
+In-Reply-To: <AANLkTimOu5GfUN848EOiMIZONHrRjgYyexmwBL3OCAMs@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: amruth pattanada <amruth.vamadev@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Dear Josh Boyer,
+On 06/30/2010 08:30 AM, amruth pattanada wrote:
+> Hi
+> I need some clarification regarding read DMA data from silicon image
+> controller. How do know that DMA transfer happened and where to look
+> for the data after the transfer. Should we look at BAR2 channel X Task
+> file register data word or look into allocated DMA buffer which is
+> specified in the PRD table. I am reading 0x00 in the PRD table scatter
+> gather list and it hangs in the when I tried to read data word of
+> channel task file register. Please let me know how to read data buffer
+> after the DMA is complete.
 
-In message <20100630200325.GD7756@zod.rchland.ibm.com> you wrote:
->
-> The driver doesn't depend on CONFIG_ATA_SFF in it's Kconfig file, but seems to
-> require it at build time.  Isn't that something that needs fixing in the
-> driver?
+Teaching you how to write a non-Linux driver is outside the scope of 
+linux-ide and linux-kernel.  This information is covered by the freely 
+available Silicon Image documentation, and SiI support should be able to 
+assist you further beyond that.
 
-Right.  Next question is if this is really needed for this driver. 
+	Jeff
 
-Best regards,
 
-Wolfgang Denk
 
--- 
-DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
-Copy from one, it's plagiarism; copy from two, it's research.
