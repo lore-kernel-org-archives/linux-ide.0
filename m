@@ -1,39 +1,48 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCHv2] ahci_platform: Provide for vendor specific init
-Date: Thu, 01 Jul 2010 15:30:02 -0400
-Message-ID: <4C2CECBA.2080202@pobox.com>
-References: <1277457679-14171-1-git-send-email-jassisinghbrar@gmail.com>
+Subject: Re: [PATCH] ahci_platform: Remove unneeded ahci_driver.probe assignment
+Date: Thu, 01 Jul 2010 15:30:12 -0400
+Message-ID: <4C2CECC4.5030400@pobox.com>
+References: <20100625122053.GA14391@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:40746 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463Ab0GATaI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 15:30:08 -0400
-Received: by gxk23 with SMTP id 23so1270202gxk.19
-        for <linux-ide@vger.kernel.org>; Thu, 01 Jul 2010 12:30:07 -0700 (PDT)
-In-Reply-To: <1277457679-14171-1-git-send-email-jassisinghbrar@gmail.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:55684 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463Ab0GATaR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 15:30:17 -0400
+Received: by gwb15 with SMTP id 15so1249656gwb.19
+        for <linux-ide@vger.kernel.org>; Thu, 01 Jul 2010 12:30:16 -0700 (PDT)
+In-Reply-To: <20100625122053.GA14391@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jassi Brar <jassisinghbrar@gmail.com>
-Cc: linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, Jassi Brar <jassi.brar@samsung.com>
+To: Anton Vorontsov <avorontsov@mvista.com>
+Cc: =?UTF-8?B?UmVuw6kgQm9sbGRvcmY=?= <xsecute@googlemail.com>, linux-ide@vger.kernel.org
 
-On 06/25/2010 05:21 AM, Jassi Brar wrote:
-> From: Jassi Brar<jassi.brar@samsung.com>
+On 06/25/2010 08:20 AM, Anton Vorontsov wrote:
+> The driver is using platform_driver_probe() during initialization,
+> so ahci_driver.probe hook is never used.
 >
-> Some AHCI implementations may use Vendor Specific HBA[A0h, FFh]
-> and/or Port[70h, 7Fh] registers to 'prepare' for initialization.
-> For that, the platform needs memory mapped address of AHCI registers.
+> But it causes the following (harmless, luckily) section mismatch:
 >
-> This patch adds the 'mmio' argument and reorders the call to
-> platform init function.
+>    WARNING: vmlinux.o(.data+0x2fb20): Section mismatch in reference
+>    from the variable ahci_driver to the function .init.text:ahci_probe()
 >
-> Signed-off-by: Jassi Brar<jassi.brar@samsung.com>
+> This patch removes the ahci_driver.probe assignment, thus fixes
+> the warning.
+>
+> p.s. Note that there's another patch[1] from Rene Bolldorf that
+> tried to solve the same issue by __refdata annotation. __refdata
+> says that this reference is actually OK, but in fact it is not OK,
+> because dereferencing .probe() will cause problems. So the proper
+> fix is to remove the assignment.
+>
+> [1] http://kerneltrap.org/mailarchive/linux-kernel/2010/3/18/4549547
+>
+> Signed-off-by: Anton Vorontsov<avorontsov@mvista.com>
 > ---
->   drivers/ata/ahci_platform.c   |   25 +++++++++++++++----------
->   include/linux/ahci_platform.h |    4 +++-
->   2 files changed, 18 insertions(+), 11 deletions(-)
+>   drivers/ata/ahci_platform.c |    1 -
+>   1 files changed, 0 insertions(+), 1 deletions(-)
 
 applied
 
