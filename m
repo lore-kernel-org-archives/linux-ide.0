@@ -1,39 +1,128 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Setting up Silicon image 3114 in DMA mode
-Date: Wed, 30 Jun 2010 20:33:07 -0400
-Message-ID: <4C2BE243.5040308@garzik.org>
-References: <AANLkTinYuxwsLQKGRd6joRSCcbnns930DDienlhfEB8i@mail.gmail.com> <4C257E67.9090101@gmail.com> <AANLkTikeQO1v-ag_DDbkgxoZRTk1_fomn1kbHKqH9vkD@mail.gmail.com> <AANLkTimOu5GfUN848EOiMIZONHrRjgYyexmwBL3OCAMs@mail.gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: [PATCH 1/3] libata: glob_match for ata_device_blacklist
+Date: Thu, 01 Jul 2010 11:30:31 -0400
+Message-ID: <4C2CB497.3000701@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:61529 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619Ab0GAAdO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jun 2010 20:33:14 -0400
-In-Reply-To: <AANLkTimOu5GfUN848EOiMIZONHrRjgYyexmwBL3OCAMs@mail.gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:28699 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753172Ab0GAPaf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 11:30:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: amruth pattanada <amruth.vamadev@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-
-On 06/30/2010 08:30 AM, amruth pattanada wrote:
-> Hi
-> I need some clarification regarding read DMA data from silicon image
-> controller. How do know that DMA transfer happened and where to look
-> for the data after the transfer. Should we look at BAR2 channel X Task
-> file register data word or look into allocated DMA buffer which is
-> specified in the PRD table. I am reading 0x00 in the PRD table scatter
-> gather list and it hangs in the when I tried to read data word of
-> channel task file register. Please let me know how to read data buffer
-> after the DMA is complete.
-
-Teaching you how to write a non-Linux driver is outside the scope of 
-linux-ide and linux-kernel.  This information is covered by the freely 
-available Silicon Image documentation, and SiI support should be able to 
-assist you further beyond that.
-
-	Jeff
+To: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
 
 
+Replace rudimentry pattern matching with more capable shell-style globbing.
+This will enable shrinking ata_device_blacklist[] table in subsequent patches,
+and helps with future editions to the table, such as matching only the end
+of a firmware revision string etc..
 
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+
+Eventually, this function should move out of libata into lib/string.c or similar (?).
+But since following patches in this series require it for libata,
+let's start with it there, and move things later on.
+
+--- 2.6.34/drivers/ata/libata-core.c	2010-05-16 17:17:36.000000000 -0400
++++ linux/drivers/ata/libata-core.c	2010-07-01 11:08:10.509159666 -0400
+@@ -4413,29 +4413,65 @@
+  	{ }
+  };
+  
+-static int strn_pattern_cmp(const char *patt, const char *name, int wildchar)
++/**
++ *	glob_match - match a text string against a glob-style pattern
++ *	@text: the string to be examined
++ *	@pattern: the glob-style pattern to be matched against
++ *
++ *	Either/both of text and pattern can be empty strings.
++ *
++ *	Match text against a glob-style pattern, with wildcards and simple sets:
++ *
++ *		?	matches any single character.
++ *		*	matches any run of characters.
++ *		[xyz]	matches a single character from the set: x, y, or z.
++ *
++ *	Note: hyphenated ranges [0-9] are _not_ supported here.
++ *	The special characters ?, [, or *, can be matched using a set, eg. [*]
++ *
++ *	Example patterns:  "SD1?",  "SD1[012345]",  "*R0",  SD*1?[012]*xx"
++ *
++ *	This function uses one level of recursion per '*' in pattern.
++ *	Since it calls _nothing_ else, and has _no_ explicit local variables,
++ *	this will not cause stack problems for any reasonable use here.
++ *
++ *	RETURNS:
++ *	0 on match, 1 otherwise.
++ */
++static int glob_match (const char *text, const char *pattern)
+  {
+-	const char *p;
+-	int len;
++	do {
++		/* Match single character or a '?' wildcard */
++		if (*text == *pattern || *pattern == '?') {
++			if (!*pattern++)
++				return 0;  /* End of both strings: match */
++		} else {
++			/* Match single char against a '[' bracketed ']' pattern set */
++			if (!*text || *pattern != '[')
++				break;  /* Not a pattern set */
++			while (*++pattern && *pattern != ']' && *text != *pattern);
++			if (!*pattern || *pattern == ']')
++				return 1;  /* No match */
++			while (*pattern && *pattern++ != ']');
++		}
++	} while (*++text && *pattern);
+  
+-	/*
+-	 * check for trailing wildcard: *\0
+-	 */
+-	p = strchr(patt, wildchar);
+-	if (p && ((*(p + 1)) == 0))
+-		len = p - patt;
+-	else {
+-		len = strlen(name);
+-		if (!len) {
+-			if (!*patt)
+-				return 0;
+-			return -1;
++	/* Match any run of chars against a '*' wildcard */
++	if (*pattern == '*') {
++		if (!*++pattern)
++			return 0;  /* Match: avoid recursion at end of pattern */
++		/* Loop to handle additional pattern chars after the wildcard */
++		while (*text) {
++			if (glob_match(text, pattern) == 0)
++				return 0;  /* Remainder matched */
++			++text;  /* Absorb (match) this char and try again */
+  		}
+  	}
+-
+-	return strncmp(patt, name, len);
++	if (!*text && !*pattern)
++		return 0;  /* End of both strings: match */
++	return 1;  /* No match */
+  }
+-
++
+  static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
+  {
+  	unsigned char model_num[ATA_ID_PROD_LEN + 1];
+@@ -4446,10 +4482,10 @@
+  	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
+  
+  	while (ad->model_num) {
+-		if (!strn_pattern_cmp(ad->model_num, model_num, '*')) {
++		if (!glob_match(model_num, ad->model_num)) {
+  			if (ad->model_rev == NULL)
+  				return ad->horkage;
+-			if (!strn_pattern_cmp(ad->model_rev, model_rev, '*'))
++			if (!glob_match(model_rev, ad->model_rev))
+  				return ad->horkage;
+  		}
+  		ad++;
