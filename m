@@ -1,42 +1,61 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 1/3] libata: glob_match for ata_device_blacklist
-Date: Thu, 01 Jul 2010 11:44:32 -0400
-Message-ID: <4C2CB7E0.30408@teksavvy.com>
-References: <4C2CB497.3000701@teksavvy.com> <1277998591.2813.24.camel@mulgrave.site>
+From: Rupjyoti Sarmah <rsarmah@apm.com>
+Subject: RE: [PATCH v1]460EX on-chip SATA driver<resubmisison>
+Date: Thu, 1 Jul 2010 23:14:14 +0530
+Message-ID: <4645a5c409da26358f3102276bbccf72@mail.gmail.com>
+References: <201006241327.o5ODRY6m032299@amcc.com> <20100630115808.2D9241524EC@gemini.denx.de>
+	<3b928476b2fffdcf0694e5436e8a482f@mail.gmail.com> <20100630184728.C02D014EBF9@gemini.denx.de>
+	<4C2B9831.9020801@pobox.com> <20100630200325.GD7756@zod.rchland.ibm.com>
+	<20100630225516.8F9D3152442@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:27482 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756729Ab0GAPoe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 11:44:34 -0400
-In-Reply-To: <1277998591.2813.24.camel@mulgrave.site>
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:40412 "HELO
+	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752998Ab0GARoS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Jul 2010 13:44:18 -0400
+In-Reply-To: <20100630225516.8F9D3152442@gemini.denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Wolfgang Denk <wd@denx.de>, Josh Boyer <jwboyer@linux.vnet.ibm.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, sr@denx.de, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org
 
-On 01/07/10 11:36 AM, James Bottomley wrote:
-> On Thu, 2010-07-01 at 11:30 -0400, Mark Lord wrote:
->> Replace rudimentry pattern matching with more capable shell-style globbing.
->> This will enable shrinking ata_device_blacklist[] table in subsequent patches,
->> and helps with future editions to the table, such as matching only the end
->> of a firmware revision string etc..
+Dear All,
+
+The Synopsis design ware core is task file orientated so the driver would
+still need CONFIG_ATA_SFF.
+I would be fixing the Kconfig file to make it dependent on the
+CONFIG_ATA_SFF.
+
+Regards,
+Rup
+
+
+
+-----Original Message-----
+From: Wolfgang Denk [mailto:wd@denx.de]
+Sent: Thursday, July 01, 2010 4:25 AM
+To: Josh Boyer
+Cc: Jeff Garzik; linux-ide@vger.kernel.org; sr@denx.de; Rupjyoti Sarmah;
+linux-kernel@vger.kernel.org; linuxppc-dev@ozlabs.org
+Subject: Re: [PATCH v1]460EX on-chip SATA driver<resubmisison>
+
+Dear Josh Boyer,
+
+In message <20100630200325.GD7756@zod.rchland.ibm.com> you wrote:
 >
-> So we have other identical cases of this list to flag matching ... like
-> in SCSI.  How about we move the mechanics to lib and share the code?
+> The driver doesn't depend on CONFIG_ATA_SFF in it's Kconfig file, but
+seems to
+> require it at build time.  Isn't that something that needs fixing in the
+> driver?
 
+Right.  Next question is if this is really needed for this driver.
 
-I agree wholeheartedly.  But first it has to get upstream.
-And it has follow-on patches that depend on it,
-so initially I'd like to push it up via the libata tree.
-And then.. as in the original post:
+Best regards,
 
-> Eventually, this function should move out of libata into lib/string.c or similar (?).
-> But since following patches in this series require it for libata,
-> let's start with it there, and move things later on.
+Wolfgang Denk
 
-
-Cheers!
-
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+Phone: (+49)-8142-66989-10 Fax: (+49)-8142-66989-80 Email: wd@denx.de
+Copy from one, it's plagiarism; copy from two, it's research.
