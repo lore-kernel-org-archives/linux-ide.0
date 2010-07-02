@@ -1,42 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/3] libata: reduce blacklist size even more (v2)
-Date: Fri, 02 Jul 2010 03:19:22 -0400
-Message-ID: <4C2D92FA.2070600@pobox.com>
-References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream] ata_generic: drop hard coded DMA force logic for
+ CENATEK
+Date: Fri, 02 Jul 2010 14:41:24 +0200
+Message-ID: <4C2DDE74.3070405@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45032 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754767Ab0GBHT0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jul 2010 03:19:26 -0400
-Received: by gxk23 with SMTP id 23so1493021gxk.19
-        for <linux-ide@vger.kernel.org>; Fri, 02 Jul 2010 00:19:25 -0700 (PDT)
-In-Reply-To: <4C2D1424.4050407@teksavvy.com>
+Received: from hera.kernel.org ([140.211.167.34]:56919 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754550Ab0GBMlh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Jul 2010 08:41:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andy Whitcroft <apw@canonical.com>
 
-On 07/01/2010 06:18 PM, Mark Lord wrote:
-> Take further advantage of the new glob_match() function to reduce the
-> blacklist size.
-> There are even more savings possible, but how far do we want to go with
-> this?
->
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> ---
->
-> (re-diff'd against latest -git, and also attached to bypass mailer issues)
+Commit 1529c69adc (ata_generic: implement ATA_GEN_* flags and force
+enable DMA on MBP 7,1) implemented ATA_GEN_FORCE_DMA for forcing DMA
+mode and applied it to CENATEK but forgot to remove the original hard
+coded logic.  This is removal of redundant logic and doesn't affect
+correctness.
 
-applied 1-3
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Andy Whitcroft <apw@canonical.com>
+---
+ drivers/ata/ata_generic.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-Unfortunately I had to use the attachments, as again, neither git-am nor 
-patch(1) liked the emailed result otherwise.
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 7107a69..cc5f772 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -54,7 +54,6 @@ static int generic_set_mode(struct ata_link *link, struct ata_device **unused)
+ 	const struct pci_device_id *id = ap->host->private_data;
+ 	int dma_enabled = 0;
+ 	struct ata_device *dev;
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
 
-	Jeff
+ 	if (id->driver_data & ATA_GEN_FORCE_DMA) {
+ 		dma_enabled = 0xff;
+@@ -63,9 +62,6 @@ static int generic_set_mode(struct ata_link *link, struct ata_device **unused)
+ 		dma_enabled = ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_STATUS);
+ 	}
 
-
-
-
+-	if (pdev->vendor == PCI_VENDOR_ID_CENATEK)
+-		dma_enabled = 0xFF;
+-
+ 	ata_for_each_dev(dev, link, ENABLED) {
+ 		/* We don't really care */
+ 		dev->pio_mode = XFER_PIO_0;
