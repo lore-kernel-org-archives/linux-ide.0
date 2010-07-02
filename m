@@ -1,35 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] irq: better lost/spurious irq handling
-Date: Fri, 02 Jul 2010 16:59:54 +0200
-Message-ID: <4C2DFEEA.9050704@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ata, pcmcia: problem with irq and ata_dev_read_id()
+Date: Fri, 02 Jul 2010 17:01:23 +0200
+Message-ID: <4C2DFF43.6050502@gmail.com>
+References: <4C034FAE.9090605@denx.de> <4C044C8F.8050406@gmail.com> <4C2833B2.3040209@denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56694 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758763Ab0GBPBE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Jul 2010 11:01:04 -0400
-In-Reply-To: <1276443098-20653-1-git-send-email-tj@kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49102 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758785Ab0GBPB3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Jul 2010 11:01:29 -0400
+Received: by bwz1 with SMTP id 1so1638773bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 02 Jul 2010 08:01:27 -0700 (PDT)
+In-Reply-To: <4C2833B2.3040209@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tglx@linutronix.de
-Cc: mingo@elte.hu, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, jeff@garzik.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
+To: hs@denx.de
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello, Thomas.
+Hello,
 
-Please pull from the following branch to receieve lost-spurious-irq
-patchset.
+Can you please give a shot at the following branch and report
+the kernel log?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git lost-spurious-irq
-
-The branch contains the patches to implement lost/spurious IRQ
-handling (patches 0001-0010) and apply it to USB (0012).  libata part
-is being discussed and not included in this pull request.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
 
 Thanks.
 
---
+-- 
 tejun
-
