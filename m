@@ -1,96 +1,57 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: Drives missing at boot
-Date: Sat, 3 Jul 2010 12:21:55 -0700
-Message-ID: <AANLkTimVJEO-yF3GZ2ghX6DNPuAu-A-MNNO9x8Q1EpRc@mail.gmail.com>
-References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>
-	<4C2F5ECB.1040505@kernel.org>
-	<AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>
-	<4C2F87C1.8000701@hardwarefreak.com>
+Date: Sat, 03 Jul 2010 14:42:10 -0500
+Message-ID: <4C2F9292.708@hardwarefreak.com>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>	<4C2F5ECB.1040505@kernel.org>	<AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>	<4C2F87C1.8000701@hardwarefreak.com> <AANLkTimVJEO-yF3GZ2ghX6DNPuAu-A-MNNO9x8Q1EpRc@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:59621 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab0GCTV4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 15:21:56 -0400
-In-Reply-To: <4C2F87C1.8000701@hardwarefreak.com>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:52478 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755776Ab0GCTmM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 15:42:12 -0400
+In-Reply-To: <AANLkTimVJEO-yF3GZ2ghX6DNPuAu-A-MNNO9x8Q1EpRc@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
+To: Mark Knecht <markknecht@gmail.com>
 Cc: Tejun Heo <tj@kernel.org>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sat, Jul 3, 2010 at 11:56 AM, Stan Hoeppner <stan@hardwarefreak.com>=
- wrote:
-> Mark Knecht put forth on 7/3/2010 11:06 AM:
->
->>>> =C2=A0 =C2=A0I have a newish machine - maybe 3 months old - which =
-unreliably
->>>> finds its disk drives at each boot. Probably 40% of the time booti=
-ng 1
->>>> or more drives will be missing.
->
-> Please provide the make/model of the PC. =C2=A0If it's whitebox or DI=
-Y please
-> provide make/model of PSU, mobo and CPU. =C2=A0How many USB periphera=
-ls are powered
-> by the PC? =C2=A0Are you powering a water cooling loop pump from the =
-PC's power
-> supply? =C2=A0Is this PC in a temperature controlled environment (A/C=
-)?
->
-> --
-> Stan
->
+Mark Knecht put forth on 7/3/2010 2:21 PM:
 
-Build it myself.
+> Note two things:
+> 
+> 1) All the drives are always reported by BIOS at boot time. Now, that
+> doesn't guarantee that the drives spin up. It may only mean they can
+> be read by BIOS, but they are there as far as I can tell. They show up
+> in the boot screens and in BIOS itself if I drop in to play with
+> settings.
 
-Asus Rampage II Extreme motherboard
-12GB Crucial DRAM currently installed (Holds 24GB)
-Intel Core i7-980X CPU @ 3.33Ghz
-Palit nVidia 9500GT-based graphics card
-Sony Nec Optiarc AD-7241S-0B 24X Dual Layer DVD+/-RW SATA Drive
-(5x) WD5002ABYS RE3 Enterprise Class 500GB hard drives
+I missed that.  I thought I read it was both.  My bad.
 
-No external devices other than monitor, mouse, keyboard and the USB
-interface to the UPS are attached. No USB, 1394 or eSATA are attached
-at this time.
+> QUESTION: There are some settings in BIOS for delaying the drive. (Or
+> something. I'm using the machine and not in BIOS) There were settings
+> from 0 to 35 seconds if I remember correctly. Possibly I should try
+> setting each drive to a different value to different value to stagger
+> power up?
 
-It's all powered by:
+If that PSU meets published specs you shouldn't need delayed spin up with
+those 5 drives.
 
-Corsair CMPSU-750TX 750-Watt TX Series 80 Plus Certified Power Supply
+> If you need more info or have other ideas please let me know.
 
-Air cooled using the stock Intel fan that came with the processor and
-sitting in a home office environment.
+Your answers here should have pretty much eliminated hardware issues as the
+cause, unless that particular mobo has BIOS or other issues I'm unaware of.
 
-The machine draws (steady state) about 250-275W according to both the
-UPS it's hooked to as well as my trusty Kill-a-Watt. What it might
-draw transient at power on while drives are spinning up I wouldn't
-hazard a guess but it does seem to be well below the rating of the
-supply. The PSU actually has something like 8 or 10 SATA power
-connections, not that that means anything. I'm using 6. (1 CDRW, 5
-drives)
+I've found it's always best to ask about hardware with this kind of report
+just to eliminate possibilities.  All that gear is good quality stuff.  If the
+problem is due to hardware, it's because one of your components is defective,
+but we don't see evidence of that at this point.
 
-Note two things:
+Also, TTBOMK, if a SATA drive motor doesn't spin up, the drive firmware won't
+report the drive as ready upstream, thus the BIOS won't list the drive.
 
-1) All the drives are always reported by BIOS at boot time. Now, that
-doesn't guarantee that the drives spin up. It may only mean they can
-be read by BIOS, but they are there as far as I can tell. They show up
-in the boot screens and in BIOS itself if I drop in to play with
-settings.
+-- 
+Stan
 
-2) Whatever state the machine comes up in - drives recognized or not -
-it will run forever in that state under some pretty heavy loads so it
-isn't like the PSU can't completely do the job. It could possibly be
-marginal though.
 
-QUESTION: There are some settings in BIOS for delaying the drive. (Or
-something. I'm using the machine and not in BIOS) There were settings
-from 0 to 35 seconds if I remember correctly. Possibly I should try
-setting each drive to a different value to different value to stagger
-power up?
-
-If you need more info or have other ideas please let me know.
-
-Thanks,
-Mark
