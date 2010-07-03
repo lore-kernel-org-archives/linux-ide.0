@@ -1,58 +1,44 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [Bug 16142] r8169: Kernel Panic when a lot of data is
- transferred through network interface
-Date: Sat, 3 Jul 2010 13:53:05 +0200
-Message-ID: <20100703115305.GA26168@liondog.tnic>
-References: <20100619100511.GA31429@liondog.tnic>
- <20100619132708.030fe408@cpc>
- <20100623080200.GB5010@liondog.tnic>
- <20100625185846.72171be0@cpc>
- <20100630065426.GA1857@liondog.tnic>
- <20100630200254.45ab84d1@cpc>
- <20100630183138.GA11036@liondog.tnic>
- <20100703094918.03007437@cbook.fritz.box>
- <20100703082304.GA25293@liondog.tnic>
- <20100703134149.63fd8c6d@cbook.fritz.box>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: [PATCH]ata:ahci.c Fix warning: comparison between 'enum <anonymous>' and 'enum <anonymous>'
+Date: Sat,  3 Jul 2010 07:29:25 -0700
+Message-ID: <1278167365-16011-1-git-send-email-justinmattock@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:53919 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754568Ab0GCLxK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 Jul 2010 07:53:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20100703134149.63fd8c6d@cbook.fritz.box>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:49846 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751536Ab0GCO30 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 10:29:26 -0400
+Received: by pvc7 with SMTP id 7so1637662pvc.19
+        for <linux-ide@vger.kernel.org>; Sat, 03 Jul 2010 07:29:24 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans Mueller <hans42mueller@googlemail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org, jgarzik@pobox.com, "Justin P. Mattock" <justinmattock@gmail.com>
 
-From: Hans Mueller <hans42mueller@googlemail.com>
-Date: Sat, Jul 03, 2010 at 01:41:49PM +0200
+The below patch casts ATA_MAX_QUEUE to int because GCC will 
+give a warning message about the two different enum blocks:
+  CC      drivers/ata/ahci.o
+drivers/ata/ahci.c: In function 'ahci_init_one':
+drivers/ata/ahci.c:1045:2: warning: comparison between 'enum <anonymous>' and 'enum <anonymous>'
+ 
+Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
-> I do especially emphasize this, as it seems not to standard to answer
-> bugreports at all.
+---
+ drivers/ata/ahci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-It's a shame that users get that impression but sadly I must admit I
-know what you mean and yes, we should try harder instead of hacking in
-gazillion new features. But the answer is simple: writing new features
-is much more fun than bughunting...
-
-> (At least on the b43 bugreport list; I reported a bug as their driver
-> seems to have destroyed my wifi card. Don't missundersstand me I know
-> this can happen, but I exspected the will to stop the driver from
-> destroying other peoples hardware.)
-
-Hmm, that's strange. I remember reading that while
-there's no real maintainer of the driver, there are
-still people doing some work on it, according to this:
-http://marc.info/?l=linux-wireless&m=127747220616577&w=2
-
-Did you also add the wireless maintainer to the Cc of your bugreport
-- "John W. Linville" <linville@tuxdriver.com> - along with a detailed
-description of what the problem is, which kernel, how to reproduce along
-with dmesg?
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index f252253..fe75d8b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1042,7 +1042,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	VPRINTK("ENTER\n");
+ 
+-	WARN_ON(ATA_MAX_QUEUE > AHCI_MAX_CMDS);
++	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
+ 
+ 	if (!printed_version++)
+ 		dev_printk(KERN_DEBUG, &pdev->dev, "version " DRV_VERSION "\n");
 -- 
-Regards/Gruss,
-    Boris.
+1.7.1.rc1.21.gf3bd6
+
