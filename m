@@ -1,47 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16142] r8169: Kernel Panic when a lot of data is transferred
- through network interface
-Date: Sat, 3 Jul 2010 08:26:10 GMT
-Message-ID: <201007030826.o638QAb3012199@demeter.kernel.org>
-References: <bug-16142-11633@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Rapidly increasing Load_Cycle_Count
+Date: Sat, 03 Jul 2010 11:42:35 +0200
+Message-ID: <4C2F060B.6030606@kernel.org>
+References: <AANLkTinZZi6kzs7XXgYDUHpoTeO6IV0r1Axn3197gWwZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37257 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484Ab0GCI0M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 04:26:12 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o638QAQu012200
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sat, 3 Jul 2010 08:26:11 GMT
-In-Reply-To: <bug-16142-11633@https.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:52360 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752903Ab0GCJmj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jul 2010 05:42:39 -0400
+In-Reply-To: <AANLkTinZZi6kzs7XXgYDUHpoTeO6IV0r1Axn3197gWwZ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alberto Passalacqua <albert.passalacqua@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16142
+On 07/02/2010 07:15 PM, Alberto Passalacqua wrote:
+> As requested by Tejun here
+> https://bugzilla.novell.com/show_bug.cgi?id=545024#c63 , I report a
+> problem encountered on a DELL Latitude E6410 with a Seagate hard drive
+> (see attachments for details).
+> 
+> The Load_Cycle_Count increased significantly in the first two days of
+> life of the machine reaching the value of 1183, which, according to my
+> estimates corresponds to about 60 cycles per hour. The problems was
+> fixed by setting a higher value of the power management parameter:
+> 
+> hdparm -B 254 /dev/sda
 
+Noted in ata-wiki known issues page and added to storage-fixup.
 
-
-
-
---- Comment #17 from Borislav Petkov <bbpetkov@yahoo.de>  2010-07-03 08:26:01 ---
-See thread at http://marc.info/?l=linux-ide&m=127676206925930 for how it all
-turns out. In short:
-
-> But as I wrote in my original bugreport, I tested with a PCI NIC. (But
-> the onboard NIC was not completely disabled, it was only disabled via
-> ifconfig ... down)
-> When using the PCI NIC, the whole problem (kernel panik) did not occure.
-
-Ok, this confirms my suspicion that it is shared-irq related. Also, we
-already verified that switching to libata does fix the issue for you so
-you are good to go. Considering the DEPRECATED status of ide, I have a
-very little incentive in hunting this thing further down, so let's leave
-it at that.
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
