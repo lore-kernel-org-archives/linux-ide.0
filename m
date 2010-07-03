@@ -1,53 +1,62 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [PATCH v2]ata:ahci.c Fix warning: comparison between 'enum <anonymous>'
- and 'enum <anonymous>'
-Date: Sat, 03 Jul 2010 07:39:02 -0700
-Message-ID: <4C2F4B86.6040100@gmail.com>
-References: <1277879827-18233-1-git-send-email-justinmattock@gmail.com> <4C2AE8FE.3020409@kernel.org> <4C2AED03.7070103@gmail.com> <4C2AEE2A.8060405@kernel.org> <4C2AF088.2080609@gmail.com> <4C2F099D.1080806@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Drives missing at boot
+Date: Sat, 03 Jul 2010 18:01:15 +0200
+Message-ID: <4C2F5ECB.1040505@kernel.org>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:52462 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015Ab0GCOid (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 10:38:33 -0400
-Received: by pxi14 with SMTP id 14so1179289pxi.19
-        for <linux-ide@vger.kernel.org>; Sat, 03 Jul 2010 07:38:33 -0700 (PDT)
-In-Reply-To: <4C2F099D.1080806@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:54257 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753216Ab0GCQBR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Jul 2010 12:01:17 -0400
+In-Reply-To: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 07/03/2010 02:57 AM, Tejun Heo wrote:
-> Hello,
->
-> On 06/30/2010 09:21 AM, Justin P. Mattock wrote:
->>> What does the extra warning buy us?  There are several places which
->>> use anonymous enums for constants and I can't see what the benefit of
->>> this warning would be.
->>
->> I don't think it buys us anything..think it's just saying "hey
->> you have two #defines with the same value" or something in that
->> area(if Im reading the warning correctly) funny thing is, is
->> gcc should of done the same with the original patch that I
->> sent, as well as the second..  (but could be wrong).
->
-> Okay, just tested and it's warning that the code is comparing two
-> enums which are from two different enum blocks.  I'm kind of
-> doubtful about its usefulness but then again I don't think there
-> will be many occassions of this to be problematic either.  For
-> now, can you please submit a patch to cast just ATA_MAX_QUEUE
-> to (int) before comparing and short comment explanining why it's
-> necessary?
->
-> Thanks.
->
+(cc'ing linux-ide)
 
+On 07/02/2010 07:56 PM, Mark Knecht wrote:
+> Hi,
+>    I have a newish machine - maybe 3 months old - which unreliably
+> finds its disk drives at each boot. Probably 40% of the time booting 1
+> or more drives will be missing.
+> 
+>    So far I've been unable to determine what might be wrong. Sometimes
+> it finds all 5 drives, sometimes only 4 or 3 drives. It's not always
+> the same drives that are missing. Shown below are two successive warm
+> boots. The machien had been running with all 5 drives working. The
+> first time through it missed both /dev/sdd and /dev/sde while the very
+> next time it found all 5 drives. Each of the 5 drives has been missing
+> one or more times at different boots. (I.e. - it's not always drive
+> sdd for instance.)
+> 
+>    Every time I boot the AMI BIOS screen says all 5 drives are there.
+> I have found that if I drop into BIOS before going to grub that
+> selecting each drive one at a time and reading through it's setup
+> seems to make the boot more reliable, but not 100%. Probably 80%
+> reliable.
+> 
+>    I don't know what info is required to look at this. I'm running the
+> newest Gentoo kernel but it's been happening with all kernels I've
+> tried since I built the machine. I'm attaching the kernel config as
+> well as dmesg from the last boot which had all the drives. The only
+> difference in dmesg when the drives don't show up (that I've spotted)
+> is that the missing drive just isn't in dmesg. (I.e. no error messages
+> that I could spot.)
+> 
+>    Let me know what I might try or what other info you might want. The
+> motherboard is an Asus Rampage II Extreme with an i7-980x 6 core/12
+> thread processor. sda, sdb & sdc are part of a RAID1, sdd & sde are
+> part of a RAID0.
 
-o.k. so it's what you where asking..
+Can you please *attach* full logs of a successful boot and several
+failing boots?
 
-cheers,
+Thanks.
 
-Justin P. Mattock
+-- 
+tejun
