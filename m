@@ -1,32 +1,81 @@
-From: Kulikov Vasiliy <segooon@gmail.com>
-Subject: [PATCH 10/19] drivers/ide: use for_each_pci_dev()
-Date: Sat,  3 Jul 2010 20:04:11 +0400
-Message-ID: <1278173052-11745-1-git-send-email-segooon@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kernel Janitors <kernel-janitors@vger.kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Mark Knecht <markknecht@gmail.com>
+Subject: Re: Drives missing at boot
+Date: Sat, 3 Jul 2010 09:06:33 -0700
+Message-ID: <AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>
+	<4C2F5ECB.1040505@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46518 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755684Ab0GCQGf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Jul 2010 12:06:35 -0400
+In-Reply-To: <4C2F5ECB.1040505@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Use for_each_pci_dev() to simplify the code.
+On Sat, Jul 3, 2010 at 9:01 AM, Tejun Heo <tj@kernel.org> wrote:
+> (cc'ing linux-ide)
+>
+> On 07/02/2010 07:56 PM, Mark Knecht wrote:
+>> Hi,
+>> =C2=A0 =C2=A0I have a newish machine - maybe 3 months old - which un=
+reliably
+>> finds its disk drives at each boot. Probably 40% of the time booting=
+ 1
+>> or more drives will be missing.
+>>
+>> =C2=A0 =C2=A0So far I've been unable to determine what might be wron=
+g. Sometimes
+>> it finds all 5 drives, sometimes only 4 or 3 drives. It's not always
+>> the same drives that are missing. Shown below are two successive war=
+m
+>> boots. The machien had been running with all 5 drives working. The
+>> first time through it missed both /dev/sdd and /dev/sde while the ve=
+ry
+>> next time it found all 5 drives. Each of the 5 drives has been missi=
+ng
+>> one or more times at different boots. (I.e. - it's not always drive
+>> sdd for instance.)
+>>
+>> =C2=A0 =C2=A0Every time I boot the AMI BIOS screen says all 5 drives=
+ are there.
+>> I have found that if I drop into BIOS before going to grub that
+>> selecting each drive one at a time and reading through it's setup
+>> seems to make the boot more reliable, but not 100%. Probably 80%
+>> reliable.
+>>
+>> =C2=A0 =C2=A0I don't know what info is required to look at this. I'm=
+ running the
+>> newest Gentoo kernel but it's been happening with all kernels I've
+>> tried since I built the machine. I'm attaching the kernel config as
+>> well as dmesg from the last boot which had all the drives. The only
+>> difference in dmesg when the drives don't show up (that I've spotted=
+)
+>> is that the missing drive just isn't in dmesg. (I.e. no error messag=
+es
+>> that I could spot.)
+>>
+>> =C2=A0 =C2=A0Let me know what I might try or what other info you mig=
+ht want. The
+>> motherboard is an Asus Rampage II Extreme with an i7-980x 6 core/12
+>> thread processor. sda, sdb & sdc are part of a RAID1, sdd & sde are
+>> part of a RAID0.
+>
+> Can you please *attach* full logs of a successful boot and several
+> failing boots?
+>
+> Thanks.
+>
+> --
+> tejun
+>
 
-Signed-off-by: Kulikov Vasiliy <segooon@gmail.com>
----
- drivers/ide/ide-scan-pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Certainly? Which logs? dmesg or something else?
 
-diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-index 0e79eff..c3da53e 100644
---- a/drivers/ide/ide-scan-pci.c
-+++ b/drivers/ide/ide-scan-pci.c
-@@ -88,7 +88,7 @@ static int __init ide_scan_pcibus(void)
- 	struct list_head *l, *n;
- 
- 	pre_init = 0;
--	while ((dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, dev)))
-+	for_each_pci_dev(dev)
- 		ide_scan_pcidev(dev);
- 
- 	/*
--- 
-1.7.0.4
+Thanks,
+Mark
