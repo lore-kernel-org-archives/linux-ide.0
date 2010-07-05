@@ -1,28 +1,108 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 5/5] libata: allow hyphenated pattern ranges
-Date: Mon, 05 Jul 2010 18:51:30 -0400
-Message-ID: <4C3261F2.1020706@teksavvy.com>
+Subject: [PATCH 5/5] libata: allow hyphenated pattern ranges (v2)
+Date: Mon, 05 Jul 2010 18:53:37 -0400
+Message-ID: <4C326271.4040005@teksavvy.com>
 References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com> <4C31EB69.5070903@teksavvy.com> <4C3261AE.2070307@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------090801040609070303080503"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:5618 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:56787 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754411Ab0GEWvb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 18:51:31 -0400
+	with ESMTP id S1750807Ab0GEWxj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 18:53:39 -0400
 In-Reply-To: <4C3261AE.2070307@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On 05/07/10 06:50 PM, Mark Lord wrote:
-> Take further advantage of the new glob_match() function to reduce the
-> blacklist size,
-> this time making use of "character ranges" in the patterns.
->
-> Signed-off-by: Mark Lord <mlord@pobox.com>
+This is a multi-part message in MIME format.
+--------------090801040609070303080503
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Take further advantage of the new glob_match() function to reduce the blacklist size,
+this time making use of "character ranges" in the patterns.
 
-NAK that one.  I'll resubmit a (v2) shortly.
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+No change from original post -- false alarm.
+(also attached to bypass issues with my b0rked email client).
+
+--- old/drivers/ata/libata-core.c	2010-07-05 10:23:51.198204000 -0400
++++ linux/drivers/ata/libata-core.c	2010-07-05 18:47:18.817518530 -0400
+@@ -4209,22 +4209,16 @@
+  	{ "OCZ CORE_SSD",	"02.10104",	ATA_HORKAGE_NONCQ },
+  
+  	/* Seagate NCQ + FLUSH CACHE firmware bug */
+-	{ "ST31500341AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST31500341AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+  						ATA_HORKAGE_FIRMWARE_WARN },
+  
+-	{ "ST31000333AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST31000333AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+  						ATA_HORKAGE_FIRMWARE_WARN },
+  
+-	{ "ST3640623AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST3640[36]23AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+  						ATA_HORKAGE_FIRMWARE_WARN },
+  
+-	{ "ST3640323AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
+-						ATA_HORKAGE_FIRMWARE_WARN },
+-
+-	{ "ST3320813AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
+-						ATA_HORKAGE_FIRMWARE_WARN },
+-
+-	{ "ST3320613AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST3320[68]13AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+  						ATA_HORKAGE_FIRMWARE_WARN },
+  
+  	/* Blacklist entries taken from Silicon Image 3124/3132
+
+--------------090801040609070303080503
+Content-Type: text/x-diff;
+ name="55_libata_even_more_blacklist_reduction.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="55_libata_even_more_blacklist_reduction.patch"
+
+Take further advantage of the new glob_match() function to reduce the blacklist size,
+this time making use of "character ranges" in the patterns.
+
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+
+(also attached to bypass issues with my b0rked email client).
+
+--- old/drivers/ata/libata-core.c	2010-07-05 10:23:51.198204000 -0400
++++ linux/drivers/ata/libata-core.c	2010-07-05 18:47:18.817518530 -0400
+@@ -4209,22 +4209,16 @@
+ 	{ "OCZ CORE_SSD",	"02.10104",	ATA_HORKAGE_NONCQ },
+ 
+ 	/* Seagate NCQ + FLUSH CACHE firmware bug */
+-	{ "ST31500341AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST31500341AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+ 						ATA_HORKAGE_FIRMWARE_WARN },
+ 
+-	{ "ST31000333AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST31000333AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+ 						ATA_HORKAGE_FIRMWARE_WARN },
+ 
+-	{ "ST3640623AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST3640[36]23AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+ 						ATA_HORKAGE_FIRMWARE_WARN },
+ 
+-	{ "ST3640323AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
+-						ATA_HORKAGE_FIRMWARE_WARN },
+-
+-	{ "ST3320813AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
+-						ATA_HORKAGE_FIRMWARE_WARN },
+-
+-	{ "ST3320613AS",	"SD1[56789]",	ATA_HORKAGE_NONCQ |
++	{ "ST3320[68]13AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
+ 						ATA_HORKAGE_FIRMWARE_WARN },
+ 
+ 	/* Blacklist entries taken from Silicon Image 3124/3132
+
+--------------090801040609070303080503--
