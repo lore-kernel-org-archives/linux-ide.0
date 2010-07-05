@@ -1,50 +1,37 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 4/4] libata: allow hyphenated pattern ranges
-Date: Mon, 05 Jul 2010 17:47:43 -0400
-Message-ID: <4C3252FF.3040501@teksavvy.com>
-References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com> <4C31EB69.5070903@teksavvy.com> <4C322585.602@pobox.com>
+Subject: Re: [RFC 1/2] block: implement an unprep function corresponding directly
+ to prep
+Date: Mon, 05 Jul 2010 17:50:56 -0400
+Message-ID: <4C3253C0.8040900@teksavvy.com>
+References: <1277917264.2839.153.camel@mulgrave.site> <20100701104653O.fujita.tomonori@lab.ntt.co.jp> <20100702110343.GA27159@lst.de> <20100705160023S.fujita.tomonori@lab.ntt.co.jp> <20100705192413.GA24189@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:47357 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:65172 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752837Ab0GEVr6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 17:47:58 -0400
-In-Reply-To: <4C322585.602@pobox.com>
+	with ESMTP id S1752837Ab0GEVu6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 17:50:58 -0400
+In-Reply-To: <20100705192413.GA24189@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
 
-On 05/07/10 02:33 PM, Jeff Garzik wrote:
-> On 07/05/2010 10:25 AM, Mark Lord wrote:
->> Enable use of hyphenated pattern ranges in glob_match(), similar to how
->> shell globbing works, and how developers might expect things to work.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->> ---
->>
->> Patch also attached, to get around ongoing mailer issues here.
->> Eventually, glob_match() will move out of libata into lib/string.c or
->> similar.
+On 05/07/10 03:24 PM, Christoph Hellwig wrote:
 >
-> No issue with correctness... but where is the demonstrated need?
->
-> Did someone ask for this?
+> What codebase were you testing on?  Sorry, but curently I'm a bit lost
+> in the maze of patches.  I've got both and intel and an OCZ SSD (right
+> now I'm travelling with only access to the OCZ actually) and I'd like
+> to test the latest variant again.
 ..
 
-Not specifically.  But since this will eventually end up as a kernel-wide
-library function, somebody somewhere will eventually make the reasonable
-assumption that it does globbing "in the usual way".
+Speaking of which..  I have recently noticed that some OCZ drives
+fail TRIM commands when issued for the final sector of the drive..
+which happens by default with "mke2fs -t ext4".
 
-Adding the hyphenated ranges turned out to be almost trivial,
-so I added it on and posted the patch.
+So I now partition those to not include the final sector.
 
-I could also send you follow-on patches to use that feature
-in the ata blacklists, if you like, saving a few more bytes hither and dither.  :)
+Keep your eyes peeled for stuff like that.
 
-Speaking of this stuff.. how do we go about moving this function to /lib/strings.c  ?
-Can that be done via your git tree?
-
-Thanks
+Cheers
