@@ -1,117 +1,50 @@
-From: =?UTF-8?B?VMO2csO2aw==?= Edwin <edwintorok@gmail.com>
-Subject: ata: failed to IDENTIFY / SRST failed (errno = -16) problems
- on/after booting 2.6.35-rc3
-Date: Mon, 5 Jul 2010 22:46:27 +0300
-Message-ID: <20100705224627.3a158e8c@debian>
-References: <20100627232347.2f1dc4fd@debian>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH 4/4] libata: allow hyphenated pattern ranges
+Date: Mon, 05 Jul 2010 17:47:43 -0400
+Message-ID: <4C3252FF.3040501@teksavvy.com>
+References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com> <4C31EB69.5070903@teksavvy.com> <4C322585.602@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50960 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821Ab0GETqe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 15:46:34 -0400
-In-Reply-To: <20100627232347.2f1dc4fd@debian>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:47357 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752837Ab0GEVr6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 17:47:58 -0400
+In-Reply-To: <4C322585.602@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
-On Sun, 27 Jun 2010 23:23:47 +0300
-T=C3=B6r=C3=B6k Edwin <edwintorok@gmail.com> wrote:
+On 05/07/10 02:33 PM, Jeff Garzik wrote:
+> On 07/05/2010 10:25 AM, Mark Lord wrote:
+>> Enable use of hyphenated pattern ranges in glob_match(), similar to how
+>> shell globbing works, and how developers might expect things to work.
+>>
+>> Signed-off-by: Mark Lord <mlord@pobox.com>
+>> ---
+>>
+>> Patch also attached, to get around ongoing mailer issues here.
+>> Eventually, glob_match() will move out of libata into lib/string.c or
+>> similar.
+>
+> No issue with correctness... but where is the demonstrated need?
+>
+> Did someone ask for this?
+..
 
-> Hi,
->=20
-> Using 2.6.35-rc3 I noticed this in my dmesg (see end of email for ful=
-l dmesg output)
-> [28144.351747] ata9: drained 65536 bytes to clear DRQ.
-> [28144.460834] ata9.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action =
-0x6
-> [28144.460838] sr 8:0:1:0: CDB: Prevent/Allow Medium Removal: 1e 00 0=
-0
-> 00 00 00 [28144.460846] ata9.01: cmd
-> a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0 [28144.460846]          res
-> 7f/7f:7f:7f:7f:7f/00:00:00:00:00/7f Emask 0x3 (HSM violation)
-> [28144.460849] ata9.01: status: { DRDY DF DRQ ERR } [28144.460867]
-> ata9: soft resetting link
-> ....
-> [32977.433092] ata9: EH complete
+Not specifically.  But since this will eventually end up as a kernel-wide
+library function, somebody somewhere will eventually make the reasonable
+assumption that it does globbing "in the usual way".
 
-The problem has just become worse:
- - an error occurs on ata9 during boot, taking several minutes to bring
-   up the link:
+Adding the hyphenated ranges turned out to be almost trivial,
+so I added it on and posted the patch.
 
-Jul  5 09:41:49 debian kernel: [   15.824148] ata9.01: qc timeout (cmd
-0xa1)
-Jul  5 09:41:49 debian kernel: [   15.824155] ata9.01: failed to
-IDENTIFY (I/O error, err_mask=3D0x4)
-Jul  5 09:41:49 debian kernel: [   20.864007] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   25.848007] ata9: device not ready
-(errno=3D-16), forcing hardreset
-Jul  5 09:41:49 debian kernel: [   31.044007] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   41.056006] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   51.068007] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   74.492148] ata9.00: qc timeout (cmd
-0xa1)
-Jul  5 09:41:49 debian kernel: [   74.492154] ata9.00: failed to
-IDENTIFY (I/O error, err_mask=3D0x4)
-Jul  5 09:41:49 debian kernel: [   79.532006] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   84.516007] ata9: device not ready
-(errno=3D-16), forcing hardreset
-Jul  5 09:41:49 debian kernel: [   89.712006] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [   99.724007] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [  109.736007] ata9: link is slow to
-respond, please be patient (ready=3D0)
-Jul  5 09:41:49 debian kernel: [  138.184642] ata9.00: ATAPI: ASUS
-CRW-5232AS, 1.01, max UDMA/33
-Jul  5 09:41:49 debian kernel: [  138.192670] ata9.00: configured for
-UDMA/33
+I could also send you follow-on patches to use that feature
+in the ata blacklists, if you like, saving a few more bytes hither and dither.  :)
 
-   - sometimes the link never comes up (well never is ~5m, I
-didn't wait longer). it just keeps trying to reset the link saying
-that SRST failed with errno -16 ... endlessly, hence booting is
-impossible.
+Speaking of this stuff.. how do we go about moving this function to /lib/strings.c  ?
+Can that be done via your git tree?
 
-This is bad: the CDROM is not required to successfully boot (in this
-case anyway), the kernel should IMHO just try reestablishing that link
-in a background thread and finish booting normally.
-
-Note that while this DID started to occur soon after I installed
-2.6.35-rc3 (like 1 bisection run + 5 more boots later), if I now try to
-boot 2.6.34 the same thing happens (i.e. link resets endlessly on boot)=
-=2E
-This has NEVER happened with a kernel <2.6.35-rc3 though .. until
-now.
-
-Also I noticed that the BIOS sometimes hanged during boot (probably
-trying to establish a link to the CDROM too), resetting it a couple of
-times allowed it to reach Linux, but then Linux hanged.
-It could be a hardware failure of the CDROM that just happened to occur
-after I installed 2.6.35-rc3, I don't know.
-
-=46or now I pulled out the power+data cables from my 2 CDROMs so I can =
-at
-least boot. That of course made all these problems go away.
-
-When I have some more time I'll try plugging back the 2 CDROMs one at a
-time, exchange the cables, etc. to see if it is a problem with one of
-the CDROM drives themselves.
-
-In the meantime are there any debug messages I can enable for the next
-time I try booting with the CDROMs?
-Is there any diagnostic I can run from Linux to tell where the problem
-is:
- - the JMicron PATA controller?
- - the cables?
- - the CDROM drive(s) themselves?
-=20
-Best regards,
---Edwin
+Thanks
