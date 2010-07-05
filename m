@@ -1,31 +1,117 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC 1/2] block: implement an unprep function corresponding directly to prep
-Date: Mon, 5 Jul 2010 21:24:13 +0200
-Message-ID: <20100705192413.GA24189@lst.de>
-References: <1277917264.2839.153.camel@mulgrave.site> <20100701104653O.fujita.tomonori@lab.ntt.co.jp> <20100702110343.GA27159@lst.de> <20100705160023S.fujita.tomonori@lab.ntt.co.jp>
+From: =?UTF-8?B?VMO2csO2aw==?= Edwin <edwintorok@gmail.com>
+Subject: ata: failed to IDENTIFY / SRST failed (errno = -16) problems
+ on/after booting 2.6.35-rc3
+Date: Mon, 5 Jul 2010 22:46:27 +0300
+Message-ID: <20100705224627.3a158e8c@debian>
+References: <20100627232347.2f1dc4fd@debian>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:53190 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753759Ab0GETYf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jul 2010 15:24:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20100705160023S.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50960 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab0GETqe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 15:46:34 -0400
+In-Reply-To: <20100627232347.2f1dc4fd@debian>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hch@lst.de, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Mon, Jul 05, 2010 at 04:00:44PM +0900, FUJITA Tomonori wrote:
-> Did you tested my discard branch, right?
+On Sun, 27 Jun 2010 23:23:47 +0300
+T=C3=B6r=C3=B6k Edwin <edwintorok@gmail.com> wrote:
 
-I tested the patch that you sent out back then.
+> Hi,
+>=20
+> Using 2.6.35-rc3 I noticed this in my dmesg (see end of email for ful=
+l dmesg output)
+> [28144.351747] ata9: drained 65536 bytes to clear DRQ.
+> [28144.460834] ata9.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action =
+0x6
+> [28144.460838] sr 8:0:1:0: CDB: Prevent/Allow Medium Removal: 1e 00 0=
+0
+> 00 00 00 [28144.460846] ata9.01: cmd
+> a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0 [28144.460846]          res
+> 7f/7f:7f:7f:7f:7f/00:00:00:00:00/7f Emask 0x3 (HSM violation)
+> [28144.460849] ata9.01: status: { DRDY DF DRQ ERR } [28144.460867]
+> ata9: soft resetting link
+> ....
+> [32977.433092] ata9: EH complete
 
-> Wired, I've just got Intel SSD X25-M drives and mkfs.xfs worked well.
+The problem has just become worse:
+ - an error occurs on ata9 during boot, taking several minutes to bring
+   up the link:
 
-What codebase were you testing on?  Sorry, but curently I'm a bit lost
-in the maze of patches.  I've got both and intel and an OCZ SSD (right
-now I'm travelling with only access to the OCZ actually) and I'd like
-to test the latest variant again.
+Jul  5 09:41:49 debian kernel: [   15.824148] ata9.01: qc timeout (cmd
+0xa1)
+Jul  5 09:41:49 debian kernel: [   15.824155] ata9.01: failed to
+IDENTIFY (I/O error, err_mask=3D0x4)
+Jul  5 09:41:49 debian kernel: [   20.864007] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   25.848007] ata9: device not ready
+(errno=3D-16), forcing hardreset
+Jul  5 09:41:49 debian kernel: [   31.044007] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   41.056006] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   51.068007] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   74.492148] ata9.00: qc timeout (cmd
+0xa1)
+Jul  5 09:41:49 debian kernel: [   74.492154] ata9.00: failed to
+IDENTIFY (I/O error, err_mask=3D0x4)
+Jul  5 09:41:49 debian kernel: [   79.532006] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   84.516007] ata9: device not ready
+(errno=3D-16), forcing hardreset
+Jul  5 09:41:49 debian kernel: [   89.712006] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [   99.724007] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [  109.736007] ata9: link is slow to
+respond, please be patient (ready=3D0)
+Jul  5 09:41:49 debian kernel: [  138.184642] ata9.00: ATAPI: ASUS
+CRW-5232AS, 1.01, max UDMA/33
+Jul  5 09:41:49 debian kernel: [  138.192670] ata9.00: configured for
+UDMA/33
 
+   - sometimes the link never comes up (well never is ~5m, I
+didn't wait longer). it just keeps trying to reset the link saying
+that SRST failed with errno -16 ... endlessly, hence booting is
+impossible.
+
+This is bad: the CDROM is not required to successfully boot (in this
+case anyway), the kernel should IMHO just try reestablishing that link
+in a background thread and finish booting normally.
+
+Note that while this DID started to occur soon after I installed
+2.6.35-rc3 (like 1 bisection run + 5 more boots later), if I now try to
+boot 2.6.34 the same thing happens (i.e. link resets endlessly on boot)=
+=2E
+This has NEVER happened with a kernel <2.6.35-rc3 though .. until
+now.
+
+Also I noticed that the BIOS sometimes hanged during boot (probably
+trying to establish a link to the CDROM too), resetting it a couple of
+times allowed it to reach Linux, but then Linux hanged.
+It could be a hardware failure of the CDROM that just happened to occur
+after I installed 2.6.35-rc3, I don't know.
+
+=46or now I pulled out the power+data cables from my 2 CDROMs so I can =
+at
+least boot. That of course made all these problems go away.
+
+When I have some more time I'll try plugging back the 2 CDROMs one at a
+time, exchange the cables, etc. to see if it is a problem with one of
+the CDROM drives themselves.
+
+In the meantime are there any debug messages I can enable for the next
+time I try booting with the CDROMs?
+Is there any diagnostic I can run from Linux to tell where the problem
+is:
+ - the JMicron PATA controller?
+ - the cables?
+ - the CDROM drive(s) themselves?
+=20
+Best regards,
+--Edwin
