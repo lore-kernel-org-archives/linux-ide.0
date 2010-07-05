@@ -1,140 +1,60 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: ata: failed to IDENTIFY / SRST failed (errno = -16) problems
- on/after booting 2.6.35-rc3
-Date: Mon, 05 Jul 2010 17:50:57 -0600
-Message-ID: <4C326FE1.2020005@gmail.com>
-References: <20100627232347.2f1dc4fd@debian> <20100705224627.3a158e8c@debian>
+Subject: Re: Drives missing at boot
+Date: Mon, 05 Jul 2010 17:59:59 -0600
+Message-ID: <4C3271FF.9080308@gmail.com>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>	<4C2F5ECB.1040505@kernel.org>	<AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>	<4C2F87C1.8000701@hardwarefreak.com>	<AANLkTimVJEO-yF3GZ2ghX6DNPuAu-A-MNNO9x8Q1EpRc@mail.gmail.com>	<4C2F9292.708@hardwarefreak.com>	<AANLkTikPsRvvpSZirSygnZqyGKcS-Bz0eVeASZZqvZwH@mail.gmail.com>	<AANLkTintf2mwgBVuk_4GmfHTzyJebP2kyfcNGij_epy-@mail.gmail.com>	<4C31796C.8050209@kernel.org> <AANLkTinvNGha7SfaAWYIjUJwR9ZelCbHAWK0qvvllF9S@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54293 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755360Ab0GEXvD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 19:51:03 -0400
-In-Reply-To: <20100705224627.3a158e8c@debian>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinvNGha7SfaAWYIjUJwR9ZelCbHAWK0qvvllF9S@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Stan Hoeppner <stan@hardwarefreak.com>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?VMO2csO2ayBFZHdpbg==?= <edwintorok@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/05/2010 01:46 PM, T=C3=B6r=C3=B6k Edwin wrote:
-> On Sun, 27 Jun 2010 23:23:47 +0300
-> T=C3=B6r=C3=B6k Edwin<edwintorok@gmail.com>  wrote:
->
->> Hi,
+On 07/05/2010 10:48 AM, Mark Knecht wrote:
+> On Sun, Jul 4, 2010 at 11:19 PM, Tejun Heo<tj@kernel.org>  wrote:
+>> Hello,
 >>
->> Using 2.6.35-rc3 I noticed this in my dmesg (see end of email for fu=
-ll dmesg output)
->> [28144.351747] ata9: drained 65536 bytes to clear DRQ.
->> [28144.460834] ata9.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action=
- 0x6
->> [28144.460838] sr 8:0:1:0: CDB: Prevent/Allow Medium Removal: 1e 00 =
-00
->> 00 00 00 [28144.460846] ata9.01: cmd
->> a0/00:00:00:00:00/00:00:00:00:00/b0 tag 0 [28144.460846]          re=
-s
->> 7f/7f:7f:7f:7f:7f/00:00:00:00:00/7f Emask 0x3 (HSM violation)
->> [28144.460849] ata9.01: status: { DRDY DF DRQ ERR } [28144.460867]
->> ata9: soft resetting link
->> ....
->> [32977.433092] ata9: EH complete
+>> On 07/04/2010 12:31 AM, Mark Knecht wrote:
+>>> OK, I don't know if this is related but so far I cannot get the
+>>> machine to boot if I set BIOS SATA configuration to AHCI. I believe
+>>> that I have AHCI support as well as SATA support built into the kernel
+>>> but when I set the BIOS to AHCI the machine just hangs saying it finds
+>>> no medium. I assume that means no hard drive. I have to set SATA
+>>> support to enhanced and then IDE to get the machine to boot at all.
+>>
+>> That's odd.  Can you please attach kernel boot log w/ ahci mode?
+>> Booting a recent live CD and saving boot log from there should do the
+>> trick.
+>>
+>> Thanks.
+>>
+>> --
+>> tejun
+>>
 >
-> The problem has just become worse:
->   - an error occurs on ata9 during boot, taking several minutes to br=
-ing
->     up the link:
+> Hi Tehun,
+>     Thanks for the help.
 >
-> Jul  5 09:41:49 debian kernel: [   15.824148] ata9.01: qc timeout (cm=
-d
-> 0xa1)
-> Jul  5 09:41:49 debian kernel: [   15.824155] ata9.01: failed to
-> IDENTIFY (I/O error, err_mask=3D0x4)
-> Jul  5 09:41:49 debian kernel: [   20.864007] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   25.848007] ata9: device not ready
-> (errno=3D-16), forcing hardreset
-> Jul  5 09:41:49 debian kernel: [   31.044007] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   41.056006] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   51.068007] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   74.492148] ata9.00: qc timeout (cm=
-d
-> 0xa1)
-> Jul  5 09:41:49 debian kernel: [   74.492154] ata9.00: failed to
-> IDENTIFY (I/O error, err_mask=3D0x4)
-> Jul  5 09:41:49 debian kernel: [   79.532006] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   84.516007] ata9: device not ready
-> (errno=3D-16), forcing hardreset
-> Jul  5 09:41:49 debian kernel: [   89.712006] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [   99.724007] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [  109.736007] ata9: link is slow to
-> respond, please be patient (ready=3D0)
-> Jul  5 09:41:49 debian kernel: [  138.184642] ata9.00: ATAPI: ASUS
-> CRW-5232AS, 1.01, max UDMA/33
-> Jul  5 09:41:49 debian kernel: [  138.192670] ata9.00: configured for
-> UDMA/33
+>     I tried a Gentoo install CD from last march. It's a 2.6.31 type
+> kernel. Problem is the buffer depths are not big enough to capture the
+> complete dmesg contents and I don't know a command line option to make
+> it larger on the fly. If you know of one that's got a larger buffer -
+> or a command to increase it at boot time - then let me know and I'll
+> try again.
 >
->     - sometimes the link never comes up (well never is ~5m, I
-> didn't wait longer). it just keeps trying to reset the link saying
-> that SRST failed with errno -16 ... endlessly, hence booting is
-> impossible.
+>     I'm attaching what I was able to catch for both AHCI and IDE
+> settings in BIOS for the storage configuration option.
 >
-> This is bad: the CDROM is not required to successfully boot (in this
-> case anyway), the kernel should IMHO just try reestablishing that lin=
-k
-> in a background thread and finish booting normally.
+>     It seems to me that even in AHCI mode the machine does see all the
+> hard drives. Maybe there's something about my boot partition that's
+> having problems in AHCI mode only? If it sees /dev/sda then why
+> wouldn't it find grub and at least show a grub menu?
 
-I think it would if pata_jmicron had parallel scanning enabled, which i=
-t=20
-currently doesn't. It may be able to be turned on, someone just has to=20
-make sure it's safe for that chipset.
-
->
-> Note that while this DID started to occur soon after I installed
-> 2.6.35-rc3 (like 1 bisection run + 5 more boots later), if I now try =
-to
-> boot 2.6.34 the same thing happens (i.e. link resets endlessly on boo=
-t).
-> This has NEVER happened with a kernel<2.6.35-rc3 though .. until
-> now.
->
-> Also I noticed that the BIOS sometimes hanged during boot (probably
-> trying to establish a link to the CDROM too), resetting it a couple o=
-f
-> times allowed it to reach Linux, but then Linux hanged.
-> It could be a hardware failure of the CDROM that just happened to occ=
-ur
-> after I installed 2.6.35-rc3, I don't know.
-
-It does sound like a hardware problem, yes, from those symptoms.
-
->
-> For now I pulled out the power+data cables from my 2 CDROMs so I can =
-at
-> least boot. That of course made all these problems go away.
->
-> When I have some more time I'll try plugging back the 2 CDROMs one at=
- a
-> time, exchange the cables, etc. to see if it is a problem with one of
-> the CDROM drives themselves.
->
-> In the meantime are there any debug messages I can enable for the nex=
-t
-> time I try booting with the CDROMs?
-> Is there any diagnostic I can run from Linux to tell where the proble=
-m
-> is:
->   - the JMicron PATA controller?
->   - the cables?
->   - the CDROM drive(s) themselves?
-
-It's probably going to be difficult to isolate that problem from=20
-software, it's likely easiest to remove or swap components until the=20
-problem goes away.
+On some machines changing from IDE to AHCI messes up the boot order 
+selection in the BIOS - you may have to switch to AHCI, save settings, 
+reboot, go back into the BIOS and then make sure the disk boot order 
+settings are correct (whatever drive grub is installed on needs to be 
+first).
