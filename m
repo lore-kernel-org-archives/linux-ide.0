@@ -1,40 +1,31 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 4/4] libata: allow hyphenated pattern ranges
-Date: Mon, 05 Jul 2010 14:33:41 -0400
-Message-ID: <4C322585.602@pobox.com>
-References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com> <4C31EB69.5070903@teksavvy.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC 1/2] block: implement an unprep function corresponding directly to prep
+Date: Mon, 5 Jul 2010 21:24:13 +0200
+Message-ID: <20100705192413.GA24189@lst.de>
+References: <1277917264.2839.153.camel@mulgrave.site> <20100701104653O.fujita.tomonori@lab.ntt.co.jp> <20100702110343.GA27159@lst.de> <20100705160023S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:60100 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061Ab0GESdq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 14:33:46 -0400
-Received: by gxk23 with SMTP id 23so2591909gxk.19
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jul 2010 11:33:46 -0700 (PDT)
-In-Reply-To: <4C31EB69.5070903@teksavvy.com>
+Received: from verein.lst.de ([213.95.11.210]:53190 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753759Ab0GETYf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jul 2010 15:24:35 -0400
+Content-Disposition: inline
+In-Reply-To: <20100705160023S.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: hch@lst.de, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
 
-On 07/05/2010 10:25 AM, Mark Lord wrote:
-> Enable use of hyphenated pattern ranges in glob_match(), similar to how
-> shell globbing works, and how developers might expect things to work.
->
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> ---
->
-> Patch also attached, to get around ongoing mailer issues here.
-> Eventually, glob_match() will move out of libata into lib/string.c or
-> similar.
+On Mon, Jul 05, 2010 at 04:00:44PM +0900, FUJITA Tomonori wrote:
+> Did you tested my discard branch, right?
 
-No issue with correctness...  but where is the demonstrated need?
+I tested the patch that you sent out back then.
 
-Did someone ask for this?
+> Wired, I've just got Intel SSD X25-M drives and mkfs.xfs worked well.
 
-	Jeff
-
-
+What codebase were you testing on?  Sorry, but curently I'm a bit lost
+in the maze of patches.  I've got both and intel and an OCZ SSD (right
+now I'm travelling with only access to the OCZ actually) and I'd like
+to test the latest variant again.
 
