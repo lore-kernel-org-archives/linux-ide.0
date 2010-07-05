@@ -1,234 +1,248 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC 1/2] block: implement an unprep function corresponding
- directly to prep
-Date: Mon, 5 Jul 2010 16:00:44 +0900
-Message-ID: <20100705160023S.fujita.tomonori@lab.ntt.co.jp>
-References: <1277917264.2839.153.camel@mulgrave.site>
-	<20100701104653O.fujita.tomonori@lab.ntt.co.jp>
-	<20100702110343.GA27159@lst.de>
+From: Heiko Schocher <hs@denx.de>
+Subject: Re: ata, pcmcia: problem with irq and ata_dev_read_id()
+Date: Mon, 05 Jul 2010 10:26:41 +0200
+Message-ID: <4C319741.3060602@denx.de>
+References: <4C034FAE.9090605@denx.de> <4C044C8F.8050406@gmail.com>
+ <4C2833B2.3040209@denx.de> <4C2DFF43.6050502@gmail.com>
+Reply-To: hs@denx.de
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:52032 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752747Ab0GEHBM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Jul 2010 03:01:12 -0400
-In-Reply-To: <20100702110343.GA27159@lst.de>
+Received: from a.relay.invitel.net ([62.77.203.3]:55601 "EHLO
+	a.relay.invitel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754680Ab0GEI0u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 04:26:50 -0400
+In-reply-to: <4C2DFF43.6050502@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hch@lst.de
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Cc'ed to linux-ide,
+Hello Tejun,
 
-On Fri, 2 Jul 2010 13:03:44 +0200
-Christoph Hellwig <hch@lst.de> wrote:
-
-> On Thu, Jul 01, 2010 at 10:47:12AM +0900, FUJITA Tomonori wrote:
-> > I think so. If I can figure out why qemu scsi driver is broken, the
-> > job is done.
+Tejun Heo wrote:
+> Can you please give a shot at the following branch and report
+> the kernel log?
 > 
-> Well, I still have problems even with libata + a trim capable SSD.
-> Dmesg from the last attept with your patch to use FS requests all the
-> way:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
 
-Thanks for testing.
+I tried it with above kernel, but same problem as I reported:
 
-Did you tested my discard branch, right?
+   Uncompressing Kernel Image ... OK
+Using KUP4K machine description
+Linux version 2.6.35-rc3-112005-gc44f4d3-dirty (hs@pollux.denx.de) (gcc version 4.2.2) #1 Mon Jul 5 10:11:11 CEST 2010
+Zone PFN ranges:
+  DMA      0x00000000 -> 0x00006000
+  Normal   empty
+Movable zone start PFN for each node
+early_node_map[1] active PFN ranges
+    0: 0x00000000 -> 0x00006000
+MMU: Allocated 72 bytes of context maps for 16 contexts
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 24384
+Kernel command line: root=/dev/nfs rw nfsroot=/opt/eldk-4.2/ppc_8xx,timeo=20,retrans=5 ip=192.168.120.4:192.168.1.1:192.168.1.254:255.255.0.0:kup4k:eth0:off console=ttyCPM0,115200
+PID hash table entries: 512 (order: -1, 2048 bytes)
+Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+Memory: 93912k/98304k available (3180k kernel code, 4392k reserved, 112k data, 106k bss, 132k init)
+Kernel virtual memory layout:
+  * 0xfffdf000..0xfffff000  : fixmap
+  * 0xfde00000..0xfe000000  : consistent mem
+  * 0xfddf9000..0xfde00000  : early ioremap
+  * 0xc7000000..0xfddf9000  : vmalloc & ioremap
+SLUB: Genslabs=12, HWalign=16, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+Hierarchical RCU implementation.
+        RCU-based detection of stalled CPUs is disabled.
+        Verbose stalled-CPUs detection is disabled.
+NR_IRQS:512 nr_irqs:512
+Decrementer Frequency = 0x4c4b40
+clocksource: timebase mult[32000000] shift[22] registered
+console [ttyCPM0] enabled
+pid_max: default: 4096 minimum: 301
+Mount-cache hash table entries: 512
+NET: Registered protocol family 16
+pwm_init
+bio: create slab <bio-0> at 0
+SCSI subsystem initialized
+Switching to clocksource timebase
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 4096 (order: 3, 32768 bytes)
+TCP bind hash table entries: 4096 (order: 2, 16384 bytes)
+TCP: Hash tables configured (established 4096 bind 4096)
+TCP reno registered
+NET: Registered protocol family 1
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+RPC: Registered tcp NFSv4.1 backchannel transport module.
+mpc8xx-gpt fff00980.pwm_m8xx_gpt: 4 channels
+msgmni has been set to 183
+io scheduler noop registered
+io scheduler deadline registered (default)
+s1d13xxxfb: chip production id 10 = S1D13706
+s1d13xxxfb: chip revision 0
+fff00a80.serial: ttyCPM0 at MMIO 0xc7034a80 (irq = 19) is a CPM UART
+fff00a90.serial: ttyCPM1 at MMIO 0xc703ca90 (irq = 20) is a CPM UART
+brd: module loaded
+loop: module loaded
+Found: AMD AM29LV800BB
+40000000.flash: Found 1 x16 devices at 0x0 in 16-bit bank
+number of JEDEC chips: 1
+RedBoot partition parsing not available
+mpc8xxx_spi fff00aa0.spi: at 0xc705aaa0 (irq = 21), CPM1 mode
+eth0: fs_enet: 00:0b:64:00:0b:72
+FEC MII Bus: probed
+m8xx_pcmcia: Version 0.07, March 2010
+m8xx_pcmcia: m8xx_probe: using SLOT_A and SLOT_B with IRQ 24  (13).
+pcmcia_hardware_enable: Slot: 0 3.3V card found:
+pcmcia_hardware_enable: Slot: 1 3.3V card found:
+ads7846 spi32766.0: touchscreen, irq 22
+input: ADS7846 Touchscreen as /class/input/input0
+i2c /dev entries driver
+pcf857x 0-0021: gpios 168..175 on a pcf8574
+rtc-pcf8563 0-0051: chip found, driver version 0.4.3
+rtc-pcf8563 0-0051: rtc core: registered rtc-pcf8563 as rtc0
+WD: Software Watchdog Timer 1.1.0, timeout 300 sec.
+TCP cubic registered
+NET: Registered protocol family 17
+rtc-pcf8563 0-0051: setting system clock to 2010-07-05 08:14:34 UTC (1278317674)
+pcmcia_socket pcmcia_socket0: pccard: PCMCIA card inserted into slot 0
+pcmcia_setup_irq: s->pcmcia_irq: 25
+pcmcia 0.0: pcmcia: registering new device pcmcia0.0 (IRQ: 25)
+scsi0 : pata_pcmcia
+ata1: PATA max PIO4 cmd 0x0 ctl 0xe irq 25+
+ata1.00: CFA: TOSHIBA THNCF512MDG, 3.00, max MWDMA2
+ata1.00: 1000944 sectors, multi 1: LBA
+ata1.00: configured for PIO4
+ata1.00: configured for PIO4
+ata1: EH complete
+isa bounce pool size: 16 pages
+scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA THNCF512 3.00 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 1000944 512-byte logical blocks: (512 MB/488 MiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4
+pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
+pcmcia_setup_irq: s->pcmcia_irq: 26
+pcmcia 1.0: pcmcia: registering new device pcmcia1.0 (IRQ: 26)
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+scsi1 : pata_pcmcia
+ata2: PATA max PIO4 cmd 0x10 ctl 0x1e irq 26+
+IRQ 26: too many spurious IRQs, disabling and polling for 10k 10msec intervals.
+IRQ 26: system performance may be affected
+handlers:
+[<c0198d00>] (ata_sff_interrupt+0x0/0x204)
+IP-Config: Complete:
+     device=eth0, addr=192.168.120.4, mask=255.255.0.0, gw=192.168.1.254,
+     host=kup4k, domain=, nis-domain=(none),
+     bootserver=192.168.1.1, rootserver=192.168.1.1, rootpath=
+ata2.00: CFA: TOSHIBA THNCF032MBA, 2.00, max PIO2
+ata2.00: 63488 sectors, multi 0: LBA
+ata2.00: configured for PIO2
+ata2.00: configured for PIO2
+ata2: EH complete
+scsi 1:0:0:0: Direct-Access     ATA      TOSHIBA THNCF032 2.00 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sdb] 63488 512-byte logical blocks: (32.5 MB/31.0 MiB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1
+sd 1:0:0:0: [sdb] Attached SCSI removable disk
+Looking up port of RPC 100003/2 on 192.168.1.1
+Looking up port of RPC 100005/1 on 192.168.1.1
+VFS: Mounted root (nfs filesystem) on device 0:12.
+Freeing unused kernel memory: 132k init
+modprobe: FATAL: Could not load /lib/modules/2.6.35-rc3-112005-gc44f4d3-dirty/modules.dep: No such file or directory
 
-Wired, I've just got Intel SSD X25-M drives and mkfs.xfs worked well.
+modprobe: FATAL: Could not load /lib/modules/2.6.35-rc3-112005-gc44f4d3-dirty/modules.dep: No such file or directory
 
-REQ_TYPE_FS should give the same scsi_cmnd struct as
-REQ_TYPE_BLOCK_PC... I've attached a patch to print some debug info.
+INIT: version 2.86 booting
+                Welcome to DENX Embedded Linux Environment
+                Press 'I' to enter interactive startup.
+Setting clock : Mon Jul  5 08:14:41 CEST 2010 [  OK  ]
+Building the cache [  OK  ]
+Setting hostname kup4k:  [  OK  ]
+Mounting local filesystems:  [  OK  ]
+Enabling /etc/fstab swaps:  [  OK  ]
+INIT: Entering runlevel: 3
+Entering non-interactive startup
+FATAL: Could not load /lib/modules/2.6.35-rc3-112005-gc44f4d3-dirty/modules.dep: No such file or directory
+Bringing up loopback interface:  [  OK  ]
+FATAL: Could not load /lib/modules/2.6.35-rc3-112005-gc44f4d3-dirty/modules.dep: No such file or directory
+Starting system logger: [  OK  ]
+Starting kernel logger: [  OK  ]
+Starting rpcbind: [  OK  ]
+Mounting NFS filesystems:  [  OK  ]
+Mounting other filesystems:  [  OK  ]
+Starting xinetd: [  OK  ]
 
-Ide people, any idea about what the following error message means?
+DENX ELDK version 4.2 build 2008-04-01
+Linux 2.6.35-rc3-112005-gc44f4d3-dirty on a ppc
 
-I've been trying to convert WRITE_SAME_16 from REQ_TYPE_BLOCK_PC to
-REQ_TYPE_FS.
+kup4k login: root
+Last login: Thu Jan  1 01:01:08 on console
+reboot-bash-3.2#
 
+I tried it with my posted patch, and it solved it also for this kernel:
 
-> [   27.669404] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   27.669533] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   27.669627] ata2: SError: { UnrecovData Handshk }
-> [   27.669720] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   27.669819] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   27.669821]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   27.670096] ata2.00: status: { DRDY }
-> [   27.670196] ata2: hard resetting link
-> [   27.975118] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   27.978618] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   27.978628] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   27.978756] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   27.984299] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   27.984309] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   27.984437] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   27.984814] ata2.00: configured for UDMA/133
-> [   27.987548] ata2.00: configured for UDMA/133
-> [   27.987645] ata2: EH complete
-> [   27.987784] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   27.987915] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   27.988026] ata2: SError: { UnrecovData Handshk }
-> [   27.988128] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   27.988234] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   27.988236]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   27.988499] ata2.00: status: { DRDY }
-> [   27.988591] ata2: hard resetting link
-> [   28.293109] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   28.297509] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.297518] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.297648] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.301854] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.301863] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.301991] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.302378] ata2.00: configured for UDMA/133
-> [   28.305024] ata2.00: configured for UDMA/133
-> [   28.305123] ata2: EH complete
-> [   28.305292] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   28.305421] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   28.305513] ata2: SError: { UnrecovData Handshk }
-> [   28.305605] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   28.305703] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   28.305705]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   28.305948] ata2.00: status: { DRDY }
-> [   28.306066] ata2: hard resetting link
-> [   28.611111] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   28.613232] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.613241] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.613378] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.619103] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.619112] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.619240] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.619616] ata2.00: configured for UDMA/133
-> [   28.623193] ata2.00: configured for UDMA/133
-> [   28.623289] ata2: EH complete
-> [   28.623427] ata2: limiting SATA link speed to 1.5 Gbps
-> [   28.623528] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   28.623651] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   28.623745] ata2: SError: { UnrecovData Handshk }
-> [   28.623836] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   28.623934] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   28.623937]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   28.624202] ata2.00: status: { DRDY }
-> [   28.624303] ata2: hard resetting link
-> [   28.929103] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [   28.932449] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.932458] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.932587] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.939190] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   28.939200] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   28.939328] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   28.939763] ata2.00: configured for UDMA/133
-> [   28.941154] ata2.00: configured for UDMA/133
-> [   28.941250] ata2: EH complete
-> [   28.941414] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   28.941538] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   28.941631] ata2: SError: { UnrecovData Handshk }
-> [   28.941722] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   28.941821] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   28.941823]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   28.942091] ata2.00: status: { DRDY }
-> [   28.942187] ata2: hard resetting link
-> [   29.247116] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [   29.250536] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   29.250545] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   29.250673] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   29.256129] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   29.256138] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   29.256266] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   29.256651] ata2.00: configured for UDMA/133
-> [   29.259263] ata2.00: configured for UDMA/133
-> [   29.259359] ata2: EH complete
-> [   29.259533] ata2.00: exception Emask 0x10 SAct 0x1 SErr 0x400100 action 0x6 frozen
-> [   29.259659] ata2.00: irq_stat 0x08000000, interface fatal error
-> [   29.259752] ata2: SError: { UnrecovData Handshk }
-> [   29.259843] ata2.00: failed command: WRITE FPDMA QUEUED
-> [   29.259942] ata2.00: cmd 61/ff:00:00:00:00/ff:00:00:00:00/40 tag 0 ncq 33553920 out
-> [   29.259945]          res 40/00:00:00:00:00/00:00:00:00:00/40 Emask 0x10 (ATA bus error)
-> [   29.260218] ata2.00: status: { DRDY }
-> [   29.260319] ata2: hard resetting link
-> [   29.565102] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> [   29.569593] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   29.569603] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   29.569731] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   29.573969] ata2.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> [   29.573978] ata2.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> [   29.574127] ata2.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> [   29.574543] ata2.00: configured for UDMA/133
-> [   29.577217] ata2.00: configured for UDMA/133
-> [   29.577313] sd 1:0:0:0: [sdb] Result: hostbyte=DID_OK
-> driverbyte=DRIVER_SENSE
-> [   29.577460] sd 1:0:0:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
-> [   29.577786] Descriptor sense data with sense descriptors (in hex):
-> [   29.577928]         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-> [   29.578923]         00 00 00 00
-> [   29.579301] sd 1:0:0:0: [sdb] Add. Sense: No additional sense information
-> [   29.579496] sd 1:0:0:0: [sdb] CDB: Write(10): 2a 00 00 00 00 00 00 ff ff 00
-> [   29.580281] end_request: I/O error, dev sdb, sector 0
-> [   29.580395] ata2: EH complete
+   Uncompressing Kernel Image ... OK
+Using KUP4K machine description
+Linux version 2.6.35-rc3-112005-gc44f4d3-dirty (hs@pollux.denx.de) (gcc version 4.2.2) #2 Mon Jul 5 10:20:35 CEST 2010
+Zone PFN ranges:
+  DMA      0x00000000 -> 0x00006000
+  Normal   empty
+Movable zone start PFN for each node
+early_node_map[1] active PFN ranges
+[...]
+m8xx_pcmcia: Version 0.07, March 2010
+m8xx_pcmcia: m8xx_probe: using SLOT_A and SLOT_B with IRQ 24  (13).
+pcmcia_hardware_enable: Slot: 0 3.3V card found:
+pcmcia_hardware_enable: Slot: 1 3.3V card found:
+ads7846 spi32766.0: touchscreen, irq 22
+input: ADS7846 Touchscreen as /class/input/input0
+i2c /dev entries driver
+pcf857x 0-0021: gpios 168..175 on a pcf8574
+rtc-pcf8563 0-0051: chip found, driver version 0.4.3
+rtc-pcf8563 0-0051: rtc core: registered rtc-pcf8563 as rtc0
+WD: Software Watchdog Timer 1.1.0, timeout 300 sec.
+TCP cubic registered
+NET: Registered protocol family 17
+rtc-pcf8563 0-0051: setting system clock to 2010-07-05 08:16:30 UTC (1278317790)
+pcmcia_socket pcmcia_socket0: pccard: PCMCIA card inserted into slot 0
+pcmcia 0.0: pcmcia: registering new device pcmcia0.0 (IRQ: 25)
+scsi0 : pata_pcmcia
+ata1: PATA max PIO4 cmd 0x0 ctl 0xe irq 25+
+ata1.00: CFA: TOSHIBA THNCF512MDG, 3.00, max MWDMA2
+ata1.00: 1000944 sectors, multi 1: LBA
+ata1.00: configured for PIO4
+ata1.00: configured for PIO4
+ata1: EH complete
+isa bounce pool size: 16 pages
+scsi 0:0:0:0: Direct-Access     ATA      TOSHIBA THNCF512 3.00 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 1000944 512-byte logical blocks: (512 MB/488 MiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+pcmcia_socket pcmcia_socket1: pccard: PCMCIA card inserted into slot 1
+pcmcia 1.0: pcmcia: registering new device pcmcia1.0 (IRQ: 26)
+scsi1 : pata_pcmcia
+ata2: PATA max PIO4 cmd 0x10 ctl 0x1e irq 26+
+ata2.00: CFA: TOSHIBA THNCF032MBA, 2.00, max PIO2
+ata2.00: 63488 sectors, multi 0: LBA
+ata2.00: configured for PIO2
+ata2.00: configured for PIO2
+ata2: EH complete
+scsi 1:0:0:0: Direct-Access     ATA      TOSHIBA THNCF032 2.00 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sdb] 63488 512-byte logical blocks: (32.5 MB/31.0 MiB)
+sd 1:0:0:0: [sdb] Write Protect is off
+sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sdb: sdb1
+sd 1:0:0:0: [sdb] Attached SCSI removable disk
+IP-Config: Complete:
+[...]
 
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0a8cd34..70b6b3d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3020,6 +3020,9 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 
- 	ata_qc_set_pc_nbytes(qc);
- 
-+	printk("%s %d: %p %d %d %d\n", __func__, __LINE__, scmd,
-+	       scsi_bufflen(scmd), qc->extrabytes, size);
-+
- 	return 0;
- 
-  invalid_fld:
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index ad0ed21..9e98d0b 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -838,6 +838,13 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 				"(result %x)\n", cmd->result));
- 
- 	good_bytes = scsi_bufflen(cmd);
-+
-+	if (cmd->request->cmd_flags & REQ_DISCARD)
-+		printk("%s %d: %p %d %d %d %u %d\n", __func__, __LINE__,
-+		       cmd->request, scsi_bufflen(cmd), good_bytes,
-+		       scsi_get_resid(cmd), cmd->request->errors,
-+		       cmd->result);
-+
-         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
- 		int old_good_bytes = good_bytes;
- 		drv = scsi_cmd_to_driver(cmd);
-@@ -849,9 +856,16 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 		 * residue if drv->done() error processing indicates no
- 		 * change to the completion length.
- 		 */
-+
-+		if (cmd->request->cmd_flags & REQ_DISCARD)
-+			printk("%s %d: %p %d %d %d\n", __func__, __LINE__,
-+			       cmd->request, good_bytes, old_good_bytes,
-+			       scsi_get_resid(cmd));
-+
- 		if (good_bytes == old_good_bytes)
- 			good_bytes -= scsi_get_resid(cmd);
- 	}
-+
- 	scsi_io_completion(cmd, good_bytes);
- }
- EXPORT_SYMBOL(scsi_finish_command);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8c1b084..f92bbff 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -464,6 +464,10 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
- 	}
- 
- 	blk_add_request_payload(rq, page, len);
-+
-+	printk("%s %d: %p %d %d\n", __func__, __LINE__, rq, sdkp->unmap,
-+		len);
-+
- 	return scsi_setup_blk_pc_cmnd(sdp, rq);
- }
- 
+bye,
+Heiko
+-- 
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
