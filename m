@@ -1,69 +1,98 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata, pcmcia: problem with irq and ata_dev_read_id()
-Date: Mon, 05 Jul 2010 11:33:19 +0200
-Message-ID: <4C31A6DF.9080109@gmail.com>
-References: <4C034FAE.9090605@denx.de> <4C044C8F.8050406@gmail.com> <4C2833B2.3040209@denx.de> <4C2DFF43.6050502@gmail.com> <4C319741.3060602@denx.de> <4C319D31.60705@gmail.com> <4C31A519.7030806@denx.de>
+From: Hans Mueller <hans42mueller@googlemail.com>
+Subject: Re: [Bug 16142] r8169: Kernel Panic when a lot of data is
+ transferred through network interface
+Date: Mon, 5 Jul 2010 13:44:01 +0200
+Message-ID: <20100705134401.30c8112c@cbook>
+References: <20100619100511.GA31429@liondog.tnic>
+	<20100619132708.030fe408@cpc>
+	<20100623080200.GB5010@liondog.tnic>
+	<20100625185846.72171be0@cpc>
+	<20100630065426.GA1857@liondog.tnic>
+	<20100630200254.45ab84d1@cpc>
+	<20100630183138.GA11036@liondog.tnic>
+	<20100703094918.03007437@cbook.fritz.box>
+	<20100703082304.GA25293@liondog.tnic>
+	<20100703134149.63fd8c6d@cbook.fritz.box>
+	<20100703115305.GA26168@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="MP_/cWsI_u6A/CL1YHJQxccmvNH"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49944 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43647 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752732Ab0GEJd2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 05:33:28 -0400
-Received: by bwz1 with SMTP id 1so2588758bwz.19
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jul 2010 02:33:22 -0700 (PDT)
-In-Reply-To: <4C31A519.7030806@denx.de>
+	with ESMTP id S1752920Ab0GELoK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jul 2010 07:44:10 -0400
+Received: by bwz1 with SMTP id 1so2659682bwz.19
+        for <linux-ide@vger.kernel.org>; Mon, 05 Jul 2010 04:44:08 -0700 (PDT)
+In-Reply-To: <20100703115305.GA26168@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hs@denx.de
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide <linux-ide@vger.kernel.org>
 
-Hello,
+--MP_/cWsI_u6A/CL1YHJQxccmvNH
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-On 07/05/2010 11:25 AM, Heiko Schocher wrote:
->> Yeah, that's the new polling code kicking in.  If the IRQ problem
->> doesn't persiste (which should be the case here), polling will step
->> down after a while and everything will return to normal.  If you keep
->> the system running more than ten minutes and use the CF device, does
->> the kernel complain anymore?
-> 
-> No, I can use the CF while kernel is in polling mode, also if the
-> kernel switched back to irq mode:
-> 
-> Log, direct after kernel is up:
-> 
-..
->  25:          9   MPC8XX SIU       Level        pata_pcmcia
->  26:      10000   MPC8XX SIU       Level        pata_pcmcia
-...
-> 
-> No irq is used.
-> 
-> -bash-3.2# dmesg
-> [...]
-> Freeing unused kernel memory: 132k init
-> IRQ 26: spurious polling finished, reenabling IRQ
-> -bash-3.2#
-> 
-> Now it is back in irq mode:
-> 
-> -bash-3.2# cat /proc/uptime
-> 419.65 370.56
-> -bash-3.2#
-> 
-...
->  25:          9   MPC8XX SIU       Level        pata_pcmcia
->  26:      10033   MPC8XX SIU       Level        pata_pcmcia
+Hi, 
 
-Cool, so it works as expected.  With the new lost/spurious IRQ
-handling in place, removing TFLAG_POLLING from read_id for all
-controllers shouldn't cause much problem.  However, the CF device is a
-pretty rare corner case and spurious IRQ handling can deal with it
-without too much problem, so leaving things as it is is probably
-better.
+even if this is quite offtopic and I'm not sure whether linux-ide
+sould be still in the Cc field, I answert to all to leave nobody with
+half of the story :)
 
-Thanks for testing.
+On Sat, 3 Jul 2010 13:53:05 +0200
+Borislav Petkov <bp@alien8.de> wrote:
 
--- 
-tejun
+> Did you also add the wireless maintainer to the Cc of your bugreport
+> - "John W. Linville" <linville@tuxdriver.com>  [...]
+
+No that is the only thing I did not. I followed the instructions from:
+http://linuxwireless.org/en/users/Drivers/b43#bug_reporting
+It wasn't mentioned to Cc anybody as far as I know :)
+
+
+
+> [...] along with a detailed
+> description of what the problem is, which kernel, how to reproduce along
+> with dmesg?
+
+I attached the text of the original mail (but not the attachments as
+there should be no need for them in here; if I am wrong with this, ask
+me for them :) )
+If there is anything wrong with the bugreport, feel free to criticize.
+
+
+I am aware that this is offtopic, so do not spend to much time
+on it, I am going to send a copy of the original mail to the wireless
+maintainer, as you suggested, and see what will happen.
+
+
+Gruss / Regards,
+Jonas
+--MP_/cWsI_u6A/CL1YHJQxccmvNH
+Content-Type: application/octet-stream; name=bugreport-mail
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=bugreport-mail
+
+RnJvbTogSGFucyBNdWVsbGVyIDxIYW5zNDJNdWVsbGVyQGdvb2dsZW1haWwuY29tPgpUbzogYjQz
+LWRldkBsaXN0cy5pbmZyYWRlYWQub3JnClN1YmplY3Q6IE9vcHMgb24gaWZjb25maWcgd2xhbjAg
+dXAKRGF0ZTogU2F0LCAxOSBKdW4gMjAxMCAyMjoyOTozMCArMDIwMAoKCkhpLAoKSSBhbSB1c2lu
+ZyBhbiBpYm9vayBnNCwgcnVubmluZyBnZW50b28gKGFuZCBNYWNPc1ggZm9yIHRlc3RpbmcpLgoK
+RXZlcnkgdGltZSBJIHRyeSB0byB1c2UgbXkgd2lyZWxlc3MgY2FyZCwgdGhlIGRyaXZlciBjcmFz
+aGVzLgonVXNpbmcnIG1lYW5zIHRvIGRvIHNvbWV0aGluZyBsaWtlICJpZmNvbmZpZyB3bGFuMCB1
+cCIuIFNvbWV0aW1lcyB0aGUKZHJpdmVyIGFsc28gY3Jhc2hlcyB3aGlsZSBib290aW5nLgpJIHRy
+aWVkIHRvIGJvb3QgTWFjT3NYLCBidXQgdGhlIHdsYW4gZGlkbid0IHdvcmsgdGhlcmUgYW55bW9y
+ZSwgdG9vLgooTWFjT3NYIG5vdyBvZnRlbiBjcmFzaGVzIGFmdGVyIGEgZmV3IHNlY29uZHM7IG1p
+Z2h0IHRoZQpkcml2ZXIgYnJva2UgbXkgd2xhbiBjYXJkPykKCgoKd2xhbiBjb25maWd1cmF0aW9u
+LCBhdXRoZW50aWNhdGlvbi9lbmNyeXB0aW9uIHR5cGU6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpub25lLCBpdCBjcmFzaGVzIHdpdGhvdXQgYmVp
+bmcgY29ubmVjdGVkIHRvIGFueXRoaW5nCgoKdW5hbWUgLWE6Ci0tLS0tLS0tLQpMaW51eCBjYm9v
+ayAyLjYuMzItZ2VudG9vLXI3ICM3IFN1biBNYXkgMzAgMTA6NDk6MTEgQ0VTVCAyMDEwCnBwYyA3
+NDQ3QSwgYWx0aXZlYyBzdXBwb3J0ZWQgUG93ZXJCb29rNiw3IEdOVS9MaW51eAoKCndvcmtpbmcg
+d2l0aCBvdGhlciBrZXJuZWwgdmVyc2lvbnM6Ci0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tCkkgZG9uJ3Qga25vdywgaXQgaXMgdGhlIGZpcnN0IGtlcm5lbCBJIHVzZSBvbiB0aGUg
+aWJvb2sKCgpsc3BjaSAtdnZuIHwgZ3JlcCA0MyAtQTc6IGlzIGF0dGFjaGVkCgpkbWVzZzogaXMg
+YXR0YWNoZWQgKGFuZCBjb250YWlucyB0aGUgT29wcyBtZXNzYWdlKQoKCi0tIApHcnXDny9SZWdh
+cmRzLApKb25hcwoK
+
+--MP_/cWsI_u6A/CL1YHJQxccmvNH--
