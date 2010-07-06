@@ -1,44 +1,29 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-cd: Do not access completed requests in the irq
- handler
-Date: Mon, 05 Jul 2010 21:24:05 -0700 (PDT)
-Message-ID: <20100705.212405.232923099.davem@davemloft.net>
-References: <20100703094918.03007437@cbook.fritz.box>
-	<20100703082304.GA25293@liondog.tnic>
-	<20100703110104.GB25293@liondog.tnic>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Drives missing at boot
+Date: Tue, 06 Jul 2010 01:13:52 -0500
+Message-ID: <4C32C9A0.1000901@hardwarefreak.com>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>	<4C2F5ECB.1040505@kernel.org>	<AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>	<4C2F87C1.8000701@hardwarefreak.com>	<AANLkTimVJEO-yF3GZ2ghX6DNPuAu-A-MNNO9x8Q1EpRc@mail.gmail.com>	<4C2F9292.708@hardwarefreak.com>	<AANLkTikPsRvvpSZirSygnZqyGKcS-Bz0eVeASZZqvZwH@mail.gmail.com>	<AANLkTintf2mwgBVuk_4GmfHTzyJebP2kyfcNGij_epy-@mail.gmail.com>	<4C31796C.8050209@kernel.org>	<AANLkTinvNGha7SfaAWYIjUJwR9ZelCbHAWK0qvvllF9S@mail.gmail.com>	<4C3271FF.9080308@gmail.com> <AANLkTilAvJUthkXM7KL9BhLwEv9kJn31Rs8wDTAe4PlY@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45503
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750889Ab0GFEXw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jul 2010 00:23:52 -0400
-In-Reply-To: <20100703110104.GB25293@liondog.tnic>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:41392 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313Ab0GFGNy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jul 2010 02:13:54 -0400
+In-Reply-To: <AANLkTilAvJUthkXM7KL9BhLwEv9kJn31Rs8wDTAe4PlY@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bp@alien8.de
-Cc: akpm@linux-foundation.org, hans42mueller@googlemail.com, linux-ide@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <tj@kernel.org>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Borislav Petkov <bp@alien8.de>
-Date: Sat, 3 Jul 2010 13:01:04 +0200
+Mark Knecht put forth on 7/5/2010 11:16 PM:
 
-> this came out as a by-product after debugging
-> https://bugzilla.kernel.org/show_bug.cgi?id=16142
-> 
-> It fixes the oops at
-> https://bugzilla.kernel.org/attachment.cgi?id=26776, please apply.
-> 
-> --
-> From: Borislav Petkov <bp@alien8.de>
-> Date: Fri, 2 Jul 2010 09:08:09 +0200
-> Subject: [PATCH] ide-cd: Do not access completed requests in the irq handler
-> 
-> ide_cd_error_cmd() can complete an erroneous request with leftover
-> buffers. Signal this with its return value so that the request is not
-> accessed after its completion in the irq handler and we oops.
-> 
-> Cc: <stable@kernel.org> # 32.x 33.x 34.x
-> Signed-off-by: Borislav Petkov <bp@alien8.de>
+> I'll have to be careful. I have 5 identical drives in the machine so
+> figuring out which is which when I'm in BIOS might be a bit of a
+> trick.
 
-Applied, thanks Borislav.
+Makes you yearn for the good old days of SCSI don't it? :(
+
+-- 
+Stan
