@@ -1,31 +1,38 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Thu, 8 Jul 2010 13:05:06 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se>
-References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
- <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: 520 BPS data integrity vendors
+Date: Thu, 08 Jul 2010 11:51:04 -0400
+Message-ID: <yq1sk3u55w7.fsf@sermon.lab.mkp.net>
+References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
+	<1278093968.2856.169.camel@mulgrave.site>
+	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
+	<yq1mxu981eg.fsf@sermon.lab.mkp.net>
+	<AANLkTimI7Ke4qXw7zv8WDsWSQtBRSwSi5IZbvByjGRih@mail.gmail.com>
+	<yq1630s8msu.fsf@sermon.lab.mkp.net>
+	<AANLkTildJKANf7tC_OkYII-4T01oBgPx7YDC_WjuPSmN@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:54115 "EHLO uplift.swm.pp.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753480Ab0GHLFH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 8 Jul 2010 07:05:07 -0400
-In-Reply-To: <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:18671 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756107Ab0GHPvi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jul 2010 11:51:38 -0400
+In-Reply-To: <AANLkTildJKANf7tC_OkYII-4T01oBgPx7YDC_WjuPSmN@mail.gmail.com>
+	(Dan Porat's message of "Wed, 7 Jul 2010 06:34:42 -0400")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robin Hill <robin@robinhill.me.uk>
-Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: Dan Porat <dan.porat@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 8 Jul 2010, Robin Hill wrote:
+>>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
 
-> It would look like ata14 is the equivalent of scsi13 then - lsscsi or 
-> "cat /proc/scsi" should show you the drives connected on controller 13 
-> (or look in /sys/class/scsi_disk/13*/device/block).
+Dan> Regarding the specific model , Will any of those do ?
 
-Oki, yes, that's true, but the mapping from scsi13 to sdj isn't really my 
-problem, I can find that out in quite a few ways. It's the mapping of 
-ata14.00 to scsi13 that I can say is likely (from dmesg), but not certain.
+Dan> HUS151414VL3800 HUS151473VL3800 HUS151436VL3800 HUS151414VL3600
+Dan> HUS151473VL3600 HUS151436VL3600
+
+I'm not familiar with those specific models.  But as far as I know any
+SAS/FC drive shipped by Hitachi within the last 3 years is DIF-capable.
+Check the datasheet for "end-2-end protection".
 
 -- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Martin K. Petersen	Oracle Linux Engineering
