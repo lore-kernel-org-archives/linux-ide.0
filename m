@@ -1,38 +1,49 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 520 BPS data integrity vendors
-Date: Thu, 08 Jul 2010 11:51:04 -0400
-Message-ID: <yq1sk3u55w7.fsf@sermon.lab.mkp.net>
-References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
-	<1278093968.2856.169.camel@mulgrave.site>
-	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
-	<yq1mxu981eg.fsf@sermon.lab.mkp.net>
-	<AANLkTimI7Ke4qXw7zv8WDsWSQtBRSwSi5IZbvByjGRih@mail.gmail.com>
-	<yq1630s8msu.fsf@sermon.lab.mkp.net>
-	<AANLkTildJKANf7tC_OkYII-4T01oBgPx7YDC_WjuPSmN@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: If I have a single bad sector, how many failed reads should simple dd
+	report?
+Date: Thu, 8 Jul 2010 13:14:09 -0400
+Message-ID: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:18671 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756107Ab0GHPvi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jul 2010 11:51:38 -0400
-In-Reply-To: <AANLkTildJKANf7tC_OkYII-4T01oBgPx7YDC_WjuPSmN@mail.gmail.com>
-	(Dan Porat's message of "Wed, 7 Jul 2010 06:34:42 -0400")
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47135 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754538Ab0GHROJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jul 2010 13:14:09 -0400
+Received: by iwn7 with SMTP id 7so1086312iwn.19
+        for <linux-ide@vger.kernel.org>; Thu, 08 Jul 2010 10:14:09 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Porat <dan.porat@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
->>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
+All,
 
-Dan> Regarding the specific model , Will any of those do ?
+I just ran a test against a IDE drive (/dev/sdb) and slightly older
+kernel (2.6.32).
 
-Dan> HUS151414VL3800 HUS151473VL3800 HUS151436VL3800 HUS151414VL3600
-Dan> HUS151473VL3600 HUS151436VL3600
+Similar to:
 
-I'm not familiar with those specific models.  But as far as I know any
-SAS/FC drive shipped by Hitachi within the last 3 years is DIF-capable.
-Check the datasheet for "end-2-end protection".
+dd if=/dev/sdb of=/dev/null conv=noerror,sync bs=4k
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+With a good drive it ran fine.
+
+Then I used hdparm --make-bad-sector to intentionally corrupt a sector
+on the drive.
+
+When I re-ran it, /var/log/messages reported 10 bad logical blocks.
+And even worse, dd reported 20 bad blocks.  I examined the data dd
+read and it had 80KB of zero'ed out data.  So that's 160 sectors worth
+of data lost because of a single bad sector.  At most I was expecting
+4KB of zero'ed out data.
+
+I haven't started troubleshooting, but I want to know if this is
+expected behavior due to read-ahead or something.  (Is there
+read-ahead on the raw device, or just if a file system is involved.)
+
+I can redo my test with 2.6.34 and get logs if that is a bug.
+
+And if not a bug, is there a hdparm command I can issue to eliminate
+this behaviour.
+
+Thanks
+Greg
