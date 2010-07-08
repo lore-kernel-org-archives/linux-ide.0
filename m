@@ -1,49 +1,35 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: If I have a single bad sector, how many failed reads should simple dd
-	report?
-Date: Thu, 8 Jul 2010 13:14:09 -0400
-Message-ID: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: mapping ataXX.YY to a /dev/sdX
+Date: Thu, 8 Jul 2010 23:53:51 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
+ <20100708104422.GA32564@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se> <20100708232631.014a5ade@atak.bl.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:47135 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754538Ab0GHROJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jul 2010 13:14:09 -0400
-Received: by iwn7 with SMTP id 7so1086312iwn.19
-        for <linux-ide@vger.kernel.org>; Thu, 08 Jul 2010 10:14:09 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100708232631.014a5ade@atak.bl.pg.gda.pl>
+Sender: linux-raid-owner@vger.kernel.org
+To: Janek Kozicki <janek_listy@wp.pl>
+Cc: linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-All,
+On Thu, 8 Jul 2010, Janek Kozicki wrote:
 
-I just ran a test against a IDE drive (/dev/sdb) and slightly older
-kernel (2.6.32).
+> could you make some trial and error tests, while staying safe?
+>
+> turn off the array. Shut down. Unplug sdj, boot up. See if it is sdj
+> that disappeared, but do not assemble the array (so that it won't get
+> corrupted).
 
-Similar to:
+I used smartctl to check that sdj indeed had bad sectors and just failed 
+it from the array and then lit it up by dd:ing from it, checked what drive 
+it was, and replaced it. When I unplugged it and put in another drive it 
+was indeed ata14.
 
-dd if=/dev/sdb of=/dev/null conv=noerror,sync bs=4k
+I never really had a huge problem figuring out with high probability which 
+drive it was, but I wanted to know if there was a 100% certain way of 
+doing it. Seems there is not, am I the only one who is looking for this 
+functionality? I would think this is a fairly common problem?
 
-With a good drive it ran fine.
-
-Then I used hdparm --make-bad-sector to intentionally corrupt a sector
-on the drive.
-
-When I re-ran it, /var/log/messages reported 10 bad logical blocks.
-And even worse, dd reported 20 bad blocks.  I examined the data dd
-read and it had 80KB of zero'ed out data.  So that's 160 sectors worth
-of data lost because of a single bad sector.  At most I was expecting
-4KB of zero'ed out data.
-
-I haven't started troubleshooting, but I want to know if this is
-expected behavior due to read-ahead or something.  (Is there
-read-ahead on the raw device, or just if a file system is involved.)
-
-I can redo my test with 2.6.34 and get logs if that is a bug.
-
-And if not a bug, is there a hdparm command I can issue to eliminate
-this behaviour.
-
-Thanks
-Greg
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
