@@ -1,95 +1,68 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: If I have a single bad sector, how many failed reads should
-	simple dd report?
-Date: Fri, 9 Jul 2010 15:04:22 -0400
-Message-ID: <AANLkTimWfp4mLF9DCpxtnnUQsYQ08gXmh491EfhARe1x@mail.gmail.com>
-References: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
+From: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Subject: Re: HDD not suspending properly / dead on resume
+Date: Fri, 9 Jul 2010 23:47:28 +0200
+Message-ID: <201007092347.29244.stephan.diestelhorst@gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_wj5NMmLhbH06zII"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:52225 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537Ab0GITEX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jul 2010 15:04:23 -0400
-Received: by gwj18 with SMTP id 18so1009256gwj.19
-        for <linux-ide@vger.kernel.org>; Fri, 09 Jul 2010 12:04:23 -0700 (PDT)
-In-Reply-To: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:54464 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab0GIVre (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jul 2010 17:47:34 -0400
+In-Reply-To: <201007091750.05020.stephan.diestelhorst@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
+To: Tejun Heo <tj@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org
 
-Adding Mark Lord to CC because hdparm may be part of the problem.
+--Boundary-00=_wj5NMmLhbH06zII
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jul 8, 2010 at 1:14 PM, Greg Freemyer <greg.freemyer@gmail.com>=
- wrote:
-> All,
->
-> I just ran a test against a IDE drive (/dev/sdb) and slightly older
-> kernel (2.6.32).
->
-> Similar to:
->
-> dd if=3D/dev/sdb of=3D/dev/null conv=3Dnoerror,sync bs=3D4k
->
-> With a good drive it ran fine.
->
-> Then I used hdparm --make-bad-sector to intentionally corrupt a secto=
-r
-> on the drive.
->
-> When I re-ran it, /var/log/messages reported 10 bad logical blocks.
-> And even worse, dd reported 20 bad blocks. =A0I examined the data dd
-> read and it had 80KB of zero'ed out data. =A0So that's 160 sectors wo=
-rth
-> of data lost because of a single bad sector. =A0At most I was expecti=
-ng
-> 4KB of zero'ed out data.
->
-> I haven't started troubleshooting, but I want to know if this is
-> expected behavior due to read-ahead or something. =A0(Is there
-> read-ahead on the raw device, or just if a file system is involved.)
->
-> I can redo my test with 2.6.34 and get logs if that is a bug.
->
-> And if not a bug, is there a hdparm command I can issue to eliminate
-> this behaviour.
->
-> Thanks
-> Greg
+I wrote:
+>   I have an issue with suspend to RAM and I/O load on a disk. Symptoms
+> are that the disk does not respond to requests when woken up, producing
+> only I/O errors on all tested kernels (newest 2.6.35-rc4 (Ubuntu
+> mainline PPA build)):
+> 
+<snip>
+ 
+> This can be triggered most reliably with multiple "direct" writes to
+> disk, I create the load with the attached script. If the issue is
+> triggered, suspend (through pm-suspend) takes very long.
 
-I retested with 2.6.25 and see the same behavior, so if its a bug, its
-not a recently introduced one.  But 2.6.25 is showing a lot more media
-errors than I recall from 2.6.32.
+Attached now...
 
-Even stranger, I'm now introducing the bad sector as sector 100,000
-(ie. about 50 MB from the start of the drive).
+> IMHO the interesting log output during suspend is:
+> [ 1674.700125] ata1.00: qc timeout (cmd 0xec)
 
-Then doing a dd to capture just the first 100 MB to a file.
+Almighty google suggested to try "pci=nomsi", which seems to have
+cured the issue for me for now. Is that plausible? I'll keep this
+under observation.
 
-ie.
-dd if=3D/dev/sdb of=3Dclean.dd conv=3Dnoerror,sync bs=3D4K count=3D2560=
-0
-hdparm --make-bad-sector 100000 --yes-i-know-what-i-am-doing /dev/sdb
-dd if=3D/dev/sdb of=3Dcorrupt.dd conv=3Dnoerror,sync bs=3D4K count=3D25=
-600
-hdparm --write-sector 100000 --yes-i-know-what-i-am-doing /dev/sdb
+Thanks,
+  Stephan
 
-(clearly don't do that to a disk you care about.  The data at sector
-100,000 is permanently lost.)
+--Boundary-00=_wj5NMmLhbH06zII
+Content-Type: application/x-shellscript;
+  name="io_load.sh"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="io_load.sh"
 
-cmp -bl clean.dd corrupt.dd > delta.log
+#!/bin/bash
+CONC=10
+BS=4096
+COUNT=1024
+while true; do
+	for i in $(seq 1 ${CONC}); do
+		dd if=/dev/zero of=zeroes_${i} oflag=direct bs=${BS} count=${COUNT} &
+	done
+	wait
+done
 
-Looking at delta.log, the bytes start disagreeing 4 bytes prior to the
-sector boundary.  How can that be?
 
-I guess hdparm --make-bad-sector may be corrupting an extra 4 bytes,
-but that would surprise me.
-
-That seems like a definite bug in either the kernel or hdparm.
-
-Mark, do you have any input about either the early start of the
-corruption, or the very large number of sectors that seem corrupted by
-making a single sector bad.
-
-Greg
+--Boundary-00=_wj5NMmLhbH06zII--
