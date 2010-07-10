@@ -1,79 +1,76 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Sat, 10 Jul 2010 09:05:40 +0200
-Message-ID: <4C381BC4.9040903@grumpydevil.homelinux.org>
-References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se> <20100708104422.GA32564@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se> <20100708232631.014a5ade@atak.bl.pg.gda.pl> <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se> <4C37FA32.8020008@wasp.net.au>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: timeout problems on onboard SATA 6.0 controller on Asus P7H57D-V
+ EVO
+Date: Sat, 10 Jul 2010 11:56:11 +0200 (CEST)
+Message-ID: <alpine.DEB.1.10.1007101142440.23489@uplift.swm.pp.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tritonia.xxlwebhosting.nl ([81.4.88.63]:43380 "EHLO
-	tritonia.xxlwebhosting.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856Ab0GJIDE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jul 2010 04:03:04 -0400
-In-Reply-To: <4C37FA32.8020008@wasp.net.au>
+Received: from swm.pp.se ([212.247.200.143]:59625 "EHLO uplift.swm.pp.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753895Ab0GJJ4M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jul 2010 05:56:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by uplift.swm.pp.se (Postfix) with ESMTP id 71B00A5
+	for <linux-ide@vger.kernel.org>; Sat, 10 Jul 2010 11:56:11 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brad Campbell <brad@wasp.net.au>
-Cc: Mikael Abrahamsson <swmike@swm.pp.se>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
-
-Brad Campbell wrote:
-> On 09/07/10 05:53, Mikael Abrahamsson wrote:
->
->> I never really had a huge problem figuring out with high probability
->> which drive it was, but I wanted to know if there was a 100% certain way
->> of doing it. Seems there is not, am I the only one who is looking for
->> this functionality? I would think this is a fairly common problem?
->
-> Certainty would be nice, but in practice here I've always found that 
-> ataX = sdX+1 and I've relied on that mapping to always be constant. 
-> I've not yet found it otherwise, but I guess it's possible. I'd assume 
-> the libata guys should be able to provide a definite comment on that.
->
-> I've got no lights on my arrays, so it's even harder to identify which 
-> drive is which when you need to swap one out live. I've resorted to 
-> keeping a log of which serial number is in which physical slot, so I 
-> can look up the serial number of the failing drive with hdparm and I 
-> know I've got the right one. Again, it still hinges on the ata-sd 
-> mapping being constant. (it also relies on me updating the log when I 
-> swap a disk)
->
-> Brad
-Judging from my dmesg and lsscsi on a system with both scsi and SATA, 
-ataX translates into scsi X:0:0:0
-
-example dmesg output:
-[    3.901035] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[    3.937046] ata10.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max 
-UDMA/133
-[    3.948794] ata10.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 
-31/32)
-[    3.969065] ata10.00: configured for UDMA/133
-[    3.980847] scsi 10:0:0:0: Direct-Access     ATA      WDC 
-WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
-[    3.993120] sd 10:0:0:0: [sdf] 1465149168 512-byte hardware sectors: 
-(750 GB/698 GiB)
-[    4.005586] sd 10:0:0:0: [sdf] Write Protect is off
-[    4.017936] sd 10:0:0:0: [sdf] Mode Sense: 00 3a 00 00
-[    4.017959] sd 10:0:0:0: [sdf] Write cache: enabled, read cache: 
-enabled, doesn't support DPO or FUA
-
-and the lsscsi output:
-[0:2:0:0]    disk    LSI      MegaRAID 8344ELP 1.12  /dev/sda
-[0:2:1:0]    disk    LSI      MegaRAID 8344ELP 1.12  /dev/sdb
-[5:0:1:0]    cd/dvd  MATSHITA DVD-ROM UJDA780  1.50  /dev/sr0
-[7:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdm
-[8:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdl
-[9:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdo
-[10:0:0:0]   disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdn
-[11:0:0:0]   disk    ATA      SAMSUNG HD103SJ  1AJ1  /dev/sdk
-[12:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdh
-[13:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdi
-[14:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdj
+To: linux-ide@vger.kernel.org
 
 
+In the thread "mapping ataXX.YY to a /dev/sdX" I had some problems with 
+faultfinding timeout problems. When actually opening the computer up I 
+discovered that this channel actually was connected to the onboard Asus 
+P7H57D-V EVO motherboard 6.0Gb/s ports (one of two) (seems to be Marvell 
+based).
 
-Cheers,
+I'm running ubuntu 10.04 with their 2.6.32 kernel. Is there a known 
+problem with this controller which is being rectified in later kernels?
 
+Here is lspci (guess the 08.00.0 is the SATA3 controller, googling for the 
+Device ID yields SATA3 references anyway).
 
-Rudy
+00:00.0 Host bridge: Intel Corporation Core Processor DRAM Controller (rev 12)
+00:02.0 VGA compatible controller: Intel Corporation Core Processor Integrated Graphics Controller (rev 12)
+00:16.0 Communication controller: Intel Corporation 5 Series/3400 Series Chipset HECI Controller (rev 06)
+00:1a.0 USB Controller: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller (rev 06)
+00:1b.0 Audio device: Intel Corporation 5 Series/3400 Series Chipset High Definition Audio (rev 06)
+00:1c.0 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 1 (rev 06)
+00:1c.4 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 5 (rev 06)
+00:1c.5 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 6 (rev 06)
+00:1c.6 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 7 (rev 06)
+00:1c.7 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 8 (rev 06)
+00:1d.0 USB Controller: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller (rev 06)
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev a6)
+00:1f.0 ISA bridge: Intel Corporation 5 Series Chipset LPC Interface Controller (rev 06)
+00:1f.2 SATA controller: Intel Corporation 5 Series/3400 Series Chipset 6 port SATA AHCI Controller (rev 06)
+00:1f.3 SMBus: Intel Corporation 5 Series/3400 Series Chipset SMBus Controller (rev 06)
+01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 03)
+02:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II Controller (rev b2)
+03:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+04:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
+05:00.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
+06:01.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
+06:05.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
+06:07.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
+06:09.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
+07:00.0 USB Controller: NEC Corporation Device 0194 (rev 03)
+08:00.0 SATA controller: Device 1b4b:9123 (rev 10)
+
+The timeouts look like this:
+
+Jul 10 09:36:14 ub kernel: [734783.829968] ata14.00: exception Emask 0x0 SAct 0xffff SErr 0x0 action 0x6 frozen
+Jul 10 09:36:14 ub kernel: [734783.829977] ata14.00: failed command: READ FPDMA QUEUED
+Jul 10 09:36:14 ub kernel: [734783.829987] ata14.00: cmd 60/40:00:d0:fd:84/00:00:01:00:00/40 tag 0 ncq 32768 in
+Jul 10 09:36:14 ub kernel: [734783.829989]          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Jul 10 09:36:14 ub kernel: [734783.829993] ata14.00: status: { DRDY }
+
+I found a thread on lkml regarding similar issue 
+<http://kerneltrap.org/mailarchive/linux-kernel/2010/6/10/4581441>, and I 
+guess I can say I'm also hit by it, with different drives, and the same 
+drives work perfectly when I move them to a SiL based controller.
+
+<http://mogs.nl/node/35> seems to indicate NCQ based issues...
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
