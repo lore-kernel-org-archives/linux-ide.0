@@ -1,68 +1,47 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: HDD not suspending properly / dead on resume
-Date: Sat, 10 Jul 2010 02:06:13 +0200
-Message-ID: <201007100206.13401.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007092353.25731.rjw@sisk.pl> <201007100104.38693.stephan.diestelhorst@gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: If I have a single bad sector, how many failed reads should
+ simple dd report?
+Date: Fri, 09 Jul 2010 21:19:21 -0400
+Message-ID: <4C37CA99.1040104@teksavvy.com>
+References: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com> <AANLkTimWfp4mLF9DCpxtnnUQsYQ08gXmh491EfhARe1x@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34459 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750862Ab0GJAIP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Jul 2010 20:08:15 -0400
-In-Reply-To: <201007100104.38693.stephan.diestelhorst@gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:21008 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751186Ab0GJBTX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jul 2010 21:19:23 -0400
+In-Reply-To: <AANLkTimWfp4mLF9DCpxtnnUQsYQ08gXmh491EfhARe1x@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
-On Saturday, July 10, 2010, Stephan Diestelhorst wrote:
-> Rafael J. Wysocki wrote:
-> > On Friday, July 09, 2010, Stephan Diestelhorst wrote:
-> > > I wrote:
-> > > >   I have an issue with suspend to RAM and I/O load on a disk. Symptoms
-> > > > are that the disk does not respond to requests when woken up, producing
-> > > > only I/O errors on all tested kernels (newest 2.6.35-rc4 (Ubuntu
-> > > > mainline PPA build)):
-> > > > 
-> > > <snip>
-> > >  
-> > > > This can be triggered most reliably with multiple "direct" writes to
-> > > > disk, I create the load with the attached script. If the issue is
-> > > > triggered, suspend (through pm-suspend) takes very long.
-> > > 
-> > > > IMHO the interesting log output during suspend is:
-> > > > [ 1674.700125] ata1.00: qc timeout (cmd 0xec)
-> > > 
-> > > Almighty google suggested to try "pci=nomsi", which seems to have
-> > > cured the issue for me for now. Is that plausible? I'll keep this
-> > > under observation.
-> > 
-> > Hmm.  How does your /proc/interrupts look like?
-> 
-> This has been yet another red herring. After trying out the kernel
-> option three times with two different kernels, it failed yet again
-> with the same symptoms. 
+On 09/07/10 03:04 PM, Greg Freemyer wrote:
+..
+>> When I re-ran it, /var/log/messages reported 10 bad logical blocks.
+>> And even worse, dd reported 20 bad blocks.  I examined the data dd
+>> read and it had 80KB of zero'ed out data.  So that's 160 sectors worth
+>> of data lost because of a single bad sector.  At most I was expecting
+>> 4KB of zero'ed out data.
+..
 
-I thought it would be like that.
+That's just the standard, undesirable result of the current SCSI EH
+when used with libata for (mainly) desktop computers.
 
-> I have attached /proc/interrupts for 2.6.35-rc4, once with pci=nomsi
-> and once without, but again, I do not think this makes a difference :-/
-> 
-> > Also, do you have a link to this "Google suggestion"?
-> 
-> It was some german forum, a guy with completely different HW, but the
-> same symptom. I thought trying out the option wouldn't hurt.
-> 
-> Maybe it came for example from http://lkml.org/lkml/2008/12/20/3
-> originally.
+I have patches (against older kernels) to fix it, but have yet to
+get both myself and James B. interested enough simultaneously to
+actually get the kernel fixed.  :)
+..
+> cmp -bl clean.dd corrupt.dd>  delta.log
+>
+> Looking at delta.log, the bytes start disagreeing 4 bytes prior to the
+> sector boundary.  How can that be?
+..
 
-I have a box where this problem is kind of reproducible, but it happens _very_
-rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
-loop.  Are you able to reproduce it more regurarly?
+Dunno.  That could be a different problem.
+I've seen the odd scattered report of data corruption on ext3/ext4
+with large data sets, but don't know what the root causes were.
 
-Also, what kind of disk do you use?
-
-Rafael
+Cheers
