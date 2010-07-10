@@ -1,37 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: HDD not suspending properly / dead on resume
-Date: Sat, 10 Jul 2010 12:03:44 +0200
-Message-ID: <4C384580.2080507@kernel.org>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100104.38693.stephan.diestelhorst@gmail.com> <201007100206.13401.rjw@sisk.pl> <201007100850.36889.stephan.diestelhorst@gmail.com>
+Subject: Re: [PATCH 11/12] libata: use IRQ expecting
+Date: Sat, 10 Jul 2010 12:06:24 +0200
+Message-ID: <4C384620.8040808@kernel.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org> <4C2577F2.4030005@garzik.org> <4C25BAD2.4070705@kernel.org> <4C25C551.8000404@garzik.org> <4C25CC18.2070507@kernel.org> <4C2DFAB0.3020703@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52417 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:40537 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754047Ab0GJKEu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2010 06:04:50 -0400
-In-Reply-To: <201007100850.36889.stephan.diestelhorst@gmail.com>
+	id S1754116Ab0GJKIM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jul 2010 06:08:12 -0400
+In-Reply-To: <4C2DFAB0.3020703@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@amd.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-On 07/10/2010 08:50 AM, Stephan Diestelhorst wrote:
->> I have a box where this problem is kind of reproducible, but it happens _very_
->> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
->> loop.  Are you able to reproduce it more regurarly?
+On 07/02/2010 04:41 PM, Tejun Heo wrote:
+> Hello, Jeff.
 > 
-> For me it is much more reproducible. If I run multiple direct writing
-> dd-s to the disk in question I trigger it rather reliably (~75% or
-> higher). See the attached script from an earlier email.
-> Maybe that helps triggering your case more reliabl, too?
+> So, something like the following.  This should be applied on top of
+> the two previous libata patches.  The amount of code in the hot path
+> is very small.  Compared to the cpu actually taking an interrupt and
+> accessing hardware, it should be negligible, and this will give us
+> working and acceptably performing systems in the presence of most
+> types of IRQ problems.
 
-Can you please try the following git tree?
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
-
-Thanks.
+Ping.
 
 -- 
 tejun
