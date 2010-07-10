@@ -1,70 +1,70 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Sat, 10 Jul 2010 14:45:53 +0300
-Message-ID: <201007101445.53556.anssi.hannula@iki.fi>
-References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <4C37FA32.8020008@wasp.net.au> <4C381BC4.9040903@grumpydevil.homelinux.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: HDD not suspending properly / dead on resume
+Date: Sat, 10 Jul 2010 15:08:11 +0200
+Message-ID: <201007101508.11488.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100206.13401.rjw@sisk.pl> <201007100850.36889.stephan.diestelhorst@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <4C381BC4.9040903@grumpydevil.homelinux.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Cc: Brad Campbell <brad@wasp.net.au>, Mikael Abrahamsson <swmike@swm.pp.se>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:35772 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754052Ab0GJNKN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jul 2010 09:10:13 -0400
+In-Reply-To: <201007100850.36889.stephan.diestelhorst@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@amd.com
 
-Rudy Zijlstra kirjoitti lauantai, 10. hein=E4kuuta 2010 10:05:40:
-> Judging from my dmesg and lsscsi on a system with both scsi and SATA,
-> ataX translates into scsi X:0:0:0
+On Saturday, July 10, 2010, Stephan Diestelhorst wrote:
+> Rafael J. Wysocki wrote:
+> > On Saturday, July 10, 2010, Stephan Diestelhorst wrote:
+> > > Rafael J. Wysocki wrote:
+> > > > On Friday, July 09, 2010, Stephan Diestelhorst wrote:
+> > > > > I wrote:
+> > > > > >   I have an issue with suspend to RAM and I/O load on a disk. Symptoms
+> > > > > > are that the disk does not respond to requests when woken up, producing
+> > > > > > only I/O errors on all tested kernels (newest 2.6.35-rc4 (Ubuntu
+> > > > > > mainline PPA build)):
+> > > > > > 
+> > > > > <snip>
+> > > > >  
+> > > > > > This can be triggered most reliably with multiple "direct" writes to
+> > > > > > disk, I create the load with the attached script. If the issue is
+> > > > > > triggered, suspend (through pm-suspend) takes very long.
+> > > > > 
+> > > > > > IMHO the interesting log output during suspend is:
+> > > > > > [ 1674.700125] ata1.00: qc timeout (cmd 0xec)
+> > 
+> > I have a box where this problem is kind of reproducible, but it happens _very_
+> > rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
+> > loop.  Are you able to reproduce it more regurarly?
+> 
+> For me it is much more reproducible. If I run multiple direct writing
+> dd-s to the disk in question I trigger it rather reliably (~75% or
+> higher). See the attached script from an earlier email.
+> Maybe that helps triggering your case more reliabl, too?
+> 
+> > Also, what kind of disk do you use?
+> 
+> It is a Samsung HM321HI in a Samsung Eikee R525 notebook, please also 
+> see my smartctl -a log, attached earlier.
+> 
+> Interesting, I have a similar symptom on one of my home servers,
+> which has a *Samsung* SpinPoint F1 and it went away with different
+> disks. So maybe these disks are either faulty themselves or they
+> trigger the issue more often?
 
-AFAIK this is only because you have a real SCSI occupying scsi0. On sys=
-tems=20
-with only ATA, ataN is scsi(N-1).
+They may be doing something that causes the issue to appear.
 
-I guess it really depends on the load order of ATA, SCSI and USB storag=
-e=20
-device drivers.
+That said, on my test box this only happens during suspend and it's an Intel
+SSD (INTEL SSDSA2M080G2GC, 2CV102HD to be precise).
 
-This should probably be changed somehow.. either make ataXX binding ava=
-ilable=20
-somewhere or use some other known identifier instead of ataXX.
+> I also have a LVM on top of LUKS on the disk. So the I/O will also
+> add some computational overhead for encryption.
 
-> example dmesg output:
-> [    3.901035] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 300=
-)
-> [    3.937046] ata10.00: ATA-7: WDC WD7500AAKS-00RBA0, 30.04G30, max
-> UDMA/133
-> [    3.948794] ata10.00: 1465149168 sectors, multi 0: LBA48 NCQ (dept=
-h
-> 31/32)
-> [    3.969065] ata10.00: configured for UDMA/133
-> [    3.980847] scsi 10:0:0:0: Direct-Access     ATA      WDC
-> WD7500AAKS-0 30.0 PQ: 0 ANSI: 5
-> [    3.993120] sd 10:0:0:0: [sdf] 1465149168 512-byte hardware sector=
-s:
-> (750 GB/698 GiB)
-> [    4.005586] sd 10:0:0:0: [sdf] Write Protect is off
-> [    4.017936] sd 10:0:0:0: [sdf] Mode Sense: 00 3a 00 00
-> [    4.017959] sd 10:0:0:0: [sdf] Write cache: enabled, read cache:
-> enabled, doesn't support DPO or FUA
->=20
-> and the lsscsi output:
-> [0:2:0:0]    disk    LSI      MegaRAID 8344ELP 1.12  /dev/sda
-> [0:2:1:0]    disk    LSI      MegaRAID 8344ELP 1.12  /dev/sdb
-> [5:0:1:0]    cd/dvd  MATSHITA DVD-ROM UJDA780  1.50  /dev/sr0
-> [7:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdm
-> [8:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdl
-> [9:0:0:0]    disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdo
-> [10:0:0:0]   disk    ATA      SAMSUNG HD154UI  1AG0  /dev/sdn
-> [11:0:0:0]   disk    ATA      SAMSUNG HD103SJ  1AJ1  /dev/sdk
-> [12:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdh
-> [13:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdi
-> [14:0:0:0]   disk    ATA      Hitachi HDT72101 ST6O  /dev/sdj
+There are only ext3/ext4 partitions on the disk in my case.
 
---=20
-Anssi Hannula
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Rafael
