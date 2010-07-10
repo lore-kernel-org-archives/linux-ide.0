@@ -1,76 +1,53 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: timeout problems on onboard SATA 6.0 controller on Asus P7H57D-V
- EVO
-Date: Sat, 10 Jul 2010 11:56:11 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1007101142440.23489@uplift.swm.pp.se>
+From: =?ISO-8859-1?Q?T=F6r=F6k_Edvin?= <edwintorok@gmail.com>
+Subject: Re: ata: failed to IDENTIFY / SRST failed (errno = -16) problems
+	on/after booting 2.6.35-rc3
+Date: Sat, 10 Jul 2010 12:58:09 +0300
+Message-ID: <AANLkTinqjTdICdUoY2Qin6w14UxfOxl6dhOcZbnNhmoA@mail.gmail.com>
+References: <20100627232347.2f1dc4fd@debian>
+	<20100705224627.3a158e8c@debian>
+	<4C326FE1.2020005@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:59625 "EHLO uplift.swm.pp.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753895Ab0GJJ4M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2010 05:56:12 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by uplift.swm.pp.se (Postfix) with ESMTP id 71B00A5
-	for <linux-ide@vger.kernel.org>; Sat, 10 Jul 2010 11:56:11 +0200 (CEST)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45049 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624Ab0GJJ6M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jul 2010 05:58:12 -0400
+In-Reply-To: <4C326FE1.2020005@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+2010/7/6 Robert Hancock <hancockrwd@gmail.com>:
+>> Also I noticed that the BIOS sometimes hanged during boot (probably
+>> trying to establish a link to the CDROM too), resetting it a couple of
+>> times allowed it to reach Linux, but then Linux hanged.
+>> It could be a hardware failure of the CDROM that just happened to occur
+>> after I installed 2.6.35-rc3, I don't know.
+>
+> It does sound like a hardware problem, yes, from those symptoms.
 
-In the thread "mapping ataXX.YY to a /dev/sdX" I had some problems with 
-faultfinding timeout problems. When actually opening the computer up I 
-discovered that this channel actually was connected to the onboard Asus 
-P7H57D-V EVO motherboard 6.0Gb/s ports (one of two) (seems to be Marvell 
-based).
+So from the 2 CDROM drives this one works:
+ata9.00: ATAPI: ASUS CRW-5232AS, 1.01, max UDMA/33
 
-I'm running ubuntu 10.04 with their 2.6.32 kernel. Is there a known 
-problem with this controller which is being rectified in later kernels?
+If I plug in just the other CDROM drive (on same cable/power
+connector, and unplug the working CDROM) then it hangs in the BIOS
+"Detecting IDE drives....". Looks like faulty hardware.
 
-Here is lspci (guess the 08.00.0 is the SATA3 controller, googling for the 
-Device ID yields SATA3 references anyway).
+If I have both CDROMs plugged in (on same data cable, order doesn't
+seem to matter) then it hangs in the  BIOS for a while.
+It eventually boots Linux, at which point I get those SRST failed
+messages, and at some point it brings up the link to both CDROMs
+(after 76 seconds for example):
+ata9.00: ATAPI: ASUS CRW-5232AS, 1.0.1, max UDMA/33
+ata9.01: ATAPI: SAMSUNG CD-ROM SH-152A, C503, max UDMA/33
 
-00:00.0 Host bridge: Intel Corporation Core Processor DRAM Controller (rev 12)
-00:02.0 VGA compatible controller: Intel Corporation Core Processor Integrated Graphics Controller (rev 12)
-00:16.0 Communication controller: Intel Corporation 5 Series/3400 Series Chipset HECI Controller (rev 06)
-00:1a.0 USB Controller: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller (rev 06)
-00:1b.0 Audio device: Intel Corporation 5 Series/3400 Series Chipset High Definition Audio (rev 06)
-00:1c.0 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 1 (rev 06)
-00:1c.4 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 5 (rev 06)
-00:1c.5 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 6 (rev 06)
-00:1c.6 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 7 (rev 06)
-00:1c.7 PCI bridge: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 8 (rev 06)
-00:1d.0 USB Controller: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller (rev 06)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev a6)
-00:1f.0 ISA bridge: Intel Corporation 5 Series Chipset LPC Interface Controller (rev 06)
-00:1f.2 SATA controller: Intel Corporation 5 Series/3400 Series Chipset 6 port SATA AHCI Controller (rev 06)
-00:1f.3 SMBus: Intel Corporation 5 Series/3400 Series Chipset SMBus Controller (rev 06)
-01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 03)
-02:00.0 IDE interface: Marvell Technology Group Ltd. 88SE6121 SATA II Controller (rev b2)
-03:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
-04:00.0 Mass storage controller: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller (rev 01)
-05:00.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
-06:01.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
-06:05.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
-06:07.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
-06:09.0 PCI bridge: PLX Technology, Inc. Device 8608 (rev ba)
-07:00.0 USB Controller: NEC Corporation Device 0194 (rev 03)
-08:00.0 SATA controller: Device 1b4b:9123 (rev 10)
+In this case load average starts to climb (2.39 already) for a while,
+I'll reply with more details in the other thread about that.
 
-The timeouts look like this:
+So this is not a regression, or a bug in Linux, it is just faulty
+hardware and Linux retrying multiple times  when it fails.
 
-Jul 10 09:36:14 ub kernel: [734783.829968] ata14.00: exception Emask 0x0 SAct 0xffff SErr 0x0 action 0x6 frozen
-Jul 10 09:36:14 ub kernel: [734783.829977] ata14.00: failed command: READ FPDMA QUEUED
-Jul 10 09:36:14 ub kernel: [734783.829987] ata14.00: cmd 60/40:00:d0:fd:84/00:00:01:00:00/40 tag 0 ncq 32768 in
-Jul 10 09:36:14 ub kernel: [734783.829989]          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-Jul 10 09:36:14 ub kernel: [734783.829993] ata14.00: status: { DRDY }
-
-I found a thread on lkml regarding similar issue 
-<http://kerneltrap.org/mailarchive/linux-kernel/2010/6/10/4581441>, and I 
-guess I can say I'm also hit by it, with different drives, and the same 
-drives work perfectly when I move them to a SiL based controller.
-
-<http://mogs.nl/node/35> seems to indicate NCQ based issues...
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+Best regards,
+--Edwin
