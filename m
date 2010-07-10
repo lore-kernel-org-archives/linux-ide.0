@@ -1,41 +1,62 @@
-From: Brad Campbell <brad@wasp.net.au>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Sat, 10 Jul 2010 12:42:26 +0800
-Message-ID: <4C37FA32.8020008@wasp.net.au>
-References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se> <87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se> <4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se> <20100708104422.GA32564@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se> <20100708232631.014a5ade@atak.bl.pg.gda.pl> <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+From: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Subject: Re: HDD not suspending properly / dead on resume
+Date: Sat, 10 Jul 2010 08:50:34 +0200
+Message-ID: <201007100850.36889.stephan.diestelhorst@gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100104.38693.stephan.diestelhorst@gmail.com> <201007100206.13401.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fnarfbargle.com ([93.93.128.63]:36562 "EHLO fnarfbargle.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750791Ab0GJF3g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2010 01:29:36 -0400
-In-Reply-To: <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:56235 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751397Ab0GJGun (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Jul 2010 02:50:43 -0400
+In-Reply-To: <201007100206.13401.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@gmail.com, stephan.diestelhorst@amd.com
 
-On 09/07/10 05:53, Mikael Abrahamsson wrote:
+Rafael J. Wysocki wrote:
+> On Saturday, July 10, 2010, Stephan Diestelhorst wrote:
+> > Rafael J. Wysocki wrote:
+> > > On Friday, July 09, 2010, Stephan Diestelhorst wrote:
+> > > > I wrote:
+> > > > >   I have an issue with suspend to RAM and I/O load on a disk. Symptoms
+> > > > > are that the disk does not respond to requests when woken up, producing
+> > > > > only I/O errors on all tested kernels (newest 2.6.35-rc4 (Ubuntu
+> > > > > mainline PPA build)):
+> > > > > 
+> > > > <snip>
+> > > >  
+> > > > > This can be triggered most reliably with multiple "direct" writes to
+> > > > > disk, I create the load with the attached script. If the issue is
+> > > > > triggered, suspend (through pm-suspend) takes very long.
+> > > > 
+> > > > > IMHO the interesting log output during suspend is:
+> > > > > [ 1674.700125] ata1.00: qc timeout (cmd 0xec)
+> 
+> I have a box where this problem is kind of reproducible, but it happens _very_
+> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
+> loop.  Are you able to reproduce it more regurarly?
 
-> I never really had a huge problem figuring out with high probability
-> which drive it was, but I wanted to know if there was a 100% certain way
-> of doing it. Seems there is not, am I the only one who is looking for
-> this functionality? I would think this is a fairly common problem?
+For me it is much more reproducible. If I run multiple direct writing
+dd-s to the disk in question I trigger it rather reliably (~75% or
+higher). See the attached script from an earlier email.
+Maybe that helps triggering your case more reliabl, too?
 
-Certainty would be nice, but in practice here I've always found that ataX = sdX+1 and I've relied on 
-that mapping to always be constant. I've not yet found it otherwise, but I guess it's possible. I'd 
-assume the libata guys should be able to provide a definite comment on that.
+> Also, what kind of disk do you use?
 
-I've got no lights on my arrays, so it's even harder to identify which drive is which when you need 
-to swap one out live. I've resorted to keeping a log of which serial number is in which physical 
-slot, so I can look up the serial number of the failing drive with hdparm and I know I've got the 
-right one. Again, it still hinges on the ata-sd mapping being constant. (it also relies on me 
-updating the log when I swap a disk)
+It is a Samsung HM321HI in a Samsung Eikee R525 notebook, please also 
+see my smartctl -a log, attached earlier.
 
-Brad
--- 
-Dolphins are so intelligent that within a few weeks they can
-train Americans to stand at the edge of the pool and throw them
-fish.
+Interesting, I have a similar symptom on one of my home servers,
+which has a *Samsung* SpinPoint F1 and it went away with different
+disks. So maybe these disks are either faulty themselves or they
+trigger the issue more often?
+
+I also have a LVM on top of LUKS on the disk. So the I/O will also
+add some computational overhead for encryption.
+
+Stephan
