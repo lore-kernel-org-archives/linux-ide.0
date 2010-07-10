@@ -1,53 +1,165 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: HDD not suspending properly / dead on resume
-Date: Sat, 10 Jul 2010 15:45:17 +0200
-Message-ID: <201007101545.17401.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100850.36889.stephan.diestelhorst@gmail.com> <4C384580.2080507@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: If I have a single bad sector, how many failed reads should
+ simple dd report?
+Date: Sat, 10 Jul 2010 09:14:31 -0500
+Message-ID: <1278771271.2911.18.camel@mulgrave.site>
+References: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
+	 <AANLkTimWfp4mLF9DCpxtnnUQsYQ08gXmh491EfhARe1x@mail.gmail.com>
+	 <4C37CA99.1040104@teksavvy.com>  <4C37CBB8.1040909@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:35832 "EHLO ogre.sisk.pl"
+Received: from cantor.suse.de ([195.135.220.2]:35017 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755226Ab0GJNrS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jul 2010 09:47:18 -0400
-In-Reply-To: <4C384580.2080507@kernel.org>
+	id S1754709Ab0GJOOi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jul 2010 10:14:38 -0400
+In-Reply-To: <4C37CBB8.1040909@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@amd.com
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Greg Freemyer <greg.freemyer@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
 
-On Saturday, July 10, 2010, Tejun Heo wrote:
-> On 07/10/2010 08:50 AM, Stephan Diestelhorst wrote:
-> >> I have a box where this problem is kind of reproducible, but it happens _very_
-> >> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
-> >> loop.  Are you able to reproduce it more regurarly?
-> > 
-> > For me it is much more reproducible. If I run multiple direct writing
-> > dd-s to the disk in question I trigger it rather reliably (~75% or
-> > higher). See the attached script from an earlier email.
-> > Maybe that helps triggering your case more reliabl, too?
+On Fri, 2010-07-09 at 21:24 -0400, Mark Lord wrote:
+> On 09/07/10 09:19 PM, Mark Lord wrote:
+> > On 09/07/10 03:04 PM, Greg Freemyer wrote:
+> > ..
+> >>> When I re-ran it, /var/log/messages reported 10 bad logical blocks.
+> >>> And even worse, dd reported 20 bad blocks. I examined the data dd
+> >>> read and it had 80KB of zero'ed out data. So that's 160 sectors worth
+> >>> of data lost because of a single bad sector. At most I was expecting
+> >>> 4KB of zero'ed out data.
+> > ..
+> >
+> > That's just the standard, undesirable result of the current SCSI EH
+> > when used with libata for (mainly) desktop computers.
+> >
+> > I have patches (against older kernels) to fix it, but have yet to
+> > get both myself and James B. interested enough simultaneously to
+> > actually get the kernel fixed. :)
+> ..
 > 
-> Can you please try the following git tree?
+> Here (attached and inline below) are my most recent patches for this.
+> Still outdated, though.  These are against the SLES11 2.6.27.19 kernel:
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
+> -----------------------------snip----------------------------
+> 
+> Stop the SCSI EH from performing tons of retries on unrecoverable medium errors,
+> so that error-handling fails more quickly and we (EMC) avoid unneeded node resets.
+> 
+> The ugliness of this patch matches the ugliness of SCSI EH.
+> Does *anyone* actually understand this code completely?
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- old/drivers/scsi/scsi_error.c	2009-06-04 09:46:55.000000000 -0400
+> +++ linux/drivers/scsi/scsi_error.c	2009-06-04 12:08:48.000000000 -0400
+> @@ -423,6 +423,52 @@
+>   	}
+>   }
+>   
+> +/*
+> + * The problem with scsi_check_sense(), is that it is (designed to be)
+> + * called only after retries are exhausted.  But for MEDIUM_ERRORs (only)
+> + * we don't want any retries here at all.
+> + *
+> + * So this function below is a clone of the necessary parts from scsi_check_sense(),
+> + * to check for unrecoverable MEDIUM_ERRORs when deciding whether to retry or not.
+> + */
+> +static int scsi_unrecoverable_medium_error(struct scsi_cmnd *scmd)
+> +{
+> +	struct scsi_sense_hdr sshdr;
+> +
+> +	if (! scsi_command_normalize_sense(scmd, &sshdr))
+> +		return 0;	/* no valid sense data */
+> +
+> +	if (scsi_sense_is_deferred(&sshdr))
+> +		return 0;
+> +
+> +	if (sshdr.response_code == 0x70) {
+> +		/* fixed format */
+> +		if (scmd->sense_buffer[2] & 0xe0)
+> +			return 0;
+> +	} else {
+> +		/*
+> +		 * descriptor format: look for "stream commands sense data
+> +		 * descriptor" (see SSC-3). Assume single sense data
+> +		 * descriptor. Ignore ILI from SBC-2 READ LONG and WRITE LONG.
+> +		 */
+> +		if ((sshdr.additional_length > 3) &&
+> +		    (scmd->sense_buffer[8] == 0x4) &&
+> +		    (scmd->sense_buffer[11] & 0xe0))
+> +			return 0;
+> +	}
+> +
+> +	switch (sshdr.sense_key) {
+> +	case MEDIUM_ERROR:
+> +		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
+> +		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
+> +		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
+> +			//printk(KERN_WARNING "%s: MEDIUM_ERROR\n", __func__);
+> +			return 1;
+> +		}
+> +	}
+> +	return 0;
+> +}
 
-Well, for now I got this:
 
-[   36.833075] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-[   36.833085] ata1.00: failed command: SMART
-[   36.833099] ata1.00: cmd b0/d5:01:06:4f:c2/00:00:00:00:00/00 tag 0 pio 512 in
-[   36.833101]          res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
-[   36.833107] ata1.00: status: { DRDY }
-[   36.833118] ata1: hard resetting link
-[   37.316053] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[   37.316840] ata1.00: configured for UDMA/133
-[   37.316888] ata1: EH complete
+> +
+>   /**
+>    * scsi_eh_completed_normally - Disposition a eh cmd on return from LLD.
+>    * @scmd:	SCSI cmd to examine.
+> @@ -1334,6 +1380,8 @@
+>   
+>   	switch (status_byte(scmd->result)) {
+>   	case CHECK_CONDITION:
+> +		if (scsi_unrecoverable_medium_error(scmd))
+> +			return 1;
+>   		/*
+>   		 * assume caller has checked sense and determinted
+>   		 * the check condition was retryable.
 
-during initialization.  Apart from this it seems to work fine.
+The check is redundant:  scsi_decide_disposition is where we check for
+retries or error handling.  If you look, it already picks out your three
+cases and returns success for them (meaning pass straight through).  in
+sd_done() MEDIUM_ERROR means complete immediately.
 
-But in fact I'll only be able to say it helps if it survives a week-or-so
-without suspend failure.
 
-Rafael
+> 
+> On encountering a bad sector, report and skip over it,
+> then continue with the remainder of the request.
+> Otherwise we would fail perfectly good sectors,
+> making a bad situation even worse.
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com>
+> 
+> --- old/drivers/scsi/scsi_lib.c	2009-06-04 12:26:52.000000000 -0400
+> +++ linux/drivers/scsi/scsi_lib.c	2009-06-04 14:40:11.000000000 -0400
+> @@ -952,6 +952,12 @@
+>   	 */
+>   	if (sense_valid && !sense_deferred) {
+>   		switch (sshdr.sense_key) {
+> +		case MEDIUM_ERROR:
+> +		/* Bad sector.  Fail it, and then continue the rest of the request. */
+> +		if (this_count && scsi_end_request(cmd, -EIO, cmd->device->sector_size, 1) == NULL) {
+> +			cmd->retries = 0;       // go around again..
+> +			return;
+> +		}
+>   		case UNIT_ATTENTION:
+>   			if (cmd->device->removable) {
+>   				/* Detected disc change.  Set a bit
+
+This one's in the wrong place.  Normal MEDIUM_ERRORS complete above
+this.
+
+I also don't think the skip is right.  We're supposed to communicate to
+block what we've done, and all we have to do that with is good bytes.
+If we skip over a bad sector and try to complete the rest, we've lost
+the error position.
+
+The failure return from Medium error is defined to be the number of
+bytes we actually wrote, which is everything up to the medium error.
+
+James
+
+
