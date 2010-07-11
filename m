@@ -1,256 +1,144 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: If I have a single bad sector, how many failed reads should
-	simple dd report?
-Date: Sun, 11 Jul 2010 08:58:19 -0400
-Message-ID: <AANLkTilPrr81sS0lVluXttfF52yHZFCiaHwWzN2TaVfp@mail.gmail.com>
-References: <AANLkTil2Zfhpkq24qrCoHZVx1vlbIPTcDMrZ508yODta@mail.gmail.com>
-	<AANLkTimWfp4mLF9DCpxtnnUQsYQ08gXmh491EfhARe1x@mail.gmail.com>
-	<4C37CA99.1040104@teksavvy.com>
-	<4C37CBB8.1040909@teksavvy.com>
-	<1278771271.2911.18.camel@mulgrave.site>
+From: =?ISO-8859-1?Q?J=E9r=F4me_Poulin?= <jeromepoulin@gmail.com>
+Subject: Re: mapping ataXX.YY to a /dev/sdX
+Date: Sun, 11 Jul 2010 15:01:20 -0400
+Message-ID: <AANLkTiluwfd9LTH7Tb0J9N3NBvp1FbZdoJYUYj1g8BJz__44540.111316792$1278874906$gmane$org@mail.gmail.com>
+References: <alpine.DEB.1.10.1007070810540.23489@uplift.swm.pp.se>
+	<87wrt7ijp3.fsf@rimspace.net> <alpine.DEB.1.10.1007071749320.23489@uplift.swm.pp.se>
+	<4C35A2FC.5080402@buttersideup.com> <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
+	<20100708104422.GA32564@cthulhu.home.robinhill.me.uk> <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se>
+	<20100708232631.014a5ade@atak.bl.pg.gda.pl> <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+	<4C37FA32.8020008@wasp.net.au> <4C381BC4.9040903@grumpydevil.homelinux.org>
+	<4C38C8BD.4050604@garzik.org> <4C390703.80703@grumpydevil.homelinux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52554 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452Ab0GKM6V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jul 2010 08:58:21 -0400
-Received: by iwn7 with SMTP id 7so3745688iwn.19
-        for <linux-ide@vger.kernel.org>; Sun, 11 Jul 2010 05:58:20 -0700 (PDT)
-In-Reply-To: <1278771271.2911.18.camel@mulgrave.site>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62719 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754535Ab0GKTBh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jul 2010 15:01:37 -0400
+In-Reply-To: <4C390703.80703@grumpydevil.homelinux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mark Lord <kernel@teksavvy.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <liml@rtr.ca>
+To: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Jeff Garzik <jeff@garzik.org>, Brad Campbell <brad@wasp.net.au>, Mikael Abrahamsson <swmike@swm.pp.se>, Janek Kozicki <janek_listy@wp.>
 
-On Sat, Jul 10, 2010 at 10:14 AM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> On Fri, 2010-07-09 at 21:24 -0400, Mark Lord wrote:
->> On 09/07/10 09:19 PM, Mark Lord wrote:
->> > On 09/07/10 03:04 PM, Greg Freemyer wrote:
->> > ..
->> >>> When I re-ran it, /var/log/messages reported 10 bad logical bloc=
-ks.
->> >>> And even worse, dd reported 20 bad blocks. I examined the data d=
-d
->> >>> read and it had 80KB of zero'ed out data. So that's 160 sectors =
-worth
->> >>> of data lost because of a single bad sector. At most I was expec=
-ting
->> >>> 4KB of zero'ed out data.
->> > ..
->> >
->> > That's just the standard, undesirable result of the current SCSI E=
-H
->> > when used with libata for (mainly) desktop computers.
->> >
->> > I have patches (against older kernels) to fix it, but have yet to
->> > get both myself and James B. interested enough simultaneously to
->> > actually get the kernel fixed. :)
->> ..
+I find it rather confusing in my log, and there are situation when you
+hotplug the disk which does not make it show up right after the ataX
+line, also if the logs overflow, then you can't know anyway. (I know
+there's syslog too)
+
+There doesn't seem to be any mapping in /sys I though lshw would show
+it but it isn't.
+
+[    1.378503] loop: module loaded
+[    1.382075] ata_piix 0000:00:1f.2: version 2.13
+[    1.382100] ata_piix 0000:00:1f.2: PCI INT A -> GSI 18 (level, low) =
+-> IRQ 18
+[    1.389566] ata_piix 0000:00:1f.2: MAP [ IDE IDE P0 P1 ]
+[    1.395265] ata_piix 0000:00:1f.2: setting latency timer to 64
+[    1.395349] scsi0 : ata_piix
+[    1.398516] scsi1 : ata_piix
+[    1.401647] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xfc00=
+ irq 14
+[    1.408880] ata2: SATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xfc08=
+ irq 15
+[    1.416308] sata_mv 0000:01:00.0: version 1.28
+[    1.420999] sata_mv 0000:01:00.0: PCI INT A -> GSI 16 (level, low) -=
+> IRQ 16
+[    1.428614] sata_mv 0000:01:00.0: Gen-IIE 32 slots 4 ports ? mode
+IRQ via INTx
+[    1.436133] sata_mv 0000:01:00.0: setting latency timer to 64
+[    1.436591] scsi2 : sata_mv
+[    1.436751] scsi3 : sata_mv
+[    1.436889] scsi4 : sata_mv
+[    1.437024] scsi5 : sata_mv
+[    1.437141] ata3: SATA max UDMA/133 mmio m1048576@0xfc800000 port
+0xfc822000 irq 16
+[    1.437146] ata4: SATA max UDMA/133 mmio m1048576@0xfc800000 port
+0xfc824000 irq 16
+[    1.437150] ata5: SATA max UDMA/133 mmio m1048576@0xfc800000 port
+0xfc826000 irq 16
+[    1.437154] ata6: SATA max UDMA/133 mmio m1048576@0xfc800000 port
+0xfc828000 irq 16
+[    1.442237] e1000: Intel(R) PRO/1000 Network Driver - version 7.3.21=
+-k6-NAPI
+[    1.442241] e1000: Copyright (c) 1999-2006 Intel Corporation.
+[    1.442278] e1000 0000:03:03.0: PCI INT A -> GSI 26 (level, low) -> =
+IRQ 26
+[    1.506175] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-4167B, DL12, max UDM=
+A/33
+[    1.506433] ata2.01: ATA-8: OCZ-ONYX, 1.6, max UDMA/133
+[    1.506437] ata2.01: 62533296 sectors, multi 1: LBA48 NCQ (depth 0/3=
+2)
+[    1.546986] ata2.01: configured for UDMA/133
+[    1.559278] ata1.00: configured for UDMA/33
+[    1.576801] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM
+GSA-4167B DL12 PQ: 0 ANSI: 5
+[    1.605506] sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw
+xa/form2 cdda tray
+[    1.621572] Uniform CD-ROM driver Revision: 3.20
+[    1.635283] sr 0:0:0:0: Attached scsi CD-ROM sr0
+[    1.635478] sr 0:0:0:0: Attached scsi generic sg0 type 5
+[    1.649870] scsi 1:0:1:0: Direct-Access     ATA      OCZ-ONYX
+  1.6  PQ: 0 ANSI: 5
+[    1.667596] sd 1:0:1:0: [sda] 62533296 512-byte logical blocks:
+(32.0 GB/29.8 GiB)
+[    1.667672] sd 1:0:1:0: Attached scsi generic sg1 type 0
+[    1.699875] sd 1:0:1:0: [sda] Write Protect is off
+[    1.714493] sd 1:0:1:0: [sda] Mode Sense: 00 3a 00 00
+[    1.714527] sd 1:0:1:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[    1.734022]  sda: sda1 sda2 sda3 sda4
+[    1.758945] e1000 0000:03:03.0: eth0: (PCI:66MHz:32-bit)
+[    1.759032] sd 1:0:1:0: [sda] Attached SCSI disk
+[    1.790414] e1000 0000:03:03.0: eth0: 00:30:48:58:1d:82
+[    1.806615] e1000 0000:03:03.0: eth0: Intel(R) PRO/1000 Network Conn=
+ection
+[    1.824685] e1000 0000:03:04.0: PCI INT A -> GSI 27 (level, low) -> =
+IRQ 27
+[    1.946696] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.003382] ata3.00: ATA-8: ST3320613AS, CC2H, max UDMA/133
+[    2.021065] ata3.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 31=
+/32)
+[    2.100074] ata3.00: configured for UDMA/133
+[    2.116753] scsi 2:0:0:0: Direct-Access     ATA      ST3320613AS
+  CC2H PQ: 0 ANSI: 5
+
+
+On Sat, Jul 10, 2010 at 7:49 PM, Rudy Zijlstra
+<rudy@grumpydevil.homelinux.org> wrote:
+> Jeff Garzik wrote:
 >>
->> Here (attached and inline below) are my most recent patches for this=
-=2E
->> Still outdated, though. =A0These are against the SLES11 2.6.27.19 ke=
-rnel:
+>> On 07/10/2010 03:05 AM, Rudy Zijlstra wrote:
+>>>
+>>> Judging from my dmesg and lsscsi on a system with both scsi and SAT=
+A,
+>>> ataX translates into scsi X:0:0:0
 >>
->> -----------------------------snip----------------------------
 >>
->> Stop the SCSI EH from performing tons of retries on unrecoverable me=
-dium errors,
->> so that error-handling fails more quickly and we (EMC) avoid unneede=
-d node resets.
+>> There is no translation.
 >>
->> The ugliness of this patch matches the ugliness of SCSI EH.
->> Does *anyone* actually understand this code completely?
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->>
->> --- old/drivers/scsi/scsi_error.c =A0 =A0 2009-06-04 09:46:55.000000=
-000 -0400
->> +++ linux/drivers/scsi/scsi_error.c =A0 2009-06-04 12:08:48.00000000=
-0 -0400
->> @@ -423,6 +423,52 @@
->> =A0 =A0 =A0 }
->> =A0 }
->>
->> +/*
->> + * The problem with scsi_check_sense(), is that it is (designed to =
-be)
->> + * called only after retries are exhausted. =A0But for MEDIUM_ERROR=
-s (only)
->> + * we don't want any retries here at all.
->> + *
->> + * So this function below is a clone of the necessary parts from sc=
-si_check_sense(),
->> + * to check for unrecoverable MEDIUM_ERRORs when deciding whether t=
-o retry or not.
->> + */
->> +static int scsi_unrecoverable_medium_error(struct scsi_cmnd *scmd)
->> +{
->> + =A0 =A0 struct scsi_sense_hdr sshdr;
->> +
->> + =A0 =A0 if (! scsi_command_normalize_sense(scmd, &sshdr))
->> + =A0 =A0 =A0 =A0 =A0 =A0 return 0; =A0 =A0 =A0 /* no valid sense da=
-ta */
->> +
->> + =A0 =A0 if (scsi_sense_is_deferred(&sshdr))
->> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
->> +
->> + =A0 =A0 if (sshdr.response_code =3D=3D 0x70) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 /* fixed format */
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (scmd->sense_buffer[2] & 0xe0)
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
->> + =A0 =A0 } else {
->> + =A0 =A0 =A0 =A0 =A0 =A0 /*
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0* descriptor format: look for "stream c=
-ommands sense data
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0* descriptor" (see SSC-3). Assume singl=
-e sense data
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0* descriptor. Ignore ILI from SBC-2 REA=
-D LONG and WRITE LONG.
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
->> + =A0 =A0 =A0 =A0 =A0 =A0 if ((sshdr.additional_length > 3) &&
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (scmd->sense_buffer[8] =3D=3D 0x4)=
- &&
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 (scmd->sense_buffer[11] & 0xe0))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
->> + =A0 =A0 }
->> +
->> + =A0 =A0 switch (sshdr.sense_key) {
->> + =A0 =A0 case MEDIUM_ERROR:
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (sshdr.asc =3D=3D 0x11 || /* UNRECOVERE=
-D READ ERR */
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sshdr.asc =3D=3D 0x13 || /* AMNF D=
-ATA FIELD */
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 sshdr.asc =3D=3D 0x14) { /* RECORD=
- NOT FOUND */
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 //printk(KERN_WARNING "%s:=
- MEDIUM_ERROR\n", __func__);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
->> + =A0 =A0 =A0 =A0 =A0 =A0 }
->> + =A0 =A0 }
->> + =A0 =A0 return 0;
->> +}
+>> It is random, based on driver load order.
+>
+> This then begs the question whether it can be dependingly derived fro=
+m dmesg
+> messages. Like messages
+>
+> [ =A0 =A02.268315] ata7.00: configured for UDMA/133
+> [ =A0 =A02.277452] scsi 7:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0=
+WDC WD7500AAKS-0
+> 30.0 PQ: 0 ANSI: 5
+>
+> always following each other, thus making identification possible.
 >
 >
->> +
->> =A0 /**
->> =A0 =A0* scsi_eh_completed_normally - Disposition a eh cmd on return=
- from LLD.
->> =A0 =A0* @scmd: =A0 SCSI cmd to examine.
->> @@ -1334,6 +1380,8 @@
->>
->> =A0 =A0 =A0 switch (status_byte(scmd->result)) {
->> =A0 =A0 =A0 case CHECK_CONDITION:
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (scsi_unrecoverable_medium_error(scmd))
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 1;
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /*
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* assume caller has checked sense and=
- determinted
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* the check condition was retryable.
->
-> The check is redundant: =A0scsi_decide_disposition is where we check =
-for
-> retries or error handling. =A0If you look, it already picks out your =
-three
-> cases and returns success for them (meaning pass straight through). =A0=
-in
-> sd_done() MEDIUM_ERROR means complete immediately.
+> Cheers,
 >
 >
->>
->> On encountering a bad sector, report and skip over it,
->> then continue with the remainder of the request.
->> Otherwise we would fail perfectly good sectors,
->> making a bad situation even worse.
->>
->> Signed-off-by: Mark Lord <mlord@pobox.com>
->>
->> --- old/drivers/scsi/scsi_lib.c =A0 =A0 =A0 2009-06-04 12:26:52.0000=
-00000 -0400
->> +++ linux/drivers/scsi/scsi_lib.c =A0 =A0 2009-06-04 14:40:11.000000=
-000 -0400
->> @@ -952,6 +952,12 @@
->> =A0 =A0 =A0 =A0*/
->> =A0 =A0 =A0 if (sense_valid && !sense_deferred) {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 switch (sshdr.sense_key) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 case MEDIUM_ERROR:
->> + =A0 =A0 =A0 =A0 =A0 =A0 /* Bad sector. =A0Fail it, and then contin=
-ue the rest of the request. */
->> + =A0 =A0 =A0 =A0 =A0 =A0 if (this_count && scsi_end_request(cmd, -E=
-IO, cmd->device->sector_size, 1) =3D=3D NULL) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 cmd->retries =3D 0; =A0 =A0=
- =A0 // go around again..
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
->> + =A0 =A0 =A0 =A0 =A0 =A0 }
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 case UNIT_ATTENTION:
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (cmd->device->removab=
-le) {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Detec=
-ted disc change. =A0Set a bit
+> Rudy
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-raid"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
 >
-> This one's in the wrong place. =A0Normal MEDIUM_ERRORS complete above
-> this.
->
-> I also don't think the skip is right. =A0We're supposed to communicat=
-e to
-> block what we've done, and all we have to do that with is good bytes.
-> If we skip over a bad sector and try to complete the rest, we've lost
-> the error position.
->
-> The failure return from Medium error is defined to be the number of
-> bytes we actually wrote, which is everything up to the medium error.
->
-> James
-
-If you guys have patches you want me to test, I'm happy to do so, but
-I urge the team to work on this simple test case.
-
-It may have been this way since day one of libata, but it certainly
-looks like a collection of bugs to me.
-
-Again, assuming /dev/sdb is a test drive without valuable data the
-test case can be as simple as just:
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-#create a 1000 sectors of random data starting at sector 1000
-dd if=3D/dev/urandom of=3D/dev/sdb bs=3D512 seek=3D1000 count=3D1000
-
-#make a clean copy of the data, starting at sector 0 and going well
-past. 4MB total
-dd if=3D/dev/sdb of=3Dclean.dd conv=3Dnoerror,sync bs=3D4K count=3D1000
-
-#corrupt a sector in the middle of the test data
-hdparm --make-bad-sector 1500 --yes-i-know-what-i-am-doing /dev/sdb
-
-#make another copy of the first 4MB
-dd if=3D/dev/sdb of=3Dcorrupt.dd conv=3Dnoerror,sync bs=3D4K count=3D10=
-00
-
-#restore the drive sector so it is not permanently lost
-hdparm --write-sector 1500 --yes-i-know-what-i-am-doing /dev/sdb
-
-(I choose sector 1500 this time to make the testing process faster.)
-
-cmp -bl clean.dd corrupt.dd > delta.log
-
-Review delta.log for disagrees.  And /var/log/warn for logical block
-failures as well as extraneous media errors.
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-I found:
-
-1) Corruption stated several bytes prior to the corrupt sector
-2) With dd using 512 byte blocks, 64 sectors worth of corrupt data in c=
-orrupt.dd
-3) With dd using 4K blocks, 160 sectors worth of corrupt data in
-corrupt.dd.   (I don't know why the difference and I was using a
-customized version of dd called dcfldd for this test.)
-4) a 50% reduction in throughput based on one bad sector.  I'm not
-sure that's a bug, but it is clearly an issue that can be looked at.
-You need a much bigger dd run to see that impact.
-
-Thanks
-Greg
