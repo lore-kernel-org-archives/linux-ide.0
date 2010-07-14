@@ -1,38 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2]460EX on-chip SATA driver<resubmisison>
-Date: Wed, 14 Jul 2010 03:51:44 -0400
-Message-ID: <4C3D6C90.4030709@pobox.com>
-References: <201007061106.o66B631f013777@amcc.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: add ATA_CMD_DSM to ata_get_cmd_descript
+Date: Wed, 14 Jul 2010 03:51:51 -0400
+Message-ID: <4C3D6C97.3010506@garzik.org>
+References: <20100705154454U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:57559 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427Ab0GNHvt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:51:49 -0400
-In-Reply-To: <201007061106.o66B631f013777@amcc.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:46281 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427Ab0GNHvy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:51:54 -0400
+Received: by gxk23 with SMTP id 23so3663839gxk.19
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 00:51:54 -0700 (PDT)
+In-Reply-To: <20100705154454U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rsarmah@apm.com, sr@denx.de, linuxppc-dev@ozlabs.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org
 
-On 07/06/2010 07:06 AM, Rupjyoti Sarmah wrote:
-> This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
+On 07/05/2010 02:45 AM, FUJITA Tomonori wrote:
+> Why isn't ATA_CMD_DSM in ata_get_cmd_descript()?
 >
-> Signed-off-by: Rupjyoti Sarmah<rsarmah@appliedmicro.com>
-> Signed-off-by: Mark Miesfeld<mmiesfeld@appliedmicro.com>
-> Signed-off-by: Prodyut Hazarika<phazarika@appliedmicro.com>
+> =
+> From: FUJITA Tomonori<fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] libata: add ATA_CMD_DSM to ata_get_cmd_descript
 >
+> Signed-off-by: FUJITA Tomonori<fujita.tomonori@lab.ntt.co.jp>
 > ---
-> This patch incorporates the changes advised in the mailing list. The device
-> tree changes were submitted as a seperate patch. Kconfig file is fixed in this version.
+>   drivers/ata/libata-eh.c |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
 >
->   drivers/ata/Kconfig          |    9 +
->   drivers/ata/Makefile         |    1 +
->   drivers/ata/sata_dwc_460ex.c | 1756 ++++++++++++++++++++++++++++++++++++++++++
->   3 files changed, 1766 insertions(+), 0 deletions(-)
->   create mode 100644 drivers/ata/sata_dwc_460ex.c
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index f77a673..697474b 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2214,6 +2214,7 @@ const char *ata_get_cmd_descript(u8 command)
+>   		{ ATA_CMD_SMART,		"SMART" },
+>   		{ ATA_CMD_MEDIA_LOCK,		"DOOR LOCK" },
+>   		{ ATA_CMD_MEDIA_UNLOCK,		"DOOR UNLOCK" },
+> +		{ ATA_CMD_DSM,			"DATA SET MANAGEMENT" },
+>   		{ ATA_CMD_CHK_MED_CRD_TYP, 	"CHECK MEDIA CARD TYPE" },
 
 applied
 
