@@ -1,58 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16382] driver 'pata_hpt37x' attempts to run HPT device x0006
- subd x0001. Doesn't work! 'pata_hpt3x2n' works well.
-Date: Wed, 14 Jul 2010 19:50:11 GMT
-Message-ID: <201007141950.o6EJoBr1005270@demeter.kernel.org>
-References: <bug-16382-11633@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Thu, 15 Jul 2010 01:36:36 +0200
+Message-ID: <4C3E4A04.5030000@kernel.org>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>    <4B5D26EF.4030709@kernel.org> <loom.20100205T041929-66@post.gmane.org>    <12193ff15b0deef3609ea93f54e5b485.squirrel@thechecks.ca>    <13096cdf5e0e6704e30364a746e60467.squirrel@thechecks.ca>    <8276efbfebcbfc3e58033ab8d5996d9d.squirrel@thechecks.ca>    <4C3DACFF.2060504@kernel.org> <0d9ccbbb9ed0fb46dc9497888cd92c6e.squirrel@thechecks.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57832 "EHLO
-	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754973Ab0GNTuM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 15:50:12 -0400
-Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6EJoBtj005271
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 19:50:11 GMT
-In-Reply-To: <bug-16382-11633@https.bugzilla.kernel.org/>
+Received: from hera.kernel.org ([140.211.167.34]:56701 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757478Ab0GNXgl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jul 2010 19:36:41 -0400
+In-Reply-To: <0d9ccbbb9ed0fb46dc9497888cd92c6e.squirrel@thechecks.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Paul Check <paul@thechecks.ca>
+Cc: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16382
+Hello,
 
+On 07/14/2010 07:58 PM, Paul Check wrote:
+> I applied your patch to the 2.6.34 kernel, and on my very first reboot had
+> a drive missing. What information do you want? Just /var/log/messages?
 
+The kernel boot log should suffice.  ie. dmesg output after boot.
 
+> I don't want to keep rebooting forever. Was this patch supposed to fix the
+> problem, or just give you information to debug? Is the problem even known?
 
+It should give more information but seems to actually make the other
+reporter's problem go away.  It looks like SIDPR SCR access can be
+flaky depending on timing but I'm still trying to determine how to
+work around it.
 
---- Comment #5 from Rick Stockton <rickstockton@reno-computerhelp.com>  2010-07-14 19:50:08 ---
-OK! There's a comment "check this" in the initialization code of (at line 843
-within the current version of pata_hpt37x, V0.6.15), and that made me
-suspicious.
-
-But, per your suggestion, I rebuilt initrd with BOTH drivers included -- and I
-installed hpt37x first. This worked exactly as as you said it should: hpt37x
-was assigned to handle the interrupt, but it bailed out immediately. hpt3x2n
-was tried next, and was able to grab the interface.
-
-So please feel free to close this as 'invalid'. There's one TINY nitpick which
-I saw in pata_3x2n, but it would be a different bug (if someone wants to
-bother): Source code lines 536-537 (in the current version, V0.3.10)are as
-follows,
-
-536         printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using 66MHz
-DPLL.\n",
-537                pci_mhz);
-
-And you saw this in my clip from dmesg (in the bug description, above). Driver
-"pata_3x2n" should not print a message listing itself as "pata_hpt37x"; there's
-an old copy/paste mistake in there.
-
-
-THANKS for hand-holding the newby, you've been awesome.
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
