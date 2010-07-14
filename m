@@ -1,37 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 5/5] libata: allow hyphenated pattern ranges (v2)
-Date: Wed, 14 Jul 2010 03:54:54 -0400
-Message-ID: <4C3D6D4E.8020502@pobox.com>
-References: <4C2CB497.3000701@teksavvy.com> <4C2CEB70.3090209@pobox.com> <4C2D0F05.6040706@teksavvy.com> <4C2D13AE.6090701@teksavvy.com> <4C2D13F1.9030408@teksavvy.com> <4C2D1424.4050407@teksavvy.com> <4C31EB69.5070903@teksavvy.com> <4C3261AE.2070307@teksavvy.com> <4C326271.4040005@teksavvy.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 11/12] libata: use IRQ expecting
+Date: Wed, 14 Jul 2010 03:58:07 -0400
+Message-ID: <4C3D6E0F.20605@garzik.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org> <4C2577F2.4030005@garzik.org> <4C25BAD2.4070705@kernel.org> <4C25C551.8000404@garzik.org> <4C25CC18.2070507@kernel.org> <4C2DFAB0.3020703@kernel.org> <4C384620.8040808@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:38128 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996Ab0GNHy6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:54:58 -0400
-Received: by gxk23 with SMTP id 23so3664412gxk.19
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 00:54:58 -0700 (PDT)
-In-Reply-To: <4C326271.4040005@teksavvy.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43206 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751951Ab0GNH6M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:58:12 -0400
+In-Reply-To: <4C384620.8040808@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-On 07/05/2010 06:53 PM, Mark Lord wrote:
-> Take further advantage of the new glob_match() function to reduce the
-> blacklist size,
-> this time making use of "character ranges" in the patterns.
+On 07/10/2010 06:06 AM, Tejun Heo wrote:
+> On 07/02/2010 04:41 PM, Tejun Heo wrote:
+>> Hello, Jeff.
+>>
+>> So, something like the following.  This should be applied on top of
+>> the two previous libata patches.  The amount of code in the hot path
+>> is very small.  Compared to the cpu actually taking an interrupt and
+>> accessing hardware, it should be negligible, and this will give us
+>> working and acceptably performing systems in the presence of most
+>> types of IRQ problems.
 >
-> Signed-off-by: Mark Lord <mlord@pobox.com>
-> ---
-> No change from original post -- false alarm.
-> (also attached to bypass issues with my b0rked email client).
+> Ping.
 
-applied #4 and #5
+Give me another day or two.  I'm working up an alternate patch for 
+demonstration (still use the irq-expecting api, but differently).
 
-had to utilize the attachments, as mail client still does not seem to be 
-cooperating.  otherwise, patches applied and lightly tested without a hitch.
+	Jeff
+
 
 
