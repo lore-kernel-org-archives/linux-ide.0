@@ -1,59 +1,39 @@
-From: "Paul Check" <paul@thechecks.ca>
-Subject: Re: timeout problems on onboard SATA 6.0 controller on Asus
- P7H57D-V EVO
-Date: Wed, 14 Jul 2010 02:56:52 -0400
-Message-ID: <840a37fc6ead7840793234cdef8c90c4.squirrel@thechecks.ca>
-References: <alpine.DEB.1.10.1007101142440.23489@uplift.swm.pp.se>
-    <4C3962C8.60000@gmail.com>
-    <alpine.DEB.1.10.1007110842150.23489@uplift.swm.pp.se>
-    <4C3D1684.3050107@gmail.com>
-    <alpine.DEB.1.10.1007140839020.9875@uplift.swm.pp.se>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v7] libata: pata_samsung: Add Samsung PATA controller
+ driver
+Date: Wed, 14 Jul 2010 03:51:32 -0400
+Message-ID: <4C3D6C84.5020403@garzik.org>
+References: <1278994985-15748-1-git-send-email-kgene.kim@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:3738 "EHLO
-	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751380Ab0GNG44 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jul 2010 02:56:56 -0400
-In-Reply-To: <alpine.DEB.1.10.1007140839020.9875@uplift.swm.pp.se>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1278994985-15748-1-git-send-email-kgene.kim@samsung.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Kukjin Kim <kgene.kim@samsung.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, ben-linux@fluff.org, jgarzik@redhat.com, sshtylyov@mvista.com, Abhilash Kesavan <a.kesavan@samsung.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-I have an 850W PSU...and I have my drives split across rails. My drives
-are raided and the problem I have is that on boot, about 25-45% of the
-time one drive will be missing, so I have to reboot again, hoping that it
-appears and rebuild my RAID.  It's quite annoying.  I don't think it's a
-montherboard issue since the Windows drive never seems to be missing when
-Windows boots....   ....   ....    P
+On 07/13/2010 12:23 AM, Kukjin Kim wrote:
+> From: Abhilash Kesavan<a.kesavan@samsung.com>
+>
+> Adds support for the Samsung PATA controller. This driver is based on the
+> Libata subsystem and references the earlier patches sent for IDE subsystem.
+>
+> Signed-off-by: Abhilash Kesavan<a.kesavan@samsung.com>
+> Signed-off-by: Kukjin Kim<kgene.kim@samsung.com>
+> Cc: Ben Dooks<ben-linux@fluff.org>
+> Acked-by: Sergei Shtylyov<sshtylyov@mvista.com>
+> ---
+> Changes since v6:
+> - Removed check for device 1 in pata_s3c_wait_after_reset() and
+>    associated changes
+> - Initialized directly in pata_s3c_remove() and pata_s3c_resume()
+>
+>   drivers/ata/Kconfig           |    9 +
+>   drivers/ata/Makefile          |    1 +
+>   drivers/ata/pata_samsung_cf.c |  683 +++++++++++++++++++++++++++++++++++++++++
+>   3 files changed, 693 insertions(+), 0 deletions(-)
+>   create mode 100644 drivers/ata/pata_samsung_cf.c
 
-> On Tue, 13 Jul 2010, Robert Hancock wrote:
->
->> In a lot of cases with people having trouble when running multiple hard
->> drives in a machine - especially with simultaneous access situations,
->> like a RAID check/rebuild - the problem has been a power issue. It seems
->> that some hard drives can cause power draw spikes that some PSUs can't
->> handle, especially if multiple drives are connected to the some cable
->> from the power supply.
->
-> I have a 550W common rail PSU and after moving the drive away from the
-> SATA 6 port to a SiL controller port I haven't seen any more problems.
->
-> I saw the same timeouts when I first did some lab with the same
-> motherboard, then I only had 1-2 drives in the machine. I doubt my
-> perticular problem is power related.
->
-> It's a consistent problem, either it's a hw issue with my motherboard or
-> it's a driver issue.
->
-> --
-> Mikael Abrahamsson    email: swmike@swm.pp.se
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+applied
