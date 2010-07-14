@@ -1,73 +1,58 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: mapping ataXX.YY to a /dev/sdX
-Date: Wed, 14 Jul 2010 15:05:41 -0400
-Message-ID: <20100714190541.GA27855@psychosis.jim.sh>
-References: <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
- <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
- <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se>
- <20100708232631.014a5ade@atak.bl.pg.gda.pl>
- <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
- <4C37FA32.8020008@wasp.net.au>
- <4C381BC4.9040903@grumpydevil.homelinux.org>
- <4C38C8BD.4050604@garzik.org>
- <4C390703.80703@grumpydevil.homelinux.org>
- <AANLkTiluwfd9LTH7Tb0J9N3NBvp1FbZdoJYUYj1g8BJz@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16382] driver 'pata_hpt37x' attempts to run HPT device x0006
+ subd x0001. Doesn't work! 'pata_hpt3x2n' works well.
+Date: Wed, 14 Jul 2010 19:50:11 GMT
+Message-ID: <201007141950.o6EJoBr1005270@demeter.kernel.org>
+References: <bug-16382-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTiluwfd9LTH7Tb0J9N3NBvp1FbZdoJYUYj1g8BJz@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: =?iso-8859-1?B?Suly9G1l?= Poulin <jeromepoulin@gmail.com>
-Cc: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Jeff Garzik <jeff@garzik.org>, Brad Campbell <brad@wasp.net.au>, Mikael Abrahamsson <swmike@swm.pp.se>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:57832 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754973Ab0GNTuM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 15:50:12 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o6EJoBtj005271
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 19:50:11 GMT
+In-Reply-To: <bug-16382-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-J=E9r=F4me Poulin wrote:
-> On Sat, Jul 10, 2010 at 7:49 PM, Rudy Zijlstra
-> <rudy@grumpydevil.homelinux.org> wrote:
-> > Jeff Garzik wrote:
-> >>
-> >> On 07/10/2010 03:05 AM, Rudy Zijlstra wrote:
-> >>>
-> >>> Judging from my dmesg and lsscsi on a system with both scsi and S=
-ATA,
-> >>> ataX translates into scsi X:0:0:0
-> >>
-> >>
-> >> There is no translation.
-> >>
-> >> It is random, based on driver load order.
-> >
-> > This then begs the question whether it can be dependingly derived f=
-rom dmesg
-> > messages. Like messages
-> >
-> > [ =A0 =A02.268315] ata7.00: configured for UDMA/133
-> > [ =A0 =A02.277452] scsi 7:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =
-=A0WDC WD7500AAKS-0
-> > 30.0 PQ: 0 ANSI: 5
-> >
-> > always following each other, thus making identification possible.
->
-> I find it rather confusing in my log, and there are situation when yo=
-u
-> hotplug the disk which does not make it show up right after the ataX
-> line, also if the logs overflow, then you can't know anyway. (I know
-> there's syslog too)
->=20
-> There doesn't seem to be any mapping in /sys I though lshw would show
-> it but it isn't.
+https://bugzilla.kernel.org/show_bug.cgi?id=16382
 
-=46or a scsi_host driven by libata, the number in /sys/class/scsi_host/=
-host?/unique_id
-should match the ataX value.  You can check /sys/class/scsi_host/host?/=
-proc_name
-to see the driver for a particular scsi_host.
 
--jim
---
-To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+--- Comment #5 from Rick Stockton <rickstockton@reno-computerhelp.com>  2010-07-14 19:50:08 ---
+OK! There's a comment "check this" in the initialization code of (at line 843
+within the current version of pata_hpt37x, V0.6.15), and that made me
+suspicious.
+
+But, per your suggestion, I rebuilt initrd with BOTH drivers included -- and I
+installed hpt37x first. This worked exactly as as you said it should: hpt37x
+was assigned to handle the interrupt, but it bailed out immediately. hpt3x2n
+was tried next, and was able to grab the interface.
+
+So please feel free to close this as 'invalid'. There's one TINY nitpick which
+I saw in pata_3x2n, but it would be a different bug (if someone wants to
+bother): Source code lines 536-537 (in the current version, V0.3.10)are as
+follows,
+
+536         printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using 66MHz
+DPLL.\n",
+537                pci_mhz);
+
+And you saw this in my clip from dmesg (in the bug description, above). Driver
+"pata_3x2n" should not print a message listing itself as "pata_hpt37x"; there's
+an old copy/paste mistake in there.
+
+
+THANKS for hand-holding the newby, you've been awesome.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
