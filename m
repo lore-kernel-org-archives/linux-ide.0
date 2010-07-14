@@ -1,46 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: add ATA_CMD_DSM to ata_get_cmd_descript
-Date: Wed, 14 Jul 2010 03:51:51 -0400
-Message-ID: <4C3D6C97.3010506@garzik.org>
-References: <20100705154454U.fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH]ata:ahci.c Fix warning: comparison between 'enum <anonymous>'
+ and 'enum <anonymous>'
+Date: Wed, 14 Jul 2010 03:51:57 -0400
+Message-ID: <4C3D6C9D.7070708@pobox.com>
+References: <1278167365-16011-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:46281 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427Ab0GNHvy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:51:54 -0400
-Received: by gxk23 with SMTP id 23so3663839gxk.19
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 00:51:54 -0700 (PDT)
-In-Reply-To: <20100705154454U.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:62702 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753124Ab0GNHwA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 03:52:00 -0400
+Received: by mail-gw0-f46.google.com with SMTP id 18so3212470gwj.19
+        for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 00:52:00 -0700 (PDT)
+In-Reply-To: <1278167365-16011-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: linux-ide@vger.kernel.org, tj@kernel.org
 
-On 07/05/2010 02:45 AM, FUJITA Tomonori wrote:
-> Why isn't ATA_CMD_DSM in ata_get_cmd_descript()?
+On 07/03/2010 10:29 AM, Justin P. Mattock wrote:
+> The below patch casts ATA_MAX_QUEUE to int because GCC will
+> give a warning message about the two different enum blocks:
+>    CC      drivers/ata/ahci.o
+> drivers/ata/ahci.c: In function 'ahci_init_one':
+> drivers/ata/ahci.c:1045:2: warning: comparison between 'enum<anonymous>' and 'enum<anonymous>'
 >
-> =
-> From: FUJITA Tomonori<fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] libata: add ATA_CMD_DSM to ata_get_cmd_descript
+> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
 >
-> Signed-off-by: FUJITA Tomonori<fujita.tomonori@lab.ntt.co.jp>
 > ---
->   drivers/ata/libata-eh.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
+>   drivers/ata/ahci.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index f77a673..697474b 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2214,6 +2214,7 @@ const char *ata_get_cmd_descript(u8 command)
->   		{ ATA_CMD_SMART,		"SMART" },
->   		{ ATA_CMD_MEDIA_LOCK,		"DOOR LOCK" },
->   		{ ATA_CMD_MEDIA_UNLOCK,		"DOOR UNLOCK" },
-> +		{ ATA_CMD_DSM,			"DATA SET MANAGEMENT" },
->   		{ ATA_CMD_CHK_MED_CRD_TYP, 	"CHECK MEDIA CARD TYPE" },
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index f252253..fe75d8b 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1042,7 +1042,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>
+>   	VPRINTK("ENTER\n");
+>
+> -	WARN_ON(ATA_MAX_QUEUE>  AHCI_MAX_CMDS);
+> +	WARN_ON((int)ATA_MAX_QUEUE>  AHCI_MAX_CMDS);
+>
 
 applied
 
