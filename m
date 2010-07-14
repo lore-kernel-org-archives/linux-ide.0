@@ -1,58 +1,72 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [PATCH]ata:ahci.c Fix warning: comparison between 'enum <anonymous>'
- and 'enum <anonymous>'
-Date: Wed, 14 Jul 2010 06:35:00 -0700
-Message-ID: <4C3DBD04.7020908@gmail.com>
-References: <1278167365-16011-1-git-send-email-justinmattock@gmail.com> <4C3D6C9D.7070708@pobox.com>
+From: "Paul Check" <paul@thechecks.ca>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Wed, 14 Jul 2010 13:58:10 -0400
+Message-ID: <0d9ccbbb9ed0fb46dc9497888cd92c6e.squirrel@thechecks.ca>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+    <4B5D26EF.4030709@kernel.org> <loom.20100205T041929-66@post.gmane.org>
+    <12193ff15b0deef3609ea93f54e5b485.squirrel@thechecks.ca>
+    <13096cdf5e0e6704e30364a746e60467.squirrel@thechecks.ca>
+    <8276efbfebcbfc3e58033ab8d5996d9d.squirrel@thechecks.ca>
+    <4C3DACFF.2060504@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:64566 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427Ab0GNNfG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jul 2010 09:35:06 -0400
-Received: by pvc7 with SMTP id 7so2724493pvc.19
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jul 2010 06:35:05 -0700 (PDT)
-In-Reply-To: <4C3D6C9D.7070708@pobox.com>
+Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:1528 "EHLO
+	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752668Ab0GNR6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Jul 2010 13:58:13 -0400
+In-Reply-To: <4C3DACFF.2060504@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Paul Check <paul@thechecks.ca>, linux-ide@vger.kernel.org
 
-On 07/14/2010 12:51 AM, Jeff Garzik wrote:
-> On 07/03/2010 10:29 AM, Justin P. Mattock wrote:
->> The below patch casts ATA_MAX_QUEUE to int because GCC will
->> give a warning message about the two different enum blocks:
->> CC drivers/ata/ahci.o
->> drivers/ata/ahci.c: In function 'ahci_init_one':
->> drivers/ata/ahci.c:1045:2: warning: comparison between
->> 'enum<anonymous>' and 'enum<anonymous>'
->>
->> Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->>
->> ---
->> drivers/ata/ahci.c | 2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index f252253..fe75d8b 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -1042,7 +1042,7 @@ static int ahci_init_one(struct pci_dev *pdev,
->> const struct pci_device_id *ent)
->>
->> VPRINTK("ENTER\n");
->>
->> - WARN_ON(ATA_MAX_QUEUE> AHCI_MAX_CMDS);
->> + WARN_ON((int)ATA_MAX_QUEUE> AHCI_MAX_CMDS);
->>
+I applied your patch to the 2.6.34 kernel, and on my very first reboot had
+a drive missing. What information do you want? Just /var/log/messages?
+
+I don't want to keep rebooting forever. Was this patch supposed to fix the
+problem, or just give you information to debug? Is the problem even known?
+
+Regards, Paul
+
+
+> Hello,
 >
-> applied
+> On 07/12/2010 06:36 PM, Paul Check wrote:
+>>> Tejun & Co:
+>>>
+>>> I have finally upgraded to the 2.6.34 kernel, and I am still having
+>>> problems with some of my drives not coming up some of the time
+>>> (different
+>>> drives, at different times, never more than one).
+>>>
+>>> Here are some lines from /var/log/messages on the most recent boot
+>>> below.
+>>> Do you have any suggestions for this? I'm getting tired of having to
+>>> reconstitute my raid 30-50% of the time, and will try anything to see
+>>> if
+>>> it fixes. Note the "link up (unknown)" and "link down" lines. I don't
+>>> know
+>>> what should appear, but I have 4 hard drives and one optical drive
+>>> plugged
+>>> into 5 of the 6 SATA ports on the board.
+> ...
+>>> Jul 12 12:25:22 min kernel: [    2.078489] ata2.01: SATA link up
+>>> <unknown>
+>>> (SStatus 300 SControl 123)
 >
+> Hmm, yeah, it seems like SCR access via SIDPR is more flaky than
+> covered by the previous commit.  There's another thread where similar
+> problem is being debugged.  Can you please do the following?  I'm
+> attaching patch here too.
 >
+>   http://thread.gmane.org/gmane.linux.kernel/1005983/focus=46749
+>
+> Thanks.
+>
+> --
+> tejun
 >
 
-o.k. cool..
 
-Justin P. Mattock
