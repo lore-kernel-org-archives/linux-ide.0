@@ -1,72 +1,73 @@
-From: "Paul Check" <paul@thechecks.ca>
-Subject: Re: Intermittent SATA link down SStatus 0
-Date: Wed, 14 Jul 2010 13:58:10 -0400
-Message-ID: <0d9ccbbb9ed0fb46dc9497888cd92c6e.squirrel@thechecks.ca>
-References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
-    <4B5D26EF.4030709@kernel.org> <loom.20100205T041929-66@post.gmane.org>
-    <12193ff15b0deef3609ea93f54e5b485.squirrel@thechecks.ca>
-    <13096cdf5e0e6704e30364a746e60467.squirrel@thechecks.ca>
-    <8276efbfebcbfc3e58033ab8d5996d9d.squirrel@thechecks.ca>
-    <4C3DACFF.2060504@kernel.org>
+From: Jim Paris <jim@jtan.com>
+Subject: Re: mapping ataXX.YY to a /dev/sdX
+Date: Wed, 14 Jul 2010 15:05:41 -0400
+Message-ID: <20100714190541.GA27855@psychosis.jim.sh>
+References: <alpine.DEB.1.10.1007081214590.23489@uplift.swm.pp.se>
+ <20100708104422.GA32564@cthulhu.home.robinhill.me.uk>
+ <alpine.DEB.1.10.1007081259560.23489@uplift.swm.pp.se>
+ <20100708232631.014a5ade@atak.bl.pg.gda.pl>
+ <alpine.DEB.1.10.1007082348190.23489@uplift.swm.pp.se>
+ <4C37FA32.8020008@wasp.net.au>
+ <4C381BC4.9040903@grumpydevil.homelinux.org>
+ <4C38C8BD.4050604@garzik.org>
+ <4C390703.80703@grumpydevil.homelinux.org>
+ <AANLkTiluwfd9LTH7Tb0J9N3NBvp1FbZdoJYUYj1g8BJz@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:1528 "EHLO
-	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752668Ab0GNR6N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Jul 2010 13:58:13 -0400
-In-Reply-To: <4C3DACFF.2060504@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTiluwfd9LTH7Tb0J9N3NBvp1FbZdoJYUYj1g8BJz@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: =?iso-8859-1?B?Suly9G1l?= Poulin <jeromepoulin@gmail.com>
+Cc: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>, Jeff Garzik <jeff@garzik.org>, Brad Campbell <brad@wasp.net.au>, Mikael Abrahamsson <swmike@swm.pp.se>, Janek Kozicki <janek_listy@wp.pl>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Paul Check <paul@thechecks.ca>, linux-ide@vger.kernel.org
 
-I applied your patch to the 2.6.34 kernel, and on my very first reboot had
-a drive missing. What information do you want? Just /var/log/messages?
-
-I don't want to keep rebooting forever. Was this patch supposed to fix the
-problem, or just give you information to debug? Is the problem even known?
-
-Regards, Paul
-
-
-> Hello,
+J=E9r=F4me Poulin wrote:
+> On Sat, Jul 10, 2010 at 7:49 PM, Rudy Zijlstra
+> <rudy@grumpydevil.homelinux.org> wrote:
+> > Jeff Garzik wrote:
+> >>
+> >> On 07/10/2010 03:05 AM, Rudy Zijlstra wrote:
+> >>>
+> >>> Judging from my dmesg and lsscsi on a system with both scsi and S=
+ATA,
+> >>> ataX translates into scsi X:0:0:0
+> >>
+> >>
+> >> There is no translation.
+> >>
+> >> It is random, based on driver load order.
+> >
+> > This then begs the question whether it can be dependingly derived f=
+rom dmesg
+> > messages. Like messages
+> >
+> > [ =A0 =A02.268315] ata7.00: configured for UDMA/133
+> > [ =A0 =A02.277452] scsi 7:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =
+=A0WDC WD7500AAKS-0
+> > 30.0 PQ: 0 ANSI: 5
+> >
+> > always following each other, thus making identification possible.
 >
-> On 07/12/2010 06:36 PM, Paul Check wrote:
->>> Tejun & Co:
->>>
->>> I have finally upgraded to the 2.6.34 kernel, and I am still having
->>> problems with some of my drives not coming up some of the time
->>> (different
->>> drives, at different times, never more than one).
->>>
->>> Here are some lines from /var/log/messages on the most recent boot
->>> below.
->>> Do you have any suggestions for this? I'm getting tired of having to
->>> reconstitute my raid 30-50% of the time, and will try anything to see
->>> if
->>> it fixes. Note the "link up (unknown)" and "link down" lines. I don't
->>> know
->>> what should appear, but I have 4 hard drives and one optical drive
->>> plugged
->>> into 5 of the 6 SATA ports on the board.
-> ...
->>> Jul 12 12:25:22 min kernel: [    2.078489] ata2.01: SATA link up
->>> <unknown>
->>> (SStatus 300 SControl 123)
->
-> Hmm, yeah, it seems like SCR access via SIDPR is more flaky than
-> covered by the previous commit.  There's another thread where similar
-> problem is being debugged.  Can you please do the following?  I'm
-> attaching patch here too.
->
->   http://thread.gmane.org/gmane.linux.kernel/1005983/focus=46749
->
-> Thanks.
->
-> --
-> tejun
->
+> I find it rather confusing in my log, and there are situation when yo=
+u
+> hotplug the disk which does not make it show up right after the ataX
+> line, also if the logs overflow, then you can't know anyway. (I know
+> there's syslog too)
+>=20
+> There doesn't seem to be any mapping in /sys I though lshw would show
+> it but it isn't.
 
+=46or a scsi_host driven by libata, the number in /sys/class/scsi_host/=
+host?/unique_id
+should match the ataX value.  You can check /sys/class/scsi_host/host?/=
+proc_name
+to see the driver for a particular scsi_host.
 
+-jim
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
