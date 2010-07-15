@@ -1,221 +1,152 @@
-From: Peter Huewe <PeterHuewe@gmx.de>
-Subject: [PATCH 01/25] ata/ata_piix: Convert pci_table entries to PCI_VDEVICE (if PCI_ANY_ID is used)
-Date: Thu, 15 Jul 2010 20:35:26 +0200
-Message-ID: <201007152035.27658.PeterHuewe@gmx.de>
+From: Tomas Lund <tlund@nxs.se>
+Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED
+Date: Thu, 15 Jul 2010 21:05:03 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.1007152103081.24693@envy.nxs.se>
+References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se> <4C3D134B.2090604@gmail.com>
+ <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:47699 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S934145Ab0GOSmL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Jul 2010 14:42:11 -0400
+Received: from envy.nxs.se ([212.247.200.182]:51897 "EHLO envy.nxs.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934480Ab0GOTFK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jul 2010 15:05:10 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by envy.nxs.se (Postfix) with ESMTP id B87A32BEBE
+	for <linux-ide@vger.kernel.org>; Thu, 15 Jul 2010 21:05:03 +0200 (CEST)
+In-Reply-To: <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kernel Janitors <kernel-janitors@vger.kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Jiri Kosina <jkosina@suse.cz>, Steve Conklin <sconklin@canonical.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Peter Huewe <peterhuewe@gmx.de>
+On Wed, 14 Jul 2010, Tomas Lund wrote:
 
-This patch converts pci_table entries, where .subvendor=PCI_ANY_ID and
-.subdevice=PCI_ANY_ID, .class=0 and .class_mask=0, to use the
-PCI_VDEVICE macro, and thus improves readability.
+> On Tue, 13 Jul 2010, Robert Hancock wrote:
+>
+>> On 07/13/2010 03:09 PM, Tomas Lund wrote:
+>> 
+>>> ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+>>> ata9.00: irq_stat 0x00020002, device error via D2H FIS
+>>> ata9.00: failed command: READ DMA
+>>> ata9.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+>>> res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+>>> ata9.00: status: { DRDY ERR }
+>>> ata9.00: error: { ABRT }
+>>> ata9.00: configured for UDMA/100
+>>> ata9: EH complete
+>> 
+>> This seems strange, the drive apparently reported command aborted when 
+>> trying to read the first sectors of the disk, but there's no indication 
+>> of why (there's nothing set in Serror).
+>> 
+>> Can you test the controller in a different machine? It could be 
+>> faulty..
+>
+> Remotly compiled 2.6.27.48 and rebooted, just to test, and the problem 
+> persists.
+>
+> Will pick up another sil3132 based-controller (different vendor) at 
+> lunch today and do more testing tonight.
+>
+> The motherboard in the server is a Gigabyte 965P-DS4 with a 2.13GHz 
+> Core2Duo E6420
 
-Moreover this patch replaces the hardcoded Intel Vendor ID with the
-corresponding PCI_VENDOR_ID_INTEL from pci_ids.h
+Got myself a "Sunix SATA2400" controller with the same chip on it:
 
-Signed-off-by: Peter Huewe <peterhuewe@gmx.de>
----
- drivers/ata/ata_piix.c |  116 ++++++++++++++++++++++++------------------------
- 1 files changed, 58 insertions(+), 58 deletions(-)
+02:00.0 RAID bus controller [0104]: Silicon Image, Inc. SiI 3132 Serial ATA Raid II Controller [1095:3132] (rev 01)
+         Subsystem: Silicon Image, Inc. Device [1095:7132]
+         Flags: bus master, fast devsel, latency 0, IRQ 17
+         Memory at f1004000 (64-bit, non-prefetchable) [size=128]
+         Memory at f1000000 (64-bit, non-prefetchable) [size=16K]
+         I/O ports at 8000 [size=128]
+         [virtual] Expansion ROM at f8200000 [disabled] [size=512K]
+         Capabilities: [54] Power Management version 2
+         Capabilities: [5c] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
+         Capabilities: [70] Express Legacy Endpoint, MSI 00
+         Capabilities: [100] Advanced Error Reporting <?>
+         Kernel driver in use: sata_sil24
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 7409f98..37cdd30 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -184,123 +184,123 @@ static unsigned int in_module_init = 1;
- 
- static const struct pci_device_id piix_pci_tbl[] = {
- 	/* Intel PIIX3 for the 430HX etc */
--	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
-+	{ PCI_VDEVICE(INTEL, 0x7010), piix_pata_mwdma },
- 	/* VMware ICH4 */
--	{ 0x8086, 0x7111, 0x15ad, 0x1976, 0, 0, piix_pata_vmw },
-+	{ PCI_VENDOR_ID_INTEL, 0x7111, 0x15ad, 0x1976, 0, 0, piix_pata_vmw },
- 	/* Intel PIIX4 for the 430TX/440BX/MX chipset: UDMA 33 */
- 	/* Also PIIX4E (fn3 rev 2) and PIIX4M (fn3 rev 3) */
--	{ 0x8086, 0x7111, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
-+	{ PCI_VDEVICE(INTEL, 0x7111), piix_pata_33 },
- 	/* Intel PIIX4 */
--	{ 0x8086, 0x7199, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
-+	{ PCI_VDEVICE(INTEL, 0x7199), piix_pata_33 },
- 	/* Intel PIIX4 */
--	{ 0x8086, 0x7601, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
-+	{ PCI_VDEVICE(INTEL, 0x7601), piix_pata_33 },
- 	/* Intel PIIX */
--	{ 0x8086, 0x84CA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_33 },
-+	{ PCI_VDEVICE(INTEL, 0x84CA), piix_pata_33 },
- 	/* Intel ICH (i810, i815, i840) UDMA 66*/
--	{ 0x8086, 0x2411, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_66 },
-+	{ PCI_VDEVICE(INTEL, 0x2411), ich_pata_66 },
- 	/* Intel ICH0 : UDMA 33*/
--	{ 0x8086, 0x2421, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_33 },
-+	{ PCI_VDEVICE(INTEL, 0x2421), ich_pata_33 },
- 	/* Intel ICH2M */
--	{ 0x8086, 0x244A, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x244A), ich_pata_100 },
- 	/* Intel ICH2 (i810E2, i845, 850, 860) UDMA 100 */
--	{ 0x8086, 0x244B, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x244B), ich_pata_100 },
- 	/*  Intel ICH3M */
--	{ 0x8086, 0x248A, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x248A), ich_pata_100 },
- 	/* Intel ICH3 (E7500/1) UDMA 100 */
--	{ 0x8086, 0x248B, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x248B), ich_pata_100 },
- 	/* Intel ICH4 (i845GV, i845E, i852, i855) UDMA 100 */
--	{ 0x8086, 0x24CA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
--	{ 0x8086, 0x24CB, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x24CA), ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x24CB), ich_pata_100 },
- 	/* Intel ICH5 */
--	{ 0x8086, 0x24DB, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x24DB), ich_pata_100 },
- 	/* C-ICH (i810E2) */
--	{ 0x8086, 0x245B, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x245B), ich_pata_100 },
- 	/* ESB (855GME/875P + 6300ESB) UDMA 100  */
--	{ 0x8086, 0x25A2, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x25A2), ich_pata_100 },
- 	/* ICH6 (and 6) (i915) UDMA 100 */
--	{ 0x8086, 0x266F, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x266F), ich_pata_100 },
- 	/* ICH7/7-R (i945, i975) UDMA 100*/
--	{ 0x8086, 0x27DF, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100_nomwdma1 },
--	{ 0x8086, 0x269E, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100_nomwdma1 },
-+	{ PCI_VDEVICE(INTEL, 0x27DF), ich_pata_100_nomwdma1 },
-+	{ PCI_VDEVICE(INTEL, 0x269E), ich_pata_100_nomwdma1 },
- 	/* ICH8 Mobile PATA Controller */
--	{ 0x8086, 0x2850, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ PCI_VDEVICE(INTEL, 0x2850), ich_pata_100 },
- 
- 	/* SATA ports */
- 	
- 	/* 82801EB (ICH5) */
--	{ 0x8086, 0x24d1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
-+	{ PCI_VDEVICE(INTEL, 0x24d1), ich5_sata },
- 	/* 82801EB (ICH5) */
--	{ 0x8086, 0x24df, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
-+	{ PCI_VDEVICE(INTEL, 0x24df), ich5_sata },
- 	/* 6300ESB (ICH5 variant with broken PCS present bits) */
--	{ 0x8086, 0x25a3, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
-+	{ PCI_VDEVICE(INTEL, 0x25a3), ich5_sata },
- 	/* 6300ESB pretending RAID */
--	{ 0x8086, 0x25b0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich5_sata },
-+	{ PCI_VDEVICE(INTEL, 0x25b0), ich5_sata },
- 	/* 82801FB/FW (ICH6/ICH6W) */
--	{ 0x8086, 0x2651, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2651), ich6_sata },
- 	/* 82801FR/FRW (ICH6R/ICH6RW) */
--	{ 0x8086, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2652), ich6_sata },
- 	/* 82801FBM ICH6M (ICH6R with only port 0 and 2 implemented).
- 	 * Attach iff the controller is in IDE mode. */
--	{ 0x8086, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
-+	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata },
- 	/* 82801GB/GR/GH (ICH7, identical to ICH6) */
--	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-+	{ PCI_VDEVICE(INTEL, 0x27c0), ich6_sata },
- 	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
--	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata },
-+	{ PCI_VDEVICE(INTEL, 0x27c4), ich6m_sata },
- 	/* Enterprise Southbridge 2 (631xESB/632xESB) */
--	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2680), ich6_sata },
- 	/* SATA Controller 1 IDE (ICH8) */
--	{ 0x8086, 0x2820, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2820), ich8_sata },
- 	/* SATA Controller 2 IDE (ICH8) */
--	{ 0x8086, 0x2825, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2825), ich8_2port_sata },
- 	/* Mobile SATA Controller IDE (ICH8M), Apple */
--	{ 0x8086, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
--	{ 0x8086, 0x2828, 0x106b, 0x00a1, 0, 0, ich8m_apple_sata },
--	{ 0x8086, 0x2828, 0x106b, 0x00a3, 0, 0, ich8m_apple_sata },
-+	{ PCI_VENDOR_ID_INTEL, 0x2828, 0x106b, 0x00a0, 0, 0, ich8m_apple_sata },
-+	{ PCI_VENDOR_ID_INTEL, 0x2828, 0x106b, 0x00a1, 0, 0, ich8m_apple_sata },
-+	{ PCI_VENDOR_ID_INTEL, 0x2828, 0x106b, 0x00a3, 0, 0, ich8m_apple_sata },
- 	/* Mobile SATA Controller IDE (ICH8M) */
--	{ 0x8086, 0x2828, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2828), ich8_sata },
- 	/* SATA Controller IDE (ICH9) */
--	{ 0x8086, 0x2920, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2920), ich8_sata },
- 	/* SATA Controller IDE (ICH9) */
--	{ 0x8086, 0x2921, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2921), ich8_2port_sata },
- 	/* SATA Controller IDE (ICH9) */
--	{ 0x8086, 0x2926, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2926), ich8_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
--	{ 0x8086, 0x2928, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x2928), ich8_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
--	{ 0x8086, 0x292d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x292d), ich8_2port_sata },
- 	/* SATA Controller IDE (ICH9M) */
--	{ 0x8086, 0x292e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x292e), ich8_sata },
- 	/* SATA Controller IDE (Tolapai) */
--	{ 0x8086, 0x5028, PCI_ANY_ID, PCI_ANY_ID, 0, 0, tolapai_sata },
-+	{ PCI_VDEVICE(INTEL, 0x5028), tolapai_sata },
- 	/* SATA Controller IDE (ICH10) */
--	{ 0x8086, 0x3a00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3a00), ich8_sata },
- 	/* SATA Controller IDE (ICH10) */
--	{ 0x8086, 0x3a06, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3a06), ich8_2port_sata },
- 	/* SATA Controller IDE (ICH10) */
--	{ 0x8086, 0x3a20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3a20), ich8_sata },
- 	/* SATA Controller IDE (ICH10) */
--	{ 0x8086, 0x3a26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3a26), ich8_2port_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b20), ich8_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b21, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b21), ich8_2port_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b26, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b26), ich8_2port_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b28, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b28), ich8_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b2d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b2d), ich8_2port_sata },
- 	/* SATA Controller IDE (PCH) */
--	{ 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x3b2e), ich8_sata },
- 	/* SATA Controller IDE (CPT) */
--	{ 0x8086, 0x1c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x1c00), ich8_sata },
- 	/* SATA Controller IDE (CPT) */
--	{ 0x8086, 0x1c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	{ PCI_VDEVICE(INTEL, 0x1c01), ich8_sata },
- 	/* SATA Controller IDE (CPT) */
--	{ 0x8086, 0x1c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x1c08), ich8_2port_sata },
- 	/* SATA Controller IDE (CPT) */
--	{ 0x8086, 0x1c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ PCI_VDEVICE(INTEL, 0x1c09), ich8_2port_sata },
- 	{ }	/* terminate list */
- };
- 
--- 
-1.7.1
+dmesg output from booting:
 
+sata_sil24 0000:02:00.0: version 1.1
+sata_sil24 0000:02:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+sata_sil24 0000:02:00.0: setting latency timer to 64
+scsi8 : sata_sil24
+scsi9 : sata_sil24
+ata9: SATA max UDMA/100 host m128@0xf1004000 port 0xf1000000 irq 17
+ata10: SATA max UDMA/100 host m128@0xf1004000 port 0xf1002000 irq 17
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata9.00: ATA-8: SAMSUNG HD103SJ, 1AJ10001, max UDMA/133
+ata9.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata9.00: configured for UDMA/100
+ata10: SATA link down (SStatus 0 SControl 0)
+scsi 8:0:0:0: Direct-Access     ATA      SAMSUNG HD103SJ  1AJ1 PQ: 0 ANSI: 5
+sd 8:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 8:0:0:0: [sdb] Write Protect is off
+sd 8:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 8:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 8:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 8:0:0:0: [sdb] Write Protect is off
+sd 8:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 8:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+  sdb:<3>ata9.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00020002, device error via D2H FIS
+ata9.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 50/00:00:00:00:00/00:00:00:00:00/00 Emask 0x401 (device error) <F>
+ata9.00: status: { DRDY }
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: NCQ disabled due to excessive errors
+ata9.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+ata9.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata9.00: status: { DRDY }
+ata9: hard resetting link
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00020002, device error via D2H FIS
+ata9.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+          res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata9.00: status: { DRDY ERR }
+ata9.00: error: { ABRT }
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00060002, device error via D2H FIS
+ata9.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+          res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata9.00: status: { DRDY ERR }
+ata9.00: error: { ABRT }
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00060002, device error via D2H FIS
+ata9.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+          res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata9.00: status: { DRDY ERR }
+ata9.00: error: { ABRT }
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00060002, device error via D2H FIS
+ata9.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+          res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata9.00: status: { DRDY ERR }
+ata9.00: error: { ABRT }
+ata9.00: configured for UDMA/100
+sd 8:0:0:0: [sdb] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
+sd 8:0:0:0: [sdb] Sense Key : Aborted Command [current] [descriptor]
+Descriptor sense data with sense descriptors (in hex):
+         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+         00 00 00 00 
+sd 8:0:0:0: [sdb] Add. Sense: No additional sense information
+end_request: I/O error, dev sdb, sector 0
+Buffer I/O error on device sdb, logical block 0
+ata9: EH complete
+<..continues..>
+
+I will go ahead and test this disk and sata-cable with both of the controlers on a different motherboard.
+
+//tlund
