@@ -1,41 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: 520 BPS data integrity vendors
-Date: Thu, 15 Jul 2010 09:47:32 -0400
-Message-ID: <yq17hkwrh57.fsf@sermon.lab.mkp.net>
-References: <AANLkTilcpFgsYtEUkZ2zAU3SDs0jetiajYPzKUWgFMyD@mail.gmail.com>
-	<1278093968.2856.169.camel@mulgrave.site>
-	<AANLkTilWKeOAXMukh_zvXzdXkdOTk6soAEnpzFNwvBA3@mail.gmail.com>
-	<yq1mxu981eg.fsf@sermon.lab.mkp.net>
-	<AANLkTimI7Ke4qXw7zv8WDsWSQtBRSwSi5IZbvByjGRih@mail.gmail.com>
-	<yq1630s8msu.fsf@sermon.lab.mkp.net>
-	<AANLkTilqzgIav9noTYLC9cxKtntva6wQwLSUI1i8DgAe@mail.gmail.com>
+From: "Paul Check" <paul@thechecks.ca>
+Subject: Re: Intermittent SATA link down SStatus 0
+Date: Thu, 15 Jul 2010 13:06:01 -0400
+Message-ID: <026d427816dcd2b34b0411305210e58f.squirrel@thechecks.ca>
+References: <f4d0374cb498479438e76ac749465a7d.squirrel@thechecks.ca>
+    <4B5D26EF.4030709@kernel.org> <loom.20100205T041929-66@post.gmane.org>
+    <12193ff15b0deef3609ea93f54e5b485.squirrel@thechecks.ca>
+    <13096cdf5e0e6704e30364a746e60467.squirrel@thechecks.ca>
+    <8276efbfebcbfc3e58033ab8d5996d9d.squirrel@thechecks.ca>
+    <4C3DACFF.2060504@kernel.org>
+    <0d9ccbbb9ed0fb46dc9497888cd92c6e.squirrel@thechecks.ca>
+    <4C3E4A04.5030000@kernel.org>
+    <6cb5020f769580a1f431ed5bb8709b6a.squirrel@thechecks.ca>
+    <4C3ED2C3.9050907@kernel.org> <4C3ED4E2.9080806@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:62052 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933243Ab0GONs0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jul 2010 09:48:26 -0400
-In-Reply-To: <AANLkTilqzgIav9noTYLC9cxKtntva6wQwLSUI1i8DgAe@mail.gmail.com>
-	(Dan Porat's message of "Thu, 15 Jul 2010 06:08:09 -0400")
+Received: from d72-38-7-254.commercial1.cgocable.net ([72.38.7.254]:1656 "EHLO
+	max" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932588Ab0GORGF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jul 2010 13:06:05 -0400
+In-Reply-To: <4C3ED4E2.9080806@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Porat <dan.porat@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
->>>>> "Dan" == Dan Porat <dan.porat@gmail.com> writes:
+Ok, I've applied the patch and had a successful boot on the first try. Of
+course the problem appears only about 40% of the time, so I'll re-boot
+several times later and see if I can get 10 in a row.  I'm busy now
+(unsuccessful => raid re-build, no time for that now)...will report back
+later today.  P
 
-Dan> [root@fedora13 ~]# sg_inq /dev/sdb
-[...]
-Dan> [root@fedora13 ~]# sg_readcap /dev/sdb
-[...]
+> On 07/15/2010 11:20 AM, Tejun Heo wrote:
+>> Hmm... it looks like SStatus and SControl are swapped here.  Maybe
+>> there's a race condition in SIDPR code.  I'll look into it a bit more.
+>
+> So, something like this.  Can you please apply the patch and see
+> whether the problem goes away?
 
-I asked for EXTENDED INQUIRY and READ CAPACITY(16).
 
-# sg_inq -x /dev/sdb
-# sg_readcap -l /dev/sdb
-
-It does not look like you have reformatted the drive, though...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
