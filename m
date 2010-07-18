@@ -1,28 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2]460EX on-chip SATA driver<resubmisison>
-Date: Sat, 17 Jul 2010 19:51:16 +0400
-Message-ID: <4C41D174.2040907@ru.mvista.com>
-References: <201007061106.o66B631f013777@amcc.com>
+From: Rupjyoti Sarmah <rsarmah@apm.com>
+Subject: RE: [PATCH v2]460EX on-chip SATA driver<resubmisison>
+Date: Sun, 18 Jul 2010 23:03:07 +0530
+Message-ID: <0a24db24870a10fff89cfec07a179a78@mail.gmail.com>
+References: <201007061106.o66B631f013777@amcc.com> <4C41D174.2040907@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201007061106.o66B631f013777@amcc.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rupjyoti Sarmah <rsarmah@amcc.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, rsarmah@apm.com, jgarzik@pobox.com, sr@denx.de, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:46728 "HELO
+	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756769Ab0GRRdM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jul 2010 13:33:12 -0400
+In-Reply-To: <4C41D174.2040907@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, sr@denx.de, linuxppc-dev@ozlabs.org
+
+Hi Sergei,
+
+Thanks for your suggestions.
+I would look into them and submit a patch for style improvement some time
+later.
+
+Regards,
+Rup
+
+
+-----Original Message-----
+From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+Sent: Saturday, July 17, 2010 9:21 PM
+To: Rupjyoti Sarmah
+Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org;
+rsarmah@apm.com; jgarzik@pobox.com; sr@denx.de; linuxppc-dev@ozlabs.org
+Subject: Re: [PATCH v2]460EX on-chip SATA driver<resubmisison>
 
 Hello.
 
 Rupjyoti Sarmah wrote:
 
-> This patch enables the on-chip DWC SATA controller of the AppliedMicro processor 460EX.
+> This patch enables the on-chip DWC SATA controller of the AppliedMicro
+processor 460EX.
 
-    Too bad thius has already been applied but here's my (mostly stylistic) 
+    Too bad thius has already been applied but here's my (mostly
+stylistic)
 comments anyway:
 
-> Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com> 
+> Signed-off-by: Rupjyoti Sarmah <rsarmah@appliedmicro.com>
 > Signed-off-by: Mark Miesfeld <mmiesfeld@appliedmicro.com>
 > Signed-off-by: Prodyut Hazarika <phazarika@appliedmicro.com>
 
@@ -65,21 +88,29 @@ comments anyway:
 
 > +struct ahb_dma_regs {
 > +	struct dma_chan_regs	chan_regs[DMA_NUM_CHAN_REGS];
-> +	struct dma_interrupt_regs interrupt_raw;	/* Raw Interrupt */
-> +	struct dma_interrupt_regs interrupt_status;	/* Interrupt Status */
-> +	struct dma_interrupt_regs interrupt_mask;	/* Interrupt Mask */
-> +	struct dma_interrupt_regs interrupt_clear;	/* Interrupt Clear */
+> +	struct dma_interrupt_regs interrupt_raw;	/* Raw Interrupt
+*/
+> +	struct dma_interrupt_regs interrupt_status;	/* Interrupt
+Status */
+> +	struct dma_interrupt_regs interrupt_mask;	/* Interrupt Mask
+*/
+> +	struct dma_interrupt_regs interrupt_clear;	/* Interrupt Clear
+*/
 > +	struct dmareg		statusInt;	/* Interrupt combined*/
 
     No camelCase please, rename it to status_int.
 
-> +#define	DMA_CTL_BLK_TS(size)	((size) & 0x000000FFF)	/* Blk Transfer size */
-> +#define DMA_CHANNEL(ch)		(0x00000001 << (ch))	/* Select channel */
+> +#define	DMA_CTL_BLK_TS(size)	((size) & 0x000000FFF)	/* Blk
+Transfer size */
+> +#define DMA_CHANNEL(ch)		(0x00000001 << (ch))	/* Select
+channel */
 > +	/* Enable channel */
-> +#define	DMA_ENABLE_CHAN(ch)	((0x00000001 << (ch)) |			\
+> +#define	DMA_ENABLE_CHAN(ch)	((0x00000001 << (ch)) |
+\
 > +				 ((0x000000001 << (ch)) << 8))
 > +	/* Disable channel */
-> +#define	DMA_DISABLE_CHAN(ch)	(0x00000000 | ((0x000000001 << (ch)) << 8))
+> +#define	DMA_DISABLE_CHAN(ch)	(0x00000000 | ((0x000000001 <<
+(ch)) << 8))
 
     What's the point of OR'ing with zero?
 
@@ -108,7 +139,8 @@ comments anyway:
 
 > +static void sata_dwc_tf_dump(struct ata_taskfile *tf)
 > +{
-> +	dev_vdbg(host_pvt.dwc_dev, "taskfile cmd: 0x%02x protocol: %s flags:"
+> +	dev_vdbg(host_pvt.dwc_dev, "taskfile cmd: 0x%02x protocol: %s
+flags:"
 > +		"0x%lx device: %x\n", tf->command, ata_get_cmd_descript\
 
     There's no need to use \ outside macro defintions.
@@ -116,7 +148,8 @@ comments anyway:
 > +/*
 > + * Function: get_burst_length_encode
 > + * arguments: datalength: length in bytes of data
-> + * returns value to be programmed in register corrresponding to data length
+> + * returns value to be programmed in register corrresponding to data
+length
 > + * This value is effectively the log(base 2) of the length
 > + */
 > +static  int get_burst_length_encode(int datalength)
@@ -141,7 +174,8 @@ comments anyway:
 > +	return 0;
 > +}
 
-    Hmm, there should be a function in the kernel to calculate 2^n order from
+    Hmm, there should be a function in the kernel to calculate 2^n order
+from
 size, something like get_count_order()...
 
 > +/*
@@ -173,7 +207,8 @@ size, something like get_count_order()...
     There's no need to use \ outside macro defintions.
 
 > +			.low));
-> +	err_reg = in_le32(&(host_pvt.sata_dma_regs->interrupt_status.error\
+> +	err_reg =
+in_le32(&(host_pvt.sata_dma_regs->interrupt_status.error\
 
     Same comment here...
 
@@ -182,7 +217,8 @@ size, something like get_count_order()...
 > +		if (tfr_reg & DMA_CHANNEL(chan)) {
 > +			/*
 > +			 * Each DMA command produces 2 interrupts.  Only
-> +			 * complete the command after both interrupts have been
+> +			 * complete the command after both interrupts have
+been
 > +			 * seen. (See sata_dwc_isr())
 > +			 */
 > +			host_pvt.dma_interrupt_count++;
@@ -190,8 +226,10 @@ size, something like get_count_order()...
 > +
 > +			if (hsdevp->dma_pending[tag] ==
 > +			    SATA_DWC_DMA_PENDING_NONE) {
-> +				dev_err(ap->dev, "DMA not pending eot=0x%08x "
-> +					"err=0x%08x tag=0x%02x pending=%d\n",
+> +				dev_err(ap->dev, "DMA not pending
+eot=0x%08x "
+> +					"err=0x%08x tag=0x%02x
+pending=%d\n",
 > +					tfr_reg, err_reg, tag,
 > +					hsdevp->dma_pending[tag]);
 > +			}
@@ -203,22 +241,28 @@ size, something like get_count_order()...
 > +				sata_dwc_dma_xfer_complete(ap, 1);
 > +
 > +			/* Clear the interrupt */
-> +			out_le32(&(host_pvt.sata_dma_regs->interrupt_clear\
+> +
+out_le32(&(host_pvt.sata_dma_regs->interrupt_clear\
 
     \ not needed.
 
 > +			/* Clear the interrupt. */
-> +			out_le32(&(host_pvt.sata_dma_regs->interrupt_clear\
+> +
+out_le32(&(host_pvt.sata_dma_regs->interrupt_clear\
 
     \ not needed.
 
 > +/*
 > + * Function: map_sg_to_lli
 > + * The Synopsis driver has a comment proposing that better performance
-> + * is possible by only enabling interrupts on the last item in the linked list.
-> + * However, it seems that could be a problem if an error happened on one of the
-> + * first items.  The transfer would halt, but no error interrupt would occur.
-> + * Currently this function sets interrupts enabled for each linked list item:
+> + * is possible by only enabling interrupts on the last item in the
+linked list.
+> + * However, it seems that could be a problem if an error happened on
+one of the
+> + * first items.  The transfer would halt, but no error interrupt would
+occur.
+> + * Currently this function sets interrupts enabled for each linked list
+item:
 > + * DMA_CTL_INT_EN.
 > + */
 > +static int map_sg_to_lli(struct scatterlist *sg, int num_elems,
@@ -233,7 +277,8 @@ size, something like get_count_order()...
 
 > +						(len / 4));
 > +
-> +			/* Program the next pointer.  The next pointer must be
+> +			/* Program the next pointer.  The next pointer
+must be
 > +			 * the physical address, not the virtual address.
 > +			 */
 > +			next_llp = (dma_lli + ((idx + 1) * sizeof(struct \
@@ -303,7 +348,8 @@ size, something like get_count_order()...
 
     Why not call ata_sff_check_status() directly?
 
-> +	err_reg = in_le32(&(host_pvt.sata_dma_regs->interrupt_status.error.\
+> +	err_reg =
+in_le32(&(host_pvt.sata_dma_regs->interrupt_status.error.\
 
     \ not neeeded.
 
@@ -332,7 +378,8 @@ size, something like get_count_order()...
 
     Isn't it the same as 'host_pvt.sata_dwc_sactive_issued & ~sactive'?
 
-> +	/* If no sactive issued and tag_mask is zero then this is not NCQ */
+> +	/* If no sactive issued and tag_mask is zero then this is not NCQ
+*/
 > +	if (host_pvt.sata_dwc_sactive_issued == 0 && tag_mask == 0) {
 > +		if (ap->link.active_tag == ATA_TAG_POISON)
 > +			tag = 0;
@@ -358,8 +405,10 @@ size, something like get_count_order()...
 > +DRVSTILLBUSY:
 > +		if (ata_is_dma(qc->tf.protocol)) {
 > +			/*
-> +			 * Each DMA transaction produces 2 interrupts. The DMAC
-> +			 * transfer complete interrupt and the SATA controller
+> +			 * Each DMA transaction produces 2 interrupts. The
+DMAC
+> +			 * transfer complete interrupt and the SATA
+controller
 > +			 * operation done interrupt. The command should be
 > +			 * completed only after both interrupts are seen.
 > +			 */
@@ -367,18 +416,22 @@ size, something like get_count_order()...
 > +			if (hsdevp->dma_pending[tag] == \
 > +					SATA_DWC_DMA_PENDING_NONE) {
 > +				dev_err(ap->dev, "%s: DMA not pending "
-> +					"intpr=0x%08x status=0x%08x pending"
+> +					"intpr=0x%08x status=0x%08x
+pending"
 > +					"=%d\n", __func__, intpr, status,
 > +					hsdevp->dma_pending[tag]);
 > +			}
 
-    Curly brace not needed here. I assume you haven't run the patch thru 
+    Curly brace not needed here. I assume you haven't run the patch thru
 scripts/checkpatch.pl?
 
 > +	/*
-> +	 * This is a NCQ command. At this point we need to figure out for which
-> +	 * tags we have gotten a completion interrupt.  One interrupt may serve
-> +	 * as completion for more than one operation when commands are queued
+> +	 * This is a NCQ command. At this point we need to figure out for
+which
+> +	 * tags we have gotten a completion interrupt.  One interrupt may
+serve
+> +	 * as completion for more than one operation when commands are
+queued
 > +	 * (NCQ).  We need to process each completed command.
 > +	 */
 > +
@@ -390,10 +443,12 @@ scripts/checkpatch.pl?
 
 > +	if (sactive != 0 || (host_pvt.sata_dwc_sactive_issued) > 1 || \
 
-    Useless parens around 'host_pvt.sata_dwc_sactive_issued' + \ not needed.
+    Useless parens around 'host_pvt.sata_dwc_sactive_issued' + \ not
+needed.
 
 > +							tag_mask > 1) {
-> +		dev_dbg(ap->dev, "%s NCQ:sactive=0x%08x  sactive_issued=0x%08x"
+> +		dev_dbg(ap->dev, "%s NCQ:sactive=0x%08x
+sactive_issued=0x%08x"
 > +			"tag_mask=0x%08x\n", __func__, sactive,
 > +			host_pvt.sata_dwc_sactive_issued, tag_mask);
 > +	}
@@ -401,13 +456,16 @@ scripts/checkpatch.pl?
     Curly braces not needed here.
 
 > +	if ((tag_mask | (host_pvt.sata_dwc_sactive_issued)) != \
-> +					(host_pvt.sata_dwc_sactive_issued)) {
+> +
+(host_pvt.sata_dwc_sactive_issued)) {
 
     Useless parens around 'host_pvt.sata_dwc_sactive_issued'.
 
 > +		dev_warn(ap->dev, "Bad tag mask?  sactive=0x%08x "
-> +			 "(host_pvt.sata_dwc_sactive_issued)=0x%08x  tag_mask"
-> +			 "=0x%08x\n", sactive, host_pvt.sata_dwc_sactive_issued,
+> +			 "(host_pvt.sata_dwc_sactive_issued)=0x%08x
+tag_mask"
+> +			 "=0x%08x\n", sactive,
+host_pvt.sata_dwc_sactive_issued,
 > +			  tag_mask);
 > +	}
 
@@ -419,7 +477,8 @@ scripts/checkpatch.pl?
 
     Call ata_sff_check_status() directly.
 
-> +	dev_dbg(ap->dev, "%s ATA status register=0x%x\n", __func__, status);
+> +	dev_dbg(ap->dev, "%s ATA status register=0x%x\n", __func__,
+status);
 > +
 > +	tag = 0;
 > +	num_processed = 0;
@@ -435,7 +494,8 @@ scripts/checkpatch.pl?
     Useless parens.
 
 > +		/* Process completed command */
-> +		dev_dbg(ap->dev, "%s NCQ command, protocol: %s\n", __func__,
+> +		dev_dbg(ap->dev, "%s NCQ command, protocol: %s\n",
+__func__,
 > +			ata_get_cmd_descript(qc->tf.protocol));
 > +		if (ata_is_dma(qc->tf.protocol)) {
 > +			host_pvt.dma_interrupt_count++;
@@ -444,7 +504,8 @@ scripts/checkpatch.pl?
     \ not needed.
 
 > +					SATA_DWC_DMA_PENDING_NONE)
-> +				dev_warn(ap->dev, "%s: DMA not pending?\n",
+> +				dev_warn(ap->dev, "%s: DMA not
+pending?\n",
 > +					__func__);
 > +			if ((host_pvt.dma_interrupt_count % 2) == 0)
 
@@ -463,10 +524,14 @@ scripts/checkpatch.pl?
 		}
 
 > +	/*
-> +	 * Check to see if any commands completed while we were processing our
-> +	 * initial set of completed commands (read status clears interrupts,
-> +	 * so we might miss a completed command interrupt if one came in while
-> +	 * we were processing --we read status as part of processing a completed
+> +	 * Check to see if any commands completed while we were processing
+our
+> +	 * initial set of completed commands (read status clears
+interrupts,
+> +	 * so we might miss a completed command interrupt if one came in
+while
+> +	 * we were processing --we read status as part of processing a
+completed
 > +	 * command).
 > +	 */
 > +	sactive2 = core_scr_read(SCR_ACTIVE);
@@ -474,7 +539,8 @@ scripts/checkpatch.pl?
 
     {} not needed here.
 
-> +static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32 check_status)
+> +static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32
+check_status)
 > +{
 > +	struct ata_queued_cmd *qc;
 > +	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
@@ -493,8 +559,10 @@ scripts/checkpatch.pl?
 
     Curly braces not needed around single statement.
 
-> +		dev_info(ap->dev, "%s tag=%u cmd=0x%02x dma dir=%s proto=%s "
-> +			 "dmacr=0x%08x\n", __func__, qc->tag, qc->tf.command,
+> +		dev_info(ap->dev, "%s tag=%u cmd=0x%02x dma dir=%s
+proto=%s "
+> +			 "dmacr=0x%08x\n", __func__, qc->tag,
+qc->tf.command,
 > +			 ata_get_cmd_descript(qc->dma_dir),
 > +			 ata_get_cmd_descript(qc->tf.protocol),
 > +			 in_le32(&(hsdev->sata_dwc_regs->dmacr)));
@@ -502,11 +570,13 @@ scripts/checkpatch.pl?
 > +#endif
 > +
 > +	if (ata_is_dma(qc->tf.protocol)) {
-> +		if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_NONE) {
+> +		if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_NONE)
+{
 
     Curly braces not needed around single statement.
 
-> +static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
+> +static int sata_dwc_qc_complete(struct ata_port *ap, struct
+ata_queued_cmd *qc,
 > +				u32 check_status)
 > +{
 > +	u8 status = 0;
@@ -532,9 +602,11 @@ scripts/checkpatch.pl?
 
     Useless parens.
 
-> +	host_pvt.sata_dwc_sactive_queued = (host_pvt.sata_dwc_sactive_queued) \
+> +	host_pvt.sata_dwc_sactive_queued =
+(host_pvt.sata_dwc_sactive_queued) \
 > +						& mask;
-> +	host_pvt.sata_dwc_sactive_issued = (host_pvt.sata_dwc_sactive_issued) \
+> +	host_pvt.sata_dwc_sactive_issued =
+(host_pvt.sata_dwc_sactive_issued) \
 
     \ not needed.
 
@@ -554,7 +626,8 @@ scripts/checkpatch.pl?
 
 > +			dma_free_coherent(ap->host->dev,
 > +					  SATA_DWC_DMAC_LLI_TBL_SZ,
-> +					 hsdevp->llit[i], hsdevp->llit_dma[i]);
+> +					 hsdevp->llit[i],
+hsdevp->llit_dma[i]);
 
     Should be indented on the same level as above line
 
@@ -563,7 +636,8 @@ scripts/checkpatch.pl?
 > +	u8 tag = qc->tag;
 > +
 > +	if (ata_is_ncq(qc->tf.protocol)) {
-> +		dev_dbg(qc->ap->dev, "%s: ap->link.sactive=0x%08x tag=%d\n",
+> +		dev_dbg(qc->ap->dev, "%s: ap->link.sactive=0x%08x
+tag=%d\n",
 > +			__func__, qc->ap->link.sactive, tag);
 > +	} else {
 > +		tag = 0;
@@ -571,7 +645,8 @@ scripts/checkpatch.pl?
 
     Curly braces not needed around single statements.
 
-> +static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+> +static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8
+tag)
 > +{
 > +	int start_dma;
 > +	u32 reg, dma_chan;
@@ -593,7 +668,8 @@ scripts/checkpatch.pl?
 > +	u8 tag = qc->tag;
 > +
 > +	if (ata_is_ncq(qc->tf.protocol)) {
-> +		dev_dbg(qc->ap->dev, "%s: ap->link.sactive=0x%08x tag=%d\n",
+> +		dev_dbg(qc->ap->dev, "%s: ap->link.sactive=0x%08x
+tag=%d\n",
 > +			__func__, qc->ap->link.sactive, tag);
 > +	} else {
 > +		tag = 0;
@@ -612,7 +688,8 @@ scripts/checkpatch.pl?
 [...]
 > +	dma_chan = dma_dwc_xfer_setup(sg, qc->n_elem, hsdevp->llit[tag],
 > +				      hsdevp->llit_dma[tag],
-> +				      (void *__iomem)(&hsdev->sata_dwc_regs->\
+> +				      (void
+*__iomem)(&hsdev->sata_dwc_regs->\
 
     \ not needed.
 
@@ -631,8 +708,10 @@ scripts/checkpatch.pl?
 
 > +		core_scr_write(SCR_ACTIVE, sactive);
 > +
-> +		dev_dbg(qc->ap->dev, "%s: tag=%d ap->link.sactive = 0x%08x "
-> +			"sactive=0x%08x\n", __func__, tag, qc->ap->link.sactive,
+> +		dev_dbg(qc->ap->dev, "%s: tag=%d ap->link.sactive = 0x%08x
+"
+> +			"sactive=0x%08x\n", __func__, tag,
+qc->ap->link.sactive,
 > +			sactive);
 > +
 > +		ap->ops->sff_tf_load(ap, &qc->tf);
@@ -648,7 +727,8 @@ scripts/checkpatch.pl?
 > +
 > +static void sata_dwc_qc_prep(struct ata_queued_cmd *qc)
 > +{
-> +	if ((qc->dma_dir == DMA_NONE) || (qc->tf.protocol == ATA_PROT_PIO))
+> +	if ((qc->dma_dir == DMA_NONE) || (qc->tf.protocol ==
+ATA_PROT_PIO))
 
     Parens not needed arounf == operation.
 
@@ -656,7 +736,8 @@ scripts/checkpatch.pl?
 > +
 > +#ifdef DEBUG_NCQ
 > +	if (qc->tag > 0)
-> +		dev_info(qc->ap->dev, "%s: qc->tag=%d ap->active_tag=0x%08x\n",
+> +		dev_info(qc->ap->dev, "%s: qc->tag=%d
+ap->active_tag=0x%08x\n",
 > +			 __func__, tag, qc->ap->link.active_tag);
 > +
 > +	return ;
@@ -727,7 +808,7 @@ scripts/checkpatch.pl?
 > +	if (base)
 > +		iounmap(base);
 
-    What about freeing 'hsdev' and 'host' and unmapping 
+    What about freeing 'hsdev' and 'host' and unmapping
 'host_pvt.sata_dma_regs'? And does iounmap() really pair with of_iomap()?
 
 > +static int sata_dwc_remove(struct of_device *ofdev)
