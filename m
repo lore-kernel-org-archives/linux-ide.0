@@ -1,37 +1,53 @@
-From: Jassi Brar <jassisinghbrar@gmail.com>
-Subject: SIL24: pcie_set_readrq 4096
-Date: Thu, 22 Jul 2010 11:47:06 +0900
-Message-ID: <AANLkTinMJktVl28m-mL8i9N8_Q9V471LV3XsxsZlLIp7@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Drives missing at boot
+Date: Thu, 22 Jul 2010 14:39:16 +0200
+Message-ID: <4C483BF4.3090006@kernel.org>
+References: <AANLkTimVkG9TFgyOTTnrztBjqT4JoOzFaP268vWLAAm9@mail.gmail.com>	<4C2F5ECB.1040505@kernel.org>	<AANLkTinBn35687znO2_IxI3s1opkXrG2HpCRgsejNbMq@mail.gmail.com>	<4C2F61AB.9030806@kernel.org>	<AANLkTilYOT45q8OUJ-_V61_fnYy9HIk6GAv5ZPiomCaT@mail.gmail.com>	<4C317C04.20500@kernel.org>	<AANLkTilupyieml9yaWO9BUNPmQQ0g2w1HLWj6R9MwDZf@mail.gmail.com>	<4C32CE50.6010501@kernel.org>	<AANLkTikehTO1j6Gd7Y_g32_P6Yg9KB8Z8qwbNJh10aOU@mail.gmail.com>	<4C341598.6040004@kernel.org>	<AANLkTik4zkcIyVxwtX8GA1BsQSZaAeODpPlY3mRVBc-4@mail.gmail.com>	<4C34A1D5.1090202@kernel.org>	<AANLkTilgQSu3qi7qoTtjnV22r-8Sh1hbDAB_nlPImWNt@mail.gmail.com>	<4C34B8BE.5080504@kernel.org>	<AANLkTilDbrA6lLPSOAtA8_4mLNkUZibHweTliqU5jd03@mail.gmail.com>	<4C44BD42.3030904@kernel.org>	<7141c88bc8c27f26c2187252c0594318.squirrel@the
+ checks.ca>	<4C45AF40.7030800@kernel.org> <AANLkTinxDjPCk46eItZrXziTbf6efqvNNNTbkZDXIbns@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43344 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986Ab0GVCrI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jul 2010 22:47:08 -0400
+Received: from hera.kernel.org ([140.211.167.34]:39776 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753596Ab0GVMjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Jul 2010 08:39:22 -0400
+In-Reply-To: <AANLkTinxDjPCk46eItZrXziTbf6efqvNNNTbkZDXIbns@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, tj@kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Paul Check <paul@thechecks.ca>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi,
-  After implementing driver for PCIe RC controller of a SOC, I came
-across peculiarity
-while testing SIL3132 directly connected to the root port.
+Hello,
 
-My RC IP is configured for maximum of 256bytes of payload size.
-The sata_sil24 driver unconditionally sets pcie_set_readrq(pdev, 4096)
-for the endpoint
-which apparently works for 'every' other host irrespective of their capacity.
+On 07/21/2010 10:54 PM, Mark Knecht wrote:
+>    Looks like I had a failure today. First one in weeks and only the
+> 3rd or 4th boot with this newer patch file. One of the two drives
+> making a RAID0 wasn't found so /dev/md11 (constructed from /dev/sdd
+> and /dev/sde) couldn't be started. I did a cold reboot and the drive
+> was found.
+> 
+>    If it matters, and it probably doesn't, the failure came on a boot
+> which had a scheduled fsck to do of /dev/md5 - my main / drive. I
+> don't see how that would make a difference but I figure why leave the
+> info out. That's why the times are so much larger in the dmesg file.
+> (I think)
+> 
+>    dmesg attached. I patched the Gentoo kernel if it makes a
+> difference, same as I did with the earlier patch.
+> 
+> mark@c2stable ~ $ uname -a
+> Linux c2stable 2.6.34-gentoo-r2 #1 SMP PREEMPT Sun Jul 18 14:09:48 PDT
+> 2010 x86_64 Intel(R) Core(TM) i7 CPU X 980 @ 3.33GHz GenuineIntel
+> GNU/Linux
+> mark@c2stable ~ $
 
-In my case it works only if I change to
-  pcie_set_readrq(pdev, 256)
-
-Shouldn't the Linux PCI have provision to allow max_read/payload_size
-not higher than
-the least of max capacities of all agents in the chain ?
-
-I see similar use of pcie_set_readrq(pdev, 4096), so could be I am
-missing something ?
+Hmmm... that's weird.  Can you please make sure the patch is actually
+applied?  Adding a printk("XXX patch applied!\n") near other changes
+usually is easy enough.  Also, can you please apply resume-dbg-1.patch
+too and reproduce the failure and post log?
 
 Thanks.
+
+-- 
+tejun
