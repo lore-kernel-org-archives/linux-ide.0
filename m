@@ -1,42 +1,44 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 Subject: Re: support for drives larger than 2TiB
-Date: Sat, 24 Jul 2010 18:08:05 -0500
-Message-ID: <4C4B7255.2070505@hardwarefreak.com>
-References: <4C4AB952.9030705@kernel.org>            <1279974966.11927.26.camel@lithium.local.net> <92061.1279979348@localhost>
+Date: Sat, 24 Jul 2010 20:22:47 -0300
+Message-ID: <20100724232247.GA2129@khazad-dum.debian.net>
+References: <4C4AB952.9030705@kernel.org>
+ <SNT125-W4469FAC3FE110BB4882949C3A40@phx.gbl>
+ <AANLkTi=-0Hdp2dfK_RB=w-W8Qm8O42dDM0ybEcRtEMdn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53705 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041Ab0GXXII (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jul 2010 19:08:08 -0400
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 791426C072
-	for <linux-ide@vger.kernel.org>; Sat, 24 Jul 2010 18:08:06 -0500 (CDT)
-In-Reply-To: <92061.1279979348@localhost>
+Received: from out1.smtp.messagingengine.com ([66.111.4.25]:37412 "EHLO
+	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751408Ab0GXXWv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jul 2010 19:22:51 -0400
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=-0Hdp2dfK_RB=w-W8Qm8O42dDM0ybEcRtEMdn@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Yuhong Bao <yuhongbao_386@hotmail.com>, tj@kernel.org, jeff@garzik.org, ben.collins@ubuntu.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Valdis.Kletnieks@vt.edu put forth on 7/24/2010 8:49 AM:
+On Sat, 24 Jul 2010, Greg Freemyer wrote:
+> Secondly, if you look at the table on the right of
+> http://en.wikipedia.org/wiki/Master_boot_record#Disk_partitioning you
+> see that the starting sector of a partition is defined with a 32-bit
+> value.
+> 
+> ie. 2TB with 512 byte sectors.
+> 
+> The normal solution is to move to a GPT which requires EFI if you want
+> to boot from it.
 
-> As a side consideration - moving from 512 to 4K moves the associated limit from
-> 2 TiB to 16 TiB.  Given the current rate of device density increase, how much
-> time will that buy us, and what do we do then?
+Can't one have a GPT with a guard boot sector which can read the real
+partition table?
 
-The crystal ball tells me that SSD adoption will kick this date a little
-farther into the future given that SSD capacity lags mechanical by a large
-margin.  In the not too distance future, PCs/laptops/netbooks will all
-transition to shipping with SSD as their sole/main internal storage device,
-with USB3/eSATA thumb drives of 1TB and above permanently replacing external
-USB/eSATA mechanical drives.
-
-Servers will probably transition at about the same time to shipping with
-solely SSD storage internally for boot/OS and maybe some other primary and a
-little secondary storage, with mechanical storage being optional, whether
-internal or external.  Mechanical in the form of FC/iSCSI SAN and NAS arrays
-will still rule large data needs well after the aforementioned transitions above.
+I think Tejun must mean some big problem at the BIOS APIs required for the
+bootloader.  Tejun, what exactly croaks at the 2TB boundary (with 512KiB
+sectors)?
 
 -- 
-Stan
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
