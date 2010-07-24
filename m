@@ -1,46 +1,42 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
 Subject: Re: support for drives larger than 2TiB
-Date: Sat, 24 Jul 2010 17:38:49 -0400
-Message-ID: <AANLkTi=-0Hdp2dfK_RB=w-W8Qm8O42dDM0ybEcRtEMdn@mail.gmail.com>
-References: <4C4AB952.9030705@kernel.org>
-	<SNT125-W4469FAC3FE110BB4882949C3A40@phx.gbl>
+Date: Sat, 24 Jul 2010 18:08:05 -0500
+Message-ID: <4C4B7255.2070505@hardwarefreak.com>
+References: <4C4AB952.9030705@kernel.org>            <1279974966.11927.26.camel@lithium.local.net> <92061.1279979348@localhost>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39802 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab0GXViu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jul 2010 17:38:50 -0400
-In-Reply-To: <SNT125-W4469FAC3FE110BB4882949C3A40@phx.gbl>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53705 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753041Ab0GXXII (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Jul 2010 19:08:08 -0400
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 791426C072
+	for <linux-ide@vger.kernel.org>; Sat, 24 Jul 2010 18:08:06 -0500 (CDT)
+In-Reply-To: <92061.1279979348@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuhong Bao <yuhongbao_386@hotmail.com>
-Cc: tj@kernel.org, jeff@garzik.org, ben.collins@ubuntu.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, hmh@debian.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sat, Jul 24, 2010 at 2:40 PM, Yuhong Bao <yuhongbao_386@hotmail.com> wrote:
->
->> However, 2TiB limit is
->> inherent in the BIOS programming interface and currently the only way
->> to overcome it is using a completely different BIOS interface (EFI,
->> that is).
-> Nope, look at the Int13 extensions, it already support 64-bit LBA.
->
-> Yuhong Bao
+Valdis.Kletnieks@vt.edu put forth on 7/24/2010 8:49 AM:
 
-64-bit LBA?  I assume you meant 48-bit LBA from ATA-7.  It will
-address up to PBs I believe.  (KB, MB, GB, TB, PB, ....)
+> As a side consideration - moving from 512 to 4K moves the associated limit from
+> 2 TiB to 16 TiB.  Given the current rate of device density increase, how much
+> time will that buy us, and what do we do then?
 
-But I've seen lots of "48-bit LBA" supporting controllers that hit
-limits at 500GB, 1TB, etc. and needed new firmware updates.
+The crystal ball tells me that SSD adoption will kick this date a little
+farther into the future given that SSD capacity lags mechanical by a large
+margin.  In the not too distance future, PCs/laptops/netbooks will all
+transition to shipping with SSD as their sole/main internal storage device,
+with USB3/eSATA thumb drives of 1TB and above permanently replacing external
+USB/eSATA mechanical drives.
 
-Secondly, if you look at the table on the right of
-http://en.wikipedia.org/wiki/Master_boot_record#Disk_partitioning you
-see that the starting sector of a partition is defined with a 32-bit
-value.
+Servers will probably transition at about the same time to shipping with
+solely SSD storage internally for boot/OS and maybe some other primary and a
+little secondary storage, with mechanical storage being optional, whether
+internal or external.  Mechanical in the form of FC/iSCSI SAN and NAS arrays
+will still rule large data needs well after the aforementioned transitions above.
 
-ie. 2TB with 512 byte sectors.
-
-The normal solution is to move to a GPT which requires EFI if you want
-to boot from it.
-
-Greg
+-- 
+Stan
