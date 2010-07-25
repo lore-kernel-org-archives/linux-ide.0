@@ -1,49 +1,47 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: support for drives larger than 2TiB
-Date: Sun, 25 Jul 2010 09:49:54 +0200
-Message-ID: <4C4BECA2.3090709@kernel.org>
-References: <4C4AB952.9030705@kernel.org> <SNT125-W4469FAC3FE110BB4882949C3A40@phx.gbl> <AANLkTi=-0Hdp2dfK_RB=w-W8Qm8O42dDM0ybEcRtEMdn@mail.gmail.com> <20100724232247.GA2129@khazad-dum.debian.net>
+Date: Sun, 25 Jul 2010 09:56:09 +0200
+Message-ID: <4C4BEE19.8030106@kernel.org>
+References: <4C4AB952.9030705@kernel.org>            <1279974966.11927.26.camel@lithium.local.net> <92061.1279979348@localhost> <4C4B7255.2070505@hardwarefreak.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100724232247.GA2129@khazad-dum.debian.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Yuhong Bao <yuhongbao_386@hotmail.com>, jeff@garzik.org, ben.collins@ubuntu.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:39347 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364Ab0GYH4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Jul 2010 03:56:15 -0400
+In-Reply-To: <4C4B7255.2070505@hardwarefreak.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Hello,
 
-On 07/25/2010 01:22 AM, Henrique de Moraes Holschuh wrote:
-> On Sat, 24 Jul 2010, Greg Freemyer wrote:
->> Secondly, if you look at the table on the right of
->> http://en.wikipedia.org/wiki/Master_boot_record#Disk_partitioning you
->> see that the starting sector of a partition is defined with a 32-bit
->> value.
->>
->> ie. 2TB with 512 byte sectors.
->>
->> The normal solution is to move to a GPT which requires EFI if you want
->> to boot from it.
+On 07/25/2010 01:08 AM, Stan Hoeppner wrote:
+> Valdis.Kletnieks@vt.edu put forth on 7/24/2010 8:49 AM:
 > 
-> Can't one have a GPT with a guard boot sector which can read the real
-> partition table?
+>> As a side consideration - moving from 512 to 4K moves the associated limit from
+>> 2 TiB to 16 TiB.  Given the current rate of device density increase, how much
+>> time will that buy us, and what do we do then?
 
-Yeah, parted already does that although there seem to be some bugs and
-they sometimes are inconsistent.  In principle, BIOSes don't really
-care about the partition table (they look at it primarily to figure
-out geometry and stuff) and can boot as long as the initial boot
-sector is accessible.
+I don't really see it happening on ATA hard drives.  Maybe on USB /
+external ones.  There simply are too many compatibility implications.
 
-> I think Tejun must mean some big problem at the BIOS APIs required for the
-> bootloader.  Tejun, what exactly croaks at the 2TB boundary (with 512KiB
-> sectors)?
-	
-The 2TiB limit is coming from BIOS software interrupt for disk access
-using 32bit for addressing.  If there's 64bit extension to BIOS disk
-access, everything should work but still locating boot partition under
-2TiB is pretty much required at this point, I think.
+> In the not too distance future, PCs/laptops/netbooks will all
+> transition to shipping with SSD as their sole/main internal storage
+> device, with USB3/eSATA thumb drives of 1TB and above permanently
+> replacing external USB/eSATA mechanical drives.
+
+After hearing the same story for the good part of the decade, I'm a
+bit skeptical about this too.  The unit capacity price ratio hasn't
+really changed that much.  Maybe requirements for storage capacity
+have reached / are approaching saturation point, so as long as the
+price keeps coming down, SSDs can be mainstream without closing the
+unit capacity price difference.  At this point, hybrid seems much more
+realistic to me, but then again, maybe we really are reaching the
+saturation point.  Who knows?
 
 Thanks.
 
