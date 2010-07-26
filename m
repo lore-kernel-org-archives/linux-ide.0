@@ -1,40 +1,79 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: support for drives larger than 2TiB
-Date: Sun, 25 Jul 2010 11:53:53 -0700
-Message-ID: <4C4C8841.60206@zytor.com>
-References: <4C4AB952.9030705@kernel.org>	 <SNT125-W4469FAC3FE110BB4882949C3A40@phx.gbl> <4C4BEF61.5010203@kernel.org>	 <4C4BF0D2.1070503@zytor.com> <1280046384.2139.0.camel@lithium.local.net>
+From: Heiko Schocher <hs@denx.de>
+Subject: Re: ata, pcmcia: problem with irq and ata_dev_read_id()
+Date: Mon, 26 Jul 2010 14:59:16 +0200
+Message-ID: <4C4D86A4.2040500@denx.de>
+References: <4C034FAE.9090605@denx.de> <4C044C8F.8050406@gmail.com>
+ <4C2833B2.3040209@denx.de> <4C2DFF43.6050502@gmail.com>
+ <4C319741.3060602@denx.de> <4C319D31.60705@gmail.com>
+ <4C31A519.7030806@denx.de> <4C31A6DF.9080109@gmail.com>
+Reply-To: hs@denx.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:54464 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170Ab0GYSyJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Jul 2010 14:54:09 -0400
-In-Reply-To: <1280046384.2139.0.camel@lithium.local.net>
+Received: from a.relay.invitel.net ([62.77.203.3]:46648 "EHLO
+	a.relay.invitel.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691Ab0GZM7X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jul 2010 08:59:23 -0400
+In-reply-to: <4C31A6DF.9080109@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alex.buell@munted.org.uk
-Cc: Tejun Heo <tj@kernel.org>, Yuhong Bao <yuhongbao_386@hotmail.com>, jeff@garzik.org, ben.collins@ubuntu.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, hmh@debian.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 07/25/2010 01:26 AM, Alex Buell wrote:
-> On Sun, 2010-07-25 at 01:07 -0700, H. Peter Anvin wrote:
+Hello Tejun,
+
+Tejun Heo wrote:
+> On 07/05/2010 11:25 AM, Heiko Schocher wrote:
+>>> Yeah, that's the new polling code kicking in.  If the IRQ problem
+>>> doesn't persiste (which should be the case here), polling will step
+>>> down after a while and everything will return to normal.  If you keep
+>>> the system running more than ten minutes and use the CF device, does
+>>> the kernel complain anymore?
+>> No, I can use the CF while kernel is in polling mode, also if the
+>> kernel switched back to irq mode:
 >>
->> Syslinux 4 supports it with full 64-bit capabilities.  SeaBIOS (used
->> in
->> Qemu/KVM) supports it, and I know at least some hardware/firmware RAID
->> solutions support it; I recently got access to a 3 TB SATA drive but
->> due to NDA requirements I can't reveal the results of that testing. 
+>> Log, direct after kernel is up:
+>>
+> ..
+>>  25:          9   MPC8XX SIU       Level        pata_pcmcia
+>>  26:      10000   MPC8XX SIU       Level        pata_pcmcia
+> ...
+>> No irq is used.
+>>
+>> -bash-3.2# dmesg
+>> [...]
+>> Freeing unused kernel memory: 132k init
+>> IRQ 26: spurious polling finished, reenabling IRQ
+>> -bash-3.2#
+>>
+>> Now it is back in irq mode:
+>>
+>> -bash-3.2# cat /proc/uptime
+>> 419.65 370.56
+>> -bash-3.2#
+>>
+> ...
+>>  25:          9   MPC8XX SIU       Level        pata_pcmcia
+>>  26:      10033   MPC8XX SIU       Level        pata_pcmcia
 > 
-> Yes but is it possible to boot from a complete 4k sector with the new
-> standards? 
+> Cool, so it works as expected.  With the new lost/spurious IRQ
+> handling in place, removing TFLAG_POLLING from read_id for all
+> controllers shouldn't cause much problem.  However, the CF device is a
+> pretty rare corner case and spurious IRQ handling can deal with it
+> without too much problem, so leaving things as it is is probably
+> better.
 
-Yes, but currently there are no 4k *logical* sector products on the
-market (and $DEITY knows how many BIOSes would handle them correctly.)
-The BIOS interfaces should handle them fine, though.
+Hmm.. I am not sure if "leaving things as it is" is the better way,
+because this behaviour comes every time, I insert a card! And with
+my patch I can prevent this behaviour ...
 
-	-hpa
+> Thanks for testing.
 
+Thanks for your comments!
+
+bye
+Heiko
 -- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+DENX Software Engineering GmbH,     MD: Wolfgang Denk & Detlev Zundel
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
