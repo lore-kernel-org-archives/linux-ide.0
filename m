@@ -1,67 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata_port_flush_task, BUG: unable to handle kernel paging request
-Date: Tue, 27 Jul 2010 10:43:39 +0200
-Message-ID: <4C4E9C3B.9070402@kernel.org>
-References: <20100725154816.GF31966@localhost>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 11/12] libata: use IRQ expecting
+Date: Tue, 27 Jul 2010 13:37:45 -0400
+Message-ID: <4C4F1969.5020305@garzik.org>
+References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org> <4C2577F2.4030005@garzik.org> <4C25BAD2.4070705@kernel.org> <4C25C551.8000404@garzik.org> <4C25CC18.2070507@kernel.org> <4C2DFAB0.3020703@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39750 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753914Ab0G0Inq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Jul 2010 04:43:46 -0400
-In-Reply-To: <20100725154816.GF31966@localhost>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:62276 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633Ab0G0Rh4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jul 2010 13:37:56 -0400
+In-Reply-To: <4C2DFAB0.3020703@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nils Radtke <lkml@Think-Future.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org
 
-(cc'ing linux-ide)
-Hello,
+On 07/02/2010 10:41 AM, Tejun Heo wrote:
+> Hello, Jeff.
+>
+> So, something like the following.  This should be applied on top of
+> the two previous libata patches.  The amount of code in the hot path
+> is very small.  Compared to the cpu actually taking an interrupt and
+> accessing hardware, it should be negligible, and this will give us
+> working and acceptably performing systems in the presence of most
+> types of IRQ problems.
+>
+> Thanks.
+>
+> Subject: [PATCH] libata: use IRQ expecting
+>
+> Legacy ATA is very susceptible to IRQ delivery problems in both
+> directions - lost and spurious interrupts.  In traditional PATA, the
+> IRQ line is ultimately out of the controller and driver's control.
+>
+> Even relatively new SATA controllers share this problem as many still
+> emulate the traditional IDE interface which doesn't have reliable way
+> to indicate interrupt pending state and there also is an issue
+> regarding the interpretation of nIEN on both sides of the cable.
+>
+> Controllers with native interface have fewer problems compared to the
+> ones which use SFF but they still are affected by IRQ misrouting or
+> broken MSI implementations.
+>
+> IRQ delivery problems on ATA are particularly nasty because it
+> commonly hosts installation and/or booting.
+>
+> Most of these problems can be worked around by using the new IRQ
+> expecting mechanism without adding any noticeable overhead.  In ATA,
+> almost all operations are initiated by the host and the controller
+> signals progress or completion using IRQ.  IRQ expecting can easily be
+> added in libata core and applied to all libata drivers.
+>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> ---
+>   drivers/ata/libata-core.c |   55 ++++++++++++++++++++++++++++++----------------
+>   drivers/ata/libata-eh.c   |    4 ++-
+>   drivers/ata/libata-sff.c  |   37 +++++++++++++++---------------
+>   include/linux/libata.h    |    2 +
+>   4 files changed, 60 insertions(+), 38 deletions(-)
 
-On 07/25/2010 05:48 PM, Nils Radtke wrote:
->   Hi,
-> 
-> Ideas, anybody?
-> 
-> BUG: unable to handle kernel paging request at 10ec83c6
-> IP: [<c13b8880>] ata_port_flush_task+0x0/0x50
-> *pde = 00000000 
-> Oops: 0002 [#1] PREEMPT 
-> last sysfs file: /sys/devices/pci0000:00/0000:00:1c.0/0000:02:00.0/net/eth0/carrier
-> Modules linked in: snd_usb_audio snd_usb_lib snd_seq_midi snd_rawmidi uvcvideo option usbserial usb_storage video1394 raw1394 dv1394 firewire_ohci firewire_core ohci1394 ieee1394 tg3 libphy
-> 
-> Pid: 1298, comm: scsi_eh_0 Not tainted 2.6.33 #6 Columbia                       /Extensa 5220                   
-> EIP: 0060:[<c13b8880>] EFLAGS: 00010292 CPU: 0
-> EIP is at ata_port_flush_task+0x0/0x50
-> EAX: f6878000 EBX: 00000246 ECX: 00000003 EDX: c13c7ab0
-> ESI: f6813800 EDI: f6813844 EBP: 00000000 ESP: f6877f48
->  DS: 007b ES: 007b FS: 0000 GS: 0000 SS: 0068
-> Process scsi_eh_0 (pid: 1298, ti=f6876000 task=f70603f0 task.ti=f6876000)
-> Stack:
->  c13c7aca c1852b50 f6acbc80 f6acbc80 c102fb3e f6acbc80 f70603f0 c184a5a0
-> <0> f6813800 c184a400 f6878000 f70603f0 00000246 f6813800 f6813844 00000000
-> <0> c138a5af 00000000 c13897b0 c102bd97 f70603f0 f70603f0 f6813834 f6813844
-> Call Trace:
->  [<c13c7aca>] ? ata_scsi_error+0x1a/0x870
->  [<c102fb3e>] ? finish_task_switch+0x2e/0xa0
->  [<c138a5af>] ? scsi_error_handler+0x9f/0x3a0
->  [<c13897b0>] ? eh_lock_door_done+0x0/0x10
->  [<c102bd97>] ? pick_next_task_fair+0x97/0xe0
->  [<c1671f0a>] ? schedule+0x28a/0x3b0
->  [<c138a510>] ? scsi_error_handler+0x0/0x3a0
->  [<c104f3f4>] ? kthread+0x74/0x80
->  [<c104f380>] ? kthread+0x0/0x80
->  [<c1003236>] ? kernel_thread_helper+0x6/0x10
-> Code: 18 00 00 b8 a5 f7 7b c1 e8 2e b8 c7 ff eb 81 8d b6 00 00 00 00 8d bf 00 00 00 00 83 c0 5c e8 48 d3 fb ff e9 43 ff ff ff 8d 76 00 <ff> 89 c3 83 ec 10 8d 80 75 1e 00 00 e8 bf 3d c9 ff f6 83 c4 1e 
-> EIP: [<c13b8880>] ata_port_flush_task+0x0/0x50 SS:ESP 0068:f6877f48
-> CR2: 0000000010ec83c6
-> ---[ end trace 2f757ea4d01bedcf ]---
+I suppose the few cycles it costs are worth it...
 
-Which kernel version is this?  What was the configuration and what
-were the system doing?  Can you please post lspci -nn output and boot
-log?
+Assuming this new version (from July 2) is tested,
 
--- 
-tejun
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
+
+
