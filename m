@@ -1,356 +1,98 @@
-From: Dominic Curran <dominic.curran@citrix.com>
-Subject: Re: Possible bug in ide_cd_queue_pc() or ide_wait_stat() ?
-Date: Wed, 28 Jul 2010 16:23:13 +0100
-Message-ID: <4C504B61.4050409@citrix.com>
-References: <4C500A82.2040805@citrix.com> <20100728115107.GA1690@a1.tnic>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM (was: Re: HDD not suspending properly / dead on resume)
+Date: Wed, 28 Jul 2010 23:50:09 +0200
+Message-ID: <201007282350.09676.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100850.36889.stephan.diestelhorst@gmail.com> <4C384580.2080507@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp02.citrix.com ([66.165.176.63]:18120 "EHLO
-	SMTP02.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391Ab0G1PNO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jul 2010 11:13:14 -0400
-In-Reply-To: <20100728115107.GA1690@a1.tnic>
+Received: from ogre.sisk.pl ([217.79.144.158]:40575 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753493Ab0G1Vvz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jul 2010 17:51:55 -0400
+In-Reply-To: <4C384580.2080507@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@amd.com
 
+On Saturday, July 10, 2010, Tejun Heo wrote:
+> On 07/10/2010 08:50 AM, Stephan Diestelhorst wrote:
+> >> I have a box where this problem is kind of reproducible, but it happens _very_
+> >> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
+> >> loop.  Are you able to reproduce it more regurarly?
+> > 
+> > For me it is much more reproducible. If I run multiple direct writing
+> > dd-s to the disk in question I trigger it rather reliably (~75% or
+> > higher). See the attached script from an earlier email.
+> > Maybe that helps triggering your case more reliabl, too?
+> 
+> Can you please try the following git tree?
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
 
+That didn't help, but the appended patch fixes the problem for me.
 
-Borislav Petkov wrote:
->> I have some TEAC DV-28E-V CDROM drives that after polling for status
->> starts to timeout requests (the time it takes to do this varies
->> between 5mins and 24hrs).
->>     
->
-> Which kernel is that? Can we see a complete dmesg? Which tool does the
-> polling (udev... )?
->
->   
-We have cooked our own usermode tool (we dont use udev).
-Tool is very simple:
-1) polls cdrom drive using ioctl CDROM_DRIVE_STATUS
-2) Looks for a CDS_DISC_OK return
-3) Once it sees that it tries to mount CD
+Thanks,
+Rafael
 
-The problem is that for this specific drive it starts timing out STATUS 
-requests, and then returns CDS_DISC_OK.
-This cause the tools to try to mount (non existent disc), which then 
-eats 100% cpu time.
+---
+From: Rafael J. Wysocki <rjw@sisk.pl>
+Subject: SATA / AHCI: Do not play with the link PM during suspend to RAM
 
-So even if the drive goes bad, I'd like to get back a error status from 
-the ioctl rather than CDS_DISC_OK.
+My Acer Ferrari One occasionally loses communication with the disk
+(which in fact is an Intel SSD) during suspend to RAM.  The symptom
+is that the IDENTIFY command times out during suspend and the device
+is dropped by the kernel, so it is not available during resume and
+the system is unuseable as a result.  The failure is not readily
+reproducible, although it happens once every several suspends and
+it always happens after the disk has been shut down by the SCSI
+layer's suspend routine.
 
-Kernel is 2.6.27.  Based on CentOS I believe.
->> The problem is that even when the requests timeout the ioctl
->> CDROM_DRIVE_STATUS will receive a status of CDS_DISC_OK.
->>     
->
-> Can you add some more instrumentation code to ide_cdrom_drive_status()
-> to see which "return CDS_DISC_OK" is being hit since there are a couple
-> of them in that function.
->
->   
-In ide_cdrom_drive_status() the return happens in the following if:
+I was able to track this issue down to the link PM manipulations
+carried out by ata_host_suspend(), which probably means that the
+SSD's firmware is not implemented correctly.  However, the AHCI
+driver, which is used on the affected box, doesn't really need to do
+anything with the link PM during suspend to RAM, because the whole
+controller is going to be put into D3 by ata_pci_device_do_suspend()
+immediately and it will undergo full reset during the subsequent
+resume anyway.  For this reason, make the AHCI driver avoid calling
+ata_host_suspend() during suspend to RAM which fixes the problem and
+makes sense as a general optimization.
 
-    stat = cdrom_check_status(drive, &sense);
-printk("ide_cdrom_drive_status(stat=%i sense_key=%u)\n",stat, 
-sense.sense_key);
-    if (!stat || sense.sense_key == UNIT_ATTENTION) {
-        printk("ide_cdrom_drive_status(#1) ret=CDS_DICS_OK)\n");
-        return CDS_DISC_OK;
-    }
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/ata/ahci.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-
-
-As for dmesg, it is filled with my own instrumentation:
-This is a ioctl that worked correctly....
-
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ======= cdrom_ioctl() =======
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: entering 
-CDROM_DRIVE_STATUS
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cdrom_drive_status()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ENTER: cdrom_check_status()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00000000)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x00082000 retries=10
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x00086640
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() Other. 
-retries=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() retries=-1
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=-5)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: EXIT: 
-cdrom_check_status(ret=-5)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_cdrom_drive_status(stat=-5 sense_key=2)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=700,cf=0x00008000)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x0008A000 retries=10
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x0008A640
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=0)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: 
-cdrom_ioctl_drive_status (ret=1)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: entering cdrom_release
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: Use count for 
-"/dev/hda" now zero
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: hda: No DVD+RW
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom: Unlocking door!
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00000000)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x00082000 retries=10
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x00082640
-Jul 27 16:48:37 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=0)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom: entering cdrom_open
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom: Use count for 
-"/dev/hda" now 1
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ENTER: cdrom_check_status()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00000000)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x00082000 retries=10
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x00086640
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() Other. 
-retries=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() retries=-1
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=-5)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: EXIT: 
-cdrom_check_status(ret=-5)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ENTER: cdrom_check_status()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00000000)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x00082000 retries=10
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x00086640
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() Other. 
-retries=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() retries=-1
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=-5)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: EXIT: 
-cdrom_check_status(ret=-5)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00008000)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x0008A000 retries=10
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x0008E640
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() Other. 
-retries=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() retries=-1
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=-5)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00008000)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x0008A000 retries=10
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=0008A640)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: cdrom_transfer_packet_command()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00010440)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: 
-cdrom_transfer_packet_command(#2)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBDE00 
-rq->errors=0 err=0)
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x0008E640
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() Other. 
-retries=0
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc() retries=-1
-Jul 27 16:48:39 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=-5)
-
-
-Note the line early on that reads...
-
-EXIT: cdrom_check_status(ret=-5)
-ide_cdrom_drive_status(stat=-5 sense_key=2)
-
-
-A sense_key=2 means NOT_READY. Thats good.
-
-Here is the spew when requests have started to timeout...
-
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ======= cdrom_ioctl() =======
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: cdrom: entering 
-CDROM_DRIVE_STATUS
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide_cdrom_drive_status()
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ENTER: cdrom_check_status()
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: 
-ide_cd_queue_pc(timeout=0,cf=0x00000000)
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: About to call 
-blk_execute_rq() rq->cmd_flags=0x00082000 retries=10
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide_wait_stat()
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: 
-ide_wait_stat(rq->cmd_flags=00082640)
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide_error(stat=0xD0)
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: hda: status timeout: 
-status=0xd0 { Busy }
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide: failed opcode was: unknown
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide_error(#2)[rq=EDEBD380 
-errors=0 cmd_flags=00082640]
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: ide_wait_stat() ret=-16
-Jul 27 16:51:27 xsdubianh-srdeaor131 kernel: hda: drive not ready for 
-command
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: blk_execute_rq(rq=EDEBD380 
-rq->errors=0 err=0)
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: blk_execute_rq() error=0 
-rq->cmd_flags=0x00082640
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: ide_cd_queue_pc(ret=0)
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: EXIT: cdrom_check_status(ret=0)
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: 
-ide_cdrom_drive_status(stat=0 sense_key=0)
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: ide_cdrom_drive_status(#1) 
-ret=CDS_DICS_OK)
-Jul 27 16:51:32 xsdubianh-srdeaor131 kernel: cdrom: 
-cdrom_ioctl_drive_status (ret=4)
-
-Note that CDS_DISC_OK is being returned.
-Of course this is my own instrumentation so I doubt it will mean that 
-much to you.
-
-
+Index: linux-2.6/drivers/ata/ahci.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/ahci.c
++++ linux-2.6/drivers/ata/ahci.c
+@@ -595,6 +595,7 @@ static int ahci_pci_device_suspend(struc
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
+ 	u32 ctl;
++	int rc = 0;
+ 
+ 	if (mesg.event & PM_EVENT_SUSPEND &&
+ 	    hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+@@ -614,7 +615,15 @@ static int ahci_pci_device_suspend(struc
+ 		readl(mmio + HOST_CTL); /* flush */
+ 	}
+ 
+-	return ata_pci_device_suspend(pdev, mesg);
++	if (mesg.event == PM_EVENT_SUSPEND)
++		pdev->dev.power.power_state = mesg;
++	else
++		rc = ata_host_suspend(host, mesg);
++
++	if (!rc)
++		ata_pci_device_do_suspend(pdev, mesg);
++
++	return rc;
+ }
+ 
+ static int ahci_pci_device_resume(struct pci_dev *pdev)
