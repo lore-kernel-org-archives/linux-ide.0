@@ -1,98 +1,30 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM (was: Re: HDD not suspending properly / dead on resume)
-Date: Wed, 28 Jul 2010 23:50:09 +0200
-Message-ID: <201007282350.09676.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201007100850.36889.stephan.diestelhorst@gmail.com> <4C384580.2080507@kernel.org>
+From: "Wainschenker Nicolas" <nwainschenker@ort.edu.ar>
+Subject: ESXi Sil3512 Compatibility
+Date: Wed, 28 Jul 2010 23:43:07 -0300
+Message-ID: <20100729023913.M52441@ort.edu.ar>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=iso-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:40575 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493Ab0G1Vvz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 Jul 2010 17:51:55 -0400
-In-Reply-To: <4C384580.2080507@kernel.org>
+Received: from mail.ort.edu.ar ([201.253.103.3]:42354 "EHLO ort.edu.ar"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751838Ab0G2Dgg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 Jul 2010 23:36:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@lists.osdl.org, stephan.diestelhorst@amd.com
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-On Saturday, July 10, 2010, Tejun Heo wrote:
-> On 07/10/2010 08:50 AM, Stephan Diestelhorst wrote:
-> >> I have a box where this problem is kind of reproducible, but it happens _very_
-> >> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
-> >> loop.  Are you able to reproduce it more regurarly?
-> > 
-> > For me it is much more reproducible. If I run multiple direct writing
-> > dd-s to the disk in question I trigger it rather reliably (~75% or
-> > higher). See the attached script from an earlier email.
-> > Maybe that helps triggering your case more reliabl, too?
-> 
-> Can you please try the following git tree?
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git libata-irq-expect
+Hello, my name is Nicolas, im from Argentina. Im doing some testings with 
+ESXi 3.5 and 4.1. i saw that the Silicon Imagen 3512 Sata Controller 
+is "supported" by these Hypervisors. At least its in the HCL (Hardware 
+Compatibility List). The thing is that i make the LUN (RAID1) with 2x1tb WD 
+Drives but when im installing those hypervisors i see the both of the disks 
+and no LUNs.
 
-That didn't help, but the appended patch fixes the problem for me.
+i would like to know if you have any solution for this.
 
-Thanks,
-Rafael
+Thanks.
+Sorry for my low skill in english.
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: SATA / AHCI: Do not play with the link PM during suspend to RAM
-
-My Acer Ferrari One occasionally loses communication with the disk
-(which in fact is an Intel SSD) during suspend to RAM.  The symptom
-is that the IDENTIFY command times out during suspend and the device
-is dropped by the kernel, so it is not available during resume and
-the system is unuseable as a result.  The failure is not readily
-reproducible, although it happens once every several suspends and
-it always happens after the disk has been shut down by the SCSI
-layer's suspend routine.
-
-I was able to track this issue down to the link PM manipulations
-carried out by ata_host_suspend(), which probably means that the
-SSD's firmware is not implemented correctly.  However, the AHCI
-driver, which is used on the affected box, doesn't really need to do
-anything with the link PM during suspend to RAM, because the whole
-controller is going to be put into D3 by ata_pci_device_do_suspend()
-immediately and it will undergo full reset during the subsequent
-resume anyway.  For this reason, make the AHCI driver avoid calling
-ata_host_suspend() during suspend to RAM which fixes the problem and
-makes sense as a general optimization.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/ata/ahci.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-Index: linux-2.6/drivers/ata/ahci.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.c
-+++ linux-2.6/drivers/ata/ahci.c
-@@ -595,6 +595,7 @@ static int ahci_pci_device_suspend(struc
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->mmio;
- 	u32 ctl;
-+	int rc = 0;
- 
- 	if (mesg.event & PM_EVENT_SUSPEND &&
- 	    hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
-@@ -614,7 +615,15 @@ static int ahci_pci_device_suspend(struc
- 		readl(mmio + HOST_CTL); /* flush */
- 	}
- 
--	return ata_pci_device_suspend(pdev, mesg);
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		pdev->dev.power.power_state = mesg;
-+	else
-+		rc = ata_host_suspend(host, mesg);
-+
-+	if (!rc)
-+		ata_pci_device_do_suspend(pdev, mesg);
-+
-+	return rc;
- }
- 
- static int ahci_pci_device_resume(struct pci_dev *pdev)
+Nicolas D. Wainschenker.
