@@ -1,52 +1,42 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: SATA device powerdown
-Date: Fri, 30 Jul 2010 12:12:44 -0600
-Message-ID: <4C53161C.6050308@gmail.com>
-References: <4C52CCCC.7010902@gmail.com>
+Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED
+Date: Fri, 30 Jul 2010 12:30:24 -0600
+Message-ID: <4C531A40.6080804@gmail.com>
+References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se> <4C3D134B.2090604@gmail.com> <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se> <Pine.LNX.4.61.1007152103081.24693@envy.nxs.se> <Pine.LNX.4.61.1007171422530.24693@envy.nxs.se> <Pine.LNX.4.61.1007211404480.24693@envy.nxs.se> <Pine.LNX.4.61.1007211433360.24693@envy.nxs.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:53540 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760128Ab0G3SMt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jul 2010 14:12:49 -0400
-Received: by ywh1 with SMTP id 1so720656ywh.19
-        for <linux-ide@vger.kernel.org>; Fri, 30 Jul 2010 11:12:48 -0700 (PDT)
-In-Reply-To: <4C52CCCC.7010902@gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:33046 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933250Ab0G3Say (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jul 2010 14:30:54 -0400
+Received: by iwn7 with SMTP id 7so1547211iwn.19
+        for <linux-ide@vger.kernel.org>; Fri, 30 Jul 2010 11:30:53 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.61.1007211433360.24693@envy.nxs.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard <tuxbox.guru@gmail.com>
+To: Tomas Lund <tlund@nxs.se>
 Cc: linux-ide@vger.kernel.org
 
-On 07/30/2010 06:59 AM, Richard wrote:
-> Hi All,
+On 07/21/2010 06:38 AM, Tomas Lund wrote:
+> On Wed, 21 Jul 2010, Tomas Lund wrote:
 >
-> I have a question relating to the ATA drives and a SATA drive powerdown.
-> Currently you can issue a HDD Spindown/Sleep command to a drive which
-> will result in it going to sleep, but I have a hardware platform that
-> requires the drive to be Powered-Off completely. (its in an extreme
-> energy saving mode)
+>> Put the "LYCOM SATA PE-103 2-CH" back in the server with the Gigabyte
+>> 965P-DS4 motherboard and installed the debian backports kernel
+>> 2.6.32-bpo.5-amd64.
+>>
+>> Problem persists and a dmesg and console output (since dmesg buffer is
+>> too small to fit everything) is available at:
+>>
+>> http://tlund.pp.se/sil24/console_2.6.32-bpo.5-amd64.txt
+>> http://tlund.pp.se/sil24/dmesg_2.6.32-bpo.5-amd64.txt
 >
-> Normal modes the HDD can sleep, and when any IO happens the disk wakes..
->
-> I can get the HDD to power-off when it enters deep-sleep (SMART register
-> reading) but how can I get the disk to re-powered before next access is
-> needed. Currently the /dev/sdx deregisters when the SATA bus is
-> disconnected and re-registers when the device is avaliable.
->
-> Is there a method to keep the open files alive when the HDD is powered
-> off and execute a custom hardware relay switch to power the HDD back up
-> and continue working with the files that were open previous to the sleep?
->
-> Is this at all possible?
+> Tested Debian 2.6.26-2-amd64, files at the same place.
 
-At present I don't think this is possible. I suppose one thing you could 
-do would be to hack whatever ATA driver the system was using to ignore 
-all hotplug notifications, but then you'd have to make other changes to 
-wake up the drive again when an access was required.
-
-If you really need to retain apparent access to the disk when it's 
-switched off, I kind of question whether the power saving from this is 
-worthwhile compared to just turning on aggressive SATA link power 
-management and putting the disk in standby mode..
+What does "hdparm -I" show when run on the drive attached to that 
+controller? Is it possible there's some security locking enabled on it? 
+If the BIOS is doing some kind of security unlock then it probably does 
+it only on drives attached to the motherboard controller, not on any 
+add-in cards. It certainly seems like the drive is returning command 
+aborted on all reads when connected to that controller for whatever reason.
