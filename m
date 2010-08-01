@@ -1,143 +1,116 @@
 From: Tomas Lund <tlund@nxs.se>
 Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED
-Date: Sun, 1 Aug 2010 16:27:18 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
+Date: Sun, 1 Aug 2010 18:55:31 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.1008011849080.24693@envy.nxs.se>
 References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se> <4C3D134B.2090604@gmail.com>
  <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se> <Pine.LNX.4.61.1007152103081.24693@envy.nxs.se>
  <Pine.LNX.4.61.1007171422530.24693@envy.nxs.se> <Pine.LNX.4.61.1007211404480.24693@envy.nxs.se>
  <Pine.LNX.4.61.1007211433360.24693@envy.nxs.se> <4C531A40.6080804@gmail.com>
+ <Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:39101 "EHLO envy.nxs.se"
+Received: from envy.nxs.se ([212.247.200.182]:35994 "EHLO envy.nxs.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754504Ab0HAO1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 1 Aug 2010 10:27:23 -0400
-In-Reply-To: <4C531A40.6080804@gmail.com>
+	id S1751110Ab0HAQzc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Aug 2010 12:55:32 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by envy.nxs.se (Postfix) with ESMTP id 8ACCF2BEBE
+	for <linux-ide@vger.kernel.org>; Sun,  1 Aug 2010 18:55:31 +0200 (CEST)
+In-Reply-To: <Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 30 Jul 2010, Robert Hancock wrote:
+Upgraded motherboard (965P-DS4) BIOS to latest version. Booted 2.6.27.48 
+with one disk attached to motherboard sata controller (with root 
+filesystem) and two disks (different vendors Samsung/WDC) on the 
+SIL-controler:
 
-> On 07/21/2010 06:38 AM, Tomas Lund wrote:
->> On Wed, 21 Jul 2010, Tomas Lund wrote:
->> 
->>> Put the "LYCOM SATA PE-103 2-CH" back in the server with the Gigabyte 
->>> 965P-DS4 motherboard and installed the debian backports kernel 
->>> 2.6.32-bpo.5-amd64.
->>> 
->>> Problem persists and a dmesg and console output (since dmesg buffer is 
->>> too small to fit everything) is available at:
->>> 
->>> http://tlund.pp.se/sil24/console_2.6.32-bpo.5-amd64.txt
->>> http://tlund.pp.se/sil24/dmesg_2.6.32-bpo.5-amd64.txt
->> 
->> Tested Debian 2.6.26-2-amd64, files at the same place.
->
-> What does "hdparm -I" show when run on the drive attached to that controller?
+<..>
 
-# hdparm -I /dev/sdb
+sata_sil24 0000:03:00.0: version 1.1
+sata_sil24 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+sata_sil24 0000:03:00.0: setting latency timer to 64
+scsi8 : sata_sil24
+scsi9 : sata_sil24
+ata9: SATA max UDMA/100 host m128@0xf8004000 port 0xf8000000 irq 17
+ata10: SATA max UDMA/100 host m128@0xf8004000 port 0xf8002000 irq 17
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata9.00: ATA-8: SAMSUNG HD103SJ, 1AJ10001, max UDMA/133
+ata9.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata9.00: configured for UDMA/100
+ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata10.00: ATA-8: WDC WD20EARS-00S8B1, 80.00A80, max UDMA/133
+ata10.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+ata10.00: configured for UDMA/100
+scsi 8:0:0:0: Direct-Access     ATA      SAMSUNG HD103SJ  1AJ1 PQ: 0 ANSI: 5
+sd 8:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 8:0:0:0: [sdb] Write Protect is off
+sd 8:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 8:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 8:0:0:0: [sdb] 1953525168 512-byte hardware sectors (1000205 MB)
+sd 8:0:0:0: [sdb] Write Protect is off
+sd 8:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 8:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+  sdb:<3>ata9.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x0
+ata9.00: irq_stat 0x00020002, device error via D2H FIS
+ata9.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 50/00:00:00:00:00/00:00:00:00:00/00 Emask 0x401 (device error) <F>
+ata9.00: status: { DRDY }
+ata9.00: configured for UDMA/100
+ata9: EH complete
+ata9.00: NCQ disabled due to excessive errors
+ata9.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+ata9.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata9.00: status: { DRDY }
+ata9: hard resetting link
+ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata9.00: configured for UDMA/100
+ata9: EH complete
 
-/dev/sdb:
+<..>
 
-ATA device, with non-removable media
-         Model Number:       SAMSUNG HD103SJ
-         Serial Number:      S246J90Z321275
-         Firmware Revision:  1AJ10001
-         Transport:          Serial, ATA8-AST, SATA 1.0a, SATA II Extensions, SATA Rev 2.5
-Standards:
-         Used: unknown (minor revision code 0x0028)
-         Supported: 8 7 6 5
-         Likely used: 8
-Configuration:
-         Logical         max     current
-         cylinders       16383   16383
-         heads           16      16
-         sectors/track   63      63
-         --
-         CHS current addressable sectors:   16514064
-         LBA    user addressable sectors:  268435455
-         LBA48  user addressable sectors: 1953525168
-         device size with M = 1024*1024:      953869 MBytes
-         device size with M = 1000*1000:     1000204 MBytes (1000 GB)
-Capabilities:
-         LBA, IORDY(can be disabled)
-         Queue depth: 32
-         Standby timer values: spec'd by Standard, no device specific minimum
-         R/W multiple sector transfer: Max = 16  Current = 16
-         Advanced power management level: disabled
-         Recommended acoustic management value: 254, current value: 254
-         DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5 udma6
-              Cycle time: min=120ns recommended=120ns
-         PIO: pio0 pio1 pio2 pio3 pio4
-              Cycle time: no flow control=120ns  IORDY flow control=120ns
-Commands/features:
-         Enabled Supported:
-            *    SMART feature set
-            *    Security Mode feature set
-            *    Power Management feature set
-            *    Write cache
-            *    Look-ahead
-            *    Host Protected Area feature set
-            *    WRITE_BUFFER command
-            *    READ_BUFFER command
-            *    NOP cmd
-            *    DOWNLOAD_MICROCODE
-                 Advanced Power Management feature set
-                 Power-Up In Standby feature set
-            *    SET_FEATURES required to spinup after power up
-                 SET_MAX security extension
-            *    Automatic Acoustic Management feature set
-            *    48-bit Address feature set
-            *    Device Configuration Overlay feature set
-            *    Mandatory FLUSH_CACHE
-            *    FLUSH_CACHE_EXT
-            *    SMART error logging
-            *    SMART self-test
-            *    General Purpose Logging feature set
-            *    64-bit World wide name
-            *    WRITE_UNCORRECTABLE_EXT command
-            *    {READ,WRITE}_DMA_EXT_GPL commands
-            *    Segmented DOWNLOAD_MICROCODE
-            *    SATA-I signaling speed (1.5Gb/s)
-            *    SATA-II signaling speed (3.0Gb/s)
-            *    Native Command Queueing (NCQ)
-            *    Host-initiated interface power management
-            *    Phy event counters
-            *    unknown 76[12]
-                 DMA Setup Auto-Activate optimization
-                 Device-initiated interface power management
-            *    Software settings preservation
-            *    SMART Command Transport (SCT) feature set
-            *    SCT Long Sector Access (AC1)
-            *    SCT LBA Segment Access (AC2)
-            *    SCT Error Recovery Control (AC3)
-            *    SCT Features Control (AC4)
-            *    SCT Data Tables (AC5)
-Security:
-         Master password revision code = 65534
-                 supported
-                 enabled
-                 locked
-         not     frozen
-         not     expired: security count
-                 supported: enhanced erase
-         Security level high
-         150min for SECURITY ERASE UNIT. 150min for ENHANCED SECURITY ERASE UNIT.
-Logical Unit WWN Device Identifier: 50024e9221d12b7
-         NAA             : 5
-         IEEE OUI        : 24e9
-         Unique ID       : 221d12b7
-Checksum: correct
+scsi 9:0:0:0: Direct-Access     ATA      WDC WD20EARS-00S 80.0 PQ: 0 ANSI: 5
+sd 9:0:0:0: [sdc] 3907029168 512-byte hardware sectors (2000399 MB)
+sd 9:0:0:0: [sdc] Write Protect is off
+sd 9:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 9:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 9:0:0:0: [sdc] 3907029168 512-byte hardware sectors (2000399 MB)
+sd 9:0:0:0: [sdc] Write Protect is off
+sd 9:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 9:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+  sdc:<3>ata10: failed to read log page 10h (errno=-2)
+ata10.00: exception Emask 0x1 SAct 0x1 SErr 0x0 action 0x0
+ata10.00: irq_stat 0x00020002, device error via D2H FIS
+ata10.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 51/04:00:af:88:e0/00:00:e8:00:00/e0 Emask 0x1 (device error)
+ata10.00: status: { DRDY ERR }
+ata10.00: error: { ABRT }
+ata10.00: configured for UDMA/100
+ata10: EH complete
+ata10: failed to read log page 10h (errno=-2)
+ata10.00: NCQ disabled due to excessive errors
+ata10.00: exception Emask 0x1 SAct 0x1 SErr 0x0 action 0x0
+ata10.00: irq_stat 0x00060002, device error via D2H FIS
+ata10.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq 4096 in
+          res 51/04:00:af:88:e0/00:00:e8:00:00/e0 Emask 0x1 (device error)
+ata10.00: status: { DRDY ERR }
+ata10.00: error: { ABRT }
+ata10.00: configured for UDMA/100
+ata10: EH complete
+ata10.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
+ata10.00: irq_stat 0x00060002, device error via D2H FIS
+ata10.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dma 4096 in
+          res 51/04:08:00:00:00/00:00:00:00:00/e0 Emask 0x1 (device error)
+ata10.00: status: { DRDY ERR }
+ata10.00: error: { ABRT }
+ata10.00: configured for UDMA/100
+ata10: EH complete
 
-> Is it possible there's some security locking enabled on it? If the BIOS is 
-> doing some kind of security unlock then it probably does it only on drives 
-> attached to the motherboard controller, not on any add-in cards. It certainly 
-> seems like the drive is returning command aborted on all reads when connected 
-> to that controller for whatever reason.
+<..>
 
-No, nothing like that :(
+Starting to get a bit desperate, willing to try anything..
 
 //tlund
