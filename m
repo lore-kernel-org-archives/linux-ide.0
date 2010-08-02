@@ -1,35 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2 #upstream] sata_fsl,mv,nv: prepare for NCQ command
- completion update
-Date: Mon, 02 Aug 2010 09:18:15 +0200
-Message-ID: <4C567137.9060407@kernel.org>
-References: <1276443098-20653-1-git-send-email-tj@kernel.org> <1276443098-20653-12-git-send-email-tj@kernel.org> <4C23F6C1.7070603@garzik.org> <4C245E50.7090701@kernel.org> <4C247B54.2050900@garzik.org> <4C247C36.6040007@kernel.org> <4C24A903.4060908@kernel.org> <4C5607AF.8020109@garzik.org>
+From: Tomas Lund <tlund@nxs.se>
+Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED (resolved)
+Date: Mon, 2 Aug 2010 09:21:47 +0200 (CEST)
+Message-ID: <Pine.LNX.4.61.1008020720250.24693@envy.nxs.se>
+References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se> <4C3D134B.2090604@gmail.com>
+ <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se> <Pine.LNX.4.61.1007152103081.24693@envy.nxs.se>
+ <Pine.LNX.4.61.1007171422530.24693@envy.nxs.se> <Pine.LNX.4.61.1007211404480.24693@envy.nxs.se>
+ <Pine.LNX.4.61.1007211433360.24693@envy.nxs.se> <4C531A40.6080804@gmail.com>
+ <Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
+ <AANLkTikCqugAgM7zd=8H-hchN8b8tmZsP=NHgf+mNvc0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35250 "EHLO hera.kernel.org"
+Received: from envy.nxs.se ([212.247.200.182]:36621 "EHLO envy.nxs.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752771Ab0HBHS5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Aug 2010 03:18:57 -0400
-In-Reply-To: <4C5607AF.8020109@garzik.org>
+	id S1752643Ab0HBHVv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Aug 2010 03:21:51 -0400
+In-Reply-To: <AANLkTikCqugAgM7zd=8H-hchN8b8tmZsP=NHgf+mNvc0@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: mingo@elte.hu, tglx@linutronix.de, bphilips@suse.de, yinghai@kernel.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stern@rowland.harvard.edu, gregkh@suse.de, khali@linux-fr.org, Ashish Kalra <ashish.kalra@freescale.com>, Saeed Bishara <saeed@marvell.com>, Mark Lord <liml@rtr.ca>, Robert Hancock <hancockr@shaw.ca>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello, Jeff.
+On Sun, 1 Aug 2010, Robert Hancock wrote:
 
-On 08/02/2010 01:47 AM, Jeff Garzik wrote:
->> So, something like this.  I tested both flavors of sata_nv but don't
->> have access to sata_mv or sata_fsl, but the conversion is pretty
->> straight forward and failures should be pretty easy to catch.
-> 
-> applied
+> The output above shows that the drive has security enabled and locked, 
+> so it seems that must be the case, and it won't be accessible unless 
+> it's unlocked. hdparm should be able to disable it, though it seems you 
+> may need a valid password to do it..
 
-Are you planning on applying the second patch too?
+There is something I did not mention in any of my earlier posts, and that 
+is the fact that the server also has had a 3ware controller installed 
+(removed as part of fault isolation) and some of the disks has been 
+attached to that controller. In the case of the samsung 1tb disk, it was 
+attached to the 3ware conroller after it was successfully tested on the 
+motherboard sata-controller.
 
-Thanks.
+Some googling and testing found that yes, the 3ware controller does indeed 
+lock the drives, even if they are just automatically exported as "JBOD".
 
--- 
-tejun
+The following command successfully unlocked my devices:
+
+hdparm --user-master u --security-disable "3wareUserPassword               " /dev/sdb
+
+I have unlocked and tested a total of 4 disks now, both the samsung 1TB 
+and 3 of the WDC 2TB disks. Thank you very much! Left to do: test that 
+everything is working with the PMP aswell.
+
+Question: Would it be unreasonable to request that the kernel would issue 
+the apropriate ATA-commands to a disk as soon as it is detected, and not 
+try to read from it if it is locked? It would have been really, really 
+nice to just get the error message "drive is locked".
+
+//tlund
