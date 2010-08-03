@@ -1,40 +1,49 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: Can you guys please take a look at bko#16434?
-Date: Mon, 02 Aug 2010 22:58:20 -0400
-Message-ID: <4C5785CC.4060603@teksavvy.com>
-References: <4C4AA8A2.4030107@kernel.org>
+Subject: Re: [RFC 1/2] block: implement an unprep function corresponding directly
+ to prep
+Date: Mon, 02 Aug 2010 23:01:23 -0400
+Message-ID: <4C578683.5010409@teksavvy.com>
+References: <1277917264.2839.153.camel@mulgrave.site> <20100701104653O.fujita.tomonori@lab.ntt.co.jp> <20100702110343.GA27159@lst.de> <20100705160023S.fujita.tomonori@lab.ntt.co.jp> <20100705192413.GA24189@lst.de> <4C3253C0.8040900@teksavvy.com> <4C3254A3.6080709@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:1207 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752718Ab0HCC6X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Aug 2010 22:58:23 -0400
-In-Reply-To: <4C4AA8A2.4030107@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4C3254A3.6080709@teksavvy.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Saeed Bishara <saeed@marvell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 10-07-24 04:47 AM, Tejun Heo wrote:
-> Hello,
+On 10-07-05 05:54 PM, Mark Lord wrote:
+>> On 05/07/10 03:24 PM, Christoph Hellwig wrote:
+>>>
+>>> What codebase were you testing on? Sorry, but curently I'm a bit lost
+>>> in the maze of patches. I've got both and intel and an OCZ SSD
+> ..
 >
-> It looks like sata_mv triggers BUG_ON() when a command it doesn't know
-> about is issued and discard support makes it happen.  Can you guys
-> take a look?  And please update it such that it doesn't trigger
-> BUG_ON() only because an unknown command is issued.  That's way too
-> dangerous.  If void return from qc_prep is a problem, just move the
-> whole qc_prep into qc_issue, the distinction is pretty arbitrary
-> anyway.
-..
+> Do you, or anyone else with one, know what the upper limit is on
+> TRIM operations with the Intel SSDs ?
+>
+> I need to know the maximum amount of TRIM ranges they will process
+> in a single command.
+>
+> Eg. Indilinx-based SSDs don't appear to have a limit -- they'll accept
+> a TRIM command with thousands of LBA ranges included.
+>
+> Sandforce-based SSDs appear to restrict things to max 4KB of range data.
+>
+> So.. what about Intel?
 
-I've been away on holiday for the past few weeks,
-but I did make a note on the bugzilla entry for this
-that there were two problems to be addressed.
 
-Now that I'm back in the office, I'll have a look at this later
-in the week, and see about getting TRIM working with sata_mv,
-if possible.
+Well, I still don't know about Intel drives -- anyone?
+
+But for the latest hardware, some manufacturers are now reporting
+their TRIM limits in word[105] of the identify data,
+as described (optional) in the latest draft ATA ACS-2 specs.
+
+It appears that Sandforce drives officially only allow 512-bytes of range data.
+So I'll limit hdparm's TRIM functions to match word[105] when it is specified.
+
+The Indilinx drives I have here don't report anything in word[105], though.
 
 Cheers
