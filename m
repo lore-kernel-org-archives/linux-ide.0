@@ -1,49 +1,87 @@
-From: Tomas Lund <tlund@nxs.se>
-Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED (resolved)
-Date: Tue, 3 Aug 2010 07:33:44 +0200 (CEST)
-Message-ID: <Pine.LNX.4.61.1008030732251.24693@envy.nxs.se>
-References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se> <4C3D134B.2090604@gmail.com>
- <Pine.LNX.4.61.1007140955080.24693@envy.nxs.se> <Pine.LNX.4.61.1007152103081.24693@envy.nxs.se>
- <Pine.LNX.4.61.1007171422530.24693@envy.nxs.se> <Pine.LNX.4.61.1007211404480.24693@envy.nxs.se>
- <Pine.LNX.4.61.1007211433360.24693@envy.nxs.se> <4C531A40.6080804@gmail.com>
- <Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
- <AANLkTikCqugAgM7zd=8H-hchN8b8tmZsP=NHgf+mNvc0@mail.gmail.com>
- <Pine.LNX.4.61.1008020720250.24693@envy.nxs.se>
- <AANLkTi=YDuEYt4BK4T4bJH3cY5GujC-tCV4D-ORcbDVT@mail.gmail.com>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM (was: Re: HDD not suspending properly / dead on resume)
+Date: Tue, 3 Aug 2010 10:36:50 +0200
+Message-ID: <201008031036.51012.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008022248.45135.stephan.diestelhorst@gmail.com> <201008022338.05195.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from envy.nxs.se ([212.247.200.182]:52191 "EHLO envy.nxs.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755173Ab0HCFdp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Aug 2010 01:33:45 -0400
-In-Reply-To: <AANLkTi=YDuEYt4BK4T4bJH3cY5GujC-tCV4D-ORcbDVT@mail.gmail.com>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:39056 "EHLO
+	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753953Ab0HCIkK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Aug 2010 04:40:10 -0400
+In-Reply-To: <201008022338.05195.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>
 
-On Mon, 2 Aug 2010, Robert Hancock wrote:
+On Monday 02 August 2010, 23:38:05 Rafael J. Wysocki wrote:
+> On Monday, August 02, 2010, Stephan Diestelhorst wrote:
+> > On Wednesday 28 July 2010, 23:50:09 Rafael J. Wysocki wrote:
+> > > On Saturday, July 10, 2010, Tejun Heo wrote:
+> > > > On 07/10/2010 08:50 AM, Stephan Diestelhorst wrote:
+> > > > >> I have a box where this problem is kind of reproducible, but it happens _very_
+> > > > >> rarely.  Also I can't reproduce it on demand running suspend-resume in a tight
+> > > > >> loop.  Are you able to reproduce it more regurarly?
+> > > > > 
+> > > > > For me it is much more reproducible. If I run multiple direct writing
+> > > > > dd-s to the disk in question I trigger it rather reliably (~75% or
+> > > > > higher). See the attached script from an earlier email.
+> > > > > Maybe that helps triggering your case more reliabl, too?
+> > > > 
+> > > That didn't help, but the appended patch fixes the problem for me.
+> > 
+> > <snip>
+> > 
+> > Sorry for taking ages. Vacation and catching up after it are to blame,
+> > as is me forgetting to build a proper initrd...
+> > 
+> > Thanks for the patch! It certainly changes behaviour, however, in a
+> > very strange way for me. With your patch my machine does not suspend
+> > to ram anymore (a simple echo mem > /proc/sys/state blocks), and
+> > nothing happens in dmesg if there is a lot of write I/O while
+> > suspending. (A number of parallel dd's with oflag=direct)
+> > 
+> > If I stop the I/O, the system eventually goes into suspend to RAM.
+> > However, that takes a while, after the I/O has stopped, and also
+> > from "Preparing system for suspend" log entry until it is actually
+> > done.
+> > 
+> > Is this intentional?
+> 
+> It surely isn't.
+> 
+> > Let me know how I can debug this further!
+> > Ideally I'd like to be able to suspend the machine under I/O load,
+> > too. (E.g. during a compile job.)
+> > 
+> > Can you reproduce this at your end, too?
+> 
+> Well, I didn't try suspending with a number of parallel dd's with oflag=direct
+> in the background, but otherwise I'm not reproducing the issue with
+> the patch applied.
 
-> On Mon, Aug 2, 2010 at 1:21 AM, Tomas Lund <tlund@nxs.se> wrote:
->
->> I have unlocked and tested a total of 4 disks now, both the samsung 1TB 
->> and 3 of the WDC 2TB disks. Thank you very much! Left to do: test that 
->> everything is working with the PMP aswell.
->
-> Good to hear.
+Mhmhm, I have tried to reproduce my issue again, and also added some
+dev_printk's around your code to understand where the delay is
+happening.
 
-I now have all of my drives up and working, running on the PMP and 
-everything is looking perfectly. Thanks again for your help.
+However, I have not been able to reproduce the issue (with and without
+the debug output) anymore, and I am happy to report that for now your
+patch helps.
 
->> Question: Would it be unreasonable to request that the kernel would 
->> issue the apropriate ATA-commands to a disk as soon as it is detected, 
->> and not try to read from it if it is locked? It would have been really, 
->> really nice to just get the error message "drive is locked".
->
-> It should be possible to indicate that, yes. I'll look into it when I 
-> get a chance, if someone doesn't beat me to it..
+I'd like to keep this under observation for a little while longer,
+though.
 
-Perfect!
+Many thanks,
+  Stephan
 
-//tlund
+-- 
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
