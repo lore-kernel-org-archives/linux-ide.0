@@ -1,132 +1,65 @@
-From: Jim Paris <jim@jtan.com>
+From: Mark Knecht <markknecht@gmail.com>
 Subject: Re: Drives missing at boot
-Date: Tue, 3 Aug 2010 14:49:16 -0400
-Message-ID: <20100803184915.GA23847@psychosis.jim.sh>
+Date: Tue, 3 Aug 2010 11:53:42 -0700
+Message-ID: <AANLkTi=1dFZ+APFx=W8YawtTDhOjVn1sVshUnSJ3OyCB@mail.gmail.com>
 References: <AANLkTilgQSu3qi7qoTtjnV22r-8Sh1hbDAB_nlPImWNt@mail.gmail.com>
- <4C34B8BE.5080504@kernel.org>
- <AANLkTilDbrA6lLPSOAtA8_4mLNkUZibHweTliqU5jd03@mail.gmail.com>
- <4C44BD42.3030904@kernel.org>
- <7141c88bc8c27f26c2187252c0594318.squirrel@thechecks.ca>
- <4C45AF40.7030800@kernel.org>
- <AANLkTinxDjPCk46eItZrXziTbf6efqvNNNTbkZDXIbns@mail.gmail.com>
- <4C483BF4.3090006@kernel.org>
- <AANLkTinwJLE=jjwG5zL8UBO91tzDpX36_W9GORKag8RK@mail.gmail.com>
- <20100803114105.7f199878.randy.dunlap@oracle.com>
+	<4C34B8BE.5080504@kernel.org>
+	<AANLkTilDbrA6lLPSOAtA8_4mLNkUZibHweTliqU5jd03@mail.gmail.com>
+	<4C44BD42.3030904@kernel.org>
+	<7141c88bc8c27f26c2187252c0594318.squirrel@thechecks.ca>
+	<4C45AF40.7030800@kernel.org>
+	<AANLkTinxDjPCk46eItZrXziTbf6efqvNNNTbkZDXIbns@mail.gmail.com>
+	<4C483BF4.3090006@kernel.org>
+	<AANLkTinwJLE=jjwG5zL8UBO91tzDpX36_W9GORKag8RK@mail.gmail.com>
+	<20100803114105.7f199878.randy.dunlap@oracle.com>
+	<20100803184915.GA23847@psychosis.jim.sh>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jim.sh ([75.150.123.25]:57024 "EHLO psychosis.jim.sh"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757614Ab0HCSvH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Aug 2010 14:51:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20100803114105.7f199878.randy.dunlap@oracle.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39419 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932160Ab0HCSxo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Aug 2010 14:53:44 -0400
+In-Reply-To: <20100803184915.GA23847@psychosis.jim.sh>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Mark Knecht <markknecht@gmail.com>, Tejun Heo <tj@kernel.org>, Paul Check <paul@thechecks.ca>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jim Paris <jim@jtan.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Tejun Heo <tj@kernel.org>, Paul Check <paul@thechecks.ca>, Linux Kernel List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Randy Dunlap wrote:
-> On Mon, 2 Aug 2010 15:07:11 -0700 Mark Knecht wrote:
-> 
-> > On Thu, Jul 22, 2010 at 5:39 AM, Tejun Heo <tj@kernel.org> wrote:
-> > 
-> > Hi Tejun,
-> >    I'm finally home and trying to get back to this. I'm really a bad
-> > programmer so I don't know what I've done wrong but it seems patch
-> > isn't happy with me.
-> > 
-> > c2stable linux # patch --dry-run -p1 <../ata_piix-sidpr-lock.patch
-> > patching file drivers/ata/ata_piix.c
-> > patch: **** malformed patch at line 13:
-> 
-> Whenever the patch file was saved on this system, line 13 of it was
-> split (probably by an email client).  Whenever I see this, I just
-> join (merge) that line and the next one and try again... sometimes
-> several lines are malformed and have to be fixed like this.
+On Tue, Aug 3, 2010 at 11:49 AM, Jim Paris <jim@jtan.com> wrote:
+> Randy Dunlap wrote:
+>> On Mon, 2 Aug 2010 15:07:11 -0700 Mark Knecht wrote:
+>>
+>> > On Thu, Jul 22, 2010 at 5:39 AM, Tejun Heo <tj@kernel.org> wrote:
+>> >
+>> > Hi Tejun,
+>> > =C2=A0 =C2=A0I'm finally home and trying to get back to this. I'm =
+really a bad
+>> > programmer so I don't know what I've done wrong but it seems patch
+>> > isn't happy with me.
+>> >
+>> > c2stable linux # patch --dry-run -p1 <../ata_piix-sidpr-lock.patch
+>> > patching file drivers/ata/ata_piix.c
+>> > patch: **** malformed patch at line 13:
+>>
+>> Whenever the patch file was saved on this system, line 13 of it was
+>> split (probably by an email client). =C2=A0Whenever I see this, I ju=
+st
+>> join (merge) that line and the next one and try again... sometimes
+>> several lines are malformed and have to be fixed like this.
+>
+> Tejun asked Mark to add a printk, and Mark added it directly to the
+> patch. =C2=A0Mark, just apply the original patch as-is, and then add =
+the
+> printk to the source code in ata_piix.c. =C2=A0You should add it some=
+where
+> like the piix_init_one function, e.g. right before the "Save IOCFG"
+> comment around line 1575.
+>
+> -jim
 
-Tejun asked Mark to add a printk, and Mark added it directly to the
-patch.  Mark, just apply the original patch as-is, and then add the
-printk to the source code in ata_piix.c.  You should add it somewhere
-like the piix_init_one function, e.g. right before the "Save IOCFG"
-comment around line 1575.
+Thanks Jim. I'll give it a shot.
 
--jim
-
-> 
-> > 
-> > c2stable linux #
-> > 
-> >    Here's the change I tried to make to a copy of the file:
-> > 
-> > c2stable linux # cat ../ata_piix-sidpr-lock.patch
-> > diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> > index 7409f98..3971bc0 100644
-> > --- a/drivers/ata/ata_piix.c
-> > +++ b/drivers/ata/ata_piix.c
-> > @@ -158,6 +158,7 @@ struct piix_map_db {
-> >  struct piix_host_priv {
-> >         const int *map;
-> >         u32 saved_iocfg;
-> > +       spinlock_t sidpr_lock;  /* FIXME: remove once locking in EH is fixed */
-> > +       printk("MWK - ata_sidpr patch applied!\n");
-> >         void __iomem *sidpr;
-> >  };
-> > 
-> > @@ -951,12 +952,15 @@ static int piix_sidpr_scr_read(struct ata_link *link,
-> >                                unsigned int reg, u32 *val)
-> >  {
-> >         struct piix_host_priv *hpriv = link->ap->host->private_data;
-> > +       unsigned long flags;
-> > 
-> >         if (reg >= ARRAY_SIZE(piix_sidx_map))
-> >                 return -EINVAL;
-> > 
-> > +       spin_lock_irqsave(&hpriv->sidpr_lock, flags);
-> >         piix_sidpr_sel(link, reg);
-> >         *val = ioread32(hpriv->sidpr + PIIX_SIDPR_DATA);
-> > +       spin_unlock_irqrestore(&hpriv->sidpr_lock, flags);
-> >         return 0;
-> >  }
-> > 
-> > @@ -964,12 +968,15 @@ static int piix_sidpr_scr_write(struct ata_link *link,
-> >                                 unsigned int reg, u32 val)
-> >  {
-> >         struct piix_host_priv *hpriv = link->ap->host->private_data;
-> > +       unsigned long flags;
-> > 
-> >         if (reg >= ARRAY_SIZE(piix_sidx_map))
-> >                 return -EINVAL;
-> > 
-> > +       spin_lock_irqsave(&hpriv->sidpr_lock, flags);
-> >         piix_sidpr_sel(link, reg);
-> >         iowrite32(val, hpriv->sidpr + PIIX_SIDPR_DATA);
-> > +       spin_unlock_irqrestore(&hpriv->sidpr_lock, flags);
-> >         return 0;
-> >  }
-> > 
-> > @@ -1566,6 +1573,7 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
-> >         hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
-> >         if (!hpriv)
-> >                 return -ENOMEM;
-> > +       spin_lock_init(&hpriv->sidpr_lock);
-> > 
-> >         /* Save IOCFG, this will be used for cable detection, quirk
-> >          * detection and restoration on detach.  This is necessary
-> > c2stable linux #
-> > 
-> >    Maybe you can shoot back something that's done correctly and I'll
-> > start testing.
-> > 
-> >    I've tried booting a few times. I've had 3 cold boot failures so
-> > far. No warm boot failures. Each time it failed on cold boot a warm
-> > boot fixed it.
-> 
-> 
-> ---
-> ~Randy
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
+Mark
