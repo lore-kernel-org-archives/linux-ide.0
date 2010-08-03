@@ -1,56 +1,40 @@
-From: Tao Ma <tao.ma@oracle.com>
-Subject: [PATCH v2] ide: Use kzalloc in idedisk_prep_fn.
-Date: Tue,  3 Aug 2010 10:06:32 +0800
-Message-ID: <1280801192-14419-1-git-send-email-tao.ma@oracle.com>
-References: <20100803010903I.fujita.tomonori@lab.ntt.co.jp>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: Can you guys please take a look at bko#16434?
+Date: Mon, 02 Aug 2010 22:58:20 -0400
+Message-ID: <4C5785CC.4060603@teksavvy.com>
+References: <4C4AA8A2.4030107@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:33477 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab0HCCIg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Aug 2010 22:08:36 -0400
-In-Reply-To: <20100803010903I.fujita.tomonori@lab.ntt.co.jp>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:1207 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752718Ab0HCC6X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Aug 2010 22:58:23 -0400
+In-Reply-To: <4C4AA8A2.4030107@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, linux-ide@vger.kernel.org, Tao Ma <tao.ma@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Tejun Heo <tj@kernel.org>
+Cc: Saeed Bishara <saeed@marvell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-> 
-> This change conflicts with the change in linux-next (came from Jens'
-> tree).
-Thanks for pointing it out. Here is the updated one.
+On 10-07-24 04:47 AM, Tejun Heo wrote:
+> Hello,
+>
+> It looks like sata_mv triggers BUG_ON() when a command it doesn't know
+> about is issued and discard support makes it happen.  Can you guys
+> take a look?  And please update it such that it doesn't trigger
+> BUG_ON() only because an unknown command is issued.  That's way too
+> dangerous.  If void return from qc_prep is a problem, just move the
+> whole qc_prep into qc_issue, the distinction is pretty arbitrary
+> anyway.
+..
 
-Regards,
-Tao
+I've been away on holiday for the past few weeks,
+but I did make a note on the bugzilla entry for this
+that there were two problems to be addressed.
 
->From 5b8ae2eb7e3ecb54ea8db3b296727106148f17b3 Mon Sep 17 00:00:00 2001
-From: Tao Ma <tao.ma@oracle.com>
-Date: Tue, 3 Aug 2010 08:18:27 +0800
-Subject: [PATCH v2] ide: Use kzalloc in idedisk_prep_fn.
+Now that I'm back in the office, I'll have a look at this later
+in the week, and see about getting TRIM working with sata_mv,
+if possible.
 
-Signed-off-by: Tao Ma <tao.ma@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/ide/ide-disk.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 7433e07..471bb0d 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -435,12 +435,11 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
- 	if (!(rq->cmd_flags & REQ_FLUSH))
- 		return BLKPREP_OK;
- 
--	cmd = kmalloc(sizeof(*cmd), GFP_ATOMIC);
-+	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
- 
- 	/* FIXME: map struct ide_taskfile on rq->cmd[] */
- 	BUG_ON(cmd == NULL);
- 
--	memset(cmd, 0, sizeof(*cmd));
- 	if (ata_id_flush_ext_enabled(drive->id) &&
- 	    (drive->capacity64 >= (1UL << 28)))
- 		cmd->tf.command = ATA_CMD_FLUSH_EXT;
--- 
-1.7.1.571.gba4d01
-
+Cheers
