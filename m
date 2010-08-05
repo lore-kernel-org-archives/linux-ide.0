@@ -1,38 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates
-Date: Wed, 04 Aug 2010 14:46:14 -0400
-Message-ID: <4C59B576.4090807@garzik.org>
-References: <20100804015530.GA8136@havoc.gtf.org> <AANLkTik-68XiTq3VC6ta3-YVL8r=FpwFErAx8nVV4CJ4@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Andrea Gelmini <andrea.gelmini@gelma.net>
+Subject: [PATCH 06/15] drivers: ide: ide-tape.c removed duplicated #include
+Date: Thu,  5 Aug 2010 15:51:30 +0200
+Message-ID: <1281016299-23958-6-git-send-email-andrea.gelmini@gelma.net>
+References: <1281016299-23958-1-git-send-email-andrea.gelmini@gelma.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:41924 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752491Ab0HDSqv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Aug 2010 14:46:51 -0400
-In-Reply-To: <AANLkTik-68XiTq3VC6ta3-YVL8r=FpwFErAx8nVV4CJ4@mail.gmail.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:60783 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758888Ab0HENwH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Aug 2010 09:52:07 -0400
+Received: by ewy23 with SMTP id 23so2361126ewy.19
+        for <linux-ide@vger.kernel.org>; Thu, 05 Aug 2010 06:52:06 -0700 (PDT)
+In-Reply-To: <1281016299-23958-1-git-send-email-andrea.gelmini@gelma.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: gelma@gelma.net
+Cc: Andrea Gelmini <andrea.gelmini@gelma.net>, "David S. Miller" <davem@davemloft.net>, Borislav Petkov <petkovbb@gmail.com>, Alexey Dobriyan <adobriyan@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org
 
-On 08/04/2010 02:32 PM, Linus Torvalds wrote:
-> On Tue, Aug 3, 2010 at 6:55 PM, Jeff Garzik<jeff@garzik.org>  wrote:
->>
->> Tejun Heo (4):
->>       ata_generic: drop hard coded DMA force logic for CENATEK
->>       ata_piix: fix locking around SIDPR access
->>       libata: more PCI IDs for jmicron controllers
->>       sata_fsl,mv,nv: prepare for NCQ command completion update
->
-> Hmm. Aren't these the ones that you said causes "sata_mv is behaving
-> weirdly"? I think I'll wait for you to do another pull request when
-> that is sorted out..
+Signed-off-by: Andrea Gelmini <andrea.gelmini@gelma.net>
+---
+ drivers/ide/ide-tape.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-"prepare for..." is patch #1 of 2.  With #2, sata_mv starts behaving 
-strangely.  #1 seems to be working here.
-
-	Jeff
-
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index b072328..24d0332 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -35,7 +35,6 @@
+ #include <linux/slab.h>
+ #include <linux/pci.h>
+ #include <linux/ide.h>
+-#include <linux/smp_lock.h>
+ #include <linux/completion.h>
+ #include <linux/bitops.h>
+ #include <linux/mutex.h>
+-- 
+1.7.2.1.85.g2d089
 
