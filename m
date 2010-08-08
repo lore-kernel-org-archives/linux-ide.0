@@ -1,43 +1,45 @@
-From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Fri, 6 Aug 2010 11:04:11 +0200
-Message-ID: <201008061104.12574.stephan.diestelhorst@amd.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008060830.50889.stephan.diestelhorst@amd.com> <4C5BB472.5000207@gmail.com>
+From: Komuro <komurojun-mbn@nifty.com>
+Subject: Re: [PATCH 11/18] pcmcia: do not use io_req_t when calling
+	pcmcia_request_io()
+Date: Sun, 8 Aug 2010 22:07:31 +0900 (JST)
+Message-ID: <103911.103501281272851252.komurojun-mbn@nifty.com>
+References: <1281046014-7585-11-git-send-email-linux@dominikbrodowski.net>
+	<20100805220511.GA7040@comet.dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-2"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C5BB472.5000207@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1281046014-7585-11-git-send-email-linux@dominikbrodowski.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+Cc: alsa-devel@alsa-project.org, linux-usb@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org, laforge@gnumonks.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Dominik Brodowski <linux@dominikbrodowski.net>, Michael Buesch <mb@bu3sch.de>
 List-Id: linux-ide@vger.kernel.org
 
-HI,
+Hi,
 
-On Friday 06 August 2010, 09:06:26 Tejun Heo wrote:
-> On 08/06/2010 08:30 AM, Stephan Diestelhorst wrote:
-> > On Thursday 05 August 2010, 18:08:02 Tejun Heo wrote:
-> >> Can you please try the following patch and see whether the problem
-> >> goes away?
-> > <snip>
-> > 
-> > to which revision does the patch apply? I didn't get it to apply
-> > cleanly to Linus' kernel HEAD or the 2.6.34 stable tag. Maybe I am
-> > missing something, since I am a git-n00b (use Mercurial all the time)?
 > 
-> It applies cleanly to v2.6.35.
+>-    link->io.IOAddrLines =10;
+>-    link->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
+>+    link->resource[0]->flags |= IO_DATA_PATH_WIDTH_16;
 
-Arrrgh. My "great" company Exchange mail server thought it was a good
-idea to mess with the white-space of the mail. That's why the patch did
-not apply. Compiling and testing now, sorry.
+link->io_lines should be set here?
 
-Stephan
 
--- 
-Stephan Diestelhorst, AMD Operating System Research Center
-stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
 
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+>@@ -840,14 +839,15 @@ xirc2ps_config(struct pcmcia_device * link)
+> 	}
+> 	printk(KNOT_XIRC "no ports available\n");
+>     } else {
+>-	link->io.NumPorts1 = 16;
+>+	link->io_lines = 10;
+>+	link->resource[0]->end = 16;
+
+Best Regards
+Komuro
