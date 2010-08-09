@@ -1,64 +1,57 @@
-From: Tharindu Rukshan Bamunuarachchi <btharindu@gmail.com>
-Subject: qc timeout ... failed to IDENTIFY - qemu/kvm setup
-Date: Mon, 9 Aug 2010 18:55:04 +0100
-Message-ID: <AANLkTikAAAGg-OO81my14YAkQP-wK86rmXVhAiqAWf1i@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] docbook: fix fatal error from libata
+Date: Mon, 9 Aug 2010 16:28:30 -0700
+Message-ID: <20100809162830.06374768.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:59075 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752638Ab0HIRzi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2010 13:55:38 -0400
-Received: by qyk7 with SMTP id 7so6622528qyk.19
-        for <linux-ide@vger.kernel.org>; Mon, 09 Aug 2010 10:55:35 -0700 (PDT)
+Received: from rcsinet10.oracle.com ([148.87.113.121]:18861 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757140Ab0HIX3t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2010 19:29:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+Cc: jgarzik <jgarzik@pobox.com>, torvalds <torvalds@linux-foundation.org>
 
-hi All,
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-I am getting following message when I try to start my qemu/kvm virtual =
-machine.
-I have been using qemu/kvm setup for last couple of months, issue was
-introduced after upgrading to v2.6.35-rc6.
+'make htmldocs' has a fatal error when processing libata.xml, as seen
+below.  The string "Example patterns:" (or any string with "example.*:"
+in it AFAIK) causes some part of the doc generation tool chain to try to
+produce an <informalexample> block without a beginning <para>, but
+there is an ending </para> generated, which throws things out of kilter.
 
-VM starts as usual when I disable SMP. Issue is not visible in v2.6.34x=
-=2E
-
-[=A0=A0=A0 6.052229] ata1.01: qc timeout (cmd 0xec)
-[=A0=A0=A0 6.054105] ata1.01: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
-[=A0=A0=A0 6.056653] ata2.01: qc timeout (cmd 0xec)
-[=A0=A0=A0 6.058453] ata2.01: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
-[=A0=A0 16.212186] ata1.01: qc timeout (cmd 0xec)
-[=A0=A0 16.214056] ata1.01: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
-[=A0=A0 16.220146] ata2.01: qc timeout (cmd 0xec)
-[=A0=A0 16.221986] ata2.01: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
-[=A0=A0 46.376202] ata1.01: qc timeout (cmd 0xec)
-[=A0=A0 46.378164] ata1.01: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
-[=A0=A0 46.384165] ata2.01: qc timeout (cmd 0xec)
-[=A0=A0 46.386140] ata2.01: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
-
-I think following CONFIGs are introduced with latest version ... could
-there be any relation to above error ..
-
-CONFIG_IO_DELAY_TYPE_0X80=3D0
-CONFIG_IO_DELAY_TYPE_0XED=3D1
-CONFIG_IO_DELAY_TYPE_UDELAY=3D2
-CONFIG_IO_DELAY_TYPE_NONE=3D3
-CONFIG_IO_DELAY_0X80=3Dy
+I don't even know where (what program) this is happening in.
+I searched in docproc and xmlto and in some XML stylesheets without
+finding anything.  If anyone can give me pointers about this, please do.
+Until this is fixed, let's just spell "Example" as "Sample"
+and match up the double quotation marks while there.
 
 
-Please provide any clue or debug method to resolve the issue ?
-Could this be an issue with kvm/qemu ?
+linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml:6575: parser error : Opening and ending tag mismatch: programlisting line 6573 and para
+   </para><para>
+          ^
+linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml:6580: parser error : Opening and ending tag mismatch: para line 6575 and programlisting
+</programlisting></informalexample>
+                 ^
+unable to parse linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml
+make[2]: *** [Documentation/DocBook/libata.html] Error 1
 
-Sorry if i am addressing wrong mailing-list.
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/ata/libata-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-cheers
-tharindu
+--- linux-2.6.35-git8.orig/drivers/ata/libata-core.c
++++ linux-2.6.35-git8/drivers/ata/libata-core.c
+@@ -4281,7 +4281,7 @@ static const struct ata_blacklist_entry 
+  *	The special characters ?, [, -, or *, can be matched using a set, eg. [*]
+  *	Behaviour with malformed patterns is undefined, though generally reasonable.
+  *
+- *	Example patterns:  "SD1?",  "SD1[0-5]",  "*R0",  SD*1?[012]*xx"
++ *	Sample patterns:  "SD1?",  "SD1[0-5]",  "*R0",  "SD*1?[012]*xx"
+  *
+  *	This function uses one level of recursion per '*' in pattern.
+  *	Since it calls _nothing_ else, and has _no_ explicit local variables,
