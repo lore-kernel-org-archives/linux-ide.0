@@ -1,45 +1,52 @@
-From: Komuro <komurojun-mbn@nifty.com>
-Subject: Re: [PATCH 11/18] pcmcia: do not use io_req_t when calling
-	pcmcia_request_io()
-Date: Sun, 8 Aug 2010 22:07:31 +0900 (JST)
-Message-ID: <103911.103501281272851252.komurojun-mbn@nifty.com>
-References: <1281046014-7585-11-git-send-email-linux@dominikbrodowski.net>
-	<20100805220511.GA7040@comet.dominikbrodowski.net>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Mon, 09 Aug 2010 03:28:09 -0700 (PDT)
+Message-ID: <20100809.032809.71101140.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1281046014-7585-11-git-send-email-linux@dominikbrodowski.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-Cc: alsa-devel@alsa-project.org, linux-usb@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-wireless@vger.kernel.org, laforge@gnumonks.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Dominik Brodowski <linux@dominikbrodowski.net>, Michael Buesch <mb@bu3sch.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
 
-> 
->-    link->io.IOAddrLines =10;
->-    link->io.Attributes1 = IO_DATA_PATH_WIDTH_16;
->+    link->resource[0]->flags |= IO_DATA_PATH_WIDTH_16;
+Just a few minor changes:
 
-link->io_lines should be set here?
+1) Warning fix in tx493xide from Atsushi Nemoto.
 
+2) Request completion fix in ide-cd driver from Borislav Petkov
 
+3) memdup_user conversion from Julia Lawall
 
->@@ -840,14 +839,15 @@ xirc2ps_config(struct pcmcia_device * link)
-> 	}
-> 	printk(KNOT_XIRC "no ports available\n");
->     } else {
->-	link->io.NumPorts1 = 16;
->+	link->io_lines = 10;
->+	link->resource[0]->end = 16;
+4) Fix typo in VT6415 device table entry, from Yann Dirson
 
-Best Regards
-Komuro
+Please pull, thanks a lot!
+
+The following changes since commit 45d7f32c7a43cbb9592886d38190e379e2eb2226:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/cmetcalf/linux-tile (2010-08-08 10:10:11 -0700)
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Atsushi Nemoto (1):
+      tx493xide: use min_t() macro instead of min()
+
+Borislav Petkov (1):
+      ide-cd: Do not access completed requests in the irq handler
+
+Julia Lawall (1):
+      drivers/ide: Use memdup_user
+
+Yann Dirson (1):
+      via82cxxx: fix typo for VT6415 PCIE PATA IDE Host Controller support.
+
+ drivers/ide/ide-cd.c       |   14 +++++++++++---
+ drivers/ide/ide-taskfile.c |   10 +++-------
+ drivers/ide/tx4938ide.c    |    2 +-
+ drivers/ide/tx4939ide.c    |    2 +-
+ drivers/ide/via82cxxx.c    |    2 +-
+ 5 files changed, 17 insertions(+), 13 deletions(-)
