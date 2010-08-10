@@ -1,57 +1,50 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] docbook: fix fatal error from libata
-Date: Mon, 9 Aug 2010 16:28:30 -0700
-Message-ID: <20100809162830.06374768.randy.dunlap@oracle.com>
+From: Murali N <nalajala.murali@gmail.com>
+Subject: Fwd: handling received FISes in SATA driver & libATA !!!
+Date: Tue, 10 Aug 2010 17:26:19 +0530
+Message-ID: <AANLkTi=RE4hcShGA0WGaZ9Ys44FSQt_zSRvd0xJG_2D3@mail.gmail.com>
+References: <AANLkTimdikdyj1ZkO_dNEYM4SynNpYV4jGOh7VVRN=Sn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:18861 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757140Ab0HIX3t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2010 19:29:49 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39695 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757504Ab0HJL4U convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Aug 2010 07:56:20 -0400
+Received: by bwz3 with SMTP id 3so1823359bwz.19
+        for <linux-ide@vger.kernel.org>; Tue, 10 Aug 2010 04:56:19 -0700 (PDT)
+In-Reply-To: <AANLkTimdikdyj1ZkO_dNEYM4SynNpYV4jGOh7VVRN=Sn@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
-Cc: jgarzik <jgarzik@pobox.com>, torvalds <torvalds@linux-foundation.org>
+To: linux-ide@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
-
-'make htmldocs' has a fatal error when processing libata.xml, as seen
-below.  The string "Example patterns:" (or any string with "example.*:"
-in it AFAIK) causes some part of the doc generation tool chain to try to
-produce an <informalexample> block without a beginning <para>, but
-there is an ending </para> generated, which throws things out of kilter.
-
-I don't even know where (what program) this is happening in.
-I searched in docproc and xmlto and in some XML stylesheets without
-finding anything.  If anyone can give me pointers about this, please do.
-Until this is fixed, let's just spell "Example" as "Sample"
-and match up the double quotation marks while there.
+I am posting this question here as i did't get any reply from 'kernelne=
+wbies'.
+Also i am not sure whether i can assist any help on SATA here for a
+simple questions for my driver development!!!
 
 
-linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml:6575: parser error : Opening and ending tag mismatch: programlisting line 6573 and para
-   </para><para>
-          ^
-linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml:6580: parser error : Opening and ending tag mismatch: para line 6575 and programlisting
-</programlisting></informalexample>
-                 ^
-unable to parse linux-2.6.35-git8/DOC1/Documentation/DocBook/libata.xml
-make[2]: *** [Documentation/DocBook/libata.html] Error 1
+---------- Forwarded message ----------
+=46rom: Murali N <nalajala.murali@gmail.com>
+Date: Tue, Aug 10, 2010 at 12:14 PM
+Subject: handling received FISes in SATA driver & libATA !!!
+To: kernelnewbies@nl.linux.org
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/ata/libata-core.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-2.6.35-git8.orig/drivers/ata/libata-core.c
-+++ linux-2.6.35-git8/drivers/ata/libata-core.c
-@@ -4281,7 +4281,7 @@ static const struct ata_blacklist_entry 
-  *	The special characters ?, [, -, or *, can be matched using a set, eg. [*]
-  *	Behaviour with malformed patterns is undefined, though generally reasonable.
-  *
-- *	Example patterns:  "SD1?",  "SD1[0-5]",  "*R0",  SD*1?[012]*xx"
-+ *	Sample patterns:  "SD1?",  "SD1[0-5]",  "*R0",  "SD*1?[012]*xx"
-  *
-  *	This function uses one level of recursion per '*' in pattern.
-  *	Since it calls _nothing_ else, and has _no_ explicit local variables,
+Hi,
+I am new to SATA driver development. Here i have few questions.
+
+I am able to understand how SATA driver =C2=A0will send FISes to device=
+=2E
+
+I would like to know how the received FISes are handled in case of
+=46ISes come from the device? These FISes are copied in a special area
+whose base address is given in the "FIS base" register. I am would
+like to know which driver hooks (functions) to libATA will handle the
+received FISes?
+
+i appreciate your inputs.
+
+--
+Regards,
+Murali N
