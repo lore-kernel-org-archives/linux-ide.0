@@ -1,220 +1,144 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/11] block: misc cleanups in barrier code
-Date: Thu, 12 Aug 2010 14:41:25 +0200
-Message-ID: <1281616891-5691-6-git-send-email-tj@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: sata_sil24 failed command: READ FPDMA QUEUED (resolved)
+Date: Thu, 12 Aug 2010 07:09:36 -0700
+Message-ID: <AANLkTikGFJcAUKTcrjO_bNnZHBkAVhFENOs_o7HmN1po@mail.gmail.com>
+References: <Pine.LNX.4.61.1007132245000.24693@envy.nxs.se>
+	<4C3D134B.2090604@gmail.com>
+	<Pine.LNX.4.61.1007140955080.24693@envy.nxs.se>
+	<Pine.LNX.4.61.1007152103081.24693@envy.nxs.se>
+	<Pine.LNX.4.61.1007171422530.24693@envy.nxs.se>
+	<Pine.LNX.4.61.1007211404480.24693@envy.nxs.se>
+	<Pine.LNX.4.61.1007211433360.24693@envy.nxs.se>
+	<4C531A40.6080804@gmail.com>
+	<Pine.LNX.4.61.1008011625490.24693@envy.nxs.se>
+	<AANLkTikCqugAgM7zd=8H-hchN8b8tmZsP=NHgf+mNvc0@mail.gmail.com>
+	<Pine.LNX.4.61.1008020720250.24693@envy.nxs.se>
+	<AANLkTi=YDuEYt4BK4T4bJH3cY5GujC-tCV4D-ORcbDVT@mail.gmail.com>
+	<Pine.LNX.4.61.1008030732251.24693@envy.nxs.se>
+	<4C5B979E.8050606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1281616891-5691-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@l
-Cc: Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp-out.google.com ([74.125.121.35]:45126 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760176Ab0HLOJm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Aug 2010 10:09:42 -0400
+Received: from wpaz21.hot.corp.google.com (wpaz21.hot.corp.google.com [172.24.198.85])
+	by smtp-out.google.com with ESMTP id o7CE9ePj030243
+	for <linux-ide@vger.kernel.org>; Thu, 12 Aug 2010 07:09:40 -0700
+Received: from ywg4 (ywg4.prod.google.com [10.192.7.4])
+	by wpaz21.hot.corp.google.com with ESMTP id o7CE9dBF031503
+	for <linux-ide@vger.kernel.org>; Thu, 12 Aug 2010 07:09:39 -0700
+Received: by ywg4 with SMTP id 4so478694ywg.23
+        for <linux-ide@vger.kernel.org>; Thu, 12 Aug 2010 07:09:38 -0700 (PDT)
+In-Reply-To: <4C5B979E.8050606@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Tomas Lund <tlund@nxs.se>, linux-ide@vger.kernel.org
 
-Make the following cleanups in preparation of barrier/flush update.
+Hi Robert,
 
-* blk_do_ordered() declaration is moved from include/linux/blkdev.h to
-  block/blk.h.
+I had the same problem with locked drive earlier, causing a lot of
+unnecessary errors. See "Do not send RW commands to locked disks."
+thread.
+It works right now, but it does not take in account disks with wrong
+information in their identify page. I need to improve this patch: the
+first IO will go through and the error handler will check the drive is
+locked and then set a bit to prevent sending more command until the
+UNLOCK command is issued.
 
-* blk_do_ordered() now returns pointer to struct request, with %NULL
-  meaning "try the next request" and ERR_PTR(-EAGAIN) "try again
-  later".  The third case will be dropped with further changes.
+Gwendal.
 
-* In the initialization of proxy barrier request, data direction is
-  already set by init_request_from_bio().  Drop unnecessary explicit
-  REQ_WRITE setting and move init_request_from_bio() above REQ_FUA
-  flag setting.
-
-* add_request() is collapsed into __make_request().
-
-These changes don't make any functional difference.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/blk-barrier.c    |   32 ++++++++++++++------------------
- block/blk-core.c       |   21 ++++-----------------
- block/blk.h            |    7 +++++--
- include/linux/blkdev.h |    1 -
- 4 files changed, 23 insertions(+), 38 deletions(-)
-
-diff --git a/block/blk-barrier.c b/block/blk-barrier.c
-index ed0aba5..f1be85b 100644
---- a/block/blk-barrier.c
-+++ b/block/blk-barrier.c
-@@ -110,9 +110,9 @@ static void queue_flush(struct request_queue *q, unsigned which)
- 	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
- }
- 
--static inline bool start_ordered(struct request_queue *q, struct request **rqp)
-+static inline struct request *start_ordered(struct request_queue *q,
-+					    struct request *rq)
- {
--	struct request *rq = *rqp;
- 	unsigned skip = 0;
- 
- 	q->orderr = 0;
-@@ -149,11 +149,9 @@ static inline bool start_ordered(struct request_queue *q, struct request **rqp)
- 
- 		/* initialize proxy request and queue it */
- 		blk_rq_init(q, rq);
--		if (bio_data_dir(q->orig_bar_rq->bio) == WRITE)
--			rq->cmd_flags |= REQ_WRITE;
-+		init_request_from_bio(rq, q->orig_bar_rq->bio);
- 		if (q->ordered & QUEUE_ORDERED_DO_FUA)
- 			rq->cmd_flags |= REQ_FUA;
--		init_request_from_bio(rq, q->orig_bar_rq->bio);
- 		rq->end_io = bar_end_io;
- 
- 		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
-@@ -171,27 +169,26 @@ static inline bool start_ordered(struct request_queue *q, struct request **rqp)
- 	else
- 		skip |= QUEUE_ORDSEQ_DRAIN;
- 
--	*rqp = rq;
--
- 	/*
- 	 * Complete skipped sequences.  If whole sequence is complete,
--	 * return false to tell elevator that this request is gone.
-+	 * return %NULL to tell elevator that this request is gone.
- 	 */
--	return !blk_ordered_complete_seq(q, skip, 0);
-+	if (blk_ordered_complete_seq(q, skip, 0))
-+		rq = NULL;
-+	return rq;
- }
- 
--bool blk_do_ordered(struct request_queue *q, struct request **rqp)
-+struct request *blk_do_ordered(struct request_queue *q, struct request *rq)
- {
--	struct request *rq = *rqp;
- 	const int is_barrier = rq->cmd_type == REQ_TYPE_FS &&
- 				(rq->cmd_flags & REQ_HARDBARRIER);
- 
- 	if (!q->ordseq) {
- 		if (!is_barrier)
--			return true;
-+			return rq;
- 
- 		if (q->next_ordered != QUEUE_ORDERED_NONE)
--			return start_ordered(q, rqp);
-+			return start_ordered(q, rq);
- 		else {
- 			/*
- 			 * Queue ordering not supported.  Terminate
-@@ -199,8 +196,7 @@ bool blk_do_ordered(struct request_queue *q, struct request **rqp)
- 			 */
- 			blk_dequeue_request(rq);
- 			__blk_end_request_all(rq, -EOPNOTSUPP);
--			*rqp = NULL;
--			return false;
-+			return NULL;
- 		}
- 	}
- 
-@@ -211,14 +207,14 @@ bool blk_do_ordered(struct request_queue *q, struct request **rqp)
- 	/* Special requests are not subject to ordering rules. */
- 	if (rq->cmd_type != REQ_TYPE_FS &&
- 	    rq != &q->pre_flush_rq && rq != &q->post_flush_rq)
--		return true;
-+		return rq;
- 
- 	/* Ordered by draining.  Wait for turn. */
- 	WARN_ON(blk_ordered_req_seq(rq) < blk_ordered_cur_seq(q));
- 	if (blk_ordered_req_seq(rq) > blk_ordered_cur_seq(q))
--		*rqp = NULL;
-+		rq = ERR_PTR(-EAGAIN);
- 
--	return true;
-+	return rq;
- }
- 
- static void bio_end_empty_barrier(struct bio *bio, int err)
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 3f802dd..ed8ef89 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1037,22 +1037,6 @@ void blk_insert_request(struct request_queue *q, struct request *rq,
- }
- EXPORT_SYMBOL(blk_insert_request);
- 
--/*
-- * add-request adds a request to the linked list.
-- * queue lock is held and interrupts disabled, as we muck with the
-- * request queue list.
-- */
--static inline void add_request(struct request_queue *q, struct request *req)
--{
--	drive_stat_acct(req, 1);
--
--	/*
--	 * elevator indicated where it wants this request to be
--	 * inserted at elevator_merge time
--	 */
--	__elv_add_request(q, req, ELEVATOR_INSERT_SORT, 0);
--}
--
- static void part_round_stats_single(int cpu, struct hd_struct *part,
- 				    unsigned long now)
- {
-@@ -1316,7 +1300,10 @@ get_rq:
- 		req->cpu = blk_cpu_to_group(smp_processor_id());
- 	if (queue_should_plug(q) && elv_queue_empty(q))
- 		blk_plug_device(q);
--	add_request(q, req);
-+
-+	/* insert the request into the elevator */
-+	drive_stat_acct(req, 1);
-+	__elv_add_request(q, req, ELEVATOR_INSERT_SORT, 0);
- out:
- 	if (unplug || !queue_should_plug(q))
- 		__generic_unplug_device(q);
-diff --git a/block/blk.h b/block/blk.h
-index 6e7dc87..874eb4e 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -51,6 +51,8 @@ static inline void blk_clear_rq_complete(struct request *rq)
-  */
- #define ELV_ON_HASH(rq)		(!hlist_unhashed(&(rq)->hash))
- 
-+struct request *blk_do_ordered(struct request_queue *q, struct request *rq);
-+
- static inline struct request *__elv_next_request(struct request_queue *q)
- {
- 	struct request *rq;
-@@ -58,8 +60,9 @@ static inline struct request *__elv_next_request(struct request_queue *q)
- 	while (1) {
- 		while (!list_empty(&q->queue_head)) {
- 			rq = list_entry_rq(q->queue_head.next);
--			if (blk_do_ordered(q, &rq))
--				return rq;
-+			rq = blk_do_ordered(q, rq);
-+			if (rq)
-+				return !IS_ERR(rq) ? rq : NULL;
- 		}
- 
- 		if (!q->elevator->ops->elevator_dispatch_fn(q, 0))
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6003f7c..21baa19 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -867,7 +867,6 @@ extern void blk_queue_rq_timed_out(struct request_queue *, rq_timed_out_fn *);
- extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- extern void blk_queue_flush(struct request_queue *q, unsigned int flush);
- extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
--extern bool blk_do_ordered(struct request_queue *, struct request **);
- extern unsigned blk_ordered_cur_seq(struct request_queue *);
- extern unsigned blk_ordered_req_seq(struct request *);
- extern bool blk_ordered_complete_seq(struct request_queue *, unsigned, int);
--- 
-1.7.1
+On Thu, Aug 5, 2010 at 10:03 PM, Robert Hancock <hancockrwd@gmail.com> =
+wrote:
+> On 08/02/2010 11:33 PM, Tomas Lund wrote:
+>> On Mon, 2 Aug 2010, Robert Hancock wrote:
+>>
+>>> On Mon, Aug 2, 2010 at 1:21 AM, Tomas Lund <tlund@nxs.se> wrote:
+>>>
+>>>> I have unlocked and tested a total of 4 disks now, both the samsun=
+g 1TB and 3 of the WDC 2TB disks. Thank you very much! Left to do: test=
+ that everything is working with the PMP aswell.
+>>>
+>>> Good to hear.
+>>
+>> I now have all of my drives up and working, running on the PMP and e=
+verything is looking perfectly. Thanks again for your help.
+>>
+>>>> Question: Would it be unreasonable to request that the kernel woul=
+d issue the apropriate ATA-commands to a disk as soon as it is detected=
+, and not try to read from it if it is locked? It would have been reall=
+y, really nice to just get the error message "drive is locked".
+>>>
+>>> It should be possible to indicate that, yes. I'll look into it when=
+ I get a chance, if someone doesn't beat me to it..
+>>
+>> Perfect!
+>>
+>> //tlund
+>
+> Can you test this patch out, assuming you still have anything left th=
+at's locked
+> (or can relock one of them to try it out)? It should print out a warn=
+ing in
+> dmesg upon recognizing the device if it's in the security locked stat=
+e.
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ddf8e48..d4ec163 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2561,6 +2561,11 @@ int ata_dev_configure(struct ata_device *dev)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 dma_dir_string);
+> =A0 =A0 =A0 =A0}
+>
+> + =A0 =A0 =A0 if (print_info && ata_id_security_locked(dev->id))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_dev_printk(dev, KERN_WARNING,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "appears to have ATA se=
+curity enabled and locked - "
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 "media may be inaccessi=
+ble until unlocked\n");
+> +
+> =A0 =A0 =A0 =A0/* determine max_sectors */
+> =A0 =A0 =A0 =A0dev->max_sectors =3D ATA_MAX_SECTORS;
+> =A0 =A0 =A0 =A0if (dev->flags & ATA_DFLAG_LBA48)
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index fe6e681..f2359fa 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -684,6 +684,22 @@ static inline int ata_id_hpa_enabled(const u16 *=
+id)
+> =A0 =A0 =A0 =A0return id[ATA_ID_COMMAND_SET_1] & (1 << 10);
+> =A0}
+>
+> +static inline int ata_id_security_locked(const u16 *id)
+> +{
+> + =A0 =A0 =A0 /* Yes children, word 83 valid bits cover word 82 data =
+*/
+> + =A0 =A0 =A0 if ((id[ATA_ID_COMMAND_SET_2] & 0xC000) !=3D 0x4000)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 /* And 87 covers 85-87 */
+> + =A0 =A0 =A0 if ((id[ATA_ID_CSF_DEFAULT] & 0xC000) !=3D 0x4000)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 /* Check command sets enabled as well as supported */
+> + =A0 =A0 =A0 if ((id[ATA_ID_CFS_ENABLE_1] & (1 << 1)) =3D=3D 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 if ((id[ATA_ID_COMMAND_SET_1] & (1 << 1)) =3D=3D 0)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 return (id[ATA_ID_DLF] & 0x0007) =3D=3D 0x0007;
+> +}
+> +
+> =A0static inline int ata_id_has_wcache(const u16 *id)
+> =A0{
+> =A0 =A0 =A0 =A0/* Yes children, word 83 valid bits cover word 82 data=
+ */
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
