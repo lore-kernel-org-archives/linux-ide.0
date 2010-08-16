@@ -1,114 +1,112 @@
-From: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>
-Subject: RE: [PATCH] 2.6.35 libata support for > 512 byte sectors (e.g. 4K
- Native)
-Date: Sat, 14 Aug 2010 22:37:14 -0600
-Message-ID: <CAC4B8726E86A142B27A9E9A2F2F12470149041A4E@rrsmsx505.amr.corp.intel.com>
-References: <AANLkTikSSmP5f1csa=xPTR=EqY4D5a=6t2oDVkZ7cA-v@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH UPDATED 10/11] fs, block: propagate REQ_FLUSH/FUA interface
+ to upper layers
+Date: Mon, 16 Aug 2010 18:33:22 +0200
+Message-ID: <4C696852.1080709@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-11-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61502 "EHLO mga01.intel.com"
+Received: from hera.kernel.org ([140.211.167.34]:42340 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750696Ab0HOEhS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 Aug 2010 00:37:18 -0400
-In-Reply-To: <AANLkTikSSmP5f1csa=xPTR=EqY4D5a=6t2oDVkZ7cA-v@mail.gmail.com>
-Content-Language: en-US
+	id S1754642Ab0HPQgh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Aug 2010 12:36:37 -0400
+In-Reply-To: <1281616891-5691-11-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Grant Grundler <grundler@google.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>
-Cc: Linux IDE <linux-ide@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 
-SWYgeW91IHdpbGwgaW5zaXN0IG9uIHNlbmRpbmcgdG8gbXkgT3V0bG9vayBhZGRyZXNzLCB5b3Un
-bGwgZ2V0IHJlcGxpZXMgaW4gc3RhbmRhcmQgYnJva2VuIE91dGxvb2sgZm9ybWF0LiAgWW91J3Zl
-IGJlZW4gd2FybmVkLg0KDQotLS0NCg0KKy8qIEJVRzogQmlnIGVuZGlhbiBzeXN0ZW1zIG5lZWQg
-YWNjZXNzZXMgdG8gImlkIiB3cmFwcGVkIHdpdGggbGUxNl90b19jcHUoKS4NCisgKi8NCg0KTm8s
-IGl0J3MgYWxyZWFkeSBiZWVuIGNvbnZlcnRlZC4gIFNlZSBhdGFfZGV2X3JlYWRfaWQoKS4NCg0K
-LS0tDQoNCkknbSBub3Qgc3VyZSBhYm91dCB5b3VyIHVzZSBvZiBhIHN3aXRjaCB0byBzZXQgdGhl
-IHNlY3RvciBzaXplLiAgSGF2ZSB5b3UgY2hlY2tlZCB0aGUgY29kZSB0aGF0IEdDQyBnZW5lcmF0
-ZXMgZm9yIHRoaXM/DQoNCi0tLQ0KDQpBbGwgdGhlIHBsYWNlcyB5b3UgZGVyZWZlcmVuY2UgZGV2
-LT5zZGV2IGFyZSB3aXRoaW4gYSBjYWxsY2hhaW4gZnJvbSAtPnF1ZXVlY29tbWFuZDsgc2RldiBj
-YW4ndCBwb3NzaWJseSBnbyBhd2F5Lg0KSXQnZCBiZSBjbGVhcmVyIHRoYXQgdGhpcyBpcyB0aGUg
-Y2FzZSBpZiB5b3UgdXNlZCBzY21kLT5kZXZpY2UtPnNlY3Rvcl9zaXplIGluc3RlYWQgb2YgZGV2
-LT5zZGV2LT5zZWN0b3Jfc2l6ZS4NCg0KLS0tDQoNCkBAIC01MTYsNyArNTE1LDcgQEAgaW50IGF0
-YV9jbWRfaW9jdGwoc3RydWN0IHNjc2lfZGV2aWNlICpzY3NpZGV2LCB2b2lkIF9fdXNlciAqYXJn
-KQ0KIAltZW1zZXQoc2NzaV9jbWQsIDAsIHNpemVvZihzY3NpX2NtZCkpOw0KIA0KIAlpZiAoYXJn
-c1szXSkgew0KLQkJYXJnc2l6ZSA9IFNFQ1RPUl9TSVpFICogYXJnc1szXTsNCisJCWFyZ3NpemUg
-PSBBVEFfU0VDVF9TSVpFICogYXJnc1szXTsNCiAJCWFyZ2J1ZiA9IGttYWxsb2MoYXJnc2l6ZSwg
-R0ZQX0tFUk5FTCk7DQogCQlpZiAoYXJnYnVmID09IE5VTEwpIHsNCiAJCQlyYyA9IC1FTk9NRU07
-DQoNCkkgdGhpbmsgdGhpcyBpcyB3cm9uZy4gIFRoZSBpb2N0bCBkb2VzIFBJTyBEYXRhLWluOyBh
-cyBzdWNoLCBpdCBzaG91bGQgdXNlIHRoZSBuYXRpdmUgc2VjdG9yIHNpemUsIG5vdCA1MTIuDQpU
-aGF0IHNhaWQsIHRoZXJlJ3MgYSBwb3NzaWJpbGl0eSBvZiBkYXRhIGNvcnJ1cHRpb24gZm9yIHBy
-b2dyYW1zIHdoaWNoIHVzZSB0aGlzIGlvY3RsLCBhc3N1bWluZyBhIDUxMi1ieXRlIHNlY3RvciBz
-aXplIHdoZW4gaXQncyBuYXRpdmVseSA0ay4NClRoaXMgb25lJ3MgdHJpY2t5IGFuZCBuZWVkcyBz
-ZXJpb3VzIHRob3VnaHQuICBJIG1pZ2h0IGVycm9yIGl0IGlmIHNlY3Rvcl9zaXplIGlzbid0IDUx
-MiBieXRlcyA6LSkNCkl0J3MgYSBsZWdhY3kgaW9jdGwgYW55d2F5LCByaWdodD8NCg0KLS0tDQoN
-CkkgYWxzbyByZW1lbWJlciBBbGFuIHBvaW50aW5nIG91dCB0aGF0IHNvbWUgQVRBIGNvbnRyb2xs
-ZXJzIGRvbid0IHN1cHBvcnQgbm9uLTUxMi1ieXRlIGNvbW1hbmRzLCBhbmQgd2Ugc2hvdWxkIGhh
-dmUgYSAnc2FmZSBmb3IgbGFyZ2Ugc2VjdG9ycycgZmxhZyBzZXQgYnkgdGhlIGNvbnRyb2xsZXIu
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBHcmFudCBHcnVuZGxlciBbbWFp
-bHRvOmdydW5kbGVyQGdvb2dsZS5jb21dIA0KU2VudDogU2F0dXJkYXksIEF1Z3VzdCAxNCwgMjAx
-MCA1OjAxIFBNDQpUbzogSmVmZiBHYXJ6aWs7IFRlanVuIEhlbw0KQ2M6IExpbnV4IElERTsgV2ls
-Y294LCBNYXR0aGV3IFI7IEd3ZW5kYWwgR3JpZ25vdTsgTEtNTA0KU3ViamVjdDogW1BBVENIXSAy
-LjYuMzUgbGliYXRhIHN1cHBvcnQgZm9yID4gNTEyIGJ5dGUgc2VjdG9ycyAoZS5nLiA0SyBOYXRp
-dmUpDQoNCkF0dGFjaGVkIHBhdGNoIGVuYWJsZXMgbXkgeDg2IG1hY2hpbmUgdG8gcmVjb2duaXpl
-IGFuZCB0YWxrIHRvIGEgIk5hdGl2ZSA0SyIgU0FUQSBkZXZpY2UuDQoNCldoZW4gSSBzdGFydGVk
-IHdvcmtpbmcgb24gdGhpcywgSSBkaWRuJ3Qga25vdyBNYXR0aGV3IFdpbGNveCBoYWQgcG9zdGVk
-IGEgc2ltaWxhciBwYXRjaCAyIHllYXJzIGFnbzoNCiAgIGh0dHA6Ly9naXQua2VybmVsLm9yZy8/
-cD1saW51eC9rZXJuZWwvZ2l0L3dpbGx5L2F0YS5naXQ7YT1zaG9ydGxvZztoPXJlZnMvaGVhZHMv
-YXRhLWxhcmdlLXNlY3RvcnMNCg0KR3dlbmRhbCBHcmlnbm91IHBvaW50ZWQgbWUgYXQgdGhlIHRo
-ZSBhYm92ZSBjb2RlIGFuZCBzbWFsbCBwb3J0aW9ucyBvZiB0aGlzIHBhdGNoIGluY2x1ZGUgTWF0
-dGhldydzIHdvcmsuIFRoYXQncyB3aHkgTWF0aGV3IGlzIGZpcnN0IG9uIHRoZSAiU2lnbmVkLW9m
-Zi1ieToiLiBJJ3ZlIE5PVCBpbmNsdWRlZCBoaXMgdXNlIG9mIGEgYml0bWFwIHRvIGRldGVybWlu
-ZQ0KNTEyIHZzIE5hdGl2ZSBmb3IgQVRBIGNvbW1hbmQgYmxvY2sgc2l6ZSAtIGp1c3QgdXNlZCBh
-IHNpbXBsZSB0YWJsZS4NCkFuZCBidWdzIGFyZSBhbG1vc3QgY2VydGFpbmx5IG1pbmUuDQoNCkxh
-c3RseSwgdGhlIHBhdGNoIGhhcyBiZWVuIHRlc3RlZCB3aXRoIGEgbmF0aXZlIDRLICdFbmdpbmVl
-cmluZyBTYW1wbGUnIGRyaXZlIHByb3ZpZGVkIGJ5IEhpdGFjaGkgR1NULg0KDQpTaWduZWQtb2Zm
-LWJ5OiBNYXR0aGV3IFdpbGNveCA8bWF0dGhldy5yLndpbGNveEBpbnRlbC5jb20+DQpTaWduZWQt
-b2ZmLWJ5OiBHcmFudCBHcnVuZGxlciA8Z3J1bmRsZXJAZ29vZ2xlLmNvbT4NClJldmlld2VkLWJ5
-OiBHd2VuZGFsIEdyaWdub3UgPGd3ZW5kYWxAZ29vZ2xlLmNvbT4NCg0KLS0tLS0NCg0KR3dlbmRh
-bCdzIHJldmlldyBvZiB0aGlzIHBhdGNoIGhhZCBoaW0gY29uY2VybmVkIGFib3V0IGFjY2VzcyB0
-byAiZGV2LT5zZGV2LT5zZWN0b3Jfc2l6ZSIgbWF5IGhhdmUgcmlza3MgKGUuZy4gc2RldiBnb2Vz
-IGF3YXkgYmVmb3JlIGRldiBkb2VzKS4gIEkgZGlkbid0IGxpa2UgYWRkaW5nIGFkZGl0aW9uYWwg
-ZmllbGRzIHRvIGF0YV9kZXYgdGhhdCBkdXBsaWNhdGUgd2hhdCBzY3NpIGlzIGRvaW5nIGFuZCB0
-aGlzIHNlZW1zIHRvIGJlIHdvcmtpbmcgc28gZmFyLiBCdXQgc2luY2UgSSBkb24ndCBrbm93IGhv
-dyBkZXYtPnNkZXYgaXMgcHJvdGVjdGVkL3N5bmNyb25pemVkIChkZXNwaXRlIGhvdyBsaWJhdGEg
-YW5kIHNjc2kgYXJlIGpvaW5lZCBhdCB0aGUgaGlwKSwgSSBob3BlIHNvbWVvbmUgZWxzZSBjYW4g
-Y29tbWVudCBvbiBpZiBteSB1c2FnZSBvZiBkZXYtPnNkZXYtPnNlY3Rvcl9zaXplIGlzIGEgcHJv
-YmxlbSBhbmQgd2h5Lg0KDQpJIGJlbGlldmUgdXNlIG9mIGF0YV9pZF9sb2dpY2FsX3Blcl9waHlz
-aWNhbF9zZWN0b3JzKCkgd2FzIHdyb25nLiBJJ3ZlIHJlcGxhY2VkIGl0IHdpdGggYXRhX2lkX2xv
-ZzJfcGVyX3BoeXNpY2FsX3NlY3RvcigpIGFuZCBjbGVhbmVkIHVwIGhvdyBibG9jayBzaXplIHdv
-cmQgYW5kIGFsaWdubWVudCBhcmUgcmVmZXJlbmNlZC4gSXQncyBhbG90IGVhc2llciB0byByZWFk
-IHdoZXJlIHRob3NlIGZ1bmN0aW9ucyBhcmUgdXNlZCBub3cuDQoNCg0KSGVyZSBpcyB0aGUga2Vy
-bmVsIG91dHB1dCBmcm9tIGhvdHBsdWdnaW5nIHRoZSBTQVRBIGRyaXZlIG9uIG15IG1hY2hpbmUg
-KHVzaW5nIE1hcnZlbGwgNzA0MiBjb250cm9sbGVyKToNCg0KWyAyNDY4LjMwMTIxOF0gYXRhNDog
-ZXhjZXB0aW9uIEVtYXNrIDB4MTAgU0FjdCAweDAgU0VyciAweDQwMTAwMDAgYWN0aW9uIDB4ZSBm
-cm96ZW4gWyAyNDY4LjMwMTIyNV0gYXRhNDogZWRtYV9lcnJfY2F1c2U9MDAwMDAwMTAgcHBfZmxh
-Z3M9MDAwMDAwMDAsIGRldiBjb25uZWN0IFsgMjQ2OC4zMDEyNDBdIGF0YTQ6IFNFcnJvcjogeyBQ
-SFlSZHlDaGcgRGV2RXhjaCB9IFsgMjQ2OC4zMDEyNTddIGF0YTQ6IGhhcmQgcmVzZXR0aW5nIGxp
-bmsgWyAyNDcxLjcwMTExN10gYXRhNDogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVzIDEx
-MyBTQ29udHJvbCAzMDApIFsgMjQ3MS43NDAzOTBdIGF0YTQuMDA6IEhQQSBkZXRlY3RlZDogY3Vy
-cmVudCA5NzcwNjcwLCBuYXRpdmUgNzgxNjUzNjAgWyAyNDcxLjc0MDM5OV0gYXRhNC4wMDogQVRB
-LTc6IEhpdGFjaGkgSFRTeHh4eHh4eHh4eHh4LCB5eXl5eXl5eSwgbWF4IFVETUEvMTAwIFsgMjQ3
-MS43NDA0MDJdIGF0YTQuMDA6IDk3NzA2NzAgc2VjdG9ycywgbXVsdGkgMDogTEJBNDggTkNRIChk
-ZXB0aCAzMS8zMikgWyAyNDcxLjc2NDQ2NV0gYXRhNC4wMDogY29uZmlndXJlZCBmb3IgVURNQS8x
-MDAgWyAyNDcxLjc2NDUwMV0gYXRhNDogRUggY29tcGxldGUNClsgMjQ3MS43NjQ5ODhdIHNjc2kg
-NDowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAgQVRBICAgICAgSGl0YWNoaQ0KSFRTeHh4eHh4eHh4
-eHh4IFBROiAwIEFOU0k6IDUNClsgMjQ3MS43ODI5MTRdIHNkIDQ6MDowOjA6IFtzZGRdIDk3NzA2
-NzAgNDA5Ni1ieXRlIGxvZ2ljYWwgYmxvY2tzOg0KKDQwLjAgR0IvMzcuMiBHaUIpDQpbIDI0NzEu
-Nzg3MDkzXSBzZCA0OjA6MDowOiBbc2RkXSBXcml0ZSBQcm90ZWN0IGlzIG9mZiBbIDI0NzEuNzg3
-MTIwXSBzZCA0OjA6MDowOiBbc2RkXSBNb2RlIFNlbnNlOiAwMCAzYSAwMCAwMCBbIDI0NzEuNzg4
-NzY4XSBzZCA0OjA6MDowOiBbc2RkXSBXcml0ZSBjYWNoZTogZW5hYmxlZCwgcmVhZCBjYWNoZToN
-CmVuYWJsZWQsIGRvZXNuJ3Qgc3VwcG9ydCBEUE8gb3IgRlVBDQpbIDI0NzEuNzkyMjkzXSBzZCA0
-OjA6MDowOiBbc2RkXSA5NzcwNjcwIDQwOTYtYnl0ZSBsb2dpY2FsIGJsb2NrczoNCig0MC4wIEdC
-LzM3LjIgR2lCKQ0KWyAyNDcxLjc5MjgzNF0gc2QgNDowOjA6MDogQXR0YWNoZWQgc2NzaSBnZW5l
-cmljIHNnMyB0eXBlIDAgWyAyNDcxLjc5OTM3MF0gIHNkZDogdW5rbm93biBwYXJ0aXRpb24gdGFi
-bGUgWyAyNDcxLjg0NTU4Ml0gc2QgNDowOjA6MDogW3NkZF0gOTc3MDY3MCA0MDk2LWJ5dGUgbG9n
-aWNhbCBibG9ja3M6DQooNDAuMCBHQi8zNy4yIEdpQikNClsgMjQ3MS44NTM3NjNdIHNkIDQ6MDow
-OjA6IFtzZGRdIEF0dGFjaGVkIFNDU0kgZGlzaw0KDQpJIHdhcyBhYmxlIHRvIGRkIHRvL2Zyb20g
-dGhlIGRldmljZSBhbmQgcHVsbCBTTUFSVCBkYXRhIChub3Qgc2hvd24gYW5kIHByb2JhYmx5IG5v
-dCBhYmxlIHRvIHNoYXJlLikNCg0KSWYgc29tZW9uZSBoYXMgIkFkdmFuY2VkIEZvcm1hdCBEZXZl
-bG9wZXJzIEtpdCIgU0FUQSBkcml2ZXMgZnJvbSBpZGVtYS5vcmcsIEknZCBhcHByZWNpYXRlIGFu
-eSB0ZXN0IHJlcG9ydHMuDQoNCnRoYW5rcw0KZ3JhbnQNCg0KWyBwYXRjaCBOT1QgaW5saW5lZCBi
-ZWNhdXNlIGdtYWlsIHdpbGwgd29yZC13cmFwIGFuZCBtYWtlIGEgbWVzcyBvZiBpdC4gUGxlYXNl
-IHVzZSBhdHRhY2hlZCBmaWxlZC5dDQo=
+Propagate deprecation of REQ_HARDBARRIER and new REQ_FLUSH/FUA
+interface to upper layers.
+
+* WRITE_BARRIER is marked deprecated and WRITE_FLUSH, WRITE_FUA and
+  WRITE_FLUSH_FUA are added.
+
+* REQ_COMMON_MASK now includes REQ_FLUSH | REQ_FUA so that they are
+  copied from bio to request.
+
+* BH_Ordered and BH_Eopnotsupp are marked deprecated.  BH_Flush/FUA
+  are _NOT_ added as they can and should be specified when calling
+  submit_bh() as @rw parameter as suggested by Jan Kara.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>
+---
+Dropped BH_Flush/FUA as suggested.
+
+Thanks.
+
+ include/linux/blk_types.h   |    2 +-
+ include/linux/buffer_head.h |    4 ++--
+ include/linux/fs.h          |   20 +++++++++++++-------
+ 3 files changed, 16 insertions(+), 10 deletions(-)
+
+Index: block/include/linux/fs.h
+===================================================================
+--- block.orig/include/linux/fs.h
++++ block/include/linux/fs.h
+@@ -138,13 +138,13 @@ struct inodes_stat_t {
+  * SWRITE_SYNC
+  * SWRITE_SYNC_PLUG	Like WRITE_SYNC/WRITE_SYNC_PLUG, but locks the buffer.
+  *			See SWRITE.
+- * WRITE_BARRIER	Like WRITE_SYNC, but tells the block layer that all
+- *			previously submitted writes must be safely on storage
+- *			before this one is started. Also guarantees that when
+- *			this write is complete, it itself is also safely on
+- *			storage. Prevents reordering of writes on both sides
+- *			of this IO.
+- *
++ * WRITE_BARRIER	DEPRECATED. Always fails. Use FLUSH/FUA instead.
++ * WRITE_FLUSH		Like WRITE_SYNC but with preceding cache flush.
++ * WRITE_FUA		Like WRITE_SYNC but data is guaranteed to be on
++ *			non-volatile media on completion.
++ * WRITE_FLUSH_FUA	Combination of WRITE_FLUSH and FUA.  The IO is preceded
++ *			by a cache flush and data is guaranteed to be on
++ *			non-volatile media on completion.
+  */
+ #define RW_MASK			REQ_WRITE
+ #define RWA_MASK		REQ_RAHEAD
+@@ -162,6 +162,12 @@ struct inodes_stat_t {
+ #define WRITE_META		(WRITE | REQ_META)
+ #define WRITE_BARRIER		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
+ 				 REQ_HARDBARRIER)
++#define WRITE_FLUSH		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FLUSH)
++#define WRITE_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FUA)
++#define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
++				 REQ_FLUSH | REQ_FUA)
+ #define SWRITE_SYNC_PLUG	(SWRITE | REQ_SYNC | REQ_NOIDLE)
+ #define SWRITE_SYNC		(SWRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG)
+
+Index: block/include/linux/blk_types.h
+===================================================================
+--- block.orig/include/linux/blk_types.h
++++ block/include/linux/blk_types.h
+@@ -164,7 +164,7 @@ enum rq_flag_bits {
+ 	(REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT | REQ_FAILFAST_DRIVER)
+ #define REQ_COMMON_MASK \
+ 	(REQ_WRITE | REQ_FAILFAST_MASK | REQ_HARDBARRIER | REQ_SYNC | \
+-	 REQ_META| REQ_DISCARD | REQ_NOIDLE)
++	 REQ_META | REQ_DISCARD | REQ_NOIDLE | REQ_FLUSH | REQ_FUA)
+
+ #define REQ_UNPLUG		(1 << __REQ_UNPLUG)
+ #define REQ_RAHEAD		(1 << __REQ_RAHEAD)
+Index: block/include/linux/buffer_head.h
+===================================================================
+--- block.orig/include/linux/buffer_head.h
++++ block/include/linux/buffer_head.h
+@@ -32,8 +32,8 @@ enum bh_state_bits {
+ 	BH_Delay,	/* Buffer is not yet allocated on disk */
+ 	BH_Boundary,	/* Block is followed by a discontiguity */
+ 	BH_Write_EIO,	/* I/O error on write */
+-	BH_Ordered,	/* ordered write */
+-	BH_Eopnotsupp,	/* operation not supported (barrier) */
++	BH_Ordered,	/* DEPRECATED: ordered write */
++	BH_Eopnotsupp,	/* DEPRECATED: operation not supported (barrier) */
+ 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
+ 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
+
