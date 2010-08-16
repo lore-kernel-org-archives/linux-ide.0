@@ -1,38 +1,75 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [patch] pata_winbond: fix module init
-Date: Mon, 16 Aug 2010 21:23:03 +0200
-Message-ID: <201008162123.03208.bzolnier@gmail.com>
-References: <20100803152549.GQ26313@bicker>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] 2.6.35 libata support for > 512 byte sectors (e.g. 4K
+ Native)
+Date: Mon, 16 Aug 2010 15:41:09 -0400
+Message-ID: <4C699455.6020200@pobox.com>
+References: <AANLkTikSSmP5f1csa=xPTR=EqY4D5a=6t2oDVkZ7cA-v@mail.gmail.com> <CAC4B8726E86A142B27A9E9A2F2F12470149041A4E@rrsmsx505.amr.corp.intel.com> <AANLkTik4RNvaE5OrFq3NmZ+-9DKhAAaNQ3cdPg38zOr2@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41725 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691Ab0HPTXe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2010 15:23:34 -0400
-In-Reply-To: <20100803152549.GQ26313@bicker>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTik4RNvaE5OrFq3NmZ+-9DKhAAaNQ3cdPg38zOr2@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Grant Grundler <grundler@google.com>
+Cc: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, Tejun Heo <tj@kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
+On 08/16/2010 03:17 PM, Grant Grundler wrote:
+> On Sat, Aug 14, 2010 at 9:37 PM, Wilcox, Matthew R
+> <matthew.r.wilcox@intel.com>  wrote:
+>> If you will insist on sending to my Outlook address, you'll get replies in standard broken Outlook format.  You've been warned.
+>
+> You trumped my Gmail warning. I fold. :)
+>
+>>
+>> ---
+>>
+>> +/* BUG: Big endian systems need accesses to "id" wrapped with le16_to_cpu().
+>> + */
+>>
+>> No, it's already been converted.  See ata_dev_read_id().
+>
+> Ah - good. I'll remove the comment.
+>
+>>
+>> I'm not sure about your use of a switch to set the sector size.  Have you checked the code that GCC generates for this?
+>
+> The switch probably sucks unless we could weight the order of the
+> tests. E.g. common cases first. But it's just an implementation detail
+> that is relatively easy to replace with the bitmap you had implemented
+> before.
+>
+>>
+>> All the places you dereference dev->sdev are within a callchain from ->queuecommand; sdev can't possibly go away.
+>> It'd be clearer that this is the case if you used scmd->device->sector_size instead of dev->sdev->sector_size.
+>
+> Thank you - that looks much better to me too.
+>
+>> --
+>>
+>> @@ -516,7 +515,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+>>         memset(scsi_cmd, 0, sizeof(scsi_cmd));
+>>
+>>         if (args[3]) {
+>> -               argsize = SECTOR_SIZE * args[3];
+>> +               argsize = ATA_SECT_SIZE * args[3];
+>>                 argbuf = kmalloc(argsize, GFP_KERNEL);
+>>                 if (argbuf == NULL) {
+>>                         rc = -ENOMEM;
+>>
+>> I think this is wrong.  The ioctl does PIO Data-in; as such, it should use the native sector size, not 512.
+>> That said, there's a possibility of data corruption for programs which use this ioctl, assuming a 512-byte sector size when it's natively 4k.
+>> This one's tricky and needs serious thought.  I might error it if sector_size isn't 512 bytes :-)
+>> It's a legacy ioctl anyway, right?
+>
+> I have no idea. If it's tricky, I probably have it wrong.
+> Anyone else have guidance here?
 
-Hi Dan,
+The main question is whether the size of a DRQ block changes, when LBA 
+logical size changes?  I need to review the ATA8 specs in this area, but 
+I would think some interfaces that return 512-byte pages for things like 
+SMART info would be unchanged.  How do the drives behave for 
+PIO-Data-{In,Out} commands that are not reading/writing user data, but 
+rather drive metadata?
 
-On Tuesday 03 August 2010 05:27:47 pm Dan Carpenter wrote:
-> winbond_init_one() returns 0 on success and an error code on failure.
-> In the original code, we always just released the regions and return
-> -ENODEV.  This was introduce in 2006 by 7e45b0e5f6f6 "[PATCH] libata:
-> Winbond support".
-
-You might like to pick up
-
-	http://patchwork.ozlabs.org/patch/39358/
-
-instead..
-
-Thanks.
---
-Bartlomiej Zolnierkiewicz
+	Jeff
