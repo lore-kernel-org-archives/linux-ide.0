@@ -1,75 +1,59 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] 2.6.35 libata support for > 512 byte sectors (e.g. 4K
- Native)
-Date: Mon, 16 Aug 2010 15:41:09 -0400
-Message-ID: <4C699455.6020200@pobox.com>
-References: <AANLkTikSSmP5f1csa=xPTR=EqY4D5a=6t2oDVkZ7cA-v@mail.gmail.com> <CAC4B8726E86A142B27A9E9A2F2F12470149041A4E@rrsmsx505.amr.corp.intel.com> <AANLkTik4RNvaE5OrFq3NmZ+-9DKhAAaNQ3cdPg38zOr2@mail.gmail.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] 2.6.35 libata support for > 512 byte sectors (e.g. 4K Native)
+Date: Mon, 16 Aug 2010 13:24:09 -0700
+Message-ID: <AANLkTi=R4GQGVE5AvU9hdWXdtqZzaOswrGQA+cPgO58W@mail.gmail.com>
+References: <AANLkTikSSmP5f1csa=xPTR=EqY4D5a=6t2oDVkZ7cA-v@mail.gmail.com>
+	<CAC4B8726E86A142B27A9E9A2F2F12470149041A4E@rrsmsx505.amr.corp.intel.com>
+	<AANLkTik4RNvaE5OrFq3NmZ+-9DKhAAaNQ3cdPg38zOr2@mail.gmail.com>
+	<4C699455.6020200@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTik4RNvaE5OrFq3NmZ+-9DKhAAaNQ3cdPg38zOr2@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, Tejun Heo <tj@kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp-out.google.com ([216.239.44.51]:48157 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754842Ab0HPUYV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2010 16:24:21 -0400
+In-Reply-To: <4C699455.6020200@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "Wilcox, Matthew R" <matthew.r.wilcox@intel.com>, Tejun Heo <tj@kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>, LKML <linux-kernel@vger.kernel.org>
 
-On 08/16/2010 03:17 PM, Grant Grundler wrote:
-> On Sat, Aug 14, 2010 at 9:37 PM, Wilcox, Matthew R
-> <matthew.r.wilcox@intel.com>  wrote:
->> If you will insist on sending to my Outlook address, you'll get replies in standard broken Outlook format.  You've been warned.
->
-> You trumped my Gmail warning. I fold. :)
->
->>
->> ---
->>
->> +/* BUG: Big endian systems need accesses to "id" wrapped with le16_to_cpu().
->> + */
->>
->> No, it's already been converted.  See ata_dev_read_id().
->
-> Ah - good. I'll remove the comment.
->
->>
->> I'm not sure about your use of a switch to set the sector size.  Have you checked the code that GCC generates for this?
->
-> The switch probably sucks unless we could weight the order of the
-> tests. E.g. common cases first. But it's just an implementation detail
-> that is relatively easy to replace with the bitmap you had implemented
-> before.
->
->>
->> All the places you dereference dev->sdev are within a callchain from ->queuecommand; sdev can't possibly go away.
->> It'd be clearer that this is the case if you used scmd->device->sector_size instead of dev->sdev->sector_size.
->
-> Thank you - that looks much better to me too.
->
->> --
->>
->> @@ -516,7 +515,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
->>         memset(scsi_cmd, 0, sizeof(scsi_cmd));
->>
->>         if (args[3]) {
->> -               argsize = SECTOR_SIZE * args[3];
->> +               argsize = ATA_SECT_SIZE * args[3];
->>                 argbuf = kmalloc(argsize, GFP_KERNEL);
->>                 if (argbuf == NULL) {
->>                         rc = -ENOMEM;
->>
->> I think this is wrong.  The ioctl does PIO Data-in; as such, it should use the native sector size, not 512.
->> That said, there's a possibility of data corruption for programs which use this ioctl, assuming a 512-byte sector size when it's natively 4k.
->> This one's tricky and needs serious thought.  I might error it if sector_size isn't 512 bytes :-)
->> It's a legacy ioctl anyway, right?
->
-> I have no idea. If it's tricky, I probably have it wrong.
-> Anyone else have guidance here?
+On Mon, Aug 16, 2010 at 12:41 PM, Jeff Garzik <jgarzik@pobox.com> wrote=
+:
+=2E..
+> The main question is whether the size of a DRQ block changes, when LB=
+A
+> logical size changes?
 
-The main question is whether the size of a DRQ block changes, when LBA 
-logical size changes?  I need to review the ATA8 specs in this area, but 
-I would think some interfaces that return 512-byte pages for things like 
-SMART info would be unchanged.  How do the drives behave for 
-PIO-Data-{In,Out} commands that are not reading/writing user data, but 
-rather drive metadata?
+Don't we already know that depends on the ATA command?
 
-	Jeff
+> I need to review the ATA8 specs in this area, but I
+> would think some interfaces that return 512-byte pages for things lik=
+e SMART
+> info would be unchanged. =C2=A0How do the drives behave for PIO-Data-=
+{In,Out}
+> commands that are not reading/writing user data, but rather drive met=
+adata?
+
+SMART Info/Logs are meta data and as you noted unchanged.
+
+Two other meta-data PIO commands I can think of:
+o  FW update: I'm not going to risk bricking this drive to find that ou=
+t.
+o Vendor specific selftest/diagnostic commands (I don't know if any
+exist - just a guess)
+
+If someone from Hitachi cares to respond publicly regarding the
+behavior of this "Engineering Sample", that would be appreciated and
+helpful.  But feedback from any other vendor would be welcome/useful
+also.
+
+I suspect legacy tools might be needed to update firmware and those
+might continue to function if DRQ block size is still 512 byte.  I'd
+like to leave this hardcoded to ATA_SECT_SIZE until someone can
+demonstrate a need to change it. Ok?
+
+thanks,
+grant
