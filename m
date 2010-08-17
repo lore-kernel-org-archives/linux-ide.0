@@ -1,62 +1,83 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with sequenced flush
-Date: Tue, 17 Aug 2010 18:59:29 +0200
-Message-ID: <20100817165929.GB13800@lst.de>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Tue, 17 Aug 2010 18:59:38 +0200
+Message-ID: <4C6ABFFA.2000502@kernel.org>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>	<4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>	<4C6AB919.7060203@kernel.org> <20100817180158.179e7780@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:44510 "EHLO verein.lst.de"
+Received: from hera.kernel.org ([140.211.167.34]:33552 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757584Ab0HQRAA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Aug 2010 13:00:00 -0400
-Content-Disposition: inline
-In-Reply-To: <4C6ABBCB.9030306@kernel.org>
+	id S1757496Ab0HQRDW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Aug 2010 13:03:22 -0400
+In-Reply-To: <20100817180158.179e7780@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-On Tue, Aug 17, 2010 at 06:41:47PM +0200, Tejun Heo wrote:
-> > What other trees do you mean?
+Hello, Alan.
+
+On 08/17/2010 07:01 PM, Alan Cox wrote:
+>> ata_piix already has list of all the devices it supports, so maybe
+>> it's safe to grab all intel IDE devices from ata_generic?  ata_piix
 > 
-> I was mostly thinking about dm/md, drdb and stuff, but you're talking
-> about filesystem conversion patches being routed through block tree,
-> right?
+> I can't guarantee that and I'm not sure I can find anyone at Intel with
+> that deep a knowledge of the earliest chip errata.
 
-I think we really need all the conversions in one tree, block layer,
-remapping drivers and filesystems.
+But ata_generic grabbing a controller doesn't mean it's gonna be
+messed up in anyway.  That's what windows does for unknown IDE
+controllers after all.  The problem we want to avoid here is using
+ata_generic for a controller which already has a proper driver.
 
-Btw, I've done the conversion for all filesystems and I'm running tests
-over them now.  Expect the series late today or tomorrow.
-
-> I might just resequence it to finish this part of discussion but what
-> does that really buy us?  It's not really gonna help bisection.
-> Bisection won't be able to tell anything in higher resolution than
-> "the new implementation doesn't work".  If you show me how it would
-> actually help, I'll happily reshuffle the patches.
-
-It's not bisecting to find bugs in the barrier conversion.  We can't
-easily bisect it down anyway.  The problem is when we try to bisect
-other problems and get into the middle of the series barriers suddenly
-are gone.  Which is not very helpful for things like data integrity
-problems in filesystems.
-
-> >> I wasn't sure about that part.  You removed store_flush_error(), but
-> >> DM_ENDIO_REQUEUE should still have higher priority than other
-> >> failures, no?
-> > 
-> > Which priority?
+>> always has higher priority than ata_generic anyway and if a device
+>> isn't grabbed by ata_piix, we don't lose anything by grabbing it from
+>> ata_generic.
 > 
-> IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
-> core layer to retry the whole bio later), it trumps all other failures
-> and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
-> prioritized over other error codes, which actually is sort of
-> incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
-> layers as FLUSH failure implies data already lost.  So,
-> DM_ENDIO_REQUEUE actually should have lower priority than other
-> failures.  But, then again, the error codes still need to be
-> prioritized.
+> Priority only works if you know what is there to use, and the piix one is
+> for example broken if you change the bindings with sysfs. You don't for
+> example want to forget to compile in one driver and get generic when that
+> is unsafe.
 
-I think that's something we better leave to the DM team.
+I don't really think it would be dangerous to grab intel IDE
+controllers with ata_generic.  Again, that's what windows would do.
+And for sysfs unbind case, if the user specifically unbinds the
+controller from ata_piix, what is broken?
 
+> The extreme example would be if you have ata_generic binding to all
+> devices and you forgot to compile in RZ1000 support. On the relevant
+> board that just ate your file system.
+> 
+> So the grab it all approach was dismissed.
+
+For RZ1000, sure, but we're talking about only intel IDEs here.
+
+>>> Is it documented ? The instructions it was written to came from the
+>>> people who do the chips.
+>>
+>> Yeap, that's much better, but I still think it would be better to
+>> avoid such detection magics if possible.
+> 
+> Well yes but the logic is simple.
+> 
+> 0xF8 is non zero on all later Intel ATA PCI chipsets
+> 0x40 is writable on all earlier Intel ATA PCI chipsets, and zero + non
+> writable on the IDE-R devices.
+
+Maybe it's okay now but who's gonna remember what's going on there
+after five years and nobody guarantees the above would continue to
+hold in the future.
+
+> The other thing I did consider was submitting an Intel IDE-R driver that
+> contained the check and matched IDE CLASS & vendor == INTEL. That has the
+> advantage of not getting autoloaded unnecessarily so easily, but means we
+> have another driver.
+
+Yeah, I think it would be better to do it in ata_generic one way or
+the other.
+
+Thanks.
+
+-- 
+tejun
