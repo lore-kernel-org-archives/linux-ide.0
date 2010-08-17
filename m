@@ -1,44 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
- to RAM
-Date: Tue, 17 Aug 2010 14:09:33 +0200
-Message-ID: <4C6A7BFD.1070604@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008171319.25080.rjw@sisk.pl> <4C6A7281.3030804@gmail.com> <201008171410.21382.stephan.diestelhorst@amd.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] pata_cmd64x: revert commit d62f5576
+Date: Tue, 17 Aug 2010 14:13:42 +0200
+Message-ID: <4C6A7CF6.5090706@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48936 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379Ab0HQMMo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 08:12:44 -0400
-In-Reply-To: <201008171410.21382.stephan.diestelhorst@amd.com>
+Received: from hera.kernel.org ([140.211.167.34]:50912 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751340Ab0HQMRL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Aug 2010 08:17:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>, "\"linux-ide@vger.kernel.org\" st" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Milan Kocian <milan.kocian@wq.cz>
 
-Hello,
+Commit d62f5576 (pata_cmd64x: fix handling of address setup timings)
+incorrectly called ata_timing_compute() on UDMA mode on 0 @UT leading
+to devide by zero fault.  Revert it until better fix is available.
+This is reported in bko#16607 by Milan Kocian who also root caused it.
 
-On 08/17/2010 02:10 PM, Stephan Diestelhorst wrote:
-> If you want me to test anything... let me know. Since I do not know
-> much about the ATA code, I do not know what to change where. (A simple
-> grep for sd_suspend in drivers/ata didn't turn up anything.)
+  https://bugzilla.kernel.org/show_bug.cgi?id=16607
 
-Oh, sure, the following should be enough.  Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-and-root-caused-by: Milan Kocian <milan.kocian@wq.cz>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: stable@kernel.org
+---
+ drivers/ata/pata_cmd64x.c |    6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 8802e48..892ccc7 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2456,6 +2456,8 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
- 	int ret = 0;
+diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+index 9f5da1c..905ff76 100644
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -121,14 +121,8 @@ static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 m
 
-+	return 0;
-+
- 	if (!sdkp)
- 		return 0;	/* this can happen */
+ 		if (pair) {
+ 			struct ata_timing tp;
+-
+ 			ata_timing_compute(pair, pair->pio_mode, &tp, T, 0);
+ 			ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
+-			if (pair->dma_mode) {
+-				ata_timing_compute(pair, pair->dma_mode,
+-						&tp, T, 0);
+-				ata_timing_merge(&tp, &t, &t, ATA_TIMING_SETUP);
+-			}
+ 		}
+ 	}
 
--- 
-tejun
