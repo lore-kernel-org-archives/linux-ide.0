@@ -1,73 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Tue, 17 Aug 2010 18:41:47 +0200
-Message-ID: <4C6ABBCB.9030306@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Tue, 17 Aug 2010 18:01:58 +0100
+Message-ID: <20100817180158.179e7780@lxorguk.ukuu.org.uk>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>
+	<4C6AB68D.8000102@kernel.org>
+	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>
+	<4C6AB919.7060203@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100817131915.GB2963@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51350 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753129Ab0HQQqo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 12:46:44 -0400
+In-Reply-To: <4C6AB919.7060203@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hi,
+> ata_piix already has list of all the devices it supports, so maybe
+> it's safe to grab all intel IDE devices from ata_generic?  ata_piix
 
-On 08/17/2010 03:19 PM, Christoph Hellwig wrote:
-> On Tue, Aug 17, 2010 at 11:59:38AM +0200, Tejun Heo wrote:
->> I'm not against restructuring the patchset if it makes more sense but
->> it just feels like it would be a bit pointless effort (and one which
->> would require much tighter coordination among different trees) at this
->> point.  Am I missing something?
+I can't guarantee that and I'm not sure I can find anyone at Intel with
+that deep a knowledge of the earliest chip errata.
+
+> always has higher priority than ata_generic anyway and if a device
+> isn't grabbed by ata_piix, we don't lose anything by grabbing it from
+> ata_generic.
+
+Priority only works if you know what is there to use, and the piix one is
+for example broken if you change the bindings with sysfs. You don't for
+example want to forget to compile in one driver and get generic when that
+is unsafe.
+
+The extreme example would be if you have ata_generic binding to all
+devices and you forgot to compile in RZ1000 support. On the relevant
+board that just ate your file system.
+
+So the grab it all approach was dismissed.
+
+> > Is it documented ? The instructions it was written to came from the
+> > people who do the chips.
 > 
-> What other trees do you mean?
+> Yeap, that's much better, but I still think it would be better to
+> avoid such detection magics if possible.
 
-I was mostly thinking about dm/md, drdb and stuff, but you're talking
-about filesystem conversion patches being routed through block tree,
-right?
+Well yes but the logic is simple.
 
-> The conversions of the 8 filesystems that actually support barriers
-> need to go through this tree anyway if we want to be able to test
-> it.  Also the changes in the filesystem are absolutely minimal -
-> it's basically just s/WRITE_BARRIER/WRITE_FUA_FLUSH/ after my
-> initial patch kill BH_Orderd, and removing about 10 lines of code in
-> reiserfs.
+0xF8 is non zero on all later Intel ATA PCI chipsets
+0x40 is writable on all earlier Intel ATA PCI chipsets, and zero + non
+writable on the IDE-R devices.
 
-I might just resequence it to finish this part of discussion but what
-does that really buy us?  It's not really gonna help bisection.
-Bisection won't be able to tell anything in higher resolution than
-"the new implementation doesn't work".  If you show me how it would
-actually help, I'll happily reshuffle the patches.
+The other thing I did consider was submitting an Intel IDE-R driver that
+contained the check and matched IDE CLASS & vendor == INTEL. That has the
+advantage of not getting autoloaded unnecessarily so easily, but means we
+have another driver.
 
->> I wasn't sure about that part.  You removed store_flush_error(), but
->> DM_ENDIO_REQUEUE should still have higher priority than other
->> failures, no?
-> 
-> Which priority?
+Alan
 
-IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
-core layer to retry the whole bio later), it trumps all other failures
-and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
-prioritized over other error codes, which actually is sort of
-incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
-layers as FLUSH failure implies data already lost.  So,
-DM_ENDIO_REQUEUE actually should have lower priority than other
-failures.  But, then again, the error codes still need to be
-prioritized.
 
->> But how do you make sure REQ_FLUSHes for preflush finish before
->> starting the write?
-> 
-> Hmm, okay.  I see how the special flush_bio makes the waiting easier,
-> let's see if Mike or other in the DM team have a better idea.
-
-Yeah, it would be better if it can be sequenced w/o using a work but
-let's leave it for later.
-
-Thanks.
-
--- 
-tejun
