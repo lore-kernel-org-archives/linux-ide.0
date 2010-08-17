@@ -1,56 +1,56 @@
-From: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
- to RAM
-Date: Tue, 17 Aug 2010 23:28:58 +0200
-Message-ID: <AANLkTin2XPHXL_o9hHz9f4beTYEx+isX+PaFRkMMiYHQ@mail.gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com>
-	<4C6A6145.7020707@gmail.com>
-	<201008171229.28917.stephan.diestelhorst@amd.com>
-	<201008171251.29441.stephan.diestelhorst@amd.com>
-	<4C6AA50F.3090801@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] pata_cmd64x: revert commit d62f5576
+Date: Tue, 17 Aug 2010 17:30:07 -0400
+Message-ID: <4C6AFF5F.50403@garzik.org>
+References: <4C6A7CF6.5090706@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:38583 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750863Ab0HQV27 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 17:28:59 -0400
-In-Reply-To: <4C6AA50F.3090801@gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:38714 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750789Ab0HQVaM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 17:30:12 -0400
+Received: by vws3 with SMTP id 3so5019478vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 17 Aug 2010 14:30:11 -0700 (PDT)
+In-Reply-To: <4C6A7CF6.5090706@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, stephan.diestelhorst@amd.com
+To: Tejun Heo <tj@kernel.org>
+Cc: "\"linux-ide@vger.kernel.org\" st" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Milan Kocian <milan.kocian@wq.cz>
 
-Hi,
-
-2010/8/17 Tejun Heo <htejun@gmail.com>:
-> On 08/17/2010 12:51 PM, Stephan Diestelhorst wrote:
->> I *think* I have applied the patch correctly. Please find a copy of
->> "git show" in the build directory attached. This should be the right
->> thing, shouldn't it?
+On 08/17/2010 08:13 AM, Tejun Heo wrote:
+> Commit d62f5576 (pata_cmd64x: fix handling of address setup timings)
+> incorrectly called ata_timing_compute() on UDMA mode on 0 @UT leading
+> to devide by zero fault.  Revert it until better fix is available.
+> This is reported in bko#16607 by Milan Kocian who also root caused it.
 >
->> Maybe I forgot to speify a particular debug option / verbosity?
+>    https://bugzilla.kernel.org/show_bug.cgi?id=16607
 >
->> I've also confirmed that the "XXX ahci_set_ipm" is present in
->> libahci.ko. So either I've screwed up badly when compiling the initr=
-d,
->> the code is not executed or the printout does not make it into any
->> logfile anymore.
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Reported-and-root-caused-by: Milan Kocian<milan.kocian@wq.cz>
+> Cc: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Cc: stable@kernel.org
+> ---
+>   drivers/ata/pata_cmd64x.c |    6 ------
+>   1 file changed, 6 deletions(-)
 >
-> Yeah, that's weird. =A0You're enabling IPM, right?
+> diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+> index 9f5da1c..905ff76 100644
+> --- a/drivers/ata/pata_cmd64x.c
+> +++ b/drivers/ata/pata_cmd64x.c
+> @@ -121,14 +121,8 @@ static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 m
+>
+>   		if (pair) {
+>   			struct ata_timing tp;
+> -
+>   			ata_timing_compute(pair, pair->pio_mode,&tp, T, 0);
+>   			ata_timing_merge(&t,&tp,&t, ATA_TIMING_SETUP);
+> -			if (pair->dma_mode) {
+> -				ata_timing_compute(pair, pair->dma_mode,
+> -						&tp, T, 0);
+> -				ata_timing_merge(&tp,&t,&t, ATA_TIMING_SETUP);
 
-Erm... Honestly, I have no clue. What is IPM? How do I enable it? This =
-is a
-Kubuntu Lucid 10.04 distribution, and I have not touched too much. In
-particular, the kernels have been from upstream git, just with the Ubun=
-tu config
-copied over.
+applied; even if not perfect, this gets us into a better state.
 
-Maybe it is just not enabled? I am guessing that IPM might be IDE power
-management? Or intelligent, integrated? Google turns up this email thre=
-ad
-as one of the first hits and nothing else conclusive.
 
-Thanks,
-  Stephan
