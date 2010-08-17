@@ -1,47 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes] pata_cmd64x: revert commit d62f5576
-Date: Tue, 17 Aug 2010 17:01:10 +0200
-Message-ID: <4C6AA436.2090003@kernel.org>
-References: <4C6A7CF6.5090706@kernel.org> <201008171456.43648.bzolnier@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Tue, 17 Aug 2010 17:04:47 +0200
+Message-ID: <4C6AA50F.3090801@gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C6A6145.7020707@gmail.com> <201008171229.28917.stephan.diestelhorst@amd.com> <201008171251.29441.stephan.diestelhorst@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43902 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261Ab0HQPEq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Aug 2010 11:04:46 -0400
-In-Reply-To: <201008171456.43648.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201008171251.29441.stephan.diestelhorst@amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, "\"linux-ide@vger.kernel.org\" st" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Milan Kocian <milan.kocian@wq.cz>
 
 Hello,
 
-On 08/17/2010 02:56 PM, Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 17 August 2010 02:13:42 pm Tejun Heo wrote:
->> Commit d62f5576 (pata_cmd64x: fix handling of address setup timings)
->> incorrectly called ata_timing_compute() on UDMA mode on 0 @UT leading
->> to devide by zero fault.  Revert it until better fix is available.
->> This is reported in bko#16607 by Milan Kocian who also root caused it.
->>
->>   https://bugzilla.kernel.org/show_bug.cgi?id=16607
-> 
-> How's about giving the ATA maintainer some time to resolve the issue
-> properly?
+On 08/17/2010 12:51 PM, Stephan Diestelhorst wrote:
+> I *think* I have applied the patch correctly. Please find a copy of
+> "git show" in the build directory attached. This should be the right
+> thing, shouldn't it?
 
-Yeap, sure.
+Yeah, looks right to me but if you have enabled IPM, there gotta be
+at least some XXX messages in the log.  Weird.
 
-> The revert should be a last resort action (+ the issue was reported
-> only yesterday) as it introduces another regression (it just replaces
-> new bug with the old bug while adding noise in the process)..
+> Maybe I forgot to speify a particular debug option / verbosity?
 
-The old problem is much less severe tho.  The introduced regression
-causes oops while the old bug probably doesn't show itself too often.
-Does it really need to merge the DMA timings too?  If the device can't
-do certain timing, it's PIO configuration should reflect that so
-merging PIO part only should be enough for PIO configuration, no?
+Hmmm... all messages are at KERN_INFO level and they don't have any
+switch.
+
+> I've also confirmed that the "XXX ahci_set_ipm" is present in
+> libahci.ko. So either I've screwed up badly when compiling the initrd,
+> the code is not executed or the printout does not make it into any
+> logfile anymore.
+
+Yeah, that's weird.  You're enabling IPM, right?
 
 Thanks.
 
