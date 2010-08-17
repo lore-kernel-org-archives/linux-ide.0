@@ -1,52 +1,49 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Tue, 17 Aug 2010 13:19:24 +0200
-Message-ID: <201008171319.25080.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008171132.56431.stephan.diestelhorst@amd.com> <4C6A6145.7020707@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Tue, 17 Aug 2010 13:29:05 +0200
+Message-ID: <4C6A7281.3030804@gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008171132.56431.stephan.diestelhorst@amd.com> <4C6A6145.7020707@gmail.com> <201008171319.25080.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47418 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751955Ab0HQLVH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Aug 2010 07:21:07 -0400
-In-Reply-To: <4C6A6145.7020707@gmail.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:40842 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750892Ab0HQLcQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 07:32:16 -0400
+In-Reply-To: <201008171319.25080.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
 Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-On Tuesday, August 17, 2010, Tejun Heo wrote:
-> Hello,
-> 
-> On 08/17/2010 11:32 AM, Stephan Diestelhorst wrote:
-> > Indeed. Like I said, I have similar issues on a another Samsung HDD in
-> > an AMD system. I have not yet got around to try the fix there, but I
-> > suspect it is the same thing.
-> > 
-> > I have attached the full /var/log/messages and /var/log/kern.log with
-> > multiple suspend-to-ram runs and the last one failing.
-> 
-> Hmm... are you sure the patch is applied?  There's no debug message
-> outputs in the log which the patch added.
-> 
-> > Would it make sense to add Rafael's workaround upstream, maybe enabling
-> > it only for particular platforms / HDDs / with a parameter?
-> 
-> Yeah, maybe.  The problem is that I'm a bit reluctant to do that for
-> all cases as it may cause other obscure failures and we don't know
-> whether the problem is controller or device specific at this point,
-> so...
+Hello,
 
-Well, I wonder what the real reason for doing the link power management
-thing at this particular point in the suspend code path is.  It just seems to
-disable the link power management, but then the controller is put into a
-low-power state and is reset from scratch during resume, so I'm not quite
-sure how skipping that code could possibly lead to any problems.
+On 08/17/2010 01:19 PM, Rafael J. Wysocki wrote:
+> Well, I wonder what the real reason for doing the link power management
+> thing at this particular point in the suspend code path is.  It just seems to
+> disable the link power management, but then the controller is put into a
+> low-power state and is reset from scratch during resume, so I'm not quite
+> sure how skipping that code could possibly lead to any problems.
 
-Perhaps we could move the link PM manipulation to the prepare stage of suspend?
+Stranger things have happened in the ATA la-la land. :-) Also, it
+makes non-lpm and lpm cases leave the controller and device in
+different states when it goes to sleep, which _really_ bothers me.
+Combined with the timing dependent nature of DIPM, I worry this might
+lead to very obscure issues and would much prefer to make sure
+everything is in fixed, known, fully powered state before committing
+to any major operations.  I might be paranoid tho.  I'll think more
+about it.
 
-Thanks,
-Rafael
+> Perhaps we could move the link PM manipulation to the prepare stage
+> of suspend?
+
+Yeah, one possibility is that the devices misbehave if they receive
+LPM commands while suspended.  Does commenting out sd_suspend resolve
+the issue too?
+
+Thanks.
+
+-- 
+tejun
