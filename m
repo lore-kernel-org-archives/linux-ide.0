@@ -1,36 +1,42 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Tue, 17 Aug 2010 10:46:51 +0930
-Message-ID: <201008171046.53220.rusty@rustcorp.com.au>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [patch] pata_winbond: fix module init
+Date: Tue, 17 Aug 2010 08:29:40 +0200
+Message-ID: <20100817062830.GF645@bicker>
+References: <20100803152549.GQ26313@bicker> <201008162123.03208.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:49650 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751422Ab0HQBQ4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Aug 2010 21:16:56 -0400
-In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63612 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab0HQGaE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 02:30:04 -0400
+Content-Disposition: inline
+In-Reply-To: <201008162123.03208.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com, Tejun Heo <tj@kernle.org>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Tue, 17 Aug 2010 02:22:00 am Tejun Heo wrote:
-> From: Tejun Heo <tj@kernle.org>
+On Mon, Aug 16, 2010 at 09:23:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Remove now unused REQ_HARDBARRIER support and implement REQ_FLUSH/FUA
-> support instead.  A new feature flag VIRTIO_BLK_F_FUA is added to
-> indicate the support for FUA.
+> Hi Dan,
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
+> On Tuesday 03 August 2010 05:27:47 pm Dan Carpenter wrote:
+> > winbond_init_one() returns 0 on success and an error code on failure.
+> > In the original code, we always just released the regions and return
+> > -ENODEV.  This was introduce in 2006 by 7e45b0e5f6f6 "[PATCH] libata:
+> > Winbond support".
+> 
+> You might like to pick up
+> 
+> 	http://patchwork.ozlabs.org/patch/39358/
+> 
+> instead..
+> 
 
-Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+I don't have the hardware, but yes, probably it's better to replace this
+driver since it has never been able to load.
 
-And also for the lguest-specific patch.
+regards,
+dan carpenter
 
-Thanks!
-Rusty.
