@@ -1,64 +1,34 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] pata_cmd64x: revert commit d62f5576
-Date: Tue, 17 Aug 2010 14:56:43 +0200
-Message-ID: <201008171456.43648.bzolnier@gmail.com>
-References: <4C6A7CF6.5090706@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
+Date: Tue, 17 Aug 2010 15:13:09 +0200
+Message-ID: <20100817131309.GA2963@lst.de>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61221 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080Ab0HQM5d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 08:57:33 -0400
-Received: by fxm13 with SMTP id 13so3437368fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 17 Aug 2010 05:57:32 -0700 (PDT)
-In-Reply-To: <4C6A7CF6.5090706@kernel.org>
+Received: from verein.lst.de ([213.95.11.210]:38332 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752380Ab0HQNNu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Aug 2010 09:13:50 -0400
+Content-Disposition: inline
+In-Reply-To: <4C6A5780.2090100@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "\"linux-ide@vger.kernel.org\" st" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Milan Kocian <milan.kocian@wq.cz>
+Cc: Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 
-
-On Tuesday 17 August 2010 02:13:42 pm Tejun Heo wrote:
-> Commit d62f5576 (pata_cmd64x: fix handling of address setup timings)
-> incorrectly called ata_timing_compute() on UDMA mode on 0 @UT leading
-> to devide by zero fault.  Revert it until better fix is available.
-> This is reported in bko#16607 by Milan Kocian who also root caused it.
+On Tue, Aug 17, 2010 at 11:33:52AM +0200, Tejun Heo wrote:
+> > That logic wasn't just about retries (at least not in the latest
+> > kernel).  With commit 708e929513502fb0 the -EOPNOTSUPP checking also
+> > serves to optimize the barrier+discard case (when discards aren't
+> > supported).
 > 
->   https://bugzilla.kernel.org/show_bug.cgi?id=16607
+> With the patch applied, there's no second flush.  Those requests would
+> now be REQ_FLUSH + REQ_DISCARD.  The first can't be avoided anyway and
+> there won't be the second flush to begin with, so I don't think this
+> worsens anything.
 
-How's about giving the ATA maintainer some time to resolve the issue
-properly?
+In fact the pre-flush is completely superflous for discards, but that's a
+separate discussion and should not be changed as part of this patchset but
+rather explicitly.
 
-The revert should be a last resort action (+ the issue was reported
-only yesterday) as it introduces another regression (it just replaces
-new bug with the old bug while adding noise in the process)..
-
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-and-root-caused-by: Milan Kocian <milan.kocian@wq.cz>
-> Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Cc: stable@kernel.org
-> ---
->  drivers/ata/pata_cmd64x.c |    6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-> index 9f5da1c..905ff76 100644
-> --- a/drivers/ata/pata_cmd64x.c
-> +++ b/drivers/ata/pata_cmd64x.c
-> @@ -121,14 +121,8 @@ static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 m
-> 
->  		if (pair) {
->  			struct ata_timing tp;
-> -
->  			ata_timing_compute(pair, pair->pio_mode, &tp, T, 0);
->  			ata_timing_merge(&t, &tp, &t, ATA_TIMING_SETUP);
-> -			if (pair->dma_mode) {
-> -				ata_timing_compute(pair, pair->dma_mode,
-> -						&tp, T, 0);
-> -				ata_timing_merge(&tp, &t, &t, ATA_TIMING_SETUP);
-> -			}
->  		}
->  	}
