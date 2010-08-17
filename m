@@ -1,42 +1,45 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: Re: [patch] pata_winbond: fix module init
-Date: Tue, 17 Aug 2010 08:29:40 +0200
-Message-ID: <20100817062830.GF645@bicker>
-References: <20100803152549.GQ26313@bicker> <201008162123.03208.bzolnier@gmail.com>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Tue, 17 Aug 2010 09:51:25 +0200
+Message-ID: <201008170951.26073.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C52DF50.80009@kernel.org> <4C5AE1E2.6070601@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:63612 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751637Ab0HQGaE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 02:30:04 -0400
-Content-Disposition: inline
-In-Reply-To: <201008162123.03208.bzolnier@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C5AE1E2.6070601@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Mon, Aug 16, 2010 at 09:23:03PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi Dan,
-> 
-> On Tuesday 03 August 2010 05:27:47 pm Dan Carpenter wrote:
-> > winbond_init_one() returns 0 on success and an error code on failure.
-> > In the original code, we always just released the regions and return
-> > -ENODEV.  This was introduce in 2006 by 7e45b0e5f6f6 "[PATCH] libata:
-> > Winbond support".
-> 
-> You might like to pick up
-> 
-> 	http://patchwork.ozlabs.org/patch/39358/
-> 
-> instead..
-> 
+Hi Tejun,
 
-I don't have the hardware, but yes, probably it's better to replace this
-driver since it has never been able to load.
+On Thursday 05 August 2010 18:08:02 Tejun Heo wrote:
+> Can you please try the following patch and see whether the problem
+> goes away?
 
-regards,
-dan carpenter
+I've finally managed to get this to compile and test. (Hit a bug with
+Debian's make-kpkg and other nuisances...)
 
+The problem is still there. On some resumes I get the dreadful dead
+disk again:
+
+end_request: I/O error , dev sda sector ...
+sd 0:0:0:0: [sda] Unhandled error code
+sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 0:0:0:0: [sda] CDB: Read(10): 28 00 0e a4 77 a8 0 00 08 00
+(many of those)
+
+Can't access /var/log/messages right now, due to broken I/O. Will try
+to trigger it again and check for the qc timeout messages..
+
+Stephan
+
+-- 
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
