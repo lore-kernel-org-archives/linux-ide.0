@@ -1,55 +1,73 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH #upstream-fixes] pata_cmd64x: revert commit d62f5576
-Date: Tue, 17 Aug 2010 18:39:14 +0200
-Message-ID: <201008171839.14465.bzolnier@gmail.com>
-References: <4C6A7CF6.5090706@kernel.org> <4C6AA436.2090003@kernel.org> <20100817163917.58ea1d06@lxorguk.ukuu.org.uk>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Tue, 17 Aug 2010 18:41:47 +0200
+Message-ID: <4C6ABBCB.9030306@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43951 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757123Ab0HQQj5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 12:39:57 -0400
-Received: by fxm13 with SMTP id 13so3601342fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 17 Aug 2010 09:39:55 -0700 (PDT)
-In-Reply-To: <20100817163917.58ea1d06@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100817131915.GB2963@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, "\"linux-ide@vger.kernel.org\" st" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>, Milan Kocian <milan.kocian@wq.cz>
 
-On Tuesday 17 August 2010 05:39:17 pm Alan Cox wrote:
-> > The old problem is much less severe tho.  The introduced regression
-> > causes oops while the old bug probably doesn't show itself too often.
+Hi,
+
+On 08/17/2010 03:19 PM, Christoph Hellwig wrote:
+> On Tue, Aug 17, 2010 at 11:59:38AM +0200, Tejun Heo wrote:
+>> I'm not against restructuring the patchset if it makes more sense but
+>> it just feels like it would be a bit pointless effort (and one which
+>> would require much tighter coordination among different trees) at this
+>> point.  Am I missing something?
 > 
-> If ever
+> What other trees do you mean?
+
+I was mostly thinking about dm/md, drdb and stuff, but you're talking
+about filesystem conversion patches being routed through block tree,
+right?
+
+> The conversions of the 8 filesystems that actually support barriers
+> need to go through this tree anyway if we want to be able to test
+> it.  Also the changes in the filesystem are absolutely minimal -
+> it's basically just s/WRITE_BARRIER/WRITE_FUA_FLUSH/ after my
+> initial patch kill BH_Orderd, and removing about 10 lines of code in
+> reiserfs.
+
+I might just resequence it to finish this part of discussion but what
+does that really buy us?  It's not really gonna help bisection.
+Bisection won't be able to tell anything in higher resolution than
+"the new implementation doesn't work".  If you show me how it would
+actually help, I'll happily reshuffle the patches.
+
+>> I wasn't sure about that part.  You removed store_flush_error(), but
+>> DM_ENDIO_REQUEUE should still have higher priority than other
+>> failures, no?
 > 
-> > Does it really need to merge the DMA timings too?  If the device can't
-> > do certain timing, it's PIO configuration should reflect that so
-> > merging PIO part only should be enough for PIO configuration, no?
+> Which priority?
+
+IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
+core layer to retry the whole bio later), it trumps all other failures
+and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
+prioritized over other error codes, which actually is sort of
+incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
+layers as FLUSH failure implies data already lost.  So,
+DM_ENDIO_REQUEUE actually should have lower priority than other
+failures.  But, then again, the error codes still need to be
+prioritized.
+
+>> But how do you make sure REQ_FLUSHes for preflush finish before
+>> starting the write?
 > 
-> The timing code knows about DMA/PIO constraints itself. The whole mucking
-> around passing both timings is just bogus.
-> 
-> Pass pair->dma_mode only and it'll work out the PIO for you. Not that it
-> matters - no real hardware has a DMA mode with a slower address setup
-> than its PIO mode.
+> Hmm, okay.  I see how the special flush_bio makes the waiting easier,
+> let's see if Mike or other in the DM team have a better idea.
 
-There were some PIO3/MWDMA1 devices out in the wild (Iomega ZIP IIRC)..
-
-Anyway the patch has never been submitted upstream:
-
-*) I have absolutely no time to support it or related changes
-
-*) it was not critical enough and/or important for other related work
-   (it is more important in atang/ide2libata context)
-
-> and for UT just stick in some value (eg 33000) so it works in PCI clocks
-
-Exactly, ->udma is never used by the driver itself..
+Yeah, it would be better if it can be sequenced w/o using a work but
+let's leave it for later.
 
 Thanks.
---
-Bartlomiej Zolnierkiewicz
+
+-- 
+tejun
