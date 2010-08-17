@@ -1,31 +1,33 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Tue, 17 Aug 2010 17:42:57 +0100
-Message-ID: <20100817174257.3691ed68@lxorguk.ukuu.org.uk>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>
-	<4C6AB68D.8000102@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 08/11] block: rename barrier/ordered to flush
+Date: Tue, 17 Aug 2010 18:23:55 +0200
+Message-ID: <4C6AB79B.2040303@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-9-git-send-email-tj@kernel.org> <20100817132646.GA3577@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45788 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757490Ab0HQQ1p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 12:27:45 -0400
-In-Reply-To: <4C6AB68D.8000102@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100817132646.GA3577@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-> This looks scary to me.  Is this something documented somewhere?  It's
-> not like we can avoid adding PCI device IDs completely anyway, so I
-> would suggest just doing it good old fashioned way.
+Hello,
 
-The trouble with adding all the ids is it will keep needing updates every
-chipset (and a lot of existing idents).
+On 08/17/2010 03:26 PM, Christoph Hellwig wrote:
+>> -#define blk_queue_flushing(q)	((q)->ordseq)
+>> +#define blk_queue_flushing(q)	((q)->flush_seq)
+> 
+> Btw, I think this one should just go away.  It's only used by
+> ide in an attempt to make ordered sequences atomic, which isn't
+> needed for the new design.
 
-Is it documented ? The instructions it was written to came from the
-people who do the chips.
+Yeap, agreed.  I couldn't really understand why the the sequence
+needed to be atomic for ide in the first place so just left it alone.
+Do you understand why it tried to be atomic?
 
-Alan
+Thanks.
+
+-- 
+tejun
