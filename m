@@ -1,41 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Tue, 17 Aug 2010 18:22:38 +0200
-Message-ID: <4C6AB74E.7080909@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org> <20100816183317.GA28171@lst.de> <4C6A458B.5040407@kernel.org> <20100817132327.GA3347@lst.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Tue, 17 Aug 2010 17:42:57 +0100
+Message-ID: <20100817174257.3691ed68@lxorguk.ukuu.org.uk>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>
+	<4C6AB68D.8000102@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100817132327.GA3347@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45788 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757490Ab0HQQ1p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 12:27:45 -0400
+In-Reply-To: <4C6AB68D.8000102@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hello,
+> This looks scary to me.  Is this something documented somewhere?  It's
+> not like we can avoid adding PCI device IDs completely anyway, so I
+> would suggest just doing it good old fashioned way.
 
-On 08/17/2010 03:23 PM, Christoph Hellwig wrote:
->> Hmmm... the underlying storage could be md/dm RAIDs in which case FUA
->> should be cheaper than FLUSH.
-> 
-> If someone ever wrote a virtio-blk backend that sits directly ontop
-> of the Linux block layer that would be true.  Of the five known
-> virtio-blk backends all operate on normal files using the Posix I/O
-> APIs, or the Linux aio API (optionally in qemu) or in-kernel
-> vfs_read/vfs_write (vhost-blk).
+The trouble with adding all the ids is it will keep needing updates every
+chipset (and a lot of existing idents).
 
-Right.
+Is it documented ? The instructions it was written to came from the
+people who do the chips.
 
-> Given how little testing lguest gets compared to qemu I really don't
-> want a protocol addition for it unless it really buys us something.
-> Once we're done with this barrier conversion I plan into benchmarking
-> FUA and a pre-flush tag on the command for virtio in real life setups,
-> and see if it actually buys us anything.
-
-Hmmm... yeah, we can drop it.  Michael, what do you think?
-
-Thanks.
-
--- 
-tejun
+Alan
