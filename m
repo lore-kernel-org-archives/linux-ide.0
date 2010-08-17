@@ -1,63 +1,102 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Tue, 17 Aug 2010 18:01:58 +0100
-Message-ID: <20100817180158.179e7780@lxorguk.ukuu.org.uk>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>
-	<4C6AB68D.8000102@kernel.org>
-	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>
-	<4C6AB919.7060203@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
+Date: Tue, 17 Aug 2010 18:51:30 +0200
+Message-ID: <4C6ABE12.40705@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51350 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753129Ab0HQQqo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Aug 2010 12:46:44 -0400
-In-Reply-To: <4C6AB919.7060203@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100817140734.GA30768@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-> ata_piix already has list of all the devices it supports, so maybe
-> it's safe to grab all intel IDE devices from ata_generic?  ata_piix
+Hello,
 
-I can't guarantee that and I'm not sure I can find anyone at Intel with
-that deep a knowledge of the earliest chip errata.
-
-> always has higher priority than ata_generic anyway and if a device
-> isn't grabbed by ata_piix, we don't lose anything by grabbing it from
-> ata_generic.
-
-Priority only works if you know what is there to use, and the piix one is
-for example broken if you change the bindings with sysfs. You don't for
-example want to forget to compile in one driver and get generic when that
-is unsafe.
-
-The extreme example would be if you have ata_generic binding to all
-devices and you forgot to compile in RZ1000 support. On the relevant
-board that just ate your file system.
-
-So the grab it all approach was dismissed.
-
-> > Is it documented ? The instructions it was written to came from the
-> > people who do the chips.
+On 08/17/2010 04:07 PM, Mike Snitzer wrote:
+>> With the patch applied, there's no second flush.  Those requests would
+>> now be REQ_FLUSH + REQ_DISCARD.  The first can't be avoided anyway and
+>> there won't be the second flush to begin with, so I don't think this
+>> worsens anything.
 > 
-> Yeap, that's much better, but I still think it would be better to
-> avoid such detection magics if possible.
+> Makes sense, but your patches still need to be refreshed against the
+> latest (2.6.36-rc1) upstream code.  Numerous changes went in to DM
+> recently.
 
-Well yes but the logic is simple.
+Sure thing.  The block part isn't fixed yet and so the RFC tag.  Once
+the block layer part is settled, it probably should be pulled into
+dm/md and other trees and conversions should happen there.
 
-0xF8 is non zero on all later Intel ATA PCI chipsets
-0x40 is writable on all earlier Intel ATA PCI chipsets, and zero + non
-writable on the IDE-R devices.
+>> Yeap, I want you to be concerned. :-) This was the first time I looked
+>> at the dm code and there are many different disjoint code paths and I
+>> couldn't fully follow or test all of them, so it definitely needs a
+>> careful review from someone who understands the whole thing.
+> 
+> You'll need Mikulas (bio-based) and NEC (request-based, Kiyoshi and
+> Jun'ichi) to give it serious review.
 
-The other thing I did consider was submitting an Intel IDE-R driver that
-contained the check and matched IDE CLASS & vendor == INTEL. That has the
-advantage of not getting autoloaded unnecessarily so easily, but means we
-have another driver.
+Oh, you already cc'd them.  Great.  Hello, guys, the original thread
+is
 
-Alan
+  http://thread.gmane.org/gmane.linux.raid/29100
 
+> NOTE: NEC has already given some preliminary feedback to hch in the
+> "[PATCH, RFC 2/2] dm: support REQ_FLUSH directly" thread:
+> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html
+> https://www.redhat.com/archives/dm-devel/2010-August/msg00033.html
 
+Hmmm... I think both issues don't exist in this incarnation of
+conversion although I'm fairly sure there will be other issues.  :-)
+
+>>     A related question: Is dm_wait_for_completion() used in
+>>     process_flush() safe against starvation under continuous influx of
+>>     other commands?
+>
+> As for your specific dm_wait_for_completion() concern -- I'll defer to
+> Mikulas.  But I'll add: we haven't had any reported starvation issues
+> with DM's existing barrier support.  DM uses a mempool for its clones,
+> so it should naturally throttle (without starvation) when memory gets
+> low.
+
+I see but single pending flush and steady write streams w/o saturating
+the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
+well, it's a separate issue, I guess.
+
+>>   * Guarantee that REQ_FLUSH w/ data never reaches targets (this in
+>>     part is to put it in alignment with request based dm).
+> 
+> bio-based DM already split the barrier out from the data (in
+> process_barrier).  You've renamed process_barrier to process_flush and
+> added the REQ_FLUSH logic like I'd expect.
+
+Yeah and threw in WARN_ON() there to make sure REQ_FLUSH + data bios
+don't slip through for whatever reason.
+
+>> * For request based dm:
+>>
+>>   * The sequencing is done by the block layer for the top level
+>>     request_queue, so the only things request based dm needs to make
+>>     sure is 1. handling empty REQ_FLUSH correctly (block layer will
+>>     only send down empty REQ_FLUSHes) and 2. propagate REQ_FUA bit to
+>>     member devices.
+> 
+> OK, so seems 1 is done, 2 is still TODO.  Looking at your tree it seems
+> 2 would be as simple as using the following in
+
+Oh, I was talking about the other way around.  Passing REQ_FUA in
+bio->bi_rw down to member request_queues.  Sometimes while
+constructing clone / split bios, the bit is lost (e.g. md raid5).
+
+> dm_init_request_based_queue (on the most current upstream dm.c):
+> blk_queue_flush(q, REQ_FLUSH | REQ_FUA);
+> (your current patch only sets REQ_FLUSH in alloc_dev).
+
+Yeah, but for that direction, just adding REQ_FUA to blk_queue_flush()
+should be enough.  I'll add it.
+
+Thanks.
+
+-- 
+tejun
