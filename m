@@ -1,57 +1,56 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
- to RAM
-Date: Wed, 18 Aug 2010 08:12:24 +0200
-Message-ID: <4C6B79C8.7080602@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C6A6145.7020707@gmail.com> <201008171229.28917.stephan.diestelhorst@amd.com> <201008171251.29441.stephan.diestelhorst@amd.com> <4C6AA50F.3090801@gmail.com> <AANLkTin2XPHXL_o9hHz9f4beTYEx+isX+PaFRkMMiYHQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Wed, 18 Aug 2010 08:19:30 +0200
+Message-ID: <4C6B7B72.4090405@kernel.org>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>	<4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>	<4C6AB919.7060203@kernel.org>	<20100817180158.179e7780@lxorguk.ukuu.org.uk>	<4C6ABFFA.2000502@kernel.org> <20100817192353.3529733c@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41610 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab0HRGL6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2010 02:11:58 -0400
-In-Reply-To: <AANLkTin2XPHXL_o9hHz9f4beTYEx+isX+PaFRkMMiYHQ@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:55376 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751865Ab0HRGTP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Aug 2010 02:19:15 -0400
+In-Reply-To: <20100817192353.3529733c@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, stephan.diestelhorst@amd.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
 Hello,
 
-On 08/17/2010 11:28 PM, Stephan Diestelhorst wrote:
-> 2010/8/17 Tejun Heo <htejun@gmail.com>:
->> On 08/17/2010 12:51 PM, Stephan Diestelhorst wrote:
->>> I *think* I have applied the patch correctly. Please find a copy of
->>> "git show" in the build directory attached. This should be the right
->>> thing, shouldn't it?
->>
->>> Maybe I forgot to speify a particular debug option / verbosity?
->>
->>> I've also confirmed that the "XXX ahci_set_ipm" is present in
->>> libahci.ko. So either I've screwed up badly when compiling the initrd,
->>> the code is not executed or the printout does not make it into any
->>> logfile anymore.
->>
->> Yeah, that's weird.  You're enabling IPM, right?
+On 08/17/2010 08:23 PM, Alan Cox wrote:
+>> I don't really think it would be dangerous to grab intel IDE
+>> controllers with ata_generic.  Again, that's what windows would do.
+>> And for sysfs unbind case, if the user specifically unbinds the
+>> controller from ata_piix, what is broken?
 > 
-> Erm... Honestly, I have no clue. What is IPM? How do I enable it? This is a
-> Kubuntu Lucid 10.04 distribution, and I have not touched too much. In
-> particular, the kernels have been from upstream git, just with the Ubuntu config
-> copied over.
+> If the user changes the PCI id list what happens ?
+
+Then that's upto the user, right?  That's what the (root) user wants.
+You can add any random device ID to any random driver and if you do it
+wrong something will break.  That's not different from any other
+driver.
+
+>> Maybe it's okay now but who's gonna remember what's going on there
+>> after five years and nobody guarantees the above would continue to
 > 
-> Maybe it is just not enabled? I am guessing that IPM might be IDE power
-> management? Or intelligent, integrated? Google turns up this email thread
-> as one of the first hits and nothing else conclusive.
+> Add a comment ?
 
-It's interface power management, also called link power management.
-You can check whether it's enabled by
+Yeah, definitely.  Fat amount of them.
 
-$ cat /sys/class/scsi_host/host0/link_power_management_policy
+>> hold in the future.
+> 
+> It did occur to me to check this would be true in the future. Either way
+> - an id table would go out of date more often.
 
-If it says max_performance, it's disabled.  If it says anything else,
-it's enabled.
+Sure, the thing is that your patch doesn't mean we don't have to keep
+ata_piix device table up-to-date.  We would still need to be
+maintaining that table whether ata_generic can detect IDE-R by itself
+or not.  The device ID table in ata_piix is given, and ata_generic
+picking up the rest of intel IDE's wouldn't miss anything.  So, unless
+IDE-R devices need some special treatment, I don't really see how the
+detection code would be useful.
 
 Thanks.
 
