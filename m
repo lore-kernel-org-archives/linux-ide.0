@@ -1,33 +1,27 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Wed, 18 Aug 2010 16:15:21 +0100
-Message-ID: <20100818161521.430ba361@lxorguk.ukuu.org.uk>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>
-	<4C6AB68D.8000102@kernel.org>
-	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>
-	<4C6AB919.7060203@kernel.org>
-	<20100817180158.179e7780@lxorguk.ukuu.org.uk>
-	<4C6ABFFA.2000502@kernel.org>
-	<20100817192353.3529733c@lxorguk.ukuu.org.uk>
-	<4C6B7B72.4090405@kernel.org>
-	<20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>
-	<4C6BE9C8.4030803@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] V2 2.6.35 libata support for > 512 byte sectors (e.g. 4K Native)
+Date: Wed, 18 Aug 2010 17:04:51 +0200
+Message-ID: <201008181704.51357.arnd@arndb.de>
+References: <AANLkTinx-cgn7zony8UO__zejj36GxcJTf3Pr2Z9G2af@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:34355 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752833Ab0HRPAS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2010 11:00:18 -0400
-In-Reply-To: <4C6BE9C8.4030803@kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.8]:63177 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459Ab0HRPF0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2010 11:05:26 -0400
+In-Reply-To: <AANLkTinx-cgn7zony8UO__zejj36GxcJTf3Pr2Z9G2af@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Grant Grundler <grundler@google.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Linux IDE <linux-ide@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>, LKML <linux-kernel@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-> That's the reason why we have module priorities.  The link priority
-> becomes module priority and modprobe will deterministically prefer
-> ata_piix over ata_generic if a controller is supported by both.
+On Tuesday 17 August 2010, Grant Grundler wrote:
+> [ patch NOT inlined because gmail will word-wrap and make a mess of
+> it. Please use attached file.]
 
-Sure - but if ata_generic is already compiled in or already loaded ?
+You should be able to use git-send-email with a gmail account to fix this.
+
+	Arnd
