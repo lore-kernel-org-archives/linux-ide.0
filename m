@@ -1,56 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Wed, 18 Aug 2010 08:19:30 +0200
-Message-ID: <4C6B7B72.4090405@kernel.org>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>	<4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>	<4C6AB919.7060203@kernel.org>	<20100817180158.179e7780@lxorguk.ukuu.org.uk>	<4C6ABFFA.2000502@kernel.org> <20100817192353.3529733c@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 08/11] block: rename barrier/ordered to flush
+Date: Wed, 18 Aug 2010 08:23:43 +0200
+Message-ID: <4C6B7C6F.1020809@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-9-git-send-email-tj@kernel.org> <20100817132646.GA3577@lst.de> <4C6AB79B.2040303@kernel.org> <20100817170857.GA15297@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55376 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751865Ab0HRGTP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Aug 2010 02:19:15 -0400
-In-Reply-To: <20100817192353.3529733c@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20100817170857.GA15297@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
 Hello,
 
-On 08/17/2010 08:23 PM, Alan Cox wrote:
->> I don't really think it would be dangerous to grab intel IDE
->> controllers with ata_generic.  Again, that's what windows would do.
->> And for sysfs unbind case, if the user specifically unbinds the
->> controller from ata_piix, what is broken?
+On 08/17/2010 07:08 PM, Christoph Hellwig wrote:
+> On Tue, Aug 17, 2010 at 06:23:55PM +0200, Tejun Heo wrote:
+>> Yeap, agreed.  I couldn't really understand why the the sequence
+>> needed to be atomic for ide in the first place so just left it alone.
+>> Do you understand why it tried to be atomic?
 > 
-> If the user changes the PCI id list what happens ?
+> I think initial drafs of the barrier specification talked about atomic
+> sequences.  Except for that I can't think of any reason.
 
-Then that's upto the user, right?  That's what the (root) user wants.
-You can add any random device ID to any random driver and if you do it
-wrong something will break.  That's not different from any other
-driver.
-
->> Maybe it's okay now but who's gonna remember what's going on there
->> after five years and nobody guarantees the above would continue to
-> 
-> Add a comment ?
-
-Yeah, definitely.  Fat amount of them.
-
->> hold in the future.
-> 
-> It did occur to me to check this would be true in the future. Either way
-> - an id table would go out of date more often.
-
-Sure, the thing is that your patch doesn't mean we don't have to keep
-ata_piix device table up-to-date.  We would still need to be
-maintaining that table whether ata_generic can detect IDE-R by itself
-or not.  The device ID table in ata_piix is given, and ata_generic
-picking up the rest of intel IDE's wouldn't miss anything.  So, unless
-IDE-R devices need some special treatment, I don't really see how the
-detection code would be useful.
+Hmm... alright, I'll rip it out.
 
 Thanks.
 
