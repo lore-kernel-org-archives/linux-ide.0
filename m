@@ -1,30 +1,55 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Wed, 18 Aug 2010 19:52:02 +0930
-Message-ID: <201008181952.03093.rusty@rustcorp.com.au>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <4C6A458B.5040407@kernel.org> <20100817132327.GA3347@lst.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Wed, 18 Aug 2010 16:10:16 +0200
+Message-ID: <4C6BE9C8.4030803@kernel.org>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>	<4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>	<4C6AB919.7060203@kernel.org>	<20100817180158.179e7780@lxorguk.ukuu.org.uk>	<4C6ABFFA.2000502@kernel.org>	<20100817192353.3529733c@lxorguk.ukuu.org.uk>	<4C6B7B72.4090405@kernel.org> <20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:59508 "EHLO ozlabs.org"
+Received: from hera.kernel.org ([140.211.167.34]:47642 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751902Ab0HRKWI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Aug 2010 06:22:08 -0400
-In-Reply-To: <20100817132327.GA3347@lst.de>
+	id S1751995Ab0HROOB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Aug 2010 10:14:01 -0400
+In-Reply-To: <20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-On Tue, 17 Aug 2010 10:53:27 pm Christoph Hellwig wrote:
-> Given how little testing lguest gets compared to qemu I really don't
-> want a protocol addition for it unless it really buys us something.
-> Once we're done with this barrier conversion I plan into benchmarking
-> FUA and a pre-flush tag on the command for virtio in real life setups,
-> and see if it actually buys us anything.
+Hello,
 
-Absolutely.  Lguest should follow, not lead!
+On 08/18/2010 12:03 PM, Alan Cox wrote:
+>> Sure, the thing is that your patch doesn't mean we don't have to keep
+>> ata_piix device table up-to-date.  We would still need to be
+>> maintaining that table whether ata_generic can detect IDE-R by itself
+> 
+> I'm not sure I follow
 
-Rusty.
+I was trying to say that IDE-R basically being the complement of Intel
+IDE's not drive by ata_piix, we don't need to maintain a separate PCI
+device ID table for IDE-R's.
+
+>> or not.  The device ID table in ata_piix is given, and ata_generic
+>> picking up the rest of intel IDE's wouldn't miss anything.  So, unless
+>> IDE-R devices need some special treatment, I don't really see how the
+>> detection code would be useful.
+> 
+> The trend is towards AHCI so the problem goes away for the other bits.
+
+Yeah, it has helped a lot but ata_piix's are here to stay for the
+foreseeable future and we'll be maintaining its device ID table.
+
+> IDE-R is not ata_piix drivable, and lots of the ICH stuff really wants
+> driving via ata_piix, so having the generic driver grab all intel stuff
+> isn't as far as I can see going to be safe given a system may load the
+> ata_generic module but not PIIX then meet a piix by hotplug.
+
+That's the reason why we have module priorities.  The link priority
+becomes module priority and modprobe will deterministically prefer
+ata_piix over ata_generic if a controller is supported by both.
+
+Thanks.
+
+-- 
+tejun
