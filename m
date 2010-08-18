@@ -1,45 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Wed, 18 Aug 2010 11:03:06 +0100
-Message-ID: <20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>
-	<4C6AB68D.8000102@kernel.org>
-	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>
-	<4C6AB919.7060203@kernel.org>
-	<20100817180158.179e7780@lxorguk.ukuu.org.uk>
-	<4C6ABFFA.2000502@kernel.org>
-	<20100817192353.3529733c@lxorguk.ukuu.org.uk>
-	<4C6B7B72.4090405@kernel.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
+Date: Wed, 18 Aug 2010 19:52:02 +0930
+Message-ID: <201008181952.03093.rusty@rustcorp.com.au>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <4C6A458B.5040407@kernel.org> <20100817132327.GA3347@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59726 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752638Ab0HRJrt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2010 05:47:49 -0400
-In-Reply-To: <4C6B7B72.4090405@kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:59508 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751902Ab0HRKWI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Aug 2010 06:22:08 -0400
+In-Reply-To: <20100817132327.GA3347@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com
 
-> Sure, the thing is that your patch doesn't mean we don't have to keep
-> ata_piix device table up-to-date.  We would still need to be
-> maintaining that table whether ata_generic can detect IDE-R by itself
+On Tue, 17 Aug 2010 10:53:27 pm Christoph Hellwig wrote:
+> Given how little testing lguest gets compared to qemu I really don't
+> want a protocol addition for it unless it really buys us something.
+> Once we're done with this barrier conversion I plan into benchmarking
+> FUA and a pre-flush tag on the command for virtio in real life setups,
+> and see if it actually buys us anything.
 
-I'm not sure I follow
+Absolutely.  Lguest should follow, not lead!
 
-> or not.  The device ID table in ata_piix is given, and ata_generic
-> picking up the rest of intel IDE's wouldn't miss anything.  So, unless
-> IDE-R devices need some special treatment, I don't really see how the
-> detection code would be useful.
-
-The trend is towards AHCI so the problem goes away for the other bits.
-
-IDE-R is not ata_piix drivable, and lots of the ICH stuff really wants
-driving via ata_piix, so having the generic driver grab all intel stuff
-isn't as far as I can see going to be safe given a system may load the
-ata_generic module but not PIIX then meet a piix by hotplug.
-
-Alan
+Rusty.
