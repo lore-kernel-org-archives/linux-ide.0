@@ -1,53 +1,89 @@
-From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Thu, 19 Aug 2010 18:23:57 +0200
-Message-ID: <201008191823.57915.stephan.diestelhorst@amd.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <AANLkTin2XPHXL_o9hHz9f4beTYEx+isX+PaFRkMMiYHQ@mail.gmail.com> <4C6B79C8.7080602@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Thu, 19 Aug 2010 13:27:21 -0400
+Message-ID: <AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:40749 "EHLO
-	TX2EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab0HSQYW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 12:24:22 -0400
-In-Reply-To: <4C6B79C8.7080602@gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33385 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922Ab0HSR1X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 13:27:23 -0400
+In-Reply-To: <1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 
-Hi Tejun,
-
-On Wednesday 18 August 2010, 08:12:24 Tejun Heo wrote:
-> On 08/17/2010 11:28 PM, Stephan Diestelhorst wrote:
-> > 2010/8/17 Tejun Heo <htejun@gmail.com>:
-> >> On 08/17/2010 12:51 PM, Stephan Diestelhorst wrote:
-> >>> I've also confirmed that the "XXX ahci_set_ipm" is present in
-> >>> libahci.ko. So either I've screwed up badly when compiling the initrd,
-> >>> the code is not executed or the printout does not make it into any
-> >>> logfile anymore.
-> >>
-> >> Yeah, that's weird.  You're enabling IPM, right?
+On Thu, Aug 19, 2010 at 11:48 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> ATA IDENTIFY DEVICE word 105 contains the number of 512-byte blocks o=
+f
+> TRIM payload information the device can accept in one command. =A0Use=
+ this
+> value to enable payloads > 512 bytes.
 >
-> You can check whether it's enabled by
-> 
-> $ cat /sys/class/scsi_host/host0/link_power_management_policy
-> 
-> If it says max_performance, it's disabled.  If it says anything else,
-> it's enabled.
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+> =A0drivers/ata/libata-scsi.c | =A0 =A07 ++++++-
+> =A0include/linux/ata.h =A0 =A0 =A0 | =A0 =A09 +++++++++
+> =A02 files changed, 15 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index e280ae6..145f099 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2152,7 +2152,12 @@ static unsigned int ata_scsiop_inq_b0(struct a=
+ta_scsi_args *args, u8 *rbuf)
+> =A0 =A0 =A0 =A0 * with the unmap bit set.
+> =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0if (ata_id_has_trim(args->id)) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 put_unaligned_be32(65535 * 512 / 8, &rb=
+uf[20]);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned int blocks;
 
-It says "max_performance", I have not touched anyhting. So it has been
-like that all the time. Would this explain why your patch did not show
-the debug printout?
+since blocks is nebulous, a comment would be nice, maybe:
 
-Thanks,
-  Stephan
--- 
-Stephan Diestelhorst, AMD Operating System Research Center
-stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+                 unsigned int blocks;    /* the ATA spec specifies
+512-byte blocks for trim payload */
 
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Default to 1 if unspecified in word =
+105. =A0Cap at 1 page. */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 blocks =3D clamp(ata_id_trim_range_bloc=
+ks(args->id), 1U, 8U);
 
+
+Should there at least be a todo comment about raising that cap?
+
+Or is there a fundamental reason for it.  ie. I don't think the ATA
+spec calls for it, so this is a kernel restriction I assume.
+
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 put_unaligned_be32(65535 * 512 / 8 * bl=
+ocks, &rbuf[20]);
+
+Is this patch actually enabling the block layer to initiate ATA
+multi-sector trim payloads, or is this only allowing the max payloads
+sectors to be queried?
+
+Are there plans (or existing code) to accumulate trim ranges in the
+block layer and create trim commands with multiple sectors?
+
+AFAIK, the only block layer feature exported to the file system layer
+only accepts one range.
+
+I'd like to see multiple trim ranges accumulated either by the
+filesystem prior to calling into the block layer, of have the block
+layer accumulate them.  (I suspect its easier for the filesystem to do
+it via the proposed fitrim() ioctl that is on the ext4 list recently.
+
+ie. the current proposed fitrim() ioctl calls into the block layer for
+each trim range, but it could easily have the ability to accumulate a
+vector of trim ranges and call the block layer only once per trim
+vector if the block layer had a interface for that.
+
+Greg
