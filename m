@@ -1,36 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16) with UNMAP
-Date: Thu, 19 Aug 2010 12:20:34 -0400
-Message-ID: <yq1k4nmmv59.fsf@sermon.lab.mkp.net>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
-	<1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
-	<1282234551.8139.25.camel@mulgrave.site>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Thu, 19 Aug 2010 18:23:57 +0200
+Message-ID: <201008191823.57915.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <AANLkTin2XPHXL_o9hHz9f4beTYEx+isX+PaFRkMMiYHQ@mail.gmail.com> <4C6B79C8.7080602@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:20728 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab0HSQWo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 12:22:44 -0400
-In-Reply-To: <1282234551.8139.25.camel@mulgrave.site> (James Bottomley's
-	message of "Thu, 19 Aug 2010 11:15:51 -0500")
+Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:40749 "EHLO
+	TX2EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab0HSQYW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 12:24:22 -0400
+In-Reply-To: <4C6B79C8.7080602@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
->>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
+Hi Tejun,
 
-James> Should this be unconditional?  Shouldn't it be conditioned on the
-James> current supported trim indicator (which is word 169 being
-James> non-zero unless they've changed it yet again)?
+On Wednesday 18 August 2010, 08:12:24 Tejun Heo wrote:
+> On 08/17/2010 11:28 PM, Stephan Diestelhorst wrote:
+> > 2010/8/17 Tejun Heo <htejun@gmail.com>:
+> >> On 08/17/2010 12:51 PM, Stephan Diestelhorst wrote:
+> >>> I've also confirmed that the "XXX ahci_set_ipm" is present in
+> >>> libahci.ko. So either I've screwed up badly when compiling the initrd,
+> >>> the code is not executed or the printout does not make it into any
+> >>> logfile anymore.
+> >>
+> >> Yeah, that's weird.  You're enabling IPM, right?
+>
+> You can check whether it's enabled by
+> 
+> $ cat /sys/class/scsi_host/host0/link_power_management_policy
+> 
+> If it says max_performance, it's disabled.  If it says anything else,
+> it's enabled.
 
-I thought about it.  But the VPD page isn't gated on thin provisioning
-being enabled.
+It says "max_performance", I have not touched anyhting. So it has been
+like that all the time. Would this explain why your patch did not show
+the debug printout?
 
-With the SCSI hat on we won't enable discard unless TPE=1 in READ
-CAPACITY(16).  Regardless of whether the device reports TPU=1 or TPWS=1
-in the TP VPD.
-
+Thanks,
+  Stephan
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
