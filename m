@@ -1,80 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/6] block: Make max_discard_sectors sector_t
-Date: Thu, 19 Aug 2010 11:48:58 -0400
-Message-ID: <1282232941-9910-4-git-send-email-martin.petersen@oracle.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE
+ SAME(16) with UNMAP
+Date: Thu, 19 Aug 2010 11:15:51 -0500
+Message-ID: <1282234551.8139.25.camel@mulgrave.site>
 References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	 <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:35582 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864Ab0HSPvd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 11:51:33 -0400
-In-Reply-To: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+Received: from cantor2.suse.de ([195.135.220.15]:40759 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752206Ab0HSQP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Aug 2010 12:15:57 -0400
+In-Reply-To: <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 
-With 4KB ATA TRIM payloads we can express ranges above the 32 bits
-allowed by SCSI.  Convert max_discard_sectors to sector_t.
+On Thu, 2010-08-19 at 11:48 -0400, Martin K. Petersen wrote:
+> Until now identifying that a device supports WRITE SAME(16) with the
+> UNMAP bit set has been black magic.  Implement support for the new (SBC3
+> r24) Thin Provisioning VPD page and the TPWS bit.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  drivers/ata/libata-scsi.c |   13 +++++++++++++
+>  1 files changed, 13 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a54273d..e280ae6 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+>  		0x89,	/* page 0x89, ata info page */
+>  		0xb0,	/* page 0xb0, block limits page */
+>  		0xb1,	/* page 0xb1, block device characteristics page */
+> +		0xb2,	/* page 0xb2, thin provisioning page */
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- block/blk-lib.c        |    5 +++--
- block/blk-settings.c   |    2 +-
- include/linux/blkdev.h |    4 ++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
+Should this be unconditional?  Shouldn't it be conditioned on the
+current supported trim indicator (which is word 169 being non-zero
+unless they've changed it yet again)?
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index d0216b9..dbed1e9 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -54,8 +54,9 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 
- 	while (nr_sects && !ret) {
- 		unsigned int sector_size = q->limits.logical_block_size;
--		unsigned int max_discard_sectors =
--			min(q->limits.max_discard_sectors, UINT_MAX >> 9);
-+		sector_t max_discard_sectors =
-+			min(q->limits.max_discard_sectors,
-+			    (sector_t)UINT_MAX >> 9);
- 
- 		bio = bio_alloc(gfp_mask, 1);
- 		if (!bio)
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f5ed5a1..a4a2f42 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -246,7 +246,7 @@ EXPORT_SYMBOL(blk_queue_max_hw_sectors);
-  * @max_discard_sectors: maximum number of sectors to discard
-  **/
- void blk_queue_max_discard_sectors(struct request_queue *q,
--		unsigned int max_discard_sectors)
-+		sector_t max_discard_sectors)
- {
- 	q->limits.max_discard_sectors = max_discard_sectors;
- }
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 09a8402..d083146 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -316,7 +316,7 @@ struct queue_limits {
- 	unsigned int		alignment_offset;
- 	unsigned int		io_min;
- 	unsigned int		io_opt;
--	unsigned int		max_discard_sectors;
-+	sector_t		max_discard_sectors;
- 	unsigned int		discard_granularity;
- 	unsigned int		discard_alignment;
- 
-@@ -934,7 +934,7 @@ extern void blk_queue_max_hw_sectors(struct request_queue *, unsigned int);
- extern void blk_queue_max_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_max_discard_sectors(struct request_queue *q,
--		unsigned int max_discard_sectors);
-+		sector_t max_discard_sectors);
- extern void blk_queue_logical_block_size(struct request_queue *, unsigned short);
- extern void blk_queue_physical_block_size(struct request_queue *, unsigned short);
- extern void blk_queue_alignment_offset(struct request_queue *q,
--- 
-1.7.2.1
+James
+
 
