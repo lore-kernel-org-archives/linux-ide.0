@@ -1,65 +1,47 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
-Date: Thu, 19 Aug 2010 19:32:04 +0900
-Message-ID: <4C6D0824.3070908@ct.jp.nec.com>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com> <4C6ABE12.40705@kernel.org>
+From: Alan Cox <alan@linux.intel.com>
+Subject: Re: [PATCH RFC] ata: Intel IDE-R support
+Date: Thu, 19 Aug 2010 11:09:59 +0100
+Message-ID: <20100819110959.40312e58@linux.intel.com>
+References: <20100810155559.7620.79711.stgit@localhost.localdomain>
+	<4C6AB68D.8000102@kernel.org>
+	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>
+	<4C6AB919.7060203@kernel.org>
+	<20100817180158.179e7780@lxorguk.ukuu.org.uk>
+	<4C6ABFFA.2000502@kernel.org>
+	<20100817192353.3529733c@lxorguk.ukuu.org.uk>
+	<4C6B7B72.4090405@kernel.org>
+	<20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>
+	<4C6BE9C8.4030803@kernel.org>
+	<20100818161521.430ba361@lxorguk.ukuu.org.uk>
+	<4C6CFB63.2070001@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:36992 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752530Ab0HSKdG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 06:33:06 -0400
-In-Reply-To: <4C6ABE12.40705@kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:41977 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752318Ab0HSKsH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Aug 2010 06:48:07 -0400
+In-Reply-To: <4C6CFB63.2070001@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hi Tejun, Mike,
-
-On 08/18/2010 01:51 AM +0900, Tejun Heo wrote:
-> On 08/17/2010 04:07 PM, Mike Snitzer wrote:
->> NOTE: NEC has already given some preliminary feedback to hch in the
->> "[PATCH, RFC 2/2] dm: support REQ_FLUSH directly" thread:
->> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html
->> https://www.redhat.com/archives/dm-devel/2010-August/msg00033.html
+> > Sure - but if ata_generic is already compiled in or already loaded ?
 > 
-> Hmmm... I think both issues don't exist in this incarnation of
-> conversion although I'm fairly sure there will be other issues.  :-)
+> Well, what if pata_acpi is already compiled in or already loaded?  Or
 
-The same issue is still there for request-based dm.  See below.
+Yes I am aware that one also has problems but unlike IDER I don't see a
+cure.
 
+> what if ata_piix is already compiled in or already loaded but ahci is
+> not for an ich6 controller?  We have priorities in the drivers, if the
+> user/admin wants to use the lower priority ones that much, he/she
+> shall.  This isn't an issue.  There's no way to hotplug intel IDEs
+> anyway.
 
->>>     A related question: Is dm_wait_for_completion() used in
->>>     process_flush() safe against starvation under continuous influx of
->>>     other commands?
->> As for your specific dm_wait_for_completion() concern -- I'll defer to
->> Mikulas.  But I'll add: we haven't had any reported starvation issues
->> with DM's existing barrier support.  DM uses a mempool for its clones,
->> so it should naturally throttle (without starvation) when memory gets
->> low.
-> 
-> I see but single pending flush and steady write streams w/o saturating
-> the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
-> well, it's a separate issue, I guess.
+The PIIX4 in the IBM docking stations is hot plug - and its why I also
+have to check 0x40 and write it if zero. So the case exists.
 
-Your understanding is correct, dm_wait_for_completion() for flush
-will stall in such cases for request-based dm.
-That's why I mentioned below in
-https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html.
-
-    In other words, current request-based device-mapper can't handle
-    other requests while a flush request is in progress.
-
-In flush request handling, request-based dm uses dm_wait_for_completion()
-to wait for the completion of cloned flush requests, depending on
-the fact that there should be only flush requests in flight owning
-to the block layer sequencing.
-
-It's not a separate issue and we need to resolve it at least.
-I'm still considering how I can fix the request-based dm.
-
-Thanks,
-Kiyoshi Ueda
+Alan
