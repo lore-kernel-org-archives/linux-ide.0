@@ -1,37 +1,59 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Thu, 19 Aug 2010 11:37:39 +0200
-Message-ID: <4C6CFB63.2070001@kernel.org>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain>	<4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk>	<4C6AB919.7060203@kernel.org>	<20100817180158.179e7780@lxorguk.ukuu.org.uk>	<4C6ABFFA.2000502@kernel.org>	<20100817192353.3529733c@lxorguk.ukuu.org.uk>	<4C6B7B72.4090405@kernel.org>	<20100818110306.03ce2fbc@lxorguk.ukuu.org.uk>	<4C6BE9C8.4030803@kernel.org> <20100818161521.430ba361@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Thu, 19 Aug 2010 11:51:38 +0200
+Message-ID: <4C6CFEAA.1060004@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <4C6540C5.8070108@vlnb.net> <4C6546E0.7070208@kernel.org> <4C6C34E0.3050601@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:49437 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:34379 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883Ab0HSJlg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2010 05:41:36 -0400
-In-Reply-To: <20100818161521.430ba361@lxorguk.ukuu.org.uk>
+	id S1750902Ab0HSJzt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 Aug 2010 05:55:49 -0400
+In-Reply-To: <4C6C34E0.3050601@vlnb.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, jeff@garzik.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 
 Hello,
 
-On 08/18/2010 05:15 PM, Alan Cox wrote:
->> That's the reason why we have module priorities.  The link priority
->> becomes module priority and modprobe will deterministically prefer
->> ata_piix over ata_generic if a controller is supported by both.
-> 
-> Sure - but if ata_generic is already compiled in or already loaded ?
+On 08/18/2010 09:30 PM, Vladislav Bolkhovitin wrote:
+> Basically, I measured how iSCSI link utilization depends from amount
+> of queued commands and queued data size. This is why I made it as a
+> table. From it you can see which improvement you will have removing
+> queue draining after 1, 2, 4, etc. commands depending of commands
+> sizes.
+>
+> For instance, on my previous XFS rm example, where rm of 4 files
+> took 3.5 minutes with nobarrier option, I could see that XFS was
+> sending 1-3 32K commands in a row. From my table you can see that if
+> it sent all them at once without draining, it would have about
+> 150-200% speed increase.
 
-Well, what if pata_acpi is already compiled in or already loaded?  Or
-what if ata_piix is already compiled in or already loaded but ahci is
-not for an ich6 controller?  We have priorities in the drivers, if the
-user/admin wants to use the lower priority ones that much, he/she
-shall.  This isn't an issue.  There's no way to hotplug intel IDEs
-anyway.
+You compared barrier off/on.  Of course, it will make a big
+difference.  I think good part of that gain should be realized by the
+currently proposed patchset which removes draining.  What's needed to
+be demonstrated is the difference between ordered-by-waiting and
+ordered-by-tag.  We've never had code to do that properly.
+
+The original ordered-by-tag we had only applied tag ordering to two or
+three command sequences inside a barrier, which doesn't amount to much
+(and could even be harmful as it imposes draining of all simple
+commands inside the device only to reduce issue latencies for a few
+commands).  You'll need to hook into filesystem and somehow export the
+ordering information down to the driver so that whatever needs
+ordering is sent out as ordered commands.
+
+As I've wrote multiple times, I'm pretty skeptical it will bring much.
+Ordered tag mandates draining inside the device just like the original
+barrier implementation.  Sure, it's done at a lower layer and command
+issue latencies will be reduced thanks to that but ordered-by-waiting
+doesn't require _any_ draining at all.  The whole pipeline can be kept
+full all the time.  I'm often wrong tho, so please feel free to go
+ahead and prove me wrong.  :-)
 
 Thanks.
 
