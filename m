@@ -1,48 +1,36 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE
- SAME(16) with UNMAP
-Date: Thu, 19 Aug 2010 11:15:51 -0500
-Message-ID: <1282234551.8139.25.camel@mulgrave.site>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16) with UNMAP
+Date: Thu, 19 Aug 2010 12:20:34 -0400
+Message-ID: <yq1k4nmmv59.fsf@sermon.lab.mkp.net>
 References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
-	 <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+	<1282234551.8139.25.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40759 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206Ab0HSQP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2010 12:15:57 -0400
-In-Reply-To: <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:20728 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150Ab0HSQWo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 12:22:44 -0400
+In-Reply-To: <1282234551.8139.25.camel@mulgrave.site> (James Bottomley's
+	message of "Thu, 19 Aug 2010 11:15:51 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 
-On Thu, 2010-08-19 at 11:48 -0400, Martin K. Petersen wrote:
-> Until now identifying that a device supports WRITE SAME(16) with the
-> UNMAP bit set has been black magic.  Implement support for the new (SBC3
-> r24) Thin Provisioning VPD page and the TPWS bit.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/ata/libata-scsi.c |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a54273d..e280ae6 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
->  		0x89,	/* page 0x89, ata info page */
->  		0xb0,	/* page 0xb0, block limits page */
->  		0xb1,	/* page 0xb1, block device characteristics page */
-> +		0xb2,	/* page 0xb2, thin provisioning page */
+>>>>> "James" == James Bottomley <James.Bottomley@suse.de> writes:
 
-Should this be unconditional?  Shouldn't it be conditioned on the
-current supported trim indicator (which is word 169 being non-zero
-unless they've changed it yet again)?
+James> Should this be unconditional?  Shouldn't it be conditioned on the
+James> current supported trim indicator (which is word 169 being
+James> non-zero unless they've changed it yet again)?
 
-James
+I thought about it.  But the VPD page isn't gated on thin provisioning
+being enabled.
 
+With the SCSI hat on we won't enable discard unless TPE=1 in READ
+CAPACITY(16).  Regardless of whether the device reports TPU=1 or TPWS=1
+in the TP VPD.
 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
