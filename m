@@ -1,39 +1,25 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH #upstream] libata-transport: Fix compilation error on powerpc
-Date: Wed, 18 Aug 2010 19:37:12 -0700
-Message-ID: <1282185432-7069-1-git-send-email-gwendal@google.com>
-References: <20100818104057.5fdaf20d.sfr@canb.auug.org.au>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] trivial: Use kzalloc in idedisk_prep_fn.
+Date: Thu, 19 Aug 2010 02:58:24 -0400
+Message-ID: <4C6CD610.3090902@garzik.org>
+References: <1282190541-12154-1-git-send-email-tao.ma@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:61539 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750973Ab0HSChj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2010 22:37:39 -0400
-In-Reply-To: <20100818104057.5fdaf20d.sfr@canb.auug.org.au>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60736 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018Ab0HSG62 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 02:58:28 -0400
+In-Reply-To: <1282190541-12154-1-git-send-email-tao.ma@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, sfr@canb.auug.org.au
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+To: Tao Ma <tao.ma@oracle.com>
+Cc: linux-kernel@vger.kernel.org, Jiri Kosina <trivial@kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-slab.h was not included when compiling for powerpc.
-It is implicitely included for x86.
+On 08/19/2010 12:02 AM, Tao Ma wrote:
+> Cc: Jiri Kosina<trivial@kernel.org>
+> Signed-off-by: Tao Ma<tao.ma@oracle.com>
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- drivers/ata/libata-transport.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index a80860f..c136efc 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -25,6 +25,7 @@
- 
- 
- #include <linux/kernel.h>
-+#include <linux/slab.h>
- #include <linux/blkdev.h>
- #include <linux/spinlock.h>
- #include <scsi/scsi_transport.h>
--- 
-1.7.1
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
