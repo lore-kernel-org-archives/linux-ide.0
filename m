@@ -1,97 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/5] lguest: replace VIRTIO_F_BARRIER support with VIRTIO_F_FLUSH
- support
-Date: Thu, 19 Aug 2010 17:15:41 +0200
-Message-ID: <4C6D4A9D.1020400@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-4-git-send-email-tj@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16) with UNMAP
+Date: Thu, 19 Aug 2010 11:48:56 -0400
+Message-ID: <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47572 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750994Ab0HSPTs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2010 11:19:48 -0400
-In-Reply-To: <1281977523-19335-4-git-send-email-tj@kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:32069 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935Ab0HSPt2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 11:49:28 -0400
+In-Reply-To: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-VIRTIO_F_BARRIER is deprecated.  Replace it with VIRTIO_F_FLUSH
-support.
+Until now identifying that a device supports WRITE SAME(16) with the
+UNMAP bit set has been black magic.  Implement support for the new (SBC3
+r24) Thin Provisioning VPD page and the TPWS bit.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
-FUA support dropped as suggested by Christoph.  Rusty, can you please
-ack this version too?  I tested it with the updated virtio_blk and it
-works fine.
+ drivers/ata/libata-scsi.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-Thanks.
-
- Documentation/lguest/lguest.c |   29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
-
-Index: block/Documentation/lguest/lguest.c
-===================================================================
---- block.orig/Documentation/lguest/lguest.c
-+++ block/Documentation/lguest/lguest.c
-@@ -1639,15 +1639,6 @@ static void blk_request(struct virtqueue
- 	off = out->sector * 512;
-
- 	/*
--	 * The block device implements "barriers", where the Guest indicates
--	 * that it wants all previous writes to occur before this write.  We
--	 * don't have a way of asking our kernel to do a barrier, so we just
--	 * synchronize all the data in the file.  Pretty poor, no?
--	 */
--	if (out->type & VIRTIO_BLK_T_BARRIER)
--		fdatasync(vblk->fd);
--
--	/*
- 	 * In general the virtio block driver is allowed to try SCSI commands.
- 	 * It'd be nice if we supported eject, for example, but we don't.
- 	 */
-@@ -1679,6 +1670,13 @@ static void blk_request(struct virtqueue
- 			/* Die, bad Guest, die. */
- 			errx(1, "Write past end %llu+%u", off, ret);
- 		}
-+
-+		wlen = sizeof(*in);
-+		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
-+	} else if (out->type & VIRTIO_BLK_T_FLUSH) {
-+		/* Flush */
-+		ret = fdatasync(vblk->fd);
-+		verbose("FLUSH fdatasync: %i\n", ret);
- 		wlen = sizeof(*in);
- 		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
- 	} else {
-@@ -1702,15 +1700,6 @@ static void blk_request(struct virtqueue
- 		}
- 	}
-
--	/*
--	 * OK, so we noted that it was pretty poor to use an fdatasync as a
--	 * barrier.  But Christoph Hellwig points out that we need a sync
--	 * *afterwards* as well: "Barriers specify no reordering to the front
--	 * or the back."  And Jens Axboe confirmed it, so here we are:
--	 */
--	if (out->type & VIRTIO_BLK_T_BARRIER)
--		fdatasync(vblk->fd);
--
- 	/* Finished that request. */
- 	add_used(vq, head, wlen);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a54273d..e280ae6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x89,	/* page 0x89, ata info page */
+ 		0xb0,	/* page 0xb0, block limits page */
+ 		0xb1,	/* page 0xb1, block device characteristics page */
++		0xb2,	/* page 0xb2, thin provisioning page */
+ 	};
+ 
+ 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
+@@ -2172,6 +2173,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+ 	return 0;
  }
-@@ -1735,8 +1724,8 @@ static void setup_block_file(const char
- 	vblk->fd = open_or_die(filename, O_RDWR|O_LARGEFILE);
- 	vblk->len = lseek64(vblk->fd, 0, SEEK_END);
+ 
++static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
++{
++	rbuf[1] = 0xb1;
++	rbuf[3] = 0x3c;
++	rbuf[5] = 1 << 6;	/* TPWS */
++
++	return 0;
++}
++
+ /**
+  *	ata_scsiop_noop - Command handler that simply returns success.
+  *	@args: device IDENTIFY data / SCSI command of interest.
+@@ -3250,6 +3260,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 		case 0xb1:
+ 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
+ 			break;
++		case 0xb2:
++			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b2);
++			break;
+ 		default:
+ 			ata_scsi_invalid_field(cmd, done);
+ 			break;
+-- 
+1.7.2.1
 
--	/* We support barriers. */
--	add_feature(dev, VIRTIO_BLK_F_BARRIER);
-+	/* We support FLUSH. */
-+	add_feature(dev, VIRTIO_BLK_F_FLUSH);
-
- 	/* Tell Guest how many sectors this device has. */
- 	conf.capacity = cpu_to_le64(vblk->len / 512);
