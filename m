@@ -1,52 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH RFC] ata: Intel IDE-R support
-Date: Thu, 19 Aug 2010 14:05:34 -0400
-Message-ID: <4C6D726E.6030709@garzik.org>
-References: <20100810155559.7620.79711.stgit@localhost.localdomain> <4C6AB68D.8000102@kernel.org>	<20100817174257.3691ed68@lxorguk.ukuu.org.uk> <4C6AB919.7060203@kernel.org>	<20100817180158.179e7780@lxorguk.ukuu.org.uk> <4C6ABFFA.2000502@kernel.org>	<20100817192353.3529733c@lxorguk.ukuu.org.uk> <4C6B7B72.4090405@kernel.org>	<20100818110306.03ce2fbc@lxorguk.ukuu.org.uk> <4C6BE9C8.4030803@kernel.org>	<20100818161521.430ba361@lxorguk.ukuu.org.uk> <4C6CFB63.2070001@kernel.org> <20100819110959.40312e58@linux.intel.com> <4C6D13E2.1010703@kernel.org> <4C6D29FB.3000002@suse.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Thu, 19 Aug 2010 14:05:51 -0400
+Message-ID: <yq1fwyamq9s.fsf@sermon.lab.mkp.net>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60109 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065Ab0HSSFi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 14:05:38 -0400
-Received: by vws3 with SMTP id 3so2079313vws.19
-        for <linux-ide@vger.kernel.org>; Thu, 19 Aug 2010 11:05:38 -0700 (PDT)
-In-Reply-To: <4C6D29FB.3000002@suse.de>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:42985 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752187Ab0HSSIG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 14:08:06 -0400
+In-Reply-To: <AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
+	(Greg Freemyer's message of "Thu, 19 Aug 2010 13:27:21 -0400")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <teheo@suse.de>
-Cc: Alan Cox <alan@linux.intel.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, kay.sievers@suse.de
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 
-On 08/19/2010 08:56 AM, Tejun Heo wrote:
-> Hello, again.
->
-> On 08/19/2010 01:22 PM, Tejun Heo wrote:
->> On 08/19/2010 12:09 PM, Alan Cox wrote:
->>>> what if ata_piix is already compiled in or already loaded but ahci is
->>>> not for an ich6 controller?  We have priorities in the drivers, if the
->>>> user/admin wants to use the lower priority ones that much, he/she
->>>> shall.  This isn't an issue.  There's no way to hotplug intel IDEs
->>>> anyway.
->>>
->>> The PIIX4 in the IBM docking stations is hot plug - and its why I also
->>> have to check 0x40 and write it if zero. So the case exists.
->>
->> I see.  Most of the problems are solved by driver priority but yeah
->> that's an actual corner case.  Driver priority doesn't work unless all
->> the matching drivers are loaded by the time driver matching starts, so
->> the same problem could happen with pata_acpi depending on probe order
->> during normal boot, so pata_acpi should be blacklisted by default.
->
-> It seems priority thing can't handle this at all.  So, to the original
-> patch,
->
-> Acked-by: Tejun Heo<tj@kernel.org>
+>>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
 
-Cool, though still waiting on resend to fix problems mentioned earlier 
-in the thread, notably s/&&/&/
+>> + /* Default to 1 if unspecified in word 105. Cap at 1 page. */
 
-Or if Alan wants to sign-off on my doing that correction myself, since a 
-resend hasn't appeared?
+Greg> Should there at least be a todo comment about raising that cap?
 
+We don't currently plan to.  The payload is a single page which we can
+allocate fairly easily.  A bigger payload would be more problematic.
+
+With the 4KB payload you can adress 16GB with one command.
+
+
+Greg> Or is there a fundamental reason for it.  ie. I don't think the
+Greg> ATA spec calls for it, so this is a kernel restriction I assume.
+
+Yes, this is part of the internal SCSI-ATA translation mechanism in
+Linux.  But fwiw, there I'm only aware of one drive that currently
+supports more than 512 bytes of payload and it also caps at 4KB.
+
+
+Greg> Is this patch actually enabling the block layer to initiate ATA
+Greg> multi-sector trim payloads, or is this only allowing the max
+Greg> payloads sectors to be queried?
+
+TRIM only takes 65535 blocks per entry.  So we need many entries to
+decribe a single, contiguous space being freed.  That's what's being
+bumped here.
+
+
+Greg> Are there plans (or existing code) to accumulate trim ranges in
+Greg> the block layer and create trim commands with multiple sectors?
+
+I have worked on this on and off.  It's not trivial for several reasons.
+We discussed the issues at the storage workshop last week and there was
+concensus that the changes were too intrusive.  So we're holding off
+until we see what's happening with:
+
+      a) the SSD market. Win 7 also issues lots of small, individual
+         trims like we do
+
+      b) the TRIM TNG command that's being worked on in T13
+
+This doesn't mean that TRIM coalescing is impossible and that it will
+never happen.  But right now it appears to be more hassle than it's
+worth...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
