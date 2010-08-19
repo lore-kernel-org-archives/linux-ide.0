@@ -1,71 +1,71 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] ide: remove unnecessary blk_queue_flushing() test in do_ide_request()
-Date: Thu, 19 Aug 2010 15:35:37 +0200
-Message-ID: <4C6D3329.7030901@kernel.org>
+Subject: [PATCH 2/5 UPDATED] virtio_blk: drop REQ_HARDBARRIER support
+Date: Thu, 19 Aug 2010 17:14:21 +0200
+Message-ID: <4C6D4A4D.7090501@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54082 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338Ab0HSNjY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Aug 2010 09:39:24 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-Unplugging from a request function doesn't really help much (it's
-already in the request_fn) and soon block layer will be updated to mix
-barrier sequence with other commands, so there's no need to treat
-queue flushing any differently.
-
-ide was the only user of blk_queue_flushing().  Remove it.
+Remove now unused REQ_HARDBARRIER support.  virtio_blk already
+supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
+questionable at this point, so there's nothing else to do to support
+new REQ_FLUSH/FUA interface.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Michael S. Tsirkin <mst@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 ---
-David, can I route this patch through block tree with other barrier
-changes?
+REQ_FUA support dropped as suggested by Christoph.
 
-Thanks.
+ drivers/block/virtio_blk.c |   17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
- drivers/ide/ide-io.c   |   13 -------------
- include/linux/blkdev.h |    1 -
- 2 files changed, 14 deletions(-)
-
-Index: block/drivers/ide/ide-io.c
+Index: block/drivers/block/virtio_blk.c
 ===================================================================
---- block.orig/drivers/ide/ide-io.c
-+++ block/drivers/ide/ide-io.c
-@@ -441,19 +441,6 @@ void do_ide_request(struct request_queue
- 	struct request	*rq = NULL;
- 	ide_startstop_t	startstop;
+--- block.orig/drivers/block/virtio_blk.c
++++ block/drivers/block/virtio_blk.c
+@@ -128,9 +128,6 @@ static bool do_req(struct request_queue
+ 		}
+ 	}
+
+-	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
+-		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
+-
+ 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
+
+ 	/*
+@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struc
+ 	vblk->disk->driverfs_dev = &vdev->dev;
+ 	index++;
 
 -	/*
--	 * drive is doing pre-flush, ordered write, post-flush sequence. even
--	 * though that is 3 requests, it must be seen as a single transaction.
--	 * we must not preempt this drive until that is complete
+-	 * If the FLUSH feature is supported we do have support for
+-	 * flushing a volatile write cache on the host.  Use that to
+-	 * implement write barrier support; otherwise, we must assume
+-	 * that the host does not perform any kind of volatile write
+-	 * caching.
 -	 */
--	if (blk_queue_flushing(q))
--		/*
--		 * small race where queue could get replugged during
--		 * the 3-request flush cycle, just yank the plug since
--		 * we want it to finish asap
--		 */
--		blk_remove_plug(q);
--
- 	spin_unlock_irq(q->queue_lock);
++	/* configure queue flush support */
+ 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
+ 		blk_queue_flush(q, REQ_FLUSH);
 
- 	/* HLD do_request() callback might sleep, make sure it's okay */
-Index: block/include/linux/blkdev.h
-===================================================================
---- block.orig/include/linux/blkdev.h
-+++ block/include/linux/blkdev.h
-@@ -520,7 +520,6 @@ enum {
- #define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, &(q)->queue_flags)
- #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
- #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
--#define blk_queue_flushing(q)	((q)->ordseq)
- #define blk_queue_stackable(q)	\
- 	test_bit(QUEUE_FLAG_STACKABLE, &(q)->queue_flags)
- #define blk_queue_discard(q)	test_bit(QUEUE_FLAG_DISCARD, &(q)->queue_flags)
+@@ -515,9 +506,9 @@ static const struct virtio_device_id id_
+ };
+
+ static unsigned int features[] = {
+-	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
+-	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
+-	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
++	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
++	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
++	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
+ };
+
+ /*
