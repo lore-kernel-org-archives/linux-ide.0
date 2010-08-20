@@ -1,120 +1,60 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: [PATCH] ata: Intel IDE-R support
-Date: Fri, 20 Aug 2010 18:33:33 +0100
-Message-ID: <20100820173327.30661.51410.stgit@localhost.localdomain>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Fri, 20 Aug 2010 14:28:34 -0400
+Message-ID: <4C6EC952.4010706@teksavvy.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>	<yq1fwyamq9s.fsf@sermon.lab.mkp.net>	<4C6DA713.40601@teksavvy.com>	<20100820085801.GB27033@lst.de>	<4C6E88E6.7060307@teksavvy.com> <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:61278 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab0HTSL6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Aug 2010 14:11:58 -0400
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:45655 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751765Ab0HTS2i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 14:28:38 -0400
+In-Reply-To: <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Intel IDE-R devices are part of the Intel AMT management setup. They don't
-have any special configuration registers or settings so the ata_generic
-driver will support them fully.
+On 10-08-20 01:13 PM, Greg Freemyer wrote:
+> On Fri, Aug 20, 2010 at 9:53 AM, Mark Lord<kernel@teksavvy.com>  wrote:
+>> On 10-08-20 04:58 AM, Christoph Hellwig wrote:
+>>>
+>>> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
+>>>>
+>>>> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
+>>>>>
+>>>>> I'm only aware of one drive that currently
+>>>>> supports more than 512 bytes of payload and it also caps at 4KB.
+>>>>
+>>>> SSDs based upon the Indilinx Barefoot controller support
+>>>> more or less "infinite" payload for TRIM, with no cap.
+>>>> But it predates idword[105], so just has a zero there.
+>>>
+>>> Is there an easy way to identify them?  If so we could add a quirk
+>>> for them if it provides enough benefit.
+..
+> A whitelist to enable large contiguous range trims via 8 512B-block
+> payloads seems useful for those devices that don't support word 105.
+> (ie. 4KB payload)
+>
+> But, I doubt there is enough observable performance advantage to
+> justify reworking the internal SCSI-ATA translation mechanism in the
+> kernel to handle larger payloads.   Especially if only one or two SSDs
+> will accept greater than 4KB of payload to the trim command.
+..
 
-Rather than add a huge table of IDs for each chipset and keep sending in
-new ones this patch autodetects them.
+Actually, for in-kernel uses, even just a single 512-byte long list
+would likely be adequate.  The biggest gains will come from simply
+having more than one range per TRIM command issued.
 
-[Added some further comments]
+Once we get that, it's diminishing returns for larger and larger lists,
+and in-kernel code is unlikely to ever be able to generate lists that long.
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
+But getting started should be easier than folks are making it out to be.
+The first step is to have "file deletion" issue multi-range trims for
+all extents of the file at once, rather than one range at a time as at present.
 
- drivers/ata/ata_generic.c |   54 ++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 53 insertions(+), 1 deletions(-)
-
-
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index cc5f772..6981f76 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -35,6 +35,7 @@
- enum {
- 	ATA_GEN_CLASS_MATCH		= (1 << 0),
- 	ATA_GEN_FORCE_DMA		= (1 << 1),
-+	ATA_GEN_INTEL_IDER		= (1 << 2),
- };
- 
- /**
-@@ -109,6 +110,49 @@ static struct ata_port_operations generic_port_ops = {
- static int all_generic_ide;		/* Set to claim all devices */
- 
- /**
-+ *	is_intel_ider		-	identify intel IDE-R devices
-+ *	@dev: PCI device
-+ *
-+ *	Distinguish Intel IDE-R controller devices from other Intel IDE
-+ *	devices. IDE-R devices have no timing registers and are in
-+ *	most respects virtual. They should be driven by the ata_generic
-+ *	driver.
-+ *
-+ *	IDE-R devices have PCI offset 0xF8.L as zero, later Intel ATA has
-+ *	it non zero. All Intel ATA has 0x40 writable (timing), but it is
-+ *	not writable on IDE-R devices (this is guaranteed).
-+ */
-+
-+static int is_intel_ider(struct pci_dev *dev)
-+{
-+	/* For Intel IDE the value at 0xF8 is only zero on IDE-R
-+	   interfaces */
-+	u32 r;
-+	u16 t;
-+
-+	/* Check the manufacturing ID, it will be zero for IDE-R */
-+	pci_read_config_dword(dev, 0xF8, &r);
-+	/* Not IDE-R: punt so that ata_(old)piix gets it */
-+	if (r != 0)
-+		return 0;
-+	/* 0xF8 will also be zero on some early Intel IDE devices
-+	   but they will have a sane timing register */
-+	pci_read_config_word(dev, 0x40, &t);
-+	if (t != 0)
-+		return 0;
-+	/* Finally check if the timing register is writable so that
-+	   we eliminate any early devices hot-docked in a docking
-+	   station */
-+	pci_write_config_word(dev, 0x40, 1);
-+	pci_read_config_word(dev, 0x40, &t);
-+	if (t) {
-+		pci_write_config_word(dev, 0x40, 0);
-+		return 0;
-+	}
-+	return 1;
-+}
-+
-+/**
-  *	ata_generic_init		-	attach generic IDE
-  *	@dev: PCI device found
-  *	@id: match entry
-@@ -134,6 +178,10 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
- 	if ((id->driver_data & ATA_GEN_CLASS_MATCH) && all_generic_ide == 0)
- 		return -ENODEV;
- 
-+	if (id->driver_data & ATA_GEN_INTEL_IDER)
-+		if (!is_intel_ider(dev))
-+			return -ENODEV;
-+
- 	/* Devices that need care */
- 	if (dev->vendor == PCI_VENDOR_ID_UMC &&
- 	    dev->device == PCI_DEVICE_ID_UMC_UM8886A &&
-@@ -186,7 +234,11 @@ static struct pci_device_id ata_generic[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_5),  },
--#endif	
-+#endif
-+	/* Intel, IDE class device */
-+	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-+	  PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 
-+	  .driver_data = ATA_GEN_INTEL_IDER },
- 	/* Must come last. If you add entries adjust this table appropriately */
- 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL),
- 	  .driver_data = ATA_GEN_CLASS_MATCH },
-
+That'll be the biggest gain, and shouldn't be too complex to implement.
+Especially not after Christoph/Tejun's current barrier rework stuff is in place.
