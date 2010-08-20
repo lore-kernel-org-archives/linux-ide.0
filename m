@@ -1,245 +1,63 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: [PATCH] sata_mv: fix broken DSM/TRIM support (v2)
-Date: Thu, 19 Aug 2010 21:40:44 -0400
-Message-ID: <1282268444.9628.4.camel@corey>
-References: <1282267195.8909.6.camel@corey>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Fri, 20 Aug 2010 17:26:02 +0900
+Message-ID: <4C6E3C1A.50205@ct.jp.nec.com>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-bCqIt7NsmBorWeWtmUQL"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:36819 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750824Ab0HTBkq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 21:40:46 -0400
-In-Reply-To: <1282267195.8909.6.camel@corey>
+Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:58177 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752751Ab0HTI1t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 04:27:49 -0400
+In-Reply-To: <20100817165929.GB13800@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: tj@kernel.org, jeff@garzik.org
+To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+
+Hi Tejun, Christoph,
+
+On Tue, Aug 17, 2010 at 06:41:47PM +0200, Tejun Heo wrote:
+>>> I wasn't sure about that part.  You removed store_flush_error(), but
+>>> DM_ENDIO_REQUEUE should still have higher priority than other
+>>> failures, no?
+>>
+>> Which priority?
+>
+> IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
+> core layer to retry the whole bio later), it trumps all other failures
+> and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
+> prioritized over other error codes, which actually is sort of
+> incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
+> layers as FLUSH failure implies data already lost.  So,
+> DM_ENDIO_REQUEUE actually should have lower priority than other
+> failures.  But, then again, the error codes still need to be
+> prioritized.
+
+I think that's correct and changing the priority of DM_ENDIO_REQUEUE
+for REQ_FLUSH down to the lowest should be fine.
+(I didn't know that FLUSH failure implies data loss possibility.)
+
+But the patch is not enough, you have to change target drivers, too.
+E.g. As for multipath, you need to change
+     drivers/md/dm-mpath.c:do_end_io() to return error for REQ_FLUSH
+     like the REQ_DISCARD support included in 2.6.36-rc1.
 
 
---=-bCqIt7NsmBorWeWtmUQL
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+By the way, if these patch-set with the change above are included,
+even one path failure for REQ_FLUSH on multipath configuration will
+be reported to upper layer as error, although it's retried using
+other paths currently.
+Then, if an upper layer won't take correct recovery action for the error,
+it would be seen as a regression for users. (e.g. Frequent EXT3-error
+resulting in read-only mount on multipath configuration.)
 
-Fix DSM/TRIM commands in sata_mv (v2).
-These need to be issued using old-school "BM DMA",
-rather than via the EDMA host queue.
+Although I think the explicit error is fine rather than implicit data
+corruption, please check upper layers carefully so that users won't see
+such errors as much as possible.
 
-Since the chips don't have proper BM DMA status,
-we need to be more careful with setting the ATA_DMA_INTR bit,
-since DSM/TRIM often has a long delay between "DMA complete"
-and "command complete".
-
-GEN_I chips don't have BM DMA, so no TRIM for them.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-
-Re-issue of original patch, with fixes for GEN_I and GEN_II chipsets.
-(my apologies for broken mailers -- patch also attached in case inline is b0rked).
-
---- 2.6.35.2/drivers/ata/sata_mv.c	2010-08-01 18:11:14.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2010-08-19 21:34:46.139766319 -0400
-@@ -1898,19 +1898,25 @@
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--static void mv_bmdma_stop(struct ata_queued_cmd *qc)
-+static void mv_bmdma_stop_ap(struct ata_port *ap)
- {
--	struct ata_port *ap = qc->ap;
- 	void __iomem *port_mmio = mv_ap_base(ap);
- 	u32 cmd;
- 
- 	/* clear start/stop bit */
- 	cmd = readl(port_mmio + BMDMA_CMD);
--	cmd &= ~ATA_DMA_START;
--	writelfl(cmd, port_mmio + BMDMA_CMD);
-+	if (cmd & ATA_DMA_START) {
-+		cmd &= ~ATA_DMA_START;
-+		writelfl(cmd, port_mmio + BMDMA_CMD);
- 
--	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
--	ata_sff_dma_pause(ap);
-+		/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
-+		ata_sff_dma_pause(ap);
-+	}
-+}
-+
-+static void mv_bmdma_stop(struct ata_queued_cmd *qc)
-+{
-+	mv_bmdma_stop_ap(qc->ap);
- }
- 
- /**
-@@ -1934,8 +1940,21 @@
- 	reg = readl(port_mmio + BMDMA_STATUS);
- 	if (reg & ATA_DMA_ACTIVE)
- 		status = ATA_DMA_ACTIVE;
--	else
-+	else if (reg & ATA_DMA_ERR)
- 		status = (reg & ATA_DMA_ERR) | ATA_DMA_INTR;
-+	else {
-+		/*
-+		 * Just because DMA_ACTIVE is 0 (DMA completed),
-+		 * this does _not_ mean the device is "done".
-+		 * So we should not yet be signalling ATA_DMA_INTR
-+		 * in some cases.  Eg. DSM/TRIM, and perhaps others.
-+		 */
-+		mv_bmdma_stop_ap(ap);
-+		if (ioread8(ap->ioaddr.altstatus_addr) & ATA_BUSY)
-+			status = 0;
-+		else
-+			status = ATA_DMA_INTR;
-+	}
- 	return status;
- }
- 
-@@ -1995,6 +2014,9 @@
- 
- 	switch (tf->protocol) {
- 	case ATA_PROT_DMA:
-+		if (tf->command == ATA_CMD_DSM)
-+			return;
-+		/* fall-thru */
- 	case ATA_PROT_NCQ:
- 		break;	/* continue below */
- 	case ATA_PROT_PIO:
-@@ -2094,6 +2116,8 @@
- 	if ((tf->protocol != ATA_PROT_DMA) &&
- 	    (tf->protocol != ATA_PROT_NCQ))
- 		return;
-+	if (tf->command == ATA_CMD_DSM)
-+		return;  /* use bmdma for this */
- 
- 	/* Fill in Gen IIE command request block */
- 	if (!(tf->flags & ATA_TFLAG_WRITE))
-@@ -2289,6 +2313,12 @@
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
-+		if (qc->tf.command == ATA_CMD_DSM) {
-+			if (!ap->ops->bmdma_setup)  /* no bmdma on GEN_I */
-+				return AC_ERR_OTHER;
-+			break;  /* use bmdma for this */
-+		}
-+		/* fall thru */
- 	case ATA_PROT_NCQ:
- 		mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
- 		pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
-
-
---=-bCqIt7NsmBorWeWtmUQL
-Content-Disposition: attachment; filename="01_sata_mv_dsm_trim_fix.patch"
-Content-Type: text/x-patch; name="01_sata_mv_dsm_trim_fix.patch"; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-
-Fix DSM/TRIM commands in sata_mv (v2).
-These need to be issued using old-school "BM DMA",
-rather than via the EDMA host queue.
-
-Since the chips don't have proper BM DMA status,
-we need to be more careful with setting the ATA_DMA_INTR bit,
-since DSM/TRIM often has a long delay between "DMA complete"
-and "command complete".
-
-GEN_I chips don't have BM DMA, so no TRIM for them.
-
-Signed-off-by: Mark Lord <mlord@pobox.com>
----
-
-Re-issue of original patch, with fixes for GEN_I and GEN_II chipsets.
-(my apologies for broken mailers -- patch also attached in case inline is b0rked).
-
---- 2.6.35.2/drivers/ata/sata_mv.c	2010-08-01 18:11:14.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2010-08-19 21:34:46.139766319 -0400
-@@ -1898,19 +1898,25 @@
-  *	LOCKING:
-  *	Inherited from caller.
-  */
--static void mv_bmdma_stop(struct ata_queued_cmd *qc)
-+static void mv_bmdma_stop_ap(struct ata_port *ap)
- {
--	struct ata_port *ap = qc->ap;
- 	void __iomem *port_mmio = mv_ap_base(ap);
- 	u32 cmd;
- 
- 	/* clear start/stop bit */
- 	cmd = readl(port_mmio + BMDMA_CMD);
--	cmd &= ~ATA_DMA_START;
--	writelfl(cmd, port_mmio + BMDMA_CMD);
-+	if (cmd & ATA_DMA_START) {
-+		cmd &= ~ATA_DMA_START;
-+		writelfl(cmd, port_mmio + BMDMA_CMD);
- 
--	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
--	ata_sff_dma_pause(ap);
-+		/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
-+		ata_sff_dma_pause(ap);
-+	}
-+}
-+
-+static void mv_bmdma_stop(struct ata_queued_cmd *qc)
-+{
-+	mv_bmdma_stop_ap(qc->ap);
- }
- 
- /**
-@@ -1934,8 +1940,21 @@
- 	reg = readl(port_mmio + BMDMA_STATUS);
- 	if (reg & ATA_DMA_ACTIVE)
- 		status = ATA_DMA_ACTIVE;
--	else
-+	else if (reg & ATA_DMA_ERR)
- 		status = (reg & ATA_DMA_ERR) | ATA_DMA_INTR;
-+	else {
-+		/*
-+		 * Just because DMA_ACTIVE is 0 (DMA completed),
-+		 * this does _not_ mean the device is "done".
-+		 * So we should not yet be signalling ATA_DMA_INTR
-+		 * in some cases.  Eg. DSM/TRIM, and perhaps others.
-+		 */
-+		mv_bmdma_stop_ap(ap);
-+		if (ioread8(ap->ioaddr.altstatus_addr) & ATA_BUSY)
-+			status = 0;
-+		else
-+			status = ATA_DMA_INTR;
-+	}
- 	return status;
- }
- 
-@@ -1995,6 +2014,9 @@
- 
- 	switch (tf->protocol) {
- 	case ATA_PROT_DMA:
-+		if (tf->command == ATA_CMD_DSM)
-+			return;
-+		/* fall-thru */
- 	case ATA_PROT_NCQ:
- 		break;	/* continue below */
- 	case ATA_PROT_PIO:
-@@ -2094,6 +2116,8 @@
- 	if ((tf->protocol != ATA_PROT_DMA) &&
- 	    (tf->protocol != ATA_PROT_NCQ))
- 		return;
-+	if (tf->command == ATA_CMD_DSM)
-+		return;  /* use bmdma for this */
- 
- 	/* Fill in Gen IIE command request block */
- 	if (!(tf->flags & ATA_TFLAG_WRITE))
-@@ -2289,6 +2313,12 @@
- 
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
-+		if (qc->tf.command == ATA_CMD_DSM) {
-+			if (!ap->ops->bmdma_setup)  /* no bmdma on GEN_I */
-+				return AC_ERR_OTHER;
-+			break;  /* use bmdma for this */
-+		}
-+		/* fall thru */
- 	case ATA_PROT_NCQ:
- 		mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
- 		pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
-
---=-bCqIt7NsmBorWeWtmUQL--
-
+Thanks,
+Kiyoshi Ueda
