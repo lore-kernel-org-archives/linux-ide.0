@@ -1,43 +1,52 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Fri, 20 Aug 2010 12:02:49 -0400
-Message-ID: <4C6EA729.7030308__43818.4770559475$1282320193$gmane$org@redhat.com>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <20100820160009.GI5854@think>
+From: "Jan Beulich" <JBeulich@novell.com>
+Subject: sata_sil boot failure with 2.6.35
+Date: Fri, 20 Aug 2010 17:24:56 +0100
+Message-ID: <4C6EC878020000780001146D@vpn.id2.novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10069 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752046Ab0HTQCx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Aug 2010 12:02:53 -0400
-In-Reply-To: <20100820160009.GI5854@think>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.orglinux-
+To: tj@kernel.org, jgarzik@redhat.com
+Cc: linux-ide@vger.kernel.org
 
-On 08/20/2010 12:00 PM, Chris Mason wrote:
-> On Fri, Aug 20, 2010 at 11:18:07AM -0400, Ric Wheeler wrote:
->> On 08/20/2010 09:22 AM, Christoph Hellwig wrote:
->>> FYI: here's a little writeup to document the new cache flushing scheme,
->>> intended to replace Documentation/block/barriers.txt.  Any good
->>> suggestion for a filename in the kernel tree?
->>>
->>> ---
->>
->> I was thinking that we might be better off using the "durable
->> writes" term more since it is well documented (at least in the
->> database world, where it is the "D" in ACID properties).  Maybe
->> "durable_writes_support.txt" ?
->
-> sata_lies.txt?
->
-> Ok, maybe writeback_cache.txt?
->
-> -chris
+Hi,
 
-writeback_cache.txt is certainly the least confusing :)
+on one of my systems (the only one with that sort of controller) boot
+fails with .35 due to an identify failure for the drive that has the root
+partition (and others):
 
-ric
+libata version 3.00 loaded.
+sata_sil 0000:00:12.0: version 2.4
+sata_sil 0000:00:12.0: enabling device (0005 -> 0007)
+  alloc irq_desc for 22 on node -1
+  alloc kstat_irqs on node -1
+sata_sil 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
+scsi0 : sata_sil
+scsi1 : sata_sil
+ata1: SATA max UDMA/100 mmio m512@0xc0000000 tf 0xc0000080 irq 22
+ata2: SATA max UDMA/100 mmio m512@0xc0000000 tf 0xc00000c0 irq 22
+input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input1
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: NODEV after polling detection
+ata2: SATA link down (SStatus 0 SControl 300)
+
+With some debugging printk-s added I found that "status" as passed
+from ata_sff_pio_task() to ata_sff_hsm_move() is 0x50 (instead of
+the expected 0x58), and I also found that adding a certain delay
+at the top of ata_sff_pio_task() for just the very first invocation
+makes the problem go away: putting udelay(400) there works,
+while udelay(300) isn't sufficient.
+
+2.6.34.x is working fine.
+
+The controller is reported as
+
+00:12.0 IDE interface [0101]: ATI Technologies Inc IXP SB400 Serial ATA Controller [1002:4379]
+
+Thanks for any hints towards debugging or resolving this problem.
+
+Jan
 
