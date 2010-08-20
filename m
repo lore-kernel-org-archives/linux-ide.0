@@ -1,48 +1,53 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Fri, 20 Aug 2010 09:53:42 -0400
-Message-ID: <4C6E88E6.7060307@teksavvy.com>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-3-git-send-email-martin.petersen@oracle.com> <AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com> <yq1fwyamq9s.fsf@sermon.lab.mkp.net> <4C6DA713.40601@teksavvy.com> <20100820085801.GB27033@lst.de>
+Subject: Re: [PATCH] sata_mv: fix broken DSM/TRIM support (v2)
+Date: Fri, 20 Aug 2010 09:56:56 -0400
+Message-ID: <4C6E89A8.2000600@teksavvy.com>
+References: <1282267195.8909.6.camel@corey> <1282268444.9628.4.camel@corey>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:28396 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:15053 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752509Ab0HTNxp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 09:53:45 -0400
-In-Reply-To: <20100820085801.GB27033@lst.de>
+	with ESMTP id S1751375Ab0HTN45 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 09:56:57 -0400
+In-Reply-To: <1282268444.9628.4.camel@corey>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org, jeff@garzik.org
 
-On 10-08-20 04:58 AM, Christoph Hellwig wrote:
-> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
->> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
->>> I'm only aware of one drive that currently
->>> supports more than 512 bytes of payload and it also caps at 4KB.
->>
->> SSDs based upon the Indilinx Barefoot controller support
->> more or less "infinite" payload for TRIM, with no cap.
->> But it predates idword[105], so just has a zero there.
+On 10-08-19 09:40 PM, Mark Lord wrote:
+> Fix DSM/TRIM commands in sata_mv (v2).
+> These need to be issued using old-school "BM DMA",
+> rather than via the EDMA host queue.
 >
-> Is there an easy way to identify them?  If so we could add a quirk
-> for them if it provides enough benefit.
+> Since the chips don't have proper BM DMA status,
+> we need to be more careful with setting the ATA_DMA_INTR bit,
+> since DSM/TRIM often has a long delay between "DMA complete"
+> and "command complete".
+..
+
+Speaking of which.. it appears that BM DMA support for sata_mv
+is intentionally broken by 2.6.35 kernels, with the addition of
+this code in libata-sff.c:
+
+unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
+{
+         struct ata_port *ap = qc->ap;
+
+         /* see ata_dma_blacklisted() */
+         BUG_ON((ap->flags & ATA_FLAG_PIO_POLLING) &&
+                qc->tf.protocol == ATAPI_PROT_DMA);
 
 
-Each brand/model identifies itself differently.
-But we could start a whitelist on based on the model name field
-from the ATA identify data.
+Is that BUG_ON even necessary??
+It really should be looking only at tf.flags, not qp->flags there,
+as it actually does redundantly further on:
 
-The OCZ VERTEX drives I have here, identify themselves as "OCZ-VERTEX",
-and accept very very long payloads (no limit?).
+    WARN_ON_ONCE(qc->tf.flags & ATA_TFLAG_POLLING);
 
-The OCZ VERTEX-LE drives here do have a limit, of 8 sectors,
-and identify themselves as "OCZ VERTEX-LE" in that field.
+sata_mv has ATA_FLAG_PIO_POLLING set for all ports,
+but doesn't set ATA_TFLAG_POLLING when doing BM DMA.
 
-That's what hdparm-9.30 uses to figure out the max TRIM payloads,
-in the absence of a value in word 105.
-
-Cheers
-
+???
