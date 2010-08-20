@@ -1,40 +1,46 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: [PATCH] sata_mv: fix broken DSM/TRIM support
-Date: Thu, 19 Aug 2010 21:19:55 -0400
-Message-ID: <1282267195.8909.6.camel@corey>
+Subject: [PATCH] sata_mv: fix broken DSM/TRIM support (v2)
+Date: Thu, 19 Aug 2010 21:40:44 -0400
+Message-ID: <1282268444.9628.4.camel@corey>
+References: <1282267195.8909.6.camel@corey>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-nfBLhm0YiO1yKssK9wcb"
+Content-Type: multipart/mixed; boundary="=-bCqIt7NsmBorWeWtmUQL"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:52117 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:36819 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750902Ab0HTBT6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 21:19:58 -0400
+	with ESMTP id S1750824Ab0HTBkq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Aug 2010 21:40:46 -0400
+In-Reply-To: <1282267195.8909.6.camel@corey>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, tj@kernel.org, jeff@garzik.org
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org, jeff@garzik.org
 
 
---=-nfBLhm0YiO1yKssK9wcb
+--=-bCqIt7NsmBorWeWtmUQL
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 
-Fix DSM/TRIM commands in sata_mv.
+Fix DSM/TRIM commands in sata_mv (v2).
 These need to be issued using old-school "BM DMA",
 rather than via the EDMA host queue.
 
-And since the chips don't have proper BM DMA status,
+Since the chips don't have proper BM DMA status,
 we need to be more careful with setting the ATA_DMA_INTR bit,
 since DSM/TRIM often has a long delay between "DMA complete"
 and "command complete".
+
+GEN_I chips don't have BM DMA, so no TRIM for them.
 
 Signed-off-by: Mark Lord <mlord@pobox.com>
 ---
 
+Re-issue of original patch, with fixes for GEN_I and GEN_II chipsets.
 (my apologies for broken mailers -- patch also attached in case inline is b0rked).
 
---- linux/drivers/ata/sata_mv.c.orig	2010-08-02 13:30:51.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2010-08-19 20:57:26.785033240 -0400
-@@ -1886,19 +1886,25 @@
+--- 2.6.35.2/drivers/ata/sata_mv.c	2010-08-01 18:11:14.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2010-08-19 21:34:46.139766319 -0400
+@@ -1898,19 +1898,25 @@
   *	LOCKING:
   *	Inherited from caller.
   */
@@ -52,21 +58,21 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
 +	if (cmd & ATA_DMA_START) {
 +		cmd &= ~ATA_DMA_START;
 +		writelfl(cmd, port_mmio + BMDMA_CMD);
-+
+ 
+-	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+-	ata_sff_dma_pause(ap);
 +		/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
 +		ata_sff_dma_pause(ap);
 +	}
 +}
- 
--	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
--	ata_sff_dma_pause(ap);
++
 +static void mv_bmdma_stop(struct ata_queued_cmd *qc)
 +{
 +	mv_bmdma_stop_ap(qc->ap);
  }
  
  /**
-@@ -1922,8 +1928,21 @@
+@@ -1934,8 +1940,21 @@
  	reg = readl(port_mmio + BMDMA_STATUS);
  	if (reg & ATA_DMA_ACTIVE)
  		status = ATA_DMA_ACTIVE;
@@ -89,7 +95,17 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
  	return status;
  }
  
-@@ -2082,6 +2101,8 @@
+@@ -1995,6 +2014,9 @@
+ 
+ 	switch (tf->protocol) {
+ 	case ATA_PROT_DMA:
++		if (tf->command == ATA_CMD_DSM)
++			return;
++		/* fall-thru */
+ 	case ATA_PROT_NCQ:
+ 		break;	/* continue below */
+ 	case ATA_PROT_PIO:
+@@ -2094,6 +2116,8 @@
  	if ((tf->protocol != ATA_PROT_DMA) &&
  	    (tf->protocol != ATA_PROT_NCQ))
  		return;
@@ -98,36 +114,46 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
  
  	/* Fill in Gen IIE command request block */
  	if (!(tf->flags & ATA_TFLAG_WRITE))
-@@ -2277,6 +2298,8 @@
+@@ -2289,6 +2313,12 @@
  
  	switch (qc->tf.protocol) {
  	case ATA_PROT_DMA:
-+		if (qc->tf.command == ATA_CMD_DSM)
++		if (qc->tf.command == ATA_CMD_DSM) {
++			if (!ap->ops->bmdma_setup)  /* no bmdma on GEN_I */
++				return AC_ERR_OTHER;
 +			break;  /* use bmdma for this */
++		}
++		/* fall thru */
  	case ATA_PROT_NCQ:
  		mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
  		pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
 
 
---=-nfBLhm0YiO1yKssK9wcb
+--=-bCqIt7NsmBorWeWtmUQL
 Content-Disposition: attachment; filename="01_sata_mv_dsm_trim_fix.patch"
 Content-Type: text/x-patch; name="01_sata_mv_dsm_trim_fix.patch"; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 
-Fix DSM/TRIM commands in sata_mv.
+Fix DSM/TRIM commands in sata_mv (v2).
 These need to be issued using old-school "BM DMA",
 rather than via the EDMA host queue.
 
-And since the chips don't have proper BM DMA status,
+Since the chips don't have proper BM DMA status,
 we need to be more careful with setting the ATA_DMA_INTR bit,
 since DSM/TRIM often has a long delay between "DMA complete"
 and "command complete".
 
-Signed-off-by: Mark Lord <mlord@pobox.com>
+GEN_I chips don't have BM DMA, so no TRIM for them.
 
---- linux/drivers/ata/sata_mv.c.orig	2010-08-02 13:30:51.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2010-08-19 20:57:26.785033240 -0400
-@@ -1886,19 +1886,25 @@
+Signed-off-by: Mark Lord <mlord@pobox.com>
+---
+
+Re-issue of original patch, with fixes for GEN_I and GEN_II chipsets.
+(my apologies for broken mailers -- patch also attached in case inline is b0rked).
+
+--- 2.6.35.2/drivers/ata/sata_mv.c	2010-08-01 18:11:14.000000000 -0400
++++ linux/drivers/ata/sata_mv.c	2010-08-19 21:34:46.139766319 -0400
+@@ -1898,19 +1898,25 @@
   *	LOCKING:
   *	Inherited from caller.
   */
@@ -145,21 +171,21 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
 +	if (cmd & ATA_DMA_START) {
 +		cmd &= ~ATA_DMA_START;
 +		writelfl(cmd, port_mmio + BMDMA_CMD);
-+
+ 
+-	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
+-	ata_sff_dma_pause(ap);
 +		/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
 +		ata_sff_dma_pause(ap);
 +	}
 +}
- 
--	/* one-PIO-cycle guaranteed wait, per spec, for HDMA1:0 transition */
--	ata_sff_dma_pause(ap);
++
 +static void mv_bmdma_stop(struct ata_queued_cmd *qc)
 +{
 +	mv_bmdma_stop_ap(qc->ap);
  }
  
  /**
-@@ -1922,8 +1928,21 @@
+@@ -1934,8 +1940,21 @@
  	reg = readl(port_mmio + BMDMA_STATUS);
  	if (reg & ATA_DMA_ACTIVE)
  		status = ATA_DMA_ACTIVE;
@@ -182,7 +208,17 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
  	return status;
  }
  
-@@ -2082,6 +2101,8 @@
+@@ -1995,6 +2014,9 @@
+ 
+ 	switch (tf->protocol) {
+ 	case ATA_PROT_DMA:
++		if (tf->command == ATA_CMD_DSM)
++			return;
++		/* fall-thru */
+ 	case ATA_PROT_NCQ:
+ 		break;	/* continue below */
+ 	case ATA_PROT_PIO:
+@@ -2094,6 +2116,8 @@
  	if ((tf->protocol != ATA_PROT_DMA) &&
  	    (tf->protocol != ATA_PROT_NCQ))
  		return;
@@ -191,15 +227,19 @@ Signed-off-by: Mark Lord <mlord@pobox.com>
  
  	/* Fill in Gen IIE command request block */
  	if (!(tf->flags & ATA_TFLAG_WRITE))
-@@ -2277,6 +2298,8 @@
+@@ -2289,6 +2313,12 @@
  
  	switch (qc->tf.protocol) {
  	case ATA_PROT_DMA:
-+		if (qc->tf.command == ATA_CMD_DSM)
++		if (qc->tf.command == ATA_CMD_DSM) {
++			if (!ap->ops->bmdma_setup)  /* no bmdma on GEN_I */
++				return AC_ERR_OTHER;
 +			break;  /* use bmdma for this */
++		}
++		/* fall thru */
  	case ATA_PROT_NCQ:
  		mv_start_edma(ap, port_mmio, pp, qc->tf.protocol);
  		pp->req_idx = (pp->req_idx + 1) & MV_MAX_Q_DEPTH_MASK;
 
---=-nfBLhm0YiO1yKssK9wcb--
+--=-bCqIt7NsmBorWeWtmUQL--
 
