@@ -1,52 +1,70 @@
-From: "Jan Beulich" <JBeulich@novell.com>
-Subject: sata_sil boot failure with 2.6.35
-Date: Fri, 20 Aug 2010 17:24:56 +0100
-Message-ID: <4C6EC878020000780001146D@vpn.id2.novell.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Fri, 20 Aug 2010 13:13:31 -0400
+Message-ID: <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
+	<yq1fwyamq9s.fsf@sermon.lab.mkp.net>
+	<4C6DA713.40601@teksavvy.com>
+	<20100820085801.GB27033@lst.de>
+	<4C6E88E6.7060307@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55932 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752358Ab0HTRNg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 13:13:36 -0400
+In-Reply-To: <4C6E88E6.7060307@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, jgarzik@redhat.com
-Cc: linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Fri, Aug 20, 2010 at 9:53 AM, Mark Lord <kernel@teksavvy.com> wrote:
+> On 10-08-20 04:58 AM, Christoph Hellwig wrote:
+>>
+>> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
+>>>
+>>> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
+>>>>
+>>>> I'm only aware of one drive that currently
+>>>> supports more than 512 bytes of payload and it also caps at 4KB.
+>>>
+>>> SSDs based upon the Indilinx Barefoot controller support
+>>> more or less "infinite" payload for TRIM, with no cap.
+>>> But it predates idword[105], so just has a zero there.
+>>
+>> Is there an easy way to identify them? =A0If so we could add a quirk
+>> for them if it provides enough benefit.
+>
+>
+> Each brand/model identifies itself differently.
+> But we could start a whitelist on based on the model name field
+> from the ATA identify data.
+>
+> The OCZ VERTEX drives I have here, identify themselves as "OCZ-VERTEX=
+",
+> and accept very very long payloads (no limit?).
+>
+> The OCZ VERTEX-LE drives here do have a limit, of 8 sectors,
+> and identify themselves as "OCZ VERTEX-LE" in that field.
+>
+> That's what hdparm-9.30 uses to figure out the max TRIM payloads,
+> in the absence of a value in word 105.
+>
+> Cheers
+>
 
-on one of my systems (the only one with that sort of controller) boot
-fails with .35 due to an identify failure for the drive that has the root
-partition (and others):
+A whitelist to enable large contiguous range trims via 8 512B-block
+payloads seems useful for those devices that don't support word 105.
+(ie. 4KB payload)
 
-libata version 3.00 loaded.
-sata_sil 0000:00:12.0: version 2.4
-sata_sil 0000:00:12.0: enabling device (0005 -> 0007)
-  alloc irq_desc for 22 on node -1
-  alloc kstat_irqs on node -1
-sata_sil 0000:00:12.0: PCI INT A -> GSI 22 (level, low) -> IRQ 22
-scsi0 : sata_sil
-scsi1 : sata_sil
-ata1: SATA max UDMA/100 mmio m512@0xc0000000 tf 0xc0000080 irq 22
-ata2: SATA max UDMA/100 mmio m512@0xc0000000 tf 0xc00000c0 irq 22
-input: ImExPS/2 Generic Explorer Mouse as /devices/platform/i8042/serio1/input/input1
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: NODEV after polling detection
-ata2: SATA link down (SStatus 0 SControl 300)
+But, I doubt there is enough observable performance advantage to
+justify reworking the internal SCSI-ATA translation mechanism in the
+kernel to handle larger payloads.   Especially if only one or two SSDs
+will accept greater than 4KB of payload to the trim command.
 
-With some debugging printk-s added I found that "status" as passed
-from ata_sff_pio_task() to ata_sff_hsm_move() is 0x50 (instead of
-the expected 0x58), and I also found that adding a certain delay
-at the top of ata_sff_pio_task() for just the very first invocation
-makes the problem go away: putting udelay(400) there works,
-while udelay(300) isn't sufficient.
-
-2.6.34.x is working fine.
-
-The controller is reported as
-
-00:12.0 IDE interface [0101]: ATI Technologies Inc IXP SB400 Serial ATA Controller [1002:4379]
-
-Thanks for any hints towards debugging or resolving this problem.
-
-Jan
-
+Greg
