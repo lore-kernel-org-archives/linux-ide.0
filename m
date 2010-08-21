@@ -1,75 +1,79 @@
-From: Cyril Hrubis <metan-+ZI9xUNit7I@public.gmane.org>
-Subject: Re: zaurus pata_pcmcia corrupted filesystem
-Date: Sat, 21 Aug 2010 11:51:37 +0200
-Message-ID: <20100821095137.GA22301@atrey.karlin.mff.cuni.cz>
-References: <20100811144410.GA12029@atrey.karlin.mff.cuni.cz>
-	<20100814094353.GB926@boggieman.bredbandsbolaget.se>
-	<1281782580.6707.1.camel@utx.lan>
-	<20100814113937.GB9346@atrey.karlin.mff.cuni.cz>
-	<1281795351.15157.3.camel@utx.lan>
-Reply-To: Zaurus PDA developers list <zaurus-devel-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: possible esata regression in 2.6.35
+Date: Sat, 21 Aug 2010 15:13:24 -0400
+Message-ID: <4C702554.4040005@teksavvy.com>
+References: <4C702070.5020809@jungers.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <zaurus-devel-bounces-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1281795351.15157.3.camel-T9yq2y+nUN8@public.gmane.org>
-List-Unsubscribe: <http://lists.linuxtogo.org/cgi-bin/mailman/options/zaurus-devel>,
-	<mailto:zaurus-devel-request-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxtogo.org/pipermail/zaurus-devel>
-List-Post: <mailto:zaurus-devel-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:zaurus-devel-request-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.linuxtogo.org/cgi-bin/mailman/listinfo/zaurus-devel>,
-	<mailto:zaurus-devel-request-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: zaurus-devel-bounces-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org
-Errors-To: zaurus-devel-bounces-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org
-To: Stanislav Brabec <utx-ZsETY1VsSgLrBKCeMvbIDA@public.gmane.org>
-Cc: thommycheck-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lenz-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, dbaryshkov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, arminlitzel-S0/GAf8tV78@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kristoffer Ericson <kristoffer.ericson-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, rpurdie-Fm38FmjxZ/leoWH0uzbU5w@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, eric.y.miao-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, zaurus-devel-cunTk1MwBs/k6gDgw6ADrEB+6BGkLq7r@public.gmane.org, Robert Hancock <hancockrwd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:51779 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751486Ab0HUTN1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Aug 2010 15:13:27 -0400
+In-Reply-To: <4C702070.5020809@jungers.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nicolas Jungers <nicolas@jungers.net>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi!
-> > These seems to be different, at least it newer occured so often to me. Now
-> > installing debian packages often fails because it cannot remove temporary
-> > files, the filesystem worked reasonably good before.
-> > 
-> > The usecase is to unpack archive with a lot rather small files somewhere deeper
-> > to the filesystem tree. Eg. installing gtk2-devel failed miserably when trying
-> > to move all the header files from *.h.dpkg-new to *.h, this works rather good
-> > with old driver.
-> 
-> Well, I remember opkg crashes while installing emacs (many small files)
-> and file system corruption as well. Both with kernel 2.6.26.
+On 10-08-21 02:52 PM, Nicolas Jungers wrote:
+> My arm box doesn't succeed to use my esata port multiplier (addonics sil3726 based).  It was working well with 2.6.34.1 and 2.6.34.4 but not with both 2.6.35.2 and 2.6.35.3.  I haven't test other kernels.
 >
+> The kernels are from http://sheeva.with-linux.com/sheeva/ with for example the following config http://sheeva.with-linux.com/sheeva/2.6.35.3/sheeva-2.6.35.3.config
+>
+> The symptoms are in the console a loop on the esata links. Here is the start of it:
+>
+> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xe frozen
+> ata2: edma_err_cause=00000010 pp_flags=00000000, dev connect
+> ata2: SError: { PHYRdyChg DevExch }
+> ata2: hard resetting link
+> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
+> ata2.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> ata2.00: hard resetting link
+> ata2.01: hard resetting link
+> ata2.02: hard resetting link
+> ata2.03: hard resetting link
+> ata2.04: hard resetting link
+> ata2.05: hard resetting link
+> ata2.00: qc timeout (cmd 0xec)
+> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata2.15: hard resetting link
+> ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
+> ata2.00: hard resetting link
+> ata2.01: hard resetting link
+> ata2.02: hard resetting link
+> ata2.04: hard resetting link
+> ata2.05: hard resetting link
+> ata2.00: qc timeout (cmd 0xec)
+> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata2.15: hard resetting link
+> ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
+> ata2.00: hard resetting link
+> ata2.01: hard resetting link
+> ata2.02: hard resetting link
+> ata2.03: hard resetting link
+> ata2.04: hard resetting link
+> ata2.05: hard resetting link
+> ata2.00: qc timeout (cmd 0xec)
+> ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> ata2.00: failed to recover link after 3 tries, disabling
+> ata2.15: hard resetting link
+> ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
+...
 
-The main difference is that now it's 100% reproducible and I've never seen
-corruption bad enough so I could not delete files without doing fsck first.
+ From the "edma_err" keyword above, we can deduce that you've got this PM
+plugged into a Marvell SATA controller of some kind, managed by sata_mv.
+Care to tell us more?
 
-Here is pseudo output from fsck on ext3 filesystem after these problems
-appeared:
+There are various changes in libata in 2.6.34/35 that break sata_mv,
+particularly for ATAPI drives and any SSDs that support the DSM/TRIM commands.
+Do either of those two things apply in your case?
 
-Pass 2:
+If so, there are two pending patches which fix them.
+They were posted to linux-ide this past Thursday,
+and can also be found as attachments to this bug report:
 
-Bunch of these:
+   https://bugzilla.kernel.org/show_bug.cgi?id=16434
 
-Invalid HTREE directory inode $NUMBER
-$PATH/$FILE
-Clear HTree index<y>?
-
-and these:
-
-Problem in HTree directory inode $NUMBER: block #$NR has bad max hash
-
-Pass 3:
-
-Bunch of:
-
-Entry '$FILE in $PATH ($NUMBER) has a non-unique filename.
-Rename to $FILE~0<y>?
-
-Happily the files/directories affected was only the recently written from the
-kernel from marex tree.  I haven't seen file content to be corrupted (that
-doesn't mean there weren't any corruptions) but it seems they are not so likely
-as directory tree corruption.
-
--- 
-metan
+Cheers
