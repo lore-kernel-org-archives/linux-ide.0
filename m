@@ -1,33 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: Intel IDE-R support
-Date: Fri, 20 Aug 2010 21:06:03 +0100
-Message-ID: <20100820210603.328a978f@lxorguk.ukuu.org.uk>
-References: <20100820173327.30661.51410.stgit@localhost.localdomain>
-	<4C6ED3E7.3010804@garzik.org>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] ata/sata_dwc_460ex: signdness bug
+Date: Sat, 21 Aug 2010 10:43:25 +0200
+Message-ID: <20100821084325.GF6674@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:49224 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752354Ab0HTTuN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Aug 2010 15:50:13 -0400
-In-Reply-To: <4C6ED3E7.3010804@garzik.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42919 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592Ab0HUIoI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Aug 2010 04:44:08 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
 
+dma_dwc_xfer_setup() returns an int and "dma_chan" needs to be signed
+for the error handling to work.
 
-> > Signed-off-by: Alan Cox<alan@linux.intel.com>
-> > Acked-by: Tejun Heo<tj@kernel.org>
-> 
-> One last question:  is this extremely urgent?
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-No - it can wait, no hurry.
-
-> 
-> As the merge window is closed, I would prefer to have this in #upstream 
-> (linux-next, ie. 2.6.37) rather than #upstream-fixes (2.6.36-rc).
-
-And me
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 2673a3d..6cf57c5 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1459,7 +1459,7 @@ static void sata_dwc_qc_prep_by_tag(struct ata_queued_cmd *qc, u8 tag)
+ {
+ 	struct scatterlist *sg = qc->sg;
+ 	struct ata_port *ap = qc->ap;
+-	u32 dma_chan;
++	int dma_chan;
+ 	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
+ 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
+ 	int err;
