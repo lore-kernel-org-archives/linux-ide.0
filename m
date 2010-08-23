@@ -1,42 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Mon, 23 Aug 2010 14:56:54 -0400
-Message-ID: <yq1d3t9tax5.fsf@sermon.lab.mkp.net>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
-	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
-	<20100823135024.GA22554@lst.de>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Mon, 23 Aug 2010 20:58:33 +0200
+Message-ID: <201008232058.33542.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008191823.57915.stephan.diestelhorst@amd.com> <4C72639C.6090108@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20100823135024.GA22554@lst.de> (Christoph Hellwig's message of
-	"Mon, 23 Aug 2010 15:50:24 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:37765 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752708Ab0HWTAP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 15:00:15 -0400
+In-Reply-To: <4C72639C.6090108@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+On Monday, August 23, 2010, Tejun Heo wrote:
+> Hello, sorry about the delay.
+> 
+> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
+> > It says "max_performance", I have not touched anyhting. So it has been
+> > like that all the time. Would this explain why your patch did not show
+> > the debug printout?
+> 
+> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
+> be any debug messages but at the same time the posted patch should
+> have had the same effect as Rafael's patch as IPM path isn't traveled
+> at all.  Can you please check the followings?
+> 
+> * You're actually running the correct patched kernel and modules.  It
+>   probably is a good idea to add a printk message.  ie. Apply the
+>   patch and add a printk() in ata_host_request_pm() in libata-core.c
+>   and make sure the debug messages appears.
+> 
+> * Rafael's patch actually fixes the problem.  If you haven't been
+>   using IPM at all, Rafael's patch and mine should behave exactly the
+>   same (ie. no IPM operation at all during suspend/resume).  It could
+>   be that you're seeing a different issue.
+> 
+> Rafael, can you please test my patch and see how your case behaves?
 
-Christoph> On Thu, Aug 19, 2010 at 11:48:57AM -0400, Martin K. Petersen wrote:
->> ATA IDENTIFY DEVICE word 105 contains the number of 512-byte blocks
->> of TRIM payload information the device can accept in one command.
->> Use this value to enable payloads > 512 bytes.
+This one: http://lkml.org/lkml/2010/8/5/328 ?
 
-Christoph> Currently ata_scsi_write_same_xlat passes uses a constant 512
-Christoph> for the payload all over the place, so the larger payloads
-Christoph> won't actually work yet.
-
-Christoph> I don't think advertising a larger size than we actually
-Christoph> support is a good idea.
-
-I was on crack when I included this in the series last week.  It came
-from my discard coalescing tree where things are quite different.
-
-In any case we're also limited by the range of WRITE SAME as long as
-we're relying on SAT.  So under all circumstances we're dead in the
-water with a payload > 1KB.
-
-Let's just drop this one for now.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Rafael
