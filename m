@@ -1,63 +1,50 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_sil boot failure with 2.6.35
-Date: Mon, 23 Aug 2010 15:58:24 +0200
-Message-ID: <4C727E80.3060402@kernel.org>
-References: <4C6EC878020000780001146D@vpn.id2.novell.com> <4C6ED603.9020602@garzik.org> <4C724D3E.50404@kernel.org> <4C728C5E0200007800011887@vpn.id2.novell.com>
+Subject: Re: [PATCH] sata_mv: fix broken DSM/TRIM support (v2)
+Date: Mon, 23 Aug 2010 15:59:32 +0200
+Message-ID: <4C727EC4.6060903@kernel.org>
+References: <1282267195.8909.6.camel@corey> <1282268444.9628.4.camel@corey>	 <4C722FD4.2010305@kernel.org> <1282570893.30799.1.camel@corey> <4C727BFB.5070203@kernel.org> <4C727D93.4000105@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:37231 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:46754 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752774Ab0HWN5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Aug 2010 09:57:34 -0400
-In-Reply-To: <4C728C5E0200007800011887@vpn.id2.novell.com>
+	id S1751163Ab0HWN6Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 09:58:25 -0400
+In-Reply-To: <4C727D93.4000105@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Beulich <JBeulich@novell.com>
-Cc: Jeff Garzik <jeff@garzik.org>, jgarzik@redhat.com, linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: linux-ide@vger.kernel.org, jeff@garzik.org
 
-Hello,
-
-On 08/23/2010 02:57 PM, Jan Beulich wrote:
->>>> On 23.08.10 at 12:28, Tejun Heo <tj@kernel.org> wrote:
->> This apparently is not an isolated case.
+On 08/23/2010 03:54 PM, Mark Lord wrote:
+> On 10-08-23 09:47 AM, Tejun Heo wrote:
+>> On 08/23/2010 03:41 PM, Mark Lord wrote:
+>>>> Don't we need this for other BMDMA commands too?  If so, maybe it's
+>>>> better to make it two patches?
+>>>
+>>>
+>>> TRIM is the first/only command which actually breaks
+>>> without this.  It is possible that other commands may
+>>> benefit as well on some DVD-RW drives, but I have not
+>>> encountered those yet.
+>>>
+>>> So for now, I've left it as a single patch,
+>>> with all of the (small) pieces together for TRIM.
 >>
->>   https://bugzilla.kernel.org/show_bug.cgi?id=16606 
+>> I see.  Looks good to me then.
 >>
->> For some reason, the NODEV detection is getting triggered spuriously
->> which is really strange given that that part of code has been *really*
->> stable for very long time now.  Jan, can you please apply the
->> following patch and attach the kernel log?
->>
->>   https://bugzilla.kernel.org/attachment.cgi?id=27513 
+>> Acked-by: Tejun Heo<tj@kernel.org>
+> ..
 > 
-> Attached (but I think it doesn't tell more than what I already wrote
-> in the original description).
+> Peachy.  I do imagine that both of these patches
+> might also be prime candidates for -stable,
+> if/when they ever make it upstream.
 
-Actually, it gives one more line.
-
-  ata1: ST-ATA: DRQ=0 without device error, dev_stat 0x50
-
-which is _really_ weird.  Hmmm... can you please apply the following
-patch and see whether anything changes?
+Just add Cc: stable@kernel.org below SOB's.  Greg will be
+automatically notified when these patches hit mainline.
 
 Thanks.
-
-diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
-index 3a4f842..526d58e 100644
---- a/drivers/ata/sata_sil.c
-+++ b/drivers/ata/sata_sil.c
-@@ -183,7 +183,7 @@ static struct scsi_host_template sil_sht = {
- };
-
- static struct ata_port_operations sil_ops = {
--	.inherits		= &ata_bmdma32_port_ops,
-+	.inherits		= &ata_bmdma_port_ops,
- 	.dev_config		= sil_dev_config,
- 	.set_mode		= sil_set_mode,
- 	.bmdma_setup            = sil_bmdma_setup,
-
 
 -- 
 tejun
