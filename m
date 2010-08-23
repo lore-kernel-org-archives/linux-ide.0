@@ -1,50 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata_mv: fix broken DSM/TRIM support (v2)
-Date: Mon, 23 Aug 2010 15:59:32 +0200
-Message-ID: <4C727EC4.6060903@kernel.org>
-References: <1282267195.8909.6.camel@corey> <1282268444.9628.4.camel@corey>	 <4C722FD4.2010305@kernel.org> <1282570893.30799.1.camel@corey> <4C727BFB.5070203@kernel.org> <4C727D93.4000105@teksavvy.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Mon, 23 Aug 2010 09:58:46 -0400
+Message-ID: <4C727E96.5020801@redhat.com>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46754 "EHLO hera.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:45853 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751163Ab0HWN6Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Aug 2010 09:58:25 -0400
-In-Reply-To: <4C727D93.4000105@teksavvy.com>
+	id S1752594Ab0HWN64 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 09:58:56 -0400
+In-Reply-To: <20100823124815.GA20095@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, hare@suse.de
 
-On 08/23/2010 03:54 PM, Mark Lord wrote:
-> On 10-08-23 09:47 AM, Tejun Heo wrote:
->> On 08/23/2010 03:41 PM, Mark Lord wrote:
->>>> Don't we need this for other BMDMA commands too?  If so, maybe it's
->>>> better to make it two patches?
->>>
->>>
->>> TRIM is the first/only command which actually breaks
->>> without this.  It is possible that other commands may
->>> benefit as well on some DVD-RW drives, but I have not
->>> encountered those yet.
->>>
->>> So for now, I've left it as a single patch,
->>> with all of the (small) pieces together for TRIM.
->>
->> I see.  Looks good to me then.
->>
->> Acked-by: Tejun Heo<tj@kernel.org>
-> ..
-> 
-> Peachy.  I do imagine that both of these patches
-> might also be prime candidates for -stable,
-> if/when they ever make it upstream.
+On 08/23/2010 08:48 AM, Christoph Hellwig wrote:
+> On Mon, Aug 23, 2010 at 02:30:33PM +0200, Tejun Heo wrote:
+>> It might be useful to give several example configurations with
+>> different cache configurations.  I don't have much experience with
+>> battery backed arrays but aren't they suppose to report write through
+>> cache automatically?
+>
+> They usually do.  I have one that doesn't, but SYNCHRONIZE CACHE on
+> it is so fast that it effectively must be a no-op.
+>
 
-Just add Cc: stable@kernel.org below SOB's.  Greg will be
-automatically notified when these patches hit mainline.
+Arrays are not a problem in general - they normally have internally, redundant 
+batteries to hold up the cache.
 
-Thanks.
+The issue is when you have an internal hardware RAID card with a large cache. 
+Those cards sit in your server and the batteries on the card protect its 
+internal cache, but do not have the capacity to hold up the drives behind it.
 
--- 
-tejun
+Normally, those drives should have their write cache disabled, but sometimes 
+(especially with S-ATA disks) this is not done.
+
+ric
+
