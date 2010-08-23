@@ -1,81 +1,71 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Mon, 23 Aug 2010 20:45:22 +0400
-Message-ID: <20100823164522.GA9528@atlas.home>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-	<20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com>
-	<4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de>
-	<4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com>
-	<4C729171.3030605@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16)
+ with UNMAP
+Date: Mon, 23 Aug 2010 14:22:24 -0400
+Message-ID: <4C72BC60.4090705@interlog.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-2-git-send-email-martin.petersen@oracle.com> <4C723215.3080507@kernel.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5913051511334986110=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C729171.3030605@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: "jack@suse.cz" <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>
-List-Id: linux-ide@vger.kernel.org
-
-
---===============5913051511334986110==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-Content-Disposition: inline
-
-
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Aug 23, 2010 at 11:19:13AM -0400, Ric Wheeler wrote:
-[...]
-> (2) hardware raid cards with internal buffer memory and on-card battery b=
-ackup=20
-> (they sit in your server, disks sit in jbod like expansion shelves). Thes=
-e are=20
-> fine if the drives in those shelves have write cache disabled.
-
-Actually some of such cards keep write cache on the drives enabled and
-issue FLUSH CACHE commands to the drives.  E.g., 3ware 9690SA behaves
-like this at least with SATA drives (the FLUSH CACHE commands can be
-seen after enabling performance monitoring - they often end up in the
-"10 commands having the largest latency" table).  This can actually be
-safe if the card waits for the FLUSH CACHE completion before making
-the write cache data in its battery-backed memory available for reuse
-(and the drive implements the FLUSH CACHE command correctly).
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkxypaIACgkQW82GfkQfsqI94QCeLiRSclQhAVlFnmFnK49Fh41s
-55EAn1CXk2dhHSW/+tvscDZYwHy5ZG37
-=v7Fn
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
-
-
---===============5913051511334986110==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:33115 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751423Ab0HWSW7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 14:22:59 -0400
+In-Reply-To: <4C723215.3080507@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+
+On 10-08-23 04:32 AM, Tejun Heo wrote:
+> On 08/19/2010 05:48 PM, Martin K. Petersen wrote:
+>> Until now identifying that a device supports WRITE SAME(16) with the
+>> UNMAP bit set has been black magic.  Implement support for the new (SBC3
+>> r24) Thin Provisioning VPD page and the TPWS bit.
+>>
+>> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+>> ---
+>>   drivers/ata/libata-scsi.c |   13 +++++++++++++
+>>   1 files changed, 13 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index a54273d..e280ae6 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+>>   		0x89,	/* page 0x89, ata info page */
+>>   		0xb0,	/* page 0xb0, block limits page */
+>>   		0xb1,	/* page 0xb1, block device characteristics page */
+>> +		0xb2,	/* page 0xb2, thin provisioning page */
+>>   	};
+>>
+>>   	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
+>> @@ -2172,6 +2173,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+>>   	return 0;
+>>   }
+>>
+>> +static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
+>> +{
+>> +	rbuf[1] = 0xb1;
+>> +	rbuf[3] = 0x3c;
+>> +	rbuf[5] = 1<<  6;	/* TPWS */
+>
+> I would love a bit more documentation here.
+
+Yes, that style comes from my code in scsi_debug and
+some of my utilities. Recently I added some more
+documentation, just prior the the function:
+
+/* SCSI Thin Provisioning VPD page: SBC-3 rev 22 or later */
+
+I see no point in commenting the individual code lines.
+Just follow that reference ...
+
+And when I do then I see that rbuf[3] should be 4 (not 0x3c)
+unless the DP bit is set.
+
+Doug Gilbert
 
 
---===============5913051511334986110==--
