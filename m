@@ -1,58 +1,47 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16)
- with UNMAP
-Date: Mon, 23 Aug 2010 10:32:21 +0200
-Message-ID: <4C723215.3080507@kernel.org>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+Subject: Re: Fwd: Maybe a bug in libata-core
+Date: Mon, 23 Aug 2010 11:16:21 +0200
+Message-ID: <4C723C65.6080303@kernel.org>
+References: <4C71C645.8050007@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55348 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:41862 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751202Ab0HWIhM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Aug 2010 04:37:12 -0400
-In-Reply-To: <1282232941-9910-2-git-send-email-martin.petersen@oracle.com>
+	id S1753617Ab0HWJWq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 05:22:46 -0400
+In-Reply-To: <4C71C645.8050007@stud.tu-ilmenau.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+To: stefan.huebner@stud.tu-ilmenau.de
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 08/19/2010 05:48 PM, Martin K. Petersen wrote:
-> Until now identifying that a device supports WRITE SAME(16) with the
-> UNMAP bit set has been black magic.  Implement support for the new (SBC3
-> r24) Thin Provisioning VPD page and the TPWS bit.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/ata/libata-scsi.c |   13 +++++++++++++
->  1 files changed, 13 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a54273d..e280ae6 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
->  		0x89,	/* page 0x89, ata info page */
->  		0xb0,	/* page 0xb0, block limits page */
->  		0xb1,	/* page 0xb1, block device characteristics page */
-> +		0xb2,	/* page 0xb2, thin provisioning page */
->  	};
->  
->  	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-> @@ -2172,6 +2173,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
->  	return 0;
->  }
->  
-> +static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
-> +{
-> +	rbuf[1] = 0xb1;
-> +	rbuf[3] = 0x3c;
-> +	rbuf[5] = 1 << 6;	/* TPWS */
+On 08/23/2010 02:52 AM, Stefan /*St0fF*/ H=FCbner wrote:
+> Hi Jeff and list,
+>=20
+> maybe this mail was wrong on the linux-scsi list.  So here we go agai=
+n:
+>=20
+> -------- Original-Nachricht --------
+> Betreff: Maybe a bug in libata-core
+> Datum: Fri, 20 Aug 2010 23:48:09 +0200
+> Von: Stefan H=FCbner  <stefan.huebner@stud.tu-ilmenau.de>
+> Antwort an: stefan.huebner@stud.tu-ilmenau.de
+> Organisation: TU-Ilmenau
+> An: linux-scsi@vger.kernel.org
+>=20
+>  Hi List!
+>=20
+> After sending a WRITE_DMA_FUA_EXT ATA-command via SG_IO Passthru to a
+> harddisk (here: /dev/sdd), my kernel panics.  The is what I find in s=
+yslog:
 
-I would love a bit more documentation here.
+You're sending down data command w/o data.  Panicking probably isn't
+the best response here.  Maybe the BUG_ON() should be changed to
+WARN_ON_ONCE() + goto sg_err.
 
 Thanks.
 
--- 
+--=20
 tejun
