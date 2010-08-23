@@ -1,48 +1,41 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Mon, 23 Aug 2010 20:58:33 +0200
-Message-ID: <201008232058.33542.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008191823.57915.stephan.diestelhorst@amd.com> <4C72639C.6090108@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 6/6] sd: Update thin provisioning support
+Date: Mon, 23 Aug 2010 15:06:00 -0400
+Message-ID: <yq14oeltahz.fsf@sermon.lab.mkp.net>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-7-git-send-email-martin.petersen@oracle.com>
+	<20100820090039.GD27033@lst.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37765 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752708Ab0HWTAP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Aug 2010 15:00:15 -0400
-In-Reply-To: <4C72639C.6090108@gmail.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:49108 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753419Ab0HWTGU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Aug 2010 15:06:20 -0400
+In-Reply-To: <20100820090039.GD27033@lst.de> (Christoph Hellwig's message of
+	"Fri, 20 Aug 2010 11:00:40 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Monday, August 23, 2010, Tejun Heo wrote:
-> Hello, sorry about the delay.
-> 
-> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
-> > It says "max_performance", I have not touched anyhting. So it has been
-> > like that all the time. Would this explain why your patch did not show
-> > the debug printout?
-> 
-> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
-> be any debug messages but at the same time the posted patch should
-> have had the same effect as Rafael's patch as IPM path isn't traveled
-> at all.  Can you please check the followings?
-> 
-> * You're actually running the correct patched kernel and modules.  It
->   probably is a good idea to add a printk message.  ie. Apply the
->   patch and add a printk() in ata_host_request_pm() in libata-core.c
->   and make sure the debug messages appears.
-> 
-> * Rafael's patch actually fixes the problem.  If you haven't been
->   using IPM at all, Rafael's patch and mine should behave exactly the
->   same (ie. no IPM operation at all during suspend/resume).  It could
->   be that you're seeing a different issue.
-> 
-> Rafael, can you please test my patch and see how your case behaves?
+>>>>> "hch" == Christoph Hellwig <hch@lst.de> writes:
 
-This one: http://lkml.org/lkml/2010/8/5/328 ?
+hch> I don't think we can simply break all existing setups with support
+hch> for earlier SBC drafts.  I think we should use the TPU and TPWS
+hch> same bits if present and else fall back to our current heuristics.
 
-Rafael
+Originally my patch included support for "legacy" TP devices triggered
+by TPE=1 but no TP VPD page listed in page 0.  I also supported the even
+older TP approach (WRITE SAME without the UNMAP bit, all zero payload).
+
+However, I talked to a few partners and everybody were going to add the
+TP VPD to their firmware builds right away.  So I ripped out the compat
+stuff because I felt it was weird to have explicit support for an
+intermediate SBC3 release in there.
+
+How would you feel about a sysfs switch to "force" TP on for devices
+that don't report it correctly?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
