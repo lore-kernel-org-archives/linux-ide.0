@@ -1,65 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: be less of a drama queen on empty
- data commands
-Date: Mon, 23 Aug 2010 11:27:27 +0200
-Message-ID: <4C723EFF.4030201@kernel.org>
-References: <4C71C645.8050007@stud.tu-ilmenau.de> <4C723C65.6080303@kernel.org>
+Subject: Re: ahci port hangs while hard resetting link
+Date: Mon, 23 Aug 2010 11:31:32 +0200
+Message-ID: <4C723FF4.1020208@kernel.org>
+References: <201008230010.48355.anssi.hannula@iki.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35345 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:53202 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751643Ab0HWJcl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 23 Aug 2010 05:32:41 -0400
-In-Reply-To: <4C723C65.6080303@kernel.org>
+	id S1753671Ab0HWJgV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Aug 2010 05:36:21 -0400
+In-Reply-To: <201008230010.48355.anssi.hannula@iki.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: stefan.huebner@stud.tu-ilmenau.de, linux-ide@vger.kernel.org
+To: Anssi Hannula <anssi.hannula@iki.fi>
+Cc: linux-ide@vger.kernel.org
 
-ata_qc_issue() BUG_ON()s on data commands w/o data, which may be
-submitted via SG_IO.  Be less of a drama queen and just trigger
-WARN_ON_ONCE() and fail the command with AC_ERR_SYSTEM.
+Hello,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Stefan H=FCbner <stefan.huebner@stud.tu-ilmenau.de>
----
- drivers/ata/libata-core.c |   11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+On 08/22/2010 11:10 PM, Anssi Hannula wrote:
+> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe 
+> frozen
+> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
+> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
+> 22:52:18 : ata6: hard resetting link
+> 22:52:28 : ata6: softreset failed (device not ready)
+> 22:52:28 : ata6: hard resetting link
+> 22:52:38 : ata6: softreset failed (device not ready)
+> 22:52:38 : ata6: hard resetting link
+> 22:52:49 : ata6: link is slow to respond, please be patient (ready=0)
+> 22:53:13 : ata6: softreset failed (device not ready)
+> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
+> 22:53:13 : ata6: hard resetting link
+> =====================
+> I disconnect the drive for a few moments, but nothing is output by kernel.
+> I reconnect it again, but again, nothing is output by the kernel.
+> I run: echo "- - -" > 
+> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
+> However, it appeared stuck and still no messages in the kernel log, so
+> I disconnected the device again. Still nothing is output, and the
+> following messages started to be output, indicating that the process
+> had become stuck:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7ef7c4f..c035b3d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5111,15 +5111,18 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 	qc->flags |=3D ATA_QCFLAG_ACTIVE;
- 	ap->qc_active |=3D 1 << qc->tag;
+Looks like EH got stuck somehow.  Maybe the timeout calculation is
+wrong?  Can you please trigger sysrq-t while the system is stuck and
+post the result?
 
--	/* We guarantee to LLDs that they will have at least one
-+	/*
-+	 * We guarantee to LLDs that they will have at least one
- 	 * non-zero sg if the command is a data command.
- 	 */
--	BUG_ON(ata_is_data(prot) && (!qc->sg || !qc->n_elem || !qc->nbytes));
-+	if (WARN_ON_ONCE(ata_is_data(prot) &&
-+			 (!qc->sg || !qc->n_elem || !qc->nbytes)))
-+		goto sys_err;
+Thanks.
 
- 	if (ata_is_dma(prot) || (ata_is_pio(prot) &&
- 				 (ap->flags & ATA_FLAG_PIO_DMA)))
- 		if (ata_sg_setup(qc))
--			goto sg_err;
-+			goto sys_err;
-
- 	/* if device is sleeping, schedule reset and abort the link */
- 	if (unlikely(qc->dev->flags & ATA_DFLAG_SLEEPING)) {
-@@ -5136,7 +5139,7 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 		goto err;
- 	return;
-
--sg_err:
-+sys_err:
- 	qc->err_mask |=3D AC_ERR_SYSTEM;
- err:
- 	ata_qc_complete(qc);
+-- 
+tejun
