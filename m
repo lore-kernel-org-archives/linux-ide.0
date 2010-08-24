@@ -1,75 +1,58 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci port hangs while hard resetting link
-Date: Tue, 24 Aug 2010 18:27:15 +0200
-Message-ID: <4C73F2E3.6030909@kernel.org>
-References: <201008230010.48355.anssi.hannula@iki.fi> <4C723FF4.1020208@kernel.org> <201008231811.59828.anssi.hannula@iki.fi>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Tue, 24 Aug 2010 18:59:59 +0200
+Message-ID: <4C73FA8F.5080800@kernel.org>
+References: <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:39685 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:55197 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751531Ab0HXQcZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Aug 2010 12:32:25 -0400
-In-Reply-To: <201008231811.59828.anssi.hannula@iki.fi>
+	id S1754406Ab0HXRFj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Aug 2010 13:05:39 -0400
+In-Reply-To: <4C739DE9.5070803@ct.jp.nec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anssi Hannula <anssi.hannula@iki.fi>
-Cc: linux-ide@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 
-On 08/23/2010 05:11 PM, Anssi Hannula wrote:
-> On Monday 23 August 2010 12:31:32 Tejun Heo wrote:
->> Hello,
->>
->> On 08/22/2010 11:10 PM, Anssi Hannula wrote:
->>> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe
->>> frozen
->>> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
->>> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
->>> 22:52:18 : ata6: hard resetting link
->>> 22:52:28 : ata6: softreset failed (device not ready)
->>> 22:52:28 : ata6: hard resetting link
->>> 22:52:38 : ata6: softreset failed (device not ready)
->>> 22:52:38 : ata6: hard resetting link
->>> 22:52:49 : ata6: link is slow to respond, please be patient (ready=0)
->>> 22:53:13 : ata6: softreset failed (device not ready)
->>> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
->>> 22:53:13 : ata6: hard resetting link
->>> =====================
->>> I disconnect the drive for a few moments, but nothing is output by
->>> kernel. I reconnect it again, but again, nothing is output by the
->>> kernel. I run: echo "- - -" >
->>> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
->>> However, it appeared stuck and still no messages in the kernel log, so
->>> I disconnected the device again. Still nothing is output, and the
->>> following messages started to be output, indicating that the process
->>
->>> had become stuck:
->> Looks like EH got stuck somehow.  Maybe the timeout calculation is
->> wrong?  Can you please trigger sysrq-t while the system is stuck and
->> post the result?
-> 
-> Ok, here's the output. And the system is not stuck, just the bash process that 
-> is writing to 'scan' file.
-> 
-> In this occasion, the hard reset had been stuck for some 16 hours, and it is 
-> on ata5 (scsi4):
+Hello,
 
-Does the following patch fix the problem?
+On 08/24/2010 12:24 PM, Kiyoshi Ueda wrote:
+> Yes, checking whether it's a transport error in lower layer is
+> the right solution.
+> (Since I know it's not available yet, I just hoped if upper layers
+>  had some other options.)
+> 
+> Anyway, only reporting errors for REQ_FLUSH to upper layer without
+> such a solution would make dm-multipath almost unusable in real world,
+> although it's better than implicit data loss.
+
+I see.
+
+>>> Maybe just turn off barrier support in mpath for now?
+> 
+> If it's possible, it could be a workaround for a short term.
+> But how can you do that?
+> 
+> I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
+> Underlying devices of a mpath device may have write-back cache and
+> it may be enabled.
+> So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
+> becomes a device which has write-back cache but doesn't support flush.
+> Then, upper layer can do nothing to ensure cache flush?
+
+Yeah, I was basically suggesting to forget about cache flush w/ mpath
+until it can be fixed.  You're saying that if mpath just passes
+REQ_FLUSH upwards without retrying, it will be almost unuseable,
+right?  I'm not sure how to proceed here.  How much work would
+discerning between transport and IO errors take?  If it can't be done
+quickly enough the retry logic can be kept around to keep the old
+behavior but that already was a broken behavior, so...  :-(
 
 Thanks.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 666850d..68dc678 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1326,7 +1326,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	/* issue the first D2H Register FIS */
- 	msecs = 0;
- 	now = jiffies;
--	if (time_after(now, deadline))
-+	if (time_after(deadline, now))
- 		msecs = jiffies_to_msecs(deadline - now);
-
- 	tf.ctl |= ATA_SRST;
-
+-- 
+tejun
