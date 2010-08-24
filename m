@@ -1,58 +1,75 @@
-From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Tue, 24 Aug 2010 18:07:23 +0200
-Message-ID: <201008241807.23519.stephan.diestelhorst@amd.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008191823.57915.stephan.diestelhorst@amd.com> <4C72639C.6090108@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ahci port hangs while hard resetting link
+Date: Tue, 24 Aug 2010 18:27:15 +0200
+Message-ID: <4C73F2E3.6030909@kernel.org>
+References: <201008230010.48355.anssi.hannula@iki.fi> <4C723FF4.1020208@kernel.org> <201008231811.59828.anssi.hannula@iki.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:25429 "EHLO
-	TX2EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755105Ab0HXQWh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2010 12:22:37 -0400
-In-Reply-To: <4C72639C.6090108@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:39685 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751531Ab0HXQcZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Aug 2010 12:32:25 -0400
+In-Reply-To: <201008231811.59828.anssi.hannula@iki.fi>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Anssi Hannula <anssi.hannula@iki.fi>
+Cc: linux-ide@vger.kernel.org
 
-On Monday 23 August 2010 14:03:40 Tejun Heo wrote:
-> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
-> > It says "max_performance", I have not touched anyhting. So it has been
-> > like that all the time. Would this explain why your patch did not show
-> > the debug printout?
+On 08/23/2010 05:11 PM, Anssi Hannula wrote:
+> On Monday 23 August 2010 12:31:32 Tejun Heo wrote:
+>> Hello,
+>>
+>> On 08/22/2010 11:10 PM, Anssi Hannula wrote:
+>>> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe
+>>> frozen
+>>> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
+>>> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
+>>> 22:52:18 : ata6: hard resetting link
+>>> 22:52:28 : ata6: softreset failed (device not ready)
+>>> 22:52:28 : ata6: hard resetting link
+>>> 22:52:38 : ata6: softreset failed (device not ready)
+>>> 22:52:38 : ata6: hard resetting link
+>>> 22:52:49 : ata6: link is slow to respond, please be patient (ready=0)
+>>> 22:53:13 : ata6: softreset failed (device not ready)
+>>> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
+>>> 22:53:13 : ata6: hard resetting link
+>>> =====================
+>>> I disconnect the drive for a few moments, but nothing is output by
+>>> kernel. I reconnect it again, but again, nothing is output by the
+>>> kernel. I run: echo "- - -" >
+>>> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
+>>> However, it appeared stuck and still no messages in the kernel log, so
+>>> I disconnected the device again. Still nothing is output, and the
+>>> following messages started to be output, indicating that the process
+>>
+>>> had become stuck:
+>> Looks like EH got stuck somehow.  Maybe the timeout calculation is
+>> wrong?  Can you please trigger sysrq-t while the system is stuck and
+>> post the result?
 > 
-> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
-> be any debug messages but at the same time the posted patch should
-> have had the same effect as Rafael's patch as IPM path isn't traveled
-> at all.  Can you please check the followings?
+> Ok, here's the output. And the system is not stuck, just the bash process that 
+> is writing to 'scan' file.
 > 
-> * You're actually running the correct patched kernel and modules.  It
->   probably is a good idea to add a printk message.  ie. Apply the
->   patch and add a printk() in ata_host_request_pm() in libata-core.c
->   and make sure the debug messages appears.
+> In this occasion, the hard reset had been stuck for some 16 hours, and it is 
+> on ata5 (scsi4):
 
-Did that. Actually also added some printks to the XXX function, called
-early during boot. Output confirms that your patch is loaded. And even
-on the first resume the machine dies.
+Does the following patch fix the problem?
 
-> * Rafael's patch actually fixes the problem.  If you haven't been
->   using IPM at all, Rafael's patch and mine should behave exactly the
->   same (ie. no IPM operation at all during suspend/resume).  It could
->   be that you're seeing a different issue.
+Thanks.
 
-That next on my list...
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 666850d..68dc678 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1326,7 +1326,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 	/* issue the first D2H Register FIS */
+ 	msecs = 0;
+ 	now = jiffies;
+-	if (time_after(now, deadline))
++	if (time_after(deadline, now))
+ 		msecs = jiffies_to_msecs(deadline - now);
 
-Many thanks!
-
-Stephan
-
--- 
-Stephan Diestelhorst, AMD Operating System Research Center
-stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+ 	tf.ctl |= ATA_SRST;
 
