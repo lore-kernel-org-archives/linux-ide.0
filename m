@@ -1,64 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Tue, 24 Aug 2010 20:14:07 +0200
-Message-ID: <4C740BEF.2010806@kernel.org>
-References: <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org> <20100824175215.GA29409@redhat.com>
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Subject: Re: ahci port hangs while hard resetting link
+Date: Tue, 24 Aug 2010 23:03:35 +0300
+Message-ID: <201008242303.35044.anssi.hannula@iki.fi>
+References: <201008230010.48355.anssi.hannula@iki.fi> <201008231811.59828.anssi.hannula@iki.fi> <4C73F2E3.6030909@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:40372 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751812Ab0HXSNT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Aug 2010 14:13:19 -0400
-In-Reply-To: <20100824175215.GA29409@redhat.com>
+Received: from sirokuusama.dnainternet.net ([83.102.40.133]:39374 "EHLO
+	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752664Ab0HXUDj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2010 16:03:39 -0400
+In-Reply-To: <4C73F2E3.6030909@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
-
-On 08/24/2010 07:52 PM, Mike Snitzer wrote:
->> If it can't be done quickly enough the retry logic can be kept around
->> to keep the old behavior but that already was a broken behavior, so...
->> :-(
+On Tuesday 24 August 2010 19:27:15 Tejun Heo wrote:
+> On 08/23/2010 05:11 PM, Anssi Hannula wrote:
+> > On Monday 23 August 2010 12:31:32 Tejun Heo wrote:
+> >> Hello,
+> >> 
+> >> On 08/22/2010 11:10 PM, Anssi Hannula wrote:
+> >>> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action
+> >>> 0xe frozen
+> >>> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
+> >>> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
+> >>> 22:52:18 : ata6: hard resetting link
+> >>> 22:52:28 : ata6: softreset failed (device not ready)
+> >>> 22:52:28 : ata6: hard resetting link
+> >>> 22:52:38 : ata6: softreset failed (device not ready)
+> >>> 22:52:38 : ata6: hard resetting link
+> >>> 22:52:49 : ata6: link is slow to respond, please be patient (ready=0)
+> >>> 22:53:13 : ata6: softreset failed (device not ready)
+> >>> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
+> >>> 22:53:13 : ata6: hard resetting link
+> >>> =====================
+> >>> I disconnect the drive for a few moments, but nothing is output by
+> >>> kernel. I reconnect it again, but again, nothing is output by the
+> >>> kernel. I run: echo "- - -" >
+> >>> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
+> >>> However, it appeared stuck and still no messages in the kernel log, so
+> >>> I disconnected the device again. Still nothing is output, and the
+> >>> following messages started to be output, indicating that the process
+> >> 
+> >>> had become stuck:
+> >> Looks like EH got stuck somehow.  Maybe the timeout calculation is
+> >> wrong?  Can you please trigger sysrq-t while the system is stuck and
+> >> post the result?
+> > 
+> > Ok, here's the output. And the system is not stuck, just the bash process
+> > that is writing to 'scan' file.
+> > 
+> > In this occasion, the hard reset had been stuck for some 16 hours, and it
+> > is
 > 
-> I'll have to review this thread again to understand why mpath's existing
-> retry logic is broken behavior.  mpath is used with more capable SCSI
-> devices so I'm missing why a failed FLUSH implies data loss.
+> > on ata5 (scsi4):
+> Does the following patch fix the problem?
 
-SBC doesn't specify the failure behavior, so it could be that retrying
-flush could be safe.  But for most disk type devices, flush failure
-usually indicates that the device exhausted all the options to commit
-some of pending data to NV media - ie. even remapping failed for
-whatever reason.  Even if retry is safe, it's more likely to simply
-delay notification of failure.
+Unfortunately (as I feared) I no longer have the drive.
 
-In ATA, the situation is clearer, when a device actively fails a
-flush, the drive reports the first failed sector it failed to commit
-and the next flush will continue _after_ the sector - IOW, data is
-already lost.
+Now I feel bad, but I keep telling myself that an untestable report was still 
+better than no report at all.. ;)
 
-<speculation>
-I think there's no reason mpath should be tasked with retrying flush
-failure.  That's upto the SCSI EH.  If the command failed in 'safe'
-transient way - ie. device busy or whatnot, SCSI EH can and does retry
-the command.  There are several FAILFAST bits already and SCSI EH can
-avoid retrying transport errors for mpath (maybe it already does
-that?) and just need to be able to tell upper layer that the failure
-was a fast one and upper layer is responsible for retrying?  Is there
-any reason to pass the whole sense information upwards?
-</speculation>
+> Thanks.
 
-Anyways, flush failure is different from read/write failures.
-Read/writes can always be retried cleanly.  They are stateless.  I
-don't know how SCSI devices would actually behavior but it's a bit
-scary to retry SYNCHRONIZE_CACHE a device failed and report success
-upwards.
+Thanks for taking a look. The wrong parameter order looks like a clear bug 
+indeed.
 
-Thanks.
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 666850d..68dc678 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1326,7 +1326,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned
+> int *class, /* issue the first D2H Register FIS */
+>  	msecs = 0;
+>  	now = jiffies;
+> -	if (time_after(now, deadline))
+> +	if (time_after(deadline, now))
+>  		msecs = jiffies_to_msecs(deadline - now);
+> 
+>  	tf.ctl |= ATA_SRST;
 
 -- 
-tejun
+Anssi Hannula
