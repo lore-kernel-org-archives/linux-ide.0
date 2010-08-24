@@ -1,66 +1,83 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
-Subject: Re: Maybe a bug in libata-core
-Date: Tue, 24 Aug 2010 00:41:45 +0200
-Message-ID: <4C72F929.6090401@stud.tu-ilmenau.de>
-References: <4C71C645.8050007@stud.tu-ilmenau.de> <4C723C65.6080303@kernel.org>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 4/5] md: implment REQ_FLUSH/FUA support
+Date: Tue, 24 Aug 2010 15:41:02 +1000
+Message-ID: <20100824154102.7b68818b@notabene>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+	<1281977523-19335-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:57838 "EHLO
-	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263Ab0HWWo2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Aug 2010 18:44:28 -0400
-In-Reply-To: <4C723C65.6080303@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1281977523-19335-5-git-send-email-tj@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-Am 23.08.2010 11:16, schrieb Tejun Heo:
-> On 08/23/2010 02:52 AM, Stefan /*St0fF*/ H=FCbner wrote:
->> Hi Jeff and list,
->>
->> maybe this mail was wrong on the linux-scsi list.  So here we go aga=
-in:
->>
->> -------- Original-Nachricht --------
->> Betreff: Maybe a bug in libata-core
->> Datum: Fri, 20 Aug 2010 23:48:09 +0200
->> Von: Stefan H=FCbner  <stefan.huebner@stud.tu-ilmenau.de>
->> Antwort an: stefan.huebner@stud.tu-ilmenau.de
->> Organisation: TU-Ilmenau
->> An: linux-scsi@vger.kernel.org
->>
->>  Hi List!
->>
->> After sending a WRITE_DMA_FUA_EXT ATA-command via SG_IO Passthru to =
-a
->> harddisk (here: /dev/sdd), my kernel panics.  The is what I find in =
-syslog:
->=20
-> You're sending down data command w/o data.  Panicking probably isn't
-> the best response here.  Maybe the BUG_ON() should be changed to
-> WARN_ON_ONCE() + goto sg_err.
->=20
-> Thanks.
->=20
+On Mon, 16 Aug 2010 18:52:02 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
-As far as I know my code I thought I did send enough data.  Maybe I'm
-misunderstanding something: I valloc'ated block_count*logical_block_siz=
-e
-bytes, filled them with data and presented this buffer to the
-sg_io_hdr_t structure by setting dxfer_len to the length of the buffer,
-setting dxferp to a pointer to the buffer and setting the
-dxfer_direction to SG_DXFER_TO_DEV.
 
-The only thing coming to my mind would be overflow of dxfer_len, but as
-this is a unsigned int - wouldn't it be 32 bits wide? (and by that
-accepting f.e. 64k*512 bytes =3D 33 554 432 bytes (32M, needing 25 bits=
-))
+Hi Tejun,
+ thanks for doing this.
+ It mostly looks good, especially ...
 
-Any other suggestions, or do I have to present the code?
 
-Thanks,
-Stefan
+> * REQ_FLUSH/FUA failures are final and its users don't need retry
+>   logic.  Retry logic is removed.
+
+This bit - all that retry logic felt so clumsy :-)
+
+Only change I would make is:
+
+>  
+> @@ -4083,7 +4089,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  			finish_wait(&conf->wait_for_overlap, &w);
+>  			set_bit(STRIPE_HANDLE, &sh->state);
+>  			clear_bit(STRIPE_DELAYED, &sh->state);
+> -			if (mddev->barrier && 
+> +			if (mddev->flush_bio &&
+>  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  				atomic_inc(&conf->preread_active_stripes);
+>  			release_stripe(sh);
+> @@ -4106,7 +4112,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  		bio_endio(bi, 0);
+>  	}
+>  
+> -	if (mddev->barrier) {
+> +	if (mddev->flush_bio) {
+>  		/* We need to wait for the stripes to all be handled.
+>  		 * So: wait for preread_active_stripes to drop to 0.
+>  		 */
+
+These two in raid5.c aren't quite right.
+The first should be changed to test
+   bi->bi_rw & REQ_SYNC
+rather than
+   mddev->flush_bio.
+(Assuming the REQ_SYNC means "don't bother waiting for more requests that
+might combine with this one to make it all go faster" which I think it does.)
+
+For the second we can just drop the whole if statement.
+It was needed so that the all the writes would go done to the underlying
+devices so that the null-barrier which would subsequently be passed to all
+those devices would go *after* the writes for the barrier request.
+As there is no longer a post-flush, that code can go.
+
+Thanks a lot, and sorry for the delay in reviewing it.
+NeilBrown
+
+
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 0f86f5e..ff9cad2 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -275,6 +275,7 @@ struct r6_state {
+>  				    * filling
+>  				    */
+>  #define R5_Wantdrain	13 /* dev->towrite needs to be drained */
+> +#define R5_WantFUA	14	/* Write should be FUA */
+>  /*
+>   * Write method
+>   */
+
