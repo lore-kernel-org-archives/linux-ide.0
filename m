@@ -1,88 +1,55 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: ahci port hangs while hard resetting link
-Date: Tue, 24 Aug 2010 23:03:35 +0300
-Message-ID: <201008242303.35044.anssi.hannula@iki.fi>
-References: <201008230010.48355.anssi.hannula@iki.fi> <201008231811.59828.anssi.hannula@iki.fi> <4C73F2E3.6030909@kernel.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Tue, 24 Aug 2010 22:39:43 +0200
+Message-ID: <201008242239.43249.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008232058.33542.rjw@sisk.pl> <4C7376BE.5040006@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sirokuusama.dnainternet.net ([83.102.40.133]:39374 "EHLO
-	sirokuusama.dnainternet.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752664Ab0HXUDj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2010 16:03:39 -0400
-In-Reply-To: <4C73F2E3.6030909@kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:41578 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753110Ab0HXUl0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 24 Aug 2010 16:41:26 -0400
+In-Reply-To: <4C7376BE.5040006@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-On Tuesday 24 August 2010 19:27:15 Tejun Heo wrote:
-> On 08/23/2010 05:11 PM, Anssi Hannula wrote:
-> > On Monday 23 August 2010 12:31:32 Tejun Heo wrote:
-> >> Hello,
-> >> 
-> >> On 08/22/2010 11:10 PM, Anssi Hannula wrote:
-> >>> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action
-> >>> 0xe frozen
-> >>> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
-> >>> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
-> >>> 22:52:18 : ata6: hard resetting link
-> >>> 22:52:28 : ata6: softreset failed (device not ready)
-> >>> 22:52:28 : ata6: hard resetting link
-> >>> 22:52:38 : ata6: softreset failed (device not ready)
-> >>> 22:52:38 : ata6: hard resetting link
-> >>> 22:52:49 : ata6: link is slow to respond, please be patient (ready=0)
-> >>> 22:53:13 : ata6: softreset failed (device not ready)
-> >>> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
-> >>> 22:53:13 : ata6: hard resetting link
-> >>> =====================
-> >>> I disconnect the drive for a few moments, but nothing is output by
-> >>> kernel. I reconnect it again, but again, nothing is output by the
-> >>> kernel. I run: echo "- - -" >
-> >>> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
-> >>> However, it appeared stuck and still no messages in the kernel log, so
-> >>> I disconnected the device again. Still nothing is output, and the
-> >>> following messages started to be output, indicating that the process
-> >> 
-> >>> had become stuck:
-> >> Looks like EH got stuck somehow.  Maybe the timeout calculation is
-> >> wrong?  Can you please trigger sysrq-t while the system is stuck and
-> >> post the result?
+On Tuesday, August 24, 2010, Tejun Heo wrote:
+> On 08/23/2010 08:58 PM, Rafael J. Wysocki wrote:
+> > On Monday, August 23, 2010, Tejun Heo wrote:
+> >> Hello, sorry about the delay.
+> >>
+> >> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
+> >>> It says "max_performance", I have not touched anyhting. So it has been
+> >>> like that all the time. Would this explain why your patch did not show
+> >>> the debug printout?
+> >>
+> >> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
+> >> be any debug messages but at the same time the posted patch should
+> >> have had the same effect as Rafael's patch as IPM path isn't traveled
+> >> at all.  Can you please check the followings?
+> >>
+> >> * You're actually running the correct patched kernel and modules.  It
+> >>   probably is a good idea to add a printk message.  ie. Apply the
+> >>   patch and add a printk() in ata_host_request_pm() in libata-core.c
+> >>   and make sure the debug messages appears.
+> >>
+> >> * Rafael's patch actually fixes the problem.  If you haven't been
+> >>   using IPM at all, Rafael's patch and mine should behave exactly the
+> >>   same (ie. no IPM operation at all during suspend/resume).  It could
+> >>   be that you're seeing a different issue.
+> >>
+> >> Rafael, can you please test my patch and see how your case behaves?
 > > 
-> > Ok, here's the output. And the system is not stuck, just the bash process
-> > that is writing to 'scan' file.
-> > 
-> > In this occasion, the hard reset had been stuck for some 16 hours, and it
-> > is
+> > This one: http://lkml.org/lkml/2010/8/5/328 ?
 > 
-> > on ata5 (scsi4):
-> Does the following patch fix the problem?
+> Yeap, that one.  I can prep a test git branch if necessary.
 
-Unfortunately (as I feared) I no longer have the drive.
+No need to, but it's going to take a few days to verify on my box.
 
-Now I feel bad, but I keep telling myself that an untestable report was still 
-better than no report at all.. ;)
-
-> Thanks.
-
-Thanks for taking a look. The wrong parameter order looks like a clear bug 
-indeed.
-
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 666850d..68dc678 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1326,7 +1326,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned
-> int *class, /* issue the first D2H Register FIS */
->  	msecs = 0;
->  	now = jiffies;
-> -	if (time_after(now, deadline))
-> +	if (time_after(deadline, now))
->  		msecs = jiffies_to_msecs(deadline - now);
-> 
->  	tf.ctl |= ATA_SRST;
-
--- 
-Anssi Hannula
+Thanks,
+Rafael
