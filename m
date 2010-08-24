@@ -1,52 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
- to RAM
-Date: Tue, 24 Aug 2010 09:37:34 +0200
-Message-ID: <4C7376BE.5040006@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008191823.57915.stephan.diestelhorst@amd.com> <4C72639C.6090108@gmail.com> <201008232058.33542.rjw@sisk.pl>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Fix section mismatch: ata_sff_exit
+Date: Tue, 24 Aug 2010 10:47:33 +0200
+Message-ID: <4C738725.5070101@kernel.org>
+References: <4c72d77a17302aa2a9@agluck-desktop.sc.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45685 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128Ab0HXHmh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2010 03:42:37 -0400
-In-Reply-To: <201008232058.33542.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <4c72d77a17302aa2a9@agluck-desktop.sc.intel.com>
+Sender: linux-next-owner@vger.kernel.org
+To: "Luck, Tony" <tony.luck@intel.com>, Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-next@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-On 08/23/2010 08:58 PM, Rafael J. Wysocki wrote:
-> On Monday, August 23, 2010, Tejun Heo wrote:
->> Hello, sorry about the delay.
->>
->> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
->>> It says "max_performance", I have not touched anyhting. So it has been
->>> like that all the time. Would this explain why your patch did not show
->>> the debug printout?
->>
->> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
->> be any debug messages but at the same time the posted patch should
->> have had the same effect as Rafael's patch as IPM path isn't traveled
->> at all.  Can you please check the followings?
->>
->> * You're actually running the correct patched kernel and modules.  It
->>   probably is a good idea to add a printk message.  ie. Apply the
->>   patch and add a printk() in ata_host_request_pm() in libata-core.c
->>   and make sure the debug messages appears.
->>
->> * Rafael's patch actually fixes the problem.  If you haven't been
->>   using IPM at all, Rafael's patch and mine should behave exactly the
->>   same (ie. no IPM operation at all during suspend/resume).  It could
->>   be that you're seeing a different issue.
->>
->> Rafael, can you please test my patch and see how your case behaves?
+On 08/23/2010 10:18 PM, Luck, Tony wrote:
+> This build error showed up in linux-next tag next-20100820 for ia64:
 > 
-> This one: http://lkml.org/lkml/2010/8/5/328 ?
+> WARNING: vmlinux.o(.init.text+0x4a952): Section mismatch in reference from the function ata_init() to the function .exit.text:ata_sff_exit()
+> The function __init ata_init() references
+> a function __exit ata_sff_exit().
+> This is often seen when error handling in the init function
+> uses functionality in the exit path.
+> The fix is often to remove the __exit annotation of
+> ata_sff_exit() so it may be used outside an exit section.
+> 
+> Sure enough, dropping the __exit fixes the problem.
+> 
+> Signed-off-by: Tony Luck <tony.luck@intel.com>
+> ---
+> 
+> Tejun: I didn't pin down which commit broke this ... but you seem
+> to have a number of recent commits here.
 
-Yeap, that one.  I can prep a test git branch if necessary.
+It's the scsi transport addition.  It adds an init failure case where
+ata_sff_exit() is called to undo initialization, so your fix is
+correct.
+
+Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks.
 
