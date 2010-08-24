@@ -1,34 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_sil boot failure with 2.6.35
-Date: Tue, 24 Aug 2010 17:16:51 +0200
-Message-ID: <4C73E263.5050102@kernel.org>
-References: <4C6EC878020000780001146D@vpn.id2.novell.com> <4C6ED603.9020602@garzik.org> <4C724D3E.50404@kernel.org> <4C728C5E0200007800011887@vpn.id2.novell.com> <4C727E80.3060402@kernel.org> <4C72B4250200007800011998@vpn.id2.novell.com> <4C73CE8A.406@kernel.org> <4C73FEA60200007800011F51@vpn.id2.novell.com>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Tue, 24 Aug 2010 18:11:22 +0200
+Message-ID: <201008241811.22991.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C72639C.6090108@gmail.com> <201008241807.23519.stephan.diestelhorst@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43245 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755388Ab0HXPWR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 24 Aug 2010 11:22:17 -0400
-In-Reply-To: <4C73FEA60200007800011F51@vpn.id2.novell.com>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:37245
+	"EHLO VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755184Ab0HXQN0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2010 12:13:26 -0400
+In-Reply-To: <201008241807.23519.stephan.diestelhorst@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Beulich <JBeulich@novell.com>
-Cc: Jeff Garzik <jeff@garzik.org>, jgarzik@redhat.com, linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>
 
-On 08/24/2010 05:17 PM, Jan Beulich wrote:
->> The only thing I can think of is the following.  Can you please try
->> this one?  If this one fails, we might have to resort to bisecting.
->> It's very weird.  The sff common code is used by other controllers but
->> until now the problem is only being reported on sata_sil.
+On Tuesday 24 August 2010 18:07:23 Stephan Diestelhorst wrote:
+> On Monday 23 August 2010 14:03:40 Tejun Heo wrote:
+> > On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
+> > > It says "max_performance", I have not touched anyhting. So it has been
+> > > like that all the time. Would this explain why your patch did not show
+> > > the debug printout?
+> > 
+> > Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
+> > be any debug messages but at the same time the posted patch should
+> > have had the same effect as Rafael's patch as IPM path isn't traveled
+> > at all.  Can you please check the followings?
+> > 
+> > * You're actually running the correct patched kernel and modules.  It
+> >   probably is a good idea to add a printk message.  ie. Apply the
+> >   patch and add a printk() in ata_host_request_pm() in libata-core.c
+> >   and make sure the debug messages appears.
 > 
-> Sorry - again no (visible) difference.
+> Did that. Actually also added some printks to the XXX function, called
 
-Any chance I can persuade you into bisecting the problem? :-) Also,
-can you please attach the output of lspci -nn output and .config?
+I meant ahci_dev_config() in libahci.c . Darn quick trigger finger ;-)
 
-Thanks.
+> early during boot. Output confirms that your patch is loaded. And even
+> on the first resume the machine dies.
+> 
+> > * Rafael's patch actually fixes the problem.  If you haven't been
+> >   using IPM at all, Rafael's patch and mine should behave exactly the
+> >   same (ie. no IPM operation at all during suspend/resume).  It could
+> >   be that you're seeing a different issue.
+> 
+> That next on my list...
+> 
+> Many thanks!
+> 
+> Stephan
+> 
+> 
+
 
 -- 
-tejun
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
