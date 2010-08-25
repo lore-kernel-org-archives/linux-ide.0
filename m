@@ -1,53 +1,70 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: promise sataII 150 TX4 issue
-Date: Tue, 24 Aug 2010 22:24:55 -0600
-Message-ID: <4C749B17.7070507@gmail.com>
-References: <i4f6jk$969$1@dough.gmane.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Wed, 25 Aug 2010 17:00:21 +0900
+Message-ID: <4C74CD95.1000208@ct.jp.nec.com>
+References: <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45389 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751684Ab0HYEY6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Aug 2010 00:24:58 -0400
-Received: by iwn5 with SMTP id 5so234692iwn.19
-        for <linux-ide@vger.kernel.org>; Tue, 24 Aug 2010 21:24:58 -0700 (PDT)
-In-Reply-To: <i4f6jk$969$1@dough.gmane.org>
+Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:59566 "EHLO
+	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699Ab0HYICs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Aug 2010 04:02:48 -0400
+In-Reply-To: <4C73FA8F.5080800@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: kenneth johansson <ken@kenjo.org>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 
-On 08/17/2010 05:39 PM, kenneth johansson wrote:
-> 00:0d.0 Mass storage controller: Promise Technology, Inc. PDC20518/
-> PDC40518 (SATAII 150 TX4) (rev 02)
->
-> I have a raid5 with 3 disks in and have started so see some weired
-> problems.First I thought it was the disk since it was always the same but
-> after changing the disk I now have the same problems but another disk so
-> I'm starting to suspect a driver issue.
->
-> The only disk I have in the system is connected to this pci card and the
-> problem is always with the disk named sda regardless if it is connected
-> to the first sata port or the second and first is empty.
-> I have switch power cables and sata cables around but problem is not
-> moving from sda.
->
-> problem seen on kernel version vmlinuz-2.6.35,vmlinuz-2.6.33.3. was
-> running vmlinuz-2.6.28.7 for about a year before that without any problem.
->
-> Now it took about two month before sda got kicked out of the raid on
-> 2.6.33.3 but 2.6.35 have not lasted more than a few days.
->
-> -------------------------------------------
-> Aug 15 20:27:22 amd kernel: [171585.020040] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x180000 action 0x6 frozen
-> Aug 15 20:29:15 amd kernel: [171585.020080] ata1: SError: { 10B8B Dispar }
-> Aug 15 20:29:15 amd kernel: [171585.020100] ata1.00: failed command: WRITE DMA EXT
-> Aug 15 20:29:15 amd kernel: [171585.020125] ata1.00: cmd 35/00:f8:3f:bb:a1/00:03:73:00:00/e0 tag 0 dma 520192 out
-> Aug 15 20:29:15 amd kernel: [171585.020127]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+Hi Tejun,
 
-The controller's reporting errors on the SATA link. I would still tend 
-to suspect some kind of hardware issue - maybe that port connector is 
-bad on the card or something? I would be surprised if a driver fault 
-could cause this to be reported spuriously.
+On 08/25/2010 01:59 AM +0900, Tejun Heo wrote:
+> On 08/24/2010 12:24 PM, Kiyoshi Ueda wrote:
+>> Anyway, only reporting errors for REQ_FLUSH to upper layer without
+>> such a solution would make dm-multipath almost unusable in real world,
+>> although it's better than implicit data loss.
+> 
+> I see.
+> 
+>>> Maybe just turn off barrier support in mpath for now?
+>> 
+>> If it's possible, it could be a workaround for a short term.
+>> But how can you do that?
+>>
+>> I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
+>> Underlying devices of a mpath device may have write-back cache and
+>> it may be enabled.
+>> So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
+>> becomes a device which has write-back cache but doesn't support flush.
+>> Then, upper layer can do nothing to ensure cache flush?
+> 
+> Yeah, I was basically suggesting to forget about cache flush w/ mpath
+> until it can be fixed.  You're saying that if mpath just passes
+> REQ_FLUSH upwards without retrying, it will be almost unuseable,
+> right?
+
+Right.
+If the error is safe/needed to retry using other paths, mpath should
+retry even if REQ_FLUSH.  Otherwise, only one path failure may result
+in system down.
+Just passing any REQ_FLUSH error upwards regardless the error type
+will make such situations, and users will feel the behavior as
+unstable/unusable.
+
+
+> I'm not sure how to proceed here.  How much work would
+> discerning between transport and IO errors take?  If it can't be done
+> quickly enough the retry logic can be kept around to keep the old
+> behavior but that already was a broken behavior, so...  :-(
+
+I'm not sure how long will it take.
+Anyway, as you said, the flush error handling of dm-mpath is already
+broken if data loss really happens on any storage used by dm-mpath.
+Although it's a serious issue and quick fix is required, I think
+you may leave the old behavior in your patch-set, since it's
+a separate issue.
+
+Thanks,
+Kiyoshi Ueda
