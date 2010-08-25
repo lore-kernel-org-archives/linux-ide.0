@@ -1,43 +1,53 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Wed, 25 Aug 2010 00:14:21 +0100
-Message-ID: <20100825001421.67eb8aad@lxorguk.ukuu.org.uk>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-	<20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org>
-	<20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org>
-	<20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org>
-	<20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org>
-	<20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com>
-	<4C72660A.7070009@kernel.org> <4C73FD52.7000305@vlnb.net>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: promise sataII 150 TX4 issue
+Date: Tue, 24 Aug 2010 22:24:55 -0600
+Message-ID: <4C749B17.7070507@gmail.com>
+References: <i4f6jk$969$1@dough.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C73FD52.7000305@vlnb.net>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, tytso@mit.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Tejun Heo <tj@kernel.org>, jack@suse.cz, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45389 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751684Ab0HYEY6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Aug 2010 00:24:58 -0400
+Received: by iwn5 with SMTP id 5so234692iwn.19
+        for <linux-ide@vger.kernel.org>; Tue, 24 Aug 2010 21:24:58 -0700 (PDT)
+In-Reply-To: <i4f6jk$969$1@dough.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: kenneth johansson <ken@kenjo.org>
+Cc: linux-ide@vger.kernel.org
 
-> In SCSI there are conditions when a command, including FLUSH 
-> (SYNC_CACHE), failed which don't imply lost data. For them the caller 
-> expected to retry the failed command. Most common cases are Unit 
-> Attentions and TASK QUEUE FULL status.
+On 08/17/2010 05:39 PM, kenneth johansson wrote:
+> 00:0d.0 Mass storage controller: Promise Technology, Inc. PDC20518/
+> PDC40518 (SATAII 150 TX4) (rev 02)
+>
+> I have a raid5 with 3 disks in and have started so see some weired
+> problems.First I thought it was the disk since it was always the same but
+> after changing the disk I now have the same problems but another disk so
+> I'm starting to suspect a driver issue.
+>
+> The only disk I have in the system is connected to this pci card and the
+> problem is always with the disk named sda regardless if it is connected
+> to the first sata port or the second and first is empty.
+> I have switch power cables and sata cables around but problem is not
+> moving from sda.
+>
+> problem seen on kernel version vmlinuz-2.6.35,vmlinuz-2.6.33.3. was
+> running vmlinuz-2.6.28.7 for about a year before that without any problem.
+>
+> Now it took about two month before sda got kicked out of the raid on
+> 2.6.33.3 but 2.6.35 have not lasted more than a few days.
+>
+> -------------------------------------------
+> Aug 15 20:27:22 amd kernel: [171585.020040] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x180000 action 0x6 frozen
+> Aug 15 20:29:15 amd kernel: [171585.020080] ata1: SError: { 10B8B Dispar }
+> Aug 15 20:29:15 amd kernel: [171585.020100] ata1.00: failed command: WRITE DMA EXT
+> Aug 15 20:29:15 amd kernel: [171585.020125] ata1.00: cmd 35/00:f8:3f:bb:a1/00:03:73:00:00/e0 tag 0 dma 520192 out
+> Aug 15 20:29:15 amd kernel: [171585.020127]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
 
-ATA expects the command to be retried as well because a failed flush
-indicates the specific sector is lost (unless the host still has a copy
-of course - which is *very* likely although we don't use it) but the rest
-of the flush transaction can be retried to continue to flush sectors
-beyond the failed one.
-
-Alan
+The controller's reporting errors on the SATA link. I would still tend 
+to suspect some kind of hardware issue - maybe that port connector is 
+bad on the card or something? I would be surprised if a driver fault 
+could cause this to be reported spuriously.
