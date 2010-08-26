@@ -1,61 +1,68 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
 Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Thu, 26 Aug 2010 20:24:35 +0200
-Message-ID: <201008262024.35551.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008241811.22991.stephan.diestelhorst@amd.com> <201008261815.34574.stephan.diestelhorst@amd.com>
+Date: Fri, 27 Aug 2010 01:09:36 +0200
+Message-ID: <201008270109.36687.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C7376BE.5040006@gmail.com> <201008242239.43249.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:48574 "EHLO ogre.sisk.pl"
+Received: from ogre.sisk.pl ([217.79.144.158]:49152 "EHLO ogre.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752774Ab0HZS0R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Aug 2010 14:26:17 -0400
-In-Reply-To: <201008261815.34574.stephan.diestelhorst@amd.com>
+	id S1752791Ab0HZXLr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Aug 2010 19:11:47 -0400
+In-Reply-To: <201008242239.43249.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Cc: Tejun Heo <htejun@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-On Thursday, August 26, 2010, Stephan Diestelhorst wrote:
-> On Tuesday 24 August 2010 18:11:22 Stephan Diestelhorst wrote:
-> > On Tuesday 24 August 2010 18:07:23 Stephan Diestelhorst wrote:
-> > > On Monday 23 August 2010 14:03:40 Tejun Heo wrote:
-> > > > On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
-> > > > > It says "max_performance", I have not touched anyhting. So it has been
-> > > > > like that all the time. Would this explain why your patch did not show
-> > > > > the debug printout?
-> > > > 
-> > > > Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
-> > > > be any debug messages but at the same time the posted patch should
-> > > > have had the same effect as Rafael's patch as IPM path isn't traveled
-> > > > at all.  Can you please check the followings?
-> > > > 
-> [...]
-> > > > * Rafael's patch actually fixes the problem.  If you haven't been
-> > > >   using IPM at all, Rafael's patch and mine should behave exactly the
-> > > >   same (ie. no IPM operation at all during suspend/resume).  It could
-> > > >   be that you're seeing a different issue.
+On Tuesday, August 24, 2010, Rafael J. Wysocki wrote:
+> On Tuesday, August 24, 2010, Tejun Heo wrote:
+> > On 08/23/2010 08:58 PM, Rafael J. Wysocki wrote:
+> > > On Monday, August 23, 2010, Tejun Heo wrote:
+> > >> Hello, sorry about the delay.
+> > >>
+> > >> On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
+> > >>> It says "max_performance", I have not touched anyhting. So it has been
+> > >>> like that all the time. Would this explain why your patch did not show
+> > >>> the debug printout?
+> > >>
+> > >> Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
+> > >> be any debug messages but at the same time the posted patch should
+> > >> have had the same effect as Rafael's patch as IPM path isn't traveled
+> > >> at all.  Can you please check the followings?
+> > >>
+> > >> * You're actually running the correct patched kernel and modules.  It
+> > >>   probably is a good idea to add a printk message.  ie. Apply the
+> > >>   patch and add a printk() in ata_host_request_pm() in libata-core.c
+> > >>   and make sure the debug messages appears.
+> > >>
+> > >> * Rafael's patch actually fixes the problem.  If you haven't been
+> > >>   using IPM at all, Rafael's patch and mine should behave exactly the
+> > >>   same (ie. no IPM operation at all during suspend/resume).  It could
+> > >>   be that you're seeing a different issue.
+> > >>
+> > >> Rafael, can you please test my patch and see how your case behaves?
 > > > 
-> > > That next on my list...
+> > > This one: http://lkml.org/lkml/2010/8/5/328 ?
+> > 
+> > Yeap, that one.  I can prep a test git branch if necessary.
 > 
-> Just did the following: Rebased Rafaels patch to 2.6.35 and tried it
-> again (with added prints to make sure I am running the right one) and
-> did >10 suspend to ram / resume cycles under I/O write load. All of
-> them worked fine (for comparison: your patch resulted in RO HDD at
-> first attempt).
-> 
-> (I had some extra prints around the suspend functions changed in
->  Rafael's patch, tried with and without, no change--works flawlessly.)
-> 
-> What do you make of this?
+> No need to, but it's going to take a few days to verify on my box.
 
-I think my patch actually does more than the Tejun's one.  I need to have a
-deeper look at them both.
+Well, no luck.  I was able to reproduce the issue on my box with this patch
+applied on top of 2.6.32-rc2.
 
-I'm still testing the Tejun's patch on my system where I was able to reproduce
-the problem, but so far it's been working.
+Which probably means that the link power management is not really involved
+here and seems to turn up this statement:
+
+rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
+
+in ata_host_suspend() as the culprit.
+
+Does it make sense?
 
 Thanks,
 Rafael
