@@ -1,213 +1,180 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: possible esata regression in 2.6.35
-Date: Fri, 27 Aug 2010 15:56:04 -0700
-Message-ID: <AANLkTim9daA5eoQDbtJSnMuoBOEkDV4Y_Z3GbcDxL7Rk@mail.gmail.com>
-References: <4C702070.5020809@jungers.net>
-	<4C71808B.7070704@garzik.org>
-	<4C718115.8070103@garzik.org>
-	<AANLkTi=fQsHVpNu2TZeDNdcofoorFFfsASU=XDqUB9b4@mail.gmail.com>
-	<AANLkTi=deJbndavPJmFzEoy6kZQX8LdoAdE+QQN5if0=@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
+Date: Sat, 28 Aug 2010 01:35:38 +0200
+Message-ID: <201008280135.39005.rjw@sisk.pl>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008261815.34574.stephan.diestelhorst@amd.com> <201008262024.35551.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:45470 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241Ab0H0W4J convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Aug 2010 18:56:09 -0400
-In-Reply-To: <AANLkTi=deJbndavPJmFzEoy6kZQX8LdoAdE+QQN5if0=@mail.gmail.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:52072 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751893Ab0H0Xhs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Aug 2010 19:37:48 -0400
+In-Reply-To: <201008262024.35551.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, kernel@teksavvy.com
-Cc: Nicolas Jungers <nicolas@jungers.net>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Cc: Tejun Heo <htejun@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-I found the problem: in ata_sff_pio_stack:
+On Thursday, August 26, 2010, Rafael J. Wysocki wrote:
+> On Thursday, August 26, 2010, Stephan Diestelhorst wrote:
+> > On Tuesday 24 August 2010 18:11:22 Stephan Diestelhorst wrote:
+> > > On Tuesday 24 August 2010 18:07:23 Stephan Diestelhorst wrote:
+> > > > On Monday 23 August 2010 14:03:40 Tejun Heo wrote:
+> > > > > On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
+> > > > > > It says "max_performance", I have not touched anyhting. So it has been
+> > > > > > like that all the time. Would this explain why your patch did not show
+> > > > > > the debug printout?
+> > > > > 
+> > > > > Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
+> > > > > be any debug messages but at the same time the posted patch should
+> > > > > have had the same effect as Rafael's patch as IPM path isn't traveled
+> > > > > at all.  Can you please check the followings?
+> > > > > 
+> > [...]
+> > > > > * Rafael's patch actually fixes the problem.  If you haven't been
+> > > > >   using IPM at all, Rafael's patch and mine should behave exactly the
+> > > > >   same (ie. no IPM operation at all during suspend/resume).  It could
+> > > > >   be that you're seeing a different issue.
+> > > > 
+> > > > That next on my list...
+> > 
+> > Just did the following: Rebased Rafaels patch to 2.6.35 and tried it
+> > again (with added prints to make sure I am running the right one) and
+> > did >10 suspend to ram / resume cycles under I/O write load. All of
+> > them worked fine (for comparison: your patch resulted in RO HDD at
+> > first attempt).
+> > 
+> > (I had some extra prints around the suspend functions changed in
+> >  Rafael's patch, tried with and without, no change--works flawlessly.)
+> > 
+> > What do you make of this?
+> 
+> I think my patch actually does more than the Tejun's one.  I need to have a
+> deeper look at them both.
+> 
+> I'm still testing the Tejun's patch on my system where I was able to reproduce
+> the problem, but so far it's been working.
 
-struct ata_queued_cmd *qc =3D ap->port_task_data;
+I reproduced the problem with the Tejun's patch applied, so I'm now quite
+sure the problem is related to the suspend of controller ports (which is done
+by scheduling SCSI error handling on the controller).
 
-has been replaced by:
+Anyway, below is a new version of my patch that plays a bit nicer with
+the resume code.  Can you please check if it still fixes the problem for you?
 
-/* qc can be NULL if timeout occurred */
-qc =3D ata_qc_from_tag(ap, ap->link.active_tag);
-if (!qc)
-	return;
+Thanks,
+Rafael
 
-That does not work in case of port multipler, because the link to look
-at is not ap->link. ap->link.active_tag is ATA_POISON.
+---
+From: Rafael J. Wysocki <rjw@sisk.pl>
+Subject: SATA / AHCI: Do not play with the link PM during suspend to RAM (v2)
 
-I will submit a patch where I re-introduce port_task_data, this time
-containing the link to to look at.
+My Acer Ferrari One occasionally loses communication with the HDD
+(which in fact is an Intel SSD) during suspend to RAM.  The symptom
+is that the IDENTIFY command times out during suspend and the device
+is dropped by the kernel, so it is not available during resume and
+the system is unuseable as a result.  The failure is not readily
+reproducible, although it happens once every several suspends and
+it always happens after the disk has been shut down by the SCSI
+layer's suspend routine.
 
-Gwendal.
+I was able to trace this issue down to the scheduling of error
+handling for all of the controller's ports carried out by
+ata_host_suspend(), which indicates quirky hardware.  However, the
+AHCI driver, which is used on the affected box, doesn't really need
+to do anything with the controller's ports during suspend to RAM,
+because the controller is going to be put into D3 immediately by
+ata_pci_device_do_suspend() and it will undergo full reset during
+the subsequent resume anyway.  For this reason, make the AHCI driver
+avoid calling ata_host_suspend() during suspend to RAM which works
+around the problem and makes sense as a general optimization.
 
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ drivers/ata/ahci.c        |   11 ++++++++++-
+ drivers/ata/libata-core.c |   20 ++++++++++++++++++++
+ include/linux/libata.h    |    1 +
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-
-On Fri, Aug 27, 2010 at 12:29 PM, Gwendal Grignou <gwendal@google.com> =
-wrote:
-> I include the trace. You need windows and a lecroy satasuite to look
-> at the trace.
->
-> Looking at extended traces, the identify never move in HSM:
->
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613529] ata_sff_flush_pio_t=
-ask: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613561] ata_sff_exec_comman=
-d:
-> ata13: cmd 0xE4
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613577] ata_sff_hsm_move:
-> ata13: protocol 1 task_state 3 (dev_stat 0x50)
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613580] ata_sff_hsm_move:
-> ata13: dev 0 command complete, drv_stat 0x50
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613605] ata_sff_flush_pio_t=
-ask: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613637] ata_sff_exec_comman=
-d:
-> ata13: cmd 0xE4
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613654] ata_sff_hsm_move:
-> ata13: protocol 1 task_state 3 (dev_stat 0x50)
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613656] ata_sff_hsm_move:
-> ata13: dev 0 command complete, drv_stat 0x50
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613681] ata_sff_flush_pio_t=
-ask: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613688]
-> ata_eh_revalidate_and_attach: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613691]
-> ata_eh_revalidate_and_attach: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613693]
-> ata_eh_revalidate_and_attach: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613694]
-> ata_eh_revalidate_and_attach: ENTER
-> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613725] ata_sff_exec_comman=
-d:
-> ata13: cmd 0xEC
-> ...
-> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613048] __ata_port_freeze:
-> ata13 port frozen
-> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613058] ata13.03: qc timeou=
-t (cmd 0xec)
-> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613062] ata13.03: failed to
-> IDENTIFY (I/O error, err_mask=3D0x4)
->
->
-> On Fri, Aug 27, 2010 at 1:19 AM, Gwendal Grignou <gwendal@google.com>=
- wrote:
->> I can reproduce the problem on uptsream-linux using a PC with Marvel=
-l
->> 7042 controller and Sil3726 PMP. Without the SIl3726, it works fine.
->>
->> What I can see on the SATA analyzer [I will send clean trace tomorro=
-w]
->> is the disk send the DATA FIS back to the PMP, but the PMP does not
->> manage to have the data accepted by the host.
->>
->> Non data commands work fine.
->>
->> In dmesg:
->> [10058.404047] ata29: SATA link up 3.0 Gbps (SStatus 123 SControl 30=
-0)
->> [10058.404742] ata29.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6
->> ports, feat 0x1/0x9
->> [10058.405250] ata29.00: hard resetting link
->> [10058.809151] ata29.00: link resume succeeded after 1 retries
->> [10058.911613] ata29.01: hard resetting link
->> [10059.217572] ata29.02: hard resetting link
->> [10059.523572] ata29.03: hard resetting link
->> [10059.829505] ata29.04: hard resetting link
->> [10060.134572] ata29.05: hard resetting link
->> [10065.440079] ata29.03: qc timeout (cmd 0xec)
->> [10065.440085] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
->> [10065.440092] ata29.15: hard resetting link
->> [10065.947049] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl=
- 300)
->> [10065.947737] ata29.00: hard resetting link
->> [10066.352106] ata29.00: link resume succeeded after 1 retries
->> [10066.454616] ata29.01: hard resetting link
->> [10066.760591] ata29.02: hard resetting link
->> [10067.066570] ata29.03: hard resetting link
->> [10067.372505] ata29.05: hard resetting link
->> [10077.677071] ata29.03: qc timeout (cmd 0xec)
->> [10077.677076] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
->> [10077.677081] ata29.15: hard resetting link
->> [10078.184073] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl=
- 300)
->> [10078.184783] ata29.00: hard resetting link
->> [10078.589185] ata29.00: link resume succeeded after 1 retries
->> [10078.691593] ata29.01: hard resetting link
->> [10078.997592] ata29.02: hard resetting link
->> [10079.303571] ata29.03: hard resetting link
->> [10079.609505] ata29.04: hard resetting link
->> [10079.914572] ata29.05: hard resetting link
->> [10110.220078] ata29.03: qc timeout (cmd 0xec)
->> [10110.220083] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0=
-x4)
->> [10110.220087] ata29.03: failed to recover link after 3 tries, disab=
-ling
->> [10110.220094] ata29.15: hard resetting link
->> [10110.727044] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl=
- 300)
->> [10111.033375] ata29.00: hard resetting link
->> [10111.338571] ata29.01: hard resetting link
->> [10111.644591] ata29.02: hard resetting link
->> [10111.950594] ata29.05: hard resetting link
->> [10112.256643] ata29: EH complete
->>
->>
->> Gwendal.
->>
->>
->>
->>
->> On Sun, Aug 22, 2010 at 12:57 PM, Jeff Garzik <jeff@garzik.org> wrot=
-e:
->>> On 08/22/2010 03:54 PM, Jeff Garzik wrote:
->>>>
->>>> On 08/21/2010 02:52 PM, Nicolas Jungers wrote:
->>>>>
->>>>> My arm box doesn't succeed to use my esata port multiplier (addon=
-ics
->>>>> sil3726 based). It was working well with 2.6.34.1 and 2.6.34.4 bu=
-t not
->>>>> with both 2.6.35.2 and 2.6.35.3. I haven't test other kernels.
->>>>>
->>>>> The kernels are from http://sheeva.with-linux.com/sheeva/ with fo=
-r
->>>>> example the following config
->>>>> http://sheeva.with-linux.com/sheeva/2.6.35.3/sheeva-2.6.35.3.conf=
-ig
->>>>>
->>>>> The symptoms are in the console a loop on the esata links. Here i=
-s the
->>>>> start of it:
->>>>>
->>>>> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xe fro=
-zen
->>>>> ata2: edma_err_cause=3D00000010 pp_flags=3D00000000, dev connect
->>>>> ata2: SError: { PHYRdyChg DevExch }
->>>>> ata2: hard resetting link
->>>>> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
->>>>> ata2.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x=
-1/0x9
->>>>
->>>> Can you post or link to the entire dmesg?
->>>>
->>>> Notably, we need to see the probe messages to determine what SATA =
-chip
->>>> you are using... From the edma_err_cause config I'd guess sata_mv,=
- but
->>>> more info would be useful.
->>>
->>> Nevermind, I see the reply (it got auto-sorted into the wrong folde=
-r
->>> locally).
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-ide=
-" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.htm=
-l
->>>
->>
->
+Index: linux-2.6/drivers/ata/ahci.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/ahci.c
++++ linux-2.6/drivers/ata/ahci.c
+@@ -595,6 +595,7 @@ static int ahci_pci_device_suspend(struc
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
+ 	u32 ctl;
++	int rc = 0;
+ 
+ 	if (mesg.event & PM_EVENT_SUSPEND &&
+ 	    hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+@@ -614,7 +615,15 @@ static int ahci_pci_device_suspend(struc
+ 		readl(mmio + HOST_CTL); /* flush */
+ 	}
+ 
+-	return ata_pci_device_suspend(pdev, mesg);
++	if (mesg.event == PM_EVENT_SUSPEND)
++		ata_fake_suspend(host);
++	else
++		rc = ata_host_suspend(host, mesg);
++
++	if (!rc)
++		ata_pci_device_do_suspend(pdev, mesg);
++
++	return rc;
+ }
+ 
+ static int ahci_pci_device_resume(struct pci_dev *pdev)
+Index: linux-2.6/include/linux/libata.h
+===================================================================
+--- linux-2.6.orig/include/linux/libata.h
++++ linux-2.6/include/linux/libata.h
+@@ -986,6 +986,7 @@ extern bool ata_link_online(struct ata_l
+ extern bool ata_link_offline(struct ata_link *link);
+ #ifdef CONFIG_PM
+ extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
++extern void ata_fake_suspend(struct ata_host *host);
+ extern void ata_host_resume(struct ata_host *host);
+ #endif
+ extern int ata_ratelimit(void);
+Index: linux-2.6/drivers/ata/libata-core.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-core.c
++++ linux-2.6/drivers/ata/libata-core.c
+@@ -5429,6 +5429,25 @@ int ata_host_suspend(struct ata_host *ho
+ 	return rc;
+ }
+ 
++void ata_fake_suspend(struct ata_host *host)
++{
++	unsigned long flags;
++	int i;
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		spin_lock_irqsave(ap->lock, flags);
++
++		ap->pm_mesg = PMSG_SUSPEND;
++		ap->pflags |= ATA_PFLAG_SUSPENDED;
++
++		spin_unlock_irqrestore(ap->lock, flags);
++	}
++
++	host->dev->power.power_state = PMSG_SUSPEND;
++}
++
+ /**
+  *	ata_host_resume - resume host
+  *	@host: host to resume
+@@ -6691,6 +6710,7 @@ EXPORT_SYMBOL_GPL(ata_link_online);
+ EXPORT_SYMBOL_GPL(ata_link_offline);
+ #ifdef CONFIG_PM
+ EXPORT_SYMBOL_GPL(ata_host_suspend);
++EXPORT_SYMBOL_GPL(ata_fake_suspend);
+ EXPORT_SYMBOL_GPL(ata_host_resume);
+ #endif /* CONFIG_PM */
+ EXPORT_SYMBOL_GPL(ata_id_string);
