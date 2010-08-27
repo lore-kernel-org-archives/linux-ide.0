@@ -1,109 +1,120 @@
 From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: ahci port hangs while hard resetting link
-Date: Fri, 27 Aug 2010 01:09:50 -0700
-Message-ID: <AANLkTimN0tg+mBGaU=BHmC1FyVWr8LXhdNC6FzV_7J57@mail.gmail.com>
-References: <201008230010.48355.anssi.hannula@iki.fi>
-	<4C723FF4.1020208@kernel.org>
-	<201008231811.59828.anssi.hannula@iki.fi>
-	<4C73F2E3.6030909@kernel.org>
+Subject: Re: possible esata regression in 2.6.35
+Date: Fri, 27 Aug 2010 01:19:49 -0700
+Message-ID: <AANLkTi=fQsHVpNu2TZeDNdcofoorFFfsASU=XDqUB9b4@mail.gmail.com>
+References: <4C702070.5020809@jungers.net>
+	<4C71808B.7070704@garzik.org>
+	<4C718115.8070103@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:49608 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753304Ab0H0IJy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Aug 2010 04:09:54 -0400
-Received: from hpaq6.eem.corp.google.com (hpaq6.eem.corp.google.com [172.25.149.6])
-	by smtp-out.google.com with ESMTP id o7R89r2o006853
-	for <linux-ide@vger.kernel.org>; Fri, 27 Aug 2010 01:09:53 -0700
-Received: from vws10 (vws10.prod.google.com [10.241.21.138])
-	by hpaq6.eem.corp.google.com with ESMTP id o7R89pMd009616
-	for <linux-ide@vger.kernel.org>; Fri, 27 Aug 2010 01:09:51 -0700
-Received: by vws10 with SMTP id 10so3816458vws.17
-        for <linux-ide@vger.kernel.org>; Fri, 27 Aug 2010 01:09:51 -0700 (PDT)
-In-Reply-To: <4C73F2E3.6030909@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C718115.8070103@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, kernel@teksavvy.com
+Cc: Nicolas Jungers <nicolas@jungers.net>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Anssi Hannula <anssi.hannula@iki.fi>, linux-ide@vger.kernel.org
 
-It is a good fix. We experience a similar issue [a bad drive was
-passing hard reset but would not answer a soft reset]. Without the
-patch the machine would hang. With it, the error is found. This
-problem has been introduced a long time ago, in commit
-2cbb79ebbd4be07041368da5379a64f89f8ad518; it is there in 2.6.33, in
-drivers/ata/ahci.c. I can send you the trivial patch for it if you
-want, for stable kernel.
+I can reproduce the problem on uptsream-linux using a PC with Marvell
+7042 controller and Sil3726 PMP. Without the SIl3726, it works fine.
+
+What I can see on the SATA analyzer [I will send clean trace tomorrow]
+is the disk send the DATA FIS back to the PMP, but the PMP does not
+manage to have the data accepted by the host.
+
+Non data commands work fine.
+
+In dmesg:
+[10058.404047] ata29: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[10058.404742] ata29.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6
+ports, feat 0x1/0x9
+[10058.405250] ata29.00: hard resetting link
+[10058.809151] ata29.00: link resume succeeded after 1 retries
+[10058.911613] ata29.01: hard resetting link
+[10059.217572] ata29.02: hard resetting link
+[10059.523572] ata29.03: hard resetting link
+[10059.829505] ata29.04: hard resetting link
+[10060.134572] ata29.05: hard resetting link
+[10065.440079] ata29.03: qc timeout (cmd 0xec)
+[10065.440085] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+[10065.440092] ata29.15: hard resetting link
+[10065.947049] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl 30=
+0)
+[10065.947737] ata29.00: hard resetting link
+[10066.352106] ata29.00: link resume succeeded after 1 retries
+[10066.454616] ata29.01: hard resetting link
+[10066.760591] ata29.02: hard resetting link
+[10067.066570] ata29.03: hard resetting link
+[10067.372505] ata29.05: hard resetting link
+[10077.677071] ata29.03: qc timeout (cmd 0xec)
+[10077.677076] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+[10077.677081] ata29.15: hard resetting link
+[10078.184073] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl 30=
+0)
+[10078.184783] ata29.00: hard resetting link
+[10078.589185] ata29.00: link resume succeeded after 1 retries
+[10078.691593] ata29.01: hard resetting link
+[10078.997592] ata29.02: hard resetting link
+[10079.303571] ata29.03: hard resetting link
+[10079.609505] ata29.04: hard resetting link
+[10079.914572] ata29.05: hard resetting link
+[10110.220078] ata29.03: qc timeout (cmd 0xec)
+[10110.220083] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D0x4)
+[10110.220087] ata29.03: failed to recover link after 3 tries, disablin=
+g
+[10110.220094] ata29.15: hard resetting link
+[10110.727044] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SControl 30=
+0)
+[10111.033375] ata29.00: hard resetting link
+[10111.338571] ata29.01: hard resetting link
+[10111.644591] ata29.02: hard resetting link
+[10111.950594] ata29.05: hard resetting link
+[10112.256643] ata29: EH complete
+
 
 Gwendal.
 
-On Tue, Aug 24, 2010 at 9:27 AM, Tejun Heo <tj@kernel.org> wrote:T
-> On 08/23/2010 05:11 PM, Anssi Hannula wrote:
->> On Monday 23 August 2010 12:31:32 Tejun Heo wrote:
->>> Hello,
+
+
+
+On Sun, Aug 22, 2010 at 12:57 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 08/22/2010 03:54 PM, Jeff Garzik wrote:
+>>
+>> On 08/21/2010 02:52 PM, Nicolas Jungers wrote:
 >>>
->>> On 08/22/2010 11:10 PM, Anssi Hannula wrote:
->>>> 22:52:18 : ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050002 acti=
-on 0xe
->>>> frozen
->>>> 22:52:18 : ata6: irq_stat 0x00400040, connection status changed
->>>> 22:52:18 : ata6: SError: { RecovComm PHYRdyChg CommWake DevExch }
->>>> 22:52:18 : ata6: hard resetting link
->>>> 22:52:28 : ata6: softreset failed (device not ready)
->>>> 22:52:28 : ata6: hard resetting link
->>>> 22:52:38 : ata6: softreset failed (device not ready)
->>>> 22:52:38 : ata6: hard resetting link
->>>> 22:52:49 : ata6: link is slow to respond, please be patient (ready=
-=3D0)
->>>> 22:53:13 : ata6: softreset failed (device not ready)
->>>> 22:53:13 : ata6: limiting SATA link speed to 1.5 Gbps
->>>> 22:53:13 : ata6: hard resetting link
->>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->>>> I disconnect the drive for a few moments, but nothing is output by
->>>> kernel. I reconnect it again, but again, nothing is output by the
->>>> kernel. I run: echo "- - -" >
->>>> /sys/devices/pci0000:00/0000:00:1f.2/host5/scsi_host/host5/scan
->>>> However, it appeared stuck and still no messages in the kernel log=
-, so
->>>> I disconnected the device again. Still nothing is output, and the
->>>> following messages started to be output, indicating that the proce=
-ss
->>>
->>>> had become stuck:
->>> Looks like EH got stuck somehow. =A0Maybe the timeout calculation i=
+>>> My arm box doesn't succeed to use my esata port multiplier (addonic=
 s
->>> wrong? =A0Can you please trigger sysrq-t while the system is stuck =
-and
->>> post the result?
+>>> sil3726 based). It was working well with 2.6.34.1 and 2.6.34.4 but =
+not
+>>> with both 2.6.35.2 and 2.6.35.3. I haven't test other kernels.
+>>>
+>>> The kernels are from http://sheeva.with-linux.com/sheeva/ with for
+>>> example the following config
+>>> http://sheeva.with-linux.com/sheeva/2.6.35.3/sheeva-2.6.35.3.config
+>>>
+>>> The symptoms are in the console a loop on the esata links. Here is =
+the
+>>> start of it:
+>>>
+>>> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xe froze=
+n
+>>> ata2: edma_err_cause=3D00000010 pp_flags=3D00000000, dev connect
+>>> ata2: SError: { PHYRdyChg DevExch }
+>>> ata2: hard resetting link
+>>> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
+>>> ata2.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/=
+0x9
 >>
->> Ok, here's the output. And the system is not stuck, just the bash pr=
-ocess that
->> is writing to 'scan' file.
+>> Can you post or link to the entire dmesg?
 >>
->> In this occasion, the hard reset had been stuck for some 16 hours, a=
-nd it is
->> on ata5 (scsi4):
+>> Notably, we need to see the probe messages to determine what SATA ch=
+ip
+>> you are using... From the edma_err_cause config I'd guess sata_mv, b=
+ut
+>> more info would be useful.
 >
-> Does the following patch fix the problem?
->
-> Thanks.
->
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 666850d..68dc678 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1326,7 +1326,7 @@ int ahci_do_softreset(struct ata_link *link, un=
-signed int *class,
-> =A0 =A0 =A0 =A0/* issue the first D2H Register FIS */
-> =A0 =A0 =A0 =A0msecs =3D 0;
-> =A0 =A0 =A0 =A0now =3D jiffies;
-> - =A0 =A0 =A0 if (time_after(now, deadline))
-> + =A0 =A0 =A0 if (time_after(deadline, now))
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0msecs =3D jiffies_to_msecs(deadline - =
-now);
->
-> =A0 =A0 =A0 =A0tf.ctl |=3D ATA_SRST;
+> Nevermind, I see the reply (it got auto-sorted into the wrong folder
+> locally).
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-ide" =
