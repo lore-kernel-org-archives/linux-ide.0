@@ -1,180 +1,198 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend to RAM
-Date: Sat, 28 Aug 2010 01:35:38 +0200
-Message-ID: <201008280135.39005.rjw@sisk.pl>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201008261815.34574.stephan.diestelhorst@amd.com> <201008262024.35551.rjw@sisk.pl>
+From: Siddhartha Jain <siddhartha@siddharthajain.net>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during
+ suspend to RAM
+Date: Sat, 28 Aug 2010 13:28:10 -0700
+Message-ID: <1283027290.2721.37.camel@myfedorahat>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52072 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751893Ab0H0Xhs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Aug 2010 19:37:48 -0400
-In-Reply-To: <201008262024.35551.rjw@sisk.pl>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33716 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996Ab0H1U2O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Aug 2010 16:28:14 -0400
+Received: by pzk9 with SMTP id 9so1543631pzk.19
+        for <linux-ide@vger.kernel.org>; Sat, 28 Aug 2010 13:28:13 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Cc: Tejun Heo <htejun@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: linux-ide@vger.kernel.org
 
-On Thursday, August 26, 2010, Rafael J. Wysocki wrote:
-> On Thursday, August 26, 2010, Stephan Diestelhorst wrote:
-> > On Tuesday 24 August 2010 18:11:22 Stephan Diestelhorst wrote:
-> > > On Tuesday 24 August 2010 18:07:23 Stephan Diestelhorst wrote:
-> > > > On Monday 23 August 2010 14:03:40 Tejun Heo wrote:
-> > > > > On 08/19/2010 06:23 PM, Stephan Diestelhorst wrote:
-> > > > > > It says "max_performance", I have not touched anyhting. So it has been
-> > > > > > like that all the time. Would this explain why your patch did not show
-> > > > > > the debug printout?
-> > > > > 
-> > > > > Hmm... okay.  Yeah, if you haven't been using IPM at all, there won't
-> > > > > be any debug messages but at the same time the posted patch should
-> > > > > have had the same effect as Rafael's patch as IPM path isn't traveled
-> > > > > at all.  Can you please check the followings?
-> > > > > 
-> > [...]
-> > > > > * Rafael's patch actually fixes the problem.  If you haven't been
-> > > > >   using IPM at all, Rafael's patch and mine should behave exactly the
-> > > > >   same (ie. no IPM operation at all during suspend/resume).  It could
-> > > > >   be that you're seeing a different issue.
-> > > > 
-> > > > That next on my list...
-> > 
-> > Just did the following: Rebased Rafaels patch to 2.6.35 and tried it
-> > again (with added prints to make sure I am running the right one) and
-> > did >10 suspend to ram / resume cycles under I/O write load. All of
-> > them worked fine (for comparison: your patch resulted in RO HDD at
-> > first attempt).
-> > 
-> > (I had some extra prints around the suspend functions changed in
-> >  Rafael's patch, tried with and without, no change--works flawlessly.)
-> > 
-> > What do you make of this?
-> 
-> I think my patch actually does more than the Tejun's one.  I need to have a
-> deeper look at them both.
-> 
-> I'm still testing the Tejun's patch on my system where I was able to reproduce
-> the problem, but so far it's been working.
+Hi,
 
-I reproduced the problem with the Tejun's patch applied, so I'm now quite
-sure the problem is related to the suspend of controller ports (which is done
-by scheduling SCSI error handling on the controller).
+I have the same symptom as Stephan and came across this thread while
+googling for more info.
 
-Anyway, below is a new version of my patch that plays a bit nicer with
-the resume code.  Can you please check if it still fixes the problem for you?
+Hardware: Macbook Pro 5,4 (Firmware version 1.7)
+
+OS: Fedora 13 x64 
+Kernel: 2.6.33.8-149.fc13.x86_64 (stock fedora kernel)
+Modifications: Video is on Nvidia proprietary driver and Root and swap
+are encrypted with luks. Kernel boot parameters are:
+
+kernel /vmlinuz-2.6.33.8-149.fc13.x86_64 ro
+root=/dev/mapper/luks-f01b2a77-921b-45c1-8f28-6095ab3a56f1
+rd_LUKS_UUID=luks-f01b2a77-921b-45c1-8f28-6095ab3a56f1
+rd_LUKS_UUID=luks-91e5037b-267c-4572-
+9c99-baaa5ca41600 rd_NO_LVM rd_NO_MD rd_NO_DM LANG=en_US.UTF-8
+SYSFONT=latarcyrheb-sun16 KEYTABLE=us rhgb rdblacklist=nouveau vga=792
+resume=UUID=91e5037b-267c-4572-9c99-baaa5ca41600 
+
+The system seems to go to suspend alright but on resume, the hdd does
+not seem to wake-up. After resume, in X, the login screen background
+shows up but the login prompt box does not. If I am logged in before
+suspend then after resume, every command I run including reboot/shutdown
+etc returns Input/Output error. After resume, if I try to ssh in, I get
+the ssh prompt but authentication does not succeed and I get password
+failures. 
+
+Bit more HW/SW info:
+
+1. From lspci -vv
+00:0b.0 IDE interface: nVidia Corporation MCP79 SATA Controller (rev b1)
+(prog-if 85 [Master SecO PriO])
+	Subsystem: nVidia Corporation Device cb79
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
+Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort-
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0 (750ns min, 250ns max)
+	Interrupt: pin A routed to IRQ 27
+	Region 0: I/O ports at 21d8 [size=8]
+	Region 1: I/O ports at 21ec [size=4]
+	Region 2: I/O ports at 21d0 [size=8]
+	Region 3: I/O ports at 21e8 [size=4]
+	Region 4: I/O ports at 21c0 [size=16]
+	Region 5: Memory at d3584000 (32-bit, non-prefetchable) [size=8K]
+	Capabilities: [44] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [8c] SATA HBA v1.0 InCfgSpace
+	Capabilities: [b0] MSI: Enable+ Count=1/8 Maskable- 64bit+
+		Address: 00000000fee0200c  Data: 4181
+	Kernel driver in use: ahci
+	Kernel modules: ata_generic, pata_acpi
+
+
+2. HDD Info from smartctl
+# smartctl -a /dev/sda
+smartctl 5.39.1 2010-01-28 r3054 [x86_64-redhat-linux-gnu] (local build)
+Copyright (C) 2002-10 by Bruce Allen,
+http://smartmontools.sourceforge.net
+
+=== START OF INFORMATION SECTION ===
+Device Model:     FUJITSU MJA2250BH FFS G1
+Serial Number:    K94DTA22N7C1
+Firmware Version: 00810020
+User Capacity:    250,059,350,016 bytes
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   8
+ATA Standard is:  ATA-8-ACS revision 3f
+Local Time is:    Sat Aug 28 13:09:06 2010 PDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+
+3. ATA related messages from bootup (dmesg | grep ATA)
+ata1: SATA max UDMA/133 irq_stat 0x00400000, PHY RDY changed irq 27
+ata2: SATA max UDMA/133 irq_stat 0x00400000, PHY RDY changed irq 27
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata1.00: ATA-8: FUJITSU MJA2250BH FFS G1, 00810020, max UDMA/100
+ata2.00: ATAPI: HL-DT-ST DVDRW  GS23N, SB03, max UDMA/133
+ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+scsi 0:0:0:0: Direct-Access     ATA      FUJITSU MJA2250B 0081 PQ: 0
+ANSI: 5
+ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+
+
+4. # cat /sys/class/scsi_host/host0/link_power_management_policy 
+max_performance
+
+
+5. Some odd errors at boot-up related to 'ata' (captured by directing
+*.* to a log file in rsyslog)
+Aug 28 11:49:39 myfedorahat kernel: ACPI: SSDT 00000000bfee4000 000A5
+(v01 SataRe  SataPri 00001000 INTL 20061109)
+Aug 28 11:49:39 myfedorahat kernel: ACPI: SSDT 00000000bfee3000 0009F
+(v01 SataRe  SataSec 00001000 INTL 20061109)
+Aug 28 11:49:39 myfedorahat kernel:  #0 [0000000000 - 0000001000]   BIOS
+data page ==> [0000000000 - 0000001000]
+Aug 28 11:49:39 myfedorahat kernel: Kernel command line: ro
+root=/dev/mapper/luks-f01b2a77-921b-45c1-8f28-6095ab3a56f1
+rd_LUKS_UUID=luks-f01b2a77-921b-45c1-8f28-6095ab3a56f1
+rd_LUKS_UUID=luks-91e5037b-26
+7c-4572-9c99-baaa5ca41600 rd_NO_LVM rd_NO_MD rd_NO_DM LANG=en_US.UTF-8
+SYSFONT=latarcyrheb-sun16 KEYTABLE=us rhgb rdblacklist=nouveau vga=792
+resume=UUID=91e5037b-267c-4572-9c99-baaa5ca41600 
+Aug 28 11:49:39 myfedorahat kernel: Memory: 3758324k/5242880k available
+(4289k kernel code, 1336536k absent, 148020k reserved, 7539k data, 756k
+init)
+Aug 28 11:49:39 myfedorahat kernel: ACPI: EC: GPE = 0x3f, I/O:
+command/status = 0x66, data = 0x62
+Aug 28 11:49:39 myfedorahat kernel: libata version 3.00 loaded.
+Aug 28 11:49:39 myfedorahat kernel: ata1: SATA max UDMA/133 irq_stat
+0x00400000, PHY RDY changed irq 27
+Aug 28 11:49:39 myfedorahat kernel: ata2: SATA max UDMA/133 irq_stat
+0x00400000, PHY RDY changed irq 27
+Aug 28 11:49:39 myfedorahat kernel: ata3: DUMMY
+Aug 28 11:49:39 myfedorahat kernel: ata4: DUMMY
+Aug 28 11:49:39 myfedorahat kernel: ata5: DUMMY
+Aug 28 11:49:39 myfedorahat kernel: ata6: DUMMY
+Aug 28 11:49:39 myfedorahat kernel: ata1: SATA link up 1.5 Gbps (SStatus
+113 SControl 300)
+Aug 28 11:49:39 myfedorahat kernel: ata2: SATA link up 1.5 Gbps (SStatus
+113 SControl 300)
+Aug 28 11:49:39 myfedorahat kernel: ata1.00: ATA-8: FUJITSU MJA2250BH
+FFS G1, 00810020, max UDMA/100
+Aug 28 11:49:39 myfedorahat kernel: ata1.00: 488397168 sectors, multi
+16: LBA48 NCQ (depth 31/32)
+Aug 28 11:49:39 myfedorahat kernel: ata1.00: configured for UDMA/100
+Aug 28 11:49:39 myfedorahat kernel: ata1: exception Emask 0x10 SAct 0x0
+SErr 0x5850000 action 0xe frozen
+Aug 28 11:49:39 myfedorahat kernel: ata1: irq_stat 0x00000040,
+connection status changed
+Aug 28 11:49:39 myfedorahat kernel: ata1: SError: { PHYRdyChg CommWake
+LinkSeq TrStaTrns DevExch }
+Aug 28 11:49:39 myfedorahat kernel: ata2.00: ATAPI: HL-DT-ST DVDRW
+GS23N, SB03, max UDMA/133
+Aug 28 11:49:39 myfedorahat kernel: ata1: hard resetting link
+Aug 28 11:49:39 myfedorahat kernel: ata2.00: configured for UDMA/133
+Aug 28 11:49:39 myfedorahat kernel: ata2: exception Emask 0x10 SAct 0x0
+SErr 0x5950000 action 0xe frozen
+Aug 28 11:49:39 myfedorahat kernel: ata2: irq_stat 0x00400040,
+connection status changed
+Aug 28 11:49:39 myfedorahat kernel: ata2: SError: { PHYRdyChg CommWake
+Dispar LinkSeq TrStaTrns DevExch }
+Aug 28 11:49:39 myfedorahat kernel: ata2: hard resetting link
+Aug 28 11:49:39 myfedorahat kernel: ata1: SATA link up 1.5 Gbps (SStatus
+113 SControl 300)
+Aug 28 11:49:39 myfedorahat kernel: ata1.00: configured for UDMA/100
+Aug 28 11:49:39 myfedorahat kernel: ata1: EH complete
+Aug 28 11:49:39 myfedorahat kernel: ata2: SATA link up 1.5 Gbps (SStatus
+113 SControl 300)
+Aug 28 11:49:39 myfedorahat kernel: ata2.00: configured for UDMA/133
+Aug 28 11:49:39 myfedorahat kernel: ata2: EH complete
+Aug 28 11:49:39 myfedorahat kernel: Write protecting the kernel
+read-only data: 10240k
+Aug 28 11:49:39 myfedorahat kernel: EXT4-fs (dm-0): mounted filesystem
+with ordered data mode
+Aug 28 11:49:39 myfedorahat kernel: EXT4-fs (sda1): mounted filesystem
+with ordered data mode
+
+
+I am going to try pointing rsyslog at a remote syslog server to see if I
+can capture what happens at resume-time but any other pointers to
+debug/troubleshoot this issue will be helpful. I tried booting with
+"pci=nomsi" but that makes the box hang at boot-up. Tried disabling acpi
+and switched to APM but that seems risky because after suspend, APM does
+not seem to have control over CPU and fans. With APM enabled, I did a
+suspend and put the macbook in my bag. Four hours later when I pulled it
+out of the bag, the fan was spinning at highest RPM and the macbook was
+running really hot. With ACPI, at least, all the damage is only to
+filesystem when I have to force reboot on resume :)
 
 Thanks,
-Rafael
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: SATA / AHCI: Do not play with the link PM during suspend to RAM (v2)
+- Siddhartha
 
-My Acer Ferrari One occasionally loses communication with the HDD
-(which in fact is an Intel SSD) during suspend to RAM.  The symptom
-is that the IDENTIFY command times out during suspend and the device
-is dropped by the kernel, so it is not available during resume and
-the system is unuseable as a result.  The failure is not readily
-reproducible, although it happens once every several suspends and
-it always happens after the disk has been shut down by the SCSI
-layer's suspend routine.
-
-I was able to trace this issue down to the scheduling of error
-handling for all of the controller's ports carried out by
-ata_host_suspend(), which indicates quirky hardware.  However, the
-AHCI driver, which is used on the affected box, doesn't really need
-to do anything with the controller's ports during suspend to RAM,
-because the controller is going to be put into D3 immediately by
-ata_pci_device_do_suspend() and it will undergo full reset during
-the subsequent resume anyway.  For this reason, make the AHCI driver
-avoid calling ata_host_suspend() during suspend to RAM which works
-around the problem and makes sense as a general optimization.
-
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- drivers/ata/ahci.c        |   11 ++++++++++-
- drivers/ata/libata-core.c |   20 ++++++++++++++++++++
- include/linux/libata.h    |    1 +
- 3 files changed, 31 insertions(+), 1 deletion(-)
-
-Index: linux-2.6/drivers/ata/ahci.c
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.c
-+++ linux-2.6/drivers/ata/ahci.c
-@@ -595,6 +595,7 @@ static int ahci_pci_device_suspend(struc
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->mmio;
- 	u32 ctl;
-+	int rc = 0;
- 
- 	if (mesg.event & PM_EVENT_SUSPEND &&
- 	    hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
-@@ -614,7 +615,15 @@ static int ahci_pci_device_suspend(struc
- 		readl(mmio + HOST_CTL); /* flush */
- 	}
- 
--	return ata_pci_device_suspend(pdev, mesg);
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		ata_fake_suspend(host);
-+	else
-+		rc = ata_host_suspend(host, mesg);
-+
-+	if (!rc)
-+		ata_pci_device_do_suspend(pdev, mesg);
-+
-+	return rc;
- }
- 
- static int ahci_pci_device_resume(struct pci_dev *pdev)
-Index: linux-2.6/include/linux/libata.h
-===================================================================
---- linux-2.6.orig/include/linux/libata.h
-+++ linux-2.6/include/linux/libata.h
-@@ -986,6 +986,7 @@ extern bool ata_link_online(struct ata_l
- extern bool ata_link_offline(struct ata_link *link);
- #ifdef CONFIG_PM
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
-+extern void ata_fake_suspend(struct ata_host *host);
- extern void ata_host_resume(struct ata_host *host);
- #endif
- extern int ata_ratelimit(void);
-Index: linux-2.6/drivers/ata/libata-core.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-core.c
-+++ linux-2.6/drivers/ata/libata-core.c
-@@ -5429,6 +5429,25 @@ int ata_host_suspend(struct ata_host *ho
- 	return rc;
- }
- 
-+void ata_fake_suspend(struct ata_host *host)
-+{
-+	unsigned long flags;
-+	int i;
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		spin_lock_irqsave(ap->lock, flags);
-+
-+		ap->pm_mesg = PMSG_SUSPEND;
-+		ap->pflags |= ATA_PFLAG_SUSPENDED;
-+
-+		spin_unlock_irqrestore(ap->lock, flags);
-+	}
-+
-+	host->dev->power.power_state = PMSG_SUSPEND;
-+}
-+
- /**
-  *	ata_host_resume - resume host
-  *	@host: host to resume
-@@ -6691,6 +6710,7 @@ EXPORT_SYMBOL_GPL(ata_link_online);
- EXPORT_SYMBOL_GPL(ata_link_offline);
- #ifdef CONFIG_PM
- EXPORT_SYMBOL_GPL(ata_host_suspend);
-+EXPORT_SYMBOL_GPL(ata_fake_suspend);
- EXPORT_SYMBOL_GPL(ata_host_resume);
- #endif /* CONFIG_PM */
- EXPORT_SYMBOL_GPL(ata_id_string);
