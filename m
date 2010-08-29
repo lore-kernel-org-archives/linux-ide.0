@@ -1,244 +1,30 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: possible esata regression in 2.6.35
-Date: Sat, 28 Aug 2010 17:40:03 -0700
-Message-ID: <AANLkTikBQATmDFsdqfc3hVA6QyDfpGfzetzVMJkxg5-Y@mail.gmail.com>
-References: <4C702070.5020809@jungers.net>
-	<4C71808B.7070704@garzik.org>
-	<4C718115.8070103@garzik.org>
-	<AANLkTi=fQsHVpNu2TZeDNdcofoorFFfsASU=XDqUB9b4@mail.gmail.com>
-	<AANLkTi=deJbndavPJmFzEoy6kZQX8LdoAdE+QQN5if0=@mail.gmail.com>
-	<AANLkTim9daA5eoQDbtJSnMuoBOEkDV4Y_Z3GbcDxL7Rk@mail.gmail.com>
+From: amruth pattanada <amruth.vamadev@gmail.com>
+Subject: silicon image 3114 DMA polling
+Date: Sun, 29 Aug 2010 10:44:02 +0530
+Message-ID: <AANLkTikvUF7dk2z6Sd-uD8zXxd-Bm-K9gx2=mSKwq4Fx@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:17388 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498Ab0H2AkR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Aug 2010 20:40:17 -0400
-In-Reply-To: <AANLkTim9daA5eoQDbtJSnMuoBOEkDV4Y_Z3GbcDxL7Rk@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:41319 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860Ab0H2FOE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Aug 2010 01:14:04 -0400
+Received: by iwn5 with SMTP id 5so3860113iwn.19
+        for <linux-ide@vger.kernel.org>; Sat, 28 Aug 2010 22:14:02 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, kernel@teksavvy.com
-Cc: Nicolas Jungers <nicolas@jungers.net>, linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-I submit a patch, but messed up with the --in-reply-to argument. Check
-"libata-sff: Reenable Port Multiplier after libata-sff remodeling."
-thread.
-
-I can now see my drive:
-Aug 27 17:42:36 halab-59 kernel: [  103.631293] ata_sff_exec_command:
-ata5: cmd 0xEC
-Aug 27 17:42:36 halab-59 kernel: [  103.634050] ata_sff_hsm_move:
-ata5: protocol 2 task_state 2 (dev_stat 0x58)
-Aug 27 17:42:36 halab-59 kernel: [  103.634053] ata_pio_sector: data re=
-ad
-Aug 27 17:42:36 halab-59 kernel: [  103.634228] ata_sff_hsm_move:
-ata5: protocol 2 task_state 3 (dev_stat 0x50)
-Aug 27 17:42:36 halab-59 kernel: [  103.634231] ata_sff_hsm_move:
-ata5: dev 0 command complete, drv_stat 0x50
-
-In general BMDMA does not support PMP, it assumes all qc are on ap->hos=
-t.
-sata_mv does it sometimes, I will submit a patch for that, after I
-test the error path through-fully.
-
-Gwendal.
-
-
-On Fri, Aug 27, 2010 at 3:56 PM, Gwendal Grignou <gwendal@google.com> w=
-rote:
-> I found the problem: in ata_sff_pio_stack:
->
-> struct ata_queued_cmd *qc =3D ap->port_task_data;
->
-> has been replaced by:
->
-> /* qc can be NULL if timeout occurred */
-> qc =3D ata_qc_from_tag(ap, ap->link.active_tag);
-> if (!qc)
-> =A0 =A0 =A0 =A0return;
->
-> That does not work in case of port multipler, because the link to loo=
-k
-> at is not ap->link. ap->link.active_tag is ATA_POISON.
->
-> I will submit a patch where I re-introduce port_task_data, this time
-> containing the link to to look at.
->
-> Gwendal.
->
->
->
-> On Fri, Aug 27, 2010 at 12:29 PM, Gwendal Grignou <gwendal@google.com=
-> wrote:
->> I include the trace. You need windows and a lecroy satasuite to look
->> at the trace.
->>
->> Looking at extended traces, the identify never move in HSM:
->>
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613529] ata_sff_flush_pio_=
-task: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613561] ata_sff_exec_comma=
-nd:
->> ata13: cmd 0xE4
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613577] ata_sff_hsm_move:
->> ata13: protocol 1 task_state 3 (dev_stat 0x50)
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613580] ata_sff_hsm_move:
->> ata13: dev 0 command complete, drv_stat 0x50
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613605] ata_sff_flush_pio_=
-task: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613637] ata_sff_exec_comma=
-nd:
->> ata13: cmd 0xE4
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613654] ata_sff_hsm_move:
->> ata13: protocol 1 task_state 3 (dev_stat 0x50)
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613656] ata_sff_hsm_move:
->> ata13: dev 0 command complete, drv_stat 0x50
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613681] ata_sff_flush_pio_=
-task: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613688]
->> ata_eh_revalidate_and_attach: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613691]
->> ata_eh_revalidate_and_attach: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613693]
->> ata_eh_revalidate_and_attach: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613694]
->> ata_eh_revalidate_and_attach: ENTER
->> Aug 27 12:07:53 halab-59 kernel: [ =A0548.613725] ata_sff_exec_comma=
-nd:
->> ata13: cmd 0xEC
->> ...
->> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613048] __ata_port_freeze:
->> ata13 port frozen
->> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613058] ata13.03: qc timeo=
-ut (cmd 0xec)
->> Aug 27 12:08:23 halab-59 kernel: [ =A0578.613062] ata13.03: failed t=
-o
->> IDENTIFY (I/O error, err_mask=3D0x4)
->>
->>
->> On Fri, Aug 27, 2010 at 1:19 AM, Gwendal Grignou <gwendal@google.com=
-> wrote:
->>> I can reproduce the problem on uptsream-linux using a PC with Marve=
-ll
->>> 7042 controller and Sil3726 PMP. Without the SIl3726, it works fine=
-=2E
->>>
->>> What I can see on the SATA analyzer [I will send clean trace tomorr=
-ow]
->>> is the disk send the DATA FIS back to the PMP, but the PMP does not
->>> manage to have the data accepted by the host.
->>>
->>> Non data commands work fine.
->>>
->>> In dmesg:
->>> [10058.404047] ata29: SATA link up 3.0 Gbps (SStatus 123 SControl 3=
-00)
->>> [10058.404742] ata29.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6
->>> ports, feat 0x1/0x9
->>> [10058.405250] ata29.00: hard resetting link
->>> [10058.809151] ata29.00: link resume succeeded after 1 retries
->>> [10058.911613] ata29.01: hard resetting link
->>> [10059.217572] ata29.02: hard resetting link
->>> [10059.523572] ata29.03: hard resetting link
->>> [10059.829505] ata29.04: hard resetting link
->>> [10060.134572] ata29.05: hard resetting link
->>> [10065.440079] ata29.03: qc timeout (cmd 0xec)
->>> [10065.440085] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
->>> [10065.440092] ata29.15: hard resetting link
->>> [10065.947049] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SContro=
-l 300)
->>> [10065.947737] ata29.00: hard resetting link
->>> [10066.352106] ata29.00: link resume succeeded after 1 retries
->>> [10066.454616] ata29.01: hard resetting link
->>> [10066.760591] ata29.02: hard resetting link
->>> [10067.066570] ata29.03: hard resetting link
->>> [10067.372505] ata29.05: hard resetting link
->>> [10077.677071] ata29.03: qc timeout (cmd 0xec)
->>> [10077.677076] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
->>> [10077.677081] ata29.15: hard resetting link
->>> [10078.184073] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SContro=
-l 300)
->>> [10078.184783] ata29.00: hard resetting link
->>> [10078.589185] ata29.00: link resume succeeded after 1 retries
->>> [10078.691593] ata29.01: hard resetting link
->>> [10078.997592] ata29.02: hard resetting link
->>> [10079.303571] ata29.03: hard resetting link
->>> [10079.609505] ata29.04: hard resetting link
->>> [10079.914572] ata29.05: hard resetting link
->>> [10110.220078] ata29.03: qc timeout (cmd 0xec)
->>> [10110.220083] ata29.03: failed to IDENTIFY (I/O error, err_mask=3D=
-0x4)
->>> [10110.220087] ata29.03: failed to recover link after 3 tries, disa=
-bling
->>> [10110.220094] ata29.15: hard resetting link
->>> [10110.727044] ata29.15: SATA link up 3.0 Gbps (SStatus 123 SContro=
-l 300)
->>> [10111.033375] ata29.00: hard resetting link
->>> [10111.338571] ata29.01: hard resetting link
->>> [10111.644591] ata29.02: hard resetting link
->>> [10111.950594] ata29.05: hard resetting link
->>> [10112.256643] ata29: EH complete
->>>
->>>
->>> Gwendal.
->>>
->>>
->>>
->>>
->>> On Sun, Aug 22, 2010 at 12:57 PM, Jeff Garzik <jeff@garzik.org> wro=
-te:
->>>> On 08/22/2010 03:54 PM, Jeff Garzik wrote:
->>>>>
->>>>> On 08/21/2010 02:52 PM, Nicolas Jungers wrote:
->>>>>>
->>>>>> My arm box doesn't succeed to use my esata port multiplier (addo=
-nics
->>>>>> sil3726 based). It was working well with 2.6.34.1 and 2.6.34.4 b=
-ut not
->>>>>> with both 2.6.35.2 and 2.6.35.3. I haven't test other kernels.
->>>>>>
->>>>>> The kernels are from http://sheeva.with-linux.com/sheeva/ with f=
-or
->>>>>> example the following config
->>>>>> http://sheeva.with-linux.com/sheeva/2.6.35.3/sheeva-2.6.35.3.con=
-fig
->>>>>>
->>>>>> The symptoms are in the console a loop on the esata links. Here =
-is the
->>>>>> start of it:
->>>>>>
->>>>>> ata2: exception Emask 0x10 SAct 0x0 SErr 0x4010000 action 0xe fr=
-ozen
->>>>>> ata2: edma_err_cause=3D00000010 pp_flags=3D00000000, dev connect
->>>>>> ata2: SError: { PHYRdyChg DevExch }
->>>>>> ata2: hard resetting link
->>>>>> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl F300)
->>>>>> ata2.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0=
-x1/0x9
->>>>>
->>>>> Can you post or link to the entire dmesg?
->>>>>
->>>>> Notably, we need to see the probe messages to determine what SATA=
- chip
->>>>> you are using... From the edma_err_cause config I'd guess sata_mv=
-, but
->>>>> more info would be useful.
->>>>
->>>> Nevermind, I see the reply (it got auto-sorted into the wrong fold=
-er
->>>> locally).
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-id=
-e" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->>>>
->>>
->>
->
+Hi
+I am currently using 2.6.35.3 linux kernel for porting silicon image
+3114 driver to new hardware. I see that the current code uses
+interrupt  to check for dma complete. I don't have any interrupt
+mechanism in the current framework. Do we have any other mechanism to
+check whether DMA is complete via polling. I also see that after
+issuing Read DMA command, 0x52 is returned as command status and
+according to ATA spec bit 1 set is NA. Is there any mandatory
+requirement that DRQ bit needs to be enabled(0x58) before starting DMA
+operation.
+Any inputs will be appreciated.
+Thanks
+Amruth p.v
