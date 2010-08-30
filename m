@@ -1,47 +1,121 @@
-From: Jean Delvare <jdelvare@suse.de>
-Subject: [PATCH] pata_artop: Fix device ID parity check
-Date: Mon, 30 Aug 2010 17:37:05 +0200
-Message-ID: <201008301737.05459.jdelvare@suse.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 04/30] block: deprecate barrier and replace blk_queue_ordered()
+ with blk_queue_flush()
+Date: Mon, 30 Aug 2010 18:37:53 +0300
+Message-ID: <4C7BD051.70302@panasas.com>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42656 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752641Ab0H3PhI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2010 11:37:08 -0400
+Received: from daytona.panasas.com ([67.152.220.89]:48352 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751590Ab0H3PiD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2010 11:38:03 -0400
+In-Reply-To: <1282751267-3530-5-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@linux.intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>, Nick Piggin <npiggin@kernel.dk>, Jeremy Fitzhardinge <jeremy@xensource.com>, Chris Wright <chrisw@sous-sol.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, "David S. Miller" <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Pierre Ossman <drzeus@drzeus.cx>, Stefan Weinhuber <wein@>
 
-x % 1 always evaluates to 0, which clearly isn't the intent. The
-author probably had "% 2" or "& 1" in mind, and mispelled it.
+On 08/25/2010 06:47 PM, Tejun Heo wrote:
+> Barrier is deemed too heavy and will soon be replaced by FLUSH/FUA
+> requests.  Deprecate barrier.  All REQ_HARDBARRIERs are failed with
+> -EOPNOTSUPP and blk_queue_ordered() is replaced with simpler
+> blk_queue_flush().
+> 
+> blk_queue_flush() takes combinations of REQ_FLUSH and FUA.  If a
+> device has write cache and can flush it, it should set REQ_FLUSH.  If
+> the device can handle FUA writes, it should also set REQ_FUA.
+> 
+> All blk_queue_ordered() users are converted.
+> 
+> * ORDERED_DRAIN is mapped to 0 which is the default value.
+> * ORDERED_DRAIN_FLUSH is mapped to REQ_FLUSH.
+> * ORDERED_DRAIN_FLUSH_FUA is mapped to REQ_FLUSH | REQ_FUA.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Nick Piggin <npiggin@kernel.dk>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
+> Cc: Jeremy Fitzhardinge <jeremy@xensource.com>
+> Cc: Chris Wright <chrisw@sous-sol.org>
+> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: Alan Cox <alan@linux.intel.com>
----
-Notice: I don't have the hardware so this fix is untested, bug was
-found by code inspection.
+Acked-by: Boaz Harrosh <bharrosh@panasas.com>
 
- drivers/ata/pata_artop.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Actually osd as support for FUA as well. It's on my todo
+to implement it.
 
---- linux-2.6.36-rc3.orig/drivers/ata/pata_artop.c	2010-08-02 00:11:14.000000000 +0200
-+++ linux-2.6.36-rc3/drivers/ata/pata_artop.c	2010-08-30 17:07:17.000000000 +0200
-@@ -74,7 +74,8 @@ static int artop6260_pre_reset(struct at
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
- 	/* Odd numbered device ids are the units with enable bits (the -R cards) */
--	if (pdev->device % 1 && !pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
-+	if ((pdev->device & 1) &&
-+	    !pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
- 		return -ENOENT;
- 
- 	return ata_sff_prereset(link, deadline);
+Thanks Tejun, as usual, after your visit there is more room
+in the house.
 
--- 
-Jean Delvare
-Suse L3
+> Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: Alasdair G Kergon <agk@redhat.com>
+> Cc: Pierre Ossman <drzeus@drzeus.cx>
+> Cc: Stefan Weinhuber <wein@de.ibm.com>
+> ---
+<snip>
+>  drivers/block/osdblk.c       |    2 +-
+> diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+> index 2284b4f..72d6246 100644
+> --- a/drivers/block/osdblk.c
+> +++ b/drivers/block/osdblk.c
+> @@ -439,7 +439,7 @@ static int osdblk_init_disk(struct osdblk_device *osdev)
+>  	blk_queue_stack_limits(q, osd_request_queue(osdev->osd));
+>  
+>  	blk_queue_prep_rq(q, blk_queue_start_tag);
+> -	blk_queue_ordered(q, QUEUE_ORDERED_DRAIN_FLUSH);
+> +	blk_queue_flush(q, REQ_FLUSH);
+>  
+>  	disk->queue = q;
+>  
+<snip>
+
+Also this mail
+On 08/25/2010 06:47 PM, Tejun Heo wrote:
+> REQ_HARDBARRIER is deprecated.  Remove spurious uses in the following
+> users.  Please note that other than osdblk, all other uses were
+> already spurious before deprecation.
+> 
+> * osdblk: osdblk_rq_fn() won't receive any request with
+>   REQ_HARDBARRIER set.  Remove the test for it.
+> 
+> * pktcdvd: use of REQ_HARDBARRIER in pkt_generic_packet() doesn't mean
+>   anything.  Removed.
+> 
+> * aic7xxx_old: Setting MSG_ORDERED_Q_TAG on REQ_HARDBARRIER is
+>   spurious.  Removed.
+> 
+> * sas_scsi_host: Setting TASK_ATTR_ORDERED on REQ_HARDBARRIER is
+>   spurious.  Removed.
+> 
+> * scsi_tcq: The ordered tag path wasn't being used anyway.  Removed.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Boaz Harrosh <bharrosh@panasas.com>
+
+Acked-by: Boaz Harrosh <bharrosh@panasas.com>
+
+> Cc: James Bottomley <James.Bottomley@suse.de>
+> Cc: Peter Osterlund <petero2@telia.com>
+> ---
+>  drivers/block/osdblk.c              |    3 +--
+<snip>
+> diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+> index 72d6246..87311eb 100644
+> --- a/drivers/block/osdblk.c
+> +++ b/drivers/block/osdblk.c
+> @@ -310,8 +310,7 @@ static void osdblk_rq_fn(struct request_queue *q)
+>  			break;
+>  
+>  		/* filter out block requests we don't understand */
+> -		if (rq->cmd_type != REQ_TYPE_FS &&
+> -		    !(rq->cmd_flags & REQ_HARDBARRIER)) {
+> +		if (rq->cmd_type != REQ_TYPE_FS) {
+>  			blk_end_request_all(rq, 0);
+>  			continue;
+>  		}
+
