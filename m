@@ -1,255 +1,70 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Sun, 29 Aug 2010 11:49:06 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Mon, 30 Aug 2010 15:13:55 +0900
+Message-ID: <4C7B4C23.8020100@ct.jp.nec.com>
+References: <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org> <4C74CD95.1000208@ct.jp.nec.com> <20100825152831.GA8509@redhat.com> <4C7789BE.1060609@ct.jp.nec.com> <20100827134940.GA22504@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:41828 "EHLO lucidpixels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753555Ab0H2PtJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Aug 2010 11:49:09 -0400
-In-Reply-To: <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100827134940.GA22504@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+
+Hi Mike,
+
+On 08/27/2010 10:49 PM +0900, Mike Snitzer wrote:
+> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+>> On 08/26/2010 12:28 AM +0900, Mike Snitzer wrote:
+>>> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+>>>> Anyway, as you said, the flush error handling of dm-mpath is already
+>>>> broken if data loss really happens on any storage used by dm-mpath.
+>>>> Although it's a serious issue and quick fix is required, I think
+>>>> you may leave the old behavior in your patch-set, since it's
+>>>> a separate issue.
+>>> 
+>>> I'm not seeing where anything is broken with current mpath.  If a
+>>> multipathed LUN is WCE=1 then it should be fair to assume the cache is
+>>> mirrored or shared across ports.  Therefore retrying the SYNCHRONIZE
+>>> CACHE is needed.
+>>>
+>>> Do we still have fear that SYNCHRONIZE CACHE can silently drop data?
+>>> Seems unlikely especially given what Tejun shared from SBC.
+>> 
+>> Do we have any proof to wipe that fear?
+>>
+>> If retrying on flush failure is safe on all storages used with multipath
+>> (e.g. SCSI, CCISS, DASD, etc), then current dm-mpath should be fine in
+>> the real world.
+>> But I'm afraid if there is a storage where something like below can happen:
+>>     - a flush command is returned as error to mpath because a part of
+>>       cache has physically broken at the time or so, then that part of
+>>       data loses and the size of the cache is shrunk by the storage.
+>>     - mpath retries the flush command using other path.
+>>     - the flush command is returned as success to mpath.
+>>     - mpath passes the result, success, to upper layer, but some of
+>>       the data already lost.
+> 
+> That does seem like a valid concern.  But I'm not seeing why its unique
+> to SYNCHRONIZE CACHE.  Any IO that fails on the target side should be
+> passed up once the error gets to DM.
+
+See the Tejun's explanation again:
+    http://marc.info/?l=linux-kernel&m=128267361813859&w=2
+What I'm concerning is whether the same thing as Tejun explained
+for ATA can happen on other types of devices.
 
 
+Normal write command has data and no data loss happens on error.
+So it can be retried cleanly, and if the result of the retry is
+success, it's really success, no implicit data loss.
 
-On Fri, 27 Aug 2010, Justin Piszcz wrote:
+Normal read command has a sector to read.  If the sector is broken,
+all retries will fail and the error will be reported upwards.
+So it can be retried cleanly as well.
 
-Hi,
-
-Current theory:
-
-Mobo: Intel DP55KG
-
-I had this:
-#append="3w-9xxx.use_msi=1 reboot=a snd_hda_intel.enable_msi=1"
-
-Now I am no longer using MSI for the 3ware driver, so far, the 'lag' /
-controller reset problem has not occurred yet:
-append="reboot=a snd_hda_intel.enable_msi=1"
-
-I wish both cards did not use the same IRQ, however, if this solves the problem
-then I'll be happy.
-
->From /proc/interrupts:
-
-16:      44899          0          0          0          0          0      12418          0   IO-APIC-fasteoi   3w-9xxx, 3w-9xxx, ehci_hcd:usb1
-
-So far I'm typing this e-mail on the client and I do not see any lag at this
-time, it appears this has fixed my problem, I'll give it a few more hours/days
-before I consider it 'fixed' but after changing all of the settings in 3dm2
-and replacing/removing the BBUs, noticing no change, it appears to be an
-interrupt problem when the 3ware cards are used with MSI on my motherboard.
-
-Are there cases in which MSI should/should not be used?  Generally I have it on
-for all of my devices but perhaps the 3ware cards don't play well with it
-on the Intel motherboard?
-
-I am guessing the 'lag' issue causes the controller to reset when there is
-too much I/O launched via cron (backups and such)..
-
-We'll see if it happens again, I did briefly try the newest Beta firmware
-as LSI recommended made no difference in terms of the lag issue.
-
-I am still running with 'nobarrier' removed and have not gotten any controller
-resets yet, but I had the lag issue as mentioned above until I removed the
-MSI option from the 3w-9xxx driver.
-
-Before removal of MSI option:
-
-Drive Performance Monitor Configuration for /c1 ...
-Performance Monitor: ON
-Version: 1
-Max commands for averaging: 100
-Max latency commands to save: 10
-Requested data: Instantaneous Drive Statistics
-
-                                Queue           Xfer         Resp
-Port   Status           Unit   Depth   IOPs    Rate(MB/s)   Time(ms)
-------------------------------------------------------------------------
-p0     OK               u0     1       123     1.202        730148 
-p1     OK               u0     1       123     1.203        644249 
-p2     OK               u1     1       7       0.000        132 
-p3     NOT-PRESENT      -      -       -       -            -
-
-After removal:
-
-Drive Performance Monitor Configuration for /c1 ...
-Performance Monitor: ON
-Version: 1
-Max commands for averaging: 100
-Max latency commands to save: 10
-Requested data: Instantaneous Drive Statistics
-
-                                Queue           Xfer         Resp
-Port   Status           Unit   Depth   IOPs    Rate(MB/s)   Time(ms)
-------------------------------------------------------------------------
-p0     OK               u0     1       53      3.124        85900 
-p1     OK               u0     1       53      3.124        85900 
-p2     OK               u1     0       0       0.000        0 
-p3     NOT-PRESENT      -      -       -       -            -
-
-..
-
-This is what the problem looks like (sdb=root) as it happened twice (before
-removal of the MSI option, I've not been able to reproduce it with the MSI
-option disabled).
-
-$ (output form dstat)
--dsk/total----dsk/sda-----dsk/sdb--
-  read  writ: read  writ: read  writ
-    0  6884k:   0     0 :   0  6884k
-    0  4580k:   0     0 :   0  4580k
-    0  4728k:   0     0 :   0  4728k
-    0  3936k:   0     0 :   0  3936k
-    0  5764k:   0     0 :   0  5764k
-    0  1292k:   0     0 :   0  1292k
-    0  7760k:   0     0 :   0  7760k
-    0  5480k:   0     0 :   0  5480k
-    0  7408k:   0     0 :   0  7408k
-    0  5040k:   0     0 :   0  5040k
-    0  6236k:   0     0 :   0  6236k
-    0   788k:   0     0 :   0   788k
-    0     0 :   0     0 :   0     0
-    0  2900k:   0     0 :   0  2900k
-    0  8160k:   0     0 :   0  8160k
-4096B 7916k:   0     0 :4096B 7916k
-    0  7812k:   0     0 :   0  7812k
-    0  4804k:   0     0 :   0  4804k
-  148k 7268k:   0     0 : 148k 7268k
-    0   888k:   0     0 :   0   888k
-    0  7688k:   0     0 :   0  7688k
-    0  7644k:   0     0 :   0  7644k
-    0  6352k:   0     0 :   0  6352k
--dsk/total----dsk/sda-----dsk/sdb--
-  read  writ: read  writ: read  writ
-    0  5324k:   0     0 :   0  5324k
-    0  1432k:   0     0 :   0  1432k
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
--dsk/total----dsk/sda-----dsk/sdb--
-  read  writ: read  writ: read  writ
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0 dddddddddd
-    0  8700k:   0     0 :   0  8700k
-    0  2076k:   0     0 :   0  2076k
-    0  5428k:   0     0 :   0  5428k
-    0  7984k:   0     0 :   0  7984k
-    0  8236k:   0     0 :   0  8236k
-    0  2536k:   0     0 :   0  2536k
-    0   232k:   0     0 :   0   232k
-    0   268k:   0     0 :   0   268k
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0   508k:   0     0 :   0   508k
-    0    72k:   0     0 :   0    72k
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-4096B  232k:   0     0 :4096B  232k
-  344k 2380k:   0     0 : 344k 2380k
-    0  1172k:   0     0 :   0  1172k
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0
-    0     0 :   0     0 :   0     0 ^C^C^C
-$
-
-
-Justin.
-
-
+Thanks,
+Kiyoshi Ueda
