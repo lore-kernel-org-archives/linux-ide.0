@@ -1,70 +1,89 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
  sequenced flush
-Date: Mon, 30 Aug 2010 15:13:55 +0900
-Message-ID: <4C7B4C23.8020100@ct.jp.nec.com>
-References: <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org> <20100823141733.GA21158@redhat.com> <4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org> <4C74CD95.1000208@ct.jp.nec.com> <20100825152831.GA8509@redhat.com> <4C7789BE.1060609@ct.jp.nec.com> <20100827134940.GA22504@redhat.com>
+Date: Mon, 30 Aug 2010 11:54:11 +0200
+Message-ID: <4C7B7FC3.1050701@suse.de>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <4C6540C5.8070108@vlnb.net> <4C6546E0.7070208@kernel.org> <4C6C34E0.3050601@vlnb.net> <4C6CFEAA.1060004@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100827134940.GA22504@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:57862 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751747Ab0H3JyQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Aug 2010 05:54:16 -0400
+In-Reply-To: <4C6CFEAA.1060004@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com
 
-Hi Mike,
-
-On 08/27/2010 10:49 PM +0900, Mike Snitzer wrote:
-> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
->> On 08/26/2010 12:28 AM +0900, Mike Snitzer wrote:
->>> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
->>>> Anyway, as you said, the flush error handling of dm-mpath is already
->>>> broken if data loss really happens on any storage used by dm-mpath.
->>>> Although it's a serious issue and quick fix is required, I think
->>>> you may leave the old behavior in your patch-set, since it's
->>>> a separate issue.
->>> 
->>> I'm not seeing where anything is broken with current mpath.  If a
->>> multipathed LUN is WCE=1 then it should be fair to assume the cache is
->>> mirrored or shared across ports.  Therefore retrying the SYNCHRONIZE
->>> CACHE is needed.
->>>
->>> Do we still have fear that SYNCHRONIZE CACHE can silently drop data?
->>> Seems unlikely especially given what Tejun shared from SBC.
->> 
->> Do we have any proof to wipe that fear?
+Tejun Heo wrote:
+> Hello,
+>=20
+> On 08/18/2010 09:30 PM, Vladislav Bolkhovitin wrote:
+>> Basically, I measured how iSCSI link utilization depends from amount
+>> of queued commands and queued data size. This is why I made it as a
+>> table. From it you can see which improvement you will have removing
+>> queue draining after 1, 2, 4, etc. commands depending of commands
+>> sizes.
 >>
->> If retrying on flush failure is safe on all storages used with multipath
->> (e.g. SCSI, CCISS, DASD, etc), then current dm-mpath should be fine in
->> the real world.
->> But I'm afraid if there is a storage where something like below can happen:
->>     - a flush command is returned as error to mpath because a part of
->>       cache has physically broken at the time or so, then that part of
->>       data loses and the size of the cache is shrunk by the storage.
->>     - mpath retries the flush command using other path.
->>     - the flush command is returned as success to mpath.
->>     - mpath passes the result, success, to upper layer, but some of
->>       the data already lost.
-> 
-> That does seem like a valid concern.  But I'm not seeing why its unique
-> to SYNCHRONIZE CACHE.  Any IO that fails on the target side should be
-> passed up once the error gets to DM.
+>> For instance, on my previous XFS rm example, where rm of 4 files
+>> took 3.5 minutes with nobarrier option, I could see that XFS was
+>> sending 1-3 32K commands in a row. From my table you can see that if
+>> it sent all them at once without draining, it would have about
+>> 150-200% speed increase.
+>=20
+> You compared barrier off/on.  Of course, it will make a big
+> difference.  I think good part of that gain should be realized by the
+> currently proposed patchset which removes draining.  What's needed to
+> be demonstrated is the difference between ordered-by-waiting and
+> ordered-by-tag.  We've never had code to do that properly.
+>=20
+> The original ordered-by-tag we had only applied tag ordering to two o=
+r
+> three command sequences inside a barrier, which doesn't amount to muc=
+h
+> (and could even be harmful as it imposes draining of all simple
+> commands inside the device only to reduce issue latencies for a few
+> commands).  You'll need to hook into filesystem and somehow export th=
+e
+> ordering information down to the driver so that whatever needs
+> ordering is sent out as ordered commands.
+>=20
+> As I've wrote multiple times, I'm pretty skeptical it will bring much=
+=2E
+> Ordered tag mandates draining inside the device just like the origina=
+l
+> barrier implementation.  Sure, it's done at a lower layer and command
+> issue latencies will be reduced thanks to that but ordered-by-waiting
+> doesn't require _any_ draining at all.  The whole pipeline can be kep=
+t
+> full all the time.  I'm often wrong tho, so please feel free to go
+> ahead and prove me wrong.  :-)
+>=20
+Actually, I thought about ordered tag writes, too.
+But eventually I had to give up on this for a simple reason:
+Ordered tag controls the ordering on the SCSI _TARGET_. But for a
+meaningful implementation we need to control the ordering all the way
+down from ->queuecommand(). Which means we have three areas we need
+to cover here:
+- driver (ie between ->queuecommand() and passing it off to the firmwar=
+e)
+- firmware
+- fabric
 
-See the Tejun's explanation again:
-    http://marc.info/?l=linux-kernel&m=128267361813859&w=2
-What I'm concerning is whether the same thing as Tejun explained
-for ATA can happen on other types of devices.
+Sadly, the latter two are really hard to influence. And, what's more,
+with the new/modern CNAs with multiple queues and possible multiple
+routes to the target it becomes impossible to guarantee ordering.
+So using ordered tags for FibreChannel is not going to work, which
+makes implementing it a bit of a pointless exercise for me.
 
+Cheers,
 
-Normal write command has data and no data loss happens on error.
-So it can be retried cleanly, and if the result of the retry is
-success, it's really success, no implicit data loss.
-
-Normal read command has a sector to read.  If the sector is broken,
-all retries will fail and the error will be reported upwards.
-So it can be retried cleanly as well.
-
-Thanks,
-Kiyoshi Ueda
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
