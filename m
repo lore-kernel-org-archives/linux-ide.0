@@ -1,67 +1,87 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
-Date: Mon, 30 Aug 2010 10:19:04 -0700
-Message-ID: <AANLkTi=65rZ5CBiFmU_QfgSOT8TB=AMaTxUFyaPtsYTf@mail.gmail.com>
-References: <AANLkTim9daA5eoQDbtJSnMuoBOEkDV4Y_Z3GbcDxL7Rk@mail.gmail.com>
-	<1283041897-4378-1-git-send-email-gwendal@google.com>
-	<4C7A22CF.3090403@kernel.org>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [opensuse-kernel] SSD / filesystem / TRIM
+Date: Mon, 30 Aug 2010 15:14:29 -0400
+Message-ID: <AANLkTinNt83RYu+ssRHzLT=E+Nk5kTk4Q+sfxQk5SP4+@mail.gmail.com>
+References: <4C759825.60503@web.de>
+	<AANLkTimrOOPExu+hU9wNubT3wgJWwUxMwjREn2p=x-qT@mail.gmail.com>
+	<4C7A2949.8070606@web.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.35]:23303 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756100Ab0H3RTH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2010 13:19:07 -0400
-Received: from wpaz29.hot.corp.google.com (wpaz29.hot.corp.google.com [172.24.198.93])
-	by smtp-out.google.com with ESMTP id o7UHJ5GI018746
-	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2010 10:19:06 -0700
-Received: from vws14 (vws14.prod.google.com [10.241.21.142])
-	by wpaz29.hot.corp.google.com with ESMTP id o7UHJ4Kw007908
-	for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2010 10:19:04 -0700
-Received: by vws14 with SMTP id 14so6696158vws.39
-        for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2010 10:19:04 -0700 (PDT)
-In-Reply-To: <4C7A22CF.3090403@kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47075 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787Ab0H3TOa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2010 15:14:30 -0400
+Received: by iwn5 with SMTP id 5so5111683iwn.19
+        for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2010 12:14:29 -0700 (PDT)
+In-Reply-To: <4C7A2949.8070606@web.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
+To: Thomas Hertweck <Thomas.Hertweck@web.de>
+Cc: opensuse-kernel@opensuse.org, Mark Lord <kernel@teksavvy.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Sun, Aug 29, 2010 at 2:05 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On 08/29/2010 02:31 AM, Gwendal Grignou wrote:
->> Re-introduce port_task_data to hold the link on the which the curren=
-t
->> request is in progress. It allows support of links behind port multi=
-plier.
->>
->> Not all libata-sff is PMP compliant. Code for native BMDMA controlle=
-r
->> does not take in accound PMP.
->>
->> Tested on Marvell 7042 and Sil7526.
->
-> So sata_mv is using SFF state machine for PMP devices too. =A0Didn't =
-see
-> that coming. =A0Thanks for fixing this. =A0Can you please consider th=
-e
-> followings?
->
-> * Make ata_sff_queue_pio_task() take a @qc (or @link if @qc can't be
-> =A0used for whatever reason) and @delay, instead of taking @ap, @link
-> =A0and @delay.
-Done. I keep link, because qc could be reused if the command timeout
-while the task is delayed.
->
-> * Change ata_port->port_task_data to something more specific. =A0ie.
-> =A0sff_pio_task_qc or sff_pio_task_link.
-Done.
+(Putting Mark Lord and linux-ide in cc:)
 
-path is next.
+Mark,
+
+Thomas has tried to use wiper.sh / hdparm v9.28 to trim a SSD and it
+failed.  See below:
+
+This is with the openSUSE 2.6.34 kernel.
+
+On Sun, Aug 29, 2010 at 5:32 AM, Thomas Hertweck <Thomas.Hertweck@web.d=
+e> wrote:
+<snip>
+
+> I have now installed openSUSE 11.3 on a OCZ Vertex 2E SSD. I used a
+> standard ext4 filesystem, the mount options at the moment are
+> "rw,noatime,acl,user_xattr". Unfortunately, wiper.sh doesn't work at =
+all.
 >
-> Thanks.
+> $> wiper.sh --verbose --commit /dev/sdb1
+> wiper.sh: Linux SATA SSD TRIM utility, version 2.6, by Mark Lord.
+> wiper.sh: This tool is DANGEROUS! Please read and understand
+> wiper.sh: /usr/share/doc/packages/hdparm/README.wiper
+> wiper.sh: before going any further.
+> rootdev=3D/dev/sdb1
+> fsmode2: fsmode=3Dread-write
+> /: fstype=3Dext4
+> freesize =3D 45338732 KB, reserved =3D 453387 KB
+> Preparing for online TRIM of free space on /dev/sdb1 (ext4 mounted
+> read-write at /).
+> This operation could silently destroy your data. =A0Are you sure (y/N=
+)? y
+> Creating temporary file (44885345 KB)..
+> Syncing disks..
+> Beginning TRIM operations..
+> get_trimlist=3D/sbin/hdparm --fibmap WIPER_TMPFILE.13467
+> /dev/sdb:
+> trimming 89770696 sectors from 1493 ranges
+> FAILED: Input/output error
+> Removing temporary file..
+> Syncing disks..
+> Aborted.
 >
-> --
-> tejun
+> No joy, obviously. So what can I do?
+<snip>
+
+> The motherboard, by the
+> way, is an Asus P6X58D-E, the SSD is attached to one of the 3GB/s SAT=
+A
+> ports (Intel chip). There's also a 6GB/s SATA port (Marvell chip) on =
+the
+> board, but I couldn't find Linux support for that (that's why I haven=
+'t
+> used this port).
 >
+>
+> Well,... See above.
+>
+> Regards,
+> Thomas
+
+Mark, any thoughts why it didn't work.  Have you added anything
+relevant to hdparm since v.9.28 that would help?
+
+Greg
