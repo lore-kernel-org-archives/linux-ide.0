@@ -1,40 +1,95 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Mon, 30 Aug 2010 12:04:56 +0200
-Message-ID: <4C7B8248.5070602@suse.de>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de> <4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com> <20100823140823.GA23490@lst.de>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Mon, 30 Aug 2010 13:38:54 +0200
+Message-ID: <4C7B984E.4070802@suse.de>
+References: <20100825155918.GB8509@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39377 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753173Ab0H3KE6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Aug 2010 06:04:58 -0400
-In-Reply-To: <20100823140823.GA23490@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100825155918.GB8509@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Tejun Heo <tj@kernel.org>, michaelc@cs.wisc.edu, James.Bottomley@suse.de, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <jaxboe@fusionio.com>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "tytso@mit.edu" <tytso@mit.edu>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "vst@vlnb.net" <vst@vlnb.net>, "jack@suse.cz" <jack@suse.cz>
 
-Christoph Hellwig wrote:
-> On Mon, Aug 23, 2010 at 04:01:15PM +0200, Jens Axboe wrote:
->> The problem purely exists on arrays that report write back cache ena=
-bled
->> AND don't implement SYNC_CACHE as a noop. Do any of them exist, or a=
-re
->> they purely urban legend?
+Mike Snitzer wrote:
+> On Wed, Aug 25 2010 at  4:00am -0400,
+> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
 >=20
-> I haven't seen it.  I don't care particularly about this case, but on=
-ce
-> it a while people want to disable flushing for testing or because the=
-y
-> really don't care.
+>>> I'm not sure how to proceed here.  How much work would
+>>> discerning between transport and IO errors take?  If it can't be do=
+ne
+>>> quickly enough the retry logic can be kept around to keep the old
+>>> behavior but that already was a broken behavior, so...  :-(
+>> I'm not sure how long will it take.
 >=20
-aacraid for one falls into this category.
-SYNC_CACHE is no-oped in the driver. Otherwise you get a _HUGE_
-performance loss.
+> We first need to understand what direction we want to go with this.  =
+We
+> currently have 2 options.  But any other ideas are obviously welcome.
+>=20
+> 1)
+> Mike Christie has a patchset that introduce more specific
+> target/transport/host error codes.  Mike shared these pointers but he=
+'d
+> have to put the work in to refresh them:
+> http://marc.info/?l=3Dlinux-scsi&m=3D112487427230642&w=3D2
+> http://marc.info/?l=3Dlinux-scsi&m=3D112487427306501&w=3D2
+> http://marc.info/?l=3Dlinux-scsi&m=3D112487431524436&w=3D2
+> http://marc.info/?l=3Dlinux-scsi&m=3D112487431524350&w=3D2
+>=20
+> errno.h new EXYZ
+> http://marc.info/?l=3Dlinux-kernel&m=3D107715299008231&w=3D2
+>=20
+> add block layer blkdev.h error values
+> http://marc.info/?l=3Dlinux-kernel&m=3D107961883915068&w=3D2
+>=20
+> add block layer blkdev.h error values (v2 convert more drivers)
+> http://marc.info/?l=3Dlinux-scsi&m=3D112487427230642&w=3D2
+>=20
+> I think that patchset's appoach is fairly disruptive just to be able =
+to
+> train upper layers to differentiate (e.g. mpath).  But in the end may=
+be
+> that change takes the code in a more desirable direction?
+>=20
+> 2)
+> Another option is Hannes' approach of having DM consume req->errors a=
+nd
+> SCSI sense more directly.
+>=20
+
+Actually, I think we have two separate issues here:
+1) The need of having more detailed I/O errors even in the fs layer. Th=
+is
+   we've already discussed at the LSF, consensus here is to allow other
+   errors than just 'EIO'.
+   Instead of Mike's approach I would rather use existing error codes h=
+ere;
+   this will make the transition somewhat easier.
+   Initially I would propose to return 'ENOLINK' for a transport failur=
+e,
+   'EIO' for a non-retryable failure on the target, and 'ENODEV' for a
+   retryable failure on the target.
+
+2) The need to differentiate the various error conditions on the multip=
+ath
+   layer. Multipath needs to distinguish the three error types as speci=
+fied
+   in 1)
+
+Mike has been trying to solve 1) and 2) by introducing separate/new err=
+or
+codes, and I have been trying to use 2) by parsing the sense codes dire=
+ctly
+from multipathing.
+
+Given that the fs people have expressed their desire to know about thes=
+e
+error classes, too, it makes sense to have them exposed to the fs layer=
+=2E
+
+I see if I can come up with a patch.
 
 Cheers,
 
