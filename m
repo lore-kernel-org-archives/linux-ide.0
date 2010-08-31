@@ -1,22 +1,46 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
-Date: Tue, 31 Aug 2010 16:20:36 -0700
-Message-ID: <1283296836-23863-1-git-send-email-gwendal@google.com>
-References: <4C7CB7A0.3000003@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff
+ remodeling.
+Date: Tue, 31 Aug 2010 19:32:24 -0400
+Message-ID: <4C7D9108.5010506@garzik.org>
+References: <4C7CB7A0.3000003@kernel.org> <1283296836-23863-1-git-send-email-gwendal@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:56553 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754637Ab0HaXUz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2010 19:20:55 -0400
-In-Reply-To: <4C7CB7A0.3000003@kernel.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41660 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051Ab0HaXc2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2010 19:32:28 -0400
+Received: by qwh6 with SMTP id 6so5739477qwh.19
+        for <linux-ide@vger.kernel.org>; Tue, 31 Aug 2010 16:32:28 -0700 (PDT)
+In-Reply-To: <1283296836-23863-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: tj@kernel.org, nicolas@jungers.net, linux-ide@vger.kernel.org
 
-Keep track of the link on the which the current request is in progress.
-It allows support of links behind port multiplier.
+On 08/31/2010 07:20 PM, Gwendal Grignou wrote:
+> Keep track of the link on the which the current request is in progress.
+> It allows support of links behind port multiplier.
+>
+> Not all libata-sff is PMP compliant. Code for native BMDMA controller
+> does not take in accound PMP.
+>
+> Tested on Marvell 7042 and Sil7526.
+>
+> Signed-off-by: Gwendal Grignou<gwendal@google.com>
+> ---
+>   drivers/ata/libata-sff.c |   38 ++++++++++++++++++++++++++++----------
+>   drivers/ata/sata_mv.c    |    2 +-
+>   include/linux/libata.h   |    3 ++-
+>   3 files changed, 31 insertions(+), 12 deletions(-)
 
+FWIW, the normal standard for revised patches is to include a short 
+changelog following the "---", but preceding the patch itself. 
+Something like:
+
+---------------------SNIP-----------------------
 Not all libata-sff is PMP compliant. Code for native BMDMA controller
 does not take in accound PMP.
 
@@ -24,175 +48,20 @@ Tested on Marvell 7042 and Sil7526.
 
 Signed-off-by: Gwendal Grignou <gwendal@google.com>
 ---
- drivers/ata/libata-sff.c |   38 ++++++++++++++++++++++++++++----------
- drivers/ata/sata_mv.c    |    2 +-
- include/linux/libata.h   |    3 ++-
- 3 files changed, 31 insertions(+), 12 deletions(-)
+v3: cleanups, add WARN_ON() etc
+v2: ata_sff_queue_pio_task takes a qc etc
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 3b82d8e..55cf7f4 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1042,7 +1042,8 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
- int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 		     u8 status, int in_wq)
- {
--	struct ata_eh_info *ehi = &ap->link.eh_info;
-+	struct ata_link *link = qc->dev->link;
-+	struct ata_eh_info *ehi = &link->eh_info;
- 	unsigned long flags = 0;
- 	int poll_next;
- 
-@@ -1298,8 +1299,14 @@ fsm_start:
- }
- EXPORT_SYMBOL_GPL(ata_sff_hsm_move);
- 
--void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay)
-+void ata_sff_queue_pio_task(struct ata_link *link, unsigned long delay)
- {
-+	struct ata_port *ap = link->ap;
-+
-+	WARN_ON((ap->sff_pio_task_link != NULL) &&
-+		(ap->sff_pio_task_link != link));
-+	ap->sff_pio_task_link = link;
-+
- 	/* may fail if ata_sff_flush_pio_task() in progress */
- 	queue_delayed_work(ata_sff_wq, &ap->sff_pio_task,
- 			   msecs_to_jiffies(delay));
-@@ -1321,14 +1328,18 @@ static void ata_sff_pio_task(struct work_struct *work)
- {
- 	struct ata_port *ap =
- 		container_of(work, struct ata_port, sff_pio_task.work);
-+	struct ata_link *link = ap->sff_pio_task_link;
- 	struct ata_queued_cmd *qc;
- 	u8 status;
- 	int poll_next;
- 
-+	BUG_ON(ap->sff_pio_task_link == NULL); 
- 	/* qc can be NULL if timeout occurred */
--	qc = ata_qc_from_tag(ap, ap->link.active_tag);
--	if (!qc)
-+	qc = ata_qc_from_tag(ap, link->active_tag);
-+	if (!qc) {
-+		ap->sff_pio_task_link = NULL;
- 		return;
-+	}
- 
- fsm_start:
- 	WARN_ON_ONCE(ap->hsm_task_state == HSM_ST_IDLE);
-@@ -1345,11 +1356,16 @@ fsm_start:
- 		msleep(2);
- 		status = ata_sff_busy_wait(ap, ATA_BUSY, 10);
- 		if (status & ATA_BUSY) {
--			ata_sff_queue_pio_task(ap, ATA_SHORT_PAUSE);
-+			ata_sff_queue_pio_task(link, ATA_SHORT_PAUSE);
- 			return;
- 		}
- 	}
- 
-+	/*
-+	 * hsm_move() may trigger another command to be processed.
-+	 * clean the link beforehand.
-+	 */
-+	ap->sff_pio_task_link = NULL;
- 	/* move the HSM */
- 	poll_next = ata_sff_hsm_move(ap, qc, status, 1);
- 
-@@ -1376,6 +1392,7 @@ fsm_start:
- unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-+	struct ata_link *link = qc->dev->link;
- 
- 	/* Use polling pio if the LLD doesn't handle
- 	 * interrupt driven pio and atapi CDB interrupt.
-@@ -1396,7 +1413,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- 		ap->hsm_task_state = HSM_ST_LAST;
- 
- 		if (qc->tf.flags & ATA_TFLAG_POLLING)
--			ata_sff_queue_pio_task(ap, 0);
-+			ata_sff_queue_pio_task(link, 0);
- 
- 		break;
- 
-@@ -1409,7 +1426,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- 		if (qc->tf.flags & ATA_TFLAG_WRITE) {
- 			/* PIO data out protocol */
- 			ap->hsm_task_state = HSM_ST_FIRST;
--			ata_sff_queue_pio_task(ap, 0);
-+			ata_sff_queue_pio_task(link, 0);
- 
- 			/* always send first data block using the
- 			 * ata_sff_pio_task() codepath.
-@@ -1419,7 +1436,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- 			ap->hsm_task_state = HSM_ST;
- 
- 			if (qc->tf.flags & ATA_TFLAG_POLLING)
--				ata_sff_queue_pio_task(ap, 0);
-+				ata_sff_queue_pio_task(link, 0);
- 
- 			/* if polling, ata_sff_pio_task() handles the
- 			 * rest.  otherwise, interrupt handler takes
-@@ -1441,7 +1458,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- 		/* send cdb by polling if no cdb interrupt */
- 		if ((!(qc->dev->flags & ATA_DFLAG_CDB_INTR)) ||
- 		    (qc->tf.flags & ATA_TFLAG_POLLING))
--			ata_sff_queue_pio_task(ap, 0);
-+			ata_sff_queue_pio_task(link, 0);
- 		break;
- 
- 	default:
-@@ -2734,6 +2751,7 @@ EXPORT_SYMBOL_GPL(ata_bmdma_dumb_qc_prep);
- unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-+	struct ata_link *link = qc->dev->link;
- 
- 	/* defer PIO handling to sff_qc_issue */
- 	if (!ata_is_dma(qc->tf.protocol))
-@@ -2762,7 +2780,7 @@ unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
- 
- 		/* send cdb by polling if no cdb interrupt */
- 		if (!(qc->dev->flags & ATA_DFLAG_CDB_INTR))
--			ata_sff_queue_pio_task(ap, 0);
-+			ata_sff_queue_pio_task(link, 0);
- 		break;
- 
- 	default:
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 8198259..a9fd970 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2284,7 +2284,7 @@ static unsigned int mv_qc_issue_fis(struct ata_queued_cmd *qc)
- 	}
- 
- 	if (qc->tf.flags & ATA_TFLAG_POLLING)
--		ata_sff_queue_pio_task(ap, 0);
-+		ata_sff_queue_pio_task(link, 0);
- 	return 0;
- }
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f010f18..74596a3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -723,6 +723,7 @@ struct ata_port {
- 	struct ata_ioports	ioaddr;	/* ATA cmd/ctl/dma register blocks */
- 	u8			ctl;	/* cache of ATA control register */
- 	u8			last_ctl;	/* Cache last written value */
-+	struct ata_link*	sff_pio_task_link; /* link currently used */
- 	struct delayed_work	sff_pio_task;
- #ifdef CONFIG_ATA_BMDMA
- 	struct ata_bmdma_prd	*bmdma_prd;	/* BMDMA SG list */
-@@ -1594,7 +1595,7 @@ extern void ata_sff_irq_on(struct ata_port *ap);
- extern void ata_sff_irq_clear(struct ata_port *ap);
- extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			    u8 status, int in_wq);
--extern void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay);
-+extern void ata_sff_queue_pio_task(struct ata_link *link, unsigned long delay);
- extern unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc);
- extern bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc);
- extern unsigned int ata_sff_port_intr(struct ata_port *ap,
--- 
-1.7.1
+  drivers/ata/libata-sff.c |   38 ++++++++++++++++++++++++++++----------
+  drivers/ata/sata_mv.c    |    2 +-
+  include/linux/libata.h   |    3 ++-
+  3 files changed, 31 insertions(+), 12 deletions(-)
+---------------------SNIP-----------------------
+
+
+
+I'll queue this up along with the other libata fixes tonight (unless 
+there are further revisions of course:))
+
+	Jeff
+
 
