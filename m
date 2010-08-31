@@ -1,52 +1,36 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff
- remodeling.
-Date: Tue, 31 Aug 2010 10:04:48 +0200
-Message-ID: <4C7CB7A0.3000003@kernel.org>
-References: <4C7A22CF.3090403@kernel.org> <1283188678-1696-1-git-send-email-gwendal@google.com>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Tue, 31 Aug 2010 10:11:34 +0200
+Message-ID: <4C7CB936.8010509@kernel.org>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42407 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:37911 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756916Ab0HaIFK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 31 Aug 2010 04:05:10 -0400
-In-Reply-To: <1283188678-1696-1-git-send-email-gwendal@google.com>
+	id S1756953Ab0HaIML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Aug 2010 04:12:11 -0400
+In-Reply-To: <20100830202034.GB12226@quack.quadriga.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 
-Hello,
+On 08/30/2010 10:20 PM, Jan Kara wrote:
+>   My setup is that I have a dedicated partition / drive for a filesystem
+> which is written to from a guest kernel running under KVM. I have set it up
+> using virtio driver with cache=writeback so that the host caches the writes
+> in a similar way disk caches them. At some point I just kill the qemu-kvm
+> process and at that point I'd like to also throw away data cached by the
+> host...
 
-On 08/30/2010 07:17 PM, Gwendal Grignou wrote:
-> Keep track of the link on the which the current request is in progress.
-> It allows support of links behind port multiplier.
-> 
-> Not all libata-sff is PMP compliant. Code for native BMDMA controller
-> does not take in accound PMP.
+$ echo 1 > /sys/block/sdX/device/delete
+$ echo - - - > /sys/class/scsi_host/hostX/scan
 
-Can you please elaborate a bit more on what broke and how this patch
-fixes the problem?
+should do the trick.
 
-> -void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long delay)
-> +void ata_sff_queue_pio_task(struct ata_link *link, unsigned long delay)
->  {
-> +	struct ata_port *ap = link->ap;
-
-New line here, please.
-
-> +	ap->sff_pio_task_link = link;
-
-It would also be useful to have WARN/BUG_ON() to make sure no two
-links try to use pio_task at the same time.  ie. Set
-ap->sff_pio_task_link here and clear it with NULL when done and make
-sure it's NULL before setting it.
-
-Otherwise, looks good to me.
-
-Thanks!
+Thanks.
 
 -- 
 tejun
