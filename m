@@ -1,97 +1,87 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: WARNINGs because of ide-proc handling
-Date: Tue, 31 Aug 2010 22:56:05 +0200
-Message-ID: <20100831205605.GA23636@pengutronix.de>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
+Date: Tue, 31 Aug 2010 16:17:36 -0700
+Message-ID: <AANLkTimhfcJ-OkZ3wcnuTeXF_bJRQP8uUzOpkMsOSnTE@mail.gmail.com>
+References: <4C7A22CF.3090403@kernel.org>
+	<1283188678-1696-1-git-send-email-gwendal@google.com>
+	<4C7CB7A0.3000003@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:39508 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754000Ab0HaU4H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2010 16:56:07 -0400
-Received: from octopus.hi.pengutronix.de ([2001:6f8:1178:2:215:17ff:fe12:23b0])
-	by metis.ext.pengutronix.de with esmtp (Exim 4.71)
-	(envelope-from <wsa@pengutronix.de>)
-	id 1OqXsE-0007fG-2v
-	for linux-ide@vger.kernel.org; Tue, 31 Aug 2010 22:56:06 +0200
-Received: from wsa by octopus.hi.pengutronix.de with local (Exim 4.69)
-	(envelope-from <wsa@pengutronix.de>)
-	id 1OqXsD-0006CX-RV
-	for linux-ide@vger.kernel.org; Tue, 31 Aug 2010 22:56:05 +0200
-Content-Disposition: inline
+Received: from smtp-out.google.com ([216.239.44.51]:55150 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782Ab0HaXRj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2010 19:17:39 -0400
+Received: from wpaz9.hot.corp.google.com (wpaz9.hot.corp.google.com [172.24.198.73])
+	by smtp-out.google.com with ESMTP id o7VNHcs0004346
+	for <linux-ide@vger.kernel.org>; Tue, 31 Aug 2010 16:17:38 -0700
+Received: from ywg4 (ywg4.prod.google.com [10.192.7.4])
+	by wpaz9.hot.corp.google.com with ESMTP id o7VNHaCF016279
+	for <linux-ide@vger.kernel.org>; Tue, 31 Aug 2010 16:17:37 -0700
+Received: by ywg4 with SMTP id 4so870452ywg.4
+        for <linux-ide@vger.kernel.org>; Tue, 31 Aug 2010 16:17:36 -0700 (PDT)
+In-Reply-To: <4C7CB7A0.3000003@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
 
+On Tue, Aug 31, 2010 at 1:04 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> On 08/30/2010 07:17 PM, Gwendal Grignou wrote:
+>> Keep track of the link on the which the current request is in progre=
+ss.
+>> It allows support of links behind port multiplier.
+>>
+>> Not all libata-sff is PMP compliant. Code for native BMDMA controlle=
+r
+>> does not take in accound PMP.
+>
+> Can you please elaborate a bit more on what broke and how this patch
+> fixes the problem?
+Before this patch, all libata-sff assumes the qc in progess is tied to
+ap->link, the host port link.
+That's fine as long as the controllers do not support port multiplier,
+which is the case of all controller inheriting ata_sff_port_ops except
+some controllers managed by sata_mv.
+Also, before the libata-ssf reorg, it did not matter, qc was given the
+sff task directly.
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+However, sata_mv supports port multiplier and use part of libata-sff
+to hanlde PIO commands to disks. qc sent to disk behind port
+multiplier are tight to one of element pmp_link array.
+Therefore, the part of libata-sff sata_mv exercises must be retrieve
+qc from the provided link instead of ap->link.
 
-Hello,
+>
+>> -void ata_sff_queue_pio_task(struct ata_port *ap, unsigned long dela=
+y)
+>> +void ata_sff_queue_pio_task(struct ata_link *link, unsigned long de=
+lay)
+>> =A0{
+>> + =A0 =A0 struct ata_port *ap =3D link->ap;
+>
+> New line here, please.
+Done
+>
+>> + =A0 =A0 ap->sff_pio_task_link =3D link;
+>
+> It would also be useful to have WARN/BUG_ON() to make sure no two
+> links try to use pio_task at the same time. =A0ie. Set
+> ap->sff_pio_task_link here and clear it with NULL when done and make
+> sure it's NULL before setting it.
+Add some WARN/BUG. I set link to NULL very early, I believe it is
+cleaner than setting it in hsm_move() itself.
+Patch after the break.
 
-I get the following warning (and some similar ones) on my laptop running
-2.6.36-rc3 when removing a CF card via pcmcia:
-
-[ 1087.602129] WARNING: at fs/proc/generic.c:816 remove_proc_entry+0x185/0x=
-1d0()
-[ 1087.602137] Hardware name: Amilo M14255
-[ 1087.602142] name 'cache'
-=2E..
-
-It turned out that none of the entries in ide_disk_proc[] gets created when
-inserting the card, so trying to remove them triggers this warning. Adding
-some debug printouts
-
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
-index a3133d7..5016a54 100644
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -650,6 +651,7 @@ void ide_proc_register_driver(ide_drive_t *drive, struc=
-t ide_driver *driver)
-        drive->settings =3D driver->proc_devsets(drive);
-        mutex_unlock(&ide_setting_mtx);
-=20
-+       printk(KERN_INFO "*** wsa: %s - %p - %d\n", driver->proc_entries(dr=
-ive)->name, drive->proc, (drive->media =3D=3D ide_disk));
-        ide_add_proc_entries(drive->proc, driver->proc_entries(drive), driv=
-e);
- }
-=20
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-results in:
-
-[    9.040157] *** wsa: cache - (null) - 1
-
-This shows that the path needed for those proc-entries does not exist at th=
-is
-moment (pointer is null). So the callchain for creating all the proc-entries
-seems to be disordered? The entries are present for my hard-disk, though.
-
-Kind regards,
-
-   Wolfram
-
---=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkx9bGUACgkQD27XaX1/VRuopgCgxaH4mozuyqLDag9Jgu+suqEq
-yQkAn1dVBTMfGNFEL82q4tZe338lxB0v
-=0sTZ
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
+Gwendal.
+>
+> Otherwise, looks good to me.
+>
+> Thanks!
+>
+> --
+> tejun
+>
