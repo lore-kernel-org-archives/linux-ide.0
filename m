@@ -1,53 +1,104 @@
-From: Greg Freemyer <greg.freemyer-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: SSD / filesystem / TRIM
-Date: Tue, 31 Aug 2010 12:05:26 -0400
-Message-ID: <AANLkTin+bc8vw0cpqaYeP6GNUe-ioxMTTy5CXC9ZquRf@mail.gmail.com>
-References: <4C759825.60503@web.de>
-	<AANLkTimrOOPExu+hU9wNubT3wgJWwUxMwjREn2p=x-qT@mail.gmail.com>
-	<4C7A2949.8070606@web.de>
-	<AANLkTinNt83RYu+ssRHzLT=E+Nk5kTk4Q+sfxQk5SP4+@mail.gmail.com>
-	<4C7CF740.9040907@teksavvy.com>
-	<AANLkTinBG0CjPZe1+ViHp9ir95sPvJ=XADT2a3LdbF3i@mail.gmail.com>
-	<4C7CFDFD.5000902@teksavvy.com>
+From: adam radford <aradford@gmail.com>
+Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Tue, 31 Aug 2010 11:15:23 -0700
+Message-ID: <AANLkTi=s5LusUgDFY4+qeWg4nfXZzF34UEafqZwEG+AM@mail.gmail.com>
+References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
+	<AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
+	<alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
+	<alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
+	<alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
+	<alpine.DEB.2.00.1008310732120.5156@p34.internal.lan>
+	<alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <opensuse-kernel+bounces-2017-glsk-opensuse-kernel=m.gmane.org-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Post: <mailto:opensuse-kernel-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Help: <mailto:opensuse-kernel+help-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Subscribe: <mailto:opensuse-kernel+subscribe-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Unsubscribe: <mailto:opensuse-kernel+unsubscribe-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Owner: <mailto:opensuse-kernel+owner-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org>
-List-Archive: <http://lists.opensuse.org/opensuse-kernel/>
-In-Reply-To: <4C7CFDFD.5000902-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
-To: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
-Cc: Thomas Hertweck <Thomas.Hertweck-S0/GAf8tV78@public.gmane.org>, opensuse-kernel-stAJ6ESoqRxg9hUCZPvPmw@public.gmane.org, IDE/ATA development list <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:57171 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348Ab0HaSPY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Aug 2010 14:15:24 -0400
+In-Reply-To: <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Aug 31, 2010 at 9:05 AM, Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org> wrote:
-> On 10-08-31 08:51 AM, Greg Freemyer wrote:
->>
->> Does hdparm v.9.30 have any known kernel dependencies that would keep
->> it from working with 2.6.31?
->>
->> Or any other known issues that would argue against opensuse pushing it
->> out as a software update for 11.2 and 11.3?
->>
->> Or at least putting it in a OBS repo so people using wiper.sh/hdparm
->> can use the latest if they load if from the repo..
+Justin,
+
+There were no changes in the driver other than to force a 60 second I/O
+timeout.  You probably have a udev rule that was already giving you 60
+second timeouts for all scsi devices, so this patch did absolutely noth=
+ing.
+
+More likely is that there is an I/O pattern change between the kernels
+that is causing a 3ware firmware issue (or drive firmware issue) on
+your configuration.
+I have forwarded your case to 3ware firmware support.
+
+-Adam
+
+
+On Tue, Aug 31, 2010 at 5:23 AM, Justin Piszcz <jpiszcz@lucidpixels.com=
+> wrote:
 >
 >
-> No issues that I know about.
-> My own opinion, is that _anyone_ using hdparm should be using v9.30.
+> On Tue, 31 Aug 2010, Justin Piszcz wrote:
 >
-> Cheers
-
-Mark, Thanks
-
-Thomas, I opened a bugzilla about it:
-https://bugzilla.novell.com/show_bug.cgi?id=635920
-
-I hope you'll add yourself as a cc: and test hdparm v9.30 if and when
-it is available for test.
-
-Thanks
-Greg
+>>
+>>
+>> On Tue, 31 Aug 2010, Justin Piszcz wrote:
+>>
+>>>
+>>>
+>>> On Sun, 29 Aug 2010, Justin Piszcz wrote:
+>>>
+>>>> On Fri, 27 Aug 2010, Justin Piszcz wrote:
+>>
+>> Per my earlier message, both cards were resetting, scsi0 and scsi1 u=
+nder
+>> kernel 2.6.35(.x), with 2.6.34, the lag problem is gone and my machi=
+ne is
+>> back to normal again. =A0It is unlikely that both cards would be at =
+fault,
+>> in addition I spent several hours trying different things, removing =
+the
+>> BBU
+>> modules for example, but always staying on the 2.6.35 kernel.
+>>
+>> I am now able to run rss2email (which ALWAYS caused the machine to l=
+ockup
+>> and freeze until one of the controllers reset) without any problems =
+using
+>> 2.6.34.
+>>
+>> 2.6.34.1 =3D good
+>> 2.6.35.x =3D has 3ware bug
+>>
+>> There appears to be a bug in the commit for the 3w-9xxx updates.
+>>
+>> On 2.6.34 now and no problems so far, I am continuing to test.
+>>
+>> http://marc.info/?l=3Dlinux-kernel&m=3D127419418304483&w=3D2
+>>
+>> Adam Radford (2):
+>> =A0 =A0 3ware maintainers update
+>> =A0 =A0 3w-xxxx, 3w-9xxx: force 60 second timeout
+>>
+>>
+>> Justin.
+>
+>
+> Latest-- 2.6.34.x seems to fix the issue, no lag whatsoever, the syst=
+em is
+> very responsive when running rss2email, again no lag, have run 10-15 =
+tests
+> without a single incident. =A0I also re-enabled msi and put my optimi=
+zation
+> script back in init.d, everything continues to work perfectly.
+>
+> Will wait for Adam on what went wrong with the 2.6.35 3w-9xxx update.
+>
+> Justin.
+>
+>
