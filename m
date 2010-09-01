@@ -1,63 +1,92 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff
- remodeling.
-Date: Wed, 01 Sep 2010 10:21:47 +0200
-Message-ID: <4C7E0D1B.5060703@kernel.org>
-References: <4C7A22CF.3090403@kernel.org>	<1283188678-1696-1-git-send-email-gwendal@google.com>	<4C7CB7A0.3000003@kernel.org> <AANLkTimhfcJ-OkZ3wcnuTeXF_bJRQP8uUzOpkMsOSnTE@mail.gmail.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Wed, 1 Sep 2010 05:40:52 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
+References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
+ <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:55787 "EHLO hera.kernel.org"
+Received: from lucidpixels.com ([75.144.35.66]:32789 "EHLO lucidpixels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751205Ab0IAIWU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2010 04:22:20 -0400
-In-Reply-To: <AANLkTimhfcJ-OkZ3wcnuTeXF_bJRQP8uUzOpkMsOSnTE@mail.gmail.com>
+	id S1754481Ab0IAJk4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Sep 2010 05:40:56 -0400
+In-Reply-To: <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
 
-On 09/01/2010 01:17 AM, Gwendal Grignou wrote:
-> On Tue, Aug 31, 2010 at 1:04 AM, Tejun Heo <tj@kernel.org> wrote:
->> On 08/30/2010 07:17 PM, Gwendal Grignou wrote:
->>> Keep track of the link on the which the current request is in progress.
->>> It allows support of links behind port multiplier.
->>>
->>> Not all libata-sff is PMP compliant. Code for native BMDMA controller
->>> does not take in accound PMP.
+
+On Tue, 31 Aug 2010, Justin Piszcz wrote:
+
 >>
->> Can you please elaborate a bit more on what broke and how this patch
->> fixes the problem?
-> Before this patch, all libata-sff assumes the qc in progess is tied to
-> ap->link, the host port link.
-> That's fine as long as the controllers do not support port multiplier,
-> which is the case of all controller inheriting ata_sff_port_ops except
-> some controllers managed by sata_mv.
-> Also, before the libata-ssf reorg, it did not matter, qc was given the
-> sff task directly.
-> 
-> However, sata_mv supports port multiplier and use part of libata-sff
-> to hanlde PIO commands to disks. qc sent to disk behind port
-> multiplier are tight to one of element pmp_link array.
-> Therefore, the part of libata-sff sata_mv exercises must be retrieve
-> qc from the provided link instead of ap->link.
 
-Heh, I meant to elaborate in the patch description. :-) Sorry about
-not being clearer.
+Hi Adam and LSI,
 
->> It would also be useful to have WARN/BUG_ON() to make sure no two
->> links try to use pio_task at the same time.  ie. Set
->> ap->sff_pio_task_link here and clear it with NULL when done and make
->> sure it's NULL before setting it.
->
-> Add some WARN/BUG. I set link to NULL very early, I believe it is
-> cleaner than setting it in hsm_move() itself.
-> Patch after the break.
+LSI got back to me, they said to try their latest firwmare and that the high
+I/O wait was solved in that release.
 
-Thanks.
+# tw_cli  /c0 show all | grep -i firmware
+/c0 Firmware Version = FE9X 4.10.00.016
+# tw_cli  /c1 show all | grep -i firmware
+/c1 Firmware Version = FE9X 4.10.00.016
 
--- 
-tejun
+I upgraded to the newest firmware, 2.6.34 remains solid.
+However, when I moved to 2.6.35, the high I/O weight and system freezes recur.
+Has anyone not noticed this?  I have two different controllers, a 4 and 16
+port 9650SE, both with BBUs, one with a RAID-1 the other with a RAID-6 and
+I've never had any problems like this before (this high I/O wait/ctrl reset)
+until I moved to 2.6.35.
+
+There is something wrong/happening here in 2.6.35 that causes the system
+to become unresponsive and reset the controllers under high load.  Prior to
+2.6.35, the problem does not exist, I have confirmed this on both firmwares
+now.
+
+
+Could the lock/unlock be causing the issue?
+Again, in 2.6.34, there are no latency problems or controller resets.
+
+3ware diff:
+
+--- linux-2.6.34.6/drivers/scsi/3w-9xxx.c       2010-08-26 19:44:38.000000000 -0400
++++ linux-2.6.35.4/drivers/scsi/3w-9xxx.c       2010-08-26 19:47:12.000000000 -0400
+-   Written By: Adam Radford <linuxraid@amcc.com>
+-   Modifications By: Tom Couch <linuxraid@amcc.com>
++   Written By: Adam Radford <linuxraid@lsi.com>
++   Modifications By: Tom Couch <linuxraid@lsi.com>
++   Copyright (C) 2010 LSI Corporation.
+-   linuxraid@amcc.com
++   linuxraid@lsi.com
+-   http://www.amcc.com
++   http://www.lsi.com
++   2.26.02.014 - Force 60 second timeout default.
+-#define TW_DRIVER_VERSION "2.26.02.013"
++#define TW_DRIVER_VERSION "2.26.02.014"
+-MODULE_AUTHOR ("AMCC");
++MODULE_AUTHOR ("LSI");
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+-       .ioctl          = twa_chrdev_ioctl,
++       .unlocked_ioctl = twa_chrdev_ioctl,
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++       struct inode *inode = file->f_path.dentry->d_inode;
++       lock_kernel();
++
++       unlock_kernel();
++/* This function gets called when a disk is coming on-line */
++static int twa_slave_configure(struct scsi_device *sdev)
++{
++       /* Force 60 second timeout */
++       blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
++
++       return 0;
++} /* End twa_slave_configure() */
++
++       .slave_configure        = twa_slave_configure,
+
+
