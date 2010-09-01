@@ -1,92 +1,182 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Wed, 1 Sep 2010 05:40:52 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
- <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 2/5] libata: implement sata_link_scr_lpm() and make ata_dev_set_feature() global
+Date: Wed,  1 Sep 2010 17:50:05 +0200
+Message-ID: <1283356208-1884-3-git-send-email-tj@kernel.org>
+References: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:32789 "EHLO lucidpixels.com"
+Received: from hera.kernel.org ([140.211.167.34]:35951 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754481Ab0IAJk4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2010 05:40:56 -0400
-In-Reply-To: <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
+	id S1755897Ab0IAPu2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Sep 2010 11:50:28 -0400
+In-Reply-To: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
+Link power management is about to be reimplemented.  Prepare for it.
 
+* Implement sata_link_scr_lpm().
 
-On Tue, 31 Aug 2010, Justin Piszcz wrote:
+* Drop static from ata_dev_set_feature() and make it available to
+  other libata files.
 
->>
+* Trivial whitespace adjustments.
 
-Hi Adam and LSI,
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-core.c |   75 ++++++++++++++++++++++++++++++++++++++++++---
+ drivers/ata/libata.h      |    2 +
+ include/linux/libata.h    |    2 +
+ 3 files changed, 74 insertions(+), 5 deletions(-)
 
-LSI got back to me, they said to try their latest firwmare and that the high
-I/O wait was solved in that release.
-
-# tw_cli  /c0 show all | grep -i firmware
-/c0 Firmware Version = FE9X 4.10.00.016
-# tw_cli  /c1 show all | grep -i firmware
-/c1 Firmware Version = FE9X 4.10.00.016
-
-I upgraded to the newest firmware, 2.6.34 remains solid.
-However, when I moved to 2.6.35, the high I/O weight and system freezes recur.
-Has anyone not noticed this?  I have two different controllers, a 4 and 16
-port 9650SE, both with BBUs, one with a RAID-1 the other with a RAID-6 and
-I've never had any problems like this before (this high I/O wait/ctrl reset)
-until I moved to 2.6.35.
-
-There is something wrong/happening here in 2.6.35 that causes the system
-to become unresponsive and reset the controllers under high load.  Prior to
-2.6.35, the problem does not exist, I have confirmed this on both firmwares
-now.
-
-
-Could the lock/unlock be causing the issue?
-Again, in 2.6.34, there are no latency problems or controller resets.
-
-3ware diff:
-
---- linux-2.6.34.6/drivers/scsi/3w-9xxx.c       2010-08-26 19:44:38.000000000 -0400
-+++ linux-2.6.35.4/drivers/scsi/3w-9xxx.c       2010-08-26 19:47:12.000000000 -0400
--   Written By: Adam Radford <linuxraid@amcc.com>
--   Modifications By: Tom Couch <linuxraid@amcc.com>
-+   Written By: Adam Radford <linuxraid@lsi.com>
-+   Modifications By: Tom Couch <linuxraid@lsi.com>
-+   Copyright (C) 2010 LSI Corporation.
--   linuxraid@amcc.com
-+   linuxraid@lsi.com
--   http://www.amcc.com
-+   http://www.lsi.com
-+   2.26.02.014 - Force 60 second timeout default.
--#define TW_DRIVER_VERSION "2.26.02.013"
-+#define TW_DRIVER_VERSION "2.26.02.014"
--MODULE_AUTHOR ("AMCC");
-+MODULE_AUTHOR ("LSI");
--static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
-+static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
--       .ioctl          = twa_chrdev_ioctl,
-+       .unlocked_ioctl = twa_chrdev_ioctl,
--static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
-+static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-+       struct inode *inode = file->f_path.dentry->d_inode;
-+       lock_kernel();
-+
-+       unlock_kernel();
-+/* This function gets called when a disk is coming on-line */
-+static int twa_slave_configure(struct scsi_device *sdev)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a7274f5..c8573e0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -91,8 +91,6 @@ const struct ata_port_operations sata_port_ops = {
+ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+-static unsigned int ata_dev_set_feature(struct ata_device *dev,
+-					u8 enable, u8 feature);
+ static void ata_dev_xfermask(struct ata_device *dev);
+ static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
+ 
+@@ -3628,7 +3626,7 @@ int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
+  *	@params: timing parameters { interval, duratinon, timeout } in msec
+  *	@deadline: deadline jiffies for the operation
+  *
+-*	Make sure SStatus of @link reaches stable state, determined by
++ *	Make sure SStatus of @link reaches stable state, determined by
+  *	holding the same value where DET is not 1 for @duration polled
+  *	every @interval, before @timeout.  Timeout constraints the
+  *	beginning of the stable state.  Because DET gets stuck at 1 on
+@@ -3760,6 +3758,72 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ }
+ 
+ /**
++ *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
++ *	@link: ATA link to manipulate SControl for
++ *	@policy: LPM policy to configure
++ *	@spm_wakeup: initiate LPM transition to active state
++ *
++ *	Manipulate the IPM field of the SControl register of @link
++ *	according to @policy.  If @policy is ATA_LPM_MAX_POWER and
++ *	@spm_wakeup is %true, the SPM field is manipulated to wake up
++ *	the link.  This function also clears PHYRDY_CHG before
++ *	returning.
++ *
++ *	LOCKING:
++ *	EH context.
++ *
++ *	RETURNS:
++ *	0 on succes, -errno otherwise.
++ */
++int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++		      bool spm_wakeup)
 +{
-+       /* Force 60 second timeout */
-+       blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
++	struct ata_eh_context *ehc = &link->eh_context;
++	bool woken_up = false;
++	u32 scontrol;
++	int rc;
 +
-+       return 0;
-+} /* End twa_slave_configure() */
++	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return rc;
 +
-+       .slave_configure        = twa_slave_configure,
-
++	switch (policy) {
++	case ATA_LPM_MAX_POWER:
++		/* disable all LPM transitions */
++		scontrol |= (0x3 << 8);
++		/* initiate transition to active state */
++		if (spm_wakeup) {
++			scontrol |= (0x4 << 12);
++			woken_up = true;
++		}
++		break;
++	case ATA_LPM_MED_POWER:
++		/* allow LPM to PARTIAL */
++		scontrol &= ~(0x1 << 8);
++		scontrol |= (0x2 << 8);
++		break;
++	case ATA_LPM_MIN_POWER:
++		/* no restrictions on LPM transitions */
++		scontrol &= ~(0x3 << 8);
++		break;
++	default:
++		WARN_ON(1);
++	}
++
++	rc = sata_scr_write(link, SCR_CONTROL, scontrol);
++	if (rc)
++		return rc;
++
++	/* give the link time to transit out of LPM state */
++	if (woken_up)
++		msleep(10);
++
++	/* clear PHYRDY_CHG from SError */
++	ehc->i.serror &= ~SERR_PHYRDY_CHG;
++	return sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
++}
++
++/**
+  *	ata_std_prereset - prepare for reset
+  *	@link: ATA link to be reset
+  *	@deadline: deadline jiffies for the operation
+@@ -4551,6 +4615,7 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+ 	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+ 	return err_mask;
+ }
++
+ /**
+  *	ata_dev_set_feature - Issue SET FEATURES - SATA FEATURES
+  *	@dev: Device to which command will be sent
+@@ -4566,8 +4631,7 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev)
+  *	RETURNS:
+  *	0 on success, AC_ERR_* mask otherwise.
+  */
+-static unsigned int ata_dev_set_feature(struct ata_device *dev, u8 enable,
+-					u8 feature)
++unsigned int ata_dev_set_feature(struct ata_device *dev, u8 enable, u8 feature)
+ {
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+@@ -6720,6 +6784,7 @@ EXPORT_SYMBOL_GPL(sata_set_spd);
+ EXPORT_SYMBOL_GPL(ata_wait_after_reset);
+ EXPORT_SYMBOL_GPL(sata_link_debounce);
+ EXPORT_SYMBOL_GPL(sata_link_resume);
++EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
+ EXPORT_SYMBOL_GPL(ata_std_prereset);
+ EXPORT_SYMBOL_GPL(sata_link_hardreset);
+ EXPORT_SYMBOL_GPL(sata_std_hardreset);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 1471462..65b6a73 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -86,6 +86,8 @@ extern int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+ extern int ata_dev_configure(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
++extern unsigned int ata_dev_set_feature(struct ata_device *dev,
++					u8 enable, u8 feature);
+ extern void ata_sg_clean(struct ata_queued_cmd *qc);
+ extern void ata_qc_free(struct ata_queued_cmd *qc);
+ extern void ata_qc_issue(struct ata_queued_cmd *qc);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index acfb650..da71bb9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -950,6 +950,8 @@ extern int sata_link_debounce(struct ata_link *link,
+ 			const unsigned long *params, unsigned long deadline);
+ extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 			    unsigned long deadline);
++extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++			     bool spm_wakeup);
+ extern int sata_link_hardreset(struct ata_link *link,
+ 			const unsigned long *timing, unsigned long deadline,
+ 			bool *online, int (*check_ready)(struct ata_link *));
+-- 
+1.7.1
 
