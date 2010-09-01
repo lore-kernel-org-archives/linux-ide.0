@@ -1,61 +1,197 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET #upstream] libata: reimplement LPM support
-Date: Wed,  1 Sep 2010 17:50:03 +0200
-Message-ID: <1283356208-1884-1-git-send-email-tj@kernel.org>
+Subject: [PATCH 4/5] libata: implement LPM support for port multipliers
+Date: Wed,  1 Sep 2010 17:50:07 +0200
+Message-ID: <1283356208-1884-5-git-send-email-tj@kernel.org>
+References: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35949 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35948 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755891Ab0IAPu1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1755878Ab0IAPu1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Wed, 1 Sep 2010 11:50:27 -0400
+In-Reply-To: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jeff@garzik.org, linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello,
+Port multipliers can do DIPM on fan-out links fine.  Implement support
+for it.  Tested w/ SIMG 57xx and marvell PMPs.  Both the host and
+fan-out links enter power save modes nicely.
 
-This patchset reimplement LPM support so that it's better integrated
-with the rest of libata and supports more than just ALPM.  After the
-patchset, DIPM works on ahci w/o ALPM support, host link of PMP can
-use both H/DIPM and fan-out links supports DIPM, and ata_piix w/ SIDPR
-also supports DIPM.
+SIMG 37xx and 47xx report link offline on SStatus causing EH to detach
+the devices.  Blacklisted.
 
-Adding DIPM support for other controllers should be easy and DIPM
-actually works better than ALPM because DIPM implements sane timeout
-before entering powersave mode and thus doesn't hurt throughput like
-ALPM does.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-eh.c  |   21 ++++++++++++++-----
+ drivers/ata/libata-pmp.c |   48 ++++++++++++++++++++++++++++++++++++++++++---
+ drivers/ata/libata.h     |    8 +++++++
+ 3 files changed, 67 insertions(+), 10 deletions(-)
 
-Tested with intel and JMB ahci's, ich8 ata_piix, SIMG and marvell
-PMPs.  SATA bus analyzer was used to verify links are actually
-entering and coming out of powersave mode.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 91f302f..1fb809c 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3232,7 +3232,7 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
+ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 			  struct ata_device **r_failed_dev)
+ {
+-	struct ata_port *ap = link->ap;
++	struct ata_port *ap = ata_is_host_link(link) ? link->ap : NULL;
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
+ 	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
+@@ -3278,9 +3278,12 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		}
+ 	}
+ 
+-	rc = ap->ops->set_lpm(link, policy, hints);
+-	if (!rc && ap->slave_link)
+-		rc = ap->ops->set_lpm(ap->slave_link, policy, hints);
++	if (ap) {
++		rc = ap->ops->set_lpm(link, policy, hints);
++		if (!rc && ap->slave_link)
++			rc = ap->ops->set_lpm(ap->slave_link, policy, hints);
++	} else
++		rc = sata_pmp_set_lpm(link, policy, hints);
+ 
+ 	/*
+ 	 * Attribute link config failure to the first (LPM) enabled
+@@ -3408,8 +3411,14 @@ static int ata_eh_schedule_probe(struct ata_device *dev)
+ 	ehc->saved_ncq_enabled &= ~(1 << dev->devno);
+ 
+ 	/* the link maybe in a deep sleep, wake it up */
+-	if (link->lpm_policy > ATA_LPM_MAX_POWER)
+-		link->ap->ops->set_lpm(link, ATA_LPM_MAX_POWER, ATA_LPM_EMPTY);
++	if (link->lpm_policy > ATA_LPM_MAX_POWER) {
++		if (ata_is_host_link(link))
++			link->ap->ops->set_lpm(link, ATA_LPM_MAX_POWER,
++					       ATA_LPM_EMPTY);
++		else
++			sata_pmp_set_lpm(link, ATA_LPM_MAX_POWER,
++					 ATA_LPM_EMPTY);
++	}
+ 
+ 	/* Record and count probe trials on the ering.  The specific
+ 	 * error mask used is irrelevant.  Because a successful device
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 5054702..3120596 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -186,6 +186,27 @@ int sata_pmp_scr_write(struct ata_link *link, int reg, u32 val)
+ }
+ 
+ /**
++ *	sata_pmp_set_lpm - configure LPM for a PMP link
++ *	@link: PMP link to configure LPM for
++ *	@policy: target LPM policy
++ *	@hints: LPM hints
++ *
++ *	Configure LPM for @link.  This function will contain any PMP
++ *	specific workarounds if necessary.
++ *
++ *	LOCKING:
++ *	EH context.
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++int sata_pmp_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++		     unsigned hints)
++{
++	return sata_link_scr_lpm(link, policy, true);
++}
++
++/**
+  *	sata_pmp_read_gscr - read GSCR block of SATA PMP
+  *	@dev: PMP device
+  *	@gscr: buffer to read GSCR block into
+@@ -365,6 +386,9 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 	if (vendor == 0x1095 && devid == 0x3726) {
+ 		/* sil3726 quirks */
+ 		ata_for_each_link(link, ap, EDGE) {
++			/* link reports offline after LPM */
++			link->flags |= ATA_LFLAG_NO_LPM;
++
+ 			/* Class code report is unreliable and SRST
+ 			 * times out under certain configurations.
+ 			 */
+@@ -380,6 +404,9 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 	} else if (vendor == 0x1095 && devid == 0x4723) {
+ 		/* sil4723 quirks */
+ 		ata_for_each_link(link, ap, EDGE) {
++			/* link reports offline after LPM */
++			link->flags |= ATA_LFLAG_NO_LPM;
++
+ 			/* class code report is unreliable */
+ 			if (link->pmp < 2)
+ 				link->flags |= ATA_LFLAG_ASSUME_ATA;
+@@ -392,6 +419,9 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 	} else if (vendor == 0x1095 && devid == 0x4726) {
+ 		/* sil4726 quirks */
+ 		ata_for_each_link(link, ap, EDGE) {
++			/* link reports offline after LPM */
++			link->flags |= ATA_LFLAG_NO_LPM;
++
+ 			/* Class code report is unreliable and SRST
+ 			 * times out under certain configurations.
+ 			 * Config device can be at port 0 or 5 and
+@@ -952,15 +982,25 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+ 	if (rc)
+ 		goto link_fail;
+ 
+-	/* Connection status might have changed while resetting other
+-	 * links, check SATA_PMP_GSCR_ERROR before returning.
+-	 */
+-
+ 	/* clear SNotification */
+ 	rc = sata_scr_read(&ap->link, SCR_NOTIFICATION, &sntf);
+ 	if (rc == 0)
+ 		sata_scr_write(&ap->link, SCR_NOTIFICATION, sntf);
+ 
++	/*
++	 * If LPM is active on any fan-out port, hotplug wouldn't
++	 * work.  Return w/ PHY event notification disabled.
++	 */
++	ata_for_each_link(link, ap, EDGE)
++		if (link->lpm_policy > ATA_LPM_MAX_POWER)
++			return 0;
++
++	/*
++	 * Connection status might have changed while resetting other
++	 * links, enable notification and check SATA_PMP_GSCR_ERROR
++	 * before returning.
++	 */
++
+ 	/* enable notification */
+ 	if (pmp_dev->flags & ATA_DFLAG_AN) {
+ 		gscr[SATA_PMP_GSCR_FEAT_EN] |= SATA_PMP_FEAT_NOTIFY;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 55a6f41..7c070a4 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -176,6 +176,8 @@ extern int ata_ering_map(struct ata_ering *ering,
+ #ifdef CONFIG_SATA_PMP
+ extern int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *val);
+ extern int sata_pmp_scr_write(struct ata_link *link, int reg, u32 val);
++extern int sata_pmp_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++			    unsigned hints);
+ extern int sata_pmp_attach(struct ata_device *dev);
+ #else /* CONFIG_SATA_PMP */
+ static inline int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *val)
+@@ -188,6 +190,12 @@ static inline int sata_pmp_scr_write(struct ata_link *link, int reg, u32 val)
+ 	return -EINVAL;
+ }
+ 
++static inline int sata_pmp_set_lpm(struct ata_link *link,
++				   enum ata_lpm_policy policy, unsigned hints)
++{
++	return -EINVAL;
++}
++
+ static inline int sata_pmp_attach(struct ata_device *dev)
+ {
+ 	return -EINVAL;
+-- 
+1.7.1
 
-This patchset contains the following five patches
-
- 0001-libata-clean-up-lpm-related-symbols-and-sysfs-show-s.patch
- 0002-libata-implement-sata_link_scr_lpm-and-make-ata_dev_.patch
- 0003-libata-reimplement-link-power-management.patch
- 0004-libata-implement-LPM-support-for-port-multipliers.patch
- 0005-ata_piix-implement-LPM-support.patch
-
-and available in the folloing git tree
-
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git lpm
-
-with the following changes.
-
- drivers/ata/ahci.c          |    3 
- drivers/ata/ahci.h          |    3 
- drivers/ata/ahci_platform.c |    3 
- drivers/ata/ata_piix.c      |   24 +++
- drivers/ata/libahci.c       |  160 ++++++-------------------
- drivers/ata/libata-core.c   |  276 +++++++++++---------------------------------
- drivers/ata/libata-eh.c     |  173 ++++++++++++++++++++++++---
- drivers/ata/libata-pmp.c    |   48 +++++++
- drivers/ata/libata-scsi.c   |   73 ++++-------
- drivers/ata/libata.h        |   12 +
- include/linux/libata.h      |   42 +++---
- 11 files changed, 397 insertions(+), 420 deletions(-)
-
-Thanks.
-
---
-tejun
