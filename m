@@ -1,514 +1,93 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 1/5] libata: clean up lpm related symbols and sysfs show/store functions
-Date: Wed,  1 Sep 2010 17:50:04 +0200
-Message-ID: <1283356208-1884-2-git-send-email-tj@kernel.org>
-References: <1283356208-1884-1-git-send-email-tj@kernel.org>
+From: Kalra Ashish-B00888 <B00888@freescale.com>
+Subject: RE: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
+Date: Wed, 1 Sep 2010 22:03:14 +0530
+Message-ID: <187b01cb49f3$9cf1a042$2303d30a@fsl.freescale.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:35957 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755895Ab0IAPuc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2010 11:50:32 -0400
-In-Reply-To: <1283356208-1884-1-git-send-email-tj@kernel.org>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:57126
+	"EHLO VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755898Ab0IAQfT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Sep 2010 12:35:19 -0400
+Received: from mail149-va3 (localhost.localdomain [127.0.0.1])	by
+ mail149-va3-R.bigfish.com (Postfix) with ESMTP id D63CE33047D	for
+ <linux-ide@vger.kernel.org>; Wed,  1 Sep 2010 16:35:17 +0000 (UTC)
+Received: from VA3EHSMHS028.bigfish.com (unknown [10.7.14.241])	by
+ mail149-va3.bigfish.com (Postfix) with ESMTP id 6807613A8051	for
+ <linux-ide@vger.kernel.org>; Wed,  1 Sep 2010 16:35:16 +0000 (UTC)
+Received: from az33smr01.freescale.net (az33smr01.freescale.net
+ [10.64.34.199])	by az33egw02.freescale.net (8.14.3/8.14.3) with ESMTP id
+ o81GYxgP003941	for <linux-ide@vger.kernel.org>; Wed, 1 Sep 2010 09:35:03
+ -0700 (MST)
+Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net
+ [10.232.192.5])	by az33smr01.freescale.net (8.13.1/8.13.0) with ESMTP id
+ o81Gl7E7001058	for <linux-ide@vger.kernel.org>; Wed, 1 Sep 2010 11:47:08
+ -0500 (CDT)
+Content-Class: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jeff@garzik.org, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj@kernel.org>, Gwendal Grignou <gwendal@google.com>
+Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
 
-Link power management related symbols are in confusing state w/ mixed
-usages of lpm, ipm and pm.  This patch cleans up lpm related symbols
-and sysfs show/store functions as follows.
 
-* lpm states - NOT_AVAILABLE, MIN_POWER, MAX_PERFORMANCE and
-  MEDIUM_POWER are renamed to ATA_LPM_UNKNOWN and
-  ATA_LPM_{MIN|MAX|MED}_POWER.
 
-* Pre/postfixes are unified to lpm.
+Sent from my HTC
 
-* sysfs show/store functions for link_power_management_policy were
-  curiously named get/put and unnecessarily complex.  Renamed to
-  show/store and simplified.
+-----Original Message-----
+From: Tejun Heo <tj@kernel.org>
+Sent: 01 September 2010 1:52 PM
+To: Gwendal Grignou <gwendal@google.com>
+Cc: jeff@garzik.org <jeff@garzik.org>; nicolas@jungers.net <nicolas@jungers.net>; linux-ide@vger.kernel.org <linux-ide@vger.kernel.org>
+Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/ahci.c          |    2 +-
- drivers/ata/ahci.h          |    2 +-
- drivers/ata/ahci_platform.c |    2 +-
- drivers/ata/libahci.c       |   20 ++++++-------
- drivers/ata/libata-core.c   |   50 ++++++++++++++++----------------
- drivers/ata/libata-eh.c     |    2 +-
- drivers/ata/libata-scsi.c   |   68 ++++++++++++++----------------------------
- drivers/ata/libata.h        |    6 ++-
- include/linux/libata.h      |   29 +++++++++---------
- 9 files changed, 80 insertions(+), 101 deletions(-)
+Hello,
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 013727b..b4e2730 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1202,7 +1202,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 				   0x100 + ap->port_no * 0x80, "port");
- 
- 		/* set initial link pm policy */
--		ap->pm_policy = NOT_AVAILABLE;
-+		ap->lpm_policy = ATA_LPM_UNKNOWN;
- 
- 		/* set enclosure management message type */
- 		if (ap->flags & ATA_FLAG_EM)
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 474427b..f5ba3fa 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -216,7 +216,7 @@ enum {
- 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
- 					  ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA |
- 					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
--					  ATA_FLAG_IPM,
-+					  ATA_FLAG_LPM,
- 
- 	ICH_MAP				= 0x90, /* ICH MAP register */
- 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 4e97f33..3581d50 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -126,7 +126,7 @@ static int __init ahci_probe(struct platform_device *pdev)
- 		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
- 
- 		/* set initial link pm policy */
--		ap->pm_policy = NOT_AVAILABLE;
-+		ap->lpm_policy = ATA_LPM_UNKNOWN;
- 
- 		/* set enclosure management message type */
- 		if (ap->flags & ATA_FLAG_EM)
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 666850d..7c043a0 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -56,8 +56,7 @@ MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)
- module_param_named(ignore_sss, ahci_ignore_sss, int, 0444);
- MODULE_PARM_DESC(ignore_sss, "Ignore staggered spinup flag (0=don't ignore, 1=ignore)");
- 
--static int ahci_enable_alpm(struct ata_port *ap,
--		enum link_pm policy);
-+static int ahci_enable_alpm(struct ata_port *ap, enum ata_lpm_policy policy);
- static void ahci_disable_alpm(struct ata_port *ap);
- static ssize_t ahci_led_show(struct ata_port *ap, char *buf);
- static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
-@@ -657,7 +656,7 @@ static void ahci_disable_alpm(struct ata_port *ap)
- 	u32 cmd;
- 	struct ahci_port_priv *pp = ap->private_data;
- 
--	/* IPM bits should be disabled by libata-core */
-+	/* LPM bits should be disabled by libata-core */
- 	/* get the existing command bits */
- 	cmd = readl(port_mmio + PORT_CMD);
- 
-@@ -699,8 +698,7 @@ static void ahci_disable_alpm(struct ata_port *ap)
- 	 */
- }
- 
--static int ahci_enable_alpm(struct ata_port *ap,
--	enum link_pm policy)
-+static int ahci_enable_alpm(struct ata_port *ap, enum ata_lpm_policy policy)
- {
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -713,21 +711,21 @@ static int ahci_enable_alpm(struct ata_port *ap,
- 		return -EINVAL;
- 
- 	switch (policy) {
--	case MAX_PERFORMANCE:
--	case NOT_AVAILABLE:
-+	case ATA_LPM_MAX_POWER:
-+	case ATA_LPM_UNKNOWN:
- 		/*
--		 * if we came here with NOT_AVAILABLE,
-+		 * if we came here with ATA_LPM_UNKNOWN,
- 		 * it just means this is the first time we
- 		 * have tried to enable - default to max performance,
- 		 * and let the user go to lower power modes on request.
- 		 */
- 		ahci_disable_alpm(ap);
- 		return 0;
--	case MIN_POWER:
-+	case ATA_LPM_MIN_POWER:
- 		/* configure HBA to enter SLUMBER */
- 		asp = PORT_CMD_ASP;
- 		break;
--	case MEDIUM_POWER:
-+	case ATA_LPM_MED_POWER:
- 		/* configure HBA to enter PARTIAL */
- 		asp = 0;
- 		break;
-@@ -770,7 +768,7 @@ static int ahci_enable_alpm(struct ata_port *ap,
- 	writel(cmd, port_mmio + PORT_CMD);
- 	cmd = readl(port_mmio + PORT_CMD);
- 
--	/* IPM bits should be set by libata-core */
-+	/* LPM bits should be set by libata-core */
- 	return 0;
- }
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9ceb493..a7274f5 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1030,7 +1030,7 @@ const char *sata_spd_string(unsigned int spd)
- 	return spd_str[spd - 1];
- }
- 
--static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
-+static int ata_dev_set_dipm(struct ata_device *dev, enum ata_lpm_policy policy)
- {
- 	struct ata_link *link = dev->link;
- 	struct ata_port *ap = link->ap;
-@@ -1040,14 +1040,14 @@ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
- 
- 	/*
- 	 * disallow DIPM for drivers which haven't set
--	 * ATA_FLAG_IPM.  This is because when DIPM is enabled,
-+	 * ATA_FLAG_LPM.  This is because when DIPM is enabled,
- 	 * phy ready will be set in the interrupt status on
- 	 * state changes, which will cause some drivers to
- 	 * think there are errors - additionally drivers will
- 	 * need to disable hot plug.
- 	 */
--	if (!(ap->flags & ATA_FLAG_IPM) || !ata_dev_enabled(dev)) {
--		ap->pm_policy = NOT_AVAILABLE;
-+	if (!(ap->flags & ATA_FLAG_LPM) || !ata_dev_enabled(dev)) {
-+		ap->lpm_policy = ATA_LPM_UNKNOWN;
- 		return -EINVAL;
- 	}
- 
-@@ -1066,8 +1066,8 @@ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
- 		return rc;
- 
- 	switch (policy) {
--	case MIN_POWER:
--		/* no restrictions on IPM transitions */
-+	case ATA_LPM_MIN_POWER:
-+		/* no restrictions on LPM transitions */
- 		scontrol &= ~(0x3 << 8);
- 		rc = sata_scr_write(link, SCR_CONTROL, scontrol);
- 		if (rc)
-@@ -1078,8 +1078,8 @@ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
- 			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
- 		break;
--	case MEDIUM_POWER:
--		/* allow IPM to PARTIAL */
-+	case ATA_LPM_MED_POWER:
-+		/* allow LPM to PARTIAL */
- 		scontrol &= ~(0x1 << 8);
- 		scontrol |= (0x2 << 8);
- 		rc = sata_scr_write(link, SCR_CONTROL, scontrol);
-@@ -1087,21 +1087,21 @@ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
- 			return rc;
- 
- 		/*
--		 * we don't have to disable DIPM since IPM flags
-+		 * we don't have to disable DIPM since LPM flags
- 		 * disallow transitions to SLUMBER, which effectively
- 		 * disable DIPM if it does not support PARTIAL
- 		 */
- 		break;
--	case NOT_AVAILABLE:
--	case MAX_PERFORMANCE:
--		/* disable all IPM transitions */
-+	case ATA_LPM_UNKNOWN:
-+	case ATA_LPM_MAX_POWER:
-+		/* disable all LPM transitions */
- 		scontrol |= (0x3 << 8);
- 		rc = sata_scr_write(link, SCR_CONTROL, scontrol);
- 		if (rc)
- 			return rc;
- 
- 		/*
--		 * we don't have to disable DIPM since IPM flags
-+		 * we don't have to disable DIPM since LPM flags
- 		 * disallow all transitions which effectively
- 		 * disable DIPM anyway.
- 		 */
-@@ -1125,9 +1125,9 @@ static int ata_dev_set_dipm(struct ata_device *dev, enum link_pm policy)
-  *	enabling Host Initiated Power management.
-  *
-  *	Locking: Caller.
-- *	Returns: -EINVAL if IPM is not supported, 0 otherwise.
-+ *	Returns: -EINVAL if LPM is not supported, 0 otherwise.
-  */
--void ata_dev_enable_pm(struct ata_device *dev, enum link_pm policy)
-+void ata_dev_enable_pm(struct ata_device *dev, enum ata_lpm_policy policy)
- {
- 	int rc = 0;
- 	struct ata_port *ap = dev->link->ap;
-@@ -1141,9 +1141,9 @@ void ata_dev_enable_pm(struct ata_device *dev, enum link_pm policy)
- 
- enable_pm_out:
- 	if (rc)
--		ap->pm_policy = MAX_PERFORMANCE;
-+		ap->lpm_policy = ATA_LPM_MAX_POWER;
- 	else
--		ap->pm_policy = policy;
-+		ap->lpm_policy = policy;
- 	return /* rc */;	/* hopefully we can use 'rc' eventually */
- }
- 
-@@ -1164,15 +1164,15 @@ static void ata_dev_disable_pm(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 
--	ata_dev_set_dipm(dev, MAX_PERFORMANCE);
-+	ata_dev_set_dipm(dev, ATA_LPM_MAX_POWER);
- 	if (ap->ops->disable_pm)
- 		ap->ops->disable_pm(ap);
- }
- #endif	/* CONFIG_PM */
- 
--void ata_lpm_schedule(struct ata_port *ap, enum link_pm policy)
-+void ata_lpm_schedule(struct ata_port *ap, enum ata_lpm_policy policy)
- {
--	ap->pm_policy = policy;
-+	ap->lpm_policy = policy;
- 	ap->link.eh_info.action |= ATA_EH_LPM;
- 	ap->link.eh_info.flags |= ATA_EHI_NO_AUTOPSY;
- 	ata_port_schedule_eh(ap);
-@@ -1201,7 +1201,7 @@ static void ata_lpm_disable(struct ata_host *host)
- 
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
--		ata_lpm_schedule(ap, ap->pm_policy);
-+		ata_lpm_schedule(ap, ap->lpm_policy);
- 	}
- }
- #endif	/* CONFIG_PM */
-@@ -2564,7 +2564,7 @@ int ata_dev_configure(struct ata_device *dev)
- 	if (dev->flags & ATA_DFLAG_LBA48)
- 		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
- 
--	if (!(dev->horkage & ATA_HORKAGE_IPM)) {
-+	if (!(dev->horkage & ATA_HORKAGE_LPM)) {
- 		if (ata_id_has_hipm(dev->id))
- 			dev->flags |= ATA_DFLAG_HIPM;
- 		if (ata_id_has_dipm(dev->id))
-@@ -2591,11 +2591,11 @@ int ata_dev_configure(struct ata_device *dev)
- 		dev->max_sectors = min_t(unsigned int, ATA_MAX_SECTORS_128,
- 					 dev->max_sectors);
- 
--	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_IPM) {
--		dev->horkage |= ATA_HORKAGE_IPM;
-+	if (ata_dev_blacklisted(dev) & ATA_HORKAGE_LPM) {
-+		dev->horkage |= ATA_HORKAGE_LPM;
- 
- 		/* reset link pm_policy for this port to no pm */
--		ap->pm_policy = MAX_PERFORMANCE;
-+		ap->lpm_policy = ATA_LPM_MAX_POWER;
- 	}
- 
- 	if (ap->ops->dev_config)
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0108731..ae2f697 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3566,7 +3566,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		/* configure link power saving */
- 		if (ehc->i.action & ATA_EH_LPM)
- 			ata_for_each_dev(dev, link, ALL)
--				ata_dev_enable_pm(dev, ap->pm_policy);
-+				ata_dev_enable_pm(dev, ap->lpm_policy);
- 
- 		/* this link is okay now */
- 		ehc->i.flags = 0;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f1c0118..aa56681 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -103,72 +103,50 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
- 	0, 30	/* extended self test time, see 05-359r1 */
- };
- 
--static const struct {
--	enum link_pm	value;
--	const char	*name;
--} link_pm_policy[] = {
--	{ NOT_AVAILABLE, "max_performance" },
--	{ MIN_POWER, "min_power" },
--	{ MAX_PERFORMANCE, "max_performance" },
--	{ MEDIUM_POWER, "medium_power" },
-+static const char *ata_lpm_policy_names[] = {
-+	[ATA_LPM_UNKNOWN]	= "max_performance",
-+	[ATA_LPM_MAX_POWER]	= "max_performance",
-+	[ATA_LPM_MED_POWER]	= "medium_power",
-+	[ATA_LPM_MIN_POWER]	= "min_power",
- };
- 
--static const char *ata_scsi_lpm_get(enum link_pm policy)
--{
--	int i;
--
--	for (i = 0; i < ARRAY_SIZE(link_pm_policy); i++)
--		if (link_pm_policy[i].value == policy)
--			return link_pm_policy[i].name;
--
--	return NULL;
--}
--
--static ssize_t ata_scsi_lpm_put(struct device *dev,
--				struct device_attribute *attr,
--				const char *buf, size_t count)
-+static ssize_t ata_scsi_lpm_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ata_port *ap = ata_shost_to_port(shost);
--	enum link_pm policy = 0;
--	int i;
-+	enum ata_lpm_policy policy;
- 
--	/*
--	 * we are skipping array location 0 on purpose - this
--	 * is because a value of NOT_AVAILABLE is displayed
--	 * to the user as max_performance, but when the user
--	 * writes "max_performance", they actually want the
--	 * value to match MAX_PERFORMANCE.
--	 */
--	for (i = 1; i < ARRAY_SIZE(link_pm_policy); i++) {
--		const int len = strlen(link_pm_policy[i].name);
--		if (strncmp(link_pm_policy[i].name, buf, len) == 0) {
--			policy = link_pm_policy[i].value;
-+	/* UNKNOWN is internal state, iterate from MAX_POWER */
-+	for (policy = ATA_LPM_MAX_POWER;
-+	     policy < ARRAY_SIZE(ata_lpm_policy_names); policy++) {
-+		const char *name = ata_lpm_policy_names[policy];
-+
-+		if (strncmp(name, buf, strlen(name)) == 0)
- 			break;
--		}
- 	}
--	if (!policy)
-+	if (policy == ARRAY_SIZE(ata_lpm_policy_names))
- 		return -EINVAL;
- 
- 	ata_lpm_schedule(ap, policy);
- 	return count;
- }
- 
--static ssize_t
--ata_scsi_lpm_show(struct device *dev, struct device_attribute *attr, char *buf)
-+static ssize_t ata_scsi_lpm_show(struct device *dev,
-+				 struct device_attribute *attr, char *buf)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct ata_port *ap = ata_shost_to_port(shost);
--	const char *policy =
--		ata_scsi_lpm_get(ap->pm_policy);
- 
--	if (!policy)
-+	if (ap->lpm_policy >= ARRAY_SIZE(ata_lpm_policy_names))
- 		return -EINVAL;
- 
--	return snprintf(buf, 23, "%s\n", policy);
-+	return snprintf(buf, PAGE_SIZE, "%s\n",
-+			ata_lpm_policy_names[ap->lpm_policy]);
- }
- DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
--		ata_scsi_lpm_show, ata_scsi_lpm_put);
-+	    ata_scsi_lpm_show, ata_scsi_lpm_store);
- EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
- 
- static ssize_t ata_scsi_park_show(struct device *device,
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 142102b..1471462 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -100,8 +100,10 @@ extern int sata_link_init_spd(struct ata_link *link);
- extern int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg);
- extern struct ata_port *ata_port_alloc(struct ata_host *host);
--extern void ata_dev_enable_pm(struct ata_device *dev, enum link_pm policy);
--extern void ata_lpm_schedule(struct ata_port *ap, enum link_pm);
-+extern void ata_dev_enable_pm(struct ata_device *dev,
-+			      enum ata_lpm_policy policy);
-+extern void ata_lpm_schedule(struct ata_port *ap,
-+			     enum ata_lpm_policy policy);
- extern const char *sata_spd_string(unsigned int spd);
- 
- /* libata-acpi.c */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 89115f8..acfb650 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -196,7 +196,7 @@ enum {
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
- 	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
- 	ATA_FLAG_PMP		= (1 << 19), /* controller supports PMP */
--	ATA_FLAG_IPM		= (1 << 20), /* driver can handle IPM */
-+	ATA_FLAG_LPM		= (1 << 20), /* driver can handle LPM */
- 	ATA_FLAG_EM		= (1 << 21), /* driver supports enclosure
- 					      * management */
- 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
-@@ -376,7 +376,7 @@ enum {
- 	ATA_HORKAGE_BROKEN_HPA	= (1 << 4),	/* Broken HPA */
- 	ATA_HORKAGE_DISABLE	= (1 << 5),	/* Disable it */
- 	ATA_HORKAGE_HPA_SIZE	= (1 << 6),	/* native size off by one */
--	ATA_HORKAGE_IPM		= (1 << 7),	/* Link PM problems */
-+	ATA_HORKAGE_LPM		= (1 << 7),	/* Link PM problems */
- 	ATA_HORKAGE_IVB		= (1 << 8),	/* cbl det validity bit bugs */
- 	ATA_HORKAGE_STUCK_ERR	= (1 << 9),	/* stuck ERR on next PACKET */
- 	ATA_HORKAGE_BRIDGE_OK	= (1 << 10),	/* no bridge limits */
-@@ -463,6 +463,17 @@ enum ata_completion_errors {
- 	AC_ERR_NCQ		= (1 << 10), /* marker for offending NCQ qc */
- };
- 
-+/*
-+ * Link power management policy: If you alter this, you also need to
-+ * alter libata-scsi.c (for the ascii descriptions)
-+ */
-+enum ata_lpm_policy {
-+	ATA_LPM_UNKNOWN,
-+	ATA_LPM_MAX_POWER,
-+	ATA_LPM_MED_POWER,
-+	ATA_LPM_MIN_POWER,
-+};
-+
- /* forward declarations */
- struct scsi_device;
- struct ata_port_operations;
-@@ -477,16 +488,6 @@ typedef int (*ata_reset_fn_t)(struct ata_link *link, unsigned int *classes,
- 			      unsigned long deadline);
- typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes);
- 
--/*
-- * host pm policy: If you alter this, you also need to alter libata-scsi.c
-- * (for the ascii descriptions)
-- */
--enum link_pm {
--	NOT_AVAILABLE,
--	MIN_POWER,
--	MAX_PERFORMANCE,
--	MEDIUM_POWER,
--};
- extern struct device_attribute dev_attr_link_power_management_policy;
- extern struct device_attribute dev_attr_unload_heads;
- extern struct device_attribute dev_attr_em_message_type;
-@@ -770,7 +771,7 @@ struct ata_port {
- 
- 	pm_message_t		pm_mesg;
- 	int			*pm_result;
--	enum link_pm		pm_policy;
-+	enum ata_lpm_policy	lpm_policy;
- 
- 	struct timer_list	fastdrain_timer;
- 	unsigned long		fastdrain_cnt;
-@@ -836,7 +837,7 @@ struct ata_port_operations {
- 	int  (*scr_write)(struct ata_link *link, unsigned int sc_reg, u32 val);
- 	void (*pmp_attach)(struct ata_port *ap);
- 	void (*pmp_detach)(struct ata_port *ap);
--	int  (*enable_pm)(struct ata_port *ap, enum link_pm policy);
-+	int  (*enable_pm)(struct ata_port *ap, enum ata_lpm_policy policy);
- 	void (*disable_pm)(struct ata_port *ap);
- 
- 	/*
+On 09/01/2010 01:17 AM, Gwendal Grignou wrote:
+> On Tue, Aug 31, 2010 at 1:04 AM, Tejun Heo <tj@kernel.org> wrote:
+>> On 08/30/2010 07:17 PM, Gwendal Grignou wrote:
+>>> Keep track of the link on the which the current request is in progress.
+>>> It allows support of links behind port multiplier.
+>>>
+>>> Not all libata-sff is PMP compliant. Code for native BMDMA controller
+>>> does not take in accound PMP.
+>>
+>> Can you please elaborate a bit more on what broke and how this patch
+>> fixes the problem?
+> Before this patch, all libata-sff assumes the qc in progess is tied to
+> ap->link, the host port link.
+> That's fine as long as the controllers do not support port multiplier,
+> which is the case of all controller inheriting ata_sff_port_ops except
+> some controllers managed by sata_mv.
+> Also, before the libata-ssf reorg, it did not matter, qc was given the
+> sff task directly.
+> 
+> However, sata_mv supports port multiplier and use part of libata-sff
+> to hanlde PIO commands to disks. qc sent to disk behind port
+> multiplier are tight to one of element pmp_link array.
+> Therefore, the part of libata-sff sata_mv exercises must be retrieve
+> qc from the provided link instead of ap->link.
+
+Heh, I meant to elaborate in the patch description. :-) Sorry about
+not being clearer.
+
+>> It would also be useful to have WARN/BUG_ON() to make sure no two
+>> links try to use pio_task at the same time.  ie. Set
+>> ap->sff_pio_task_link here and clear it with NULL when done and make
+>> sure it's NULL before setting it.
+>
+> Add some WARN/BUG. I set link to NULL very early, I believe it is
+> cleaner than setting it in hsm_move() itself.
+> Patch after the break.
+
+Thanks.
+
 -- 
-1.7.1
+tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
