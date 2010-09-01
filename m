@@ -1,93 +1,94 @@
-From: Kalra Ashish-B00888 <B00888@freescale.com>
-Subject: RE: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
-Date: Wed, 1 Sep 2010 22:03:14 +0530
-Message-ID: <187b01cb49f3$9cf1a042$2303d30a@fsl.freescale.net>
+From: Siddhartha Jain <siddhartha@siddharthajain.net>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Wed, 1 Sep 2010 12:47:53 -0700
+Message-ID: <AANLkTikqxmzQozCOo+7XDSWE4tTniSnYbomEgqA4aB-2@mail.gmail.com>
+References: <1283027290.2721.37.camel@myfedorahat>
+	<4C7BAA42.2050809@kernel.org>
+	<AANLkTimEQEAF7WfCmmSfS_Ryq7HEfqemAnh9BvdKRhqL@mail.gmail.com>
+	<AANLkTi=3BVGUSNUZn=QbDciWdhBPmxe0kQgKcBFtkSH7@mail.gmail.com>
+	<AANLkTin5uTJA0G+hWxfsGFhyC_N9ZR7rZN9qCjK5VyvU@mail.gmail.com>
+	<AANLkTi=mGaNoutyh=iVrGORYjRx_qvnVfMHL63TuY5gY@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:57126
-	"EHLO VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755898Ab0IAQfT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Sep 2010 12:35:19 -0400
-Received: from mail149-va3 (localhost.localdomain [127.0.0.1])	by
- mail149-va3-R.bigfish.com (Postfix) with ESMTP id D63CE33047D	for
- <linux-ide@vger.kernel.org>; Wed,  1 Sep 2010 16:35:17 +0000 (UTC)
-Received: from VA3EHSMHS028.bigfish.com (unknown [10.7.14.241])	by
- mail149-va3.bigfish.com (Postfix) with ESMTP id 6807613A8051	for
- <linux-ide@vger.kernel.org>; Wed,  1 Sep 2010 16:35:16 +0000 (UTC)
-Received: from az33smr01.freescale.net (az33smr01.freescale.net
- [10.64.34.199])	by az33egw02.freescale.net (8.14.3/8.14.3) with ESMTP id
- o81GYxgP003941	for <linux-ide@vger.kernel.org>; Wed, 1 Sep 2010 09:35:03
- -0700 (MST)
-Received: from zin33exm20.fsl.freescale.net (zin33exm20.ap.freescale.net
- [10.232.192.5])	by az33smr01.freescale.net (8.13.1/8.13.0) with ESMTP id
- o81Gl7E7001058	for <linux-ide@vger.kernel.org>; Wed, 1 Sep 2010 11:47:08
- -0500 (CDT)
-Content-Class: 
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:58363 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753646Ab0IATry convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2010 15:47:54 -0400
+Received: by qyk36 with SMTP id 36so1010660qyk.19
+        for <linux-ide@vger.kernel.org>; Wed, 01 Sep 2010 12:47:53 -0700 (PDT)
+In-Reply-To: <AANLkTi=mGaNoutyh=iVrGORYjRx_qvnVfMHL63TuY5gY@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Gwendal Grignou <gwendal@google.com>
-Cc: jeff@garzik.org, nicolas@jungers.net, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+Hi Tejun,
+
+Was any of this debug info helpful?
+
+Thanks,
+
+- Siddhartha
 
 
-
-Sent from my HTC
-
------Original Message-----
-From: Tejun Heo <tj@kernel.org>
-Sent: 01 September 2010 1:52 PM
-To: Gwendal Grignou <gwendal@google.com>
-Cc: jeff@garzik.org <jeff@garzik.org>; nicolas@jungers.net <nicolas@jungers.net>; linux-ide@vger.kernel.org <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH] libata-sff: Reenable Port Multiplier after libata-sff remodeling.
-
-Hello,
-
-On 09/01/2010 01:17 AM, Gwendal Grignou wrote:
-> On Tue, Aug 31, 2010 at 1:04 AM, Tejun Heo <tj@kernel.org> wrote:
->> On 08/30/2010 07:17 PM, Gwendal Grignou wrote:
->>> Keep track of the link on the which the current request is in progress.
->>> It allows support of links behind port multiplier.
->>>
->>> Not all libata-sff is PMP compliant. Code for native BMDMA controller
->>> does not take in accound PMP.
->>
->> Can you please elaborate a bit more on what broke and how this patch
->> fixes the problem?
-> Before this patch, all libata-sff assumes the qc in progess is tied to
-> ap->link, the host port link.
-> That's fine as long as the controllers do not support port multiplier,
-> which is the case of all controller inheriting ata_sff_port_ops except
-> some controllers managed by sata_mv.
-> Also, before the libata-ssf reorg, it did not matter, qc was given the
-> sff task directly.
-> 
-> However, sata_mv supports port multiplier and use part of libata-sff
-> to hanlde PIO commands to disks. qc sent to disk behind port
-> multiplier are tight to one of element pmp_link array.
-> Therefore, the part of libata-sff sata_mv exercises must be retrieve
-> qc from the provided link instead of ap->link.
-
-Heh, I meant to elaborate in the patch description. :-) Sorry about
-not being clearer.
-
->> It would also be useful to have WARN/BUG_ON() to make sure no two
->> links try to use pio_task at the same time.  ie. Set
->> ap->sff_pio_task_link here and clear it with NULL when done and make
->> sure it's NULL before setting it.
+On Mon, Aug 30, 2010 at 7:03 PM, Siddhartha Jain
+<siddhartha@siddharthajain.net> wrote:
+> Upgraded to latest stable release - 2.6.35.4. Same errors:
 >
-> Add some WARN/BUG. I set link to NULL very early, I believe it is
-> cleaner than setting it in hsm_move() itself.
-> Patch after the break.
-
-Thanks.
-
--- 
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+> PM: Syncing filesystems ... done.
+> PM: Preparing system for mem sleep
+> Freezing user space processes ... (elapsed 0.01 seconds) done.
+> Freezing remaining freezable tasks ... (elapsed 0.01 seconds) done.
+> PM: Entering mem sleep
+> Suspending console(s) (use no_console_suspend to debug)
+> eth0: link up.
+> scsi 0:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0FUJITSU MJA2250B 0=
+081 PQ: 0 ANSI: 5
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
+> ata2.00: detaching (SCSI 1:0:0:0)
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> sd 0:0:0:0: [sdc] 488397168 512-byte logical blocks: (250 GB/232 GiB)
+> EXT4-fs error (device sda2): ext4_find_entry: inode #2884877: (comm
+> udevd) reading directory lblock 0
+> sd 0:0:0:0: [sdc] Write Protect is off
+> sd 0:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> sd 0:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> =A0sdc:
+> scsi 1:0:0:0: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0HL-DT-ST DVDRW =A0GS23N =A0=
+ =A0 SB03 PQ: 0 ANSI: 5
+> EXT4-fs error (device sda2): ext4_find_entry: inode #4456450: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #4456489: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #3670077: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #3670017: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #3670068: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #10485761: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #3670068: (comm
+> gnome-panel) reading directory lblock 0
+> EXT4-fs error (device sda2): ext4_find_entry: inode #4456450: (comm
+> gnome-panel) reading directory lblock 0
+> sr0: scsi3-mmc drive: 24x/24x writer cd/rw xa/form2 cdda caddy
+> sr 1:0:0:0: Attached scsi CD-ROM sr0
+> sr 1:0:0:0: Attached scsi generic sg1 type 5
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> EXT4-fs error (device sda2): __ext4_get_inode_loc: inode #2885332:
+> (comm udevd) unable to read inode block 11534477
+> =A0sdc1 sdc2 sdc3
+> sd 0:0:0:0: [sdc] Attached SCSI disk
+>
