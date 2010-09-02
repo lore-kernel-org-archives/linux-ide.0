@@ -1,37 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 Subject: Re: [PATCH] libata: skip EH autopsy and recovery during suspend
-Date: Thu, 02 Sep 2010 22:33:53 +0200
-Message-ID: <4C800A31.3050401@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <201009022216.45303.rjw@sisk.pl> <4C800829.9040802@gmail.com> <201009022228.07626.rjw@sisk.pl>
+Date: Thu, 2 Sep 2010 22:52:56 +0200
+Message-ID: <AANLkTi==kpbcJQ9E_MMfs9Ohu_O4vNsf8T7NK1z+iAwn@mail.gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com>
+	<4C7F6931.4050707@gmail.com>
+	<4C7F7649.3010409@gmail.com>
+	<201009021633.22869.stephan.diestelhorst@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55863 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754673Ab0IBUdW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 16:33:22 -0400
-In-Reply-To: <201009022228.07626.rjw@sisk.pl>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:38886 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752490Ab0IBUw6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 16:52:58 -0400
+In-Reply-To: <201009021633.22869.stephan.diestelhorst@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Tejun Heo <htejun@gmail.com>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>
 
-Hello,
+On Thu, Sep 2, 2010 at 4:33 PM, Stephan Diestelhorst
+<stephan.diestelhorst@amd.com> wrote:
+> On Thursday 02 September 2010, 12:02:49 Tejun Heo wrote:
+>> For some mysterious reason, certain hardware reacts badly to usual E=
+H
+>> actions while the system is going for suspend. =A0As the devices won=
+'t
+>> be needed until the system is resumed, ask EH to skip usual autopsy
+>> and recovery and proceed directly to suspend.
+>
+> Thanks Tejun for this patch. Will test in a second!
 
-On 09/02/2010 10:28 PM, Rafael J. Wysocki wrote:
-> That would be very nice.  In particular, I'd like to get rid of the
-> pm_message_t thing if possible.  And I'd like to avoid putting the
-> controller into D3 before creating hibernation image. :-)
+Applied, compiled and worked for the 5 iterations I managed to test it.
+Much better than your previous patch, thanks a lot! I'd give it some mo=
+re spins
+tomorrow, though.
 
-Oh, yeah, things like that can definitely be changed, but I think it
-would still need to be piped through EH.  That's how the queue gets
-quiesced for those special operations and resume is basically probing,
-so it doesn't make much sense to split them.  Please let me know how
-it should work from power management POV and I'll be happy to convert
-libata to fit the new behavior.
 
-Thanks.
-
--- 
-tejun
+Thanks,
+  Stephan
