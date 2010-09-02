@@ -1,46 +1,42 @@
-From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM
-	during suspend to RAM
-Date: Thu, 2 Sep 2010 16:31:59 +0200
-Message-ID: <201009021632.00699.stephan.diestelhorst@amd.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com>
-	<201008262024.35551.rjw@sisk.pl> <201008280135.39005.rjw@sisk.pl>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Thu, 02 Sep 2010 22:46:35 +0400
+Message-ID: <4C7FF10B.2040102@vlnb.net>
+References: <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com> <4C7C170D.9090409@vlnb.net> <20100830210205.GD12226@quack.quadriga.com> <4C7CD18B.2060608@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <201008280135.39005.rjw@sisk.pl>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:57229 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752146Ab0IBSrm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 14:47:42 -0400
+In-Reply-To: <4C7CD18B.2060608@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 
-On Saturday 28 August 2010, 01:35:38 Rafael J. Wysocki wrote:
-> I reproduced the problem with the Tejun's patch applied, so I'm now quite
-> sure the problem is related to the suspend of controller ports (which is done
-> by scheduling SCSI error handling on the controller).
-> 
-> Anyway, below is a new version of my patch that plays a bit nicer with
-> the resume code.  Can you please check if it still fixes the problem for you?
+Boaz Harrosh, on 08/31/2010 01:55 PM wrote:
+>>>>>> An update: I've set up an ext4 barrier testing in KVM - run fsstress,
+>>>>>> kill KVM at some random moment and check that the filesystem is consistent
+>>>>>> (kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
+>>>>>
+>>>>> But doesn't your "disk cache" survive the "power cycle" of your guest?
+>>>> Yes, you're right. Thinking about it now the test setup was wrong because
+>>>> it didn't refuse writes to the VM's data partition after the moment I
+>>>> killed KVM. Thanks for catching this. I will probably have to use the fault
+>>>> injection on the host to disallow writing the device at a certain moment.
+>>>> Or does somebody have a better option?
+>>>
+>>> Have you considered to setup a second box as an iSCSI target (e.g.
+>>> with iSCSI-SCST)? With it killing the connectivity is just a matter
+>>> of a single iptables command + a lot more options.
+>
+> Still same problem no? the data is still cached on the backing store device
+> how do you trash the cached data?
 
-Applied to 2.6.35.3 and tested. Works perfectly fine (> 10 s2ram
-cycles under heavy I/O load).
+If you need to kill the device's cache you can crash/panic/power off the 
+target. That also can be well scriptable.
 
-Many thanks,
-  Stephan
-
--- 
-Stephan Diestelhorst, AMD Operating System Research Center
-stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
-
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+Vlad
