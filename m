@@ -1,35 +1,77 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: WARNINGs because of ide-proc handling
-Date: Thu, 02 Sep 2010 15:14:16 -0700 (PDT)
-Message-ID: <20100902.151416.242137052.davem@davemloft.net>
-References: <20100831205605.GA23636@pengutronix.de>
-	<20100901.193332.77341159.davem@davemloft.net>
-	<20100902212839.GA20070@pengutronix.de>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Thu, 2 Sep 2010 18:19:49 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1009021818040.3149@p34.internal.lan>
+References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
+ <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan> <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan> <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
+ <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan> <alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59812
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753000Ab0IBWOA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 18:14:00 -0400
-In-Reply-To: <20100902212839.GA20070@pengutronix.de>
+Received: from lucidpixels.com ([75.144.35.66]:43601 "EHLO lucidpixels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751281Ab0IBWTu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Sep 2010 18:19:50 -0400
+In-Reply-To: <alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: w.sang@pengutronix.de
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: adam radford <aradford@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Wolfram Sang <w.sang@pengutronix.de>
-Date: Thu, 2 Sep 2010 23:28:39 +0200
 
-> Dunno, if it is correct, though. The strange thing is that the code is like
-> this for two years and, surprisingly, I don't see the problem with 2.6.33.
-> Also, the proc-entry for my hard-disk is fine. I can't see any suspicious
-> commits in the ide-directory except maybe the BKL pushdown had a side-effect
-> regarding the serialization of the sequence? Ah, too late today to seriously
-> think about such issues...
 
-I don't think it's the BKL pushdown, it seems it would be due to something
-else to me.
+On Thu, 2 Sep 2010, Justin Piszcz wrote:
 
-Thanks for your analysis and suggested patch, I'll take a look at this.
+>
+>
+> On Thu, 2 Sep 2010, Justin Piszcz wrote:
+>
+>> 
+>> 
+>> On Wed, 1 Sep 2010, adam radford wrote:
+>> 
+>>> On Wed, Sep 1, 2010 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
+>>> wrote:
+>>> 
+>>>> Could the lock/unlock be causing the issue?
+>>>> Again, in 2.6.34, there are no latency problems or controller resets.
+>>> 
+>>> Justin,
+>>> 
+>>> We are looking into this issue and should get back to you soon.
+>>> 
+>>> The lock/unlock() kernel calls were not added by me but were part of a
+>>> series of 'BKL pushdown' patches added by someone to all drivers with
+>>> an ioctl interface.  If you think those might be related to your
+>>> issue, you could try
+>>> removing those 2 lines of code and recompiling.
+>>> 
+>>> If you haven't already, please email you kernel .config files for both
+>>> the working kernel and non working kernel to the 3ware/LSI support
+>>> people you are in contact with.
+>>> 
+>>> Thanks.
+>>> 
+>>> -Adam
+>>> 
+>> 
+>
+> I spoke too fast, it also happens with the 2.6.34 driver under 2.6.35.
+> I will have to research this more, until then I'll stick with 2.6.34.
+>
+> Justin.
+>
+>
+
+Adam/all,
+
+Any recommendations on how to capture the freezing between the two kernels?
+Which debug method would be best?
+Does anyone else experience high wait times under 2.6.35 that uses 3ware cards?
+
+I tested under another host with 2.6.35 (software raid only) and it did not
+have any issues..
+
+Justin.
+
