@@ -1,64 +1,45 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-pm] [PATCH] libata: skip EH autopsy and recovery during
- suspend
-Date: Thu, 2 Sep 2010 17:01:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1009021646510.1311-100000@iolanthe.rowland.org>
-References: <4C800A31.3050401@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] libata: skip EH autopsy and recovery during
+	suspend
+Date: Thu, 2 Sep 2010 23:09:56 +0200
+Message-ID: <201009022309.56824.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1009021646510.1311-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36037 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753478Ab0IBVBV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 17:01:21 -0400
-In-Reply-To: <4C800A31.3050401@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <Pine.LNX.4.44L0.1009021646510.1311-100000@iolanthe.rowland.org>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Tejun Heo <htejun@gmail.com>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>
 
-On Thu, 2 Sep 2010, Tejun Heo wrote:
-
-> Hello,
+On Thursday, September 02, 2010, Alan Stern wrote:
+> On Thu, 2 Sep 2010, Tejun Heo wrote:
 > 
-> On 09/02/2010 10:28 PM, Rafael J. Wysocki wrote:
-> > That would be very nice.  In particular, I'd like to get rid of the
-> > pm_message_t thing if possible.  And I'd like to avoid putting the
-> > controller into D3 before creating hibernation image. :-)
+> > Hello,
+> > 
+> > On 09/02/2010 10:28 PM, Rafael J. Wysocki wrote:
+> > > That would be very nice.  In particular, I'd like to get rid of the
+> > > pm_message_t thing if possible.  And I'd like to avoid putting the
+> > > controller into D3 before creating hibernation image. :-)
+> 
+> Ultimately I don't think it will be possible to get rid of pm_message_t
+> throughout the entire kernel.  Not just because it's a legacy thing
+> spread all over the place, but because it sometimes is genuinely
+> useful.  In situations where there are only minimal differences between
+> the various suspend/resume paths, it makes a lot of sense to call a
+> single function and tell it which type of operation to perform.
 
-Ultimately I don't think it will be possible to get rid of pm_message_t
-throughout the entire kernel.  Not just because it's a legacy thing
-spread all over the place, but because it sometimes is genuinely
-useful.  In situations where there are only minimal differences between
-the various suspend/resume paths, it makes a lot of sense to call a
-single function and tell it which type of operation to perform.
+Well, that's why I said "if possible" above. :-)
 
-> Oh, yeah, things like that can definitely be changed, but I think it
-> would still need to be piped through EH.  That's how the queue gets
-> quiesced for those special operations and resume is basically probing,
-> so it doesn't make much sense to split them.  Please let me know how
-> it should work from power management POV and I'll be happy to convert
-> libata to fit the new behavior.
-
-Tejun, I'm planning to make a few changes to the block layer and the
-SCSI core in order to implement delayed autosuspend.  These changes
-will affect system sleep too, so you may need to know about them.
-
-Each request_queue structure will have an rpm_status variable that gets
-updated as the corresponding device is suspended or resumed.  When the
-status is SUSPENDING or RESUMING, requests will not be sent from the
-request_queue to the driver unless they have cmd_type set to
-REQ_TYPE_PM_SUSPEND or REQ_TYPE_PM_RESUME (actually I may combine those
-two into a single REQ_TYPE_PM type).  If other types of request are
-added to the queue when the status isn't ACTIVE, they will cause a
-runtime resume to be started.
-
-Initially this will affect only drivers using the SCSI layer.  
-Commands sent during error handling won't be affected though, because
-the SCSI error handler doesn't use requests or queues -- it sends
-commands directly to the lower-level driver.
-
-Does that all sound okay to you?
-
-Alan Stern
-
+Thanks,
+Rafael
