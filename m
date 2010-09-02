@@ -1,94 +1,30 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH] libata: skip EH autopsy and recovery during suspend
-Date: Thu, 02 Sep 2010 12:02:49 +0200
-Message-ID: <4C7F7649.3010409@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C7376BE.5040006@gmail.com> <201008242239.43249.rjw@sisk.pl> <201008270109.36687.rjw@sisk.pl> <4C7F6931.4050707@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Thu, 02 Sep 2010 12:09:08 +0200
+Message-ID: <4C7F77C4.6040404@kernel.org>
+References: <1283027290.2721.37.camel@myfedorahat>	<4C7BAA42.2050809@kernel.org>	<AANLkTimEQEAF7WfCmmSfS_Ryq7HEfqemAnh9BvdKRhqL@mail.gmail.com>	<AANLkTi=3BVGUSNUZn=QbDciWdhBPmxe0kQgKcBFtkSH7@mail.gmail.com>	<AANLkTin5uTJA0G+hWxfsGFhyC_N9ZR7rZN9qCjK5VyvU@mail.gmail.com>	<AANLkTi=mGaNoutyh=iVrGORYjRx_qvnVfMHL63TuY5gY@mail.gmail.com> <AANLkTikqxmzQozCOo+7XDSWE4tTniSnYbomEgqA4aB-2@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39057 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799Ab0IBKCy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 06:02:54 -0400
-In-Reply-To: <4C7F6931.4050707@gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:50678 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750799Ab0IBKJN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Sep 2010 06:09:13 -0400
+In-Reply-To: <AANLkTikqxmzQozCOo+7XDSWE4tTniSnYbomEgqA4aB-2@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+To: Siddhartha Jain <siddhartha@siddharthajain.net>
+Cc: linux-ide@vger.kernel.org
 
-For some mysterious reason, certain hardware reacts badly to usual EH
-actions while the system is going for suspend.  As the devices won't
-be needed until the system is resumed, ask EH to skip usual autopsy
-and recovery and proceed directly to suspend.
+Hello,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
-Can you please verify this one?
+Can you please the patch in the following message?
+
+ http://article.gmane.org/gmane.linux.ide/47387/raw
 
 Thanks.
 
- drivers/ata/libata-core.c |   14 +++++++++++++-
- drivers/ata/libata-eh.c   |    4 ++++
- include/linux/libata.h    |    1 +
- 3 files changed, 18 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9ceb493..92cd5f3 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5427,6 +5427,7 @@ static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
-  */
- int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
- {
-+	unsigned int ehi_flags = ATA_EHI_QUIET;
- 	int rc;
-
- 	/*
-@@ -5435,7 +5436,18 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
- 	 */
- 	ata_lpm_enable(host);
-
--	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
-+	/*
-+	 * On some hardware, device fails to respond after spun down
-+	 * for suspend.  As the device won't be used before being
-+	 * resumed, we don't need to touch the device.  Ask EH to skip
-+	 * the usual stuff and proceed directly to suspend.
-+	 *
-+	 * http://thread.gmane.org/gmane.linux.ide/46764
-+	 */
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
-+
-+	rc = ata_host_request_pm(host, mesg, 0, ehi_flags, 1);
- 	if (rc == 0)
- 		host->dev->power.power_state = mesg;
- 	return rc;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0108731..95838b3 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3242,6 +3242,10 @@ static int ata_eh_skip_recovery(struct ata_link *link)
- 	if (link->flags & ATA_LFLAG_DISABLED)
- 		return 1;
-
-+	/* skip if explicitly requested */
-+	if (ehc->i.flags & ATA_EHI_NO_RECOVERY)
-+		return 1;
-+
- 	/* thaw frozen port and recover failed devices */
- 	if ((ap->pflags & ATA_PFLAG_FROZEN) || ata_link_nr_enabled(link))
- 		return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 89115f8..d1ef41b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -335,6 +335,7 @@ enum {
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
-+	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
-
- 	ATA_EHI_DID_SOFTRESET	= (1 << 16), /* already soft-reset this port */
- 	ATA_EHI_DID_HARDRESET	= (1 << 17), /* already soft-reset this port */
+-- 
+tejun
