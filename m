@@ -1,44 +1,40 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Wed, 1 Sep 2010 17:25:06 -0700
-Message-ID: <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
-	<AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
-	<alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-	<alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
-	<alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
-	<alpine.DEB.2.00.1008310732120.5156@p34.internal.lan>
-	<alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
-	<alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
+From: David Miller <davem@davemloft.net>
+Subject: Re: WARNINGs because of ide-proc handling
+Date: Wed, 01 Sep 2010 19:33:32 -0700 (PDT)
+Message-ID: <20100901.193332.77341159.davem@davemloft.net>
+References: <20100831205605.GA23636@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46916
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752314Ab0IBCdQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2010 22:33:16 -0400
+In-Reply-To: <20100831205605.GA23636@pengutronix.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: w.sang@pengutronix.de
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Sep 1, 2010 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+From: Wolfram Sang <w.sang@pengutronix.de>
+Date: Tue, 31 Aug 2010 22:56:05 +0200
 
-> Could the lock/unlock be causing the issue?
-> Again, in 2.6.34, there are no latency problems or controller resets.
+> Hello,
+> 
+> I get the following warning (and some similar ones) on my laptop running
+> 2.6.36-rc3 when removing a CF card via pcmcia:
+> 
+> [ 1087.602129] WARNING: at fs/proc/generic.c:816 remove_proc_entry+0x185/0x1d0()
+> [ 1087.602137] Hardware name: Amilo M14255
+> [ 1087.602142] name 'cache'
+> ...
+> 
+> It turned out that none of the entries in ide_disk_proc[] gets created when
+> inserting the card, so trying to remove them triggers this warning. Adding
+> some debug printouts
 
-Justin,
+Hmmm, at some point ide_host_add() or ide_host_register() should be invoked,
+which should create the drive->proc and hwif->proc PROCFS directories.
 
-We are looking into this issue and should get back to you soon.
-
-The lock/unlock() kernel calls were not added by me but were part of a
-series of 'BKL pushdown' patches added by someone to all drivers with
-an ioctl interface.  If you think those might be related to your
-issue, you could try
-removing those 2 lines of code and recompiling.
-
-If you haven't already, please email you kernel .config files for both
-the working kernel and non working kernel to the 3ware/LSI support
-people you are in contact with.
-
-Thanks.
-
--Adam
+What driver is your pcmcia IDE card using?
