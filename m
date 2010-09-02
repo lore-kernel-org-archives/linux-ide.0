@@ -1,55 +1,39 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Thu, 2 Sep 2010 10:29:31 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
- <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan> <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan> <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
- <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] libata: skip EH autopsy and recovery during
+	suspend
+Date: Thu, 2 Sep 2010 16:33:22 +0200
+Message-ID: <201009021633.22869.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com>
+	<4C7F6931.4050707@gmail.com> <4C7F7649.3010409@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <4C7F7649.3010409@gmail.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Tejun Heo <htejun@gmail.com>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
+On Thursday 02 September 2010, 12:02:49 Tejun Heo wrote:
+> For some mysterious reason, certain hardware reacts badly to usual EH
+> actions while the system is going for suspend.  As the devices won't
+> be needed until the system is resumed, ask EH to skip usual autopsy
+> and recovery and proceed directly to suspend.
 
+Thanks Tejun for this patch. Will test in a second!
 
-On Thu, 2 Sep 2010, Justin Piszcz wrote:
+Cheers,
+  Stephan
 
->
->
-> On Wed, 1 Sep 2010, adam radford wrote:
->
->> On Wed, Sep 1, 2010 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
->> wrote:
->> 
->>> Could the lock/unlock be causing the issue?
->>> Again, in 2.6.34, there are no latency problems or controller resets.
->> 
->> Justin,
->> 
->> We are looking into this issue and should get back to you soon.
->> 
->> The lock/unlock() kernel calls were not added by me but were part of a
->> series of 'BKL pushdown' patches added by someone to all drivers with
->> an ioctl interface.  If you think those might be related to your
->> issue, you could try
->> removing those 2 lines of code and recompiling.
->> 
->> If you haven't already, please email you kernel .config files for both
->> the working kernel and non working kernel to the 3ware/LSI support
->> people you are in contact with.
->> 
->> Thanks.
->> 
->> -Adam
->> 
->
-
-I spoke too fast, it also happens with the 2.6.34 driver under 2.6.35.
-I will have to research this more, until then I'll stick with 2.6.34.
-
-Justin.
+-- 
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719  (AMD: 29-719)
