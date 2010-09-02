@@ -1,40 +1,47 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: WARNINGs because of ide-proc handling
-Date: Wed, 01 Sep 2010 19:33:32 -0700 (PDT)
-Message-ID: <20100901.193332.77341159.davem@davemloft.net>
-References: <20100831205605.GA23636@pengutronix.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Thu, 02 Sep 2010 11:06:57 +0200
+Message-ID: <4C7F6931.4050707@gmail.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C7376BE.5040006@gmail.com> <201008242239.43249.rjw@sisk.pl> <201008270109.36687.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46916
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752314Ab0IBCdQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2010 22:33:16 -0400
-In-Reply-To: <20100831205605.GA23636@pengutronix.de>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46655 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830Ab0IBJHE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Sep 2010 05:07:04 -0400
+In-Reply-To: <201008270109.36687.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: w.sang@pengutronix.de
-Cc: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
 
-From: Wolfram Sang <w.sang@pengutronix.de>
-Date: Tue, 31 Aug 2010 22:56:05 +0200
+Hello, Rafael.
 
-> Hello,
+On 08/27/2010 01:09 AM, Rafael J. Wysocki wrote:
+> Well, no luck.  I was able to reproduce the issue on my box with this patch
+> applied on top of 2.6.32-rc2.
 > 
-> I get the following warning (and some similar ones) on my laptop running
-> 2.6.36-rc3 when removing a CF card via pcmcia:
+> Which probably means that the link power management is not really involved
+> here and seems to turn up this statement:
 > 
-> [ 1087.602129] WARNING: at fs/proc/generic.c:816 remove_proc_entry+0x185/0x1d0()
-> [ 1087.602137] Hardware name: Amilo M14255
-> [ 1087.602142] name 'cache'
-> ...
+> rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
 > 
-> It turned out that none of the entries in ide_disk_proc[] gets created when
-> inserting the card, so trying to remove them triggers this warning. Adding
-> some debug printouts
+> in ata_host_suspend() as the culprit.
+> 
+> Does it make sense?
 
-Hmmm, at some point ide_host_add() or ide_host_register() should be invoked,
-which should create the drive->proc and hwif->proc PROCFS directories.
+So, LPM doesn't have anything to do with the problem.  The fact that
+this only happens on specific machines is strange.  Maybe the BIOS is
+doing something fishy to the controller on disk spindown during
+suspend.  Can the BIOS tell that the system is going for suspend by
+the time sd suspend is called?  I'll prep another patch which will
+make EH skip certain steps and ignore failures during suspend, which
+basically mimics what your patch does but in safer way.
 
-What driver is your pcmcia IDE card using?
+Thanks.
+
+-- 
+tejun
