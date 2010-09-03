@@ -1,64 +1,77 @@
-From: Don Zickus <dzickus@redhat.com>
-Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Fri, 3 Sep 2010 09:56:13 -0400
-Message-ID: <20100903135613.GV4879@redhat.com>
-References: <4C03C608.1040600@gmail.com>
- <20100601135004.GP15159@redhat.com>
- <4C051D44.7040203@gmail.com>
- <20100602184459.GA15159@redhat.com>
- <4C0B3E94.6020506@gmail.com>
- <4C80B338.6020701@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] [PATCH] libata: skip EH autopsy and recovery during
+ suspend
+Date: Fri, 3 Sep 2010 10:16:03 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1009031006510.1548-100000@iolanthe.rowland.org>
+References: <4C80B81F.8090803@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44163 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752958Ab0ICN4u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Sep 2010 09:56:50 -0400
-Content-Disposition: inline
-In-Reply-To: <4C80B338.6020701@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C80B81F.8090803@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-On Fri, Sep 03, 2010 at 10:35:04AM +0200, Jiri Slaby wrote:
-> On 06/06/2010 08:22 AM, Jiri Slaby wrote:
-> > On 06/02/2010 08:44 PM, Don Zickus wrote:
-> >> --- a/kernel/watchdog.c
-> >> +++ b/kernel/watchdog.c
-> >> @@ -550,8 +550,7 @@ cpu_callback(struct notifier_block *nfb, unsigned long action, void *hcpu)
-> >>  		break;
-> >>  	case CPU_ONLINE:
-> >>  	case CPU_ONLINE_FROZEN:
-> >> -		if (watchdog_enable(hotcpu))
-> >> -			return NOTIFY_BAD;
-> >> +		watchdog_enable(hotcpu)
+On Fri, 3 Sep 2010, Tejun Heo wrote:
+
+> > Tejun, I'm planning to make a few changes to the block layer and the
+> > SCSI core in order to implement delayed autosuspend.  These changes
+> > will affect system sleep too, so you may need to know about them.
 > > 
-> > This fixes the problem indeed.
+> > Each request_queue structure will have an rpm_status variable that gets
+> > updated as the corresponding device is suspended or resumed.  When the
+> > status is SUSPENDING or RESUMING, requests will not be sent from the
+> > request_queue to the driver unless they have cmd_type set to
+> > REQ_TYPE_PM_SUSPEND or REQ_TYPE_PM_RESUME (actually I may combine those
+> > two into a single REQ_TYPE_PM type).  If other types of request are
+> > added to the queue when the status isn't ACTIVE, they will cause a
+> > runtime resume to be started.
+> > 
+> > Initially this will affect only drivers using the SCSI layer.  
+> > Commands sent during error handling won't be affected though, because
+> > the SCSI error handler doesn't use requests or queues -- it sends
+> > commands directly to the lower-level driver.
+> > 
+> > Does that all sound okay to you?
 > 
-> Hi, was this fixed somehow? I still use this hunk and don't know if it
-> is needed:
+> Hmm... I can't really tell much without looking at the actual patch
+> but I'm a bit doubtful about using REQ_TYPE_* for suspend/resumes,
+> well, for that matter, for any other purpose than actual IO requests.
+> The current REQ_TYPE_PM_* are only used by ide and it's really messy.
 
-I have to go re-review the problem again.  I might have forgot to bring it
-in.  Thanks for reminding me!
+Yes.  I'm hoping that these changes will help simplify IDE, but I 
+haven't looked at it yet.
 
-Cheers,
-Don
+> Those special requests are very difficult to use in generic manner.
+> ie. How should remapping / cloning drivers like md, dm and loopback
+> handle them?
 
-> --- a/kernel/watchdog.c
-> +++ b/kernel/watchdog.c
-> @@ -524,7 +524,7 @@ cpu_callback(struct notifier_block *nfb, unsigned
-> long action, void *hcpu)
->                 break;
->         case CPU_ONLINE:
->         case CPU_ONLINE_FROZEN:
-> -               err = watchdog_enable(hotcpu);
-> +               watchdog_enable(hotcpu);
->                 break;
->  #ifdef CONFIG_HOTPLUG_CPU
->         case CPU_UP_CANCELED:
-> 
-> thanks,
-> -- 
-> js
+They should never need to handle them.  These requests get used only
+for preparing a device to change power modes.  Logical devices don't
+need them, only physical devices do.  For example, you can't put a
+logical RAID device into low-power mode; all you can do is put the
+underlying physical drives into low power.
+
+>  They end up just being a mechanism for specific low
+> level drivers to feed certain requests back to themselves to implement
+> suspend/resume sequence and as there's no clear defined common usage,
+> the meaning of those flags becomes ambiguous and confusing depending
+> on drivers and so on.
+
+With my changes there now will be a clear defined usage.
+
+> Another issue is that power management is probably better handled as a
+> sub problem of generic IO exception handling.  If you throw in
+> hot[un]plugs and transport errors and consider what should happen when
+> those events happen together, things get hairy if power management is
+> not well integrated with the usual exceptionn handling.
+
+I don't see why.  Power management is not exceptional.  The relation
+with hot [un]plug is already taken care of.  Transport error recovery
+will block runtime power management if it occurs while the device is at
+full power; it is an issue only if it occurs during a power transition.  
+The SCSI error handler should work okay since it doesn't send commands
+through the block layer.
+
+Alan Stern
