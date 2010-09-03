@@ -1,45 +1,70 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
- to RAM
-Date: Fri, 03 Sep 2010 11:04:52 +0200
-Message-ID: <4C80BA34.7090400@kernel.org>
-References: <1283027290.2721.37.camel@myfedorahat>	<4C7BAA42.2050809@kernel.org>	<AANLkTimEQEAF7WfCmmSfS_Ryq7HEfqemAnh9BvdKRhqL@mail.gmail.com>	<AANLkTi=3BVGUSNUZn=QbDciWdhBPmxe0kQgKcBFtkSH7@mail.gmail.com>	<AANLkTin5uTJA0G+hWxfsGFhyC_N9ZR7rZN9qCjK5VyvU@mail.gmail.com>	<AANLkTi=mGaNoutyh=iVrGORYjRx_qvnVfMHL63TuY5gY@mail.gmail.com>	<AANLkTikqxmzQozCOo+7XDSWE4tTniSnYbomEgqA4aB-2@mail.gmail.com>	<4C7F77C4.6040404@kernel.org> <AANLkTi=_fmtNjj=ZeSyuMtQg+YBJ3=gHAkeurJhDZmmh@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 01/41] ide: remove unnecessary blk_queue_flushing() test in do_ide_request()
+Date: Fri,  3 Sep 2010 12:29:16 +0200
+Message-ID: <1283509796-1510-2-git-send-email-tj@kernel.org>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:59195 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:35560 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754432Ab0ICJEz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Sep 2010 05:04:55 -0400
-In-Reply-To: <AANLkTi=_fmtNjj=ZeSyuMtQg+YBJ3=gHAkeurJhDZmmh@mail.gmail.com>
+	id S1752960Ab0ICKa7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Sep 2010 06:30:59 -0400
+In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Siddhartha Jain <siddhartha@siddharthajain.net>
-Cc: linux-ide@vger.kernel.org
+To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.co
+Cc: Tejun Heo <tj@kernel.org>
 
-Hello,
+Unplugging from a request function doesn't really help much (it's
+already in the request_fn) and soon block layer will be updated to mix
+barrier sequence with other commands, so there's no need to treat
+queue flushing any differently.
 
-On 09/02/2010 09:56 PM, Siddhartha Jain wrote:
-> Applied patch to 2.6.35.4. Patched cleanly and kernel compile was smooth.
-> 
-> Suspend works beautifully now. Not only does the system resume
-> properly but earlier suspend would take minutes, now it goes to
-> suspend within seconds (less than 10).
-> 
-> I will re-build my laptop with dmcrypt + ext4, apply this patch and
-> use the system for a while to ensure all play together nicely.
-> 
-> Thanks Tejun!! Really appreciate the quick turnaround on this issue. I
-> saved debugging info from the successful resume where I have debugging
-> turned on for various modules - acpi, pci etc. Let me know if you need
-> me to send it across.
+ide was the only user of blk_queue_flushing().  Remove it.
 
-Debugging was mostly done by Rafael, so he deserves most of credit.
-Can you please keep testing for a few more days and let me know the
-result?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Acked-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/ide/ide-io.c   |   13 -------------
+ include/linux/blkdev.h |    1 -
+ 2 files changed, 0 insertions(+), 14 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index a381be8..999dac0 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -441,19 +441,6 @@ void do_ide_request(struct request_queue *q)
+ 	struct request	*rq = NULL;
+ 	ide_startstop_t	startstop;
+ 
+-	/*
+-	 * drive is doing pre-flush, ordered write, post-flush sequence. even
+-	 * though that is 3 requests, it must be seen as a single transaction.
+-	 * we must not preempt this drive until that is complete
+-	 */
+-	if (blk_queue_flushing(q))
+-		/*
+-		 * small race where queue could get replugged during
+-		 * the 3-request flush cycle, just yank the plug since
+-		 * we want it to finish asap
+-		 */
+-		blk_remove_plug(q);
+-
+ 	spin_unlock_irq(q->queue_lock);
+ 
+ 	/* HLD do_request() callback might sleep, make sure it's okay */
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2c54906..015375c 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -521,7 +521,6 @@ enum {
+ #define blk_queue_nonrot(q)	test_bit(QUEUE_FLAG_NONROT, &(q)->queue_flags)
+ #define blk_queue_io_stat(q)	test_bit(QUEUE_FLAG_IO_STAT, &(q)->queue_flags)
+ #define blk_queue_add_random(q)	test_bit(QUEUE_FLAG_ADD_RANDOM, &(q)->queue_flags)
+-#define blk_queue_flushing(q)	((q)->ordseq)
+ #define blk_queue_stackable(q)	\
+ 	test_bit(QUEUE_FLAG_STACKABLE, &(q)->queue_flags)
+ #define blk_queue_discard(q)	test_bit(QUEUE_FLAG_DISCARD, &(q)->queue_flags)
 -- 
-tejun
+1.7.1
+
