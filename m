@@ -1,74 +1,91 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCHSET #upstream] block,
- fs: replace HARDBARRIER with FLUSH/FUA, take#2
-Date: Fri, 03 Sep 2010 20:53:34 +0200
-Message-ID: <4C81442E.5040301@fusionio.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+Subject: Re: [PATCH 07/15] pcmcia: move config_{base,index,regs} to struct
+ pcmcia_device
+Date: Fri, 3 Sep 2010 19:32:56 -0300
+Message-ID: <20100903223256.GC16973@vigoh>
+References: <20100903105628.GA21255@comet.dominikbrodowski.net>
+ <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Tejun Heo <tj@kernel.org>
-Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, laforge@gnumonks.org, linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org, alsa-devel@alsa-project.org, linux-serial@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 09/03/2010 12:29 PM, Tejun Heo wrote:
-> Hello,
-> 
-> This patchset is combination of the following two patchsets.
-> 
->  [1] block, fs: replace HARDBARRIER with FLUSH/FUA
->  [2] block, dm: finish REQ_FLUSH/FUA conversion, take#2
-> 
-> Changes from the previous postings are
-> 
-> * Rebased on top of v2.6.36-rc3.
-> 
-> * 0010-block-implement-REQ_FLUSH-FUA-based-interface-for-FL.patch
->   description updated to include why special -EOPNOTSUPP handling is
->   no longer necessary as suggested by Mike Snitzer.
-> 
-> * 0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
->   description updated to include why flush_error and special error
->   handling logic are no longer necessary as suggested by Mike
->   Snitzer.
-> 
-> * 0013-block-initialize-flush-request-with-WRITE_FLUSH-inst.patch and
->   0014-block-kick-queue-after-sequencing-REQ_FLUSH-FUA.patch added.
->   These fixes aren't strictly required by the current users but remove
->   fishy corner cases.
-> 
-> * 0015-block-make-sure-FSEQ_DATA-request-has-the-same-rq_di.patch
->   added.  This is needed to make requested based dm work.
-> 
-> * 0026-dm-fix-locking-context-in-queue_io.patch added.  This fixes
->   locking context problem introduced by
->   0025-dm-relax-ordering-of-bio-based-flush-implementation.patch.
-> 
-> * Tested/Reviewed-by's added and patches reordered such that block
->   layer conversion comes first followed by block driver conversions,
->   filesystem conversions and then finally removal of deprecate stuff.
-> 
-> I think the patchset is mostly ready now although I would love to have
-> acked/reviewd-by's on bio-based dm conversion patches.  Jens,
-> Christoph, how do you guys wanna steer these patches?  I think it
-> would be best to go through the block tree but splitting parts and
-> doing cross tree pull/merges should be doable too.
+* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:06 +0200]:
 
-Since the core changes are block churn, it would probably be
-sanest to pull everything in there. Core into for-2.6.37/core,
-then have for-2.6.37/fs and 2.6.37/drivers on top of that.
+> Several drivers prefer to explicitly set config_{base,index,regs},
+> formerly known as ConfigBase, ConfigIndex and Present. Instead of
+> passing these values inside config_req_t, store it in struct
+> pcmcia_device.
+> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-ide@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: laforge@gnumonks.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: alsa-devel@alsa-project.org
+> CC: linux-serial@vger.kernel.org
+> CC: Jiri Kosina <jkosina@suse.cz>
+> CC: linux-scsi@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/bluetooth/bluecard_cs.c                  |    2 +-
+>  drivers/char/pcmcia/ipwireless/main.c            |    2 +-
+>  drivers/char/pcmcia/synclink_cs.c                |    6 ++--
+>  drivers/ide/ide-cs.c                             |    3 +-
+>  drivers/isdn/hardware/avm/avm_cs.c               |    4 +-
+>  drivers/isdn/hisax/avma1_cs.c                    |    4 +-
+>  drivers/isdn/hisax/elsa_cs.c                     |    2 +-
+>  drivers/isdn/hisax/sedlbauer_cs.c                |    2 +-
+>  drivers/isdn/hisax/teles_cs.c                    |    2 +-
+>  drivers/mtd/maps/pcmciamtd.c                     |    2 +-
+>  drivers/net/pcmcia/3c574_cs.c                    |    2 +-
+>  drivers/net/pcmcia/3c589_cs.c                    |    2 +-
+>  drivers/net/pcmcia/axnet_cs.c                    |    6 ++--
+>  drivers/net/pcmcia/fmvj18x_cs.c                  |   22 ++++++------
+>  drivers/net/pcmcia/ibmtr_cs.c                    |    4 +-
+>  drivers/net/pcmcia/nmclan_cs.c                   |    4 +-
+>  drivers/net/pcmcia/pcnet_cs.c                    |    6 ++--
+>  drivers/net/pcmcia/smc91c92_cs.c                 |   10 +++---
+>  drivers/net/pcmcia/xirc2ps_cs.c                  |    2 +-
+>  drivers/net/wireless/airo_cs.c                   |    2 +-
+>  drivers/net/wireless/hostap/hostap_cs.c          |    2 +-
+>  drivers/net/wireless/ray_cs.c                    |    2 +-
+>  drivers/net/wireless/wl3501_cs.c                 |    2 +-
+>  drivers/parport/parport_cs.c                     |    2 +-
+>  drivers/pcmcia/cs_internal.h                     |    3 --
+>  drivers/pcmcia/ds.c                              |    8 ++--
+>  drivers/pcmcia/pcmcia_cis.c                      |    2 +-
+>  drivers/pcmcia/pcmcia_resource.c                 |   38 +++++++++++-----------
+>  drivers/scsi/pcmcia/aha152x_stub.c               |    2 +-
+>  drivers/scsi/pcmcia/fdomain_stub.c               |    2 +-
+>  drivers/scsi/pcmcia/nsp_cs.c                     |    2 +-
+>  drivers/scsi/pcmcia/qlogic_stub.c                |    2 +-
+>  drivers/serial/serial_cs.c                       |    6 ++--
+>  drivers/staging/comedi/drivers/cb_das16_cs.c     |    2 +-
+>  drivers/staging/comedi/drivers/das08_cs.c        |    2 +-
+>  drivers/staging/comedi/drivers/ni_daq_700.c      |    2 +-
+>  drivers/staging/comedi/drivers/ni_daq_dio24.c    |    2 +-
+>  drivers/staging/comedi/drivers/ni_labpc_cs.c     |    2 +-
+>  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    2 +-
+>  drivers/staging/wlags49_h2/wl_cs.c               |    4 +-
+>  drivers/usb/host/sl811_cs.c                      |    2 +-
+>  include/pcmcia/cs.h                              |   15 --------
+>  include/pcmcia/ds.h                              |   14 ++++++++
+>  sound/pcmcia/pdaudiocf/pdaudiocf.c               |    6 ++--
+>  sound/pcmcia/vx/vxpocket.c                       |    4 +-
+>  45 files changed, 107 insertions(+), 112 deletions(-)
+
+For drivers/bluetooth
+
+Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
 
 -- 
-Jens Axboe
+Gustavo F. Padovan
+ProFUSION embedded systems - http://profusion.mobi
