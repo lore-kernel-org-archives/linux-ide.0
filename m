@@ -1,86 +1,74 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: Re: WARNINGs because of ide-proc handling
-Date: Fri, 3 Sep 2010 20:59:34 +0200
-Message-ID: <20100903185934.GA27291@pengutronix.de>
-References: <20100902.151416.242137052.davem@davemloft.net> <20100903055328.GA11991@pengutronix.de> <20100903.053437.68134749.davem@davemloft.net> <20100903.073503.191401190.davem@davemloft.net>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCHSET #upstream] block,
+ fs: replace HARDBARRIER with FLUSH/FUA, take#2
+Date: Fri, 03 Sep 2010 20:53:34 +0200
+Message-ID: <4C81442E.5040301@fusionio.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="YZ5djTAD1cGYuMQK"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:41916 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753200Ab0ICS7f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2010 14:59:35 -0400
-Content-Disposition: inline
-In-Reply-To: <20100903.073503.191401190.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Tejun Heo <tj@kernel.org>
+Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
+On 09/03/2010 12:29 PM, Tejun Heo wrote:
+> Hello,
+> 
+> This patchset is combination of the following two patchsets.
+> 
+>  [1] block, fs: replace HARDBARRIER with FLUSH/FUA
+>  [2] block, dm: finish REQ_FLUSH/FUA conversion, take#2
+> 
+> Changes from the previous postings are
+> 
+> * Rebased on top of v2.6.36-rc3.
+> 
+> * 0010-block-implement-REQ_FLUSH-FUA-based-interface-for-FL.patch
+>   description updated to include why special -EOPNOTSUPP handling is
+>   no longer necessary as suggested by Mike Snitzer.
+> 
+> * 0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
+>   description updated to include why flush_error and special error
+>   handling logic are no longer necessary as suggested by Mike
+>   Snitzer.
+> 
+> * 0013-block-initialize-flush-request-with-WRITE_FLUSH-inst.patch and
+>   0014-block-kick-queue-after-sequencing-REQ_FLUSH-FUA.patch added.
+>   These fixes aren't strictly required by the current users but remove
+>   fishy corner cases.
+> 
+> * 0015-block-make-sure-FSEQ_DATA-request-has-the-same-rq_di.patch
+>   added.  This is needed to make requested based dm work.
+> 
+> * 0026-dm-fix-locking-context-in-queue_io.patch added.  This fixes
+>   locking context problem introduced by
+>   0025-dm-relax-ordering-of-bio-based-flush-implementation.patch.
+> 
+> * Tested/Reviewed-by's added and patches reordered such that block
+>   layer conversion comes first followed by block driver conversions,
+>   filesystem conversions and then finally removal of deprecate stuff.
+> 
+> I think the patchset is mostly ready now although I would love to have
+> acked/reviewd-by's on bio-based dm conversion patches.  Jens,
+> Christoph, how do you guys wanna steer these patches?  I think it
+> would be best to go through the block tree but splitting parts and
+> doing cross tree pull/merges should be doable too.
 
---YZ5djTAD1cGYuMQK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Since the core changes are block churn, it would probably be
+sanest to pull everything in there. Core into for-2.6.37/core,
+then have for-2.6.37/fs and 2.6.37/drivers on top of that.
 
-On Fri, Sep 03, 2010 at 07:35:03AM -0700, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Fri, 03 Sep 2010 05:34:37 -0700 (PDT)
->=20
-> > From: Wolfram Sang <w.sang@pengutronix.de>
-> > Date: Fri, 3 Sep 2010 07:53:28 +0200
-> >=20
-> >>=20
-> >>> Thanks for your analysis and suggested patch, I'll take a look at thi=
-s.
-> >>=20
-> >> Thanks for your help. If we can't find something, I'll just do a bisec=
-t this
-> >> weekend.
-> >=20
-> > Frankly, at this point, I'm beginning suspect that the procfs stuff
-> > simply never warned at some point in the past and that the IDE
-> > code has had this problem for a while.
->=20
-> I just confirmed that the procfs code only started warning on removal
-> of non-present entries this past March, so basically the IDE code has
-> silently had this problem of not actually creating any of it's procfs
-> nodes for some time now.
-
-Confirming. With 2.6.33, I don't get the warnings, but neither get the
-procfs-entries.
-
-Checking my debug-output again, I assume that the hard-disk has the entries,
-because it is the first user of ide-gd, so that driver still needs to be
-requested. Maybe this is enough delay for the directories to appear? Wild
-guess...
-
-> Wolfram I'll look into your patch some more and integrate it, thanks.
-
-Just in case you need a SoB:
-
-Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
-
-Thanks,
-
-   Wolfram
-
---=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---YZ5djTAD1cGYuMQK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkyBRZYACgkQD27XaX1/VRtjGgCfQ5WEpbg+C6dUJVgHZQDAnNIE
-0GEAnjvgAr71V/Hx8YRbJM/9ZTT3Ad7Y
-=kmvc
------END PGP SIGNATURE-----
-
---YZ5djTAD1cGYuMQK--
+-- 
+Jens Axboe
