@@ -1,87 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [linux-pm] [PATCH] libata: skip EH autopsy and recovery during
- suspend
-Date: Fri, 03 Sep 2010 10:55:59 +0200
-Message-ID: <4C80B81F.8090803@gmail.com>
-References: <Pine.LNX.4.44L0.1009021646510.1311-100000@iolanthe.rowland.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] SATA / AHCI: Do not play with the link PM during suspend
+ to RAM
+Date: Fri, 03 Sep 2010 11:04:52 +0200
+Message-ID: <4C80BA34.7090400@kernel.org>
+References: <1283027290.2721.37.camel@myfedorahat>	<4C7BAA42.2050809@kernel.org>	<AANLkTimEQEAF7WfCmmSfS_Ryq7HEfqemAnh9BvdKRhqL@mail.gmail.com>	<AANLkTi=3BVGUSNUZn=QbDciWdhBPmxe0kQgKcBFtkSH7@mail.gmail.com>	<AANLkTin5uTJA0G+hWxfsGFhyC_N9ZR7rZN9qCjK5VyvU@mail.gmail.com>	<AANLkTi=mGaNoutyh=iVrGORYjRx_qvnVfMHL63TuY5gY@mail.gmail.com>	<AANLkTikqxmzQozCOo+7XDSWE4tTniSnYbomEgqA4aB-2@mail.gmail.com>	<4C7F77C4.6040404@kernel.org> <AANLkTi=_fmtNjj=ZeSyuMtQg+YBJ3=gHAkeurJhDZmmh@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:64066 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752998Ab0ICI4G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2010 04:56:06 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1009021646510.1311-100000@iolanthe.rowland.org>
+Received: from hera.kernel.org ([140.211.167.34]:59195 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754432Ab0ICJEz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Sep 2010 05:04:55 -0400
+In-Reply-To: <AANLkTi=_fmtNjj=ZeSyuMtQg+YBJ3=gHAkeurJhDZmmh@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+To: Siddhartha Jain <siddhartha@siddharthajain.net>
+Cc: linux-ide@vger.kernel.org
 
-cc'ing Jens and Christoph and quoting whole body for them.
+Hello,
 
-On 09/02/2010 11:01 PM, Alan Stern wrote:
-> On Thu, 2 Sep 2010, Tejun Heo wrote:
+On 09/02/2010 09:56 PM, Siddhartha Jain wrote:
+> Applied patch to 2.6.35.4. Patched cleanly and kernel compile was smooth.
 > 
->> Hello,
->>
->> On 09/02/2010 10:28 PM, Rafael J. Wysocki wrote:
->>> That would be very nice.  In particular, I'd like to get rid of the
->>> pm_message_t thing if possible.  And I'd like to avoid putting the
->>> controller into D3 before creating hibernation image. :-)
+> Suspend works beautifully now. Not only does the system resume
+> properly but earlier suspend would take minutes, now it goes to
+> suspend within seconds (less than 10).
 > 
-> Ultimately I don't think it will be possible to get rid of pm_message_t
-> throughout the entire kernel.  Not just because it's a legacy thing
-> spread all over the place, but because it sometimes is genuinely
-> useful.  In situations where there are only minimal differences between
-> the various suspend/resume paths, it makes a lot of sense to call a
-> single function and tell it which type of operation to perform.
+> I will re-build my laptop with dmcrypt + ext4, apply this patch and
+> use the system for a while to ensure all play together nicely.
 > 
->> Oh, yeah, things like that can definitely be changed, but I think it
->> would still need to be piped through EH.  That's how the queue gets
->> quiesced for those special operations and resume is basically probing,
->> so it doesn't make much sense to split them.  Please let me know how
->> it should work from power management POV and I'll be happy to convert
->> libata to fit the new behavior.
-> 
-> Tejun, I'm planning to make a few changes to the block layer and the
-> SCSI core in order to implement delayed autosuspend.  These changes
-> will affect system sleep too, so you may need to know about them.
-> 
-> Each request_queue structure will have an rpm_status variable that gets
-> updated as the corresponding device is suspended or resumed.  When the
-> status is SUSPENDING or RESUMING, requests will not be sent from the
-> request_queue to the driver unless they have cmd_type set to
-> REQ_TYPE_PM_SUSPEND or REQ_TYPE_PM_RESUME (actually I may combine those
-> two into a single REQ_TYPE_PM type).  If other types of request are
-> added to the queue when the status isn't ACTIVE, they will cause a
-> runtime resume to be started.
-> 
-> Initially this will affect only drivers using the SCSI layer.  
-> Commands sent during error handling won't be affected though, because
-> the SCSI error handler doesn't use requests or queues -- it sends
-> commands directly to the lower-level driver.
-> 
-> Does that all sound okay to you?
+> Thanks Tejun!! Really appreciate the quick turnaround on this issue. I
+> saved debugging info from the successful resume where I have debugging
+> turned on for various modules - acpi, pci etc. Let me know if you need
+> me to send it across.
 
-Hmm... I can't really tell much without looking at the actual patch
-but I'm a bit doubtful about using REQ_TYPE_* for suspend/resumes,
-well, for that matter, for any other purpose than actual IO requests.
-The current REQ_TYPE_PM_* are only used by ide and it's really messy.
-
-Those special requests are very difficult to use in generic manner.
-ie. How should remapping / cloning drivers like md, dm and loopback
-handle them?  They end up just being a mechanism for specific low
-level drivers to feed certain requests back to themselves to implement
-suspend/resume sequence and as there's no clear defined common usage,
-the meaning of those flags becomes ambiguous and confusing depending
-on drivers and so on.
-
-Another issue is that power management is probably better handled as a
-sub problem of generic IO exception handling.  If you throw in
-hot[un]plugs and transport errors and consider what should happen when
-those events happen together, things get hairy if power management is
-not well integrated with the usual exceptionn handling.
+Debugging was mostly done by Rafael, so he deserves most of credit.
+Can you please keep testing for a few more days and let me know the
+result?
 
 Thanks.
 
