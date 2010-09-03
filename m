@@ -1,57 +1,64 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Fri, 3 Sep 2010 08:36:18 -0400
-Message-ID: <20100903123617.GA23812@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
+From: Don Zickus <dzickus@redhat.com>
+Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
+Date: Fri, 3 Sep 2010 09:56:13 -0400
+Message-ID: <20100903135613.GV4879@redhat.com>
+References: <4C03C608.1040600@gmail.com>
+ <20100601135004.GP15159@redhat.com>
+ <4C051D44.7040203@gmail.com>
+ <20100602184459.GA15159@redhat.com>
+ <4C0B3E94.6020506@gmail.com>
+ <4C80B338.6020701@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:44163 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752958Ab0ICN4u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 3 Sep 2010 09:56:50 -0400
 Content-Disposition: inline
-In-Reply-To: <1283509796-1510-24-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com, mpatocka@redhat.com
+In-Reply-To: <4C80B338.6020701@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-On Fri, Sep 03 2010 at  6:29am -0400,
-Tejun Heo <tj@kernel.org> wrote:
+On Fri, Sep 03, 2010 at 10:35:04AM +0200, Jiri Slaby wrote:
+> On 06/06/2010 08:22 AM, Jiri Slaby wrote:
+> > On 06/02/2010 08:44 PM, Don Zickus wrote:
+> >> --- a/kernel/watchdog.c
+> >> +++ b/kernel/watchdog.c
+> >> @@ -550,8 +550,7 @@ cpu_callback(struct notifier_block *nfb, unsigned long action, void *hcpu)
+> >>  		break;
+> >>  	case CPU_ONLINE:
+> >>  	case CPU_ONLINE_FROZEN:
+> >> -		if (watchdog_enable(hotcpu))
+> >> -			return NOTIFY_BAD;
+> >> +		watchdog_enable(hotcpu)
+> > 
+> > This fixes the problem indeed.
+> 
+> Hi, was this fixed somehow? I still use this hunk and don't know if it
+> is needed:
 
-> This patch converts bio-based dm to support REQ_FLUSH/FUA instead of
-> now deprecated REQ_HARDBARRIER.
-> 
-> * -EOPNOTSUPP handling logic dropped.
-> 
-> * Preflush is handled as before but postflush is dropped and replaced
->   with passing down REQ_FUA to member request_queues.  This replaces
->   one array wide cache flush w/ member specific FUA writes.
-> 
-> * __split_and_process_bio() now calls __clone_and_map_flush() directly
->   for flushes and guarantees all FLUSH bio's going to targets are zero
-> `  length.
-> 
-> * It's now guaranteed that all FLUSH bio's which are passed onto dm
->   targets are zero length.  bio_empty_barrier() tests are replaced
->   with REQ_FLUSH tests.
-> 
-> * Empty WRITE_BARRIERs are replaced with WRITE_FLUSHes.
-> 
-> * Dropped unlikely() around REQ_FLUSH tests.  Flushes are not unlikely
->   enough to be marked with unlikely().
-> 
-> * Block layer now filters out REQ_FLUSH/FUA bio's if the request_queue
->   doesn't support cache flushing.  Advertise REQ_FLUSH | REQ_FUA
->   capability.
-> 
-> * Request based dm isn't converted yet.  dm_init_request_based_queue()
->   resets flush support to 0 for now.  To avoid disturbing request
->   based dm code, dm->flush_error is added for bio based dm while
->   requested based dm continues to use dm->barrier_error.
-> 
-> Lightly tested linear, stripe, raid1, snap and crypt targets.  Please
-> proceed with caution as I'm not familiar with the code base.
+I have to go re-review the problem again.  I might have forgot to bring it
+in.  Thanks for reminding me!
 
-Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+Cheers,
+Don
 
-Mikulas and/or Alasdair won't be able to review this until next week.
+> --- a/kernel/watchdog.c
+> +++ b/kernel/watchdog.c
+> @@ -524,7 +524,7 @@ cpu_callback(struct notifier_block *nfb, unsigned
+> long action, void *hcpu)
+>                 break;
+>         case CPU_ONLINE:
+>         case CPU_ONLINE_FROZEN:
+> -               err = watchdog_enable(hotcpu);
+> +               watchdog_enable(hotcpu);
+>                 break;
+>  #ifdef CONFIG_HOTPLUG_CPU
+>         case CPU_UP_CANCELED:
+> 
+> thanks,
+> -- 
+> js
