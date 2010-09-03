@@ -1,50 +1,51 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: Re: WARNINGs because of ide-proc handling
-Date: Fri, 3 Sep 2010 07:53:28 +0200
-Message-ID: <20100903055328.GA11991@pengutronix.de>
-References: <20100831205605.GA23636@pengutronix.de> <20100901.193332.77341159.davem@davemloft.net> <20100902212839.GA20070@pengutronix.de> <20100902.151416.242137052.davem@davemloft.net>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
+Date: Fri, 03 Sep 2010 10:35:04 +0200
+Message-ID: <4C80B338.6020701@gmail.com>
+References: <4C03C608.1040600@gmail.com> <20100601135004.GP15159@redhat.com> <4C051D44.7040203@gmail.com> <20100602184459.GA15159@redhat.com> <4C0B3E94.6020506@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:46291 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900Ab0ICFx3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2010 01:53:29 -0400
-Content-Disposition: inline
-In-Reply-To: <20100902.151416.242137052.davem@davemloft.net>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34849 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755548Ab0ICIfI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2010 04:35:08 -0400
+In-Reply-To: <4C0B3E94.6020506@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
+To: Don Zickus <dzickus@redhat.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
+On 06/06/2010 08:22 AM, Jiri Slaby wrote:
+> On 06/02/2010 08:44 PM, Don Zickus wrote:
+>> --- a/kernel/watchdog.c
+>> +++ b/kernel/watchdog.c
+>> @@ -550,8 +550,7 @@ cpu_callback(struct notifier_block *nfb, unsigned long action, void *hcpu)
+>>  		break;
+>>  	case CPU_ONLINE:
+>>  	case CPU_ONLINE_FROZEN:
+>> -		if (watchdog_enable(hotcpu))
+>> -			return NOTIFY_BAD;
+>> +		watchdog_enable(hotcpu)
+> 
+> This fixes the problem indeed.
 
---PNTmBPCT7hxwcZjr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi, was this fixed somehow? I still use this hunk and don't know if it
+is needed:
+--- a/kernel/watchdog.c
++++ b/kernel/watchdog.c
+@@ -524,7 +524,7 @@ cpu_callback(struct notifier_block *nfb, unsigned
+long action, void *hcpu)
+                break;
+        case CPU_ONLINE:
+        case CPU_ONLINE_FROZEN:
+-               err = watchdog_enable(hotcpu);
++               watchdog_enable(hotcpu);
+                break;
+ #ifdef CONFIG_HOTPLUG_CPU
+        case CPU_UP_CANCELED:
 
-
-> Thanks for your analysis and suggested patch, I'll take a look at this.
-
-Thanks for your help. If we can't find something, I'll just do a bisect this
-weekend.
-
---=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---PNTmBPCT7hxwcZjr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.9 (GNU/Linux)
-
-iEYEARECAAYFAkyAjVgACgkQD27XaX1/VRum7QCeMNczZGPYpmyGJUbPxF9KunnY
-fi8AnRl7wbsW4hMyq36l7cCBwR16zxri
-=Jm3s
------END PGP SIGNATURE-----
-
---PNTmBPCT7hxwcZjr--
+thanks,
+-- 
+js
