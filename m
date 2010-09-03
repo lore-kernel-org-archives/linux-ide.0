@@ -1,44 +1,50 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Thu, 2 Sep 2010 16:34:28 -0700
-Message-ID: <AANLkTi=8jU7gKVDcngZDv6MBfPSax=sRz2ZT9hvCEQd0@mail.gmail.com>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
-	<AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
-	<alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-	<alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
-	<alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
-	<alpine.DEB.2.00.1008310732120.5156@p34.internal.lan>
-	<alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
-	<alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
-	<AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
-	<alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
-	<alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
-	<alpine.DEB.2.00.1009021818040.3149@p34.internal.lan>
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: Re: WARNINGs because of ide-proc handling
+Date: Fri, 3 Sep 2010 07:53:28 +0200
+Message-ID: <20100903055328.GA11991@pengutronix.de>
+References: <20100831205605.GA23636@pengutronix.de> <20100901.193332.77341159.davem@davemloft.net> <20100902212839.GA20070@pengutronix.de> <20100902.151416.242137052.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1009021818040.3149@p34.internal.lan>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:46291 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900Ab0ICFx3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Sep 2010 01:53:29 -0400
+Content-Disposition: inline
+In-Reply-To: <20100902.151416.242137052.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
-On Thu, Sep 2, 2010 at 3:19 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Any recommendations on how to capture the freezing between the two kernels?
-> Which debug method would be best?
-> Does anyone else experience high wait times under 2.6.35 that uses 3ware
-> cards?
->
-> I tested under another host with 2.6.35 (software raid only) and it did not
-> have any issues..
->
 
-Justin,
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-We are trying to duplicate your issue.  Please stay in touch with the
-3ware/LSI support person you are in touch with.
 
-Thanks,
+> Thanks for your analysis and suggested patch, I'll take a look at this.
 
--Adam
+Thanks for your help. If we can't find something, I'll just do a bisect this
+weekend.
+
+--=20
+Pengutronix e.K.                           | Wolfram Sang                |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+
+--PNTmBPCT7hxwcZjr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+iEYEARECAAYFAkyAjVgACgkQD27XaX1/VRum7QCeMNczZGPYpmyGJUbPxF9KunnY
+fi8AnRl7wbsW4hMyq36l7cCBwR16zxri
+=Jm3s
+-----END PGP SIGNATURE-----
+
+--PNTmBPCT7hxwcZjr--
