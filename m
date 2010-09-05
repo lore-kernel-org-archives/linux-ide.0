@@ -1,91 +1,49 @@
-From: "Gustavo F. Padovan" <padovan-Y3ZbgMPKUGA34EUeqzHoZw@public.gmane.org>
-Subject: Re: [PATCH 10/15] pcmcia: introduce autoconfiguration feature
-Date: Fri, 3 Sep 2010 19:38:01 -0300
-Message-ID: <20100903223801.GG16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-10-git-send-email-linux@dominikbrodowski.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: libata: SATL error processing: unrecovered read error
+Date: Sun, 05 Sep 2010 11:57:16 -0400
+Message-ID: <4C83BDDC.3020201@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1283511434-21620-10-git-send-email-linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Sender: linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, laforge-TgoAw6mPHtdg9hUCZPvPmw@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:57761 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752644Ab0IEP5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 5 Sep 2010 11:57:21 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-* Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org> [2010-09-03 12:57:09 +0200]:
+While looking at an eSATA connected external disk with
+a medium error, this sense data appeared:
 
-> Introduce an autoconfiguration feature to set certain values in
-> pcmcia_loop_config(), instead of copying the same code over and over
-> in each PCMCIA driver. At first, introduce the following options:
-> 
-> CONF_AUTO_CHECK_VCC	check or matching Vcc entry
-> CONF_AUTO_SET_VPP	set Vpp
-> CONF_AUTO_AUDIO		enable the speaker line
-> 
-> CC: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: laforge-TgoAw6mPHtdg9hUCZPvPmw@public.gmane.org
-> CC: linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-> CC: linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
-> CC: linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-> CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Signed-off-by: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-> ---
->  drivers/ata/pata_pcmcia.c                        |   23 +----
->  drivers/bluetooth/bt3c_cs.c                      |    7 +-
->  drivers/bluetooth/btuart_cs.c                    |    7 +-
->  drivers/bluetooth/dtl1_cs.c                      |    1 -
->  drivers/char/pcmcia/cm4000_cs.c                  |    1 -
->  drivers/char/pcmcia/cm4040_cs.c                  |    1 -
->  drivers/char/pcmcia/ipwireless/main.c            |    1 -
->  drivers/char/pcmcia/synclink_cs.c                |    1 -
->  drivers/ide/ide-cs.c                             |   23 +----
->  drivers/isdn/hardware/avm/avm_cs.c               |    1 -
->  drivers/isdn/hisax/avma1_cs.c                    |    1 -
->  drivers/isdn/hisax/elsa_cs.c                     |    1 -
->  drivers/isdn/hisax/sedlbauer_cs.c                |   25 +-----
->  drivers/isdn/hisax/teles_cs.c                    |    1 -
->  drivers/net/pcmcia/axnet_cs.c                    |    1 -
->  drivers/net/pcmcia/fmvj18x_cs.c                  |    1 -
->  drivers/net/pcmcia/pcnet_cs.c                    |    1 -
->  drivers/net/pcmcia/smc91c92_cs.c                 |    2 -
->  drivers/net/pcmcia/xirc2ps_cs.c                  |    5 +-
->  drivers/net/wireless/airo_cs.c                   |   17 +---
->  drivers/net/wireless/atmel_cs.c                  |   17 +---
->  drivers/net/wireless/hostap/hostap_cs.c          |   27 +-----
->  drivers/net/wireless/libertas/if_cs.c            |    1 -
->  drivers/net/wireless/orinoco/orinoco_cs.c        |   31 +------
->  drivers/net/wireless/orinoco/spectrum_cs.c       |   24 +----
->  drivers/parport/parport_cs.c                     |    1 -
->  drivers/pcmcia/pcmcia_cis.c                      |   36 ++++++-
->  drivers/scsi/pcmcia/aha152x_stub.c               |    1 -
->  drivers/scsi/pcmcia/fdomain_stub.c               |    1 -
->  drivers/scsi/pcmcia/nsp_cs.c                     |  110 ++++++++-------------
->  drivers/scsi/pcmcia/qlogic_stub.c                |    1 -
->  drivers/scsi/pcmcia/sym53c500_cs.c               |    1 -
->  drivers/serial/serial_cs.c                       |   10 +--
->  drivers/staging/comedi/drivers/cb_das16_cs.c     |    1 -
->  drivers/staging/comedi/drivers/das08_cs.c        |    1 -
->  drivers/staging/comedi/drivers/ni_daq_700.c      |   10 +--
->  drivers/staging/comedi/drivers/ni_daq_dio24.c    |   10 +--
->  drivers/staging/comedi/drivers/ni_labpc_cs.c     |   11 +--
->  drivers/staging/comedi/drivers/ni_mio_cs.c       |    1 -
->  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    1 -
->  drivers/telephony/ixj_pcmcia.c                   |    1 -
->  drivers/usb/host/sl811_cs.c                      |   24 +----
->  include/pcmcia/ds.h                              |    7 +-
->  43 files changed, 120 insertions(+), 329 deletions(-)
+     READ cdb: 28 00 96 4a 7a d1 00 00 01 00
+       duration=2816 ms
+READ:  Descriptor format, current;  Sense key: Medium Error
+  Additional sense: Unrecovered read error - auto reallocate failed
+   Descriptor type: Information
+     0x00000000964a7ad1
+  Raw sense data (in hex):
+         72 03 11 04 00 00 00 0c  00 0a 80 00 00 00 00 00
+         96 4a 7a d1
 
-For drivers/bluetooth
+That is pretty close to what I was expecting to see. If anything
+there is too much information. That "Unrecovered read error -
+auto reallocate failed" [asc/asq: 11h/04h] should just be
+"Unrecovered read error" [asc/asq: 11h/0h]. See sat2r09.pdf table
+105 or sat3r00.pdf table 105.
 
-Acked-by: Gustavo F. Padovan <padovan-Y3ZbgMPKUGA34EUeqzHoZw@public.gmane.org>
+The problem seems to be in libata's SATL code in the sense_table[]
+in ata_to_sense_error() in libata-scsi.c . Looks like some other
+entries in that sense_table need adjusting as well to align them
+to SAT's table 105.
 
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
+Also it is good to have a reference comment as sense_data[]
+does in lk 2.6.35:
+   /* Based on the 3ware driver translation table */
+
+but this would be better (if it did comply):
+   /* Based on table 105 in SAT-2 rev 9 */
+
+Doug Gilbert
