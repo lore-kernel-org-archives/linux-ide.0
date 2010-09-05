@@ -1,49 +1,43 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: libata: SATL error processing: unrecovered read error
-Date: Sun, 05 Sep 2010 11:57:16 -0400
-Message-ID: <4C83BDDC.3020201@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream-fixes] ahci: fix hang on failed softreset
+Date: Sun, 05 Sep 2010 16:39:42 -0400
+Message-ID: <4C84000E.1050906@garzik.org>
+References: <4C7780BB.6030604@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:57761 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752644Ab0IEP5V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 5 Sep 2010 11:57:21 -0400
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:62808 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754502Ab0IEUjq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Sep 2010 16:39:46 -0400
+Received: by qyk36 with SMTP id 36so1823317qyk.19
+        for <linux-ide@vger.kernel.org>; Sun, 05 Sep 2010 13:39:46 -0700 (PDT)
+In-Reply-To: <4C7780BB.6030604@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Anssi Hannula <anssi.hannula@iki.fi>, Gwendal Grignou <gwendal@google.com>, stable <stable@kernel.org>
 
-While looking at an eSATA connected external disk with
-a medium error, this sense data appeared:
+On 08/27/2010 05:09 AM, Tejun Heo wrote:
+> ahci_do_softreset() compared the current time and deadline in reverse
+> when calculating timeout for SRST issue.  The result is that if
+> @deadline is in future, SRST is issued with 0 timeout, which hasn't
+> caused any problem because it later waits for DRDY with the correct
+> timeout.  If deadline is already exceeded by the time SRST is about to
+> be issued, the timeout calculation underflows and if the device
+> doesn't respond, timeout doesn't trigger for a _very_ long time.
+>
+> Reverse the incorrect comparison order.
+>
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> Reported-by: Anssi Hannula<anssi.hannula@iki.fi>
+> Tested-by: Gwendal Grignou<gwendal@google.com>
+> Cc: stable@kernel.org
+> ---
+>   drivers/ata/libahci.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
-     READ cdb: 28 00 96 4a 7a d1 00 00 01 00
-       duration=2816 ms
-READ:  Descriptor format, current;  Sense key: Medium Error
-  Additional sense: Unrecovered read error - auto reallocate failed
-   Descriptor type: Information
-     0x00000000964a7ad1
-  Raw sense data (in hex):
-         72 03 11 04 00 00 00 0c  00 0a 80 00 00 00 00 00
-         96 4a 7a d1
+applied, good catch, sorry for the delay.
 
-That is pretty close to what I was expecting to see. If anything
-there is too much information. That "Unrecovered read error -
-auto reallocate failed" [asc/asq: 11h/04h] should just be
-"Unrecovered read error" [asc/asq: 11h/0h]. See sat2r09.pdf table
-105 or sat3r00.pdf table 105.
 
-The problem seems to be in libata's SATL code in the sense_table[]
-in ata_to_sense_error() in libata-scsi.c . Looks like some other
-entries in that sense_table need adjusting as well to align them
-to SAT's table 105.
-
-Also it is good to have a reference comment as sense_data[]
-does in lk 2.6.35:
-   /* Based on the 3ware driver translation table */
-
-but this would be better (if it did comply):
-   /* Based on table 105 in SAT-2 rev 9 */
-
-Doug Gilbert
