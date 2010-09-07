@@ -1,35 +1,51 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] via82cxxx: fix typo for VT6415 PCIE PATA IDE Host
- Controller support.
-Date: Mon, 06 Sep 2010 22:02:40 -0700 (PDT)
-Message-ID: <20100906.220240.71572839.davem@davemloft.net>
-References: <20100718232838.GA3245@home.lan>
-	<20100718.165620.133871819.davem@davemloft.net>
-	<20100719220736.GB3245@home.lan>
+From: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
+Subject: Re: [PATCH] libata: skip EH autopsy and recovery during suspend
+Date: Tue, 7 Sep 2010 13:54:31 +0200
+Message-ID: <201009071354.32149.stephan.diestelhorst@amd.com>
+References: <201007091750.05020.stephan.diestelhorst@amd.com> <201009021633.22869.stephan.diestelhorst@amd.com> <AANLkTi==kpbcJQ9E_MMfs9Ohu_O4vNsf8T7NK1z+iAwn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:36072
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751463Ab0IGFCX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Sep 2010 01:02:23 -0400
-In-Reply-To: <20100719220736.GB3245@home.lan>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:24434 "EHLO
+	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756118Ab0IGL7f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Sep 2010 07:59:35 -0400
+In-Reply-To: <AANLkTi==kpbcJQ9E_MMfs9Ohu_O4vNsf8T7NK1z+iAwn@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: ydirson@free.fr
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>
 
-From: Yann Dirson <ydirson@free.fr>
-Date: Tue, 20 Jul 2010 00:07:37 +0200
+On Thursday 02 September 2010, 22:52:56 I wrote:
+> On Thu, Sep 2, 2010 at 4:33 PM, Stephan Diestelhorst
+> <stephan.diestelhorst@amd.com> wrote:
+> > On Thursday 02 September 2010, 12:02:49 Tejun Heo wrote:
+> >> For some mysterious reason, certain hardware reacts badly to usual EH
+> >> actions while the system is going for suspend.  As the devices won't
+> >> be needed until the system is resumed, ask EH to skip usual autopsy
+> >> and recovery and proceed directly to suspend.
+> >
+> > Thanks Tejun for this patch. Will test in a second!
+> 
+> Applied, compiled and worked for the 5 iterations I managed to test it.
+> Much better than your previous patch, thanks a lot! I'd give it some more spins
+> tomorrow, though.
 
-> OTOH, we see here that the system believes in existence of "ide1",
-> although the vt6415 appears to be single-channel
-> (http://www.via.com.tw/en/products/peripherals/pci_pcie/vt6415/)
+Alright, I have tested for more than 20 iterations now. It works
+great! Thanks for the fix!
 
-I think this is unlikely as the ATA layer pata_via.c driver also
-does not mark this device as single-channel.
+Are there any plans for upstream inclusion?
 
-Have you tried just booting up with the ATA driver enabled instead
-of the IDE layer one?  Please do that as it might help narrow this
-down.
+Thanks,
+  Stephan
+
+
+-- 
+Stephan Diestelhorst, AMD Operating System Research Center
+stephan.diestelhorst@amd.com, Tel. +49 (0)351 448 356 719
+
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
