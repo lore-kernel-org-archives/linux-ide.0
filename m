@@ -1,93 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: skip EH autopsy and recovery during
- suspend
-Date: Tue, 07 Sep 2010 14:05:31 +0200
-Message-ID: <4C862A8B.3000506@gmail.com>
-References: <201007091750.05020.stephan.diestelhorst@amd.com> <4C7376BE.5040006@gmail.com> <201008242239.43249.rjw@sisk.pl> <201008270109.36687.rjw@sisk.pl> <4C7F6931.4050707@gmail.com>
+From: ld puri <neoequal@gmail.com>
+Subject: State of outstanding command executing driver code during suspend()/resume().
+Date: Tue, 7 Sep 2010 10:30:28 -0600
+Message-ID: <AANLkTi=GiP+QZ-ZYvOLsq+J2Fi9E42R8ziOKgEDkeyoc@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:49971 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756464Ab0IGMFg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Sep 2010 08:05:36 -0400
-In-Reply-To: <4C7F6931.4050707@gmail.com>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:57507 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756296Ab0IGQa3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Sep 2010 12:30:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Stephan Diestelhorst <stephan.diestelhorst@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pm@lists.osdl.org" <linux-pm@lists.osdl.org>, Stephan Diestelhorst <stephan.diestelhorst@gmail.com>, stable@kernel.org
+To: linux-ide@vger.kernel.org, linux-newbie@vger.kernel.org, linux-pci@vger.kernl.org
 
-For some mysterious reason, certain hardware reacts badly to usual EH
-actions while the system is going for suspend.  As the devices won't
-be needed until the system is resumed, ask EH to skip usual autopsy
-and recovery and proceed directly to suspend.
+Hi All,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Tested-by: Stephan Diestelhorst <stephan.diestelhorst@amd.com>
-Cc: stable@kernel.org
----
- drivers/ata/libata-core.c |   14 +++++++++++++-
- drivers/ata/libata-eh.c   |    4 ++++
- include/linux/libata.h    |    1 +
- 3 files changed, 18 insertions(+), 1 deletion(-)
+While browsing through current Linux Power management implementation
+wrt AHCI drivers, I stumbled upon following doubts.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9ceb493..92cd5f3 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5427,6 +5427,7 @@ static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
-  */
- int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
- {
-+	unsigned int ehi_flags = ATA_EHI_QUIET;
- 	int rc;
+I assume=A0whenever=A0system wide=A0suspend (STR/hibernate) occurs, all=
+ the
+process is=A0freeze=A0by the Kernel's PM=A0subsystem and it ensures the=
+re
+are no additional command can be issued to AHCI driver.=A0But it can be
+very much possible some commands are being executed within the AHCI
+driver.
 
- 	/*
-@@ -5435,7 +5436,18 @@ int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
- 	 */
- 	ata_lpm_enable(host);
+If my understanding is correct suspend() will be called anytime for
+the AHCI driver. In other words, the invocation
+ahci_pci_device_suspend() from PCI=A0subsystem=A0won't wait for ahci
+driver to complete its outstanding command.
+The invocation of suspend(), resume() & remove() call backs from PCI
+subsystem are not=A0synchronized=A0with that driver's IO path is this
+correct ?
 
--	rc = ata_host_request_pm(host, mesg, 0, ATA_EHI_QUIET, 1);
-+	/*
-+	 * On some hardware, device fails to respond after spun down
-+	 * for suspend.  As the device won't be used before being
-+	 * resumed, we don't need to touch the device.  Ask EH to skip
-+	 * the usual stuff and proceed directly to suspend.
-+	 *
-+	 * http://thread.gmane.org/gmane.linux.ide/46764
-+	 */
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
-+
-+	rc = ata_host_request_pm(host, mesg, 0, ehi_flags, 1);
- 	if (rc == 0)
- 		host->dev->power.power_state = mesg;
- 	return rc;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 0108731..95838b3 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3242,6 +3242,10 @@ static int ata_eh_skip_recovery(struct ata_link *link)
- 	if (link->flags & ATA_LFLAG_DISABLED)
- 		return 1;
+Does these outstanding command currently executed by driver will be los=
+t ?
 
-+	/* skip if explicitly requested */
-+	if (ehc->i.flags & ATA_EHI_NO_RECOVERY)
-+		return 1;
-+
- 	/* thaw frozen port and recover failed devices */
- 	if ((ap->pflags & ATA_PFLAG_FROZEN) || ata_link_nr_enabled(link))
- 		return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 89115f8..d1ef41b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -335,6 +335,7 @@ enum {
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
-+	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
+Moreover in resume() routine of AHCI driver, the controller is
+reinitialized (ahci_init_controller), then how system can restart the
+commands that are stopped during previous suspend() call.
 
- 	ATA_EHI_DID_SOFTRESET	= (1 << 16), /* already soft-reset this port */
- 	ATA_EHI_DID_HARDRESET	= (1 << 17), /* already soft-reset this port */
+Thanks
+Das
