@@ -1,92 +1,63 @@
-From: gianluca <gianluca@sottospazio.it>
-Subject: sata_sil boot problems with kernel 2.6.35 and current git
-Date: Wed, 8 Sep 2010 20:26:51 +0200
-Message-ID: <20100908182651.GA32114@seek.priv>
+From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: Maybe a bug in libata-core
+Date: Thu, 09 Sep 2010 07:42:12 +0200
+Message-ID: <4C8873B4.70808@stud.tu-ilmenau.de>
+References: <4C71C645.8050007@stud.tu-ilmenau.de> <4C723C65.6080303@kernel.org> <4C72F929.6090401@stud.tu-ilmenau.de> <4C73747D.7090305@kernel.org>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="p4qYPpj5QlsIQJ0K"
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp206.alice.it ([82.57.200.102]:40740 "EHLO smtp206.alice.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751372Ab0IHScr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Sep 2010 14:32:47 -0400
-Received: from mail.seek.priv (87.8.255.90) by smtp206.alice.it (8.5.124.08)
-        id 4C1A268C04D517AF for linux-ide@vger.kernel.org; Wed, 8 Sep 2010 20:26:52 +0200
-Received: from mail.seek.priv (localhost.seek.priv [127.0.0.1])
-	by mail.seek.priv (Postfix) with ESMTP id 97AA125EDB32
-	for <linux-ide@vger.kernel.org>; Wed,  8 Sep 2010 20:26:51 +0200 (CEST)
-Content-Disposition: inline
+Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:57584 "EHLO
+	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752392Ab0IIFpN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Sep 2010 01:45:13 -0400
+In-Reply-To: <4C73747D.7090305@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+
+Dear list,
+
+I'm very sorry I didn't find the time earlier to pursue this matter.
+Indeed it was a coding error on my side.  I sat up sg_io_hdr_t correctl=
+y
+except for one thing: dxfer_len was set to the amount of blocks instead
+of block*logical_blocksize - so it was all my bad.
+
+Thank you for the suggestions, it helped finding the error quickly.
+
+Greetings,
+Stefan
 
 
---p4qYPpj5QlsIQJ0K
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Am 24.08.2010 09:27, schrieb Tejun Heo:
+> Hello,
+>=20
+> On 08/24/2010 12:41 AM, Stefan /*St0fF*/ H=FCbner wrote:
+>> As far as I know my code I thought I did send enough data.  Maybe I'=
+m
+>> misunderstanding something: I valloc'ated block_count*logical_block_=
+size
+>> bytes, filled them with data and presented this buffer to the
+>> sg_io_hdr_t structure by setting dxfer_len to the length of the buff=
+er,
+>> setting dxferp to a pointer to the buffer and setting the
+>> dxfer_direction to SG_DXFER_TO_DEV.
+>>
+>> The only thing coming to my mind would be overflow of dxfer_len, but=
+ as
+>> this is a unsigned int - wouldn't it be 32 bits wide? (and by that
+>> accepting f.e. 64k*512 bytes =3D 33 554 432 bytes (32M, needing 25 b=
+its))
+>>
+>> Any other suggestions, or do I have to present the code?
+>=20
+> Yeah, posting a simple test case would be the best way to proceed
+> here.
+>=20
+> Thanks.
+>=20
 
-Today I tried  the kernel 2.6.35 in one of my boxes but I realized that the
-box doesn't detect my SATA HD anymore. The logs show that the driver sata_s=
-il
-is correctly loaded. With 2.6.34 it worked fine.
-
-So I tried to test the latest git to see if the issue was fixed, but that
-kernel exhibits the same behaviour. Then I looked at the linux-ide mailing =
-list
-archives at http://marc.info/?t=3D128232284600001&r=3D1&w=3D2 and I found o=
-ut that=20
-the issue is known but not solved and since I could reliably reproduce the
-problen I started to bisect.
-
-The logs of the bisection are attached. It pointed to the commit
-978c066691a49a205673672a55685305663a2554 (  libata: Remove excess delay in =
-the
-tf_load path ).
-
-So I reverted that commit and got a bootable kernel again. I think this com=
-mit
-exposed a timing bug in the sata_sil driver.
-
-gianluca
-
---p4qYPpj5QlsIQJ0K
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="satasil_bisect.log"
-
-git bisect start '--' 'drivers/ata'
-# bad: [1506707a6c740db316e422239a53ae5df1727591] Linux 2.6.35.4
-git bisect bad 1506707a6c740db316e422239a53ae5df1727591
-# good: [e40152ee1e1c7a63f4777791863215e3faa37a86] Linus 2.6.34
-git bisect good e40152ee1e1c7a63f4777791863215e3faa37a86
-# bad: [c7087652e1890a3feef35b30ee1d4be68e1932cd] libata-sff: clean up BMDMA initialization
-git bisect bad c7087652e1890a3feef35b30ee1d4be68e1932cd
-# good: [fe6005b81e142c36f066b81ca85f80022c4ac979] pata_scc: make scc_wait_after_reset() static
-git bisect good fe6005b81e142c36f066b81ca85f80022c4ac979
-# bad: [978c066691a49a205673672a55685305663a2554] libata: Remove excess delay in the tf_load path
-git bisect bad 978c066691a49a205673672a55685305663a2554
-# good: [41dec29bcb05eb8ec396f70ce791c6e3e4ce4712] libata: introduce sff_set_devctl() method
-git bisect good 41dec29bcb05eb8ec396f70ce791c6e3e4ce4712
-# good: [276a47a93dbfe5d35261451925020f65cdbfcce8] pata_cmd640: don't read CFR pointlessly
-git bisect good 276a47a93dbfe5d35261451925020f65cdbfcce8
-# good: [95cc2c70c139936a2142bcd583da8af6f9d88efb] sata_nv: use ata_pci_sff_activate_host() instead of ata_host_activate()
-git bisect good 95cc2c70c139936a2142bcd583da8af6f9d88efb
-
---p4qYPpj5QlsIQJ0K
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="satasil_view.log"
-Content-Transfer-Encoding: quoted-printable
-
-commit 978c066691a49a205673672a55685305663a2554
-Author: Alan Cox <alan@linux.intel.com>
-Date:   Wed May 5 10:24:57 2010 +0100
-
-    libata: Remove excess delay in the tf_load path
-   =20
-    We don't need to stall and wait after loading the task file and before
-    issuing a command, so don't do it. This shows up on profiles and is not
-    needed.
-   =20
-    Signed-off-by: Alan Cox <alan@linux.intel.com>
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-
---p4qYPpj5QlsIQJ0K--
