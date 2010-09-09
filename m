@@ -1,79 +1,46 @@
-From: gianluca <gianluca@sottospazio.it>
-Subject: Re: sata_sil boot problems with kernel 2.6.35 and current git
-Date: Thu, 9 Sep 2010 19:09:28 +0200
-Message-ID: <20100909170928.GA20288@seek.priv>
-References: <20100908182651.GA32114@seek.priv>
- <4C88F69E.6070000@kernel.org>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Fri, 10 Sep 2010 00:53:13 +0200
+Message-ID: <20100909225313.GB29405@quack.suse.cz>
+References: <1282751267-3530-27-git-send-email-tj@kernel.org>
+ <20100825155842.GA3229@lst.de>
+ <20100825160032.GC3229@lst.de>
+ <4C753D75.2010305@kernel.org>
+ <20100825200223.GE2738@quack.suse.cz>
+ <4C76250B.6060800@kernel.org>
+ <20100827173147.GA12374@quack.suse.cz>
+ <x4939tv98n8.fsf@segfault.boston.devel.redhat.com>
+ <20100830202034.GB12226@quack.quadriga.com>
+ <4C7CB936.8010509@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp204.alice.it ([82.57.200.100]:60832 "EHLO smtp204.alice.it"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752068Ab0IIRKH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Sep 2010 13:10:07 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4C88F69E.6070000@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <4C7CB936.8010509@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Jan Beulich <JBeulich@novell.com>, dieter@plaetinck.be, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Mark Lord <kernel@teksavvy.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Thu, Sep 09, 2010 at 05:00:46PM +0200, Tejun Heo wrote:
-> (cc's added)
-> Hello,
+On Tue 31-08-10 10:11:34, Tejun Heo wrote:
+> On 08/30/2010 10:20 PM, Jan Kara wrote:
+> >   My setup is that I have a dedicated partition / drive for a filesystem
+> > which is written to from a guest kernel running under KVM. I have set it up
+> > using virtio driver with cache=writeback so that the host caches the writes
+> > in a similar way disk caches them. At some point I just kill the qemu-kvm
+> > process and at that point I'd like to also throw away data cached by the
+> > host...
 > 
-> On 09/08/2010 08:26 PM, gianluca wrote:
-> > Today I tried  the kernel 2.6.35 in one of my boxes but I realized that the
-> > box doesn't detect my SATA HD anymore. The logs show that the driver sata_sil
-> > is correctly loaded. With 2.6.34 it worked fine.
-> > 
-> > So I tried to test the latest git to see if the issue was fixed, but that
-> > kernel exhibits the same behaviour. Then I looked at the linux-ide mailing list
-> > archives at http://marc.info/?t=128232284600001&r=1&w=2 and I found out that 
-> > the issue is known but not solved and since I could reliably reproduce the
-> > problen I started to bisect.
-> > 
-> > The logs of the bisection are attached. It pointed to the commit
-> > 978c066691a49a205673672a55685305663a2554 (  libata: Remove excess delay in the
-> > tf_load path ).
-> > 
-> > So I reverted that commit and got a bootable kernel again. I think this commit
-> > exposed a timing bug in the sata_sil driver.
+> $ echo 1 > /sys/block/sdX/device/delete
+> $ echo - - - > /sys/class/scsi_host/hostX/scan
 > 
-> I love you.  Thank you so much for bisecting it.  :-)
-> 
-> Can you please test whether the patch at the end of this message is
-> enough to fix the problem?
+> should do the trick.
+  I've tested that when mounting with barrier=0 option inside KVM, this indeed
+does destroy the filesystem rather badly. With the barrier option, ext4 has
+already survived several crash cycles while running fsstress with
+journal_async_commit option. So the patch seems to work as expected.
 
-I just tested the patch you attached on a vanilla 2.6.35.4 kernel and it works
-for me: the disk is there again.
-
-Thank you!
-
-gianluca
-
-
-> 
-> Alan, the above commit seems a bit dangerous as writes can be merged.
-> Also, ISTR delay requirements for PATA while loading registers.  Mark,
-> Sergei, what do you guys think?
-> 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 030b1c4..6a43129 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -418,6 +418,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
->  		if (ioaddr->ctl_addr)
->  			iowrite8(tf->ctl, ioaddr->ctl_addr);
->  		ap->last_ctl = tf->ctl;
-> +		ap->ops->sff_check_status(ap);
->  	}
-> 
->  	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
-> @@ -453,6 +454,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
->  		iowrite8(tf->device, ioaddr->device_addr);
->  		VPRINTK("device 0x%X\n", tf->device);
->  	}
-> +	ap->ops->sff_check_status(ap);
->  }
->  EXPORT_SYMBOL_GPL(ata_sff_tf_load);
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
