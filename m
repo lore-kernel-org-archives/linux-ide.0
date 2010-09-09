@@ -1,44 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 17982] Cannot see devices on IDE controller
-Date: Thu, 9 Sep 2010 15:56:04 GMT
-Message-ID: <201009091556.o89Fu4sL015702@demeter1.kernel.org>
-References: <bug-17982-11633@https.bugzilla.kernel.org/>
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 2.6.35.4] ata_piix: IDE Mode SATA patch for Intel Patsburg DeviceIDs
+Date: Thu, 9 Sep 2010 09:42:40 -0700
+Message-ID: <201009090942.40760.seth.heasley@intel.com>
+References: <201001121701.28589.seth.heasley@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:32992 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101Ab0IIP4G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Sep 2010 11:56:06 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o89Fu4Xi015703
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 9 Sep 2010 15:56:04 GMT
-In-Reply-To: <bug-17982-11633@https.bugzilla.kernel.org/>
+Received: from mga02.intel.com ([134.134.136.20]:51959 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751609Ab0IIQus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Sep 2010 12:50:48 -0400
+In-Reply-To: <201001121701.28589.seth.heasley@intel.com>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, seth.heasley@intel.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17982
+This patch adds the Intel Patsburg (PCH) IDE mode SATA Controller DeviceIDs.
 
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
 
-Tejun Heo <tj@kernel.org> changed:
+--- linux-2.6.35.4/drivers/ata/ata_piix.c.orig	2010-08-26 16:47:12.000000000 -0700
++++ linux-2.6.35.4/drivers/ata/ata_piix.c	2010-08-31 17:29:43.697162374 -0700
+@@ -302,6 +302,10 @@
+ 	{ 0x8086, 0x1c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (CPT) */
+ 	{ 0x8086, 0x1c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	/* SATA Controller IDE (PBG) */
++	{ 0x8086, 0x1d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	/* SATA Controller IDE (PBG) */
++	{ 0x8086, 0x1d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	{ }	/* terminate list */
+ };
+ 
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tj@kernel.org
-
-
-
-
---- Comment #4 from Tejun Heo <tj@kernel.org>  2010-09-09 15:55:56 ---
-Does "rmmod ata_generic; modprobe ata_generic all_generic_ide=1" make the drive
-come up?  If so, can you please post the output of "dmesg" and "hdparm -I
-/dev/sdX" and "hdparm -t /dev/sdX"?
-
-Thanks.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
