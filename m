@@ -1,50 +1,43 @@
-From: "Jan Beulich" <JBeulich@novell.com>
-Subject: Re: sata_sil boot problems with kernel 2.6.35 and current git
-Date: Fri, 10 Sep 2010 11:14:04 +0100
-Message-ID: <4C8A210C0200007800015648@vpn.id2.novell.com>
-References: <20100908182651.GA32114@seek.priv>
- <4C88F69E.6070000@kernel.org>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCHSET #upstream] block,
+ fs: replace HARDBARRIER with  FLUSH/FUA, take#2
+Date: Fri, 10 Sep 2010 12:19:15 +0200
+Message-ID: <4C8A0623.7060404@fusionio.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+	<4C87B5E2.6070207@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C88F69E.6070000@kernel.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <4C87B5E2.6070207@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Tejun Heo <teheo@suse.de>
+Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, dieter@plaetinck.be, Sergei Shtylyov <sshtylyov@ru.mvista.com>, gianluca <gianluca@sottospazio.it>, Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org
 
->>> On 09.09.10 at 17:00, Tejun Heo <tj@kernel.org> wrote:
-> Can you please test whether the patch at the end of this message is
-> enough to fix the problem?
-
-Both the revert of the original change and the patch here solved the
-problem also for me (on .36-rc3).
-
-Thanks, Jan
-
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 030b1c4..6a43129 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -418,6 +418,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct 
-> ata_taskfile *tf)
->  		if (ioaddr->ctl_addr)
->  			iowrite8(tf->ctl, ioaddr->ctl_addr);
->  		ap->last_ctl = tf->ctl;
-> +		ap->ops->sff_check_status(ap);
->  	}
+On 2010-09-08 18:12, Tejun Heo wrote:
+> Hello, Jens.
 > 
->  	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
-> @@ -453,6 +454,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct 
-> ata_taskfile *tf)
->  		iowrite8(tf->device, ioaddr->device_addr);
->  		VPRINTK("device 0x%X\n", tf->device);
->  	}
-> +	ap->ops->sff_check_status(ap);
->  }
->  EXPORT_SYMBOL_GPL(ata_sff_tf_load);
+> I added Mike's cleanup patch and Kiyoshi's Tested-by and updated
+> flush-fua branch accordingly.
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
+> 
+> I guess it's about ready.  Please consider pulling it into the block
+> tree so that it can get linux-next exposure.  If you want the whole
+> patch series resent, please let me know.
+
+Thanks Tejun, I'm pulling it in now.
 
 
-
+-- 
+Jens Axboe
