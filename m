@@ -1,63 +1,50 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] libata: Signal that our SATL supports WRITE SAME(16) with UNMAP
-Date: Fri, 10 Sep 2010 01:23:18 -0400
-Message-ID: <yq1vd6eqiih.fsf@sermon.lab.mkp.net>
+From: "Jan Beulich" <JBeulich@novell.com>
+Subject: Re: sata_sil boot problems with kernel 2.6.35 and current git
+Date: Fri, 10 Sep 2010 11:14:04 +0100
+Message-ID: <4C8A210C0200007800015648@vpn.id2.novell.com>
+References: <20100908182651.GA32114@seek.priv>
+ <4C88F69E.6070000@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:25174 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab0IJFYk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Sep 2010 01:24:40 -0400
+In-Reply-To: <4C88F69E.6070000@kernel.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, dieter@plaetinck.be, Sergei Shtylyov <sshtylyov@ru.mvista.com>, gianluca <gianluca@sottospazio.it>, Mark Lord <kernel@teksavvy.com>, linux-ide@vger.kernel.org
+
+>>> On 09.09.10 at 17:00, Tejun Heo <tj@kernel.org> wrote:
+> Can you please test whether the patch at the end of this message is
+> enough to fix the problem?
+
+Both the revert of the original change and the patch here solved the
+problem also for me (on .36-rc3).
+
+Thanks, Jan
+
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 030b1c4..6a43129 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -418,6 +418,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct 
+> ata_taskfile *tf)
+>  		if (ioaddr->ctl_addr)
+>  			iowrite8(tf->ctl, ioaddr->ctl_addr);
+>  		ap->last_ctl = tf->ctl;
+> +		ap->ops->sff_check_status(ap);
+>  	}
+> 
+>  	if (is_addr && (tf->flags & ATA_TFLAG_LBA48)) {
+> @@ -453,6 +454,7 @@ void ata_sff_tf_load(struct ata_port *ap, const struct 
+> ata_taskfile *tf)
+>  		iowrite8(tf->device, ioaddr->device_addr);
+>  		VPRINTK("device 0x%X\n", tf->device);
+>  	}
+> +	ap->ops->sff_check_status(ap);
+>  }
+>  EXPORT_SYMBOL_GPL(ata_sff_tf_load);
 
 
-Until now identifying that a device supports WRITE SAME(16) with the
-UNMAP bit set has been black magic.  Implement support for the SBC-3
-Thin Provisioning VPD page and set the TPWS bit.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
----
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a54273d..eea9935 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
- 		0x89,	/* page 0x89, ata info page */
- 		0xb0,	/* page 0xb0, block limits page */
- 		0xb1,	/* page 0xb1, block device characteristics page */
-+		0xb2,	/* page 0xb2, thin provisioning page */
- 	};
- 
- 	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
-@@ -2172,6 +2173,16 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
- 	return 0;
- }
- 
-+static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
-+{
-+	/* SCSI Thin Provisioning VPD page: SBC-3 rev 22 or later */
-+	rbuf[1] = 0xb2;
-+	rbuf[3] = 0x4;
-+	rbuf[5] = 1 << 6;	/* TPWS */
-+
-+	return 0;
-+}
-+
- /**
-  *	ata_scsiop_noop - Command handler that simply returns success.
-  *	@args: device IDENTIFY data / SCSI command of interest.
-@@ -3250,6 +3261,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 		case 0xb1:
- 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b1);
- 			break;
-+		case 0xb2:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b2);
-+			break;
- 		default:
- 			ata_scsi_invalid_field(cmd, done);
- 			break;
