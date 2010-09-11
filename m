@@ -1,66 +1,44 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: How to determine the information about SATA controller
-Date: Sat, 11 Sep 2010 12:43:13 +0200
-Message-ID: <19595.23873.90306.656565@pilspetsen.it.uu.se>
-References: <AANLkTimMxQXxC354V=qVOrdUYFSrpJ-RZeKJfQEx0KPN@mail.gmail.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Sat, 11 Sep 2010 08:19:33 -0400
+Message-ID: <4C8B73D5.8000600@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org> <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com> <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com> <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com> <4C8AC0F5.5080206@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:56968 "EHLO fanny.its.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066Ab0IKKnQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 11 Sep 2010 06:43:16 -0400
-In-Reply-To: <AANLkTimMxQXxC354V=qVOrdUYFSrpJ-RZeKJfQEx0KPN@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C8AC0F5.5080206@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mikulas Patocka <mpatocka@redhat.com>, Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-ide@vger.kernel.org
-To: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Jaswinder Singh Rajput writes:
- > Hello,
- > 
- > My old IDE hard disk is broken so I installed new SATA drive on my box with F13:
- > 
- > dmesg :
- > http://userweb.kernel.org/~jaswinder/P4_HT/dmesg_2633_fc13.txt
- > 
- > lsmod:
- > http://userweb.kernel.org/~jaswinder/P4_HT/lsmod_2633_fc13.txt
- > 
- > lspci:
- > 00:00.0 Host bridge: Intel Corporation 82865G/PE/P DRAM
- > Controller/Host-Hub Interface (rev 02)
- > 00:02.0 VGA compatible controller: Intel Corporation 82865G Integrated
- > Graphics Controller (rev 02)
- > 00:06.0 System peripheral: Intel Corporation 82865G/PE/P Processor to
- > I/O Memory Interface (rev 02)
- > 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev c2)
- > 00:1f.0 ISA bridge: Intel Corporation 82801EB/ER (ICH5/ICH5R) LPC
- > Interface Bridge (rev 02)
- > 00:1f.1 IDE interface: Intel Corporation 82801EB/ER (ICH5/ICH5R) IDE
- > Controller (rev 02)
- > 00:1f.2 IDE interface: Intel Corporation 82801EB (ICH5) SATA Controller (rev 02)
- > 
- > I am trying to build the kernel with this config:
- > http://userweb.kernel.org/~jaswinder/P4_HT/config-ht-test.txt
- > 
- > But I am getting error :
- > 
- > No root device found.
- > Boot has failed, sleeping forever
- > 
- > I am trying to determine the information about the SATA controller so
- > that I can choose the appropriate controller for SATA in kernel
- > config. I am not able to figure out the SATA information from above
- > dmesg and lsmod. How can I do so.
+  On 09/10/2010 07:36 PM, Tejun Heo wrote:
+> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+>> But I have my work rules that I learned: I use no git kernels and no
+>> external patches (except Alasdair's patchset that I want to test). I only
+>> use -rc or final kernels. I need a stable computer --- I don't want to
+>> solve problems like "does it crash because I pulled something or does it
+>> crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and
+>> I'll optimize flushes in dm for -rc2 or -rc3.
+> Alright, I'm sorry but this is as far as I would go for dm conversion
+> patches.  If you wanna split it further or do it your way, please feel
+> free to.  I think it would be beneficial to do things now but, hey,
+> you guys are maintaining dm part of the kernel, so it's up to you
+> guys.  But, I think it would be silly for everyone else to wait for
+> the rather special requirement for dm, so if we have to go forward
+> without dm updates, I suppose we will have to.  Jens, please feel free
+> to drop dm conversion patches.
+>
+> Thanks.
+>
 
-In your working dmesg the disks are controlled by ata_piix,
-but you've disabled CONFIG_ATA_PIIX in the config you're trying.
-So it's not surprising that you can't boot.
+I think that we certainly want to continue to fix the whole path - including dm 
+- so we do not end up with the fragmented set of works here/doesn't work there 
+situation we had for several years. If Mikulas has better patches, he should 
+post them for review.
 
-1) re-enable CONFIG_ATA_PIIX and disable CONFIG_IDE
-or
-2) go into the bios and change the option that says whether to run
-   the ATA controller in legacy/compatible mode or enhanced/ahci mode,
-   you want ahci mode
+Thanks!
+
+Ric
