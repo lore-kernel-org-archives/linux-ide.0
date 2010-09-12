@@ -1,50 +1,84 @@
-From: Richard Kennedy <richard@rsk.demon.co.uk>
-Subject: Re: [PATCH] libata: reorder ata_queued_cmd to remove alignment
- padding on 64 bit builds
-Date: Sun, 12 Sep 2010 12:21:21 +0100
-Message-ID: <1284290481.1923.14.camel@castor.rsk>
-References: <1284117583.1903.8.camel@castor.rsk>
-	 <4C8A3F1E.8050400@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lon1-post-2.mail.demon.net ([195.173.77.149]:61861 "EHLO
-	lon1-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752755Ab0ILLVX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Sep 2010 07:21:23 -0400
-In-Reply-To: <4C8A3F1E.8050400@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Vasiliy Kulikov <segooon@gmail.com>
+Subject: [PATCH] ata: sata_dwc_460ex: fix error path
+Date: Sun, 12 Sep 2010 22:57:08 +0400
+Message-ID: <1284317830-5022-1-git-send-email-segooon@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: kernel-janitors@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugo Antunes <hugo.antunes@gmail.com>
-Cc: jgarzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, 2010-09-10 at 15:22 +0100, Hugo Antunes wrote:
-> Greetings,
-> 
-> Following the list this pasts days, building a big machine with 45
-> sata2 disks (WD green 1.5TB), Sil3124 4 ports sata2 with 9 port
-> multipliers with 5 each also from Silicom image.
-> 
-> This machine should smoke but it doesn't, attached is the dmesg dump where it is possible to see the enourmous ammount
->  of hard and soft resets.Using Ubuntu/server 10.4 2.6.32-25-server x86_64, been questioning if this patch could 
-> make me have better numbers from this system, going to build a debian/ubuntu kernel image with the patch, if anyone 
-> has a link for a deb image with this patch..apreciated.
-> 
-> Keep the good work
-> 
-> Regards,
-> ./hantunes
-Hi,
-I think it's very unlikely that my patch will have any impact on your
-problem, it is only a very minor improvement when creating new ports.
+Free all allocated resources on error path.
 
-I didn't get the dmesg attachment so I can't tell what sort of problems
-you are having, but with that many drives I'd start by checking the
-power supplies & cables and then try the latest kernel. 
+Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+---
+ I cannot compile this driver at all, so it is not tested.
 
-regards
-Richard
+ drivers/ata/sata_dwc_460ex.c |   21 ++++++++++++++-------
+ 1 files changed, 14 insertions(+), 7 deletions(-)
 
-
-
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 6cf57c5..ad0535f 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -727,11 +727,15 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
+ static void dma_dwc_exit(struct sata_dwc_device *hsdev)
+ {
+ 	dev_dbg(host_pvt.dwc_dev, "%s:\n", __func__);
+-	if (host_pvt.sata_dma_regs)
++	if (host_pvt.sata_dma_regs) {
+ 		iounmap(host_pvt.sata_dma_regs);
++		host_pvt.sata_dma_regs = NULL;
++	}
+ 
+-	if (hsdev->irq_dma)
++	if (hsdev->irq_dma) {
+ 		free_irq(hsdev->irq_dma, hsdev);
++		hsdev->irq_dma = 0;
++	}
+ }
+ 
+ /*
+@@ -1606,7 +1610,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+ 	if (hsdev == NULL) {
+ 		dev_err(&ofdev->dev, "kmalloc failed for hsdev\n");
+ 		err = -ENOMEM;
+-		goto error_out;
++		goto error;
+ 	}
+ 	memset(hsdev, 0, sizeof(*hsdev));
+ 
+@@ -1616,7 +1620,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+ 		dev_err(&ofdev->dev, "ioremap failed for SATA register"
+ 			" address\n");
+ 		err = -ENODEV;
+-		goto error_out;
++		goto error_kmalloc;
+ 	}
+ 	hsdev->reg_base = base;
+ 	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
+@@ -1629,7 +1633,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+ 	if (!host) {
+ 		dev_err(&ofdev->dev, "ata_host_alloc_pinfo failed\n");
+ 		err = -ENOMEM;
+-		goto error_out;
++		goto error_iomap;
+ 	}
+ 
+ 	host->private_data = hsdev;
+@@ -1697,8 +1701,11 @@ error_out:
+ 	/* Free SATA DMA resources */
+ 	dma_dwc_exit(hsdev);
+ 
+-	if (base)
+-		iounmap(base);
++error_iomap:
++	iounmap(base);
++error_kmalloc:
++	kfree(hsdev);
++error:
+ 	return err;
+ }
+ 
+-- 
+1.7.0.4
