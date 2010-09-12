@@ -1,58 +1,48 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Combined storage tree
-Date: Sat, 11 Sep 2010 08:55:16 -0500
-Message-ID: <1284213316.2986.7.camel@mulgrave.site>
-References: <1284143247.6551.23.camel@mulgrave.site>
-	 <20100911082054.GF705@dastard>
+From: Jaswinder Singh Rajput <jaswinderlinux@gmail.com>
+Subject: Re: How to determine the information about SATA controller
+Date: Sun, 12 Sep 2010 12:33:22 +0530
+Message-ID: <AANLkTin8F3=VJ1yoOrNR_hP+52ReYCdL7+LCFBjCEv5D@mail.gmail.com>
+References: <AANLkTimMxQXxC354V=qVOrdUYFSrpJ-RZeKJfQEx0KPN@mail.gmail.com>
+	<19595.23873.90306.656565@pilspetsen.it.uu.se>
+	<AANLkTinQVQsjxJLpZQiP5V56o7quGPY6G0ZOnvwPAKbx@mail.gmail.com>
+	<19595.34143.859553.402816@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100911082054.GF705@dastard>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <19595.34143.859553.402816@pilspetsen.it.uu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikael Pettersson <mikpe@it.uu.se>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, 2010-09-11 at 18:20 +1000, Dave Chinner wrote:
-> On Fri, Sep 10, 2010 at 01:27:27PM -0500, James Bottomley wrote:
-> > One of the requests from LSF10 in August was the production of a
-> > combined storage tree.  This is now ready at
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/storage-tree
-> > 
-> > It's actually a nightly built merge tree consisting of
-> > 
-> > scsi-misc; scsi-rc-fixes
-> > libata#upstream-fixes, libata#upstream
-> > block#for-linus, block#for-next
-> > and the dm quilt (which is empty at the moment).
-> > 
-> > I haven't yet added vfs or any of the fs trees, but if necessary, I can.
-> > 
-> > Note, because it's built nightly, like linux-next, it's hard (but not
-> > impossible) to use it as a basis for git trees (it is much easier to use
-> > it as a basis for quilts).
-> 
-> Hmmm. I was kind of hoping for an upstream maintainer tree, kind of
-> like the netdev tree.  I really don't see a tree like this getting
-> wide use - if I enjoyed the pain of rebasing against throw-away
-> merge trees every day, then I'd already be using linux-next....
+> =A0> >
+> =A0>
+> =A0> In my case, BIOS options are enhanced / legacy / disabled. I tri=
+ed all
+> =A0> but of no use. So I am using enhanced to boot Fedora 13 kernel.
+>
+> We need to see the complete kernel messages from a failed boot to
+> determine the root cause of that missing root device failure.
+>
+> I suggest hooking up a null-modem serial cable to a second machine
+> and run minicom on that one to capture boot messages, but there may
+> be other ways to capture boot messages: netconsole? firewire?
+>
 
-Well, to be honest, that's what people wanted when the issue was raised
-at LSF10.  However, unlike net, storage has never had a single
-maintainer, so it's a bit more political than just doing that by fiat,
-plus not all of the current maintainers with storage trees were there.
-So we agreed (reluctantly) to start with an automatic tree and see how
-much of the current problem that solved.  If the automatic tree turns
-out not to be very useful, we can revisit the idea of a storage
-maintainer.
+Netbook is also using SATA Intel controller :
+http://userweb.kernel.org/~jaswinder/acer_netbook/config-2636rc3-netboo=
+k.txt
 
-The reason for being storage only rather than saying just use linux-next
-(which was mentioned) is that next is a much bigger tree, so it's harder
-to follow.  The diffs to mainline in the current storage tree are still
-under a megabyte.
+I used netbook config and with little bit modification as CPU and
+network device is changed, I am able to boot the kernel :
 
-James
+dmesg :
+http://userweb.kernel.org/~jaswinder/P4_HT/dmesg_2636_test_netbook.txt
 
+config:
+http://userweb.kernel.org/~jaswinder/P4_HT/config-ht-test-netbook.txt
 
+Thanks for your help,
+--
+Jaswinder Singh.
