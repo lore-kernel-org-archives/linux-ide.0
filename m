@@ -1,74 +1,80 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: using sata_sil24 10.4 2.6.32-25-server x86_64
-Date: Sun, 12 Sep 2010 13:04:04 +0200
-Message-ID: <4C8CB3A4.8090400@kernel.org>
-References: <4C8A4BD6.6090206@gmail.com> <4C8A5398.1010806@kernel.org> <4C8A609F.8040302@gmail.com>
+Subject: Re: Problems with SIL3132 and PMP / Is this driver/kernel related?
+Date: Sun, 12 Sep 2010 13:17:42 +0200
+Message-ID: <4C8CB6D6.1020000@kernel.org>
+References: <4C8A0850.2060203@scaleup.it> <4C8A1F7B.6020302@kernel.org> <4C8A5E5A.4010307@scaleup.it>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50932 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:53623 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751520Ab0ILLEH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Sep 2010 07:04:07 -0400
-In-Reply-To: <4C8A609F.8040302@gmail.com>
+	id S1751682Ab0ILLRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 12 Sep 2010 07:17:51 -0400
+In-Reply-To: <4C8A5E5A.4010307@scaleup.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugo Antunes <hugo.antunes@gmail.com>
+To: "christoph@scaleup.it" <christoph@scaleup.it>
 Cc: linux-ide@vger.kernel.org
-
-(restoring cc to linux-ide@vger.kernel.org.  Please always use
-reply-to-all)
 
 Hello,
 
-On 09/10/2010 06:45 PM, Hugo Antunes wrote:
-> After boot they stay at 1.5GBs or at least no other message is
-> logged to the system, hdparm tells me they are SATA2 1.5 and 3.0Gbs
-> capable as expected.
+On 09/10/2010 06:35 PM, christoph@scaleup.it wrote:
+>> Hmmm... interesting setup.
+>>   
+> It's according to the backblaze setup. See here:
+> http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-build-cheap-cloud-storage/
 
-Are you saying that w/ libata.force=1.5Gbps, the error messages are
-gone?
+Ooh, that's a nice setup.
 
-> Yes, backplanes, the machine has 9 internal backplanes, currently
-> using 3 backplanes (5 hdd's each backplane), 13 disks in use, 2
-> sata_sil3124 with 4 ports each, each port conects to one backplane,
-> two raid6 md0 md1 (irrelevant for the case if it wasn't for the fact
-> that mdadm recovery and resync takes almost 2000mins), this is an
-> iscsitarget machine, unable to boot machine and test
-> libata.force=1.5Gbps,
+> We have changed the design a bit by using a different Mainboard
+> (Supermicro with Intel 3420 chipset) and an Intel Xeon CPU. Also we
+> are using five PCI-Express SATA controllers instead of three and one
+> PCI-X in the original design from backblaze. This was due to not
+> finding a motherboard suiting our needs.
 
-What do you mean "unable to boot machine"?  You can't reboot the
-machine?  Or you can't try kernel parameters?  How being iscsitarget
-makes any difference regarding that?
+I see.  I don't think different motherboards would be a contributing
+factor here.
 
-> "They all indicate that the drives are seeing CRC errors on the
-> link.", on the link you meanthe cable, card - sata cable - backplane
-> - 5 drives.  so the error is related to all drives right ? currently
-> conected to that backplane?
+>> Timeout on FLUSH_CACHE_EXT is often indicative of power issues.  How
+>> are the drives powered?
+>>   
+>
+> I have two 626W PSUs from Enermax, which should give the whole box
+> enough power. We are also utilizing the Low Power 2 TB Seagate
+> drives.
 
-I meant the connection between the port multiplier and the drives;
-however they may be connected.  If at all possible (ie. PMP has ports
-w/ exposed connectors which currently are connected to backplane), try
-to connect the port multiplier to drives using regular SATA cables.
-It seems faulty backplanes are not too uncommon.  Also, are the errors
-confined to drives attached to any specific backplane or are they all
-over the place?
+High wattage doesn't necessarily mean that there is no power problem.
+Powera problem often happens if you're running a lot of drives in the
+same array.  When the filesystem decides cache flushing is necessary,
+_ALL_ drives in an array will get FLUSH_CACHE at the exact same time.
+Drives often shows power consumption spike on FLUSH_CACHE and many
+power supplies fail to maintain the voltage during such sudden
+consumption spikes.  Please note that low power drives may actually
+show higher fluctuation due to aggressive power save meaures (drives
+even lower the platter RPM to reduce power consumption then spin it
+back up on commands like FLUSH_CACHE).
 
-> hdparm -Tt /dev/sdb (disk connected to first backplane)
-> 
-> Timming cached reads: 9944 MB in 2.00 seconds = 4975.13 MB/sec
-> Timming buffered disk reads: 18 MB in 3.05 seconds = 5.90 MB/sec
+I would recommend testing the setup with, say, 1/4 number of drives
+and then start increasing the number of drives and see whether there's
+any pattern.  Another way to try it is to power up extra PSUs and
+distribute power load to different power supplies and see whether
+anything changes.  Powering up ATX PSU w/o motherboard isn't too
+difficult.
 
-Yeah, well, if you're getting frequent transmission errors, the
-performance is expected to be horrible.
+  http://www.techpowerup.com/articles/other/22
 
-> how can i get more deatiled info or test the link.
+>> This one is timeout on the port multiplier side.  Can be caused by
+>> power issues or cables which are too long.  How are the PMPs connected
+>> to the constrollers?
+>>   
+> I have 90cm (standard) SATA cables. One per PMP going to a
+> controller card. There is five PCI Express controller cards with
+> SIL3132 chipset. One controller only has one PMP attached to it, the
+> four othes have two PMPs attached to it.
 
-I think you'll need to find out which part is causing the problem.
-Start with simple test case (ie. parallel dd's) and single port
-multiplier with increasing number of drives.  Try different PMPs and
-try to find out the pattern of failure.
+Yeah, if it's internal standard SATA cable, cable probably is not the
+culprit.  Problems usually happen with long eSATA cables.
 
 Thanks.
 
