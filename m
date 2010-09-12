@@ -1,82 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problems with SIL3132 and PMP / Is this driver/kernel related?
-Date: Sun, 12 Sep 2010 13:17:42 +0200
-Message-ID: <4C8CB6D6.1020000@kernel.org>
-References: <4C8A0850.2060203@scaleup.it> <4C8A1F7B.6020302@kernel.org> <4C8A5E5A.4010307@scaleup.it>
+From: Richard Kennedy <richard@rsk.demon.co.uk>
+Subject: Re: [PATCH] libata: reorder ata_queued_cmd to remove alignment
+ padding on 64 bit builds
+Date: Sun, 12 Sep 2010 12:21:21 +0100
+Message-ID: <1284290481.1923.14.camel@castor.rsk>
+References: <1284117583.1903.8.camel@castor.rsk>
+	 <4C8A3F1E.8050400@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53623 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682Ab0ILLRv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 12 Sep 2010 07:17:51 -0400
-In-Reply-To: <4C8A5E5A.4010307@scaleup.it>
+Received: from lon1-post-2.mail.demon.net ([195.173.77.149]:61861 "EHLO
+	lon1-post-2.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752755Ab0ILLVX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Sep 2010 07:21:23 -0400
+In-Reply-To: <4C8A3F1E.8050400@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "christoph@scaleup.it" <christoph@scaleup.it>
-Cc: linux-ide@vger.kernel.org
+To: Hugo Antunes <hugo.antunes@gmail.com>
+Cc: jgarzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hello,
+On Fri, 2010-09-10 at 15:22 +0100, Hugo Antunes wrote:
+> Greetings,
+> 
+> Following the list this pasts days, building a big machine with 45
+> sata2 disks (WD green 1.5TB), Sil3124 4 ports sata2 with 9 port
+> multipliers with 5 each also from Silicom image.
+> 
+> This machine should smoke but it doesn't, attached is the dmesg dump where it is possible to see the enourmous ammount
+>  of hard and soft resets.Using Ubuntu/server 10.4 2.6.32-25-server x86_64, been questioning if this patch could 
+> make me have better numbers from this system, going to build a debian/ubuntu kernel image with the patch, if anyone 
+> has a link for a deb image with this patch..apreciated.
+> 
+> Keep the good work
+> 
+> Regards,
+> ./hantunes
+Hi,
+I think it's very unlikely that my patch will have any impact on your
+problem, it is only a very minor improvement when creating new ports.
 
-On 09/10/2010 06:35 PM, christoph@scaleup.it wrote:
->> Hmmm... interesting setup.
->>   
-> It's according to the backblaze setup. See here:
-> http://blog.backblaze.com/2009/09/01/petabytes-on-a-budget-how-to-build-cheap-cloud-storage/
+I didn't get the dmesg attachment so I can't tell what sort of problems
+you are having, but with that many drives I'd start by checking the
+power supplies & cables and then try the latest kernel. 
 
-Ooh, that's a nice setup.
+regards
+Richard
 
-> We have changed the design a bit by using a different Mainboard
-> (Supermicro with Intel 3420 chipset) and an Intel Xeon CPU. Also we
-> are using five PCI-Express SATA controllers instead of three and one
-> PCI-X in the original design from backblaze. This was due to not
-> finding a motherboard suiting our needs.
 
-I see.  I don't think different motherboards would be a contributing
-factor here.
 
->> Timeout on FLUSH_CACHE_EXT is often indicative of power issues.  How
->> are the drives powered?
->>   
->
-> I have two 626W PSUs from Enermax, which should give the whole box
-> enough power. We are also utilizing the Low Power 2 TB Seagate
-> drives.
-
-High wattage doesn't necessarily mean that there is no power problem.
-Powera problem often happens if you're running a lot of drives in the
-same array.  When the filesystem decides cache flushing is necessary,
-_ALL_ drives in an array will get FLUSH_CACHE at the exact same time.
-Drives often shows power consumption spike on FLUSH_CACHE and many
-power supplies fail to maintain the voltage during such sudden
-consumption spikes.  Please note that low power drives may actually
-show higher fluctuation due to aggressive power save meaures (drives
-even lower the platter RPM to reduce power consumption then spin it
-back up on commands like FLUSH_CACHE).
-
-I would recommend testing the setup with, say, 1/4 number of drives
-and then start increasing the number of drives and see whether there's
-any pattern.  Another way to try it is to power up extra PSUs and
-distribute power load to different power supplies and see whether
-anything changes.  Powering up ATX PSU w/o motherboard isn't too
-difficult.
-
-  http://www.techpowerup.com/articles/other/22
-
->> This one is timeout on the port multiplier side.  Can be caused by
->> power issues or cables which are too long.  How are the PMPs connected
->> to the constrollers?
->>   
-> I have 90cm (standard) SATA cables. One per PMP going to a
-> controller card. There is five PCI Express controller cards with
-> SIL3132 chipset. One controller only has one PMP attached to it, the
-> four othes have two PMPs attached to it.
-
-Yeah, if it's internal standard SATA cable, cable probably is not the
-culprit.  Problems usually happen with long eSATA cables.
-
-Thanks.
-
--- 
-tejun
