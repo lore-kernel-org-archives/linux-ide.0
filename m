@@ -1,84 +1,65 @@
-From: Vasiliy Kulikov <segooon@gmail.com>
-Subject: [PATCH] ata: sata_dwc_460ex: fix error path
-Date: Sun, 12 Sep 2010 22:57:08 +0400
-Message-ID: <1284317830-5022-1-git-send-email-segooon@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kernel-janitors@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Combined storage tree
+Date: Mon, 13 Sep 2010 12:58:07 +1000
+Message-ID: <20100913025807.GD411@dastard>
+References: <1284143247.6551.23.camel@mulgrave.site>
+ <20100911082054.GF705@dastard>
+ <1284213316.2986.7.camel@mulgrave.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1284213316.2986.7.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Free all allocated resources on error path.
+On Sat, Sep 11, 2010 at 08:55:16AM -0500, James Bottomley wrote:
+> On Sat, 2010-09-11 at 18:20 +1000, Dave Chinner wrote:
+> > On Fri, Sep 10, 2010 at 01:27:27PM -0500, James Bottomley wrote:
+> > > One of the requests from LSF10 in August was the production of a
+> > > combined storage tree.  This is now ready at
+> > > 
+> > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/storage-tree
+> > > 
+> > > It's actually a nightly built merge tree consisting of
+> > > 
+> > > scsi-misc; scsi-rc-fixes
+> > > libata#upstream-fixes, libata#upstream
+> > > block#for-linus, block#for-next
+> > > and the dm quilt (which is empty at the moment).
+> > > 
+> > > I haven't yet added vfs or any of the fs trees, but if necessary, I can.
+> > > 
+> > > Note, because it's built nightly, like linux-next, it's hard (but not
+> > > impossible) to use it as a basis for git trees (it is much easier to use
+> > > it as a basis for quilts).
+> > 
+> > Hmmm. I was kind of hoping for an upstream maintainer tree, kind of
+> > like the netdev tree.  I really don't see a tree like this getting
+> > wide use - if I enjoyed the pain of rebasing against throw-away
+> > merge trees every day, then I'd already be using linux-next....
+> 
+> Well, to be honest, that's what people wanted when the issue was raised
+> at LSF10.  However, unlike net, storage has never had a single
+> maintainer, so it's a bit more political than just doing that by fiat,
 
-Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
----
- I cannot compile this driver at all, so it is not tested.
+Bah. Technical arguments win here, not politics. Besides, what
+possible political concern can anyone have about using a different
+upstream tree for development? A storage maintainer tree would not
+replace anyone's little fiefdom; what we need is an integration point
+long before stuff gets to Linus....
 
- drivers/ata/sata_dwc_460ex.c |   21 ++++++++++++++-------
- 1 files changed, 14 insertions(+), 7 deletions(-)
+> plus not all of the current maintainers with storage trees were there.
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 6cf57c5..ad0535f 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -727,11 +727,15 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
- static void dma_dwc_exit(struct sata_dwc_device *hsdev)
- {
- 	dev_dbg(host_pvt.dwc_dev, "%s:\n", __func__);
--	if (host_pvt.sata_dma_regs)
-+	if (host_pvt.sata_dma_regs) {
- 		iounmap(host_pvt.sata_dma_regs);
-+		host_pvt.sata_dma_regs = NULL;
-+	}
- 
--	if (hsdev->irq_dma)
-+	if (hsdev->irq_dma) {
- 		free_irq(hsdev->irq_dma, hsdev);
-+		hsdev->irq_dma = 0;
-+	}
- }
- 
- /*
-@@ -1606,7 +1610,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
- 	if (hsdev == NULL) {
- 		dev_err(&ofdev->dev, "kmalloc failed for hsdev\n");
- 		err = -ENOMEM;
--		goto error_out;
-+		goto error;
- 	}
- 	memset(hsdev, 0, sizeof(*hsdev));
- 
-@@ -1616,7 +1620,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
- 		dev_err(&ofdev->dev, "ioremap failed for SATA register"
- 			" address\n");
- 		err = -ENODEV;
--		goto error_out;
-+		goto error_kmalloc;
- 	}
- 	hsdev->reg_base = base;
- 	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
-@@ -1629,7 +1633,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
- 	if (!host) {
- 		dev_err(&ofdev->dev, "ata_host_alloc_pinfo failed\n");
- 		err = -ENOMEM;
--		goto error_out;
-+		goto error_iomap;
- 	}
- 
- 	host->private_data = hsdev;
-@@ -1697,8 +1701,11 @@ error_out:
- 	/* Free SATA DMA resources */
- 	dma_dwc_exit(hsdev);
- 
--	if (base)
--		iounmap(base);
-+error_iomap:
-+	iounmap(base);
-+error_kmalloc:
-+	kfree(hsdev);
-+error:
- 	return err;
- }
- 
+If that's the barrier to discussion, then where else but a dedicated
+storage workshop are you going to get a more representative sample
+of storage developers in the same room?
+
+Cheers,
+
+Dave.
 -- 
-1.7.0.4
+Dave Chinner
+david@fromorbit.com
