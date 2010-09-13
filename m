@@ -1,80 +1,54 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Combined storage tree
-Date: Mon, 13 Sep 2010 11:46:59 -0500
-Message-ID: <1284396419.10388.342.camel@mulgrave.site>
-References: <1284143247.6551.23.camel@mulgrave.site>
-	 <20100911082054.GF705@dastard> <1284213316.2986.7.camel@mulgrave.site>
-	 <20100913025807.GD411@dastard>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Mon, 13 Sep 2010 15:01:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1009131456100.14720@hs20-bc2-1.build.redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+ <4C8AC0F5.5080206@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:56752 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:14781 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191Ab0IMQrF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Sep 2010 12:47:05 -0400
-In-Reply-To: <20100913025807.GD411@dastard>
+	id S1754961Ab0IMTCJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Sep 2010 15:02:09 -0400
+In-Reply-To: <4C8AC0F5.5080206@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 
-On Mon, 2010-09-13 at 12:58 +1000, Dave Chinner wrote: 
-> On Sat, Sep 11, 2010 at 08:55:16AM -0500, James Bottomley wrote:
-> > On Sat, 2010-09-11 at 18:20 +1000, Dave Chinner wrote:
-> > > On Fri, Sep 10, 2010 at 01:27:27PM -0500, James Bottomley wrote:
-> > > > One of the requests from LSF10 in August was the production of a
-> > > > combined storage tree.  This is now ready at
-> > > > 
-> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/storage-tree
-> > > > 
-> > > > It's actually a nightly built merge tree consisting of
-> > > > 
-> > > > scsi-misc; scsi-rc-fixes
-> > > > libata#upstream-fixes, libata#upstream
-> > > > block#for-linus, block#for-next
-> > > > and the dm quilt (which is empty at the moment).
-> > > > 
-> > > > I haven't yet added vfs or any of the fs trees, but if necessary, I can.
-> > > > 
-> > > > Note, because it's built nightly, like linux-next, it's hard (but not
-> > > > impossible) to use it as a basis for git trees (it is much easier to use
-> > > > it as a basis for quilts).
-> > > 
-> > > Hmmm. I was kind of hoping for an upstream maintainer tree, kind of
-> > > like the netdev tree.  I really don't see a tree like this getting
-> > > wide use - if I enjoyed the pain of rebasing against throw-away
-> > > merge trees every day, then I'd already be using linux-next....
-> > 
-> > Well, to be honest, that's what people wanted when the issue was raised
-> > at LSF10.  However, unlike net, storage has never had a single
-> > maintainer, so it's a bit more political than just doing that by fiat,
+
+
+On Sat, 11 Sep 2010, Tejun Heo wrote:
+
+> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+> > But I have my work rules that I learned: I use no git kernels and no 
+> > external patches (except Alasdair's patchset that I want to test). I only 
+> > use -rc or final kernels. I need a stable computer --- I don't want to 
+> > solve problems like "does it crash because I pulled something or does it 
+> > crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+> > I'll optimize flushes in dm for -rc2 or -rc3.
 > 
-> Bah. Technical arguments win here, not politics.
-
-Heh, who runs a tree is both politics and technical.
-
-> Besides, what
-> possible political concern can anyone have about using a different
-> upstream tree for development? A storage maintainer tree would not
-> replace anyone's little fiefdom; what we need is an integration point
-> long before stuff gets to Linus....
-
-For a storage git tree to be usable as a stable base, it has to be the
-upstream tree.  That would mean that, like net, the way upstream would
-be via this tree.  That's quite a shift in the way we currently work.
-
-> > plus not all of the current maintainers with storage trees were there.
+> Alright, I'm sorry but this is as far as I would go for dm conversion
+> patches.  If you wanna split it further or do it your way, please feel
+> free to.  I think it would be beneficial to do things now but, hey,
+> you guys are maintaining dm part of the kernel, so it's up to you
+> guys.  But, I think it would be silly for everyone else to wait for
+> the rather special requirement for dm, so if we have to go forward
+> without dm updates, I suppose we will have to.  Jens, please feel free
+> to drop dm conversion patches.
 > 
-> If that's the barrier to discussion, then where else but a dedicated
-> storage workshop are you going to get a more representative sample
-> of storage developers in the same room?
+> Thanks.
+> -- 
+> tejun
 
-This sort of thing doesn't get decided by fiat.  If you can't get all of
-the relevant parties to agree, you have to demonstrate the need.  So
-doing a rollup tree to test how much of the problem is solvable that way
-seems like a reasonable first step.
+I think: take the first patch and submit it on your own, and send the rest 
+of patches to Alasdair to his tree. If I get such big patches I am unable 
+to immediatelly say if they are correct or not.
 
-James
-
-
+Mikulas
