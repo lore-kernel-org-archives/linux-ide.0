@@ -1,54 +1,80 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Mon, 13 Sep 2010 15:01:38 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.1009131456100.14720@hs20-bc2-1.build.redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
- <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
- <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
- <4C8AC0F5.5080206@kernel.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: WARNINGs because of ide-proc handling
+Date: Mon, 13 Sep 2010 21:17:56 -0700 (PDT)
+Message-ID: <20100913.211756.191403182.davem@davemloft.net>
+References: <20100903.053437.68134749.davem@davemloft.net>
+	<20100903.073503.191401190.davem@davemloft.net>
+	<20100903185934.GA27291@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14781 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754961Ab0IMTCJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Sep 2010 15:02:09 -0400
-In-Reply-To: <4C8AC0F5.5080206@kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37457
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750834Ab0INERi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Sep 2010 00:17:38 -0400
+In-Reply-To: <20100903185934.GA27291@pengutronix.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
+To: w.sang@pengutronix.de
+Cc: linux-ide@vger.kernel.org, bzolnier@gmail.com
 
+From: Wolfram Sang <w.sang@pengutronix.de>
+Date: Fri, 3 Sep 2010 20:59:34 +0200
 
+> Checking my debug-output again, I assume that the hard-disk has the entries,
+> because it is the first user of ide-gd, so that driver still needs to be
+> requested. Maybe this is enough delay for the directories to appear? Wild
+> guess...
 
-On Sat, 11 Sep 2010, Tejun Heo wrote:
+The issue has to do with the order of module initialization.
 
-> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
-> > But I have my work rules that I learned: I use no git kernels and no 
-> > external patches (except Alasdair's patchset that I want to test). I only 
-> > use -rc or final kernels. I need a stable computer --- I don't want to 
-> > solve problems like "does it crash because I pulled something or does it 
-> > crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
-> > I'll optimize flushes in dm for -rc2 or -rc3.
-> 
-> Alright, I'm sorry but this is as far as I would go for dm conversion
-> patches.  If you wanna split it further or do it your way, please feel
-> free to.  I think it would be beneficial to do things now but, hey,
-> you guys are maintaining dm part of the kernel, so it's up to you
-> guys.  But, I think it would be silly for everyone else to wait for
-> the rather special requirement for dm, so if we have to go forward
-> without dm updates, I suppose we will have to.  Jens, please feel free
-> to drop dm conversion patches.
-> 
-> Thanks.
-> -- 
-> tejun
+I've never seen this since on machines where IDE is actually used I
+tend to build everything statically into the tree.
 
-I think: take the first patch and submit it on your own, and send the rest 
-of patches to Alasdair to his tree. If I get such big patches I am unable 
-to immediatelly say if they are correct or not.
+In such a configuration, the ide-cd, ide-gd, etc. drivers come at the
+end of the link, based upon the ordering listed in the file
+drivers/ide/Makefile.
 
-Mikulas
+Therefore, their probe functions are invoked last, long after core IDE
+and the individual IDE host controller drivers register.
+
+The individual IDE host controller probes will therefore happen first.
+
+As we discussed, things work if ide_proc_port_register_devices()
+executes before ide_proc_register_driver() is called.
+
+And this is satisfied by the "all of IDE built-in" configuration
+because the event sequence is:
+
+1) IDE host controller driver registers, probes and finds ideX
+2) ide_host_register(ideX, ...)
+3) ide_proc_port_register_devices(ideX)
+
+... some time passes ...
+
+4) ide-gd driver registers
+5) generic_ide_probe(hdX)
+6) ide_gd_probe()
+7) disk_ops->setup()
+8) ide_disk_setup()
+9) ide_proc_register_driver(hdX)
+
+etc.
+
+At ide_host_register() time, hwif_register_devices() created all of
+the IDE devices on the ide_bus_type bus, but since ide-gd et al.  were
+not registered yet, these device instances don't get matched and
+probed at hwif_register_devices() time.
+
+However, if the various IDE core driver bits are modules and are
+loaded already, then the ide-cs driver subsequently loads, or an
+ide-cs device hot plugs, then we get into the situation you've
+discovered where we invoke the PROCFS init functions in the wrong
+order.
+
+Anyways, I just wanted to let you know that I figured out why it does
+work in some circumstances, and I will now go back and do a final
+audit of your patch before applying it.
+
+Thanks.
