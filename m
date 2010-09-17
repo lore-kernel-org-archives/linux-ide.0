@@ -1,31 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Signal that our SATL supports WRITE SAME(16)
- with UNMAP
-Date: Fri, 17 Sep 2010 02:13:30 -0400
-Message-ID: <4C93070A.4060003@pobox.com>
-References: <yq1vd6eqiih.fsf@sermon.lab.mkp.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: ahci rmmodable and shouldn't
+Date: Fri, 17 Sep 2010 11:53:19 +0200
+Message-ID: <4C933A8F.2080305@gmail.com>
+References: <201009162256.04765.pedrogfrancisco@gmail.com> <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:64706 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754602Ab0IQGNe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:13:34 -0400
-In-Reply-To: <yq1vd6eqiih.fsf@sermon.lab.mkp.net>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33087 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750831Ab0IQJxY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 05:53:24 -0400
+In-Reply-To: <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Pedro Francisco <pedrogfrancisco@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 09/10/2010 01:23 AM, Martin K. Petersen wrote:
->
-> Until now identifying that a device supports WRITE SAME(16) with the
-> UNMAP bit set has been black magic.  Implement support for the SBC-3
-> Thin Provisioning VPD page and set the TPWS bit.
->
-> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+Hello,
 
-applied
+On 09/16/2010 11:58 PM, Randy Dunlap wrote:
+>> `rmmod ahci' works even if the module is being used (`lsmod' thinks it's
+>> not being used but rmmoding ahci triggers filesystem erros and I've to
+>> force a reboot).
+>>
+>> I've been told it's the same as plugging a cable. IMO that's what
+>> /sys/stuff/eject_or_similar is to, not `rmmod ahci'.
+>>
+>>
+>> I *assume* it was caused by the split between libahci & ahci, since in
+>> 2.6.32
+>> `rmmod ahci' is impossible because it's marked as being in use. Didn't try
+>>  `rmmod -f ahci' but that's not the point.
+>>
+>>
+>> I'm posting again about this because it doesn't make sense to me the
+>> actual behaviour.
 
+Just don't rmmod a module which is serving a live filesystem.  Why
+does it even matter?
 
+-- 
+tejun
