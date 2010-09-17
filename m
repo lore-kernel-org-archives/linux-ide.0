@@ -1,44 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ahci rmmodable and shouldn't
-Date: Fri, 17 Sep 2010 11:53:19 +0200
-Message-ID: <4C933A8F.2080305@gmail.com>
-References: <201009162256.04765.pedrogfrancisco@gmail.com> <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
+From: Murali N <nalajala.murali@gmail.com>
+Subject: On SoC SATA controller driver implementation!!!
+Date: Fri, 17 Sep 2010 15:24:15 +0530
+Message-ID: <AANLkTin-bG72N9TSzRFOFYusa+9xZfYOA75zAP0chSFH@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:33087 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750831Ab0IQJxY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 05:53:24 -0400
-In-Reply-To: <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55598 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921Ab0IQJyR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 05:54:17 -0400
+Received: by ewy23 with SMTP id 23so922077ewy.19
+        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2010 02:54:15 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Pedro Francisco <pedrogfrancisco@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-Hello,
+Hi All,
 
-On 09/16/2010 11:58 PM, Randy Dunlap wrote:
->> `rmmod ahci' works even if the module is being used (`lsmod' thinks it's
->> not being used but rmmoding ahci triggers filesystem erros and I've to
->> force a reboot).
->>
->> I've been told it's the same as plugging a cable. IMO that's what
->> /sys/stuff/eject_or_similar is to, not `rmmod ahci'.
->>
->>
->> I *assume* it was caused by the split between libahci & ahci, since in
->> 2.6.32
->> `rmmod ahci' is impossible because it's marked as being in use. Didn't try
->>  `rmmod -f ahci' but that's not the point.
->>
->>
->> I'm posting again about this because it doesn't make sense to me the
->> actual behaviour.
+I am implementing  a SATA driver for my SATA controller which is part of SoC.
+I had seen a generic AHCI controller driver in .35 (ahci_platform.c)
+which is used by SATA controllers part of the SoC and interacting to
+local bus.
 
-Just don't rmmod a module which is serving a live filesystem.  Why
-does it even matter?
+My doubts is:
+1. Can i make use of above framework to implement my own controller
+driver? I know that i have to take care of the "init", "exit" and
+power management routines specific to my controller. Will this work?
+OR do i need to take care of any other additional considerations while
+implementing?
 
--- 
-tejun
+I would like to see a reference drivers code which uses the platform
+AHCI controller driver(ahci_platform.c). Can anyone point me to the
+sources.
+My aim is to leverage already existing code as much as possible to
+make my controller works better.
+
+Please provide me any suggestions.
+
+--
+Regards,
+Murali N
