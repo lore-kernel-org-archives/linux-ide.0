@@ -1,56 +1,59 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCHSET #upstream] libata: reimplement LPM support
-Date: Fri, 17 Sep 2010 02:06:49 -0400
-Message-ID: <4C930579.3090507@garzik.org>
-References: <1283356208-1884-1-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH #upstream 1/3] libata: add @ap to ata_wait_register()
+ and introduce ata_msleep()
+Date: Fri, 17 Sep 2010 02:11:08 -0400
+Message-ID: <4C93067C.5010405@garzik.org>
+References: <4C850F2D.4030601@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:36781 "EHLO
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:51160 "EHLO
 	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627Ab0IQGG5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:06:57 -0400
-Received: by qwh6 with SMTP id 6so1612901qwh.19
-        for <linux-ide@vger.kernel.org>; Thu, 16 Sep 2010 23:06:56 -0700 (PDT)
-In-Reply-To: <1283356208-1884-1-git-send-email-tj@kernel.org>
+	with ESMTP id S1753126Ab0IQGLM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:11:12 -0400
+Received: by qwh6 with SMTP id 6so1615577qwh.19
+        for <linux-ide@vger.kernel.org>; Thu, 16 Sep 2010 23:11:11 -0700 (PDT)
+In-Reply-To: <4C850F2D.4030601@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, yuanding02@gmail.com
 
-On 09/01/2010 11:50 AM, Tejun Heo wrote:
-> Hello,
+On 09/06/2010 11:56 AM, Tejun Heo wrote:
+> Add optional @ap argument to ata_wait_register() and replace msleep()
+> calls with ata_msleep() which take optional @ap in addition to the
+> duration.  These will be used to implement EH exclusion.
 >
-> This patchset reimplement LPM support so that it's better integrated
-> with the rest of libata and supports more than just ALPM.  After the
-> patchset, DIPM works on ahci w/o ALPM support, host link of PMP can
-> use both H/DIPM and fan-out links supports DIPM, and ata_piix w/ SIDPR
-> also supports DIPM.
+> This patch doesn't cause any behavior difference.
 >
-> Adding DIPM support for other controllers should be easy and DIPM
-> actually works better than ALPM because DIPM implements sane timeout
-> before entering powersave mode and thus doesn't hurt throughput like
-> ALPM does.
+> Signed-off-by: Tejun Heo<tj@kernel.org>
+> ---
+> These three patches fix the long-standing EH exclusion bug which was
+> reported more than three years ago and recently caused obscure
+> problems during parallel probing for ata_piix w/ SIDPR.
 >
-> Tested with intel and JMB ahci's, ich8 ata_piix, SIMG and marvell
-> PMPs.  SATA bus analyzer was used to verify links are actually
-> entering and coming out of powersave mode.
+> It basically implements EH big lock which guarantees that only single
+> EH of a host is running.  This achieves proper EH exclusion without
+> pervasive changes to each driver which would be fragile while not
+> harming parallel probing/EH too much.
 >
-> This patchset contains the following five patches
+> Thanks.
 >
->   0001-libata-clean-up-lpm-related-symbols-and-sysfs-show-s.patch
->   0002-libata-implement-sata_link_scr_lpm-and-make-ata_dev_.patch
->   0003-libata-reimplement-link-power-management.patch
->   0004-libata-implement-LPM-support-for-port-multipliers.patch
->   0005-ata_piix-implement-LPM-support.patch
->
-> and available in the folloing git tree
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git lpm
+>   drivers/ata/libahci.c         |   18 +++++++++---------
+>   drivers/ata/libata-core.c     |   21 ++++++++++++++-------
+>   drivers/ata/libata-eh.c       |    2 +-
+>   drivers/ata/libata-sff.c      |   12 ++++++------
+>   drivers/ata/pata_bf54x.c      |    4 ++--
+>   drivers/ata/pata_samsung_cf.c |    2 +-
+>   drivers/ata/pata_scc.c        |    4 ++--
+>   drivers/ata/sata_fsl.c        |   19 ++++++++++---------
+>   drivers/ata/sata_inic162x.c   |    2 +-
+>   drivers/ata/sata_sil24.c      |   14 +++++++-------
+>   drivers/ata/sata_via.c        |    2 +-
+>   include/linux/libata.h        |    5 +++--
+>   12 files changed, 57 insertions(+), 48 deletions(-)
 
-Had to hunt a bit for a good DIPM local test.
-
-Looks good, applied, thanks!
+applied
 
 
