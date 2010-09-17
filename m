@@ -1,40 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: reorder ata_queued_cmd to remove alignment padding
- on 64 bit builds
-Date: Fri, 17 Sep 2010 02:13:19 -0400
-Message-ID: <4C9306FF.70202@pobox.com>
-References: <1284117583.1903.8.camel@castor.rsk>
+Subject: Re: [PATCH] libata: Signal that our SATL supports WRITE SAME(16)
+ with UNMAP
+Date: Fri, 17 Sep 2010 02:13:30 -0400
+Message-ID: <4C93070A.4060003@pobox.com>
+References: <yq1vd6eqiih.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:34952 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752551Ab0IQGNX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:13:23 -0400
-In-Reply-To: <1284117583.1903.8.camel@castor.rsk>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:64706 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602Ab0IQGNe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:13:34 -0400
+In-Reply-To: <yq1vd6eqiih.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Kennedy <richard@rsk.demon.co.uk>
-Cc: Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 09/10/2010 07:19 AM, Richard Kennedy wrote:
-> Reorder structure ata_queued_cmd to remove 8 bytes of alignment padding
-> on 64 bit builds&  therefore reduce the size of structure ata_port by
-> 256 bytes.
+On 09/10/2010 01:23 AM, Martin K. Petersen wrote:
 >
-> Overall this will have little impact, other than reducing the amount of
-> memory that is cleared when allocating ata_ports.
+> Until now identifying that a device supports WRITE SAME(16) with the
+> UNMAP bit set has been black magic.  Implement support for the SBC-3
+> Thin Provisioning VPD page and set the TPWS bit.
 >
-> Signed-off-by: Richard Kennedy<richard@rsk.demon.co.uk>
-> ----
-> patch against 2.6.36-rc3
-> compiled&  tested on x86_64
->
-> I've been running this patch for a couple of weeks with no apparent
-> issues.
->
-> regards
+> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
 
 applied
 
