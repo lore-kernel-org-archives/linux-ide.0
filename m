@@ -1,53 +1,56 @@
-From: "Randy Dunlap" <rdunlap@xenotime.net>
-Subject: Re: ahci rmmodable and shouldn't
-Date: Thu, 16 Sep 2010 14:58:56 -0700 (PDT)
-Message-ID: <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
-References: <201009162256.04765.pedrogfrancisco@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCHSET #upstream] libata: reimplement LPM support
+Date: Fri, 17 Sep 2010 02:06:49 -0400
+Message-ID: <4C930579.3090507@garzik.org>
+References: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:37373 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756343Ab0IPV7G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Sep 2010 17:59:06 -0400
-Received: from www.xenotime.net ([2001:470:0:13c::4834:7338]) by xenotime.net for <linux-ide@vger.kernel.org>; Thu, 16 Sep 2010 14:58:56 -0700
-In-Reply-To: <201009162256.04765.pedrogfrancisco@gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36781 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab0IQGG5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 02:06:57 -0400
+Received: by qwh6 with SMTP id 6so1612901qwh.19
+        for <linux-ide@vger.kernel.org>; Thu, 16 Sep 2010 23:06:56 -0700 (PDT)
+In-Reply-To: <1283356208-1884-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
+On 09/01/2010 11:50 AM, Tejun Heo wrote:
+> Hello,
+>
+> This patchset reimplement LPM support so that it's better integrated
+> with the rest of libata and supports more than just ALPM.  After the
+> patchset, DIPM works on ahci w/o ALPM support, host link of PMP can
+> use both H/DIPM and fan-out links supports DIPM, and ata_piix w/ SIDPR
+> also supports DIPM.
+>
+> Adding DIPM support for other controllers should be easy and DIPM
+> actually works better than ALPM because DIPM implements sane timeout
+> before entering powersave mode and thus doesn't hurt throughput like
+> ALPM does.
+>
+> Tested with intel and JMB ahci's, ich8 ata_piix, SIMG and marvell
+> PMPs.  SATA bus analyzer was used to verify links are actually
+> entering and coming out of powersave mode.
+>
+> This patchset contains the following five patches
+>
+>   0001-libata-clean-up-lpm-related-symbols-and-sysfs-show-s.patch
+>   0002-libata-implement-sata_link_scr_lpm-and-make-ata_dev_.patch
+>   0003-libata-reimplement-link-power-management.patch
+>   0004-libata-implement-LPM-support-for-port-multipliers.patch
+>   0005-ata_piix-implement-LPM-support.patch
+>
+> and available in the folloing git tree
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git lpm
 
-On Thu, September 16, 2010 2:56 pm, Pedro Francisco wrote:
-> I reported this here for 2.6.35.4 -- http://lkml.org/lkml/2010/9/7/321 --
-> but still happens on latest -git.
+Had to hunt a bit for a good DIPM local test.
 
-Please copy linux-ide@vger.kernel.org on ATA issues.
-(done now)
+Looks good, applied, thanks!
 
-> `rmmod ahci' works even if the module is being used (`lsmod' thinks it's
-> not being used but rmmoding ahci triggers filesystem erros and I've to
-> force a reboot).
->
-> I've been told it's the same as plugging a cable. IMO that's what
-> /sys/stuff/eject_or_similar is to, not `rmmod ahci'.
->
->
-> I *assume* it was caused by the split between libahci & ahci, since in
-> 2.6.32
-> `rmmod ahci' is impossible because it's marked as being in use. Didn't try
->  `rmmod -f ahci' but that's not the point.
->
->
-> I'm posting again about this because it doesn't make sense to me the
-> actual behaviour.
->
-> TIA,
-> --
-> Pedro
-> --
-
--- 
-~Randy
 
