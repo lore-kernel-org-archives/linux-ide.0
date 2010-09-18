@@ -1,74 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata: SATL error processing: unrecovered read error
-Date: Fri, 17 Sep 2010 15:32:28 -0400
-Message-ID: <4C93C24C.1050302@garzik.org>
-References: <4C83BDDC.3020201@interlog.com> <4C93B418.8040106@garzik.org> <4C93C0D5.2090402@interlog.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Fri, 17 Sep 2010 21:19:46 -0700 (PDT)
+Message-ID: <20100917.211946.38301858.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:38904 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab0IQTcc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2010 15:32:32 -0400
-In-Reply-To: <4C93C0D5.2090402@interlog.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37247
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750909Ab0IRET1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Sep 2010 00:19:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-
-On 09/17/2010 03:26 PM, Douglas Gilbert wrote:
-> On 10-09-17 02:31 PM, Jeff Garzik wrote:
->> On 09/05/2010 11:57 AM, Douglas Gilbert wrote:
->>> While looking at an eSATA connected external disk with
->>> a medium error, this sense data appeared:
->>>
->>> READ cdb: 28 00 96 4a 7a d1 00 00 01 00
->>> duration=2816 ms
->>> READ: Descriptor format, current; Sense key: Medium Error
->>> Additional sense: Unrecovered read error - auto reallocate failed
->>> Descriptor type: Information
->>> 0x00000000964a7ad1
->>> Raw sense data (in hex):
->>> 72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
->>> 96 4a 7a d1
->>>
->>> That is pretty close to what I was expecting to see. If anything
->>> there is too much information. That "Unrecovered read error -
->>> auto reallocate failed" [asc/asq: 11h/04h] should just be
->>> "Unrecovered read error" [asc/asq: 11h/0h]. See sat2r09.pdf table
->>> 105 or sat3r00.pdf table 105.
->>
->> If any auto-reallocate occurred on the drive's part, it definitely
->> failed at that point. And auto-reallocate is a possibility.
->>
->> 11h/04h seems to more accurately describe the situation.
->
-> Usually if you are implementing a SCSI device (lu) there
-> is some latitude in asc/asq codes. However for a SAT layer
-> they state exactly how to translate ATA errors.
->
-> There is one published SAT standard (ANSI INCITS 431-2007)
-> and there will soon be another one (SAT-2). The compliant
-> response is asc/asq: 11h/0h since in t10 documents additional
-> sense matches by string which is shown in upper case.
-
-Fair enough.  Wanna write a patch?  :)
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-> BTW I never understood what asc/asq 11h/04h was about,
-> auto-reallocate is something that should be attempted
-> on a _recovered_ read error. And that in turn might fail
-> if the disk had run out of spare blocks. So in a contorted
-> sort of way, perhaps that is what "Unrecovered read error -
-> auto reallocate failed" means!? If so, you are most
-> likely incorrect on that count as well.
+Thanks to the excellent detective work and patch written by
+Wolfram Sang, we have a fix for along standing issue in IDE.
 
-The ATA disk hits an unrecovered read error, which by virtue of 
-operation implies auto reallocate failed.  What's going on inside seems 
-to match the error text quite closely.
+The procfs directory for devices underneath an IDE controller
+instance is not created before we try to makes nodes in that
+directory.
 
-	Jeff
+The problem doesn't happen if, for example, you build everything
+IDE statically into your kernel.  This is because the individual
+host controller drivers initialize first and probe the IDE
+controllers.  But the CDROM, disk, et al. driver's haven't
+setup yet.  They do so later, and at that point is when the
+nodes in the procfs directory get created.  And this works in
+this case because the procfs directory is setup by the time
+those device type drivers initialize.
 
+But if we register an IDE controller device after the CDROM,
+disk, et al. IDE modules have setup, we hit the problem.
 
+Please pull, thanks a lot!
 
+The following changes since commit 03a7ab083e4d619136d6f07ce70fa9de0bc436fc:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/sfrench/cifs-2.6 (2010-09-16 12:59:11 -0700)
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Wolfram Sang (1):
+      ide: Fix ordering of procfs registry.
+
+ drivers/ide/ide-probe.c |   12 +++---------
+ 1 files changed, 3 insertions(+), 9 deletions(-)
