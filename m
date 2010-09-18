@@ -1,98 +1,38 @@
-From: "Joshua Hintze" <joshh@imsar.com>
-Subject: RE: PATA IDE is slower in newer versions of kernel
-Date: Sat, 18 Sep 2010 14:02:50 -0600
-Message-ID: <010e01cb576c$7909c900$6b1d5b00$@com>
-References: <00d401cb55f7$33a78210$9af68630$@com>	<20100917154732.330c4b1b@varda>	<010901cb5754$ae6735a0$0b35a0e0$@com>	<1284837774.12425.1.camel@localhost.localdomain>	<010d01cb5769$cbca3380$635e9a80$@com> <20100918124750.393a64a8.rdunlap@xenotime.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da-3.dns-solutions.net ([69.12.112.3]:56768 "HELO
-	mail-da-3.dns-solutions.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754983Ab0IRUC7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Sep 2010 16:02:59 -0400
-In-Reply-To: <20100918124750.393a64a8.rdunlap@xenotime.net>
-Content-Language: en-us
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: 'Randy Dunlap' <rdunlap@xenotime.net>
-Cc: 'Maxim Levitsky' <maximlevitsky@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-
-I got you. 
-
-Thanks.
-
-
------Original Message-----
-From: Randy Dunlap [mailto:rdunlap@xenotime.net] 
-Sent: Saturday, September 18, 2010 1:48 PM
-To: Joshua Hintze
-Cc: 'Maxim Levitsky'; linux-kernel@vger.kernel.org;
-linux-ide@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: PATA IDE is slower in newer versions of kernel
+Date: Sat, 18 Sep 2010 22:04:16 +0200
+Message-ID: <201009182204.17255.arnd@arndb.de>
+References: <00d401cb55f7$33a78210$9af68630$@com> <010901cb5754$ae6735a0$0b35a0e0$@com> <1284837774.12425.1.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1284837774.12425.1.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maxim Levitsky <maximlevitsky@gmail.com>
+Cc: Joshua Hintze <joshh@imsar.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Sat, 18 Sep 2010 13:43:40 -0600 Joshua Hintze wrote:
-
-> Thanks,
-> 
-> I'm not sure what you mean by bisect, other than just the definition of
-the word. I am breaking this problem down adding printks etc.  I think I'm
-finally beginng to understand how this works :)
-> 
-
-http://www.kernel.org/pub/software/scm/git/docs/git-bisect.html
-http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#using-bisec
-t
-
-
-> 
-> 
-> -----Original Message-----
-> From: linux-ide-owner@vger.kernel.org
-[mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Maxim Levitsky
-> Sent: Saturday, September 18, 2010 1:23 PM
-> To: Joshua Hintze
-> Cc: linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org
-> Subject: RE: PATA IDE is slower in newer versions of kernel
-> 
+On Saturday 18 September 2010 21:22:54 Maxim Levitsky wrote:
 > On Sat, 2010-09-18 at 11:12 -0600, Joshua Hintze wrote:
-> > Some updated information. I created a screen capture of what I am
-seeing. First is the logic analyzer when the newer linux kernel is writing
-slow to the PATA port.
-> > 
-> > http://i56.tinypic.com/oqhrug.png
-> > 
-> > Notice in the above link how there is a lot of activating and then large
-gaps of no activity. After about 9 mS the STOP line is strobed a few times
-and then DMARQ finally returns to normal operating. The link below shows the
-picture of an old 2.6.10 kernel where write speeds are much faster.
-> > 
-> > http://i51.tinypic.com/a9wiur.png
-> > 
-> > In the above image notice how the wait time is considerable less 100's
-of microseconds before the stop lines get strobed.
-> > 
-> > I'm dedicated to continue working on the problem, I just need to advice
-from the linux community. I've tried different I/O schedulers such as noop
-and anticipatory and I'm studying the ide-dma code but still lost to where
-this is happening.
+> > I'm dedicated to continue working on the problem, I just need to advice from 
+> > the linux community. I've tried different I/O schedulers such as noop and
+> > anticipatory and I'm studying the ide-dma code but still lost to where this
+> > is happening.
 > > 
 > > Thanks!
 > > 
 > Maybe you can just bisect this?
-> Just a general advice, I don't know ide subsystem at all.
-> 
-> Best regards,
-> 	Maxim Levitsky
 
+That would probably help to pinpoint the problem. A regression somewhere
+between 2.6.10 and 2.6.32 is not that interesting when people are working
+on stabilizing 2.6.36 and adding features to 2.6.37.
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+One important question would be if this happens with the libata drivers
+in 2.6.36-rc4 or linux-next as well. Note that the IDE subsystem has been
+replaced with libata a few years ago, and that is what all development
+happens on. If libata is good enough, there is probably no point in
+chasing down ide bugs.
 
-No virus found in this incoming message.
-Checked by AVG - www.avg.com 
-Version: 9.0.851 / Virus Database: 271.1.1/3132 - Release Date: 09/18/10
-00:34:00
-
+	Arnd
