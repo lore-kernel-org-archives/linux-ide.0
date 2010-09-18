@@ -1,38 +1,44 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: PATA IDE is slower in newer versions of kernel
-Date: Sat, 18 Sep 2010 22:04:16 +0200
-Message-ID: <201009182204.17255.arnd@arndb.de>
-References: <00d401cb55f7$33a78210$9af68630$@com> <010901cb5754$ae6735a0$0b35a0e0$@com> <1284837774.12425.1.camel@localhost.localdomain>
+From: Mike Snitzer <snitzer@gmail.com>
+Subject: Re: [dm-devel] [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for
+ bio-based dm
+Date: Sat, 18 Sep 2010 16:42:25 -0400
+Message-ID: <AANLkTikQv+NmcwXeWebcCzxjR69YN0qY-en1mLeXS4-n@mail.gmail.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+ <4C8AC0F5.5080206@kernel.org> <20100911014612.GA26517@redhat.com> <4C94FDB4.7020206@tmr.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1284837774.12425.1.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Maxim Levitsky <maximlevitsky@gmail.com>
-Cc: Joshua Hintze <joshh@imsar.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34746 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753440Ab0IRUmr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Sep 2010 16:42:47 -0400
+In-Reply-To: <4C94FDB4.7020206@tmr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, agk@redhat.com, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, dm-devel@redhat.com
 
-On Saturday 18 September 2010 21:22:54 Maxim Levitsky wrote:
-> On Sat, 2010-09-18 at 11:12 -0600, Joshua Hintze wrote:
-> > I'm dedicated to continue working on the problem, I just need to advice from 
-> > the linux community. I've tried different I/O schedulers such as noop and
-> > anticipatory and I'm studying the ide-dma code but still lost to where this
-> > is happening.
-> > 
-> > Thanks!
-> > 
-> Maybe you can just bisect this?
+On Sat, Sep 18, 2010 at 1:58 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+>
+> He is commenting on the process rather than the code, since he tells you
+> that he lacks time to review your complex changes to his work, so your
+> saying that he hasn't found errors in it is muddy thinking as best.
+>
+> He provided a patch and would like it tested properly before you drop a
+> bunch of stuff on top of it, to be sure it gets proper exposure and wider
+> testing. That sounds like sound software development to me. It sounds as
+> though you feel that the inclusion of your additional work is critical and
+> can't possibly wait until the next -rc or release, and I have missed the
+> reason why your stuff can't wait until it can drop on mainline code..
 
-That would probably help to pinpoint the problem. A regression somewhere
-between 2.6.10 and 2.6.32 is not that interesting when people are working
-on stabilizing 2.6.36 and adding features to 2.6.37.
+Well that was just completely incoherent yet clearly antagonistic drivel.
 
-One important question would be if this happens with the libata drivers
-in 2.6.36-rc4 or linux-next as well. Note that the IDE subsystem has been
-replaced with libata a few years ago, and that is what all development
-happens on. If libata is good enough, there is probably no point in
-chasing down ide bugs.
+Seems you're joining multiple peoples' response to this issue and
+attributing that completely misinformed combination to "he".
 
-	Arnd
+Thanks but we have this completely under control.
+
+Mike
