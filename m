@@ -1,52 +1,40 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Fri, 17 Sep 2010 21:19:46 -0700 (PDT)
-Message-ID: <20100917.211946.38301858.davem@davemloft.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Either PMP issues, or SB700/800 Issues ??
+Date: Sat, 18 Sep 2010 09:33:05 +0200
+Message-ID: <4C946B31.3060804@kernel.org>
+References: <AANLkTikMLg2Uweeszw7pU9ZKWA0wTdLS5Y3NovOsb0fa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37247
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750909Ab0IRET1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Sep 2010 00:19:27 -0400
+Received: from hera.kernel.org ([140.211.167.34]:58742 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752105Ab0IRHbt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Sep 2010 03:31:49 -0400
+In-Reply-To: <AANLkTikMLg2Uweeszw7pU9ZKWA0wTdLS5Y3NovOsb0fa@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Greg Oliver <oliver.greg@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
+Hello,
 
-Thanks to the excellent detective work and patch written by
-Wolfram Sang, we have a fix for along standing issue in IDE.
+On 09/17/2010 07:05 PM, Greg Oliver wrote:
+> Does anyone know how far back I can take this working libahci/ahci
+> code?  I would really like to get it running in centos - 2.6.19, but I
+> assume that's a no go..  2.6.32 would be ideal, but I guess I could
+> live with 2.6.35 since there are patches floating around to make all
+> of my aforementioned stuff work.
 
-The procfs directory for devices underneath an IDE controller
-instance is not created before we try to makes nodes in that
-directory.
+I don't recall any PMP or ahci related fix which could have cuased
+such behavior difference between 2.6.35 and 36 branch.  Are you sure
+there aren't other factors which could be affecting the test result?
+Does going back to 2.6.35 reliably reproduce the problem?  If so, can
+you please attach full kernel log including boot and the failure
+preferably with timestamps turned on?  Also, please post the output of
+"lspci -nn".
 
-The problem doesn't happen if, for example, you build everything
-IDE statically into your kernel.  This is because the individual
-host controller drivers initialize first and probe the IDE
-controllers.  But the CDROM, disk, et al. driver's haven't
-setup yet.  They do so later, and at that point is when the
-nodes in the procfs directory get created.  And this works in
-this case because the procfs directory is setup by the time
-those device type drivers initialize.
+Thanks.
 
-But if we register an IDE controller device after the CDROM,
-disk, et al. IDE modules have setup, we hit the problem.
-
-Please pull, thanks a lot!
-
-The following changes since commit 03a7ab083e4d619136d6f07ce70fa9de0bc436fc:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/sfrench/cifs-2.6 (2010-09-16 12:59:11 -0700)
-
-are available in the git repository at:
-
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
-
-Wolfram Sang (1):
-      ide: Fix ordering of procfs registry.
-
- drivers/ide/ide-probe.c |   12 +++---------
- 1 files changed, 3 insertions(+), 9 deletions(-)
+-- 
+tejun
