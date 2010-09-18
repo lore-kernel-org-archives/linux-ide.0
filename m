@@ -1,66 +1,69 @@
-From: "Joshua Hintze" <joshh@imsar.com>
-Subject: RE: PATA IDE is slower in newer versions of kernel
-Date: Sat, 18 Sep 2010 13:43:40 -0600
-Message-ID: <010d01cb5769$cbca3380$635e9a80$@com>
-References: <00d401cb55f7$33a78210$9af68630$@com>	 <20100917154732.330c4b1b@varda>  <010901cb5754$ae6735a0$0b35a0e0$@com> <1284837774.12425.1.camel@localhost.localdomain>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: PATA IDE is slower in newer versions of kernel
+Date: Sat, 18 Sep 2010 12:47:50 -0700
+Message-ID: <20100918124750.393a64a8.rdunlap@xenotime.net>
+References: <00d401cb55f7$33a78210$9af68630$@com>
+	<20100917154732.330c4b1b@varda>
+	<010901cb5754$ae6735a0$0b35a0e0$@com>
+	<1284837774.12425.1.camel@localhost.localdomain>
+	<010d01cb5769$cbca3380$635e9a80$@com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da-3.dns-solutions.net ([69.12.112.3]:57334 "HELO
-	mail-da-3.dns-solutions.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756143Ab0IRTns convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 18 Sep 2010 15:43:48 -0400
-In-Reply-To: <1284837774.12425.1.camel@localhost.localdomain>
-Content-Language: en-us
+Received: from xenotime.net ([72.52.115.56]:58536 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757650Ab0IRTry (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Sep 2010 15:47:54 -0400
+Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-ide@vger.kernel.org>; Sat, 18 Sep 2010 12:47:50 -0700
+In-Reply-To: <010d01cb5769$cbca3380$635e9a80$@com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Maxim Levitsky' <maximlevitsky@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Joshua Hintze <joshh@imsar.com>
+Cc: 'Maxim Levitsky' <maximlevitsky@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Thanks,
+On Sat, 18 Sep 2010 13:43:40 -0600 Joshua Hintze wrote:
 
-I'm not sure what you mean by bisect, other than just the definition of the word. I am breaking this problem down adding printks etc.  I think I'm finally beginng to understand how this works :)
-
-Josh
-
-
------Original Message-----
-From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Maxim Levitsky
-Sent: Saturday, September 18, 2010 1:23 PM
-To: Joshua Hintze
-Cc: linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org
-Subject: RE: PATA IDE is slower in newer versions of kernel
-
-On Sat, 2010-09-18 at 11:12 -0600, Joshua Hintze wrote:
-> Some updated information. I created a screen capture of what I am seeing. First is the logic analyzer when the newer linux kernel is writing slow to the PATA port.
+> Thanks,
 > 
-> http://i56.tinypic.com/oqhrug.png
+> I'm not sure what you mean by bisect, other than just the definition of the word. I am breaking this problem down adding printks etc.  I think I'm finally beginng to understand how this works :)
 > 
-> Notice in the above link how there is a lot of activating and then large gaps of no activity. After about 9 mS the STOP line is strobed a few times and then DMARQ finally returns to normal operating. The link below shows the picture of an old 2.6.10 kernel where write speeds are much faster.
-> 
-> http://i51.tinypic.com/a9wiur.png
-> 
-> In the above image notice how the wait time is considerable less 100's of microseconds before the stop lines get strobed.
-> 
-> I'm dedicated to continue working on the problem, I just need to advice from the linux community. I've tried different I/O schedulers such as noop and anticipatory and I'm studying the ide-dma code but still lost to where this is happening.
-> 
-> Thanks!
-> 
-Maybe you can just bisect this?
-Just a general advice, I don't know ide subsystem at all.
 
-Best regards,
-	Maxim Levitsky
+http://www.kernel.org/pub/software/scm/git/docs/git-bisect.html
+http://www.kernel.org/pub/software/scm/git/docs/user-manual.html#using-bisect
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-No virus found in this incoming message.
-Checked by AVG - www.avg.com 
-Version: 9.0.851 / Virus Database: 271.1.1/3132 - Release Date: 09/18/10 00:34:00
+> 
+> 
+> -----Original Message-----
+> From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-owner@vger.kernel.org] On Behalf Of Maxim Levitsky
+> Sent: Saturday, September 18, 2010 1:23 PM
+> To: Joshua Hintze
+> Cc: linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org
+> Subject: RE: PATA IDE is slower in newer versions of kernel
+> 
+> On Sat, 2010-09-18 at 11:12 -0600, Joshua Hintze wrote:
+> > Some updated information. I created a screen capture of what I am seeing. First is the logic analyzer when the newer linux kernel is writing slow to the PATA port.
+> > 
+> > http://i56.tinypic.com/oqhrug.png
+> > 
+> > Notice in the above link how there is a lot of activating and then large gaps of no activity. After about 9 mS the STOP line is strobed a few times and then DMARQ finally returns to normal operating. The link below shows the picture of an old 2.6.10 kernel where write speeds are much faster.
+> > 
+> > http://i51.tinypic.com/a9wiur.png
+> > 
+> > In the above image notice how the wait time is considerable less 100's of microseconds before the stop lines get strobed.
+> > 
+> > I'm dedicated to continue working on the problem, I just need to advice from the linux community. I've tried different I/O schedulers such as noop and anticipatory and I'm studying the ide-dma code but still lost to where this is happening.
+> > 
+> > Thanks!
+> > 
+> Maybe you can just bisect this?
+> Just a general advice, I don't know ide subsystem at all.
+> 
+> Best regards,
+> 	Maxim Levitsky
 
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
