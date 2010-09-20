@@ -1,40 +1,130 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: ahci rmmodable and shouldn't
-Date: Mon, 20 Sep 2010 11:31:03 +0200
-Message-ID: <4C9729D7.70500@gmail.com>
-References: <201009162256.04765.pedrogfrancisco@gmail.com> <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net> <4C933A8F.2080305@gmail.com> <1284892106.2650.4.camel@sundae-v2> <4C9602E4.4090007@gmail.com> <1284974726.11757.9.camel@sundae-v2>
+Date: Mon, 20 Sep 2010 11:41:52 +0200
+Message-ID: <4C972C60.8010506@gmail.com>
+References: <201009162256.04765.pedrogfrancisco@gmail.com> <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net> <4C933A8F.2080305@gmail.com> <1284892106.2650.4.camel@sundae-v2> <4C9602E4.4090007@gmail.com> <1284974726.11757.9.camel@sundae-v2> <4C9729D7.70500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59429 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:65038 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756118Ab0ITJbJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Sep 2010 05:31:09 -0400
-In-Reply-To: <1284974726.11757.9.camel@sundae-v2>
+	with ESMTP id S1754485Ab0ITJl6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Sep 2010 05:41:58 -0400
+In-Reply-To: <4C9729D7.70500@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Pedro Francisco <pedrogfrancisco@gmail.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+Hello, again.
 
-On 09/20/2010 11:25 AM, Pedro Francisco wrote:
-> Discomfort? Not really, sorry if my stubbornness felt like it. No, I'm
-> fine with it.
-
-:-)
-
-> I just thought it was weird the change of behaviour from 2.6.32, plus
-> felt that the "Used by" field by lsmod was incorrectly set at 0 since
-> the module is, in fact, being used (e)
-
-Hmmm... I don't recall the behavior changing from 2.6.32.  Maybe I've
-been just speaking bullshit this whole time.  Can you please post the
-output of lsmod?  Maybe the difference is caused by the split between
-libahci and ahci?
+Yeah, now I'm fairly sure I was spewing out complete bullshit.  Sorry
+about that.  Gees, why does spewing out bullshit always feel so right?
+Please feel free to call me an idiot.  Can you please try the
+following patch and see whether it changes the module counting
+behavior?
 
 Thanks.
 
--- 
-tejun
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ff1c945..99d0e5a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -90,6 +90,10 @@ static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ static int ahci_pci_device_resume(struct pci_dev *pdev);
+ #endif
+
++static struct scsi_host_template ahci_sht = {
++	AHCI_SHT("ahci"),
++};
++
+ static struct ata_port_operations ahci_vt8251_ops = {
+ 	.inherits		= &ahci_ops,
+ 	.hardreset		= ahci_vt8251_hardreset,
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 474427b..e5fdeeb 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -298,7 +298,17 @@ struct ahci_host_priv {
+
+ extern int ahci_ignore_sss;
+
+-extern struct scsi_host_template ahci_sht;
++extern struct device_attribute *ahci_shost_attrs[];
++extern struct device_attribute *ahci_sdev_attrs[];
++
++#define AHCI_SHT(drv_name)						\
++	ATA_NCQ_SHT(drv_name),						\
++	.can_queue		= AHCI_MAX_CMDS - 1,			\
++	.sg_tablesize		= AHCI_MAX_SG,				\
++	.dma_boundary		= AHCI_DMA_BOUNDARY,			\
++	.shost_attrs		= ahci_shost_attrs,			\
++	.sdev_attrs		= ahci_sdev_attrs
++
+ extern struct ata_port_operations ahci_ops;
+
+ void ahci_save_initial_config(struct device *dev,
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 4e97f33..84b6432 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -23,6 +23,10 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
+
++static struct scsi_host_template ahci_platform_sht = {
++	AHCI_SHT("ahci_platform"),
++};
++
+ static int __init ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -145,7 +149,7 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	ahci_print_info(host, "platform");
+
+ 	rc = ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
+-			       &ahci_sht);
++			       &ahci_platform_sht);
+ 	if (rc)
+ 		goto err0;
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 68dc678..8eea309 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -121,7 +121,7 @@ static DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
+ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+ 		   ahci_read_em_buffer, ahci_store_em_buffer);
+
+-static struct device_attribute *ahci_shost_attrs[] = {
++struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+ 	&dev_attr_em_message_type,
+ 	&dev_attr_em_message,
+@@ -132,22 +132,14 @@ static struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_em_buffer,
+ 	NULL
+ };
++EXPORT_SYMBOL_GPL(ahci_shost_attrs);
+
+-static struct device_attribute *ahci_sdev_attrs[] = {
++struct device_attribute *ahci_sdev_attrs[] = {
+ 	&dev_attr_sw_activity,
+ 	&dev_attr_unload_heads,
+ 	NULL
+ };
+-
+-struct scsi_host_template ahci_sht = {
+-	ATA_NCQ_SHT("ahci"),
+-	.can_queue		= AHCI_MAX_CMDS - 1,
+-	.sg_tablesize		= AHCI_MAX_SG,
+-	.dma_boundary		= AHCI_DMA_BOUNDARY,
+-	.shost_attrs		= ahci_shost_attrs,
+-	.sdev_attrs		= ahci_sdev_attrs,
+-};
+-EXPORT_SYMBOL_GPL(ahci_sht);
++EXPORT_SYMBOL_GPL(ahci_sdev_attrs);
+
+ struct ata_port_operations ahci_ops = {
+ 	.inherits		= &sata_pmp_port_ops,
