@@ -1,38 +1,44 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: PDC42819 porr performance: how to debug?
-Date: Thu, 23 Sep 2010 13:35:55 +0200
-Message-ID: <19611.15259.211249.821102@pilspetsen.it.uu.se>
-References: <20100923091018.14139.qmail@science.horizon.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Subject: Re: ahci rmmodable and shouldn't
+Date: Thu, 23 Sep 2010 16:14:35 +0100
+Message-ID: <1285254875.2858.15.camel@sundae-v2>
+References: <201009162256.04765.pedrogfrancisco@gmail.com>
+	 <47010.148.87.67.141.1284674336.squirrel@www.xenotime.net>
+	 <4C933A8F.2080305@gmail.com> <1284892106.2650.4.camel@sundae-v2>
+	 <4C9602E4.4090007@gmail.com> <1284974726.11757.9.camel@sundae-v2>
+	 <4C9729D7.70500@gmail.com>  <4C972C60.8010506@gmail.com>
+	 <1285015465.26023.10.camel@sundae-v2> <4C97DB80.4060403@gmail.com>
+	 <4C97DBE2.8070707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fanny.its.uu.se ([130.238.4.241]:4976 "EHLO fanny.its.uu.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754742Ab0IWLgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Sep 2010 07:36:06 -0400
-In-Reply-To: <20100923091018.14139.qmail@science.horizon.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C97DBE2.8070707@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: George Spelvin <linux@horizon.com>
-Cc: linux-ide@vger.kernel.org
 
-George Spelvin writes:
- > I have an AM2 motherboard with onboard SB600 AHCI, connected to 10
- > identical 2 TB hard drives:
- > - 4 from the onboard SB600 (sd[abcd])
- > - 2 from the motherboard PDC42819 (sd[ef])
- > - 4 from a Si3132 PCIe card (sd[ghij])
- > 
- > I can copy (RAID resync, actually) from sda to sdc (or sdb to sdd)
- > at around 100 MB/s.
- > But copying sda to sde (or sdb to sdf) runs around 25-33 MB/s.
-...
- > 04:00.0 RAID bus controller [0104]: Promise Technology, Inc. PDC42819 [FastTrak TX2650/TX4650] [105a:3f20]
+On Ter, 2010-09-21 at 00:10 +0200, Tejun Heo wrote:
+> On 09/21/2010 12:09 AM, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On 09/20/2010 10:44 PM, Pedro Francisco wrote:
+> >> To which tree shall I apply it? It currently fails both on Linus'
+> >> linux-2.6 and
+> >> git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata-dev.git .
+> > 
+> > Hmm... weird.  It's against Linus' tree.  Checking, yeap, it applies
+> > cleanly to 2.6.36-rc4, commit 2422084a (Merge branch 'for-linus' of
+> > git://git.kernel.org/pub/scm/linux/kernel/git/mattst88/alpha-2.6).
+> 
+> Attaching the patch just in case.
 
-There's no public documentation for the PDC42819 aka FastTrak TX{2,4}650.
-The only reason it works at all is that it includes an AHCI interface.
-But all the advanced stuff is hidden from us.
+I must have forgotten "-p1" since it now worked fine.
 
-You can try asking Promise for PDC42819 programming documentation, or
-failing that for a 100% open-source driver (no binary blobs).
+Anyway, the patch works on 2.6.36-rc4 :)
+
+Sorry for the late reply but compiling and running it took a bit longer
+than expected.
+-- 
+Pedro
