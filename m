@@ -1,7 +1,7 @@
 From: Don Zickus <dzickus@redhat.com>
 Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Fri, 24 Sep 2010 14:24:37 -0400
-Message-ID: <20100924182437.GR26290@redhat.com>
+Date: Fri, 24 Sep 2010 15:19:46 -0400
+Message-ID: <20100924191946.GS26290@redhat.com>
 References: <4C03C608.1040600@gmail.com>
  <20100601135004.GP15159@redhat.com>
  <4C051D44.7040203@gmail.com>
@@ -12,13 +12,17 @@ References: <4C03C608.1040600@gmail.com>
  <4C9CBF4A.9060302@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:10703 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976Ab0IXTUZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Sep 2010 15:20:25 -0400
 Content-Disposition: inline
 In-Reply-To: <4C9CBF4A.9060302@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jiri Slaby <jirislaby@gmail.com>
 Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 On Fri, Sep 24, 2010 at 06:10:02PM +0300, Jiri Slaby wrote:
 > On 09/03/2010 04:56 PM, Don Zickus wrote:
@@ -45,10 +49,9 @@ On Fri, Sep 24, 2010 at 06:10:02PM +0300, Jiri Slaby wrote:
 > 
 > Reminder #2 :). Any updates?
 
-No. I suck.  I was sidetracked on other stuff.  Let me put that together
-today.
-
-Thanks again for reminding me.
+Actually there seems to have been some clean up in the cpu hotplug error
+handling code.  Could you remove that snippet of code and see if the
+problem still happens?
 
 Cheers,
 Don
