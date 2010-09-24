@@ -1,28 +1,27 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: [BUG] libahci returns stale result tf much of the time.
-Date: Fri, 24 Sep 2010 01:34:48 -0400
-Message-ID: <4C9C3878.9010206@teksavvy.com>
+From: Seed <seedrubbish@gmail.com>
+Subject: Re: [BUG] libahci returns stale result tf much of the time.
+Date: Fri, 24 Sep 2010 15:49:37 +1000
+Message-ID: <AANLkTi=85A9ueu9YYrh0jOKFgc+fqbaUhkRLt7=Bzx2M@mail.gmail.com>
+References: <4C9C3878.9010206@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:57756 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751503Ab0IXFet (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2010 01:34:49 -0400
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:54593 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750999Ab0IXFt7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2010 01:49:59 -0400
+Received: by wyb28 with SMTP id 28so1597269wyb.19
+        for <linux-ide@vger.kernel.org>; Thu, 23 Sep 2010 22:49:58 -0700 (PDT)
+In-Reply-To: <4C9C3878.9010206@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-I've been trying to understand numerous bug reports I've seen for hdparm
-over the past couple of months.  I think they probably all boil down to
-the new libahci code not returning a correct result_tf in response
-to successful ATA_16/ATA_12 passthru commands.
+010 at 3:34 PM, Mark Lord <kernel@teksavvy.com> wrote:
+> I am totally lost when looking at libahci code though.
+> Anyone got any ideas where the bug might be there??
 
-It seems to return a stale result_tf much of the time.
-perfectly reproduceable here on my Jmicron JMB360 PCIe SATA interface.
+Maybe in libata-scsi.c function ata_scsi_pass_thru?
 
-I am totally lost when looking at libahci code though.
-Anyone got any ideas where the bug might be there??
-
-Thanks
+--
