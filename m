@@ -1,46 +1,28 @@
 From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
- prevent?
-Date: Fri, 24 Sep 2010 01:31:35 -0400
-Message-ID: <4C9C37B7.7060204@teksavvy.com>
-References: <4C9BE5A8.1090002@teksavvy.com> <4C9BF624.7090906@hardwarefreak.com> <20100924013748.GH13116@bombadil.infradead.org> <4C9C1F95.5000509@hardwarefreak.com>
+Subject: [BUG] libahci returns stale result tf much of the time.
+Date: Fri, 24 Sep 2010 01:34:48 -0400
+Message-ID: <4C9C3878.9010206@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:18932 "EHLO
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:57756 "EHLO
 	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750898Ab0IXFbw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2010 01:31:52 -0400
-In-Reply-To: <4C9C1F95.5000509@hardwarefreak.com>
+	with ESMTP id S1751503Ab0IXFet (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2010 01:34:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Kyle McMartin <kyle@mcmartin.ca>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 10-09-23 11:48 PM, Stan Hoeppner wrote:
-> Kyle McMartin put forth on 9/23/2010 8:37 PM:
->> On Thu, Sep 23, 2010 at 07:51:48PM -0500, Stan Hoeppner wrote:
->>> ~$ man hdparm
->>>
->>
->> kyle@dreadnought ~ $ hdparm
->> hdparm - get/set hard disk parameters - version v9.27, by Mark Lord.
->>                                                         ^^^^^^^^^^^^
->> [...]
->
-> Please pardon me while I wipe this egg off my face. :)
->
-> My apologies Mark.  Please feel free to publicly flog me if you wish.
+I've been trying to understand numerous bug reports I've seen for hdparm
+over the past couple of months.  I think they probably all boil down to
+the new libahci code not returning a correct result_tf in response
+to successful ATA_16/ATA_12 passthru commands.
 
-Chuckle.  :)
+It seems to return a stale result_tf much of the time.
+perfectly reproduceable here on my Jmicron JMB360 PCIe SATA interface.
 
-But you did manage to prompt me to remove that obsolete warning
-from the --security-* commands in hdparm.  They are rather well tested
-at this point in the game.
+I am totally lost when looking at libahci code though.
+Anyone got any ideas where the bug might be there??
 
-hdparm-9.31 is now released, with some fixes to --security,
-and with the nasty warnings mostly removed.
-
-Thanks!
-
+Thanks
