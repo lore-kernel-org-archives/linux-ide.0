@@ -1,30 +1,80 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Sat, 25 Sep 2010 22:30:35 +0300
-Message-ID: <4C9E4DDB.6070503@gmail.com>
-References: <4C03C608.1040600@gmail.com> <20100601135004.GP15159@redhat.com> <4C051D44.7040203@gmail.com> <20100602184459.GA15159@redhat.com> <4C0B3E94.6020506@gmail.com> <4C80B338.6020701@gmail.com> <20100903135613.GV4879@redhat.com> <4C9CBF4A.9060302@gmail.com> <20100924191946.GS26290@redhat.com>
+From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Subject: Re: [RFC 2/3 v3]update web addresses in stagging
+Date: Sat, 25 Sep 2010 13:47:36 -0700
+Message-ID: <20100925204736.GD25677@one-eyed-alien.net>
+References: <1285373337-10945-1-git-send-email-justinmattock@gmail.com> <1285373337-10945-2-git-send-email-justinmattock@gmail.com> <20100925003406.GA30029@kroah.com> <4C9D47AC.6000002@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50153 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331Ab0IYTao (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Sep 2010 15:30:44 -0400
-In-Reply-To: <20100924191946.GS26290@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="7CZp05NP8/gJM8Cl"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4C9D47AC.6000002-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Justin P. Mattock" <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Don Zickus <dzickus@redhat.com>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-On 09/24/2010 10:19 PM, Don Zickus wrote:
-> Actually there seems to have been some clean up in the cpu hotplug error
-> handling code.  Could you remove that snippet of code and see if the
-> problem still happens?
 
-The thing is I don't remember what problems exactly I had. From the
-description I wrote, I cannot reproduce it anymore :).
+--7CZp05NP8/gJM8Cl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-thanks for looking into that,
--- 
-js
+On Fri, Sep 24, 2010 at 05:51:56PM -0700, Justin P. Mattock wrote:
+> On 09/24/2010 05:34 PM, Greg KH wrote:
+> >On Fri, Sep 24, 2010 at 05:08:56PM -0700, Justin P. Mattock wrote:
+> >>The below patch, is a simple fix to a broken web address not using a=20
+> >>period in it's
+> >>name. I'll leave this up to you guys if you want to use it...
+> >>
+> >>  Signed-off-by: Justin P. Mattock<justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> >
+> >I'll queue it up, thanks.
+> >
+> >Oh, it's "staging", not "stagging" as you have up there in the Subject:
+> >:)
+> >
+> >thanks,
+> >
+> >greg k-h
+> >
+>=20
+> shoot... and I actually changed it from staging to stagging thinking=20
+> that was correct..(duh)..
+>=20
+> Anyways alright.. I'll exclude this one if the other sets get finalized.
+
+One random suggestion:  Perhaps you should include a date here?  i.e. "URL
+blah blah blah (as of Sept 2010)"
+
+That way, people have some idea how much they can trust that URL without
+having to dig into the kernel history to see when it was last changed.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+It was a new hope.
+					-- Dust Puppy
+User Friendly, 12/25/1998
+
+--7CZp05NP8/gJM8Cl
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFMnl/o3gL8qCooyc4RAqGYAJ0Vtb9UGcVSOagW2v+EWpTeucsEpACeOJOu
+8n2eXNSWdRbDQNClZROGuGE=
+=rS8p
+-----END PGP SIGNATURE-----
+
+--7CZp05NP8/gJM8Cl--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
