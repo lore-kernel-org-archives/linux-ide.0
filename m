@@ -1,42 +1,31 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [RFC 2/3 v3]update web addresses in stagging
-Date: Fri, 24 Sep 2010 17:51:56 -0700
-Message-ID: <4C9D47AC.6000002@gmail.com>
-References: <1285373337-10945-1-git-send-email-justinmattock@gmail.com> <1285373337-10945-2-git-send-email-justinmattock@gmail.com> <20100925003406.GA30029@kroah.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] fix blk-exec.c compile error: always define  'sysctl_hung_task_timeout_secs'
+ (resend)
+Date: Sat, 25 Sep 2010 11:18:29 +0200
+Message-ID: <4C9DBE65.6040606@kernel.dk>
+References: <1285271646-2768-1-git-send-email-vgoyal@redhat.com> <4C9CEFD6.3000106@kernel.dk>  <20100924202106.GC7145@redhat.com> <1285364797.12723.1.camel@corey>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:55845 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518Ab0IYAvu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Sep 2010 20:51:50 -0400
-In-Reply-To: <20100925003406.GA30029@kroah.com>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:49767 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754454Ab0IYJSc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 25 Sep 2010 05:18:32 -0400
+In-Reply-To: <1285364797.12723.1.camel@corey>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org
+To: Mark Lord <mlord@pobox.com>
+Cc: Vivek Goyal <vgoyal@redhat.com>, linux-kernel@vger.kernel.org, hch@lst.de, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 09/24/2010 05:34 PM, Greg KH wrote:
-> On Fri, Sep 24, 2010 at 05:08:56PM -0700, Justin P. Mattock wrote:
->> The below patch, is a simple fix to a broken web address not using a period in it's
->> name. I'll leave this up to you guys if you want to use it...
->>
->>   Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
->
-> I'll queue it up, thanks.
->
-> Oh, it's "staging", not "stagging" as you have up there in the Subject:
-> :)
->
-> thanks,
->
-> greg k-h
->
+On 2010-09-24 23:46, Mark Lord wrote:
+> Ensure that 'sysctl_hung_task_timeout_secs' is defined
+> even when CONFIG_DETECT_HUNG_TASK is not set.
+> This way we can safely reference it without need for
+> ifdefs in the code elsewhere.  eg. in block/blk-exec.c
 
-shoot... and I actually changed it from staging to stagging thinking 
-that was correct..(duh)..
+Thanks Mark, applied.
 
-Anyways alright.. I'll exclude this one if the other sets get finalized.
+-- 
+Jens Axboe
 
-Justin P. Mattock
