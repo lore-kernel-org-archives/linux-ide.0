@@ -1,41 +1,30 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] hpt366: add debounce delay to cable_detect() method
-Date: Sat, 25 Sep 2010 20:49:40 +0400
-Message-ID: <4C9E2824.50505@ru.mvista.com>
-References: <200702140101.26639.sshtylyov@ru.mvista.com> <200911202152.22910.sshtylyov@ru.mvista.com> <4B1D17D9.4040906@ru.mvista.com>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
+Date: Sat, 25 Sep 2010 22:30:35 +0300
+Message-ID: <4C9E4DDB.6070503@gmail.com>
+References: <4C03C608.1040600@gmail.com> <20100601135004.GP15159@redhat.com> <4C051D44.7040203@gmail.com> <20100602184459.GA15159@redhat.com> <4C0B3E94.6020506@gmail.com> <4C80B338.6020701@gmail.com> <20100903135613.GV4879@redhat.com> <4C9CBF4A.9060302@gmail.com> <20100924191946.GS26290@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48054 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754682Ab0IYQu0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Sep 2010 12:50:26 -0400
-Received: by eyb6 with SMTP id 6so988354eyb.19
-        for <linux-ide@vger.kernel.org>; Sat, 25 Sep 2010 09:50:24 -0700 (PDT)
-In-Reply-To: <4B1D17D9.4040906@ru.mvista.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50153 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751331Ab0IYTao (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Sep 2010 15:30:44 -0400
+In-Reply-To: <20100924191946.GS26290@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
+To: Don Zickus <dzickus@redhat.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-Hello.
+On 09/24/2010 10:19 PM, Don Zickus wrote:
+> Actually there seems to have been some clean up in the cpu hotplug error
+> handling code.  Could you remove that snippet of code and see if the
+> problem still happens?
 
-I wrote:
+The thing is I don't remember what problems exactly I had. From the
+description I wrote, I cannot reproduce it anymore :).
 
->> Alan Cox reported that cable detection sometimes works unreliably
->> for HPT3xxN and that the issue is fixed by adding debounce delay
->> as used by the vendor drivers.
-
->> While at it, get rid of unneeded parens/space in the vicinity...
-
->> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
->> Cc: stable@kernel.org
-
->    David, will you (finally) apply this patch?
-
-    Well, nine months has passed, and I have to ask again -- are you going to at 
-last apply it? :-/
-
-MBR, Sergei
-
+thanks for looking into that,
+-- 
+js
