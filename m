@@ -1,31 +1,59 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] fix blk-exec.c compile error: always define  'sysctl_hung_task_timeout_secs'
- (resend)
-Date: Sat, 25 Sep 2010 11:18:29 +0200
-Message-ID: <4C9DBE65.6040606@kernel.dk>
-References: <1285271646-2768-1-git-send-email-vgoyal@redhat.com> <4C9CEFD6.3000106@kernel.dk>  <20100924202106.GC7145@redhat.com> <1285364797.12723.1.camel@corey>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] hpt366: fix clock turnaround
+Date: Sat, 25 Sep 2010 20:40:43 +0400
+Message-ID: <4C9E260B.2050603@ru.mvista.com>
+References: <200702140101.26639.sshtylyov@ru.mvista.com> <200912071803.37117.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:49767 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754454Ab0IYJSc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 25 Sep 2010 05:18:32 -0400
-In-Reply-To: <1285364797.12723.1.camel@corey>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:36162 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754496Ab0IYQl3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Sep 2010 12:41:29 -0400
+Received: by eyb6 with SMTP id 6so987514eyb.19
+        for <linux-ide@vger.kernel.org>; Sat, 25 Sep 2010 09:41:28 -0700 (PDT)
+In-Reply-To: <200912071803.37117.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>, linux-kernel@vger.kernel.org, hch@lst.de, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
-On 2010-09-24 23:46, Mark Lord wrote:
-> Ensure that 'sysctl_hung_task_timeout_secs' is defined
-> even when CONFIG_DETECT_HUNG_TASK is not set.
-> This way we can safely reference it without need for
-> ifdefs in the code elsewhere.  eg. in block/blk-exec.c
+Hello.
 
-Thanks Mark, applied.
+I wrote:
 
--- 
-Jens Axboe
+> DPLL clock (0x21) should be used for writes and PCI clock (0x23) for reads,
+> not vice versa.
 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Cc: stable@kernel.org
+
+> ---
+> The patch is atop of ide-2.6.git tree.
+
+> Not sure why I didn't fix this back in 2007... well, nobody has ever
+> complained. :-)
+
+>  drivers/ide/hpt366.c |    2 +-
+>  1 files changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: ide-2.6/drivers/ide/hpt366.c
+> ===================================================================
+> --- ide-2.6.orig/drivers/ide/hpt366.c
+> +++ ide-2.6/drivers/ide/hpt366.c
+> @@ -901,7 +901,7 @@ static void hpt3xxn_set_clock(ide_hwif_t
+>  
+>  static void hpt3xxn_rw_disk(ide_drive_t *drive, struct request *rq)
+>  {
+> -	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x23 : 0x21);
+> +	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x21 : 0x23);
+>  }
+>  
+>  /**
+> 
+
+    David, looks like this patch posted 12/07/2009 got lost somewhere? I still 
+don't see it applied...
+
+WBR, Sergei
