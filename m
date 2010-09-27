@@ -1,47 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2] hpt366: fix clock turnaround
-Date: Mon, 27 Sep 2010 18:09:43 +0400
-Message-ID: <201009271809.44135.sshtylyov@ru.mvista.com>
+From: Don Zickus <dzickus@redhat.com>
+Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
+Date: Mon, 27 Sep 2010 10:21:49 -0400
+Message-ID: <20100927142149.GV26290@redhat.com>
+References: <4C03C608.1040600@gmail.com>
+ <20100601135004.GP15159@redhat.com>
+ <4C051D44.7040203@gmail.com>
+ <20100602184459.GA15159@redhat.com>
+ <4C0B3E94.6020506@gmail.com>
+ <4C80B338.6020701@gmail.com>
+ <20100903135613.GV4879@redhat.com>
+ <4C9CBF4A.9060302@gmail.com>
+ <20100924191946.GS26290@redhat.com>
+ <4C9E4DDB.6070503@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:45553 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932939Ab0I0ORH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Sep 2010 10:17:07 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42248 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755997Ab0I0OW1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Sep 2010 10:22:27 -0400
 Content-Disposition: inline
+In-Reply-To: <4C9E4DDB.6070503@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-DPLL clock (0x21) should be used for writes and PCI clock (0x23) for reads,
-not vice versa.
+On Sat, Sep 25, 2010 at 10:30:35PM +0300, Jiri Slaby wrote:
+> On 09/24/2010 10:19 PM, Don Zickus wrote:
+> > Actually there seems to have been some clean up in the cpu hotplug error
+> > handling code.  Could you remove that snippet of code and see if the
+> > problem still happens?
+> 
+> The thing is I don't remember what problems exactly I had. From the
+> description I wrote, I cannot reproduce it anymore :).
+> 
+> thanks for looking into that,
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: stable@kernel.org
+ok. :-)  Let me know if it pops up again.
 
----
-The patch is atop of ide-2.6.git tree.
-
-Not sure why I didn't fix this back in 2007... well, nobody has ever
-complained. :-)
-
- drivers/ide/hpt366.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: ide-2.6/drivers/ide/hpt366.c
-===================================================================
---- ide-2.6.orig/drivers/ide/hpt366.c
-+++ ide-2.6/drivers/ide/hpt366.c
-@@ -838,7 +838,7 @@ static void hpt3xxn_set_clock(ide_hwif_t
- 
- static void hpt3xxn_rw_disk(ide_drive_t *drive, struct request *rq)
- {
--	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x23 : 0x21);
-+	hpt3xxn_set_clock(drive->hwif, rq_data_dir(rq) ? 0x21 : 0x23);
- }
- 
- /**
+Cheers,
+Don
