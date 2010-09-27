@@ -1,43 +1,43 @@
-From: Don Zickus <dzickus@redhat.com>
-Subject: Re: hibernation hangs with ATA errors (lockup_detector bug)
-Date: Mon, 27 Sep 2010 10:21:49 -0400
-Message-ID: <20100927142149.GV26290@redhat.com>
-References: <4C03C608.1040600@gmail.com>
- <20100601135004.GP15159@redhat.com>
- <4C051D44.7040203@gmail.com>
- <20100602184459.GA15159@redhat.com>
- <4C0B3E94.6020506@gmail.com>
- <4C80B338.6020701@gmail.com>
- <20100903135613.GV4879@redhat.com>
- <4C9CBF4A.9060302@gmail.com>
- <20100924191946.GS26290@redhat.com>
- <4C9E4DDB.6070503@gmail.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+Date: Mon, 27 Sep 2010 11:10:06 -0400
+Message-ID: <20100927151005.GC11086@tuxdriver.com>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42248 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755997Ab0I0OW1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Sep 2010 10:22:27 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4C9E4DDB.6070503@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Finn Thain <fthain@telegraphics.com.au>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>, LKML <linux-kernel@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, linux-ide@vger.kernel.org
 
-On Sat, Sep 25, 2010 at 10:30:35PM +0300, Jiri Slaby wrote:
-> On 09/24/2010 10:19 PM, Don Zickus wrote:
-> > Actually there seems to have been some clean up in the cpu hotplug error
-> > handling code.  Could you remove that snippet of code and see if the
-> > problem still happens?
-> 
-> The thing is I don't remember what problems exactly I had. From the
-> description I wrote, I cannot reproduce it anymore :).
-> 
-> thanks for looking into that,
+On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+> Below is an updated patch from the original fixing broken web addresses in the kernel.
+> Thanks for all the help and info on this to everybody..
+> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
 
-ok. :-)  Let me know if it pops up again.
+Changing a URL for a relocated page is one thing, but removing links
+isn't necessarily a great idea.  Even if the site is technically
+gone, it may be possible to find information e.g through the Internet
+Archive Wayback Machine.
 
-Cheers,
-Don
+> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+> index e8e2d0f..ba10b07 100644
+> --- a/drivers/net/wireless/orinoco/main.c
+> +++ b/drivers/net/wireless/orinoco/main.c
+> @@ -17,7 +17,6 @@
+>   *
+>   * Portions based on wvlan_cs.c 1.0.6, Copyright Andreas Neuhaus <andy
+>   * AT fasta.fh-dortmund.de>
+> - *      http://www.stud.fh-dortmund.de/~andy/wvlan/
+>   *
+>   * The contents of this file are subject to the Mozilla Public License
+>   * Version 1.1 (the "License"); you may not use this file except in
+
+http://web.archive.org/web/20070716051348/http://www.stud.fh-dortmund.de/~andy/wvlan/
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
