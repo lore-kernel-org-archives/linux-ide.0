@@ -1,31 +1,28 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 1/2] hpt366: add debounce delay to cable_detect() method
-Date: Mon, 27 Sep 2010 11:00:50 -0700 (PDT)
-Message-ID: <20100927.110050.232902423.davem@davemloft.net>
-References: <201009271808.15710.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 2/2] hpt366: fix clock turnaround
+Date: Mon, 27 Sep 2010 11:01:42 -0700 (PDT)
+Message-ID: <20100927.110142.71582292.davem@davemloft.net>
+References: <201009271809.44135.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53798
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33863
 	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759579Ab0I0SAa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Sep 2010 14:00:30 -0400
-In-Reply-To: <201009271808.15710.sshtylyov@ru.mvista.com>
+	by vger.kernel.org with ESMTP id S1752203Ab0I0SBX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Sep 2010 14:01:23 -0400
+In-Reply-To: <201009271809.44135.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: sshtylyov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
 
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Date: Mon, 27 Sep 2010 18:08:15 +0400
+Date: Mon, 27 Sep 2010 18:09:43 +0400
 
-> Alan Cox reported that cable detection sometimes works unreliably
-> for HPT3xxN and that the issue is fixed by adding debounce delay
-> as used by the vendor drivers.
-> 
-> While at it, get rid of unneeded parens/space in the vicinity...
+> DPLL clock (0x21) should be used for writes and PCI clock (0x23) for reads,
+> not vice versa.
 > 
 > Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Applied.
+Also applied, thanks.
