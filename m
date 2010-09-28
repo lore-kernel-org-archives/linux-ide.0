@@ -1,28 +1,62 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] hpt366: fix clock turnaround
-Date: Mon, 27 Sep 2010 11:01:42 -0700 (PDT)
-Message-ID: <20100927.110142.71582292.davem@davemloft.net>
-References: <201009271809.44135.sshtylyov@ru.mvista.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+Date: Tue, 28 Sep 2010 11:37:57 +1000 (EST)
+Message-ID: <alpine.OSX.2.00.1009281119570.276@localhost>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>  <20100927151005.GC11086@tuxdriver.com> <1285603383.1732.106.camel@Joe-Laptop> <4CA0CB0F.3060303@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33863
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752203Ab0I0SBX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Sep 2010 14:01:23 -0400
-In-Reply-To: <201009271809.44135.sshtylyov@ru.mvista.com>
+Received: from www.telegraphics.com.au ([204.15.192.19]:60613 "EHLO
+	mail.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757688Ab0I1BpK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Sep 2010 21:45:10 -0400
+In-Reply-To: <4CA0CB0F.3060303@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@ru.mvista.com
-Cc: linux-ide@vger.kernel.org, stable@kernel.org, alan@lxorguk.ukuu.org.uk
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Joe Perches <joe@perches.com>, "John W. Linville" <linville@tuxdriver.com>, trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Date: Mon, 27 Sep 2010 18:09:43 +0400
 
-> DPLL clock (0x21) should be used for writes and PCI clock (0x23) for reads,
-> not vice versa.
+On Mon, 27 Sep 2010, Justin P. Mattock wrote:
+
+> On 09/27/2010 09:03 AM, Joe Perches wrote:
+> > On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
+> > > On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+> > > > Below is an updated patch from the original fixing broken web 
+> > > > addresses in the kernel. Thanks for all the help and info on this 
+> > > > to everybody.. Hopefully I didnt miss any of them(if so let me 
+> > > > know, and I'll resend).
+> > > Changing a URL for a relocated page is one thing, but removing links 
+> > > isn't necessarily a great idea.  Even if the site is technically 
+> > > gone, it may be possible to find information e.g through the 
+> > > Internet Archive Wayback Machine.
+> > 
+> > Perhaps it'd be better to scrape the contents of the various web 
+> > pages, collect them somewhere like wiki.kernel.org and encourage 
+> > others to put new contributions in that site.
+
+The copyright problem aside, this might be a good idea for material not 
+already archived but I don't think it makes sense to start a new 
+archive when archive.org (or other) has the information.
+
+And which version(s) do you scrape? I discussed some problems with 
+changing URLs in another thread: http://lkml.org/lkml/2010/9/22/22
+
+Anyway, without knowing what future archive(s) would be available or 
+relevant to any given URL in the future, I think the best we might do is a 
+"Retrieved on YYYY-MM-DD" qualification for new URLs.
+
 > 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> yeah I think somebody was saying something about having a separate file, 
+> with all the web addresses in them or something...In any case, up to you 
+> guys..
 
-Also applied, thanks.
+I don't see how moving the addresses would help.
+And would it not make the information harder to find?
+
+Finn
+
+> 
+> Justin P. Mattock
+> 
