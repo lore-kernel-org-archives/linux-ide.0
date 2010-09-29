@@ -1,51 +1,82 @@
-From: Richard <tuxbox.guru@gmail.com>
-Subject: Re: Marvel PMP SATA controller
-Date: Wed, 29 Sep 2010 21:32:59 +0100
-Message-ID: <4CA3A27B.3030906@gmail.com>
-References: <4CA2E33B.70001@gmail.com> <4CA399FD.6030904@teksavvy.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
+ ahci module deactivate hotplug support (regression from lenny)
+Date: Wed, 29 Sep 2010 23:27:10 +0100
+Message-ID: <1285799230.28504.105.camel@localhost>
+References: <20100929165034.21331.69639.reportbug@albatros.savanenet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-SH9WkzjaDG6an/e/NEd4"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34760 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830Ab0I2UdD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Sep 2010 16:33:03 -0400
-Received: by wyb28 with SMTP id 28so1162909wyb.19
-        for <linux-ide@vger.kernel.org>; Wed, 29 Sep 2010 13:33:02 -0700 (PDT)
-In-Reply-To: <4CA399FD.6030904@teksavvy.com>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45278 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753188Ab0I2W1V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Sep 2010 18:27:21 -0400
+In-Reply-To: <20100929165034.21331.69639.reportbug@albatros.savanenet>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
+To: thomas.debesse+debian@gmail.com, 598518@bugs.debian.org
 Cc: linux-ide@vger.kernel.org
 
-On 29/09/10 20:56, Mark Lord wrote:
-> On 10-09-29 02:56 AM, Richard wrote:
->> Morning all,
->>
->> Using the Marvel Port Multiplier I am stuck trying to get it working 
->> with some Hard drives.
->
->
-> Err.. just plug some drives into it, and then plug it (the PMP) into
-> a SATA controller that supports PMP (eg. the Marvell ones, newer AHCI, 
-> some Sil ones, etc..).
->
-> What are you trying to do?
-Hi Mark,
 
-Its an embedded device whereby the one HDD I have does not work with the 
-Marvel PMP. I have the command to send to the PMP controller but I am 
-not an officianado with linux SATA(the code I have is from VxWorks) The 
-drive is confirmed working, but the PMP chip does not default to SATA 
-Generation 1, and this HDD is a bit dumb to figure it out :) - so I have 
-to force the PMP controller to Gen1 mode.
-(I have tons of drives that work just fine, its just this ONE Maxtor 
-drive that is being a pain)
+--=-SH9WkzjaDG6an/e/NEd4
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The short - I need to write a command to the SATA controller before this 
-HDD can be recognised.
+On Wed, 2010-09-29 at 18:50 +0200, thomas.debesse+debian@gmail.com
+wrote:
+[...]
+> ICH6 sata controller could be managed by both ata_piix and ahci module bu=
+t only
+> ahci module handle hotplug.
+> At boot time, when ata_piix is loaded before ahci module, it takes contro=
+l of
+> the ICH6 controller and the ahci module does'nt manage nothing. Because
+> ata_piix also manage ICH6 sata controller, hard drives are managed, but b=
+ecause
+> ata_piix module is used in place of ahci module, because ahci module is'n=
+t
+> used, hotplug (and other ahci functionnalities indeed) does'nt works.
+[...]
+> The solution is to load ahci module before ata_piix module, then we can h=
+ave
+> SATA drives managed by ahci module and IDE drives managed by ata_piix mod=
+ule.
+[...]
 
-Much appreciated,
-Richard
+You can force ahci to be loaded first:
+1. Add the line 'ahci' to /etc/initramfs-tools/modules.
+2. Run 'update-initramfs -u' to regenerate the initramfs.
+3. Reboot.
 
+But it seems like it would be better if ahci was automatically
+preferred.
+
+Ben.
+
+--=20
+Ben Hutchings
+Once a job is fouled up, anything done to improve it makes it worse.
+
+--=-SH9WkzjaDG6an/e/NEd4
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQIVAwUATKO9OOe/yOyVhhEJAQJqLRAAziqE1J9aKlUSUh10qk+cR1k6JcjaqMf5
+ee9VAAqpvavwbbRzWacB2rLv2bHR3I7hafsX1neSh6ezgfM1FJ97a/ZPMAOdOP2F
+8e8tRViC8Q/lDk2LpJNEI3a4hkc2QjYl5tuHN3jJdZ6/4v/N07H3jDTLVwF1fwEr
+ZxWcb1jrOgybxeImh3tmFAiBF8mBdOm8bvsoUZiaI0a8JOqkwnefcrLqqMItuLr+
+P/yLB/pHOF2YIQo8K1sG8DKeX3k94rKtTlBIn6WoXeqqW2aDW77bh0oqNaR4EH31
+x7MJLTxaHdJ2TmWBiyFCYrWZ541UUQ1OwtRcyRXvyb4QDLuo4n7yOeiP+ZQgCcBg
+NPTCYVRoGpAEvlNknUb3/Qdv43jPfNlGj0qTIJzw7GjA9JIIoCPBTi5Leh2uElT8
+ori+UqtbNvJxcSpIhSFmIVYBRJVXvJybkaVDV86McKI2f7WUjJvJreo0O3vehQZ/
+Ws73cZViF2gpC4zaC4oela99RHACNPdUQz5RJXsIRUkfTuLf/BDbz2UXY7/h740F
+8ia4N6oHa47bTUHN3523VyGQ27A9DSWnNsFAPnjSuzU+Gri5qlpOYp7du3LOtKg4
+9L2yGdleWsWq0ZpTZEB1XdR7vRBWNgu2A9Q86qrtimS0nMbhFCSr1OaI0dRs0e8c
+c250/ESt7/U=
+=Dav5
+-----END PGP SIGNATURE-----
+
+--=-SH9WkzjaDG6an/e/NEd4--
