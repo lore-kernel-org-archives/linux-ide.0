@@ -1,70 +1,46 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: piix vs ata_piix device ID tables
-Date: Mon, 04 Oct 2010 04:50:52 +0100
-Message-ID: <1286164252.3916.312.camel@localhost>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [BUG] libahci returns stale result tf much of the time.
+Date: Mon, 04 Oct 2010 11:18:03 +0200
+Message-ID: <4CA99BCB.8080904@gmail.com>
+References: <4C9C3878.9010206@teksavvy.com> <AANLkTi=85A9ueu9YYrh0jOKFgc+fqbaUhkRLt7=Bzx2M@mail.gmail.com> <4C9C44D0.1030409@teksavvy.com> <AANLkTinOECHi_7+y7yT-GZXxW0c4vrJOuRz80kejt2+N@mail.gmail.com> <4C9CA385.5090709@teksavvy.com> <4C9CA673.4090104@teksavvy.com> <4C9D33C0.8050900@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-x6u4gjqbKPivNUz7Jm55"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:38798 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751630Ab0JDDvC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Oct 2010 23:51:02 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:38667 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752814Ab0JDJSJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Oct 2010 05:18:09 -0400
+Received: by fxm14 with SMTP id 14so1560204fxm.19
+        for <linux-ide@vger.kernel.org>; Mon, 04 Oct 2010 02:18:08 -0700 (PDT)
+In-Reply-To: <4C9D33C0.8050900@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Mark Lord <kernel@teksavvy.com>, Seed <seedrubbish@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
+Hello,
 
---=-x6u4gjqbKPivNUz7Jm55
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On 09/25/2010 01:26 AM, Robert Hancock wrote:
+>> And here's an example of the bug, which should work (as a demo)
+>> for most folks out there with the same controller ahci / JMB360:
+>>
+>> Here, I'll use hdparm to do a "set acoustic" command
+>> on a drive which does NOT have the "Acoustic Management" feature set.
+>> Just look for the fd fd fd strings in the returned data,
+>> and notice how the final IDENTIFY at the end works, but returns
+>> bad ATA status 0x51 from the stale result_tf:
+> 
+> The d2h_fis area is supposed to be updated by the controller with
+> the last FIS received from the device. Maybe this controller just
+> isn't doing that for some reason?
 
-When I converted the Debian kernel configurations over from IDE to
-libata-based drivers, I compared the device ID tables for all the PCI
-drivers.  I found that ata_piix handles most of the same devices as piix
-while pata_oldpiix and pata_mpiix each handle one more.  However, 2
-device IDs in piix are not in the device ID tables of any libata-based
-driver:
+Hmm... one possibility is that the controller takes some time to
+update the area and the driver is reading it off too early.  Maybe
+adding a delay would resolve the issue?  Mark, do you know whether
+this problem is isolated to JMB360?
 
-PCI_DEVICE_ID_INTEL_82371FB_0 =3D=3D 0x122e (PIIX function 0)
+Thanks.
 
-piix seems to treat this the same as PCI_DEVICE_ID_INTEL_82371FB_1 =3D=3D
-0x1230, which is handled by pata_oldpiix.  (This is weird; function 0 is
-supposed to be the ISA bridge!)
-
-PCI_DEVICE_ID_INTEL_82801DB_1 =3D=3D 0x24c1 (ICH4 device 31 function 1)
-
-piix seems to treat this the same as most other ICH PATA interfaces,
-which are handled by ata_piix.
-
-Does anyone know why these aren't handled by the libata-based drivers?
-
-Ben.
-
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-x6u4gjqbKPivNUz7Jm55
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUATKlPF+e/yOyVhhEJAQIxkg//bUUucvw87qot2WX+bRoS586/gnl+Bsad
-YF+iQGhVbU9RnzkiuVi50w62IqBYP70b7S4uwjgD3O0QGjIrwXvHuaA4u5DEYnyQ
-YNRweE74SpEZvqdVeGD9NL9OLEwC36Gn0a2RVvfDH29+O4M1AwRp2/heU0qJtuP7
-FYFIr/VZUPOp/RFIh9BTe0a4SQjUFPBdy4Ek8LcYOYtQSUNdQ6igcnb/Rdixu2S5
-Fp/w0EhnYwyBD3JGosOtakGmdkstNmp1gWA+pYr5One2Do4qRSuX4PXzR2oj3OMz
-IcPrn3PBsuJa0lPOLoecGpxH5gu3y2nGZtU5vkY/jZW1aAZeprPahKzezcRiBebk
-Ecb1eHtSE3XYxktkJYiwgZVQyA+h5oGvXNaCkjhaHqKv4q/lY36j/aeVTFaoTafW
-Y4PampqDV85mWOmVigK2wrFMwBbXF8BFfogGA26Dfcz7ykB6xaDt1jrsDO1Fynmv
-xgr0yi2YyKNTwLEPiQmjrOgi7//FCDiFoCJ+sR6xx4gEKr1c1OCy0Gvc3epj/Xrv
-4mcMO4zZBAzsTD7wFVMqMMlH84N3OP5b5xEAD6DHRplIASSZ5yVUpZUCL8r45UDN
-ujFVqrErOMK/N43krTUeih0Cfz0C9I33TXJj1zgYnBQa/G3A3iG6mklr49z5c7Ga
-xXUUWypehXY=
-=BDwp
------END PGP SIGNATURE-----
-
---=-x6u4gjqbKPivNUz7Jm55--
+-- 
+tejun
