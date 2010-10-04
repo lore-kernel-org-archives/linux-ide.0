@@ -1,57 +1,58 @@
-From: maximilian attems <max@stro.at>
-Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
-	ahci module deactivate hotplug support (regression from lenny)
-Date: Mon, 4 Oct 2010 17:54:38 +0000
-Message-ID: <20101004175438.GZ5947@vostochny.stro.at>
-References: <20100929165034.21331.69639.reportbug@albatros.savanenet> <1285799230.28504.105.camel@localhost> <4CAA04FB.7070402@gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [BUG] libahci returns stale result tf much of the time.
+Date: Mon, 04 Oct 2010 14:50:28 -0400
+Message-ID: <4CAA21F4.5060000@teksavvy.com>
+References: <4C9C3878.9010206@teksavvy.com> <AANLkTi=85A9ueu9YYrh0jOKFgc+fqbaUhkRLt7=Bzx2M@mail.gmail.com> <4C9C44D0.1030409@teksavvy.com> <AANLkTinOECHi_7+y7yT-GZXxW0c4vrJOuRz80kejt2+N@mail.gmail.com> <4C9CA385.5090709@teksavvy.com> <4C9CA673.4090104@teksavvy.com> <4C9D33C0.8050900@gmail.com> <4CA99BCB.8080904@gmail.com> <4CAA0885.8060906@teksavvy.com> <4CAA0996.5080403@teksavvy.com> <4CAA0F6C.6080609@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vostochny.stro.at ([78.47.22.85]:40184 "EHLO vostochny.stro.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756393Ab0JDRyj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2010 13:54:39 -0400
-Content-Disposition: inline
-In-Reply-To: <4CAA04FB.7070402@gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:59792 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755029Ab0JDSuc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Oct 2010 14:50:32 -0400
+In-Reply-To: <4CAA0F6C.6080609@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 598518@bugs.debian.org, thomas.debesse+debian@gmail.com
-Cc: Ben Hutchings <ben@decadent.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Seed <seedrubbish@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-hello,
-
-On Mon, Oct 04, 2010 at 06:46:51PM +0200, Tejun Heo wrote:
-> >> The solution is to load ahci module before ata_piix module, then we can have
-> >> SATA drives managed by ahci module and IDE drives managed by ata_piix module.
-> > [...]
-> > 
-> > You can force ahci to be loaded first:
-> > 1. Add the line 'ahci' to /etc/initramfs-tools/modules.
-> > 2. Run 'update-initramfs -u' to regenerate the initramfs.
-> > 3. Reboot.
-> > 
-> > But it seems like it would be better if ahci was automatically
-> > preferred.
-> 
-> With modules.order in place, modprobe will always prefer ahci over
-> ata_piix (the preference follows the link order).  Maybe debian initrd
-> doesn't handle modules.order properly?
-
-we do shipp modules.order in initramfs.
-
-hmm thomas what are your MODULES settings, please post output of
- egrep MODULES -r /etc/initramfs-tools/
-
-if MODULES=dep appears it could be that the sys walking code has
-a bug in adding the wrong module to the initramfs.
-please change it to the safe and default MODULES=most and regenerate:
-update-initramfs -u -k <kernelversion>
-
-you can check any initramfs if it has the relevant modules with
-lsinitramfs /boot/initrd.img-2.6.35-trunk-amd64 | grep ahci 
+On 10-10-04 01:31 PM, Mark Lord wrote:
+> On 10-10-04 01:06 PM, Mark Lord wrote:
+> ..
+>>> That's my theory, too (slow updating of the area).
+>>> I haven't pursued it further yet, but I will.
+>>>
+>>> This is really disruptive for me here, as my primary eSATA
+>>> adaptor in my notebook is JMB360, and it gets used a LOT.
+>>
+>> Okay, I just now ran a quick test on another machine with AHCI: Same bug:
+>>
+>> 00:1f.2 SATA controller: Intel Corporation 82801HR/HO/HH (ICH8R/DO/DH) 6 port SATA AHCI Controller (rev 02)
+>>
+>> So it's probably universal. Try it with this simple test:
+>>
+>> hdparm -I /dev/sdX ## this works
+>> hdparm -Z /dev/sdX ## this will fail --> obsolete vendor-specific command
+>> hdparm -I /dev/sdX ## this fails when following the above
+>>
+>> hdparm -z /dev/sdX ## force some regular I/O, to clear the bad state from the driver
+>> hdparm -I /dev/sdX ## this now works again
+>
+>
+> The issue also seems to be present in 2.6.32.8 on that same Intel AHCI platform,
+> so it probably has nothing to do with the libahci split.
 
 
-thanks
+I've dug a bit deeper, and worked around the issue.
+It seems that libata is not always happy about DATA-xfer commands
+that also have the check-sense bit set (0x20 in cdb[2]).
+Perhaps that's not even valid in SCSI ??
 
--- 
-maks
+Anyway, I'm updating hdparm to only set that bit for non-DATA commands,
+and leave it unset for data commands (eg. IDENTIFY).
+That's how libata itself does things internally.
+
+Seems to fix whatever the issue was.
+
+Cheers
