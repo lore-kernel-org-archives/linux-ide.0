@@ -1,46 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [BUG] libahci returns stale result tf much of the time.
-Date: Mon, 04 Oct 2010 11:18:03 +0200
-Message-ID: <4CA99BCB.8080904@gmail.com>
-References: <4C9C3878.9010206@teksavvy.com> <AANLkTi=85A9ueu9YYrh0jOKFgc+fqbaUhkRLt7=Bzx2M@mail.gmail.com> <4C9C44D0.1030409@teksavvy.com> <AANLkTinOECHi_7+y7yT-GZXxW0c4vrJOuRz80kejt2+N@mail.gmail.com> <4C9CA385.5090709@teksavvy.com> <4C9CA673.4090104@teksavvy.com> <4C9D33C0.8050900@gmail.com>
+From: Alan Cox <alan@linux.intel.com>
+Subject: Re: piix vs ata_piix device ID tables
+Date: Mon, 4 Oct 2010 10:21:45 +0100
+Message-ID: <20101004102145.2f34cc62@linux.intel.com>
+References: <1286164252.3916.312.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:38667 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814Ab0JDJSJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Oct 2010 05:18:09 -0400
-Received: by fxm14 with SMTP id 14so1560204fxm.19
-        for <linux-ide@vger.kernel.org>; Mon, 04 Oct 2010 02:18:08 -0700 (PDT)
-In-Reply-To: <4C9D33C0.8050900@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:39606 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754333Ab0JDKL2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Oct 2010 06:11:28 -0400
+In-Reply-To: <1286164252.3916.312.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Mark Lord <kernel@teksavvy.com>, Seed <seedrubbish@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: David Miller <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello,
+On Mon, 04 Oct 2010 04:50:52 +0100
+Ben Hutchings <ben@decadent.org.uk> wrote:
 
-On 09/25/2010 01:26 AM, Robert Hancock wrote:
->> And here's an example of the bug, which should work (as a demo)
->> for most folks out there with the same controller ahci / JMB360:
->>
->> Here, I'll use hdparm to do a "set acoustic" command
->> on a drive which does NOT have the "Acoustic Management" feature set.
->> Just look for the fd fd fd strings in the returned data,
->> and notice how the final IDENTIFY at the end works, but returns
->> bad ATA status 0x51 from the stale result_tf:
+> When I converted the Debian kernel configurations over from IDE to
+> libata-based drivers, I compared the device ID tables for all the PCI
+> drivers.  I found that ata_piix handles most of the same devices as
+> piix while pata_oldpiix and pata_mpiix each handle one more.
+> However, 2 device IDs in piix are not in the device ID tables of any
+> libata-based driver:
 > 
-> The d2h_fis area is supposed to be updated by the controller with
-> the last FIS received from the device. Maybe this controller just
-> isn't doing that for some reason?
+> PCI_DEVICE_ID_INTEL_82371FB_0 == 0x122e (PIIX function 0)
+> 
+> piix seems to treat this the same as PCI_DEVICE_ID_INTEL_82371FB_1 ==
+> 0x1230, which is handled by pata_oldpiix.  (This is weird; function 0
+> is supposed to be the ISA bridge!)
 
-Hmm... one possibility is that the controller takes some time to
-update the area and the driver is reading it off too early.  Maybe
-adding a delay would resolve the issue?  Mark, do you know whether
-this problem is isolated to JMB360?
+Given that pre PIIX3 devices (MPIIX and PIIX original) never worked in
+the old IDE code (well sometimes semi-worked by accident because the
+BIOS values were right and they didn't break anything) I wouldn't draw
+any conclusions.
 
-Thanks.
+> PCI_DEVICE_ID_INTEL_82801DB_1 == 0x24c1 (ICH4 device 31 function 1)
+> 
+> piix seems to treat this the same as most other ICH PATA interfaces,
+> which are handled by ata_piix.
+> 
+> Does anyone know why these aren't handled by the libata-based drivers?
 
--- 
-tejun
+I don't know about 0x24C1 however it isn't listed in the Intel ICH
+programming manual so given we've also had no reports about it I
+suspect it's an error in the PIIX driver ?
+
+Alan
