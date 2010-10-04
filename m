@@ -1,52 +1,56 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: Re: piix vs ata_piix device ID tables
-Date: Mon, 4 Oct 2010 10:21:45 +0100
-Message-ID: <20101004102145.2f34cc62@linux.intel.com>
-References: <1286164252.3916.312.camel@localhost>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
+ ahci module deactivate hotplug support (regression from lenny)
+Date: Mon, 04 Oct 2010 18:46:51 +0200
+Message-ID: <4CAA04FB.7070402@gmail.com>
+References: <20100929165034.21331.69639.reportbug@albatros.savanenet> <1285799230.28504.105.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39606 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754333Ab0JDKL2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Oct 2010 06:11:28 -0400
-In-Reply-To: <1286164252.3916.312.camel@localhost>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:62072 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932066Ab0JDQqz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Oct 2010 12:46:55 -0400
+Received: by fxm4 with SMTP id 4so72043fxm.19
+        for <linux-ide@vger.kernel.org>; Mon, 04 Oct 2010 09:46:54 -0700 (PDT)
+In-Reply-To: <1285799230.28504.105.camel@localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Ben Hutchings <ben@decadent.org.uk>
-Cc: David Miller <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: thomas.debesse+debian@gmail.com, 598518@bugs.debian.org, linux-ide@vger.kernel.org
 
-On Mon, 04 Oct 2010 04:50:52 +0100
-Ben Hutchings <ben@decadent.org.uk> wrote:
+Hello,
 
-> When I converted the Debian kernel configurations over from IDE to
-> libata-based drivers, I compared the device ID tables for all the PCI
-> drivers.  I found that ata_piix handles most of the same devices as
-> piix while pata_oldpiix and pata_mpiix each handle one more.
-> However, 2 device IDs in piix are not in the device ID tables of any
-> libata-based driver:
+On 09/30/2010 12:27 AM, Ben Hutchings wrote:
+> On Wed, 2010-09-29 at 18:50 +0200, thomas.debesse+debian@gmail.com
+> wrote:
+> [...]
+>> ICH6 sata controller could be managed by both ata_piix and ahci module but only
+>> ahci module handle hotplug.
+>> At boot time, when ata_piix is loaded before ahci module, it takes control of
+>> the ICH6 controller and the ahci module does'nt manage nothing. Because
+>> ata_piix also manage ICH6 sata controller, hard drives are managed, but because
+>> ata_piix module is used in place of ahci module, because ahci module is'nt
+>> used, hotplug (and other ahci functionnalities indeed) does'nt works.
+> [...]
+>> The solution is to load ahci module before ata_piix module, then we can have
+>> SATA drives managed by ahci module and IDE drives managed by ata_piix module.
+> [...]
 > 
-> PCI_DEVICE_ID_INTEL_82371FB_0 == 0x122e (PIIX function 0)
+> You can force ahci to be loaded first:
+> 1. Add the line 'ahci' to /etc/initramfs-tools/modules.
+> 2. Run 'update-initramfs -u' to regenerate the initramfs.
+> 3. Reboot.
 > 
-> piix seems to treat this the same as PCI_DEVICE_ID_INTEL_82371FB_1 ==
-> 0x1230, which is handled by pata_oldpiix.  (This is weird; function 0
-> is supposed to be the ISA bridge!)
+> But it seems like it would be better if ahci was automatically
+> preferred.
 
-Given that pre PIIX3 devices (MPIIX and PIIX original) never worked in
-the old IDE code (well sometimes semi-worked by accident because the
-BIOS values were right and they didn't break anything) I wouldn't draw
-any conclusions.
+With modules.order in place, modprobe will always prefer ahci over
+ata_piix (the preference follows the link order).  Maybe debian initrd
+doesn't handle modules.order properly?
 
-> PCI_DEVICE_ID_INTEL_82801DB_1 == 0x24c1 (ICH4 device 31 function 1)
-> 
-> piix seems to treat this the same as most other ICH PATA interfaces,
-> which are handled by ata_piix.
-> 
-> Does anyone know why these aren't handled by the libata-based drivers?
+Thanks.
 
-I don't know about 0x24C1 however it isn't listed in the Intel ICH
-programming manual so given we've also had no reports about it I
-suspect it's an error in the PIIX driver ?
-
-Alan
+-- 
+tejun
