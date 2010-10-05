@@ -1,31 +1,27 @@
-From: maximilian attems <max@stro.at>
-Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
-	ahci module deactivate hotplug support (regression from lenny)
-Date: Tue, 5 Oct 2010 09:05:22 +0000
-Message-ID: <20101005090522.GA5947@vostochny.stro.at>
-References: <20100929165034.21331.69639.reportbug@albatros.savanenet> <1285799230.28504.105.camel@localhost> <4CAA04FB.7070402@gmail.com> <20101004175438.GZ5947@vostochny.stro.at> <AANLkTikVYpaYd4xOeBeWu9aHieJ+P1nTLJ_eoGyXC2K0@mail.gmail.com>
+From: "MALCOM FINANCING" <hieronim.woniak@neostrada.pl>
+Subject: LOAN OFFER AT LOW INTEREST RATE!!
+Date: Tue, 5 Oct 2010 10:17:09 +0100
+Message-ID: <5107.95221566713$1286271740@news.gmane.org>
+Reply-To: <inquirymf@hawamail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vostochny.stro.at ([78.47.22.85]:49822 "EHLO vostochny.stro.at"
+Received: from smtp201.alice.it ([82.57.200.97]:33861 "EHLO smtp201.alice.it"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab0JEJFZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Oct 2010 05:05:25 -0400
-Content-Disposition: inline
-In-Reply-To: <AANLkTikVYpaYd4xOeBeWu9aHieJ+P1nTLJ_eoGyXC2K0@mail.gmail.com>
+	id S1755551Ab0JEJmO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Oct 2010 05:42:14 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas DEBESSE <thomas.debesse+debian@gmail.com>
-Cc: 598518@bugs.debian.org, Ben Hutchings <ben@decadent.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: info@infoaxe.net
 
-On Tue, Oct 05, 2010 at 09:45:40AM +0200, Thomas DEBESSE wrote:
-> 
-> So, I'm going to check modules.order and /etc/initramfs-tools/ then I
-> will report here what I can see.
-> 
+Do you need 100% Finance?? MS.Ginny Brishen,a financial lender and consultant,MALCOM FINANCING Sdn Bhd,
+For Debt Consolidation Loan, Business Loan, Private loan, Home Refinancing Loan etc... 
 
-please also report which initramfs-tools version you are using,
-since lenny there had been ton of fixes:
-dpkg -l initramfs-tools
+The Offer Ranges from $5,000.00 Min. To $100,000,000.00 Max. at 2.0% interest per annum.
+Get the best for your family and own a dream home as well with our General Loan scheme.
 
-you should be running 0.98.4
+Contact Person: MS.Ginny Brishen.
+Email: inquirymf@hawamail.com
+            MALCOM FINANCIAL Sdn Bhd.
