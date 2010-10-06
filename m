@@ -1,69 +1,221 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [BUG] libahci returns stale result tf much of the time.
-Date: Tue, 5 Oct 2010 19:00:41 -0600
-Message-ID: <AANLkTin=QWXcuy6JOi1y26dWH8FG1ji3JewTXu0K=4ri@mail.gmail.com>
-References: <4C9C3878.9010206@teksavvy.com>
-	<AANLkTi=85A9ueu9YYrh0jOKFgc+fqbaUhkRLt7=Bzx2M@mail.gmail.com>
-	<4C9C44D0.1030409@teksavvy.com>
-	<AANLkTinOECHi_7+y7yT-GZXxW0c4vrJOuRz80kejt2+N@mail.gmail.com>
-	<4C9CA385.5090709@teksavvy.com>
-	<4C9CA673.4090104@teksavvy.com>
-	<4C9D33C0.8050900@gmail.com>
-	<4CA99BCB.8080904@gmail.com>
-	<4CAA0885.8060906@teksavvy.com>
-	<4CAA0996.5080403@teksavvy.com>
-	<4CAA0F6C.6080609@teksavvy.com>
-	<4CAA21F4.5060000@teksavvy.com>
-	<4CAA2AA6.2010204@pobox.com>
-	<4CAA2C6F.2090603@teksavvy.com>
-	<4CAA2E16.4010905@pobox.com>
-	<4CAA3033.8030405@teksavvy.com>
-	<4CAACEBE.1000104@gmail.com>
-	<4CAB30FA.2010508@teksavvy.com>
-	<4CAB4CE9.9070709@gmail.com>
+From: Thomas DEBESSE <thomas.debesse+debian@gmail.com>
+Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
+ ahci module deactivate hotplug support (regression from lenny)
+Date: Wed, 6 Oct 2010 19:04:48 +0200
+Message-ID: <AANLkTimUEpq1V=eSammBk9M0GHVRjZgfSBCjXQ36o95_@mail.gmail.com>
+References: <20100929165034.21331.69639.reportbug@albatros.savanenet>
+	<1285799230.28504.105.camel@localhost>
+	<4CAA04FB.7070402@gmail.com>
+	<20101004175438.GZ5947@vostochny.stro.at>
+	<AANLkTikVYpaYd4xOeBeWu9aHieJ+P1nTLJ_eoGyXC2K0@mail.gmail.com>
+	<20101005090522.GA5947@vostochny.stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38870 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754978Ab0JFBAm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Oct 2010 21:00:42 -0400
-Received: by ywh1 with SMTP id 1so238703ywh.19
-        for <linux-ide@vger.kernel.org>; Tue, 05 Oct 2010 18:00:41 -0700 (PDT)
-In-Reply-To: <4CAB4CE9.9070709@gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36261 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759167Ab0JFREt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Oct 2010 13:04:49 -0400
+Received: by wwj40 with SMTP id 40so7399962wwj.1
+        for <linux-ide@vger.kernel.org>; Wed, 06 Oct 2010 10:04:48 -0700 (PDT)
+In-Reply-To: <20101005090522.GA5947@vostochny.stro.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Mark Lord <kernel@teksavvy.com>, Jeff Garzik <jgarzik@pobox.com>, Seed <seedrubbish@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: maximilian attems <max@stro.at>
+Cc: 598518@bugs.debian.org, Ben Hutchings <ben@decadent.org.uk>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On Tue, Oct 5, 2010 at 10:06 AM, Tejun Heo <htejun@gmail.com> wrote:
-> Hello,
->
-> On 10/05/2010 04:06 PM, Mark Lord wrote:
->> Yeah, maybe something like that.
->>
->> But do note that I have verified that "hdparm -C" does work correctl=
-y,
->> and is dependent upon correctly returned result_tf values.
->>
->> It's not a PIO "data" command, though. =A0Does it get issued the sam=
-e way?
->
-> PIO Setup FIS is not used for nodata commands. =A0IIRC, nodata uses D=
-2H
-> Reg FIS for command completion. =A0I think the only exception is PIO
-> data commands. =A0The weird hack is to satisfy PIO data command proto=
-col
-> timing requirement stemming from PATA specification. =A0Eh... ugly.
+2010/10/4 maximilian attems <max@stro.at>:
+> we do shipp modules.order in initramfs.
 
-=46rom my reading of the SATA spec, with the PIO data-in protocol, the
-device can raise a D2H register FIS prior to transmitting data if the
-command is aborted due to an error, but for normal completion, the
-state machine just goes back to idle after the last data FIS is
-transmitted and there's no final D2H register FIS - the final status
-is set by the last PIO Setup FIS received. According to the AHCI spec,
-the host adapter is supposed to copy the PIO Setup FIS to memory as
-well. Presumably when retrieving the result taskfile for such PIO
-data-in transfers we should be pulling it from that area, not the D2H
-register FIS area, at least if the device transferred any data?
+> hmm thomas what are your MODULES settings, please post output of
+> =C2=A0egrep MODULES -r /etc/initramfs-tools/
+
+> you can check any initramfs if it has the relevant modules with
+> lsinitramfs /boot/initrd.img-2.6.35-trunk-amd64 | grep ahci
+
+2010/10/5 maximilian attems <max@stro.at>:
+> please also report which initramfs-tools version you are using,
+> since lenny there had been ton of fixes:
+> dpkg -l initramfs-tools
+>
+> you should be running 0.98.4
+
+Somes checks, playing with system configuration,
+
+On Lenny:
+
+# egrep MODULES -r /etc/initramfs-tools/
+/etc/initramfs-tools/initramfs.conf:# MODULES: [ most | netboot | dep |=
+ list ]
+/etc/initramfs-tools/initramfs.conf:MODULES=3Dmost
+
+# lspci -vv -s 00:1f.2 | grep Kernel
+	Kernel driver in use: ahci
+	Kernel modules: ahci, ata_piix
+
+# dpkg -l initramfs-tools | grep ^ii
+ii  initramfs-tools                   0.92o                      tools
+for generating an initramfs
+
+# find / -iname "modules.order"
+
+On Squeeze :
+
+# egrep MODULES -r /etc/initramfs-tools/
+/etc/initramfs-tools/initramfs.conf:# MODULES: [ most | netboot | dep |=
+ list ]
+/etc/initramfs-tools/initramfs.conf:MODULES=3Dmost
+
+# lspci -vv -s 00:1f.2 | grep Kernel
+	Kernel driver in use: ata_piix
+
+# dpkg -l initramfs-tools | grep ^ii
+ii  initramfs-tools                   0.98.4
+tools for generating an initramfs
+
+# find / -iname "modules.order"
+
+Nothing seems to be interesting here.
+
+Playing with initrd,
+
+On Lenny :
+
+# lsinitramfs initrd.img-2.6.26-2-686 | grep 'ahci\|ata_piix'
+lib/modules/2.6.26-2-686/kernel/drivers/ata/ahci.ko
+lib/modules/2.6.26-2-686/kernel/drivers/ata/ata_piix.ko
+
+# gunzip < initrd.img-2.6.26-2-686 | cpio -i --make-directories
+# find . -iname '*module*'
+=2E/conf/modules
+=2E/lib/modules
+
+On Squeeze (unmodified):
+
+# lsinitramfs initrd.img-2.6.32-5-686 | grep 'ahci\|ata_piix'
+lib/modules/2.6.32-5-686/kernel/drivers/ata/ahci.ko
+lib/modules/2.6.32-5-686/kernel/drivers/ata/ata_piix.ko
+
+# gunzip < initrd.img-2.6.32-5-686 | cpio -i --make-directories
+# find . -iname '*module*'
+=2E/conf/modules
+=2E/lib/modules
+=2E/lib/modules/2.6.32-5-686/modules.symbols
+=2E/lib/modules/2.6.32-5-686/modules.dep
+=2E/lib/modules/2.6.32-5-686/modules.alias.bin
+=2E/lib/modules/2.6.32-5-686/modules.symbols.bin
+=2E/lib/modules/2.6.32-5-686/modules.alias
+=2E/lib/modules/2.6.32-5-686/modules.devname
+=2E/lib/modules/2.6.32-5-686/modules.dep.bin
+=2E/lib/modules/2.6.32-5-686/modules.softdep
+
+On Squeeze (modified, with blacklist ata_piix):
+
+# lsinitramfs initrd.img-2.6.32-5-686 | grep 'ahci\|ata_piix'
+lib/modules/2.6.32-5-686/kernel/drivers/ata/ahci.ko
+lib/modules/2.6.32-5-686/kernel/drivers/ata/ata_piix.ko
+
+# gunzip < initrd.img-2.6.32-5-686 | cpio -i --make-directories
+# find . -iname '*module*'
+=2E/conf/modules
+=2E/lib/modules
+=2E/lib/modules/2.6.32-5-686/modules.symbols
+=2E/lib/modules/2.6.32-5-686/modules.dep
+=2E/lib/modules/2.6.32-5-686/modules.alias.bin
+=2E/lib/modules/2.6.32-5-686/modules.symbols.bin
+=2E/lib/modules/2.6.32-5-686/modules.alias
+=2E/lib/modules/2.6.32-5-686/modules.devname
+=2E/lib/modules/2.6.32-5-686/modules.dep.bin
+=2E/lib/modules/2.6.32-5-686/modules.softdep
+
+Comparing file 'conf/module' which is common to Lenny and Squeeze
+
+# diff lenny/conf/modules squeeze-unmodified/conf/modules
+# diff squeeze-unmodified/conf/modules squeeze-blacklist/conf/modules
+
+Comparing somes Squeeze modified and unmodified initrds contents :
+
+# for i in modules.symbols \
+           modules.dep \
+           modules.alias.bin \
+           modules.symbols.bin \
+           modules.alias \
+           modules.devname \
+           modules.dep.bin \
+           modules.softdep
+do diff squeeze-unmodified/lib/modules/2.6.32-5-686/$i \
+        squeeze-blacklist/lib/modules/2.6.32-5-686/$i
+done
+
+# diff squeeze-unmodified/etc/modprobe.d/blacklist.conf
+squeeze-blacklist/etc/modprobe.d/blacklist.conf
+24a25
+> blacklist ata_piix
+
+# diff squeeze-blacklist/etc/modprobe.d/aliases.conf
+squeeze-unmodified/etc/modprobe.d/aliases.conf
+# diff lenny/etc/modprobe.d/aliases
+squeeze-unmodified/etc/modprobe.d/aliases.conf
+4,5c4,5
+< # Please file a bug against module-init-tools if a package needs a en=
+try
+< # in this file.
+---
+> # No new aliases should be added to this file, please file a bug agai=
+nst
+> # the kernel for any aliases which are still not built-in.
+14c14
+< alias net-pf-7  bridge
+---
+> # 7 BRIDGE
+30c30
+< alias net-pf-25 wanrouter
+---
+> # 25 WANROUTER
+57,59d56
+< alias block-major-8-*  sd_mod
+< alias block-major-9-*  md
+< alias block-major-11-* sr_mod
+78d74
+< alias char-major-9-* st
+141,146c137,142
+< alias bt-proto-0 l2cap
+< alias bt-proto-2 sco
+< alias bt-proto-3 rfcomm
+< alias bt-proto-4 bnep
+< alias bt-proto-5 cmtp
+< alias bt-proto-6 hidp
+---
+> #alias bt-proto-0 l2cap
+> #alias bt-proto-2 sco
+> #alias bt-proto-3 rfcomm
+> #alias bt-proto-4 bnep
+> #alias bt-proto-5 cmtp
+> #alias bt-proto-6 hidp
+165a162,167
+> # work around other kernel issues ###################################=
+#########
+> # The EHCI driver should be loaded before the ones for low speed cont=
+rollers
+> # or some devices may be confused when they are disconnected and reco=
+nnected.
+> softdep uhci-hcd pre: ehci-hcd
+> softdep ohci-hcd pre: ehci-hcd
+>
+
+Nothing seems to be interesting here...
+
+Playing with kernel sources
+
+# ar p linux-source-2.6.26_2.6.26-25lenny1_all.deb data.tar.gz|tar zx
+# ar p linux-source-2.6.32_2.6.32-23_all.deb data.tar.gz|tar zx
+# (cd /usr/src ; tar -xjf linux-source-2.6.26.tar.bz2)
+# (cd /usr/src ; tar -xjf linux-source-2.6.32.tar.bz2)
+# find usr/src/linux-source-2.6.26 -iname '*modules.order*'
+# find usr/src/linux-source-2.6.32 -iname '*modules.order*'
+
+Nothing seems to be interesting here...
+
+Where can I find modules.order ?
+Or where write it and how ?
