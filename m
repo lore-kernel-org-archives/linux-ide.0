@@ -1,56 +1,29 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 4/4] pata_sl82c105: implement sff_irq_check() method
-Date: Fri, 8 Oct 2010 19:02:13 +0400
-Message-ID: <201010081902.13183.sshtylyov@ru.mvista.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 1/4] pata_cmd640: implement sff_irq_check() method
+Date: Fri, 8 Oct 2010 17:34:45 +0100
+Message-ID: <20101008173445.610b9202@lxorguk.ukuu.org.uk>
+References: <201010081856.39644.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:51795 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758289Ab0JHPCx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 11:02:53 -0400
-Content-Disposition: inline
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38998 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757338Ab0JHQJs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 12:09:48 -0400
+In-Reply-To: <201010081856.39644.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+On Fri, 8 Oct 2010 18:56:39 +0400
+Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
 
----
-The patch is against the recent Linus' tree.
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> 
+> ---
+> The patch is against the recent Linus' tree.
 
- drivers/ata/pata_sl82c105.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
+Why is this needed and what setups did you test ?
 
-Index: linux-2.6/drivers/ata/pata_sl82c105.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_sl82c105.c
-+++ linux-2.6/drivers/ata/pata_sl82c105.c
-@@ -227,6 +227,16 @@ static int sl82c105_qc_defer(struct ata_
- 	return 0;
- }
- 
-+static bool sl82c105_sff_irq_check(struct ata_port *ap)
-+{
-+	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
-+	u32 val, mask		= ap->port_no ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
-+
-+	pci_read_config_dword(pdev, 0x40, &val);
-+
-+	return val & mask;
-+}
-+
- static struct scsi_host_template sl82c105_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
-@@ -239,6 +249,7 @@ static struct ata_port_operations sl82c1
- 	.cable_detect	= ata_cable_40wire,
- 	.set_piomode	= sl82c105_set_piomode,
- 	.prereset	= sl82c105_pre_reset,
-+	.sff_irq_check	= sl82c105_sff_irq_check,
- };
- 
- /**
