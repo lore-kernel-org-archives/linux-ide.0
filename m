@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 3/4] pata_sil680: implement sff_irq_check() method
-Date: Fri, 8 Oct 2010 19:01:08 +0400
-Message-ID: <201010081901.08447.sshtylyov@ru.mvista.com>
+Subject: [PATCH 4/4] pata_sl82c105: implement sff_irq_check() method
+Date: Fri, 8 Oct 2010 19:02:13 +0400
+Message-ID: <201010081902.13183.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:51792 "HELO
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:51795 "HELO
 	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758576Ab0JHPBs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 11:01:48 -0400
+	with SMTP id S1758289Ab0JHPCx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 11:02:53 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,36 +22,35 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
 The patch is against the recent Linus' tree.
 
- drivers/ata/pata_sil680.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/ata/pata_sl82c105.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Index: linux-2.6/drivers/ata/pata_sil680.c
+Index: linux-2.6/drivers/ata/pata_sl82c105.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/pata_sil680.c
-+++ linux-2.6/drivers/ata/pata_sil680.c
-@@ -210,6 +210,17 @@ static void sil680_sff_exec_command(stru
- 	ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
+--- linux-2.6.orig/drivers/ata/pata_sl82c105.c
++++ linux-2.6/drivers/ata/pata_sl82c105.c
+@@ -227,6 +227,16 @@ static int sl82c105_qc_defer(struct ata_
+ 	return 0;
  }
  
-+static bool sil680_sff_irq_check(struct ata_port *ap)
++static bool sl82c105_sff_irq_check(struct ata_port *ap)
 +{
 +	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
-+	unsigned long addr	= sil680_selreg(ap, 1);
-+	u8 val;
++	u32 val, mask		= ap->port_no ? CTRL_IDE_IRQB : CTRL_IDE_IRQA;
 +
-+	pci_read_config_byte(pdev, addr, &val);
++	pci_read_config_dword(pdev, 0x40, &val);
 +
-+	return val & 0x08;
++	return val & mask;
 +}
 +
- static struct scsi_host_template sil680_sht = {
+ static struct scsi_host_template sl82c105_sht = {
  	ATA_BMDMA_SHT(DRV_NAME),
  };
-@@ -218,6 +229,7 @@ static struct scsi_host_template sil680_
- static struct ata_port_operations sil680_port_ops = {
- 	.inherits		= &ata_bmdma32_port_ops,
- 	.sff_exec_command	= sil680_sff_exec_command,
-+	.sff_irq_check		= sil680_sff_irq_check,
- 	.cable_detect		= sil680_cable_detect,
- 	.set_piomode		= sil680_set_piomode,
- 	.set_dmamode		= sil680_set_dmamode,
+@@ -239,6 +249,7 @@ static struct ata_port_operations sl82c1
+ 	.cable_detect	= ata_cable_40wire,
+ 	.set_piomode	= sl82c105_set_piomode,
+ 	.prereset	= sl82c105_pre_reset,
++	.sff_irq_check	= sl82c105_sff_irq_check,
+ };
+ 
+ /**
