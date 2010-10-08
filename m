@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/4] pata_pdc202xx_old: implement sff_irq_check() method
-Date: Fri, 8 Oct 2010 18:57:45 +0400
-Message-ID: <201010081857.45919.sshtylyov@ru.mvista.com>
+Subject: [PATCH 3/4] pata_sil680: implement sff_irq_check() method
+Date: Fri, 8 Oct 2010 19:01:08 +0400
+Message-ID: <201010081901.08447.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:51785 "HELO
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:51792 "HELO
 	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758566Ab0JHO6Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 10:58:25 -0400
+	with SMTP id S1758576Ab0JHPBs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Oct 2010 11:01:48 -0400
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -22,54 +22,36 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 ---
 The patch is against the recent Linus' tree.
 
- drivers/ata/pata_pdc202xx_old.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/ata/pata_sil680.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Index: linux-2.6/drivers/ata/pata_pdc202xx_old.c
+Index: linux-2.6/drivers/ata/pata_sil680.c
 ===================================================================
---- linux-2.6.orig/drivers/ata/pata_pdc202xx_old.c
-+++ linux-2.6/drivers/ata/pata_pdc202xx_old.c
-@@ -44,6 +44,27 @@ static void pdc202xx_exec_command(struct
- 	ndelay(400);
+--- linux-2.6.orig/drivers/ata/pata_sil680.c
++++ linux-2.6/drivers/ata/pata_sil680.c
+@@ -210,6 +210,17 @@ static void sil680_sff_exec_command(stru
+ 	ioread8(ap->ioaddr.bmdma_addr + ATA_DMA_CMD);
  }
  
-+static bool pdc202xx_irq_check(struct ata_port *ap)
++static bool sil680_sff_irq_check(struct ata_port *ap)
 +{
 +	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
-+	unsigned long master	= pci_resource_start(pdev, 4);
-+	u8 sc1d			= inb(master + 0x1d);
++	unsigned long addr	= sil680_selreg(ap, 1);
++	u8 val;
 +
-+	if (ap->port_no) {
-+		/*
-+		 * bit 7: error, bit 6: interrupting,
-+		 * bit 5: FIFO full, bit 4: FIFO empty
-+		 */
-+		return sc1d & 0x40;
-+	} else	{
-+		/*
-+		 * bit 3: error, bit 2: interrupting,
-+		 * bit 1: FIFO full, bit 0: FIFO empty
-+		 */
-+		return sc1d & 0x04;
-+	}
++	pci_read_config_byte(pdev, addr, &val);
++
++	return val & 0x08;
 +}
 +
- /**
-  *	pdc202xx_configure_piomode	-	set chip PIO timing
-  *	@ap: ATA interface
-@@ -282,6 +303,7 @@ static struct ata_port_operations pdc202
- 	.set_dmamode		= pdc202xx_set_dmamode,
- 
- 	.sff_exec_command	= pdc202xx_exec_command,
-+	.sff_irq_check		= pdc202xx_irq_check,
+ static struct scsi_host_template sil680_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
  };
- 
- static struct ata_port_operations pdc2026x_port_ops = {
-@@ -297,6 +319,7 @@ static struct ata_port_operations pdc202
- 	.port_start		= pdc2026x_port_start,
- 
- 	.sff_exec_command	= pdc202xx_exec_command,
-+	.sff_irq_check		= pdc202xx_irq_check,
- };
- 
- static int pdc202xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+@@ -218,6 +229,7 @@ static struct scsi_host_template sil680_
+ static struct ata_port_operations sil680_port_ops = {
+ 	.inherits		= &ata_bmdma32_port_ops,
+ 	.sff_exec_command	= sil680_sff_exec_command,
++	.sff_irq_check		= sil680_sff_irq_check,
+ 	.cable_detect		= sil680_cable_detect,
+ 	.set_piomode		= sil680_set_piomode,
+ 	.set_dmamode		= sil680_set_dmamode,
