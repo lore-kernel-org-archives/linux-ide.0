@@ -1,89 +1,52 @@
-From: Harri Olin <harri.olin@gmail.com>
-Subject: Re: ata device numbers
-Date: Sat, 9 Oct 2010 21:58:08 +0300
-Message-ID: <4CB0BB40.1090104@gmail.com>
-References: <4CB0A19C.20604@gmail.com> <20101009200110.3e00a14c@lxorguk.ukuu.org.uk>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH] ata_piix: Add device ID for ICH4-L
+Date: Sun, 10 Oct 2010 22:42:21 +0100
+Message-ID: <1286746941.2955.255.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:35565 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756806Ab0JIS6O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Oct 2010 14:58:14 -0400
-In-Reply-To: <20101009200110.3e00a14c@lxorguk.ukuu.org.uk>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:35965 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751250Ab0JJVm3 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 Oct 2010 17:42:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->> ata13: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> ata13.00: ATA-7: WDC WD7500AYYS-01RCA0, 30.04G30, max UDMA/133
->> ata13.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 31/32)
->> ata13.00: configured for UDMA/133
->> scsi 12:0:0:0: Direct-Access     ATA      WDC WD7500AYYS-0 30.0 PQ: 0 
->> ANSI: 5
->> sd 12:0:0:0: [sdm] 1465149168 512-byte logical blocks: (750 GB/698 GiB)
->> sd 12:0:0:0: Attached scsi generic sg12 type 0
->> sd 12:0:0:0: [sdm] Write Protect is off
->> sd 12:0:0:0: [sdm] Mode Sense: 00 3a 00 00
->> sd 12:0:0:0: [sdm] Write cache: enabled, read cache: enabled, doesn't 
->> support DPO or FUA
->>   sdm: sdm1
->> sd 12:0:0:0: [sdm] Attached SCSI disk
-> 
-> So /dev/sdm
-> 
+ICH4-L is a variant of ICH4 lacking USB2 functionality and with some
+different device IDs.
 
-Sorry, I mistyped. Error was on ata23, not on ata13, as seen at the end 
-of dmesg. And I'm more interested on some kind of reliable way to make 
-the translation - is there anything on /sys where ata device number 
-could be checked?
+It is documented in Intel specification update 290745-025, currently
+at <http://www.intel.com/assets/pdf/specupdate/290745.pdf>, and is
+included in the device ID table for piix.
 
-I suppose ata23 could still be sd22 ..
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+This is untested; I don't have this device but just compared the device
+ID tables.
 
-ata23 scanning messages appear around halfway of dmesg, line 710:
-...
-ata15: SATA link down (SStatus 0 SControl 300)
-usb 1-1: new high speed USB device using ehci_hcd and address 2
-usb 1-1: configuration #1 chosen from 1 choice
-ata23: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata23.00: ATA-7: WDC WD7500AYYS-01RCA0, 30.04G30, max UDMA/133
-ata23.00: 1465149168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-ata23.00: configured for UDMA/133
-usb 1-5: new high speed USB device using ehci_hcd and address 3
-usb 1-5: configuration #1 chosen from 1 choice
-input: Peppercon AG Multidevice as /class/input/input2
-...
+Ben.
 
-and sd22 scan somewhere around line 971:
-...
-scsi 22:0:0:0: Direct-Access     ATA      WDC WD7500AYYS-0 30.0 PQ: 0 
-ANSI: 5
-sd 22:0:0:0: [sdt] 1465149168 512-byte logical blocks: (750 GB/698 GiB)
-sd 22:0:0:0: [sdt] Write Protect is off
-sd 22:0:0:0: [sdt] Mode Sense: 00 3a 00 00
-sd 22:0:0:0: [sdt] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-sd 22:0:0:0: Attached scsi generic sg19 type 0
-  sdt:
-sd 21:0:0:0: [sds] Write Protect is off
-sd 21:0:0:0: [sds] Mode Sense: 00 3a 00 00
-sd 21:0:0:0: [sds] Write cache: enabled, read cache: enabled, doesn't 
-support DPO or FUA
-  sds: sdt1
-sd 22:0:0:0: [sdt] Attached SCSI disk
-  unknown partition table
-sd 21:0:0:0: [sds] Attached SCSI disk
-...
+ drivers/ata/ata_piix.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Care to tell which line is for what drive? :)
-
-(hint: sds contains what partitions?)
-
-I thought of inserting USB stick in the middle of scanning just to throw 
-the numbering off.. just to make things a little more interesting :)
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 2cfc1ae..6cb14ca 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -210,6 +210,8 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x8086, 0x248A, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 	/* Intel ICH3 (E7500/1) UDMA 100 */
+ 	{ 0x8086, 0x248B, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
++	/* Intel ICH4-L */
++	{ 0x8086, 0x24C1, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 	/* Intel ICH4 (i845GV, i845E, i852, i855) UDMA 100 */
+ 	{ 0x8086, 0x24CA, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 	{ 0x8086, 0x24CB, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
 -- 
-Harri.
+1.7.1
+
+
