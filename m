@@ -1,43 +1,42 @@
-From: Jeremy Sanders <jeremy@jeremysanders.net>
-Subject: Re: Sil 3124: "softreset failed (SRST command error)"
-Date: Wed, 13 Oct 2010 10:14:37 +0100
-Message-ID: <i93t9u$c60$1@dough.gmane.org>
-References: <i8vbcg$4hc$1@dough.gmane.org> <i8vq15$biu$1@dough.gmane.org> <4CB4665F.5030207@kernel.org> <i91uv3$ooj$1@dough.gmane.org> <4CB481E0.4040705@seoss.co.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 12/14] ata: pata_octeon_cf: Use I/O clock rate for timing
+ calculations.
+Date: Thu, 14 Oct 2010 04:42:53 -0400
+Message-ID: <4CB6C28D.5070805@pobox.com>
+References: <1286492633-26885-1-git-send-email-ddaney@caviumnetworks.com> <1286492633-26885-13-git-send-email-ddaney@caviumnetworks.com> <20101011134354.GI30695@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:36085 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753357Ab0JMJOu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Oct 2010 05:14:50 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1P5xQ7-0002AQ-OC
-	for linux-ide@vger.kernel.org; Wed, 13 Oct 2010 11:14:47 +0200
-Received: from xpc1.ast.cam.ac.uk ([131.111.68.219])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 13 Oct 2010 11:14:47 +0200
-Received: from jeremy by xpc1.ast.cam.ac.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 13 Oct 2010 11:14:47 +0200
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:48006 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754769Ab0JNIm6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Oct 2010 04:42:58 -0400
+Received: by qyk5 with SMTP id 5so1612276qyk.19
+        for <linux-ide@vger.kernel.org>; Thu, 14 Oct 2010 01:42:57 -0700 (PDT)
+In-Reply-To: <20101011134354.GI30695@linux-mips.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: David Daney <ddaney@caviumnetworks.com>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org
 
-Tim Small wrote:
+On 10/11/2010 09:43 AM, Ralf Baechle wrote:
+> On Thu, Oct 07, 2010 at 04:03:51PM -0700, David Daney wrote:
+>
+>> The creation of the I/O clock domain requires some adjustments.  Since
+>> the CF bus timing logic is clocked by the I/O clock, use its rate for
+>> delay calculations.
+>>
+>> Signed-off-by: David Daney<ddaney@caviumnetworks.com>
+>> Cc: Jeff Garzik<jgarzik@pobox.com>
+>> Cc: linux-ide@vger.kernel.org
+>
+> Haven't seen any ack yet but I assume due to the dependencies on other
+> MIPS patches it'll be ok if I merge this through the MIPS tree, so I
+> queued it for 2.6.37.
 
-> Bad PCI express to PCI-X bridge chip maybe, or maybe the Linux bug lies
-> there?  I have seen cards with 2 3132s on instead (and a PCI express
-> bridge), perhaps it'd be worth trying one of those?
+yep,
 
-It looks like the problem was an incompatibility with the Intel motherboard.
-
-It seems to work fine in an old foxconn Athlon 64 motherboard (in the PCIex 
-graphics slot when using a PCI card for video).
-
-Jeremy
-
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
 
