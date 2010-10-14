@@ -1,57 +1,124 @@
-From: Jeremy Sanders <jeremy@jeremysanders.net>
-Subject: Re: Sil 3124: "softreset failed (SRST command error)"
-Date: Thu, 14 Oct 2010 14:19:07 +0100
-Message-ID: <i9700c$g3o$1@dough.gmane.org>
-References: <i8vbcg$4hc$1@dough.gmane.org> <i8vq15$biu$1@dough.gmane.org> <4CB4665F.5030207@kernel.org> <i91uv3$ooj$1@dough.gmane.org> <4CB481E0.4040705@seoss.co.uk> <i93t9u$c60$1@dough.gmane.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [RESEND PATCH] ata: Intel IDE-R support
+Date: Thu, 14 Oct 2010 15:28:47 +0100
+Message-ID: <20101014142836.12342.50013.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:46164 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754157Ab0JNNTT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Oct 2010 09:19:19 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1P6NiG-0002id-94
-	for linux-ide@vger.kernel.org; Thu, 14 Oct 2010 15:19:16 +0200
-Received: from xpc1.ast.cam.ac.uk ([131.111.68.219])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 14 Oct 2010 15:19:16 +0200
-Received: from jeremy by xpc1.ast.cam.ac.uk with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 14 Oct 2010 15:19:16 +0200
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48030 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754576Ab0JNPip (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Oct 2010 11:38:45 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org
 
-Jeremy Sanders wrote:
+(Still not in -next so ...)
 
-> Tim Small wrote:
-> 
->> Bad PCI express to PCI-X bridge chip maybe, or maybe the Linux bug lies
->> there?  I have seen cards with 2 3132s on instead (and a PCI express
->> bridge), perhaps it'd be worth trying one of those?
-> 
-> It looks like the problem was an incompatibility with the Intel
-> motherboard.
-> 
-> It seems to work fine in an old foxconn Athlon 64 motherboard (in the
-> PCIex graphics slot when using a PCI card for video).
+From: Alan Cox <alan@linux.intel.com>
 
-Unfortunately it doesn't look like it works that well :-(
+Intel IDE-R devices are part of the Intel AMT management setup. They don't
+have any special configuration registers or settings so the ata_generic
+driver will support them fully.
 
-Read speeds to a standard drive are great - 70 MB/s.
+Rather than add a huge table of IDs for each chipset and keep sending in
+new ones this patch autodetects them.
 
-Write speeds are awful - they range on one system at 17 MB/s down to a more 
-modern system at 1.7 MB/s! There is no CPU load.
+[Added some further comments]
 
-I assume this is a problem with the PCIe bridge. There are no errors or 
-warnings given. I couldn't get MSI interrupts to work on this system.
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
 
-Time to throw the card away I think!
+ drivers/ata/ata_generic.c |   54 ++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 53 insertions(+), 1 deletions(-)
 
-Jeremy
 
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index cc5f772..6981f76 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -35,6 +35,7 @@
+ enum {
+ 	ATA_GEN_CLASS_MATCH		= (1 << 0),
+ 	ATA_GEN_FORCE_DMA		= (1 << 1),
++	ATA_GEN_INTEL_IDER		= (1 << 2),
+ };
+ 
+ /**
+@@ -109,6 +110,49 @@ static struct ata_port_operations generic_port_ops = {
+ static int all_generic_ide;		/* Set to claim all devices */
+ 
+ /**
++ *	is_intel_ider		-	identify intel IDE-R devices
++ *	@dev: PCI device
++ *
++ *	Distinguish Intel IDE-R controller devices from other Intel IDE
++ *	devices. IDE-R devices have no timing registers and are in
++ *	most respects virtual. They should be driven by the ata_generic
++ *	driver.
++ *
++ *	IDE-R devices have PCI offset 0xF8.L as zero, later Intel ATA has
++ *	it non zero. All Intel ATA has 0x40 writable (timing), but it is
++ *	not writable on IDE-R devices (this is guaranteed).
++ */
++
++static int is_intel_ider(struct pci_dev *dev)
++{
++	/* For Intel IDE the value at 0xF8 is only zero on IDE-R
++	   interfaces */
++	u32 r;
++	u16 t;
++
++	/* Check the manufacturing ID, it will be zero for IDE-R */
++	pci_read_config_dword(dev, 0xF8, &r);
++	/* Not IDE-R: punt so that ata_(old)piix gets it */
++	if (r != 0)
++		return 0;
++	/* 0xF8 will also be zero on some early Intel IDE devices
++	   but they will have a sane timing register */
++	pci_read_config_word(dev, 0x40, &t);
++	if (t != 0)
++		return 0;
++	/* Finally check if the timing register is writable so that
++	   we eliminate any early devices hot-docked in a docking
++	   station */
++	pci_write_config_word(dev, 0x40, 1);
++	pci_read_config_word(dev, 0x40, &t);
++	if (t) {
++		pci_write_config_word(dev, 0x40, 0);
++		return 0;
++	}
++	return 1;
++}
++
++/**
+  *	ata_generic_init		-	attach generic IDE
+  *	@dev: PCI device found
+  *	@id: match entry
+@@ -134,6 +178,10 @@ static int ata_generic_init_one(struct pci_dev *dev, const struct pci_device_id
+ 	if ((id->driver_data & ATA_GEN_CLASS_MATCH) && all_generic_ide == 0)
+ 		return -ENODEV;
+ 
++	if (id->driver_data & ATA_GEN_INTEL_IDER)
++		if (!is_intel_ider(dev))
++			return -ENODEV;
++
+ 	/* Devices that need care */
+ 	if (dev->vendor == PCI_VENDOR_ID_UMC &&
+ 	    dev->device == PCI_DEVICE_ID_UMC_UM8886A &&
+@@ -186,7 +234,11 @@ static struct pci_device_id ata_generic[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_3),  },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_5),  },
+-#endif	
++#endif
++	/* Intel, IDE class device */
++	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
++	  PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL, 
++	  .driver_data = ATA_GEN_INTEL_IDER },
+ 	/* Must come last. If you add entries adjust this table appropriately */
+ 	{ PCI_DEVICE_CLASS(PCI_CLASS_STORAGE_IDE << 8, 0xFFFFFF00UL),
+ 	  .driver_data = ATA_GEN_CLASS_MATCH },
 
