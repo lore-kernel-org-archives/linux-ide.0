@@ -1,37 +1,61 @@
-From: Tracey Dent <tdent48227@gmail.com>
-Subject: Re: [PATCH] Drivers: ata: Makefile: replace the use of <module>-objs
- with <module>-y
-Date: Sun, 17 Oct 2010 06:45:33 -0400
-Message-ID: <AANLkTi=39JTBALKH2zi118_a9kx_wpH2TyBY5LA6d9fe@mail.gmail.com>
-References: <1287200493-2024-1-git-send-email-tdent48227@gmail.com>
-	<4CBA6338.20700@teksavvy.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Mon, 18 Oct 2010 17:09:23 +0900
+Message-ID: <4CBC00B3.7090603@ce.jp.nec.com>
+References: <20100825155918.GB8509@redhat.com>	<4C7B984E.4070802@suse.de>	<4C7B9F14.9080900@mvista.com>	<4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:51068 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932340Ab0JQKpg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Oct 2010 06:45:36 -0400
-In-Reply-To: <4CBA6338.20700@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C7BC5B4.3010707@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, jack@suse.cz, vst@vlnb.net, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, chris.mason@oracle.com, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, Sergei Shtylyov <sshtylyov@mvista.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: jgarzik@pobox.com, linux-kernel@vger.kernel.org, avorontsov@ru.mvista.com, linux-ide@vger.kernel.org
 
-On 10/16/10, Mark Lord <kernel@teksavvy.com> wrote:
-> On 10-10-15 11:41 PM, Tracey Dent wrote:
->> Changed<module>-objs to<module>-y in Makefile.
-> ..
->> -libata-objs	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
->> +libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
->
->
-> Why?
->
+Hi Hannes,
 
-Using <module>-objs is deprecated and should now be replaced with
-<module>-y(which is specified in Documentation/kbuild/makefiles.txt).
+Thank you for working on this issue and sorry for very late reply...
 
-Regards,
+(08/30/10 23:52), Hannes Reinecke wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> Date: Mon, 30 Aug 2010 16:21:10 +0200
+> Subject: [RFC][PATCH] scsi: Detailed I/O errors
+> 
+> Instead of just passing 'EIO' for any I/O errors we should be
+> notifying the upper layers with some more details about the cause
+> of this error.
+> This patch updates the possible I/O errors to:
+> 
+> - ENOLINK: Link failure between host and target
+> - EIO: Retryable I/O error
+> - EREMOTEIO: Non-retryable I/O error
+> 
+> 'Retryable' in this context means that an I/O error _might_ be
+> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+> nexus / path might succeed.
 
-Tracey D
+Does 'retryable' of EIO mean retryable in multipath layer?
+If so, what is the difference between EIO and ENOLINK?
+
+I've heard of a case where just retrying within path-group is
+preferred to (relatively costly) switching group.
+So, if EIO (or other error code) can be used to indicate such type
+of errors, it's nice.
+
+
+Also (although this might be a bit off topic from your patch),
+can we expand such a distinction to what should be logged?
+Currently, it's difficult to distinguish important SCSI/block errors
+and less important ones in kernel log.
+For example, when I get a link failure on sda, kernel prints something
+like below, regardless of whether the I/O is recovered by multipathing or not:
+  end_request: I/O error, dev sda, sector XXXXX
+
+Setting REQ_QUIET in dm-multipath could mask the message
+but also other important ones in SCSI.
+
+
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
