@@ -1,55 +1,86 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: Sil 3124: "softreset failed (SRST command error)"
-Date: Mon, 18 Oct 2010 22:36:03 +0300
-Message-ID: <20101018193606.88DDB7F103@oliivipuu.dnainternet.net>
-References: <i8vbcg$4hc$1@dough.gmane.org> <i93t9u$c60$1@dough.gmane.org> <i9700c$g3o$1@dough.gmane.org>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Tue, 19 Oct 2010 13:03:44 +0900
+Message-ID: <4CBD18A0.5070206@ce.jp.nec.com>
+References: <20100825155918.GB8509@redhat.com>	<4C7B984E.4070802@suse.de>	<4C7B9F14.9080900@mvista.com>	<4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com> <4CBC35AE.9050002@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:43398 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932965Ab0JRTnn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Oct 2010 15:43:43 -0400
-In-Reply-To: <i9700c$g3o$1@dough.gmane.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CBC35AE.9050002@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, jack@suse.cz, vst@vlnb.net, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, chris.mason@oracle.com, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, Sergei Shtylyov <sshtylyov@mvista.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeremy Sanders <jeremy@jeremysanders.net>
-Cc: linux-ide@vger.kernel.org
 
-On Thursday 14 October 2010 14:19:07 Jeremy Sanders wrote:
-> Jeremy Sanders wrote:
-> > Tim Small wrote:
-> >> Bad PCI express to PCI-X bridge chip maybe, or maybe the Linux bug
-> >> lies
-> >> there?  I have seen cards with 2 3132s on instead (and a PCI express
-> >> bridge), perhaps it'd be worth trying one of those?
-> > 
-> > It looks like the problem was an incompatibility with the Intel
-> > motherboard.
-> > 
-> > It seems to work fine in an old foxconn Athlon 64 motherboard (in the
-> > PCIex graphics slot when using a PCI card for video).
+Hi Hannes,
+
+(10/18/10 20:55), Hannes Reinecke wrote:
+>> Does 'retryable' of EIO mean retryable in multipath layer?
+>> If so, what is the difference between EIO and ENOLINK?
+>>
+> Yes, EIO is intended for errors which should be retried at the
+> multipath layer. This does _not_ include transport errors, which are
+> signalled by ENOLINK.
 > 
-> Unfortunately it doesn't look like it works that well :-(
+> Basically, ENOLINK is a transport error, and EIO just means
+> something is wrong and we weren't able to classify it properly.
+> If we were, it'd be either ENOLINK or EREMOTEIO.
 > 
-> Read speeds to a standard drive are great - 70 MB/s.
+>> I've heard of a case where just retrying within path-group is
+>> preferred to (relatively costly) switching group.
+>> So, if EIO (or other error code) can be used to indicate such type
+>> of errors, it's nice.
+>>
+> Yes, that was one of the intention.
+
+Great to hear that.
+
+And when it comes to retrying, the next problem is who controls it.
+I don't think it's good to duplicate retry logic in multipath and
+underlying device like SCSI (i.e. sd retries 5 times).
+So perhaps we need a way to disable (or limit) retries in underlying
+device at least.
+
+>> Also (although this might be a bit off topic from your patch),
+>> can we expand such a distinction to what should be logged?
+>> Currently, it's difficult to distinguish important SCSI/block errors
+>> and less important ones in kernel log.
+>> For example, when I get a link failure on sda, kernel prints something
+>> like below, regardless of whether the I/O is recovered by multipathing or not:
+>>   end_request: I/O error, dev sda, sector XXXXX
+>>
+> Indeed, when using the above we could be modifying the above
+> message, eg by
 > 
-> Write speeds are awful - they range on one system at 17 MB/s down to a more
-> modern system at 1.7 MB/s! There is no CPU load.
-
-For the record, I encountered the same issues some time ago.
-
-I couldn't get a SiI 3124 based PCI-E card to work on an IIRC NVIDIA based 
-(AMD) motherboard: I encountered the "softreset failed" messages.
-
-I had a friend try the card on another system, and this time it reportedly 
-detected the drives successfully but the performance was bad.
-
-> I assume this is a problem with the PCIe bridge. There are no errors or
-> warnings given. I couldn't get MSI interrupts to work on this system.
+> end_request: transport error, dev sda, sector XXXXX
 > 
-> Time to throw the card away I think!
+> or
+> 
+> end_request: target error, dev sda, sector XXXXX
+> 
+> which would improve the output noticeable.
+
+It improves but still they look like critical errors
+even if multipath saves them.
+
+When I see this:
+
+  end_request: target error, dev sda, sector XXXXX
+
+I can't tell whether it's a real error visible to user space
+or it's just recoverred by multipath retry/failover afterwards.
+
+
+>> Setting REQ_QUIET in dm-multipath could mask the message
+>> but also other important ones in SCSI.
+>>
+> Hmm. Not sure about that, but I think the above modifications will
+> be useful already.
+> 
+> I'll be sending an updated patch.
+
+Thank you. I'm looking for that.
 
 -- 
-Anssi Hannula
+Jun'ichi Nomura, NEC Corporation
