@@ -1,47 +1,22 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 14/14] drivers/ata/pata_octeon_cf.c: delete double assignment
-Date: Tue, 26 Oct 2010 12:25:43 +0200
-Message-ID: <1288088743-3725-15-git-send-email-julia@diku.dk>
-References: <1288088743-3725-1-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1288088743-3725-1-git-send-email-julia@diku.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: David Miller <davem@davemloft.net>
+Subject: ide-2.6 rebased...
+Date: Tue, 26 Oct 2010 10:23:28 -0700 (PDT)
+Message-ID: <20101026.102328.28810116.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:60108
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760159Ab0JZRXE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Oct 2010 13:23:04 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: sfr@canb.auug.org.au
 
-From: Julia Lawall <julia@diku.dk>
 
-Delete successive assignments to the same location.
+Just FYI, I did something stupid and had to rebase the ide-2.6
+GIT tree.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression i;
-@@
-
-*i = ...;
- i = ...;
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/ata/pata_octeon_cf.c |    2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index 74b8298..fa1b95a 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -653,8 +653,6 @@ static irqreturn_t octeon_cf_interrupt(int irq, void *dev_instance)
- 
- 		ap = host->ports[i];
- 		ocd = ap->dev->platform_data;
--
--		ocd = ap->dev->platform_data;
- 		cf_port = ap->private_data;
- 		dma_int.u64 =
- 			cvmx_read_csr(CVMX_MIO_BOOT_DMA_INTX(ocd->dma_engine));
+Sorry for any inconvenience, although no commits were lost.
