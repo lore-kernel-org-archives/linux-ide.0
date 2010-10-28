@@ -1,38 +1,47 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Thu, 28 Oct 2010 20:45:07 -0700 (PDT)
-Message-ID: <20101028.204507.193718797.davem@davemloft.net>
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: apparently missing test of CONFIG_PATA_WINBOND_VLB in drivers/ata
+Date: Thu, 28 Oct 2010 08:50:20 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1010280848050.4880@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33121
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758164Ab0J2Doo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Oct 2010 23:44:44 -0400
+Received: from astoria.ccjclearline.com ([64.235.106.9]:46132 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940Ab0J2EOe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Oct 2010 00:14:34 -0400
+Received: from cpec03f0ed089ed-cm001ac318e826.cpe.net.cable.rogers.com ([174.113.188.199] helo=crashcourse.ca)
+	by astoria.ccjclearline.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <rpjday@crashcourse.ca>)
+	id 1PBRw5-0002Et-E4
+	for linux-ide@vger.kernel.org; Thu, 28 Oct 2010 08:50:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
 
-Please pull to get these IDE changes for 2.6.36, thanks!
+  my scanning script picked up the following in drivers/ata
 
-The following changes since commit b18cae4224bde7e5a332c19bc99247b2098ea232:
+$ grep -r PATA_WINBOND *
+Kconfig:config PATA_WINBOND
+Kconfig:config PATA_WINBOND_VLB
+Makefile:obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
+pata_legacy.c:#ifdef PATA_WINBOND_VLB_MODULE
+$
 
-  Merge branch 'for-next' of git://android.git.kernel.org/kernel/tegra (2010-10-25 18:42:06 -0700)
+  first, that test in pata_legacy.c should be for "CONFIG_...", should
+it not?  and there doesn't appear to be any test for just
+CONFIG_PATA_WINBOND_VLB.  i'll leave it with someone here to figure
+out what needs to be tweaked.
 
-are available in the git repository at:
+rday
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+-- 
 
-Sergei Shtylyov (2):
-      hpt366: add debounce delay to cable_detect() method
-      hpt366: fix clock turnaround
+========================================================================
+Robert P. J. Day                               Waterloo, Ontario, CANADA
+                        http://crashcourse.ca
 
-Tejun Heo (1):
-      ide: clean up timed out request handling
-
- drivers/ide/hpt366.c  |   14 ++++++++------
- drivers/ide/ide-dma.c |   11 +++--------
- 2 files changed, 11 insertions(+), 14 deletions(-)
+Twitter:                                       http://twitter.com/rpjday
+LinkedIn:                               http://ca.linkedin.com/in/rpjday
+========================================================================
