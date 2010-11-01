@@ -1,124 +1,48 @@
-From: "Czejou" <citinobvlz@yahoo.co.nz>
-Subject: 8567-Y
-Date: Sun, 31 Oct 2010 18:35:43 +0800
-Message-ID: <488064.91676.qm__22786.7108108059$1288521705$gmane$org@smtp138.mail.mud.yahoo.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] libata: fix NULL sdev dereference race in
+ atapi_qc_complete()
+Date: Mon, 01 Nov 2010 11:39:19 +0100
+Message-ID: <4CCE98D7.1030906@kernel.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=ydinty297_4596_186058833.03559"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from n13.bullet.mail.mud.yahoo.com ([68.142.206.40]:45810 "HELO
-	n13.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755174Ab0JaKlj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Oct 2010 06:41:39 -0400
+Received: from hera.kernel.org ([140.211.167.34]:53998 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753722Ab0KAKjq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Nov 2010 06:39:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ia64 <linux-ia64@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>
 
+SCSI commands may be issued between __scsi_add_device() and dev->sdev
+assignment, so it's unsafe for ata_qc_complete() to dereference
+dev->sdev->locked without checking whether it's NULL or not.  Fix it.
 
-This is a multi-part message in MIME format.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: stable@kernel.org
+---
+I actually hit this race condition.  Lucky me.  :-)
 
-------=ydinty297_4596_186058833.03559
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Thanks.
 
-bXNhLmhpbmV0Lm5ldA0KNjg5MjQ2ODAyNDU4MDEzNTc=
+ drivers/ata/libata-scsi.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-------=ydinty297_4596_186058833.03559
-Content-Type: image/gif;
-	name="Mrxbr3242.gif"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Mrxbr3242.gif"
+Index: work/drivers/ata/libata-scsi.c
+===================================================================
+--- work.orig/drivers/ata/libata-scsi.c
++++ work/drivers/ata/libata-scsi.c
+@@ -2552,8 +2552,11 @@ static void atapi_qc_complete(struct ata
+ 		 *
+ 		 * If door lock fails, always clear sdev->locked to
+ 		 * avoid this infinite loop.
++		 *
++		 * This may happen before SCSI scan is complete.  Make
++		 * sure qc->dev->sdev isn't NULL before dereferencing.
+ 		 */
+-		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL)
++		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
+ 			qc->dev->sdev->locked = 0;
 
-R0lGODdh2AGoAHcAACwAAAAA2AGoAIcAAAAAADMAAGYAAJkAAMwAAP8AMwAAMzMAM2YAM5kAM8wA
-M/8AZgAAZjMAZmYAZpkAZswAZv8AmQAAmTMAmWYAmZkAmcwAmf8AzAAAzDMAzGYAzJkAzMwAzP8A
-/wAA/zMA/2YA/5kA/8wA//8zAAAzADMzAGYzAJkzAMwzAP8zMwAzMzMzM2YzM5kzM8wzM/8zZgAz
-ZjMzZmYzZpkzZswzZv8zmQAzmTMzmWYzmZkzmcwzmf8zzAAzzDMzzGYzzJkzzMwzzP8z/wAz/zMz
-/2Yz/5kz/8wz//9mAABmADNmAGZmAJlmAMxmAP9mMwBmMzNmM2ZmM5lmM8xmM/9mZgBmZjNmZmZm
-ZplmZsxmZv9mmQBmmTNmmWZmmZlmmcxmmf9mzABmzDNmzGZmzJlmzMxmzP9m/wBm/zNm/2Zm/5lm
-/8xm//+ZAACZADOZAGaZAJmZAMyZAP+ZMwCZMzOZM2aZM5mZM8yZM/+ZZgCZZjOZZmaZZpmZZsyZ
-Zv+ZmQCZmTOZmWaZmZmZmcyZmf+ZzACZzDOZzGaZzJmZzMyZzP+Z/wCZ/zOZ/2aZ/5mZ/8yZ///M
-AADMADPMAGbMAJnMAMzMAP/MMwDMMzPMM2bMM5nMM8zMM//MZgDMZjPMZmbMZpnMZszMZv/MmQDM
-mTPMmWbMmZnMmczMmf/MzADMzDPMzGbMzJnMzMzMzP/M/wDM/zPM/2bM/5nM/8zM////AAD/ADP/
-AGb/AJn/AMz/AP//MwD/MzP/M2b/M5n/M8z/M///ZgD/ZjP/Zmb/Zpn/Zsz/Zv//mQD/mTP/mWb/
-mZn/mcz/mf//zAD/zDP/zGb/zJn/zMz/zP///wD//zP//2b//5n//8z///8AAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAB0bWVkbmVoamVGa2Uxa2VsbGV0bWVjbmVnamVFa2Uxa2VNCg1OcjlP
-MzlMNThRQzlST0ZSYUZTc0ZUNEZVNUVkQ0ZlTzFNYTFOczFPNDFMNTBaQzEvSW9DVEEI/wATCRxI
-sKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqly5EAAAljBjypxJs6bN
-mydf4tzJs6fPn0CDStQptKjRo0iTKkXo8qVLgU+hRpVKcOrBpgOjNiV69enWpWDDih2LU6dZqGgT
-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
-zeAczuJsugEBADs=
-
-------=ydinty297_4596_186058833.03559--
-
+ 		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
