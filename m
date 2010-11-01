@@ -1,48 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: fix NULL sdev dereference race in
- atapi_qc_complete()
-Date: Mon, 01 Nov 2010 11:39:19 +0100
-Message-ID: <4CCE98D7.1030906@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Full hostlock pushdown available
+Date: Mon, 01 Nov 2010 14:59:10 -0400
+Message-ID: <4CCF0DFE.4050106@garzik.org>
+References: <20101028150508.GA2385@basil.fritz.box> <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de> <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box> <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:53998 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753722Ab0KAKjq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Nov 2010 06:39:46 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20101101175742.GG25817@basil.fritz.box>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, stable <stable@kernel.org>
 
-SCSI commands may be issued between __scsi_add_device() and dev->sdev
-assignment, so it's unsafe for ata_qc_complete() to dereference
-dev->sdev->locked without checking whether it's NULL or not.  Fix it.
+On 11/01/2010 01:57 PM, Andi Kleen wrote:
+> @@ -3186,11 +3186,14 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done
+>         struct ata_device *dev;
+>         struct scsi_device *scsidev = cmd->device;
+>         struct Scsi_Host *shost = scsidev->host;
+> +       unsigned long irqflags;
+>         int rc = 0;
+>
+>         ap = ata_shost_to_port(shost);
+>
+> -       spin_unlock(shost->host_lock);
+> +       spin_lock_irqsave(shost->host_lock, irqflags);
+> +       scsi_cmd_get_serial(shost, cmd);
+> +
+>         spin_lock(ap->lock);
+>
+>         ata_scsi_dump_cdb(ap, cmd);
+> @@ -3205,6 +3208,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(
+>
+>         spin_unlock(ap->lock);
+>         spin_lock(shost->host_lock);
+> +       spin_unlock_irqrestore(shost->host_lock, irqflags);
+>         return rc;
+>  }
+>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: stable@kernel.org
----
-I actually hit this race condition.  Lucky me.  :-)
+It's a bit disappointing that libata's lock profile in this patch is 
+quite different than that of current upstream: with your patch, libata 
+holds the scsi host lock for a considerably longer period of time, while 
+also holding the ATA port/host spinlock.
 
-Thanks.
+IOW, it's doing the exact opposite of what the previous code did 
+(release the scsi host lock, before acquiring the ATA port/host 
+spinlock), not at all an equivalent transformation.
 
- drivers/ata/libata-scsi.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+The following sequence would seem to better preserve the existing lock 
+profile, correct?
 
-Index: work/drivers/ata/libata-scsi.c
-===================================================================
---- work.orig/drivers/ata/libata-scsi.c
-+++ work/drivers/ata/libata-scsi.c
-@@ -2552,8 +2552,11 @@ static void atapi_qc_complete(struct ata
- 		 *
- 		 * If door lock fails, always clear sdev->locked to
- 		 * avoid this infinite loop.
-+		 *
-+		 * This may happen before SCSI scan is complete.  Make
-+		 * sure qc->dev->sdev isn't NULL before dereferencing.
- 		 */
--		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL)
-+		if (qc->cdb[0] == ALLOW_MEDIUM_REMOVAL && qc->dev->sdev)
- 			qc->dev->sdev->locked = 0;
+	local_irq_save(flags)
 
- 		qc->scsicmd->result = SAM_STAT_CHECK_CONDITION;
+	spin_lock(shost->host_lock)
+	scsi_cmd_get_serial()
+	spin_unlock(shost->host_lock)
+
+	spin_lock(ap->lock)
+	...
+	spin_unlock(ap->lock)
+
+	local_irq_restore(flags)
+
+Regards,
+
+	Jeff
+
+
