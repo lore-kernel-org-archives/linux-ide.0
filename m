@@ -1,91 +1,34 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Full hostlock pushdown available
-Date: Mon, 01 Nov 2010 14:06:19 -0700
-Message-ID: <1288645579.7708.10.camel@haakon2.linux-iscsi.org>
-References: <20101028150508.GA2385@basil.fritz.box>
-	 <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de>
-	 <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box>
-	 <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box>
-	 <4CCF0DFE.4050106@garzik.org>
+From: viresh kumar <viresh.kumar@st.com>
+Subject: Where should i add Compact flash driver?
+Date: Tue, 2 Nov 2010 10:55:10 +0530
+Message-ID: <4CCFA0B6.7050602@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4CCF0DFE.4050106@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andi Kleen <andi@firstfloor.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: linux-pcmcia-bounces@lists.infradead.org
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+To: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
+Cc: Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 2010-11-01 at 14:59 -0400, Jeff Garzik wrote:
-> On 11/01/2010 01:57 PM, Andi Kleen wrote:
-> > @@ -3186,11 +3186,14 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done
-> >         struct ata_device *dev;
-> >         struct scsi_device *scsidev = cmd->device;
-> >         struct Scsi_Host *shost = scsidev->host;
-> > +       unsigned long irqflags;
-> >         int rc = 0;
-> >
-> >         ap = ata_shost_to_port(shost);
-> >
-> > -       spin_unlock(shost->host_lock);
-> > +       spin_lock_irqsave(shost->host_lock, irqflags);
-> > +       scsi_cmd_get_serial(shost, cmd);
-> > +
-> >         spin_lock(ap->lock);
-> >
-> >         ata_scsi_dump_cdb(ap, cmd);
-> > @@ -3205,6 +3208,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(
-> >
-> >         spin_unlock(ap->lock);
-> >         spin_lock(shost->host_lock);
-> > +       spin_unlock_irqrestore(shost->host_lock, irqflags);
-> >         return rc;
-> >  }
-> >
-> 
-> It's a bit disappointing that libata's lock profile in this patch is 
-> quite different than that of current upstream: with your patch, libata 
-> holds the scsi host lock for a considerably longer period of time, while 
-> also holding the ATA port/host spinlock.
-> 
-> IOW, it's doing the exact opposite of what the previous code did 
-> (release the scsi host lock, before acquiring the ATA port/host 
-> spinlock), not at all an equivalent transformation.
-> 
-> The following sequence would seem to better preserve the existing lock 
-> profile, correct?
-> 
-> 	local_irq_save(flags)
-> 
-> 	spin_lock(shost->host_lock)
-> 	scsi_cmd_get_serial()
-> 	spin_unlock(shost->host_lock)
-> 
-> 	spin_lock(ap->lock)
-> 	...
-> 	spin_unlock(ap->lock)
-> 
-> 	local_irq_restore(flags)
-> 
+Hello,
 
-Hmmmmm yes..   Along with Andi's generated patches I think we should
-strongly consider including the atomic_t Scsi_Host->cmd_serial_number
-patch here as well for scsi_cmd_get_serial() (which needs EXPORT_SYMBOL)
+I am developing driver for CF+ module for SPEAr Platform.
+I am not sure where should i add it? PCMCIA or somewhere else?
+Can somebody please help me on this. Brief description of device
+can be found at:
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch68
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch37
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch82
+www.arasan.com/products/memory/CompactFlash-Device-Flyer-1.0.pdf
 
-This ends up being a very simple change, and would allow libata to
-immediately go host_lock less for scsi_cmd_dispatch() operation.
+We have controller on AHB/APB interface.
 
-FYI, the current scoreboard for the global push down is available in
-lio-core-4.0.git/host_lock-less-for-37-v9 at the top of the above
-commit..  I think Andi is missing a few LLDs outside of /drivers/scsi/
-
-Best,
-
---nab
-
-
+-- 
+viresh
