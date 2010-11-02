@@ -1,34 +1,46 @@
-From: viresh kumar <viresh.kumar@st.com>
-Subject: Where should i add Compact flash driver?
-Date: Tue, 2 Nov 2010 10:55:10 +0530
-Message-ID: <4CCFA0B6.7050602@st.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Full hostlock pushdown available
+Date: Tue, 2 Nov 2010 10:21:11 +0100
+Message-ID: <20101102092111.GK25817@basil.fritz.box>
+References: <20101028150508.GA2385@basil.fritz.box>
+ <4CCD5F7F.8020808@panasas.com>
+ <tkrat.c4793af298337eff@s5r6.in-berlin.de>
+ <4CCE271D.7040400@garzik.org>
+ <20101101135338.GA25817@basil.fritz.box>
+ <4CCEE33F.5030300@garzik.org>
+ <20101101175742.GG25817@basil.fritz.box>
+ <4CCF0DFE.4050106@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
-	<mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: linux-pcmcia-bounces@lists.infradead.org
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
-To: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org
-Cc: Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from one.firstfloor.org ([213.235.205.2]:33154 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752632Ab0KBJVS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Nov 2010 05:21:18 -0400
+Content-Disposition: inline
+In-Reply-To: <4CCF0DFE.4050106@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andi Kleen <andi@firstfloor.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello,
+> It's a bit disappointing that libata's lock profile in this patch is
+> quite different than that of current upstream: with your patch,
+> libata holds the scsi host lock for a considerably longer period of
+> time, while also holding the ATA port/host spinlock.
 
-I am developing driver for CF+ module for SPEAr Platform.
-I am not sure where should i add it? PCMCIA or somewhere else?
-Can somebody please help me on this. Brief description of device
-can be found at:
+The goal here is not really what comes out of this patch,
+but dropping the host lock completely. This is just the first step.
 
-www.arasan.com/products/memory/CompactFlash-Device-Flyer-1.0.pdf
+> 
+> IOW, it's doing the exact opposite of what the previous code did
+> (release the scsi host lock, before acquiring the ATA port/host
+> spinlock), not at all an equivalent transformation.
+> 
+> The following sequence would seem to better preserve the existing
+> lock profile, correct?
 
-We have controller on AHB/APB interface.
+Possibly, but it's not a mechanic change.
 
--- 
-viresh
+-Andi
+
