@@ -1,36 +1,46 @@
-From: Tim Small <tim@buttersideup.com>
-Subject: Re: Hyper-V and IDE disks > 128GB
-Date: Wed, 03 Nov 2010 11:15:03 +0000
-Message-ID: <4CD14437.6070402@buttersideup.com>
-References: <12CD8E2D-64F0-46D6-8ACB-C411D7BECEE7@jabberwocky.com>
+From: Dominik Brodowski <linux@dominikbrodowski.net>
+Subject: Re: Where should i add Compact flash driver?
+Date: Wed, 3 Nov 2010 14:56:37 +0100
+Message-ID: <20101103135637.GA8594@isilmar-3.linta.de>
+References: <4CCFA0B6.7050602@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([63.246.152.102]:51136 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754375Ab0KCLPH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Nov 2010 07:15:07 -0400
-In-Reply-To: <12CD8E2D-64F0-46D6-8ACB-C411D7BECEE7@jabberwocky.com>
+Received: from isilmar-3.linta.de ([188.40.101.200]:59965 "EHLO linta.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755169Ab0KCN4m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Nov 2010 09:56:42 -0400
+Content-Disposition: inline
+In-Reply-To: <4CCFA0B6.7050602@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Shaw <dshaw@jabberwocky.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: viresh kumar <viresh.kumar@st.com>
+Cc: linux-pcmcia@lists.infradead.org, linux-ide@vger.kernel.org, Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>
 
-On 02/11/10 18:52, David Shaw wrote:
-> Can someone suggest a direction to go in next?
->   
+Hey,
 
-I think I've seen this problem reported before, with the same diagnosis
-that Alan gave.  i.e. it's a HyperV bug, albeit one which doesn't affect
-Windows operating systems.
+as this doesn't seem to be a PCMCIA-capable driver, I'd say drivers/ata/
+(same as pata_octeon_cf.c, for example)... But this decision seems quite
+easy to revert once the code is available :)
 
-As I believe Microsoft and Redhat have some sort of co-support agreement
-with respect to each other's virtualisation platforms, you may want to
-report it on Redhat's bugzilla (after verifying that the fault is also
-present in the RHEL6 beta).  I'd guess they'll either implement a
-workaround or have some relatively straightforward mechanism to report
-the fault to Microsoft - courtesy of their co-support agreement...
+Best,
+	Dominik
 
-Cheers,
-
-Tim.
+On Tue, Nov 02, 2010 at 10:55:10AM +0530, viresh kumar wrote:
+> Hello,
+> 
+> I am developing driver for CF+ module for SPEAr Platform.
+> I am not sure where should i add it? PCMCIA or somewhere else?
+> Can somebody please help me on this. Brief description of device
+> can be found at:
+> 
+> www.arasan.com/products/memory/CompactFlash-Device-Flyer-1.0.pdf
+> 
+> We have controller on AHB/APB interface.
+> 
+> -- 
+> viresh
+> 
+> _______________________________________________
+> Linux PCMCIA reimplementation list
+> http://lists.infradead.org/mailman/listinfo/linux-pcmcia
