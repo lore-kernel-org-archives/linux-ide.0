@@ -1,27 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: TRIM support in drivers and dm/md?
-Date: Thu, 04 Nov 2010 22:56:33 -0400
-Message-ID: <4CD37261.2050507@garzik.org>
-References: <4CD2B2EF.4050005@att.net> <20101104134014.GB21931@parisc-linux.org> <4CD2C755.3000908@att.net> <4CD2E32D.9030303@garzik.org> <4CD2F3E1.8040700@att.net> <4CD31647.7070301@garzik.org> <4CD36F8D.7000700@teksavvy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40337 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753062Ab0KEC4m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Nov 2010 22:56:42 -0400
-In-Reply-To: <4CD36F8D.7000700@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH] IDE: ide-floppy, remove unnecessary NULL check
+Date: Sat,  6 Nov 2010 10:06:51 +0100
+Message-ID: <1289034412-24278-3-git-send-email-jslaby@suse.cz>
+References: <1289034412-24278-1-git-send-email-jslaby@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1289034412-24278-1-git-send-email-jslaby@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jirislaby@gmail.com
+Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Jeff Layton <laytonjb@att.net>, Matthew Wilcox <matthew@wil.cx>, linux-fsdevel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 11/04/2010 10:44 PM, Mark Lord wrote:
-> sata_sil didn't support trim the last time I checked (the hardware can
-> do it though).
-> sata_sil24 does, though, along with ahci, sata_mv, etc..
+Stanse founf that rq in ide_floppy_callback cannot be NULL, because it
+is dereferenced all around. So remove the superfluous check.
 
-The recent sata_mv bugfix should be noted of course...
+This appeared after blk_* macors removal.
 
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ide/ide-floppy.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 5406b6e..536ff68 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -73,7 +73,7 @@ static int ide_floppy_callback(ide_drive_t *drive, int dsc)
+ 		drive->failed_pc = NULL;
+ 
+ 	if (pc->c[0] == GPCMD_READ_10 || pc->c[0] == GPCMD_WRITE_10 ||
+-	    (rq && rq->cmd_type == REQ_TYPE_BLOCK_PC))
++	    rq->cmd_type == REQ_TYPE_BLOCK_PC)
+ 		uptodate = 1; /* FIXME */
+ 	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
+ 
+-- 
+1.7.3.1
