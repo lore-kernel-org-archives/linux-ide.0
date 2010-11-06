@@ -1,40 +1,43 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH] IDE: ide-floppy, remove unnecessary NULL check
-Date: Sat,  6 Nov 2010 10:06:51 +0100
-Message-ID: <1289034412-24278-3-git-send-email-jslaby@suse.cz>
-References: <1289034412-24278-1-git-send-email-jslaby@suse.cz>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1289034412-24278-1-git-send-email-jslaby@suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jirislaby@gmail.com
-Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [RFC PATCH] SCSI host lock push-down
+Date: Sat, 06 Nov 2010 10:31:05 +0100
+Message-ID: <4CD52059.7010503@s5r6.in-berlin.de>
+References: <20101105002409.GA21714@havoc.gtf.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:34784 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753892Ab0KFJbV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Nov 2010 05:31:21 -0400
+In-Reply-To: <20101105002409.GA21714@havoc.gtf.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Stanse founf that rq in ide_floppy_callback cannot be NULL, because it
-is dereferenced all around. So remove the superfluous check.
+Jeff Garzik wrote:
+> An alternate arrangement, not presented by this patch, might
+> be preferred:  in order to make it clear that queuecommand
+> locking has changed, one could s/queuecommand/queuecommand_nl/ in
+> Scsi_Host_Template, in order to guarantee that drivers are either
+> (a) upgraded or (b) broken at compile time.  Compile-time detection of
+> new locking may be desirable, and I'll volunteer to change my patch to
+> do that, if community members prefer that route instead of below.
 
-This appeared after blk_* macors removal.
+I followed only a fraction of the related discussion.  Thus I wonder why a
+renaming of scsi_host_template.queuecommand was not part of these attempts
+from the very outset.
 
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ide/ide-floppy.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Given the choice between compile-time breakage of unconverted drivers and
+silent invalidation of potential locking assumptions at runtime, the
+preferable way forward is quite clear IMO.
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 5406b6e..536ff68 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -73,7 +73,7 @@ static int ide_floppy_callback(ide_drive_t *drive, int dsc)
- 		drive->failed_pc = NULL;
- 
- 	if (pc->c[0] == GPCMD_READ_10 || pc->c[0] == GPCMD_WRITE_10 ||
--	    (rq && rq->cmd_type == REQ_TYPE_BLOCK_PC))
-+	    rq->cmd_type == REQ_TYPE_BLOCK_PC)
- 		uptodate = 1; /* FIXME */
- 	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
- 
+(Since no coexistence period of .queuecommand and .queuecommand_nl or
+.unlocked_queuecommand is planned, how about you rename it to .queue_command?
+Follows Linux naming conventions more closely.)
 -- 
-1.7.3.1
+Stefan Richter
+-=====-==-=- =-== --==-
+http://arcgraph.de/sr/
