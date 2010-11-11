@@ -1,160 +1,131 @@
-From: Bokhan Artem <aptem@ngs.ru>
-Subject: kernel problems with smart on LSI-92xx
-Date: Wed, 10 Nov 2010 01:27:25 +0600
-Message-ID: <4CD9A09D.7000508@ngs.ru>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: [PATCH] Export ahci eSATA attribute
+Date: Wed, 10 Nov 2010 22:32:55 -0500
+Message-ID: <4CDB63E7.1040106@cfl.rr.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000905040803000305090507"
+ boundary="------------050206090301030807010000"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtpout17.ngs.ru ([195.93.186.223]:46438 "EHLO smtpout17.ngs.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753608Ab0KJTkQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Nov 2010 14:40:16 -0500
-Received: from smtpout.ngs.ru (unknown [172.16.0.3])
-	by smtpout17.ngs.ru (smtpout17.ngs.ru) with ESMTP id CC78E71D87FF
-	for <linux-ide@vger.kernel.org>; Thu, 11 Nov 2010 01:20:47 +0600 (NOVT)
-Received: from [192.168.3.4] (unknown [192.168.3.4])
-	(using TLSv1 with cipher AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	(Authenticated sender: aptem@ngs.ru)
-	by mail.ngs.ru (smtp) with ESMTP id 59167752A68D9
-	for <linux-ide@vger.kernel.org>; Thu, 11 Nov 2010 01:29:59 +0600 (NOVT)
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:58916 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932104Ab0KKDd6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Nov 2010 22:33:58 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------000905040803000305090507
-Content-Type: text/plain; charset=UTF-8; format=flowed
+--------------050206090301030807010000
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 
-Hello.
-
-I have kernel problems when trying to run smart commands on LSI-92xx 
-controller.
-
-Running self-test  on SAS disk (smartctl /dev/sda -dmegaraid,24 -t long) 
-with smartmontools causes kernel oops (?) (and segfault). Look in 
-attachment for dmesg.
-
-strace of smartctl:
-
-mknod("/dev/megaraid_sas_ioctl_node", S_IFCHR, makedev(251, 0)) = -1 EEXIST
-(File exists)
-close(4)                                = 0
-munmap(0x7f4be3a9f000, 4096)            = 0
-open("/dev/megaraid_sas_ioctl_node", O_RDWR) = 4
-ioctl(4, MTRRIOC_SET_ENTRY, 0x7fffa574ed30) = 0
-ioctl(4, MTRRIOC_SET_ENTRY, 0x7fffa574eb30) = 0
-ioctl(4, MTRRIOC_SET_ENTRY <unfinished ...>
-+++ killed by SIGSEGV +++
+Not subscribed, please CC.
 
 
-Viewing  smart info is OK (smartctl /dev/sda -dmegaraid,24 -a).
-Running self-test on SATA disk on the same system is OK.
-
-The problem is reproducible with 2.6.32 and 2.6.36 kernels.
-
-I understand that linux-ide@vger.kernel.org is not right place to ask 
-this question, but I believe that somebody here can point the way to 
-resolve the problem.
-
---------------000905040803000305090507
-Content-Type: text/plain;
- name="dmesg.txt"
-Content-Transfer-Encoding: base64
+--------------050206090301030807010000
+Content-Type: text/x-patch;
+ name="0001-Export-ahci-eSATA-attribute.patch"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
- filename="dmesg.txt"
+ filename="0001-Export-ahci-eSATA-attribute.patch"
 
-WyAgIDY5LjE2MjM5M10gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpb
-ICAgNjkuMTYyNDA0XSBXQVJOSU5HOiBhdCAvYnVpbGQvYnVpbGRkL2xpbnV4LTIuNi4zMi9t
-bS9wYWdlX2FsbG9jLmM6MTgwNiBfX2FsbG9jX3BhZ2VzX3Nsb3dwYXRoKzB4NDNiLzB4NTgw
-KCkNClsgICA2OS4xNjI0MDddIEhhcmR3YXJlIG5hbWU6IFg4RFRODQpbICAgNjkuMTYyNDA5
-XSBNb2R1bGVzIGxpbmtlZCBpbjogZmJjb24gdGlsZWJsaXQgZm9udCBiaXRibGl0IHNvZnRj
-dXJzb3IgdmdhMTZmYiB2Z2FzdGF0ZSBpb2F0ZG1hIHJhZGVvbiB0dG0gZHJtX2ttc19oZWxw
-ZXIgc2hwY2hwIGRybSBpMmNfYWxnb19iaXQgbHAgcGFycG9ydCBmbG9wcHkgcGF0YV9qbWlj
-cm9uIG1lZ2FyYWlkX3NhcyBpZ2IgZGNhDQpbICAgNjkuMTYyNDI5XSBQaWQ6IDEyMDYsIGNv
-bW06IHNtYXJ0Y3RsIE5vdCB0YWludGVkIDIuNi4zMi0yNS1zZXJ2ZXIgIzQ1LVVidW50dQ0K
-WyAgIDY5LjE2MjQzMl0gQ2FsbCBUcmFjZToNClsgICA2OS4xNjI0MzldICBbPGZmZmZmZmZm
-ODEwNjVmM2I+XSB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDdiLzB4YzANClsgICA2OS4xNjI0
-NDNdICBbPGZmZmZmZmZmODEwNjVmOTQ+XSB3YXJuX3Nsb3dwYXRoX251bGwrMHgxNC8weDIw
-DQpbICAgNjkuMTYyNDQ3XSAgWzxmZmZmZmZmZjgxMGY5OGZiPl0gX19hbGxvY19wYWdlc19z
-bG93cGF0aCsweDQzYi8weDU4MA0KWyAgIDY5LjE2MjQ1NF0gIFs8ZmZmZmZmZmY4MTAxMDc4
-Yz5dID8gX19zd2l0Y2hfdG8rMHgxYWMvMHgzMjANClsgICA2OS4xNjI0NTldICBbPGZmZmZm
-ZmZmODEwNTc4NTA+XSA/IGZpbmlzaF90YXNrX3N3aXRjaCsweDUwLzB4ZTANClsgICA2OS4x
-NjI0NjNdICBbPGZmZmZmZmZmODEwZjliYjE+XSBfX2FsbG9jX3BhZ2VzX25vZGVtYXNrKzB4
-MTcxLzB4MTgwDQpbICAgNjkuMTYyNDY4XSAgWzxmZmZmZmZmZjgxMDE3NTM2Pl0gZG1hX2dl
-bmVyaWNfYWxsb2NfY29oZXJlbnQrMHhhNi8weDE2MA0KWyAgIDY5LjE2MjQ3NV0gIFs8ZmZm
-ZmZmZmY4MTAzOGIwMT5dIHg4Nl9zd2lvdGxiX2FsbG9jX2NvaGVyZW50KzB4MzEvMHg3MA0K
-WyAgIDY5LjE2MjQ4Ml0gIFs8ZmZmZmZmZmZhMDAyZDBjZT5dIG1lZ2FzYXNfbWdtdF9md19p
-b2N0bCsweDFhZS8weDY5MCBbbWVnYXJhaWRfc2FzXQ0KWyAgIDY5LjE2MjQ4OF0gIFs8ZmZm
-ZmZmZmZhMDAyZDc0OD5dIG1lZ2FzYXNfbWdtdF9pb2N0bF9mdysweDE5OC8weDI0MCBbbWVn
-YXJhaWRfc2FzXQ0KWyAgIDY5LjE2MjQ5NF0gIFs8ZmZmZmZmZmZhMDAyZjY5NT5dIG1lZ2Fz
-YXNfbWdtdF9pb2N0bCsweDM1LzB4NTAgW21lZ2FyYWlkX3Nhc10NClsgICA2OS4xNjI1MDBd
-ICBbPGZmZmZmZmZmODExNTNiMTI+XSB2ZnNfaW9jdGwrMHgyMi8weGEwDQpbICAgNjkuMTYy
-NTA1XSAgWzxmZmZmZmZmZjgxMTVkYTJhPl0gPyBhbGxvY19mZCsweDEwYS8weDE1MA0KWyAg
-IDY5LjE2MjUwOV0gIFs8ZmZmZmZmZmY4MTE1M2NiMT5dIGRvX3Zmc19pb2N0bCsweDgxLzB4
-NDEwDQpbICAgNjkuMTYyNTE1XSAgWzxmZmZmZmZmZjgxNTVjYzEzPl0gPyBkb19wYWdlX2Zh
-dWx0KzB4MTUzLzB4M2IwDQpbICAgNjkuMTYyNTE4XSAgWzxmZmZmZmZmZjgxMTU0MGMxPl0g
-c3lzX2lvY3RsKzB4ODEvMHhhMA0KWyAgIDY5LjE2MjUyM10gIFs8ZmZmZmZmZmY4MTAxMjFi
-Mj5dIHN5c3RlbV9jYWxsX2Zhc3RwYXRoKzB4MTYvMHgxYg0KWyAgIDY5LjE2MjUyNl0gLS0t
-WyBlbmQgdHJhY2UgNmEyMTgxYjYzNGUyYWJjNiBdLS0tDQpbICAgNjkuMTYyNTM4XSAtLS0t
-LS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NClsgICA2OS4xNjI4MDZdIGtlcm5l
-bCBCVUcgYXQgL2J1aWxkL2J1aWxkZC9saW51eC0yLjYuMzIvbGliL3N3aW90bGIuYzozNjgh
-DQpbICAgNjkuMTYzMTM0XSBpbnZhbGlkIG9wY29kZTogMDAwMCBbIzFdIFNNUA0KWyAgIDY5
-LjE2MzU3MF0gbGFzdCBzeXNmcyBmaWxlOiAvc3lzL2RldmljZXMvc3lzdGVtL2NwdS9jcHUz
-L2NhY2hlL2luZGV4Mi9zaGFyZWRfY3B1X21hcA0KWyAgIDY5LjE2Mzk3NV0gQ1BVIDANClsg
-ICA2OS4xNjQyMjddIE1vZHVsZXMgbGlua2VkIGluOiBmYmNvbiB0aWxlYmxpdCBmb250IGJp
-dGJsaXQgc29mdGN1cnNvciB2Z2ExNmZiIHZnYXN0YXRlIGlvYXRkbWEgcmFkZW9uIHR0bSBk
-cm1fa21zX2hlbHBlciBzaHBjaHAgZHJtIGkyY19hbGdvX2JpdCBscCBwYXJwb3J0IGZsb3Bw
-eSBwYXRhX2ptaWNyb24gbWVnYXJhaWRfc2FzIGlnYiBkY2ENClsgICA2OS4xNjc0MTldIFBp
-ZDogMTIwNiwgY29tbTogc21hcnRjdGwgVGFpbnRlZDogRyAgICAgICAgVyAgMi42LjMyLTI1
-LXNlcnZlciAjNDUtVWJ1bnR1IFg4RFRODQpbICAgNjkuMTY3ODQzXSBSSVA6IDAwMTA6Wzxm
-ZmZmZmZmZjgxMmM0ZGM1Pl0gIFs8ZmZmZmZmZmY4MTJjNGRjNT5dIG1hcF9zaW5nbGUrMHgy
-NTUvMHgyNjANClsgICA2OS4xNjgzNzBdIFJTUDogMDAxODpmZmZmODgwODFjMGViYzU4ICBF
-RkxBR1M6IDAwMDEwMjQ2DQpbICAgNjkuMTY4NjU1XSBSQVg6IDAwMDAwMDAwMDAwM2JmZmMg
-UkJYOiAwMDAwMDAwMGZmZmZmZmZmIFJDWDogMDAwMDAwMDAwMDAwMDAwMg0KWyAgIDY5LjE2
-OTAwMF0gUkRYOiAwMDAwMDAwMDAwMDAwMDAwIFJTSTogMDAwMDAwMDAwMDAwMDAwMCBSREk6
-IGZmZmY4ODAwMWRmZmUwMDANClsgICA2OS4xNjkzNDZdIFJCUDogZmZmZjg4MDgxYzBlYmNi
-OCBSMDg6IDAwMDAwMDAwMDAwMDAwMDAgUjA5OiBmZmZmODgwMDAwMDMwODQwDQpbICAgNjku
-MTY5NjkxXSBSMTA6IDAwMDAwMDAwMDAxMDAwMDAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIx
-MjogMDAwMDAwMDAwMDAwMDAwMA0KWyAgIDY5LjE3MDAzNl0gUjEzOiAwMDAwMDAwMGZmZmZm
-ZmZmIFIxNDogMDAwMDAwMDAwMDAwMDAwMSBSMTU6IDAwMDAwMDAwMDAyMDAwMDANClsgICA2
-OS4xNzAzODJdIEZTOiAgMDAwMDdmYjhkZTE4OTcyMCgwMDAwKSBHUzpmZmZmODgwMDFkZTAw
-MDAwKDAwMDApIGtubEdTOjAwMDAwMDAwMDAwMDAwMDANClsgICA2OS4xNzA3OTRdIENTOiAg
-MDAxMCBEUzogMDAwMCBFUzogMDAwMCBDUjA6IDAwMDAwMDAwODAwNTAwMzMNClsgICA2OS4x
-NzEwOTRdIENSMjogMDAwMDdmYjhkZDU5MjM3YyBDUjM6IDAwMDAwMDA4MWE3OTAwMDAgQ1I0
-OiAwMDAwMDAwMDAwMDAwNmYwDQpbICAgNjkuMTcxNDM5XSBEUjA6IDAwMDAwMDAwMDAwMDAw
-MDAgRFIxOiAwMDAwMDAwMDAwMDAwMDAwIERSMjogMDAwMDAwMDAwMDAwMDAwMA0KWyAgIDY5
-LjE3MTc4NF0gRFIzOiAwMDAwMDAwMDAwMDAwMDAwIERSNjogMDAwMDAwMDBmZmZmMGZmMCBE
-Ujc6IDAwMDAwMDAwMDAwMDA0MDANClsgICA2OS4xNzIxMzBdIFByb2Nlc3Mgc21hcnRjdGwg
-KHBpZDogMTIwNiwgdGhyZWFkaW5mbyBmZmZmODgwODFjMGVhMDAwLCB0YXNrIGZmZmY4ODA4
-MWE3NjAwMDApDQpbICAgNjkuMTk0NTEzXSBTdGFjazoNClsgICA2OS4yMDU3ODhdICAwMDAw
-MDAwMDAwMDAwMDM0IDAwMDAwMDAyODE3ZTMzOTAgMDAwMDAwMDAwMDAwMDAwMCBmZmZmODgw
-ODFjMGViZTAwDQpbICAgNjkuMjE3NzM5XSA8MD4gMDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAw
-MDAwMDNiZmZjIDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAwMDAwMDAwMA0KWyAgIDY5LjI0
-MTI1MF0gPDA+IDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDBmZmZmZmZmZiBmZmZmODgwODFj
-NWI0MDgwIGZmZmY4ODA4MWMwZWJlMDANClsgICA2OS4yNzczMTBdIENhbGwgVHJhY2U6DQpb
-ICAgNjkuMjg5Mjc4XSAgWzxmZmZmZmZmZjgxMmM1MmFjPl0gc3dpb3RsYl9hbGxvY19jb2hl
-cmVudCsweGVjLzB4MTMwDQpbICAgNjkuMzAxMTE4XSAgWzxmZmZmZmZmZjgxMDM4YjMxPl0g
-eDg2X3N3aW90bGJfYWxsb2NfY29oZXJlbnQrMHg2MS8weDcwDQpbICAgNjkuMzEzMDQ1XSAg
-WzxmZmZmZmZmZmEwMDJkMGNlPl0gbWVnYXNhc19tZ210X2Z3X2lvY3RsKzB4MWFlLzB4Njkw
-IFttZWdhcmFpZF9zYXNdDQpbICAgNjkuMzM2Mzk5XSAgWzxmZmZmZmZmZmEwMDJkNzQ4Pl0g
-bWVnYXNhc19tZ210X2lvY3RsX2Z3KzB4MTk4LzB4MjQwIFttZWdhcmFpZF9zYXNdDQpbICAg
-NjkuMzU5MzQ2XSAgWzxmZmZmZmZmZmEwMDJmNjk1Pl0gbWVnYXNhc19tZ210X2lvY3RsKzB4
-MzUvMHg1MCBbbWVnYXJhaWRfc2FzXQ0KWyAgIDY5LjM3MDkwMl0gIFs8ZmZmZmZmZmY4MTE1
-M2IxMj5dIHZmc19pb2N0bCsweDIyLzB4YTANClsgICA2OS4zODIzMjJdICBbPGZmZmZmZmZm
-ODExNWRhMmE+XSA/IGFsbG9jX2ZkKzB4MTBhLzB4MTUwDQpbICAgNjkuMzkzNjIyXSAgWzxm
-ZmZmZmZmZjgxMTUzY2IxPl0gZG9fdmZzX2lvY3RsKzB4ODEvMHg0MTANClsgICA2OS40MDQ2
-OTZdICBbPGZmZmZmZmZmODE1NWNjMTM+XSA/IGRvX3BhZ2VfZmF1bHQrMHgxNTMvMHgzYjAN
-ClsgICA2OS40MTU3NjFdICBbPGZmZmZmZmZmODExNTQwYzE+XSBzeXNfaW9jdGwrMHg4MS8w
-eGEwDQpbICAgNjkuNDI2NjQwXSAgWzxmZmZmZmZmZjgxMDEyMWIyPl0gc3lzdGVtX2NhbGxf
-ZmFzdHBhdGgrMHgxNi8weDFiDQpbICAgNjkuNDM3NDkxXSBDb2RlOiBmZSBmZiBmZiA0OCA4
-YiAzZCA3NCAzOCA3NiAwMCA0MSBiZiAwMCAwMCAyMCAwMCBlOCA1MSBmNSBkNyBmZiA4MyBl
-MCBmZiA0OCAwNSBmZiAwNyAwMCAwMCA0OCBjMSBlOCAwYiA0OCA4OSA0NSBjOCBlOSAxMyBm
-ZSBmZiBmZiA8MGY+IDBiIGViIGZlIDBmIDFmIDgwIDAwIDAwIDAwIDAwIDU1IDQ4IDg5IGU1
-IDQ4IDgzIGVjIDIwIDRjIDg5DQpbICAgNjkuNDc4MjE2XSBSSVAgIFs8ZmZmZmZmZmY4MTJj
-NGRjNT5dIG1hcF9zaW5nbGUrMHgyNTUvMHgyNjANClsgICA2OS40ODk2NjhdICBSU1AgPGZm
-ZmY4ODA4MWMwZWJjNTg+DQpbICAgNjkuNTAwOTc1XSAtLS1bIGVuZCB0cmFjZSA2YTIxODFi
-NjM0ZTJhYmM3IF0tLS0NCg==
---------------000905040803000305090507--
+>From 8b079f9f7111a21251df110db81bd2540ec73058 Mon Sep 17 00:00:00 2001
+From: Phillip Susi <psusi@faldara.(none)>
+Date: Wed, 10 Nov 2010 22:01:35 -0500
+Subject: [PATCH] Export ahci eSATA attribute
+
+The AHCI standard defines a port bit that indicates that port
+is an eSATA external port.  Detect and export this bit as a
+sysfs attribute named ahci_port_external.  It is intended that
+this information be used by udisks to auto mount external eSATA
+drives when they are hot plugged.
+---
+ drivers/ata/ahci.h     |    1 +
+ drivers/ata/libahci.c  |   16 ++++++++++++++++
+ include/linux/libata.h |    1 +
+ 3 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 329cbbb..421c523 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -172,6 +172,7 @@ enum {
+ 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+ 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
++	PORT_CMD_ESP 		= (1 << 21), /* eSATA Port */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ebc08d6..8e4a363 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -107,6 +107,8 @@ static ssize_t ahci_show_host_version(struct device *dev,
+ 				      struct device_attribute *attr, char *buf);
+ static ssize_t ahci_show_port_cmd(struct device *dev,
+ 				  struct device_attribute *attr, char *buf);
++static ssize_t ahci_show_port_external(struct device *dev,
++				  struct device_attribute *attr, char *buf);
+ static ssize_t ahci_read_em_buffer(struct device *dev,
+ 				   struct device_attribute *attr, char *buf);
+ static ssize_t ahci_store_em_buffer(struct device *dev,
+@@ -117,6 +119,7 @@ static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
+ static DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
+ static DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
+ static DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
++static DEVICE_ATTR(ahci_port_external, S_IRUGO, ahci_show_port_external, NULL);
+ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+ 		   ahci_read_em_buffer, ahci_store_em_buffer);
+ 
+@@ -128,6 +131,7 @@ struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_ahci_host_cap2,
+ 	&dev_attr_ahci_host_version,
+ 	&dev_attr_ahci_port_cmd,
++	&dev_attr_ahci_port_external,
+ 	&dev_attr_em_buffer,
+ 	NULL
+ };
+@@ -250,6 +254,15 @@ static ssize_t ahci_show_port_cmd(struct device *dev,
+ 	return sprintf(buf, "%x\n", readl(port_mmio + PORT_CMD));
+ }
+ 
++static ssize_t ahci_show_port_external(struct device *dev,
++				  struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++
++	return sprintf(buf, "%x\n", ap->flags & ATA_FLAG_EXTERN ? 1 : 0);
++}
++
+ static ssize_t ahci_read_em_buffer(struct device *dev,
+ 				   struct device_attribute *attr, char *buf)
+ {
+@@ -1079,6 +1092,9 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 		writel(tmp, port_mmio + PORT_IRQ_STAT);
+ 
+ 	writel(1 << port_no, mmio + HOST_IRQ_STAT);
++	tmp = readl(port_mmio + PORT_CMD);
++	if (tmp & PORT_CMD_ESP)
++		ap->flags |= ATA_FLAG_EXTERN;
+ }
+ 
+ void ahci_init_controller(struct ata_host *host)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 15b77b8..1c5ffa7 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -203,6 +203,7 @@ enum {
+ 					      * management */
+ 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+ 					      * led */
++	ATA_FLAG_EXTERN		= (1 << 23), /* eSATA external port */
+ 
+ 	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
+ 
+-- 
+1.7.1
+
+
+--------------050206090301030807010000--
