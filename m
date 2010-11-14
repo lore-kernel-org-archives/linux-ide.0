@@ -1,31 +1,39 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH] Export ahci eSATA attribute
-Date: Sat, 13 Nov 2010 10:46:11 -0500
-Message-ID: <4CDEB2C3.20806@cfl.rr.com>
-References: <4CDB63E7.1040106@cfl.rr.com> <4CDB79CA.6000606@garzik.org> <4CDE20CF.3010708@cfl.rr.com> <4CDE2274.8060807@garzik.org>
+From: James Cloos <cloos@jhcloos.com>
+Subject: AMD 890GX vs 6Gbps SATA?
+Date: Sun, 14 Nov 2010 12:50:41 -0500
+Message-ID: <m3mxpbn69i.fsf@jhcloos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:48065 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754112Ab0KMPqQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Nov 2010 10:46:16 -0500
-In-Reply-To: <4CDE2274.8060807@garzik.org>
+Received: from eagle.jhcloos.com ([207.210.242.212]:44648 "EHLO
+	eagle.jhcloos.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756637Ab0KNSHf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Nov 2010 13:07:35 -0500
+Received: from carbon (localhost [127.0.0.1])
+	by carbon.jhcloos.org (Postfix) with ESMTP id 60FD330003C
+	for <linux-ide@vger.kernel.org>; Sun, 14 Nov 2010 17:50:42 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 11/13/2010 12:30 AM, Jeff Garzik wrote:
-> As you noted in your previous mail, the entire PORT_CMD is already
-> exported as a attribute. I don't see much point in exporting this
-> information a second time.
+All of the ad copy and doc I can find claim that the sata controller in
+the 890gx supports 6Gbps sata3.  But I still get this:
 
-Unfortunately it is not exported in a way that udev can make use of it. 
-  Firstly because udev can only compare on specific value matches rather 
-than an individual bit, and secondly because it is in the weird 
-scsi_host device rather than the host device, so the attribute is not in 
-an ancestor device of the disk device.  Placing this attribute this way 
-puts it in the ancestry of the disk device so it can be matched by a 
-udev ATTRS rule.
+ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x3f impl SATA mode
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: ATA-8: WDC WD1002FAEX-xxxxxx, 05.xxxxx, max UDMA/133
+
+I hadn't noticed before because that box's first drive only supports 3 Gbps.
+
+Does the 6Gpbs mode require that all of the disks are sata3?  (That would
+be /most/ annoying, given that optical drives all seem to be 1.5Gbps.)
+
+Did MSI screw something up on the board?
+
+Or is the ad copy exaggerative?
+
+I took a look though the bios config; I didn't find anything relevant.
+
+-JimC
+-- 
+James Cloos <cloos@jhcloos.com>         OpenPGP: 1024D/ED7DAEA6
