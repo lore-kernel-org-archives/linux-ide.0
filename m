@@ -1,42 +1,37 @@
-From: James Cloos <cloos@jhcloos.com>
-Subject: Re: AMD 890GX vs 6Gbps SATA?
-Date: Mon, 15 Nov 2010 11:39:31 -0500
-Message-ID: <m3wroek0bo.fsf@jhcloos.com>
-References: <m3mxpbn69i.fsf@jhcloos.com> <4CE0B247.50002@garzik.org>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: AMD 890GX vs 6Gbps SATA?
+Date: Tue, 16 Nov 2010 01:02:27 +0800
+Message-ID: <1E8B869C0C6913418421A406C094DF7C82D954@sshaexmb1.amd.com>
+References: <2DEEA3AB13739D45A22ADDB5086AEA0B915107@sshaexmb1.amd.com><1E8B869C0C6913418421A406C094DF7C82D812@sshaexmb1.amd.com> <m339r2lf9b.fsf@jhcloos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eagle.jhcloos.com ([207.210.242.212]:34165 "EHLO
-	eagle.jhcloos.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757973Ab0KOQqO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Nov 2010 11:46:14 -0500
-In-Reply-To: <4CE0B247.50002@garzik.org> (Jeff Garzik's message of "Sun, 14
-	Nov 2010 23:08:39 -0500")
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:42592
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756641Ab0KORCp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Nov 2010 12:02:45 -0500
+Content-Class: urn:content-classes:message
+In-Reply-To: <m339r2lf9b.fsf@jhcloos.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: James Cloos <cloos@jhcloos.com>
+Cc: linux-ide@vger.kernel.org, "Xu, Andiry" <Andiry.Xu@amd.com>, "Petkov, Borislav" <Borislav.Petkov@amd.com>, "Huang, Shane" <Shane.Huang@amd.com>
 
->>>>> "JG" =3D=3D Jeff Garzik <jeff@garzik.org> writes:
+Hi James:
 
-JG> No, on SATA each link is entirely independent of the other links
-JG> (ignoring port multipliers).
+> lspci is:
+> ...
+> And the dmesg, compressed to fit, is attached.
 
-That is what I thought.
+Are your SATA HDDs(WDC WD6401AALS-00J7B1,
+WD1002FAEX-00Z3A0) also supporting 6Gbps?
 
-JG> The "3 Gbps" maximum you see on the first line comes directly from
-JG> what capabilities the chip reports, so perhaps the firmware/BIOS is
-JG> not initializing the chip properly.
+Only the support from host controller is not enough...
 
-And that is what I was afraid of. =E2=98=B9
 
-JG> AHCI 1.2 hardware, the AHCI driver and libata core should all suppo=
-rt
-JG> operation at 6 Gbps.
+Thanks,
+Shane
 
-Again, what I thought.
 
--JimC
---=20
-James Cloos <cloos@jhcloos.com>         OpenPGP: 1024D/ED7DAEA6
