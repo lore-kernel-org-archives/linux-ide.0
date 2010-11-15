@@ -1,35 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata-via: enable magic transmission fix for vt6420
-Date: Mon, 15 Nov 2010 09:28:47 +0100
-Message-ID: <4CE0EF3F.3040707@kernel.org>
-References: <1289737911.24491.7.camel@twins>
+From: Thomas DEBESSE <thomas.debesse+debian@gmail.com>
+Subject: Re: Bug#598518: linux-image-2.6-686: ata_piix module loaded before
+ ahci module deactivate hotplug support (regression from lenny)
+Date: Mon, 15 Nov 2010 14:43:55 +0100
+Message-ID: <AANLkTinKLP=Y2gqS3KvqnUndTXq2Mixp=-Uh2RtgssXd@mail.gmail.com>
+References: <20100929165034.21331.69639.reportbug@albatros.savanenet>
+	<1285799230.28504.105.camel@localhost>
+	<4CAA04FB.7070402@gmail.com>
+	<20101004175438.GZ5947@vostochny.stro.at>
+	<AANLkTikVYpaYd4xOeBeWu9aHieJ+P1nTLJ_eoGyXC2K0@mail.gmail.com>
+	<20101005090522.GA5947@vostochny.stro.at>
+	<AANLkTimUEpq1V=eSammBk9M0GHVRjZgfSBCjXQ36o95_@mail.gmail.com>
+	<20101006183321.GU13095@decadent.org.uk>
+	<AANLkTikhmG_mBrCAun+0SWAu0WQGrnVrgOHdpteBk3eU@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:60998 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757623Ab0KOI3E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 15 Nov 2010 03:29:04 -0500
-In-Reply-To: <1289737911.24491.7.camel@twins>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53895 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756816Ab0KONn4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Nov 2010 08:43:56 -0500
+Received: by mail-bw0-f46.google.com with SMTP id 15so5181352bwz.19
+        for <linux-ide@vger.kernel.org>; Mon, 15 Nov 2010 05:43:55 -0800 (PST)
+In-Reply-To: <AANLkTikhmG_mBrCAun+0SWAu0WQGrnVrgOHdpteBk3eU@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, Joseph Chan <JosephChan@via.com.tw>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>
+To: 598518@bugs.debian.org
+Cc: Ben Hutchings <ben@decadent.org.uk>, maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-Hello, Peter.
+2010/10/20 Thomas DEBESSE <thomas.debesse+debian@gmail.com>:
+> I've just installed a fresh Squeeze and I got the new kernel :
+> I have the 2.6.32-25, wich was announced to solve the problem,
+> and yes this new one put modules.order in initramfs
+> but the wrong module is always loaded :
+> This bug is not fixed.
 
-On 11/14/2010 01:31 PM, Peter Zijlstra wrote:
-> I was able to reproduce and test the transmission error on vt6420
-> hardware with the 2G WD drives. Adding the controller ID to this fix
-> seems to result in a properly working system.
+The previous test was done with a livecd installing 2.6.32-24 then
+upgrading to 2.6.32-25.
+I've done another test with another fresh install but using a livecd
+with 2.6.32-25 kernel.
+The good module is loaded without modifying aliases.conf.
 
-Yeah, there was another report on bugzilla and I contacted Joseph a
-few days ago for confirmation.  There are multiple PCI IDs for vt6420
-and I think we'll probably have to apply the workaround to all of
-them.  Joseph, can you please confirm this?
+This bug seems fixed, but there is some persistence when upgrading
+from previously installed Squeeze distros.
 
-Thanks.
 
--- 
-tejun
+Thanx.
