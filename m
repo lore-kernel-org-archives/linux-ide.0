@@ -1,41 +1,55 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 02/11] drivers/ide/pmac.c: Remove unnecessary casts of pci_get_drvdata
-Date: Mon, 15 Nov 2010 12:13:53 -0800
-Message-ID: <9a1859d08801fcd813f75b1a79dfcd68ba51b58f.1289851770.git.joe@perches.com>
-References: <cover.1289851770.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1289851770.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Kosina <trivial@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: AMD 890GX vs 6Gbps SATA?
+Date: Tue, 16 Nov 2010 18:04:29 +0800
+Message-ID: <1E8B869C0C6913418421A406C094DF7C82DC6C@sshaexmb1.amd.com>
+References: <2DEEA3AB13739D45A22ADDB5086AEA0B915107@sshaexmb1.amd.com><1E8B869C0C6913418421A406C094DF7C82D812@sshaexmb1.amd.com><m339r2lf9b.fsf@jhcloos.com><1E8B869C0C6913418421A406C094DF7C82D954@sshaexmb1.amd.com> <m3r5emjyv1.fsf@jhcloos.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:16622
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932489Ab0KPKEp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Nov 2010 05:04:45 -0500
+Content-Class: urn:content-classes:message
+In-Reply-To: <m3r5emjyv1.fsf@jhcloos.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Cloos <cloos@jhcloos.com>
+Cc: linux-ide@vger.kernel.org, "Xu, Andiry" <Andiry.Xu@amd.com>, "Petkov, Borislav" <Borislav.Petkov@amd.com>, "Huang, Shane" <Shane.Huang@amd.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ide/pmac.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Hi James,
 
-diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-index ebcf8e4..1db7c43 100644
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -1334,7 +1334,7 @@ out_free_pmif:
- static int
- pmac_ide_pci_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	pmac_ide_hwif_t *pmif = pci_get_drvdata(pdev);
- 	int rc = 0;
- 
- 	if (mesg.event != pdev->dev.power.power_state.event
-@@ -1350,7 +1350,7 @@ pmac_ide_pci_suspend(struct pci_dev *pdev, pm_message_t mesg)
- static int
- pmac_ide_pci_resume(struct pci_dev *pdev)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	pmac_ide_hwif_t *pmif = pci_get_drvdata(pdev);
- 	int rc = 0;
- 
- 	if (pdev->dev.power.power_state.event != PM_EVENT_ON) {
--- 
-1.7.3.1.g432b3.dirty
+> As I at least implied in the original post, while the 640 is only a
+> 3 Gbps drive, WDC says the WD1002FAEX is a 6 Gbps.
+> 
+> (And, before anyone asks, no jumpers -- such as the one which limits
+> it to 3 Gbps -- are installed.)
+
+Your south bridge chip is SB800 which should support SATA 6Gbps.
+
+Quoting your dmesg:
+> ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 3 Gbps
+> 0x3f impl SATA mode
+
+Quoting AHCI spec, HBA CAP.ISS(RO):
+> Interface Speed Support (ISS): Indicates the maximum speed
+> the HBA can support on its ports. These encodings match the
+> system software programmable PxSCTL.DET.SPD field. Values are:
+> Bits Definition
+> 0000 Reserved
+> 0001 Gen 1 (1.5 Gbps)
+> 0010 Gen 2 (3 Gbps)
+> 0011 Gen 3 (6 Gbps)
+> 0100 - 1111 Reserved
+
+Since your CAP.ISS is set to 0010(3Gbps), most likely you'll
+have to ask your BIOS vendor to enable 6Gbps in one release.
+Some BIOS vendors may set the max speed to Gen2 to save power.
+
+
+Thanks,
+Shane
+
+
