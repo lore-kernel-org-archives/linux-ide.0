@@ -1,58 +1,103 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: AMD 890GX vs 6Gbps SATA?
-Date: Wed, 17 Nov 2010 10:48:47 +0800
-Message-ID: <1E8B869C0C6913418421A406C094DF7C82DDA2@sshaexmb1.amd.com>
-References: <2DEEA3AB13739D45A22ADDB5086AEA0B915107@sshaexmb1.amd.com><1E8B869C0C6913418421A406C094DF7C82D812@sshaexmb1.amd.com><m339r2lf9b.fsf@jhcloos.com><1E8B869C0C6913418421A406C094DF7C82D954@sshaexmb1.amd.com> <m3r5emjyv1.fsf@jhcloos.com> <1E8B869C0C6913418421A406C094DF7C82DC6C@sshaexmb1.amd.com> <4CE32250.8050401@hardwarefreak.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] libata: remove unlock+relock cycle in ata_scsi_queuecmd
+Date: Wed, 17 Nov 2010 01:29:58 -0500
+Message-ID: <20101117062958.GA2894@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:52566 "EHLO
-	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757446Ab0KQCtG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Nov 2010 21:49:06 -0500
-Content-Class: urn:content-classes:message
-In-Reply-To: <4CE32250.8050401@hardwarefreak.com>
+Received: from havoc.gtf.org ([69.61.125.42]:47665 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756765Ab0KQG37 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Nov 2010 01:29:59 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>, James Cloos <cloos@jhcloos.com>
-Cc: linux-ide@vger.kernel.org, "Xu, Andiry" <Andiry.Xu@amd.com>, "Petkov, Borislav" <Borislav.Petkov@amd.com>, "Huang, Shane" <Shane.Huang@amd.com>
-
-James & Stan,
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
 
-> > Since your CAP.ISS is set to 0010(3Gbps), most likely you'll
-> > have to ask your BIOS vendor to enable 6Gbps in one release.
-> > Some BIOS vendors may set the max speed to Gen2 to save power.
-> 
-> Unless you have a PMP on the other end of that SATA link with a bunch
-> of
-> striped drives, or an expensive SSD, you won't notice a performance
-> difference between 3 Gb/s and 6 Gb/s link speed anyway:  no single
-mech
-> drive on the planet can come close to pushing 300 MB/s let alone 600.
-> The fastest 15k SAS drives are peaking at around 200 MB/s IIRC.  And
-> there are few [affordable] SSDs that will saturate a SATA II link, let
-> alone a SATA III link.
-> 
-> My advice, FWIW, is to simply ignore this, unless you plan on
-attaching
-> a device in the near future that can actually exceed 300 MB/s.
-> Currently the only way to do this is with striped mech drives on a
-PMP,
-> or with a $500+ SSD.
+This is in #upstream-fixes...  Each libata command is now two lock-ops
+less expensive... for free!  Should be nice for multi-core SSD users etc.
 
-There is one RW bit in SB800 which makes SATA controller operate
-in maximum Gen2 (3.0Gbps), this bit will limit CAP.ISS(RO) to
-0010(3Gbps).
-
-Some BIOS vendors may enable this bit "to save more power"(from spec,
-driver needs not touch it). That's why I suggested James contact BIOS
-vendor if you do want to get the 6Gbps dmesg.
+(not a pull request, Linus, just an FYI)
 
 
+commit 02ab5c49284c91901cad783921e816297c92ebf8
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Wed Nov 17 01:19:11 2010 -0500
 
-Thanks,
-Shane
+    [libata] kill unlock+relock cycle in SCSI queuecommand hook
+    
+    Now that SCSI's ->queuecommand hook is unlocked, ATA no longer needs
+    to unlock the SCSI host_lock prior to work, and re-lock the host_lock
+    once our work is complete.
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
+ drivers/ata/libata-scsi.c |   23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 19835d3..d72340e 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3166,8 +3166,8 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 
+ /**
+  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
++ *	@shost: SCSI host destination for given command
+  *	@cmd: SCSI command to be sent
+- *	@done: Completion function, called when command is complete
+  *
+  *	In some cases, this function translates SCSI commands into
+  *	ATA taskfiles, and queues the taskfiles to be sent to
+@@ -3183,36 +3183,41 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
+  *	0 otherwise.
+  */
+-static int ata_scsi_queuecmd_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
++int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ {
+ 	struct ata_port *ap;
+ 	struct ata_device *dev;
+ 	struct scsi_device *scsidev = cmd->device;
+-	struct Scsi_Host *shost = scsidev->host;
+ 	int rc = 0;
++	unsigned long irq_flags;
+ 
+-	ap = ata_shost_to_port(shost);
++	local_irq_save(irq_flags);
+ 
++	spin_lock(shost->host_lock);
++	scsi_cmd_get_serial(shost, cmd);
+ 	spin_unlock(shost->host_lock);
++
++	ap = ata_shost_to_port(shost);
++
+ 	spin_lock(ap->lock);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+ 	dev = ata_scsi_find_dev(ap, scsidev);
+ 	if (likely(dev))
+-		rc = __ata_scsi_queuecmd(cmd, done, dev);
++		rc = __ata_scsi_queuecmd(cmd, cmd->scsi_done, dev);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-		done(cmd);
++		cmd->scsi_done(cmd);
+ 	}
+ 
+ 	spin_unlock(ap->lock);
+-	spin_lock(shost->host_lock);
++
++	local_irq_restore(irq_flags);
++
+ 	return rc;
+ }
+ 
+-DEF_SCSI_QCMD(ata_scsi_queuecmd)
+-
+ /**
+  *	ata_scsi_simulate - simulate SCSI command on ATA device
+  *	@dev: the target device
