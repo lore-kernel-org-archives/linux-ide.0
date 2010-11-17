@@ -1,43 +1,65 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] libata: remove unlock+relock cycle in ata_scsi_queuecmd
-Date: Tue, 16 Nov 2010 22:44:14 -0800
-Message-ID: <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com>
-References: <20101117062958.GA2894@havoc.gtf.org>
+Date: Wed, 17 Nov 2010 03:08:16 -0500
+Message-ID: <4CE38D70.4010507@garzik.org>
+References: <20101117062958.GA2894@havoc.gtf.org> <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101117062958.GA2894@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:43218 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758033Ab0KQIIW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Nov 2010 03:08:22 -0500
+In-Reply-To: <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-On Tue, Nov 16, 2010 at 10:29 PM, Jeff Garzik <jeff@garzik.org> wrote:
+On 11/17/2010 01:44 AM, Linus Torvalds wrote:
+> On Tue, Nov 16, 2010 at 10:29 PM, Jeff Garzik<jeff@garzik.org>  wrote:
+>>
+>> +       spin_lock(shost->host_lock);
+>> +       scsi_cmd_get_serial(shost, cmd);
+>>         spin_unlock(shost->host_lock);
 >
-> + =A0 =A0 =A0 spin_lock(shost->host_lock);
-> + =A0 =A0 =A0 scsi_cmd_get_serial(shost, cmd);
-> =A0 =A0 =A0 =A0spin_unlock(shost->host_lock);
+> This is just sad.
+>
+> How important is that serial number? So important that we need to do a
+> spinlock over it here? And it _must_ be per-shost?
 
-This is just sad.
+Quite unimportant.  Quoting James from 
+http://marc.info/?l=linux-kernel&m=128949079704323&w=2
+> There are only a few drivers left that actually make use of a serial
+> number.  Of those, the only modern ones are qla4, lpfc, mpt2sas and
+> megaraid.
+>
+> So the next logical step seems to be eliminate the overloading of the
+> serial number zero value, which removes the last mid-layer use (dpt_i2o
+> seems to abuse this unnecessarily as well), then the serial number code
+> can be pushed down into the queuecommand routines of only those drivers
+> that actually use it.  None of the modern ones seems to have a
+> legitimate use, so I think their uses can mostly be eliminated.  Thus,
+> we might be able to get away with a simple queuecommand push down and
+> never bother with atomics for this (since it's unlikely the legacy users
+> would convert away from a lock wrapping their queuecommand routines).
 
-How important is that serial number? So important that we need to do a
-spinlock over it here? And it _must_ be per-shost?
 
-Because if you made it per-ap, you could easily just move that logic
-down to after you get the ap lock.
+Looking solely at the SCSI code (ie. ignoring LLD code), it seems like 
+the magic number zero for serial_number is signaling a boolean condition 
+"are we an EH command?"
 
-Just add a "unsigned int serial_number" into the ata_port struct, and
-do the same (trivial) logic for getting a non-zero serial number
-there:
+EH tests this at the very beginning of the abort/reset/explode error 
+handling sequence, presumably to avoid recursive EH invocations 
+(scsi_try_to_abort_cmd).
 
-  n =3D ap->serial_number;
-  if (!++n)
-    n =3D 1
-  ap->serial_number =3D n;
-  cmd->serial_number =3D n;
+So maybe an EH expert (Tejun?) can correct me here, but I think we may 
+be able to completely the lock/get-serial/unlock sequence from libata, 
+as long as scsi_init_cmd_errh() reliably sets an "I am an EH command" flag.
 
-or something. And then you'd _really_ not need to touch that totally
-pointless host lock at all.
+Would be nice if true...
 
-               Linus
+	Jeff
+
+
