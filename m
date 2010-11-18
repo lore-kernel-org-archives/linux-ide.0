@@ -1,42 +1,99 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH] Export ahci eSATA attribute
-Date: Thu, 18 Nov 2010 14:37:05 -0500
-Message-ID: <4CE58061.4080906@cfl.rr.com>
-References: <4CDB63E7.1040106@cfl.rr.com> <4CDB79CA.6000606@garzik.org> <4CDE20CF.3010708@cfl.rr.com> <4CDE2274.8060807@garzik.org> <4CDEB2C3.20806@cfl.rr.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata SCSI locking update
+Date: Thu, 18 Nov 2010 17:48:02 -0500
+Message-ID: <20101118224802.GA14271@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exhub016-2.exch016.msoutlookonline.net ([207.5.72.164]:25840
-	"EHLO EXHUB016-2.exch016.msoutlookonline.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755945Ab0KRTff (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Nov 2010 14:35:35 -0500
-In-Reply-To: <4CDEB2C3.20806@cfl.rr.com>
+Received: from havoc.gtf.org ([69.61.125.42]:58858 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756542Ab0KRWsK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Nov 2010 17:48:10 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-I never got any comment back on this.  In order for udev to use the
-existing attribute, it needs to be moved out of the scsi_host device,
-and udev needs patched to handle bitwise comparisons, or my simple patch
-adding the new attribute can be applied.
 
-Are you certain you do not want to add a new attribute, and if so, would
-you accept a patch moving the existing one out of the scsi_host device
-so it will be a proper ancestor of the disk device?
+Selfishly, I think this should go into 2.6.37 rather than 2.6.38, simply
+because it is so obviously better for a large number of Linux users.
 
-On 11/13/2010 10:46 AM, Phillip Susi wrote:
-> On 11/13/2010 12:30 AM, Jeff Garzik wrote:
->> As you noted in your previous mail, the entire PORT_CMD is already
->> exported as a attribute. I don't see much point in exporting this
->> information a second time.
-> 
-> Unfortunately it is not exported in a way that udev can make use of it.
->  Firstly because udev can only compare on specific value matches rather
-> than an individual bit, and secondly because it is in the weird
-> scsi_host device rather than the host device, so the attribute is not in
-> an ancestor device of the disk device.  Placing this attribute this way
-> puts it in the ancestry of the disk device so it can be matched by a
-> udev ATTRS rule.
+But I understand if you'd rather wait for 2.6.38.
 
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/libata-scsi.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
+
+Jeff Garzik (1):
+      [libata] remove SCSI host lock and serial number usage from ata_scsi_queuecmd
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 19835d3..66aa4be 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3166,8 +3166,8 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 
+ /**
+  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
++ *	@shost: SCSI host of command to be sent
+  *	@cmd: SCSI command to be sent
+- *	@done: Completion function, called when command is complete
+  *
+  *	In some cases, this function translates SCSI commands into
+  *	ATA taskfiles, and queues the taskfiles to be sent to
+@@ -3177,42 +3177,39 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+  *	ATA and ATAPI devices appearing as SCSI devices.
+  *
+  *	LOCKING:
+- *	Releases scsi-layer-held lock, and obtains host lock.
++ *	ATA host lock
+  *
+  *	RETURNS:
+  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
+  *	0 otherwise.
+  */
+-static int ata_scsi_queuecmd_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
++int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ {
+ 	struct ata_port *ap;
+ 	struct ata_device *dev;
+ 	struct scsi_device *scsidev = cmd->device;
+-	struct Scsi_Host *shost = scsidev->host;
+ 	int rc = 0;
++	unsigned long irq_flags;
+ 
+ 	ap = ata_shost_to_port(shost);
+ 
+-	spin_unlock(shost->host_lock);
+-	spin_lock(ap->lock);
++	spin_lock_irqsave(ap->lock, irq_flags);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+ 	dev = ata_scsi_find_dev(ap, scsidev);
+ 	if (likely(dev))
+-		rc = __ata_scsi_queuecmd(cmd, done, dev);
++		rc = __ata_scsi_queuecmd(cmd, cmd->scsi_done, dev);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-		done(cmd);
++		cmd->scsi_done(cmd);
+ 	}
+ 
+-	spin_unlock(ap->lock);
+-	spin_lock(shost->host_lock);
++	spin_unlock_irqrestore(ap->lock, irq_flags);
++
+ 	return rc;
+ }
+ 
+-DEF_SCSI_QCMD(ata_scsi_queuecmd)
+-
+ /**
+  *	ata_scsi_simulate - simulate SCSI command on ATA device
+  *	@dev: the target device
