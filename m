@@ -1,71 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata fix
-Date: Fri, 19 Nov 2010 14:19:16 -0500
-Message-ID: <20101119191916.GA30172@havoc.gtf.org>
+From: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+Subject: ide boot failure 2.6.36/2.6.28 - 2.6.27 works
+Date: Sat, 20 Nov 2010 03:15:19 +0100
+Message-ID: <20101120021515.GA3277@iq>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:41025 "EHLO havoc.gtf.org"
+Received: from hera.cwi.nl ([192.16.191.8]:50749 "EHLO hera.cwi.nl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754332Ab0KSTTR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Nov 2010 14:19:17 -0500
+	id S1756404Ab0KTCi7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Nov 2010 21:38:59 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
+In case anybody is still interested in this old IDE stuff:
+I wanted to boot a recent kernel on an old machine and failed.
+The last kernel that worked was 2.6.27.
+What goes wrong is that the disks are no longer detected on 2.6.28.
+I see that 2.6.28 had a lot of changes in this area.
+Maybe this just needs a new boot option I overlooked.
+(Or is oldfashioned IDE considered broken these days?)
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+Google gives me many people with the same problem
+(e.g., http://bugs.gentoo.org/253628) but no remedy.
+I have not looked at the code yet.
 
-to receive the following updates:
-
- drivers/ata/sata_via.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
-
-Tejun Heo (1):
-      sata_via: apply magic FIFO fix to vt6420 too
-
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index c215899..8b677bb 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -538,7 +538,7 @@ static int vt8251_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	return 0;
- }
- 
--static void svia_configure(struct pci_dev *pdev)
-+static void svia_configure(struct pci_dev *pdev, int board_id)
- {
- 	u8 tmp8;
- 
-@@ -577,7 +577,7 @@ static void svia_configure(struct pci_dev *pdev)
- 	}
- 
- 	/*
--	 * vt6421 has problems talking to some drives.  The following
-+	 * vt6420/1 has problems talking to some drives.  The following
- 	 * is the fix from Joseph Chan <JosephChan@via.com.tw>.
- 	 *
- 	 * When host issues HOLD, device may send up to 20DW of data
-@@ -596,8 +596,9 @@ static void svia_configure(struct pci_dev *pdev)
- 	 *
- 	 * https://bugzilla.kernel.org/show_bug.cgi?id=15173
- 	 * http://article.gmane.org/gmane.linux.ide/46352
-+	 * http://thread.gmane.org/gmane.linux.kernel/1062139
- 	 */
--	if (pdev->device == 0x3249) {
-+	if (board_id == vt6420 || board_id == vt6421) {
- 		pci_read_config_byte(pdev, 0x52, &tmp8);
- 		tmp8 |= 1 << 2;
- 		pci_write_config_byte(pdev, 0x52, tmp8);
-@@ -652,7 +653,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
--	svia_configure(pdev);
-+	svia_configure(pdev, board_id);
- 
- 	pci_set_master(pdev);
- 	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+Andries
