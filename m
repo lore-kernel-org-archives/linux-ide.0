@@ -1,40 +1,35 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
+From: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
 Subject: Re: ide boot failure 2.6.36/2.6.28 - 2.6.27 works
-Date: Fri, 19 Nov 2010 18:59:50 -0800
-Message-ID: <4CE739A6.6070306@gmail.com>
-References: <20101120021515.GA3277@iq>
+Date: Sat, 20 Nov 2010 04:28:33 +0100
+Message-ID: <20101120032828.GA14693@iq>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101120021515.GA3277@iq>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.cwi.nl ([192.16.191.8]:52742 "EHLO hera.cwi.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932127Ab0KTD2r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Nov 2010 22:28:47 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/19/2010 06:15 PM, Andries E. Brouwer wrote:
-> In case anybody is still interested in this old IDE stuff:
+Answering myself (and providing info that can be Googled):
+
 > I wanted to boot a recent kernel on an old machine and failed.
 > The last kernel that worked was 2.6.27.
 > What goes wrong is that the disks are no longer detected on 2.6.28.
-> I see that 2.6.28 had a lot of changes in this area.
-> Maybe this just needs a new boot option I overlooked.
-> (Or is oldfashioned IDE considered broken these days?)
->
-> Google gives me many people with the same problem
-> (e.g., http://bugs.gentoo.org/253628) but no remedy.
-> I have not looked at the code yet.
->
-> Andries
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
 
+A typical error would be
 
-probably best to bisect if you can..
+	Cannot open root device 342 or unknown block (3,66)
 
-Justin P. Mattock
+Reading the code shows that the default probing is no longer done.
+Editing ./drivers/ide/ide-generic.c and changing
+
+-static int probe_mask;
++static int probe_mask = 3;
+
+returns my disks to life, and this old machine boots again.
+
+Andries
