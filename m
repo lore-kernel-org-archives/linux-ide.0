@@ -1,81 +1,44 @@
-From: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: ide boot failure 2.6.36/2.6.28 - 2.6.27 works
-Date: Sat, 20 Nov 2010 13:11:21 +0100
-Message-ID: <20101120121121.GA30338@iq>
+Date: Sat, 20 Nov 2010 13:04:01 +0000
+Message-ID: <20101120130401.59d8b8a1@lxorguk.ukuu.org.uk>
 References: <20101120032828.GA14693@iq>
- <20101120074508.GA16854@liondog.tnic>
+	<20101120074508.GA16854@liondog.tnic>
+	<20101120121121.GA30338@iq>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20101120074508.GA16854@liondog.tnic>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>, "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47269 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752797Ab0KTNFO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Nov 2010 08:05:14 -0500
+In-Reply-To: <20101120121121.GA30338@iq>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Andries E. Brouwer" <Andries.Brouwer@cwi.nl>
+Cc: Borislav Petkov <bp@alien8.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Nov 20, 2010 at 08:45:08AM +0100, Borislav Petkov wrote:
-> On Sat, Nov 20, 2010 at 04:28:33AM +0100, Andries E. Brouwer wrote:
-> > Answering myself (and providing info that can be Googled):
-> > 
-> > > I wanted to boot a recent kernel on an old machine and failed.
-> > > The last kernel that worked was 2.6.27.
-> > > What goes wrong is that the disks are no longer detected on 2.6.28.
-> > 
-> > A typical error would be
-> > 
-> > 	Cannot open root device 342 or unknown block (3,66)
-> > 
-> > Reading the code shows that the default probing is no longer done.
-> 
-> Well, this got changed in 20df429dd6671804999493baf2952f82582869fa since
-> we had other problems when having ide-generic and a specific PCI IDE
-> controller driver enabled at the same time, AFAIR.
+> The author of the regression knew that he was breaking some setups
+> and cleared his conscience by adding a printk
+> +   printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
+> +   	     	       "parameter for probing all legacy ISA IDE ports\n");
+> at boot time. Of course this scrolls off the screen too quickly to read.
 
-In the meantime I looked at what happened, and how this regression
-was introduced. Mikael Pettersson reported that he lost his NIC
-because of commit 343a3451e20314d5959b59b992e33fbaadfe52bf that
-caused the IDE code to probe where it did not before.
-Because of a resource leak, this caused other hardware
-not to be found any longer.
+I pointed out at the time that this was totally bogus hackery, but
+without result. On a PCI box however you should always have a matching
+PCI driver, and if not you want to force ide-generic to bind to it in
+almost all cases, so if its hitting a lot of people then something else
+is wrong in the config choices of the distro
 
-One would hope that this resource leak would be investigated further,
-but the reaction was to stop IDE probing, causing a few hundred
-people to lose their disk.
+The libata driver tries to be a bit smarter, firstly by not leaking
+random resources but also knows not to bind against ports mapped to PCI
+devices, or to certain special cases (non PCI standard but PCI space
+using) devices.
 
-A regression.
+If you have a PCI ATA driver which is not handled by any of the libata
+drivers and is not known by ata_generic then please let me know. I
+think we have pretty much everything old, weird and wonderful covered in
+libata.
 
-> There are two fixes I can think of - you either enable the specific IDE
-> controller driver for your chipset or you enforce probing with
-> 
-> 	ide_generic.probe_mask=0x3f
-> 
-> on the kernel command line.
-
-Yes, but my edit was better.
-
->> Editing ./drivers/ide/ide-generic.c and changing
->>
->> -static int probe_mask;
->> +static int probe_mask = 3;
->>
->> returns my disks to life, and this old machine boots again.
-
-
-(On the one hand, I have many machines and certainly do not recall
-the precise hardware details on all. On the other hand, having a
-non-booting kernel that requires separate command-line arguments
-is a pain, it requires bookkeeping. The 1-line fix makes it work
-without command-line arguments.)
-
-The author of the regression knew that he was breaking some setups
-and cleared his conscience by adding a printk
-+   printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" module "
-+   	     	       "parameter for probing all legacy ISA IDE ports\n");
-at boot time. Of course this scrolls off the screen too quickly to read.
-Since the kernel does not boot, there is no dmesg afterwards, so one would
-need serious debugging, using serial console or netconsole, to see it.
-
-I pointed at a bugzilla where this is still described as an unsolved problem.
-
-
-Andries
+Alan
