@@ -1,59 +1,52 @@
-From: Tobias Karnat <tobias.karnat@googlemail.com>
-Subject: Re: sata_sil24: external raid storage mistaken as port multiplier
-Date: Tue, 23 Nov 2010 13:08:45 +0100
-Message-ID: <1290514125.28293.2.camel@Tobias-Karnat>
-References: <1290461073.12443.21.camel@Tobias-Karnat>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: AT91 IDE module
+Date: Tue, 23 Nov 2010 22:00:54 +0100
+Message-ID: <20101123210054.GA4164@r2bh72.net.upc.cz>
+References: <4CEB8FB8.80702@tcz.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60232 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab0KWMIu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Nov 2010 07:08:50 -0500
-In-Reply-To: <1290461073.12443.21.camel@Tobias-Karnat>
+Received: from mx3.wp.pl ([212.77.101.7]:10155 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751250Ab0KWU5Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Nov 2010 15:57:25 -0500
+Content-Disposition: inline
+In-Reply-To: <4CEB8FB8.80702@tcz.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Radovan =?iso-8859-1?Q?V=E1pen=EDk?= <radovan.vapenik@tcz.cz>
+Cc: linux-ide@vger.kernel.org
 
-Am Montag, den 22.11.2010, 22:24 +0100 schrieb Tobias Karnat:
-> My RaidSonic Stardom SR3620-2S-SB2 is mistaken as a port multiplier,
-> it did work with Linux 2.6.23.
+Hi
 
-This is what I get with Linux 2.6.23:
+(cc linux-ide)
 
-[  242.139418] ata1: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0x2 frozen
-[  242.139424] ata1: irq_stat 0x00a00080, device exchanged
-[  242.859815] ata1: soft resetting port
-[  243.694381] ata1: softreset failed (SRST command error)
-[  243.694389] ata1: reset failed (errno=-5), retrying in 10 secs
-[  252.842608] ata1: hard resetting port
-[  254.982393] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  254.982489] ata1.00: ATA-6: External Disk 0, RGL10403, max UDMA/133
-[  254.982492] ata1.00: 1953546336 sectors, multi 1: LBA48 
-[  254.982605] ata1.00: configured for UDMA/100
-[  254.982612] ata1: EH complete
-[  254.982740] scsi 0:0:0:0: Direct-Access     ATA      External Disk 0  RGL1 PQ: 0 ANSI: 5
-[  254.982836] sd 0:0:0:0: [sdh] 1953546336 512-byte hardware sectors (1000216 MB)
-[  254.982848] sd 0:0:0:0: [sdh] Write Protect is off
-[  254.982853] sd 0:0:0:0: [sdh] Mode Sense: 00 3a 00 00
-[  254.982870] sd 0:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  254.982971] sd 0:0:0:0: [sdh] 1953546336 512-byte hardware sectors (1000216 MB)
-[  254.983025] sd 0:0:0:0: [sdh] Write Protect is off
-[  254.983030] sd 0:0:0:0: [sdh] Mode Sense: 00 3a 00 00
-[  254.983063] sd 0:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  254.983068]  sdh: unknown partition table
-[  254.988917] sd 0:0:0:0: [sdh] Attached SCSI disk
-[  254.989036] sd 0:0:0:0: Attached scsi generic sg9 type 0
+On Tue, Nov 23, 2010 at 10:56:08AM +0100, Radovan V=E1pen=EDk wrote:
+> Hello Stanislaw,
+> i am working on custom board with AT91SAM9263, i am trying to start
+> communication with CompactFlash throught your kernel driver (true
+> ide mode). I have problem to connect CF to file to /dev directory.
+> After module load kernel prints message "ide0 at
+> 0xc4866000-0xc4866007,0xc486e006 on irq 132" without some
+> identification in /dev/(hda). Can you help me, what can be wrong?
+> Wires connections betweent processor and CF should be ok.
+>=20
+> I have these options in kernel:
+> CONFIG_IDE
+> CONFIG_IDE_GD
+> CONFIG_IDE_GD_ATA
+> CONFIG_IDE_TASK_IOCTL
+> CONFIG_IDE_PROC_FS
+> CONFIG_BLK_DEV_PLATFORM
+> CONFIG_BLK_DEV_IDE_AT91
 
-----------------------------
-Device Type                        0
-Vendor:                    ATA     
-Product:                   External Disk 0 
-Revision level:            RGL1
+CONFIG_IDE_TIMINGS is also needed, but this should be selected if=20
+CONFIG_BLK_DEV_IDE_AT91 was chosen.
 
-Serial Number '070C05F_879391___0_8'
+If there is no info in /proc/partitions, then disc was not detected.
+It's hard to tell why without more verbose messages. Add
+"EXTRA_CFLAGS +=3D -DDEBUG" to drivers/ide/Makefile and provide full
+dmesg output.
 
--Tobias
-
+Stanislaw
