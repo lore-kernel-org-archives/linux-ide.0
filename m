@@ -1,58 +1,36 @@
-From: Borislav Petkov <bp@alien8.de>
+From: Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
 Subject: Re: Message
-Date: Fri, 26 Nov 2010 08:38:05 +0100
-Message-ID: <20101126073805.GB14282@liondog.tnic>
+Date: Fri, 26 Nov 2010 08:41:59 +0100
+Message-ID: <AANLkTikBgxBsGudfiN-xnN-KRNaanFrPpwOH_EMJ-oic@mail.gmail.com>
 References: <AANLkTinSigE4JPsFByPCkFd-+_oXQwR-V9=AsSH9Warz@mail.gmail.com>
- <1290755809.2678.14.camel@edumazet-laptop>
- <AANLkTi=8nWFHeJ0Z-WhprNqZMGprMRG5LQ+b3wKoMWWv@mail.gmail.com>
- <AANLkTi=bELgtgcWcy59KCvKwWWiuVZBb7e_hTSBHZ4cH@mail.gmail.com>
+	<1290755809.2678.14.camel@edumazet-laptop>
+	<AANLkTi=8nWFHeJ0Z-WhprNqZMGprMRG5LQ+b3wKoMWWv@mail.gmail.com>
+	<AANLkTi=bELgtgcWcy59KCvKwWWiuVZBb7e_hTSBHZ4cH@mail.gmail.com>
+	<20101126073805.GB14282@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:42333 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750860Ab0KZHiK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Nov 2010 02:38:10 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTi=bELgtgcWcy59KCvKwWWiuVZBb7e_hTSBHZ4cH@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52736 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753203Ab0KZHmA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Nov 2010 02:42:00 -0500
+In-Reply-To: <20101126073805.GB14282@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>, linux-kernel@vger.kernel.org, linux-ide <linux-ide@vger.kernel.org>
+To: Borislav Petkov <bp@alien8.de>, Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>, Eric Dumazet <eric.dumazet@gmail.com>, linux-kernel@vger.kernel.org, linux-ide <linux-ide@>
 
-adding linux-ide.
+2010/11/26 Borislav Petkov <bp@alien8.de>:
+> adding linux-ide.
 
-On Fri, Nov 26, 2010 at 08:35:48AM +0100, Alessandro Tagliapietra wrote=
-:
-> Venerd=C3=AC 26 novembre 2010 alle 08:16 +0100, Eric Dumazet ha scrit=
-to:
-> > Thanksgiving might be the reason.
->=20
-> No problem :)
-> I've this problem (that i think also affect some people and probably
-> more in the future)
->=20
-> I've a asus p6x58d-e motherboard with a Marver 9128 (1b4b:91a3) Sata-=
-6
-> controller. I've tried both ubuntu and fedora (that has newer kernel)
-> and both can't find the 2 western digital sata-6 drives configured in
-> raid0.
->=20
-> I've looked here
-> https://ata.wiki.kernel.org/index.php/SATA_hardware_features and the
-> Marvell	88SE9128/9120/9125/9111/9110 seems that they haven't any
-> driver right?
->=20
-> I'm new to the kernel mailing list, what are the next steps to help?
->=20
-> Best regards
->=20
-> Alessandro Tagliapietra
->=20
-> Sorry for double mail Eric but i haven't sent it on list.
-> --
+Thank you, i've also attached at this ubuntu bug:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/658521
+the dmesg from ubuntu 10.10 and 11.04 with bios settings as RAID and AHCI.
+I think that setting is only for Sata-2, as the drives are not seen by
+the bios in the drive list. Just on the boot orded it see "IDE:
+Marvell RAiD".
+The drives are seen by the marvell controller after the bios, where
+i've setup the raid 0 on them.
 
---=20
-Regards/Gruss,
-    Boris.
+Best Regards
+
+Alessandro Tagliapietra
