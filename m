@@ -1,78 +1,43 @@
-From: Tobias Karnat <tobias.karnat@googlemail.com>
-Subject: Re: sata_sil24: external raid storage mistaken as port multiplier
-Date: Sun, 28 Nov 2010 11:51:58 +0100
-Message-ID: <1290941518.12616.12.camel@Tobias-Karnat>
-References: <1290461073.12443.21.camel@Tobias-Karnat>
-	 <1290514125.28293.2.camel@Tobias-Karnat>
-	 <1290572588.24847.20.camel@Tobias-Karnat> <4CEFEC17.6060503@kernel.org>
-	 <4CF014F8.9000700@teksavvy.com> <4CF01583.5050307@kernel.org>
-	 <4CF07386.7080304@teksavvy.com>
+From: "j.s." <lulojs11@gmail.com>
+Subject: marvell 9128
+Date: Sun, 28 Nov 2010 14:52:57 +0100
+Message-ID: <1290952377.17206.12.camel@lulo-homelinux>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CF07386.7080304@teksavvy.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Mark Lord <kernel@teksavvy.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57424 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab0K1NxB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Nov 2010 08:53:01 -0500
+Received: by fxm15 with SMTP id 15so1753528fxm.19
+        for <linux-ide@vger.kernel.org>; Sun, 28 Nov 2010 05:53:00 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Am Freitag, den 26.11.2010, 18:19 +0100 schrieb Tejun Heo:
-> That said, yeah, it probably would be a good idea to add a
-> libata.force param.
-> 
-> Can you please apply the following patch and verify that the device
-> doesn't work without any parameter but it does with
-> "libata.force=nopmp"?
+if aded this patch
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/658521/+attachment/1746904/+files/Marvell.patch
 
-Sorry, but I am currently happy with the generic Ubuntu Kernel
-with the module recompiled.
+kernel not build from ubuntu 10.10 ( latest stable 2.6.35-23-generic )
 
-Maybe I am just lazy, but I have scheduled to compile my first Kernel
-on Ubuntu 10.10 when 2.6.37 will be out.
+comment:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/658521/comments/21
 
-Am Freitag, den 26.11.2010, 21:57 -0500 schrieb Mark Lord:
-> I suppose *if* we knew the exact fwrev that requires the workaround,
-> then we could make it automatic for that, and still have the boot flag
-> for cases we don't know about.
-> 
-> Tobias?  Got the IDENTIFY info from that device?
-> Something like "hdparm --istdout /dev/sdX"  ?
+bug:
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/658521?comments=all
 
-Yes, hdparm --istdout /dev/sdh gives,
 
-/dev/sdh:
-0040 3fff c837 0010 0000 0000 003f 0000
-0000 0000 3037 3043 3035 465f 3837 3933
-3931 5f5f 5f30 5f38 0003 3e00 0004 5247
-4c31 3034 3033 4578 7465 726e 616c 2044
-6973 6b20 3020 2020 2020 2020 2020 2020
-2020 2020 2020 2020 2020 2020 2020 8001
-0000 2f00 4000 0200 0000 0006 0000 0000
-0000 0000 0000 0101 ffff 0fff 0000 0407
-0003 0078 0078 0078 0078 0000 0000 0000
-0000 0000 0000 0000 0201 0000 0000 0000
-007e 001b 0069 7460 4040 0028 3460 4040
-207f 0000 0000 0000 fffe 0000 c0fe 0000
-0000 0000 0000 0000 c060 7470 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0001 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0017 2040
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 0000
-0000 0000 0000 0000 0000 0000 0000 a3a5
 
-Tobias
+how to install,start,...etc. ubuntu or/and any linux for MSI
+STAR-USB3/SATA6
+( http://www.msi.com/index.php?func=proddesc&maincat_no=1&prod_no=2052 )
+and mainboard NF980-G65
+( 
+http://www.msi.com/index.php?func=downloaddetail&type=bios&maincat_no=1&prod_no=1885 )
+
+
+???
+
+very sorry my english
+
