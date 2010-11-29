@@ -1,37 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Regression between 2.6.34 and 2.6.35 ?
-Date: Mon, 29 Nov 2010 17:01:44 +0100
-Message-ID: <4CF3CE68.2020500@kernel.org>
-References: <AANLkTi=g4F0mgS-w2jFs0r_PAcEk5bytdyAGP+rWJ-J5@mail.gmail.com>	<4CEFC051.7090800@kernel.org> <AANLkTi=koJHKvqv6iuvuc-j3HGtSR+YJqaDQmM9JrViO@mail.gmail.com>
+From: Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: [git patches] libata updates for 2.6.37
+Date: Mon, 29 Nov 2010 13:07:55 -0500
+Message-ID: <20101129180755.GK15818@bombadil.infradead.org>
+References: <20101022012302.GA7487@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:54414 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751422Ab0K2QBr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Nov 2010 11:01:47 -0500
-In-Reply-To: <AANLkTi=koJHKvqv6iuvuc-j3HGtSR+YJqaDQmM9JrViO@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101022012302.GA7487@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Antonio Toma <antonio.toma@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Hello,
+On Thu, Oct 21, 2010 at 09:23:02PM -0400, Jeff Garzik wrote:
+> 1) Link Power Management (LPM) rewrite
+> 
 
-On 11/28/2010 08:39 PM, Antonio Toma wrote:
-> thanks for your reply.
-> Here is the output from the cat command and boot logs.
-> I included kern, syslog and debug.
-> Let me know if there is some other info that could help debugging.
+Hrm, this is causing issues for me... When I resume from suspend on my
+thinkpad X201s I get:
 
-Hmmm... interesting.  Your machine definitely is screwed up but the EH
-behavior changed for worse too.  I've been looking through the changes
-but can't quite put my finger on what's going wrong.  Can you please
-build and test 2.6.36.1?  If the problem is still there, I'll send you
-debug patches to track down what's going on.
+[ 2454.478673] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 2454.487736] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 2454.487742] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+filtered out
+[repeated a few times]
+[ 2454.492688] ata1.00: configured for UDMA/100
+[ 2454.506690] ata1.00: configured for UDMA/100
+[ 2454.506696] ata1: EH complete
+[...]
+[ 2455.097874] ata1.00: configured for UDMA/100
+[ 2455.097882] ata1: EH complete
+[...]
+[ 2455.386756] ata1.00: failed to enable DIPM, Emask 0x100
+[ 2455.386768] ata1: hard resetting link
+[...]
+[ 2455.847925] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 2455.849372] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 2455.849380] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ditto]
+[ 2455.854171] ata1.00: configured for UDMA/100
+[ 2455.854480] ata1.00: failed to enable DIPM, Emask 0x100
+[ 2455.854484] ata1: disabling LPM on the link
+[ 2455.854489] ata1: limiting SATA link speed to 1.5 Gbps
+[ 2455.854494] ata1.00: limiting speed to UDMA/100:PIO3
 
-Thank you.
+Tejun, any ideas how I can debug this?
 
--- 
-tejun
+regards, Kyle
