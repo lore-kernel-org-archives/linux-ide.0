@@ -1,41 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] ahci: add another PCI ID for marvell
-Date: Mon, 29 Nov 2010 15:57:14 +0100
-Message-ID: <4CF3BF4A.4080009@kernel.org>
+Subject: Re: Regression between 2.6.34 and 2.6.35 ?
+Date: Mon, 29 Nov 2010 17:01:44 +0100
+Message-ID: <4CF3CE68.2020500@kernel.org>
+References: <AANLkTi=g4F0mgS-w2jFs0r_PAcEk5bytdyAGP+rWJ-J5@mail.gmail.com>	<4CEFC051.7090800@kernel.org> <AANLkTi=koJHKvqv6iuvuc-j3HGtSR+YJqaDQmM9JrViO@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:46793 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:54414 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752696Ab0K2O5k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Nov 2010 09:57:40 -0500
+	id S1751422Ab0K2QBr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Nov 2010 11:01:47 -0500
+In-Reply-To: <AANLkTi=koJHKvqv6iuvuc-j3HGtSR+YJqaDQmM9JrViO@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Borislav Petkov <bp@alien8.de>, Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
+To: Antonio Toma <antonio.toma@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-1b4b:91a3 seems to be another PCI ID for marvell ahci.  Add it.
-Reported and tested in the following thread.
+Hello,
 
- http://thread.gmane.org/gmane.linux.kernel/1068354
+On 11/28/2010 08:39 PM, Antonio Toma wrote:
+> thanks for your reply.
+> Here is the output from the cat command and boot logs.
+> I included kern, syslog and debug.
+> Let me know if there is some other info that could help debugging.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Borislav Petkov <bp@alien8.de>
-Reported-by: Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
----
- drivers/ata/ahci.c |    2 ++
- 1 file changed, 2 insertions(+)
+Hmmm... interesting.  Your machine definitely is screwed up but the EH
+behavior changed for worse too.  I've been looking through the changes
+but can't quite put my finger on what's going wrong.  Can you please
+build and test 2.6.36.1?  If the problem is still there, I'll send you
+debug patches to track down what's going on.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 3288263..0c39fbb 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -380,6 +380,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
- 	{ PCI_DEVICE(0x1b4b, 0x9123),
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
-+	{ PCI_DEVICE(0x1b4b, 0x91a3),
-+	  .driver_data = board_ahci_yes_fbs },
+Thank you.
 
- 	/* Promise */
- 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+-- 
+tejun
