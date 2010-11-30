@@ -1,61 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Tue, 30 Nov 2010 14:31:42 +0100
-Message-ID: <4CF4FCBE.2060406@kernel.org>
-References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using
+ SATA multiplier
+Date: Tue, 30 Nov 2010 15:08:52 +0100
+Message-ID: <4CF50574.6000706@gmail.com>
+References: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:42742 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751271Ab0K3NcP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Nov 2010 08:32:15 -0500
-In-Reply-To: <4CF45BC0.2030701@iki.fi>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60237 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233Ab0K3OI5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 09:08:57 -0500
+Received: by bwz15 with SMTP id 15so5045894bwz.19
+        for <linux-ide@vger.kernel.org>; Tue, 30 Nov 2010 06:08:56 -0800 (PST)
+In-Reply-To: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anssi Hannula <anssi.hannula@iki.fi>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
+To: Lin Mac <mkl0301@gmail.com>
+Cc: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello,
-
-On 11/30/2010 03:04 AM, Anssi Hannula wrote:
-> On 24.07.2010 17:53, Tejun Heo wrote:
->> 88SE9128 can do FBS and sets it in HOST_CAP but forgets to set FBSCP
->> in PORT_CMD.  Implement AHCI_HFLAG_YES_FBS and apply it to 88SE9128.
->>
->> Signed-off-by: Tejun Heo <tj@kernel.org>
-> [...]
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index f252253..41fa0a3 100644
-> [...]
->> @@ -362,6 +371,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>  	/* Marvell */
->>  	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
->>  	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
->> +	{ PCI_DEVICE(0x1b4b, 0x9123),
->> +	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+On 11/30/2010 05:02 AM, Lin Mac wrote:
+> Hi,
 > 
-> The device contains an IDE interface as well, and the above
-> pci_device_id matches them both:
-> 08:00.0 SATA controller [0106]: Device [1b4b:9123] (rev 10)
-> 08:00.1 IDE interface [0101]: Device [1b4b:9123] (rev 10)
-
-*GASP* Come on Marvell.... :-(
-
-> This results in some (apparently harmless) mess [1].
+> I found that if I enabled CONFIG_SATA_PMP while not using multiplier
+> and connect the disks directly to the board, the disk cannot be found
+> due to software reset always failed.
 > 
-> Attached is a patch to make the id entry class-specific. The patch is
-> untested (the issue happens in a production machine).
+> With arm/cns3xxx
+> linux-2.6.37-rc3
+> ahci-platform driver
+> 
+> # modprobe ahci-platform
+> [   12.790000] ahci ahci.0: forcing PORTS_IMPL to 0x3
+> [   12.800000] ahci ahci.0: AHCI 0001.0100 32 slots 2 ports 3 Gbps 0x3
+> impl platform mode
+> [   12.810000] ahci ahci.0: flags: ncq sntf pm led clo only pmp pio
+> slum part ccc
+> [   12.850000] scsi0 : ahci_platform
+> [   12.860000] scsi1 : ahci_platform
+> [   12.870000] ata1: SATA max UDMA/133 irq_stat 0x00400040, connection
+> status changed irq 65
+> [   12.880000] ata2: SATA max UDMA/133 mmio [mem
+> 0x83000000-0x83ffffff] port 0x180 irq 65
+> [   13.240000] ata2: SATA link down (SStatus 0 SControl 300)
+> [   18.900000] ata1: link is slow to respond, please be patient (ready=0)
+> [   22.930000] ata1: softreset failed (device not ready)
+> [   28.940000] ata1: link is slow to respond, please be patient (ready=0)
+> [   32.970000] ata1: softreset failed (device not ready)
+> [   38.980000] ata1: link is slow to respond, please be patient (ready=0)
+> [   68.030000] ata1: softreset failed (device not ready)
+> [   68.040000] ata1: limiting SATA link speed to 1.5 Gbps
+> [   70.280000] ata1: SATA link down (SStatus 1 SControl 310)
+> 
+> With some debug, ahci_check_ready always get PORT_TFDATA(20)=0x1d0
+> 
+> While using multiplier with CONFIG_SATA_PMP enabled, or using disks
+> directly without CONFIG_SATA_PMP have no issue.
+> After some googling, it seems common and the only fix is to disable
+> CONFIG_SATA_PMP.
+> So, before I keep on going, I would like to know whether this is a
+> limitation, or a bug?
 
-Thanks a lot for the patch.  It looks correct but it would be great if
-it can be veified.  Also, there's a pending patch to add another PCI
-ID for similar marvell controller.  I wonder whether similar
-workaround should be applied.  Hmmm... ISTR the other one reporting
-IDE class even though it works in IDE mode.  Can someone with marvell
-documentation access check what's going on?
-
-Thanks.
+Most likely a quirk in the controller.  Maybe we should disable PMP
+support for it?
 
 -- 
 tejun
