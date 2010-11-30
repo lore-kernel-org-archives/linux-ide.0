@@ -1,74 +1,76 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Tue, 30 Nov 2010 22:10:51 +0200
-Message-ID: <4CF55A4B.1020402@iki.fi>
-References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org>
+From: Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: [git patches] libata updates for 2.6.37
+Date: Tue, 30 Nov 2010 16:09:38 -0500
+Message-ID: <20101130210938.GF25668@bombadil.infradead.org>
+References: <20101022012302.GA7487@havoc.gtf.org>
+ <20101129180755.GK15818@bombadil.infradead.org>
+ <4CF506A6.4020200@kernel.org>
+ <20101130153839.GM15818@bombadil.infradead.org>
+ <4CF52652.4030802@kernel.org>
+ <20101130163150.GA25668@bombadil.infradead.org>
+ <20101130175317.GB25668@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from saarni.dnainternet.net ([83.102.40.136]:58810 "EHLO
-	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab0K3UK6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 15:10:58 -0500
-In-Reply-To: <4CF4FCBE.2060406@kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:55504 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755430Ab0K3VJu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 16:09:50 -0500
+Content-Disposition: inline
+In-Reply-To: <20101130175317.GB25668@bombadil.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
+To: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 30.11.2010 15:31, Tejun Heo wrote:
-> Hello,
+On Tue, Nov 30, 2010 at 12:53:17PM -0500, Kyle McMartin wrote:
+> On Tue, Nov 30, 2010 at 11:31:50AM -0500, Kyle McMartin wrote:
+> > On Tue, Nov 30, 2010 at 05:29:06PM +0100, Tejun Heo wrote:
+> > > > Be happy to apply any debug patches, but I plan on replacing the drive
+> > > > with a faster one at some point in the next few weeks.
+> > > 
+> > > Can you please apply the following patch and report the resulting
+> > > kernel log?  You're on ahci, right?
+> > > 
+> > 
+> > Yup, building now.
+> > 
 > 
-> On 11/30/2010 03:04 AM, Anssi Hannula wrote:
->> On 24.07.2010 17:53, Tejun Heo wrote:
->>> 88SE9128 can do FBS and sets it in HOST_CAP but forgets to set FBSCP
->>> in PORT_CMD.  Implement AHCI_HFLAG_YES_FBS and apply it to 88SE9128.
->>>
->>> Signed-off-by: Tejun Heo <tj@kernel.org>
->> [...]
->>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>> index f252253..41fa0a3 100644
->> [...]
->>> @@ -362,6 +371,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>>  	/* Marvell */
->>>  	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
->>>  	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
->>> +	{ PCI_DEVICE(0x1b4b, 0x9123),
->>> +	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
->>
->> The device contains an IDE interface as well, and the above
->> pci_device_id matches them both:
->> 08:00.0 SATA controller [0106]: Device [1b4b:9123] (rev 10)
->> 08:00.1 IDE interface [0101]: Device [1b4b:9123] (rev 10)
-> 
-> *GASP* Come on Marvell.... :-(
-> 
->> This results in some (apparently harmless) mess [1].
->>
->> Attached is a patch to make the id entry class-specific. The patch is
->> untested (the issue happens in a production machine).
-> 
-> Thanks a lot for the patch.  It looks correct but it would be great if
-> it can be veified.
-
-I think I can do that later, but probably not this week or so.
-
-> Also, there's a pending patch to add another PCI
-> ID for similar marvell controller.  I wonder whether similar
-> workaround should be applied.  Hmmm... ISTR the other one reporting
-> IDE class even though it works in IDE mode.
-
-IDE class in IDE mode? Isn't that kind of expected? :)
-
-Also, just to avoid any misunderstanding: I see both the SATA and IDE
-interfaces at the same time.
-
-> Can someone with marvell
-> documentation access check what's going on?
-> 
-> Thanks.
+> Ok, running it, I haven't seen the issue across three suspends... Will
+> update when it inevitably happens.
 > 
 
--- 
-Anssi Hannula
+[10272.544858] ata1.00: ahci: internal command failure,
+irq_stat=0x400001
+[10272.544943] ata1.00: internal command failure: stat=0xef
+ehi_desc="irq_stat 0x00400001, PHY RDY changed"
+[10272.544951] ata1.00: failed to enable DIPM, Emask 0x100
+[10272.544960] ata1: hard resetting link
+[10273.004718] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[10273.006108] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[10273.006116] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[10273.006410] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[10273.006417] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[10273.009337] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[10273.009344] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[10273.009611] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[10273.009631] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[10273.010945] ata1.00: configured for UDMA/100
+[10273.011206] ata1.00: ahci: internal command failure,
+irq_stat=0x400001
+[10273.011241] ata1.00: internal command failure: stat=0xef
+ehi_desc="irq_stat 0x00400001, PHY RDY changed"
+[10273.011247] ata1.00: failed to enable DIPM, Emask 0x100
+[10273.011250] ata1: disabling LPM on the link
+[10273.011255] ata1: limiting SATA link speed to 1.5 Gbps
+[10273.011259] ata1.00: limiting speed to UDMA/100:PIO3
+
+regards, Kyle
