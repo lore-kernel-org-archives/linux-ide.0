@@ -1,137 +1,60 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Tue, 30 Nov 2010 04:04:48 +0200
-Message-ID: <4CF45BC0.2030701@iki.fi>
-References: <4C4AFE7C.5070506@kernel.org>
+From: Lin Mac <mkl0301@gmail.com>
+Subject: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using SATA multiplier
+Date: Tue, 30 Nov 2010 12:02:18 +0800
+Message-ID: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070204080601060507040404"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:51259 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab0K3COT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Nov 2010 21:14:19 -0500
-In-Reply-To: <4C4AFE7C.5070506@kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:43345 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab0K3ECU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Nov 2010 23:02:20 -0500
+Received: by fxm8 with SMTP id 8so793666fxm.19
+        for <linux-ide@vger.kernel.org>; Mon, 29 Nov 2010 20:02:18 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------070204080601060507040404
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Hi,
 
-On 24.07.2010 17:53, Tejun Heo wrote:
-> 88SE9128 can do FBS and sets it in HOST_CAP but forgets to set FBSCP
-> in PORT_CMD.  Implement AHCI_HFLAG_YES_FBS and apply it to 88SE9128.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-[...]
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index f252253..41fa0a3 100644
-[...]
-> @@ -362,6 +371,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	/* Marvell */
->  	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
->  	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
-> +	{ PCI_DEVICE(0x1b4b, 0x9123),
-> +	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+I found that if I enabled CONFIG_SATA_PMP while not using multiplier
+and connect the disks directly to the board, the disk cannot be found
+due to software reset always failed.
 
-The device contains an IDE interface as well, and the above
-pci_device_id matches them both:
-08:00.0 SATA controller [0106]: Device [1b4b:9123] (rev 10)
-08:00.1 IDE interface [0101]: Device [1b4b:9123] (rev 10)
+With arm/cns3xxx
+linux-2.6.37-rc3
+ahci-platform driver
 
-This results in some (apparently harmless) mess [1].
+# modprobe ahci-platform
+[   12.790000] ahci ahci.0: forcing PORTS_IMPL to 0x3
+[   12.800000] ahci ahci.0: AHCI 0001.0100 32 slots 2 ports 3 Gbps 0x3
+impl platform mode
+[   12.810000] ahci ahci.0: flags: ncq sntf pm led clo only pmp pio
+slum part ccc
+[   12.850000] scsi0 : ahci_platform
+[   12.860000] scsi1 : ahci_platform
+[   12.870000] ata1: SATA max UDMA/133 irq_stat 0x00400040, connection
+status changed irq 65
+[   12.880000] ata2: SATA max UDMA/133 mmio [mem
+0x83000000-0x83ffffff] port 0x180 irq 65
+[   13.240000] ata2: SATA link down (SStatus 0 SControl 300)
+[   18.900000] ata1: link is slow to respond, please be patient (ready=0)
+[   22.930000] ata1: softreset failed (device not ready)
+[   28.940000] ata1: link is slow to respond, please be patient (ready=0)
+[   32.970000] ata1: softreset failed (device not ready)
+[   38.980000] ata1: link is slow to respond, please be patient (ready=0)
+[   68.030000] ata1: softreset failed (device not ready)
+[   68.040000] ata1: limiting SATA link speed to 1.5 Gbps
+[   70.280000] ata1: SATA link down (SStatus 1 SControl 310)
 
-Attached is a patch to make the id entry class-specific. The patch is
-untested (the issue happens in a production machine).
+With some debug, ahci_check_ready always get PORT_TFDATA(20)=0x1d0
 
+While using multiplier with CONFIG_SATA_PMP enabled, or using disks
+directly without CONFIG_SATA_PMP have no issue.
+After some googling, it seems common and the only fix is to disable
+CONFIG_SATA_PMP.
+So, before I keep on going, I would like to know whether this is a
+limitation, or a bug?
 
-[1]
-ahci 0000:08:00.1: PCI INT B -> GSI 16 (level, low) -> IRQ 16
-ahci 0000:08:00.1: irq 51 for MSI/MSI-X
-ahci 0000:08:00.1: controller can do FBS, turning on CAP_FBS
-ahci 0000:08:00.1: controller reset failed (0x80000085)
-ahci 0000:08:00.1: failed to stop engine (-5)
-ahci 0000:08:00.1: failed to stop engine (-5)
-ahci 0000:08:00.1: failed to stop engine (-5)
-ahci 0000:08:00.1: AHCI ffff.ffff 1 slots 6 ports ? Gbps 0x308 impl IDE mode
-ahci 0000:08:00.1: flags: fbs ccc apst nvmp boh
-ahci 0000:08:00.1: setting latency timer to 64
-scsi38 : ahci
-scsi39 : ahci
-scsi40 : ahci
-scsi41 : ahci
-scsi42 : ahci
-scsi43 : ahci
-scsi44 : ahci
-scsi45 : ahci
-scsi46 : ahci
-scsi47 : ahci
-ata39: DUMMY
-ata40: DUMMY
-ata41: DUMMY
-ata42: SATA max UDMA/133 abar m16@0xfb8fe000 port 0xfb8fe280 irq 51
-ata43: DUMMY
-ata44: DUMMY
-ata45: DUMMY
-ata46: DUMMY
-ata47: SATA max UDMA/133 abar m16@0xfb8fe000 port 0xfb8fe500 irq 51
-ata48: SATA max UDMA/133 abar m16@0xfb8fe000 port 0xfb8fe580 irq 51
-ata42: failed to resume link (SControl FFFFFFFF)
-ata47: failed to resume link (SControl FFFFFFFF)
-ata47: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-ata48: failed to resume link (SControl FFFFFFFF)
-ata48: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-ata42: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-
--- 
-Anssi Hannula
-
---------------070204080601060507040404
-Content-Type: text/x-patch;
- name="0001-ahci-do-not-match-the-IDE-interface-of-88SE9128.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-ahci-do-not-match-the-IDE-interface-of-88SE9128.patch"
-
->From 5e4e904eb78d69528bc3b3ddd39a55579642bfbd Mon Sep 17 00:00:00 2001
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Date: Tue, 30 Nov 2010 03:43:15 +0200
-Subject: [PATCH] ahci: do not match the IDE interface of 88SE9128
-
-Commit 5f173107ecad83a50 added HFLAG_YES_FBS workaround for 88SE9128
-(1b4b:9123).
-
-However, that change inadvertently caused the legacy IDE interface of
-the controller (with the same pci id) to become associated with the AHCI
-driver as well, causing the driver to try to bring the interface up in
-vain.
-
-Fix that by matching against class as well.
-
-Signed-off-by: Anssi Hannula <anssi.hannula@iki.fi>
----
- drivers/ata/ahci.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 3288263..791cf9b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -379,6 +379,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
- 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
- 	{ PCI_DEVICE(0x1b4b, 0x9123),
-+	  .class = PCI_CLASS_STORAGE_SATA_AHCI,
-+	  .class_mask = 0xffffff,
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
- 
- 	/* Promise */
--- 
-1.7.3
-
-
---------------070204080601060507040404--
+Best Regards,
+Mac Lin
