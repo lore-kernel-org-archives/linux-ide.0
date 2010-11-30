@@ -1,33 +1,68 @@
-From: Kyle McMartin <kyle@mcmartin.ca>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [git patches] libata updates for 2.6.37
-Date: Tue, 30 Nov 2010 10:38:39 -0500
-Message-ID: <20101130153839.GM15818@bombadil.infradead.org>
-References: <20101022012302.GA7487@havoc.gtf.org>
- <20101129180755.GK15818@bombadil.infradead.org>
- <4CF506A6.4020200@kernel.org>
+Date: Tue, 30 Nov 2010 17:29:06 +0100
+Message-ID: <4CF52652.4030802@kernel.org>
+References: <20101022012302.GA7487@havoc.gtf.org> <20101129180755.GK15818@bombadil.infradead.org> <4CF506A6.4020200@kernel.org> <20101130153839.GM15818@bombadil.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4CF506A6.4020200@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Kyle McMartin <kyle@mcmartin.ca>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:54488 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754173Ab0K3Q3l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Nov 2010 11:29:41 -0500
+In-Reply-To: <20101130153839.GM15818@bombadil.infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Nov 30, 2010 at 03:13:58PM +0100, Tejun Heo wrote:
-> > Tejun, any ideas how I can debug this?
+On 11/30/2010 04:38 PM, Kyle McMartin wrote:
+> On Tue, Nov 30, 2010 at 03:13:58PM +0100, Tejun Heo wrote:
+>>> Tejun, any ideas how I can debug this?
+>>
+>> Hmm... DIPM commands are failing with AC_ERR_OTHER.  Other than DIPM
+>> not being configured and speed capped at 1.5Gbps, the machine works
+>> fine afterwards, right?  Are you up for applying debug patches?
+>>
 > 
-> Hmm... DIPM commands are failing with AC_ERR_OTHER.  Other than DIPM
-> not being configured and speed capped at 1.5Gbps, the machine works
-> fine afterwards, right?  Are you up for applying debug patches?
+> Yup, it's chugging along happily, though I notice kernel builds are
+> taking a minute or two longer (but I don't bother to time them so it's
+> purely subjective.)
 > 
+> Be happy to apply any debug patches, but I plan on replacing the drive
+> with a faster one at some point in the next few weeks.
 
-Yup, it's chugging along happily, though I notice kernel builds are
-taking a minute or two longer (but I don't bother to time them so it's
-purely subjective.)
+Can you please apply the following patch and report the resulting
+kernel log?  You're on ahci, right?
 
-Be happy to apply any debug patches, but I plan on replacing the drive
-with a faster one at some point in the next few weeks.
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ebc08d6..b1c39db 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1560,6 +1560,10 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+ 	}
 
---Kyle
+ 	/* okay, let's hand over to EH */
++	if (active_qc && ata_tag_internal(active_qc->tag))
++		ata_dev_printk(active_qc->dev, KERN_WARNING,
++			       "ahci: internal command failure, irq_stat=0x%x\n",
++			       irq_stat);
+
+ 	if (irq_stat & PORT_IRQ_FREEZE)
+ 		ata_port_freeze(ap);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 7f77c67..7cf236b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1668,6 +1668,10 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+
+ 	/* perform minimal error analysis */
+ 	if (qc->flags & ATA_QCFLAG_FAILED) {
++		ata_dev_printk(dev, KERN_WARNING,
++			       "internal command failure: stat=0x%x ehi_desc=\"%s\"\n",
++			       qc->tf.command, dev->link->eh_info.desc);
++
+ 		if (qc->result_tf.command & (ATA_ERR | ATA_DF))
+ 			qc->err_mask |= AC_ERR_DEV;
+
