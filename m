@@ -1,54 +1,74 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using
- SATA multiplier
-Date: Tue, 30 Nov 2010 20:49:29 +0100
-Message-ID: <4CF55549.4080000@gmail.com>
-References: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com> <4CF50574.6000706@gmail.com> <AANLkTi=0gBcfrAyJNb0+=obH2QDsqhGM5a9xxwHAoh88@mail.gmail.com>
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
+Date: Tue, 30 Nov 2010 22:10:51 +0200
+Message-ID: <4CF55A4B.1020402@iki.fi>
+References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39164 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249Ab0K3TuM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 14:50:12 -0500
-Received: by bwz15 with SMTP id 15so5364904bwz.19
-        for <linux-ide@vger.kernel.org>; Tue, 30 Nov 2010 11:50:11 -0800 (PST)
-In-Reply-To: <AANLkTi=0gBcfrAyJNb0+=obH2QDsqhGM5a9xxwHAoh88@mail.gmail.com>
+Received: from saarni.dnainternet.net ([83.102.40.136]:58810 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab0K3UK6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 15:10:58 -0500
+In-Reply-To: <4CF4FCBE.2060406@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Mac <mkl0301@gmail.com>
-Cc: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
 
-Hello,
-
-On 11/30/2010 06:46 PM, Lin Mac wrote:
-> Could be,  but disabling it is the last option. And it's anoying to
-> have 2 different modules for different uses.
+On 30.11.2010 15:31, Tejun Heo wrote:
+> Hello,
 > 
-> I'd prefer some clues/checkpoint if possible.
+> On 11/30/2010 03:04 AM, Anssi Hannula wrote:
+>> On 24.07.2010 17:53, Tejun Heo wrote:
+>>> 88SE9128 can do FBS and sets it in HOST_CAP but forgets to set FBSCP
+>>> in PORT_CMD.  Implement AHCI_HFLAG_YES_FBS and apply it to 88SE9128.
+>>>
+>>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> [...]
+>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>> index f252253..41fa0a3 100644
+>> [...]
+>>> @@ -362,6 +371,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>>>  	/* Marvell */
+>>>  	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+>>>  	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+>>> +	{ PCI_DEVICE(0x1b4b, 0x9123),
+>>> +	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+>>
+>> The device contains an IDE interface as well, and the above
+>> pci_device_id matches them both:
+>> 08:00.0 SATA controller [0106]: Device [1b4b:9123] (rev 10)
+>> 08:00.1 IDE interface [0101]: Device [1b4b:9123] (rev 10)
+> 
+> *GASP* Come on Marvell.... :-(
+> 
+>> This results in some (apparently harmless) mess [1].
+>>
+>> Attached is a patch to make the id entry class-specific. The patch is
+>> untested (the issue happens in a production machine).
+> 
+> Thanks a lot for the patch.  It looks correct but it would be great if
+> it can be veified.
 
-One thing which could be possible is that the controller stashes the
-result code for the PMP aware SRST according to the PMP number instead
-of the usual place, so the driver can't see it.  In that case, the
-driver can be modified to check both places I suppose but if the
-hardware can be fixed, that would be great.
+I think I can do that later, but probably not this week or so.
 
-> I supposed the behavior of detecting and resetting disks (without
-> using port multiplier) should be the same for both with and without
-> CONFIG_SATA_PMP. All I know about port multiplier is when it is used
-> (not much too), but is there any register configuration or behavior is
-> required for multiplier to work properly and take effect even when no
-> multiplier is used?
+> Also, there's a pending patch to add another PCI
+> ID for similar marvell controller.  I wonder whether similar
+> workaround should be applied.  Hmmm... ISTR the other one reporting
+> IDE class even though it works in IDE mode.
 
-Yeah, the only difference is the PMP port number when issuing SRST.
-Non-PMP devices ignore it and respond the same way while PMP
-recognizes it and responds with PMP signature instead of the signature
-of the first device.  As written above, I think it's quite likely that
-the controller is handling the response D2H Reg FIS incorrectly when a
-non-PMP device responds to PMP SRST.
+IDE class in IDE mode? Isn't that kind of expected? :)
 
-Good luck.
+Also, just to avoid any misunderstanding: I see both the SATA and IDE
+interfaces at the same time.
+
+> Can someone with marvell
+> documentation access check what's going on?
+> 
+> Thanks.
+> 
 
 -- 
-tejun
+Anssi Hannula
