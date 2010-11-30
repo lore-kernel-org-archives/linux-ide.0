@@ -1,76 +1,72 @@
-From: Kyle McMartin <kyle@mcmartin.ca>
-Subject: Re: [git patches] libata updates for 2.6.37
-Date: Tue, 30 Nov 2010 16:09:38 -0500
-Message-ID: <20101130210938.GF25668@bombadil.infradead.org>
-References: <20101022012302.GA7487@havoc.gtf.org>
- <20101129180755.GK15818@bombadil.infradead.org>
- <4CF506A6.4020200@kernel.org>
- <20101130153839.GM15818@bombadil.infradead.org>
- <4CF52652.4030802@kernel.org>
- <20101130163150.GA25668@bombadil.infradead.org>
- <20101130175317.GB25668@bombadil.infradead.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Tue, 30 Nov 2010 17:59:56 -0500
+Message-ID: <20101130225956.GA8882@redhat.com>
+References: <20100825155918.GB8509@redhat.com>
+ <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
+ <20101119031149.GA28455@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:55504 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755430Ab0K3VJu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Nov 2010 16:09:50 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:64275 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751727Ab0K3XAp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Nov 2010 18:00:45 -0500
 Content-Disposition: inline
-In-Reply-To: <20101130175317.GB25668@bombadil.infradead.org>
+In-Reply-To: <20101119031149.GA28455@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 
-On Tue, Nov 30, 2010 at 12:53:17PM -0500, Kyle McMartin wrote:
-> On Tue, Nov 30, 2010 at 11:31:50AM -0500, Kyle McMartin wrote:
-> > On Tue, Nov 30, 2010 at 05:29:06PM +0100, Tejun Heo wrote:
-> > > > Be happy to apply any debug patches, but I plan on replacing the drive
-> > > > with a faster one at some point in the next few weeks.
+On Thu, Nov 18 2010 at 10:11pm -0500,
+Malahal Naineni <malahal@us.ibm.com> wrote:
+
+> Hannes Reinecke [hare@suse.de] wrote:
+> > > Also (although this might be a bit off topic from your patch),
+> > > can we expand such a distinction to what should be logged?
+> > > Currently, it's difficult to distinguish important SCSI/block errors
+> > > and less important ones in kernel log.
+> > > For example, when I get a link failure on sda, kernel prints something
+> > > like below, regardless of whether the I/O is recovered by multipathing or not:
+> > >   end_request: I/O error, dev sda, sector XXXXX
 > > > 
-> > > Can you please apply the following patch and report the resulting
-> > > kernel log?  You're on ahci, right?
+> > Indeed, when using the above we could be modifying the above
+> > message, eg by
+> > 
+> > end_request: transport error, dev sda, sector XXXXX
+> > 
+> > or
+> > 
+> > end_request: target error, dev sda, sector XXXXX
+> > 
+> > which would improve the output noticeable.
+> > 
+> > > Setting REQ_QUIET in dm-multipath could mask the message
+> > > but also other important ones in SCSI.
 > > > 
+> > Hmm. Not sure about that, but I think the above modifications will
+> > be useful already.
 > > 
-> > Yup, building now.
-> > 
+> > I'll be sending an updated patch.
 > 
-> Ok, running it, I haven't seen the issue across three suspends... Will
-> update when it inevitably happens.
-> 
+> Hannes, is there an updated version of this patch? It applied fine with
+> Linus git tree with a minor reject! I would like to test an updated
+> version if you have one (the update seems to refer to better logging
+> only, right?).
 
-[10272.544858] ata1.00: ahci: internal command failure,
-irq_stat=0x400001
-[10272.544943] ata1.00: internal command failure: stat=0xef
-ehi_desc="irq_stat 0x00400001, PHY RDY changed"
-[10272.544951] ata1.00: failed to enable DIPM, Emask 0x100
-[10272.544960] ata1: hard resetting link
-[10273.004718] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[10273.006108] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
-succeeded
-[10273.006116] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
-LOCK) filtered out
-[10273.006410] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
-succeeded
-[10273.006417] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
-filtered out
-[10273.009337] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
-succeeded
-[10273.009344] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
-LOCK) filtered out
-[10273.009611] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
-succeeded
-[10273.009631] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
-filtered out
-[10273.010945] ata1.00: configured for UDMA/100
-[10273.011206] ata1.00: ahci: internal command failure,
-irq_stat=0x400001
-[10273.011241] ata1.00: internal command failure: stat=0xef
-ehi_desc="irq_stat 0x00400001, PHY RDY changed"
-[10273.011247] ata1.00: failed to enable DIPM, Emask 0x100
-[10273.011250] ata1: disabling LPM on the link
-[10273.011255] ata1: limiting SATA link speed to 1.5 Gbps
-[10273.011259] ata1.00: limiting speed to UDMA/100:PIO3
+Hannes,
 
-regards, Kyle
+Any chance you've had time to fold your proposed logging changes in and
+rebase this patch?  Could you post that updated patch?
+
+I'd like to help see this patch through to inclussion when 2.6.38 merge
+window opens.  I can help with further review, testing and development.
+
+Please advise, thanks.
+Mike
