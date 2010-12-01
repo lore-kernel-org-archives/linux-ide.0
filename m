@@ -1,51 +1,138 @@
-From: David Shaw <dshaw@jabberwocky.com>
-Subject: Re: Hyper-V and IDE disks > 128GB
-Date: Wed, 1 Dec 2010 10:53:16 -0500
-Message-ID: <EE12C226-4D9D-4EBD-AF79-A58E286B4474@jabberwocky.com>
-References: <12CD8E2D-64F0-46D6-8ACB-C411D7BECEE7@jabberwocky.com> <20101102192738.1bb0ccf4@lxorguk.ukuu.org.uk>
-Mime-Version: 1.0 (Apple Message framework v1081)
+From: Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: [git patches] libata updates for 2.6.37
+Date: Wed, 1 Dec 2010 15:09:07 -0500
+Message-ID: <20101201200907.GI25668@bombadil.infradead.org>
+References: <4CF506A6.4020200@kernel.org>
+ <20101130153839.GM15818@bombadil.infradead.org>
+ <4CF52652.4030802@kernel.org>
+ <20101130163150.GA25668@bombadil.infradead.org>
+ <20101130175317.GB25668@bombadil.infradead.org>
+ <20101130210938.GF25668@bombadil.infradead.org>
+ <4CF62EE0.7040607@kernel.org>
+ <20101201124445.GG25668@bombadil.infradead.org>
+ <4CF6595A.6010104@kernel.org>
+ <20101201155026.GH25668@bombadil.infradead.org>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from walrus.jabberwocky.com ([173.9.29.57]:33929 "EHLO
-	walrus.jabberwocky.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858Ab0LAPxS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2010 10:53:18 -0500
-Received: from dshaw.nasuni.net (gw-comcast1.nasuni.com [173.166.63.186])
-	(authenticated bits=0)
-	by walrus.jabberwocky.com (8.14.3/8.14.3) with ESMTP id oB1FrHmU030347
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NO)
-	for <linux-ide@vger.kernel.org>; Wed, 1 Dec 2010 10:53:17 -0500
-In-Reply-To: <20101102192738.1bb0ccf4@lxorguk.ukuu.org.uk>
+Received: from bombadil.infradead.org ([18.85.46.34]:56900 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752371Ab0LAUJU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2010 15:09:20 -0500
+Content-Disposition: inline
+In-Reply-To: <20101201155026.GH25668@bombadil.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Nov 2, 2010, at 3:27 PM, Alan Cox wrote:
-
->> with the same results) under the Hyper-V virtualization platform.  Specifically, the virtual IDE disks
->> probe as "ATA-0", which seems to turn off 48-bit LBA, thus capping the
->> disk size at 128GB.
+On Wed, Dec 01, 2010 at 10:50:26AM -0500, Kyle McMartin wrote:
+> > Nothing peculiar.  Hmm... okay, I think I've found what went wrong.
+> > Can you please try the following patch and see whether the problem
+> > goes away?
+> > 
 > 
-> Early ATA does not support LBA48 so that behaviour is correct from Linux
+> Thanks, I'll let you know when/if it drops to 1.5gbps.
 > 
->> 
->> This seems to have worked properly (at least in the sense that the full size of the disk was visible) on kernel 2.6.27.41.  See http://www.serverphorums.com/read.php?12,79638
->> 
->> In any event, this is how the virtual disk shows up at boot:
->> 
->> Oct 15 11:06:06 localhost kernel: ata1.01: ATA-0: Virtual HD, 1.1.0, max MWDMA2
->> Oct 15 11:06:06 localhost kernel: ata1.01: 267382800 sectors, multi 128: LBA
-> 
->> Can someone suggest a direction to go in next?
-> 
-> Well it looks like a bug in the hypedvisor so I guess the first steps are
-> to check with Microsoft if there is an update and to open a bug report
-> with them. If the volume naming is consistent then I guess we can also in
-> theory add a hack for Linux to recognize the broken volumes (assuming
-> LBA48 actually works if you ignore the drive identify data)
 
-I'll file a report with Microsoft and see what happens.  Thanks!
+Looks to stay at 3.0 Gbps now... but gives up on EH after 5 retries?
 
-David
+[ 4342.048572] ata1: hard resetting link
+[ 4342.507282] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 4342.510118] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.510127] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4342.510413] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.510421] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4342.514766] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.514774] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4342.515024] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.515031] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4342.516697] ata1.00: configured for UDMA/100
+[ 4342.516977] ata1: hard resetting link
+[ 4342.976018] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 4342.978892] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.978900] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4342.979186] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.979193] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4342.983577] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.983585] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4342.983865] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4342.983872] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4342.984989] ata1.00: configured for UDMA/100
+[ 4342.985408] ata1: hard resetting link
+[ 4343.445045] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 4343.447845] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.447856] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4343.448119] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.448126] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4343.451322] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.451330] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4343.451628] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.451635] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4343.452961] ata1.00: configured for UDMA/100
+[ 4343.453269] ata1: hard resetting link
+[ 4343.912801] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 4343.915808] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.915816] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4343.916102] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.916110] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4343.921403] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.921411] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4343.921679] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4343.921686] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4343.923580] ata1.00: configured for UDMA/100
+[ 4343.923841] ata1: hard resetting link
+[ 4344.383113] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 4344.386020] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4344.386029] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4344.386309] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4344.386320] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4344.390462] ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4344.390470] ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE
+LOCK) filtered out
+[ 4344.390737] ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES)
+succeeded
+[ 4344.390744] ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES)
+filtered out
+[ 4344.392217] ata1.00: configured for UDMA/100
+[ 4344.392496] ata1: EH pending after 5 tries, giving up
+[ 4344.392507] ata1: EH complete
 
+regards, Kyle
