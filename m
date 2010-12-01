@@ -1,75 +1,68 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [git patches] libata updates for 2.6.37
-Date: Wed, 01 Dec 2010 15:19:06 +0100
-Message-ID: <4CF6595A.6010104@kernel.org>
-References: <20101022012302.GA7487@havoc.gtf.org> <20101129180755.GK15818@bombadil.infradead.org> <4CF506A6.4020200@kernel.org> <20101130153839.GM15818@bombadil.infradead.org> <4CF52652.4030802@kernel.org> <20101130163150.GA25668@bombadil.infradead.org> <20101130175317.GB25668@bombadil.infradead.org> <20101130210938.GF25668@bombadil.infradead.org> <4CF62EE0.7040607@kernel.org> <20101201124445.GG25668@bombadil.infradead.org>
+Subject: Re: Regression between 2.6.34 and 2.6.35 ?
+Date: Wed, 01 Dec 2010 15:45:52 +0100
+Message-ID: <4CF65FA0.5050903@kernel.org>
+References: <AANLkTi=g4F0mgS-w2jFs0r_PAcEk5bytdyAGP+rWJ-J5@mail.gmail.com>	<4CEFC051.7090800@kernel.org>	<AANLkTi=koJHKvqv6iuvuc-j3HGtSR+YJqaDQmM9JrViO@mail.gmail.com>	<4CF3CE68.2020500@kernel.org> <AANLkTi=Xnm8A0gBh9jcijTMdQ-YkajCM47YH07iBVF19@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:58683 "EHLO hera.kernel.org"
+Received: from hera.kernel.org ([140.211.167.34]:56215 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754951Ab0LAOUG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Dec 2010 09:20:06 -0500
-In-Reply-To: <20101201124445.GG25668@bombadil.infradead.org>
+	id S1750950Ab0LAOp4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Dec 2010 09:45:56 -0500
+In-Reply-To: <AANLkTi=Xnm8A0gBh9jcijTMdQ-YkajCM47YH07iBVF19@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Antonio Toma <antonio.toma@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello, again.
+Hello,
 
-On 12/01/2010 01:44 PM, Kyle McMartin wrote:
-> 00:1f.2 SATA controller [0106]: Intel Corporation 5 Series/3400 Series
-...
-> 	Model Number:       HITACHI HTS725032A9A364                 
+On 11/30/2010 07:53 PM, Antonio Toma wrote:
+> here is usual information (interrupts and boot logs) after compiling
+> and installing 2.6.36.1
+> The issue is still there.
+> Please, let me know how to patch for further debugging.
 
-Nothing peculiar.  Hmm... okay, I think I've found what went wrong.
-Can you please try the following patch and see whether the problem
-goes away?
+Can you please apply the following patch, see whether the behavior
+changes and report the kernel log?
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5e59050..17a6378 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3275,6 +3275,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	struct ata_port *ap = ata_is_host_link(link) ? link->ap : NULL;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
-+	enum ata_lpm_policy old_policy = link->lpm_policy;
- 	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
- 	unsigned int err_mask;
- 	int rc;
-@@ -3338,6 +3339,14 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 		goto fail;
+Thanks.
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index d05387d..b8bc453 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1532,11 +1532,10 @@ static unsigned int __ata_sff_port_intr(struct ata_port *ap,
+ 		if (!(qc->dev->flags & ATA_DFLAG_CDB_INTR))
+ 			return ata_sff_idle_irq(ap);
+ 		break;
+-	case HSM_ST:
+-	case HSM_ST_LAST:
+-		break;
+-	default:
++	case HSM_ST_IDLE:
+ 		return ata_sff_idle_irq(ap);
++	default:
++		break;
  	}
 
-+	/*
-+	 * Low level driver acked the transition.  Issue DIPM command
-+	 * with the new policy set.
-+	 */
-+	link->lpm_policy = policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = policy;
-+
- 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
- 	ata_for_each_dev(dev, link, ENABLED) {
- 		if (policy == ATA_LPM_MIN_POWER && ata_id_has_dipm(dev->id)) {
-@@ -3353,12 +3362,14 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	/* check main status, clearing INTRQ if needed */
+@@ -2821,7 +2820,7 @@ unsigned int ata_bmdma_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 		VPRINTK("ata%u: host_stat 0x%X\n", ap->print_id, host_stat);
+
+ 		/* if it's not our irq... */
+-		if (!(host_stat & ATA_DMA_INTR))
++		if (!(host_stat & (ATA_DMA_INTR | ATA_DMA_ERR)))
+ 			return ata_sff_idle_irq(ap);
+
+ 		/* before we do anything else, clear DMA-Start bit */
+@@ -2830,6 +2829,7 @@ unsigned int ata_bmdma_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
+
+ 		if (unlikely(host_stat & ATA_DMA_ERR)) {
+ 			/* error when transfering data to/from memory */
++			ata_port_printk(ap, KERN_WARNING, "XXX AC_ERR_HOST_BUS\n");
+ 			qc->err_mask |= AC_ERR_HOST_BUS;
+ 			ap->hsm_task_state = HSM_ST_ERR;
  		}
- 	}
-
--	link->lpm_policy = policy;
--	if (ap && ap->slave_link)
--		ap->slave_link->lpm_policy = policy;
- 	return 0;
-
- fail:
-+	/* restore the old policy */
-+	link->lpm_policy = old_policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = old_policy;
-+
- 	/* if no device or only one more chance is left, disable LPM */
- 	if (!dev || ehc->tries[dev->devno] <= 2) {
- 		ata_link_printk(link, KERN_WARNING,
