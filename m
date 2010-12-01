@@ -1,60 +1,37 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using
- SATA multiplier
-Date: Wed, 01 Dec 2010 10:45:25 +0100
-Message-ID: <4CF61935.2080501@gmail.com>
-References: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com> <4CF50574.6000706@gmail.com> <AANLkTi=0gBcfrAyJNb0+=obH2QDsqhGM5a9xxwHAoh88@mail.gmail.com> <4CF55549.4080000@gmail.com> <AANLkTinyJdTYXgpfvmw8vRBEFOc+SdCKe9hBZbGk1oLd@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [git patches] libata updates for 2.6.37
+Date: Wed, 01 Dec 2010 12:17:52 +0100
+Message-ID: <4CF62EE0.7040607@kernel.org>
+References: <20101022012302.GA7487@havoc.gtf.org> <20101129180755.GK15818@bombadil.infradead.org> <4CF506A6.4020200@kernel.org> <20101130153839.GM15818@bombadil.infradead.org> <4CF52652.4030802@kernel.org> <20101130163150.GA25668@bombadil.infradead.org> <20101130175317.GB25668@bombadil.infradead.org> <20101130210938.GF25668@bombadil.infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39614 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048Ab0LAJpG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2010 04:45:06 -0500
-Received: by bwz15 with SMTP id 15so5924727bwz.19
-        for <linux-ide@vger.kernel.org>; Wed, 01 Dec 2010 01:45:04 -0800 (PST)
-In-Reply-To: <AANLkTinyJdTYXgpfvmw8vRBEFOc+SdCKe9hBZbGk1oLd@mail.gmail.com>
+Received: from hera.kernel.org ([140.211.167.34]:45967 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752147Ab0LALRq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Dec 2010 06:17:46 -0500
+In-Reply-To: <20101130210938.GF25668@bombadil.infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Mac <mkl0301@gmail.com>
-Cc: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Kyle McMartin <kyle@mcmartin.ca>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 Hello,
 
-On 12/01/2010 06:53 AM, Lin Mac wrote:
-> While using multiplier with CONFIG_SATA_PMP enabled, or using disks directly
-> without CONFIG_SATA_PMP have no issue.
+On 11/30/2010 10:09 PM, Kyle McMartin wrote:
+>> Ok, running it, I haven't seen the issue across three suspends... Will
+>> update when it inevitably happens.
 > 
-> It is because sata_srst_pmp always return SATA_PMP_CTRL_PORT(15),
-> which casued ahci_do_softreset with pmp 15, which is not needed for
-> disks connected directly.
+> [10273.011241] ata1.00: internal command failure: stat=0xef
+> ehi_desc="irq_stat 0x00400001, PHY RDY changed"
 
-SRST w/ PMP==15 is the standard defined way to probe devices for PMP
-capable controllers.
-
-> With SPMH3726-P rev:2.1.2, ata_dev_classify would report ATA_DEV_UNKNOWN on
-> ahci_hardreset. While with a Segate Barracuda 1TB SATA HD, it is ATA_DEV_ATA.
-> Therefore, the pmp returned by sata_srst_pmp should depends on the class
-> reported by ahci_hardreset.
-
-IIRC, PMP should return the signature of the first device after
-hardreset.  At any rate, the standard sanctioned way to probe is SRST
-w/ PMP==15.
-
-> This patch does 2 things:
-> 1. ata_eh_reset calls ata_do_reset upon SRST without clearing classes, to be
->    used by sata_srst_pmp to decide pmp.
-> 2. sata_srst_pmp returns SATA_PMP_CTRL_PORT only when class is ATA_DEV_PMP or
->    ATA_DEV_UNKNOWN
-
-So, no, this isn't acceptable.  You're making the behavior deviate
-from the standard for all controllers and devices to work around a
-faulty, rather obscure controller.  If you want to work around, please
-implement a workaround which is specific to the controller in
-question.
-
-Thanks.
+Hmmm, so it's a timing problem.  For some reason, a PHY event is being
+reported after reset is complete which unfortunately gets reported
+while DIPM command is in progress.  Hmmm... what's broken is that the
+PHY event happens after reset is complete.  Can you please attach the
+output of "lspci -nn" and "hdparm -I /dev/sda"?  Looks a lot like a
+timing issue.  Maybe we'll have to add a delay somewhere.  :-(
 
 -- 
 tejun
