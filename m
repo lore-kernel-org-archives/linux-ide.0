@@ -1,52 +1,100 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [git patches] libata updates for 2.6.37
-Date: Thu, 02 Dec 2010 11:17:09 +0100
-Message-ID: <4CF77225.3040904@kernel.org>
-References: <4CF506A6.4020200@kernel.org> <20101130153839.GM15818@bombadil.infradead.org> <4CF52652.4030802@kernel.org> <20101130163150.GA25668@bombadil.infradead.org> <20101130175317.GB25668@bombadil.infradead.org> <20101130210938.GF25668@bombadil.infradead.org> <4CF62EE0.7040607@kernel.org> <20101201124445.GG25668@bombadil.infradead.org> <4CF6595A.6010104@kernel.org> <20101201155026.GH25668@bombadil.infradead.org> <20101201200907.GI25668@bombadil.infradead.org>
+From: Lin Mac <mkl0301@gmail.com>
+Subject: Re: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using
+ SATA multiplier
+Date: Thu, 2 Dec 2010 18:23:46 +0800
+Message-ID: <AANLkTimWqFh-PD4DFXwaRmthb5Lyw3MAFknFmT7vp5pY@mail.gmail.com>
+References: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com>
+	<4CF50574.6000706@gmail.com>
+	<AANLkTi=0gBcfrAyJNb0+=obH2QDsqhGM5a9xxwHAoh88@mail.gmail.com>
+	<4CF55549.4080000@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:52058 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757183Ab0LBKRl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:17:41 -0500
-In-Reply-To: <20101201200907.GI25668@bombadil.infradead.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39974 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752902Ab0LBKXs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2010 05:23:48 -0500
+Received: by fxm20 with SMTP id 20so972395fxm.19
+        for <linux-ide@vger.kernel.org>; Thu, 02 Dec 2010 02:23:46 -0800 (PST)
+In-Reply-To: <4CF55549.4080000@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kyle McMartin <kyle@mcmartin.ca>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 12/01/2010 09:09 PM, Kyle McMartin wrote:
-> On Wed, Dec 01, 2010 at 10:50:26AM -0500, Kyle McMartin wrote:
->>> Nothing peculiar.  Hmm... okay, I think I've found what went wrong.
->>> Can you please try the following patch and see whether the problem
->>> goes away?
->>>
+2010/12/1 Tejun Heo <htejun@gmail.com>:
+> On 11/30/2010 06:46 PM, Lin Mac wrote:
+>> Could be, =A0but disabling it is the last option. And it's anoying t=
+o
+>> have 2 different modules for different uses.
 >>
->> Thanks, I'll let you know when/if it drops to 1.5gbps.
->>
-> 
-> Looks to stay at 3.0 Gbps now... but gives up on EH after 5 retries?
+>> I'd prefer some clues/checkpoint if possible.
+>
+> One thing which could be possible is that the controller stashes the
+> result code for the PMP aware SRST according to the PMP number instea=
+d
+> of the usual place, so the driver can't see it. =A0In that case, the
+> driver can be modified to check both places I suppose but if the
+> hardware can be fixed, that would be great.
+the usual place, I presume you mean PxTFD+PxSIG.
+I've check RFIS of received FIS structure after softreset failed and
+nothing there. (UFIS neither)
+Is there any other suspect to check?
 
-Hmmm... something is setting EH_PENDING while EH is in progress.
-Let's see what's doing it.  Can you please apply the following patch
-on top of the previous one and report the kernel log?
+>> I supposed the behavior of detecting and resetting disks (without
+>> using port multiplier) should be the same for both with and without
+>> CONFIG_SATA_PMP. All I know about port multiplier is when it is used
+>> (not much too), but is there any register configuration or behavior =
+is
+>> required for multiplier to work properly and take effect even when n=
+o
+>> multiplier is used?
+>
+> Yeah, the only difference is the PMP port number when issuing SRST.
+> Non-PMP devices ignore it and respond the same way while PMP
+> recognizes it and responds with PMP signature instead of the signatur=
+e
+> of the first device. =A0As written above, I think it's quite likely t=
+hat
+> the controller is handling the response D2H Reg FIS incorrectly when =
+a
+> non-PMP device responds to PMP SRST.
 
-Thanks.
+My situation is that device is sending D2H Reg FIS, but controller is
+not reflecting it on PxTFD, PxSIG, or RFIS of received FIS
+structure.With the patch I sent, it seems the controller receives D2H
+Reg FIS of the same PMP setting of the previous sent H2D Reg FIS, and
+drop the different one.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5e59050..8f0d854 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -896,6 +896,10 @@ static void ata_eh_set_pending(struct ata_port *ap, int fastdrain)
+The AHCI controller I used is AHCI v1.1 compatible, command-based switc=
+hing.
 
- 	ap->pflags |= ATA_PFLAG_EH_PENDING;
+In SATA spec (rev2.6) 16.7.1, it says:
 
-+	ata_port_printk(ap, KERN_WARNING, "XXX SET EH PENDING, fastdrain=%d\n",
-+			fastdrain);
-+	dump_stack();
-+
- 	if (!fastdrain)
- 		return;
+A host controller may support command-based switching by implementing
+the Port Multiplier Port (PMP) field in the SControl register as
+detailed in section 14.1.3.In order to use this mechanism, host
+software would set the PMP field appropriately before issuing a
+command to a device conected to the Port Multiplier. (...) Note that
+the PMP field shall be set to the control port when host software
+issues commands to the Port Multiplier itself.
+--
 
+In AHCI spec, the PMP field of PxSCTL "is not used by AHCI".Does it
+implies AHCI would set it and software doesn't need to do anything?
+
+13.13.4.1 Port Multiplier Discovery
+If  a device is present, the host issues a software reset with the PM
+Port field set  to the control port. The host checks the signature
+value returned and if....
+--
+
+SATA spec didn't says what to do IF it received a data with PMP
+setting doesn't match it's current setting (did it?). While 13.13.4.1
+only implies the host should receive the signature successfully, even
+if it is of different PMP setting.
+
+
+Best Regards,
+Mac Lin
