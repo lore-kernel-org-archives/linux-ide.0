@@ -1,84 +1,71 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Cannot detect SATA disks w/ CONFIG_SATA_PMP w/o actually using
- SATA multiplier
-Date: Thu, 02 Dec 2010 11:31:12 +0100
-Message-ID: <4CF77570.9000700@gmail.com>
-References: <AANLkTi=kbTcq3hYBiDzGcAb02Ppwb1QEcs12-1W_T=LG@mail.gmail.com>	<4CF50574.6000706@gmail.com>	<AANLkTi=0gBcfrAyJNb0+=obH2QDsqhGM5a9xxwHAoh88@mail.gmail.com>	<4CF55549.4080000@gmail.com> <AANLkTimWqFh-PD4DFXwaRmthb5Lyw3MAFknFmT7vp5pY@mail.gmail.com>
+From: viresh kumar <viresh.kumar@st.com>
+Subject: Re: ata: hotplug not working with arasan CF controller driver
+Date: Thu, 2 Dec 2010 16:11:20 +0530
+Message-ID: <4CF777D0.4010603@st.com>
+References: <ede5127fb76113dd7560fa8919c0e125b38985a2.1290422728.git.viresh.kumar@st.com> <4CECA643.2010005@st.com> <4CEFED92.7050701@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65431 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752636Ab0LBKbR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2010 05:31:17 -0500
-Received: by bwz15 with SMTP id 15so7084799bwz.19
-        for <linux-ide@vger.kernel.org>; Thu, 02 Dec 2010 02:31:15 -0800 (PST)
-In-Reply-To: <AANLkTimWqFh-PD4DFXwaRmthb5Lyw3MAFknFmT7vp5pY@mail.gmail.com>
+Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:44032 "EHLO
+	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752838Ab0LBKle (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2010 05:41:34 -0500
+In-Reply-To: <4CEFED92.7050701@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Mac <mkl0301@gmail.com>
-Cc: cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+On 11/26/2010 10:55 PM, Tejun Heo wrote:
+> You gotta tell EH that the device needs rescanning.  When you detect a
+> hotplug event, call ata_ehi_hotplugged() followed by
+> ata_port_freeze().
 
-On 12/02/2010 11:23 AM, Lin Mac wrote:
->> One thing which could be possible is that the controller stashes the
->> result code for the PMP aware SRST according to the PMP number instead
->> of the usual place, so the driver can't see it.  In that case, the
->> driver can be modified to check both places I suppose but if the
->> hardware can be fixed, that would be great.
-> the usual place, I presume you mean PxTFD+PxSIG.
-> I've check RFIS of received FIS structure after softreset failed and
-> nothing there. (UFIS neither)
-> Is there any other suspect to check?
+Tejun,
 
-Have you checked all PxTFDs?  It could be that the controller is
-saving it in the wrong slot.
+Do you want to say, we need to call above routines for both hotplugging
+events: card insert and remove??
 
-> My situation is that device is sending D2H Reg FIS, but controller is
-> not reflecting it on PxTFD, PxSIG, or RFIS of received FIS
-> structure.With the patch I sent, it seems the controller receives D2H
-> Reg FIS of the same PMP setting of the previous sent H2D Reg FIS, and
-> drop the different one.
+Actually i am getting following messages on insert:
 
-If the controller is dropping the D2H Reg FIS altogether, it'll
-probably need more intricate workaround.  :-(
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+ata1: soft resetting link
+ata1.00: CFA: TRANSCEND, 20091215, max UDMA/66
+ata1.00: 62537328 sectors, multi 0: LBA 
+ata1.00: configured for PIO6
+ata1.00: configured for PIO6
+ata1: EH complete
+scsi 0:0:0:0: Direct-Access     ATA      TRANSCEND        2009 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 62537328 512-byte logical blocks: (32.0 GB/29.8 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda:
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+ sda1
+sd 0:0:0:0: [sda] Attached SCSI disk
 
-> The AHCI controller I used is AHCI v1.1 compatible, command-based switching.
-> 
-> In SATA spec (rev2.6) 16.7.1, it says:
-> 
-> A host controller may support command-based switching by implementing
-> the Port Multiplier Port (PMP) field in the SControl register as
-> detailed in section 14.1.3.In order to use this mechanism, host
-> software would set the PMP field appropriately before issuing a
-> command to a device conected to the Port Multiplier. (...) Note that
-> the PMP field shall be set to the control port when host software
-> issues commands to the Port Multiplier itself.
-> --
-> 
-> In AHCI spec, the PMP field of PxSCTL "is not used by AHCI".Does it
-> implies AHCI would set it and software doesn't need to do anything?
-> 
-> 13.13.4.1 Port Multiplier Discovery
-> If  a device is present, the host issues a software reset with the PM
-> Port field set  to the control port. The host checks the signature
-> value returned and if....
-> --
-> 
-> SATA spec didn't says what to do IF it received a data with PMP
-> setting doesn't match it's current setting (did it?). While 13.13.4.1
-> only implies the host should receive the signature successfully, even
-> if it is of different PMP setting.
 
-The probing sequence is described somewhere in the ahci spec and I'm
-fairly sure the dropping behavior you're describing is out of spec.
-You'll need to find a way to reliably distinguish a PMP device and
-then probably implement the workaround in custom hardreset or
-softreset method for the specific controller.
+and following messages on card remove:
 
-Good luck.
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+ata1: soft resetting link
+ata1.00: revalidation failed (errno=-2)
+ata1: soft resetting link
+ata1.00: revalidation failed (errno=-2)
+ata1: soft resetting link
+ata1.00: revalidation failed (errno=-2)
+ata1.00: disabled
+ata1: soft resetting link
+ata1: EH complete
+ata1.00: detaching (SCSI 0:0:0:0)
+sd 0:0:0:0: [sda] Stopping disk
+sd 0:0:0:0: [sda] START_STOP FAILED
+sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
 
--- 
-tejun
+
+For me, card insertion messages are fine, but I am not sure if card removal
+messages are fine??
+
+--
+viresh
