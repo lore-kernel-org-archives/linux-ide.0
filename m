@@ -1,75 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata: hotplug not working with arasan CF controller driver
-Date: Thu, 02 Dec 2010 11:44:06 +0100
-Message-ID: <4CF77876.9030703@kernel.org>
-References: <ede5127fb76113dd7560fa8919c0e125b38985a2.1290422728.git.viresh.kumar@st.com> <4CECA643.2010005@st.com> <4CEFED92.7050701@kernel.org> <4CF777D0.4010603@st.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13770] System freeze on XFS filesystem recovery on an external
+ disk
+Date: Thu, 2 Dec 2010 12:16:08 GMT
+Message-ID: <201012021216.oB2CG8x3014694@demeter2.kernel.org>
+References: <bug-13770-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:56213 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757347Ab0LBKoN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Dec 2010 05:44:13 -0500
-In-Reply-To: <4CF777D0.4010603@st.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:37363 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755394Ab0LBMQK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2010 07:16:10 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oB2CG9Yr014696
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 2 Dec 2010 12:16:09 GMT
+In-Reply-To: <bug-13770-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: viresh kumar <viresh.kumar@st.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On 12/02/2010 11:41 AM, viresh kumar wrote:
-> On 11/26/2010 10:55 PM, Tejun Heo wrote:
->> You gotta tell EH that the device needs rescanning.  When you detect a
->> hotplug event, call ata_ehi_hotplugged() followed by
->> ata_port_freeze().
-> 
-> Do you want to say, we need to call above routines for both hotplugging
-> events: card insert and remove??
+https://bugzilla.kernel.org/show_bug.cgi?id=13770
 
-Yes.
 
-> Actually i am getting following messages on insert:
-> 
-> ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> ata1: soft resetting link
-> ata1.00: CFA: TRANSCEND, 20091215, max UDMA/66
-> ata1.00: 62537328 sectors, multi 0: LBA 
-> ata1.00: configured for PIO6
-> ata1.00: configured for PIO6
-> ata1: EH complete
-> scsi 0:0:0:0: Direct-Access     ATA      TRANSCEND        2009 PQ: 0 ANSI: 5
-> sd 0:0:0:0: [sda] 62537328 512-byte logical blocks: (32.0 GB/29.8 GiB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
->  sda:
-> sd 0:0:0:0: Attached scsi generic sg0 type 0
->  sda1
-> sd 0:0:0:0: [sda] Attached SCSI disk
->
-> 
-> and following messages on card remove:
-> 
-> ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> ata1: soft resetting link
-> ata1.00: revalidation failed (errno=-2)
-> ata1: soft resetting link
-> ata1.00: revalidation failed (errno=-2)
-> ata1: soft resetting link
-> ata1.00: revalidation failed (errno=-2)
-> ata1.00: disabled
-> ata1: soft resetting link
-> ata1: EH complete
-> ata1.00: detaching (SCSI 0:0:0:0)
-> sd 0:0:0:0: [sda] Stopping disk
-> sd 0:0:0:0: [sda] START_STOP FAILED
-> sd 0:0:0:0: [sda] Result: hostbyte=0x04 driverbyte=0x00
-> 
-> For me, card insertion messages are fine, but I am not sure if card removal
-> messages are fine??
 
-Yes, they are expected.
 
-Thanks.
+
+--- Comment #8 from Jean-Luc Coulon <jean.luc.coulon@gmail.com>  2010-12-02 12:16:02 ---
+I'm now running 2.6.36 and I've not had this problem since.
+
+J-L
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
