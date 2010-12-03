@@ -1,91 +1,63 @@
 From: Tobias Karnat <tobias.karnat@googlemail.com>
-Subject: Re: sata_sil24: external raid storage mistaken as port multiplier
-Date: Fri, 03 Dec 2010 13:45:44 +0100
-Message-ID: <1291380344.23852.9.camel@Tobias-Karnat>
-References: <1290461073.12443.21.camel@Tobias-Karnat>
-	 <1290514125.28293.2.camel@Tobias-Karnat>
-	 <1290572588.24847.20.camel@Tobias-Karnat> <4CEFEC17.6060503@kernel.org>
-	 <4CF014F8.9000700@teksavvy.com> <4CF01583.5050307@kernel.org>
-	 <4CF07386.7080304@teksavvy.com>  <1290941518.12616.12.camel@Tobias-Karnat>
+Subject: sata_sil24: use of msi causes nmi
+Date: Fri, 03 Dec 2010 14:37:02 +0100
+Message-ID: <1291383422.14396.13.camel@Tobias-Karnat>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:58889 "EHLO
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42645 "EHLO
 	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932494Ab0LCMps (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Dec 2010 07:45:48 -0500
-In-Reply-To: <1290941518.12616.12.camel@Tobias-Karnat>
+	with ESMTP id S1751669Ab0LCNhG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Dec 2010 08:37:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Mark Lord <kernel@teksavvy.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Am Sonntag, den 28.11.2010, 11:51 +0100 schrieb Tobias Karnat:
-> Am Freitag, den 26.11.2010, 18:19 +0100 schrieb Tejun Heo:
-> > That said, yeah, it probably would be a good idea to add a
-> > libata.force param.
-> > 
-> > Can you please apply the following patch and verify that the device
-> > doesn't work without any parameter but it does with
-> > "libata.force=nopmp"?
-> 
-> Sorry, but I am currently happy with the generic Ubuntu Kernel
-> with the module recompiled.
-> 
-> Maybe I am just lazy, but I have scheduled to compile my first Kernel
-> on Ubuntu 10.10 when 2.6.37 will be out.
+Hi,
 
-Well, I'm now on 2.6.36.1, because I had an problem with Kaffeine and
-2.6.37-rc4. But I don't like the idea to force to not use pmp on every
-controller. I don't have an pmp which I use, but maybe someone else does
-and also has the problem with the external case.
+Using sata_sil24 with the module option msi=1 and writing some data
+causes an nmi and lockups the module, it can't be removed and only a
+reboot solves the problem.
 
-> Am Freitag, den 26.11.2010, 21:57 -0500 schrieb Mark Lord:
-> > I suppose *if* we knew the exact fwrev that requires the workaround,
-> > then we could make it automatic for that, and still have the boot flag
-> > for cases we don't know about.
-> > 
-> > Tobias?  Got the IDENTIFY info from that device?
-> > Something like "hdparm --istdout /dev/sdX"  ?
-> 
-> Yes, hdparm --istdout /dev/sdh gives,
-> 
-> /dev/sdh:
-> 0040 3fff c837 0010 0000 0000 003f 0000
-> 0000 0000 3037 3043 3035 465f 3837 3933
-> 3931 5f5f 5f30 5f38 0003 3e00 0004 5247
-> 4c31 3034 3033 4578 7465 726e 616c 2044
-> 6973 6b20 3020 2020 2020 2020 2020 2020
-> 2020 2020 2020 2020 2020 2020 2020 8001
-> 0000 2f00 4000 0200 0000 0006 0000 0000
-> 0000 0000 0000 0101 ffff 0fff 0000 0407
-> 0003 0078 0078 0078 0078 0000 0000 0000
-> 0000 0000 0000 0000 0201 0000 0000 0000
-> 007e 001b 0069 7460 4040 0028 3460 4040
-> 207f 0000 0000 0000 fffe 0000 c0fe 0000
-> 0000 0000 0000 0000 c060 7470 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0001 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0017 2040
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> 0000 0000 0000 0000 0000 0000 0000 a3a5
-
-I hope this is enough info?
+[ 3563.902356] sata_sil24 0000:02:00.0: version 1.1
+[ 3563.902379] sata_sil24 0000:02:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+[ 3563.902935]   alloc irq_desc for 43 on node -1
+[ 3563.902938]   alloc kstat_irqs on node -1
+[ 3563.902956] sata_sil24 0000:02:00.0: irq 43 for MSI/MSI-X
+[ 3563.902967] sata_sil24 0000:02:00.0: Using MSI
+[ 3563.902977] sata_sil24 0000:02:00.0: setting latency timer to 64
+[ 3563.903298] scsi9 : sata_sil24
+[ 3563.903488] scsi10 : sata_sil24
+[ 3563.903615] ata9: SATA max UDMA/100 host m128@0xfadfbf80 port 0xfadfc000 irq 43
+[ 3563.903621] ata10: SATA max UDMA/100 host m128@0xfadfbf80 port 0xfadfe000 irq 43
+[ 3565.923032] ata9: SATA link down (SStatus 0 SControl 0)
+[ 3567.943028] ata10: SATA link down (SStatus 0 SControl 0)
+[ 3598.066772] ata9: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+[ 3598.066777] ata9: irq_stat 0x00b40090, PHY RDY changed
+[ 3598.066785] ata9: hard resetting link
+[ 3600.198018] ata9: softreset failed (SRST command error)
+[ 3600.198025] ata9: reset failed (errno=-5), retrying in 8 secs
+[ 3608.066019] ata9: hard resetting link
+[ 3610.209029] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[ 3610.209095] ata9.00: ATA-6: External Disk 0, RGL10403, max UDMA/133
+[ 3610.209099] ata9.00: 1953546336 sectors, multi 1: LBA48 
+[ 3610.209184] ata9.00: configured for UDMA/100
+[ 3610.209190] ata9: EH complete
+[ 3610.209294] scsi 9:0:0:0: Direct-Access     ATA      External Disk 0  RGL1 PQ: 0 ANSI: 5
+[ 3610.209502] sd 9:0:0:0: [sdh] 1953546336 512-byte logical blocks: (1.00 TB/931 GiB)
+[ 3610.209528] sd 9:0:0:0: Attached scsi generic sg9 type 0
+[ 3610.209579] sd 9:0:0:0: [sdh] Write Protect is off
+[ 3610.209583] sd 9:0:0:0: [sdh] Mode Sense: 00 3a 00 00
+[ 3610.209615] sd 9:0:0:0: [sdh] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[ 3610.347199]  sdh: unknown partition table
+[ 3610.347431] sd 9:0:0:0: [sdh] Attached SCSI disk
+[ 3615.859236] XFS mounting filesystem sdh
+[ 3615.966683] Ending clean XFS mount for filesystem: sdh
+[ 3622.635163] Uhhuh. NMI received for unknown reason a1 on CPU 0.
+[ 3622.635168] You have some hardware problem, likely on the PCI bus.
+[ 3622.635170] Dazed and confused, but trying to continue
 
 -Tobias
 
