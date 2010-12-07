@@ -1,82 +1,191 @@
-From: Anssi Hannula <anssi.hannula@iki.fi>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Tue, 07 Dec 2010 21:45:38 +0200
-Message-ID: <4CFE8EE2.1060908@iki.fi>
-References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org> <4CF55A4B.1020402@iki.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sypressi.dnainternet.net ([83.102.40.135]:38114 "EHLO
-	sypressi.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518Ab0LGTpo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Dec 2010 14:45:44 -0500
-In-Reply-To: <4CF55A4B.1020402@iki.fi>
-Sender: linux-ide-owner@vger.kernel.org
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [RFC PATCH v2 1/3] scsi: Detailed I/O errors
+Date: Tue,  7 Dec 2010 18:16:40 -0500
+Message-ID: <1291763802-8251-2-git-send-email-snitzer@redhat.com>
+References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
 
-On 30.11.2010 22:10, Anssi Hannula wrote:
-> On 30.11.2010 15:31, Tejun Heo wrote:
->> Hello,
+From: Hannes Reinecke <hare@suse.de>
 
-Hi!
+Instead of just passing 'EIO' for any I/O error we should be
+notifying the upper layers with more details about the cause
+of this error.
 
->> On 11/30/2010 03:04 AM, Anssi Hannula wrote:
->>> On 24.07.2010 17:53, Tejun Heo wrote:
->>>> 88SE9128 can do FBS and sets it in HOST_CAP but forgets to set FBSCP
->>>> in PORT_CMD.  Implement AHCI_HFLAG_YES_FBS and apply it to 88SE9128.
->>>>
->>>> Signed-off-by: Tejun Heo <tj@kernel.org>
->>> [...]
->>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>>> index f252253..41fa0a3 100644
->>> [...]
->>>> @@ -362,6 +371,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>>>  	/* Marvell */
->>>>  	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
->>>>  	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
->>>> +	{ PCI_DEVICE(0x1b4b, 0x9123),
->>>> +	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
->>>
->>> The device contains an IDE interface as well, and the above
->>> pci_device_id matches them both:
->>> 08:00.0 SATA controller [0106]: Device [1b4b:9123] (rev 10)
->>> 08:00.1 IDE interface [0101]: Device [1b4b:9123] (rev 10)
->>
->> *GASP* Come on Marvell.... :-(
->>
->>> This results in some (apparently harmless) mess [1].
->>>
->>> Attached is a patch to make the id entry class-specific. The patch is
->>> untested (the issue happens in a production machine).
->>
->> Thanks a lot for the patch.  It looks correct but it would be great if
->> it can be veified.
-> 
-> I think I can do that later, but probably not this week or so.
+Update the possible I/O errors to:
 
-I've now verified that the patch works on a system with 1b4b:9123
-controller.
+- ENOLINK: Link failure between host and target
+- EIO: Retryable I/O error
+- EREMOTEIO: Non-retryable I/O error
 
->> Also, there's a pending patch to add another PCI
->> ID for similar marvell controller.  I wonder whether similar
->> workaround should be applied.  Hmmm... ISTR the other one reporting
->> IDE class even though it works in IDE mode.
-> 
-> IDE class in IDE mode? Isn't that kind of expected? :)
-> 
-> Also, just to avoid any misunderstanding: I see both the SATA and IDE
-> interfaces at the same time.
-> 
->> Can someone with marvell
->> documentation access check what's going on?
->>
->> Thanks.
->>
-> 
+'Retryable' in this context means that an I/O error _might_ be
+restricted to the I_T_L nexus (vulgo: path), so retrying on another
+nexus / path might succeed.
 
+'Non-retryable' means target failure or reservation conflict.
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/scsi/scsi_error.c |   24 +++++++++++++++++-------
+ drivers/scsi/scsi_lib.c   |   24 ++++++++++++++++++++++--
+ include/scsi/scsi.h       |    3 +++
+ 3 files changed, 42 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 824b8fc..48fdd85 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -223,7 +223,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
+  * @scmd:	Cmd to have sense checked.
+  *
+  * Return value:
+- * 	SUCCESS or FAILED or NEEDS_RETRY
++ *	SUCCESS or FAILED or NEEDS_RETRY or TARGET_ERROR
+  *
+  * Notes:
+  *	When a deferred error is detected the current command has
+@@ -326,17 +326,19 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		 */
+ 		return SUCCESS;
+ 
+-		/* these three are not supported */
++		/* these are not supported */
+ 	case COPY_ABORTED:
+ 	case VOLUME_OVERFLOW:
+ 	case MISCOMPARE:
+-		return SUCCESS;
++	case BLANK_CHECK:
++	case DATA_PROTECT:
++		return TARGET_ERROR;
+ 
+ 	case MEDIUM_ERROR:
+ 		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
+ 		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
+ 		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
+-			return SUCCESS;
++			return TARGET_ERROR;
+ 		}
+ 		return NEEDS_RETRY;
+ 
+@@ -344,11 +346,9 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		if (scmd->device->retry_hwerror)
+ 			return ADD_TO_MLQUEUE;
+ 		else
+-			return SUCCESS;
++			return TARGET_ERROR;
+ 
+ 	case ILLEGAL_REQUEST:
+-	case BLANK_CHECK:
+-	case DATA_PROTECT:
+ 	default:
+ 		return SUCCESS;
+ 	}
+@@ -809,6 +809,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 		case SUCCESS:
+ 		case NEEDS_RETRY:
+ 		case FAILED:
++		case TARGET_ERROR:
+ 			break;
+ 		case ADD_TO_MLQUEUE:
+ 			rtn = NEEDS_RETRY;
+@@ -1502,6 +1503,14 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 		rtn = scsi_check_sense(scmd);
+ 		if (rtn == NEEDS_RETRY)
+ 			goto maybe_retry;
++		else if (rtn == TARGET_ERROR) {
++			/*
++			 * Need to modify host byte to signal a
++			 * permanent target failure
++			 */
++			scmd->result |= (DID_TARGET_FAILURE << 16);
++			rtn = SUCCESS;
++		}
+ 		/* if rtn == FAILED, we have no sense information;
+ 		 * returning FAILED will wake the error handler thread
+ 		 * to collect the sense and redo the decide
+@@ -1519,6 +1528,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+ 	case RESERVATION_CONFLICT:
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 			    "reservation conflict\n");
++		scmd->result |= (DID_TARGET_FAILURE << 16);
+ 		return SUCCESS; /* causes immediate i/o error */
+ 	default:
+ 		return FAILED;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index eafeeda..4da6459 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -667,6 +667,26 @@ void scsi_release_buffers(struct scsi_cmnd *cmd)
+ }
+ EXPORT_SYMBOL(scsi_release_buffers);
+ 
++static int __scsi_error_from_host_byte(struct scsi_cmnd *cmd, int result)
++{
++	int error = 0;
++
++	switch(host_byte(result)) {
++	case DID_TRANSPORT_FAILFAST:
++		error = -ENOLINK;
++		break;
++	case DID_TARGET_FAILURE:
++		cmd->result |= (DID_OK << 16);
++		error = -EREMOTEIO;
++		break;
++	default:
++		error = -EIO;
++		break;
++	}
++
++	return error;
++}
++
+ /*
+  * Function:    scsi_io_completion()
+  *
+@@ -737,7 +757,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 				req->sense_len = len;
+ 			}
+ 			if (!sense_deferred)
+-				error = -EIO;
++				error = __scsi_error_from_host_byte(cmd, result);
+ 		}
+ 
+ 		req->resid_len = scsi_get_resid(cmd);
+@@ -796,7 +816,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	if (scsi_end_request(cmd, error, good_bytes, result == 0) == NULL)
+ 		return;
+ 
+-	error = -EIO;
++	error = __scsi_error_from_host_byte(cmd, result);
+ 
+ 	if (host_byte(result) == DID_RESET) {
+ 		/* Third party bus reset or reset for error recovery
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 216af85..73d27d9 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -405,6 +405,8 @@ static inline int scsi_is_wlun(unsigned int lun)
+ 				      * recover the link. Transport class will
+ 				      * retry or fail IO */
+ #define DID_TRANSPORT_FAILFAST	0x0f /* Transport class fastfailed the io */
++#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
++				 * other paths */
+ #define DRIVER_OK       0x00	/* Driver status                           */
+ 
+ /*
+@@ -434,6 +436,7 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define TIMEOUT_ERROR   0x2007
+ #define SCSI_RETURN_NOT_HANDLED   0x2008
+ #define FAST_IO_FAIL	0x2009
++#define TARGET_ERROR    0x200A
+ 
+ /*
+  * Midlevel queue return values.
 -- 
-Anssi Hannula
+1.7.2.3
+
