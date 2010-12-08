@@ -1,68 +1,56 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
-Date: Wed, 8 Dec 2010 21:14:40 +0100
-Message-ID: <201012082114.41509.eike-kernel@sf-tec.de>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+Date: Wed, 08 Dec 2010 23:54:03 +0100
+Message-ID: <4D000C8B.5040904@kernel.org>
+References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFEE569.4030204@gmail.com> <4CFF58D2.4040006@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFCD56.6050608@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFD3EB.10800@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFFE29C.7080205@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3076944.NXSmOvlDyz";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@hansenpartnership.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jian Peng <jipeng@broadcom.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
---nextPart3076944.NXSmOvlDyz
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Hello, Jian.
 
-Tejun Heo wrote:
+On 12/08/2010 09:09 PM, Jian Peng wrote:
+> The controller may take much longer time to recover in this case,
+> and leads to wrong HW state after stop_engine() inside
+> ahci_hardreset() and cause device type checking failure due to
+> unfinished HW state change and missing D2H FIS after start_engine()
+> again inside ahci_hardreset(). I guess this is the reason why AHCI
+> spec try to emphasize.
 
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_device_info
-> *cdi, int slot)
->=20
->  	sshdr =3D  kzalloc(sizeof(*sshdr), GFP_KERNEL);
->  	retval =3D sr_test_unit_ready(cd->device, sshdr);
-> -	if (retval || (scsi_sense_valid(sshdr) &&
-> -		       /* 0x3a is medium not present */
-> -		       sshdr->asc =3D=3D 0x3a)) {
-> -		/* Media not present or unable to test, unit probably not
-> -		 * ready. This usually means there is no disc in the drive.
-> -		 * Mark as changed, and we will figure it out later once
-> -		 * the drive is available again.
-> +	/*
-> +	 * Media is considered to be present if TUR succeeds or fails with
-> +	 * sense data indicating something other than media-not-present
-> +	 * (ASC 0x3a).
-> +	 */
-> +	if (!scsi_status_is_good(retval) &&
-> +	    (!scsi_sense_valid(sshdr) || sshdr->asc =3D=3D 0x3a)) {
-> +		/*
-> +		 * Probably not media in the device.  Mark as changed, and
-> +		 * we will figure it out later once the drive is available
-> +		 * again.
+I don't necessarily agree there.  The requirement is impossible to
+reliably satisfy to begin with (it's inherently racy) and most specs
+are filled with "the outcome is undefined" when they don't _need_ to
+be well defined.  The hardware can do "eh.. well, whatever, I don't
+know" but shouldn't get lost and fail to react to further
+state-resetting actions.
 
-"Probably no media ..."?
+> Yes, without this change, Broadcom controller will fail due to above
+> reason.
 
-Eike
+Okay, so, the controller goes bonkers if ST is set when prerequisites
+are not met.  You know that the problem can still happen with the
+proposed change, right?  It's much less likely but definitely can and
+actually is likely to happen once in a blue moon.  It isn't too
+uncommon for link to take some time to stabilize after a PHY event
+(including hardreset) and some devices will end up sending multiple
+D2H Reg FISes in the process with conflicting status.  Also, note that
+the delay between the check and ST setting could be substantial
+especially with parallel probing / booting.
 
---nextPart3076944.NXSmOvlDyz
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+I'm not objecting to the change but you guys probably want to fix the
+controller in following revisions.  If we're gonna make the change,
+I'd like to go with the previous version without the vendor check.
+What is the timeframe for the controller release?  Would it be enough
+to merge the change during 2.6.38-rc1?  After baking it for some time
+in 2.6.38, we can propagate the change back through -stable.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+Thanks.
 
-iEYEABECAAYFAkz/5zEACgkQXKSJPmm5/E4RIwCgmLecVbJQphEZPlyM+labK9/2
-ybIAnAxCKEHzpksGxmq+XOHz9DSlTTi8
-=/66e
------END PGP SIGNATURE-----
-
---nextPart3076944.NXSmOvlDyz--
+-- 
+tejun
