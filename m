@@ -1,72 +1,60 @@
-From: "Joey Lee" <jlee@novell.com>
-Subject: Re: [PATCH RFC v2] support SATA ODD zero power
-Date: Wed, 08 Dec 2010 10:56:52 -0700
-Message-ID: <4D0061940200002300025304@novprvlin0050.provo.novell.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
+Date: Wed, 08 Dec 2010 13:09:20 -0500
+Message-ID: <4CFFC9D0.2090803@garzik.org>
+References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org> <4CF55A4B.1020402@iki.fi> <4CFE8EE2.1060908@iki.fi> <4CFF67B6.7090805@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46501 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755801Ab0LHSJ0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2010 13:09:26 -0500
+Received: by vws16 with SMTP id 16so1261976vws.19
+        for <linux-ide@vger.kernel.org>; Wed, 08 Dec 2010 10:09:25 -0800 (PST)
+In-Reply-To: <4CFF67B6.7090805@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: henry.su.ati@gmail.com, Joey Lee <JLee@novell.com>, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Anssi Hannula <anssi.hannula@iki.fi>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
 
-Hi Tejun,=20
-
-Nice can talk with you! :-)
-
-=E6=96=BC =E4=B8=89=EF=BC=8C2010-12-08 =E6=96=BC 18:25 +0100=EF=BC=8CTe=
-jun Heo =E6=8F=90=E5=88=B0=EF=BC=9A
-> (cc'ing linux-ide)
->=20
+On 12/08/2010 06:10 AM, Tejun Heo wrote:
 > Hello,
->=20
-> On 12/08/2010 04:36 PM, Joey Lee wrote:
-> > Dear all expert,=20
-> >=20
-> > Hi, m... I just google the SATA ODD zero power support and found He=
-nry
-> > already contribute the patch:
-> >=20
-> >  http://kerneltrap.org/mailarchive/linux-scsi/2010/6/25/6885558
-> >=20
-> > And, after first round review,=20
-> > The second version is here:
-> >  http://www.spinics.net/lists/linux-scsi/msg44925.html
-> >=20
-> > But, I didn't see this patch merged in kernel maintain, does there =
-have
-> > any problem with this patch? or actually the patch already in queue
-> > waiting to merge to mainline?
-> >=20
-> > I appreciate if can have any comment to me.
->=20
-> IIRC, at the time, the problem was that nobody had the hardware and
-> the implementation was solely based on the specification only.  I
-> didn't want it to go in without any actual testing, so it was put on
-> hold for the time being.  Do you have access to a device with zsero
-> power support?  If so, are you willing to test the implementation?
->=20
+>
+> On 12/07/2010 08:45 PM, Anssi Hannula wrote:
+>>>>> Attached is a patch to make the id entry class-specific. The patch is
+>>>>> untested (the issue happens in a production machine).
+>>>>
+>>>> Thanks a lot for the patch.  It looks correct but it would be great if
+>>>> it can be veified.
+>>>
+>>> I think I can do that later, but probably not this week or so.
+>>
+>> I've now verified that the patch works on a system with 1b4b:9123
+>> controller.
+>
+> Thanks for verifying.  Can you please post the kernel log?  Also, do
+> all ports seem to work?
+>
+>>>> Also, there's a pending patch to add another PCI
+>>>> ID for similar marvell controller.  I wonder whether similar
+>>>> workaround should be applied.  Hmmm... ISTR the other one reporting
+>>>> IDE class even though it works in IDE mode.
+>>>
+>>> IDE class in IDE mode? Isn't that kind of expected? :)
+>
+> Oh, the latter should have been ahci.
+>
+> I'm not completely comfortable with going ahead with the patch tho.
+> It probably is okay but it's still a shot in the dark.  Is there
+> anyone with marvell contact?
 
-Got it!
-I will do the testing if I get hardware can support this function.
+I have docs for most Marvell models, but not this one; and no 
+contacts...  Presumably it is some variant of their existing Marvell 
+AHCI line of chips, but beyond that, you and I are both just guessing.
 
-> Hmmm... at the same time, I'm a little bit doubtful about its
-> usefulness.  How much power does it save?  Furthermore, ODDs are ofte=
-n
-
-I am not sure how many watts can be save, it's need use 2-channel power
-meter or NetDAQ to verify. I know how to do that, just need the sample
-machine.
-
-> omitted on mobile devices these days.  So, I have a slight reluctance
-> against including it but if the implementation is clean enough and
-> there is enough benefits it shouldn't be too difficult to overcome.
-
-=46ully understood!
+	Jeff
 
 
-Thank's a lot!
-Joey Lee
 
