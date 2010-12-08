@@ -1,60 +1,31 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RFC PATCH v2 2/3] dm mpath: propagate target errors
-	immediately
-Date: Tue,  7 Dec 2010 18:16:41 -0500
-Message-ID: <1291763802-8251-3-git-send-email-snitzer@redhat.com>
-References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+Date: Tue, 07 Dec 2010 19:54:49 -0600
+Message-ID: <4CFEE569.4030204@gmail.com>
+References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, hch@lst.de, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, j-nomura@ce.jp.nec.com, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tj@kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jian Peng <jipeng@broadcom.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-DM now has more information about the nature of the underlying storage
-failure.  Path failure is avoided if a request failed due to a target
-error.  Instead the target error is immediately passed up the stack.
+CCing linux-ide and Tejun.
 
-Discard requests that fail due to non-target errors may now be retried.
+On 12/07/2010 01:43 AM, Jian Peng wrote:
+> Recently, while bringing up a new AHCI host controller, I found out that current AHCI driver (in 2.6.37-rc3) may violate AHCI spec in function libahci.c: ahci_start_engine().
+>
+>  From end of section 10.1.2 in AHCI 1.3 spec, it claims
+>
+> Software shall not set PxCMD.ST to '1' until it is determined that a functional device is present on the port
+> as determined by PxTFD.STS.BSY = '0', PxTFD.STS.DRQ = '0', and PxSSTS.DET = 3h.
+>
+> It seems working well on most controller without this extra checking, but does cause problem in our new core. Since toggling PxCMD.SUD already initiated reset process at early time, and by the time of ahci_start_engine() got called, BSY bit may not be cleared yet, and forcing PxCMD.ST bit to 1 will cause problem for HW in this case.
+>
+> Since I do not know all history about AHCI driver, I really hope that AHCI driver and libata maintainer can comment on this.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/md/dm-mpath.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 487ecda..071529a 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1270,16 +1270,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	if (!error && !clone->errors)
- 		return 0;	/* I/O complete */
- 
--	if (error == -EOPNOTSUPP)
--		return error;
--
--	if (clone->cmd_flags & REQ_DISCARD)
--		/*
--		 * Pass all discard request failures up.
--		 * FIXME: only fail_path if the discard failed due to a
--		 * transport problem.  This requires precise understanding
--		 * of the underlying failure (e.g. the SCSI sense).
--		 */
-+	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
- 		return error;
- 
- 	if (mpio->pgpath)
--- 
-1.7.2.3
+Seems like a valid point to me, according to the spec. I'm guessing it 
+just hasn't come up previously with other controllers?
