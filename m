@@ -1,74 +1,68 @@
-From: "Jian Peng" <jipeng@broadcom.com>
-Subject: RE: questions regarding possible violation of AHCI spec in AHCI
- driver
-Date: Wed, 8 Dec 2010 12:09:32 -0800
-Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFEE569.4030204@gmail.com> <4CFF58D2.4040006@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFCD56.6050608@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFD3EB.10800@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFE29C.7080205@kernel.org>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
+Date: Wed, 8 Dec 2010 21:14:40 +0100
+Message-ID: <201012082114.41509.eike-kernel@sf-tec.de>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CFFE29C.7080205@kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart3076944.NXSmOvlDyz";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@hansenpartnership.com
 List-Id: linux-ide@vger.kernel.org
 
-The controller may take much longer time to recover in this case, and leads to wrong HW state after stop_engine() inside ahci_hardreset() and cause device type checking failure due to unfinished HW state change and missing D2H FIS after start_engine() again inside ahci_hardreset(). I guess this is the reason why AHCI spec try to emphasize.
+--nextPart3076944.NXSmOvlDyz
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Yes, without this change, Broadcom controller will fail due to above reason.
+Tejun Heo wrote:
 
-Thanks,
-Jian
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_device_info
+> *cdi, int slot)
+>=20
+>  	sshdr =3D  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+>  	retval =3D sr_test_unit_ready(cd->device, sshdr);
+> -	if (retval || (scsi_sense_valid(sshdr) &&
+> -		       /* 0x3a is medium not present */
+> -		       sshdr->asc =3D=3D 0x3a)) {
+> -		/* Media not present or unable to test, unit probably not
+> -		 * ready. This usually means there is no disc in the drive.
+> -		 * Mark as changed, and we will figure it out later once
+> -		 * the drive is available again.
+> +	/*
+> +	 * Media is considered to be present if TUR succeeds or fails with
+> +	 * sense data indicating something other than media-not-present
+> +	 * (ASC 0x3a).
+> +	 */
+> +	if (!scsi_status_is_good(retval) &&
+> +	    (!scsi_sense_valid(sshdr) || sshdr->asc =3D=3D 0x3a)) {
+> +		/*
+> +		 * Probably not media in the device.  Mark as changed, and
+> +		 * we will figure it out later once the drive is available
+> +		 * again.
 
------Original Message-----
-From: Tejun Heo [mailto:tj@kernel.org] 
-Sent: Wednesday, December 08, 2010 11:55 AM
-To: Jian Peng
-Cc: Robert Hancock; linux-kernel@vger.kernel.org; jgarzik@pobox.com; ide
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+"Probably no media ..."?
 
-Hello,
+Eike
 
-On 12/08/2010 08:49 PM, Jian Peng wrote:
-> I agree. I have AHCI based PCI card using HBA from Marvell, Via and
-> Silicon Image, and am going to test my patch.  Before this patch can
-> be applied universally, I like to use it for specific PCI_VENDOR_ID
-> first. Here is my new patch to limit it to Broadcom's AHCI core
+--nextPart3076944.NXSmOvlDyz
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Hmmm... is the change actually necessary for broadcom controllers?  As
-I wrote before, any ahci controller should just work without the above
-checks because,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
 
-> +	/* avoid race condition per spec (end of section 10.1.2) */
-> +	if (pdev->vendor == PCI_VENDOR_ID_BROADCOM) {
-> +		u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
-> +
-> +		if (status & (ATA_BUSY | ATA_DRQ) ||
-> +		    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
-> +		    (tmp & 0x0f) != 0x03)
-> +			return;
+iEYEABECAAYFAkz/5zEACgkQXKSJPmm5/E4RIwCgmLecVbJQphEZPlyM+labK9/2
+ybIAnAxCKEHzpksGxmq+XOHz9DSlTTi8
+=/66e
+-----END PGP SIGNATURE-----
 
-PHY event can occur here which causes the device to send D2H Reg FIS
-w/ BSY set.
-
-1. So, the controller _MUST NOT_ fail in irrecoverable way even if the
-   driver sets ST while BSY is set.
-
-2. The driver guarantees the final ST setting before entering normal
-   operation is done when the prerequisites are met.
-
-If you combine 1 and 2, the current behavior is perfectly fine.  Do
-broadcom controllers actually fail without the above change?
-
-Thanks.
-
--- 
-tejun
+--nextPart3076944.NXSmOvlDyz--
