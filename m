@@ -1,53 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Wed, 08 Dec 2010 12:10:46 +0100
-Message-ID: <4CFF67B6.7090805@kernel.org>
-References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org> <4CF55A4B.1020402@iki.fi> <4CFE8EE2.1060908@iki.fi>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [RFC PATCH 3/3] block: improve detail in I/O error messages
+Date: Wed, 08 Dec 2010 14:28:32 +0300
+Message-ID: <4CFF6BE0.4090109@ru.mvista.com>
+References: <1291763802-8251-1-git-send-email-snitzer@redhat.com> <1291763802-8251-4-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:34237 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753625Ab0LHLKr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Dec 2010 06:10:47 -0500
-In-Reply-To: <4CFE8EE2.1060908@iki.fi>
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:53809 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751872Ab0LHL3f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2010 06:29:35 -0500
+In-Reply-To: <1291763802-8251-4-git-send-email-snitzer@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anssi Hannula <anssi.hannula@iki.fi>
-Cc: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
 
-Hello,
+Hello.
 
-On 12/07/2010 08:45 PM, Anssi Hannula wrote:
->>>> Attached is a patch to make the id entry class-specific. The patch is
->>>> untested (the issue happens in a production machine).
->>>
->>> Thanks a lot for the patch.  It looks correct but it would be great if
->>> it can be veified.
->>
->> I think I can do that later, but probably not this week or so.
-> 
-> I've now verified that the patch works on a system with 1b4b:9123
-> controller.
+On 08-12-2010 2:16, Mike Snitzer wrote:
 
-Thanks for verifying.  Can you please post the kernel log?  Also, do
-all ports seem to work?
+> Classify severity of I/O errors for target and transport errors.
 
->>> Also, there's a pending patch to add another PCI
->>> ID for similar marvell controller.  I wonder whether similar
->>> workaround should be applied.  Hmmm... ISTR the other one reporting
->>> IDE class even though it works in IDE mode.
->>
->> IDE class in IDE mode? Isn't that kind of expected? :)
+> Signed-off-by: Mike Snitzer<snitzer@redhat.com>
+[...]
 
-Oh, the latter should have been ahci.
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 4ce953f..ab8c776 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -2028,9 +2028,15 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+>
+>   	if (error&&  req->cmd_type == REQ_TYPE_FS&&
+>   	!(req->cmd_flags&  REQ_QUIET)) {
+> -		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
+> -				req->rq_disk ? req->rq_disk->disk_name : "?",
+> -				(unsigned long long)blk_rq_pos(req));
+> +		char *error_type = "I/O";
+> +
+> +		if (error == -ENOLINK)
+> +			error_type = "recoverable transport";
+> +		else if (error == -EREMOTEIO)
+> +			error_type = "critical target";
 
-I'm not completely comfortable with going ahead with the patch tho.
-It probably is okay but it's still a shot in the dark.  Is there
-anyone with marvell contact?
+    *switch* would be more natural here.
 
-Thanks.
-
--- 
-tejun
+WBR, Sergei
