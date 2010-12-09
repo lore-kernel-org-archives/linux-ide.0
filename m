@@ -1,17 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
-Date: Wed, 08 Dec 2010 23:54:03 +0100
-Message-ID: <4D000C8B.5040904@kernel.org>
-References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFEE569.4030204@gmail.com> <4CFF58D2.4040006@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFCD56.6050608@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFD3EB.10800@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFFE29C.7080205@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: RE: questions regarding possible violation of AHCI spec in AHCI
+ driver
+Date: Wed, 8 Dec 2010 17:30:17 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FA38E23@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFEE569.4030204@gmail.com> <4CFF58D2.4040006@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFCD56.6050608@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFD3EB.10800@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFE29C.7080205@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D000C8B.5040904@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+In-Reply-To: <4D000C8B.5040904@kernel.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jian Peng <jipeng@broadcom.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
+
+Hi, Tejun,
+
+I will go over with chip designer on all detail of this race condition again. AFAIK, our controller reacted to ST bit change but lack of full handshaking between SW and HW leads to failure finally. 
+
+I can definitely help checking all available controllers I can get. Schedule wise, it is not too bad since this AHCI core is part of SOC instead of standalone controller so we have manageable kernel and patches release for our customers. To help AHCI driver to be more compliant with spec, and also fix specific problem in our controller, it requires some actions.
+
+I will post my findings on other controllers after testing it.
+
+Thanks,
+Jian
+
+
+-----Original Message-----
+From: Tejun Heo [mailto:tj@kernel.org] 
+Sent: Wednesday, December 08, 2010 2:54 PM
+To: Jian Peng
+Cc: Robert Hancock; linux-kernel@vger.kernel.org; jgarzik@pobox.com; ide
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
 
 Hello, Jian.
 
