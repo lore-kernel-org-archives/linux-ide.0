@@ -1,89 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream-fixes] libata: issue DIPM enable commands
- with LPM state updated
-Date: Thu, 09 Dec 2010 16:13:15 +0100
-Message-ID: <4D00F20B.2080908@kernel.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
+Date: Thu, 09 Dec 2010 21:20:53 +0300
+Message-ID: <4D011E05.5030205@ru.mvista.com>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-bounces@linux.kernel.org>
-List-Unsubscribe: <http://linux.kernel.org/mailman/options/stable>,
-	<mailto:stable-request@linux.kernel.org?subject=unsubscribe>
-List-Archive: <http://linux.kernel.org/mailman/private/stable/>
-List-Post: <mailto:stable@linux.kernel.org>
-List-Help: <mailto:stable-request@linux.kernel.org?subject=help>
-List-Subscribe: <http://linux.kernel.org/mailman/listinfo/stable>,
-	<mailto:stable-request@linux.kernel.org?subject=subscribe>
-Sender: stable-bounces@linux.kernel.org
-Errors-To: stable-bounces@linux.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Kyle McMartin <kyle@mcmartin.ca>
-Cc: stable <stable@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:40491 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756412Ab0LISWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2010 13:22:18 -0500
+In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
 
-Low level drivers may behave differently depending on the current
-link->lpm_policy.  During ata_eh_set_lpm(), DIPM enable commands are
-issued after the successful completion of ap->ops->set_lpm(), which
-means that the controller is already in the target state.  This causes
-DIPM enable commands to be processed with mismatching controller power
-state and link->lpm_policy value.
+Hello.
 
-In ahci, link->lpm_policy is used to ignore certain PHY events if LPM
-is enabled; however, as DIPM commands are issued with stale
-link->lpm_policy, they sometimes end up triggering these conditions
-and get aborted leading to LPM configuration failure.
+Tejun Heo wrote:
 
-Fix it by updating link->lpm_policy before issuing DIPM enable
-commands.
+> sr_test_unit_ready() returns 0 iff TUR succeeded - IOW, when media is
+> present and the device is actually ready, so the return value wouldn't
+> be zero when TUR ends with sense data. sr_media_change() incorrectly
+> tests (retval || (scsi_sense_valid(sshdr)...)) when it tries to test
+> whether TUR failed without sense data or with sense data indicating
+> media-not-present.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Kyle McMartin <kyle@mcmartin.ca>
-Cc: stable@kernel.org
----
- drivers/ata/libata-eh.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+> Fix the test using scsi_status_is_good() and update comments.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5e59050..17a6378 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3275,6 +3275,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	struct ata_port *ap = ata_is_host_link(link) ? link->ap : NULL;
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
-+	enum ata_lpm_policy old_policy = link->lpm_policy;
- 	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
- 	unsigned int err_mask;
- 	int rc;
-@@ -3338,6 +3339,14 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 		goto fail;
- 	}
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+[...]
 
-+	/*
-+	 * Low level driver acked the transition.  Issue DIPM command
-+	 * with the new policy set.
-+	 */
-+	link->lpm_policy = policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = policy;
-+
- 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
- 	ata_for_each_dev(dev, link, ENABLED) {
- 		if (policy == ATA_LPM_MIN_POWER && ata_id_has_dipm(dev->id)) {
-@@ -3353,12 +3362,14 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 		}
- 	}
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index d7b383c..deb24f0 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+>  
+>  	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+>  	retval = sr_test_unit_ready(cd->device, sshdr);
+> -	if (retval || (scsi_sense_valid(sshdr) &&
+> -		       /* 0x3a is medium not present */
+> -		       sshdr->asc == 0x3a)) {
+> -		/* Media not present or unable to test, unit probably not
+> -		 * ready. This usually means there is no disc in the drive.
+> -		 * Mark as changed, and we will figure it out later once
+> -		 * the drive is available again.
+> +	/*
+> +	 * Media is considered to be present if TUR succeeds or fails with
+> +	 * sense data indicating something other than media-not-present
+> +	 * (ASC 0x3a).
+> +	 */
+> +	if (!scsi_status_is_good(retval) &&
+> +	    (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
+> +		/*
+> +		 * Probably not media in the device.  Mark as changed, and
 
--	link->lpm_policy = policy;
--	if (ap && ap->slave_link)
--		ap->slave_link->lpm_policy = policy;
- 	return 0;
+    s/not/no/
 
- fail:
-+	/* restore the old policy */
-+	link->lpm_policy = old_policy;
-+	if (ap && ap->slave_link)
-+		ap->slave_link->lpm_policy = old_policy;
-+
- 	/* if no device or only one more chance is left, disable LPM */
- 	if (!dev || ehc->tries[dev->devno] <= 2) {
- 		ata_link_printk(link, KERN_WARNING,
+WBR, Sergei
+
