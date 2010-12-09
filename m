@@ -1,64 +1,38 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
-Date: Thu, 09 Dec 2010 21:20:53 +0300
-Message-ID: <4D011E05.5030205@ru.mvista.com>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
+Date: Thu, 09 Dec 2010 19:53:17 +0100
+Message-ID: <4D01259D.2010409@kernel.org>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org> <4D011E05.5030205@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:40491 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756412Ab0LISWS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2010 13:22:18 -0500
-In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:45911 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872Ab0LISyE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Dec 2010 13:54:04 -0500
+In-Reply-To: <4D011E05.5030205@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
 
-Hello.
+Hello, Sergei.
 
-Tejun Heo wrote:
+On 12/09/2010 07:20 PM, Sergei Shtylyov wrote:
+>> +    /*
+>> +     * Media is considered to be present if TUR succeeds or fails with
+>> +     * sense data indicating something other than media-not-present
+>> +     * (ASC 0x3a).
+>> +     */
+>> +    if (!scsi_status_is_good(retval) &&
+>> +        (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
+>> +        /*
+>> +         * Probably not media in the device.  Mark as changed, and
+> 
+>    s/not/no/
 
-> sr_test_unit_ready() returns 0 iff TUR succeeded - IOW, when media is
-> present and the device is actually ready, so the return value wouldn't
-> be zero when TUR ends with sense data. sr_media_change() incorrectly
-> tests (retval || (scsi_sense_valid(sshdr)...)) when it tries to test
-> whether TUR failed without sense data or with sense data indicating
-> media-not-present.
+Updated patch already posted.  Thanks.
 
-> Fix the test using scsi_status_is_good() and update comments.
-
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-[...]
-
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index d7b383c..deb24f0 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
->  
->  	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
->  	retval = sr_test_unit_ready(cd->device, sshdr);
-> -	if (retval || (scsi_sense_valid(sshdr) &&
-> -		       /* 0x3a is medium not present */
-> -		       sshdr->asc == 0x3a)) {
-> -		/* Media not present or unable to test, unit probably not
-> -		 * ready. This usually means there is no disc in the drive.
-> -		 * Mark as changed, and we will figure it out later once
-> -		 * the drive is available again.
-> +	/*
-> +	 * Media is considered to be present if TUR succeeds or fails with
-> +	 * sense data indicating something other than media-not-present
-> +	 * (ASC 0x3a).
-> +	 */
-> +	if (!scsi_status_is_good(retval) &&
-> +	    (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
-> +		/*
-> +		 * Probably not media in the device.  Mark as changed, and
-
-    s/not/no/
-
-WBR, Sergei
-
+-- 
+tejun
