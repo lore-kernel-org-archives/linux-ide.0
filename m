@@ -1,67 +1,86 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH UPDATED 5/8] scsi: fix TUR error handling in sr_media_change()
-Date: Thu, 09 Dec 2010 11:18:42 +0100
-Message-ID: <4D00AD02.8080504@kernel.org>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
+Subject: [PATCH #upstream-fixes] libata: no special completion
+ processing for EH commands
+Date: Thu, 09 Dec 2010 15:59:32 +0100
+Message-ID: <4D00EED4.3020901@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:33603 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990Ab0LIKTO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Dec 2010 05:19:14 -0500
-In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <stable-bounces@linux.kernel.org>
+List-Unsubscribe: <http://linux.kernel.org/mailman/options/stable>,
+	<mailto:stable-request@linux.kernel.org?subject=unsubscribe>
+List-Archive: <http://linux.kernel.org/mailman/private/stable/>
+List-Post: <mailto:stable@linux.kernel.org>
+List-Help: <mailto:stable-request@linux.kernel.org?subject=help>
+List-Subscribe: <http://linux.kernel.org/mailman/listinfo/stable>,
+	<mailto:stable-request@linux.kernel.org?subject=subscribe>
+Sender: stable-bounces@linux.kernel.org
+Errors-To: stable-bounces@linux.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Kyle McMartin <kyle@mcmartin.ca>
+Cc: stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com, Rolf Eike Beer <eike-kernel@sf-tec.de>
 
-sr_test_unit_ready() returns 0 iff TUR succeeded - IOW, when media is
-present and the device is actually ready, so the return value wouldn't
-be zero when TUR ends with sense data. sr_media_change() incorrectly
-tests (retval || (scsi_sense_valid(sshdr)...)) when it tries to test
-whether TUR failed without sense data or with sense data indicating
-media-not-present.
+ata_qc_complete() contains special handling for certain commands.  For
+example, it schedules EH for device revalidation after certain
+configurations are changed.  These shouldn't be applied to EH
+commands but they were.
 
-Fix the test using scsi_status_is_good() and update comments.
+In most cases, it doesn't cause an actual problem because EH doesn't
+issue any command which would trigger special handling; however, ACPI
+can issue such commands via _GTF which can cause weird interactions.
 
-- Fixed a comment typo spotted by Eike.
+Restructure ata_qc_complete() such that EH commands are always passed
+on to __ata_qc_complete().
+
+stable: Please apply to -stable only after 2.6.38 is released.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Reported-by: Kyle McMartin <kyle@mcmartin.ca>
+Cc: stable@kernel.org
 ---
-Typo fixed.  git tree updated accordingly.  Thanks.
+ drivers/ata/libata-core.c |   24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
 
- drivers/scsi/sr.c |   18 +++++++++++-------
- 1 file changed, 11 insertions(+), 7 deletions(-)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 7f77c67..f23d6d4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4807,9 +4807,6 @@ static void ata_verify_xfer(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_device *dev = qc->dev;
 
-Index: work/drivers/scsi/sr.c
-===================================================================
---- work.orig/drivers/scsi/sr.c
-+++ work/drivers/scsi/sr.c
-@@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_
+-	if (ata_tag_internal(qc->tag))
+-		return;
+-
+ 	if (ata_is_nodata(qc->tf.protocol))
+ 		return;
 
- 	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
- 	retval = sr_test_unit_ready(cd->device, sshdr);
--	if (retval || (scsi_sense_valid(sshdr) &&
--		       /* 0x3a is medium not present */
--		       sshdr->asc == 0x3a)) {
--		/* Media not present or unable to test, unit probably not
--		 * ready. This usually means there is no disc in the drive.
--		 * Mark as changed, and we will figure it out later once
--		 * the drive is available again.
-+	/*
-+	 * Media is considered to be present if TUR succeeds or fails with
-+	 * sense data indicating something other than media-not-present
-+	 * (ASC 0x3a).
-+	 */
-+	if (!scsi_status_is_good(retval) &&
-+	    (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
+@@ -4858,14 +4855,23 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		if (unlikely(qc->err_mask))
+ 			qc->flags |= ATA_QCFLAG_FAILED;
+
+-		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
+-			/* always fill result TF for failed qc */
 +		/*
-+		 * Probably no media in the device.  Mark as changed, and
-+		 * we will figure it out later once the drive is available
-+		 * again.
- 		 */
- 		cd->device->changed = 1;
- 		/* This will force a flush, if called from check_disk_change */
++		 * Finish internal commands without any further processing
++		 * and always with the result TF filled.
++		 */
++		if (unlikely(ata_tag_internal(qc->tag))) {
+ 			fill_result_tf(qc);
++			__ata_qc_complete(qc);
++			return;
++		}
+
+-			if (!ata_tag_internal(qc->tag))
+-				ata_qc_schedule_eh(qc);
+-			else
+-				__ata_qc_complete(qc);
++		/*
++		 * Non-internal qc has failed.  Fill the result TF and
++		 * summon EH.
++		 */
++		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
++			fill_result_tf(qc);
++			ata_qc_schedule_eh(qc);
+ 			return;
+ 		}
