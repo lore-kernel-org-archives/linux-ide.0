@@ -1,103 +1,90 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: 2.6.37-rc5, pata_atiixp,
- DVD-ROM: kernel log flooded with "rpm_resume flags 0x4",
- "rpm_resume returns 1"
-Date: Sat, 11 Dec 2010 17:32:34 +0100
-Message-ID: <20101211173234.77617d3a@stein>
+From: Sergey Matyukevich <geomatsi@gmail.com>
+Subject: Re: [PATCH] ata: pata_at91.c bugfix for high master clock
+Date: Sat, 11 Dec 2010 22:16:45 +0300
+Message-ID: <20101211221645.087d02f7@realm>
+References: <1292011430-20835-1-git-send-email-plyatov@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: linux-pm@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1292011430-20835-1-git-send-email-plyatov@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Igor Plyatov <plyatov@gmail.com>
+Cc: pgsellmann@portner-elektronik.at, christian.glindkamp@taskit.de, nicolas.ferre@atmel.com, linux-ide@vger.kernel.org, jgarzik@pobox.com, linux@maxim.org.za, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+Hello Igor,
 
-I just booted from 2.6.36 (without PM debugging configured) into
-2.6.37-rc5 (with PM debugging enabled).  There is endless log spam like
-this:
+On Fri, 10 Dec 2010 23:03:50 +0300
+Igor Plyatov <plyatov@gmail.com> wrote:
 
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:33 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:35 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume returns 1
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume flags 0x4
-Dec 11 17:11:37 stein kernel: scsi host6: rpm_resume returns 1
+> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
+> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
+> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and
+> pata_at91 driver does detect ATA device.
+> 
+> Signed-off-by: Igor Plyatov <plyatov@gmail.com>
+> ---
+>  drivers/ata/pata_at91.c |   11 +++++++++--
+>  1 files changed, 9 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+> index 0da0dcc..2e189be 100644
+> --- a/drivers/ata/pata_at91.c
+> +++ b/drivers/ata/pata_at91.c
+> @@ -33,12 +33,14 @@
+>  
+>  
+>  #define DRV_NAME "pata_at91"
+> -#define DRV_VERSION "0.1"
+> +#define DRV_VERSION "0.2"
+>  
+>  #define CF_IDE_OFFSET	    0x00c00000
+>  #define CF_ALT_IDE_OFFSET   0x00e00000
+>  #define CF_IDE_RES_SIZE     0x08
+>  
+> +#define NCS_RD_PULSE_LIMIT  0x3f /* maximal value for pulse
+> bitfields */ +
+>  struct at91_ide_info {
+>  	unsigned long mode;
+>  	unsigned int cs;
+> @@ -50,7 +52,7 @@ struct at91_ide_info {
+>  };
+>  
+>  static const struct ata_timing initial_timing =
+> -	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
+> +	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 0, 600, 0};
+>  
+>  static unsigned long calc_mck_cycles(unsigned long ns, unsigned long
+> mck_hz) {
+> @@ -109,6 +111,11 @@ static void set_smc_timing(struct device *dev,
+>  	/* (CS0, CS1, DIR, OE) <= (CFCE1, CFCE2, CFRNW, NCSX)
+> timings */ ncs_read_setup = 1;
+>  	ncs_read_pulse = read_cycle - 2;
+> +	if (ncs_read_pulse > NCS_RD_PULSE_LIMIT) {
+> +		ncs_read_pulse = NCS_RD_PULSE_LIMIT;
+> +		dev_dbg(dev, "ncs_read_pulse limited to maximal
 
-Why is rpm_resume performed 6 times every two seconds?
+arguably 'dev_warn' would be more useful in this case
 
-host6 is pata_atiixp with an:
+> value %lu\n",
+> +			ncs_read_pulse);
+> +	}
+>  
+>  	/* Write timings same as read timings */
+>  	write_cycle = read_cycle;
 
-00:14.1 IDE interface: ATI Technologies Inc SB700/SB800 IDE Controller
-(prog-if 8a [Master SecP PriP])
+Thanks for the fix.
 
-# grep . /sys/class/scsi_host/host6/power/*
-/sys/class/scsi_host/host6/power/async:enabled
-grep: /sys/class/scsi_host/host6/power/autosuspend_delay_ms: Input/output error
-/sys/class/scsi_host/host6/power/control:auto
-/sys/class/scsi_host/host6/power/runtime_active_kids:0
-/sys/class/scsi_host/host6/power/runtime_active_time:0
-/sys/class/scsi_host/host6/power/runtime_enabled:disabled
-/sys/class/scsi_host/host6/power/runtime_status:unsupported
-/sys/class/scsi_host/host6/power/runtime_suspended_time:0
-/sys/class/scsi_host/host6/power/runtime_usage:0
+Acked-by: Sergey Matyukevich <geomatsi@gmail.com>
 
-Attached to it is one device:
-
-Host: scsi6 Channel: 00 Id: 00 Lun: 00
-  Vendor: PLEXTOR  Model: DVD-ROM PX-130A  Rev: 1.01
-  Type:   CD-ROM                           ANSI  SCSI revision: 05
-
-# grep . /sys/class/scsi_host/host6/device/target6\:0\:0/6\:0\:0\:0/power/*
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/async:enabled
-grep: /sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/autosuspend_delay_ms: Input/output error
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/control:on
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_active_kids:0
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_active_time:2689146
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_enabled:forbidden
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_status:active
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_suspended_time:0
-/sys/class/scsi_host/host6/device/target6:0:0/6:0:0:0/power/runtime_usage:2
--- 
-Stefan Richter
--=====-==-=- ==-- -=-==
-http://arcgraph.de/sr/
+Best regards,
+Sergey
