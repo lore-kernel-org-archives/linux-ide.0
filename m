@@ -1,88 +1,30 @@
-From: Igor Plyatov <plyatov@gmail.com>
-Subject: [PATCH v2] ide: at91_ide.c bugfix for high master clock
-Date: Sat, 11 Dec 2010 23:45:26 +0300
-Message-ID: <1292100326-637-1-git-send-email-plyatov@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH v2] ata: pata_at91.c bugfix for high master clock
+Date: Sat, 11 Dec 2010 17:10:11 -0500
+Message-ID: <4D03F6C3.5030709@pobox.com>
+References: <1292099846-24528-1-git-send-email-plyatov@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:33000 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234Ab0LKUpo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Dec 2010 15:45:44 -0500
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46628 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622Ab0LKWKP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Dec 2010 17:10:15 -0500
+In-Reply-To: <1292099846-24528-1-git-send-email-plyatov@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@mvista.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, geomatsi@gmail.com, nicolas.ferre@atmel.com, linux@maxim.org.za, linux-arm-kernel@lists.infradead.org, linux@arm.linux.org.uk, christian.glindkamp@taskit.de, ryan@bluewatersys.com, pgsellmann@portner-elektronik.at, Igor Plyatov <plyatov@gmail.com>
+To: Igor Plyatov <plyatov@gmail.com>
+Cc: sshtylyov@mvista.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, geomatsi@gmail.com, nicolas.ferre@atmel.com, linux@maxim.org.za, linux-arm-kernel@lists.infradead.org, linux@arm.linux.org.uk, christian.glindkamp@taskit.de, ryan@bluewatersys.com, pgsellmann@portner-elektronik.at
 
-The AT91SAM9 microcontrollers with master clock higher then 105 MHz
-and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
-lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
-does not detect IDE device.
+On 12/11/2010 03:37 PM, Igor Plyatov wrote:
+> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
+> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
+> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
+> does not detect ATA device.
+>
+> Signed-off-by: Igor Plyatov<plyatov@gmail.com>
 
-Signed-off-by: Igor Plyatov <plyatov@gmail.com>
----
- drivers/ide/at91_ide.c |   33 +++++++++++++++++++++++----------
- 1 files changed, 23 insertions(+), 10 deletions(-)
+Thanks, queued (absent further comments...)
 
-diff --git a/drivers/ide/at91_ide.c b/drivers/ide/at91_ide.c
-index 000a78e..5f97710 100644
---- a/drivers/ide/at91_ide.c
-+++ b/drivers/ide/at91_ide.c
-@@ -36,6 +36,8 @@
- #define perr(fmt, args...) pr_err(DRV_NAME ": " fmt, ##args)
- #define pdbg(fmt, args...) pr_debug("%s " fmt, __func__, ##args)
- 
-+#define NCS_RD_PULSE_LIMIT  0x3f /* maximal value for pulse bitfields */
-+
- /*
-  * Access to IDE device is possible through EBI Static Memory Controller
-  * with Compact Flash logic. For details see EBI and SMC datasheet sections
-@@ -70,6 +72,7 @@ static void set_smc_timings(const u8 chipselect, const u16 cycle,
- 			    const u16 setup, const u16 pulse,
- 			    const u16 data_float, int use_iordy)
- {
-+	u16 ncs_rd_pulse;
- 	unsigned long mode = AT91_SMC_READMODE | AT91_SMC_WRITEMODE |
- 			     AT91_SMC_BAT_SELECT;
- 
-@@ -81,19 +84,29 @@ static void set_smc_timings(const u8 chipselect, const u16 cycle,
- 	if (data_float)
- 		mode |= AT91_SMC_TDF_(data_float);
- 
-+	ncs_rd_pulse = cycle;
-+	if (ncs_rd_pulse > NCS_RD_PULSE_LIMIT) {
-+		ncs_rd_pulse = NCS_RD_PULSE_LIMIT;
-+		pr_warn(DRV_NAME ": ncs_rd_pulse limited to maximal value %d\n",
-+			ncs_rd_pulse);
-+	}
-+
- 	at91_sys_write(AT91_SMC_MODE(chipselect), mode);
- 
- 	/* setup timings in SMC */
--	at91_sys_write(AT91_SMC_SETUP(chipselect), AT91_SMC_NWESETUP_(setup) |
--						   AT91_SMC_NCS_WRSETUP_(0) |
--						   AT91_SMC_NRDSETUP_(setup) |
--						   AT91_SMC_NCS_RDSETUP_(0));
--	at91_sys_write(AT91_SMC_PULSE(chipselect), AT91_SMC_NWEPULSE_(pulse) |
--						   AT91_SMC_NCS_WRPULSE_(cycle) |
--						   AT91_SMC_NRDPULSE_(pulse) |
--						   AT91_SMC_NCS_RDPULSE_(cycle));
--	at91_sys_write(AT91_SMC_CYCLE(chipselect), AT91_SMC_NWECYCLE_(cycle) |
--						   AT91_SMC_NRDCYCLE_(cycle));
-+	at91_sys_write(AT91_SMC_SETUP(chipselect),
-+			AT91_SMC_NWESETUP_(setup) |
-+			AT91_SMC_NCS_WRSETUP_(0) |
-+			AT91_SMC_NRDSETUP_(setup) |
-+			AT91_SMC_NCS_RDSETUP_(0));
-+	at91_sys_write(AT91_SMC_PULSE(chipselect),
-+			AT91_SMC_NWEPULSE_(pulse) |
-+			AT91_SMC_NCS_WRPULSE_(ncs_rd_pulse) |
-+			AT91_SMC_NRDPULSE_(pulse) |
-+			AT91_SMC_NCS_RDPULSE_(ncs_rd_pulse));
-+	at91_sys_write(AT91_SMC_CYCLE(chipselect),
-+			AT91_SMC_NWECYCLE_(cycle) |
-+			AT91_SMC_NRDCYCLE_(cycle));
- }
- 
- static unsigned int calc_mck_cycles(unsigned int ns, unsigned int mck_hz)
--- 
-1.7.0.4
 
