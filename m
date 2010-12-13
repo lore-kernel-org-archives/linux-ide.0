@@ -1,66 +1,72 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 24702] Possible bug - crash during IDE interface probing.
-Date: Sun, 12 Dec 2010 21:55:28 GMT
-Message-ID: <201012122155.oBCLtS4S031112@demeter1.kernel.org>
-References: <bug-24702-11633@https.bugzilla.kernel.org/>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2] ata: pata_at91.c bugfix for high master clock
+Date: Mon, 13 Dec 2010 14:02:36 +0300
+Message-ID: <4D05FD4C.9040200@ru.mvista.com>
+References: <1292099846-24528-1-git-send-email-plyatov@gmail.com>	 <4D04D2E2.20100@ru.mvista.com> <1292180579.8737.12.camel@homepc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:55838 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab0LLVz3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Dec 2010 16:55:29 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oBCLtSVX031113
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Sun, 12 Dec 2010 21:55:28 GMT
-In-Reply-To: <bug-24702-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1292180579.8737.12.camel@homepc>
+Sender: linux-kernel-owner@vger.kernel.org
+To: plyatov@gmail.com
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, geomatsi@gmail.com, nicolas.ferre@atmel.com, linux@maxim.org.za, linux-arm-kernel@lists.infradead.org, linux@arm.linux.org.uk, christian.glindkamp@taskit.de, ryan@bluewatersys.com, pgsellmann@portner-elektronik.at
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=24702
+Hello.
 
+On 12-12-2010 22:02, Igor Plyatov wrote:
 
+>>> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
+>>> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
+>>> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
+>>> does not detect ATA device.
+>>
+>>> Signed-off-by: Igor Plyatov<plyatov@gmail.com>
+>> [...]
 
+> Please use more descriptive comments, because it is not clear what you
+> mean here. Maybe here you just cut a text...
 
+    Exactly, this is how I mark the cut out text.
 
---- Comment #2 from software+linux-kernel@kd6lvw.ampr.org  2010-12-12 21:55:27 ---
-How do I upgrade?  I download the entire source and unpack it into its own
-directory separate from any prior source.  I do NOT patch.  Therefore, there
-are no stale object files.  The only component carried from one subversion to
-another is the configuration file.  As for include files installed into
-/usr/include, I update but I don't permit deletions.  Installation script:
+> It is so strange to cut such small amount of text and I does not have
+> any idea why here is "[...]" exists.
 
-----------------------------------------------------
-#!/bin/sh
-gunzip -c /proc/config.gz >.config
-make menuconfig bzImage modules modules_install
-make headers_install INSTALL_HDR_PATH=/tmp ; rm `find /tmp/include -size 0`
-(cd /boot ; for x in .config bzImage System.map ; do mv -v $x $x.old ; done)
-cp -v .config System.map arch/x86/boot/bzImage /boot
-cp -R /tmp/include /usr ; rm -r /tmp/include
-exec lilo
-----------------------------------------------------
-As noted, there is no OOPS message.  It simply dies:
+    Well, it's still better than leaving large patches quoted and uncommented, 
+having only one comment at the top, as some people do. :-)
 
-...
-Uniform Multi-Platform E-IDE driver
-sis5513 0000:00:00.1: SiS730 ATA 100 (1st gen) controller
-sis5513 0000:00:00.1: IDE controller (0x1039:0x5513 rev 0xd0)
-sis5513 0000:00:00.1: IDE port disabled
-sis5513 0000:00:00.1: not 100%% native mode: will probe irqs later
-    ide0: BM-DMA at 0xff00-0xff07
+>>> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+>>> index 0da0dcc..a462405 100644
+>>> --- a/drivers/ata/pata_at91.c
+>>> +++ b/drivers/ata/pata_at91.c
+>> [...]
 
-=>  2.6.36.2 dies here.  2.6.36.1 continues:
+> The same as above. Nobody are able to read you mind on the distance :-)
 
-Probing IDE interface ide0...
-hda: MAXTOR STM3500630A, ATA DISK drive
-hdb: TOSHIBA CD-ROM XM-6702B, ATAPI CD/DVD-ROM drive
-...
-(The above was copied from the 2.6.31.1 syslog.)
+    It's the first time anybody tried to iterpret my [...] marks as comments. :-)
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+>>> @@ -50,7 +52,7 @@ struct at91_ide_info {
+>>>    };
+>>>
+>>>    static const struct ata_timing initial_timing =
+>>> -	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
+>>> +	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 0, 600, 0};
+
+>>      BTW, you haven't described this in the changelog...
+
+> Here is just a typo fixed for the ata_timing structure. This typo does
+> not have influence on the driver operation, but I do not like to leave
+> such a negligible problem as it is.
+
+   You at least should have noted that in the changelog. And as the change is 
+unrelated to the other changes you're doing, it's a good practice to put it 
+into a separate patch.
+
+>> WBR, Sergei
+
+> Best regards!
+> --
+> Igor Plyatov
+
+WBR, Sergei
