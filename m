@@ -1,72 +1,48 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2] ata: pata_at91.c bugfix for high master clock
-Date: Mon, 13 Dec 2010 14:02:36 +0300
-Message-ID: <4D05FD4C.9040200@ru.mvista.com>
-References: <1292099846-24528-1-git-send-email-plyatov@gmail.com>	 <4D04D2E2.20100@ru.mvista.com> <1292180579.8737.12.camel@homepc>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 24702] Possible bug - crash during IDE interface probing.
+Date: Mon, 13 Dec 2010 14:13:18 GMT
+Message-ID: <201012131413.oBDEDIoC011675@demeter2.kernel.org>
+References: <bug-24702-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1292180579.8737.12.camel@homepc>
-Sender: linux-kernel-owner@vger.kernel.org
-To: plyatov@gmail.com
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, geomatsi@gmail.com, nicolas.ferre@atmel.com, linux@maxim.org.za, linux-arm-kernel@lists.infradead.org, linux@arm.linux.org.uk, christian.glindkamp@taskit.de, ryan@bluewatersys.com, pgsellmann@portner-elektronik.at
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:38389 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757584Ab0LMONT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Dec 2010 09:13:19 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBDEDJ6k011676
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Mon, 13 Dec 2010 14:13:19 GMT
+In-Reply-To: <bug-24702-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
+https://bugzilla.kernel.org/show_bug.cgi?id=24702
 
-On 12-12-2010 22:02, Igor Plyatov wrote:
 
->>> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
->>> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
->>> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
->>> does not detect ATA device.
->>
->>> Signed-off-by: Igor Plyatov<plyatov@gmail.com>
->> [...]
 
-> Please use more descriptive comments, because it is not clear what you
-> mean here. Maybe here you just cut a text...
 
-    Exactly, this is how I mark the cut out text.
 
-> It is so strange to cut such small amount of text and I does not have
-> any idea why here is "[...]" exists.
+--- Comment #3 from Borislav Petkov <bp@alien8.de>  2010-12-13 14:13:11 ---
+Ok,
 
-    Well, it's still better than leaving large patches quoted and uncommented, 
-having only one comment at the top, as some people do. :-)
+just wanted to make sure, thanks.
 
->>> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
->>> index 0da0dcc..a462405 100644
->>> --- a/drivers/ata/pata_at91.c
->>> +++ b/drivers/ata/pata_at91.c
->> [...]
+Well, I'm looking through the 290 .36.2 commits and
+can't find a strong candidate for this regression. Maybe
+3dc40311eaf91cde40f29d799f430dc6a00c2a7c but I can't see how... Can you
+try reverting it and see if it fixes the issue, per chance?
 
-> The same as above. Nobody are able to read you mind on the distance :-)
+If that doesn't help, you could still bisect the 290 commits between
+36.1 and 36.2.
 
-    It's the first time anybody tried to iterpret my [...] marks as comments. :-)
+Feel free to ask in case you need any help.
 
->>> @@ -50,7 +52,7 @@ struct at91_ide_info {
->>>    };
->>>
->>>    static const struct ata_timing initial_timing =
->>> -	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
->>> +	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 0, 600, 0};
+Thanks.
 
->>      BTW, you haven't described this in the changelog...
-
-> Here is just a typo fixed for the ata_timing structure. This typo does
-> not have influence on the driver operation, but I do not like to leave
-> such a negligible problem as it is.
-
-   You at least should have noted that in the changelog. And as the change is 
-unrelated to the other changes you're doing, it's a good practice to put it 
-into a separate patch.
-
->> WBR, Sergei
-
-> Best regards!
-> --
-> Igor Plyatov
-
-WBR, Sergei
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
