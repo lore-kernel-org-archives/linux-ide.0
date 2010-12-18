@@ -1,203 +1,167 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: RFC: short reads on block devices
-Date: Fri, 17 Dec 2010 20:19:44 -0500
-Message-ID: <4D0C0C30.7050204@interlog.com>
-References: <4D0B945C.2060309@interlog.com> <1292618194.2820.90.camel@mulgrave.site>
-Reply-To: dgilbert@interlog.com
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: 2.6.37-rc5, pata_atiixp,
+ DVD-ROM: kernel log flooded with "rpm_resume flags 0x4",
+ "rpm_resume returns 1"
+Date: Sat, 18 Dec 2010 13:11:42 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1012181259080.3334-100000@saphir.localdomain>
+References: <20101217211556.2789cb80@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1292618194.2820.90.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Penokie, George" <George.Penokie@lsi.com>, mkp@mkp.net, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <20101217211556.2789cb80@stein>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 10-12-17 03:36 PM, James Bottomley wrote:
-> On Fri, 2010-12-17 at 11:48 -0500, Douglas Gilbert wrote:
->> Recently while testing with the scsi_debug driver
->> I was able to trick the block layer into reading
->> random data which the block layer thought was
->> valid ***.
->>
->> Best to start with an example, say LBA ** 4660 has
->> an unrecoverable error (aka medium error) and
->> the block layer fires off a SCSI READ for 8
->> blocks (512 byte variety) at LBA 4656. The response
->> will be a medium error with the sense buffer info
->> field indicating LBA 4660. Now are the 4 blocks
->> that precede it (i.e. LBA 4656 to 4659) possibly
->> sitting in the data-in buffer and valid??
->>
->> The block layer thinks they are. This is what my
->> term "short read" in the title alludes to. So I put
->> this question to the T10 reflector:
->>      http://www.t10.org/t10r.htm
->> titled "sbc: reading blocks prior to a medium error".
->> And the answers were pretty clear. And the one from
->> George Penokie of LSI is interesting because Linux's
->> block layer assumption breaks some of LSI's equipment.
->
-> Well, unsurprisingly, I was aware of the issue via Novell customer
-> interactions.  Since you've outed LSI, we can discuss it openly.
->
-> The fact is that for medium errors, every other array returns valid data
-> up to the erroring sector.
->
->> On the other hand, big array vendors and database vendors
->> want exactly what the block layer is doing at the moment.
->> So those guys don't want a change. [Please correct me
->> if that is too sweeping.] Also I'm informed some other
->> OSes do this as well.
->
-> Plus all disk devices transfer up to the error sector.  Additionally,
-> Martin Petersen uses the same code for DIF and he's secured external
-> agreement from the DIF based arrays that nothwithstanding the ambiguity
-> in the SCSI standards, all DIF arrays return valid data up to the sector
-> with the DIF error.
->
->> I would like to propose a solution, at least in the SCSI
->> subsystem context. The 'resid' field was added 11 years
->> ago and is used by a HBA driver to indicate how many bytes
->> less than requested were placed in the scatter gather
->> list (i.e. the data-in buffer). It defaults to zero
->> (meaning all requested bytes have been read). Usually
->> for a medium error one would not bother setting resid
->> (so resid would remain 0). Somewhat surprisingly the
->> block layer has always ignored resid. I propose in the
->> case of a short read caused by a MEDIUM ERROR the block
->> layer checks resid. And if resid equals the requested
->> number of bytes then that means no data in the scatter
->> gather list is valid. So the block layer should act on
->> this information.
->>
->> To this end I propose to change the scsi_debug driver
->> to set resid equal to bufflen when it simulates a
->> medium error.
->>
->> Changes in the block layer and drivers from vendors who
->> want the strict "T10" handling of medium errors would
->> also be required. Maybe the USB mass storage (and UAS)
->> folks might also check if this impacts them.
->
-> OK, so I checked, and I think all of the major in-use HBA drivers today
-> do set the residue, so I'd be reasonably happy with a modification like
-> the following.  It basically believes the lower of either the
-> transferred data or the listed error (assuming the listed error is
-> valid ... if it's invalid, we still assume we can't trust anything).
-> This should mean that HBA drivers that set the residue work for all
-> arrays and those that don't work as they do today.
->
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 9564961..d41eaa2 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1175,6 +1175,12 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
->   	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
->   	u64 bad_lba;
->   	int info_valid;
-> +	/*
-> +	 * resid is optional but mosly filled in.  When it's unused,
-> +	 * its value is zero, so we assume the whole buffer transferred
-> +	 */
-> +	unsigned int transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
-> +	unsigned int good_bytes;
->
->   	if (scmd->request->cmd_type != REQ_TYPE_FS)
->   		return 0;
-> @@ -1208,7 +1214,8 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
->   	/* This computation should always be done in terms of
->   	 * the resolution of the device's medium.
->   	 */
-> -	return (bad_lba - start_lba) * scmd->device->sector_size;
-> +	good_bytes = (bad_lba - start_lba) * scmd->device->sector_size;
-> +	return min(good_bytes, transferred);
->   }
->
->   /**
+On Fri, 17 Dec 2010, Stefan Richter wrote:
 
-James,
-This patch to the sd driver together with the one I made
-to the scsi_debug driver (sent to the linux-scsi list)
-fixes the corruption problem in lk 2.6.36 .
+> On Dec 11 Alan Stern wrote:
+> > On Sat, 11 Dec 2010, Stefan Richter wrote:
+> > 
+> > > Hi,
+> > > 
+> > > I just booted from 2.6.36 (without PM debugging configured) into
+> > > 2.6.37-rc5 (with PM debugging enabled).  There is endless log spam like
+> > > this:
+> > > 
+> > > Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume flags 0x4
+> > > Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume returns 1
+> > > Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume flags 0x4
+> > > Dec 11 17:11:31 stein kernel: scsi host6: rpm_resume returns 1
+> > ...
+> > 
+> > > Why is rpm_resume performed 6 times every two seconds?
+> > 
+> > This is probably because hal probes the DVD drive every two seconds
+> > looking for media changes.  However that's not supposed to cause
+> > rpm_resume to be called for the host unless runtime PM is allowed for
+> > the DVD drive, which it isn't according to your listings below.  So
+> > there's a bug somewhere.
+> 
+> I had 2.6.36 running since then and have now booted into 2.6.37-rc6.
+> 
+> Yes, it is hal indeed.  Shutting hal down avoids this logging activity.
+> 
+> > > host6 is pata_atiixp with an:
+> > > 
+> > > 00:14.1 IDE interface: ATI Technologies Inc SB700/SB800 IDE Controller
+> > > (prog-if 8a [Master SecP PriP])
+> > > 
+> > > # grep . /sys/class/scsi_host/host6/power/*
+> > > /sys/class/scsi_host/host6/power/async:enabled
+> > > grep: /sys/class/scsi_host/host6/power/autosuspend_delay_ms: Input/output error
+> > > /sys/class/scsi_host/host6/power/control:auto
+> > > /sys/class/scsi_host/host6/power/runtime_active_kids:0
+> > > /sys/class/scsi_host/host6/power/runtime_active_time:0
+> > > /sys/class/scsi_host/host6/power/runtime_enabled:disabled
+> > > /sys/class/scsi_host/host6/power/runtime_status:unsupported
+> > > /sys/class/scsi_host/host6/power/runtime_suspended_time:0
+> > > /sys/class/scsi_host/host6/power/runtime_usage:0
+> > 
+> > This is the wrong directory (the class device, not the device itself).  
+> > You should look at /sys/class/scsi_host/host6/device/power instead.  
+> > And also /sys/class/scsi_host/host6/device/target6:0:0/power.
+> 
+> OK, correct directory follows below.
+> 
+> Actually, this time I see once every two seconds a message about
+> logical unit 6:0:0:0 and 6 times every two seconds a message about
+> host7:
+> 
+> Dec 17 20:22:08 stein kernel: sd 6:0:0:0: rpm_resume flags 0x4
+> Dec 17 20:22:08 stein kernel: sd 6:0:0:0: rpm_resume returns 1
+> Dec 17 20:22:08 stein kernel: scsi host7: rpm_resume flags 0x4
+> Dec 17 20:22:08 stein kernel: scsi host7: rpm_resume returns 1
+> Dec 17 20:22:08 stein kernel: scsi host7: rpm_resume flags 0x4
+> Dec 17 20:22:08 stein kernel: scsi host7: rpm_resume returns 1
+...
 
-Below is a dd command and the resulting log file
-ouput. The log shows the actual SCSI READs sent
-to the scsi_debug pseudo device (the medium error
-is at LBA 0x1234):
+> sd 6:0:0:0 is a USB card reader built into a monitor:
+> Host: scsi6 Channel: 00 Id: 00 Lun: 00
+>   Vendor: Generic  Model: Ultra HS-SD/MMC  Rev: 1.88
+>   Type:   Direct-Access                    ANSI  SCSI revision: 00
+> 
+> This is from the power/ directory of the "6:0:0:0" device which is
+> bound to driver sd:
+> 
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/async:enabled
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/control:on
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_active_kids:0
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_active_time:1650131
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_enabled:forbidden
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_status:active
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_suspended_time:0
+> /sys/devices/pci0000:00/0000:00:12.2/usb1/1-1/1-1.1/1-1.1.1/1-1.1.1:1.0/host6/target6:0:0/6:0:0:0/power/runtime_usage:1
+> 
+> host7 is the mentioned ATI SB700/SB800 IDE controller.  Here is the
+> power/ directory of the scsi_host device (rather than scsi_host class
+> device):
+> 
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/async:enabled
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/control:auto
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_active_kids:1
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_active_time:1935478
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_enabled:enabled
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_status:active
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_suspended_time:0
+> /sys/devices/pci0000:00/0000:00:14.1/host7/power/runtime_usage:0
+> 
+> The parent device 0000:00:14.1 is bound to the mentioned pata_atiixp,
+> if this is of any importance at all.
+> 
+> From the child device:
+> 
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/async:enabled
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/control:auto
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_active_kids:1
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_active_time:2402125
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_enabled:enabled
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_status:active
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_suspended_time:0
+> /sys/devices/pci0000:00/0000:00:14.1/host7/target7:0:0/power/runtime_usage:0
 
-# dd if=/dev/sdc of=ttt.img
-dd: reading `/dev/sdc': Input/output error
-4656+0 records in
-4656+0 records out
-2383872 bytes (2.4 MB) copied, 0.0722803 s, 33.0 MB/s
+Okay.  These messages appear because during each probe, something is
+requesting a runtime-PM resume.  In the case of sd 6:0:0:0, the resume
+happens each time the device file is opened; I don't know why you're
+getting a resume request for the scsi7 host (probably something strange
+going on in the ATA stack).  If you really want to know, you could add a
+dump_stack() to one of the debugging messages in rpm_resume().
 
-....
-scsi_debug: cmd 28 00 00 00 0f e0 00 01 00 00
-scsi_debug: cmd 28 00 00 00 10 e0 00 01 00 00
-scsi_debug: cmd 28 00 00 00 11 e0 00 01 00 00
-scsi_debug:    [sense_key,asc,ascq]: [0x3,0x11,0x0]
-scsi_debug:    <8 0 0 0> non-zero result=0x8000002
-sd 8:0:0:0: [sdc] Unhandled sense code
-sd 8:0:0:0: [sdc]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 8:0:0:0: [sdc]  Sense Key : Medium Error [current]
-Info fld=0x1234
-sd 8:0:0:0: [sdc]  Add. Sense: Unrecovered read error
-sd 8:0:0:0: [sdc] CDB: Read(10): 28 00 00 00 11 e0 00 01 00 00
-quiet_error: 23 callbacks suppressed
-scsi_debug: cmd 28 00 00 00 12 e0 00 01 00 00
-scsi_debug: cmd 28 00 00 00 11 e0 00 00 08 00
-scsi_debug: cmd 28 00 00 00 11 e8 00 00 08 00
-scsi_debug: cmd 28 00 00 00 11 f0 00 00 08 00
-scsi_debug: cmd 28 00 00 00 11 f8 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 00 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 08 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 10 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 18 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 20 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 28 00 00 08 00
-scsi_debug: cmd 28 00 00 00 12 30 00 00 08 00
-scsi_debug:    [sense_key,asc,ascq]: [0x3,0x11,0x0]
-scsi_debug:    <8 0 0 0> non-zero result=0x8000002
-sd 8:0:0:0: [sdc] Unhandled sense code
-sd 8:0:0:0: [sdc]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 8:0:0:0: [sdc]  Sense Key : Medium Error [current]
-Info fld=0x1234
-sd 8:0:0:0: [sdc]  Add. Sense: Unrecovered read error
+The "flags 0x4" means the actual call is pm_runtime_get_sync().  The
+"returns 1" means that the call didn't do anything to the hardware because
+the device in question was already at full power.
 
-Almost perfect. It was reading 256 blocks at a time and
-hit trouble at LBA 0x11e0 . So then it reads 4 KB (8
-blocks) at a time starting at LBA 0x11e0 until it hits
-the medium error again. Well it didn't need to read
-the medium error again. And what was it thinking when
-it read 256 blocks starting at LBA 0x12e0 (i.e. after
-the medium error)? Correct but not optimal.
+> --------
+> 
+> On Dec 11 Rafael J. Wysocki wrote:
+> > On Saturday, December 11, 2010, Stefan Richter wrote:
+> > > Hi,
+> > > 
+> > > I just booted from 2.6.36 (without PM debugging configured) into
+> > > 2.6.37-rc5 (with PM debugging enabled).  There is endless log spam like
+> > > this:
+> > 
+> > I guess you have either CONFIG_PM_VERBOSE set or CONFIG_PM_DEBUG unset.
+> > 
+> > Which is the case?
+> 
+> I have both options off on 2.6.36 and older kernels.  I have both
+> options on on 2.6.37-rc5/-rc6 (because I wanted to check something
+> unrelated on 2.6.37).
 
+These messages are produced by dev_dbg() calls.  The debug output is 
+enabled by either CONFIG_PM_VERBOSE or CONFIG_DEBUG_DRIVER.  Since you say 
+CONFIG_PM_VERBOSE is off, the other must be on -- unless maybe you have 
+CONFIG_DYNAMIC_DEBUG enabled.
 
-Moving right along, these words are written in the t13.org
-document: d2015r3 otherwise know as ACS-2 for ATA
-(including SATA) disks:
-
-"If an unrecoverable error occurs while the device is
-processing this command, then the device shall return
-command completion with the Error bit set to one and
-the LBA field set to the LBA of the logical sector where
-the first unrecoverable error occurred . The validity
-of the data transferred is indeterminate ."
-
-That is for the READ DMA EXT command. When I check
-drivers/ata/libata-scsi.c it doesn't touch the resid
-field. That means resid is at its default value of
-zero implying the data-in buffer is "all good". So
-do we know what common practice is for ATA disks in
-this situation?
-
-Doug Gilbert
-
-
-
+Alan Stern
