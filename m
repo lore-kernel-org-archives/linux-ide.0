@@ -1,57 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [linux-pm] 2.6.37-rc5, pata_atiixp, DVD-ROM: kernel log flooded
- with "rpm_resume flags 0x4", "rpm_resume returns 1"
-Date: Sat, 18 Dec 2010 20:12:53 +0100
-Message-ID: <20101218201253.167fb16a@stein>
-References: <20101217213034.7bf6587c@stein>
-	<Pine.LNX.4.44L0.1012181311570.3334-100000@saphir.localdomain>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [linux-pm] 2.6.37-rc5, pata_atiixp, DVD-ROM: kernel log flooded with "rpm_resume flags 0x4", "rpm_resume returns 1"
+Date: Sat, 18 Dec 2010 23:41:04 +0100
+Message-ID: <201012182341.04947.rjw@sisk.pl>
+References: <20101217211556.2789cb80@stein> <Pine.LNX.4.44L0.1012181259080.3334-100000@saphir.localdomain> <20101218200837.03a23f62@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50461 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757072Ab0LRTND (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Dec 2010 14:13:03 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1012181311570.3334-100000@saphir.localdomain>
+Received: from ogre.sisk.pl ([217.79.144.158]:37839 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751124Ab0LRWmF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 18 Dec 2010 17:42:05 -0500
+In-Reply-To: <20101218200837.03a23f62@stein>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-pm@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-pm@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Dec 18 Alan Stern wrote:
-> On Fri, 17 Dec 2010, Stefan Richter wrote:
-> 
-> > Well right --- hald polls the card reader for media change too.
+On Saturday, December 18, 2010, Stefan Richter wrote:
+> On Dec 18 Alan Stern wrote:
+> > On Fri, 17 Dec 2010, Stefan Richter wrote:
+> > > On Dec 11 Rafael J. Wysocki wrote:
+> > > > I guess you have either CONFIG_PM_VERBOSE set or CONFIG_PM_DEBUG unset.
+> > > > 
+> > > > Which is the case?
+> > > 
+> > > I have both options off on 2.6.36 and older kernels.  I have both
+> > > options on on 2.6.37-rc5/-rc6 (because I wanted to check something
+> > > unrelated on 2.6.37).
 > > 
-> > I now noticed that the two lines
-> > 	sd *:0:0:0: rpm_resume flags 0x4
-> > 	sd *:0:0:0: rpm_resume returns 1
-> > are logged once for each sd device (i.e. those with fixed media too)
-> > at the startup of hald.  Is this expected?
+> > These messages are produced by dev_dbg() calls.  The debug output is 
+> > enabled by either CONFIG_PM_VERBOSE or CONFIG_DEBUG_DRIVER.  Since you say 
+> > CONFIG_PM_VERBOSE is off, the other must be on -- unless maybe you have 
+> > CONFIG_DYNAMIC_DEBUG enabled.
 > 
-> I don't know anything about the details of hal.  But I do know that you
-> can tell hal not to poll certain devices.  Look at "man
-> hal-disable-polling".
+> No, CONFIG_PM_VERBOSE is of course _on_ in the kernel that spams the
+> log.
 
-I wouldn't use hal at all if it weren't for some weak userland
-programs that require it.
+Please turn if off, then.  Most likely you don't need it anyway.
 
-> > Note, I have not seen anything of the sort on another PC which runs
-> > 2.3.37-rc6 with the same PM debug options.  The differences are that
-> > the other PC is an Intel 945GM based one with x86-32 kernel and 32bit
-> > Gentoo userland, whereas the PC with log spam is an AMD RS780 based one
-> > with x86-64 kernel and 64bit Gentoo userland.  Both got hal 0.5.14-r2.
-> 
-> Maybe CONFIG_DYNAMIC_DEBUG is set differently, or userspace enables 
-> dynamic debugging of different subsystems.
-
-Simpler:  I am now noticing that CONFIG_PM_RUNTIME is off on the silent
-PC.  It is only on on the PC which produces the log spam.
-
-Good.  Then the solution for me is simply to disable CONFIG_PM_RUNTIME,
-which I had switched on for no apparent reason.
--- 
-Stefan Richter
--=====-==-=- ==-- =--=-
-http://arcgraph.de/sr/
+Thanks,
+Rafael
