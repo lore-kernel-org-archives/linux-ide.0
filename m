@@ -1,70 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [regression] 2.6.37-rc5: scsi_eh_11 CPU loop
-Date: Mon, 20 Dec 2010 18:12:56 +0100
-Message-ID: <4D0F8E98.9070500@kernel.org>
-References: <201012201105.08993.Martin@lichtvoll.de>
+From: wu zhangjin <wuzhangjin@gmail.com>
+Subject: Re: [PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
+Date: Tue, 21 Dec 2010 01:17:47 +0800
+Message-ID: <AANLkTi=pKc6KcJeXhdBbqDJ45Gmfy0UVwgCucK6KLUz1@mail.gmail.com>
+References: <1292769160-24420-1-git-send-email-wuzhangjin@gmail.com>
+	<4D0F3BDA.7080404@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f45.google.com ([209.85.214.45]:60172 "EHLO
-	mail-bw0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932939Ab0LTRNA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2010 12:13:00 -0500
-In-Reply-To: <201012201105.08993.Martin@lichtvoll.de>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:56105 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932676Ab0LTRRs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2010 12:17:48 -0500
+In-Reply-To: <4D0F3BDA.7080404@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
 
-Hello,
+Hi, Sergei
 
-On 12/20/2010 11:05 AM, Martin Steigerwald wrote:
-> Hi!
-> 
-> top - 10:49:07 up 3 days, 14:24,  8 users,  load average: 2.31, 2.62, 2.28
-> Tasks: 198 total,   2 running, 194 sleeping,   0 stopped,   2 zombie
-> Cpu(s):  6.8%us, 93.2%sy,  0.0%ni,  0.0%id,  0.0%wa,  0.0%hi,  0.0%si,  
-> 0.0%st
-> Mem:   2073660k total,  1941152k used,   132508k free,   153876k buffers
-> Swap:  4000180k total,   243452k used,  3756728k free,   676612k cached
-> 
->   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                                               
->   735 root      20   0     0    0    0 R 85.2  0.0 137:28.94 scsi_eh_11
-> 
-> I don't see anything in dmesg. Everything appears to work as normal, 
-> except for the slowness. Which got a bit better upon renicing scsi_eh_11 
-> to 19 (not knowing whether its really safe, but it works for now).
-> 
-> Interrupts appear to be within usual range as well:
+On Mon, Dec 20, 2010 at 7:19 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+> Hello.
+>
+> On 19-12-2010 17:32, Wu Zhangjin wrote:
+>
+>> pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
+>> variant), so, remove the dependency of X86_32 and fix the building
+>> errors under the other platforms via only reserving the X86_32 speci=
+fic
+>> parts for X86_32.
+>
+>> pata_amd also supports cs5536 IDE controller, but this one saves abo=
+ut
+>> 33k for the compressed kernel image(vmlinuz for MIPS).
+>
+>> Signed-off-by: Zhang Le <r0bertz@gentoo.org>
+>> Signed-off-by: Chen Jie <chenj@lemote.com>
+>> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+>
+> [...]
+>
+>> diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+>> index 21ee23f..643488b 100644
+>> --- a/drivers/ata/pata_cs5536.c
+>> +++ b/drivers/ata/pata_cs5536.c
+>> @@ -37,7 +37,17 @@
+>> =A0#include<linux/delay.h>
+>> =A0#include<linux/libata.h>
+>> =A0#include<scsi/scsi_host.h>
+>> +
+>> +#ifdef CONFIG_X86_32
+>> =A0#include<asm/msr.h>
+>> +static int use_msr;
+>> +module_param_named(msr, use_msr, int, 0644);
+>> +MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function
+>> (Default: 0)");
+>> +#else
+>> +#define rdmsr(x, y, z) do { } while (0)
+>> +#define wrmsr(x, y, z) do { } while (0)
+>> +#define use_msr 0
+>> +#endif
+>>
+>> =A0#define DRV_NAME =A0 =A0 =A0"pata_cs5536"
+>> =A0#define DRV_VERSION =A0 "0.0.7"
+>
+> =A0 I think you should increment the driver version too.
+>
 
-Can you please apply the following patch, trigger the problem and
-attach the kernel log?
+Will use 0.0.8 in the next revision of this patch.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5e59050..c748b5a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -888,12 +888,19 @@ void ata_eh_fastdrain_timerfn(unsigned long arg)
-  */
- static void ata_eh_set_pending(struct ata_port *ap, int fastdrain)
- {
-+	static int xxx;
- 	int cnt;
+With the version incrementation, can I get your "Acked-by:"?
 
- 	/* already scheduled? */
- 	if (ap->pflags & ATA_PFLAG_EH_PENDING)
- 		return;
+Thanks & Regards,
+Wu Zhangjin
 
-+	if (!(ap->pflags & ATA_PFLAG_LOADING) && xxx < 16) {
-+		ata_port_printk(ap, KERN_WARNING, "XXX ata_eh_set_pending()\n");
-+		dump_stack();
-+		xxx++;
-+	}
-+
- 	ap->pflags |= ATA_PFLAG_EH_PENDING;
-
- 	if (!fastdrain)
-
--- 
-tejun
+> WBR, Sergei
+>
