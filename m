@@ -1,62 +1,92 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
-Date: Mon, 20 Dec 2010 14:19:54 +0300
-Message-ID: <4D0F3BDA.7080404@ru.mvista.com>
-References: <1292769160-24420-1-git-send-email-wuzhangjin@gmail.com>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: Re: [PATCH 1/1] ARM: cns3xxx: ahci: Fixup for softwreset failures
+ with direct connected disks with CONFIG_SATA_PMP enabled.
+Date: Mon, 20 Dec 2010 20:02:17 +0300
+Message-ID: <20101220170217.GA1333@oksana.dev.rtsoft.ru>
+References: <1291481021-23317-1-git-send-email-mkl0301@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:41547 "EHLO
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:64575 "EHLO
 	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755464Ab0LTLU6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2010 06:20:58 -0500
-In-Reply-To: <1292769160-24420-1-git-send-email-wuzhangjin@gmail.com>
+	with ESMTP id S932922Ab0LTRCW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2010 12:02:22 -0500
+Received: by eyg5 with SMTP id 5so1580265eyg.2
+        for <linux-ide@vger.kernel.org>; Mon, 20 Dec 2010 09:02:21 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1291481021-23317-1-git-send-email-mkl0301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wu Zhangjin <wuzhangjin@gmail.com>
-Cc: "Martin K. Petersen" <mkp@mkp.net>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
+To: mkl0301@gmail.com
+Cc: htejun@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello.
-
-On 19-12-2010 17:32, Wu Zhangjin wrote:
-
-> pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
-> variant), so, remove the dependency of X86_32 and fix the building
-> errors under the other platforms via only reserving the X86_32 specific
-> parts for X86_32.
-
-> pata_amd also supports cs5536 IDE controller, but this one saves about
-> 33k for the compressed kernel image(vmlinuz for MIPS).
-
-> Signed-off-by: Zhang Le <r0bertz@gentoo.org>
-> Signed-off-by: Chen Jie <chenj@lemote.com>
-> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+On Sun, Dec 05, 2010 at 12:43:41AM +0800, mkl0301@gmail.com wrote:
 [...]
 
-> diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-> index 21ee23f..643488b 100644
-> --- a/drivers/ata/pata_cs5536.c
-> +++ b/drivers/ata/pata_cs5536.c
-> @@ -37,7 +37,17 @@
->   #include<linux/delay.h>
->   #include<linux/libata.h>
->   #include<scsi/scsi_host.h>
+Thanks for the patch!
+
+There are few issues though.
+
+> +static int cns3xxx_ahci_init(struct device *dev, void __iomem *addr)
+> +{
+> +	u32 tmp;
 > +
-> +#ifdef CONFIG_X86_32
->   #include<asm/msr.h>
-> +static int use_msr;
-> +module_param_named(msr, use_msr, int, 0644);
-> +MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
-> +#else
-> +#define rdmsr(x, y, z) do { } while (0)
-> +#define wrmsr(x, y, z) do { } while (0)
-> +#define use_msr 0
-> +#endif
->
->   #define DRV_NAME	"pata_cs5536"
->   #define DRV_VERSION	"0.0.7"
+> +	DPRINTK("ENTER\n");
+> +
+> +	tmp = __raw_readl(MISC_SATA_POWER_MODE);
+> +	tmp |= 0x1 << 16; /* Disable SATA PHY 0 from SLUMBER Mode */
+> +	tmp |= 0x1 << 17; /* Disable SATA PHY 1 from SLUMBER Mode */
+> +	__raw_writel(tmp, MISC_SATA_POWER_MODE);
+> +
+> +	/* Enable SATA PHY */
+> +	cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_SATA_PHY0);
+> +	cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_SATA_PHY1);
+> +
+> +	/* Enable SATA Clock */
+> +	cns3xxx_pwr_clk_en(0x1 << PM_CLK_GATE_REG_OFFSET_SATA);
+> +
+> +	/* De-Asscer SATA Reset */
+> +	cns3xxx_pwr_soft_rst(CNS3XXX_PWR_SOFTWARE_RST(SATA));
+> +
+> +	return 0;
+> +}
+> +
+[...]
+> -void __init cns3xxx_ahci_init(void)
+> -{
+> -	u32 tmp;
+> -
+> -	tmp = __raw_readl(MISC_SATA_POWER_MODE);
+> -	tmp |= 0x1 << 16; /* Disable SATA PHY 0 from SLUMBER Mode */
+> -	tmp |= 0x1 << 17; /* Disable SATA PHY 1 from SLUMBER Mode */
+> -	__raw_writel(tmp, MISC_SATA_POWER_MODE);
+> -
+> -	/* Enable SATA PHY */
+> -	cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_SATA_PHY0);
+> -	cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_SATA_PHY1);
+> -
+> -	/* Enable SATA Clock */
+> -	cns3xxx_pwr_clk_en(0x1 << PM_CLK_GATE_REG_OFFSET_SATA);
+> -
+> -	/* De-Asscer SATA Reset */
+> -	cns3xxx_pwr_soft_rst(CNS3XXX_PWR_SOFTWARE_RST(SATA));
+> -
+> -	platform_device_register(&cns3xxx_ahci_pdev);
+> -}
 
-    I think you should increment the driver version too.
+This is not good because cns3xxx_pwr_*() calls aren't thread-safe.
+We must use them only from the "single-threaded" platform code,
+i.e. very early.
 
-WBR, Sergei
+Once we add proper clocks (clkapi) and power management (regulators)
+support for CNS3xxx, we may move this into ahci->init() callback.
+
+Plus, unfortunately this patch breaks build when AHCI_PLATFORM is
+set to =m.
+
+arch/arm/mach-cns3xxx/built-in.o: In function 'cns3xxx_ahci_softreset':
+cns3420vb.c:(.text+0x36c): undefined reference to 'ahci_do_softreset'
+cns3420vb.c:(.text+0x390): undefined reference to 'ahci_do_softreset'
+cns3420vb.c:(.text+0x3a0): undefined reference to 'ahci_check_ready'
+arch/arm/mach-cns3xxx/built-in.o:(.data+0x35c): undefined reference to 'ahci_ops'
+make: *** [.tmp_vmlinux1] Error 1
