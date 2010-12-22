@@ -1,99 +1,512 @@
-From: Wolfram Sang <w.sang@pengutronix.de>
-Subject: [PATCH RESEND] pata_mpc52xx: driver needs BMDMA
-Date: Wed, 22 Dec 2010 16:50:10 +0100
-Message-ID: <1293033011-19265-1-git-send-email-w.sang@pengutronix.de>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: Slow disks.
+Date: Wed, 22 Dec 2010 10:59:24 -0500
+Message-ID: <AANLkTi=HO3TMYKOzzoHLdiyPgOFRZzjDB0WnYnJjeR65@mail.gmail.com>
+References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home>
+ <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: linuxppc-dev@ozlabs.org
-Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:38251 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753508Ab0LVP7p convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Dec 2010 10:59:45 -0500
+In-Reply-To: <20101222104306.GB30941@bitwizard.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Rogier Wolff <R.E.Wolff@bitwizard.nl>
+Cc: =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Found by this build-error if BMDMA is disabled:
+On Wed, Dec 22, 2010 at 5:43 AM, Rogier Wolff <R.E.Wolff@bitwizard.nl> =
+wrote:
+>
+> Unquoted text below is from either me or from my friend.
+>
+>
+> Someone suggested we try an older kernel as if kernel 2.6.32 would no=
+t
+> have this problem. We do NOT think it suddenly started with a certain
+> kernel version. I was just hoping to have you kernel-guys help with
+> prodding the kernel into revealing which component was screwing thing=
+s
+> up....
+>
+>
+> On Mon, Dec 20, 2010 at 01:32:44PM -0500, Greg Freemyer wrote:
+>> On Mon, Dec 20, 2010 at 1:06 PM, Bruno Pr=E9mont
+>> <bonbons@linux-vserver.org> wrote:
+>> > Hi,
+>> >
+>> > [ccing linux-ide]
+>> >
+>> > Please provide the part of kernel log showing initialization of yo=
+ur
+>> > disk controller(s) as well as detection of all the discs.
+>
+>
+> sata_sil 0000:03:01.0: version 2.4
+> sata_sil 0000:03:01.0: PCI INT A -> GSI 24 (level, low) -> IRQ 24
+> sata_sil 0000:03:01.0: Applying R_ERR on DMA activate FIS errata fix
+> scsi2 : sata_sil
+> scsi3 : sata_sil
+> scsi4 : sata_sil
+> scsi5 : sata_sil
+> ata3: SATA max UDMA/100 mmio m1024@0xed200000 tf 0xed200080 irq 24
+> ata4: SATA max UDMA/100 mmio m1024@0xed200000 tf 0xed2000c0 irq 24
+> ata5: SATA max UDMA/100 mmio m1024@0xed200000 tf 0xed200280 irq 24
+> ata6: SATA max UDMA/100 mmio m1024@0xed200000 tf 0xed2002c0 irq 24
+> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata3.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/133
+> ata3.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata3.00: configured for UDMA/100
+> scsi 2:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0WDC WD10EARS-00Y 8=
+0.0 PQ: 0 ANSI: 5
+> usb 2-2: new low speed USB device using uhci_hcd and address 2
+> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata4.00: ATA-7: SAMSUNG HD103SI, 1AG01118, max UDMA7
+> ata4.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata4.00: configured for UDMA/100
+> scsi 3:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0SAMSUNG HD103SI =A0=
+1AG0 PQ: 0 ANSI: 5
+> ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata5.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/133
+> ata5.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata5.00: configured for UDMA/100
+> scsi 4:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0WDC WD10EARS-00Y 8=
+0.0 PQ: 0 ANSI: 5
+> ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata6.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/133
+> ata6.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> ata6.00: configured for UDMA/100
+> scsi 5:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0WDC WD10EARS-00Y 8=
+0.0 PQ: 0 ANSI: 5
+> sd 2:0:0:0: [sda] 1953525168 512-byte logical blocks: (1.00 TB/931 Gi=
+B)
+> sd 2:0:0:0: [sda] Write Protect is off
+> sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+> sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 3:0:0:0: [sdb] 1953525168 512-byte logical blocks: (1.00 TB/931 Gi=
+B)
+> sd 3:0:0:0: [sdb] Write Protect is off
+> sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+> sd 3:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 4:0:0:0: [sdc] 1953525168 512-byte logical blocks: (1.00 TB/931 Gi=
+B)
+> sd 4:0:0:0: [sdc] Write Protect is off
+> sd 4:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> sd 4:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 5:0:0:0: [sdd] 1953525168 512-byte logical blocks: (1.00 TB/931 Gi=
+B)
+> sd 5:0:0:0: [sdd] Write Protect is off
+> sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> sd 5:0:0:0: [sdd] Write Protect is off
+> sd 5:0:0:0: [sdd] Mode Sense: 00 3a 00 00
+> sd 5:0:0:0: [sdd] Write cache: enabled, read cache: enabled, doesn't
+> support DPO or FUA
+> =A0sdb: sdb1 sdb2 sdb3 sdb4
+> sd 3:0:0:0: [sdb] Attached SCSI disk
+> =A0sda: sda1 sda2 sda3 sda4
+> sd 2:0:0:0: [sda] Attached SCSI disk
+> =A0sdc: sdc1 sdc2 sdc3 sdc4
+> sd 4:0:0:0: [sdc] Attached SCSI disk
+> =A0sdd: sdd1 sdd2 sdd3 sdd4
+> sd 5:0:0:0: [sdd] Attached SCSI disk
+>
+>
+>
+>> > Verbose lspci output for the disc controller and $(smartctl -i -A =
+$disk)
+>> > output might be useful as well.
+>
+>
+> 03:01.0 Mass storage controller: Silicon Image, Inc. SiI 3114
+> [SATALink/SATARaid] Serial ATA Controller (rev 02)
+> =A0 =A0 =A0 =A0Subsystem: Silicon Image, Inc. SiI 3114 SATALink Contr=
+oller
+> =A0 =A0 =A0 =A0Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGAS=
+noop- ParErr-
+> Stepping- SERR+ FastB2B- DisINTx-
+> =A0 =A0 =A0 =A0Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=3Dmed=
+ium >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> =A0 =A0 =A0 =A0Latency: 32, Cache Line Size: 32 bytes
+> =A0 =A0 =A0 =A0Interrupt: pin A routed to IRQ 24
+> =A0 =A0 =A0 =A0Region 0: I/O ports at 4020 [size=3D8]
+> =A0 =A0 =A0 =A0Region 1: I/O ports at 4014 [size=3D4]
+> =A0 =A0 =A0 =A0Region 2: I/O ports at 4018 [size=3D8]
+> =A0 =A0 =A0 =A0Region 3: I/O ports at 4010 [size=3D4]
+> =A0 =A0 =A0 =A0Region 4: I/O ports at 4000 [size=3D16]
+> =A0 =A0 =A0 =A0Region 5: Memory at ed200000 (32-bit, non-prefetchable=
+) [size=3D1K]
+> =A0 =A0 =A0 =A0[virtual] Expansion ROM at e8000000 [disabled] [size=3D=
+512K]
+> =A0 =A0 =A0 =A0Capabilities: [60] Power Management version 2
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=
+=3D0mA
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0PME(D0-,D1-,D2-,D3hot-,D3cold-)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0Status: D0 NoSoftRst- PME-Enable- DSel=
+=3D0 DScale=3D2 PME-
+> =A0 =A0 =A0 =A0Kernel driver in use: sata_sil
+> =A0 =A0 =A0 =A0Kernel modules: sata_sil
+>
+>
+> But also tried onboard card:
+>
+> 00:1f.1 IDE interface: Intel Corporation 82801G (ICH7 Family) IDE
+> Controller (rev 01) (prog-if 8a [Master SecP PriP])
+> =A0 =A0 =A0 =A0Subsystem: Super Micro Computer Inc Device 7980
+> =A0 =A0 =A0 =A0Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGAS=
+noop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx-
+> =A0 =A0 =A0 =A0Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=3Dmed=
+ium >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> =A0 =A0 =A0 =A0Latency: 0
+> =A0 =A0 =A0 =A0Interrupt: pin A routed to IRQ 18
+> =A0 =A0 =A0 =A0Region 0: I/O ports at 01f0 [size=3D8]
+> =A0 =A0 =A0 =A0Region 1: I/O ports at 03f4 [size=3D1]
+> =A0 =A0 =A0 =A0Region 2: I/O ports at 0170 [size=3D8]
+> =A0 =A0 =A0 =A0Region 3: I/O ports at 0374 [size=3D1]
+> =A0 =A0 =A0 =A0Region 4: I/O ports at 30a0 [size=3D16]
+> =A0 =A0 =A0 =A0Kernel driver in use: ata_piix
+> =A0 =A0 =A0 =A0Kernel modules: ata_generic, pata_acpi, ata_piix, ide-=
+pci-generic,
+> =A0 =A0 =A0 =A0piix
+>
+> smartctl output:
+> =A0 =A0 =A0 =A0Kernel modules: ata_generic, pata_acpi, ata_piix, ide-=
+pci-generic,
+> =A0 =A0 =A0 =A0piix
+>
+> smartctl output:
+>
+> smartctl 5.40 2010-10-16 r3189 [x86_64-unknown-linux-gnu] (local buil=
+d)
+> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
+e.net
+>
+> =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> Model Family: =A0 =A0 Western Digital Caviar Green (Adv. Format) fami=
+ly
+> Device Model: =A0 =A0 WDC WD10EARS-00Y5B1
+> Serial Number: =A0 =A0WD-WCAV55759454
+> Firmware Version: 80.00A80
+> User Capacity: =A0 =A01,000,204,886,016 bytes
+> Device is: =A0 =A0 =A0 =A0In smartctl database [for details use: -P s=
+how]
+> ATA Version is: =A0 8
+> ATA Standard is: =A0Exact ATA specification draft version not indicat=
+ed
+> Local Time is: =A0 =A0Tue Dec 21 20:06:00 2010 CET
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
+>
+> =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+> SMART Attributes Data Structure revision number: 16
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME =A0 =A0 =A0 =A0 =A0FLAG =A0 =A0 VALUE WORST THRESH=
+ TYPE
+> UPDATED =A0WHEN_FAILED RAW_VALUE
+> =A01 Raw_Read_Error_Rate =A0 =A0 0x002f =A0 200 =A0 200 =A0 051 =A0 =A0=
+Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A03 Spin_Up_Time =A0 =A0 =A0 =A0 =A0 =A00x0027 =A0 132 =A0 119 =A0 0=
+21 =A0 =A0Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 6391
+> =A04 Start_Stop_Count =A0 =A0 =A0 =A00x0032 =A0 100 =A0 100 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 56
+> =A05 Reallocated_Sector_Ct =A0 0x0033 =A0 200 =A0 200 =A0 140 =A0 =A0=
+Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A07 Seek_Error_Rate =A0 =A0 =A0 =A0 0x002e =A0 200 =A0 200 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A09 Power_On_Hours =A0 =A0 =A0 =A0 =A00x0032 =A0 091 =A0 091 =A0 000=
+ =A0 =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 7189
+> =A010 Spin_Retry_Count =A0 =A0 =A0 =A00x0032 =A0 100 =A0 253 =A0 000 =
+=A0 =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A011 Calibration_Retry_Count 0x0032 =A0 100 =A0 253 =A0 000 =A0 =A0O=
+ld_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A012 Power_Cycle_Count =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 54
+> 192 Power-Off_Retract_Count 0x0032 =A0 200 =A0 200 =A0 000 =A0 =A0Old=
+_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 39
+> 193 Load_Cycle_Count =A0 =A0 =A0 =A00x0032 =A0 164 =A0 164 =A0 000 =A0=
+ =A0Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 109955
+> 194 Temperature_Celsius =A0 =A0 0x0022 =A0 109 =A0 107 =A0 000 =A0 =A0=
+Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 38
+> 196 Reallocated_Event_Count 0x0032 =A0 200 =A0 200 =A0 000 =A0 =A0Old=
+_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 197 Current_Pending_Sector =A00x0032 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 198 Offline_Uncorrectable =A0 0x0030 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+> 199 UDMA_CRC_Error_Count =A0 =A00x0032 =A0 200 =A0 200 =A0 000 =A0 =A0=
+Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 200 Multi_Zone_Error_Rate =A0 0x0008 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 200 Multi_Zone_Error_Rate =A0 0x0008 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+>
+> smartctl 5.40 2010-10-16 r3189 [x86_64-unknown-linux-gnu] (local buil=
+d)
+> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
+e.net
+>
+> =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> Model Family: =A0 =A0 Western Digital Caviar Green (Adv. Format) fami=
+ly
+> Device Model: =A0 =A0 WDC WD10EARS-00Y5B1
+> Serial Number: =A0 =A0WD-WCAV55759454
+> Firmware Version: 80.00A80
+> User Capacity: =A0 =A01,000,204,886,016 bytes
+> Device is: =A0 =A0 =A0 =A0In smartctl database [for details use: -P s=
+how]
+> ATA Version is: =A0 8
+> ATA Standard is: =A0Exact ATA specification draft version not indicat=
+ed
+> Local Time is: =A0 =A0Tue Dec 21 20:06:00 2010 CET
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
+>
+> =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+> SMART Attributes Data Structure revision number: 16
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME =A0 =A0 =A0 =A0 =A0FLAG =A0 =A0 VALUE WORST THRESH=
+ TYPE
+> UPDATED =A0WHEN_FAILED RAW_VALUE
+> =A01 Raw_Read_Error_Rate =A0 =A0 0x002f =A0 200 =A0 200 =A0 051 =A0 =A0=
+Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A03 Spin_Up_Time =A0 =A0 =A0 =A0 =A0 =A00x0027 =A0 132 =A0 119 =A0 0=
+21 =A0 =A0Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 6391
+> =A04 Start_Stop_Count =A0 =A0 =A0 =A00x0032 =A0 100 =A0 100 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 56
+> =A05 Reallocated_Sector_Ct =A0 0x0033 =A0 200 =A0 200 =A0 140 =A0 =A0=
+Pre-fail
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A07 Seek_Error_Rate =A0 =A0 =A0 =A0 0x002e =A0 200 =A0 200 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A09 Power_On_Hours =A0 =A0 =A0 =A0 =A00x0032 =A0 091 =A0 091 =A0 000=
+ =A0 =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 7189
+> =A010 Spin_Retry_Count =A0 =A0 =A0 =A00x0032 =A0 100 =A0 253 =A0 000 =
+=A0 =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A011 Calibration_Retry_Count 0x0032 =A0 100 =A0 253 =A0 000 =A0 =A0O=
+ld_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 0
+> =A012 Power_Cycle_Count =A0 =A0 =A0 0x0032 =A0 100 =A0 100 =A0 000 =A0=
+ =A0Old_age
+> Always =A0 =A0 =A0 - =A0 =A0 =A0 54
+> 192 Power-Off_Retract_Count 0x0032 =A0 200 =A0 200 =A0 000 =A0 =A0Old=
+_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 39
+> 193 Load_Cycle_Count =A0 =A0 =A0 =A00x0032 =A0 164 =A0 164 =A0 000 =A0=
+ =A0Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 109955
+> 194 Temperature_Celsius =A0 =A0 0x0022 =A0 109 =A0 107 =A0 000 =A0 =A0=
+Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 38
+> 196 Reallocated_Event_Count 0x0032 =A0 200 =A0 200 =A0 000 =A0 =A0Old=
+_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 197 Current_Pending_Sector =A00x0032 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 198 Offline_Uncorrectable =A0 0x0030 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+> 199 UDMA_CRC_Error_Count =A0 =A00x0032 =A0 200 =A0 200 =A0 000 =A0 =A0=
+Old_age =A0 Always
+> =A0 =A0 =A0- =A0 =A0 =A0 0
+> 200 Multi_Zone_Error_Rate =A0 0x0008 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+>
+> smartctl 5.40 2010-10-16 r3189 [x86_64-unknown-linux-gnu] (local buil=
+d)
+> 200 Multi_Zone_Error_Rate =A0 0x0008 =A0 200 =A0 200 =A0 000 =A0 =A0O=
+ld_age
+> Offline =A0 =A0 =A0- =A0 =A0 =A0 0
+>
+>
+> The others are very similar....
+>
+>
+>> >
+>> > Did you try the individual discs on a completely different system =
+(e.g.
+>> > plain desktop system) and what revision of SATA are both component=
+s
+>> > supporting?
+>
+> Yes I did. The disks were installed in a MSI/Core2DUO based desktop
+> system. No problems at all. Transfer rates up to 200MB/s.
+>
+>
+> The SIL 3114 chip is 1.5Gbps SATA. .
+>
+>
+> Searching for information on the WD drives I stumbled across:
+>
+> http://community.wdc.com/t5/Other-Internal-Drives/1-TB-WD10EARS-desyn=
+ch-issues-in-RAID/m-p/11559
+>
+> Where it seems that WD simply says not to use these drives in a RAID.
+> I have experience with "Raid Edition" drives: They go bad at a MUCH
+> too high rate. If we can't use the non-raid for a RAID application, t=
+hen
+> there is just ONE possible option: STAY AWAY FROM WESTERN DIGITAL:
+>
+> Western digital claims it has the right to mess things up if you put =
+a
+> non-raid drive in a raid configuration. Well fine. Then they can also
+> mess things up in normal situations because when Linux does software
+> raid there isn't any difference from RAID accesses.
+>
+> (if you click through and read their entry in the knowledge base,
+> you'd notice that it should be more or less the other way
+> around. Linux will drop the RAID-enabled drive from the RAID within
+> seven seconds and reporting error on a sector, whereas the desktop
+> drive would remain operational until Linux times out (30 seconds?))
+>
+>
+>
+> More hardware info:
+>
+> System: Supermicro PDSMi, 4xDDR2 1GB, disks and controllers as above.
+> Current kernel version: 2.6.36.2
+> Problem was also present in kernel 2.6.33 (sorry cannot downgrade aga=
+in.
+> This is a production system...)
+>
+> uname -a:
+> Linux jcz.nl 2.6.36-ARCH #1 SMP PREEMPT Fri Dec 10 20:32:37 CET 2010
+> x86_64 Intel(R) Pentium(R) D CPU 3.20GHz GenuineIntel GNU/Linux
+>
+> Disklayout:
+>
+> major minor =A0#blocks =A0name
+>
+> =A0 8 =A0 =A0 =A0 =A00 =A0976762584 sda
+> =A0 8 =A0 =A0 =A0 =A01 =A0 =A0 240943 sda1
+> =A0 8 =A0 =A0 =A0 =A02 =A0 19535040 sda2
+> =A0 8 =A0 =A0 =A0 =A03 =A0 =A01951897 sda3
+> =A0 8 =A0 =A0 =A0 =A04 =A0955032120 sda4
+> =A0 8 =A0 =A0 =A0 16 =A0976762584 sdb
+> =A0 8 =A0 =A0 =A0 17 =A0 =A0 240943 sdb1
+> =A0 8 =A0 =A0 =A0 18 =A0 19535040 sdb2
+> =A0 8 =A0 =A0 =A0 19 =A0 =A01951897 sdb3
+> =A0 8 =A0 =A0 =A0 20 =A0955032120 sdb4
+> =A0 8 =A0 =A0 =A0 32 =A0976762584 sdc
+> =A0 8 =A0 =A0 =A0 33 =A0 =A0 240943 sdc1
+> =A0 8 =A0 =A0 =A0 34 =A0 19535040 sdc2
+> =A0 8 =A0 =A0 =A0 35 =A0 =A01951897 sdc3
+> =A0 8 =A0 =A0 =A0 36 =A0955032120 sdc4
+> =A0 8 =A0 =A0 =A0 48 =A0976762584 sdd
+> =A0 8 =A0 =A0 =A0 49 =A0 =A0 240943 sdd1
+> =A0 8 =A0 =A0 =A0 50 =A0 19535040 sdd2
+> =A0 8 =A0 =A0 =A0 51 =A0 =A01951897 sdd3
+> =A0 8 =A0 =A0 =A0 52 =A0955032120 sdd4
+> =A0 9 =A0 =A0 =A0127 =A0 =A0 240832 md127
+> =A0 9 =A0 =A0 =A0 =A01 =A0 39067648 md1
+> =A0 9 =A0 =A0 =A0126 1910063104 md126
+> =A0 9 =A0 =A0 =A0125 =A0 =A03903488 md125
+>
+> MDstat:
+>
+> Personalities : [raid1] [raid6] [raid5] [raid4]
+> md125 : active raid5 sdd3[5](S) sdb3[4] sda3[0] sdc3[3]
+> =A0 =A0 =A03903488 blocks super 1.1 level 5, 512k chunk, algorithm 2 =
+[3/3] [UUU]
+>
+> md126 : active raid5 sda4[0] sdd4[3] sdc4[5](S) sdb4[4]
+> =A0 =A0 =A01910063104 blocks super 1.1 level 5, 512k chunk, algorithm=
+ 2
+> [3/3] [UUU]
+>
+> md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
+> =A0 =A0 =A039067648 blocks super 1.2 level 5, 512k chunk, algorithm 2=
+ [3/3]
+> [3/3] [UUU]
+>
+> md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
+> =A0 =A0 =A039067648 blocks super 1.2 level 5, 512k chunk, algorithm 2=
+ [3/3]
+> [UUU]
+>
+> md127 : active raid1 sdd1[3](S) sda1[0] sdb1[1] sdc1[2]
+> =A0 =A0 =A0240832 blocks [3/3] [UUU]
+>
+> unused devices: <none>
+> rootfs / rootfs rw 0 0
+> proc /proc proc rw,relatime 0 0
+> sys /sys sysfs rw,relatime 0 0
+> udev /dev devtmpfs
+> rw,nosuid,relatime,size=3D10240k,nr_inodes=3D506317,mode=3D755 0 0
+> /dev/disk/by-label/rootfs / ext4
+> rw,relatime,barrier=3D1,stripe=3D256,data=3Dordered 0 0
+> devpts /dev/pts devpts rw,relatime,mode=3D600,ptmxmode=3D000 0 0
+> shm /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
+> /dev/md127 /boot ext3
+> rw,relatime,errors=3Dcontinue,barrier=3D0,data=3Dwriteback 0 0
+> /dev/md126 /data ext4 rw,relatime,barrier=3D1,data=3Dordered 0 0
+>
+>
+> Because of the severity of the problems (which remain after trying
+> another sata card), I have already bought a new Supermicro server. Le=
+t's
+> hope that helps.
 
-drivers/ata/pata_mpc52xx.c: In function 'mpc52xx_ata_init_one':
-drivers/ata/pata_mpc52xx.c:662: error: 'ata_bmdma_interrupt' undeclared (first use in this function)
-...
 
-Move the Kconfig entry to the proper location as needed since
-9a7780c9acb821fe1c2b6fc53f74cc2556ff5364 (libata-sff: make BMDMA optional)
+The load_cycle_counts are very high and that means your drive heads
+are parking all the time.  Possibly multiple times a minute.
 
-Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
----
+I don't know if its your problem, but I'd say something is wrong and
+I've seen excessive head parking cause disk write failures in Windows.
+ In linux I think it just wears out your drive way prematurely.  And
+of course and i/o's are delayed if the heads are parked when the
+commands hit the drive.
 
-This is a build-failure, so fixing it before 2.6.37 would be great.
+There is a linux package specifically targeting drives that have this
+issue.  Hopefully it can at least keep your heads from parking
+continuously.  storage-fixup.
 
- drivers/ata/Kconfig  |   20 ++++++++++----------
- drivers/ata/Makefile |    2 +-
- 2 files changed, 11 insertions(+), 11 deletions(-)
+1) Be sure you have the userspace package storage-fixup installed.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 11ec911..85756b8 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -128,16 +128,6 @@ config PDC_ADMA
- 
- 	  If unsure, say N.
- 
--config PATA_MPC52xx
--	tristate "Freescale MPC52xx SoC internal IDE"
--	depends on PPC_MPC52xx && PPC_BESTCOMM
--	select PPC_BESTCOMM_ATA
--	help
--	  This option enables support for integrated IDE controller
--	  of the Freescale MPC52xx SoC.
--
--	  If unsure, say N.
--
- config PATA_OCTEON_CF
- 	tristate "OCTEON Boot Bus Compact Flash support"
- 	depends on CPU_CAVIUM_OCTEON
-@@ -491,6 +481,16 @@ config PATA_MARVELL
- 
- 	  If unsure, say N.
- 
-+config PATA_MPC52xx
-+	tristate "Freescale MPC52xx SoC internal IDE"
-+	depends on PPC_MPC52xx && PPC_BESTCOMM
-+	select PPC_BESTCOMM_ATA
-+	help
-+	  This option enables support for integrated IDE controller
-+	  of the Freescale MPC52xx SoC.
-+
-+	  If unsure, say N.
-+
- config PATA_NETCELL
- 	tristate "NETCELL Revolution RAID support"
- 	depends on PCI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index c501af5..2b67c90 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -11,7 +11,6 @@ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
- 
- # SFF w/ custom DMA
- obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
--obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
- obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
- obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
- obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
-@@ -52,6 +51,7 @@ obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
- obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
- obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
- obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
-+obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
- obj-$(CONFIG_PATA_NETCELL)	+= pata_netcell.o
- obj-$(CONFIG_PATA_NINJA32)	+= pata_ninja32.o
- obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
--- 
-1.7.2.3
+2) Look in /etc/storage-fixup.conf and see if your drives are in the li=
+st.
+
+If not, try to work with the storage-fixup maintainer (Tejun Heo?) to
+get your drives added.
+
+And while testing, watch Load_cycle_count and ensure it is not
+increasing too fast.  ie. Several times an hour is fine.  Several
+times per minute is too much.
+
+Greg
