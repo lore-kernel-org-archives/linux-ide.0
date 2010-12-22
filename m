@@ -1,53 +1,116 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [regression] 2.6.37-rc5: scsi_eh_11 CPU loop
-Date: Tue, 21 Dec 2010 12:03:56 +0100
-Message-ID: <20101221110355.GA981@htj.dyndns.org>
-References: <201012201105.08993.Martin@lichtvoll.de>
- <4D0F8E98.9070500@kernel.org>
- <201012211131.27698.Martin@lichtvoll.de>
+From: Lin Mac <mkl0301@gmail.com>
+Subject: Re: [PATCH 1/1] ARM: cns3xxx: ahci: Fixup for softwreset failures
+ with direct connected disks with CONFIG_SATA_PMP enabled.
+Date: Wed, 22 Dec 2010 17:27:20 +0800
+Message-ID: <AANLkTi=Lk1vAxxTJQpXNvtbLCFs0Gy+ZAJadxv_mLQ6C@mail.gmail.com>
+References: <1291481021-23317-1-git-send-email-mkl0301@gmail.com>
+	<20101220170217.GA1333@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201012211131.27698.Martin@lichtvoll.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:63595 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799Ab0LVJ1W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Dec 2010 04:27:22 -0500
+Received: by fxm18 with SMTP id 18so5347547fxm.2
+        for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2010 01:27:20 -0800 (PST)
+In-Reply-To: <20101220170217.GA1333@oksana.dev.rtsoft.ru>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Anton Vorontsov <cbouatmailru@gmail.com>
+Cc: htejun@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hello,
-
-On Tue, Dec 21, 2010 at 11:31:15AM +0100, Martin Steigerwald wrote:
-> > diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> > index 5e59050..c748b5a 100644
+2010/12/21 Anton Vorontsov <cbouatmailru@gmail.com>:
+> On Sun, Dec 05, 2010 at 12:43:41AM +0800, mkl0301@gmail.com wrote:
 > [...]
-> > 
-> > +	if (!(ap->pflags & ATA_PFLAG_LOADING) && xxx < 16) {
-> > +		ata_port_printk(ap, KERN_WARNING, "XXX ata_eh_set_pending()\n");
-> > +		dump_stack();
-> > +		xxx++;
-> > +	}
-> > +
-> 
-> I will do so with my next kernel compile - likely rc7 if it comes out 
-> before Christmas.
-> 
-> As I do not know what exactly triggers it, it can take a while till I 
-> experience it again. I hope to be able to trigger it by inserting and 
-> removing the PCMCIA eSATA adapter lots of times. As the bug happened, I 
-> forgot to vgchange -an the LVM on the external drive. That might be or 
-> might not be related to triggering the issue. I will try this as well.
-> 
-> Reported-as: https://bugzilla.kernel.org/show_bug.cgi?id=25392
-> 
-> Might make sense to switch this bugzilla report to mail. Or use the 
-> bugzilla. Or just use the bugzilla for tracking and continue using mail. 
-> I'll do whatever suits you best (but prefer mail).
+>
+> Thanks for the patch!
+>
+> There are few issues though.
+>
+>> +static int cns3xxx_ahci_init(struct device *dev, void __iomem *addr=
+)
+>> +{
+>> + =A0 =A0 u32 tmp;
+>> +
+>> + =A0 =A0 DPRINTK("ENTER\n");
+>> +
+>> + =A0 =A0 tmp =3D __raw_readl(MISC_SATA_POWER_MODE);
+>> + =A0 =A0 tmp |=3D 0x1 << 16; /* Disable SATA PHY 0 from SLUMBER Mod=
+e */
+>> + =A0 =A0 tmp |=3D 0x1 << 17; /* Disable SATA PHY 1 from SLUMBER Mod=
+e */
+>> + =A0 =A0 __raw_writel(tmp, MISC_SATA_POWER_MODE);
+>> +
+>> + =A0 =A0 /* Enable SATA PHY */
+>> + =A0 =A0 cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_S=
+ATA_PHY0);
+>> + =A0 =A0 cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_S=
+ATA_PHY1);
+>> +
+>> + =A0 =A0 /* Enable SATA Clock */
+>> + =A0 =A0 cns3xxx_pwr_clk_en(0x1 << PM_CLK_GATE_REG_OFFSET_SATA);
+>> +
+>> + =A0 =A0 /* De-Asscer SATA Reset */
+>> + =A0 =A0 cns3xxx_pwr_soft_rst(CNS3XXX_PWR_SOFTWARE_RST(SATA));
+>> +
+>> + =A0 =A0 return 0;
+>> +}
+>> +
+> [...]
+>> -void __init cns3xxx_ahci_init(void)
+>> -{
+>> - =A0 =A0 u32 tmp;
+>> -
+>> - =A0 =A0 tmp =3D __raw_readl(MISC_SATA_POWER_MODE);
+>> - =A0 =A0 tmp |=3D 0x1 << 16; /* Disable SATA PHY 0 from SLUMBER Mod=
+e */
+>> - =A0 =A0 tmp |=3D 0x1 << 17; /* Disable SATA PHY 1 from SLUMBER Mod=
+e */
+>> - =A0 =A0 __raw_writel(tmp, MISC_SATA_POWER_MODE);
+>> -
+>> - =A0 =A0 /* Enable SATA PHY */
+>> - =A0 =A0 cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_S=
+ATA_PHY0);
+>> - =A0 =A0 cns3xxx_pwr_power_up(0x1 << PM_PLL_HM_PD_CTRL_REG_OFFSET_S=
+ATA_PHY1);
+>> -
+>> - =A0 =A0 /* Enable SATA Clock */
+>> - =A0 =A0 cns3xxx_pwr_clk_en(0x1 << PM_CLK_GATE_REG_OFFSET_SATA);
+>> -
+>> - =A0 =A0 /* De-Asscer SATA Reset */
+>> - =A0 =A0 cns3xxx_pwr_soft_rst(CNS3XXX_PWR_SOFTWARE_RST(SATA));
+>> -
+>> - =A0 =A0 platform_device_register(&cns3xxx_ahci_pdev);
+>> -}
+>
+> This is not good because cns3xxx_pwr_*() calls aren't thread-safe.
+> We must use them only from the "single-threaded" platform code,
+> i.e. very early.
+> Once we add proper clocks (clkapi) and power management (regulators)
+> support for CNS3xxx, we may move this into ahci->init() callback.
+Almost every device driver needs to change those power/clk/reset bits,
+and it's strange to enable everything on init phase. BTW, the  EHCI
+and OHCI that I sent previously also used these cns3xxx_pwr_*() calls.
 
-I don't care either way.  Just ping me whenever you hit the problem
-again.
+Would they be supported in near future? If not, I would like look into =
+those.
 
-Thanks.
+> Plus, unfortunately this patch breaks build when AHCI_PLATFORM is
+> set to =3Dm.
+> arch/arm/mach-cns3xxx/built-in.o: In function 'cns3xxx_ahci_softreset=
+':
+> cns3420vb.c:(.text+0x36c): undefined reference to 'ahci_do_softreset'
+> cns3420vb.c:(.text+0x390): undefined reference to 'ahci_do_softreset'
+> cns3420vb.c:(.text+0x3a0): undefined reference to 'ahci_check_ready'
+> arch/arm/mach-cns3xxx/built-in.o:(.data+0x35c): undefined reference t=
+o 'ahci_ops'
+> make: *** [.tmp_vmlinux1] Error 1
+Sorry that I didn't notice this. I was trying to reuse ahci-platform
+as possible.
+Building platform device as module seems strange to me, therefore I
+would add a new ahci-platform alike platform driver.
 
--- 
-tejun
+Best Regards,
+Mac Lin
