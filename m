@@ -1,79 +1,99 @@
-From: Anton Vorontsov <cbouatmailru@gmail.com>
-Subject: Re: [PATCH 1/1] ARM: cns3xxx: ahci: Fixup for softwreset failures
- with direct connected disks with CONFIG_SATA_PMP enabled.
-Date: Wed, 22 Dec 2010 14:58:08 +0300
-Message-ID: <20101222115808.GA458@oksana.dev.rtsoft.ru>
-References: <1291481021-23317-1-git-send-email-mkl0301@gmail.com>
- <20101220170217.GA1333@oksana.dev.rtsoft.ru>
- <AANLkTi=Lk1vAxxTJQpXNvtbLCFs0Gy+ZAJadxv_mLQ6C@mail.gmail.com>
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: [PATCH RESEND] pata_mpc52xx: driver needs BMDMA
+Date: Wed, 22 Dec 2010 16:50:10 +0100
+Message-ID: <1293033011-19265-1-git-send-email-w.sang@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f45.google.com ([209.85.215.45]:36549 "EHLO
-	mail-ew0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233Ab0LVL6M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Dec 2010 06:58:12 -0500
-Received: by ewy10 with SMTP id 10so2535859ewy.4
-        for <linux-ide@vger.kernel.org>; Wed, 22 Dec 2010 03:58:11 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <AANLkTi=Lk1vAxxTJQpXNvtbLCFs0Gy+ZAJadxv_mLQ6C@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: linuxppc-dev@ozlabs.org
+Cc: linux-ide@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Mac <mkl0301@gmail.com>
-Cc: htejun@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Wed, Dec 22, 2010 at 05:27:20PM +0800, Lin Mac wrote:
-[...]
-> > This is not good because cns3xxx_pwr_*() calls aren't thread-safe.
-> > We must use them only from the "single-threaded" platform code,
-> > i.e. very early.
-> > Once we add proper clocks (clkapi) and power management (regulators)
-> > support for CNS3xxx, we may move this into ahci->init() callback.
-> Almost every device driver needs to change those power/clk/reset bits,
-> and it's strange to enable everything on init phase. BTW, the  EHCI
-> and OHCI that I sent previously also used these cns3xxx_pwr_*() calls.
-> 
-> Would they be supported in near future? If not, I would like look into those.
+Found by this build-error if BMDMA is disabled:
 
-Currently I do not work on adding these features, so feel free
-look into it.
+drivers/ata/pata_mpc52xx.c: In function 'mpc52xx_ata_init_one':
+drivers/ata/pata_mpc52xx.c:662: error: 'ata_bmdma_interrupt' undeclared (first use in this function)
+...
 
-> > Plus, unfortunately this patch breaks build when AHCI_PLATFORM is
-> > set to =m.
-> > arch/arm/mach-cns3xxx/built-in.o: In function 'cns3xxx_ahci_softreset':
-> > cns3420vb.c:(.text+0x36c): undefined reference to 'ahci_do_softreset'
-> > cns3420vb.c:(.text+0x390): undefined reference to 'ahci_do_softreset'
-> > cns3420vb.c:(.text+0x3a0): undefined reference to 'ahci_check_ready'
-> > arch/arm/mach-cns3xxx/built-in.o:(.data+0x35c): undefined reference to 'ahci_ops'
-> > make: *** [.tmp_vmlinux1] Error 1
-> Sorry that I didn't notice this. I was trying to reuse ahci-platform
-> as possible.
-> Building platform device as module seems strange to me, therefore I
-> would add a new ahci-platform alike platform driver.
+Move the Kconfig entry to the proper location as needed since
+9a7780c9acb821fe1c2b6fc53f74cc2556ff5364 (libata-sff: make BMDMA optional)
 
-Yep. But please make it similar to the SDHCI platform driver
-approach. I.e., see these commits:
+Signed-off-by: Wolfram Sang <w.sang@pengutronix.de>
+---
 
-commit 20b1597bcf4a76ccab232fa032f5f9ad30069167
-Author: Anton Vorontsov <avorontsov@mvista.com>
-Date:   Tue Aug 10 18:01:49 2010 -0700
+This is a build-failure, so fixing it before 2.6.37 would be great.
 
-    sdhci-pltfm: add support for CNS3xxx SoC devices
+ drivers/ata/Kconfig  |   20 ++++++++++----------
+ drivers/ata/Makefile |    2 +-
+ 2 files changed, 11 insertions(+), 11 deletions(-)
 
-commit 845e3f4f06f9b1d34f39601cb6b7abfb8f40653c
-Author: Anton Vorontsov <avorontsov@mvista.com>
-Date:   Tue Aug 10 18:01:49 2010 -0700
-
-    sdhci-pltfm: reorganize Makefile entries to support SoC devices
-
-commit 515033f97c0b5a1bce13fa93e09704d95b44f376
-Author: Anton Vorontsov <avorontsov@mvista.com>
-Date:   Tue Aug 10 18:01:47 2010 -0700
-
-    sdhci-pltfm: switch to module device table matching
-
-Thanks,
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 11ec911..85756b8 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -128,16 +128,6 @@ config PDC_ADMA
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_MPC52xx
+-	tristate "Freescale MPC52xx SoC internal IDE"
+-	depends on PPC_MPC52xx && PPC_BESTCOMM
+-	select PPC_BESTCOMM_ATA
+-	help
+-	  This option enables support for integrated IDE controller
+-	  of the Freescale MPC52xx SoC.
+-
+-	  If unsure, say N.
+-
+ config PATA_OCTEON_CF
+ 	tristate "OCTEON Boot Bus Compact Flash support"
+ 	depends on CPU_CAVIUM_OCTEON
+@@ -491,6 +481,16 @@ config PATA_MARVELL
+ 
+ 	  If unsure, say N.
+ 
++config PATA_MPC52xx
++	tristate "Freescale MPC52xx SoC internal IDE"
++	depends on PPC_MPC52xx && PPC_BESTCOMM
++	select PPC_BESTCOMM_ATA
++	help
++	  This option enables support for integrated IDE controller
++	  of the Freescale MPC52xx SoC.
++
++	  If unsure, say N.
++
+ config PATA_NETCELL
+ 	tristate "NETCELL Revolution RAID support"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index c501af5..2b67c90 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -11,7 +11,6 @@ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+-obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
+ obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
+ obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
+ obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+@@ -52,6 +51,7 @@ obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
+ obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
+ obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
+ obj-$(CONFIG_PATA_MARVELL)	+= pata_marvell.o
++obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
+ obj-$(CONFIG_PATA_NETCELL)	+= pata_netcell.o
+ obj-$(CONFIG_PATA_NINJA32)	+= pata_ninja32.o
+ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
 -- 
-Anton Vorontsov
-Email: cbouatmailru@gmail.com
+1.7.2.3
