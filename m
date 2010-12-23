@@ -1,95 +1,78 @@
-From: Jeff Moyer <jmoyer@redhat.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: Slow disks.
-Date: Thu, 23 Dec 2010 12:47:34 -0500
-Message-ID: <x49bp4c7555.fsf@segfault.boston.devel.redhat.com>
-References: <20101220141553.GA6088@bitwizard.nl>
-	<20101220190630.66084e1d@neptune.home>
-	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
-	<20101222104306.GB30941@bitwizard.nl>
-	<x49aajxsrh3.fsf@segfault.boston.devel.redhat.com>
-	<20101222224416.GE30941@bitwizard.nl>
-	<x494oa48scp.fsf@segfault.boston.devel.redhat.com>
-	<20101223170109.GA31591@bitwizard.nl>
+Date: Thu, 23 Dec 2010 13:51:13 -0500
+Message-ID: <AANLkTikbhzopmyfbJuHUQdEBJLLP9e65n0cNBuUjhDdd@mail.gmail.com>
+References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home>
+ <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
+ <20101222104306.GB30941@bitwizard.nl> <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com>
+ <20101222224416.GE30941@bitwizard.nl> <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
+ <20101223170109.GA31591@bitwizard.nl> <x49bp4c7555.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752862Ab0LWRro (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Dec 2010 12:47:44 -0500
-In-Reply-To: <20101223170109.GA31591@bitwizard.nl> (Rogier Wolff's message of
-	"Thu, 23 Dec 2010 18:01:09 +0100")
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:46714 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084Ab0LWSve convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2010 13:51:34 -0500
+In-Reply-To: <x49bp4c7555.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?utf-8?Q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
-
-> On Thu, Dec 23, 2010 at 09:40:54AM -0500, Jeff Moyer wrote:
->> > In my performance calculations, 10ms average seek (should be around
->> > 7), 4ms average rotational latency for a total of 14ms. This would
->> > degrade for read-modify-write to 10+4+8 = 22ms. Still 10 times better
->> > than what we observe: service times on the order of 200-300ms. 
->> 
->> I didn't say it would account for all of your degradation, just that it
->> could affect performance.  I'm sorry if I wasn't clear on that.
+On Thu, Dec 23, 2010 at 12:47 PM, Jeff Moyer <jmoyer@redhat.com> wrote:
+> Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
 >
-> We can live with a "2x performance degradation" due to stupid
-> configuration. But not with the 10x -30x that we're seeing now. 
-
-Wow.  I'm not willing to give up any performance due to
-misconfiguration!
-
->> >  > md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
->> >> >       39067648 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3]
->> >> > [UUU]
->> >> 
->> >> A 512KB raid5 chunk with 4KB I/Os?  That is a recipe for inefficiency.
->> >> Again, blktrace data would be helpful.
->> >
->> > Where did you get the 4kb IOs from? You mean from the iostat -x
->> > output?
->> 
->> Yes, since that's all I have to go on at the moment.
->> 
->> > The system/filesystem decided to do those small IOs. With the
->> > throughput we're getting on the filesystem, it better not try to write
->> > larger chuncks...
->> 
->> Your logic is a bit flawed, for so many reasons I'm not even going to
->> try to enumerate them here.  Anyway, I'll continue to sound like a
->> broken record and ask for blktrace data.
+>> On Thu, Dec 23, 2010 at 09:40:54AM -0500, Jeff Moyer wrote:
+>>> > In my performance calculations, 10ms average seek (should be arou=
+nd
+>>> > 7), 4ms average rotational latency for a total of 14ms. This woul=
+d
+>>> > degrade for read-modify-write to 10+4+8 =3D 22ms. Still 10 times =
+better
+>>> > than what we observe: service times on the order of 200-300ms.
+>>>
+>>> I didn't say it would account for all of your degradation, just tha=
+t it
+>>> could affect performance. =A0I'm sorry if I wasn't clear on that.
+>>
+>> We can live with a "2x performance degradation" due to stupid
+>> configuration. But not with the 10x -30x that we're seeing now.
 >
-> Here it is. 
->
-> http://prive.bitwizard.nl/blktrace.log
->
-> I can't read those yet... Manual is unclear. 
+> Wow. =A0I'm not willing to give up any performance due to
+> misconfiguration!
 
-OK, I should have made it clear that I wanted the binary logs.  No
-matter, we'll work with what you've sent.
+I suspect a mailserver on a raid 5 with large chunksize could be a lot
+worse than 2x slower.  But most of the blame is just raid 5.
 
-> My friend confessed to me today that he determined the "optimal" RAID
-> block size with the exact same test as I had done, and reached the
-> same conclusion. So that explains his raid blocksize of 512k. 
->
-> The system is a mailserver running on a raid on three of the disks.
-> most of the IOs are generated by the mail server software through the
-> FS driver, and the raid system. It's not that we're running a database
-> that inherently requires 4k IOs. Apparently what the
-> system needs are those small IOs. 
+ie.
+write 4K from userspace
 
-The log shows a lot of write barriers:
+Kernel
+Read old primary data, wait for data to actually arrive
+Read old parity data, wait again
+modify both for new data
+write primary data to drive queue
+write parity data to drive queue
 
-  8,32   0     1183   169.033279975   778  A WBS 481958 + 2 <- (8,34) 8
-                                             ^^^
+userspace: fsync
+kernel: force data from queues to drive (requires wait)
 
-On pre-2.6.37 kernels, that will fully flush the device queue, which is
-why you're seeing such a small queue depth.  There was also a CFQ patch
-that sped up fsync performance for small files that landed in .37.  I
-can't remember if you ran with a 2.6.37-rc or not.  Have you?  It may be
-in your best interest to give the latest -rc a try and report back.
 
-Cheers,
-Jeff
+I'm guessing raid1 or raid10 would be several times faster.  And is at
+least as robust as raid 5.
+
+ie.
+write 4K from userspace
+
+Kernel
+write 4K to first mirror's queue
+write 4K to second mirror's queue
+done
+
+userspace: fsync
+kernel: force data from queues to drive (requires wait)
+
+Good Luck
+Greg
