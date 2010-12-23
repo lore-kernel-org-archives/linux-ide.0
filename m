@@ -1,95 +1,43 @@
-From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Subject: Re: Slow disks.
-Date: Thu, 23 Dec 2010 18:01:09 +0100
-Message-ID: <20101223170109.GA31591@bitwizard.nl>
-References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home> <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl> <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com> <20101222224416.GE30941@bitwizard.nl> <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [v2 PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
+Date: Thu, 23 Dec 2010 20:44:19 +0300
+Message-ID: <4D138A73.90504@ru.mvista.com>
+References: <21c0c6ed72c9fb53f47562705de1c2dfc3f3b2ee.1293121910.git.wuzhangjin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.101.171.8]:60804 "HELO abra2.bitwizard.nl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752846Ab0LWRBL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Dec 2010 12:01:11 -0500
-Content-Disposition: inline
-In-Reply-To: <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:37133 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330Ab0LWRpj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2010 12:45:39 -0500
+Received: by ewy5 with SMTP id 5so3180900ewy.19
+        for <linux-ide@vger.kernel.org>; Thu, 23 Dec 2010 09:45:38 -0800 (PST)
+In-Reply-To: <21c0c6ed72c9fb53f47562705de1c2dfc3f3b2ee.1293121910.git.wuzhangjin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Rogier Wolff <R.E.Wolff@BitWizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Wu Zhangjin <wuzhangjin@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
 
-On Thu, Dec 23, 2010 at 09:40:54AM -0500, Jeff Moyer wrote:
-> > In my performance calculations, 10ms average seek (should be around
-> > 7), 4ms average rotational latency for a total of 14ms. This would
-> > degrade for read-modify-write to 10+4+8 = 22ms. Still 10 times better
-> > than what we observe: service times on the order of 200-300ms. 
-> 
-> I didn't say it would account for all of your degradation, just that it
-> could affect performance.  I'm sorry if I wasn't clear on that.
+Hello.
 
-We can live with a "2x performance degradation" due to stupid
-configuration. But not with the 10x -30x that we're seeing now. 
+Wu Zhangjin wrote:
 
-> >  > md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
-> >> >       39067648 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3]
-> >> > [UUU]
-> >> 
-> >> A 512KB raid5 chunk with 4KB I/Os?  That is a recipe for inefficiency.
-> >> Again, blktrace data would be helpful.
-> >
-> > Where did you get the 4kb IOs from? You mean from the iostat -x
-> > output?
-> 
-> Yes, since that's all I have to go on at the moment.
-> 
-> > The system/filesystem decided to do those small IOs. With the
-> > throughput we're getting on the filesystem, it better not try to write
-> > larger chuncks...
-> 
-> Your logic is a bit flawed, for so many reasons I'm not even going to
-> try to enumerate them here.  Anyway, I'll continue to sound like a
-> broken record and ask for blktrace data.
+> pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
+> variant), so, remove the dependency of X86_32 and fix the building
+> errors under the other platforms via only reserving the X86_32 specific
+> parts for X86_32.
 
-Here it is. 
+> pata_amd also supports cs5536 IDE controller, but this one saves about
+> 33k for the compressed kernel image(vmlinuz for MIPS).
 
-http://prive.bitwizard.nl/blktrace.log
+> The driver version is incremented to 0.08 as feedback from "Sergei Shtylyov"
+> <sshtylyov@mvista.com>.
 
-I can't read those yet... Manual is unclear. 
+    This remark should really have been put under --- tear line...
 
-I'd guess that "D" means "submitted to driver". and "C" means
-"completed". I very often see a D followed VERY shortly by a C. Also I
-see more C's than "D"s.
+> Signed-off-by: Zhang Le <r0bertz@gentoo.org>
+> Signed-off-by: Chen Jie <chenj@lemote.com>
+> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
 
-Anohter way of looking at it, was to sort on the "ID" field. I would
-expect each "transaction" to follow similar steps. But many IDs only
-occur twice, and not the same for each. 
-
-> > I have benchmarked my own "high bandwidth" raid arrays. I benchmarked
-> > them with 128k, 256, 512 and 1024k blocksize. I got the best
-> > throughput (for my benchmark: dd if=/dev/md0 of=/dev/null bs=1024k)
-> > with 512k blocksize. (and yes that IS a valid benchmark for my
-> > usage of the array.)
-> 
-> Sorry, I'm not sure I understand how this is relevant.  I thought we
-> were troubleshooting a problem on someone else's system.  Further, the
-> window into the workload we saw via iostat definitely shows that smaller
-> I/Os are issued.
-
-My friend confessed to me today that he determined the "optimal" RAID
-block size with the exact same test as I had done, and reached the
-same conclusion. So that explains his raid blocksize of 512k. 
-
-The system is a mailserver running on a raid on three of the disks.
-most of the IOs are generated by the mail server software through the
-FS driver, and the raid system. It's not that we're running a database
-that inherently requires 4k IOs. Apparently what the
-system needs are those small IOs. 
-
-	Roger. 
-
--- 
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
-**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
-*-- BitWizard writes Linux device drivers for any device you may have! --*
-Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
-Does it sit on the couch all day? Is it unemployed? Please be specific! 
-Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
+WBR, Sergei
