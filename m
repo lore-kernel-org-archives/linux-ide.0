@@ -1,93 +1,104 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: Slow disks.
-Date: Thu, 23 Dec 2010 09:40:54 -0500
-Message-ID: <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
-References: <20101220141553.GA6088@bitwizard.nl>
-	<20101220190630.66084e1d@neptune.home>
-	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
-	<20101222104306.GB30941@bitwizard.nl>
-	<x49aajxsrh3.fsf@segfault.boston.devel.redhat.com>
-	<20101222224416.GE30941@bitwizard.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Wu Zhangjin <wuzhangjin@gmail.com>
+Subject: [v2 PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
+Date: Fri, 24 Dec 2010 00:35:32 +0800
+Message-ID: <21c0c6ed72c9fb53f47562705de1c2dfc3f3b2ee.1293121910.git.wuzhangjin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53086 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753048Ab0LWOlO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Dec 2010 09:41:14 -0500
-In-Reply-To: <20101222224416.GE30941@bitwizard.nl> (Rogier Wolff's message of
-	"Wed, 22 Dec 2010 23:44:16 +0100")
+Received: from mail-px0-f174.google.com ([209.85.212.174]:33299 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab0LWQfx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2010 11:35:53 -0500
+Received: by pxi15 with SMTP id 15so1213615pxi.19
+        for <linux-ide@vger.kernel.org>; Thu, 23 Dec 2010 08:35:53 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?utf-8?Q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, Wu Zhangjin <wuzhangjin@gmail.com>, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
 
-Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
+pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
+variant), so, remove the dependency of X86_32 and fix the building
+errors under the other platforms via only reserving the X86_32 specific
+parts for X86_32.
 
-> On Wed, Dec 22, 2010 at 11:27:20AM -0500, Jeff Moyer wrote:
->> Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
->> 
->> > Unquoted text below is from either me or from my friend. 
->> >
->> >
->> > Someone suggested we try an older kernel as if kernel 2.6.32 would not
->> > have this problem. We do NOT think it suddenly started with a certain
->> > kernel version. I was just hoping to have you kernel-guys help with
->> > prodding the kernel into revealing which component was screwing things
->> > up....
->> [...]
->> > ata3.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/133
->> 
->> This is an "Advanced format" drive, which, in this case, means it
->> internally has a 4KB sector size and exports a 512byte logical sector
->> size.  If your partitions are misaligned, this can cause performance
->> problems.
->
-> This would mean that for a misalgned write, the drive would have to
-> read-modify-write every super-sector. 
->
-> In my performance calculations, 10ms average seek (should be around
-> 7), 4ms average rotational latency for a total of 14ms. This would
-> degrade for read-modify-write to 10+4+8 = 22ms. Still 10 times better
-> than what we observe: service times on the order of 200-300ms. 
+pata_amd also supports cs5536 IDE controller, but this one saves about
+33k for the compressed kernel image(vmlinuz for MIPS).
 
-I didn't say it would account for all of your degradation, just that it
-could affect performance.  I'm sorry if I wasn't clear on that.
+The driver version is incremented to 0.08 as feedback from "Sergei Shtylyov"
+<sshtylyov@mvista.com>.
 
->  > md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
->> >       39067648 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3]
->> > [UUU]
->> 
->> A 512KB raid5 chunk with 4KB I/Os?  That is a recipe for inefficiency.
->> Again, blktrace data would be helpful.
->
-> Where did you get the 4kb IOs from? You mean from the iostat -x
-> output?
+Signed-off-by: Zhang Le <r0bertz@gentoo.org>
+Signed-off-by: Chen Jie <chenj@lemote.com>
+Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+---
+ drivers/ata/Kconfig       |    2 +-
+ drivers/ata/pata_cs5536.c |   18 ++++++++++++------
+ 2 files changed, 13 insertions(+), 7 deletions(-)
 
-Yes, since that's all I have to go on at the moment.
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 11ec911..cfd04f4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -366,7 +366,7 @@ config PATA_CS5535
+ 
+ config PATA_CS5536
+ 	tristate "CS5536 PATA support"
+-	depends on PCI && X86 && !X86_64
++	depends on PCI
+ 	help
+ 	  This option enables support for the AMD CS5536
+ 	  companion chip used with the Geode LX processor family.
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index 21ee23f..a6e6c96 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -37,10 +37,20 @@
+ #include <linux/delay.h>
+ #include <linux/libata.h>
+ #include <scsi/scsi_host.h>
++
++#ifdef CONFIG_X86_32
+ #include <asm/msr.h>
++static int use_msr;
++module_param_named(msr, use_msr, int, 0644);
++MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
++#else
++#define rdmsr(x, y, z) do { } while (0)
++#define wrmsr(x, y, z) do { } while (0)
++#define use_msr 0
++#endif
+ 
+ #define DRV_NAME	"pata_cs5536"
+-#define DRV_VERSION	"0.0.7"
++#define DRV_VERSION	"0.0.8"
+ 
+ enum {
+ 	CFG			= 0,
+@@ -75,8 +85,6 @@ enum {
+ 	IDE_ETC_NODMA		= 0x03,
+ };
+ 
+-static int use_msr;
+-
+ static const u32 msr_reg[4] = {
+ 	MSR_IDE_CFG, MSR_IDE_DTC, MSR_IDE_CAST, MSR_IDE_ETC,
+ };
+@@ -88,7 +96,7 @@ static const u8 pci_reg[4] = {
+ static inline int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+ 	if (unlikely(use_msr)) {
+-		u32 dummy;
++		u32 dummy __maybe_unused;
+ 
+ 		rdmsr(msr_reg[reg], *val, dummy);
+ 		return 0;
+@@ -294,8 +302,6 @@ MODULE_DESCRIPTION("low-level driver for the CS5536 IDE controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, cs5536);
+ MODULE_VERSION(DRV_VERSION);
+-module_param_named(msr, use_msr, int, 0644);
+-MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
+ 
+ module_init(cs5536_init);
+ module_exit(cs5536_exit);
+-- 
+1.7.1
 
-> The system/filesystem decided to do those small IOs. With the
-> throughput we're getting on the filesystem, it better not try to write
-> larger chuncks...
-
-Your logic is a bit flawed, for so many reasons I'm not even going to
-try to enumerate them here.  Anyway, I'll continue to sound like a
-broken record and ask for blktrace data.
-
-> I have benchmarked my own "high bandwidth" raid arrays. I benchmarked
-> them with 128k, 256, 512 and 1024k blocksize. I got the best
-> throughput (for my benchmark: dd if=/dev/md0 of=/dev/null bs=1024k)
-> with 512k blocksize. (and yes that IS a valid benchmark for my
-> usage of the array.)
-
-Sorry, I'm not sure I understand how this is relevant.  I thought we
-were troubleshooting a problem on someone else's system.  Further, the
-window into the workload we saw via iostat definitely shows that smaller
-I/Os are issued.
-
-Anyway, it will be much easier to debate the issue once the blktrace
-data is gathered.
-
-Happy holidays.
-
--Jeff
