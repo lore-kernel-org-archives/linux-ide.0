@@ -1,104 +1,95 @@
-From: Wu Zhangjin <wuzhangjin@gmail.com>
-Subject: [v2 PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
-Date: Fri, 24 Dec 2010 00:35:32 +0800
-Message-ID: <21c0c6ed72c9fb53f47562705de1c2dfc3f3b2ee.1293121910.git.wuzhangjin@gmail.com>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: Slow disks.
+Date: Thu, 23 Dec 2010 18:01:09 +0100
+Message-ID: <20101223170109.GA31591@bitwizard.nl>
+References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home> <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl> <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com> <20101222224416.GE30941@bitwizard.nl> <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:33299 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927Ab0LWQfx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2010 11:35:53 -0500
-Received: by pxi15 with SMTP id 15so1213615pxi.19
-        for <linux-ide@vger.kernel.org>; Thu, 23 Dec 2010 08:35:53 -0800 (PST)
+Received: from dtp.xs4all.nl ([80.101.171.8]:60804 "HELO abra2.bitwizard.nl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752846Ab0LWRBL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Dec 2010 12:01:11 -0500
+Content-Disposition: inline
+In-Reply-To: <x494oa48scp.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, Wu Zhangjin <wuzhangjin@gmail.com>, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Rogier Wolff <R.E.Wolff@BitWizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
-variant), so, remove the dependency of X86_32 and fix the building
-errors under the other platforms via only reserving the X86_32 specific
-parts for X86_32.
+On Thu, Dec 23, 2010 at 09:40:54AM -0500, Jeff Moyer wrote:
+> > In my performance calculations, 10ms average seek (should be around
+> > 7), 4ms average rotational latency for a total of 14ms. This would
+> > degrade for read-modify-write to 10+4+8 = 22ms. Still 10 times better
+> > than what we observe: service times on the order of 200-300ms. 
+> 
+> I didn't say it would account for all of your degradation, just that it
+> could affect performance.  I'm sorry if I wasn't clear on that.
 
-pata_amd also supports cs5536 IDE controller, but this one saves about
-33k for the compressed kernel image(vmlinuz for MIPS).
+We can live with a "2x performance degradation" due to stupid
+configuration. But not with the 10x -30x that we're seeing now. 
 
-The driver version is incremented to 0.08 as feedback from "Sergei Shtylyov"
-<sshtylyov@mvista.com>.
+> >  > md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
+> >> >       39067648 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3]
+> >> > [UUU]
+> >> 
+> >> A 512KB raid5 chunk with 4KB I/Os?  That is a recipe for inefficiency.
+> >> Again, blktrace data would be helpful.
+> >
+> > Where did you get the 4kb IOs from? You mean from the iostat -x
+> > output?
+> 
+> Yes, since that's all I have to go on at the moment.
+> 
+> > The system/filesystem decided to do those small IOs. With the
+> > throughput we're getting on the filesystem, it better not try to write
+> > larger chuncks...
+> 
+> Your logic is a bit flawed, for so many reasons I'm not even going to
+> try to enumerate them here.  Anyway, I'll continue to sound like a
+> broken record and ask for blktrace data.
 
-Signed-off-by: Zhang Le <r0bertz@gentoo.org>
-Signed-off-by: Chen Jie <chenj@lemote.com>
-Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
----
- drivers/ata/Kconfig       |    2 +-
- drivers/ata/pata_cs5536.c |   18 ++++++++++++------
- 2 files changed, 13 insertions(+), 7 deletions(-)
+Here it is. 
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 11ec911..cfd04f4 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -366,7 +366,7 @@ config PATA_CS5535
- 
- config PATA_CS5536
- 	tristate "CS5536 PATA support"
--	depends on PCI && X86 && !X86_64
-+	depends on PCI
- 	help
- 	  This option enables support for the AMD CS5536
- 	  companion chip used with the Geode LX processor family.
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 21ee23f..a6e6c96 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -37,10 +37,20 @@
- #include <linux/delay.h>
- #include <linux/libata.h>
- #include <scsi/scsi_host.h>
-+
-+#ifdef CONFIG_X86_32
- #include <asm/msr.h>
-+static int use_msr;
-+module_param_named(msr, use_msr, int, 0644);
-+MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
-+#else
-+#define rdmsr(x, y, z) do { } while (0)
-+#define wrmsr(x, y, z) do { } while (0)
-+#define use_msr 0
-+#endif
- 
- #define DRV_NAME	"pata_cs5536"
--#define DRV_VERSION	"0.0.7"
-+#define DRV_VERSION	"0.0.8"
- 
- enum {
- 	CFG			= 0,
-@@ -75,8 +85,6 @@ enum {
- 	IDE_ETC_NODMA		= 0x03,
- };
- 
--static int use_msr;
--
- static const u32 msr_reg[4] = {
- 	MSR_IDE_CFG, MSR_IDE_DTC, MSR_IDE_CAST, MSR_IDE_ETC,
- };
-@@ -88,7 +96,7 @@ static const u8 pci_reg[4] = {
- static inline int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
- {
- 	if (unlikely(use_msr)) {
--		u32 dummy;
-+		u32 dummy __maybe_unused;
- 
- 		rdmsr(msr_reg[reg], *val, dummy);
- 		return 0;
-@@ -294,8 +302,6 @@ MODULE_DESCRIPTION("low-level driver for the CS5536 IDE controller");
- MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, cs5536);
- MODULE_VERSION(DRV_VERSION);
--module_param_named(msr, use_msr, int, 0644);
--MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
- 
- module_init(cs5536_init);
- module_exit(cs5536_exit);
+http://prive.bitwizard.nl/blktrace.log
+
+I can't read those yet... Manual is unclear. 
+
+I'd guess that "D" means "submitted to driver". and "C" means
+"completed". I very often see a D followed VERY shortly by a C. Also I
+see more C's than "D"s.
+
+Anohter way of looking at it, was to sort on the "ID" field. I would
+expect each "transaction" to follow similar steps. But many IDs only
+occur twice, and not the same for each. 
+
+> > I have benchmarked my own "high bandwidth" raid arrays. I benchmarked
+> > them with 128k, 256, 512 and 1024k blocksize. I got the best
+> > throughput (for my benchmark: dd if=/dev/md0 of=/dev/null bs=1024k)
+> > with 512k blocksize. (and yes that IS a valid benchmark for my
+> > usage of the array.)
+> 
+> Sorry, I'm not sure I understand how this is relevant.  I thought we
+> were troubleshooting a problem on someone else's system.  Further, the
+> window into the workload we saw via iostat definitely shows that smaller
+> I/Os are issued.
+
+My friend confessed to me today that he determined the "optimal" RAID
+block size with the exact same test as I had done, and reached the
+same conclusion. So that explains his raid blocksize of 512k. 
+
+The system is a mailserver running on a raid on three of the disks.
+most of the IOs are generated by the mail server software through the
+FS driver, and the raid system. It's not that we're running a database
+that inherently requires 4k IOs. Apparently what the
+system needs are those small IOs. 
+
+	Roger. 
+
 -- 
-1.7.1
-
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
