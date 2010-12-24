@@ -1,44 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream-fixes] libata-sff: fix HSM_ST_ERR handling in
- __ata_sff_port_intr()
-Date: Fri, 24 Dec 2010 13:39:12 -0500
-Message-ID: <4D14E8D0.8090800@garzik.org>
-References: <4CF8FC61.8060606@kernel.org>
+From: Krzysztof Halasa <khc@pm.waw.pl>
+Subject: Re: Slow disks.
+Date: Fri, 24 Dec 2010 21:58:38 +0100
+Message-ID: <m34oa23n29.fsf@intrepid.localdomain>
+References: <20101220141553.GA6088@bitwizard.nl>
+	<20101220190630.66084e1d@neptune.home>
+	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
+	<20101222104306.GB30941@bitwizard.nl>
+	<m3aajvz5na.fsf@intrepid.localdomain>
+	<4D14BB36.1030304@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:33917 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970Ab0LXSjQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2010 13:39:16 -0500
-Received: by qyj19 with SMTP id 19so8892125qyj.19
-        for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2010 10:39:15 -0800 (PST)
-In-Reply-To: <4CF8FC61.8060606@kernel.org>
+Received: from inx.pm.waw.pl ([195.116.170.130]:49098 "EHLO inx.pm.waw.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752685Ab0LXU6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 24 Dec 2010 15:58:51 -0500
+In-Reply-To: <4D14BB36.1030304@msgid.tls.msk.ru> (Michael Tokarev's message of
+	"Fri, 24 Dec 2010 18:24:38 +0300")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Antonio Toma <antonio.toma@gmail.com>, stable <stable@kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Rogier Wolff <R.E.Wolff@BitWizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?utf-8?Q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 12/03/2010 09:19 AM, Tejun Heo wrote:
-> While separating out BMDMA irq handler from SFF, commit c3b28894
-> (libata-sff: separate out BMDMA irq handler) incorrectly made
-> __ata_sff_port_intr() consider an IRQ to be an idle one if the host
-> state was transitioned to HSM_ST_ERR by ata_bmdma_port_intr().
->
-> This makes BMDMA drivers ignore IRQs reporting host bus error which
-> leads to timeouts instead of triggering EH immediately.  Fix it by
-> making __ata_sff_port_intr() consider the IRQ to be an idle one iff
-> the state is HSM_ST_IDLE.  This is equivalent to adding HSM_ST_ERR to
-> the "break"ing case but less error-prone.
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Reported-by: Antonio Toma<antonio.toma@gmail.com>
-> Cc: stable@kernel.org
-> ---
->   drivers/ata/libata-sff.c |    7 +++----
->   1 file changed, 3 insertions(+), 4 deletions(-)
+Michael Tokarev <mjt@tls.msk.ru> writes:
 
-applied
+> No, this is about TLER.  The "desktop" drives like this will try
+> re-read data in case of error, and if that does not work the
+> raid code will most likely declare the drive's dead and kick
+> it off the array.  Drives which are supposed to work in RAID
+> config has configurable timeouts/retries, so that the RAID
+> code will be able to take care of read errors.
 
+Assuming the controller won't kick the drive off anyway, and it most
+probably will.
 
+In this case, no drives fail, so it doesn't matter.
+Guess we should then see the partition table(s).
+-- 
+Krzysztof Halasa
