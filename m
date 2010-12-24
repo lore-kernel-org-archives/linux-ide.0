@@ -1,46 +1,65 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: Slow disks.
-Date: Fri, 24 Dec 2010 14:01:29 +0100
-Message-ID: <m3aajvz5na.fsf@intrepid.localdomain>
-References: <20101220141553.GA6088@bitwizard.nl>
-	<20101220190630.66084e1d@neptune.home>
-	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
-	<20101222104306.GB30941@bitwizard.nl>
+From: wu zhangjin <wuzhangjin@gmail.com>
+Subject: Re: [v2 PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
+Date: Fri, 24 Dec 2010 21:30:50 +0800
+Message-ID: <AANLkTim+s438quTkFKzv7ndX-1gCSf7AOrjoG-p-HOB7@mail.gmail.com>
+References: <21c0c6ed72c9fb53f47562705de1c2dfc3f3b2ee.1293121910.git.wuzhangjin@gmail.com>
+	<4D138A73.90504@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101222104306.GB30941@bitwizard.nl> (Rogier Wolff's message of
-	"Wed, 22 Dec 2010 11:43:06 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?utf-8?Q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42478 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161Ab0LXNav convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2010 08:30:51 -0500
+Received: by wyb28 with SMTP id 28so6965648wyb.19
+        for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2010 05:30:50 -0800 (PST)
+In-Reply-To: <4D138A73.90504@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
 
-Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
+On Fri, Dec 24, 2010 at 1:44 AM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+> Hello.
+>
+> Wu Zhangjin wrote:
+>
+>> pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
+>> variant), so, remove the dependency of X86_32 and fix the building
+>> errors under the other platforms via only reserving the X86_32 speci=
+fic
+>> parts for X86_32.
+>
+>> pata_amd also supports cs5536 IDE controller, but this one saves abo=
+ut
+>> 33k for the compressed kernel image(vmlinuz for MIPS).
+>
+>> The driver version is incremented to 0.08 as feedback from "Sergei
+>> Shtylyov"
+>> <sshtylyov@mvista.com>.
+>
+> =A0 This remark should really have been put under --- tear line...
 
-> ata6.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> scsi 5:0:0:0: Direct-Access     ATA      WDC WD10EARS-00Y 80.0 PQ: 0 ANSI: 5
-> sd 2:0:0:0: [sda] 1953525168 512-byte logical blocks: (1.00 TB/931
-> GiB)
+Or I can simply add this line as the 1st line instead:
 
-WD10EARS are "green" drives, 5400 rpm. They aren't designed exactly for
-speed. Never used them, though.
+Changes from v1:
 
-No NCQ? Sil 3114 doesn't support of course. ICH7 (without letters)
-doesn't do AHCI either IIRC.
+      o The driver version is incremented to 0.08 as feedback from "Ser=
+gei
+      Shtylyov" <sshtylyov@mvista.com>.
 
->   9 Power_On_Hours          0x0032   091   091   000    Old_age
-> Always       -       7189
-> 193 Load_Cycle_Count        0x0032   164   164   000    Old_age   Always
->       -       109955
+But this is really a trivial stuff ... anyway, v3 will be sent out late=
+r ;-)
 
-Hmm, some agressive power savings? May reduce performance significantly.
-I'd disable all this "green" crap first.
+Regards,
+Wu Zhangjin
 
-> Where it seems that WD simply says not to use these drives in a RAID.
-
-That smells like "don't use them in any serious application".
-
-I'd start with a RAID-1 or RAID-10 if possible.
--- 
-Krzysztof Halasa
+>
+>> Signed-off-by: Zhang Le <r0bertz@gentoo.org>
+>> Signed-off-by: Chen Jie <chenj@lemote.com>
+>> Signed-off-by: Wu Zhangjin <wuzhangjin@gmail.com>
+>
+> WBR, Sergei
+>
