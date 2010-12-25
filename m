@@ -1,16 +1,16 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_{hpt37x|hpt3x2n}: SATA mode filtering
-Date: Sat, 25 Dec 2010 22:42:41 +0300
-Message-ID: <201012252242.41486.sshtylyov@ru.mvista.com>
+Subject: [PATCH resend] pata_hpt{37x|3x2n}: SATA mode filtering
+Date: Sat, 25 Dec 2010 22:44:01 +0300
+Message-ID: <201012252244.02021.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:58988 "HELO
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:58990 "HELO
 	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751124Ab0LYTn6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Dec 2010 14:43:58 -0500
+	with SMTP id S1751286Ab0LYTpT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Dec 2010 14:45:19 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -26,6 +26,7 @@ Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 --
 The patch is against the recent Linus' tree.
+Resending with the corrected subject...
 
  drivers/ata/pata_hpt37x.c  |   54 ++++++++++++++++++++++++++++++++-------
  drivers/ata/pata_hpt3x2n.c |   61 ++++++++++++++++++++++++++++++++++++---------
