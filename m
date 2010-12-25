@@ -1,40 +1,60 @@
-From: Krzysztof Halasa <khc@pm.waw.pl>
-Subject: Re: Slow disks.
-Date: Fri, 24 Dec 2010 21:58:38 +0100
-Message-ID: <m34oa23n29.fsf@intrepid.localdomain>
-References: <20101220141553.GA6088@bitwizard.nl>
-	<20101220190630.66084e1d@neptune.home>
-	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
-	<20101222104306.GB30941@bitwizard.nl>
-	<m3aajvz5na.fsf@intrepid.localdomain>
-	<4D14BB36.1030304@msgid.tls.msk.ru>
+From: wu zhangjin <wuzhangjin@gmail.com>
+Subject: Re: [v3 PATCH] [libata] pata_cs5536: Add support for non-X86_32 platforms
+Date: Sat, 25 Dec 2010 11:33:31 +0800
+Message-ID: <AANLkTi=7RBNF_XCkAhAkCSFfKnuUcHG_aWWf4dRBUMiQ@mail.gmail.com>
+References: <1293197948-12896-1-git-send-email-wuzhangjin@gmail.com>
+	<4D14E8AA.5020304@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inx.pm.waw.pl ([195.116.170.130]:49098 "EHLO inx.pm.waw.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752685Ab0LXU6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 24 Dec 2010 15:58:51 -0500
-In-Reply-To: <4D14BB36.1030304@msgid.tls.msk.ru> (Michael Tokarev's message of
-	"Fri, 24 Dec 2010 18:24:38 +0300")
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:63276 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178Ab0LYDdc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2010 22:33:32 -0500
+Received: by wyb28 with SMTP id 28so7318797wyb.19
+        for <linux-ide@vger.kernel.org>; Fri, 24 Dec 2010 19:33:31 -0800 (PST)
+In-Reply-To: <4D14E8AA.5020304@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Rogier Wolff <R.E.Wolff@BitWizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?utf-8?Q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, Zhang Le <r0bertz@gentoo.org>, Chen Jie <chenj@lemote.com>
 
-Michael Tokarev <mjt@tls.msk.ru> writes:
+On Sat, Dec 25, 2010 at 2:38 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
+> On 12/24/2010 08:39 AM, Wu Zhangjin wrote:
+>>
+>> Changes from v1:
+>>
+>> =A0 o The driver version is incremented to 0.0.8 as feedback from "S=
+ergei
+>> =A0 Shtylyov"<sshtylyov@mvista.com>.
+>>
+>> ---
+>>
+>> pata_cs5536 does work on the other platforms(e.g. Loongson, a MIPS
+>> variant), so, remove the dependency of X86_32 and fix the building
+>> errors under the other platforms via only reserving the X86_32 speci=
+fic
+>> parts for X86_32.
+>>
+>> pata_amd also supports cs5536 IDE controller, but this one saves abo=
+ut
+>> 33k for the compressed kernel image(vmlinuz for MIPS).
+>>
+>> Signed-off-by: Zhang Le<r0bertz@gentoo.org>
+>> Signed-off-by: Chen Jie<chenj@lemote.com>
+>> Signed-off-by: Wu Zhangjin<wuzhangjin@gmail.com>
+>> ---
+>> =A0drivers/ata/Kconfig =A0 =A0 =A0 | =A0 =A02 +-
+>> =A0drivers/ata/pata_cs5536.c | =A0 18 ++++++++++++------
+>> =A02 files changed, 13 insertions(+), 7 deletions(-)
+>
+> applied, after hand-fixing the comment message (as Sergei noted, auto=
+mated
+> tools script everything after "---" from the commit message)
+>
 
-> No, this is about TLER.  The "desktop" drives like this will try
-> re-read data in case of error, and if that does not work the
-> raid code will most likely declare the drive's dead and kick
-> it off the array.  Drives which are supposed to work in RAID
-> config has configurable timeouts/retries, so that the RAID
-> code will be able to take care of read errors.
+Thanks Jeff and Sergei.
 
-Assuming the controller won't kick the drive off anyway, and it most
-probably will.
-
-In this case, no drives fail, so it doesn't matter.
-Guess we should then see the partition table(s).
--- 
-Krzysztof Halasa
+Regards,
+Wu Zhangjin
