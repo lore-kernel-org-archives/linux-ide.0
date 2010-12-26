@@ -1,108 +1,101 @@
-From: Mark Knecht <markknecht@gmail.com>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
 Subject: Re: Slow disks.
-Date: Sun, 26 Dec 2010 15:38:51 -0800
-Message-ID: <AANLkTi=qAGCFU0u8joKVR4o4QQaRZt1XWfOPSt8eiD3r@mail.gmail.com>
-References: <20101220141553.GA6088@bitwizard.nl>
-	<20101220190630.66084e1d@neptune.home>
-	<AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com>
-	<20101222104306.GB30941@bitwizard.nl>
-	<x49aajxsrh3.fsf@segfault.boston.devel.redhat.com>
+Date: Mon, 27 Dec 2010 00:49:17 +0100
+Message-ID: <20101226234917.GE18227@bitwizard.nl>
+References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home> <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl> <m3aajvz5na.fsf@intrepid.localdomain> <4D14BB36.1030304@msgid.tls.msk.ru> <20101225121407.GA2116@bitwizard.nl> <20101226214037.GB18227@bitwizard.nl> <AANLkTinKgW_Jpph5NtstCJxA6ZhuTgEc+Juc8YrvE7CE@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55658 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab0LZXix convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Dec 2010 18:38:53 -0500
-In-Reply-To: <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com>
+Received: from dtp.xs4all.nl ([80.101.171.8]:25146 "HELO abra2.bitwizard.nl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752996Ab0LZXtT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Dec 2010 18:49:19 -0500
+Content-Disposition: inline
+In-Reply-To: <AANLkTinKgW_Jpph5NtstCJxA6ZhuTgEc+Juc8YrvE7CE@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, =?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, Michael Tokarev <mjt@tls.msk.ru>, Krzysztof Halasa <khc@pm.waw.pl>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Dec 22, 2010 at 8:27 AM, Jeff Moyer <jmoyer@redhat.com> wrote:
-> Rogier Wolff <R.E.Wolff@BitWizard.nl> writes:
->
->> Unquoted text below is from either me or from my friend.
->>
->>
->> Someone suggested we try an older kernel as if kernel 2.6.32 would n=
-ot
->> have this problem. We do NOT think it suddenly started with a certai=
-n
->> kernel version. I was just hoping to have you kernel-guys help with
->> prodding the kernel into revealing which component was screwing thin=
-gs
->> up....
-> [...]
->> ata3.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/133
->
-> This is an "Advanced format" drive, which, in this case, means it
-> internally has a 4KB sector size and exports a 512byte logical sector
-> size. =C2=A0If your partitions are misaligned, this can cause perform=
-ance
-> problems.
->
->> MDstat:
->>
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md125 : active raid5 sdd3[5](S) sdb3[4] sda3[0] sdc3[3]
->> =C2=A0 =C2=A0 =C2=A0 3903488 blocks super 1.1 level 5, 512k chunk, a=
-lgorithm 2 [3/3] [UUU]
->>
->> md126 : active raid5 sda4[0] sdd4[3] sdc4[5](S) sdb4[4]
->> =C2=A0 =C2=A0 =C2=A0 1910063104 blocks super 1.1 level 5, 512k chunk=
-, algorithm 2
->> [3/3] [UUU]
->>
->> md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
->> =C2=A0 =C2=A0 =C2=A0 39067648 blocks super 1.2 level 5, 512k chunk, =
-algorithm 2 [3/3]
->> [3/3] [UUU]
->>
->> md1 : active raid5 sda2[0] sdd2[3](S) sdb2[1] sdc2[4]
->> =C2=A0 =C2=A0 =C2=A0 39067648 blocks super 1.2 level 5, 512k chunk, =
-algorithm 2 [3/3]
->> [UUU]
->
-> A 512KB raid5 chunk with 4KB I/Os? =C2=A0That is a recipe for ineffic=
-iency.
-> Again, blktrace data would be helpful.
->
-> Cheers,
-> Jeff
+On Sun, Dec 26, 2010 at 06:17:40PM -0500, Greg Freemyer wrote:
+> On Sun, Dec 26, 2010 at 4:40 PM, Rogier Wolff <R.E.Wolff@bitwizard.nl=
+> wrote:
+> > On Sat, Dec 25, 2010 at 01:14:07PM +0100, Rogier Wolff wrote:
+> >> Out of four partitions on the drive, two are aligned, two are not.
+> >
+> > Ooops. I looked wrong. Sorry. All four partitions are mis aligned.
+> >
+> > =A0 =A0 =A0 =A0Roger.
+>=20
+> It sounds like you have 3 or 4 separate issues that are each costing
+> you a factor of 3 or so of pain.
+>=20
+> 3 * 3 * 3 *3 =3D 81  ( I don't recall how bad your overall problem wa=
+s).
+>=20
+> I can remember:
+>=20
+> Raid 5 - poor choice for 4KB random writes - a factor of 2-4
+> Misaligned 4KB physical sectors - a factor of 2+
+> Excessive Head Parking  (You show 100K plus head parks in your smart
+> data) - (who knows.  It takes a while to un-park the heads and your
+> heads are parking way too often.)
 
-I am late to this thread but I'd like to give a +1 to everything Jeff s=
-aid.
+Still I think that iostat -x output shows a different story:=20
 
-I tried to build many different mdadm RAID configurations using the
-WD10EARS. They simply didn't work. There were huge delays and mdadm
-would take drives off line. It was a mess.
+On a different server, I have many many many files. I started a delete
+of some of them two days ago. That server is performing just fine. It
+shows that disk IOs are serviced on average after around 5-15ms. Those
+are normal numbers.
 
-=46irst, the drives are 4K sector so it's really important to get them
-on the right partition boundary. Installing Gentoo requires that we
-un-tar some large-ish files. IIRC on a 512 byte boundary these drives
-took 20-30 minutes to do this. On a 4K boundary they took about 1
-minute. I know that doesn't make sense but those were my numbers, and
-it's a very high end Intel i7-980x MB so there wasn't any other
-problem I could find.
+The "remove many files" operation is also likely to cause a similar
+small-ios-workload as the mailserver. On the other hand, there are
+samsung drives there.
 
-Even when I got that part worked out I found that the drives just
-didn't work well in a RAID. The mdadm list led me to believe that the
-root cause was the lack of TLER in the firmware. I don't know how to
-show that's true or not...
+You might be right that we have a few issues together. that might
+compound things. But the "30x" performance difference estimate came
+from the service time stats from iostat.=20
 
-When all that was determined I dropped RAID and I still ran into Load
-Count issue that's discussed elsewhere in this thread.
+Raid5 might cause us an additional performance hit in real life, but
+it does not affect the measured service times of the drives.=20
 
-I then bought 5 WD RAID Edition drives and everything works perfectly.
-> 100MB/Sec on RAID1 and about 180MB/S on RAID0.
+The head parking (and unparking) can indeed influence service times if
+say the drive is parking after each IO. On the other hand when the
+kernel shows "100% usage" we might hope for the drive not to have time
+enough to start thinking about parking the head. And the kernel showed
+100% usage through periods as large as ten seconds at a time.
 
-Overall the WD10EARS drives were very disappointing, at least as
-shipped. I have 5 of them sitting here unused. I would like to find
-some time to try them again one of these days but I don't have high
-hopes.
+> I think you said it was a 8TB, I know its a pain, but I'd rebuild.  I
+> don't know how reliable various large drives are currently.  in
+> 2008/2009 they seemed to be horrible and the advice was to use drives
+> from different vendors, etc so you would be less likely to have a
+> batch of drives go bad all at once.
 
-Cheers,
-Mark
+The Samsungs are holding out really well. I have 8*1T and 4*2T (and a
+few 4*1T) running just great. Seagate goofed with some 500Gb and 1T
+drive sizes IIRC. You're right you wouldn't want to have two of them
+stop/crash at the same time due to the same bug. (chances were around
+1% for a 4-drive setup).=20
+
+Anyway. Others say that mixing drives is bad because the performance
+wouldn't match. At least the performance bottleneck for the array is
+the slowest disk, so you'll almost allways end up with worse
+performance than when you have all disks the same.
+
+
+
+	Roger.=20
+
+--=20
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998=
+ **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233   =
+ **
+*-- BitWizard writes Linux device drivers for any device you may have! =
+--*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous stateme=
+nt.=20
+Does it sit on the couch all day? Is it unemployed? Please be specific!=
+=20
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
