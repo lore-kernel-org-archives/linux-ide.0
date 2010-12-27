@@ -1,133 +1,51 @@
 From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
 Subject: Re: Slow disks.
-Date: Mon, 27 Dec 2010 01:27:50 +0100
-Message-ID: <20101227002750.GF18227@bitwizard.nl>
-References: <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com> <20101222224416.GE30941@bitwizard.nl> <x494oa48scp.fsf@segfault.boston.devel.redhat.com> <20101223170109.GA31591@bitwizard.nl> <x49bp4c7555.fsf@segfault.boston.devel.redhat.com> <AANLkTikbhzopmyfbJuHUQdEBJLLP9e65n0cNBuUjhDdd@mail.gmail.com> <4D139EAE.9090307@jcz.nl> <AANLkTimXCb00Hj1iPG5XKdfSmvQCwtw1Oo7Qr14ZR=Ge@mail.gmail.com> <20101224114008.GL30941@bitwizard.nl> <AANLkTi=e4aXeSSqCPRo4-t6j1GeW7Dj7hecHDK9KxhJ9@mail.gmail.com>
+Date: Mon, 27 Dec 2010 01:34:56 +0100
+Message-ID: <20101227003456.GG18227@bitwizard.nl>
+References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home> <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl> <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com> <AANLkTi=qAGCFU0u8joKVR4o4QQaRZt1XWfOPSt8eiD3r@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.101.171.8]:25677 "HELO abra2.bitwizard.nl"
+Received: from dtp.xs4all.nl ([80.101.171.8]:25784 "HELO abra2.bitwizard.nl"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752634Ab0L0A1x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Dec 2010 19:27:53 -0500
+	id S1752748Ab0L0Ae5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Dec 2010 19:34:57 -0500
 Content-Disposition: inline
-In-Reply-To: <AANLkTi=e4aXeSSqCPRo4-t6j1GeW7Dj7hecHDK9KxhJ9@mail.gmail.com>
+In-Reply-To: <AANLkTi=qAGCFU0u8joKVR4o4QQaRZt1XWfOPSt8eiD3r@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, Jaap Crezee <jaap@jcz.nl>, Jeff Moyer <jmoyer@redhat.com>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mark Knecht <markknecht@gmail.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Rogier Wolff <R.E.Wolff@bitwizard.nl>, Greg Freemyer <greg.freemyer@gmail.com>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Dec 26, 2010 at 06:05:05PM -0500, Greg Freemyer wrote:
-> > You are assuming that the kernel is blind and doesn't do any
-> > readaheads. I've done some tests and even when I run dd with a
-> > blocksize of 32k, the average request sizes that are hitting the di=
-sk
-> > are about 1000k (or 1000 sectors I don't know what units that colum=
-n
-> > are in when I run with -k option).
->=20
-> dd is not a benchmark tool.
->=20
-> You are building a email server that does 4KB random writes.
-> Performance testing / tuning with dd is of very limited use.
->=20
-> For your load, read ahead is pretty much useless!
+On Sun, Dec 26, 2010 at 03:38:51PM -0800, Mark Knecht wrote:
+> First, the drives are 4K sector so it's really important to get them
+> on the right partition boundary. Installing Gentoo requires that we
+> un-tar some large-ish files. IIRC on a 512 byte boundary these drives
+> took 20-30 minutes to do this. On a 4K boundary they took about 1
+> minute. I know that doesn't make sense but those were my numbers, and
+> it's a very high end Intel i7-980x MB so there wasn't any other
+> problem I could find.
 
-Greg, maybe it's wrong for me to tell you things about other systems
-while we're discussing one system. But I do want to be able to tell you
-that things are definitively different on that other server.=20
+Mark, 
 
-That other server DOES Have loads similar to the access pattern that
-dd generates. So that's why I benchmarked it that way, and base
-decisions on that benchmark.
+Thanks for your contribution. You're seeing a 20-30 fold performance
+issue, where only about 2x would be expected. So to test this theory
+I'll see if we can evacuate a partition, untar a large-ish file as a
+benchmark, and then see if we can improve that by changing the
+alignment of the partition. (hmm. Maybe we should do things the other
+way around. First find a tar-workload that takes about 1 minute on a
+properly working drive, and then we can wait up to 30 minutes for it
+to finish on the improper setup.).
 
-It turns out that, barring an easy way to "simulate the workload of a
-mail server" my friend benchmarked his raid setup the same way.
+Being able to reproduce a problem at will is a great progress to being
+able to solve it!
 
-This will at least provide for the benchmarked workload the optimal
-setup. We all agree that this does not guarantee optimal performance
-for the actual workload.
+	Roger. 
 
-> > So your argument that "it fits exactly when your blocksize is 1M, s=
-o
-> > it is obvious that 512k blocksizes are optimal" doesn't hold water.
->=20
-> If you were doing a real i/o benchmark, then 1MB random writes
-> perfectly aligned to the Raid stripes would be perfect.  Raid really
-> needs to be designed around the i/o pattern, not just optimizing dd.
-
-Except when "dd" actually models the workload. Which in some cases it
-does. Note that "some" doesn't refer to the badly performing
-mailserver as you should know.
-
-> >> Anything smaller than a 1 stripe write is where the issues occur,
-> >> because then you have the read-modify-write cycles.
-> >
-> > Yes. But still they shouldn't be as heavy as we are seeing. =A0Besi=
-des
-> > doing the "big searches" on my 8T array, I also sometimes write "lo=
-ts
-> > of small files". I'll see how many I can mange on that server....
->=20
-> <snip>
-> >
-> > You're repeating what WD says about their enterprise drives versus
-> > desktop drives. I'm pretty sure that they believe what they are say=
-ing
-> > to be true. And they probably have done tests to see support for th=
-eir
-> > theory. But for Linux it simply isn't true.
->=20
-> What kernel are you talking about.  mdraid has seen major improvement=
-s
-> in this area in the last 2 o3 years or so.  Are you using a old kerne=
-l
-> by chance?  Or reading old reviews?
-
-OK. You might be right. I haven't had a RAID fail on me the last few
-months. I don't tend to upgrade servers that are performing well. And
-the things I can test and notice are for file servers things like
-"serving files" not how they behave when a disk dies.
-
-In my friends case, the server was in production doing its thing. He
-doesn't like doing kernel upgrades unless he's near the machine. So
-yes, the server could be running something several years old.=20
-
-However the issue is NOT that the raid system was badly configured or
-could perform a few percent better, but that the disks (on which said
-RAID array was running) were performing really bad: according to
-"iostat -x" IO requests to the drives in the raid were taking on the
-order of 200-300 ms, whereas normal drives service requests on the
-order of 5-20ms. Now I wouldn't mind being told that for example the
-stats from iostat -x are not accurate in suchandsuch case. Fine. We
-can then do the measurements in a different way. But in my opinion the
-observed slowness of the machine can be explained by the measurements
-we see from iostat -x.
-
-
-If you say that linux raid has been improved, I'm not sure I prefer
-the new behaviour. Whatever a raidsubsystem does, things could be bad
-in one situation or another.....
-
-I don't like my system silently rewriting bad sectors on a failing
-drive without making noise about the drive getting worse and
-worse. I'd like to be informed that I have to swap out the drive. I
-have zero tolerance for drives that manage to lose as little as 4096
-bits (one sector) of my data..... But maybe it WILL start making noise
-Then things would be good.
-
-	Roger.=20
-
---=20
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998=
- **
-**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233   =
- **
-*-- BitWizard writes Linux device drivers for any device you may have! =
---*
-Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous stateme=
-nt.=20
-Does it sit on the couch all day? Is it unemployed? Please be specific!=
-=20
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
 Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
