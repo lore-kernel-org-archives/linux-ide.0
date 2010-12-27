@@ -1,89 +1,121 @@
 From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
 Subject: Re: Slow disks.
-Date: Mon, 27 Dec 2010 00:49:17 +0100
-Message-ID: <20101226234917.GE18227@bitwizard.nl>
-References: <20101220141553.GA6088@bitwizard.nl> <20101220190630.66084e1d@neptune.home> <AANLkTi=VAJbVSzX_DH9_==a3RonLJmawYu3MzF-uqGXC@mail.gmail.com> <20101222104306.GB30941@bitwizard.nl> <m3aajvz5na.fsf@intrepid.localdomain> <4D14BB36.1030304@msgid.tls.msk.ru> <20101225121407.GA2116@bitwizard.nl> <20101226214037.GB18227@bitwizard.nl> <AANLkTinKgW_Jpph5NtstCJxA6ZhuTgEc+Juc8YrvE7CE@mail.gmail.com>
+Date: Mon, 27 Dec 2010 01:27:50 +0100
+Message-ID: <20101227002750.GF18227@bitwizard.nl>
+References: <x49aajxsrh3.fsf@segfault.boston.devel.redhat.com> <20101222224416.GE30941@bitwizard.nl> <x494oa48scp.fsf@segfault.boston.devel.redhat.com> <20101223170109.GA31591@bitwizard.nl> <x49bp4c7555.fsf@segfault.boston.devel.redhat.com> <AANLkTikbhzopmyfbJuHUQdEBJLLP9e65n0cNBuUjhDdd@mail.gmail.com> <4D139EAE.9090307@jcz.nl> <AANLkTimXCb00Hj1iPG5XKdfSmvQCwtw1Oo7Qr14ZR=Ge@mail.gmail.com> <20101224114008.GL30941@bitwizard.nl> <AANLkTi=e4aXeSSqCPRo4-t6j1GeW7Dj7hecHDK9KxhJ9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.101.171.8]:25146 "HELO abra2.bitwizard.nl"
+Received: from dtp.xs4all.nl ([80.101.171.8]:25677 "HELO abra2.bitwizard.nl"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752996Ab0LZXtT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 26 Dec 2010 18:49:19 -0500
+	id S1752634Ab0L0A1x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Dec 2010 19:27:53 -0500
 Content-Disposition: inline
-In-Reply-To: <AANLkTinKgW_Jpph5NtstCJxA6ZhuTgEc+Juc8YrvE7CE@mail.gmail.com>
+In-Reply-To: <AANLkTi=e4aXeSSqCPRo4-t6j1GeW7Dj7hecHDK9KxhJ9@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, Michael Tokarev <mjt@tls.msk.ru>, Krzysztof Halasa <khc@pm.waw.pl>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Rogier Wolff <R.E.Wolff@bitwizard.nl>, Jaap Crezee <jaap@jcz.nl>, Jeff Moyer <jmoyer@redhat.com>, Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Dec 26, 2010 at 06:17:40PM -0500, Greg Freemyer wrote:
-> On Sun, Dec 26, 2010 at 4:40 PM, Rogier Wolff <R.E.Wolff@bitwizard.nl=
-> wrote:
-> > On Sat, Dec 25, 2010 at 01:14:07PM +0100, Rogier Wolff wrote:
-> >> Out of four partitions on the drive, two are aligned, two are not.
+On Sun, Dec 26, 2010 at 06:05:05PM -0500, Greg Freemyer wrote:
+> > You are assuming that the kernel is blind and doesn't do any
+> > readaheads. I've done some tests and even when I run dd with a
+> > blocksize of 32k, the average request sizes that are hitting the di=
+sk
+> > are about 1000k (or 1000 sectors I don't know what units that colum=
+n
+> > are in when I run with -k option).
+>=20
+> dd is not a benchmark tool.
+>=20
+> You are building a email server that does 4KB random writes.
+> Performance testing / tuning with dd is of very limited use.
+>=20
+> For your load, read ahead is pretty much useless!
+
+Greg, maybe it's wrong for me to tell you things about other systems
+while we're discussing one system. But I do want to be able to tell you
+that things are definitively different on that other server.=20
+
+That other server DOES Have loads similar to the access pattern that
+dd generates. So that's why I benchmarked it that way, and base
+decisions on that benchmark.
+
+It turns out that, barring an easy way to "simulate the workload of a
+mail server" my friend benchmarked his raid setup the same way.
+
+This will at least provide for the benchmarked workload the optimal
+setup. We all agree that this does not guarantee optimal performance
+for the actual workload.
+
+> > So your argument that "it fits exactly when your blocksize is 1M, s=
+o
+> > it is obvious that 512k blocksizes are optimal" doesn't hold water.
+>=20
+> If you were doing a real i/o benchmark, then 1MB random writes
+> perfectly aligned to the Raid stripes would be perfect.  Raid really
+> needs to be designed around the i/o pattern, not just optimizing dd.
+
+Except when "dd" actually models the workload. Which in some cases it
+does. Note that "some" doesn't refer to the badly performing
+mailserver as you should know.
+
+> >> Anything smaller than a 1 stripe write is where the issues occur,
+> >> because then you have the read-modify-write cycles.
 > >
-> > Ooops. I looked wrong. Sorry. All four partitions are mis aligned.
+> > Yes. But still they shouldn't be as heavy as we are seeing. =A0Besi=
+des
+> > doing the "big searches" on my 8T array, I also sometimes write "lo=
+ts
+> > of small files". I'll see how many I can mange on that server....
+>=20
+> <snip>
 > >
-> > =A0 =A0 =A0 =A0Roger.
+> > You're repeating what WD says about their enterprise drives versus
+> > desktop drives. I'm pretty sure that they believe what they are say=
+ing
+> > to be true. And they probably have done tests to see support for th=
+eir
+> > theory. But for Linux it simply isn't true.
 >=20
-> It sounds like you have 3 or 4 separate issues that are each costing
-> you a factor of 3 or so of pain.
->=20
-> 3 * 3 * 3 *3 =3D 81  ( I don't recall how bad your overall problem wa=
-s).
->=20
-> I can remember:
->=20
-> Raid 5 - poor choice for 4KB random writes - a factor of 2-4
-> Misaligned 4KB physical sectors - a factor of 2+
-> Excessive Head Parking  (You show 100K plus head parks in your smart
-> data) - (who knows.  It takes a while to un-park the heads and your
-> heads are parking way too often.)
+> What kernel are you talking about.  mdraid has seen major improvement=
+s
+> in this area in the last 2 o3 years or so.  Are you using a old kerne=
+l
+> by chance?  Or reading old reviews?
 
-Still I think that iostat -x output shows a different story:=20
+OK. You might be right. I haven't had a RAID fail on me the last few
+months. I don't tend to upgrade servers that are performing well. And
+the things I can test and notice are for file servers things like
+"serving files" not how they behave when a disk dies.
 
-On a different server, I have many many many files. I started a delete
-of some of them two days ago. That server is performing just fine. It
-shows that disk IOs are serviced on average after around 5-15ms. Those
-are normal numbers.
+In my friends case, the server was in production doing its thing. He
+doesn't like doing kernel upgrades unless he's near the machine. So
+yes, the server could be running something several years old.=20
 
-The "remove many files" operation is also likely to cause a similar
-small-ios-workload as the mailserver. On the other hand, there are
-samsung drives there.
-
-You might be right that we have a few issues together. that might
-compound things. But the "30x" performance difference estimate came
-from the service time stats from iostat.=20
-
-Raid5 might cause us an additional performance hit in real life, but
-it does not affect the measured service times of the drives.=20
-
-The head parking (and unparking) can indeed influence service times if
-say the drive is parking after each IO. On the other hand when the
-kernel shows "100% usage" we might hope for the drive not to have time
-enough to start thinking about parking the head. And the kernel showed
-100% usage through periods as large as ten seconds at a time.
-
-> I think you said it was a 8TB, I know its a pain, but I'd rebuild.  I
-> don't know how reliable various large drives are currently.  in
-> 2008/2009 they seemed to be horrible and the advice was to use drives
-> from different vendors, etc so you would be less likely to have a
-> batch of drives go bad all at once.
-
-The Samsungs are holding out really well. I have 8*1T and 4*2T (and a
-few 4*1T) running just great. Seagate goofed with some 500Gb and 1T
-drive sizes IIRC. You're right you wouldn't want to have two of them
-stop/crash at the same time due to the same bug. (chances were around
-1% for a 4-drive setup).=20
-
-Anyway. Others say that mixing drives is bad because the performance
-wouldn't match. At least the performance bottleneck for the array is
-the slowest disk, so you'll almost allways end up with worse
-performance than when you have all disks the same.
+However the issue is NOT that the raid system was badly configured or
+could perform a few percent better, but that the disks (on which said
+RAID array was running) were performing really bad: according to
+"iostat -x" IO requests to the drives in the raid were taking on the
+order of 200-300 ms, whereas normal drives service requests on the
+order of 5-20ms. Now I wouldn't mind being told that for example the
+stats from iostat -x are not accurate in suchandsuch case. Fine. We
+can then do the measurements in a different way. But in my opinion the
+observed slowness of the machine can be explained by the measurements
+we see from iostat -x.
 
 
+If you say that linux raid has been improved, I'm not sure I prefer
+the new behaviour. Whatever a raidsubsystem does, things could be bad
+in one situation or another.....
+
+I don't like my system silently rewriting bad sectors on a failing
+drive without making noise about the drive getting worse and
+worse. I'd like to be informed that I have to swap out the drive. I
+have zero tolerance for drives that manage to lose as little as 4096
+bits (one sector) of my data..... But maybe it WILL start making noise
+Then things would be good.
 
 	Roger.=20
 
