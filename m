@@ -1,182 +1,83 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 04/16] ide: convert to bdops->check_events()
-Date: Tue, 28 Dec 2010 18:29:00 +0100
-Message-ID: <1293557352-10592-5-git-send-email-tj@kernel.org>
-References: <1293557352-10592-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1293557352-10592-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, hch@infradead.org
-Cc: Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH v3] pata_hpt3x2n: clarify about HPT371N support
+Date: Tue, 28 Dec 2010 21:46:40 +0300
+Message-ID: <201012282146.40654.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:36376 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752893Ab0L1Sr6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Dec 2010 13:47:58 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-Convert ->media_changed() to the new ->check_events() method.  The
-conversion is mostly mechanical.  The only notable change is that
-cdrom now doesn't generate any event if @slot_nr isn't CDSL_CURRENT.
-It used to return -EINVAL which would be treated as media changed.  As
-media changer isn't supported anyway, this doesn't make any
-difference.
+Commit 28e21c8c0d44cd63bad4c62f94ef0c5a1cb8402c (pata_hpt3x2n: Add HPT371N
+support and other bits) forgot to update the driver's Kconfig entry, heading
+comment, and module description (that also wrongly claims support of HPT302)
+which may confuse users...
 
-This makes ide emit the standard disk events and allows kernel event
-polling.  Currently, only MEDIA_CHANGE event is implemented.  Adding
-support for EJECT_REQUEST shouldn't be difficult; however, given that
-ide driver is already deprecated, it probably is best to leave it
-alone.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Kay Sievers <kay.sievers@vrfy.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org
 ---
- drivers/ide/ide-cd.c       |   10 ++++++----
- drivers/ide/ide-cd.h       |    3 ++-
- drivers/ide/ide-cd_ioctl.c |    8 ++++----
- drivers/ide/ide-gd.c       |   14 ++++++++------
- 4 files changed, 20 insertions(+), 15 deletions(-)
+The patch is against the recent Linus' tree.
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 0c73fe3..a2e2909 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1177,7 +1177,7 @@ static struct cdrom_device_ops ide_cdrom_dops = {
- 	.open			= ide_cdrom_open_real,
- 	.release		= ide_cdrom_release_real,
- 	.drive_status		= ide_cdrom_drive_status,
--	.media_changed		= ide_cdrom_check_media_change_real,
-+	.check_events		= ide_cdrom_check_events_real,
- 	.tray_move		= ide_cdrom_tray_move,
- 	.lock_door		= ide_cdrom_lock_door,
- 	.select_speed		= ide_cdrom_select_speed,
-@@ -1702,10 +1702,11 @@ static int idecd_ioctl(struct block_device *bdev, fmode_t mode,
+Changes since previous version:
+- removed no longer applying comment...
+
+ drivers/ata/Kconfig        |    4 ++--
+ drivers/ata/pata_hpt3x2n.c |    6 ++----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
+
+Index: linux-2.6/drivers/ata/Kconfig
+===================================================================
+--- linux-2.6.orig/drivers/ata/Kconfig
++++ linux-2.6/drivers/ata/Kconfig
+@@ -410,11 +410,11 @@ config PATA_HPT37X
+ 	  If unsure, say N.
+ 
+ config PATA_HPT3X2N
+-	tristate "HPT 372N/302N PATA support"
++	tristate "HPT 371N/372N/302N PATA support"
+ 	depends on PCI
+ 	help
+ 	  This option enables support for the N variant HPT PATA
+-	  controllers via the new ATA layer
++	  controllers via the new ATA layer.
+ 
+ 	  If unsure, say N.
+ 
+Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
++++ linux-2.6/drivers/ata/pata_hpt3x2n.c
+@@ -1,5 +1,5 @@
+ /*
+- * Libata driver for the highpoint 372N and 302N UDMA66 ATA controllers.
++ * Libata driver for the HighPoint 371N, 372N, and 302N UDMA66 ATA controllers.
+  *
+  * This driver is heavily based upon:
+  *
+@@ -431,8 +431,6 @@ static int hpt3x2n_pci_clock(struct pci_
+  *	HPT372N			9 (HPT372N)	*	UDMA133
+  *
+  *	(1) UDMA133 support depends on the bus clock
+- *
+- *	To pin down		HPT371N
+  */
+ 
+ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+@@ -579,7 +577,7 @@ static void __exit hpt3x2n_exit(void)
  }
  
- 
--static int idecd_media_changed(struct gendisk *disk)
-+static unsigned int idecd_check_events(struct gendisk *disk,
-+				       unsigned int clearing)
- {
- 	struct cdrom_info *info = ide_drv_g(disk, cdrom_info);
--	return cdrom_media_changed(&info->devinfo);
-+	return cdrom_check_events(&info->devinfo, clearing);
- }
- 
- static int idecd_revalidate_disk(struct gendisk *disk)
-@@ -1723,7 +1724,7 @@ static const struct block_device_operations idecd_ops = {
- 	.open			= idecd_open,
- 	.release		= idecd_release,
- 	.ioctl			= idecd_ioctl,
--	.media_changed		= idecd_media_changed,
-+	.check_events		= idecd_check_events,
- 	.revalidate_disk	= idecd_revalidate_disk
- };
- 
-@@ -1790,6 +1791,7 @@ static int ide_cd_probe(ide_drive_t *drive)
- 	ide_cd_read_toc(drive, &sense);
- 	g->fops = &idecd_ops;
- 	g->flags |= GENHD_FL_REMOVABLE;
-+	g->events = DISK_EVENT_MEDIA_CHANGE;
- 	add_disk(g);
- 	return 0;
- 
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index 93a3cf1..1efc936 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -111,7 +111,8 @@ int cdrom_check_status(ide_drive_t *, struct request_sense *);
- int ide_cdrom_open_real(struct cdrom_device_info *, int);
- void ide_cdrom_release_real(struct cdrom_device_info *);
- int ide_cdrom_drive_status(struct cdrom_device_info *, int);
--int ide_cdrom_check_media_change_real(struct cdrom_device_info *, int);
-+unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *,
-+					 unsigned int clearing, int slot_nr);
- int ide_cdrom_tray_move(struct cdrom_device_info *, int);
- int ide_cdrom_lock_door(struct cdrom_device_info *, int);
- int ide_cdrom_select_speed(struct cdrom_device_info *, int);
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 766b3de..2a6bc50 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -79,8 +79,8 @@ int ide_cdrom_drive_status(struct cdrom_device_info *cdi, int slot_nr)
- 	return CDS_DRIVE_NOT_READY;
- }
- 
--int ide_cdrom_check_media_change_real(struct cdrom_device_info *cdi,
--				       int slot_nr)
-+unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *cdi,
-+					 unsigned int clearing, int slot_nr)
- {
- 	ide_drive_t *drive = cdi->handle;
- 	int retval;
-@@ -89,9 +89,9 @@ int ide_cdrom_check_media_change_real(struct cdrom_device_info *cdi,
- 		(void) cdrom_check_status(drive, NULL);
- 		retval = (drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED) ? 1 : 0;
- 		drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
--		return retval;
-+		return retval ? DISK_EVENT_MEDIA_CHANGE : 0;
- 	} else {
--		return -EINVAL;
-+		return 0;
- 	}
- }
- 
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index 35c4b43..c4ffd48 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -285,11 +285,12 @@ static int ide_gd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
- 	return 0;
- }
- 
--static int ide_gd_media_changed(struct gendisk *disk)
-+static unsigned int ide_gd_check_events(struct gendisk *disk,
-+					unsigned int clearing)
- {
- 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
- 	ide_drive_t *drive = idkp->drive;
--	int ret;
-+	bool ret;
- 
- 	/* do not scan partitions twice if this is a removable device */
- 	if (drive->dev_flags & IDE_DFLAG_ATTACH) {
-@@ -297,10 +298,10 @@ static int ide_gd_media_changed(struct gendisk *disk)
- 		return 0;
- 	}
- 
--	ret = !!(drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED);
-+	ret = drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED;
- 	drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
- 
--	return ret;
-+	return ret ? DISK_EVENT_MEDIA_CHANGE : 0;
- }
- 
- static void ide_gd_unlock_native_capacity(struct gendisk *disk)
-@@ -318,7 +319,7 @@ static int ide_gd_revalidate_disk(struct gendisk *disk)
- 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
- 	ide_drive_t *drive = idkp->drive;
- 
--	if (ide_gd_media_changed(disk))
-+	if (ide_gd_check_events(disk, 0))
- 		drive->disk_ops->get_capacity(drive);
- 
- 	set_capacity(disk, ide_gd_capacity(drive));
-@@ -340,7 +341,7 @@ static const struct block_device_operations ide_gd_ops = {
- 	.release		= ide_gd_release,
- 	.ioctl			= ide_gd_ioctl,
- 	.getgeo			= ide_gd_getgeo,
--	.media_changed		= ide_gd_media_changed,
-+	.check_events		= ide_gd_check_events,
- 	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
- 	.revalidate_disk	= ide_gd_revalidate_disk
- };
-@@ -412,6 +413,7 @@ static int ide_gd_probe(ide_drive_t *drive)
- 	if (drive->dev_flags & IDE_DFLAG_REMOVABLE)
- 		g->flags = GENHD_FL_REMOVABLE;
- 	g->fops = &ide_gd_ops;
-+	g->events = DISK_EVENT_MEDIA_CHANGE;
- 	add_disk(g);
- 	return 0;
- 
--- 
-1.7.1
+ MODULE_AUTHOR("Alan Cox");
+-MODULE_DESCRIPTION("low-level driver for the Highpoint HPT3x2n/30x");
++MODULE_DESCRIPTION("low-level driver for the Highpoint HPT3xxN");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, hpt3x2n);
+ MODULE_VERSION(DRV_VERSION);
