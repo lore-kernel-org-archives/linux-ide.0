@@ -1,39 +1,73 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 04/16] ide: convert to bdops->check_events()
-Date: Tue, 28 Dec 2010 11:01:06 -0800 (PST)
-Message-ID: <20101228.110106.226787796.davem@davemloft.net>
-References: <1293557352-10592-1-git-send-email-tj@kernel.org>
-	<1293557352-10592-5-git-send-email-tj@kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_hpt3x2n: calculate average f_CNT
+Date: Tue, 28 Dec 2010 22:54:54 +0300
+Message-ID: <201012282254.54161.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:38969
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753247Ab0L1TAi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Dec 2010 14:00:38 -0500
-In-Reply-To: <1293557352-10592-5-git-send-email-tj@kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:47181 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751136Ab0L1T4M (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Dec 2010 14:56:12 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: axboe@kernel.dk, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, hch@infradead.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-From: Tejun Heo <tj@kernel.org>
-Date: Tue, 28 Dec 2010 18:29:00 +0100
+Allow hpt3x2n_pci_clock() to calculate the average f_CNT register value iff
+HighPoint BIOS hasn't saved one, just like the 'pata_hpt37x' driver (reading
+the full 16-bit register, unlike what that driver does), so that this driver
+would work correctly on e.g. non-x86 machine with 66 MHz PCI.
 
-> Convert ->media_changed() to the new ->check_events() method.  The
-> conversion is mostly mechanical.  The only notable change is that
-> cdrom now doesn't generate any event if @slot_nr isn't CDSL_CURRENT.
-> It used to return -EINVAL which would be treated as media changed.  As
-> media changer isn't supported anyway, this doesn't make any
-> difference.
-> 
-> This makes ide emit the standard disk events and allows kernel event
-> polling.  Currently, only MEDIA_CHANGE event is implemented.  Adding
-> support for EJECT_REQUEST shouldn't be difficult; however, given that
-> ide driver is already deprecated, it probably is best to leave it
-> alone.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
+I'm not sure why Alan has only done this in one driver and not the other...
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+---
+The patch is against the recent Linus' tree plus the two patches I posted
+before:
+
+http://marc.info/?l=linux-ide&m=129356208121192
+http://marc.info/?l=linux-ide&m=129330632207779
+
+ drivers/ata/pata_hpt3x2n.c |   17 ++++++++++++++---
+ 1 file changed, 14 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
++++ linux-2.6/drivers/ata/pata_hpt3x2n.c
+@@ -25,7 +25,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt3x2n"
+-#define DRV_VERSION	"0.3.11"
++#define DRV_VERSION	"0.3.12"
+ 
+ enum {
+ 	HPT_PCI_FAST	=	(1 << 31),
+@@ -413,8 +413,19 @@ static int hpt3x2n_pci_clock(struct pci_
+ 
+ 	fcnt = inl(iobase + 0x90);	/* Not PCI readable for some chips */
+ 	if ((fcnt >> 12) != 0xABCDE) {
+-		printk(KERN_WARNING "hpt3xn: BIOS clock data not set.\n");
+-		return 33;	/* Not BIOS set */
++		int i;
++		u16 sr;
++		u32 total = 0;
++
++		printk(KERN_WARNING "pata_hpt3x2n: BIOS clock data not set.\n");
++
++		/* This is the process the HPT371 BIOS is reported to use */
++		for (i = 0; i < 128; i++) {
++			pci_read_config_word(pdev, 0x78, &sr);
++			total += sr & 0x1FF;
++			udelay(15);
++		}
++		fcnt = total / 128;
+ 	}
+ 	fcnt &= 0x1FF;
+ 
