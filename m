@@ -1,65 +1,166 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: IOMMU and DMA mode of pata_jmicron
-Date: Tue, 28 Dec 2010 20:00:12 -0500
-Message-ID: <4D1A881C.3080109@garzik.org>
-References: <4D1A7628.3050704@steffen-moser.de>
+From: Phill Jolliffe <phill.jolliffe@gmail.com>
+Subject: PMP 3726 problem?
+Date: Thu, 30 Dec 2010 00:44:56 +0000
+Message-ID: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57103 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993Ab0L2BAR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Dec 2010 20:00:17 -0500
-In-Reply-To: <4D1A7628.3050704@steffen-moser.de>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:60434 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754503Ab0L3Ap1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Dec 2010 19:45:27 -0500
+Received: by wwa36 with SMTP id 36so11193855wwa.1
+        for <linux-ide@vger.kernel.org>; Wed, 29 Dec 2010 16:45:26 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steffen Moser <lists@steffen-moser.de>
-Cc: linux-kernel@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Joerg Roedel <joerg.roedel@amd.com>
+To: linux-ide@vger.kernel.org
 
-(CC'd linux-ide, Joerg)
+Hi,
 
-On 12/28/2010 06:43 PM, Steffen Moser wrote:
-> I've encountered a problem with my AMD 890FX based system
-> and linux-2.6.35.10 (x86_64 platform).
->
-> After activating the option "IOMMU" in the mainboard's BIOS
-> setup, the onboard P-ATA controller "JMicron Technology Corp.
-> JMB361 AHCI/IDE (rev 02)" puts itself back in the PIO mode.
-> When loading the module, the kernel reports:
->
->    pata_jmicron 0000:06:00.1: BMDMA: failed to set dma mask, \
->                               falling back to PIO
-[...]
-> As soon as I deactivate IOMMU in BIOS setup, the P-ATA channel
-> runs in the DMA mode again. The S-ATA controllers don't seem
-> to be affected.
->
-> My question is: Is this a known behavior? Are there any
-> things I have to consider when activating IOMMU (which seems
-> to be AMD-Vi) on an 890FX based system? Is it a problem of
-> the chipset and/or the controller or is it related to a
-> problem in the libata area?
->
-> Some information about the affected system:
->
->  - Mainboard:    ASUS M4A89TD Pro/USB3
->  - BIOS version: 1101 (most recent version)
->  - Chipset:      AMD 890FX
->  - Processor:    AMD Phenom 1090T
->  - Memory:       4 x 4 GB (Kingston KVR1333D3E9S/4G)
->  - Distribution: openSUSE 11.3
->  - Kernel:       2.6.35.10 (from "kernel.org"), x86_64
->
+I'm having probelms with a DAS401 edge store disk enclosure. I have
+4x Hitachi HDS72202 loaded into it. Wonder is this is a PMP driver
+problem?
 
-This condition occurs when the PCI API cannot set the PCI device's DMA 
-mask to the 32-bit value
-	#define ATA_DMA_MASK            0xffffffffULL
+Unfortunately I have less than 50% chance on any given system startup
+that the disks are detected. As best I can tell the the DAS401 uses a
+SiI3726 Port-Multiplier built into the enclosure. I connect this to
+the mobo single esata builtin port.
 
-That is an unusual failure for such a modern system, which certainly can 
-handle 32-bit masks like that, one would think.
+My mobo is a Gigabyte H55N-USB3
 
-	Jeff
+[root@JollyBox ~]# uname -a
+Linux JollyBox 2.6.18-194.26.1.el5xen #1 SMP Tue Nov 9 13:35:30 EST
+2010 x86_64 x86_64 x86_64 GNU/Linux
+
+In the below log messages I see what looks like the system struggling
+to detect the disk available over the esata. Successful attempt look
+similar but seem to suceed after a few SError.N (errno=-5). Very
+occasionally it boot without any of these errors and /dev/sd[b-e] are
+all detected.
+
+When I'm lucky and the system is able to detect the disks at boot it
+seems to run fine without problems till the next reboot. But the
+system is not in production so no real load is on it.
+
+Dec 26 10:28:12 JollyBox kernel: ata6: SATA link up 3.0 Gbps (SStatus
+123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.15: Port Multiplier 1.1,
+0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
+(SStatus 123 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.04: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.04: SATA link down (SStatus 0
+SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
+(SStatus 113 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
+error, err_mask=0x100)
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
+(SStatus 123 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
+(SStatus 113 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
+error, err_mask=0x100)
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
+(SStatus 123 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.04: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.04: SATA link down (SStatus 0
+SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
+(SStatus 113 SControl 320)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
+error, err_mask=0x100)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to recover link after
+3 tries, disabling
+Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
+Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
+Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
+Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
+Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
+(SStatus 123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
+Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
+Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP after 5
+tries, giving up
+Dec 26 10:28:12 JollyBox kernel: ata6.15: Port Multiplier detaching
+Dec 26 10:28:12 JollyBox kernel: ata6.00: disabled
+Dec 26 10:28:12 JollyBox kernel: ata6: exception Emask 0x2 SAct 0x0
+SErr 0x0 action 0x6 frozen t4
+Dec 26 10:28:12 JollyBox kernel: ata6: irq_stat 0x00800000, incorrect PMP
+Dec 26 10:28:12 JollyBox kernel: ata6: hard resetting link
+Dec 26 10:28:12 JollyBox kernel: ata6: SATA link up 3.0 Gbps (SStatus
+123 SControl 300)
+Dec 26 10:28:12 JollyBox kernel: ata6: EH complete
+
+Some time I see this in dmesg as well:
+
+Dec 26 10:55:44 JollyBox kernel: ata6.15: exception Emask 0x2 SAct 0x0
+SErr 0x0 action 0x6 t3
+Dec 26 10:55:44 JollyBox kernel: ata6.15: irq_stat 0x00800000, incorrect PMP
 
 
+-- 
+Phill Jolliffe
 
+
+--
+Phill Jolliffe
