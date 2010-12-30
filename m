@@ -1,51 +1,49 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: PMP 3726 problem?
-Date: Wed, 29 Dec 2010 19:06:24 -0600
-Message-ID: <4D1BDB10.803@hardwarefreak.com>
-References: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Is there a reliable way to ID a SSD?
+Date: Thu, 30 Dec 2010 10:58:07 -0500
+Message-ID: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:57407 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754529Ab0L3BG0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Dec 2010 20:06:26 -0500
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 0F6306C0B1
-	for <linux-ide@vger.kernel.org>; Wed, 29 Dec 2010 19:06:25 -0600 (CST)
-In-Reply-To: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39269 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754515Ab0L3P6a convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2010 10:58:30 -0500
+Received: by iwn9 with SMTP id 9so11017521iwn.19
+        for <linux-ide@vger.kernel.org>; Thu, 30 Dec 2010 07:58:30 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Phill Jolliffe put forth on 12/29/2010 6:44 PM:
-> Hi,
-> 
-> I'm having probelms with a DAS401 edge store disk enclosure. I have
-> 4x Hitachi HDS72202 loaded into it. Wonder is this is a PMP driver
-> problem?
+All,
 
-> Unfortunately I have less than 50% chance on any given system startup
-> that the disks are detected. As best I can tell the the DAS401 uses a
-> SiI3726 Port-Multiplier built into the enclosure. I connect this to
-> the mobo single esata builtin port.
+Per T13/1699-D Revision 4a (from May 2007) word 217 of the identify
+block should be populated with a "1" to identify non-rotating media.
 
-1.  Have you tried the PCIe x1 eSATA card that came bundled with your
-unit?  Does it work properly using that card?
+http://www.t13.org/Documents/UploadedDocuments/docs2007/D1699r4a-ATA8-A=
+CS.pdf
 
-1.  Have you tried more than 1 eSATA cable?
+Does anyone know if that is a reliable field?
 
-3.  Do you have any equipment of any kind, that generates EMI or RFI, in
-close proximity (1 meter) to the PC, disk box, or the cable?  This would
-include high voltage transformers (florescent lights), low voltage
-transformers (wall warts--cell charger, cordless drill charger, etc),
-electric pencil sharpeners, paper shredders, anything with an electric
-motor, a cordless phone/base unit, anything electronic that could be
-injecting noise into the eSATA cable?
+Specifically there are two separate issues:
 
-Having these answers make troubleshooting easier, especially the answer
-to #1 above.
+1) Are all devices reporting a 1 in field 217 non-rotating?
+2) Are all production non-rotating devices populating that field with a=
+ 1.
 
--- 
-Stan
+Is there some other reliable mechanism for identifying a SSD?
+
+
+--=20
+Greg Freemyer
+Head of EDD Tape Extraction and Processing team
+Litigation Triage Solutions Specialist
+http://www.linkedin.com/in/gregfreemyer
+CNN/TruTV Aired Forensic Imaging Demo -
+=A0=A0 http://insession.blogs.cnn.com/2010/03/23/how-computer-evidence-=
+gets-retrieved/
+
+The Norcross Group
+The Intersection of Evidence & Technology
+http://www.norcrossgroup.com
