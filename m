@@ -1,112 +1,24 @@
-From: "Mrs. Joy Wilford" <kooman098@att.net>
-Subject: I URGE YOU TO THIS FOR THE WORK OF GOD AND HELP THE POOR?
-Date: Thu, 30 Dec 2010 14:13:08 +0100
-Message-ID: <674126.95417.qm__34570.571993436$1293736799$gmane$org@smtp101.sbc.mail.ac4.yahoo.com>
-Reply-To: <mrs.joywilford1@live.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] hpt366: coding style cleanup
+Date: Thu, 30 Dec 2010 12:27:24 -0800 (PST)
+Message-ID: <20101230.122724.193712019.davem@davemloft.net>
+References: <201012302210.31659.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_004A_01C2A9A6.668C65FA"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm8-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.230]:25642 "HELO
-	nm8-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755183Ab0L3TTv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2010 14:19:51 -0500
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58176
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754941Ab0L3U0z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2010 15:26:55 -0500
+In-Reply-To: <201012302210.31659.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sshtylyov@ru.mvista.com
+Cc: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
 
-------=_NextPart_000_004A_01C2A9A6.668C65FA
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Sorry, I'm not applying coding style fixups to the linux-ide tree
+which is in deep maintainence mode.
 
-Read Attachment File For More Details About the donation Fund, Thank You.
-
-------=_NextPart_000_004A_01C2A9A6.668C65FA
-Content-Type: application/octet-stream;
-	name="PLEASE ENDEAVOR TO USE IT ON CHURCHES AND ORPHANAGES.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="PLEASE ENDEAVOR TO USE IT ON CHURCHES AND ORPHANAGES.txt"
-
-RlJPTSBNUlMuIEpPWSBXSUxGT1JEIE9GIE5FVEhFUkxBTkRTDQpQTEVBU0Ug
-RU5ERUFWT1IgVE8gVVNFIElUIE9OIENIVVJDSEVTIEFORCBPUlBIQU5BR0VT
-DQoNCkRlYXIgSW4gVGhlIExvcmQsDQoNCkkgYW0gdGhlIGFib3ZlIG5hbWVk
-IHBlcnNvbiBmcm9tIE5ldGhlcmxhbmRzIC5JIGFtIG1hcnJpZWQgdG8gRHIu
-RnJhbmtseW4gV2lsZm9yZCwgd2hvIHdvcmtlZCB3aXRoIE5ldGhlcmxhbmRz
-IEVtYmFzc3kgaW4gdGhlIFVTQSBmb3IgbmluZSB5ZWFycyBiZWZvcmUgaGlz
-IGRlYXRoIG9uIERlY2VtYmVyIDIwMDkuV2Ugd2VyZSBtYXJyaWVkIGZvciBl
-bGV2ZW4geWVhcnMgd2l0aG91dCBhIGNoaWxkLiBIZSBkaWVkIGFmdGVyIGEg
-YnJpZWYgaWxsbmVzcyB0aGF0IGxhc3RlZCBmb3Igb25seSBmb3VyIGRheXMu
-IEJlZm9yZSBoaXMgZGVhdGgsIHdlIHdlcmUgYm90aCBib3JuIGFnYWluIENo
-cmlzdGlhbnMuIFdoZW4gbXkgbGF0ZSBodXNiYW5kIHdhcyBhbGl2ZSBoZSBk
-ZXBvc2l0ZWQgdGhlIHN1bSBvZiAkMjUuNiBNaWxsaW9uIERvbGxhcnMgd2l0
-aCBFcXVhdG9yaWFsIEJhbmsgb2YgRmxvcmlkYSBJbmMgaW4gVW5pdGVkIFN0
-YXRlcyBvZiBBbWVyaWNhLg0KDQpQcmVzZW50bHksIHRoaXMgbW9uZXkgaXMg
-c3RpbGwgd2l0aCB0aGUgYmFuayB0aGVyZSBpbiBVUy4gQW5kIHRoZSBtYW5h
-Z2VtZW50IGp1c3Qgd3JvdGUgbWUgYXMgdGhlIGJlbmVmaWNpYXJ5IHRvIHN0
-ZXAgZm9yd2FyZCAgZm9yIGNsYWltcyBvZiBteSBsYXRlIGh1c2JhbmQgIEZV
-TkQsIG9yIHJhdGhlciBpc3N1ZSBhIGxldHRlciBvZiBhdXRob3JpemF0aW9u
-IHRvIHNvbWVib2R5ICB0byByZWNlaXZlIGl0IG9uIG15IGJlaGFsZiBzaW5j
-ZSBJIGNhbm5vdCBjb21lIHRvIFVzLCBkdWUgdG8gbXkgaWxsbmVzcyBoZXJl
-IGluIGxvbmRvbiwgQW5kIGFnYWluLCBJJ20gd2l0aCBteSBsYXB0b3AgaW4g
-YSBob3NwaXRhbCB3aGVyZSBJIGhhdmUgIGJlZW4gdW5kZXJnb2luZyAgdHJl
-YXRtZW50IGZvciBjYW5jZXIgd2hpY2ggaGFkIGluZGljYXRlZCB0byBteSBE
-b2N0b3IgdGhhdCBJIHdvdWxkIG5vdCBsYXN0IGZvciB0aGUgbmV4dCBmb3Vy
-IG1vbnRocyBhY2NvcmRpbmcgdG8gaGlzIHN0YXRlbWVudC4NCg0KSXQgaXMg
-bXkgbGFzdCB3aXNoIHRvIHNlZSB0aGlzIG1vbmV5IGRpc3RyaWJ1dGVkIHRv
-IGNoYXJpdHkgb3JnYW5pemF0aW9ucywgY2h1cmNoZXMgYmVjYXVzZSBvdXIg
-cmVsYXRpdmVzIGhhdmUgcGx1bmRlcmVkIHNvIG11Y2ggb2Ygb3VyIHdlYWx0
-aCBzaW5jZSBteSBodXNiYW5kJ3MgZGVhdGggYW5kIG15IGlsbG5lc3MgdG9v
-LiAgSSBjYW5ub3QgbGl2ZSB3aXRoIHRoZSBhZ29ueSBvZiBlbnRydXN0aW5n
-IHRoaXMgaHVnZSByZXNwb25zaWJpbGl0eSB0byBhbnkgb2YgdGhlbS4gUGxl
-YXNlLCBJIGJlZyB5b3UgaW4gdGhlIG5hbWUgb2YgR29kIHRvIGhlbHAgbWUg
-YW5kIHV0aWxpemUgdGhlIGFib3ZlIG1lbnRpb25lZCBmdW5kcyBhbmQgaXRz
-IGludGVyZXN0IGFuZCBkaXN0cmlidXRlIGl0IGFjY29yZGluZ2x5Lg0KDQpI
-YXZpbmcga25vd25zIG15IENvbmRpdGlvbiBJIGRlY2lkZWQgdG8gZG9uYXRl
-IHRoaXMgZnVuZCB0byBjaHVyY2ggb3IgYSBDaHJpc3RpYW4gaW5kaXZpZHVh
-bCB0aGF0IHdpbGwgdXRpbGl6ZSB0aGlzIG1vbmV5IHRoZSB3YXkgSSBhbSBn
-b2luZyB0byBpbnN0cnVjdCBoZXJlLiBJIHdhbnQgYSBwZXJzb24gdGhhdCBo
-YXMgR29kIGZlYXJpbmcgaW4gaGltL2hlci4gU29tZW9uZSB0aGF0IHdpbGwg
-dXNlIHRoaXMgbW9uZXkgb24gY2h1cmNoZXMsIG9yIG9ycGhhbmFnZXMgZXRj
-IHByb3BhZ2F0aW5nIHRoZSB3b3JkIG9mIEdvZCBhbmQgdG8gZW5zdXJlIHRo
-YXQgdGhlIGhvdXNlIG9mIEdvZCBpcyBtYWludGFpbmVkLiBCZWNhdXNlIG15
-IEJpYmxlIG1hZGUgbWUgdG8gdW5kZXJzdGFuZCB0aGF0IGJsZXNzZWQgaXMg
-dGhlIGhhbmQgdGhhdCBnaXZldGguIEkgdG9vayB0aGlzIGRlY2lzaW9uIGJl
-Y2F1c2UgSSBkb26SdCBoYXZlIGFueSBjaGlsZCB0aGF0IHdpbGwgaW5oZXJp
-dCB0aGlzIG1vbmV5LiBNeSBodXNiYW5kIHJlbGF0aXZlcyBhcmUgbm90IENo
-cmlzdGlhbnMgYW5kIEkgRG9uJ3Qgd2FudCB0aGlzIGhhcmQgZWFybmVkIG1v
-bmV5IHRvIGJlIG1pc3VzZWQgYnkgVW5iZWxpZXZlcnMuIEkgZG9uJ3Qgd2Fu
-dCBhIFNpdHVhdGlvbiB3aGVyZSB0aGlzIG1vbmV5IHdpbGwgYmUgdXNlZCBp
-biBhbiB1bmdvZGx5IE1hbm5lci4NCg0KTXkgaGFwcGluZXNzIGlzIHRoYXQg
-SSBsaXZlZCBhIGxpZmUgb2YgYSB3b3J0aHkgQ2hyaXN0aWFuLiBTbyBJIGFt
-IG5vdCBhZnJhaWQgb2YgZGVhdGggaGVuY2UgSSBrbm93IHdoZXJlIEkgYW0g
-Z29pbmcuIEkga25vdyB0aGF0IEkgYW0gZ29pbmcgdG8gYmUgaW4gdGhlIEJv
-c29tIG9mIHRoZSBMb3JkLiBFeG9kdXMgMTQgVlMgMTQgc2F5cyB0aGF0OyB0
-aGUgbG9yZCB3aWxsIGZpZ2h0IG15IGNhc2UgYW5kIEkgc2hhbGwgaG9sZCBt
-eSBwZWFjZS4gV2hvZXZlciB0aGF0IHdhbnRzIHRvIHNlcnZlIHRoZSBMb3Jk
-IG11c3Qgc2VydmUgaGltIGluIHNwaXJpdCBhbmQgdHJ1dGguIFBsZWFzZSBh
-bHdheXMgYmUgcHJheWVyZnVsIGFsbCB0aHJvdWdoIHlvdXIgbGlmZS4NCg0K
-QXMgc29vbiBBcyBJIHJlY2VpdmUgeW91ciByZXBseSBJIHNoYWxsIGludHJv
-ZHVjZSB5b3UgdG8gb3VyIGZhbWlseSBhdHRvcm5leSB0byBpbnRyb2R1Y2Ug
-eW91IHRvIHRoZSBiYW5rIHdoZXJlIHRoZSBGdW5kIGlzIGJlaW5nIGRlcG9z
-aXRlZCBieSBteSBsYXRlIEh1c2JhbmQuIEkgd2lsbCBBbHNvIGlzc3VlIHlv
-dSBhIGxldHRlciBvZiBhdXRob3JpemF0aW9uIHRoYXQgd2lsbCBlbXBvd2Vy
-IFlvdSBhcyB0aGUgcmlnaHRmdWwgIGJlbmVmaWNpYXJ5ICBuZXh0IG9mIGtp
-bSB0byBteSBsYXRlIGh1c2JhbmQsIEkgd2FudCB5b3UgYW5kIHRoZSBjaHVy
-Y2ggdG8gYWx3YXlzIHByYXkgZm9yIG1lIGJlY2F1c2UgdGhlIGxvcmQgaXMg
-bXkgU2hlcGhlcmQNCg0KUGxlYXNlIEkgZG9uknQgbmVlZCBhbnkgdGVsZXBo
-b25lIENvbW11bmljYXRpb24gaW4gdGhpcyByZWdhcmQgYmVjYXVzZSBvZiBt
-eSBoZWFsdGggYW5kIHRoZSBwcmVzZW5jZSBvZiBteSBodXNiYW5kJ3MgcmVs
-YXRpdmVzIGFyb3VuZCBtZSBhbHdheXMuIEkgZG9uknQgd2FudCB0aGVtIHRv
-IGtub3cgYWJvdXQgdGhpcyBEZXZlbG9wbWVudC4gQW55IGRlbGF5IGluIHlv
-dXIgUmVwbHkgd2lsbCBnaXZlIG1lIHJvb20gaW4gc2VhcmNoaW5nIGZvciBh
-IGNodXJjaCBvciBDaHJpc3RpYW4gaW5kaXZpZHVhbCBmb3IgdGhpcyBzYW1l
-IHB1cnBvc2Ugc28geW91ciB1cmdlbnQgcmVzcG9uc2UgaXMgbmVlZGVkIGlt
-bWVkaWF0ZWx5Lg0KDQpLaW5kbHkgeW91IHJlcGx5IGRpcmVjdCB0byBteSBw
-cml2YXRlIGVtYWlsIGZvciBmdXJ0aGVyIGRldGFpbHMobXJzLmpveXdpbGZv
-cmQxQGxpdmUuY29tKSANCg0KWW91cnMgU2lzdGVyIGluIHRoZSBMb3JkLA0K
-TXJzLiBKb3kgV2lsZm9yZCAgDQogDQogDQogDQo=
-
-------=_NextPart_000_004A_01C2A9A6.668C65FA--
+The less churn we have in this code, the better.
