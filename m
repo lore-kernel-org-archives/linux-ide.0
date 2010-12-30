@@ -1,166 +1,51 @@
-From: Phill Jolliffe <phill.jolliffe@gmail.com>
-Subject: PMP 3726 problem?
-Date: Thu, 30 Dec 2010 00:44:56 +0000
-Message-ID: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: PMP 3726 problem?
+Date: Wed, 29 Dec 2010 19:06:24 -0600
+Message-ID: <4D1BDB10.803@hardwarefreak.com>
+References: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:60434 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503Ab0L3Ap1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Dec 2010 19:45:27 -0500
-Received: by wwa36 with SMTP id 36so11193855wwa.1
-        for <linux-ide@vger.kernel.org>; Wed, 29 Dec 2010 16:45:26 -0800 (PST)
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:57407 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754529Ab0L3BG0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Dec 2010 20:06:26 -0500
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 0F6306C0B1
+	for <linux-ide@vger.kernel.org>; Wed, 29 Dec 2010 19:06:25 -0600 (CST)
+In-Reply-To: <AANLkTi=6yROpG+nXHYPqHwbQucwQqmrai9yCyx=GFCPG@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Hi,
+Phill Jolliffe put forth on 12/29/2010 6:44 PM:
+> Hi,
+> 
+> I'm having probelms with a DAS401 edge store disk enclosure. I have
+> 4x Hitachi HDS72202 loaded into it. Wonder is this is a PMP driver
+> problem?
 
-I'm having probelms with a DAS401 edge store disk enclosure. I have
-4x Hitachi HDS72202 loaded into it. Wonder is this is a PMP driver
-problem?
+> Unfortunately I have less than 50% chance on any given system startup
+> that the disks are detected. As best I can tell the the DAS401 uses a
+> SiI3726 Port-Multiplier built into the enclosure. I connect this to
+> the mobo single esata builtin port.
 
-Unfortunately I have less than 50% chance on any given system startup
-that the disks are detected. As best I can tell the the DAS401 uses a
-SiI3726 Port-Multiplier built into the enclosure. I connect this to
-the mobo single esata builtin port.
+1.  Have you tried the PCIe x1 eSATA card that came bundled with your
+unit?  Does it work properly using that card?
 
-My mobo is a Gigabyte H55N-USB3
+1.  Have you tried more than 1 eSATA cable?
 
-[root@JollyBox ~]# uname -a
-Linux JollyBox 2.6.18-194.26.1.el5xen #1 SMP Tue Nov 9 13:35:30 EST
-2010 x86_64 x86_64 x86_64 GNU/Linux
+3.  Do you have any equipment of any kind, that generates EMI or RFI, in
+close proximity (1 meter) to the PC, disk box, or the cable?  This would
+include high voltage transformers (florescent lights), low voltage
+transformers (wall warts--cell charger, cordless drill charger, etc),
+electric pencil sharpeners, paper shredders, anything with an electric
+motor, a cordless phone/base unit, anything electronic that could be
+injecting noise into the eSATA cable?
 
-In the below log messages I see what looks like the system struggling
-to detect the disk available over the esata. Successful attempt look
-similar but seem to suceed after a few SError.N (errno=-5). Very
-occasionally it boot without any of these errors and /dev/sd[b-e] are
-all detected.
-
-When I'm lucky and the system is able to detect the disks at boot it
-seems to run fine without problems till the next reboot. But the
-system is not in production so no real load is on it.
-
-Dec 26 10:28:12 JollyBox kernel: ata6: SATA link up 3.0 Gbps (SStatus
-123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.15: Port Multiplier 1.1,
-0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
-(SStatus 123 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.04: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.04: SATA link down (SStatus 0
-SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
-(SStatus 113 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
-error, err_mask=0x100)
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
-(SStatus 123 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
-(SStatus 113 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
-error, err_mask=0x100)
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.00: SATA link up 3.0 Gbps
-(SStatus 123 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.01: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.01: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.02: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.02: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.03: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.03: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.04: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.04: SATA link down (SStatus 0
-SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.05: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.05: SATA link up 1.5 Gbps
-(SStatus 113 SControl 320)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to IDENTIFY (I/O
-error, err_mask=0x100)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to recover link after
-3 tries, disabling
-Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
-Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
-Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
-Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP, retrying in 5 secs
-Dec 26 10:28:12 JollyBox kernel: ata6.15: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6.15: SATA link up 3.0 Gbps
-(SStatus 123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to read SCR 0 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to write SCR 1 (Emask=0x40)
-Dec 26 10:28:12 JollyBox kernel: ata6.00: failed to clear SError.N (errno=-5)
-Dec 26 10:28:12 JollyBox kernel: ata6: failed to recover PMP after 5
-tries, giving up
-Dec 26 10:28:12 JollyBox kernel: ata6.15: Port Multiplier detaching
-Dec 26 10:28:12 JollyBox kernel: ata6.00: disabled
-Dec 26 10:28:12 JollyBox kernel: ata6: exception Emask 0x2 SAct 0x0
-SErr 0x0 action 0x6 frozen t4
-Dec 26 10:28:12 JollyBox kernel: ata6: irq_stat 0x00800000, incorrect PMP
-Dec 26 10:28:12 JollyBox kernel: ata6: hard resetting link
-Dec 26 10:28:12 JollyBox kernel: ata6: SATA link up 3.0 Gbps (SStatus
-123 SControl 300)
-Dec 26 10:28:12 JollyBox kernel: ata6: EH complete
-
-Some time I see this in dmesg as well:
-
-Dec 26 10:55:44 JollyBox kernel: ata6.15: exception Emask 0x2 SAct 0x0
-SErr 0x0 action 0x6 t3
-Dec 26 10:55:44 JollyBox kernel: ata6.15: irq_stat 0x00800000, incorrect PMP
-
+Having these answers make troubleshooting easier, especially the answer
+to #1 above.
 
 -- 
-Phill Jolliffe
-
-
---
-Phill Jolliffe
+Stan
