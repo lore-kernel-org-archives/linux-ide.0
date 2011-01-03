@@ -1,47 +1,131 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: PowerPC MPC5200B ATA MWDMA regression
-Date: Mon, 03 Jan 2011 19:33:17 +0300
-Message-ID: <4D21FA4D.3030506@mvista.com>
-References: <201101031445.47922.roman.fietze@telemotive.de>	<20110103135929.GO18831@htj.dyndns.org>	<4D21DD55.2000000@ru.mvista.com> <AANLkTi=5TrmxeWppabYaFUr-AhLwWcn4b_EQgLSJT44T@mail.gmail.com> <4D21EAF1.2010504@ru.mvista.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Adding runtime PM support to sata_mv driver
+Date: Mon, 3 Jan 2011 11:42:51 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1101031120230.1715-100000@iolanthe.rowland.org>
+References: <20110103153134.GW18831@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:44562 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197Ab1ACQeY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 11:34:24 -0500
-Received: by ewy5 with SMTP id 5so6119667ewy.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 08:34:22 -0800 (PST)
-In-Reply-To: <4D21EAF1.2010504@ru.mvista.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34520 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932069Ab1ACQmw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 11:42:52 -0500
+In-Reply-To: <20110103153134.GW18831@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Roman Fietze <roman.fietze@telemotive.de>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Priyanka Gupta <ankaguptaca@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
 
-Hello.
+On Mon, 3 Jan 2011, Tejun Heo wrote:
 
-On 03-01-2011 18:27, Sergei Shtylyov wrote:
+> > Runtime suspend should not occur unless all the child devices (i.e.,
+> > the attached drives) are already suspended.  This means it is not
+> > necessary to synchronize any operations, since there shouldn't be any
+> > other accesses to the hardware going on.  Therefore there is no need to
+> > use the error handler.
+> 
+> Well, it's not that simple I'm afraid.  EH actions are asynchronous.
+> Even if all the downstream devices are suspended, PHY events can
+> happen any time and EH could be active.  Hmmm... a delta but it would
+> make more sense to put only the controller into hot sleep while
+> leaving the disk alone for rotating devices.
 
->>>> The commit you bisected to contains all those conversions too. Take a
->>>> look at a similar driver and look at how it has been converted
->>>> recently. Even better, just send the driver upstream. :-)
+That could be done.  How do you tell whether a particular drive is
+rotational?
 
->>> It's already there...
+Do you have to worry about a rotating drive that gets its power from
+the SATA bus (what happens if that power is suddenly no longer
+available because the controller is suspended)?
 
->> Ouch, did I forget to convert
+> Also, on resume, as the controller was out, libata needs to do full
+> revalidation & reconfiguration.  There's no way to avoid EH.
 
-> It probably wasn't obvious as this driver had lived in non-BMDMA section of
-> Kconfig before the recent patch:
+There's no way to tell if a drive was disconnected while the controller 
+was suspended?
 
-> http://marc.info/?l=linux-ide&m=129303304605907
+> > > * EH kicks in.  Mark the port inactive so that further commands
+> > >   processing won't happen (it would probably be nice if this is
+> > >   something the PM framework can guarantee but I don't think it's done
+> > >   that way, is it?)
+> > 
+> > Why must the port be marked inactive?  If any further commands need to
+> > be processed then they should cause the controller to be resumed, at
+> > which point the port will be active again.
+> 
+> Then, at least we would need to plug EH because commands aren't the
+> only intiation vector.
 
->> it or was it a merge timing problem?
->> Anyways, sorry about that. Please go ahead and fix it. :-)
+I have no idea how libata is designed, and of course the runtime PM
+implementation will depend heavily on those details.  All I can do is 
+offer advice about runtime PM.  There are two major design options: You 
+can leave the controller powered on as long as any of the attached 
+drives are running, or you can power-down the controller in between 
+accesses.  The runtime PM core supports both approaches.
 
-    Looks like the commit that added DMA support should be thanked for the 
-mischief:
+> > > * EH skips all other EH actions and put the controller in sleep.
+> > 
+> > The PCI core already takes care of putting device into D3.  The EH 
+> > doesn't need to do it.  And there shouldn't be any other EH actions 
+> > pending.
+> 
+> So, it behaves differently from the usual suspend/resume?
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6b61e69e7bc1cfe80ab54c6321f19061f9487ed3
+The PCI subsystem's implementation is somewhat different.
 
-WBR, Sergei
+>  We have
+> .suspend callback which puts the controller into D3.
+
+It does so by calling pci_prepare_to_sleep()?  Compare that with 
+pci_finish_runtime_suspend(), which is called directly by 
+pci_pm_runtime_suspend().
+
+>  Are you saying
+> for runtime PM that isn't necessary?  If so, wouldn't it be better to
+> unify behaviors between the two paths?
+
+I don't know.  Certainly for runtime suspend it is necessary to put a
+PCI device into D3hot.  For system suspend it might not be necessary,
+depending on the platform.
+
+> > > On runtime resume
+> > > 
+> > > * Tell EH to kick in and wake up the controller.
+> > 
+> > The PCI core already puts devices back into D0.
+> 
+> I still can't see how this would work without low level driver's help.
+> Who's gonna reconfigure the controller?  Or are controllers supposed
+> to maintain all configurations across D3(hot) sleep?
+
+The low-level driver has to take care of all these special
+requirements.  Note that many PCI controllers _do_ retain their
+configuration across D3 sleep -- maybe not SATA controllers, though.
+
+> > > * EH kicks in.  Powers up the controller and revalidates all the
+> > >   attached devices.
+> > 
+> > At this point the attached devices should still be suspended.  
+> > Presumably you would not want to revalidate them until their own 
+> > runtime resumes occur.
+> 
+> Controller resume involves SATA bus resets.  As there can be multiple
+> devices per bus, you can't really divide things that neatly.  The
+> hardware isn't designed that way.
+
+Obviously, runtime PM has to be implemented in a way that will work 
+with the hardware design.
+
+> > > So, it's gonna take a bit more code than posted.
+> > 
+> > On the contrary, there should be almost no new code needed.  In fact,
+> > calling pm_runtime_put_noidle() in the probe routine and
+> > pm_runtime_get_noresume() in the remove routine should be almost good 
+> > enough.
+> 
+> Yeah, that would be nice.  I'm quite doubtful that would work as well
+> as you would expect it to tho.
+
+Well, perhaps not...
+
+Alan Stern
+
