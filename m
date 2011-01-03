@@ -1,56 +1,69 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Adding runtime PM support to sata_mv driver
-Date: Mon, 3 Jan 2011 14:01:20 -0500
-Message-ID: <AANLkTimDpJSHzS_nMpmN-+U+1Q0cLEWE4y18ATf_OXLY@mail.gmail.com>
-References: <20110103153134.GW18831@htj.dyndns.org> <Pine.LNX.4.44L0.1101031120230.1715-100000@iolanthe.rowland.org>
+From: "Peter M. Petrakis" <peter.petrakis@canonical.com>
+Subject: Re: Is there a reliable way to ID a SSD?
+Date: Mon, 03 Jan 2011 14:30:07 -0500
+Message-ID: <4D2223BF.8090901@canonical.com>
+References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:57410 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751960Ab1ACTBk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 14:01:40 -0500
-Received: by iwn9 with SMTP id 9so13601775iwn.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 11:01:40 -0800 (PST)
-In-Reply-To: <Pine.LNX.4.44L0.1101031120230.1715-100000@iolanthe.rowland.org>
+Received: from adelie.canonical.com ([91.189.90.139]:54772 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752229Ab1ACTaL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 14:30:11 -0500
+Received: from hutte.canonical.com ([91.189.90.181])
+	by adelie.canonical.com with esmtp (Exim 4.71 #1 (Debian))
+	id 1PZq6b-0003sV-Jn
+	for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 19:30:09 +0000
+Received: from c-75-67-45-93.hsd1.nh.comcast.net ([75.67.45.93] helo=[192.168.15.4])
+	by hutte.canonical.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.71)
+	(envelope-from <peter.petrakis@canonical.com>)
+	id 1PZq6b-0006nc-DP
+	for linux-ide@vger.kernel.org; Mon, 03 Jan 2011 19:30:09 +0000
+In-Reply-To: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Mon, Jan 3, 2011 at 11:42 AM, Alan Stern <stern@rowland.harvard.edu>=
- wrote:
-> On Mon, 3 Jan 2011, Tejun Heo wrote:
->
->> > Runtime suspend should not occur unless all the child devices (i.e=
-=2E,
->> > the attached drives) are already suspended. =A0This means it is no=
-t
->> > necessary to synchronize any operations, since there shouldn't be =
-any
->> > other accesses to the hardware going on. =A0Therefore there is no =
-need to
->> > use the error handler.
->>
->> Well, it's not that simple I'm afraid. =A0EH actions are asynchronou=
-s.
->> Even if all the downstream devices are suspended, PHY events can
->> happen any time and EH could be active. =A0Hmmm... a delta but it wo=
-uld
->> make more sense to put only the controller into hot sleep while
->> leaving the disk alone for rotating devices.
->
-> That could be done. =A0How do you tell whether a particular drive is
-> rotational?
->
+Hi,
 
-I don't think there is a kernel flag for it (yet).
+On 12/30/2010 10:58 AM, Greg Freemyer wrote:
+> All,
+> 
+> Per T13/1699-D Revision 4a (from May 2007) word 217 of the identify
+> block should be populated with a "1" to identify non-rotating media.
+> 
+> http://www.t13.org/Documents/UploadedDocuments/docs2007/D1699r4a-ATA8-ACS.pdf
+> 
+> Does anyone know if that is a reliable field?
+> 
+> Specifically there are two separate issues:
+> 
+> 1) Are all devices reporting a 1 in field 217 non-rotating?
+> 2) Are all production non-rotating devices populating that field with a 1.
+> 
+> Is there some other reliable mechanism for identifying a SSD?
+> 
 
-Per ATA-8 there is flag in the identify block.
+Not really, the manufacturer needs to adhere to the spec they're claiming
+to honor and we should politely notify them when we find that it's inconsistent.
+It's technically a firmware bug if it's ATA-8 and that bit isn't set right.
 
-http://markmail.org/message/2vonazw4bck7nefa
+If you're having trouble identifying SSDs pre ATA-8, you can use this simple
+patch I introduced a while back.
 
-As that email says, I don't know how reliable the flag is.
+http://www.spinics.net/lists/linux-ide/msg38944.html
 
-Greg
+and blacklist the offending drive into reporting itself as SSD when interrogated
+via SCSI.
+
+If you search around, you'll find an earlier thread about quirking SSDs by using
+heuristics like search for the word "flash" in the device name and other hints but
+the patch set never went anywhere. It's a ugly problem, there's so many devices
+out there ahead of the spec that are SSD, with no sure fire way to determine that
+they really are. Supporting a full blacklist of them would turn libata-core.c into
+a dumping ground for potentially 100s of pre ATA-8 storage devices. I don't think
+anyone wants to maintain that.
+
+Peter
