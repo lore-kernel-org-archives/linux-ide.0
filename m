@@ -1,37 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
+From: Roman Fietze <roman.fietze@telemotive.de>
 Subject: Re: PowerPC MPC5200B ATA MWDMA regression
-Date: Mon, 3 Jan 2011 15:33:07 +0100
-Message-ID: <AANLkTi=5TrmxeWppabYaFUr-AhLwWcn4b_EQgLSJT44T@mail.gmail.com>
-References: <201101031445.47922.roman.fietze@telemotive.de>
-	<20110103135929.GO18831@htj.dyndns.org>
-	<4D21DD55.2000000@ru.mvista.com>
+Date: Mon, 3 Jan 2011 15:34:13 +0100
+Message-ID: <201101031534.13533.roman.fietze@telemotive.de>
+References: <201101031445.47922.roman.fietze@telemotive.de> <20110103135929.GO18831@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:52189 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab1ACOdJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 09:33:09 -0500
-Received: by qyj19 with SMTP id 19so15912220qyj.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 06:33:08 -0800 (PST)
-In-Reply-To: <4D21DD55.2000000@ru.mvista.com>
+Received: from coyote.quickmin.net ([217.14.112.24]:50105 "EHLO
+	coyote.quickmin.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911Ab1ACOeR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 09:34:17 -0500
+In-Reply-To: <20110103135929.GO18831@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Roman Fietze <roman.fietze@telemotive.de>, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 
-On Mon, Jan 3, 2011 at 3:29 PM, Sergei Shtylyov <sshtylyov@mvista.com> =
-wrote:
->> The commit you bisected to contains all those conversions too. =A0Ta=
-ke a
->> look at a similar driver and look at how it has been converted
->> recently. =A0Even better, just send the driver upstream. =A0:-)
->
-> =A0 It's already there...
+Hallo Tejun,
 
-Ouch, did I forget to convert it or was it a merge timing problem?
-Anyways, sorry about that.  Please go ahead and fix it. :-)
+On Monday, 03.January.2011 14:59:29 Tejun Heo wrote:
 
---=20
-tejun
+> Which driver is it?
+
+drivers/ata/pata_mpc52xx.c from the standard tree, 100% unchanged. As
+I said, for the bisect I was using the original, unchanged
+torvalds/master tree from git.kernel.org.
+
+> You probably now want to use ata_bmdma_qc_issue() ...
+
+I'm sorry, but if I would know about the details, and would know more
+about ATA I would have tried to patch pata_mpc52xx.c by myself.
+
+>  Even better, just send the driver upstream.
+
+It has been there for a long while. You even patched it last summer.
+
+
+Roman
+
+-- 
+Roman Fietze              Telemotive AG Buero Muehlhausen
+Breitwiesen                             73347 Muehlhausen
+Tel.: +49(0)7335/18493-45        http://www.telemotive.de
