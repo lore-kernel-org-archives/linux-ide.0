@@ -1,69 +1,80 @@
-From: "Peter M. Petrakis" <peter.petrakis@canonical.com>
-Subject: Re: Is there a reliable way to ID a SSD?
-Date: Mon, 03 Jan 2011 14:30:07 -0500
-Message-ID: <4D2223BF.8090901@canonical.com>
-References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
+From: Steffen Moser <lists@steffen-moser.de>
+Subject: Re: IOMMU and DMA mode of pata_jmicron
+Date: Mon, 03 Jan 2011 21:15:59 +0100
+Message-ID: <4D222E7F.5080305@steffen-moser.de>
+References: <4D1A7628.3050704@steffen-moser.de> <4D1A881C.3080109@garzik.org> <20110103112952.GA2100@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:54772 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229Ab1ACTaL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 14:30:11 -0500
-Received: from hutte.canonical.com ([91.189.90.181])
-	by adelie.canonical.com with esmtp (Exim 4.71 #1 (Debian))
-	id 1PZq6b-0003sV-Jn
-	for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 19:30:09 +0000
-Received: from c-75-67-45-93.hsd1.nh.comcast.net ([75.67.45.93] helo=[192.168.15.4])
-	by hutte.canonical.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <peter.petrakis@canonical.com>)
-	id 1PZq6b-0006nc-DP
-	for linux-ide@vger.kernel.org; Mon, 03 Jan 2011 19:30:09 +0000
-In-Reply-To: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110103112952.GA2100@amd.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Roedel, Joerg" <Joerg.Roedel@amd.com>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi,
+Hi Joerg,
 
-On 12/30/2010 10:58 AM, Greg Freemyer wrote:
-> All,
+On 01/03/2011 12:29 PM, Roedel, Joerg wrote:
+> On Tue, Dec 28, 2010 at 08:00:12PM -0500, Jeff Garzik wrote:
+>> (CC'd linux-ide, Joerg)
+>> 
+>> On 12/28/2010 06:43 PM, Steffen Moser wrote:
+>> > I've encountered a problem with my AMD 890FX based system
+>> > and linux-2.6.35.10 (x86_64 platform).
+>> >
+>> > After activating the option "IOMMU" in the mainboard's BIOS
+>> > setup, the onboard P-ATA controller "JMicron Technology Corp.
+>> > JMB361 AHCI/IDE (rev 02)" puts itself back in the PIO mode.
+>> > When loading the module, the kernel reports:
+>> >
+>> >    pata_jmicron 0000:06:00.1: BMDMA: failed to set dma mask, \
+>> >                               falling back to PIO
+>> [...]
+>> > As soon as I deactivate IOMMU in BIOS setup, the P-ATA channel
+>> > runs in the DMA mode again. The S-ATA controllers don't seem
+>> > to be affected.
+>> >
+>> > My question is: Is this a known behavior? Are there any
+>> > things I have to consider when activating IOMMU (which seems
+>> > to be AMD-Vi) on an 890FX based system? Is it a problem of
+>> > the chipset and/or the controller or is it related to a
+>> > problem in the libata area?
+>> >
+>> > Some information about the affected system:
+>> >
+>> >  - Mainboard:    ASUS M4A89TD Pro/USB3
+>> >  - BIOS version: 1101 (most recent version)
+>> >  - Chipset:      AMD 890FX
+>> >  - Processor:    AMD Phenom 1090T
+>> >  - Memory:       4 x 4 GB (Kingston KVR1333D3E9S/4G)
+>> >  - Distribution: openSUSE 11.3
+>> >  - Kernel:       2.6.35.10 (from "kernel.org"), x86_64
+>> >
+>> 
+>> This condition occurs when the PCI API cannot set the PCI device's DMA 
+>> mask to the 32-bit value
+>> 	#define ATA_DMA_MASK            0xffffffffULL
+>> 
+>> That is an unusual failure for such a modern system, which certainly can 
+>> handle 32-bit masks like that, one would think.
 > 
-> Per T13/1699-D Revision 4a (from May 2007) word 217 of the identify
-> block should be populated with a "1" to identify non-rotating media.
-> 
-> http://www.t13.org/Documents/UploadedDocuments/docs2007/D1699r4a-ATA8-ACS.pdf
-> 
-> Does anyone know if that is a reliable field?
-> 
-> Specifically there are two separate issues:
-> 
-> 1) Are all devices reporting a 1 in field 217 non-rotating?
-> 2) Are all production non-rotating devices populating that field with a 1.
-> 
-> Is there some other reliable mechanism for identifying a SSD?
-> 
+> Luckily I have exactly the same motherboard under my desk. It shows the
+> same issue. The problem is that the PCI device of the PATA controler
+> (4:00.1 in my case) is not described in the IVRS ACPI table. So the
+> IOMMU driver does not feel responsible for it and the dma_supported()
+> call on this device will fail. This also makes pci_set_dma_mask() fail
+> on this device. So it comes down to a BIOS bug. 
 
-Not really, the manufacturer needs to adhere to the spec they're claiming
-to honor and we should politely notify them when we find that it's inconsistent.
-It's technically a firmware bug if it's ATA-8 and that bit isn't set right.
+That sounds quite comprehensible for me.
 
-If you're having trouble identifying SSDs pre ATA-8, you can use this simple
-patch I introduced a while back.
+> I look into it to find a workaround.
 
-http://www.spinics.net/lists/linux-ide/msg38944.html
+Thank you.
 
-and blacklist the offending drive into reporting itself as SSD when interrogated
-via SCSI.
+Beside a possible work-around, do you think, it makes sense to
+report the problem to ASUS as the straight way should be to have
+a correct IVRS table for the board?
 
-If you search around, you'll find an earlier thread about quirking SSDs by using
-heuristics like search for the word "flash" in the device name and other hints but
-the patch set never went anywhere. It's a ugly problem, there's so many devices
-out there ahead of the spec that are SSD, with no sure fire way to determine that
-they really are. Supporting a full blacklist of them would turn libata-core.c into
-a dumping ground for potentially 100s of pre ATA-8 storage devices. I don't think
-anyone wants to maintain that.
-
-Peter
+Kind regards,
+Steffen
