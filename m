@@ -1,149 +1,82 @@
-From: "Peter M. Petrakis" <peter.petrakis@canonical.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
 Subject: Re: Is there a reliable way to ID a SSD?
-Date: Mon, 03 Jan 2011 17:03:15 -0500
-Message-ID: <4D2247A3.2060506@canonical.com>
-References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com> <4D2223BF.8090901@canonical.com> <AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
+Date: Mon, 3 Jan 2011 17:50:51 -0500
+Message-ID: <AANLkTi=Kv8f3e8zhSkDohkgJqOv+XKQ_dPR=aFbpzm27@mail.gmail.com>
+References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
+ <4D2223BF.8090901@canonical.com> <AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
+ <4D2247A3.2060506@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:53815 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500Ab1ACWDT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 17:03:19 -0500
-Received: from hutte.canonical.com ([91.189.90.181])
-	by adelie.canonical.com with esmtp (Exim 4.71 #1 (Debian))
-	id 1PZsUo-0001xM-2L
-	for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 22:03:18 +0000
-Received: from c-75-67-45-93.hsd1.nh.comcast.net ([75.67.45.93] helo=[192.168.15.4])
-	by hutte.canonical.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.71)
-	(envelope-from <peter.petrakis@canonical.com>)
-	id 1PZsUn-00012n-M2
-	for linux-ide@vger.kernel.org; Mon, 03 Jan 2011 22:03:18 +0000
-In-Reply-To: <AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:55243 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903Ab1ACWvO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 17:51:14 -0500
+Received: by iyi12 with SMTP id 12so12492318iyi.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 14:51:14 -0800 (PST)
+In-Reply-To: <4D2247A3.2060506@canonical.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: "Peter M. Petrakis" <peter.petrakis@canonical.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
 
-
-
-On 01/03/2011 04:24 PM, Greg Freemyer wrote:
-> On Mon, Jan 3, 2011 at 2:30 PM, Peter M. Petrakis
-> <peter.petrakis@canonical.com> wrote:
->> Hi,
+On Mon, Jan 3, 2011 at 5:03 PM, Peter M. Petrakis
+<peter.petrakis@canonical.com> wrote:
+<snip>
+>> Thanks. =A0I have a client that needs to recognize SSDs from userspa=
+ce
+>> and I missed the ABI.
 >>
->> On 12/30/2010 10:58 AM, Greg Freemyer wrote:
->>> All,
->>>
->>> Per T13/1699-D Revision 4a (from May 2007) word 217 of the identify
->>> block should be populated with a "1" to identify non-rotating media.
->>>
->>> http://www.t13.org/Documents/UploadedDocuments/docs2007/D1699r4a-ATA8-ACS.pdf
->>>
->>> Does anyone know if that is a reliable field?
->>>
->>> Specifically there are two separate issues:
->>>
->>> 1) Are all devices reporting a 1 in field 217 non-rotating?
->>> 2) Are all production non-rotating devices populating that field with a 1.
->>>
->>> Is there some other reliable mechanism for identifying a SSD?
->>>
->>
->> Not really, the manufacturer needs to adhere to the spec they're claiming
->> to honor and we should politely notify them when we find that it's inconsistent.
->> It's technically a firmware bug if it's ATA-8 and that bit isn't set right.
->>
->> If you're having trouble identifying SSDs pre ATA-8, you can use this simple
->> patch I introduced a while back.
->>
->> http://www.spinics.net/lists/linux-ide/msg38944.html
->>
->> and blacklist the offending drive into reporting itself as SSD when interrogated
->> via SCSI.
->>
->> If you search around, you'll find an earlier thread about quirking SSDs by using
->> heuristics like search for the word "flash" in the device name and other hints but
->> the patch set never went anywhere. It's a ugly problem, there's so many devices
->> out there ahead of the spec that are SSD, with no sure fire way to determine that
->> they really are. Supporting a full blacklist of them would turn libata-core.c into
->> a dumping ground for potentially 100s of pre ATA-8 storage devices. I don't think
->> anyone wants to maintain that.
->>
->> Peter
-> 
-> Peter,
-> 
-> Thanks.  I have a client that needs to recognize SSDs from userspace
-> and I missed the ABI.
-> 
-> I was looking for the userspace ABI to be in /sys/block like the
-> topology stuff is, so I missed the userspace ABI and was confused.
+>> I was looking for the userspace ABI to be in /sys/block like the
+>> topology stuff is, so I missed the userspace ABI and was confused.
+>
+> Ah you mean /sys/block/sda/queue/rotational.
 
-Ah you mean /sys/block/sda/queue/rotational.
+I missed that one.  Never thought to look in queue. :(
 
-> Now that I've found in, I'm confused by ata_id_rotation_rate()
-> trusting the rotation_rate of 1 being valid for all ATA 7 and ATA 8
-> devices.
-> 
-> === cut & paste from ata.h
-> static inline int ata_id_rotation_rate(const u16 *id)
-> {
->         u16 val = id[217];
->         if (ata_id_major_version(id) < 7 || val == 0 || val == 0xffff)
->                 return 0;
-> 
->         if (val > 1 && val < 0x401)
->                 return 0;
-> 
->         return val;
-> }
-> ===
+(I don't know what SSD has to do with queue, but okay.  Please don't
+answer, I've read some of the discussion before and promptly forgot
+it.)
 
-Hmm, that may be but that value still needs to be valid, meaning, it's
-either 1, or it's an RPM value. What does your raw IDENTIFY DEVICE output
-say? This code accomidates ATA-7 vendors who had current draft specs to
-"do the right thing" with the reserved block.
+In the mean time I've found the hdparm also looks at word 217 and
+reports SSD devices.  It has apparently been doing that since v9.12 or
+so.  (spring 2009).
 
-> I thought rotational_rate set to 1 to indicate a SSD was only valid
-> for ATA8 devices?
+My current concern is that the logic is slowly diverging between the
+kernel 2.6.36 implementation and the hdparm v9.36 implementation.
 
-Strictly speaking yes.
+Mark (added to cc),
 
-> I'll have to go back and read the older thread you talked about, but
-> is there a plan for ATA7 devices?  Is it in general to trust word 217,
-> or what.
+Would it be better if hdparm looked at /sys/block/sda/queue/rotational
+instead of just using word 217 of the identify block?
 
-Good thing I keep notes:
-http://marc.info/?l=linux-ide&m=126677421807814&w=2
+The current divergence is:
 
-As you can see, my trivial patch is loosely based off of it.
+1) The kernel routine  ata_id_rotation_rate() (in ata.h) is only
+trusting  word 217 if its ATA7 or higher.
 
-> If I find a SSD device that is not setting word 217 correctly, and I
-> want to get the kernel to address it correctly, should I just add to
-> your list and cause ATA_HORKAGE_NONROT to be set?
+http://lxr.linux.no/#linux+v2.6.36/include/linux/ata.h#L799
 
-Yup, just add the device name as reported by IDENTIFY DEVICE to the list.
-Then the rotational bit in sysfs should be set.
+2) There have been a couple proposed kernel patches to libata-scsi.c
+to quirk in a HORKAGE flag to set the rotation_rate to 1 (meaning SSD)
+for some known devices.  I don't see those being ACKed yet, but if one
+ever gets in, hdparm will diverge from the kernels info since its
+going straight to the identify block for its info.
 
-> Or is the concern it will get unwieldy too fast if everyone used that list?
+Or is queue_flag_set_unlocked(QUEUE_FLAG_NONROT, q) somehow setting
+word 217 for future identify block usage by hdparm?  (I have no idea
+what that call does.  It was in Bart's ATANG patch, but not Peter's.)
 
-If you look at my post, you'll note that no one ever commented on it, and I
-got too busy to follow up. So I really don't know where the maintainers stand.
-The speculation of unwieldy quirk table management is my own opinion, though
-I'm sure it's on everyone's mind. I know I wouldn't want to be in that position.
-Just look at the quirk tables the sound codec drivers have to put up with to
-get an idea of the volume of devices libata would deal with if it officially
-supported this quirk.
+Bart's atang PATCH: http://marc.info/?l=3Dlinux-ide&m=3D126677421807814=
+&w=3D2
 
-> Thanks
-> Greg
+Peter's patch: http://www.spinics.net/lists/linux-ide/msg38944.html
 
-Peter
+I hope one of the approaches goes in.  As I said I have a userspace
+app that really needs to know if its talking to a  traditional
+rotating device or a SSD, so I suspect we'll be sending in quirk
+patches as we start lab testing devices.
 
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks
+Greg
