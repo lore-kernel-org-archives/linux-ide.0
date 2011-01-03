@@ -1,110 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Adding runtime PM support to sata_mv driver
-Date: Mon, 3 Jan 2011 16:31:34 +0100
-Message-ID: <20110103153134.GW18831@htj.dyndns.org>
-References: <20110103143947.GS18831@htj.dyndns.org>
- <Pine.LNX.4.44L0.1101031000200.2486-100000@iolanthe.rowland.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: PowerPC MPC5200B ATA MWDMA regression
+Date: Mon, 03 Jan 2011 19:33:17 +0300
+Message-ID: <4D21FA4D.3030506@mvista.com>
+References: <201101031445.47922.roman.fietze@telemotive.de>	<20110103135929.GO18831@htj.dyndns.org>	<4D21DD55.2000000@ru.mvista.com> <AANLkTi=5TrmxeWppabYaFUr-AhLwWcn4b_EQgLSJT44T@mail.gmail.com> <4D21EAF1.2010504@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35926 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755343Ab1ACPbj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 10:31:39 -0500
-Received: by bwz15 with SMTP id 15so13787262bwz.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 07:31:38 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1101031000200.2486-100000@iolanthe.rowland.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44562 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754197Ab1ACQeY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 11:34:24 -0500
+Received: by ewy5 with SMTP id 5so6119667ewy.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 08:34:22 -0800 (PST)
+In-Reply-To: <4D21EAF1.2010504@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Priyanka Gupta <ankaguptaca@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Roman Fietze <roman.fietze@telemotive.de>
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 
-Hello, Alan.
+Hello.
 
-On Mon, Jan 03, 2011 at 10:15:40AM -0500, Alan Stern wrote:
-> > Oh I see.  You wanna put the controller into sleep.  You'll have to
-> > implement EH actions for it and invoke EH to do it.  The problem is
-> > that for it to work in generic manner, the operations need to be
-> > synchronized with other accesses to the hardware and going through EH
-> > is the easiest way to achieve that.  Something like the following
-> > would work.
-> 
-> Are you talking about the usual SCSI error handler or something else 
-> specific to ATA drivers?
+On 03-01-2011 18:27, Sergei Shtylyov wrote:
 
-I'm talking specifically about libata EH.
+>>>> The commit you bisected to contains all those conversions too. Take a
+>>>> look at a similar driver and look at how it has been converted
+>>>> recently. Even better, just send the driver upstream. :-)
 
-> Runtime suspend should not occur unless all the child devices (i.e.,
-> the attached drives) are already suspended.  This means it is not
-> necessary to synchronize any operations, since there shouldn't be any
-> other accesses to the hardware going on.  Therefore there is no need to
-> use the error handler.
+>>> It's already there...
 
-Well, it's not that simple I'm afraid.  EH actions are asynchronous.
-Even if all the downstream devices are suspended, PHY events can
-happen any time and EH could be active.  Hmmm... a delta but it would
-make more sense to put only the controller into hot sleep while
-leaving the disk alone for rotating devices.
+>> Ouch, did I forget to convert
 
-Also, on resume, as the controller was out, libata needs to do full
-revalidation & reconfiguration.  There's no way to avoid EH.
+> It probably wasn't obvious as this driver had lived in non-BMDMA section of
+> Kconfig before the recent patch:
 
-> > * EH kicks in.  Mark the port inactive so that further commands
-> >   processing won't happen (it would probably be nice if this is
-> >   something the PM framework can guarantee but I don't think it's done
-> >   that way, is it?)
-> 
-> Why must the port be marked inactive?  If any further commands need to
-> be processed then they should cause the controller to be resumed, at
-> which point the port will be active again.
+> http://marc.info/?l=linux-ide&m=129303304605907
 
-Then, at least we would need to plug EH because commands aren't the
-only intiation vector.
+>> it or was it a merge timing problem?
+>> Anyways, sorry about that. Please go ahead and fix it. :-)
 
-> > * EH skips all other EH actions and put the controller in sleep.
-> 
-> The PCI core already takes care of putting device into D3.  The EH 
-> doesn't need to do it.  And there shouldn't be any other EH actions 
-> pending.
+    Looks like the commit that added DMA support should be thanked for the 
+mischief:
 
-So, it behaves differently from the usual suspend/resume?  We have
-.suspend callback which puts the controller into D3.  Are you saying
-for runtime PM that isn't necessary?  If so, wouldn't it be better to
-unify behaviors between the two paths?
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=6b61e69e7bc1cfe80ab54c6321f19061f9487ed3
 
-> > On runtime resume
-> > 
-> > * Tell EH to kick in and wake up the controller.
-> 
-> The PCI core already puts devices back into D0.
-
-I still can't see how this would work without low level driver's help.
-Who's gonna reconfigure the controller?  Or are controllers supposed
-to maintain all configurations across D3(hot) sleep?
-
-> > * EH kicks in.  Powers up the controller and revalidates all the
-> >   attached devices.
-> 
-> At this point the attached devices should still be suspended.  
-> Presumably you would not want to revalidate them until their own 
-> runtime resumes occur.
-
-Controller resume involves SATA bus resets.  As there can be multiple
-devices per bus, you can't really divide things that neatly.  The
-hardware isn't designed that way.
-
-> > So, it's gonna take a bit more code than posted.
-> 
-> On the contrary, there should be almost no new code needed.  In fact,
-> calling pm_runtime_put_noidle() in the probe routine and
-> pm_runtime_get_noresume() in the remove routine should be almost good 
-> enough.
-
-Yeah, that would be nice.  I'm quite doubtful that would work as well
-as you would expect it to tho.
-
-Thanks.
-
--- 
-tejun
+WBR, Sergei
