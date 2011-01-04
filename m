@@ -1,75 +1,43 @@
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Subject: Re: Adding runtime PM support to sata_mv driver
-Date: Mon, 3 Jan 2011 18:10:45 -0500
-Message-ID: <AANLkTi=oQ2waA2gdVfRFCgN4zpjj2C5jT2ExPP2jntZa@mail.gmail.com>
-References: <20110103153134.GW18831@htj.dyndns.org> <Pine.LNX.4.44L0.1101031120230.1715-100000@iolanthe.rowland.org>
- <AANLkTimDpJSHzS_nMpmN-+U+1Q0cLEWE4y18ATf_OXLY@mail.gmail.com>
+From: "Roedel, Joerg" <Joerg.Roedel@amd.com>
+Subject: Re: IOMMU and DMA mode of pata_jmicron
+Date: Tue, 4 Jan 2011 11:23:25 +0100
+Message-ID: <20110104102325.GC2100@amd.com>
+References: <4D1A7628.3050704@steffen-moser.de>
+ <4D1A881C.3080109@garzik.org>
+ <20110103112952.GA2100@amd.com>
+ <4D222E7F.5080305@steffen-moser.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49503 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803Ab1ACXLH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2011 18:11:07 -0500
-Received: by iyi12 with SMTP id 12so12504488iyi.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Jan 2011 15:11:06 -0800 (PST)
-In-Reply-To: <AANLkTimDpJSHzS_nMpmN-+U+1Q0cLEWE4y18ATf_OXLY@mail.gmail.com>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:3221 "EHLO
+	VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750954Ab1ADKX1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2011 05:23:27 -0500
+Content-Disposition: inline
+In-Reply-To: <4D222E7F.5080305@steffen-moser.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, "Peter M. Petrakis" <peter.petrakis@canonical.com>
+To: Steffen Moser <lists@steffen-moser.de>
+Cc: Jeff Garzik <jeff@garzik.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On Mon, Jan 3, 2011 at 2:01 PM, Greg Freemyer <greg.freemyer@gmail.com>=
- wrote:
-> On Mon, Jan 3, 2011 at 11:42 AM, Alan Stern <stern@rowland.harvard.ed=
-u> wrote:
->> On Mon, 3 Jan 2011, Tejun Heo wrote:
->>
->>> > Runtime suspend should not occur unless all the child devices (i.=
-e.,
->>> > the attached drives) are already suspended. =A0This means it is n=
-ot
->>> > necessary to synchronize any operations, since there shouldn't be=
- any
->>> > other accesses to the hardware going on. =A0Therefore there is no=
- need to
->>> > use the error handler.
->>>
->>> Well, it's not that simple I'm afraid. =A0EH actions are asynchrono=
-us.
->>> Even if all the downstream devices are suspended, PHY events can
->>> happen any time and EH could be active. =A0Hmmm... a delta but it w=
-ould
->>> make more sense to put only the controller into hot sleep while
->>> leaving the disk alone for rotating devices.
->>
->> That could be done. =A0How do you tell whether a particular drive is
->> rotational?
->>
->
-> I don't think there is a kernel flag for it (yet).
->
-> Per ATA-8 there is flag in the identify block.
->
-> http://markmail.org/message/2vonazw4bck7nefa
->
-> As that email says, I don't know how reliable the flag is.
->
-> Greg
+Hi Steffen,
 
-Ignore my noise, as of 2.6.36 you get it via ata_id_rotation_rate().
-If its set to 1, then its a SSD.
+On Mon, Jan 03, 2011 at 03:15:59PM -0500, Steffen Moser wrote:
+> Beside a possible work-around, do you think, it makes sense to
+> report the problem to ASUS as the straight way should be to have
+> a correct IVRS table for the board?
 
-Unfortunately, needed horkage is not yet implemented.
+Sure, that makes sense. Probably they fix their BIOS, but I wouldn't
+count on it. But it is worth a try.
 
-And the 2 proposed patches I've seen to do it were in the scsi-ata
-translation logic ( drivers/ata/libata-scsi.c) and not readily usable
-other code directly.
+Regards,
 
-Looks to me like a post_horkage_ata_id_rotation_rate() routine needs
-to be created between libata-scsi and ata_id_rotation_rate().
+	Joerg
 
-(More in the above referenced thread if you want to follow it.)
+-- 
+AMD Operating System Research Center
 
-Greg
+Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
+General Managers: Alberto Bozzo, Andrew Bowd
+Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+
