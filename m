@@ -1,72 +1,66 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt37x: actually limit HPT370 to UltraDMA/66
-Date: Wed, 5 Jan 2011 21:59:49 +0300
-Message-ID: <201101052159.49796.sshtylyov@ru.mvista.com>
+From: Stephen Clark <sclark46@earthlink.net>
+Subject: Kernel 2.6.37 erroneously limiting to UDMA/33
+Date: Wed, 05 Jan 2011 15:39:30 -0500
+Message-ID: <4D24D702.9090908@earthlink.net>
+Reply-To: sclark46@earthlink.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:58458 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750854Ab1AETBO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2011 14:01:14 -0500
-Content-Disposition: inline
+Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:55087 "EHLO
+	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752894Ab1AEUjc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2011 15:39:32 -0500
+Received: from [69.22.83.66] (helo=joker.seclark.com)
+	by elasmtp-dupuy.atl.sa.earthlink.net with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.67)
+	(envelope-from <sclark46@earthlink.net>)
+	id 1Paa8q-00071r-5d
+	for linux-ide@vger.kernel.org; Wed, 05 Jan 2011 15:39:32 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk
+To: linux-ide@vger.kernel.org
 
-The driver clearly tries to limit HPT370[A] to UltraDMA/66 if the PCI clock is
-less than 50 MHz but due to cut&paste type mistake this code has no effect...
+Hello,
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Why is the kernel limiting me to udma/33 when the device says it can do
+ata2.01: CFA: TRANSCEND, 20070831, max UDMA/66
 
----
-The patch is against the recent Linus' tree plus 2 patches that I posted
-before:
+There is no cable the compact flash is a socket on the motherboard!
 
-http://marc.info/?l=linux-ide&m=129330632207779
-http://marc.info/?l=linux-ide&m=129356704826019
+Loading sd_mod.ko module
+Loading libata.ko module
+Loading ata_generic.ko module
+Loading pata_acpi.ko module
+pata_acpi 0000:00:0f.0: PCI INT B -> GSI 21 (level, low) -> IRQ 21
+pata_acpi 0000:00:0f.0: PCI INT B disabled
+Loading pata_via.ko module
+scsi0 : pata_via
+scsi1 : pata_via
+ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0xfa00 irq 14
+ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0xfa08 irq 15
+ata2.01: CFA: TRANSCEND, 20070831, max UDMA/66
+ata2.01: 7962192 sectors, multi 0: LBA
+ata2.01: limited to UDMA/33 due to 40-wire cable
+ata2.01: configured for UDMA/33
+scsi 1:0:1:0: Direct-Access     ATA      TRANSCEND        2007 PQ: 0 ANSI: 5
+sd 1:0:1:0: [sda] 7962192 512-byte logical blocks: (4.07 GB/3.79 GiB)
+sd 1:0:1:0: [sda] Write Protect is off
+sd 1:0:1:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DA
+  sda: sda1 sda2 sda3
+sd 1:0:1:0: [sda] Attached SCSI disk
+Loading ata_piix.ko module
 
- drivers/ata/pata_hpt37x.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Thanks,
+Steve
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.17"
-+#define DRV_VERSION	"0.6.18"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -771,20 +771,20 @@ static int hpt37x_init_one(struct pci_de
- 		.udma_mask = ATA_UDMA5,
- 		.port_ops = &hpt370a_port_ops
- 	};
--	/* HPT370 - UDMA100 */
-+	/* HPT370 - UDMA66 */
- 	static const struct ata_port_info info_hpt370_33 = {
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
--		.udma_mask = ATA_UDMA5,
-+		.udma_mask = ATA_UDMA4,
- 		.port_ops = &hpt370_port_ops
- 	};
--	/* HPT370A - UDMA100 */
-+	/* HPT370A - UDMA66 */
- 	static const struct ata_port_info info_hpt370a_33 = {
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = ATA_PIO4,
- 		.mwdma_mask = ATA_MWDMA2,
--		.udma_mask = ATA_UDMA5,
-+		.udma_mask = ATA_UDMA4,
- 		.port_ops = &hpt370a_port_ops
- 	};
- 	/* HPT372 - UDMA133 */
+-- 
+
+"They that give up essential liberty to obtain temporary safety,
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty
+decreases."  (Thomas Jefferson)
+
+
+
