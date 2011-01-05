@@ -1,62 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Is there a reliable way to ID a SSD?
-Date: Tue, 04 Jan 2011 19:05:36 -0500
-Message-ID: <yq1r5cstdtb.fsf@sermon.lab.mkp.net>
-References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
-	<4D2223BF.8090901@canonical.com>
-	<AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
-	<4D2247A3.2060506@canonical.com>
-	<AANLkTi=Kv8f3e8zhSkDohkgJqOv+XKQ_dPR=aFbpzm27@mail.gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: CF Card Adapter White List Candidate
+Date: Tue, 04 Jan 2011 22:19:17 -0600
+Message-ID: <4D23F145.10902@gmail.com>
+References: <499061.38397.qm@web112020.mail.gq1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:54819 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750919Ab1AEAFp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2011 19:05:45 -0500
-In-Reply-To: <AANLkTi=Kv8f3e8zhSkDohkgJqOv+XKQ_dPR=aFbpzm27@mail.gmail.com>
-	(Greg Freemyer's message of "Mon, 3 Jan 2011 17:50:51 -0500")
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:44927 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751078Ab1AEETU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2011 23:19:20 -0500
+Received: by iwn9 with SMTP id 9so14903543iwn.19
+        for <linux-ide@vger.kernel.org>; Tue, 04 Jan 2011 20:19:19 -0800 (PST)
+In-Reply-To: <499061.38397.qm@web112020.mail.gq1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: "Peter M. Petrakis" <peter.petrakis@canonical.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
+To: Tom Denchfield <td_denchfield@yahoo.com>
+Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
->>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
+On 01/04/2011 04:18 PM, Tom Denchfield wrote:
+> Tejun,
+>
+> Using your first recommendation in your 01/04/2010 email, I added libata.force=80c to the Ubuntu v10.10 Live CD (Live-CD) kernel command line, and this succeeded in getting Linux to configure my CompactFlash card as UDMA/66, as opposed to the UDMA/33 it had been using.  The attached dmesg_libata_force_80c.txt (dmesg) file shows the details of doing a warm boot with the LiveCD on my desktop computer that did not have Ubuntu installed on it.
+>
+> As you further recommended, in an attempt to get the SD-CF-IDE-DI IDE to CF Adapter that holds my CF card white listed, I am submitting the attached libata_force_80c_CF_card_adapter_whitelist_candidate_information.txt file that has the output from executing four terminal commands to hopefully supply enough information to get it whitelisted.
+>
+> Although I expect that my RV280 Radeon 9200 Pro video card is too old to expend much effort on, it would be nice to also get it whitelisted so that future newbie Linux users who do not know about using the radeon.modeset=0 parameter on the kernel command line will not be looking at a black screen with a blinking cursor when they attempt to use a LiveCD for troubleshooting, or whatever.
+>
+> I purposely did not include the URL of one of the Internet sites that sells the adapter in this email in case this is a no no.
+>
+> If you or someone else needs more information in order to get the CF card adapter whitelisted, they can send me an email with further instructions.
+>
+> Tejun, I am not sure that I will have either the time or the interest to learn the intricacies of editing http://www.thinkwiki.org/wiki/Compact_Flash_boot_drive to add libata.force=80c to this site in lieu of force_cbl=80: so that fewer people will be asking you questions.  I have a ThinkPad without a HDD plus a laptop adapter that will hold my CF card, but my Think Pad is a lot older than the ones discussed on Compact_Flash_boot_drive.  In addition, I did not see any recent updates to this Internet page, but maybe I can find someone to email who will update this page.
+>
+> Tejun, thank you very much for helping me.
 
-Greg> In the mean time I've found the hdparm also looks at word 217 and
-Greg> reports SSD devices.  It has apparently been doing that since
-Greg> v9.12 or so.  (spring 2009).
-
-Yes. And the Linux kernel has had the sysfs parameter since 2.6.29 which
-came out around the same time.
-
-
-Greg> My current concern is that the logic is slowly diverging between
-Greg> the kernel 2.6.36 implementation and the hdparm v9.36
-Greg> implementation.
-
-As Mark said: The whole point of hdparm is to talk directly to the
-device. There never was convergence, nor should there be.
-
-
-Greg> 1) The kernel routine ata_id_rotation_rate() (in ata.h) is only
-Greg> trusting word 217 if its ATA7 or higher.
-
-The standards bodies are glacially slow (ACS-2 still hasn't been
-ratified, although it's close. Again. Maybe). Consequently most device
-vendors "backport" features from the drafts. But obviously they can't
-and won't report compliance with an unfinished standard.
-
-There are plenty of SSD drives out there which claim ATA7 compliance and
-which support word 217. The reason we have a version check in the first
-place is to guard against legacy devices which have inadvertently put
-garbage in word 217.
-
-We have had the rotational flag in place for a couple of years and have
-had very few reports about devices misrepresenting themselves. So I'm
-not entirely convinced we need quirk handling for this. Your friendly
-kernel developers already made sure the rotational flag can be
-overridden from user space.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Is there actually any way to identify the adapter automatically? AFAIK, 
+these CF-IDE adapters are just passive circuitry and there's no way to 
+identify them through software.
