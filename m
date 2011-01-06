@@ -1,58 +1,44 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Is there a reliable way to ID a SSD?
-Date: Thu, 06 Jan 2011 16:54:10 -0500
-Message-ID: <yq1vd21ofzx.fsf@sermon.lab.mkp.net>
+Date: Thu, 06 Jan 2011 17:02:43 -0500
+Message-ID: <yq1r5cpoflo.fsf@sermon.lab.mkp.net>
 References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
 	<4D2223BF.8090901@canonical.com>
 	<AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
 	<4D2247A3.2060506@canonical.com> <4D25E96D.10400@computer.org>
-	<AANLkTin1ZjPmbk1M=9-SGStU7zLUozwxX7Ddtu53xNE2@mail.gmail.com>
-	<AANLkTim=AxrJybApL-5oG7+i08tkKofk0eyP+3XhjhBJ@mail.gmail.com>
-	<yq18vyxq15w.fsf@sermon.lab.mkp.net>
-	<AANLkTiksg1a1joizFhJ34yGHZpbdaCKt5HcWnMoyEkWp@mail.gmail.com>
+	<yq1d3o9q1j7.fsf@sermon.lab.mkp.net> <4D262ACF.6010305@computer.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:37270 "EHLO
+Received: from rcsinet10.oracle.com ([148.87.113.121]:61935 "EHLO
 	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766Ab1AFVzO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 16:55:14 -0500
-In-Reply-To: <AANLkTiksg1a1joizFhJ34yGHZpbdaCKt5HcWnMoyEkWp@mail.gmail.com>
-	(Jeff Garzik's message of "Thu, 6 Jan 2011 15:41:45 -0500")
+	with ESMTP id S1752513Ab1AFWFA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 17:05:00 -0500
+In-Reply-To: <4D262ACF.6010305@computer.org> (Jan Ceuleers's message of "Thu,
+	06 Jan 2011 21:49:19 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, Jan Ceuleers <jan.ceuleers@computer.org>, "Peter M. Petrakis" <peter.petrakis@canonical.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jan Ceuleers <jan.ceuleers@computer.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Peter M. Petrakis" <peter.petrakis@canonical.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
->>>>> "Jeff" == Jeff Garzik <jeff@garzik.org> writes:
+>>>>> "Jan" == Jan Ceuleers <jan.ceuleers@computer.org> writes:
 
-Jeff> In an ideal world where information and engineers are cost-free...
+>> Chances are, though, that unlike "real" SSDs your CF is slow enough
+>> that it actually benefits from being treated like a rotational
+>> device.
 
-Oh, yeah...
+Jan> Thanks. But performance is not my primary concern or I wouldn't
+Jan> have chosen a system consisting of low-performance components ;-)
+Jan> (the CompactFlash card is only one example; others include the
+Jan> 500MHz Geode CPU, Via Rhine NICs, a tiny amount of RAM etc). I care
+Jan> more about low power consumption and the system has to be only just
+Jan> fast enough for my needs.
 
-
-Jeff> if a device is non-rotational, we should know this, whether it's
-Jeff> ancient compact flash, or gigabyte's DRAM-based ATA device, or
-Jeff> modern SSD.  It shouldn't be a question of whether or not treating
-Jeff> a non-rotational device as a non-rotational device is performance
-Jeff> win -- because if you're asking that question, it might imply
-Jeff> areas where we are making invalid assumptions about certain
-Jeff> classes of non-rotational devices :)
-
-Well, there were a few attempts at getting SSD performance metrics into
-ATA. They failed for political/marketing reasons. Even if we had gotten
-the metrics we wanted I'm sure most vendors would have indicated that
-"this one goes to eleven".
-
-All we have is non-rotational which means "seeks are cheaper than on
-rotating media". And for a lot of older/slower flash devices it's
-actually a win to do merging because command latency can be quite
-high. So it's not necessarily a win to go non-rotational. Which is why I
-suggested looking at numbers instead of blindly whitelisting every ATA
-flash device known to man.
-
-However, now it appears that what Greg really needs is a
-supports_secure_erase flag...
+There are "real" SSDs in CompactFlash form factor and they do fare much
+better than the consumer cards. Made a significant difference on my
+Geode boxes, anyway. But most importantly they have much better write
+endurance than the camera cards which is the reason I originally got
+them.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
