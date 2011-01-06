@@ -1,46 +1,44 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: 2.6.35.9 bug shown in dmesg (fwd)
-Date: Thu, 6 Jan 2011 17:19:18 +0100
-Message-ID: <20110106161918.GA3008@r2bh72.net.upc.cz>
-References: <alpine.LNX.2.00.1012301233380.3394@bigred.russwhit.org>
- <20110103230028.GA1456@localhost.localdomain>
- <alpine.LNX.2.00.1101052112010.1625@bigred.russwhit.org>
+From: Lin Mac <mkl0301@gmail.com>
+Subject: Re: [PATCH v2 0/3] add CNS3xxx AHCI support
+Date: Fri, 7 Jan 2011 00:18:08 +0800
+Message-ID: <AANLkTimWYUnO_MkawaOpJX3Sm9YZHsECgmotiNwkb8mN@mail.gmail.com>
+References: <1294206187-11487-1-git-send-email-mkl0301@gmail.com>
+	<4D24B53C.4020009@pobox.com>
+	<AANLkTinxNtzpzUn0=-iph_N7tffM6Nu++J9qNNhcp8pX@mail.gmail.com>
+	<20110106105157.GA9560@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:46668 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753157Ab1AFQMv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Jan 2011 11:12:51 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1101052112010.1625@bigred.russwhit.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50124 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257Ab1AFQSK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 11:18:10 -0500
+Received: by fxm20 with SMTP id 20so16142308fxm.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2011 08:18:08 -0800 (PST)
+In-Reply-To: <20110106105157.GA9560@oksana.dev.rtsoft.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell Whitaker <russ@ashlandhome.net>
-Cc: linux-ide@vger.kernel.org
+To: Anton Vorontsov <cbouatmailru@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-On Wed, Jan 05, 2011 at 10:21:21PM -0800, Russell Whitaker wrote:
-> >For some unknown reason resources needed by amd76xrom driver can not be
-> >available. Instead of return error, driver crash the kernel with
-> >messages like below. Patch fix that.
-> >
-> >amd76xrom" amd76xrom_init_one(): Unable to register resource 0x00000000ffc00000-0x00000000ffffffff - kernel bug?
-> 
-> Sorry, in my case that's the wrong bug. First found the bug using
-> Slackware-current. So I stripped down his config file by removing
-> most of what I can't use, recompiled, and the bug was still there.
-> 
-> I'm not using amd76xrom so went into a MTD submenu and changed it to
-> not set, etc, and found the bug is still there.
+2011/1/6 Anton Vorontsov <cbouatmailru@gmail.com>:
+> On Thu, Jan 06, 2011 at 02:43:08PM +0800, Lin Mac wrote:
+> [...]
+>> > It is overkill to rename the entirety of ahci_platform just for one override
+>> > function.
+>> > This sort of thing I would have expected to be added directly to
+>> > ahci_platform.c.
+>> It might be overkill for only one controller. but it is more clean and
+>> readable to have different SoC specific changes in separate files,
+>> especially when more SoCs need to make similar changes.
+> I think that renaming the file is not necessary. You can just
+> rename the module in the makefile.
+That is for consist end user experience. I wouldn't like to find my
+script not working anymore when changing to some linux version, simply
+because someone fix some issue on some platform I'm not using.
 
-I do not see any other problems except that one:
+> Personally I like the current approach more than putting
+> controller-specific fixups directly into ahci_platform.
 
-	BUG: unable to handle kernel paging request at f862aaa0
-	IP: [<f8120282>] simple_map_write+0x82/0xbb [map_funcs]
-
-in dmesg's you provided in the first email. That BUG is from amd75xrom
-driver. Does dmesg without MTD compiled show something different?
-And this is also not clear for me from your first email, crash happened
-every time with pata or randomly?
-
-Stanislaw
+Best Regards,
+Mac Lin.
