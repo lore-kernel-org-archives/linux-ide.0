@@ -1,44 +1,60 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Is there a reliable way to ID a SSD?
-Date: Thu, 06 Jan 2011 17:02:43 -0500
-Message-ID: <yq1r5cpoflo.fsf@sermon.lab.mkp.net>
-References: <AANLkTimRUqg4cJzV1O1-Cf+KsX6sRjYrz48Ty1-qMX-c@mail.gmail.com>
-	<4D2223BF.8090901@canonical.com>
-	<AANLkTinbFHFv-x6VWxAmuCn0o8BSzvUmXoeTv1XGq7A+@mail.gmail.com>
-	<4D2247A3.2060506@canonical.com> <4D25E96D.10400@computer.org>
-	<yq1d3o9q1j7.fsf@sermon.lab.mkp.net> <4D262ACF.6010305@computer.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC] Deferred disk spinup during system resume
+Date: Thu, 6 Jan 2011 17:12:21 -0500
+Message-ID: <AANLkTikPcGs6KBe_tPesLM55R4hLppKDvy_zfA68OsVJ@mail.gmail.com>
+References: <1294345225-28407-1-git-send-email-maksim.rayskiy@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:61935 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab1AFWFA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 17:05:00 -0500
-In-Reply-To: <4D262ACF.6010305@computer.org> (Jan Ceuleers's message of "Thu,
-	06 Jan 2011 21:49:19 +0100")
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43353 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637Ab1AFWMX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 17:12:23 -0500
+In-Reply-To: <1294345225-28407-1-git-send-email-maksim.rayskiy@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Ceuleers <jan.ceuleers@computer.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Peter M. Petrakis" <peter.petrakis@canonical.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: maksim.rayskiy@gmail.com
+Cc: linux-scsi@vger.kernel.org, tj@kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
->>>>> "Jan" == Jan Ceuleers <jan.ceuleers@computer.org> writes:
-
->> Chances are, though, that unlike "real" SSDs your CF is slow enough
->> that it actually benefits from being treated like a rotational
->> device.
-
-Jan> Thanks. But performance is not my primary concern or I wouldn't
-Jan> have chosen a system consisting of low-performance components ;-)
-Jan> (the CompactFlash card is only one example; others include the
-Jan> 500MHz Geode CPU, Via Rhine NICs, a tiny amount of RAM etc). I care
-Jan> more about low power consumption and the system has to be only just
-Jan> fast enough for my needs.
-
-There are "real" SSDs in CompactFlash form factor and they do fare much
-better than the consumer cards. Made a significant difference on my
-Geode boxes, anyway. But most importantly they have much better write
-endurance than the camera cards which is the reason I originally got
-them.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+KGxpbnV4LWlkZSBDQyBhZGRlZCkKCk9uIFRodSwgSmFuIDYsIDIwMTEgYXQgMzoyMCBQTSwgIDxt
+YWtzaW0ucmF5c2tpeUBnbWFpbC5jb20+IHdyb3RlOgo+IGluZGV4IDY2YWE0YmUuLmFlOGQ5Y2Eg
+MTAwNjQ0Cj4gLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYwo+ICsrKyBiL2RyaXZlcnMv
+YXRhL2xpYmF0YS1zY3NpLmMKPiBAQCAtMTI3Niw2ICsxMjc2LDcgQEAgaW50IGF0YV9zY3NpX2No
+YW5nZV9xdWV1ZV9kZXB0aChzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIGludCBxdWV1ZV9kZXB0
+aCwKPiDCoCovCj4gwqBzdGF0aWMgdW5zaWduZWQgaW50IGF0YV9zY3NpX3N0YXJ0X3N0b3BfeGxh
+dChzdHJ1Y3QgYXRhX3F1ZXVlZF9jbWQgKnFjKQo+IMKgewo+ICsgwqAgwqAgwqAgc3RydWN0IGF0
+YV9kZXZpY2UgKmRldiA9IHFjLT5kZXY7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3Qgc2NzaV9jbW5kICpz
+Y21kID0gcWMtPnNjc2ljbWQ7Cj4gwqAgwqAgwqAgwqBzdHJ1Y3QgYXRhX3Rhc2tmaWxlICp0ZiA9
+ICZxYy0+dGY7Cj4gwqAgwqAgwqAgwqBjb25zdCB1OCAqY2RiID0gc2NtZC0+Y21uZDsKPiBAQCAt
+MTI5NCwyMyArMTI5NSw5IEBAIHN0YXRpYyB1bnNpZ25lZCBpbnQgYXRhX3Njc2lfc3RhcnRfc3Rv
+cF94bGF0KHN0cnVjdCBhdGFfcXVldWVkX2NtZCAqcWMpCj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqBnb3RvIGludmFsaWRfZmxkOyDCoCDCoCDCoCAvKiBwb3dlciBjb25kaXRpb25zIG5vdCBzdXBw
+b3J0ZWQgKi8KPgo+IMKgIMKgIMKgIMKgaWYgKGNkYls0XSAmIDB4MSkgewo+IC0gwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgdGYtPm5zZWN0ID0gMTsgwqAvKiAxIHNlY3RvciwgbGJhPTAgKi8KPiAtCj4g
+LSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAocWMtPmRldi0+ZmxhZ3MgJiBBVEFfREZMQUdfTEJB
+KSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0Zi0+ZmxhZ3MgfD0gQVRB
+X1RGTEFHX0xCQTsKPiAtCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0Zi0+
+bGJhaCA9IDB4MDsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHRmLT5sYmFt
+ID0gMHgwOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdGYtPmxiYWwgPSAw
+eDA7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0Zi0+ZGV2aWNlIHw9IEFU
+QV9MQkE7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB9IGVsc2Ugewo+IC0gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogQ0hTICovCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCB0Zi0+bGJhbCA9IDB4MTsgLyogc2VjdCAqLwo+IC0gwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgdGYtPmxiYW0gPSAweDA7IC8qIGN5bCBsb3cgKi8KPiAtIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHRmLT5sYmFoID0gMHgwOyAvKiBjeWwgaGlnaCAq
+Lwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+IC0KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IHRmLT5jb21tYW5kID0gQVRBX0NNRF9WRVJJRlk7IMKgIC8qIFJFQUQgVkVSSUZZICovCj4gKyDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBkZXYtPmxpbmstPmVoX2luZm8uZGV2X2FjdGlvbltkZXYtPmRl
+dm5vXSB8PSBBVEFfRUhfVkVSSUZZOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYXRhX3BvcnRf
+c2NoZWR1bGVfZWgoZGV2LT5saW5rLT5hcCk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBnb3Rv
+IHNraXA7Cj4gwqAgwqAgwqAgwqB9IGVsc2Ugewo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgLyog
+U29tZSBvZGQgY2xvd24gQklPU2VuIGlzc3VlIHNwaW5kb3duIG9uIHBvd2VyIG9mZiAoQUNQSSBT
+NAo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICogb3IgUzUpIGNhdXNpbmcgc29tZSBkcml2ZXMg
+dG8gc3BpbiB1cCBhbmQgZG93biBhZ2Fpbi4KClRoaXMgcmVhbGx5IGJyZWFrcyB0aGUgbW9kZWwg
+d2hlcmUgd2UgYXJlIHNpbXBseSBwZXJmb3JtaW5nIGEKdHJhbnNsYXRpb24gLS0gd2hlcmUgcXVl
+dWVpbmcgYW5kIGV4ZWN1dGlvbiBvZiB0aGUgdHJhbnNsYXRlZCBxYyBpcwprZXB0IHNlcGFyYXRl
+IGZyb20gdGhlIFNDU0ktPkFUQSB0cmFuc2xhdGlvbiBpdHNlbGYuCgpUaGUgYWJvdmUgY29kZSBz
+aG91bGQgYmUgbGVmdCBhcy1pcywgZXhjZXB0IHBlcmhhcHMgaXQgY291bGQgc2V0IGEKJ3Zlcmlm
+eScgZmxhZyBpbiB0aGUgcWMsIHdoaWNoIHdvdWxkIHRoZW4gdHJpZ2dlciB0aGUgRUggYmVoYXZp
+b3IgeW91CnNlZWsuCgogICAgIEplZmYK
