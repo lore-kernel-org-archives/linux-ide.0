@@ -1,14 +1,16 @@
 From: mkl0301@gmail.com
-Subject: [PATCH v3 0/2] add CNS3xxx AHCI support
-Date: Fri,  7 Jan 2011 01:53:11 +0800
-Message-ID: <1294336393-920-1-git-send-email-mkl0301@gmail.com>
+Subject: [PATCH v3 1/2] ahci_platform: switch to module device table matching
+Date: Fri,  7 Jan 2011 01:53:12 +0800
+Message-ID: <1294336393-920-2-git-send-email-mkl0301@gmail.com>
+References: <1294336393-920-1-git-send-email-mkl0301@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:53352 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030Ab1AFRxW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 12:53:22 -0500
-Received: by yxt3 with SMTP id 3so6511074yxt.19
-        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2011 09:53:22 -0800 (PST)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:64819 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751686Ab1AFRxa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 12:53:30 -0500
+Received: by gyb11 with SMTP id 11so6226303gyb.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2011 09:53:30 -0800 (PST)
+In-Reply-To: <1294336393-920-1-git-send-email-mkl0301@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: cbouatmailru@gmail.com, htejun@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
@@ -16,23 +18,68 @@ Cc: Mac Lin <mkl0301@gmail.com>
 
 From: Mac Lin <mkl0301@gmail.com>
 
-v3:
- - Make the SoC-specific changes into ahci_platform.c directly.
- - Some cosmetic code changes
+Switch the driver to use module device table matching mechanism to add SoC-specific parts to the generic driver.
 
-v2: http://www.spinics.net/lists/linux-ide/msg39766.html
- - Switch ahci_platform to module device table matching to add SoC specific support
+Signed-off-by: Mac Lin <mkl0301@gmail.com>
+---
+ drivers/ata/ahci_platform.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-v1: http://www.spinics.net/lists/arm-kernel/msg106236.html
- - Add CNS3xxx SoC specific AHCI support
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 6fef1fa..25d98c8 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -19,6 +19,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/device.h>
+ #include <linux/platform_device.h>
++#include <linux/mod_devicetable.h>
+ #include <linux/libata.h>
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
+@@ -29,6 +30,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ 
+ static int __init ahci_probe(struct platform_device *pdev)
+ {
++	const struct platform_device_id *platid = platform_get_device_id(pdev);
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev->platform_data;
+ 	struct ata_port_info pi = {
+@@ -46,6 +48,9 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	int i;
+ 	int rc;
+ 
++	if (!pdata && platid && platid->driver_data)
++		pdata = (void *)platid->driver_data;
++
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!mem) {
+ 		dev_err(dev, "no mmio space\n");
+@@ -171,12 +176,19 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct platform_device_id ahci_pltfm_ids[] = {
++	{ "ahci", },
++	{ },
++};
++MODULE_DEVICE_TABLE(platform, ahci_pltfm_ids);
++
+ static struct platform_driver ahci_driver = {
+ 	.remove = __devexit_p(ahci_remove),
+ 	.driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 	},
++	.id_table	= ahci_pltfm_ids,
+ };
+ 
+ static int __init ahci_init(void)
+@@ -194,4 +206,3 @@ module_exit(ahci_exit);
+ MODULE_DESCRIPTION("AHCI SATA platform driver");
+ MODULE_AUTHOR("Anton Vorontsov <avorontsov@ru.mvista.com>");
+ MODULE_LICENSE("GPL");
+-MODULE_ALIAS("platform:ahci");
+-- 
+1.7.3
 
-This patchset is based on linux-2.6.37
-
-Mac Lin (2):
-      ahci_platform: switch to module device table matching
-      ahci_platform: add support for CNS3xxx SoC devices
-
- arch/arm/mach-cns3xxx/devices.c |    2 +-
- drivers/ata/Kconfig             |   11 ++++++++
- drivers/ata/ahci_platform.c     |   52 ++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 63 insertions(+), 2 deletions(-)
