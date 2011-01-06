@@ -1,83 +1,108 @@
-From: Stephen Clark <sclark46@earthlink.net>
-Subject: Re: Kernel 2.6.37 erroneously limiting to UDMA/33
-Date: Thu, 06 Jan 2011 10:29:30 -0500
-Message-ID: <4D25DFDA.8010909@earthlink.net>
-References: <20110106103035.GA3484@rhlx01.hs-esslingen.de>
-Reply-To: sclark46@earthlink.net
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Adding runtime PM support to sata_mv driver
+Date: Thu, 6 Jan 2011 10:40:31 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1101061018250.1916-100000@iolanthe.rowland.org>
+References: <20110106045309.GD19416@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-scoter.atl.sa.earthlink.net ([209.86.89.67]:52756 "EHLO
-	elasmtp-scoter.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753035Ab1AFP3d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 10:29:33 -0500
-In-Reply-To: <20110106103035.GA3484@rhlx01.hs-esslingen.de>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40657 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753036Ab1AFPkd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 10:40:33 -0500
+In-Reply-To: <20110106045309.GD19416@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andreas Mohr <andi@lisas.de>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Priyanka Gupta <ankaguptaca@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org
 
-On 01/06/2011 05:30 AM, Andreas Mohr wrote:
-> Hi,
->
-> Robert Hancock wrote:
->    
->> On 01/05/2011 12:33 PM, Stephen Clark wrote:
->>      
->>> Hello,
->>>
->>> Why is the kernel limiting me to udma/33 when the device says it can do
->>> ata2.01: CFA: TRANSCEND, 20070831, max UDMA/66
->>>
->>> There is no cable the compact flash is a socket on the motherboard!
->>>        
->> The kernel has no way to know that, and presumably the board isn't
->> connecting the signal for IDE pin 34 to ground in order to properly
->> signal that an 80-wire cable (or equivalent) is connected so that speeds
->> over UDMA33 can be used.
->>
->> You should be able to use the libata.force=80c option on the kernel
->> command line to override the cable detection.
->>      
-> Further comments for the OP:
->
-> If 80c happens to be correct for this machine (since it's soldered
-> it's quite obvious) and the machine is quite wide-spread, perhaps one needs
-> to add overrides within drivers/ata/pata_via.c/via_cable_detect() functionality,
-> analogous to the ata_piix.c/ich_pata_cable_detect() case where it uses
-> an entire ich_laptop device list to match against,
-> to detect special 80c compatible cases.
->
-> But since pata_via.c has the insightful comment
-> "Perform cable detection. Actually for the VIA case the BIOS
->   already did this for us."
-> it looks like your BIOS might be considered "broken"
-> due to not indicating 80c for such a solder job
-> -->  BIOS upgrade available?
->
->    
-Will check. The machine is an Acrosser AR-M0898B micro box, for use such as
-a firewall, vpn appliance, etc.
-> And perhaps better avoid mentioning a specific kernel in the subject
-> line unless it's a regression (which likely isn't the case here),
-> or write it like "..... (on 2.6.XXX)".
->
->    
-Good point.
+On Wed, 5 Jan 2011, Tejun Heo wrote:
 
-> Andreas Mohr
->
->    
+> > Do you have to worry about a rotating drive that gets its power from
+> > the SATA bus (what happens if that power is suddenly no longer
+> > available because the controller is suspended)?
+> 
+> No, SATA bus doesn't carry any power.  There are some drives (WD
+> mybook) which power down when SATA link goes offline tho and they may
+> spin down/up too often if the controller gets turned off aggressively.
+> Anyways, there are only a handful of them so no big deal.
 
+If you say so.
 
--- 
+The drives we're talking about use the SCSI sd driver, right?  And the 
+libata error handler is invoked by the regular SCSI EH?
 
-"They that give up essential liberty to obtain temporary safety,
-deserve neither liberty nor safety."  (Ben Franklin)
+This means that the call to scsi_autopm_get_host() in
+scsi_error_handler() has to be removed.  I was planning to do that
+while integrating runtime PM into the block layer.  But it will be
+difficult; it will require that every block request sent while the
+device is suspending or resuming be marked with a special request type
+(something like REQ_TYPE_PM_SUSPEND and REQ_TYPE_PM_RESUME, as used
+currently by the IDE driver).  Otherwise the block core will think that
+it's a regular I/O request and will delay it until the device is fully
+powered up again.
 
-"The course of history shows that as a government grows, liberty
-decreases."  (Thomas Jefferson)
+> There are multiple layers of powersaving, so it's a bit complicated.
+> 
+> * Spinning down hard drives: This is difficult to get right, because
+>   spinning up not only consumes quite a bit of power but also involves
+>   significant latency (usually somewhere around or over 10secs) which
+>   can affect the general interactiveness of the system.  Furthermore,
+>   ATA hard drives already have hardware features to control this so
+>   implementing this in software again could be a bit silly.  Another
+>   danger is that hardware standby and STANDBYNOW issued by OS may
+>   interact weirdly.  Some (too many) drives would spin up to just spin
+>   down again if they receieve STANDBYNOW while already spun down.
 
+These are not new problems.  The SCSI disk driver has to cope with them 
+already during system suspend.
 
+> * SATA link: This is called LPM and basically puts the link into
+>   powersave mode.  Again, there is hardware support for it on both
+>   controller (HIPM) and drive side (DIPM).  I personally think it
+>   should just have been DIPM but well...  Anyways, libata implements
+>   LPM and it's exported via SCSI sysfs.  The support can easily be
+>   extended to allow powering down unused ports.  Given the low latency
+>   dynamic nature of LPM, I'm not sure whether this would fit software
+>   runtime PM very well.
+
+I don't know either.  In theory runtime PM can be pretty low latency,
+i.e., usable from within an interrupt handler, if the underlying I/O
+operations can be carried out without blocking.
+
+> * SATA port/controller: This currently isn't implemented and could fit
+>   software runtime PM but for offline ports at least it can also be
+>   achieved using LPM support.  Not quite sure which way would be
+>   better.  It would be much nicer to integrate everything into the
+>   runtime PM framework but then again LPM doesn't really fit it.  If
+>   powering off occupied controllers has enough benefits, it definitely
+>   makes sense to implement it in the runtime PM framework but then we
+>   end up with separate LPM and runtime PM impelmentations.  Maybe it's
+>   inevitable.  I don't know.
+
+It might be a good idea to step back and think about what form the 
+final implementation should take.  At this point we may not have enough 
+information to do that, however.
+
+> > I don't know.  Certainly for runtime suspend it is necessary to put a
+> > PCI device into D3hot.  For system suspend it might not be necessary,
+> > depending on the platform.
+> 
+> Omitting pci_set_power_state() on system suspend may be an
+> alternative.  Again, I don't know.  The code has always been like that
+> and now I'm a bit afraid to change.  BTW, is there any case where
+> putting device into D3hot is necessary before going into system
+> suspend?  Aren't power always cut to the controllers anyway?
+
+I think it depends on the platform.  Non-ACPI systems tend to be 
+different from ACPI-based systems.
+
+> So, yeah, it's not a bit complicated.  If the only goal is to turn off
+> unoccpuied ports, using LPM framework would be the path with the least
+> amount of resistance but whether that is the right thing to do is a
+> different issue.  :-(
+
+For now it might be the easiest.  Runtime PM can be revisited later.
+
+Alan Stern
 
