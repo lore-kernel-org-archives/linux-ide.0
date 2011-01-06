@@ -1,57 +1,44 @@
-From: Andreas Mohr <andi@lisas.de>
-Subject: Re: Kernel 2.6.37 erroneously limiting to UDMA/33
-Date: Thu, 6 Jan 2011 11:30:35 +0100
-Message-ID: <20110106103035.GA3484@rhlx01.hs-esslingen.de>
-References: <4D2503B1.4080500@gmail.com>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: Re: [PATCH v2 0/3] add CNS3xxx AHCI support
+Date: Thu, 6 Jan 2011 13:51:57 +0300
+Message-ID: <20110106105157.GA9560@oksana.dev.rtsoft.ru>
+References: <1294206187-11487-1-git-send-email-mkl0301@gmail.com>
+ <4D24B53C.4020009@pobox.com>
+ <AANLkTinxNtzpzUn0=-iph_N7tffM6Nu++J9qNNhcp8pX@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:39425 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034Ab1AFKwE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 05:52:04 -0500
+Received: by ewy5 with SMTP id 5so7275401ewy.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2011 02:52:02 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <4D2503B1.4080500@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: sclark46@earthlink.net, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+In-Reply-To: <AANLkTinxNtzpzUn0=-iph_N7tffM6Nu++J9qNNhcp8pX@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lin Mac <mkl0301@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-Hi,
+On Thu, Jan 06, 2011 at 02:43:08PM +0800, Lin Mac wrote:
+[...]
+> > It is overkill to rename the entirety of ahci_platform just for one override
+> > function.
+> > This sort of thing I would have expected to be added directly to
+> > ahci_platform.c.
+> It might be overkill for only one controller. but it is more clean and
+> readable to have different SoC specific changes in separate files,
+> especially when more SoCs need to make similar changes.
 
-Robert Hancock wrote:
-> On 01/05/2011 12:33 PM, Stephen Clark wrote:
-> > Hello,
-> >
-> > Why is the kernel limiting me to udma/33 when the device says it can do
-> > ata2.01: CFA: TRANSCEND, 20070831, max UDMA/66
-> >
-> > There is no cable the compact flash is a socket on the motherboard!
-> 
-> The kernel has no way to know that, and presumably the board isn't 
-> connecting the signal for IDE pin 34 to ground in order to properly 
-> signal that an 80-wire cable (or equivalent) is connected so that speeds 
-> over UDMA33 can be used.
-> 
-> You should be able to use the libata.force=80c option on the kernel 
-> command line to override the cable detection.
+I think that renaming the file is not necessary. You can just
+rename the module in the makefile.
 
-Further comments for the OP:
+Personally I like the current approach more than putting
+controller-specific fixups directly into ahci_platform.
 
-If 80c happens to be correct for this machine (since it's soldered
-it's quite obvious) and the machine is quite wide-spread, perhaps one needs
-to add overrides within drivers/ata/pata_via.c/via_cable_detect() functionality,
-analogous to the ata_piix.c/ich_pata_cable_detect() case where it uses
-an entire ich_laptop device list to match against,
-to detect special 80c compatible cases.
+Thanks,
 
-But since pata_via.c has the insightful comment
-"Perform cable detection. Actually for the VIA case the BIOS
- already did this for us."
-it looks like your BIOS might be considered "broken"
-due to not indicating 80c for such a solder job
---> BIOS upgrade available?
-
-
-
-And perhaps better avoid mentioning a specific kernel in the subject
-line unless it's a regression (which likely isn't the case here),
-or write it like "..... (on 2.6.XXX)".
-
-Andreas Mohr
+-- 
+Anton Vorontsov
+Email: cbouatmailru@gmail.com
