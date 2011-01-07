@@ -1,48 +1,65 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI support Port Multiplier problem.
-Date: Fri, 7 Jan 2011 16:25:37 -0500
-Message-ID: <20110107212537.GH7355@mtj.dyndns.org>
-References: <134052.7990.qm@web74212.mail.tp2.yahoo.com>
+Subject: Re: [RFC][PATCH] spinlock: Kill spin_unlock_wait()
+Date: Fri, 7 Jan 2011 16:33:02 -0500
+Message-ID: <20110107213302.GI7355@mtj.dyndns.org>
+References: <AANLkTikGBsh0-QTe9CA2gwDtwzpdMi+fbDsTEKiJAL0P@mail.gmail.com>
+ <1294054362.2016.74.camel@laptop>
+ <20110104064542.GF3402@amd>
+ <1294254867.2016.281.camel@laptop>
+ <AANLkTi=URmD1GYqp+PfVf6rc0tXvRnAQG808LMnBRgG1@mail.gmail.com>
+ <1294306353.2016.304.camel@laptop>
+ <20110106103841.GA3493@amd>
+ <1294338395.2016.381.camel@laptop>
+ <20110107210152.GG7355@mtj.dyndns.org>
+ <AANLkTimA9VKO2bW0PtAVKhYdJ_cRi7mpsAC_QDZwrvAM@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40027 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:54793 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176Ab1AGVZl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 16:25:41 -0500
-Received: by vws16 with SMTP id 16so7290082vws.19
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jan 2011 13:25:41 -0800 (PST)
+	with ESMTP id S1751725Ab1AGVdG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 16:33:06 -0500
 Content-Disposition: inline
-In-Reply-To: <134052.7990.qm@web74212.mail.tp2.yahoo.com>
+In-Reply-To: <AANLkTimA9VKO2bW0PtAVKhYdJ_cRi7mpsAC_QDZwrvAM@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Luo Dislo <dislo_b_j@yahoo.com.tw>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, Nick Piggin <npiggin@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, Frank Rowand <frank.rowand@am.sony.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Mike Galbraith <efault@gmx.de>, Oleg Nesterov <oleg@redhat.com>, Paul Turner <pjt@google.com>, Jens Axboe <axboe@kernel.dk>, Yong Zhang <yong.zhang0@gmail.com>, linux-kernel@vger.kernel.org, Jeremy Fitzhardinge <jeremy@goop.org>, Linux-Arch <linux-arch@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
+Hello, Jeff.
 
-On Fri, Jan 07, 2011 at 10:55:14AM +0800, Luo Dislo wrote:
-> I am using AHCI driver, when CONFIG_SATA_PMP is set and the ahci
-> driver DOES NOT have AHCI_HFLAG_NO_PMP. Libata sends Software Reset
-> with PMP=0xF, trying to detect if Port Multiplier connected to the
-> port. Unfortunately, if I plugged in general Hard drive, my
-> controller failed to identify the hard drive.
-> 
-> What I observed was that libata always sent Software Reset with
-> PMP=0xF and I guessed expecting signature is 0x96690101. I think
-> libata should give up if the device does not return the Port
-> Multiplier signature at the first time and take the signature value
-> from device as the real device connnecting to the port now.
->
-> What we said "support" PMP does not mean the port can only connnect
-> to Port Multiplier. It might connect with hard drive or ATAPI
-> device.
+On Fri, Jan 07, 2011 at 04:13:53PM -0500, Jeff Garzik wrote:
+> > Hmm... I think the ->eng_timeout path is already dead. =A0We no lon=
+ger
+> > have any in-kernel implementation, so killing spin_unlock_wait()
+> > should be fine. =A0I'll follow up with removal of the unused callba=
+ck.
+>=20
+> Unfortunately...  libsas continues to avoid the new EH :(
+>=20
+> It's a hairy mess to untangle, too.  libata does proper error handlin=
+g
+> of ATA device errors, notably NCQ error handling, which libsas sorely
+> misses.  But libata new EH assumes a bit too much about "owning" the
+> entirety of the EH process.  These assumptions are proper for wholly
+> ATA drivers (drivers/ata/*) where new EH can drive the EH process, bu=
+t
+> in the SAS situation, a phy in SATA mode is simply a subset of a
+> larger set of EH conditions that must be handled.
+>=20
+> Thus libsas uses the ancient libata hook ->phy_reset and lacks ->erro=
+r_handler.
+>=20
+> I think libata's old-EH path is entirely SAS-specific at this point.
 
-Which controller is this?  Can you please post the output of "lspci
--nn"?  SB600 had this problem and needed workaround but later SBs
-fixed it.  Looks like someone else screwed up similarly.
+Hmm... but they don't use ata_scsi_error() and ->eng_timeout() at all,
+no?  We can't remove phy_reset() and need to keep the silly "if
+(->error_handler)" tests around but should be able to remove those
+from ata_scsi_error() and other EH routines, at least.  Am I missing
+something?
 
 Thanks.
 
--- 
+--=20
 tejun
