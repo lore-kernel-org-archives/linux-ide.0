@@ -1,65 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC][PATCH] spinlock: Kill spin_unlock_wait()
-Date: Fri, 7 Jan 2011 16:33:02 -0500
-Message-ID: <20110107213302.GI7355@mtj.dyndns.org>
-References: <AANLkTikGBsh0-QTe9CA2gwDtwzpdMi+fbDsTEKiJAL0P@mail.gmail.com>
- <1294054362.2016.74.camel@laptop>
- <20110104064542.GF3402@amd>
- <1294254867.2016.281.camel@laptop>
- <AANLkTi=URmD1GYqp+PfVf6rc0tXvRnAQG808LMnBRgG1@mail.gmail.com>
- <1294306353.2016.304.camel@laptop>
- <20110106103841.GA3493@amd>
- <1294338395.2016.381.camel@laptop>
- <20110107210152.GG7355@mtj.dyndns.org>
- <AANLkTimA9VKO2bW0PtAVKhYdJ_cRi7mpsAC_QDZwrvAM@mail.gmail.com>
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
+Date: Fri, 7 Jan 2011 14:37:41 -0800
+Message-ID: <20110107143741.7b2b2a8d@jbarnes-desktop>
+References: <1294327066-23518-1-git-send-email-jslaby@suse.cz>
+	<201101061224.40596.bjorn.helgaas@hp.com>
+	<4D277B33.1000508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54793 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab1AGVdG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 16:33:06 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTimA9VKO2bW0PtAVKhYdJ_cRi7mpsAC_QDZwrvAM@mail.gmail.com>
+Received: from cpoproxy2-pub.bluehost.com ([67.222.39.38]:41492 "HELO
+	cpoproxy2-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753875Ab1AGWho (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 17:37:44 -0500
+In-Reply-To: <4D277B33.1000508@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Peter Zijlstra <a.p.zijlstra@chello.nl>, Nick Piggin <npiggin@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>, Chris Mason <chris.mason@oracle.com>, Frank Rowand <frank.rowand@am.sony.com>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Mike Galbraith <efault@gmx.de>, Oleg Nesterov <oleg@redhat.com>, Paul Turner <pjt@google.com>, Jens Axboe <axboe@kernel.dk>, Yong Zhang <yong.zhang0@gmail.com>, linux-kernel@vger.kernel.org, Jeremy Fitzhardinge <jeremy@goop.org>, Linux-Arch <linux-arch@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, Jiri Slaby <jslaby@suse.cz>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
 
-Hello, Jeff.
+On Fri, 07 Jan 2011 21:44:35 +0100
+Jiri Slaby <jirislaby@gmail.com> wrote:
 
-On Fri, Jan 07, 2011 at 04:13:53PM -0500, Jeff Garzik wrote:
-> > Hmm... I think the ->eng_timeout path is already dead. =A0We no lon=
-ger
-> > have any in-kernel implementation, so killing spin_unlock_wait()
-> > should be fine. =A0I'll follow up with removal of the unused callba=
-ck.
->=20
-> Unfortunately...  libsas continues to avoid the new EH :(
->=20
-> It's a hairy mess to untangle, too.  libata does proper error handlin=
-g
-> of ATA device errors, notably NCQ error handling, which libsas sorely
-> misses.  But libata new EH assumes a bit too much about "owning" the
-> entirety of the EH process.  These assumptions are proper for wholly
-> ATA drivers (drivers/ata/*) where new EH can drive the EH process, bu=
-t
-> in the SAS situation, a phy in SATA mode is simply a subset of a
-> larger set of EH conditions that must be handled.
->=20
-> Thus libsas uses the ancient libata hook ->phy_reset and lacks ->erro=
-r_handler.
->=20
-> I think libata's old-EH path is entirely SAS-specific at this point.
+> On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
+> > Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in a
+> > generic way via namespace devices or something in the static tables.
+> > Is that generic information missing, or is it there and Linux is
+> > ignoring it?  If we're ignoring it, I'd rather fix that.
+> 
+> It works for most boxes I would say. Try to google for "claimed by ICH4
+> ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-407f.
+> 
+> > The main reason for claiming I/O regions is to keep us from placing
+> > another device on top of them.  But we've had PCIBIOS_MIN_IO = 0x1000
+> > forever, which should keep us from putting anything below that anyway
+> > (at least for PCI devices).  So there must be some other reason for
+> > claiming space in this quirk.
+> 
+> Anyway, this ACPI space may be below 0x1000 as can be seen above. From
+> the ICH standard, it can be anywhere...
 
-Hmm... but they don't use ata_scsi_error() and ->eng_timeout() at all,
-no?  We can't remove phy_reset() and need to keep the silly "if
-(->error_handler)" tests around but should be able to remove those
-from ata_scsi_error() and other EH routines, at least.  Am I missing
-something?
+Is there some other resource we should be considering to avoid this
+space?
 
-Thanks.
+And we know it won't work if we try to use the IDE controller in the
+LPC allocated space?  Have you checked the ICH4 specs to see what the
+decode rules are on this space?  I guess LPC has priority and doesn't
+forward requests through to IDE?
 
---=20
-tejun
+Either way, it would be good to understand this issue a little better
+before we start restricting the LPC space like this.
+
+Thanks,
+-- 
+Jesse Barnes, Intel Open Source Technology Center
