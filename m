@@ -1,373 +1,97 @@
-From: Tom Denchfield <td_denchfield@yahoo.com>
-Subject: Re: CF Card Adapter White List Candidate
-Date: Fri, 7 Jan 2011 08:51:13 -0800 (PST)
-Message-ID: <845423.62876.qm@web112007.mail.gq1.yahoo.com>
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
+Date: Fri, 07 Jan 2011 21:22:35 +0200
+Message-ID: <4D2767FB.5060706@iki.fi>
+References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org> <4CF55A4B.1020402@iki.fi> <4CFE8EE2.1060908@iki.fi> <4CFF67B6.7090805@kernel.org> <4CFFC9D0.2090803@garzik.org> <4CFFCAE3.1090106@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------060402070009010508030706"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm5.bullet.mail.sp2.yahoo.com ([98.139.91.75]:36527 "HELO
-	nm5.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754447Ab1AGQvP convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Jan 2011 11:51:15 -0500
+Received: from saarni.dnainternet.net ([83.102.40.136]:49337 "EHLO
+	saarni.dnainternet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752484Ab1AGTWm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 14:22:42 -0500
+In-Reply-To: <4CFFCAE3.1090106@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
 
-Robert, yes, the IDE socket missing pin was # 20, the Key needed for 80=
--conductor IDE cables, as you stated below.=A0 I had to take the adapte=
-r out so I carefully looked at it and compared it to a photograph on a =
-pin-out Internet site.
+This is a multi-part message in MIME format.
+--------------060402070009010508030706
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I also looked at an enlarged photo of the laptop CF card adapter pictur=
-ed in URL03, and counted 44 pins - at least counting from the bottom of=
- the socket.
+On 08.12.2010 20:13, Tejun Heo wrote:
+> Hello,
 
-I notice that the dmesg output in my Wednesday, January 5, 2011 11:33 P=
-M email to you guys has been removed from you response below.  I realiz=
-e that you need to keep emails shorter than those that I write, but I t=
-hink that the dmesg demonstrates that my particular CF card adapter is =
-indeed capable of being forced (libata.force=3D80c) to UDMA/66 even tho=
-ugh it is not (economically) feasible to insert a 80-wire IDE cable bet=
-ween the CF card adapter and the IDE socket on a desktop computer's mot=
-herboard.
+Hello!
 
-Robert, again thank you for helping me, and I hope that I may have cont=
-ributed at least a little bit of useful information.
+> On 12/08/2010 07:09 PM, Jeff Garzik wrote:
+>>> I'm not completely comfortable with going ahead with the patch tho.
+>>> It probably is okay but it's still a shot in the dark.  Is there
+>>> anyone with marvell contact?
+>>
+>> I have docs for most Marvell models, but not this one; and no
+>> contacts...  Presumably it is some variant of their existing Marvell
+>> AHCI line of chips, but beyond that, you and I are both just
+>> guessing.
+> 
+> Eh, well, in that case as it's a fix one way or the other,
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Thanks.
 
-Tom
+Ping? This regression fix doesn't seem to be applied in any tree yet.
 
+Attached again, just in case.
 
---- On Thu, 1/6/11, Robert Hancock <hancockrwd@gmail.com> wrote:
+-- 
+Anssi Hannula
 
-> From: Robert Hancock <hancockrwd@gmail.com>
-> Subject: Re: CF Card Adapter White List Candidate
-> To: "Tom Denchfield" <td_denchfield@yahoo.com>
-> Cc: "Tejun Heo" <htejun@gmail.com>, linux-ide@vger.kernel.org
-> Date: Thursday, January 6, 2011, 10:22 PM
-> On Wed, Jan 5, 2011 at 11:33 PM, Tom
-> Denchfield <td_denchfield@yahoo.com>
-> wrote:
-> > The reason that I mentioned powering my CF adapter
-> with a floppy drive power plug is that the first time I
-> booted after inserting the adapter, I forgot to plug the
-> floppy drive power plug into the adapter.=A0 The adapter's
-> power on LED did not light, and I think that Ubuntu did not
-> see the CF card.
-> >
-> > The reason that I mentioned the pin that was
-> intentionally left out of the motherboard IDE socket was
-> that I thought that the missing pin might have had something
-> to do with needing to power the adapter with the floppy
-> drive power plug given my experience with forgetting to plug
-> the floppy power plug into the adapter as mentioned in the
-> previous paragraph.
-> >
-> > The pin that is missing from the motherboard IDE
-> socket is very close to the middle of the IDE socket.=A0 My
-> guess is that the pin is in the in the range #18 to #24.=A0
-> It is far away from pin #34.=A0 I am going by memory here,
-> but I clearly remember that the missing pin is in the
-> middle.=A0 Pin #34 is going into the CF card adapter when I
-> insert it.=A0 I do not know whether pin #34 is grounded at
-> the mainboard.
->=20
-> If it's pin 20, that's a key pin that's always missing and
-> which has
-> the corresponding hole filled in on the cable side (from
-> compliant
-> connectors, anyway), to prevent plugging in the cable the
-> wrong way
-> around.
->=20
-> Not sure where the adapter would be potentially drawing
-> power from on
-> the IDE connector - as far as I know there aren't any pins
-> on a
-> standard IDE connector which provide continuous power. The
-> adapters
-> I've seen all use an extra power connector.
->=20
-> >
-> > When I asked my question, before I noticed and paid
-> any real attention to the UDMA/100 CF card configured as
-> UDMA/100 in URL03 above, I was concerned that there might be
-> a UDMA/66 speed limit with the type of CF card adapter that
-> I have. =A0We may never know for sure until someone who has a
-> CF card that is faster than UDMA/66 tries it in the URL01
-> adapter with Linux and the libata.force=3D80c boot parameter.
-> >
-> > Robert, thank you for helping me. =A0I hope that my
-> additional comments and the information above will
-> contribute to further Linux kernel development.
-> >
-> > Tom
-> >
-> > --- On Wed, 1/5/11, Robert Hancock <hancockrwd@gmail.com>
-> wrote:
-> >
-> >> From: Robert Hancock <hancockrwd@gmail.com>
-> >> Subject: Re: CF Card Adapter White List Candidate
-> >> To: "Tom Denchfield" <td_denchfield@yahoo.com>
-> >> Cc: "Tejun Heo" <htejun@gmail.com>,
-> linux-ide@vger.kernel.org
-> >> Date: Wednesday, January 5, 2011, 5:47 PM
-> >> On Wed, Jan 5, 2011 at 12:18 PM, Tom
-> >> Denchfield <td_denchfield@yahoo.com>
-> >> wrote:
-> >> > Hello,
-> >> >
-> >> > Tejun, this CF card adapter plugs directly
-> into an IDE
-> >> socket (Channel 0, in my case) on a desktop
-> computer
-> >> motherboard.=A0 You can see a picture of the
-> adapter in the
-> >> following URL01:
-> >> >
-> >> > URL01: http://preview.tinyurl.com/233u92u
-> >> >
-> >> > I have to power the adapter with a floppy
-> drive power
-> >> plug because my motherboard's IDE sockets were
-> intentionally
-> >> manufactured without the pin that could have
-> supplied power
-> >> through an IDE cable.
-> >> >
-> >> > Does anyone have a top of the head opinion as
-> to
-> >> whether there are inherent usage limitations in
-> either this
-> >> passive CF card adapter and/or in the Linux kernel
-> used with
-> >> Ubuntu v10.10 that would prevent users with CF
-> cards faster
-> >> than UDMA/66 (see URL02 below) from being
-> configured by
-> >> Linux to work at speeds above UDMA/66? =A0The
-> reason that I
-> >> ask this question is that I bought both my UDMA/66
-> CF card
-> >> and the adapter from the URL01 seller.=A0 It is
-> foreseeable
-> >> that a lot of customers might have purchased
-> faster CF cards
-> >> envisioning that they would work at speeds higher
-> than
-> >> UDMA/66 with the adapter.=A0 The 'Technical
-> Details' section
-> >> of URL01 does not state anything about UDMA speed
-> usage
-> >> limitations.
-> >> >
-> >> > URL02: http://www.hjreggel.net/cardspeed/index.html
-> >> >
-> >> > I think that there are CF card adapters on
-> eBay that
-> >> are similar to the one pictured in URL01 above,
-> and there
-> >> are also IDE adapters that will hold two CF
-> cards.
-> >>
-> >> The reason the speed is being limited to 33 is
-> that the
-> >> cable
-> >> detection code is detecting that an 80-wire cable
-> doesn't
-> >> appear to be
-> >> connected. In order for an 80-wire cable to be
-> detected,
-> >> pin 34 on the
-> >> cable is supposed to be grounded at the
-> motherboard end. In
-> >> the case
-> >> of this adapter, since it plugs directly into the
-> >> motherboard, it
-> >> would have to be grounding pin 34 to get an
-> 80-wire
-> >> detection, but
-> >> presumably it's not.
-> >>
-> >> >
-> >> > Tom
-> >> >
-> >> > --- On Wed, 1/5/11, Tejun Heo <htejun@gmail.com>
-> >> wrote:
-> >> >
-> >> >> From: Tejun Heo <htejun@gmail.com>
-> >> >> Subject: Re: CF Card Adapter White List
-> Candidate
-> >> >> To: "Robert Hancock" <hancockrwd@gmail.com>
-> >> >> Cc: "Tom Denchfield" <td_denchfield@yahoo.com>,
-> >> linux-ide@vger.kernel.org
-> >> >> Date: Wednesday, January 5, 2011, 5:51
-> AM
-> >> >> Hello,
-> >> >>
-> >> >> On Tue, Jan 04, 2011 at 10:19:17PM -0600,
-> Robert
-> >> Hancock
-> >> >> wrote:
-> >> >> > On 01/04/2011 04:18 PM, Tom
-> Denchfield
-> >> wrote:
-> >> >> >> As you further recommended, in
-> an attempt
-> >> to get
-> >> >> the SD-CF-IDE-DI
-> >> >> >> IDE to CF Adapter that holds my
-> CF card
-> >> white
-> >> >> listed, I am
-> >> >> >> submitting the attached
-> >> >> >>
-> >> >>
-> >>
-> libata_force_80c_CF_card_adapter_whitelist_candidate_information.txt
-> >> >> >> file that has the output from
-> executing
-> >> four
-> >> >> terminal commands to
-> >> >> >> hopefully supply enough
-> information to
-> >> get it
-> >> >> whitelisted.
-> >> >>
-> >> >> Thanks.
-> >> >>
-> >> >> >> Although I expect that my RV280
-> Radeon
-> >> 9200 Pro
-> >> >> video card is too
-> >> >> >> old to expend much effort on, it
-> would be
-> >> nice to
-> >> >> also get it
-> >> >> >> whitelisted so that future
-> newbie Linux
-> >> users who
-> >> >> do not know about
-> >> >> >> using the radeon.modeset=3D0
-> parameter on
-> >> the kernel
-> >> >> command line
-> >> >> >> will not be looking at a black
-> screen
-> >> with a
-> >> >> blinking cursor when
-> >> >> >> they attempt to use a LiveCD
-> for
-> >> troubleshooting,
-> >> >> or whatever.
-> >> >> >>
-> >> >> >> I purposely did not include the
-> URL of
-> >> one of the
-> >> >> Internet sites
-> >> >> >> that sells the adapter in this
-> email in
-> >> case this
-> >> >> is a no no.
-> >> >>
-> >> >> I don't think that's a no no unless the
-> intention
-> >> is
-> >> >> commercial.
-> >> >>
-> >> >> >> Tejun, I am not sure that I will
-> have
-> >> either the
-> >> >> time or the
-> >> >> >> interest to learn the
-> intricacies of
-> >> editing
-> >> >> >> http://www.thinkwiki.org/wiki/Compact_Flash_boot_drive
-> >> >> to add
-> >> >> >> libata.force=3D80c to this site in
-> lieu of
-> >> >> force_cbl=3D80: so that
-> >> >> >> fewer people will be asking you
-> >> questions.=A0 I
-> >> >> have a ThinkPad
-> >> >> >> without a HDD plus a laptop
-> adapter that
-> >> will hold
-> >> >> my CF card, but
-> >> >> >> my Think Pad is a lot older than
-> the
-> >> ones
-> >> >> discussed on
-> >> >> >> Compact_Flash_boot_drive.=A0 In
-> addition,
-> >> I did
-> >> >> not see any recent
-> >> >> >> updates to this Internet page,
-> but maybe
-> >> I can
-> >> >> find someone to
-> >> >> >> email who will update this
-> page.
-> >> >>
-> >> >> Yeah, just ping someone.
-> >> >>
-> >> >> > Is there actually any way to
-> identify the
-> >> adapter
-> >> >> automatically?
-> >> >> > AFAIK, these CF-IDE adapters are
-> just
-> >> passive
-> >> >> circuitry and there's
-> >> >> > no way to identify them through
-> software.
-> >> >>
-> >> >> Hmmm... I was thinking this was somehing
-> >> integrated to the
-> >> >> machine (so
-> >> >> the dmidecode), in which case we can
-> combine dmi +
-> >> pci
-> >> >> function # +
-> >> >> port # to whitelist the device, which we
-> already
-> >> do for
-> >> >> some type of
-> >> >> quirks.=A0 If it's a plug in device, we
-> obviously
-> >> can't
-> >> >> identify it.
-> >> >> Tom, is the CF slot integrated to the
-> machine or
-> >> is it
-> >> >> something you
-> >> >> put into the PCMCIA slot?
-> >> >>
-> >> >> Thanks.
-> >> >>
-> >> >> --
-> >> >> tejun
-> >> >>
-> >> >
-> >> >
-> >> >
-> >> >
-> >>
-> >
-> >
-> >
-> >
-> >
-> >
-> >
-> >
-> >
-> >
-> >
->
+--------------060402070009010508030706
+Content-Type: text/x-patch;
+ name="0001-ahci-do-not-match-the-IDE-interface-of-88SE9128.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-ahci-do-not-match-the-IDE-interface-of-88SE9128.patch"
+
+>From 5e4e904eb78d69528bc3b3ddd39a55579642bfbd Mon Sep 17 00:00:00 2001
+From: Anssi Hannula <anssi.hannula@iki.fi>
+Date: Tue, 30 Nov 2010 03:43:15 +0200
+Subject: [PATCH] ahci: do not match the IDE interface of 88SE9128
+
+Commit 5f173107ecad83a50 added HFLAG_YES_FBS workaround for 88SE9128
+(1b4b:9123).
+
+However, that change inadvertently caused the legacy IDE interface of
+the controller (with the same pci id) to become associated with the AHCI
+driver as well, causing the driver to try to bring the interface up in
+vain.
+
+Fix that by matching against class as well.
+
+Signed-off-by: Anssi Hannula <anssi.hannula@iki.fi>
+---
+ drivers/ata/ahci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3288263..791cf9b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -379,6 +379,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
+ 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+ 	{ PCI_DEVICE(0x1b4b, 0x9123),
++	  .class = PCI_CLASS_STORAGE_SATA_AHCI,
++	  .class_mask = 0xffffff,
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+ 
+ 	/* Promise */
+-- 
+1.7.3
 
 
-
-     =20
+--------------060402070009010508030706--
