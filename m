@@ -1,267 +1,59 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: CF Card Adapter White List Candidate
-Date: Thu, 6 Jan 2011 22:22:04 -0600
-Message-ID: <AANLkTi=u7eqjdY9QWOOgiWK3VMEZwLxVvZjHdreELhV1@mail.gmail.com>
-References: <186863.99156.qm@web112005.mail.gq1.yahoo.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Kernel 2.6.37 erroneously limiting to UDMA/33
+Date: Fri, 07 Jan 2011 06:31:41 -0600
+Message-ID: <4D2707AD.1060406@hardwarefreak.com>
+References: <4D24B98D.6080307@earthlink.net> <4D2503B1.4080500@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36228 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988Ab1AGEWG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jan 2011 23:22:06 -0500
-Received: by iyi12 with SMTP id 12so15476750iyi.19
-        for <linux-ide@vger.kernel.org>; Thu, 06 Jan 2011 20:22:04 -0800 (PST)
-In-Reply-To: <186863.99156.qm@web112005.mail.gq1.yahoo.com>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:55093 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752627Ab1AGMbm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 07:31:42 -0500
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 7C4B46C11C
+	for <linux-ide@vger.kernel.org>; Fri,  7 Jan 2011 06:31:41 -0600 (CST)
+In-Reply-To: <4D2503B1.4080500@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Denchfield <td_denchfield@yahoo.com>
-Cc: Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Jan 5, 2011 at 11:33 PM, Tom Denchfield <td_denchfield@yahoo.co=
-m> wrote:
-> The reason that I mentioned powering my CF adapter with a floppy driv=
-e power plug is that the first time I booted after inserting the adapte=
-r, I forgot to plug the floppy drive power plug into the adapter.=A0 Th=
-e adapter's power on LED did not light, and I think that Ubuntu did not=
- see the CF card.
->
-> The reason that I mentioned the pin that was intentionally left out o=
-f the motherboard IDE socket was that I thought that the missing pin mi=
-ght have had something to do with needing to power the adapter with the=
- floppy drive power plug given my experience with forgetting to plug th=
-e floppy power plug into the adapter as mentioned in the previous parag=
-raph.
->
-> The pin that is missing from the motherboard IDE socket is very close=
- to the middle of the IDE socket.=A0 My guess is that the pin is in the=
- in the range #18 to #24.=A0 It is far away from pin #34.=A0 I am going=
- by memory here, but I clearly remember that the missing pin is in the =
-middle.=A0 Pin #34 is going into the CF card adapter when I insert it.=A0=
- I do not know whether pin #34 is grounded at the mainboard.
-
-If it's pin 20, that's a key pin that's always missing and which has
-the corresponding hole filled in on the cable side (from compliant
-connectors, anyway), to prevent plugging in the cable the wrong way
-around.
-
-Not sure where the adapter would be potentially drawing power from on
-the IDE connector - as far as I know there aren't any pins on a
-standard IDE connector which provide continuous power. The adapters
-I've seen all use an extra power connector.
-
->
-> When I asked my question, before I noticed and paid any real attentio=
-n to the UDMA/100 CF card configured as UDMA/100 in URL03 above, I was =
-concerned that there might be a UDMA/66 speed limit with the type of CF=
- card adapter that I have. =A0We may never know for sure until someone =
-who has a CF card that is faster than UDMA/66 tries it in the URL01 ada=
-pter with Linux and the libata.force=3D80c boot parameter.
->
-> Robert, thank you for helping me. =A0I hope that my additional commen=
-ts and the information above will contribute to further Linux kernel de=
-velopment.
->
-> Tom
->
-> --- On Wed, 1/5/11, Robert Hancock <hancockrwd@gmail.com> wrote:
->
->> From: Robert Hancock <hancockrwd@gmail.com>
->> Subject: Re: CF Card Adapter White List Candidate
->> To: "Tom Denchfield" <td_denchfield@yahoo.com>
->> Cc: "Tejun Heo" <htejun@gmail.com>, linux-ide@vger.kernel.org
->> Date: Wednesday, January 5, 2011, 5:47 PM
->> On Wed, Jan 5, 2011 at 12:18 PM, Tom
->> Denchfield <td_denchfield@yahoo.com>
->> wrote:
->> > Hello,
->> >
->> > Tejun, this CF card adapter plugs directly into an IDE
->> socket (Channel 0, in my case) on a desktop computer
->> motherboard.=A0 You can see a picture of the adapter in the
->> following URL01:
->> >
->> > URL01: http://preview.tinyurl.com/233u92u
->> >
->> > I have to power the adapter with a floppy drive power
->> plug because my motherboard's IDE sockets were intentionally
->> manufactured without the pin that could have supplied power
->> through an IDE cable.
->> >
->> > Does anyone have a top of the head opinion as to
->> whether there are inherent usage limitations in either this
->> passive CF card adapter and/or in the Linux kernel used with
->> Ubuntu v10.10 that would prevent users with CF cards faster
->> than UDMA/66 (see URL02 below) from being configured by
->> Linux to work at speeds above UDMA/66? =A0The reason that I
->> ask this question is that I bought both my UDMA/66 CF card
->> and the adapter from the URL01 seller.=A0 It is foreseeable
->> that a lot of customers might have purchased faster CF cards
->> envisioning that they would work at speeds higher than
->> UDMA/66 with the adapter.=A0 The 'Technical Details' section
->> of URL01 does not state anything about UDMA speed usage
->> limitations.
->> >
->> > URL02: http://www.hjreggel.net/cardspeed/index.html
->> >
->> > I think that there are CF card adapters on eBay that
->> are similar to the one pictured in URL01 above, and there
->> are also IDE adapters that will hold two CF cards.
+Robert Hancock put forth on 1/5/2011 5:50 PM:
+> (CCing linux-ide)
+> 
+> On 01/05/2011 12:33 PM, Stephen Clark wrote:
+>> Hello,
 >>
->> The reason the speed is being limited to 33 is that the
->> cable
->> detection code is detecting that an 80-wire cable doesn't
->> appear to be
->> connected. In order for an 80-wire cable to be detected,
->> pin 34 on the
->> cable is supposed to be grounded at the motherboard end. In
->> the case
->> of this adapter, since it plugs directly into the
->> motherboard, it
->> would have to be grounding pin 34 to get an 80-wire
->> detection, but
->> presumably it's not.
+>> Why is the kernel limiting me to udma/33 when the device says it can do
+>> ata2.01: CFA: TRANSCEND, 20070831, max UDMA/66
 >>
->> >
->> > Tom
->> >
->> > --- On Wed, 1/5/11, Tejun Heo <htejun@gmail.com>
->> wrote:
->> >
->> >> From: Tejun Heo <htejun@gmail.com>
->> >> Subject: Re: CF Card Adapter White List Candidate
->> >> To: "Robert Hancock" <hancockrwd@gmail.com>
->> >> Cc: "Tom Denchfield" <td_denchfield@yahoo.com>,
->> linux-ide@vger.kernel.org
->> >> Date: Wednesday, January 5, 2011, 5:51 AM
->> >> Hello,
->> >>
->> >> On Tue, Jan 04, 2011 at 10:19:17PM -0600, Robert
->> Hancock
->> >> wrote:
->> >> > On 01/04/2011 04:18 PM, Tom Denchfield
->> wrote:
->> >> >> As you further recommended, in an attempt
->> to get
->> >> the SD-CF-IDE-DI
->> >> >> IDE to CF Adapter that holds my CF card
->> white
->> >> listed, I am
->> >> >> submitting the attached
->> >> >>
->> >>
->> libata_force_80c_CF_card_adapter_whitelist_candidate_information.txt
->> >> >> file that has the output from executing
->> four
->> >> terminal commands to
->> >> >> hopefully supply enough information to
->> get it
->> >> whitelisted.
->> >>
->> >> Thanks.
->> >>
->> >> >> Although I expect that my RV280 Radeon
->> 9200 Pro
->> >> video card is too
->> >> >> old to expend much effort on, it would be
->> nice to
->> >> also get it
->> >> >> whitelisted so that future newbie Linux
->> users who
->> >> do not know about
->> >> >> using the radeon.modeset=3D0 parameter on
->> the kernel
->> >> command line
->> >> >> will not be looking at a black screen
->> with a
->> >> blinking cursor when
->> >> >> they attempt to use a LiveCD for
->> troubleshooting,
->> >> or whatever.
->> >> >>
->> >> >> I purposely did not include the URL of
->> one of the
->> >> Internet sites
->> >> >> that sells the adapter in this email in
->> case this
->> >> is a no no.
->> >>
->> >> I don't think that's a no no unless the intention
->> is
->> >> commercial.
->> >>
->> >> >> Tejun, I am not sure that I will have
->> either the
->> >> time or the
->> >> >> interest to learn the intricacies of
->> editing
->> >> >> http://www.thinkwiki.org/wiki/Compact_Flash_boot_drive
->> >> to add
->> >> >> libata.force=3D80c to this site in lieu of
->> >> force_cbl=3D80: so that
->> >> >> fewer people will be asking you
->> questions.=A0 I
->> >> have a ThinkPad
->> >> >> without a HDD plus a laptop adapter that
->> will hold
->> >> my CF card, but
->> >> >> my Think Pad is a lot older than the
->> ones
->> >> discussed on
->> >> >> Compact_Flash_boot_drive.=A0 In addition,
->> I did
->> >> not see any recent
->> >> >> updates to this Internet page, but maybe
->> I can
->> >> find someone to
->> >> >> email who will update this page.
->> >>
->> >> Yeah, just ping someone.
->> >>
->> >> > Is there actually any way to identify the
->> adapter
->> >> automatically?
->> >> > AFAIK, these CF-IDE adapters are just
->> passive
->> >> circuitry and there's
->> >> > no way to identify them through software.
->> >>
->> >> Hmmm... I was thinking this was somehing
->> integrated to the
->> >> machine (so
->> >> the dmidecode), in which case we can combine dmi +
->> pci
->> >> function # +
->> >> port # to whitelist the device, which we already
->> do for
->> >> some type of
->> >> quirks.=A0 If it's a plug in device, we obviously
->> can't
->> >> identify it.
->> >> Tom, is the CF slot integrated to the machine or
->> is it
->> >> something you
->> >> put into the PCMCIA slot?
->> >>
->> >> Thanks.
->> >>
->> >> --
->> >> tejun
->> >>
->> >
->> >
->> >
->> >
->>
->
->
->
->
->
->
->
->
->
->
->
+>> There is no cable the compact flash is a socket on the motherboard!
+
+Make and model of the motherboard?  Is it possible the trace layout
+between the CF socket and the IDE chip on that board doesn't actually
+support UDMA/66, due to noise, cross talk, etc, thus the omission of the
+pin 34 connection?  If we assume the board designer did his job
+correctly, that pin 34 no-connect is there for a reason, and limiting
+you to UDMA/33 was also done for a reason.  Most board designers don't
+just forget specs, or throw them out the window on a whim.  The pin 34
+no-connect was very likely intentional.
+
+> The kernel has no way to know that, and presumably the board isn't
+> connecting the signal for IDE pin 34 to ground in order to properly
+> signal that an 80-wire cable (or equivalent) is connected so that speeds
+> over UDMA33 can be used.
+> 
+> You should be able to use the libata.force=80c option on the kernel
+> command line to override the cable detection.
+
+Stephen, you may want to absolutely verify the board supports UDMA/66 on
+that CF socket before forcing it as to avoid possible data corruption, etc.
+
+Something you didn't note in your original post is whether UDMA/66
+worked with this mobo/cf slot with older kernels, or if the problem
+magically appeared with 2.6.37.  If the latter, forcing UDMA/66 should
+obviously be ok.
+
+-- 
+Stan
