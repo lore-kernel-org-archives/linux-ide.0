@@ -1,28 +1,48 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
 Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Fri, 7 Jan 2011 14:37:41 -0800
-Message-ID: <20110107143741.7b2b2a8d@jbarnes-desktop>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz>
-	<201101061224.40596.bjorn.helgaas@hp.com>
-	<4D277B33.1000508@gmail.com>
+Date: Fri, 7 Jan 2011 16:03:29 -0700
+Message-ID: <201101071603.29999.bjorn.helgaas@hp.com>
+References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101061224.40596.bjorn.helgaas@hp.com> <4D277B33.1000508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpoproxy2-pub.bluehost.com ([67.222.39.38]:41492 "HELO
-	cpoproxy2-pub.bluehost.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753875Ab1AGWho (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 17:37:44 -0500
+Return-path: <linux-pci-owner@vger.kernel.org>
 In-Reply-To: <4D277B33.1000508@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, Jiri Slaby <jslaby@suse.cz>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+Cc: Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+List-Id: linux-ide@vger.kernel.org
 
-On Fri, 07 Jan 2011 21:44:35 +0100
-Jiri Slaby <jirislaby@gmail.com> wrote:
-
+On Friday, January 07, 2011 01:44:35 pm Jiri Slaby wrote:
 > On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
+> > On Thursday, January 06, 2011 08:17:46 am Jiri Slaby wrote:
+
+> Only a novell (opensuse) bugzilla:
+> https://bugzilla.novell.com/show_bug.cgi?id=558740
+> 
+> > Is it a regression?  Sounds like an
+> > old machine where we should have seen this before.)
+> 
+> Yes, a regression. 2.6.31 and newer doesn't work. 2.6.27 did. I don't
+> know what kernel exactly in between is first defunct.
+> 
+> > My guess is that we found this "conflict" and tried to move the
+> > controller, but it's hardwired to stay at 0x170 when in compatibility
+> > mode.  So the hardware is really still at 0x170, but Linux thinks it
+> > moved it elsewhere, so it doesn't work.
+> 
+> Sorry I didn't get this paragraph.
+
+IDE devices are special and are allowed to respond to the legacy
+addresses, e.g., 0x170, even if those addresses don't appear in
+the BARs.  That's why we have the special case in pci_setup_device().
+
+But the code that detects the address space conflict and tries to
+resolve it doesn't know about this hard-wired IDE address decoder.
+Linux tries to move it by writing to a BAR, and that probably has
+no effect on a compatibility-mode IDE device.
+
 > > Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in a
 > > generic way via namespace devices or something in the static tables.
 > > Is that generic information missing, or is it there and Linux is
@@ -30,27 +50,23 @@ Jiri Slaby <jirislaby@gmail.com> wrote:
 > 
 > It works for most boxes I would say. Try to google for "claimed by ICH4
 > ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-407f.
-> 
-> > The main reason for claiming I/O regions is to keep us from placing
-> > another device on top of them.  But we've had PCIBIOS_MIN_IO = 0x1000
-> > forever, which should keep us from putting anything below that anyway
-> > (at least for PCI devices).  So there must be some other reason for
-> > claiming space in this quirk.
-> 
-> Anyway, this ACPI space may be below 0x1000 as can be seen above. From
-> the ICH standard, it can be anywhere...
 
-Is there some other resource we should be considering to avoid this
-space?
+My point is that BIOS should be telling the OS about GPIO/TCO/etc.
+regions via an ACPI mechanism, and, ideally, we would use that rather
+than reading the address out of chipset-dependent registers.
 
-And we know it won't work if we try to use the IDE controller in the
-LPC allocated space?  Have you checked the ICH4 specs to see what the
-decode rules are on this space?  I guess LPC has priority and doesn't
-forward requests through to IDE?
+Even though PMBASE says the ACPI registers occupy 128 bytes from
+0x100-0x17f, it's likely there's no actual conflict between the
+last 16 bytes and the IDE device.
 
-Either way, it would be good to understand this issue a little better
-before we start restricting the LPC space like this.
+ACPI probably reports this region via the FADT (the GPE PM register
+blocks) and possibly a PNP0C02 device.  These will probably report
+something that doesn't conflict with the legacy IDE ports, i.e., a
+subset of the 0x100-0x17f range.
 
-Thanks,
--- 
-Jesse Barnes, Intel Open Source Technology Center
+Ooooh, I notice in the bugzilla that something's wrong with SMBIOS
+(comment 29) and ACPI is disabled because we couldn't find the
+RSDP (dmesg in comment 27).  What sort of machine is this, anyway?
+We didn't find PNPBIOS, either.
+
+Bjorn
