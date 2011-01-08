@@ -1,71 +1,40 @@
-From: Nick Bowler <nbowler@draconx.ca>
-Subject: [PATCH] pata_platform: Remove CONFIG_HAVE_PATA_PLATFORM's dependencies.
-Date: Fri,  7 Jan 2011 21:32:02 -0500
-Message-ID: <1294453922-27602-1-git-send-email-nbowler@draconx.ca>
-References: <20110107224348.GZ31708@n2100.arm.linux.org.uk>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH resend] pata_hpt{37x|3x2n}: SATA mode filtering
+Date: Fri, 07 Jan 2011 22:34:08 -0500
+Message-ID: <4D27DB30.6080201@pobox.com>
+References: <201012252244.02021.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:45607 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779Ab1AHCbV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 21:31:21 -0500
-In-Reply-To: <20110107224348.GZ31708@n2100.arm.linux.org.uk>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:53892 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941Ab1AHDeP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 22:34:15 -0500
+Received: by vws16 with SMTP id 16so7391603vws.19
+        for <linux-ide@vger.kernel.org>; Fri, 07 Jan 2011 19:34:14 -0800 (PST)
+In-Reply-To: <201012252244.02021.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-From: Nick Bowler <nbowler@elliptictech.com>
+On 12/25/2010 02:44 PM, Sergei Shtylyov wrote:
+> The Marvell bridge chips used on HighPoint SATA cards do not seem to support
+> the UltraDMA modes 1, 2, and 3 as well as any MWDMA modes;  these cards are
+> based on HPT372/372A/372N/374 chips (judging from the vendor drivers), so
+> the Linux drivers need to have a mode_filter() method for these chips...
+>
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+>
+> --
+> The patch is against the recent Linus' tree.
+> Resending with the corrected subject...
+>
+>   drivers/ata/pata_hpt37x.c  |   54 ++++++++++++++++++++++++++++++++-------
+>   drivers/ata/pata_hpt3x2n.c |   61 ++++++++++++++++++++++++++++++++++++---------
+>   2 files changed, 93 insertions(+), 22 deletions(-)
 
-CONFIG_HAVE_PATA_PLATFORM, by virtue of where its defined, has a
-dependency on CONFG_ATA and CONFIG_ATA_SFF.  This causes Kconfig
-warnings when it is selected by various architectures, such as
+applied
 
-  warning: (ARCH_VEXPRESS && <choice> || ARCH_RPC && <choice> || MACH_VPAC270 && ARCH_PXA || MACH_REALVIEW_PB11MP && ARCH_REALVIEW || MACH_REALVIEW_PBA8 && ARCH_REALVIEW || MACH_REALVIEW_PBX && ARCH_REALVIEW || MACH_BAST_IDE && ARCH_S3C2410 || MACH_ANUBIS && ARCH_S3C2410) selects HAVE_PATA_PLATFORM which has unmet direct dependencies (ATA && ATA_SFF)
-
-Since this option is only used to control visibility of the
-CONFIG_PATA_PLATFORM option and isn't itself visible in the menu,
-it is straightforward to simply remove these dependencies rather
-than adjust all the architectures.
-
-Signed-off-by: Nick Bowler <nbowler@elliptictech.com>
----
- drivers/ata/Kconfig |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 36e2319..b15254f 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -2,6 +2,14 @@
- # SATA/PATA driver configuration
- #
- 
-+config HAVE_PATA_PLATFORM
-+	bool
-+	help
-+	  This is an internal configuration node for any machine that
-+	  uses pata-platform driver to enable the relevant driver in the
-+	  configuration structure without having to submit endless patches
-+	  to update the PATA_PLATFORM entry.
-+
- menuconfig ATA
- 	tristate "Serial ATA and Parallel ATA drivers"
- 	depends on HAS_IOMEM
-@@ -765,14 +773,6 @@ config PATA_PCMCIA
- 
- 	  If unsure, say N.
- 
--config HAVE_PATA_PLATFORM
--	bool
--	help
--	  This is an internal configuration node for any machine that
--	  uses pata-platform driver to enable the relevant driver in the
--	  configuration structure without having to submit endless patches
--	  to update the PATA_PLATFORM entry.
--
- config PATA_PLATFORM
- 	tristate "Generic platform device PATA support"
- 	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
--- 
-1.7.2.2
 
