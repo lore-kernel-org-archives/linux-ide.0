@@ -1,104 +1,43 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Sat, 08 Jan 2011 10:58:01 +0100
-Message-ID: <4D283529.2090909@gmail.com>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101071603.29999.bjorn.helgaas@hp.com> <4D27A1BC.4080802@gmail.com> <201101071716.38220.bjorn.helgaas@hp.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: Re: CF Card Adapter White List Candidate
+Date: Sat, 08 Jan 2011 13:48:21 +0300
+Message-ID: <4D2840F5.10907@msgid.tls.msk.ru>
+References: <186863.99156.qm@web112005.mail.gq1.yahoo.com> <AANLkTi=u7eqjdY9QWOOgiWK3VMEZwLxVvZjHdreELhV1@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201101071716.38220.bjorn.helgaas@hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from isrv.corpit.ru ([86.62.121.231]:47092 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751230Ab1AHKsY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jan 2011 05:48:24 -0500
+In-Reply-To: <AANLkTi=u7eqjdY9QWOOgiWK3VMEZwLxVvZjHdreELhV1@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Tom Denchfield <td_denchfield@yahoo.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
 
-On 01/08/2011 01:16 AM, Bjorn Helgaas wrote:
-> On Friday, January 07, 2011 04:29:00 pm Jiri Slaby wrote:
->> On 01/08/2011 12:03 AM, Bjorn Helgaas wrote:
->>> On Friday, January 07, 2011 01:44:35 pm Jiri Slaby wrote:
->>>> On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
->>>>> Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in a
->>>>> generic way via namespace devices or something in the static tabl=
-es.
->>>>> Is that generic information missing, or is it there and Linux is
->>>>> ignoring it?  If we're ignoring it, I'd rather fix that.
->>>>
->>>> It works for most boxes I would say. Try to google for "claimed by=
- ICH4
->>>> ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-407f=
-=2E
->>>
->>> My point is that BIOS should be telling the OS about GPIO/TCO/etc.
->>> regions via an ACPI mechanism, and, ideally, we would use that rath=
-er
->>> than reading the address out of chipset-dependent registers.
->>>
->>> Even though PMBASE says the ACPI registers occupy 128 bytes from
->>> 0x100-0x17f, it's likely there's no actual conflict between the
->>> last 16 bytes and the IDE device.
+07.01.2011 07:22, Robert Hancock wrote:
+> On Wed, Jan 5, 2011 at 11:33 PM, Tom Denchfield <td_denchfield@yahoo.com> wrote:
+>> The reason that I mentioned powering my CF adapter with a floppy drive power plug is that the first time I booted after inserting the adapter, I forgot to plug the floppy drive power plug into the adapter.  The adapter's power on LED did not light, and I think that Ubuntu did not see the CF card.
 >>
->> I wouldn't say so. According to the datasheet 0x60-0x7f of the space
->> (i.e. 0x160-0x17f here) is for TCO registers. There:
->> 0x10 -- Software IRQ Generation Register (i.e. 0x170)
->> 0x11-0x1f -- reserved (0x171-0x17f)
+>> The reason that I mentioned the pin that was intentionally left out of the motherboard IDE socket was that I thought that the missing pin might have had something to do with needing to power the adapter with the floppy drive power plug given my experience with forgetting to plug the floppy power plug into the adapter as mentioned in the previous paragraph.
 >>
->> So at least 0x170 should be conflicting. Unless TCO is unused/disabl=
-ed
->> and not mapped there at all. May be that the case?
->=20
-> Maybe.  All your patch does is avoid reserving this 0x100-0x1f7
-> region; it doesn't actually *move* anything.  And the IDE device
-> apparently works at the 0x170 compatibility address.  So the
-> ICH ACPI stuff is still at 0x100-0x17f, so apparently they don't
-> conflict or maybe the ICH ACPI stuff is disabled.  If the box
-> doesn't even have ACPI, I suppose there would be no reason to
-> have the ACPI registers enabled.  Is there something in ICH
-> that tells us whether they're enabled?
+>> The pin that is missing from the motherboard IDE socket is very close to the middle of the IDE socket.  My guess is that the pin is in the in the range #18 to #24.  It is far away from pin #34.  I am going by memory here, but I clearly remember that the missing pin is in the middle.  Pin #34 is going into the CF card adapter when I insert it.  I do not know whether pin #34 is grounded at the mainboard.
+> 
+> If it's pin 20, that's a key pin that's always missing and which has
+> the corresponding hole filled in on the cable side (from compliant
+> connectors, anyway), to prevent plugging in the cable the wrong way
+> around.
+> 
+> Not sure where the adapter would be potentially drawing power from on
+> the IDE connector - as far as I know there aren't any pins on a
+> standard IDE connector which provide continuous power. The adapters
+> I've seen all use an extra power connector.
 
-Hmm, there is:
-bit 4: ACPI Enable (ACPI_EN) =E2=80=94 R/W.
-  0 =3D Disable.
-  1 =3D Decode of the I/O range pointed to by the ACPI Base register is
-enabled, and the ACPI power management function is enabled. Note that
-the APM power management ranges (B2/B3h) are always enabled and are not
-affected by this bit.
+The 20th pin is actually used on some VIA EPIA (mini-itx) motherboards,
+exactly for this purpose: to provide power for CF cards like this.
+Some IDE to CF adaptors can be set up (with a jumper) to ger power
+to the card from there.
 
-at 0x44 in the bridge conf space. So we should definitely check the val=
-ue.
-
-I don't have the actual value in that register when ACPI is disabled in
-BIOS. From the run where acpi=3Doff was passed to the kernel, there is
-0x10 (i.e. ACPI_EN=3D1). However I don't know whether ACPI was disabled=
- in
-BIOS at that time.
-
->>> ACPI probably reports this region via the FADT (the GPE PM register
->>> blocks) and possibly a PNP0C02 device.  These will probably report
->>> something that doesn't conflict with the legacy IDE ports, i.e., a
->>> subset of the 0x100-0x17f range.
->>>
->>> Ooooh, I notice in the bugzilla that something's wrong with SMBIOS
->>> (comment 29) and ACPI is disabled because we couldn't find the
->>> RSDP (dmesg in comment 27).  What sort of machine is this, anyway?
->>> We didn't find PNPBIOS, either.
->>
->> Hmm, it looks like some old crap. What exact information you would l=
-ike
->> to know? I've just asked if ACPI is not disabled in BIOS. There shou=
-ld
->> be no machine without ACPI running still in the 21st century, I thin=
-k.
->=20
-> I'm just wondering if the machine actually does have ACPI, but
-> there's some Linux problem related to finding the tables.  If it's
-> really old enough, that wouldn't be so surprising, but I see USB
-> and gigabit NIC hardware, so it's not truly ancient.
-
-The box is:
-http://www.xembedded.com/content/vme/processors/xvme-690.php
-and has ACPI, but the user disabled ACPI (I don't know why yet).
-
-thanks,
---=20
-js
+/mjt
