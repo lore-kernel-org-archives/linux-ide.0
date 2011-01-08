@@ -1,73 +1,71 @@
-From: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Fri, 7 Jan 2011 17:16:36 -0700
-Message-ID: <201101071716.38220.bjorn.helgaas@hp.com>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101071603.29999.bjorn.helgaas@hp.com> <4D27A1BC.4080802@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4D27A1BC.4080802@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+From: Nick Bowler <nbowler@draconx.ca>
+Subject: [PATCH] pata_platform: Remove CONFIG_HAVE_PATA_PLATFORM's dependencies.
+Date: Fri,  7 Jan 2011 21:32:02 -0500
+Message-ID: <1294453922-27602-1-git-send-email-nbowler@draconx.ca>
+References: <20110107224348.GZ31708@n2100.arm.linux.org.uk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:45607 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab1AHCbV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 21:31:21 -0500
+In-Reply-To: <20110107224348.GZ31708@n2100.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Friday, January 07, 2011 04:29:00 pm Jiri Slaby wrote:
-> On 01/08/2011 12:03 AM, Bjorn Helgaas wrote:
-> > On Friday, January 07, 2011 01:44:35 pm Jiri Slaby wrote:
-> >> On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
-> >>> Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in a
-> >>> generic way via namespace devices or something in the static tables.
-> >>> Is that generic information missing, or is it there and Linux is
-> >>> ignoring it?  If we're ignoring it, I'd rather fix that.
-> >>
-> >> It works for most boxes I would say. Try to google for "claimed by ICH4
-> >> ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-407f.
-> > 
-> > My point is that BIOS should be telling the OS about GPIO/TCO/etc.
-> > regions via an ACPI mechanism, and, ideally, we would use that rather
-> > than reading the address out of chipset-dependent registers.
-> > 
-> > Even though PMBASE says the ACPI registers occupy 128 bytes from
-> > 0x100-0x17f, it's likely there's no actual conflict between the
-> > last 16 bytes and the IDE device.
-> 
-> I wouldn't say so. According to the datasheet 0x60-0x7f of the space
-> (i.e. 0x160-0x17f here) is for TCO registers. There:
-> 0x10 -- Software IRQ Generation Register (i.e. 0x170)
-> 0x11-0x1f -- reserved (0x171-0x17f)
-> 
-> So at least 0x170 should be conflicting. Unless TCO is unused/disabled
-> and not mapped there at all. May be that the case?
+From: Nick Bowler <nbowler@elliptictech.com>
 
-Maybe.  All your patch does is avoid reserving this 0x100-0x1f7
-region; it doesn't actually *move* anything.  And the IDE device
-apparently works at the 0x170 compatibility address.  So the
-ICH ACPI stuff is still at 0x100-0x17f, so apparently they don't
-conflict or maybe the ICH ACPI stuff is disabled.  If the box
-doesn't even have ACPI, I suppose there would be no reason to
-have the ACPI registers enabled.  Is there something in ICH
-that tells us whether they're enabled?
+CONFIG_HAVE_PATA_PLATFORM, by virtue of where its defined, has a
+dependency on CONFG_ATA and CONFIG_ATA_SFF.  This causes Kconfig
+warnings when it is selected by various architectures, such as
 
-> > ACPI probably reports this region via the FADT (the GPE PM register
-> > blocks) and possibly a PNP0C02 device.  These will probably report
-> > something that doesn't conflict with the legacy IDE ports, i.e., a
-> > subset of the 0x100-0x17f range.
-> > 
-> > Ooooh, I notice in the bugzilla that something's wrong with SMBIOS
-> > (comment 29) and ACPI is disabled because we couldn't find the
-> > RSDP (dmesg in comment 27).  What sort of machine is this, anyway?
-> > We didn't find PNPBIOS, either.
-> 
-> Hmm, it looks like some old crap. What exact information you would like
-> to know? I've just asked if ACPI is not disabled in BIOS. There should
-> be no machine without ACPI running still in the 21st century, I think.
+  warning: (ARCH_VEXPRESS && <choice> || ARCH_RPC && <choice> || MACH_VPAC270 && ARCH_PXA || MACH_REALVIEW_PB11MP && ARCH_REALVIEW || MACH_REALVIEW_PBA8 && ARCH_REALVIEW || MACH_REALVIEW_PBX && ARCH_REALVIEW || MACH_BAST_IDE && ARCH_S3C2410 || MACH_ANUBIS && ARCH_S3C2410) selects HAVE_PATA_PLATFORM which has unmet direct dependencies (ATA && ATA_SFF)
 
-I'm just wondering if the machine actually does have ACPI, but
-there's some Linux problem related to finding the tables.  If it's
-really old enough, that wouldn't be so surprising, but I see USB
-and gigabit NIC hardware, so it's not truly ancient.
+Since this option is only used to control visibility of the
+CONFIG_PATA_PLATFORM option and isn't itself visible in the menu,
+it is straightforward to simply remove these dependencies rather
+than adjust all the architectures.
 
-Bjorn
+Signed-off-by: Nick Bowler <nbowler@elliptictech.com>
+---
+ drivers/ata/Kconfig |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 36e2319..b15254f 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -2,6 +2,14 @@
+ # SATA/PATA driver configuration
+ #
+ 
++config HAVE_PATA_PLATFORM
++	bool
++	help
++	  This is an internal configuration node for any machine that
++	  uses pata-platform driver to enable the relevant driver in the
++	  configuration structure without having to submit endless patches
++	  to update the PATA_PLATFORM entry.
++
+ menuconfig ATA
+ 	tristate "Serial ATA and Parallel ATA drivers"
+ 	depends on HAS_IOMEM
+@@ -765,14 +773,6 @@ config PATA_PCMCIA
+ 
+ 	  If unsure, say N.
+ 
+-config HAVE_PATA_PLATFORM
+-	bool
+-	help
+-	  This is an internal configuration node for any machine that
+-	  uses pata-platform driver to enable the relevant driver in the
+-	  configuration structure without having to submit endless patches
+-	  to update the PATA_PLATFORM entry.
+-
+ config PATA_PLATFORM
+ 	tristate "Generic platform device PATA support"
+ 	depends on EMBEDDED || PPC || HAVE_PATA_PLATFORM
+-- 
+1.7.2.2
+
