@@ -1,95 +1,73 @@
-From: Lin Mac <mkl0301@gmail.com>
-Subject: Re: [PATCH v2 0/3] add CNS3xxx AHCI support
-Date: Sat, 8 Jan 2011 07:44:29 +0800
-Message-ID: <AANLkTikMZvCEjd86Rk9dXs4yGhtg0NUcj4BsCgH3XxwF@mail.gmail.com>
-References: <1294206187-11487-1-git-send-email-mkl0301@gmail.com>
-	<4D24B53C.4020009@pobox.com>
-	<AANLkTinxNtzpzUn0=-iph_N7tffM6Nu++J9qNNhcp8pX@mail.gmail.com>
-	<20110106105157.GA9560@oksana.dev.rtsoft.ru>
-	<4D264DA4.6040308@pobox.com>
-	<20110107154714.GA27055@oksana.dev.rtsoft.ru>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
+Date: Fri, 7 Jan 2011 17:16:36 -0700
+Message-ID: <201101071716.38220.bjorn.helgaas@hp.com>
+References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101071603.29999.bjorn.helgaas@hp.com> <4D27A1BC.4080802@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56873 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649Ab1AGXoa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2011 18:44:30 -0500
-Received: by fxm20 with SMTP id 20so17410321fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jan 2011 15:44:29 -0800 (PST)
-In-Reply-To: <20110107154714.GA27055@oksana.dev.rtsoft.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4D27A1BC.4080802@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <cbouatmailru@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-2011/1/7 Anton Vorontsov <cbouatmailru@gmail.com>:
-> On Thu, Jan 06, 2011 at 06:17:56PM -0500, Jeff Garzik wrote:
->> >[...]
->> >>>It is overkill to rename the entirety of ahci_platform just for o=
-ne override
->> >>>function.
->> >>>This sort of thing I would have expected to be added directly to
->> >>>ahci_platform.c.
->> >>It might be overkill for only one controller. but it is more clean=
- and
->> >>readable to have different SoC specific changes in separate files,
->> >>especially when more SoCs need to make similar changes.
->> >
->> >I think that renaming the file is not necessary. You can just
->> >rename the module in the makefile.
->> >
->> >Personally I like the current approach more than putting
->> >controller-specific fixups directly into ahci_platform.
->>
->> My main objection is the renaming. =A0If ahci_platform wants to expo=
-rt
->> some symbols for SoC modules like ahci_platform_cns, that's ok.
->>
->> In general, follow the library approach rather than linking modules
->> together in strange ways.
->
-> In ahci_platform case there's almost nothing to factor out to a
-> library. Each platform just needs its own small "fixups" that we
-> normally pass via platform data.
->
-> We would happily pass them via platform data, and initially Mac
-> did exactly this, see:
->
-> http://ns3.spinics.net/lists/linux-ide/msg39554.html
->
-> You may notice that all platform-specific quirks are in the
-> platform code, which is neat. But there is a problem: once
-> the platform code needs to use libata, then we have to
-> build libata into the kernel (no modules possible), i.e.
->
-> http://ns3.spinics.net/lists/linux-ide/msg39656.html
->
-> It's not something new, we have the same "problem" with SDHCI,
-> USB and plenty other drivers. But the solution is simple, for
-> example see drivers/mmc/host/sdhci-pltfm.c and sdhci-cns3xxx.c
-> (and sdhci-esdhc-imx.c as another example of platform-specific
-> hooks for sdhci-pltfm).
->
-> Of course, we could make full-fledged platform driver just for
-> CNS3xxx, but that's kind of overkill. IMO, it's better to make
-> ahci_platform flexible and suitable for generic use.
+On Friday, January 07, 2011 04:29:00 pm Jiri Slaby wrote:
+> On 01/08/2011 12:03 AM, Bjorn Helgaas wrote:
+> > On Friday, January 07, 2011 01:44:35 pm Jiri Slaby wrote:
+> >> On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
+> >>> Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in a
+> >>> generic way via namespace devices or something in the static tables.
+> >>> Is that generic information missing, or is it there and Linux is
+> >>> ignoring it?  If we're ignoring it, I'd rather fix that.
+> >>
+> >> It works for most boxes I would say. Try to google for "claimed by ICH4
+> >> ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-407f.
+> > 
+> > My point is that BIOS should be telling the OS about GPIO/TCO/etc.
+> > regions via an ACPI mechanism, and, ideally, we would use that rather
+> > than reading the address out of chipset-dependent registers.
+> > 
+> > Even though PMBASE says the ACPI registers occupy 128 bytes from
+> > 0x100-0x17f, it's likely there's no actual conflict between the
+> > last 16 bytes and the IDE device.
+> 
+> I wouldn't say so. According to the datasheet 0x60-0x7f of the space
+> (i.e. 0x160-0x17f here) is for TCO registers. There:
+> 0x10 -- Software IRQ Generation Register (i.e. 0x170)
+> 0x11-0x1f -- reserved (0x171-0x17f)
+> 
+> So at least 0x170 should be conflicting. Unless TCO is unused/disabled
+> and not mapped there at all. May be that the case?
 
-Thanks for explaining all this.
+Maybe.  All your patch does is avoid reserving this 0x100-0x1f7
+region; it doesn't actually *move* anything.  And the IDE device
+apparently works at the 0x170 compatibility address.  So the
+ICH ACPI stuff is still at 0x100-0x17f, so apparently they don't
+conflict or maybe the ICH ACPI stuff is disabled.  If the box
+doesn't even have ACPI, I suppose there would be no reason to
+have the ACPI registers enabled.  Is there something in ICH
+that tells us whether they're enabled?
 
-> As for renaming, I agree that ahci_platform.c file does not
-> need to be renamed, I still think that we could just rename
-> the module (so far it is used only on CNS3xxx platforms, so
-> no big deal even if anybody rely on the module name, which
-> I doubt.)
-Yes, you're right.
-cns3xxx seems like the only platform that uses ahci_platform driver.
-Keeping the same module name is not necessary.
+> > ACPI probably reports this region via the FADT (the GPE PM register
+> > blocks) and possibly a PNP0C02 device.  These will probably report
+> > something that doesn't conflict with the legacy IDE ports, i.e., a
+> > subset of the 0x100-0x17f range.
+> > 
+> > Ooooh, I notice in the bugzilla that something's wrong with SMBIOS
+> > (comment 29) and ACPI is disabled because we couldn't find the
+> > RSDP (dmesg in comment 27).  What sort of machine is this, anyway?
+> > We didn't find PNPBIOS, either.
+> 
+> Hmm, it looks like some old crap. What exact information you would like
+> to know? I've just asked if ACPI is not disabled in BIOS. There should
+> be no machine without ACPI running still in the 21st century, I think.
 
-We could rename the module ahci_platform to ahci_platforms(?), into
-which link ahci_platform and SoC specific changes.
-Is it acceptable?
+I'm just wondering if the machine actually does have ACPI, but
+there's some Linux problem related to finding the tables.  If it's
+really old enough, that wouldn't be so surprising, but I see USB
+and gigabit NIC hardware, so it's not truly ancient.
 
-Best Regards,
-Mac Lin
+Bjorn
