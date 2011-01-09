@@ -1,98 +1,54 @@
-From: Tom Denchfield <td_denchfield@yahoo.com>
-Subject: Re: CF Card Adapter White List Candidate
-Date: Sat, 8 Jan 2011 14:18:12 -0800 (PST)
-Message-ID: <466091.67419.qm@web112006.mail.gq1.yahoo.com>
-References: <4D2840F5.10907@msgid.tls.msk.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: mkl0301@gmail.com
+Subject: [PATCH v4 0/3] add CNS3xxx AHCI support
+Date: Sun,  9 Jan 2011 09:49:32 +0800
+Message-ID: <1294537775-21714-1-git-send-email-mkl0301@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm5.bullet.mail.sp2.yahoo.com ([98.139.91.75]:42537 "HELO
-	nm5.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752019Ab1AHWSN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 8 Jan 2011 17:18:13 -0500
-In-Reply-To: <4D2840F5.10907@msgid.tls.msk.ru>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:54323 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831Ab1AIBtp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Jan 2011 20:49:45 -0500
+Received: by pva4 with SMTP id 4so3240702pva.19
+        for <linux-ide@vger.kernel.org>; Sat, 08 Jan 2011 17:49:45 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
+To: htejun@gmail.com, cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: Mac Lin <mkl0301@gmail.com>
 
-Hello,
+From: Mac Lin <mkl0301@gmail.com>
 
-Michael, this is one of the CF card adapters that has a jumper, JP1, th=
-at has the Pin-20 power source option as you suggest below.  The factor=
-y default position is external power (floppy disk power plug), and the =
-alternative position is: "IDE Pin-20."  The the settings for the three =
-jumpers are on the jumper's printed circuit board under the CF Card.  S=
-orry I didn't look at the one-sheet instruction sheet that I cannot fin=
-d right now, but Michael's email reminded me to look under the CF Card.
+v4:
+ - v2 basically, which make SoC-specific changes into separate files
+ - Rename module ahci_platform to ahci_platforms, into which link the ahci_platform and the SoC-specific changes
+ - No rename of ahci_platform.c
+ - Some cosmetic code changes since v2
 
-Tom=20
+v3: http://www.spinics.net/lists/arm-kernel/msg109924.html
+ - Make the SoC-specific changes into ahci_platform.c directly.
+ - Some cosmetic code changes
+=> ahci_platform.c is less readable due to SoC-specific changes and macro
 
---- On Sat, 1/8/11, Michael Tokarev <mjt@tls.msk.ru> wrote:
+v2: http://www.spinics.net/lists/linux-ide/msg39766.html
+ - Renaming ahci_platform.c to ahci_pltfm.c for linking SoC specific changes into ahci_platform, while not changing the module name.
+ - Switch ahci_platform to module device table matching to add SoC specific support
+ - Add CNS3xxx SoC specific AHCI support to ahci_cns3xxx.c
 
-> From: Michael Tokarev <mjt@tls.msk.ru>
-> Subject: Re: CF Card Adapter White List Candidate
-> To: "Robert Hancock" <hancockrwd@gmail.com>
-> Cc: "Tom Denchfield" <td_denchfield@yahoo.com>, "Tejun Heo" <htejun@g=
-mail.com>, linux-ide@vger.kernel.org
-> Date: Saturday, January 8, 2011, 4:48 AM
-> 07.01.2011 07:22, Robert Hancock
-> wrote:
-> > On Wed, Jan 5, 2011 at 11:33 PM, Tom Denchfield <td_denchfield@yaho=
-o.com>
-> wrote:
-> >> The reason that I mentioned powering my CF adapter
-> with a floppy drive power plug is that the first time I
-> booted after inserting the adapter, I forgot to plug the
-> floppy drive power plug into the adapter.=A0 The
-> adapter's power on LED did not light, and I think that
-> Ubuntu did not see the CF card.
-> >>
-> >> The reason that I mentioned the pin that was
-> intentionally left out of the motherboard IDE socket was
-> that I thought that the missing pin might have had something
-> to do with needing to power the adapter with the floppy
-> drive power plug given my experience with forgetting to plug
-> the floppy power plug into the adapter as mentioned in the
-> previous paragraph.
-> >>
-> >> The pin that is missing from the motherboard IDE
-> socket is very close to the middle of the IDE socket.=A0
-> My guess is that the pin is in the in the range #18 to
-> #24.=A0 It is far away from pin #34.=A0 I am going by
-> memory here, but I clearly remember that the missing pin is
-> in the middle.=A0 Pin #34 is going into the CF card
-> adapter when I insert it.=A0 I do not know whether pin
-> #34 is grounded at the mainboard.
-> >=20
-> > If it's pin 20, that's a key pin that's always missing
-> and which has
-> > the corresponding hole filled in on the cable side
-> (from compliant
-> > connectors, anyway), to prevent plugging in the cable
-> the wrong way
-> > around.
-> >=20
-> > Not sure where the adapter would be potentially
-> drawing power from on
-> > the IDE connector - as far as I know there aren't any
-> pins on a
-> > standard IDE connector which provide continuous power.
-> The adapters
-> > I've seen all use an extra power connector.
->=20
-> The 20th pin is actually used on some VIA EPIA (mini-itx)
-> motherboards,
-> exactly for this purpose: to provide power for CF cards
-> like this.
-> Some IDE to CF adaptors can be set up (with a jumper) to
-> ger power
-> to the card from there.
->=20
-> /mjt
->=20
+v1: http://www.spinics.net/lists/arm-kernel/msg106236.html
+ - Add CNS3xxx SoC specific AHCI support to arch/arm/mach-cns3xxx
+=> The changes depends on libahci and libata, i.e. both of them need to be built into kernel
 
+This patchset is based on linux-2.6.37
 
-     =20
+Mac Lin (3):
+      ahci_platform: rename module ahci_platform to ahci_platforms
+      ahci_platform: switch to module device table matching
+      ahci_platforms: add support for CNS3xxx SoC devices
+
+ arch/arm/mach-cns3xxx/devices.c |    2 +-
+ drivers/ata/Kconfig             |   11 ++++++++
+ drivers/ata/Makefile            |    5 +++-
+ drivers/ata/ahci_cns3xxx.c      |   51 +++++++++++++++++++++++++++++++++++++++
+ drivers/ata/ahci_platform.c     |   17 ++++++++++++-
+ drivers/ata/ahci_platforms.h    |   18 +++++++++++++
+ 6 files changed, 101 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/ata/ahci_cns3xxx.c
+ create mode 100644 drivers/ata/ahci_platforms.h
