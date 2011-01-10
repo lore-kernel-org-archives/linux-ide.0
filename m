@@ -1,28 +1,82 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ide: no need to check for the rq pointer to be NULL
-Date: Mon, 10 Jan 2011 21:03:57 +0300
-Message-ID: <4D2B4A0D.7040102@ru.mvista.com>
-References: <20110109235146.GA5353@white.fsl.cs.sunysb.edu> <4D2AFACB.3040909@ru.mvista.com> <20110110173044.GA3495@white.fsl.cs.sunysb.edu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2 v3] pata_hpt{366|37x}: use pr_warning(...) instead of printk(KERN_WARNING ...)
+Date: Mon, 10 Jan 2011 21:34:27 +0300
+Message-ID: <201101102134.28111.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54565 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754418Ab1AJSFU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 13:05:20 -0500
-Received: by eye27 with SMTP id 27so8721190eye.19
-        for <linux-ide@vger.kernel.org>; Mon, 10 Jan 2011 10:05:19 -0800 (PST)
-In-Reply-To: <20110110173044.GA3495@white.fsl.cs.sunysb.edu>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:35842 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751619Ab1AJSfr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 13:35:47 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vasily Tarasov <sectorsize512@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, davem@davemloft.net, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-Vasily Tarasov wrote:
+... in hpt_dma_blacklisted().
 
-> Ooops, you're right, ide_kill_rq() sets  hwif->rq (and rq in turn) to NULL.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-    Frankly speaking, I don't see where...
+---
+The patch is against the recent Linus' tree plus the patches queued by
+Jeff Garzik in his 'upstream-linus' branch.
 
-WBR, Serge
+Changes from the previous version:
+- added the similar change for the 'pata_hpt37x' driver...
+
+ drivers/ata/pata_hpt366.c |    6 +++---
+ drivers/ata/pata_hpt37x.c |    6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_hpt366.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt366.c
++++ linux-2.6/drivers/ata/pata_hpt366.c
+@@ -25,7 +25,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt366"
+-#define DRV_VERSION	"0.6.9"
++#define DRV_VERSION	"0.6.10"
+ 
+ struct hpt_clock {
+ 	u8	xfer_mode;
+@@ -160,8 +160,8 @@ static int hpt_dma_blacklisted(const str
+ 
+ 	while (list[i] != NULL) {
+ 		if (!strcmp(list[i], model_num)) {
+-			printk(KERN_WARNING DRV_NAME ": %s is not supported for %s.\n",
+-				modestr, list[i]);
++			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
++				   modestr, list[i]);
+ 			return 1;
+ 		}
+ 		i++;
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.18"
++#define DRV_VERSION	"0.6.19"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -229,8 +229,8 @@ static int hpt_dma_blacklisted(const str
+ 
+ 	while (list[i] != NULL) {
+ 		if (!strcmp(list[i], model_num)) {
+-			printk(KERN_WARNING DRV_NAME ": %s is not supported for %s.\n",
+-				modestr, list[i]);
++			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
++				   modestr, list[i]);
+ 			return 1;
+ 		}
+ 		i++;
