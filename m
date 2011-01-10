@@ -1,47 +1,61 @@
-From: "Basheer, Mansoor Ahamed" <mansoor.ahamed@ti.com>
-Subject: RE: [PATCH v5 3/3] ahci_platforms: add support for CNS3xxx SoC
- devices
-Date: Mon, 10 Jan 2011 17:50:51 +0530
-Message-ID: <5A47E75E594F054BAF48C5E4FC4B92AB0373E1D99B__18588.1489575424$1294665418$gmane$org@dbde02.ent.ti.com>
-References: <1294557970-654-1-git-send-email-mkl0301@gmail.com>
- <1294557970-654-4-git-send-email-mkl0301@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2] pata_hpt37x: coding style cleanup
+Date: Mon, 10 Jan 2011 18:45:34 +0300
+Message-ID: <4D2B299E.9000809@ru.mvista.com>
+References: <201101081901.37479.sshtylyov@ru.mvista.com> <4D28C965.8070008@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57339 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753942Ab1AJNQi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 08:16:38 -0500
-In-Reply-To: <1294557970-654-4-git-send-email-mkl0301@gmail.com>
-Content-Language: en-US
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48214 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab1AJPq6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 10:46:58 -0500
+Received: by eye27 with SMTP id 27so8596495eye.19
+        for <linux-ide@vger.kernel.org>; Mon, 10 Jan 2011 07:46:56 -0800 (PST)
+In-Reply-To: <4D28C965.8070008@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "mkl0301@gmail.com" <mkl0301@gmail.com>, "htejun@gmail.com" <htejun@gmail.com>, "cbouatmailru@gmail.com" <cbouatmailru@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm->
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-> From: Mac Lin <mkl0301@gmail.com>
-> 
-> CNS3xxx override the softreset function of ahci_platform
-> ahci_softreset by cns3xxx_ahci_softreset, which would retry
-> ahci_do_softreset again with pmp=0 if
-> pmp=15 failed, for the controller has problem receiving D2H
-> Reg FIS of the different PMP setting of the previous sent H2D Reg FIS.
-> 
+Hello.
 
-Is this issue only with your ahci platform controller? I came across another 
-thread here,
+Jeff Garzik wrote:
 
-http://www.spinics.net/lists/linux-ide/msg39865.html  
+>> Changes from the previous version:
+>> - fixed several cases of a line over 80 chars that checkpatch.pl 
+>> didn't report.
 
-Also, the ahci platform controller on Texas Instruments OMAP L138 platform 
-behaves in a similar fashion. 
+> And for pata_hpt366 you also wrote:
 
-Currently I see only Cavium Networks, Faraday and TI using ahci platform 
-controller and all 3 facing same issue.
+>> Changes from the previous version:
+>> - fixed one case of a line over 80 chars that checkpatch.pl didn't 
+>> report.
 
-Hence, should we fix this in ahci_platform.c conditionally using platform data, 
-otherwise we will end-up adding file for every platform (just for one 
-function). 
+    Looks like checkpatch.pl now doesn't report the lines with printk() messages 
+as being too long, thanks to the previous discussions on the topic. Though those 
+could be made shorter without breaking the messages in this case anyway...
 
-Thanks
-Mansoor Ahamed
+> These will need to be on top of your patches applied last night (and 
+> just sent to Linus).
+
+   I think I will join these changes to the 2 patches that I've generated on 
+Saturday. Looks like the idea of creating v2 of the coding style clean-up 
+patches wasn't really good as those extra long lines would have been truncated 
+by that 2-patch series anyway...
+
+> FWIW, it is ok to combine such changes into a single patch.  You don't 
+> have to separate our pata_hpt37x and pata_hpt366 coding style cleanups. 
+>  The main goal with separate patches is separating classes of changes, 
+> so that human reviewers and 'git bisect' may notice breakage at a 
+> useful, fine-grained level.  Separating patches at the driver boundary 
+> is less useful from that perspective (though permissible, if that is 
+> your preferred method of working).
+
+    I've preferred to give the exact error/warning statistics and the list of 
+changes for each driver in this case.
+
+>     Jeff
+
+WBR, Sergei
