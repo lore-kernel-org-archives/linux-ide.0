@@ -1,156 +1,93 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 2/2 v3] pata_hpt{37x|3x2n}: use pr_*(DRV_NAME ...) instead of printk(KERN_* ...)
-Date: Mon, 10 Jan 2011 21:39:34 +0300
-Message-ID: <201101102139.35078.sshtylyov@ru.mvista.com>
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
+Date: Mon, 10 Jan 2011 11:40:44 -0700
+Message-ID: <201101101140.45501.bjorn.helgaas@hp.com>
+References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101071716.38220.bjorn.helgaas@hp.com> <4D283529.2090909@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:59776 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751619Ab1AJSky (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 13:40:54 -0500
-Content-Disposition: inline
+Received: from g6t0187.atlanta.hp.com ([15.193.32.64]:14989 "EHLO
+	g6t0187.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619Ab1AJSlV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2011 13:41:21 -0500
+In-Reply-To: <4D283529.2090909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
 
-... the same as the 'pata_hpt366' driver does.
+On Saturday, January 08, 2011 02:58:01 am Jiri Slaby wrote:
+> On 01/08/2011 01:16 AM, Bjorn Helgaas wrote:
+> > On Friday, January 07, 2011 04:29:00 pm Jiri Slaby wrote:
+> >> On 01/08/2011 12:03 AM, Bjorn Helgaas wrote:
+> >>> On Friday, January 07, 2011 01:44:35 pm Jiri Slaby wrote:
+> >>>> On 01/06/2011 08:24 PM, Bjorn Helgaas wrote:
+> >>>>> Theoretically, ACPI tells us about the GPIO/TCO/etc. regions in=
+ a
+> >>>>> generic way via namespace devices or something in the static ta=
+bles.
+> >>>>> Is that generic information missing, or is it there and Linux i=
+s
+> >>>>> ignoring it?  If we're ignoring it, I'd rather fix that.
+> >>>>
+> >>>> It works for most boxes I would say. Try to google for "claimed =
+by ICH4
+> >>>> ACPI/GPIO/TCO", it reports sane ranges like 0400-047f or 4000-40=
+7f.
+> >>>
+> >>> My point is that BIOS should be telling the OS about GPIO/TCO/etc=
+=2E
+> >>> regions via an ACPI mechanism, and, ideally, we would use that ra=
+ther
+> >>> than reading the address out of chipset-dependent registers.
+> >>>
+> >>> Even though PMBASE says the ACPI registers occupy 128 bytes from
+> >>> 0x100-0x17f, it's likely there's no actual conflict between the
+> >>> last 16 bytes and the IDE device.
+> >>
+> >> I wouldn't say so. According to the datasheet 0x60-0x7f of the spa=
+ce
+> >> (i.e. 0x160-0x17f here) is for TCO registers. There:
+> >> 0x10 -- Software IRQ Generation Register (i.e. 0x170)
+> >> 0x11-0x1f -- reserved (0x171-0x17f)
+> >>
+> >> So at least 0x170 should be conflicting. Unless TCO is unused/disa=
+bled
+> >> and not mapped there at all. May be that the case?
+> >=20
+> > Maybe.  All your patch does is avoid reserving this 0x100-0x1f7
+> > region; it doesn't actually *move* anything.  And the IDE device
+> > apparently works at the 0x170 compatibility address.  So the
+> > ICH ACPI stuff is still at 0x100-0x17f, so apparently they don't
+> > conflict or maybe the ICH ACPI stuff is disabled.  If the box
+> > doesn't even have ACPI, I suppose there would be no reason to
+> > have the ACPI registers enabled.  Is there something in ICH
+> > that tells us whether they're enabled?
+>=20
+> Hmm, there is:
+> bit 4: ACPI Enable (ACPI_EN) =E2=80=94 R/W.
+>   0 =3D Disable.
+>   1 =3D Decode of the I/O range pointed to by the ACPI Base register =
+is
+> enabled, and the ACPI power management function is enabled. Note that
+> the APM power management ranges (B2/B3h) are always enabled and are n=
+ot
+> affected by this bit.
+>=20
+> at 0x44 in the bridge conf space. So we should definitely check the v=
+alue.
+>=20
+> I don't have the actual value in that register when ACPI is disabled =
+in
+> BIOS. From the run where acpi=3Doff was passed to the kernel, there i=
+s
+> 0x10 (i.e. ACPI_EN=3D1). However I don't know whether ACPI was disabl=
+ed in
+> BIOS at that time.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Checking ACPI_EN before doing anything in the quirk looks like
+the simplest thing (if the BIOS actually sets ACPI_EN=3D0 when
+it disables ACPI).
 
----
-The patch is against the recent Linus' tree plus the patches queued by
-Jeff Garzik in his 'upstream-linus' branch.
-
-Changes from the previous version:
-- moved change in hpt_dma_blacklisted() of the 'pata_hpt37x' driver to patch 1.
-
- drivers/ata/pata_hpt37x.c  |   22 +++++++++++-----------
- drivers/ata/pata_hpt3x2n.c |   12 +++++-------
- 2 files changed, 16 insertions(+), 18 deletions(-)
-
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.19"
-+#define DRV_VERSION	"0.6.20"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -863,7 +863,7 @@ static int hpt37x_init_one(struct pci_de
- 			chip_table = &hpt372;
- 			break;
- 		default:
--			printk(KERN_ERR "pata_hpt37x: Unknown HPT366 subtype, "
-+			pr_err(DRV_NAME ": Unknown HPT366 subtype, "
- 			       "please report (%d).\n", rev);
- 			return -ENODEV;
- 		}
-@@ -906,8 +906,8 @@ static int hpt37x_init_one(struct pci_de
- 				*ppi = &info_hpt374_fn1;
- 			break;
- 		default:
--			printk(KERN_ERR
--			       "pata_hpt37x: PCI table is bogus, please report (%d).\n",
-+			pr_err(DRV_NAME
-+			       ": PCI table is bogus, please report (%d).\n",
- 			       dev->device);
- 				return -ENODEV;
- 		}
-@@ -957,8 +957,7 @@ static int hpt37x_init_one(struct pci_de
- 		u8 sr;
- 		u32 total = 0;
- 
--		printk(KERN_WARNING
--		       "pata_hpt37x: BIOS has not set timing clocks.\n");
-+		pr_warning(DRV_NAME ": BIOS has not set timing clocks.\n");
- 
- 		/* This is the process the HPT371 BIOS is reported to use */
- 		for (i = 0; i < 128; i++) {
-@@ -1014,7 +1013,7 @@ static int hpt37x_init_one(struct pci_de
- 					       (f_high << 16) | f_low | 0x100);
- 		}
- 		if (adjust == 8) {
--			printk(KERN_ERR "pata_hpt37x: DPLL did not stabilize!\n");
-+			pr_err(DRV_NAME ": DPLL did not stabilize!\n");
- 			return -ENODEV;
- 		}
- 		if (dpll == 3)
-@@ -1022,8 +1021,8 @@ static int hpt37x_init_one(struct pci_de
- 		else
- 			private_data = (void *)hpt37x_timings_50;
- 
--		printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using %dMHz DPLL.\n",
--		       MHz[clock_slot], MHz[dpll]);
-+		pr_info(DRV_NAME ": bus clock %dMHz, using %dMHz DPLL.\n",
-+			MHz[clock_slot], MHz[dpll]);
- 	} else {
- 		private_data = (void *)chip_table->clocks[clock_slot];
- 		/*
-@@ -1036,8 +1035,9 @@ static int hpt37x_init_one(struct pci_de
- 			ppi[0] = &info_hpt370_33;
- 		if (clock_slot < 2 && ppi[0] == &info_hpt370a)
- 			ppi[0] = &info_hpt370a_33;
--		printk(KERN_INFO "pata_hpt37x: %s using %dMHz bus clock.\n",
--		       chip_table->name, MHz[clock_slot]);
-+
-+		pr_info(DRV_NAME ": %s using %dMHz bus clock.\n",
-+			chip_table->name, MHz[clock_slot]);
- 	}
- 
- 	/* Now kick off ATA set up */
-Index: linux-2.6/drivers/ata/pata_hpt3x2n.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt3x2n.c
-+++ linux-2.6/drivers/ata/pata_hpt3x2n.c
-@@ -25,7 +25,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt3x2n"
--#define DRV_VERSION	"0.3.13"
-+#define DRV_VERSION	"0.3.14"
- 
- enum {
- 	HPT_PCI_FAST	=	(1 << 31),
-@@ -418,7 +418,7 @@ static int hpt3x2n_pci_clock(struct pci_
- 		u16 sr;
- 		u32 total = 0;
- 
--		printk(KERN_WARNING "pata_hpt3x2n: BIOS clock data not set.\n");
-+		pr_warning(DRV_NAME ": BIOS clock data not set.\n");
- 
- 		/* This is the process the HPT371 BIOS is reported to use */
- 		for (i = 0; i < 128; i++) {
-@@ -528,8 +528,7 @@ hpt372n:
- 		ppi[0] = &info_hpt372n;
- 		break;
- 	default:
--		printk(KERN_ERR
--		       "pata_hpt3x2n: PCI table is bogus please report (%d).\n",
-+		pr_err(DRV_NAME ": PCI table is bogus, please report (%d).\n",
- 		       dev->device);
- 		return -ENODEV;
- 	}
-@@ -579,12 +578,11 @@ hpt372n:
- 		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
- 	}
- 	if (adjust == 8) {
--		printk(KERN_ERR "pata_hpt3x2n: DPLL did not stabilize!\n");
-+		pr_err(DRV_NAME ": DPLL did not stabilize!\n");
- 		return -ENODEV;
- 	}
- 
--	printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using 66MHz DPLL.\n",
--	       pci_mhz);
-+	pr_info(DRV_NAME ": bus clock %dMHz, using 66MHz DPLL.\n", pci_mhz);
- 
- 	/*
- 	 * Set our private data up. We only need a few flags
+Bjorn
