@@ -1,8 +1,8 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: RE: questions regarding possible violation of AHCI spec in AHCI
  driver
-Date: Tue, 11 Jan 2011 19:23:23 +0100
-Message-ID: <20110111182323.GG15933@htj.dyndns.org>
+Date: Tue, 11 Jan 2011 10:55:13 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
 References: <4CFF58D2.4040006@kernel.org>
  <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
  <4CFFCD56.6050608@kernel.org>
@@ -12,20 +12,57 @@ References: <4CFF58D2.4040006@kernel.org>
  <4CFFE29C.7080205@kernel.org>
  <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
  <4D000C8B.5040904@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39439 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932518Ab1AKSX3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 13:23:29 -0500
-Content-Disposition: inline
-In-Reply-To: <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:4130 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932549Ab1AKS5g convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 13:57:36 -0500
+In-Reply-To: <20110111182323.GG15933@htj.dyndns.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jian Peng <jipeng@broadcom.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
+
+Hi, Tejun,
+
+Here is new patch based on your suggestion (against 2.6.37 release)
+
+--- libahci.c.orig	2011-01-11 10:46:56.623991326 -0800
++++ libahci.c	2011-01-11 10:52:19.634036938 -0800
+@@ -542,6 +542,15 @@
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
++	u8 status;
++	
++	status = readl(port_mmio + PORT_TFDATA);
++	if (status & (ATA_BUSY | ATA_DRQ) ||
++	    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
++	    (tmp & 0x0f) != 0x03) {
++		printk(KERN_DEBUG "START bit was not set in %s\n", __func__);
++		return;
++	}	
+ 
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+
+I will test host controller made by other vendors and report issues soon.
+
+Thanks,
+Jian
+
+________________________________________
+From: Tejun Heo [htejun@gmail.com] On Behalf Of Tejun Heo [tj@kernel.org]
+Sent: Tuesday, January 11, 2011 10:23 AM
+To: Jian Peng
+Cc: Robert Hancock; linux-kernel@vger.kernel.org; jgarzik@pobox.com; ide
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
 
 Hello,
 
@@ -37,7 +74,7 @@ Happy new year!
 
 > Here is the sequence that will cause problem if BSY|DRQ and SSTS.DET
 > was not checked in start_engine:
-> 
+>
 > 1. SUD bit was set in ahci_power_up() to start communication between
 >    host and device
 > 2. START bit was set in ahci_start_engine() to prepare for data
@@ -55,11 +92,11 @@ Happy new year!
 >    interface is busy since BSY bit was not cleared, failed here
 >
 > At the end of section 10.1 of AHCI spec (rev 1.3), it states
-> 
+>
 > Software shall not set PxCMD.ST to '1' until it is determined that a
 > functional device is present on the port as determined by
 > PxTFD.STS.BSY = '0', PxTFD.STS.DRQ = '0', and PxSSTS.DET = 3h.
-> 
+>
 > It is likely used to prevent host controller from jumping into wrong
 > state before first FIS was received.
 
@@ -92,5 +129,7 @@ changes and resubmit.
 
 Thank you.
 
--- 
+--
 tejun
+
+
