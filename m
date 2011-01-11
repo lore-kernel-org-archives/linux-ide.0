@@ -1,67 +1,125 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] pata_hpt37x: inherit prereset() method for HPT374
-Date: Tue, 11 Jan 2011 21:01:23 +0300
-Message-ID: <201101112101.23988.sshtylyov@ru.mvista.com>
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: RE: questions regarding possible violation of AHCI spec in AHCI
+ driver
+Date: Tue, 11 Jan 2011 10:09:08 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <E18F441196CA634DB8E1F1C56A50A874319F70C1F2@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFEE569.4030204@gmail.com> <4CFF58D2.4040006@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFCD56.6050608@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>,<4CFFD3EB.10800@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFE29C.7080205@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D000C8B.5040904@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:34860 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753913Ab1AKSCn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 13:02:43 -0500
-Content-Disposition: inline
+Received: from mms1.broadcom.com ([216.31.210.17]:1809 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756246Ab1AKSJY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 13:09:24 -0500
+In-Reply-To: <4D000C8B.5040904@kernel.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: alan@lxorguk.ukuu.org.uk
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
 
-Commit ab81a505ae6be069be5b67acd7e1bab3cfb53968 (pata_hpt37x: unify ->pre_reset
-methods) neglected to remove the initializer for the prereset() method from
-'hpt374_fn1_port_ops' (it's inherited from 'hpt372_port_ops' anyway), as well
-as to update the comment in hpt37x_init_one()...
+Hi, Tejun,
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Happy Holiday! I want to revisit this issue and hopefully get consensus on it asap.
 
----
-The patch is against the recent Linus' tree plus 3 patches that I've posted
-before:
+Here is the sequence that will cause problem if BSY|DRQ and SSTS.DET was not checked in start_engine:
 
-http://marc.info/?l=linux-ide&m=129468455026976
-http://marc.info/?l=linux-ide&m=129468485927420
-http://marc.info/?l=linux-ide&m=129468797632201
+1. SUD bit was set in ahci_power_up() to start communication between host and device
+2. START bit was set in ahci_start_engine() to prepare for data transfer (should check condition and do not set START bit here per spec)
+By the time, host did not receive first FIS so BSY|DRQ was not cleared
+3. inside ahci_hardreset(), call ahci_stop_engine() first, host controller will take time to clean up internal pipeline and transit to idle state
+4. toggle SCTL.DET to reset interface, now COMRESET was not sent since internal state machine stuck at #2 and #3 (per spec), BSY|DRQ bit was not cleared
+5. call ahci_start_engine() again and try to read ID from device but interface is busy since BSY bit was not cleared, failed here
 
- drivers/ata/pata_hpt37x.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+At the end of section 10.1 of AHCI spec (rev 1.3), it states
 
-Index: linux-2.6/drivers/ata/pata_hpt37x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_hpt37x.c
-+++ linux-2.6/drivers/ata/pata_hpt37x.c
-@@ -24,7 +24,7 @@
- #include <linux/libata.h>
- 
- #define DRV_NAME	"pata_hpt37x"
--#define DRV_VERSION	"0.6.21"
-+#define DRV_VERSION	"0.6.22"
- 
- struct hpt_clock {
- 	u8	xfer_speed;
-@@ -642,7 +642,6 @@ static struct ata_port_operations hpt372
- static struct ata_port_operations hpt374_fn1_port_ops = {
- 	.inherits	= &hpt372_port_ops,
- 	.cable_detect	= hpt374_fn1_cable_detect,
--	.prereset	= hpt37x_pre_reset,
- };
- 
- /**
-@@ -803,7 +802,7 @@ static int hpt37x_init_one(struct pci_de
- 		.udma_mask = ATA_UDMA6,
- 		.port_ops = &hpt302_port_ops
- 	};
--	/* HPT374 - UDMA100, function 1 uses different prereset method */
-+	/* HPT374 - UDMA100, function 1 uses different cable_detect method */
- 	static const struct ata_port_info info_hpt374_fn0 = {
- 		.flags = ATA_FLAG_SLAVE_POSS,
- 		.pio_mask = ATA_PIO4,
+Software shall not set PxCMD.ST to '1' until it is determined that a functional device is present on the port
+as determined by PxTFD.STS.BSY = '0', PxTFD.STS.DRQ = '0', and PxSSTS.DET = 3h.
+
+It is likely used to prevent host controller from jumping into wrong state before first FIS was received.
+
+Please review this issue, and let me know how to resolve it by either adopting my previous patch, or creating a new patch.
+
+Thanks,
+Jian
+
+
+Here is my previous patch against 2.6.37-rc3
+
+> 
+> --- libahci.c.orig	2010-12-08 10:42:48.383976763 -0800
+> +++ libahci.c	2010-12-08 10:45:17.495156944 -0800
+> @@ -542,6 +542,13 @@
+>  {
+>  	void __iomem *port_mmio = ahci_port_base(ap);
+>  	u32 tmp;
+> +	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
+> +
+> +	/* avoid race condition per spec (end of section 10.1.2) */
+> +	if (status & (ATA_BUSY | ATA_DRQ) ||
+> +	    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
+> +	    (tmp & 0x0f) != 0x03)
+> +		return;
+>  
+>  	/* start DMA */
+>  	tmp = readl(port_mmio + PORT_CMD);
+
+-----Original Message-----
+From: Tejun Heo [mailto:tj@kernel.org] 
+Sent: Wednesday, December 08, 2010 2:54 PM
+To: Jian Peng
+Cc: Robert Hancock; linux-kernel@vger.kernel.org; jgarzik@pobox.com; ide
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+
+Hello, Jian.
+
+On 12/08/2010 09:09 PM, Jian Peng wrote:
+> The controller may take much longer time to recover in this case,
+> and leads to wrong HW state after stop_engine() inside
+> ahci_hardreset() and cause device type checking failure due to
+> unfinished HW state change and missing D2H FIS after start_engine()
+> again inside ahci_hardreset(). I guess this is the reason why AHCI
+> spec try to emphasize.
+
+I don't necessarily agree there.  The requirement is impossible to
+reliably satisfy to begin with (it's inherently racy) and most specs
+are filled with "the outcome is undefined" when they don't _need_ to
+be well defined.  The hardware can do "eh.. well, whatever, I don't
+know" but shouldn't get lost and fail to react to further
+state-resetting actions.
+
+> Yes, without this change, Broadcom controller will fail due to above
+> reason.
+
+Okay, so, the controller goes bonkers if ST is set when prerequisites
+are not met.  You know that the problem can still happen with the
+proposed change, right?  It's much less likely but definitely can and
+actually is likely to happen once in a blue moon.  It isn't too
+uncommon for link to take some time to stabilize after a PHY event
+(including hardreset) and some devices will end up sending multiple
+D2H Reg FISes in the process with conflicting status.  Also, note that
+the delay between the check and ST setting could be substantial
+especially with parallel probing / booting.
+
+I'm not objecting to the change but you guys probably want to fix the
+controller in following revisions.  If we're gonna make the change,
+I'd like to go with the previous version without the vendor check.
+What is the timeframe for the controller release?  Would it be enough
+to merge the change during 2.6.38-rc1?  After baking it for some time
+in 2.6.38, we can propagate the change back through -stable.
+
+Thanks.
+
+-- 
+tejun
+
+
