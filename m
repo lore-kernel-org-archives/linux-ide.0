@@ -1,38 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI support Port Multiplier problem.
-Date: Tue, 11 Jan 2011 15:39:19 +0100
-Message-ID: <20110111143919.GF30607@htj.dyndns.org>
-References: <20110107212537.GH7355@mtj.dyndns.org>
- <55871.3142.qm@web74203.mail.tp2.yahoo.com>
- <4D2BB855.5070703@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_hpt37x: inherit prereset() method for HPT374
+Date: Tue, 11 Jan 2011 21:01:23 +0300
+Message-ID: <201101112101.23988.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48664 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755469Ab1AKOjY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 09:39:24 -0500
-Received: by bwz15 with SMTP id 15so20145787bwz.19
-        for <linux-ide@vger.kernel.org>; Tue, 11 Jan 2011 06:39:22 -0800 (PST)
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:34860 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753913Ab1AKSCn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 13:02:43 -0500
 Content-Disposition: inline
-In-Reply-To: <4D2BB855.5070703@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Luo Dislo <dislo_b_j@yahoo.com.tw>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-Hello,
+Commit ab81a505ae6be069be5b67acd7e1bab3cfb53968 (pata_hpt37x: unify ->pre_reset
+methods) neglected to remove the initializer for the prereset() method from
+'hpt374_fn1_port_ops' (it's inherited from 'hpt372_port_ops' anyway), as well
+as to update the comment in hpt37x_init_one()...
 
-On Mon, Jan 10, 2011 at 07:54:29PM -0600, Robert Hancock wrote:
-> I suspect that retrying with PMP=0 if the softreset with PMP=15
-> failed to acquire a signature is likely the thing to do.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Of the non-platform ones, sb600 is the only one with this problem and
-the workaround will unnecessarily lengthen response time for other
-controllers.  I'd suggest implementing it as a quirk in libahci.c and
-applying it only to the broken controllers.
+---
+The patch is against the recent Linus' tree plus 3 patches that I've posted
+before:
 
-Thanks.
+http://marc.info/?l=linux-ide&m=129468455026976
+http://marc.info/?l=linux-ide&m=129468485927420
+http://marc.info/?l=linux-ide&m=129468797632201
 
--- 
-tejun
+ drivers/ata/pata_hpt37x.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_hpt37x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_hpt37x.c
++++ linux-2.6/drivers/ata/pata_hpt37x.c
+@@ -24,7 +24,7 @@
+ #include <linux/libata.h>
+ 
+ #define DRV_NAME	"pata_hpt37x"
+-#define DRV_VERSION	"0.6.21"
++#define DRV_VERSION	"0.6.22"
+ 
+ struct hpt_clock {
+ 	u8	xfer_speed;
+@@ -642,7 +642,6 @@ static struct ata_port_operations hpt372
+ static struct ata_port_operations hpt374_fn1_port_ops = {
+ 	.inherits	= &hpt372_port_ops,
+ 	.cable_detect	= hpt374_fn1_cable_detect,
+-	.prereset	= hpt37x_pre_reset,
+ };
+ 
+ /**
+@@ -803,7 +802,7 @@ static int hpt37x_init_one(struct pci_de
+ 		.udma_mask = ATA_UDMA6,
+ 		.port_ops = &hpt302_port_ops
+ 	};
+-	/* HPT374 - UDMA100, function 1 uses different prereset method */
++	/* HPT374 - UDMA100, function 1 uses different cable_detect method */
+ 	static const struct ata_port_info info_hpt374_fn0 = {
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = ATA_PIO4,
