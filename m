@@ -1,54 +1,90 @@
-From: "Jian Peng" <jipeng@broadcom.com>
-Subject: RE: questions regarding possible violation of AHCI spec in AHCI
- driver
-Date: Tue, 11 Jan 2011 16:51:46 -0800
-Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FE61FEE@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <4CFF58D2.4040006@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFCD56.6050608@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFD3EB.10800@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFE29C.7080205@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4D000C8B.5040904@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>
- <20110111182323.GG15933@htj.dyndns.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
- <AANLkTinpWS4yzAoHE5nTPtQ3OAU1SvM1mN2tMjsur8BW@mail.gmail.com>
+From: Luo Dislo <dislo_b_j@yahoo.com.tw>
+Subject: Re: AHCI support Port Multiplier problem.
+Date: Wed, 12 Jan 2011 09:26:38 +0800 (CST)
+Message-ID: <830413.94953.qm@web74215.mail.tp2.yahoo.com>
+References: <20110111143726.GE30607@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4812 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756359Ab1ALAwA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jan 2011 19:52:00 -0500
-In-Reply-To: <AANLkTinpWS4yzAoHE5nTPtQ3OAU1SvM1mN2tMjsur8BW@mail.gmail.com>
-Content-Language: en-US
+Received: from web74215.mail.tp2.yahoo.com ([116.214.12.107]:35646 "HELO
+	web74215.mail.tp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932362Ab1ALB0l convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 11 Jan 2011 20:26:41 -0500
+In-Reply-To: <20110111143726.GE30607@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Harik <harik.attar@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, ide <linux-ide@vger.kernel.org>
-
-Unfortunately, no
-
------Original Message-----
-=46rom: Harik [mailto:harik.attar@gmail.com]=20
-Sent: Tuesday, January 11, 2011 4:46 PM
-To: Jian Peng
-Cc: Tejun Heo; Robert Hancock; linux-kernel@vger.kernel.org; jgarzik@po=
-box.com; ide
-Subject: Re: questions regarding possible violation of AHCI spec in AHC=
-I driver
-
-> + =A0 =A0 =A0 =A0 =A0 (tmp & 0x0f) !=3D 0x03) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_DEBUG "START bit was not se=
-t in %s\n", __func__);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
-> + =A0 =A0 =A0 }
-
-Are there defines for the mask and result that you could use instead of=
- raw hex?
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 
+Thank you. I will take a look the code.
+
+
+Regards,
+Dislo
+--- 11/1/11 (=E4=BA=8C)=EF=BC=8CTejun Heo <tj@kernel.org> =E5=AF=AB=E9=81=
+=93=EF=BC=9A
+
+> =E5=AF=84=E4=BB=B6=E8=80=85: Tejun Heo <tj@kernel.org>
+> =E4=B8=BB=E6=97=A8: Re: AHCI support Port Multiplier problem.
+> =E6=94=B6=E4=BB=B6=E8=80=85: "Luo Dislo" <dislo_b_j@yahoo.com.tw>
+> =E5=89=AF=E6=9C=AC: jgarzik@pobox.com, linux-ide@vger.kernel.org
+> =E6=97=A5=E6=9C=9F: 2011=E5=B9=B41=E6=9C=8811=E6=97=A5,=E4=BA=8C,=E4=B8=
+=8B=E5=8D=8810:37
+> Hi,
+>=20
+> On Mon, Jan 10, 2011 at 09:46:45AM +0800, Luo Dislo wrote:
+> > This is my company(Faraday) implemented AHCI SATA
+> controller. Our=20
+> > controller is not located at PCI bus, but AHB bus(ARM
+> based platform).
+> >=20
+> > However, I modify Linux kernel builtin AHCI
+> driver(ahci.c) to replace
+> > the PCI related code by using platform bus. Just
+> pretty similar way=20
+> > with drivers/ata/ahci_platform.c (Kernel 2.6.35).
+> >=20
+> > I think the problem happens because libata does not
+> give up, keep on=20
+> > expecting the Port Multiplier Signature when we set
+> CONFIG_SATA_PMP=20
+> > to 1.=20
+> >=20
+> > I know how to fix this problem, just add
+> AHCI_HFLAG_NO_PMP to
+> > AHCI_HFLAGS when I connect hard drive to the
+> controller. Meanwhile,
+> > when I want to connect the Port Muliplier to my
+> controller, I need
+> > to remove AHCI_HFLAG_NO_PMP from AHCI_HFLAGS.
+> >=20
+> > I don't think this is a good solution because I have
+> to compile two
+> > version of my code. It does not make sense. We set
+> CONFIG_SATA_PMP
+> > to 1 and inside the driver code DOES NOT have
+> AHCI_HFLAG_NO_PMP just
+> > means that controller support Port Multiplier but the
+> device
+> > connecting to the port might be others type.
+>=20
+> Please take a look at ahci_sb600_softreset() in
+> ahci.c.=C2=A0 The
+> controller had the same problem.=C2=A0 Preferably, please
+> fix your
+> controller but as there are more than one controller with
+> this
+> problem, we probably should implement it as a quirk in
+> libahci.c.
+>=20
+> Thanks.
+>=20
+> --=20
+> tejun
+>=20
+
+
+     =20
