@@ -1,53 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Why is only one command issue per time in AHCI driver?
-Date: Thu, 13 Jan 2011 12:46:46 -0500
-Message-ID: <4D2F3A86.3010503@garzik.org>
-References: <AANLkTin5=NiZn6ZWZ=r-XS0v_Utrf6dpTb_YzCay-PJM@mail.gmail.com>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: PMP and SEMB messages to SEP
+Date: Thu, 13 Jan 2011 20:25:58 +0100
+Message-ID: <20110113192558.GE16039@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:41278 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757334Ab1AMRqu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jan 2011 12:46:50 -0500
-Received: by vws16 with SMTP id 16so697725vws.19
-        for <linux-ide@vger.kernel.org>; Thu, 13 Jan 2011 09:46:49 -0800 (PST)
-In-Reply-To: <AANLkTin5=NiZn6ZWZ=r-XS0v_Utrf6dpTb_YzCay-PJM@mail.gmail.com>
+Received: from MAIL.13thfloor.at ([213.145.232.33]:41371 "EHLO
+	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756632Ab1AMToy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jan 2011 14:44:54 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?576F56eJ6Yie?= <luobingjiun@gmail.com>
-Cc: linux-ide@vger.kernel.org
-
-On 01/13/2011 05:52 AM, =E7=BE=85=E7=A7=89=E9=88=9E wrote:
-> Hello,
->
-> Inside ahci_qc_issue() function, I see that driver always write one b=
-it
-> to Px.CI register even enable the NCQ.
->
-> AHCI allows to fire 32 commands at one time and AHCI driver also
-> claims itself able to queue up to 31 commands.
->
-> Inside ahci.c :
-> static struct scsi_host_template ahci_sht =3D {
->         ATA_NCQ_SHT(DRV_NAME),
->         .can_queue              =3D AHCI_MAX_CMDS - 1,
-> ............
->
-> Why upper layer(Block or SCSI layer) does not fill up as many as poss=
-ible
-> commands into Command List before sending the commands out
-> (Write to Px.CI register)?
-
-The driver successfully executes up to 31 commands at a time, in parall=
-e.
-
-We submit one command at a time to hardware because the block layer=20
-passes commands to us one at a time.
-
-	Jeff
+To: linux-ide@vger.kernel.org
 
 
+I'm currently trying to wrap my head around SEMB and sending
+messages to an attached SEP on some Port Multiplier connected
+via eSATA ...
 
+I found that the AHCI driver supports certain well defined
+messages (for the activity leds) but I'm not sure what they
+actually are, and I have no idea how to utilize them from
+userspace at the moment
+
+Basically what I want to do is the following:
+
+ - attach a Smart Enclosure via I2C to the PMP
+   (the SEP is basically under my control)
+ - retrieve certain values like temperature readings
+   from that Smart Enclosure via the SEMB
+ - send specific 'command' messages to the SEP to
+   control user visible lights on the enclosure
+
+My current Test Setup includes a simple Sil 3726 based PMP
+(Dawicontrol DC-6510 PM) which has a connector for a SEP 
+using I2C (via the SEMB), connected to an eSATA Port which 
+is PMP capable and handles the connected drives quite well.
+
+I had a quick read on the (S)ATA specification regarding
+PMP and sending/retrieving messages from the SEMB, but at
+the moment, I have no clue how to 'map' that to existing? 
+code in the Linux kernel or how that should/could be exposed 
+to userspace ...
+
+Any hints/pointers/information would be greatly appreciated.
+
+Many thanks in advance,
+Herbert 
