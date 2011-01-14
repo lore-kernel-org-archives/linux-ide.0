@@ -1,56 +1,97 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [RFC PATCH 0/3] differentiate between I/O errors
-Date: Thu, 13 Jan 2011 20:15:39 -0500
-Message-ID: <20110114011538.GB21818__9078.07617118142$1294967805$gmane$org@redhat.com>
-References: <20101130225956.GA8882@redhat.com>
- <1291763802-8251-1-git-send-email-snitzer@redhat.com>
- <20101210234036.GA4841@us.ibm.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Why is only one command issue per time in AHCI driver?
+Date: Thu, 13 Jan 2011 23:47:48 -0600
+Message-ID: <4D2FE384.4090405@gmail.com>
+References: <AANLkTin5=NiZn6ZWZ=r-XS0v_Utrf6dpTb_YzCay-PJM@mail.gmail.com>	<4D2F3A86.3010503@garzik.org> <AANLkTikV-VWpy0XKpMUvurp86dRAOWUUNEQP5OkvfCso@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55250 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752343Ab1ANBQN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Jan 2011 20:16:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20101210234036.GA4841@us.ibm.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47338 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751550Ab1ANFru (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jan 2011 00:47:50 -0500
+Received: by iyj18 with SMTP id 18so2216228iyj.19
+        for <linux-ide@vger.kernel.org>; Thu, 13 Jan 2011 21:47:50 -0800 (PST)
+In-Reply-To: <AANLkTikV-VWpy0XKpMUvurp86dRAOWUUNEQP5OkvfCso@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-f
+To: =?UTF-8?B?576F56eJ6Yie?= <luobingjiun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
 
-On Fri, Dec 10 2010 at  6:40pm -0500,
-Malahal Naineni <malahal@us.ibm.com> wrote:
+On 01/13/2011 07:06 PM, =E7=BE=85=E7=A7=89=E9=88=9E wrote:
+> Hi,
+>
+> Yes, what I see is every time scsi_request_fn is called, we can only =
+pop
+> up one request to be dispatched. So, How can we make block layer to
+> pass more than one commands to us? So that we can fill up more
+> commands into the Command List before write Px.CI. I think it might
+> shorten the command interval time.
+>
+> Even I enable the NCQ, I observed that there is only one command to b=
+e
+> executed per time and tag 0 is used.
 
-> Mike Snitzer [snitzer@redhat.com] wrote:
-> > Refreshed Hannes' initial "scsi: Detailed I/O errors" patch against
-> > v2.6.37-rc5.  v2 introduces __scsi_error_from_host_byte to avoid
-> > the duplicate switch statement.  Also a few whitespace and comment
-> > changes.
-> > 
-> > Split DM mpath change out to separate v2 patch; failed discard is now
-> > retryable in the face of a non-target IO error.
-> > 
-> > Added improved block layer's I/O error message (based on the finer
-> > grained I/O error returns afforded by SCSI).
-> > 
-> > Comments/suggestions are welcome.
-> 
-> I did test the Hannes original patch with the latest Linus' git tree! I
-> used scsi_debug to simulate path failures as well as 'Media' failures
-> and it did work as expected. I will test your patches soon.
+That sounds like the I/O pattern doesn't result in any concurrent=20
+transfers being executed. What kind of workload is this running?
 
-Hi Malahal,
+>
+> Is there any possible to change the libata and ahci.c to be able to f=
+ire up
+> more than one commands at one time and report complete multiple to
+> upper layer(SCSI and block layer).
+>
+> Another question, at scsi_adjust_queue_depth() function, why sdev->or=
+dered_tags
+> and sdev->simple_tags value is only 0 or 1 regardless of queue_depth?=
+ What
+> does it mean?
+>
+> Thank you in advance for your explanation.
+>
+>
+>
+> On Fri, Jan 14, 2011 at 1:46 AM, Jeff Garzik<jeff@garzik.org>  wrote:
+>> On 01/13/2011 05:52 AM, =E7=BE=85=E7=A7=89=E9=88=9E wrote:
+>>>
+>>> Hello,
+>>>
+>>> Inside ahci_qc_issue() function, I see that driver always write one=
+ bit
+>>> to Px.CI register even enable the NCQ.
+>>>
+>>> AHCI allows to fire 32 commands at one time and AHCI driver also
+>>> claims itself able to queue up to 31 commands.
+>>>
+>>> Inside ahci.c :
+>>> static struct scsi_host_template ahci_sht =3D {
+>>>         ATA_NCQ_SHT(DRV_NAME),
+>>>         .can_queue              =3D AHCI_MAX_CMDS - 1,
+>>> ............
+>>>
+>>> Why upper layer(Block or SCSI layer) does not fill up as many as po=
+ssible
+>>> commands into Command List before sending the commands out
+>>> (Write to Px.CI register)?
+>>
+>> The driver successfully executes up to 31 commands at a time, in par=
+alle.
+>>
+>> We submit one command at a time to hardware because the block layer =
+passes
+>> commands to us one at a time.
+>>
+>>         Jeff
+>>
+>>
+>>
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-I was wondering if you had any feedback (testing or otherwise) for these
-patches:
-
-https://patchwork.kernel.org/patch/384612/
-https://patchwork.kernel.org/patch/384602/
-https://patchwork.kernel.org/patch/390882/
-
-We haven't heard from Hannes in a bit but I was hoping we could at least
-understand that the few changes I made are agreeable and working as
-expected.
-
-Thanks,
-Mike
