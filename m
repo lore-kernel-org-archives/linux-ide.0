@@ -1,45 +1,85 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Thu, 13 Jan 2011 16:15:20 -0800
-Message-ID: <AANLkTinN40GMRL3bJ7LKDmhCYK1AYZfQ+mVYwxDP1ZQe@mail.gmail.com>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz>
- <201101101140.45501.bjorn.helgaas@hp.com> <4D2ECEDC.4040804@gmail.com> <201101131619.01893.bjorn.helgaas@hp.com>
+From: =?UTF-8?B?576F56eJ6Yie?= <luobingjiun@gmail.com>
+Subject: Re: Why is only one command issue per time in AHCI driver?
+Date: Fri, 14 Jan 2011 09:06:29 +0800
+Message-ID: <AANLkTikV-VWpy0XKpMUvurp86dRAOWUUNEQP5OkvfCso@mail.gmail.com>
+References: <AANLkTin5=NiZn6ZWZ=r-XS0v_Utrf6dpTb_YzCay-PJM@mail.gmail.com>
+	<4D2F3A86.3010503@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <201101131619.01893.bjorn.helgaas@hp.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <bjorn.helgaas@hp.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, Jiri Slaby <jslaby@suse.cz>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:42861 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752343Ab1ANBGa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Jan 2011 20:06:30 -0500
+Received: by wyb28 with SMTP id 28so2351020wyb.19
+        for <linux-ide@vger.kernel.org>; Thu, 13 Jan 2011 17:06:29 -0800 (PST)
+In-Reply-To: <4D2F3A86.3010503@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Jan 13, 2011 at 3:19 PM, Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
+Hi,
+
+Yes, what I see is every time scsi_request_fn is called, we can only po=
+p
+up one request to be dispatched. So, How can we make block layer to
+pass more than one commands to us? So that we can fill up more
+commands into the Command List before write Px.CI. I think it might
+shorten the command interval time.
+
+Even I enable the NCQ, I observed that there is only one command to be
+executed per time and tag 0 is used.
+
+Is there any possible to change the libata and ahci.c to be able to fir=
+e up
+more than one commands at one time and report complete multiple to
+upper layer(SCSI and block layer).
+
+Another question, at scsi_adjust_queue_depth() function, why sdev->orde=
+red_tags
+and sdev->simple_tags value is only 0 or 1 regardless of queue_depth? W=
+hat
+does it mean?
+
+Thank you in advance for your explanation.
+
+
+
+On Fri, Jan 14, 2011 at 1:46 AM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 01/13/2011 05:52 AM, =E7=BE=85=E7=A7=89=E9=88=9E wrote:
+>>
+>> Hello,
+>>
+>> Inside ahci_qc_issue() function, I see that driver always write one =
+bit
+>> to Px.CI register even enable the NCQ.
+>>
+>> AHCI allows to fire 32 commands at one time and AHCI driver also
+>> claims itself able to queue up to 31 commands.
+>>
+>> Inside ahci.c :
+>> static struct scsi_host_template ahci_sht =3D {
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0ATA_NCQ_SHT(DRV_NAME),
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0.can_queue =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0=3D AHCI_MAX_CMDS - 1,
+>> ............
+>>
+>> Why upper layer(Block or SCSI layer) does not fill up as many as pos=
+sible
+>> commands into Command List before sending the commands out
+>> (Write to Px.CI register)?
 >
-> I think we're back to the question of why we have the ICH4 quirk in
-> the first place, and I don't know the answer to that.
-
-Iirc, there were several laptops that didn't have the ACPI region
-mentioned in any of the regular places, and we'd allocate the PCMCIA
-IO region on top of them. The machine would boot, but if anybody ever
-inserted a PCCard into the machine, the first access to the IO region
-would generally just halt it (because it was trying to read the
-PCCard, but the APCI region decodes first, and then the read from that
-usually put the CPU in a sleep state that it would never wake up from
-for obvious reasons).
-
-So we do want the ICH4 quirk.
-
-> Maybe you could make the ICH4 quirk only claim the region if it's
-> above PCIBIOS_MIN_IO, i.e., if it's in the area where we could put
-> another PCI device on top of it?
-
-That may well be the best solution - we'd only mark it reserved if it
-might conflict with a dynamic allocation, and if it conflicts with
-other motherboard resources (like the IDE ports), then we don't know
-what the decode priority is anyway, so..
-
-In this case, it looks like the legacy IDE ports get decoded before
-the dynamic BAR's. Which is not too much of a surprise (fixed
-addresses tend to be the first to get decoded).
-
-                    Linus
+> The driver successfully executes up to 31 commands at a time, in para=
+lle.
+>
+> We submit one command at a time to hardware because the block layer p=
+asses
+> commands to us one at a time.
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Jeff
+>
+>
+>
+>
