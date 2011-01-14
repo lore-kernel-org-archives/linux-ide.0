@@ -1,51 +1,40 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: PMP and SEMB messages to SEP
-Date: Fri, 14 Jan 2011 17:59:57 +0100
-Message-ID: <20110114165957.GH16039@MAIL.13thfloor.at>
-References: <20110113192558.GE16039@MAIL.13thfloor.at> <20110114142018.GA978@htj.dyndns.org>
+Date: Fri, 14 Jan 2011 18:04:07 +0100
+Message-ID: <20110114170407.GE978@htj.dyndns.org>
+References: <20110113192558.GE16039@MAIL.13thfloor.at>
+ <20110114142018.GA978@htj.dyndns.org>
+ <20110114165957.GH16039@MAIL.13thfloor.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:46747 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757177Ab1ANQ76 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jan 2011 11:59:58 -0500
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:33221 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071Ab1ANRET (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jan 2011 12:04:19 -0500
+Received: by yxt3 with SMTP id 3so1201719yxt.19
+        for <linux-ide@vger.kernel.org>; Fri, 14 Jan 2011 09:04:19 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20110114142018.GA978@htj.dyndns.org>
+In-Reply-To: <20110114165957.GH16039@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Herbert Poetzl <herbert@13thfloor.at>
 Cc: linux-ide@vger.kernel.org
 
-On Fri, Jan 14, 2011 at 03:20:18PM +0100, Tejun Heo wrote:
-> Hello,
+Hello,
 
-> On Thu, Jan 13, 2011 at 08:25:58PM +0100, Herbert Poetzl wrote:
-> > I had a quick read on the (S)ATA specification regarding
-> > PMP and sending/retrieving messages from the SEMB, but at
-> > the moment, I have no clue how to 'map' that to existing? 
-> > code in the Linux kernel or how that should/could be exposed 
-> > to userspace ...
+On Fri, Jan 14, 2011 at 05:59:57PM +0100, Herbert Poetzl wrote:
+> > Unfortunately, it hasn't been implemented yet.  
+> 
+> Okay, so any ideas/suggestions how to implement it?
 
-> > Any hints/pointers/information would be greatly appreciated.
+I'll be happy to answer questions / review patches but I don't really
+have much idea how it should be implemented at this point.  I guess
+libata would just serve as transport layer for the enclosure
+management high level driver (there were two variants, IIRC).  There
+also was something added to ahci which is exported through sysfs.
 
-> Unfortunately, it hasn't been implemented yet.  
+Good luck!
 
-Okay, so any ideas/suggestions how to implement it?
-
-> I didn't have access to any SEMB aware device and no one 
-> else worked on it, so...
-
-No problem there, AFAIK, any SiI3726 based PMP should have
-everything required for a SEMB, but most PMP products do not
-add the required header to actually connect it to a SEP
-(at lest the SiI3726 specification says so :)
-
-I have no problem digging into it and doing the testing, but
-of course, all input on how to address this is quite welcome
-
-Thanks in advance,
-Herbert
-
-> -- 
-> tejun
+-- 
+tejun
