@@ -1,83 +1,94 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: training mpath to discern between SCSI errors
-Date: Fri, 14 Jan 2011 08:45:04 +0100
-Message-ID: <4D2FFF00.8020702@suse.de>
-References: <4C7B984E.4070802@suse.de> <4C7B9F14.9080900@mvista.com> <4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com> <4CBC35AE.9050002@suse.de> <20101119031149.GA28455@us.ibm.com> <20101130225956.GA8882@redhat.com> <4D0B31B5.101@suse.de> <20101217140605.GA740@redhat.com> <20110114010948.GA21818@redhat.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: IRQ enable/disable BUG in IDE w/shared IRQs
+Date: Fri, 14 Jan 2011 11:30:40 +0100 (CET)
+Message-ID: <alpine.LFD.2.00.1101141031320.2678@localhost6.localdomain6>
+References: <20110113.233259.157492570.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:55567 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218Ab1ANHit (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Jan 2011 02:38:49 -0500
-In-Reply-To: <20110114010948.GA21818@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110113.233259.157492570.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, marvin@mydatex.cz
 List-Id: linux-ide@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 
-On 01/14/2011 02:09 AM, Mike Snitzer wrote:
-> On Fri, Dec 17 2010 at  9:06am -0500,
-> Mike Snitzer <snitzer@redhat.com> wrote:
->=20
->> On Fri, Dec 17 2010 at  4:47am -0500,
->> Hannes Reinecke <hare@suse.de> wrote:
->>
->>> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
->>>> Hannes,
->>>>
->>>> Any chance you've had time to fold your proposed logging changes i=
-n and
->>>> rebase this patch?  Could you post that updated patch?
->>>>
->>> yes, will be following shortly.
->>>
->>>> I'd like to help see this patch through to inclussion when 2.6.38 =
-merge
->>>> window opens.  I can help with further review, testing and develop=
-ment.
->>>>
->>> Ok, thanks.
->>
->> I took some steps at furthering your work.  Here is the cover letter=
- to
->> the patches I resently sent to dm-devel:
->> https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
->>
->> And here are the patches:
->> https://patchwork.kernel.org/patch/384612/
->> https://patchwork.kernel.org/patch/384602/
->> https://patchwork.kernel.org/patch/390882/
->>
->> Please feel free to change these how ever you see fit but your feedb=
-ack
->> is really appreciated.
->=20
-> Hannes,
->=20
-> Any update?  I'd really like to see this work get upstream ASAP.  I'm
-> doubtful that is possible for 2.6.38 given the merge window is likely=
- to
-> close shortly.
->=20
-Sorry for the late answer; the above patches somehow got lost in my
-various mail folders :-(
+On Thu, 13 Jan 2011, David Miller wrote:
+> As far as I know this issue has been around forever.
+> 
+> The bug report is at:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=16481
+> 
+> The important part of the backtrace is:
+> 
+> [    4.003171] WARNING: at kernel/irq/manage.c:290 __enable_irq+0x2f/0x55()
+>  ...
+> [    4.003176] Unbalanced enable for IRQ 19
+>  ...
+> [    4.003255]  [<c107314d>] ? __enable_irq+0x2f/0x55
+> [    4.003259]  [<c1073415>] ? enable_irq+0x31/0x4c
+> [    4.003270]  [<fb915145>] ? ide_probe_port+0x4b7/0x4de [ide_core]
+> [    4.003280]  [<fb915641>] ? ide_host_register+0x204/0x4e7 [ide_core]
+> 
+> IRQ 19 on this system is shared between the it8213 IDE controller
+> and one of the USB host controllers.
+> 
+> The condition doesn't trigger every time, only some boots, which sort
+> of implies a race.
+> 
+> The function ide_probe_port() will unconditionally do a disable_irq()/
+> enable_irq() around the drive probing sequence.  It does this even if
+> the IRQ has not been registered yet by IDE.
+> 
+> Normally, this is fine, since if the IRQ is not registered then
+> irq_desc->depth is 1 and the disable/enable sequence will behave as
+> essentially a NOP.  If the IRQ is registered by IDE itself, then this
+> sequence would really disable and then re-enable the IRQ.  That's fine
+> too.
+> 
+> But this all falls apart if the IDE interrupt line is shared and one
+> of those other entities does the request_irq() in the middle the
+> enable/disable sequence.
+> 
+> As far as I can tell the bad sequence is:
+> 
+> 	ide_probe_irq			USB host controller driver
+> 
+> 			->depth starts at "1"
+> 
+> 	disable_irq()
+> 	    ->depth now "2"
+> 
+> 					request_irq()
+> 					  ->depth reset to "0"
+> 	enable_irq()
+> 	    ->depth is "0", warning triggers
+> 
+> It would seem that there is an implicit disallowing of playing
+> with the enable/disable state of an IRQ until request_irq() has
+> been by someone first, otherwise the above sequence can trigger.
 
-But yes, the patchset looks okay.
-=46eel free to add my Acked-by: to last two.
+Probably nobody every thought about this :)
+ 
+> The ATA layer doesn't operate this way, it always requests the IRQ
+> before doing anything else wrt. interrupts on it.
+> 
+> I suppose I can change IDE to behave this way too, but the less
+> changes I make to IDE the better and there are also some subtle issues
+> wrt. dynamic IDE probing I need to look into to get this right.
 
-> Regardless, if we could get consensus on this work now and then stage=
- it
-> with James that would be great.
->=20
-Indeed. Will you resend it to linux-scsi or shall I do it?
+We could check for depth > 1 and just decrement depth by one in
+request_irq, but I'm quite reluctant to do so w/o extensive testing.
 
-Cheers,
+OTOH, nested disables should not be the common case either, but who
+knows what legacy stuff will break.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+> I have a hard time believing we've gotten away with this for so long.
+> Maybe it really is that rare to share the IDE interrupts with other
+> stuff?
+
+IIRC, the legacy IDE interrupts were 14/15 and those were never shared.
+
+Thanks,
+
+	tglx
