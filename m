@@ -1,66 +1,109 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Fri, 14 Jan 2011 11:31:16 +0100
-Message-ID: <4D3025F4.6020001@gmail.com>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz> <201101101140.45501.bjorn.helgaas@hp.com> <4D2ECEDC.4040804@gmail.com> <201101131619.01893.bjorn.helgaas@hp.com> <AANLkTinN40GMRL3bJ7LKDmhCYK1AYZfQ+mVYwxDP1ZQe@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: [PATCH option B 2/2] PCI: do not create quirk I/O regions below PCIBIOS_MIN_IO for ICH
+Date: Fri, 14 Jan 2011 11:32:25 +0100
+Message-ID: <1295001146-14910-2-git-send-email-jslaby@suse.cz>
+References: <4D3025F4.6020001@gmail.com>
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinN40GMRL3bJ7LKDmhCYK1AYZfQ+mVYwxDP1ZQe@mail.gmail.com>
+In-Reply-To: <4D3025F4.6020001@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+To: jbarnes@virtuousgeek.org
+Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jirislaby@gmail.com, Bjorn Helgaas <bjorn.helgaas@hp.com>, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 01/14/2011 01:15 AM, Linus Torvalds wrote:
-> On Thu, Jan 13, 2011 at 3:19 PM, Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
->>
->> I think we're back to the question of why we have the ICH4 quirk in
->> the first place, and I don't know the answer to that.
-> 
-> Iirc, there were several laptops that didn't have the ACPI region
-> mentioned in any of the regular places, and we'd allocate the PCMCIA
-> IO region on top of them. The machine would boot, but if anybody ever
-> inserted a PCCard into the machine, the first access to the IO region
-> would generally just halt it (because it was trying to read the
-> PCCard, but the APCI region decodes first, and then the read from that
-> usually put the CPU in a sleep state that it would never wake up from
-> for obvious reasons).
-> 
-> So we do want the ICH4 quirk.
+Some broken BIOSes on ICH4 chipset report an ACPI region which is in
+conflict with legacy IDE ports when ACPI is disabled. Even though the
+regions overlap, IDE ports are working correctly (we cannot find out
+the decoding rules on chipsets).
 
-Yes, this is an "official" way how ICH4 (and later) advertises the region.
+So the only problem is the reported region itself, if we don't reserve
+the region in the quirk everything works as expected.
 
-The original commit says:
-commit df4ba87cfc2239aa85e21178fca35cf6644a6dd1
-Author: Linus Torvalds <torvalds@home.osdl.org>
-Date:   Thu Oct 23 17:52:25 2003 -0700
+This patch avoids reserving any quirk regions below PCIBIOS_MIN_IO
+which is 0x1000. Some regions might be (and are by a fast google
+query) below this border, but the only difference is that they won't
+be reserved anymore. They should still work though the same as before.
 
-    Add a quirk for the Intel ICH-[45] to add special ACPI regions.
+The conflicts look like (1f.0 is bridge, 1f.1 is IDE ctrl):
+pci 0000:00:1f.1: address space collision: [io 0x0170-0x0177] conflicts with 0000:00:1f.0 [io  0x0100-0x017f]
 
-    This fixes resource conflicts due to IO decode that doesn't show
-    up with a normal PCI probe (we do similar quirks for most other
-    chipsets). Without it, the kernel doesn't know about some magic
-    IO decodes for the chips.
+At 0x0100 a 128 bytes long ACPI region is reported in the quirk for
+ICH4. ata_piix then fails to find disks because the IDE legacy ports
+are zeroed:
+ata_piix 0000:00:1f.1: device not available (can't reserve [io 0x0000-0x0007])
 
->> Maybe you could make the ICH4 quirk only claim the region if it's
->> above PCIBIOS_MIN_IO, i.e., if it's in the area where we could put
->> another PCI device on top of it?
-> 
-> That may well be the best solution - we'd only mark it reserved if it
-> might conflict with a dynamic allocation, and if it conflicts with
-> other motherboard resources (like the IDE ports), then we don't know
-> what the decode priority is anyway, so..
-> 
-> In this case, it looks like the legacy IDE ports get decoded before
-> the dynamic BAR's. Which is not too much of a surprise (fixed
-> addresses tend to be the first to get decoded).
+References: https://bugzilla.novell.com/show_bug.cgi?id=558740
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Thomas Renninger <trenn@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/pci/quirks.c |   32 ++++++++++++++++++++++++--------
+ 1 files changed, 24 insertions(+), 8 deletions(-)
 
-I will attach 2 patches for this as a reply. I created 2 variants:
-A is for all quirk
-B is only for ICH4 and ICH6
-
-thanks,
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8db2426..b3ab2f7 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -554,18 +554,30 @@ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
+ 	u32 region;
+ 	u8 enable;
+ 
++	/*
++	 * The check for PCIBIOS_MIN_IO is to ensure we won't create a conflict
++	 * with low legacy (and fixed) ports. We don't know the decoding
++	 * priority and can't tell whether the legacy device or the one created
++	 * here is really at that address.  This happens on boards with broken
++	 * BIOSes.
++	*/
++
+ 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+ 	if (enable & ICH4_ACPI_EN) {
+ 		pci_read_config_dword(dev, ICH_PMBASE, &region);
+-		quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+-				"ICH4 ACPI/GPIO/TCO");
++		region &= PCI_BASE_ADDRESS_IO_MASK;
++		if (region >= PCIBIOS_MIN_IO)
++			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
++					"ICH4 ACPI/GPIO/TCO");
+ 	}
+ 
+ 	pci_read_config_byte(dev, ICH4_GPIO_CNTL, &enable);
+ 	if (enable & ICH4_GPIO_EN) {
+ 		pci_read_config_dword(dev, ICH4_GPIOBASE, &region);
+-		quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES + 1,
+-				"ICH4 GPIO");
++		region &= PCI_BASE_ADDRESS_IO_MASK;
++		if (region >= PCIBIOS_MIN_IO)
++			quirk_io_region(dev, region, 64,
++					PCI_BRIDGE_RESOURCES + 1, "ICH4 GPIO");
+ 	}
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,    PCI_DEVICE_ID_INTEL_82801AA_0,		quirk_ich4_lpc_acpi);
+@@ -587,15 +599,19 @@ static void __devinit ich6_lpc_acpi_gpio(struct pci_dev *dev)
+ 	pci_read_config_byte(dev, ICH_ACPI_CNTL, &enable);
+ 	if (enable & ICH6_ACPI_EN) {
+ 		pci_read_config_dword(dev, ICH_PMBASE, &region);
+-		quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+-				"ICH6 ACPI/GPIO/TCO");
++		region &= PCI_BASE_ADDRESS_IO_MASK;
++		if (region >= PCIBIOS_MIN_IO)
++			quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
++					"ICH6 ACPI/GPIO/TCO");
+ 	}
+ 
+ 	pci_read_config_byte(dev, ICH6_GPIO_CNTL, &enable);
+ 	if (enable & ICH4_GPIO_EN) {
+ 		pci_read_config_dword(dev, ICH6_GPIOBASE, &region);
+-		quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES + 1,
+-				"ICH6 GPIO");
++		region &= PCI_BASE_ADDRESS_IO_MASK;
++		if (region >= PCIBIOS_MIN_IO)
++			quirk_io_region(dev, region, 64,
++					PCI_BRIDGE_RESOURCES + 1, "ICH6 GPIO");
+ 	}
+ }
+ 
 -- 
-js
+1.7.3.4
