@@ -1,90 +1,149 @@
-From: Pierre Ossman <pierre-list@ossman.eu>
-Subject: Re: Strange read data corruption on ext4/LVM/md
-Date: Sun, 16 Jan 2011 15:01:54 +0100
-Message-ID: <20110116150154.127ea8b1@mjolnir.ossman.eu>
-References: <20100519225653.1fedb453@mjolnir.ossman.eu>
-	<20100519230426.47c6c1ed@mjolnir.ossman.eu>
-	<20100519232906.3be82279@mjolnir.ossman.eu>
-	<20100519233408.7436bd9b@mjolnir.ossman.eu>
-	<20100520091429.192d560c@mjolnir.ossman.eu>
-	<4BF4F979.4070903@kernel.org>
-	<20100520112945.61bf9705@mjolnir.ossman.eu>
-	<4BF50405.4070706@kernel.org>
-	<20100520122227.16ea1cbc@mjolnir.ossman.eu>
-	<20100520160049.1528772b@mjolnir.ossman.eu>
-	<20100520182852.58f504fb@mjolnir.ossman.eu>
-	<20100715213801.627f095a@mjolnir.ossman.eu>
+From: Marc MERLIN <marc@merlins.org>
+Subject: PMP SMART error recovery and failure code decoding help
+Date: Sun, 16 Jan 2011 08:39:50 -0800
+Message-ID: <20110116163950.GA691@merlins.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA256; protocol="application/pgp-signature"; boundary="=_freyr.ossman.eu-28819-1295186517-0001-2"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 82-117-125-11.tcdsl.calypso.net ([82.117.125.11]:60661 "EHLO
-	smtp.ossman.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752764Ab1APOHD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 16 Jan 2011 09:07:03 -0500
-In-Reply-To: <20100715213801.627f095a@mjolnir.ossman.eu>
+Received: from magic.merlins.org ([209.81.13.136]:60844 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992Ab1APRJk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Jan 2011 12:09:40 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-This is a MIME-formatted message.  If you see this text it means that your
-E-mail software does not support MIME-formatted messages.
+I have 2 sets of 5 drives being a PMP.
 
---=_freyr.ossman.eu-28819-1295186517-0001-2
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+- 2.6.36.0 kernel
+- sata_sil24 card
+- Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
 
-On Thu, 15 Jul 2010 21:38:01 +0200
-Pierre Ossman <pierre-list@ossman.eu> wrote:
+All 10 are outputting errors on a schedule after being queried by some Smart tool
+(I have hddtemp and smartmontools at least).
 
->=20
-> Status update:
->=20
-> 1. Putting the other sil3132 controller did not make any problems
-> appear.
->=20
-> 2. Next I swapped that controller with the one next to it to test if
-> this specific board design in combination with this specific slot was
-> causing the issues. Still no corruption.
->=20
-> 3. Today I put the "bad" controller back in, but in a different slot.
-> Still not seeing any issues.
->=20
-> I could move it back to the inital slot to see if the problem
-> reappears, but I'm just happy the system is error free again so I'll
-> write this off as a temporary glitch or a bad combination of card and
-> slot.
->=20
+Error is:
+ata10.02: failed command: SMART
+ata10.02: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata10.02: status: { DRDY }
 
-Time for an update to this somewhat old thread. The problem has
-remained, but being so very rare that I cannot reproduce it often
-enough for systematic testing. Both motherboard and the "bad"
-controller have been swapped out with different (but identical) cards.
+I think it's due to a script that I wrote that uses hdparm -y to spin
+drives down after an idle period (because at least 5 of my drives, WDC
+WD20EADS, have stupid green firmware that prevents auto spindowns with
+hdparm -S).
+My swdisksusp script is at:
+http://marc.merlins.org/perso/linux/post_2010-08-03_Spinning-Down-WD20EADS-Drives-and-Fixing-Load-Cycle.html
 
-These days there are some controller cards based on Marvell's 88SE9128,
-which seems to be a decent chip. So the next step is chucking all the
-sil3132 stuff in favour of those...
+Anyway, the problem happens with both drives that I manually spin down and
+drives that spin down on their own. I think it's not actually a 'real',
+error but more an issue where drives cannot answer some SMART error when
+they are spun down.
+That said, is it normal/expected for the PMP code to do a full bus reset
+because of a SMART command that couldn't go through?
 
-Rgds
---=20
-     -- Pierre Ossman
+Thanks,
+Marc
 
-  WARNING: This correspondence is being monitored by FRA, a
-  Swedish intelligence agency. Make sure your server uses
-  encryption for SMTP traffic and consider using PGP for
-  end-to-end encryption.
+Jan 16 05:54:23 gargamel kernel: ata9.00: failed command: SMART
+Jan 16 05:54:31 gargamel kernel: ata9.01: failed command: SMART
+Jan 16 05:54:39 gargamel kernel: ata9.02: failed command: SMART
+Jan 16 05:54:47 gargamel kernel: ata9.03: failed command: SMART
+Jan 16 05:54:55 gargamel kernel: ata9.04: failed command: SMART
+Jan 16 06:05:04 gargamel kernel: ata9.00: failed command: SMART
+Jan 16 06:05:12 gargamel kernel: ata9.01: failed command: SMART
+Jan 16 06:05:20 gargamel kernel: ata9.02: failed command: SMART
+Jan 16 06:05:28 gargamel kernel: ata9.03: failed command: SMART
+Jan 16 06:05:36 gargamel kernel: ata9.04: failed command: SMART
+Jan 16 06:05:44 gargamel kernel: ata10.00: failed command: SMART
+Jan 16 06:06:01 gargamel kernel: ata10.01: failed command: SMART
+Jan 16 06:06:18 gargamel kernel: ata10.02: failed command: SMART
+Jan 16 06:16:35 gargamel kernel: ata9.00: failed command: SMART
+Jan 16 06:16:52 gargamel kernel: ata9.01: failed command: SMART
+Jan 16 06:17:01 gargamel kernel: ata9.02: failed command: SMART
+Jan 16 06:17:08 gargamel kernel: ata9.03: failed command: SMART
+Jan 16 06:17:16 gargamel kernel: ata9.04: failed command: SMART
+Jan 16 06:27:25 gargamel kernel: ata10.00: failed command: SMART
+Jan 16 06:27:42 gargamel kernel: ata10.01: failed command: SMART
+Jan 16 06:27:59 gargamel kernel: ata10.02: failed command: SMART
+Jan 16 06:38:16 gargamel kernel: ata9.00: failed command: SMART
+Jan 16 06:38:24 gargamel kernel: ata9.01: failed command: SMART
+Jan 16 06:38:32 gargamel kernel: ata9.02: failed command: SMART
+Jan 16 06:38:40 gargamel kernel: ata9.03: failed command: SMART
+Jan 16 06:38:48 gargamel kernel: ata9.04: failed command: SMART
+Jan 16 06:59:05 gargamel kernel: ata10.00: failed command: SMART
+Jan 16 06:59:19 gargamel kernel: ata10.01: failed command: SMART
+Jan 16 06:59:36 gargamel kernel: ata10.02: failed command: SMART
+Jan 16 07:29:58 gargamel kernel: ata10.00: failed command: SMART
+Jan 16 07:30:15 gargamel kernel: ata10.01: failed command: SMART
+Jan 16 07:30:32 gargamel kernel: ata10.02: failed command: SMART
+Jan 16 08:00:55 gargamel kernel: ata10.00: failed command: SMART
+Jan 16 08:01:12 gargamel kernel: ata10.01: failed command: SMART
+Jan 16 08:01:29 gargamel kernel: ata10.02: failed command: SMART
 
---=_freyr.ossman.eu-28819-1295186517-0001-2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename=signature.asc
+A full error looks like this:
+ata10.00: failed to read SCR 1 (Emask=0x40)
+ata10.01: failed to read SCR 1 (Emask=0x40)
+ata10.02: failed to read SCR 1 (Emask=0x40)
+ata10.03: failed to read SCR 1 (Emask=0x40)
+ata10.04: failed to read SCR 1 (Emask=0x40)
+ata10.05: failed to read SCR 1 (Emask=0x40)
+ata10.15: exception Emask 0x4 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.01: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.02: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.02: failed command: SMART
+ata10.02: cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 tag 0
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata10.02: status: { DRDY }
+ata10.03: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.04: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.05: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata10.15: hard resetting link
+ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata10.05: limiting SATA link speed to 1.5 Gbps
+ata10.00: hard resetting link
+ata10.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+ata10.01: hard resetting link
+ata10.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.02: hard resetting link
+ata10.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.03: hard resetting link
+ata10.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.04: hard resetting link
+ata10.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.05: hard resetting link
+ata10.05: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata10.00: configured for UDMA/100
+ata10.01: configured for UDMA/100
+ata10.02: qc timeout (cmd 0xec)
+ata10.02: failed to IDENTIFY (I/O error, err_mask=0x5)
+ata10.02: revalidation failed (errno=-5)
+ata10.15: hard resetting link
+ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+ata10.00: hard resetting link
+ata10.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+ata10.01: hard resetting link
+ata10.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.02: hard resetting link
+ata10.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.03: hard resetting link
+ata10.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.04: hard resetting link
+ata10.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata10.05: hard resetting link
+ata10.05: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata10.00: configured for UDMA/100
+ata10.01: configured for UDMA/100
+ata10.02: configured for UDMA/100
+ata10.03: configured for UDMA/100
+ata10.04: configured for UDMA/100
+ata10: EH complete
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.16 (GNU/Linux)
 
-iF4EAREIAAYFAk0y+lQACgkQopDLsoqlmEKhVgD8DBBdMq/YniFjd1dvAn19VSem
-cBMoHEHaBvN0pYCmdhoA/RzSj9m80mchlYS/3kcqHpgZa6b7kC5YJeEBQtY5BlHA
-=3V+M
------END PGP SIGNATURE-----
-
---=_freyr.ossman.eu-28819-1295186517-0001-2--
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems & security ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
