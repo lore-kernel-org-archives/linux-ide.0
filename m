@@ -1,69 +1,89 @@
-From: Kumar Gala <kumar.gala@freescale.com>
-Subject: Re: [PATCH] ATA: Add FSL sata v2 controller support
-Date: Mon, 17 Jan 2011 08:57:06 -0600
-Message-ID: <54228DB3-E95B-4A4D-BB83-CABEACAD77C5@freescale.com>
-References: <1295248259-14752-1-git-send-email-B33228@freescale.com> <4D342C6E.6000608@ru.mvista.com> <45903308677306428B6EE7E6FF5A520408654D@039-SN1MPN1-004.039d.mgd.msft.net>
-Mime-Version: 1.0 (Apple Message framework v1082)
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: PMP and SEMB messages to SEP
+Date: Mon, 17 Jan 2011 16:40:42 +0100
+Message-ID: <20110117154042.GG27123@htj.dyndns.org>
+References: <20110113192558.GE16039@MAIL.13thfloor.at>
+ <20110114142018.GA978@htj.dyndns.org>
+ <20110114165957.GH16039@MAIL.13thfloor.at>
+ <20110114170407.GE978@htj.dyndns.org>
+ <20110114173759.GI16039@MAIL.13thfloor.at>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:46475
-	"EHLO VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751143Ab1AQO52 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jan 2011 09:57:28 -0500
-In-Reply-To: <45903308677306428B6EE7E6FF5A520408654D@039-SN1MPN1-004.039d.mgd.msft.net>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46558 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438Ab1AQPkt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jan 2011 10:40:49 -0500
+Content-Disposition: inline
+In-Reply-To: <20110114173759.GI16039@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aggrwal Poonam-B10812 <B10812@freescale.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Xu Lei-B33228 <B33228@freescale.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, Gala Kumar-B11780 <B11780@freescale.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+(cc'ing linux-scsi)
+Hello,
 
-On Jan 17, 2011, at 5:58 AM, Aggrwal Poonam-B10812 wrote:
-
+On Fri, Jan 14, 2011 at 06:37:59PM +0100, Herbert Poetzl wrote:
+> Fair enough, let's start with a bunch of simple questions
+> I got from looking at the code (which I did just recently,
+> so don't expect deep understanding of the inner workings,
+> or even intelligent questions FWIW :)
 > 
+> - libata is used in the kernel for ata, sata and to some
+>   extend for scsi (via (s)ata), as a helper library.
+
+The (s) there is Serial not SCSI, but yes some SAS drivers use libata
+to drive SATA devices attached to SAS controllers.
+
+>   is there any counterpart in userspace to communicate
+>   with (s)ata host/devices or how are the interfaces to
+>   userspace designed to work?
+
+SG_IO is the standard way to issue custom commands.  You need to wrap
+ATA command inside a SCSI SCSI-ATA passthrough command.  Take a look
+at hdparm, smartctl or any other tool which issues direct commands.
+
+> - the SiI3726 supports SAF-TE and SES protocols for the
+>   SEMB/SEP and the EMCs are sent through the SATA interface
+>   (according to the docu, SEP_ATTN in the command register
+>   and SEP command code in the features register)
 > 
->> -----Original Message-----
->> From: linuxppc-dev-bounces+poonam.aggrwal=freescale.com@lists.ozlabs.org
->> [mailto:linuxppc-dev-
->> bounces+poonam.aggrwal=freescale.com@lists.ozlabs.org] On Behalf Of
->> Sergei Shtylyov
->> Sent: Monday, January 17, 2011 5:18 PM
->> To: Xu Lei-B33228
->> Cc: jgarzik@pobox.com; Gala Kumar-B11780; linuxppc-dev@lists.ozlabs.org;
->> linux-ide@vger.kernel.org
->> Subject: Re: [PATCH] ATA: Add FSL sata v2 controller support
->> 
->> Hello.
->> 
->> On 17-01-2011 10:10, Xulei wrote:
->> 
->>> In FSL sata v2 block, the snoop bit of PRDT Word3 description
->>> information is at bit28 instead of bit22.
->> 
->>> This patch adds FSL sata v2 probe and resolve this difference.
->> 
->>> Signed-off-by: Xulei <B33228@freescale.com>
->> 
->>    AFAIK, full name is required.
->> 
->>> Signed-off-by: Roy Zang <tie-fei.zang@freescale.com>
->> [...]
->> 
->>> diff --git a/arch/powerpc/boot/dts/p1022ds.dts
->>> b/arch/powerpc/boot/dts/p1022ds.dts
->>> index 2bbecbb..9ad41dd 100644
->>> --- a/arch/powerpc/boot/dts/p1022ds.dts
->>> +++ b/arch/powerpc/boot/dts/p1022ds.dts
->>> @@ -475,14 +475,14 @@
->>>  		};
->>> 
->>>  		sata@18000 {
->>> -			compatible = "fsl,mpc8536-sata", "fsl,pq-sata";
->>> +			compatible = "fsl,p1022-sata", "fsl,pq-sata-v2";
+>   + how would I send such a command and retrieve the result
+>     (if there is one) from within the kernel (maybe with
+>     libata or from the ahci layer)?
+
+If it's a proper command SAT passthrough via SG_IO should work but I'm
+not sure whether it is.  Is it?
+
+> - the SiI3726 supports GPIO pins, which can be reached via
+>   the General Status and Control Register [130] and accoring
+>   to the docu, the Read/Write Port Multiplier command can
+>   be used to read/write that register.
+>  
+>   + how would I go about issuing such a command and where
+>     should it be done? i.e. what about interference with
+>     other commands? what about retrieving return values?
+
+The problem is that the PMP device itself is currently not allocated a
+userland visible device, so it doesn't have any /dev/* node.  Hmmm...
+
+> > There also was something added to ahci which is exported through
+> > sysfs.
 > 
-> Can we fix this compatibity at run time by u-boot?
+> I saw that the ahci driver uses *em_message* which I
+> think might be related to sending activity messages and
+> it also lists capabilities (which include 'ems') on
+> host adapters, but I'm not entirely sure this is SEMB
+> related (yet)
 
-We can, but its not reason not to update the .dts as well.
+The message sent there can be of any format and that's why it was
+added as a separate sysfs node.
 
-- k
+ISTR there's a SCSI enclosure management driver.  Maybe SCSI people
+have better clues about how enclosure management should be done?
 
+Thanks.
+
+-- 
+tejun
