@@ -1,38 +1,46 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Why is only one command issue per time in AHCI driver?
-Date: Tue, 18 Jan 2011 08:43:22 -0600
-Message-ID: <AANLkTi=PsjJ2ndCaPowmJjRnjwHzB+xUX-PjReh7L5fx@mail.gmail.com>
-References: <AANLkTin5=NiZn6ZWZ=r-XS0v_Utrf6dpTb_YzCay-PJM@mail.gmail.com>
-	<4D2F3A86.3010503@garzik.org>
-	<AANLkTikV-VWpy0XKpMUvurp86dRAOWUUNEQP5OkvfCso@mail.gmail.com>
-	<4D2FE384.4090405@gmail.com>
-	<AANLkTikZc3KWEyDBfML2yxnkSX+7U-aUBJjZSSSPYPqb@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15941] Thinkpad T61 after suspend to ram ide cdrom doesn't work
+Date: Tue, 18 Jan 2011 19:03:47 GMT
+Message-ID: <201101181903.p0IJ3lLL002689@demeter1.kernel.org>
+References: <bug-15941-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:38983 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032Ab1AROnX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 09:43:23 -0500
-Received: by iyj18 with SMTP id 18so5755669iyj.19
-        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 06:43:22 -0800 (PST)
-In-Reply-To: <AANLkTikZc3KWEyDBfML2yxnkSX+7U-aUBJjZSSSPYPqb@mail.gmail.com>
+Received: from demeter1.kernel.org ([140.211.167.39]:42595 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541Ab1ARTDs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 14:03:48 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p0IJ3lRW002690
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 19:03:47 GMT
+In-Reply-To: <bug-15941-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: seedrubbish@gmail.com
-Cc: =?UTF-8?B?576F56eJ6Yie?= <luobingjiun@gmail.com>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Jan 18, 2011 at 1:56 AM, Seed <seedrubbish@gmail.com> wrote:
-> Hi Robert,
->
-> On Fri, Jan 14, 2011 at 4:47 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
->> That sounds like the I/O pattern doesn't result in any concurrent transfers
->> being executed. What kind of workload is this running?
->>
->
-> Do you have any suggestion about how to can get such a workload?
+https://bugzilla.kernel.org/show_bug.cgi?id=15941
 
-It depends very much on what you're trying to accomplish. Last time I
-checked, even booting the system or doing large sequential I/O would
-result in fairly high queue depths. However if you're doing small,
-single-threaded I/O, you likely won't see much or any queueing.
+
+Rafael J. Wysocki <rjw@sisk.pl> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEEDINFO                    |CLOSED
+         Resolution|                            |WILL_NOT_FIX
+
+
+
+
+--- Comment #15 from Rafael J. Wysocki <rjw@sisk.pl>  2011-01-18 19:03:38 ---
+I'm not a libata developer.  Apart from this, I think it's better if you file
+a separate bug under Storage IO/SATA for that issue (please put my address
+into the CC list in there so that I can reassign it to the right people).
+
+I'm closing this one as "won't fix", because I don't think anyone is going to
+do anything about it at this point.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
