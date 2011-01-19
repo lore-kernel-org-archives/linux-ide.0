@@ -1,8 +1,8 @@
 From: "Jian Peng" <jipeng@broadcom.com>
 Subject: RE: questions regarding possible violation of AHCI spec in AHCI
  driver
-Date: Wed, 19 Jan 2011 15:35:47 -0800
-Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FF438B5@IRVEXCHCCR01.corp.ad.broadcom.com>
+Date: Wed, 19 Jan 2011 15:37:05 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FF438B6@IRVEXCHCCR01.corp.ad.broadcom.com>
 References: <4CFF58D2.4040006@kernel.org>
  <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
  <4CFFCD56.6050608@kernel.org>
@@ -19,17 +19,15 @@ Mime-Version: 1.0
 Content-Type: text/plain;
  charset=us-ascii
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1138 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751485Ab1ASXf6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 18:35:58 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <4D36358E.40106@pobox.com>
 Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
+
+Resent it since mailbox crashed last time
 
 Hi, Jeff,
 
@@ -54,8 +52,3 @@ On 01/11/2011 01:55 PM, Jian Peng wrote:
 Any updates?
 
 	Jeff
-
-
-
-
-
