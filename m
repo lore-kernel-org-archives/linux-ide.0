@@ -1,48 +1,61 @@
-From: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Wed, 19 Jan 2011 12:29:59 -0800
-Message-ID: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
-	<20110112112142.GA9610@mtj.dyndns.org>
-	<4D2DF45B.5010101@pobox.com>
-	<AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
-	<4D368D3B.7030701@pobox.com>
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: RE: questions regarding possible violation of AHCI spec in AHCI
+ driver
+Date: Wed, 19 Jan 2011 15:35:47 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FF438B5@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <4CFF58D2.4040006@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFCD56.6050608@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFD3EB.10800@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFE29C.7080205@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D000C8B.5040904@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D36358E.40106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:62229 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984Ab1ASUaE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 15:30:04 -0500
-In-Reply-To: <4D368D3B.7030701@pobox.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:1138 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751485Ab1ASXf6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 18:35:58 -0500
+In-Reply-To: <4D36358E.40106@pobox.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-> A kernel modification might not even be needed.
->
-> Have you tried simply issuing READ VERIFY via bsg, and not caring if =
-it
-> completes? =A0bsg should be able to handle an app submitting a comman=
-d, but
-> never checking the 'done' list, right? =A0A simple shell app could ex=
-ecute
->
-> =A0 =A0 =A0 =A0write(bsg_fd, ... SCSI READ VERIFY command ...)
-> =A0 =A0 =A0 =A0exit(0)
->
-> to avoid waiting for READ VERIFY command completion, I would hope.
->
-> =A0 =A0 =A0 =A0Jeff
->
+Hi, Jeff,
 
-My question was how to speed up system resume when he the spinup
-request is coming from sd_resume(). For shell method to work I would
-have to ignore this request entirely and do READ VERIFY when system is
-fully restored.
-Can it be done without kernel modification? Tejun mentioned using
-manage_start_stop flag but had some reservations against it.
+I bought a bunch of PCI cards and tested them, only one running AHCI using Marvell 88SE9125 controller chip. It worked well with the patched kernel at bootup, hotplug, and data transfer.
+I put an order of a JMicron AHCI based PCI card and will test it.
 
-Maksim.
+Thanks,
+Jian
+
+-----Original Message-----
+From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
+Sent: Tuesday, January 18, 2011 4:51 PM
+To: Jian Peng
+Cc: Tejun Heo; Robert Hancock; linux-kernel@vger.kernel.org; ide
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+
+On 01/11/2011 01:55 PM, Jian Peng wrote:
+> Here is new patch based on your suggestion (against 2.6.37 release)
+[...]
+> I will test host controller made by other vendors and report issues soon.
+
+Any updates?
+
+	Jeff
+
+
+
+
+
