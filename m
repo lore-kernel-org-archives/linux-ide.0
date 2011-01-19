@@ -1,37 +1,49 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: PROBLEM: Disk continually remounts and hardlocks the entire
- system if running on battery.
-Date: Wed, 19 Jan 2011 09:59:28 -0500
-Message-ID: <20110119145928.GC3043@thunk.org>
-References: <AANLkTi=_GSgFpsidp35-RDT3i6zhimXtyR=d6UtFmfMe@mail.gmail.com>
- <87ipxlj1vd.fsf@dmon-lp.sw.ru>
- <4D362DD2.8070606@gmail.com>
- <AANLkTi=ePSM7QTQgouAeP8xwLE0xFr3kW7iuBCqg8Wxb@mail.gmail.com>
- <AANLkTimh01GO1wxOWzYmPsyh0EuTCuxzr6+krNVTjRCP@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Problem:  security locked disk and partition table read..
+Date: Wed, 19 Jan 2011 16:08:22 +0100
+Message-ID: <20110119150822.GB22366@htj.dyndns.org>
+References: <4D366DF1.3000303@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from thunk.org ([69.25.196.29]:35682 "EHLO thunker.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754124Ab1ASO7k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Jan 2011 09:59:40 -0500
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41152 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125Ab1ASPI0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 10:08:26 -0500
+Received: by fxm20 with SMTP id 20so976631fxm.19
+        for <linux-ide@vger.kernel.org>; Wed, 19 Jan 2011 07:08:25 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <AANLkTimh01GO1wxOWzYmPsyh0EuTCuxzr6+krNVTjRCP@mail.gmail.com>
+In-Reply-To: <4D366DF1.3000303@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: John Tyree <johntyree@gmail.com>, Dmitry <dmonakhov@openvz.org>, Eric Sandeen <sandeen@redhat.com>, Jiaying Zhang <jiayingz@google.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-kernel <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Wed, Jan 19, 2011 at 08:43:03AM -0600, Robert Hancock wrote:
+On Tue, Jan 18, 2011 at 11:52:01PM -0500, Mark Lord wrote:
+> I was sorting through drives here today, and found one that
+> was "security locked" (had a user passwd set on it),
+> and for which I did not know the password.
 > 
-> That doesn't look like the same thing - in their case it doesn't look
-> like any SATA errors are occurring, just a remount (presumably
-> triggered by some userspace software).
+> So I hotplugged it to my SiI-3132 card, with the intent
+> of simply erasing the drive (thereby clearing the passwd)
+> using hdparm.
+> 
+> Except.. the kernel (?) sat there for a very long time trying
+> (and failing) over and over and over and over and over and over
+> to read sector-0 (the partition table).  Of course the reads
+> each failed, and then got retried 5-times by SCSI, and then
+> retried again a zillion times at a higher level.
 
-If you have laptop mode, you definitely want to disable it, and see if
-that makes a difference.  That being said, if userspace code is able
-to trigger errors like that from the hardware, I'd say at first glance
-the kernel should do a better job protecting itself from buggy
-software, even if it is buggy software running as root....
+I think SCSI and libata are behaving okay here.  The root cause is how
+the partition code handles IO errors.  Different partition table type
+probes do IOs separately.  It's somewhat reasonable given that they
+may poke at different sectors which sometimes could be near the end of
+the device failure of which might not necessarily mean the whole
+device is inaccessible, but anyways the end result is that the each
+partition table type pokes the drive regardless of how the previous
+attempt went.  And yeah we probably need some improvements there.
 
-	       	     	      	       	       - Ted
+Thanks.
+
+-- 
+tejun
