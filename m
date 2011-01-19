@@ -1,46 +1,35 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Wed, 19 Jan 2011 02:05:31 -0500
-Message-ID: <4D368D3B.7030701@pobox.com>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com> <20110112112142.GA9610@mtj.dyndns.org> <4D2DF45B.5010101@pobox.com> <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [FYI] linux-ata.org domain becoming available
+Date: Wed, 19 Jan 2011 02:09:55 -0500
+Message-ID: <4D368E43.5040704@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:59453 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:64877 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443Ab1ASHFg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 02:05:36 -0500
-In-Reply-To: <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
+	with ESMTP id S1752443Ab1ASHJ6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 02:09:58 -0500
+Received: by vws16 with SMTP id 16so218386vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 23:09:57 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+To: Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 01/12/2011 03:01 PM, Maksim Rayskiy wrote:
->>
->> The bottom line is that this patch simply wants to trigger an ATA command,
->> and return immediately, discarding the command results.  I'm not even sure a
->> "run this command in background, and discard results" facility requires the
->> EH.
->>
->
-> This is why I was asking if using a workqueue instead of EH might be a
-> better idea.
-> EH looks like an overkill here.
 
-A kernel modification might not even be needed.
+The LINUX-ATA.ORG domain, which I control, expires on 2011-02-16. 
+Currently it simply redirects to the libata "home page", 
+http://ata.wiki.kernel.org/
 
-Have you tried simply issuing READ VERIFY via bsg, and not caring if it 
-completes?  bsg should be able to handle an app submitting a command, 
-but never checking the 'done' list, right?  A simple shell app could execute
+If someone wants to grab it -- perhaps in order to sponsor it's 
+continued pointing at the wiki as a service to the community -- toss me 
+an email.
 
-	write(bsg_fd, ... SCSI READ VERIFY command ...)
-	exit(0)
-
-to avoid waiting for READ VERIFY command completion, I would hope.
+Otherwise I plan to let it expire.  Google finds the wiki quite easily, 
+and the domain does not seem to add much value.
 
 	Jeff
+
 
 
 
