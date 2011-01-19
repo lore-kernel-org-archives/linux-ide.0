@@ -1,49 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Problem:  security locked disk and partition table read..
-Date: Wed, 19 Jan 2011 16:08:22 +0100
-Message-ID: <20110119150822.GB22366@htj.dyndns.org>
-References: <4D366DF1.3000303@teksavvy.com>
+From: Maksim Rayskiy <maksim.rayskiy@gmail.com>
+Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
+Date: Wed, 19 Jan 2011 12:29:59 -0800
+Message-ID: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
+References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
+	<20110112112142.GA9610@mtj.dyndns.org>
+	<4D2DF45B.5010101@pobox.com>
+	<AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
+	<4D368D3B.7030701@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41152 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125Ab1ASPI0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 10:08:26 -0500
-Received: by fxm20 with SMTP id 20so976631fxm.19
-        for <linux-ide@vger.kernel.org>; Wed, 19 Jan 2011 07:08:25 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D366DF1.3000303@teksavvy.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:62229 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984Ab1ASUaE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 15:30:04 -0500
+In-Reply-To: <4D368D3B.7030701@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-On Tue, Jan 18, 2011 at 11:52:01PM -0500, Mark Lord wrote:
-> I was sorting through drives here today, and found one that
-> was "security locked" (had a user passwd set on it),
-> and for which I did not know the password.
-> 
-> So I hotplugged it to my SiI-3132 card, with the intent
-> of simply erasing the drive (thereby clearing the passwd)
-> using hdparm.
-> 
-> Except.. the kernel (?) sat there for a very long time trying
-> (and failing) over and over and over and over and over and over
-> to read sector-0 (the partition table).  Of course the reads
-> each failed, and then got retried 5-times by SCSI, and then
-> retried again a zillion times at a higher level.
+> A kernel modification might not even be needed.
+>
+> Have you tried simply issuing READ VERIFY via bsg, and not caring if =
+it
+> completes? =A0bsg should be able to handle an app submitting a comman=
+d, but
+> never checking the 'done' list, right? =A0A simple shell app could ex=
+ecute
+>
+> =A0 =A0 =A0 =A0write(bsg_fd, ... SCSI READ VERIFY command ...)
+> =A0 =A0 =A0 =A0exit(0)
+>
+> to avoid waiting for READ VERIFY command completion, I would hope.
+>
+> =A0 =A0 =A0 =A0Jeff
+>
 
-I think SCSI and libata are behaving okay here.  The root cause is how
-the partition code handles IO errors.  Different partition table type
-probes do IOs separately.  It's somewhat reasonable given that they
-may poke at different sectors which sometimes could be near the end of
-the device failure of which might not necessarily mean the whole
-device is inaccessible, but anyways the end result is that the each
-partition table type pokes the drive regardless of how the previous
-attempt went.  And yeah we probably need some improvements there.
+My question was how to speed up system resume when he the spinup
+request is coming from sd_resume(). For shell method to work I would
+have to ignore this request entirely and do READ VERIFY when system is
+fully restored.
+Can it be done without kernel modification? Tejun mentioned using
+manage_start_stop flag but had some reservations against it.
 
-Thanks.
-
--- 
-tejun
+Maksim.
