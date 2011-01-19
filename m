@@ -1,46 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH #upstream] ahci: add HFLAG_YES_FBS and apply it to 88SE9128
-Date: Tue, 18 Jan 2011 20:07:37 -0500
-Message-ID: <4D363959.6090203@garzik.org>
-References: <4C4AFE7C.5070506@kernel.org> <4CF45BC0.2030701@iki.fi> <4CF4FCBE.2060406@kernel.org> <4CF55A4B.1020402@iki.fi> <4CFE8EE2.1060908@iki.fi> <4CFF67B6.7090805@kernel.org> <4CFFC9D0.2090803@garzik.org> <4CFFCAE3.1090106@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ATA: Add FSL sata v2 controller support
+Date: Tue, 18 Jan 2011 20:10:19 -0500
+Message-ID: <4D3639FB.10608@pobox.com>
+References: <1295248259-14752-1-git-send-email-B33228@freescale.com> <4D342C6E.6000608@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42880 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41385 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564Ab1ASBHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 20:07:42 -0500
-Received: by vws16 with SMTP id 16so133229vws.19
-        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 17:07:41 -0800 (PST)
-In-Reply-To: <4CFFCAE3.1090106@kernel.org>
+	with ESMTP id S1752564Ab1ASBKX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 20:10:23 -0500
+Received: by vws16 with SMTP id 16so134458vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 17:10:22 -0800 (PST)
+In-Reply-To: <4D342C6E.6000608@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Anssi Hannula <anssi.hannula@iki.fi>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>, kumar.gala@freescale.com, Roy Zang <tie-fei.zang@freescale.com>
+Cc: Xulei <B33228@freescale.com>, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
 
-On 12/08/2010 01:13 PM, Tejun Heo wrote:
-> Hello,
+On 01/17/2011 06:47 AM, Sergei Shtylyov wrote:
+> Hello.
 >
-> On 12/08/2010 07:09 PM, Jeff Garzik wrote:
->>> I'm not completely comfortable with going ahead with the patch tho.
->>> It probably is okay but it's still a shot in the dark.  Is there
->>> anyone with marvell contact?
+> On 17-01-2011 10:10, Xulei wrote:
+>
+>> In FSL sata v2 block, the snoop bit of PRDT Word3 description
+>> information is at bit28 instead of bit22.
+>
+>> This patch adds FSL sata v2 probe and resolve this difference.
+>
+>> Signed-off-by: Xulei <B33228@freescale.com>
+>
+> AFAIK, full name is required.
+>
+>> Signed-off-by: Roy Zang <tie-fei.zang@freescale.com>
+> [...]
+>
+>> diff --git a/arch/powerpc/boot/dts/p1022ds.dts
+>> b/arch/powerpc/boot/dts/p1022ds.dts
+>> index 2bbecbb..9ad41dd 100644
+>> --- a/arch/powerpc/boot/dts/p1022ds.dts
+>> +++ b/arch/powerpc/boot/dts/p1022ds.dts
+>> @@ -475,14 +475,14 @@
+>> };
 >>
->> I have docs for most Marvell models, but not this one; and no
->> contacts...  Presumably it is some variant of their existing Marvell
->> AHCI line of chips, but beyond that, you and I are both just
->> guessing.
+>> sata@18000 {
+>> - compatible = "fsl,mpc8536-sata", "fsl,pq-sata";
+>> + compatible = "fsl,p1022-sata", "fsl,pq-sata-v2";
+>> reg =<0x18000 0x1000>;
+>> cell-index =<1>;
+>> interrupts =<74 0x2>;
+>> };
+>>
+>> sata@19000 {
+>> - compatible = "fsl,mpc8536-sata", "fsl,pq-sata";
+>> + compatible = "fsl,p1022-sata", "fsl,pq-sata-v2";
+>> reg =<0x19000 0x1000>;
+>> cell-index =<2>;
+>> interrupts =<41 0x2>;
 >
-> Eh, well, in that case as it's a fix one way or the other,
->
-> Acked-by: Tejun Heo<tj@kernel.org>
+> Please put this into the separate patch and push thru the PPC tree.
 
-It's ugly, and maybe it will go away in the future.  But I don't think 
-it will harm existing installations to add the additional class match, 
-so I'm applying it.
+I think it's OK to send 100% of this via the PPC tree.  The sata_fsl.c 
+patch for data_snoop variability directly keys off a call to 
+platform-specific detail (of_device_is_compatible call).
 
-	Jeff
-
-
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
