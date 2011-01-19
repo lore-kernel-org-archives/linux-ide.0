@@ -1,35 +1,53 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [FYI] linux-ata.org domain becoming available
-Date: Wed, 19 Jan 2011 02:09:55 -0500
-Message-ID: <4D368E43.5040704@garzik.org>
+From: Xulei <B33228@freescale.com>
+Subject: [PATCH 2/2] dts: Update sata controller compatible for p1022ds board
+Date: Wed, 19 Jan 2011 17:07:30 +0800
+Message-ID: <1295428050-21934-2-git-send-email-B33228@freescale.com>
+References: <1295428050-21934-1-git-send-email-B33228@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:64877 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443Ab1ASHJ6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 02:09:58 -0500
-Received: by vws16 with SMTP id 16so218386vws.19
-        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 23:09:57 -0800 (PST)
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:38764
+	"EHLO VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753069Ab1ASJGE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2011 04:06:04 -0500
+In-Reply-To: <1295428050-21934-1-git-send-email-B33228@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, kumar.gala@freescale.com, Xulei <B33228@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>
 
+Update p1022 sata compatible to "fsl,p1022-sata", "fsl,pq-sata-v2".
+p1022ds sata controller is v2 version comparing previous FSL sata
+controller, for example, mpc8536.
 
-The LINUX-ATA.ORG domain, which I control, expires on 2011-02-16. 
-Currently it simply redirects to the libata "home page", 
-http://ata.wiki.kernel.org/
+Signed-off-by: Lei Xu <B33228@freescale.com>
+Signed-off-by: Roy Zang <tie-fei.zang@freescale.com>
+---
+ arch/powerpc/boot/dts/p1022ds.dts |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-If someone wants to grab it -- perhaps in order to sponsor it's 
-continued pointing at the wiki as a service to the community -- toss me 
-an email.
-
-Otherwise I plan to let it expire.  Google finds the wiki quite easily, 
-and the domain does not seem to add much value.
-
-	Jeff
-
-
+diff --git a/arch/powerpc/boot/dts/p1022ds.dts b/arch/powerpc/boot/dts/p1022ds.dts
+index 2bbecbb..9ad41dd 100644
+--- a/arch/powerpc/boot/dts/p1022ds.dts
++++ b/arch/powerpc/boot/dts/p1022ds.dts
+@@ -475,14 +475,14 @@
+ 		};
+ 
+ 		sata@18000 {
+-			compatible = "fsl,mpc8536-sata", "fsl,pq-sata";
++			compatible = "fsl,p1022-sata", "fsl,pq-sata-v2";
+ 			reg = <0x18000 0x1000>;
+ 			cell-index = <1>;
+ 			interrupts = <74 0x2>;
+ 		};
+ 
+ 		sata@19000 {
+-			compatible = "fsl,mpc8536-sata", "fsl,pq-sata";
++			compatible = "fsl,p1022-sata", "fsl,pq-sata-v2";
+ 			reg = <0x19000 0x1000>;
+ 			cell-index = <2>;
+ 			interrupts = <41 0x2>;
+-- 
+1.7.0.4
 
 
