@@ -1,23 +1,89 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
-Date: Tue, 18 Jan 2011 19:51:26 -0500
-Message-ID: <4D36358E.40106@pobox.com>
-References: <4CFF58D2.4040006@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFFCD56.6050608@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFFD3EB.10800@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com> <4CFFE29C.7080205@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com> <4D000C8B.5040904@kernel.org> <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org> <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
+Subject: Re: [PATCH 1/2 v3] pata_hpt{366|37x}: use pr_warning(...) instead
+ of printk(KERN_WARNING ...)
+Date: Tue, 18 Jan 2011 19:56:10 -0500
+Message-ID: <4D3636AA.2000402@pobox.com>
+References: <201101102134.28111.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jian Peng <jipeng@broadcom.com>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59085 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044Ab1ASA4O (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 19:56:14 -0500
+Received: by vws16 with SMTP id 16so128508vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 16:56:13 -0800 (PST)
+In-Reply-To: <201101102134.28111.sshtylyov@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On 01/11/2011 01:55 PM, Jian Peng wrote:
-> Here is new patch based on your suggestion (against 2.6.37 release)
-[...]
-> I will test host controller made by other vendors and report issues soon.
+On 01/10/2011 01:34 PM, Sergei Shtylyov wrote:
+> ... in hpt_dma_blacklisted().
+>
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+>
+> ---
+> The patch is against the recent Linus' tree plus the patches queued by
+> Jeff Garzik in his 'upstream-linus' branch.
+>
+> Changes from the previous version:
+> - added the similar change for the 'pata_hpt37x' driver...
+>
+>   drivers/ata/pata_hpt366.c |    6 +++---
+>   drivers/ata/pata_hpt37x.c |    6 +++---
+>   2 files changed, 6 insertions(+), 6 deletions(-)
+>
+> Index: linux-2.6/drivers/ata/pata_hpt366.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/pata_hpt366.c
+> +++ linux-2.6/drivers/ata/pata_hpt366.c
+> @@ -25,7 +25,7 @@
+>   #include<linux/libata.h>
+>
+>   #define DRV_NAME	"pata_hpt366"
+> -#define DRV_VERSION	"0.6.9"
+> +#define DRV_VERSION	"0.6.10"
+>
+>   struct hpt_clock {
+>   	u8	xfer_mode;
+> @@ -160,8 +160,8 @@ static int hpt_dma_blacklisted(const str
+>
+>   	while (list[i] != NULL) {
+>   		if (!strcmp(list[i], model_num)) {
+> -			printk(KERN_WARNING DRV_NAME ": %s is not supported for %s.\n",
+> -				modestr, list[i]);
+> +			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
+> +				   modestr, list[i]);
+>   			return 1;
+>   		}
+>   		i++;
+> Index: linux-2.6/drivers/ata/pata_hpt37x.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/pata_hpt37x.c
+> +++ linux-2.6/drivers/ata/pata_hpt37x.c
+> @@ -24,7 +24,7 @@
+>   #include<linux/libata.h>
+>
+>   #define DRV_NAME	"pata_hpt37x"
+> -#define DRV_VERSION	"0.6.18"
+> +#define DRV_VERSION	"0.6.19"
+>
+>   struct hpt_clock {
+>   	u8	xfer_speed;
+> @@ -229,8 +229,8 @@ static int hpt_dma_blacklisted(const str
+>
+>   	while (list[i] != NULL) {
+>   		if (!strcmp(list[i], model_num)) {
+> -			printk(KERN_WARNING DRV_NAME ": %s is not supported for %s.\n",
+> -				modestr, list[i]);
+> +			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
+> +				   modestr, list[i]);
 
-Any updates?
+Even though I am applying these patches -- forward progress -- I would 
+encourage you to consider ata_dev_printk() here, since we have the 
+ata_device pointer available.
 
-	Jeff
+
