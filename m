@@ -1,59 +1,120 @@
-From: "Jian Peng" <jipeng@broadcom.com>
-Subject: RE: questions regarding possible violation of AHCI spec in AHCI
- driver
-Date: Tue, 18 Jan 2011 16:58:10 -0800
-Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FF4358E@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <4CFF58D2.4040006@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFCD56.6050608@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFD3EB.10800@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFE29C.7080205@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4D000C8B.5040904@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4D36358E.40106@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/2 v3] pata_hpt{37x|3x2n}: use pr_*(DRV_NAME ...) instead
+ of printk(KERN_* ...)
+Date: Tue, 18 Jan 2011 19:59:00 -0500
+Message-ID: <4D363754.6080307@pobox.com>
+References: <201101102139.35078.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3966 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751984Ab1ASA6a convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 19:58:30 -0500
-In-Reply-To: <4D36358E.40106@pobox.com>
-Content-Language: en-US
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51721 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897Ab1ASA7E (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jan 2011 19:59:04 -0500
+Received: by vws16 with SMTP id 16so129622vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 18 Jan 2011 16:59:03 -0800 (PST)
+In-Reply-To: <201101102139.35078.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Sorry that I switched to other tasks recently, and will report the testing results within this week.
-Any suggestion on how to test the code path affected by this patch, AFAIK, bootup and hotplug will use this path, What else?
+On 01/10/2011 01:39 PM, Sergei Shtylyov wrote:
+> ... the same as the 'pata_hpt366' driver does.
+>
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+>
+> ---
+> The patch is against the recent Linus' tree plus the patches queued by
+> Jeff Garzik in his 'upstream-linus' branch.
+>
+> Changes from the previous version:
+> - moved change in hpt_dma_blacklisted() of the 'pata_hpt37x' driver to patch 1.
+>
+>   drivers/ata/pata_hpt37x.c  |   22 +++++++++++-----------
+>   drivers/ata/pata_hpt3x2n.c |   12 +++++-------
+>   2 files changed, 16 insertions(+), 18 deletions(-)
+>
+> Index: linux-2.6/drivers/ata/pata_hpt37x.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/pata_hpt37x.c
+> +++ linux-2.6/drivers/ata/pata_hpt37x.c
+> @@ -24,7 +24,7 @@
+>   #include<linux/libata.h>
+>
+>   #define DRV_NAME	"pata_hpt37x"
+> -#define DRV_VERSION	"0.6.19"
+> +#define DRV_VERSION	"0.6.20"
+>
+>   struct hpt_clock {
+>   	u8	xfer_speed;
+> @@ -863,7 +863,7 @@ static int hpt37x_init_one(struct pci_de
+>   			chip_table =&hpt372;
+>   			break;
+>   		default:
+> -			printk(KERN_ERR "pata_hpt37x: Unknown HPT366 subtype, "
+> +			pr_err(DRV_NAME ": Unknown HPT366 subtype, "
+>   			       "please report (%d).\n", rev);
+>   			return -ENODEV;
+>   		}
+> @@ -906,8 +906,8 @@ static int hpt37x_init_one(struct pci_de
+>   				*ppi =&info_hpt374_fn1;
+>   			break;
+>   		default:
+> -			printk(KERN_ERR
+> -			       "pata_hpt37x: PCI table is bogus, please report (%d).\n",
+> +			pr_err(DRV_NAME
+> +			       ": PCI table is bogus, please report (%d).\n",
+>   			       dev->device);
+>   				return -ENODEV;
+>   		}
+> @@ -957,8 +957,7 @@ static int hpt37x_init_one(struct pci_de
+>   		u8 sr;
+>   		u32 total = 0;
+>
+> -		printk(KERN_WARNING
+> -		       "pata_hpt37x: BIOS has not set timing clocks.\n");
+> +		pr_warning(DRV_NAME ": BIOS has not set timing clocks.\n");
+>
+>   		/* This is the process the HPT371 BIOS is reported to use */
+>   		for (i = 0; i<  128; i++) {
+> @@ -1014,7 +1013,7 @@ static int hpt37x_init_one(struct pci_de
+>   					       (f_high<<  16) | f_low | 0x100);
+>   		}
+>   		if (adjust == 8) {
+> -			printk(KERN_ERR "pata_hpt37x: DPLL did not stabilize!\n");
+> +			pr_err(DRV_NAME ": DPLL did not stabilize!\n");
+>   			return -ENODEV;
+>   		}
+>   		if (dpll == 3)
+> @@ -1022,8 +1021,8 @@ static int hpt37x_init_one(struct pci_de
+>   		else
+>   			private_data = (void *)hpt37x_timings_50;
+>
+> -		printk(KERN_INFO "pata_hpt37x: bus clock %dMHz, using %dMHz DPLL.\n",
+> -		       MHz[clock_slot], MHz[dpll]);
+> +		pr_info(DRV_NAME ": bus clock %dMHz, using %dMHz DPLL.\n",
+> +			MHz[clock_slot], MHz[dpll]);
+>   	} else {
+>   		private_data = (void *)chip_table->clocks[clock_slot];
+>   		/*
+> @@ -1036,8 +1035,9 @@ static int hpt37x_init_one(struct pci_de
+>   			ppi[0] =&info_hpt370_33;
+>   		if (clock_slot<  2&&  ppi[0] ==&info_hpt370a)
+>   			ppi[0] =&info_hpt370a_33;
+> -		printk(KERN_INFO "pata_hpt37x: %s using %dMHz bus clock.\n",
+> -		       chip_table->name, MHz[clock_slot]);
+> +
+> +		pr_info(DRV_NAME ": %s using %dMHz bus clock.\n",
+> +			chip_table->name, MHz[clock_slot]);
 
-Thanks,
-Jian
+ditto.  when the pci_dev ptr is available, you may use dev_printk.
 
------Original Message-----
-From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
-Sent: Tuesday, January 18, 2011 4:51 PM
-To: Jian Peng
-Cc: Tejun Heo; Robert Hancock; linux-kernel@vger.kernel.org; ide
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
-
-On 01/11/2011 01:55 PM, Jian Peng wrote:
-> Here is new patch based on your suggestion (against 2.6.37 release)
-[...]
-> I will test host controller made by other vendors and report issues soon.
-
-Any updates?
+These days, you want to look for a printk helper that takes a pointer to 
+a domain-specific object (struct device or struct ata_device etc.).
 
 	Jeff
-
-
 
 
 
