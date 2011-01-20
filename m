@@ -1,96 +1,45 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH #upstream-fixes] libata: set queue DMA alignment to sector
- size for ATAPI too
-Date: Thu, 20 Jan 2011 13:59:06 +0100
-Message-ID: <20110120125906.GH6036@htj.dyndns.org>
-References: <4D263BF6.6050305@verizon.net>
- <20110106222927.GA32216@kroah.com>
- <20110106201327.4020ab64@liberty>
- <4D2ABEE4.6040408@suse.de>
- <20110111132545.GA30607@htj.dyndns.org>
- <4D33BF7A.3070801@verizon.net>
- <20110117152733.GE27123@htj.dyndns.org>
- <4D34E4F1.7060600@verizon.net>
- <20110118150932.GM27123@htj.dyndns.org>
- <4D374796.1010009@verizon.net>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: [PATCH] Export ahci eSATA attribute
+Date: Thu, 20 Jan 2011 11:08:25 -0500
+Message-ID: <4D385DF9.6060001@cfl.rr.com>
+References: <4CDB63E7.1040106@cfl.rr.com> <4CDB79CA.6000606@garzik.org> <4CDE20CF.3010708@cfl.rr.com> <4CDE2274.8060807@garzik.org> <4CDEB2C3.20806@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D374796.1010009@verizon.net>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, John Stanley <jpsinthemix@verizon.net>, linux-ide@vger.kernel.org
-Cc: Hannes Reinecke <hare@suse.de>, Robby Workman <rw@rlworkman.net>, Greg KH <greg@kroah.com>, linux-hotplug@vger.kernel.org, stable@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:37013 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752338Ab1ATQHW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jan 2011 11:07:22 -0500
+In-Reply-To: <4CDEB2C3.20806@cfl.rr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org
 
-ata_pio_sectors() expects buffer for each sector to be contained in a
-single page; otherwise, it ends up overrunning the first page.  This
-is achieved by setting queue DMA alignment.  If sector_size is smaller
-than PAGE_SIZE and all buffers are sector_size aligned, buffer for
-each sector is always contained in a single page.
+I never got any comment back on this.  In order for udev to use the
+existing attribute, it needs to be moved out of the scsi_host device,
+and udev needs patched to handle bitwise comparisons, or my simple patch
+adding the new attribute can be applied.
 
-This wasn't applied to ATAPI devices but IDENTIFY_PACKET is executed
-as ATA_PROT_PIO and thus uses ata_pio_sectors().  Newer versions of
-udev issue IDENTIFY_PACKET with unaligned buffer triggering the
-problem and causing oops.
+Are you certain you do not want to add a new attribute, and if so, would
+you accept a patch moving the existing one out of the scsi_host device
+so it will be a proper ancestor of the disk device?  Kay Sievers thinks
+that the current location of scsi_host is broken should be fixed, but I
+think that involves significant changes to the scsi layer so I found
+that this patch was much simpler.
 
-This patch fixes the problem by setting sdev->sector_size to
-ATA_SECT_SIZE on ATATPI devices and always setting DMA alignment to
-sector_size.  While at it, add a warning for the unlikely but still
-possible scenario where sector_size is larger than PAGE_SIZE, in which
-case the alignment wouldn't be enough.
+On 11/13/2010 10:46 AM, Phillip Susi wrote:
+> On 11/13/2010 12:30 AM, Jeff Garzik wrote:
+>> As you noted in your previous mail, the entire PORT_CMD is already
+>> exported as a attribute. I don't see much point in exporting this
+>> information a second time.
+> 
+> Unfortunately it is not exported in a way that udev can make use of it.
+>  Firstly because udev can only compare on specific value matches rather
+> than an individual bit, and secondly because it is in the weird
+> scsi_host device rather than the host device, so the attribute is not in
+> an ancestor device of the disk device.  Placing this attribute this way
+> puts it in the ancestry of the disk device so it can be matched by a
+> udev ATTRS rule.
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: John Stanley <jpsinthemix@verizon.net>
-Tested-by: John Stanley <jpsinthemix@verizon.net>
-Cc: stable@kernel.org
----
- drivers/ata/libata-scsi.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 5defc74..600f635 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1099,9 +1099,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 		struct request_queue *q = sdev->request_queue;
- 		void *buf;
- 
--		/* set the min alignment and padding */
--		blk_queue_update_dma_alignment(sdev->request_queue,
--					       ATA_DMA_PAD_SZ - 1);
-+		sdev->sector_size = ATA_SECT_SIZE;
-+
-+		/* set DMA padding */
- 		blk_queue_update_dma_pad(sdev->request_queue,
- 					 ATA_DMA_PAD_SZ - 1);
- 
-@@ -1115,13 +1115,25 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 
- 		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
- 	} else {
--		/* ATA devices must be sector aligned */
- 		sdev->sector_size = ata_id_logical_sector_size(dev->id);
--		blk_queue_update_dma_alignment(sdev->request_queue,
--					       sdev->sector_size - 1);
- 		sdev->manage_start_stop = 1;
- 	}
- 
-+	/*
-+	 * ata_pio_sectors() expects buffer for each sector to not cross
-+	 * page boundary.  Enforce it by requiring buffers to be sector
-+	 * aligned, which works iff sector_size is not larger than
-+	 * PAGE_SIZE.  ATAPI devices also need the alignment as
-+	 * IDENTIFY_PACKET is executed as ATA_PROT_PIO.
-+	 */
-+	if (sdev->sector_size > PAGE_SIZE)
-+		ata_dev_printk(dev, KERN_WARNING,
-+			"sector_size=%u > PAGE_SIZE, PIO may malfunction\n",
-+			sdev->sector_size);
-+
-+	blk_queue_update_dma_alignment(sdev->request_queue,
-+				       sdev->sector_size - 1);
-+
- 	if (dev->flags & ATA_DFLAG_AN)
- 		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
- 
