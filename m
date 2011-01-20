@@ -1,50 +1,96 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Thu, 20 Jan 2011 01:01:08 -0500
-Message-ID: <4D37CFA4.6030601@pobox.com>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com> <20110112112142.GA9610@mtj.dyndns.org> <4D2DF45B.5010101@pobox.com> <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com> <4D368D3B.7030701@pobox.com> <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH #upstream-fixes] libata: set queue DMA alignment to sector
+ size for ATAPI too
+Date: Thu, 20 Jan 2011 13:59:06 +0100
+Message-ID: <20110120125906.GH6036@htj.dyndns.org>
+References: <4D263BF6.6050305@verizon.net>
+ <20110106222927.GA32216@kroah.com>
+ <20110106201327.4020ab64@liberty>
+ <4D2ABEE4.6040408@suse.de>
+ <20110111132545.GA30607@htj.dyndns.org>
+ <4D33BF7A.3070801@verizon.net>
+ <20110117152733.GE27123@htj.dyndns.org>
+ <4D34E4F1.7060600@verizon.net>
+ <20110118150932.GM27123@htj.dyndns.org>
+ <4D374796.1010009@verizon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:48819 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239Ab1ATGBN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jan 2011 01:01:13 -0500
-In-Reply-To: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D374796.1010009@verizon.net>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, John Stanley <jpsinthemix@verizon.net>, linux-ide@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, Robby Workman <rw@rlworkman.net>, Greg KH <greg@kroah.com>, linux-hotplug@vger.kernel.org, stable@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-On 01/19/2011 03:29 PM, Maksim Rayskiy wrote:
->> A kernel modification might not even be needed.
->>
->> Have you tried simply issuing READ VERIFY via bsg, and not caring if it
->> completes?  bsg should be able to handle an app submitting a command, but
->> never checking the 'done' list, right?  A simple shell app could execute
->>
->>         write(bsg_fd, ... SCSI READ VERIFY command ...)
->>         exit(0)
->>
->> to avoid waiting for READ VERIFY command completion, I would hope.
->>
->>         Jeff
->>
->
-> My question was how to speed up system resume when he the spinup
-> request is coming from sd_resume(). For shell method to work I would
-> have to ignore this request entirely and do READ VERIFY when system is
-> fully restored.
-> Can it be done without kernel modification? Tejun mentioned using
-> manage_start_stop flag but had some reservations against it.
+ata_pio_sectors() expects buffer for each sector to be contained in a
+single page; otherwise, it ends up overrunning the first page.  This
+is achieved by setting queue DMA alignment.  If sector_size is smaller
+than PAGE_SIZE and all buffers are sector_size aligned, buffer for
+each sector is always contained in a single page.
 
-Oh, if we're talking about sd_resume(), SCSI definitely has an internal 
-mechanism to fire off a request, without blocking and waiting for a 
-response.  It does sound like a kernel modification, but it should be 
-straightforward via existing APIs.
+This wasn't applied to ATAPI devices but IDENTIFY_PACKET is executed
+as ATA_PROT_PIO and thus uses ata_pio_sectors().  Newer versions of
+udev issue IDENTIFY_PACKET with unaligned buffer triggering the
+problem and causing oops.
 
-	Jeff
+This patch fixes the problem by setting sdev->sector_size to
+ATA_SECT_SIZE on ATATPI devices and always setting DMA alignment to
+sector_size.  While at it, add a warning for the unlikely but still
+possible scenario where sector_size is larger than PAGE_SIZE, in which
+case the alignment wouldn't be enough.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: John Stanley <jpsinthemix@verizon.net>
+Tested-by: John Stanley <jpsinthemix@verizon.net>
+Cc: stable@kernel.org
+---
+ drivers/ata/libata-scsi.c |   24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 5defc74..600f635 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1099,9 +1099,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+ 		struct request_queue *q = sdev->request_queue;
+ 		void *buf;
+ 
+-		/* set the min alignment and padding */
+-		blk_queue_update_dma_alignment(sdev->request_queue,
+-					       ATA_DMA_PAD_SZ - 1);
++		sdev->sector_size = ATA_SECT_SIZE;
++
++		/* set DMA padding */
+ 		blk_queue_update_dma_pad(sdev->request_queue,
+ 					 ATA_DMA_PAD_SZ - 1);
+ 
+@@ -1115,13 +1115,25 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+ 
+ 		blk_queue_dma_drain(q, atapi_drain_needed, buf, ATAPI_MAX_DRAIN);
+ 	} else {
+-		/* ATA devices must be sector aligned */
+ 		sdev->sector_size = ata_id_logical_sector_size(dev->id);
+-		blk_queue_update_dma_alignment(sdev->request_queue,
+-					       sdev->sector_size - 1);
+ 		sdev->manage_start_stop = 1;
+ 	}
+ 
++	/*
++	 * ata_pio_sectors() expects buffer for each sector to not cross
++	 * page boundary.  Enforce it by requiring buffers to be sector
++	 * aligned, which works iff sector_size is not larger than
++	 * PAGE_SIZE.  ATAPI devices also need the alignment as
++	 * IDENTIFY_PACKET is executed as ATA_PROT_PIO.
++	 */
++	if (sdev->sector_size > PAGE_SIZE)
++		ata_dev_printk(dev, KERN_WARNING,
++			"sector_size=%u > PAGE_SIZE, PIO may malfunction\n",
++			sdev->sector_size);
++
++	blk_queue_update_dma_alignment(sdev->request_queue,
++				       sdev->sector_size - 1);
++
+ 	if (dev->flags & ATA_DFLAG_AN)
+ 		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
+ 
