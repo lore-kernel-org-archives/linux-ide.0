@@ -1,54 +1,50 @@
-From: "Jian Peng" <jipeng@broadcom.com>
-Subject: RE: questions regarding possible violation of AHCI spec in AHCI
- driver
-Date: Wed, 19 Jan 2011 15:37:05 -0800
-Message-ID: <E18F441196CA634DB8E1F1C56A50A874319FF438B6@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <4CFF58D2.4040006@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFCD56.6050608@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFD3EB.10800@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4CFFE29C.7080205@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4D000C8B.5040904@kernel.org>
- <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org>
- <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
- <4D36358E.40106@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
+Date: Thu, 20 Jan 2011 01:01:08 -0500
+Message-ID: <4D37CFA4.6030601@pobox.com>
+References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com> <20110112112142.GA9610@mtj.dyndns.org> <4D2DF45B.5010101@pobox.com> <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com> <4D368D3B.7030701@pobox.com> <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D36358E.40106@pobox.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:48819 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239Ab1ATGBN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jan 2011 01:01:13 -0500
+In-Reply-To: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 
-Resent it since mailbox crashed last time
+On 01/19/2011 03:29 PM, Maksim Rayskiy wrote:
+>> A kernel modification might not even be needed.
+>>
+>> Have you tried simply issuing READ VERIFY via bsg, and not caring if it
+>> completes?  bsg should be able to handle an app submitting a command, but
+>> never checking the 'done' list, right?  A simple shell app could execute
+>>
+>>         write(bsg_fd, ... SCSI READ VERIFY command ...)
+>>         exit(0)
+>>
+>> to avoid waiting for READ VERIFY command completion, I would hope.
+>>
+>>         Jeff
+>>
+>
+> My question was how to speed up system resume when he the spinup
+> request is coming from sd_resume(). For shell method to work I would
+> have to ignore this request entirely and do READ VERIFY when system is
+> fully restored.
+> Can it be done without kernel modification? Tejun mentioned using
+> manage_start_stop flag but had some reservations against it.
 
-Hi, Jeff,
-
-I bought a bunch of PCI cards and tested them, only one running AHCI using Marvell 88SE9125 controller chip. It worked well with the patched kernel at bootup, hotplug, and data transfer.
-I put an order of a JMicron AHCI based PCI card and will test it.
-
-Thanks,
-Jian
-
------Original Message-----
-From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
-Sent: Tuesday, January 18, 2011 4:51 PM
-To: Jian Peng
-Cc: Tejun Heo; Robert Hancock; linux-kernel@vger.kernel.org; ide
-Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
-
-On 01/11/2011 01:55 PM, Jian Peng wrote:
-> Here is new patch based on your suggestion (against 2.6.37 release)
-[...]
-> I will test host controller made by other vendors and report issues soon.
-
-Any updates?
+Oh, if we're talking about sd_resume(), SCSI definitely has an internal 
+mechanism to fire off a request, without blocking and waiting for a 
+response.  It does sound like a kernel modification, but it should be 
+straightforward via existing APIs.
 
 	Jeff
+
+
+
