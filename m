@@ -1,60 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: MWDMA Issue: sda: unknown partition table
-Date: Fri, 21 Jan 2011 17:39:06 +0100
-Message-ID: <20110121163906.GG2832@htj.dyndns.org>
-References: <4D395B74.1010705@st.com>
- <20110121101400.GC2832@htj.dyndns.org>
- <4D395FE8.8000902@st.com>
- <4D39752B.7000202@st.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] ipr/sas_ata: use mode mask macros from <linux/ata.h>
+Date: Fri, 21 Jan 2011 20:32:01 +0300
+Message-ID: <201101212032.01673.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60288 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754407Ab1AUQjL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 11:39:11 -0500
-Received: by fxm20 with SMTP id 20so1951178fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2011 08:39:10 -0800 (PST)
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:46674 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751665Ab1AURdW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 12:33:22 -0500
 Content-Disposition: inline
-In-Reply-To: <4D39752B.7000202@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: viresh kumar <viresh.kumar@st.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>, viresh kumar <viresh.nitj@gmail.com>
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Cc: linux-ide@vger.kernel.org, brking@us.ibm.com
 
-Hey,
+Commit 14bdef982caeda19afe34010482867c18217c641 ([libata] convert drivers to
+use ata.h mode mask defines) didn't convert these two libata driver outside
+drivers/ata/...
 
-On Fri, Jan 21, 2011 at 05:29:39PM +0530, viresh kumar wrote:
-> This error:
-> > # ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
-> 
-> is coming only when i insert/remove my card after board has booted up. If i keep it
-> inserted, and then boot the board: No such error occurs.
-> 
-> As suggested by you earlier, i am doing following on card insertion and removal,
-> after resetting card through controller.
-> 
-> 		ata_ehi_hotplugged(ehi);
-> 		ata_port_freeze(ap);
-> 
-> and after that only i get that error message through following path:
-> Kthread()->scsi_error_handler()->ata_scsi_error()->ata_bmdma_error_handler()
-> ->ata_sff_error_handler()->ata_do_eh()
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Hmmm... okay, so that's from the hotplugging.
+---
+The patch is against the recent Linus' tree.
 
-> I tried again, but couldn't find why i am getting these two issues:
-> 	ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+ drivers/scsi/ipr.c            |    6 +++---
+ drivers/scsi/libsas/sas_ata.c |    4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Yeah, it should be possible to avoid the above if it's coming from
-hotplug.  Identify where and why AC_ERR_ATA_BUS is being set and work
-around it.  There's no reason for it to be set after a hotplug anyway.
-
-> 	sda: unknown partition table
-
-and then this probably is unrelated.  So, no IO error is being
-reported but the above still fails?  How did you verify the read data
-are actually the same?  Maybe there's a cache alias issue?
-
--- 
-tejun
+Index: linux-2.6/drivers/scsi/ipr.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/ipr.c
++++ linux-2.6/drivers/scsi/ipr.c
+@@ -6221,9 +6221,9 @@ static struct ata_port_operations ipr_sa
+ static struct ata_port_info sata_port_info = {
+ 	.flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
+ 	ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
+-	.pio_mask	= 0x10, /* pio4 */
+-	.mwdma_mask = 0x07,
+-	.udma_mask	= 0x7f, /* udma0-6 */
++	.pio_mask	= ATA_PIO4_ONLY,
++	.mwdma_mask	= ATA_MWDMA2,
++	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &ipr_sata_ops
+ };
+ 
+Index: linux-2.6/drivers/scsi/libsas/sas_ata.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/libsas/sas_ata.c
++++ linux-2.6/drivers/scsi/libsas/sas_ata.c
+@@ -364,8 +364,8 @@ static struct ata_port_operations sas_sa
+ static struct ata_port_info sata_port_info = {
+ 	.flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
+ 		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ,
+-	.pio_mask = 0x1f, /* PIO0-4 */
+-	.mwdma_mask = 0x07, /* MWDMA0-2 */
++	.pio_mask = ATA_PIO4,
++	.mwdma_mask = ATA_MWDMA2,
+ 	.udma_mask = ATA_UDMA6,
+ 	.port_ops = &sas_sata_ops
+ };
