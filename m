@@ -1,45 +1,71 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: [PATCH] Export ahci eSATA attribute
-Date: Thu, 20 Jan 2011 11:08:25 -0500
-Message-ID: <4D385DF9.6060001@cfl.rr.com>
-References: <4CDB63E7.1040106@cfl.rr.com> <4CDB79CA.6000606@garzik.org> <4CDE20CF.3010708@cfl.rr.com> <4CDE2274.8060807@garzik.org> <4CDEB2C3.20806@cfl.rr.com>
+From: viresh kumar <viresh.kumar@st.com>
+Subject: MWDMA Issue: sda: unknown partition table
+Date: Fri, 21 Jan 2011 15:39:56 +0530
+Message-ID: <4D395B74.1010705@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:37013 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338Ab1ATQHW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jan 2011 11:07:22 -0500
-In-Reply-To: <4CDEB2C3.20806@cfl.rr.com>
+Received: from eu1sys200aog117.obsmtp.com ([207.126.144.143]:33558 "EHLO
+	eu1sys200aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752126Ab1AUKKY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 05:10:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Cc: Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, Amit GOEL <amit.goel@st.com>
 
-I never got any comment back on this.  In order for udev to use the
-existing attribute, it needs to be moved out of the scsi_host device,
-and udev needs patched to handle bitwise comparisons, or my simple patch
-adding the new attribute can be applied.
 
-Are you certain you do not want to add a new attribute, and if so, would
-you accept a patch moving the existing one out of the scsi_host device
-so it will be a proper ancestor of the disk device?  Kay Sievers thinks
-that the current location of scsi_host is broken should be fixed, but I
-think that involves significant changes to the scsi layer so I found
-that this patch was much simpler.
+Hi,
 
-On 11/13/2010 10:46 AM, Phillip Susi wrote:
-> On 11/13/2010 12:30 AM, Jeff Garzik wrote:
->> As you noted in your previous mail, the entire PORT_CMD is already
->> exported as a attribute. I don't see much point in exporting this
->> information a second time.
-> 
-> Unfortunately it is not exported in a way that udev can make use of it.
->  Firstly because udev can only compare on specific value matches rather
-> than an individual bit, and secondly because it is in the weird
-> scsi_host device rather than the host device, so the attribute is not in
-> an ancestor device of the disk device.  Placing this attribute this way
-> puts it in the ancestry of the disk device so it can be matched by a
-> udev ATTRS rule.
+I am implementing mwdma interface for arasan compact flash controller.
+I am facing a strange problem, when i insert CF card on my board (after bootup),
+in mwdma mode, i get following:
 
+ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+ata1: soft resetting link
+ata1.00: CFA: TRANSCEND, 20091215, max UDMA/66
+ata1.00: 62537328 sectors, multi 0: LBA 
+ata1.00: configured for MWDMA4
+ata1: EH complete
+scsi 0:0:0:0: Direct-Access     ATA      TRANSCEND        2009 PQ: 0 ANSI: 5
+sd 0:0:0:0: [sda] 62537328 512-byte logical blocks: (32.0 GB/29.8 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: unknown partition table
+sd 0:0:0:0: [sda] Attached SCSI disk
+
+
+I tried PIO mode on same card and it worked fine i got sda1 created.
+I suspected that there is some problem with DMA, so i took dump of all data read by PIO
+and DMA. After configuring in MWDMA4 mode at:
+ata1.00: configured for MWDMA4
+a read request of 4096 bytes occurs (both in PIO (handled by libata-sff) and MWDMA).
+
+These 4096 bytes are exactly same in case of PIO and MWDMA. Also all data read before configuring
+MWDMA4 mode is also same, as that is done by common PIO code.
+
+In my interrupt handler, after controller specific code i am calling:
+ata_bmdma_interrupt(irq, dev);
+
+also i am returning ATA_DMA_INTR from my bmdma_status routine.
+ata_port_operations is:
+
+static struct ata_port_operations arasan_cf_ops = {
+	.inherits		= &ata_bmdma_port_ops,
+	.set_piomode		= arasan_cf_set_piomode,
+	.set_dmamode		= arasan_cf_set_dmamode,
+	.bmdma_setup		= arasan_cf_bmdma_setup,
+	.bmdma_start		= arasan_cf_bmdma_start,
+	.bmdma_stop		= arasan_cf_bmdma_stop,
+	.bmdma_status		= arasan_cf_bmdma_status,
+	.sff_irq_clear		= arasan_cf_bmdma_irq_clear,
+};
+
+There are no BMDMA registers in my controller.
+
+Can somebody give any clue on which part i should try to look at?
+
+thanks in advance,
+viresh
