@@ -1,64 +1,65 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] ipr/sas_ata: use mode mask macros from <linux/ata.h>
-Date: Fri, 21 Jan 2011 20:32:01 +0300
-Message-ID: <201101212032.01673.sshtylyov@ru.mvista.com>
+From: Viresh Kumar <viresh.nitj@gmail.com>
+Subject: Re: MWDMA Issue: sda: unknown partition table
+Date: Sat, 22 Jan 2011 09:38:46 +0530
+Message-ID: <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
+References: <4D395B74.1010705@st.com>
+	<20110121101400.GC2832@htj.dyndns.org>
+	<4D395FE8.8000902@st.com>
+	<4D39752B.7000202@st.com>
+	<20110121163906.GG2832@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:46674 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751665Ab1AURdW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 12:33:22 -0500
-Content-Disposition: inline
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48105 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755124Ab1AVEIs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 23:08:48 -0500
+Received: by bwz15 with SMTP id 15so2206929bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2011 20:08:46 -0800 (PST)
+In-Reply-To: <20110121163906.GG2832@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
-Cc: linux-ide@vger.kernel.org, brking@us.ibm.com
+To: Tejun Heo <tj@kernel.org>
+Cc: viresh kumar <viresh.kumar@st.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
 
-Commit 14bdef982caeda19afe34010482867c18217c641 ([libata] convert drivers to
-use ata.h mode mask defines) didn't convert these two libata driver outside
-drivers/ata/...
+On 1/21/11, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Jan 21, 2011 at 05:29:39PM +0530, viresh kumar wrote:
+>> I tried again, but couldn't find why i am getting these two issues:
+>> 	ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
+>
+> Yeah, it should be possible to avoid the above if it's coming from
+> hotplug.  Identify where and why AC_ERR_ATA_BUS is being set and work
+> around it.  There's no reason for it to be set after a hotplug anyway.
+>
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Ok. Will debug this.
 
----
-The patch is against the recent Linus' tree.
+>> 	sda: unknown partition table
+>
+> and then this probably is unrelated.  So, no IO error is being
+> reported but the above still fails?
 
- drivers/scsi/ipr.c            |    6 +++---
- drivers/scsi/libsas/sas_ata.c |    4 ++--
- 2 files changed, 5 insertions(+), 5 deletions(-)
+Yes
 
-Index: linux-2.6/drivers/scsi/ipr.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/ipr.c
-+++ linux-2.6/drivers/scsi/ipr.c
-@@ -6221,9 +6221,9 @@ static struct ata_port_operations ipr_sa
- static struct ata_port_info sata_port_info = {
- 	.flags	= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
- 	ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA,
--	.pio_mask	= 0x10, /* pio4 */
--	.mwdma_mask = 0x07,
--	.udma_mask	= 0x7f, /* udma0-6 */
-+	.pio_mask	= ATA_PIO4_ONLY,
-+	.mwdma_mask	= ATA_MWDMA2,
-+	.udma_mask	= ATA_UDMA6,
- 	.port_ops	= &ipr_sata_ops
- };
- 
-Index: linux-2.6/drivers/scsi/libsas/sas_ata.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/libsas/sas_ata.c
-+++ linux-2.6/drivers/scsi/libsas/sas_ata.c
-@@ -364,8 +364,8 @@ static struct ata_port_operations sas_sa
- static struct ata_port_info sata_port_info = {
- 	.flags = ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY | ATA_FLAG_SATA_RESET |
- 		ATA_FLAG_MMIO | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ,
--	.pio_mask = 0x1f, /* PIO0-4 */
--	.mwdma_mask = 0x07, /* MWDMA0-2 */
-+	.pio_mask = ATA_PIO4,
-+	.mwdma_mask = ATA_MWDMA2,
- 	.udma_mask = ATA_UDMA6,
- 	.port_ops = &sas_sata_ops
- };
+> How did you verify the read data
+> are actually the same?  Maybe there's a cache alias issue?
+>
+
+I printed buffer data at two places
+: ata_sff_data_xfer (in PIO mode)
+: my drivers dma read routine after all data is read (In MWDMA Mode).
+
+As soon as handshaking is done, a read request of 4096 bytes is given:
+Here in both cases (PIO and MWDMA) first block of 512 bytes contained
+non-zero data but the other 7 blocks contained 0.
+
+Also Arasan Controller, as far i have understood, doesn't transfer data directly
+to a memory location. Instead we need to read data from Controllers FIFO.
+So, probably it wouldn't be cache issue, as ARM is reading data directly from
+FIFO to our buffer (using its virtual address).
+
+Note: I am working on linux-2.6.37 and Card was formatted before
+testing and so is empty.
+
+--
+viresh
