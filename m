@@ -1,52 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: MWDMA Issue: sda: unknown partition table
-Date: Sat, 22 Jan 2011 12:45:59 +0100
-Message-ID: <20110122114559.GA6160@htj.dyndns.org>
-References: <4D395B74.1010705@st.com>
- <20110121101400.GC2832@htj.dyndns.org>
- <4D395FE8.8000902@st.com>
- <4D39752B.7000202@st.com>
- <20110121163906.GG2832@htj.dyndns.org>
- <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Lars Randers <lars@nstec.dk>
+Subject: [PATCH] drivers/ata/ahci.c: add device code for marvell 88se6141
+Date: Sat, 22 Jan 2011 14:03:13 +0100
+Message-ID: <1295701393-11417-1-git-send-email-lars@nstec.dk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:32937 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752716Ab1AVLqG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jan 2011 06:46:06 -0500
-Received: by fxm20 with SMTP id 20so2627986fxm.19
-        for <linux-ide@vger.kernel.org>; Sat, 22 Jan 2011 03:46:04 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:38722 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754Ab1AVNHv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jan 2011 08:07:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Viresh Kumar <viresh.nitj@gmail.com>
-Cc: viresh kumar <viresh.kumar@st.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Lars Randers <lars@nstec.dk>
 
-Hello,
+Add the pci device code for the Marvell 88SE6141 SATA controller.
 
-On Sat, Jan 22, 2011 at 09:38:46AM +0530, Viresh Kumar wrote:
-> As soon as handshaking is done, a read request of 4096 bytes is given:
-> Here in both cases (PIO and MWDMA) first block of 512 bytes contained
-> non-zero data but the other 7 blocks contained 0.
+Signed-off-by: Lars Randers <lars@nstec.dk>
+---
+ drivers/ata/ahci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Hmmm, okay.  Well, I'm afraid you'll have to find out where things are
-going wrong.  fs/partitions/check.h::read_part_sector() is the read
-function used by partition check code.  You'll have to find where the
-difference between what that code and your drive sees comes from.
-Playing with dd in userland on the device node and see how reads and
-writes behave would be helpful too.
-
-> Also Arasan Controller, as far i have understood, doesn't transfer data directly
-> to a memory location. Instead we need to read data from Controllers FIFO.
-> So, probably it wouldn't be cache issue, as ARM is reading data directly from
-> FIFO to our buffer (using its virtual address).
-
-I don't really follow.  It's DMA.  The controller is writing to
-memory.
-
-Thanks.
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3288263..b29a64d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -377,6 +377,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 
+ 	/* Marvell */
+ 	{ PCI_VDEVICE(MARVELL, 0x6145), board_ahci_mv },	/* 6145 */
++	{ PCI_VDEVICE(MARVELL, 0x6141), board_ahci_mv },	/* 6141 */
+ 	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
+ 	{ PCI_DEVICE(0x1b4b, 0x9123),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
 -- 
-tejun
+1.7.1
+
