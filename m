@@ -1,65 +1,52 @@
-From: Viresh Kumar <viresh.nitj@gmail.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: MWDMA Issue: sda: unknown partition table
-Date: Sat, 22 Jan 2011 09:38:46 +0530
-Message-ID: <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
+Date: Sat, 22 Jan 2011 12:45:59 +0100
+Message-ID: <20110122114559.GA6160@htj.dyndns.org>
 References: <4D395B74.1010705@st.com>
-	<20110121101400.GC2832@htj.dyndns.org>
-	<4D395FE8.8000902@st.com>
-	<4D39752B.7000202@st.com>
-	<20110121163906.GG2832@htj.dyndns.org>
+ <20110121101400.GC2832@htj.dyndns.org>
+ <4D395FE8.8000902@st.com>
+ <4D39752B.7000202@st.com>
+ <20110121163906.GG2832@htj.dyndns.org>
+ <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48105 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755124Ab1AVEIs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2011 23:08:48 -0500
-Received: by bwz15 with SMTP id 15so2206929bwz.19
-        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2011 20:08:46 -0800 (PST)
-In-Reply-To: <20110121163906.GG2832@htj.dyndns.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:32937 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752716Ab1AVLqG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jan 2011 06:46:06 -0500
+Received: by fxm20 with SMTP id 20so2627986fxm.19
+        for <linux-ide@vger.kernel.org>; Sat, 22 Jan 2011 03:46:04 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <AANLkTimD0oDCx=UTYsenTNPgO4RgHGCKxrNyQ2u7atmE@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Viresh Kumar <viresh.nitj@gmail.com>
 Cc: viresh kumar <viresh.kumar@st.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
 
-On 1/21/11, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Jan 21, 2011 at 05:29:39PM +0530, viresh kumar wrote:
->> I tried again, but couldn't find why i am getting these two issues:
->> 	ata1: exception Emask 0x10 SAct 0x0 SErr 0x0 action 0xe frozen
->
-> Yeah, it should be possible to avoid the above if it's coming from
-> hotplug.  Identify where and why AC_ERR_ATA_BUS is being set and work
-> around it.  There's no reason for it to be set after a hotplug anyway.
->
+Hello,
 
-Ok. Will debug this.
+On Sat, Jan 22, 2011 at 09:38:46AM +0530, Viresh Kumar wrote:
+> As soon as handshaking is done, a read request of 4096 bytes is given:
+> Here in both cases (PIO and MWDMA) first block of 512 bytes contained
+> non-zero data but the other 7 blocks contained 0.
 
->> 	sda: unknown partition table
->
-> and then this probably is unrelated.  So, no IO error is being
-> reported but the above still fails?
+Hmmm, okay.  Well, I'm afraid you'll have to find out where things are
+going wrong.  fs/partitions/check.h::read_part_sector() is the read
+function used by partition check code.  You'll have to find where the
+difference between what that code and your drive sees comes from.
+Playing with dd in userland on the device node and see how reads and
+writes behave would be helpful too.
 
-Yes
+> Also Arasan Controller, as far i have understood, doesn't transfer data directly
+> to a memory location. Instead we need to read data from Controllers FIFO.
+> So, probably it wouldn't be cache issue, as ARM is reading data directly from
+> FIFO to our buffer (using its virtual address).
 
-> How did you verify the read data
-> are actually the same?  Maybe there's a cache alias issue?
->
+I don't really follow.  It's DMA.  The controller is writing to
+memory.
 
-I printed buffer data at two places
-: ata_sff_data_xfer (in PIO mode)
-: my drivers dma read routine after all data is read (In MWDMA Mode).
+Thanks.
 
-As soon as handshaking is done, a read request of 4096 bytes is given:
-Here in both cases (PIO and MWDMA) first block of 512 bytes contained
-non-zero data but the other 7 blocks contained 0.
-
-Also Arasan Controller, as far i have understood, doesn't transfer data directly
-to a memory location. Instead we need to read data from Controllers FIFO.
-So, probably it wouldn't be cache issue, as ARM is reading data directly from
-FIFO to our buffer (using its virtual address).
-
-Note: I am working on linux-2.6.37 and Card was formatted before
-testing and so is empty.
-
---
-viresh
+-- 
+tejun
