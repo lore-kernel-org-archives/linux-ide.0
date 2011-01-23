@@ -1,69 +1,59 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH 3/3] libata: fix eh locking
-Date: Sun, 23 Jan 2011 08:31:14 -0600
-Message-ID: <1295793074.3007.18.camel@mulgrave.site>
-References: <1295792806.3007.12.camel@mulgrave.site>
+Subject: [PATCH 0/2] convert libsas to the libata new eh
+Date: Sun, 23 Jan 2011 09:41:00 -0600
+Message-ID: <1295797260.3007.118.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1295792806.3007.12.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 List-Id: linux-ide@vger.kernel.org
 
-The SCSI host eh_cmd_q should be protected by the host lock (not the
-port lock).  This probably doesn't matter that much at the moment,
-since we try to serialise the add and eh pieces, but it might matter
-in future for more convenient error handling.  Plus this switches
-libata to the standard eh pattern where you lock, remove from the cmd
-queue to a local list and unlock and then operate on the local list.
+The bad news is that this is a pretty horrific conversion.  Because of
+the amount of control the new eh wants (and the slew of monolithic
+assumptions it makes), the entire error handler routine has to be sliced
+apart and sewn back together to make it callable as part of an existing
+error handler (rather than trying to do everything on its own).
 
-Signed-off-by: James Bottomley <James.Bottomley@suse.de>
+The even worse news is that unless you have an existing strategy
+handler, you can't make use of this.  That means that ipr is
+unconvertable in its current form.  Given the two really nasty options:
+give ipr its own error handler via its own transport class, or attach
+ipr to libsas and let it do the work, I'd choose the latter.
+Unfortunately, my power box with IPR has been non-functional for a year
+(and all pleas to IBM to fix it have so far gone unanswered), so I can't
+really do this myself.
+
+Once we carve up libata, it's still a rather complex call sequence for
+libsas because of libata's annoying insistance on calling the error
+handler at the drop of a hat.  The principle differentiator used is the
+fact that if a SCSI command no longer has an associated SAS task, (i.e.
+libsas thinks it's complete) it must be destined for libata.  This works
+correctly in all the ATAPI sense processing instances I've tested.
+Finally, we still have to call port recovery.  Currently, it's
+impossible to tell which port libata thinks is in error (libata knows
+because it has one host per port, but libsas doesn't), so the final
+solution is just to call port recovery for every SATA/STP attached port.
+
+I've tested all of this with mvsas over expander attached ATA devices
+using STP (aic94xx seems to have developed some handling fault for STP,
+which I'll look into next).
+
+James
+
 ---
- drivers/ata/libata-eh.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 17a6378..fc3f339 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -589,9 +589,14 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	struct ata_port *ap = ata_shost_to_port(host);
- 	int i;
- 	unsigned long flags;
-+	LIST_HEAD(eh_work_q);
- 
- 	DPRINTK("ENTER\n");
- 
-+	spin_lock_irqsave(host->host_lock, flags);
-+	list_splice_init(&host->eh_cmd_q, &eh_work_q);
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+
- 	/* make sure sff pio task is not running */
- 	ata_sff_flush_pio_task(ap);
- 
-@@ -627,7 +632,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		if (ap->ops->lost_interrupt)
- 			ap->ops->lost_interrupt(ap);
- 
--		list_for_each_entry_safe(scmd, tmp, &host->eh_cmd_q, eh_entry) {
-+		list_for_each_entry_safe(scmd, tmp, &eh_work_q, eh_entry) {
- 			struct ata_queued_cmd *qc;
- 
- 			for (i = 0; i < ATA_MAX_QUEUE; i++) {
-@@ -762,7 +767,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	}
- 
- 	/* finish or retry handled scmd's and clean up */
--	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q));
-+	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
- 
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
- 
--- 
-1.7.2.3
+James Bottomley (2):
+  libata: separate error handler into usable components
+  libsas: convert to libata new error handler
 
+ drivers/ata/libata-eh.c             |   53 ++++++++++++++++++----
+ drivers/scsi/libsas/sas_ata.c       |   87 ++++++++++++++++++++++++++++++++--
+ drivers/scsi/libsas/sas_scsi_host.c |   14 +++++-
+ include/linux/libata.h              |    2 +
+ include/scsi/sas_ata.h              |   22 +++++++++
+ 5 files changed, 161 insertions(+), 17 deletions(-)
 
 
