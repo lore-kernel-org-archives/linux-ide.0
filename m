@@ -1,1055 +1,951 @@
-From: Toralf =?utf-8?q?F=C3=B6rster?= <toralf.foerster@gmx.de>
-Subject: Re: libata EH running when switching VTs
-Date: Sat, 22 Jan 2011 18:31:09 +0100
-Message-ID: <201101221831.09448.toralf.foerster@gmx.de>
-References: <201101221625.00775.toralf.foerster@gmx.de> <4D3B077F.7040000@gmail.com>
+From: BU66ER BAD6ER <debu66er@gmail.com>
+Subject: Seagate hard disk firmware issue
+Date: Sun, 23 Jan 2011 12:05:27 +0100
+Message-ID: <AANLkTinvjz0n6bq3Q218w2bs6tjVu5-p8WcpH7kzyMS_@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_dRxON41QL04pMOM"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:36526 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752208Ab1AVRbN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 22 Jan 2011 12:31:13 -0500
-In-Reply-To: <4D3B077F.7040000@gmail.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:52907 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880Ab1AWLF3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jan 2011 06:05:29 -0500
+Received: by gxk9 with SMTP id 9so983233gxk.19
+        for <linux-ide@vger.kernel.org>; Sun, 23 Jan 2011 03:05:28 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
---Boundary-00=_dRxON41QL04pMOM
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Hi,
 
+=46our weeks ago I bought a new 2TB Seagate Barracuda internal SATA
+drive. That drive has two 667GB ext4 partions (667GB unused) and it is
+used for storage. My main system (Debian Sid 64-bit and KDE) resides
+on a 40GB SSD, also using ext4.
 
-Robert Hancock wrote at 17:36:15
-> (CCing linux-ide)
->=20
-> On 01/22/2011 09:25 AM, Toralf F=C3=B6rster wrote:
-> > Hello,
-> >=20
-> > Henrique de Moraes Holschuh wrote at 14:11:12
-> >=20
-> >> I don't even know whom to refer you to.  Maybe ask in LKML directly?=20
-> >> Use the subject "libata EH running when switching VTs".  If one of
-> >> those VTs are in X.org control, say that as well.
-> >=20
-> > I'm wondering why I get this in /var/log/messages w/ kernel 2.6.37 when=
- I
-> > switch from VT7 (running xorg ) to VT12 (or 1 or 2 or another number) a=
-nd
-> > back:
-> >=20
-> >=20
-> > 2011-01-22T16:20:53.854+01:00 n22 kernel: ata1: hard resetting link
-> > 2011-01-22T16:20:54.163+01:00 n22 kernel: ata1: SATA link up 1.5 Gbps
-> > (SStatus 113 SControl 300)
-> > 2011-01-22T16:20:54.164+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > 2011-01-22T16:20:54.164+01:00 n22 kernel: ata1.00: ACPI cmd
-> > f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > 2011-01-22T16:20:54.165+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-> > 2011-01-22T16:20:54.165+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> > 2011-01-22T16:20:54.169+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > 2011-01-22T16:20:54.169+01:00 n22 kernel: ata1.00: ACPI cmd
-> > f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > 2011-01-22T16:20:54.169+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-> > 2011-01-22T16:20:54.169+01:00 n22 kernel: ata1.00: ACPI cmd
-> > ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-> > 2011-01-22T16:20:54.170+01:00 n22 kernel: ata1.00: configured for
-> > UDMA/100 2011-01-22T16:20:54.171+01:00 n22 kernel: ata1: EH complete
-> >=20
-> >=20
-> > I'm running an almost stable Gentoo on a ThinkPad T400 with current
-> > kernel (2.6.37, earlier shows this behaviour too)
->=20
-> Is that the only output you're getting? Can you post the full dmesg log
-> from bootup?
+Two weeks ago I noticed a severe performance drop, where any file
+manager couldn't view directories on the 2TB disk without a one or two
+minute penalty. After that I have had three hard freezes of that disk
+and the entire system. Before the freeze there is very much hd
+activity and finally I need to turn the power off. I have now also
+made a backup of /dev/sdb1 should it be fatally serious.
 
-Of course - attached here
-=2D-=20
-MfG/Kind regards
-Toralf F=C3=B6rster
+I was recommended by someone at the #debian irc to make changes to the
+spindown_time but that only helped for a few days. Yesterday, the 3rd
+freeze came and the system wouldn't even recognize the disk after
+reboot; just 'clicking' waiting for a response. I showed the kern.log
+to someone at the same channel who concluded that this should be a
+firmware issue.
 
-pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
+Here is the latest kern.log which may identify the issue: I hope it
+contains the relevant details. But first the output of smartctl -a
+/dev/sdb.
+
+I have now set the hdparm spindown_time to 0, disabling disk sleep
+which seems to have been the culprit as judged on messages in the
+Dolphin file manager etc.
+
+Thanks for any help!
 
 
---Boundary-00=_dRxON41QL04pMOM
-Content-Type: text/x-log;
-  charset="UTF-8";
-  name="dmesg.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="dmesg.log"
+> # smartctl -a /dev/sdb
+> smartctl 5.40 2010-07-12 r3124 [x86_64-unknown-linux-gnu] (local buil=
+d)
+> Copyright (C) 2002-10 by Bruce Allen, http://smartmontools.sourceforg=
+e.net
+>
+> =3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
+> Model Family:=A0=A0=A0=A0 Seagate Barracuda LP
+> Device Model:=A0=A0=A0=A0 ST32000542AS
+> Serial Number:=A0=A0=A0 5XW20H7P
+> Firmware Version: CC34
+> User Capacity:=A0=A0=A0 2,000,398,934,016 bytes
+> Device is:=A0=A0=A0=A0=A0=A0=A0 In smartctl database [for details use=
+: -P show]
+> ATA Version is:=A0=A0 8
+> ATA Standard is:=A0 ATA-8-ACS revision 4
+> Local Time is:=A0=A0=A0 Sun Jan 23 11:50:56 2011 CET
+> SMART support is: Available - device has SMART capability.
+> SMART support is: Enabled
+>
+> =3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
+> SMART overall-health self-assessment test result: PASSED
+>
+> General SMART Values:
+> Offline data collection status:=A0 (0x00) Offline data collection act=
+ivity
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 was never started.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Auto Offline Data Coll=
+ection: Disabled.
+> Self-test execution status:=A0=A0=A0=A0=A0 (=A0=A0 0) The previous se=
+lf-test routine completed
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 without error or no se=
+lf-test has ever
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 been run.
+> Total time to complete Offline
+> data collection:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 ( 63=
+3) seconds.
+> Offline data collection
+> capabilities:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+ (0x73) SMART execute Offline immediate.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Auto Offline data coll=
+ection on/off support.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Suspend Offline collec=
+tion upon new
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 command.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 No Offline surface sca=
+n supported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Self-test supported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Conveyance Self-test s=
+upported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Selective Self-test su=
+pported.
+> SMART capabilities:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (0x0003) Saves S=
+MART data before entering
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 power-saving mode.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 Supports SMART auto sa=
+ve timer.
+> Error logging capability:=A0=A0=A0=A0=A0=A0=A0 (0x01) Error logging s=
+upported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 General Purpose Loggin=
+g supported.
+> Short self-test routine
+> recommended polling time:=A0=A0=A0=A0=A0=A0=A0 (=A0=A0 1) minutes.
+> Extended self-test routine
+> recommended polling time:=A0=A0=A0=A0=A0=A0=A0 ( 255) minutes.
+> Conveyance self-test routine
+> recommended polling time:=A0=A0=A0=A0=A0=A0=A0 (=A0=A0 2) minutes.
+> SCT capabilities:=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 (0x103f) SCT=
+ Status supported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 SCT Error Recovery Con=
+trol supported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 SCT Feature Control su=
+pported.
+> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 SCT Data Table support=
+ed.
+>
+> SMART Attributes Data Structure revision number: 10
+> Vendor Specific SMART Attributes with Thresholds:
+> ID# ATTRIBUTE_NAME=A0=A0=A0=A0=A0=A0=A0=A0=A0 FLAG=A0=A0=A0=A0 VALUE =
+WORST THRESH TYPE=A0=A0=A0=A0=A0 UPDATED=A0 WHEN_FAILED RAW_VALUE
+> =A0 1 Raw_Read_Error_Rate=A0=A0=A0=A0 0x000f=A0=A0 100=A0=A0 089=A0=A0=
+ 006=A0=A0=A0 Pre-fail=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 =
+184733939
+> =A0 3 Spin_Up_Time=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 0x0003=A0=A0 100=A0=
+=A0 100=A0=A0 000=A0=A0=A0 Pre-fail=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=
+=A0=A0=A0=A0 0
+> =A0 4 Start_Stop_Count=A0=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 099=A0=A0 09=
+9=A0=A0 020=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 1160
+> =A0 5 Reallocated_Sector_Ct=A0=A0 0x0033=A0=A0 100=A0=A0 100=A0=A0 03=
+6=A0=A0=A0 Pre-fail=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 0
+> =A0 7 Seek_Error_Rate=A0=A0=A0=A0=A0=A0=A0=A0 0x000f=A0=A0 100=A0=A0 =
+253=A0=A0 030=A0=A0=A0 Pre-fail=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 296094
+> =A0 9 Power_On_Hours=A0=A0=A0=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 100=A0=A0=
+ 100=A0=A0 000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=
+=A0=A0=A0 307
+> =A010 Spin_Retry_Count=A0=A0=A0=A0=A0=A0=A0 0x0013=A0=A0 100=A0=A0 10=
+0=A0=A0 097=A0=A0=A0 Pre-fail=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 0
+> =A012 Power_Cycle_Count=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 099=A0=A0 099=A0=
+=A0 020=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=
+=A0 1186
+> 183 Runtime_Bad_Block=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 100=A0=A0 100=A0=
+=A0 000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=
+=A0 0
+> 184 End-to-End_Error=A0=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 100=A0=A0 100=A0=
+=A0 099=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=
+=A0 0
+> 187 Reported_Uncorrect=A0=A0=A0=A0=A0 0x0032=A0=A0 001=A0=A0 001=A0=A0=
+ 000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0=
+ 225
+> 188 Command_Timeout=A0=A0=A0=A0=A0=A0=A0=A0 0x0032=A0=A0 100=A0=A0 09=
+9=A0=A0 000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 4295032833
+> 189 High_Fly_Writes=A0=A0=A0=A0=A0=A0=A0=A0 0x003a=A0=A0 100=A0=A0 10=
+0=A0=A0 000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 0
+> 190 Airflow_Temperature_Cel 0x0022=A0=A0 063=A0=A0 063=A0=A0 045=A0=A0=
+=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 37 (Life=
+time Min/Max 19/37)
+> 194 Temperature_Celsius=A0=A0=A0=A0 0x0022=A0=A0 037=A0=A0 040=A0=A0 =
+000=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0=
+ 37 (0 16 0 0)
+> 195 Hardware_ECC_Recovered=A0 0x001a=A0=A0 052=A0=A0 033=A0=A0 000=A0=
+=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 18473=
+3939
+> 197 Current_Pending_Sector=A0 0x0012=A0=A0 100=A0=A0 099=A0=A0 000=A0=
+=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 40
+> 198 Offline_Uncorrectable=A0=A0 0x0010=A0=A0 100=A0=A0 099=A0=A0 000=A0=
+=A0=A0 Old_age=A0=A0 Offline=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 40
+> 199 UDMA_CRC_Error_Count=A0=A0=A0 0x003e=A0=A0 200=A0=A0 200=A0=A0 00=
+0=A0=A0=A0 Old_age=A0=A0 Always=A0=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 0
+> 240 Head_Flying_Hours=A0=A0=A0=A0=A0=A0 0x0000=A0=A0 100=A0=A0 253=A0=
+=A0 000=A0=A0=A0 Old_age=A0=A0 Offline=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0=
+ 210019605808507
+> 241 Total_LBAs_Written=A0=A0=A0=A0=A0 0x0000=A0=A0 100=A0=A0 253=A0=A0=
+ 000=A0=A0=A0 Old_age=A0=A0 Offline=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=A0=A0 =
+546635184
+> 242 Total_LBAs_Read=A0=A0=A0=A0=A0=A0=A0=A0 0x0000=A0=A0 100=A0=A0 25=
+3=A0=A0 000=A0=A0=A0 Old_age=A0=A0 Offline=A0=A0=A0=A0=A0 -=A0=A0=A0=A0=
+=A0=A0 2195715347
+>
+> SMART Error Log Version: 1
+> ATA Error Count: 303 (device log contains only the most recent five e=
+rrors)
+> =A0=A0=A0=A0=A0=A0=A0 CR =3D Command Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 FR =3D Features Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 SC =3D Sector Count Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 SN =3D Sector Number Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 CL =3D Cylinder Low Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 CH =3D Cylinder High Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 DH =3D Device/Head Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 DC =3D Device Command Register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 ER =3D Error register [HEX]
+> =A0=A0=A0=A0=A0=A0=A0 ST =3D Status register [HEX]
+> Powered_Up_Time is measured from power on, and printed as
+> DDd+hh:mm:SS.sss where DD=3Ddays, hh=3Dhours, mm=3Dminutes,
+> SS=3Dsec, and sss=3Dmillisec. It "wraps" after 49.710 days.
+>
+> Error 303 occurred at disk power-on lifetime: 305 hours (12 days + 17=
+ hours)
+> =A0 When the command that caused the error occurred, the device was a=
+ctive or idle.
+>
+> =A0 After command completion occurred, registers were:
+> =A0 ER ST SC SN CL CH DH
+> =A0 -- -- -- -- -- -- --
+> =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 1106=
+9784
+>
+> =A0 Commands leading to the command that caused the error were:
+> =A0 CR FR SC SN CL CH DH DC=A0=A0 Powered_Up_Time=A0 Command/Feature_=
+Name
+> =A0 -- -- -- -- -- -- -- --=A0 ----------------=A0 ------------------=
+--
+> =A0 c8 00 08 57 e9 a8 e0 00=A0=A0=A0=A0=A0 02:02:27.917=A0 READ DMA
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:27.916=A0 READ NATIV=
+E MAX ADDRESS EXT
+> =A0 ec 00 00 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:27.908=A0 IDENTIFY D=
+EVICE
+> =A0 ef 03 46 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:27.877=A0 SET FEATUR=
+ES [Set transfer mode]
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:27.788=A0 READ NATIV=
+E MAX ADDRESS EXT
+>
+> Error 302 occurred at disk power-on lifetime: 305 hours (12 days + 17=
+ hours)
+> =A0 When the command that caused the error occurred, the device was a=
+ctive or idle.
+>
+> =A0 After command completion occurred, registers were:
+> =A0 ER ST SC SN CL CH DH
+> =A0 -- -- -- -- -- -- --
+> =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 1106=
+9784
+>
+> =A0 Commands leading to the command that caused the error were:
+> =A0 CR FR SC SN CL CH DH DC=A0=A0 Powered_Up_Time=A0 Command/Feature_=
+Name
+> =A0 -- -- -- -- -- -- -- --=A0 ----------------=A0 ------------------=
+--
+> =A0 c8 00 08 57 e9 a8 e0 00=A0=A0=A0=A0=A0 02:02:24.081=A0 READ DMA
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:24.080=A0 READ NATIV=
+E MAX ADDRESS EXT
+> =A0 ec 00 00 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:24.071=A0 IDENTIFY D=
+EVICE
+> =A0 ef 03 46 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:24.066=A0 SET FEATUR=
+ES [Set transfer mode]
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:24.044=A0 READ NATIV=
+E MAX ADDRESS EXT
+>
+> Error 301 occurred at disk power-on lifetime: 305 hours (12 days + 17=
+ hours)
+> =A0 When the command that caused the error occurred, the device was a=
+ctive or idle.
+>
+> =A0 After command completion occurred, registers were:
+> =A0 ER ST SC SN CL CH DH
+> =A0 -- -- -- -- -- -- --
+> =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 1106=
+9784
+>
+> =A0 Commands leading to the command that caused the error were:
+> =A0 CR FR SC SN CL CH DH DC=A0=A0 Powered_Up_Time=A0 Command/Feature_=
+Name
+> =A0 -- -- -- -- -- -- -- --=A0 ----------------=A0 ------------------=
+--
+> =A0 c8 00 08 57 e9 a8 e0 00=A0=A0=A0=A0=A0 02:02:20.320=A0 READ DMA
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:20.319=A0 READ NATIV=
+E MAX ADDRESS EXT
+> =A0 ec 00 00 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:20.310=A0 IDENTIFY D=
+EVICE
+> =A0 ef 03 46 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:20.302=A0 SET FEATUR=
+ES [Set transfer mode]
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:20.279=A0 READ NATIV=
+E MAX ADDRESS EXT
+>
+> Error 300 occurred at disk power-on lifetime: 305 hours (12 days + 17=
+ hours)
+> =A0 When the command that caused the error occurred, the device was a=
+ctive or idle.
+>
+> =A0 After command completion occurred, registers were:
+> =A0 ER ST SC SN CL CH DH
+> =A0 -- -- -- -- -- -- --
+> =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 1106=
+9784
+>
+> =A0 Commands leading to the command that caused the error were:
+> =A0 CR FR SC SN CL CH DH DC=A0=A0 Powered_Up_Time=A0 Command/Feature_=
+Name
+> =A0 -- -- -- -- -- -- -- --=A0 ----------------=A0 ------------------=
+--
+> =A0 c8 00 08 57 e9 a8 e0 00=A0=A0=A0=A0=A0 02:02:16.559=A0 READ DMA
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:16.558=A0 READ NATIV=
+E MAX ADDRESS EXT
+> =A0 ec 00 00 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:16.546=A0 IDENTIFY D=
+EVICE
+> =A0 ef 03 46 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:16.538=A0 SET FEATUR=
+ES [Set transfer mode]
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:16.506=A0 READ NATIV=
+E MAX ADDRESS EXT
+>
+> Error 299 occurred at disk power-on lifetime: 305 hours (12 days + 17=
+ hours)
+> =A0 When the command that caused the error occurred, the device was a=
+ctive or idle.
+>
+> =A0 After command completion occurred, registers were:
+> =A0 ER ST SC SN CL CH DH
+> =A0 -- -- -- -- -- -- --
+> =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 1106=
+9784
+>
+> =A0 Commands leading to the command that caused the error were:
+> =A0 CR FR SC SN CL CH DH DC=A0=A0 Powered_Up_Time=A0 Command/Feature_=
+Name
+> =A0 -- -- -- -- -- -- -- --=A0 ----------------=A0 ------------------=
+--
+> =A0 c8 00 08 57 e9 a8 e0 00=A0=A0=A0=A0=A0 02:02:12.770=A0 READ DMA
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:12.769=A0 READ NATIV=
+E MAX ADDRESS EXT
+> =A0 ec 00 00 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:12.761=A0 IDENTIFY D=
+EVICE
+> =A0 ef 03 46 00 00 00 a0 00=A0=A0=A0=A0=A0 02:02:12.754=A0 SET FEATUR=
+ES [Set transfer mode]
+> =A0 27 00 00 00 00 00 e0 00=A0=A0=A0=A0=A0 02:02:12.725=A0 READ NATIV=
+E MAX ADDRESS EXT
+>
+> SMART Self-test log structure revision number 1
+> No self-tests have been logged.=A0 [To run self-tests, use: smartctl =
+-t]
+>
+>
+> SMART Selective self-test log data structure revision number 1
+> =A0SPAN=A0 MIN_LBA=A0 MAX_LBA=A0 CURRENT_TEST_STATUS
+> =A0=A0=A0 1=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0 Not_test=
+ing
+> =A0=A0=A0 2=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0 Not_test=
+ing
+> =A0=A0=A0 3=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0 Not_test=
+ing
+> =A0=A0=A0 4=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0 Not_test=
+ing
+> =A0=A0=A0 5=A0=A0=A0=A0=A0=A0=A0 0=A0=A0=A0=A0=A0=A0=A0 0=A0 Not_test=
+ing
+> Selective self-test flags (0x0):
+> =A0 After scanning selected spans, do NOT read-scan remainder of disk=
+=2E
+> If Selective self-test is pending on power-up, resume after 0 minute =
+delay.
 
-Linux version 2.6.37 (root@n22) (gcc version 4.4.4 (Gentoo 4.4.4-r2 p1.2, pie-0.4.5) ) #6 SMP Mon Jan 17 13:44:26 CET 2011
-BIOS-provided physical RAM map:
- BIOS-e820: 0000000000000000 - 000000000009ec00 (usable)
- BIOS-e820: 000000000009ec00 - 00000000000a0000 (reserved)
- BIOS-e820: 00000000000dc000 - 0000000000100000 (reserved)
- BIOS-e820: 0000000000100000 - 00000000794a1000 (usable)
- BIOS-e820: 00000000794a1000 - 00000000794a7000 (reserved)
- BIOS-e820: 00000000794a7000 - 00000000795b7000 (usable)
- BIOS-e820: 00000000795b7000 - 000000007960f000 (reserved)
- BIOS-e820: 000000007960f000 - 00000000796c6000 (usable)
- BIOS-e820: 00000000796c6000 - 00000000796d1000 (ACPI NVS)
- BIOS-e820: 00000000796d1000 - 00000000796d4000 (ACPI data)
- BIOS-e820: 00000000796d4000 - 00000000796d8000 (reserved)
- BIOS-e820: 00000000796d8000 - 00000000796dc000 (ACPI NVS)
- BIOS-e820: 00000000796dc000 - 00000000796df000 (reserved)
- BIOS-e820: 00000000796df000 - 0000000079706000 (ACPI NVS)
- BIOS-e820: 0000000079706000 - 0000000079708000 (ACPI data)
- BIOS-e820: 0000000079708000 - 000000007990f000 (reserved)
- BIOS-e820: 000000007990f000 - 000000007999f000 (ACPI NVS)
- BIOS-e820: 000000007999f000 - 00000000799ff000 (ACPI data)
- BIOS-e820: 00000000799ff000 - 0000000079a00000 (usable)
- BIOS-e820: 0000000079c00000 - 000000007c000000 (reserved)
- BIOS-e820: 00000000e0000000 - 00000000f0000000 (reserved)
- BIOS-e820: 00000000fec00000 - 00000000fec10000 (reserved)
- BIOS-e820: 00000000fed00000 - 00000000fed00400 (reserved)
- BIOS-e820: 00000000fed10000 - 00000000fed14000 (reserved)
- BIOS-e820: 00000000fed18000 - 00000000fed1a000 (reserved)
- BIOS-e820: 00000000fed1c000 - 00000000fed90000 (reserved)
- BIOS-e820: 00000000fee00000 - 00000000fee01000 (reserved)
- BIOS-e820: 00000000ff800000 - 0000000100000000 (reserved)
-Notice: NX (Execute Disable) protection cannot be enabled: non-PAE kernel!
-DMI present.
-DMI: 6474B84/6474B84, BIOS 7UET91WW (3.21 ) 12/06/2010
-e820 update range: 0000000000000000 - 0000000000010000 (usable) ==> (reserved)
-e820 remove range: 00000000000a0000 - 0000000000100000 (usable)
-last_pfn = 0x79a00 max_arch_pfn = 0x100000
-MTRR default type: uncachable
-MTRR fixed ranges enabled:
-  00000-9FFFF write-back
-  A0000-BFFFF uncachable
-  C0000-D3FFF write-protect
-  D4000-DBFFF uncachable
-  DC000-FFFFF write-protect
-MTRR variable ranges enabled:
-  0 base 07D000000 mask FFF000000 uncachable
-  1 base 07E000000 mask FFE000000 uncachable
-  2 base 000000000 mask F80000000 write-back
-  3 base 079E00000 mask FFFE00000 uncachable
-  4 disabled
-  5 disabled
-  6 disabled
-x86 PAT enabled: cpu 0, old 0x7040600070406, new 0x7010600070106
-e820 update range: 0000000079e00000 - 000000007a000000 (usable) ==> (reserved)
-initial memory mapped : 0 - 01800000
-init_memory_mapping: 0000000000000000-00000000377fe000
- 0000000000 - 0000400000 page 4k
- 0000400000 - 0037400000 page 2M
- 0037400000 - 00377fe000 page 4k
-kernel direct mapping tables up to 377fe000 @ 17fb000-1800000
-ACPI: RSDP 000f6440 00024 (v02 LENOVO)
-ACPI: XSDT 79949b5a 0009C (v01 LENOVO TP-7U    00003210  LTP 00000000)
-ACPI: FACP 79949d00 000F4 (v03 LENOVO TP-7U    00003210 LNVO 00000001)
-ACPI: DSDT 7994a10e 0FAE1 (v01 LENOVO TP-7U    00003210 MSFT 03000000)
-ACPI: FACS 7998e000 00040
-ACPI: SSDT 79949eb4 0025A (v01 LENOVO TP-7U    00003210 MSFT 03000000)
-ACPI: ECDT 79959bef 00052 (v01 LENOVO TP-7U    00003210 LNVO 00000001)
-ACPI: APIC 79959c41 00078 (v01 LENOVO TP-7U    00003210 LNVO 00000001)
-ACPI: MCFG 79959cb9 0003C (v01 LENOVO TP-7U    00003210 LNVO 00000001)
-ACPI: HPET 79959cf5 00038 (v01 LENOVO TP-7U    00003210 LNVO 00000001)
-ACPI: SLIC 79959dc2 00176 (v01 LENOVO TP-7U    00003210  LTP 00000000)
-ACPI: BOOT 79959f38 00028 (v01 LENOVO TP-7U    00003210  LTP 00000001)
-ACPI: ASF! 79959f60 000A0 (v16 LENOVO TP-7U    00003210 PTL  00000001)
-ACPI: SSDT 7998d1fa 00568 (v01 LENOVO TP-7U    00003210 INTL 20050513)
-ACPI: TCPA 79707000 00032 (v00                 00000000      00000000)
-ACPI: DMAR 79706000 00120 (v01               ? 00000001      00000000)
-ACPI: SSDT 796d3000 00655 (v01  PmRef    CpuPm 00003000 INTL 20050624)
-ACPI: SSDT 796d2000 00274 (v01  PmRef  Cpu0Tst 00003000 INTL 20050624)
-ACPI: SSDT 796d1000 00242 (v01  PmRef    ApTst 00003000 INTL 20050624)
-ACPI: DMI detected: Lenovo ThinkPad T400
-ACPI: Local APIC address 0xfee00000
-1058MB HIGHMEM available.
-887MB LOWMEM available.
-  mapped low ram: 0 - 377fe000
-  low ram: 0 - 377fe000
-Zone PFN ranges:
-  DMA      0x00000010 -> 0x00001000
-  Normal   0x00001000 -> 0x000377fe
-  HighMem  0x000377fe -> 0x00079a00
-Movable zone start PFN for each node
-early_node_map[5] active PFN ranges
-    0: 0x00000010 -> 0x0000009e
-    0: 0x00000100 -> 0x000794a1
-    0: 0x000794a7 -> 0x000795b7
-    0: 0x0007960f -> 0x000796c6
-    0: 0x000799ff -> 0x00079a00
-On node 0 totalpages: 497143
-free_area_init_node: node 0, pgdat c1339f80, node_mem_map f68c5200
-  DMA zone: 32 pages used for memmap
-  DMA zone: 0 pages reserved
-  DMA zone: 3950 pages, LIFO batch:0
-  Normal zone: 1744 pages used for memmap
-  Normal zone: 221486 pages, LIFO batch:31
-  HighMem zone: 2117 pages used for memmap
-  HighMem zone: 267814 pages, LIFO batch:31
-Using APIC driver default
-ACPI: PM-Timer IO Port: 0x1008
-ACPI: Local APIC address 0xfee00000
-ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
-ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
-ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] disabled)
-ACPI: LAPIC (acpi_id[0x03] lapic_id[0x03] disabled)
-ACPI: LAPIC_NMI (acpi_id[0x00] high edge lint[0x1])
-ACPI: LAPIC_NMI (acpi_id[0x01] high edge lint[0x1])
-ACPI: IOAPIC (id[0x01] address[0xfec00000] gsi_base[0])
-IOAPIC[0]: apic_id 1, version 32, address 0xfec00000, GSI 0-23
-ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-ACPI: INT_SRC_OVR (bus 0 bus_irq 9 global_irq 9 high level)
-ACPI: IRQ0 used by override.
-ACPI: IRQ2 used by override.
-ACPI: IRQ9 used by override.
-Using ACPI (MADT) for SMP configuration information
-ACPI: HPET id: 0x8086a201 base: 0xfed00000
-4 Processors exceeds NR_CPUS limit of 2
-SMP: Allowing 2 CPUs, 0 hotplug CPUs
-nr_irqs_gsi: 40
-PM: Registered nosave memory: 000000000009e000 - 000000000009f000
-PM: Registered nosave memory: 000000000009f000 - 00000000000a0000
-PM: Registered nosave memory: 00000000000a0000 - 00000000000dc000
-PM: Registered nosave memory: 00000000000dc000 - 0000000000100000
-Allocating PCI resources starting at 7c000000 (gap: 7c000000:64000000)
-setup_percpu: NR_CPUS:2 nr_cpumask_bits:2 nr_cpu_ids:2 nr_node_ids:1
-PERCPU: Embedded 12 pages/cpu @f6400000 s25664 r0 d23488 u2097152
-pcpu-alloc: s25664 r0 d23488 u2097152 alloc=1*4194304
-pcpu-alloc: [0] 0 1 
-Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 493250
-Kernel command line: root=/dev/sda7 reboot=pci no_console_suspend
-PID hash table entries: 4096 (order: 2, 16384 bytes)
-Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
-Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-Initializing CPU#0
-Initializing HighMem for node 0 (000377fe:00079a00)
-Memory: 1967756k/1992704k available (2436k kernel code, 20816k reserved, 882k data, 644k init, 1079724k highmem)
-virtual kernel memory layout:
-    fixmap  : 0xfff8f000 - 0xfffff000   ( 448 kB)
-    pkmap   : 0xff800000 - 0xffc00000   (4096 kB)
-    vmalloc : 0xf7ffe000 - 0xff7fe000   ( 120 MB)
-    lowmem  : 0xc0000000 - 0xf77fe000   ( 887 MB)
-      .init : 0xc133e000 - 0xc13df000   ( 644 kB)
-      .data : 0xc1261055 - 0xc133dbd8   ( 882 kB)
-      .text : 0xc1000000 - 0xc1261055   (2436 kB)
-Checking if this processor honours the WP bit even in supervisor mode...Ok.
-Hierarchical RCU implementation.
-	RCU-based detection of stalled CPUs is disabled.
-NR_IRQS:320
-CPU 0 irqstacks, hard=f6006000 soft=f6008000
-Extended CMOS year: 2000
-Console: colour VGA+ 80x25
-console [tty0] enabled
-hpet clockevent registered
-Fast TSC calibration using PIT
-Detected 2393.682 MHz processor.
-Calibrating delay loop (skipped), value calculated using timer frequency.. 4787.36 BogoMIPS (lpj=2393682)
-pid_max: default: 32768 minimum: 301
-Mount-cache hash table entries: 512
-CPU: Physical Processor ID: 0
-CPU: Processor Core ID: 0
-mce: CPU supports 6 MCE banks
-CPU0: Thermal monitoring enabled (TM2)
-using mwait in idle threads.
-Performance Events: PEBS fmt0+, Core2 events, Intel PMU driver.
-... version:                2
-... bit width:              40
-... generic registers:      2
-... value mask:             000000ffffffffff
-... max period:             000000007fffffff
-... fixed-purpose events:   3
-... event mask:             0000000700000003
-ACPI: Core revision 20101013
-Enabling APIC mode:  Flat.  Using 1 I/O APICs
-..TIMER: vector=0x30 apic1=0 pin1=2 apic2=-1 pin2=-1
-CPU0: Intel(R) Core(TM)2 Duo CPU     P8600  @ 2.40GHz stepping 06
-CPU 1 irqstacks, hard=f63e2000 soft=f63e4000
-Booting Node   0, Processors  #1 Ok.
-Initializing CPU#1
-Brought up 2 CPUs
-Total of 2 processors activated (9557.84 BogoMIPS).
-NET: Registered protocol family 16
-ACPI FADT declares the system doesn't support PCIe ASPM, so disable it
-ACPI: bus type pci registered
-PCI: MMCONFIG for domain 0000 [bus 00-3f] at [mem 0xe0000000-0xe3ffffff] (base 0xe0000000)
-PCI: MMCONFIG at [mem 0xe0000000-0xe3ffffff] reserved in E820
-PCI: Using MMCONFIG for extended config space
-PCI: Using configuration type 1 for base access
-bio: create slab <bio-0> at 0
-ACPI: Added _OSI(Linux)
-ACPI: EC: EC description table is found, configuring boot EC
-[Firmware Bug]: ACPI: BIOS _OSI(Linux) query honored via DMI
-ACPI: SSDT 796d6c20 002C8 (v01  PmRef  Cpu0Ist 00003000 INTL 20050624)
-ACPI: Dynamic OEM Table Load:
-ACPI: SSDT   (null) 002C8 (v01  PmRef  Cpu0Ist 00003000 INTL 20050624)
-ACPI: SSDT 796d4020 0087A (v01  PmRef  Cpu0Cst 00003001 INTL 20050624)
-ACPI: Dynamic OEM Table Load:
-ACPI: SSDT   (null) 0087A (v01  PmRef  Cpu0Cst 00003001 INTL 20050624)
-ACPI: SSDT 796d5ca0 001CF (v01  PmRef    ApIst 00003000 INTL 20050624)
-ACPI: Dynamic OEM Table Load:
-ACPI: SSDT   (null) 001CF (v01  PmRef    ApIst 00003000 INTL 20050624)
-ACPI: SSDT 796d5f20 0008D (v01  PmRef    ApCst 00003000 INTL 20050624)
-ACPI: Dynamic OEM Table Load:
-ACPI: SSDT   (null) 0008D (v01  PmRef    ApCst 00003000 INTL 20050624)
-ACPI: Interpreter enabled
-ACPI: (supports S0 S3 S4 S5)
-ACPI: Using IOAPIC for interrupt routing
-ACPI Exception: AE_NOT_FOUND, Evaluating _PRW (20101013/scan-723)
-ACPI Exception: AE_NOT_FOUND, Evaluating _PRW (20101013/scan-723)
-ACPI: EC: GPE = 0x11, I/O: command/status = 0x66, data = 0x62
-ACPI: Power Resource [PUBS] (on)
-ACPI: ACPI Dock Station Driver: 3 docks/bays found
-PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
-ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
-pci_root PNP0A08:00: host bridge window [io  0x0000-0x0cf7]
-pci_root PNP0A08:00: host bridge window [io  0x0d00-0xffff]
-pci_root PNP0A08:00: host bridge window [mem 0x000a0000-0x000bffff]
-pci_root PNP0A08:00: host bridge window [mem 0x000d4000-0x000d7fff]
-pci_root PNP0A08:00: host bridge window [mem 0x000d8000-0x000dbfff]
-pci_root PNP0A08:00: host bridge window [mem 0x7c000000-0xfebfffff]
-pci 0000:00:00.0: [8086:2a40] type 0 class 0x000600
-pci 0000:00:02.0: [8086:2a42] type 0 class 0x000300
-pci 0000:00:02.0: reg 10: [mem 0xf4400000-0xf47fffff 64bit]
-pci 0000:00:02.0: reg 18: [mem 0xd0000000-0xdfffffff 64bit pref]
-pci 0000:00:02.0: reg 20: [io  0x1800-0x1807]
-pci 0000:00:02.1: [8086:2a43] type 0 class 0x000380
-pci 0000:00:02.1: reg 10: [mem 0xf4200000-0xf42fffff 64bit]
-pci 0000:00:03.0: [8086:2a44] type 0 class 0x000780
-pci 0000:00:03.0: reg 10: [mem 0xfc226800-0xfc22680f 64bit]
-pci 0000:00:03.0: PME# supported from D0 D3hot D3cold
-pci 0000:00:03.0: PME# disabled
-pci 0000:00:03.3: [8086:2a47] type 0 class 0x000700
-pci 0000:00:03.3: reg 10: [io  0x1830-0x1837]
-pci 0000:00:03.3: reg 14: [mem 0xfc024000-0xfc024fff]
-pci 0000:00:19.0: [8086:10f5] type 0 class 0x000200
-pci 0000:00:19.0: reg 10: [mem 0xfc000000-0xfc01ffff]
-pci 0000:00:19.0: reg 14: [mem 0xfc025000-0xfc025fff]
-pci 0000:00:19.0: reg 18: [io  0x1840-0x185f]
-pci 0000:00:19.0: PME# supported from D0 D3hot D3cold
-pci 0000:00:19.0: PME# disabled
-pci 0000:00:1a.0: [8086:2937] type 0 class 0x000c03
-pci 0000:00:1a.0: reg 20: [io  0x1860-0x187f]
-pci 0000:00:1a.1: [8086:2938] type 0 class 0x000c03
-pci 0000:00:1a.1: reg 20: [io  0x1880-0x189f]
-pci 0000:00:1a.2: [8086:2939] type 0 class 0x000c03
-pci 0000:00:1a.2: reg 20: [io  0x18a0-0x18bf]
-pci 0000:00:1a.7: [8086:293c] type 0 class 0x000c03
-pci 0000:00:1a.7: reg 10: [mem 0xfc226c00-0xfc226fff]
-pci 0000:00:1a.7: PME# supported from D0 D3hot D3cold
-pci 0000:00:1a.7: PME# disabled
-pci 0000:00:1b.0: [8086:293e] type 0 class 0x000403
-pci 0000:00:1b.0: reg 10: [mem 0xfc020000-0xfc023fff 64bit]
-pci 0000:00:1b.0: PME# supported from D0 D3hot D3cold
-pci 0000:00:1b.0: PME# disabled
-pci 0000:00:1c.0: [8086:2940] type 1 class 0x000604
-pci 0000:00:1c.0: PME# supported from D0 D3hot D3cold
-pci 0000:00:1c.0: PME# disabled
-pci 0000:00:1c.1: [8086:2942] type 1 class 0x000604
-pci 0000:00:1c.1: PME# supported from D0 D3hot D3cold
-pci 0000:00:1c.1: PME# disabled
-pci 0000:00:1c.3: [8086:2946] type 1 class 0x000604
-pci 0000:00:1c.3: PME# supported from D0 D3hot D3cold
-pci 0000:00:1c.3: PME# disabled
-pci 0000:00:1c.4: [8086:2948] type 1 class 0x000604
-pci 0000:00:1c.4: PME# supported from D0 D3hot D3cold
-pci 0000:00:1c.4: PME# disabled
-pci 0000:00:1d.0: [8086:2934] type 0 class 0x000c03
-pci 0000:00:1d.0: reg 20: [io  0x18c0-0x18df]
-pci 0000:00:1d.1: [8086:2935] type 0 class 0x000c03
-pci 0000:00:1d.1: reg 20: [io  0x18e0-0x18ff]
-pci 0000:00:1d.2: [8086:2936] type 0 class 0x000c03
-pci 0000:00:1d.2: reg 20: [io  0x1c00-0x1c1f]
-pci 0000:00:1d.7: [8086:293a] type 0 class 0x000c03
-pci 0000:00:1d.7: reg 10: [mem 0xfc227000-0xfc2273ff]
-pci 0000:00:1d.7: PME# supported from D0 D3hot D3cold
-pci 0000:00:1d.7: PME# disabled
-pci 0000:00:1e.0: [8086:2448] type 1 class 0x000604
-pci 0000:00:1f.0: [8086:2917] type 0 class 0x000601
-pci 0000:00:1f.2: [8086:2929] type 0 class 0x000106
-pci 0000:00:1f.2: reg 10: [io  0x1c48-0x1c4f]
-pci 0000:00:1f.2: reg 14: [io  0x183c-0x183f]
-pci 0000:00:1f.2: reg 18: [io  0x1c40-0x1c47]
-pci 0000:00:1f.2: reg 1c: [io  0x1838-0x183b]
-pci 0000:00:1f.2: reg 20: [io  0x1c20-0x1c3f]
-pci 0000:00:1f.2: reg 24: [mem 0xfc226000-0xfc2267ff]
-pci 0000:00:1f.2: PME# supported from D3hot
-pci 0000:00:1f.2: PME# disabled
-pci 0000:00:1f.3: [8086:2930] type 0 class 0x000c05
-pci 0000:00:1f.3: reg 10: [mem 0xfc227400-0xfc2274ff 64bit]
-pci 0000:00:1f.3: reg 20: [io  0x1c60-0x1c7f]
-pci 0000:00:1c.0: PCI bridge to [bus 02-02]
-pci 0000:00:1c.0:   bridge window [io  0xf000-0x0000] (disabled)
-pci 0000:00:1c.0:   bridge window [mem 0xfff00000-0x000fffff] (disabled)
-pci 0000:00:1c.0:   bridge window [mem 0xfff00000-0x000fffff pref] (disabled)
-pci 0000:03:00.0: [8086:4237] type 0 class 0x000280
-pci 0000:03:00.0: reg 10: [mem 0xf4300000-0xf4301fff 64bit]
-pci 0000:03:00.0: PME# supported from D0 D3hot D3cold
-pci 0000:03:00.0: PME# disabled
-pci 0000:00:1c.1: PCI bridge to [bus 03-03]
-pci 0000:00:1c.1:   bridge window [io  0xf000-0x0000] (disabled)
-pci 0000:00:1c.1:   bridge window [mem 0xf4300000-0xf43fffff]
-pci 0000:00:1c.1:   bridge window [mem 0xfff00000-0x000fffff pref] (disabled)
-pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
-pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
-pci 0000:00:1c.3:   bridge window [mem 0xf8000000-0xf9ffffff]
-pci 0000:00:1c.3:   bridge window [mem 0xf4000000-0xf40fffff 64bit pref]
-pci 0000:00:1c.4: PCI bridge to [bus 0d-14]
-pci 0000:00:1c.4:   bridge window [io  0x3000-0x3fff]
-pci 0000:00:1c.4:   bridge window [mem 0xfa000000-0xfbffffff]
-pci 0000:00:1c.4:   bridge window [mem 0xf4100000-0xf41fffff 64bit pref]
-pci 0000:15:00.0: [1180:0476] type 2 class 0x000607
-pci 0000:15:00.0: reg 10: [mem 0xf4800000-0xf4800fff]
-pci 0000:15:00.0: supports D1 D2
-pci 0000:15:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:15:00.0: PME# disabled
-pci 0000:15:00.1: [1180:0832] type 0 class 0x000c00
-pci 0000:15:00.1: reg 10: [mem 0xf4801000-0xf48017ff]
-pci 0000:15:00.1: supports D1 D2
-pci 0000:15:00.1: PME# supported from D0 D1 D2 D3hot D3cold
-pci 0000:15:00.1: PME# disabled
-pci 0000:00:1e.0: PCI bridge to [bus 15-18] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [io  0x4000-0x7fff]
-pci 0000:00:1e.0:   bridge window [mem 0xf4800000-0xf7ffffff]
-pci 0000:00:1e.0:   bridge window [mem 0xf0000000-0xf3ffffff 64bit pref]
-pci 0000:00:1e.0:   bridge window [io  0x0000-0x0cf7] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [io  0x0d00-0xffff] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [mem 0x000a0000-0x000bffff] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [mem 0x000d4000-0x000d7fff] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [mem 0x000d8000-0x000dbfff] (subtractive decode)
-pci 0000:00:1e.0:   bridge window [mem 0x7c000000-0xfebfffff] (subtractive decode)
-pci_bus 0000:00: on NUMA node 0
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.EXP0._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.EXP1._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.EXP3._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.EXP4._PRT]
-ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
-ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKE] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKG] (IRQs 3 4 5 6 7 9 10 *11)
-ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 5 6 7 9 10 *11)
-HEST: Table is not found!
-vgaarb: device added: PCI:0000:00:02.0,decodes=io+mem,owns=io+mem,locks=none
-vgaarb: loaded
-SCSI subsystem initialized
-libata version 3.00 loaded.
-PCI: Using ACPI for IRQ routing
-PCI: pci_cache_line_size set to 64 bytes
-reserve RAM buffer: 000000000009ec00 - 000000000009ffff 
-reserve RAM buffer: 00000000794a1000 - 000000007bffffff 
-reserve RAM buffer: 00000000795b7000 - 000000007bffffff 
-reserve RAM buffer: 00000000796c6000 - 000000007bffffff 
-reserve RAM buffer: 0000000079a00000 - 000000007bffffff 
-HPET: 4 timers in total, 0 timers will be used for per-cpu timer
-hpet0: at MMIO 0xfed00000, IRQs 2, 8, 0, 0
-hpet0: 4 comparators, 64-bit 14.318180 MHz counter
-Switching to clocksource tsc
-pnp: PnP ACPI init
-ACPI: bus type pnp registered
-pnp 00:00: [mem 0x00000000-0x0009ffff]
-pnp 00:00: [mem 0x000c0000-0x000c3fff]
-pnp 00:00: [mem 0x000c4000-0x000c7fff]
-pnp 00:00: [mem 0x000c8000-0x000cbfff]
-pnp 00:00: [mem 0x000cc000-0x000cffff]
-pnp 00:00: [mem 0x000d0000-0x000d3fff]
-pnp 00:00: [mem 0x000d4000-0x000d3fff disabled]
-pnp 00:00: [mem 0x000d8000-0x000d7fff disabled]
-pnp 00:00: [mem 0x000dc000-0x000dffff]
-pnp 00:00: [mem 0x000e0000-0x000e3fff]
-pnp 00:00: [mem 0x000e4000-0x000e7fff]
-pnp 00:00: [mem 0x000e8000-0x000ebfff]
-pnp 00:00: [mem 0x000ec000-0x000effff]
-pnp 00:00: [mem 0x000f0000-0x000fffff]
-pnp 00:00: [mem 0x00100000-0x7bffffff]
-pnp 00:00: [mem 0xfec00000-0xfed3ffff]
-pnp 00:00: [mem 0xfed4c000-0xffffffff]
-pnp 00:00: Plug and Play ACPI device, IDs PNP0c01 (active)
-pnp 00:01: [bus 00-ff]
-pnp 00:01: [io  0x0cf8-0x0cff]
-pnp 00:01: [io  0x0000-0x0cf7 window]
-pnp 00:01: [io  0x0d00-0xffff window]
-pnp 00:01: [mem 0x000a0000-0x000bffff window]
-pnp 00:01: [mem 0x000c0000-0x000c3fff window]
-pnp 00:01: [mem 0x000c4000-0x000c7fff window]
-pnp 00:01: [mem 0x000c8000-0x000cbfff window]
-pnp 00:01: [mem 0x000cc000-0x000cffff window]
-pnp 00:01: [mem 0x000d0000-0x000d3fff window]
-pnp 00:01: [mem 0x000d4000-0x000d7fff window]
-pnp 00:01: [mem 0x000d8000-0x000dbfff window]
-pnp 00:01: [mem 0x000dc000-0x000dffff window]
-pnp 00:01: [mem 0x000e0000-0x000e3fff window]
-pnp 00:01: [mem 0x000e4000-0x000e7fff window]
-pnp 00:01: [mem 0x000e8000-0x000ebfff window]
-pnp 00:01: [mem 0x000ec000-0x000effff window]
-pnp 00:01: [mem 0x7c000000-0xfebfffff window]
-pnp 00:01: [mem 0xfed40000-0xfed4bfff window]
-pnp 00:01: Plug and Play ACPI device, IDs PNP0a08 PNP0a03 (active)
-pnp 00:02: [io  0x0010-0x001f]
-pnp 00:02: [io  0x0090-0x009f]
-pnp 00:02: [io  0x0024-0x0025]
-pnp 00:02: [io  0x0028-0x0029]
-pnp 00:02: [io  0x002c-0x002d]
-pnp 00:02: [io  0x0030-0x0031]
-pnp 00:02: [io  0x0034-0x0035]
-pnp 00:02: [io  0x0038-0x0039]
-pnp 00:02: [io  0x003c-0x003d]
-pnp 00:02: [io  0x00a4-0x00a5]
-pnp 00:02: [io  0x00a8-0x00a9]
-pnp 00:02: [io  0x00ac-0x00ad]
-pnp 00:02: [io  0x00b0-0x00b5]
-pnp 00:02: [io  0x00b8-0x00b9]
-pnp 00:02: [io  0x00bc-0x00bd]
-pnp 00:02: [io  0x0050-0x0053]
-pnp 00:02: [io  0x0072-0x0077]
-pnp 00:02: [io  0x002e-0x002f]
-pnp 00:02: [io  0x1000-0x107f]
-pnp 00:02: [io  0x1180-0x11ff]
-pnp 00:02: [io  0x0800-0x080f]
-pnp 00:02: [io  0x15e0-0x15ef]
-pnp 00:02: [io  0x1600-0x167f]
-pnp 00:02: [io  0x1680-0x169f]
-pnp 00:02: [mem 0xe0000000-0xefffffff]
-pnp 00:02: [mem 0xfed1c000-0xfed1ffff]
-pnp 00:02: [mem 0xfed10000-0xfed13fff]
-pnp 00:02: [mem 0xfed18000-0xfed18fff]
-pnp 00:02: [mem 0xfed19000-0xfed19fff]
-pnp 00:02: [mem 0xfed45000-0xfed4bfff]
-pnp 00:02: Plug and Play ACPI device, IDs PNP0c02 (active)
-pnp 00:03: [mem 0xfed00000-0xfed003ff]
-pnp 00:03: Plug and Play ACPI device, IDs PNP0103 (active)
-pnp 00:04: [io  0x0000-0x000f]
-pnp 00:04: [io  0x0080-0x008f]
-pnp 00:04: [io  0x00c0-0x00df]
-pnp 00:04: [dma 4]
-pnp 00:04: Plug and Play ACPI device, IDs PNP0200 (active)
-pnp 00:05: [io  0x0061]
-pnp 00:05: Plug and Play ACPI device, IDs PNP0800 (active)
-pnp 00:06: [io  0x00f0]
-pnp 00:06: [irq 13]
-pnp 00:06: Plug and Play ACPI device, IDs PNP0c04 (active)
-pnp 00:07: [io  0x0070-0x0071]
-pnp 00:07: [irq 8]
-pnp 00:07: Plug and Play ACPI device, IDs PNP0b00 (active)
-pnp 00:08: [io  0x0060]
-pnp 00:08: [io  0x0064]
-pnp 00:08: [irq 1]
-pnp 00:08: Plug and Play ACPI device, IDs PNP0303 (active)
-pnp 00:09: [irq 12]
-pnp 00:09: Plug and Play ACPI device, IDs IBM0057 PNP0f13 (active)
-pnp 00:0a: Plug and Play ACPI device, IDs PNP0501 (disabled)
-pnp 00:0b: [io  0x0378-0x037f]
-pnp 00:0b: [io  0x0778-0x077f]
-pnp 00:0b: [irq 7]
-pnp 00:0b: [dma 0]
-pnp 00:0b: Plug and Play ACPI device, IDs PNP0401 (active)
-pnp 00:0c: [mem 0xfed40000-0xfed44fff]
-pnp 00:0c: Plug and Play ACPI device, IDs PNP0c31 (active)
-pnp: PnP ACPI: found 13 devices
-ACPI: ACPI bus type pnp unregistered
-system 00:00: [mem 0x00000000-0x0009ffff] could not be reserved
-system 00:00: [mem 0x000c0000-0x000c3fff] could not be reserved
-system 00:00: [mem 0x000c4000-0x000c7fff] could not be reserved
-system 00:00: [mem 0x000c8000-0x000cbfff] has been reserved
-system 00:00: [mem 0x000cc000-0x000cffff] has been reserved
-system 00:00: [mem 0x000d0000-0x000d3fff] could not be reserved
-system 00:00: [mem 0x000dc000-0x000dffff] could not be reserved
-system 00:00: [mem 0x000e0000-0x000e3fff] could not be reserved
-system 00:00: [mem 0x000e4000-0x000e7fff] could not be reserved
-system 00:00: [mem 0x000e8000-0x000ebfff] could not be reserved
-system 00:00: [mem 0x000ec000-0x000effff] could not be reserved
-system 00:00: [mem 0x000f0000-0x000fffff] could not be reserved
-system 00:00: [mem 0x00100000-0x7bffffff] could not be reserved
-system 00:00: [mem 0xfec00000-0xfed3ffff] could not be reserved
-system 00:00: [mem 0xfed4c000-0xffffffff] could not be reserved
-system 00:02: [io  0x1000-0x107f] has been reserved
-system 00:02: [io  0x1180-0x11ff] has been reserved
-system 00:02: [io  0x0800-0x080f] has been reserved
-system 00:02: [io  0x15e0-0x15ef] has been reserved
-system 00:02: [io  0x1600-0x167f] has been reserved
-system 00:02: [io  0x1680-0x169f] has been reserved
-system 00:02: [mem 0xe0000000-0xefffffff] has been reserved
-system 00:02: [mem 0xfed1c000-0xfed1ffff] has been reserved
-system 00:02: [mem 0xfed10000-0xfed13fff] has been reserved
-system 00:02: [mem 0xfed18000-0xfed18fff] has been reserved
-system 00:02: [mem 0xfed19000-0xfed19fff] has been reserved
-system 00:02: [mem 0xfed45000-0xfed4bfff] has been reserved
-pci 0000:00:1c.0: BAR 8: assigned [mem 0x7c000000-0x7c1fffff]
-pci 0000:00:1c.0: BAR 9: assigned [mem 0x7c200000-0x7c3fffff 64bit pref]
-pci 0000:00:1c.1: BAR 9: assigned [mem 0x7c400000-0x7c5fffff 64bit pref]
-pci 0000:00:1c.0: BAR 7: assigned [io  0x8000-0x8fff]
-pci 0000:00:1c.1: BAR 7: assigned [io  0x9000-0x9fff]
-pci 0000:00:1c.0: PCI bridge to [bus 02-02]
-pci 0000:00:1c.0:   bridge window [io  0x8000-0x8fff]
-pci 0000:00:1c.0:   bridge window [mem 0x7c000000-0x7c1fffff]
-pci 0000:00:1c.0:   bridge window [mem 0x7c200000-0x7c3fffff 64bit pref]
-pci 0000:00:1c.1: PCI bridge to [bus 03-03]
-pci 0000:00:1c.1:   bridge window [io  0x9000-0x9fff]
-pci 0000:00:1c.1:   bridge window [mem 0xf4300000-0xf43fffff]
-pci 0000:00:1c.1:   bridge window [mem 0x7c400000-0x7c5fffff 64bit pref]
-pci 0000:00:1c.3: PCI bridge to [bus 05-0c]
-pci 0000:00:1c.3:   bridge window [io  0x2000-0x2fff]
-pci 0000:00:1c.3:   bridge window [mem 0xf8000000-0xf9ffffff]
-pci 0000:00:1c.3:   bridge window [mem 0xf4000000-0xf40fffff 64bit pref]
-pci 0000:00:1c.4: PCI bridge to [bus 0d-14]
-pci 0000:00:1c.4:   bridge window [io  0x3000-0x3fff]
-pci 0000:00:1c.4:   bridge window [mem 0xfa000000-0xfbffffff]
-pci 0000:00:1c.4:   bridge window [mem 0xf4100000-0xf41fffff 64bit pref]
-pci 0000:15:00.0: BAR 9: assigned [mem 0xf0000000-0xf3ffffff pref]
-pci 0000:15:00.0: BAR 10: assigned [mem 0x80000000-0x83ffffff]
-pci 0000:15:00.0: BAR 7: assigned [io  0x4000-0x40ff]
-pci 0000:15:00.0: BAR 8: assigned [io  0x4400-0x44ff]
-pci 0000:15:00.0: CardBus bridge to [bus 16-17]
-pci 0000:15:00.0:   bridge window [io  0x4000-0x40ff]
-pci 0000:15:00.0:   bridge window [io  0x4400-0x44ff]
-pci 0000:15:00.0:   bridge window [mem 0xf0000000-0xf3ffffff pref]
-pci 0000:15:00.0:   bridge window [mem 0x80000000-0x83ffffff]
-pci 0000:00:1e.0: PCI bridge to [bus 15-18]
-pci 0000:00:1e.0:   bridge window [io  0x4000-0x7fff]
-pci 0000:00:1e.0:   bridge window [mem 0xf4800000-0xf7ffffff]
-pci 0000:00:1e.0:   bridge window [mem 0xf0000000-0xf3ffffff 64bit pref]
-pci 0000:00:1c.0: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-pci 0000:00:1c.0: setting latency timer to 64
-pci 0000:00:1c.1: PCI INT B -> GSI 21 (level, low) -> IRQ 21
-pci 0000:00:1c.1: setting latency timer to 64
-pci 0000:00:1c.3: PCI INT D -> GSI 23 (level, low) -> IRQ 23
-pci 0000:00:1c.3: setting latency timer to 64
-pci 0000:00:1c.4: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-pci 0000:00:1c.4: setting latency timer to 64
-pci 0000:00:1e.0: setting latency timer to 64
-pci 0000:15:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-pci_bus 0000:00: resource 4 [io  0x0000-0x0cf7]
-pci_bus 0000:00: resource 5 [io  0x0d00-0xffff]
-pci_bus 0000:00: resource 6 [mem 0x000a0000-0x000bffff]
-pci_bus 0000:00: resource 7 [mem 0x000d4000-0x000d7fff]
-pci_bus 0000:00: resource 8 [mem 0x000d8000-0x000dbfff]
-pci_bus 0000:00: resource 9 [mem 0x7c000000-0xfebfffff]
-pci_bus 0000:02: resource 0 [io  0x8000-0x8fff]
-pci_bus 0000:02: resource 1 [mem 0x7c000000-0x7c1fffff]
-pci_bus 0000:02: resource 2 [mem 0x7c200000-0x7c3fffff 64bit pref]
-pci_bus 0000:03: resource 0 [io  0x9000-0x9fff]
-pci_bus 0000:03: resource 1 [mem 0xf4300000-0xf43fffff]
-pci_bus 0000:03: resource 2 [mem 0x7c400000-0x7c5fffff 64bit pref]
-pci_bus 0000:05: resource 0 [io  0x2000-0x2fff]
-pci_bus 0000:05: resource 1 [mem 0xf8000000-0xf9ffffff]
-pci_bus 0000:05: resource 2 [mem 0xf4000000-0xf40fffff 64bit pref]
-pci_bus 0000:0d: resource 0 [io  0x3000-0x3fff]
-pci_bus 0000:0d: resource 1 [mem 0xfa000000-0xfbffffff]
-pci_bus 0000:0d: resource 2 [mem 0xf4100000-0xf41fffff 64bit pref]
-pci_bus 0000:15: resource 0 [io  0x4000-0x7fff]
-pci_bus 0000:15: resource 1 [mem 0xf4800000-0xf7ffffff]
-pci_bus 0000:15: resource 2 [mem 0xf0000000-0xf3ffffff 64bit pref]
-pci_bus 0000:15: resource 4 [io  0x0000-0x0cf7]
-pci_bus 0000:15: resource 5 [io  0x0d00-0xffff]
-pci_bus 0000:15: resource 6 [mem 0x000a0000-0x000bffff]
-pci_bus 0000:15: resource 7 [mem 0x000d4000-0x000d7fff]
-pci_bus 0000:15: resource 8 [mem 0x000d8000-0x000dbfff]
-pci_bus 0000:15: resource 9 [mem 0x7c000000-0xfebfffff]
-pci_bus 0000:16: resource 0 [io  0x4000-0x40ff]
-pci_bus 0000:16: resource 1 [io  0x4400-0x44ff]
-pci_bus 0000:16: resource 2 [mem 0xf0000000-0xf3ffffff pref]
-pci_bus 0000:16: resource 3 [mem 0x80000000-0x83ffffff]
-NET: Registered protocol family 2
-IP route cache hash table entries: 32768 (order: 5, 131072 bytes)
-TCP established hash table entries: 131072 (order: 8, 1048576 bytes)
-TCP bind hash table entries: 65536 (order: 7, 524288 bytes)
-TCP: Hash tables configured (established 131072 bind 65536)
-TCP reno registered
-UDP hash table entries: 512 (order: 2, 16384 bytes)
-UDP-Lite hash table entries: 512 (order: 2, 16384 bytes)
-NET: Registered protocol family 1
-pci 0000:00:02.0: Boot video device
-PCI: CLS 64 bytes, default 64
-Simple Boot Flag at 0x35 set to 0x1
-audit: initializing netlink socket (disabled)
-type=2000 audit(1295720746.721:1): initialized
-highmem bounce pool size: 64 pages
-msgmni has been set to 1734
-Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
-io scheduler noop registered
-io scheduler cfq registered (default)
-pcieport 0000:00:1c.0: ACPI _OSC control granted for 0x1d
-pcieport 0000:00:1c.0: setting latency timer to 64
-pcieport 0000:00:1c.0: irq 40 for MSI/MSI-X
-pcieport 0000:00:1c.1: ACPI _OSC control granted for 0x1d
-pcieport 0000:00:1c.1: setting latency timer to 64
-pcieport 0000:00:1c.1: irq 41 for MSI/MSI-X
-pcieport 0000:00:1c.3: ACPI _OSC control granted for 0x1d
-pcieport 0000:00:1c.3: setting latency timer to 64
-pcieport 0000:00:1c.3: irq 42 for MSI/MSI-X
-pcieport 0000:00:1c.4: ACPI _OSC control granted for 0x1d
-pcieport 0000:00:1c.4: setting latency timer to 64
-pcieport 0000:00:1c.4: irq 43 for MSI/MSI-X
-pcieport 0000:00:1c.0: Signaling PME through PCIe PME interrupt
-pcie_pme 0000:00:1c.0:pcie01: service driver pcie_pme loaded
-pcieport 0000:00:1c.1: Signaling PME through PCIe PME interrupt
-pci 0000:03:00.0: Signaling PME through PCIe PME interrupt
-pcie_pme 0000:00:1c.1:pcie01: service driver pcie_pme loaded
-pcieport 0000:00:1c.3: Signaling PME through PCIe PME interrupt
-pcie_pme 0000:00:1c.3:pcie01: service driver pcie_pme loaded
-pcieport 0000:00:1c.4: Signaling PME through PCIe PME interrupt
-pcie_pme 0000:00:1c.4:pcie01: service driver pcie_pme loaded
-ERST: Table is not found!
-GHES: HEST is not enabled!
-ahci 0000:00:1f.2: version 3.0
-ahci 0000:00:1f.2: PCI INT B -> GSI 16 (level, low) -> IRQ 16
-ahci 0000:00:1f.2: irq 44 for MSI/MSI-X
-ahci: SSS flag set, parallel bus scan disabled
-ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 4 ports 3 Gbps 0x3 impl SATA mode
-ahci 0000:00:1f.2: flags: 64bit ncq sntf stag pm led clo pio slum part ccc sxs 
-ahci 0000:00:1f.2: setting latency timer to 64
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-scsi3 : ahci
-ata1: SATA max UDMA/133 abar m2048@0xfc226000 port 0xfc226100 irq 44
-ata2: SATA max UDMA/133 abar m2048@0xfc226000 port 0xfc226180 irq 44
-ata3: DUMMY
-ata4: DUMMY
-PNP: PS/2 Controller [PNP0303:KBD,PNP0f13:MOU] at 0x60,0x64 irq 1,12
-serio: i8042 KBD port at 0x60,0x64 irq 1
-serio: i8042 AUX port at 0x60,0x64 irq 12
-mice: PS/2 mouse device common for all mice
-cpuidle: using governor ladder
-cpuidle: using governor menu
-TCP cubic registered
-Registering the dns_resolver key type
-Using IPI No-Shortcut mode
-PM: Checking hibernation image partition /dev/sda6
-input: AT Translated Set 2 keyboard as /devices/platform/i8042/serio0/input/input0
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-ata1.00: ATA-8: HITACHI HTS723216L9SA60, FC2ZC50A, max UDMA/100
-ata1.00: 312581808 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
-ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-ata1.00: configured for UDMA/100
-scsi 0:0:0:0: Direct-Access     ATA      HITACHI HTS72321 FC2Z PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 312581808 512-byte logical blocks: (160 GB/149 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
- sda: sda1 sda2 sda3 < sda5 sda6 sda7 >
-sd 0:0:0:0: [sda] Attached SCSI disk
-ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata2.00: ACPI cmd e3/00:79:00:00:00:a0 (IDLE) succeeded
-ata2.00: ACPI cmd e3/00:01:00:00:00:a0 (IDLE) succeeded
-ata2.00: ATAPI: HL-DT-ST DVDRAM GSA-U20N, HX12, max UDMA/133
-ata2.00: ACPI cmd e3/00:79:00:00:00:a0 (IDLE) succeeded
-ata2.00: ACPI cmd e3/00:01:00:00:00:a0 (IDLE) succeeded
-ata2.00: configured for UDMA/133
-scsi 1:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-U20N  HX12 PQ: 0 ANSI: 5
-PM: Hibernation image partition 8:6 present
-PM: Looking for hibernation image.
-PM: Image not found (code -22)
-PM: Hibernation image not present or could not be loaded.
-registered taskstats version 1
-kmemleak: Kernel memory leak detector initialized
-kmemleak: Automatic memory scanning thread started
-EXT3-fs: barriers not enabled
-kjournald starting.  Commit interval 5 seconds
-EXT3-fs (sda7): mounted filesystem with ordered data mode
-VFS: Mounted root (ext3 filesystem) readonly on device 8:7.
-Freeing unused kernel memory: 644k freed
-Write protecting the kernel text: 2440k
-Write protecting the kernel read-only data: 712k
-udev: starting version 151
-udevd (572): /proc/572/oom_adj is deprecated, please use /proc/572/oom_score_adj instead.
-thermal LNXTHERM:00: registered as thermal_zone0
-ACPI: Thermal Zone [THM0] (54 C)
-thermal LNXTHERM:01: registered as thermal_zone1
-ACPI: Thermal Zone [THM1] (56 C)
-ACPI: AC Adapter [AC] (on-line)
-Non-volatile memory driver v1.3
-input: Lid Switch as /devices/LNXSYSTM:00/device:00/PNP0C0D:00/input/input1
-ACPI: Lid Switch [LID]
-input: Sleep Button as /devices/LNXSYSTM:00/device:00/PNP0C0E:00/input/input2
-ACPI: Sleep Button [SLPB]
-input: Power Button as /devices/LNXSYSTM:00/LNXPWRBN:00/input/input3
-ACPI: Power Button [PWRF]
-Linux agpgart interface v0.103
-ACPI: Battery Slot [BAT0] (battery present)
-sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-cdrom: Uniform CD-ROM driver Revision: 3.20
-sr 1:0:0:0: Attached scsi CD-ROM sr0
-i801_smbus 0000:00:1f.3: PCI INT A -> GSI 23 (level, low) -> IRQ 23
-ACPI: acpi_idle registered with cpuidle
-e1000e: Intel(R) PRO/1000 Network Driver - 1.2.7-k2
-e1000e: Copyright (c) 1999 - 2010 Intel Corporation.
-e1000e 0000:00:19.0: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-e1000e 0000:00:19.0: setting latency timer to 64
-e1000e 0000:00:19.0: irq 45 for MSI/MSI-X
-Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
-wmi: Mapper loaded
-Monitor-Mwait will be used to enter C-1 state
-Monitor-Mwait will be used to enter C-2 state
-Monitor-Mwait will be used to enter C-3 state
-Marking TSC unstable due to TSC halts in idle
-Switching to clocksource hpet
-IBM TrackPoint firmware: 0x0e, buttons: 3/3
-input: TPPS/2 IBM TrackPoint as /devices/platform/i8042/serio1/input/input4
-e1000e 0000:00:19.0: eth0: (PCI Express:2.5GB/s:Width x1) 00:24:7e:11:75:c4
-e1000e 0000:00:19.0: eth0: Intel(R) PRO/1000 Network Connection
-e1000e 0000:00:19.0: eth0: MAC: 7, PHY: 8, PBA No: 1008ff-0ff
-serial 00:0a: [io  0x03f8-0x03ff]
-serial 00:0a: [irq 4]
-serial 00:0a: activated
-00:0a: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-agpgart-intel 0000:00:00.0: Intel GM45 Chipset
-agpgart-intel 0000:00:00.0: detected gtt size: 524288K total, 262144K mappable
-agpgart-intel 0000:00:00.0: detected 32768K stolen memory
-agpgart-intel 0000:00:00.0: AGP aperture is 256M @ 0xd0000000
-serial 0000:00:03.3: PCI INT B -> GSI 17 (level, low) -> IRQ 17
-0000:00:03.3: ttyS1 at I/O 0x1830 (irq = 17) is a 16550A
-[drm] Initialized drm 1.1.0 20060810
-cfg80211: Calling CRDA to update world regulatory domain
-HDA Intel 0000:00:1b.0: PCI INT B -> GSI 17 (level, low) -> IRQ 17
-HDA Intel 0000:00:1b.0: irq 46 for MSI/MSI-X
-HDA Intel 0000:00:1b.0: setting latency timer to 64
-thinkpad_acpi: ThinkPad ACPI Extras v0.24
-thinkpad_acpi: http://ibm-acpi.sf.net/
-thinkpad_acpi: ThinkPad BIOS 7UET91WW (3.21 ), EC 7VHT16WW-1.06
-thinkpad_acpi: Lenovo ThinkPad T400, model 6474B84
-thinkpad_acpi: detected a 8-level brightness capable ThinkPad
-thinkpad_acpi: radio switch found; radios are enabled
-usbcore: registered new interface driver usbfs
-usbcore: registered new interface driver hub
-usbcore: registered new device driver usb
-thinkpad_acpi: rfkill switch tpacpi_bluetooth_sw: radio is unblocked
-Registered led device: tpacpi::thinklight
-Registered led device: tpacpi::power
-Registered led device: tpacpi::standby
-Registered led device: tpacpi::thinkvantage
-thinkpad_acpi: Standard ACPI backlight interface available, not loading native one.
-thinkpad_acpi: Console audio control enabled, mode: monitor (read only)
-input: ThinkPad Extra Buttons as /devices/platform/thinkpad_acpi/input/input5
-uhci_hcd: USB Universal Host Controller Interface driver
-input: HDA Intel Mic as /devices/pci0000:00/0000:00:1b.0/sound/card0/input6
-input: HDA Intel Mic as /devices/pci0000:00/0000:00:1b.0/sound/card0/input7
-input: HDA Intel Headphone as /devices/pci0000:00/0000:00:1b.0/sound/card0/input8
-input: HDA Intel Headphone as /devices/pci0000:00/0000:00:1b.0/sound/card0/input9
-uhci_hcd 0000:00:1a.0: power state changed by ACPI to D0
-uhci_hcd 0000:00:1a.0: power state changed by ACPI to D0
-uhci_hcd 0000:00:1a.0: PCI INT A -> GSI 20 (level, low) -> IRQ 20
-uhci_hcd 0000:00:1a.0: setting latency timer to 64
-uhci_hcd 0000:00:1a.0: UHCI Host Controller
-uhci_hcd 0000:00:1a.0: new USB bus registered, assigned bus number 1
-uhci_hcd 0000:00:1a.0: irq 20, io base 0x00001860
-usb usb1: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb1: Product: UHCI Host Controller
-usb usb1: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb1: SerialNumber: 0000:00:1a.0
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 2 ports detected
-uhci_hcd 0000:00:1a.1: PCI INT B -> GSI 21 (level, low) -> IRQ 21
-uhci_hcd 0000:00:1a.1: setting latency timer to 64
-uhci_hcd 0000:00:1a.1: UHCI Host Controller
-uhci_hcd 0000:00:1a.1: new USB bus registered, assigned bus number 2
-uhci_hcd 0000:00:1a.1: irq 21, io base 0x00001880
-usb usb2: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb2: Product: UHCI Host Controller
-usb usb2: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb2: SerialNumber: 0000:00:1a.1
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: 2 ports detected
-uhci_hcd 0000:00:1a.2: power state changed by ACPI to D0
-uhci_hcd 0000:00:1a.2: power state changed by ACPI to D0
-uhci_hcd 0000:00:1a.2: PCI INT C -> GSI 22 (level, low) -> IRQ 22
-uhci_hcd 0000:00:1a.2: setting latency timer to 64
-uhci_hcd 0000:00:1a.2: UHCI Host Controller
-uhci_hcd 0000:00:1a.2: new USB bus registered, assigned bus number 3
-uhci_hcd 0000:00:1a.2: irq 22, io base 0x000018a0
-usb usb3: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb3: Product: UHCI Host Controller
-usb usb3: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb3: SerialNumber: 0000:00:1a.2
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: 2 ports detected
-uhci_hcd 0000:00:1d.0: power state changed by ACPI to D0
-uhci_hcd 0000:00:1d.0: power state changed by ACPI to D0
-uhci_hcd 0000:00:1d.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-uhci_hcd 0000:00:1d.0: setting latency timer to 64
-uhci_hcd 0000:00:1d.0: UHCI Host Controller
-uhci_hcd 0000:00:1d.0: new USB bus registered, assigned bus number 4
-uhci_hcd 0000:00:1d.0: irq 16, io base 0x000018c0
-usb usb4: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb4: Product: UHCI Host Controller
-usb usb4: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb4: SerialNumber: 0000:00:1d.0
-hub 4-0:1.0: USB hub found
-hub 4-0:1.0: 2 ports detected
-uhci_hcd 0000:00:1d.1: PCI INT B -> GSI 17 (level, low) -> IRQ 17
-uhci_hcd 0000:00:1d.1: setting latency timer to 64
-uhci_hcd 0000:00:1d.1: UHCI Host Controller
-uhci_hcd 0000:00:1d.1: new USB bus registered, assigned bus number 5
-uhci_hcd 0000:00:1d.1: irq 17, io base 0x000018e0
-usb usb5: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb5: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb5: Product: UHCI Host Controller
-usb usb5: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb5: SerialNumber: 0000:00:1d.1
-hub 5-0:1.0: USB hub found
-hub 5-0:1.0: 2 ports detected
-uhci_hcd 0000:00:1d.2: PCI INT C -> GSI 18 (level, low) -> IRQ 18
-uhci_hcd 0000:00:1d.2: setting latency timer to 64
-uhci_hcd 0000:00:1d.2: UHCI Host Controller
-uhci_hcd 0000:00:1d.2: new USB bus registered, assigned bus number 6
-uhci_hcd 0000:00:1d.2: irq 18, io base 0x00001c00
-usb usb6: New USB device found, idVendor=1d6b, idProduct=0001
-usb usb6: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb6: Product: UHCI Host Controller
-usb usb6: Manufacturer: Linux 2.6.37 uhci_hcd
-usb usb6: SerialNumber: 0000:00:1d.2
-hub 6-0:1.0: USB hub found
-hub 6-0:1.0: 2 ports detected
-ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-Warning! ehci_hcd should always be loaded before uhci_hcd and ohci_hcd, not after
-ehci_hcd 0000:00:1a.7: power state changed by ACPI to D0
-ehci_hcd 0000:00:1a.7: power state changed by ACPI to D0
-ehci_hcd 0000:00:1a.7: PCI INT D -> GSI 23 (level, low) -> IRQ 23
-ehci_hcd 0000:00:1a.7: setting latency timer to 64
-ehci_hcd 0000:00:1a.7: EHCI Host Controller
-ehci_hcd 0000:00:1a.7: new USB bus registered, assigned bus number 7
-ehci_hcd 0000:00:1a.7: debug port 1
-ehci_hcd 0000:00:1a.7: cache line size of 64 is not supported
-ehci_hcd 0000:00:1a.7: irq 23, io mem 0xfc226c00
-ehci_hcd 0000:00:1a.7: USB 2.0 started, EHCI 1.00
-usb usb7: New USB device found, idVendor=1d6b, idProduct=0002
-usb usb7: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb7: Product: EHCI Host Controller
-usb usb7: Manufacturer: Linux 2.6.37 ehci_hcd
-usb usb7: SerialNumber: 0000:00:1a.7
-hub 7-0:1.0: USB hub found
-hub 7-0:1.0: 6 ports detected
-ehci_hcd 0000:00:1d.7: power state changed by ACPI to D0
-ehci_hcd 0000:00:1d.7: power state changed by ACPI to D0
-ehci_hcd 0000:00:1d.7: PCI INT D -> GSI 19 (level, low) -> IRQ 19
-ehci_hcd 0000:00:1d.7: setting latency timer to 64
-ehci_hcd 0000:00:1d.7: EHCI Host Controller
-ehci_hcd 0000:00:1d.7: new USB bus registered, assigned bus number 8
-ehci_hcd 0000:00:1d.7: debug port 1
-ehci_hcd 0000:00:1d.7: cache line size of 64 is not supported
-ehci_hcd 0000:00:1d.7: irq 19, io mem 0xfc227000
-ehci_hcd 0000:00:1d.7: USB 2.0 started, EHCI 1.00
-usb usb8: New USB device found, idVendor=1d6b, idProduct=0002
-usb usb8: New USB device strings: Mfr=3, Product=2, SerialNumber=1
-usb usb8: Product: EHCI Host Controller
-usb usb8: Manufacturer: Linux 2.6.37 ehci_hcd
-usb usb8: SerialNumber: 0000:00:1d.7
-hub 8-0:1.0: USB hub found
-hub 8-0:1.0: 6 ports detected
-i915 0000:00:02.0: power state changed by ACPI to D0
-i915 0000:00:02.0: power state changed by ACPI to D0
-i915 0000:00:02.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
-i915 0000:00:02.0: setting latency timer to 64
-i915 0000:00:02.0: irq 47 for MSI/MSI-X
-vgaarb: device changed decodes: PCI:0000:00:02.0,olddecodes=io+mem,decodes=io+mem:owns=io+mem
-iwlagn: Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:
-iwlagn: Copyright(c) 2003-2010 Intel Corporation
-iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-iwlagn 0000:03:00.0: setting latency timer to 64
-iwlagn 0000:03:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-iwlagn 0000:03:00.0: device EEPROM VER=0x11e, CALIB=0x4
-iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
-iwlagn 0000:03:00.0: irq 48 for MSI/MSI-X
-fb0: inteldrmfb frame buffer device
-drm: registered panic notifier
-usb 7-5: new high speed USB device using ehci_hcd and address 3
-acpi device:02: registered as cooling_device2
-input: Video Bus as /devices/LNXSYSTM:00/device:00/PNP0A08:00/LNXVIDEO:00/input/input10
-ACPI: Video Device [VID] (multi-head: yes  rom: no  post: no)
-[drm] Initialized i915 1.6.0 20080730 for 0000:00:02.0 on minor 0
-iwlagn 0000:03:00.0: loaded firmware version 8.24.2.12
-usb 7-5: New USB device found, idVendor=04b3, idProduct=4485
-usb 7-5: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-hub 7-5:1.0: USB hub found
-hub 7-5:1.0: 4 ports detected
-usb 2-2: new full speed USB device using uhci_hcd and address 2
-ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
-usb 2-2: New USB device found, idVendor=0a5c, idProduct=2145
-usb 2-2: New USB device strings: Mfr=1, Product=2, SerialNumber=0
-usb 2-2: Product: ThinkPad Bluetooth with Enhanced Data Rate II
-usb 2-2: Manufacturer: Lenovo Computer Corp
-usb 7-5.1: new low speed USB device using ehci_hcd and address 4
-usb 7-5.1: New USB device found, idVendor=046a, idProduct=0023
-usb 7-5.1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
-usb 7-5.3: new full speed USB device using ehci_hcd and address 5
-usb 7-5.3: New USB device found, idVendor=043d, idProduct=0078
-usb 7-5.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-usb 7-5.3: Product: Lexmark Z600 Series
-usb 7-5.3: Manufacturer: Lexmark 
-usb 7-5.3: SerialNumber: 18K670127065550
-usblp0: USB Bidirectional printer dev 5 if 0 alt 0 proto 2 vid 0x043D pid 0x0078
-usbcore: registered new interface driver usblp
-usbcore: registered new interface driver usbhid
-usbhid: USB HID core driver
-input: HID 046a:0023 as /devices/pci0000:00/0000:00:1a.7/usb7/7-5/7-5.1/7-5.1:1.0/input/input11
-cherry 0003:046A:0023.0001: input: USB HID v1.11 Keyboard [HID 046a:0023] on usb-0000:00:1a.7-5.1/input0
-input: HID 046a:0023 as /devices/pci0000:00/0000:00:1a.7/usb7/7-5/7-5.1/7-5.1:1.1/input/input12
-cherry 0003:046A:0023.0002: input: USB HID v1.11 Device [HID 046a:0023] on usb-0000:00:1a.7-5.1/input1
-usb 7-5.4: new low speed USB device using ehci_hcd and address 6
-usb 7-5.4: New USB device found, idVendor=046d, idProduct=c044
-usb 7-5.4: New USB device strings: Mfr=1, Product=2, SerialNumber=0
-usb 7-5.4: Product: USB-PS/2 Optical Mouse
-usb 7-5.4: Manufacturer: Logitech
-input: Logitech USB-PS/2 Optical Mouse as /devices/pci0000:00/0000:00:1a.7/usb7/7-5/7-5.4/7-5.4:1.0/input/input13
-generic-usb 0003:046D:C044.0003: input: USB HID v1.10 Mouse [Logitech USB-PS/2 Optical Mouse] on usb-0000:00:1a.7-5.4/input0
-device-mapper: uevent: version 1.0.3
-device-mapper: ioctl: 4.18.0-ioctl (2010-06-29) initialised: dm-devel@redhat.com
-EXT3-fs (sda7): using internal journal
-Console: switching to colour frame buffer device 180x56
-hdaps: inverting axis (3) readings.
-hdaps: LENOVO ThinkPad T400 detected.
-input: hdaps as /devices/platform/hdaps/input/input14
-hdaps: driver successfully loaded.
-fuse init (API version 7.15)
-Adding 2003364k swap on /dev/sda6.  Priority:-1 extents:1 across:2003364k 
-e1000e 0000:00:19.0: irq 45 for MSI/MSI-X
-e1000e 0000:00:19.0: irq 45 for MSI/MSI-X
-NET: Registered protocol family 17
-e1000e: eth0 NIC Link is Up 100 Mbps Full Duplex, Flow Control: None
-e1000e 0000:00:19.0: eth0: 10/100 speed: disabling TSO
-PPP generic driver version 2.4.2
-NET: Registered protocol family 24
-ip_tables: (C) 2000-2006 Netfilter Core Team
-nf_conntrack version 0.5.0 (16384 buckets, 65536 max)
-microcode: CPU0 sig=0x10676, pf=0x80, revision=0x60f
-microcode: CPU1 sig=0x10676, pf=0x80, revision=0x60f
-microcode: Microcode Update Driver: v2.00 <tigran@aivazian.fsnet.co.uk>, Peter Oruba
-microcode: Microcode Update Driver: v2.00 removed.
-CPUFREQ: Per core ondemand sysfs interface is deprecated - up_threshold
-ata1.00: configured for UDMA/100
-ata1: EH complete
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-ata1: hard resetting link
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-ata1.00: ACPI cmd ef/5f:00:00:00:00:a0 (SET FEATURES) succeeded
-ata1.00: ACPI cmd ef/10:03:00:00:00:a0 (SET FEATURES) filtered out
-ata1.00: configured for UDMA/100
-ata1: EH complete
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+and here is the output of kern.log
 
---Boundary-00=_dRxON41QL04pMOM--
+Jan 22 07:26:59 my kernel: [    0.439387] SCSI subsystem initialized
+Jan 22 07:26:59 my kernel: [    0.443964] ehci_hcd 0000:00:1d.7: USB
+2.0 started, EHCI 1.00
+Jan 22 07:26:59 my kernel: [    0.443981] usb usb1: New USB device
+found, idVendor=3D1d6b, idProduct=3D0002
+Jan 22 07:26:59 my kernel: [    0.443983] usb usb1: New USB device
+strings: Mfr=3D3, Product=3D2, SerialNumber=3D1
+Jan 22 07:26:59 my kernel: [    0.443984] usb usb1: Product: EHCI Host
+Controller
+Jan 22 07:26:59 my kernel: [    0.443986] usb usb1: Manufacturer:
+Linux 2.6.32-5-amd64 ehci_hcd
+Jan 22 07:26:59 my kernel: [    0.443987] usb usb1: SerialNumber: 0000:=
+00:1d.7
+Jan 22 07:26:59 my kernel: [    0.444064] usb usb1: configuration #1
+chosen from 1 choice
+Jan 22 07:26:59 my kernel: [    0.444105] hub 1-0:1.0: USB hub found
+Jan 22 07:26:59 my kernel: [    0.444110] hub 1-0:1.0: 8 ports detected
+Jan 22 07:26:59 my kernel: [    0.444170] uhci_hcd 0000:00:1d.0: PCI
+INT A -> GSI 23 (level, low) -> IRQ 23
+Jan 22 07:26:59 my kernel: [    0.444176] uhci_hcd 0000:00:1d.0:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.444178] uhci_hcd 0000:00:1d.0: UHCI
+Host Controller
+Jan 22 07:26:59 my kernel: [    0.444184] uhci_hcd 0000:00:1d.0: new
+USB bus registered, assigned bus number 2
+Jan 22 07:26:59 my kernel: [    0.444203] uhci_hcd 0000:00:1d.0: irq
+23, io base 0x0000b880
+Jan 22 07:26:59 my kernel: [    0.444225] usb usb2: New USB device
+found, idVendor=3D1d6b, idProduct=3D0001
+Jan 22 07:26:59 my kernel: [    0.444227] usb usb2: New USB device
+strings: Mfr=3D3, Product=3D2, SerialNumber=3D1
+Jan 22 07:26:59 my kernel: [    0.444229] usb usb2: Product: UHCI Host
+Controller
+Jan 22 07:26:59 my kernel: [    0.444230] usb usb2: Manufacturer:
+Linux 2.6.32-5-amd64 uhci_hcd
+Jan 22 07:26:59 my kernel: [    0.444231] usb usb2: SerialNumber: 0000:=
+00:1d.0
+Jan 22 07:26:59 my kernel: [    0.444268] usb usb2: configuration #1
+chosen from 1 choice
+Jan 22 07:26:59 my kernel: [    0.444285] hub 2-0:1.0: USB hub found
+Jan 22 07:26:59 my kernel: [    0.444289] hub 2-0:1.0: 2 ports detected
+Jan 22 07:26:59 my kernel: [    0.444323]   alloc irq_desc for 19 on no=
+de -1
+Jan 22 07:26:59 my kernel: [    0.444325]   alloc kstat_irqs on node -1
+Jan 22 07:26:59 my kernel: [    0.444329] uhci_hcd 0000:00:1d.1: PCI
+INT B -> GSI 19 (level, low) -> IRQ 19
+Jan 22 07:26:59 my kernel: [    0.444333] uhci_hcd 0000:00:1d.1:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.444335] uhci_hcd 0000:00:1d.1: UHCI
+Host Controller
+Jan 22 07:26:59 my kernel: [    0.444340] uhci_hcd 0000:00:1d.1: new
+USB bus registered, assigned bus number 3
+Jan 22 07:26:59 my kernel: [    0.444364] uhci_hcd 0000:00:1d.1: irq
+19, io base 0x0000bc00
+Jan 22 07:26:59 my kernel: [    0.444387] usb usb3: New USB device
+found, idVendor=3D1d6b, idProduct=3D0001
+Jan 22 07:26:59 my kernel: [    0.444388] usb usb3: New USB device
+strings: Mfr=3D3, Product=3D2, SerialNumber=3D1
+Jan 22 07:26:59 my kernel: [    0.444390] usb usb3: Product: UHCI Host
+Controller
+Jan 22 07:26:59 my kernel: [    0.444391] usb usb3: Manufacturer:
+Linux 2.6.32-5-amd64 uhci_hcd
+Jan 22 07:26:59 my kernel: [    0.444392] usb usb3: SerialNumber: 0000:=
+00:1d.1
+Jan 22 07:26:59 my kernel: [    0.444429] usb usb3: configuration #1
+chosen from 1 choice
+Jan 22 07:26:59 my kernel: [    0.444447] hub 3-0:1.0: USB hub found
+Jan 22 07:26:59 my kernel: [    0.444451] hub 3-0:1.0: 2 ports detected
+Jan 22 07:26:59 my kernel: [    0.444485]   alloc irq_desc for 18 on no=
+de -1
+Jan 22 07:26:59 my kernel: [    0.444486]   alloc kstat_irqs on node -1
+Jan 22 07:26:59 my kernel: [    0.444489] uhci_hcd 0000:00:1d.2: PCI
+INT C -> GSI 18 (level, low) -> IRQ 18
+Jan 22 07:26:59 my kernel: [    0.444493] uhci_hcd 0000:00:1d.2:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.444495] uhci_hcd 0000:00:1d.2: UHCI
+Host Controller
+Jan 22 07:26:59 my kernel: [    0.444500] uhci_hcd 0000:00:1d.2: new
+USB bus registered, assigned bus number 4
+Jan 22 07:26:59 my kernel: [    0.444523] uhci_hcd 0000:00:1d.2: irq
+18, io base 0x0000c000
+Jan 22 07:26:59 my kernel: [    0.444546] usb usb4: New USB device
+found, idVendor=3D1d6b, idProduct=3D0001
+Jan 22 07:26:59 my kernel: [    0.444547] usb usb4: New USB device
+strings: Mfr=3D3, Product=3D2, SerialNumber=3D1
+Jan 22 07:26:59 my kernel: [    0.444549] usb usb4: Product: UHCI Host
+Controller
+Jan 22 07:26:59 my kernel: [    0.444550] usb usb4: Manufacturer:
+Linux 2.6.32-5-amd64 uhci_hcd
+Jan 22 07:26:59 my kernel: [    0.444551] usb usb4: SerialNumber: 0000:=
+00:1d.2
+Jan 22 07:26:59 my kernel: [    0.444586] usb usb4: configuration #1
+chosen from 1 choice
+Jan 22 07:26:59 my kernel: [    0.444606] hub 4-0:1.0: USB hub found
+Jan 22 07:26:59 my kernel: [    0.444610] hub 4-0:1.0: 2 ports detected
+Jan 22 07:26:59 my kernel: [    0.444641] uhci_hcd 0000:00:1d.3: PCI
+INT D -> GSI 16 (level, low) -> IRQ 16
+Jan 22 07:26:59 my kernel: [    0.444645] uhci_hcd 0000:00:1d.3:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.444648] uhci_hcd 0000:00:1d.3: UHCI
+Host Controller
+Jan 22 07:26:59 my kernel: [    0.444652] uhci_hcd 0000:00:1d.3: new
+USB bus registered, assigned bus number 5
+Jan 22 07:26:59 my kernel: [    0.444676] uhci_hcd 0000:00:1d.3: irq
+16, io base 0x0000c080
+Jan 22 07:26:59 my kernel: [    0.444699] usb usb5: New USB device
+found, idVendor=3D1d6b, idProduct=3D0001
+Jan 22 07:26:59 my kernel: [    0.444701] usb usb5: New USB device
+strings: Mfr=3D3, Product=3D2, SerialNumber=3D1
+Jan 22 07:26:59 my kernel: [    0.444702] usb usb5: Product: UHCI Host
+Controller
+Jan 22 07:26:59 my kernel: [    0.444704] usb usb5: Manufacturer:
+Linux 2.6.32-5-amd64 uhci_hcd
+Jan 22 07:26:59 my kernel: [    0.444705] usb usb5: SerialNumber: 0000:=
+00:1d.3
+Jan 22 07:26:59 my kernel: [    0.444747] usb usb5: configuration #1
+chosen from 1 choice
+Jan 22 07:26:59 my kernel: [    0.444765] hub 5-0:1.0: USB hub found
+Jan 22 07:26:59 my kernel: [    0.444769] hub 5-0:1.0: 2 ports detected
+Jan 22 07:26:59 my kernel: [    0.449570] Floppy drive(s): fd0 is 1.44M
+Jan 22 07:26:59 my kernel: [    0.449771] libata version 3.00 loaded.
+Jan 22 07:26:59 my kernel: [    0.451665] via-rhine.c:v1.10-LK1.4.3
+2007-03-06 Written by Donald Becker
+Jan 22 07:26:59 my kernel: [    0.451684]   alloc irq_desc for 22 on no=
+de -1
+Jan 22 07:26:59 my kernel: [    0.451685]   alloc kstat_irqs on node -1
+Jan 22 07:26:59 my kernel: [    0.451689] via-rhine 0000:01:02.0: PCI
+INT A -> GSI 22 (level, low) -> IRQ 22
+Jan 22 07:26:59 my kernel: [    0.456630] ata_piix 0000:00:1f.1: versio=
+n 2.13
+Jan 22 07:26:59 my kernel: [    0.456912] ata_piix 0000:00:1f.1: PCI
+INT A -> GSI 18 (level, low) -> IRQ 18
+Jan 22 07:26:59 my kernel: [    0.456937] ata_piix 0000:00:1f.1:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.457559] scsi0 : ata_piix
+Jan 22 07:26:59 my kernel: [    0.457622] eth0: VIA Rhine III at
+0x1d800, 00:11:95:86:8d:f8, IRQ 22.
+Jan 22 07:26:59 my kernel: [    0.458339] eth0: MII PHY found at
+address 1, status 0x786d advertising 05e1 Link 45e1.
+Jan 22 07:26:59 my kernel: [    0.458343] scsi1 : ata_piix
+Jan 22 07:26:59 my kernel: [    0.459329] ata1: PATA max UDMA/100 cmd
+0x1f0 ctl 0x3f6 bmdma 0xffa0 irq 14
+Jan 22 07:26:59 my kernel: [    0.459331] ata2: PATA max UDMA/100 cmd
+0x170 ctl 0x376 bmdma 0xffa8 irq 15
+Jan 22 07:26:59 my kernel: [    0.459348] ata_piix 0000:00:1f.2: PCI
+INT B -> GSI 19 (level, low) -> IRQ 19
+Jan 22 07:26:59 my kernel: [    0.459351] ata_piix 0000:00:1f.2: MAP [
+P0 P2 P1 P3 ]
+Jan 22 07:26:59 my kernel: [    0.459376] ata_piix 0000:00:1f.2:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    0.459416]   alloc irq_desc for 21 on no=
+de -1
+Jan 22 07:26:59 my kernel: [    0.459418]   alloc kstat_irqs on node -1
+Jan 22 07:26:59 my kernel: [    0.459422] firewire_ohci 0000:01:01.0:
+PCI INT A -> GSI 21 (level, low) -> IRQ 21
+Jan 22 07:26:59 my kernel: [    0.459499] scsi2 : ata_piix
+Jan 22 07:26:59 my kernel: [    0.459561] scsi3 : ata_piix
+Jan 22 07:26:59 my kernel: [    0.461184] ata3: SATA max UDMA/133 cmd
+0xcc00 ctl 0xc880 bmdma 0xc400 irq 19
+Jan 22 07:26:59 my kernel: [    0.461185] ata4: SATA max UDMA/133 cmd
+0xc800 ctl 0xc480 bmdma 0xc408 irq 19
+Jan 22 07:26:59 my kernel: [    0.471598] FDC 0 is a post-1991 82077
+Jan 22 07:26:59 my kernel: [    0.535975] firewire_ohci: Added fw-ohci
+device 0000:01:01.0, OHCI version 1.0
+Jan 22 07:26:59 my kernel: [    0.628338] ata4.00: ATA-8:
+ST32000542AS, CC34, max UDMA/133
+Jan 22 07:26:59 my kernel: [    0.628341] ata4.00: 3907029168 sectors,
+multi 16: LBA48 NCQ (depth 0/32)
+Jan 22 07:26:59 my kernel: [    0.644250] ata4.00: configured for UDMA/=
+133
+Jan 22 07:26:59 my kernel: [    0.844252] ata3.00: ATA-7: INTEL
+SSDSA2M040G2GC, 2CV102HD, max UDMA/133
+Jan 22 07:26:59 my kernel: [    0.844255] ata3.00: 78165360 sectors,
+multi 16: LBA48 NCQ (depth 0/32)
+Jan 22 07:26:59 my kernel: [    0.844296] ata3.01: ATAPI: TSSTcorp
+CDDVDW SH-S223C, SB04, max UDMA/100
+Jan 22 07:26:59 my kernel: [    0.852166] ata3.00: configured for UDMA/=
+133
+Jan 22 07:26:59 my kernel: [    0.908202] ata3.01: configured for UDMA/=
+100
+Jan 22 07:26:59 my kernel: [    0.931374] scsi 2:0:0:0: Direct-Access
+   ATA      INTEL SSDSA2M040 2CV1 PQ: 0 ANSI: 5
+Jan 22 07:26:59 my kernel: [    0.932025] scsi 2:0:1:0: CD-ROM
+   TSSTcorp CDDVDW SH-S223C  SB04 PQ: 0 ANSI: 5
+Jan 22 07:26:59 my kernel: [    0.932170] scsi 3:0:0:0: Direct-Access
+   ATA      ST32000542AS     CC34 PQ: 0 ANSI: 5
+Jan 22 07:26:59 my kernel: [    0.936896] sd 2:0:0:0: [sda] 78165360
+512-byte logical blocks: (40.0 GB/37.2 GiB)
+Jan 22 07:26:59 my kernel: [    0.936928] sd 3:0:0:0: [sdb] 3907029168
+512-byte logical blocks: (2.00 TB/1.81 TiB)
+Jan 22 07:26:59 my kernel: [    0.936936] sd 2:0:0:0: [sda] Write Prote=
+ct is off
+Jan 22 07:26:59 my kernel: [    0.936938] sd 2:0:0:0: [sda] Mode
+Sense: 00 3a 00 00
+Jan 22 07:26:59 my kernel: [    0.936955] sd 2:0:0:0: [sda] Write
+cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 22 07:26:59 my kernel: [    0.936965] sd 3:0:0:0: [sdb] Write Prote=
+ct is off
+Jan 22 07:26:59 my kernel: [    0.936967] sd 3:0:0:0: [sdb] Mode
+Sense: 00 3a 00 00
+Jan 22 07:26:59 my kernel: [    0.936982] sd 3:0:0:0: [sdb] Write
+cache: enabled, read cache: enabled, doesn't support DPO or FUA
+Jan 22 07:26:59 my kernel: [    0.937065]  sda:
+Jan 22 07:26:59 my kernel: [    0.937146]  sdb: sda1 sda2 sda3 sda4
+Jan 22 07:26:59 my kernel: [    0.937822] sd 2:0:0:0: [sda] Attached SC=
+SI disk
+Jan 22 07:26:59 my kernel: [    0.964915]  sdb1 sdb2 sdb3
+Jan 22 07:26:59 my kernel: [    0.965125] sd 3:0:0:0: [sdb] Attached SC=
+SI disk
+Jan 22 07:26:59 my kernel: [    1.034615] sr0: scsi3-mmc drive:
+52x/52x writer dvd-ram cd/rw xa/form2 cdda tray
+Jan 22 07:26:59 my kernel: [    1.034618] Uniform CD-ROM driver Revisio=
+n: 3.20
+Jan 22 07:26:59 my kernel: [    1.034693] sr 2:0:1:0: Attached scsi CD-=
+ROM sr0
+Jan 22 07:26:59 my kernel: [    1.037201] sd 2:0:0:0: Attached scsi
+generic sg0 type 0
+Jan 22 07:26:59 my kernel: [    1.037275] sr 2:0:1:0: Attached scsi
+generic sg1 type 5
+Jan 22 07:26:59 my kernel: [    1.037314] sd 3:0:0:0: Attached scsi
+generic sg2 type 0
+Jan 22 07:26:59 my kernel: [    1.039983] firewire_core: created
+device fw0: GUID 0011060001112679, S400
+Jan 22 07:26:59 my kernel: [    1.347010] PM: Starting manual resume fr=
+om disk
+Jan 22 07:26:59 my kernel: [    1.347013] PM: Resume from partition 8:2
+Jan 22 07:26:59 my kernel: [    1.347014] PM: Checking hibernation imag=
+e.
+Jan 22 07:26:59 my kernel: [    1.347244] PM: Error -22 checking image =
+file
+Jan 22 07:26:59 my kernel: [    1.347246] PM: Resume from disk failed.
+Jan 22 07:26:59 my kernel: [    1.361769] EXT4-fs (sda3): mounted
+filesystem with ordered data mode
+Jan 22 07:26:59 my kernel: [    1.505412] udev[360]: starting version 1=
+64
+Jan 22 07:26:59 my kernel: [    1.555655] ACPI: SSDT 000000007ff9e0b0
+001D2 (v01    AMI   CPU1PM 00000001 INTL 20060113)
+Jan 22 07:26:59 my kernel: [    1.555852] processor LNXCPU:00:
+registered as cooling_device0
+Jan 22 07:26:59 my kernel: [    1.556183] ACPI: SSDT 000000007ff9e290
+00143 (v01    AMI   CPU2PM 00000001 INTL 20060113)
+Jan 22 07:26:59 my kernel: [    1.556330] processor LNXCPU:01:
+registered as cooling_device1
+Jan 22 07:26:59 my kernel: [    1.559003] input: Power Button as
+/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0C:00/input/input2
+Jan 22 07:26:59 my kernel: [    1.559011] ACPI: Power Button [PWRB]
+Jan 22 07:26:59 my kernel: [    1.559057] input: Power Button as
+/devices/LNXSYSTM:00/LNXPWRBN:00/input/input3
+Jan 22 07:26:59 my kernel: [    1.559059] ACPI: Power Button [PWRF]
+Jan 22 07:26:59 my kernel: [    1.568373] input: PC Speaker as
+/devices/platform/pcspkr/input/input4
+Jan 22 07:26:59 my kernel: [    1.598983] intel_rng: FWH not detected
+Jan 22 07:26:59 my kernel: [    2.026042] nvidia: module license
+'NVIDIA' taints kernel.
+Jan 22 07:26:59 my kernel: [    2.026046] Disabling lock debugging due
+to kernel taint
+Jan 22 07:26:59 my kernel: [    2.239933] input: ImPS/2 Generic Wheel
+Mouse as /devices/platform/i8042/serio1/input/input5
+Jan 22 07:26:59 my kernel: [    2.247908] i801_smbus 0000:00:1f.3: PCI
+INT B -> GSI 19 (level, low) -> IRQ 19
+Jan 22 07:26:59 my kernel: [    2.250796] parport_pc 00:07: reported
+by Plug and Play ACPI
+Jan 22 07:26:59 my kernel: [    2.250890] parport0: PC-style at 0x378
+(0x778), irq 7 [PCSPP,TRISTATE,EPP]
+Jan 22 07:26:59 my kernel: [    2.276519] parport0: Printer,
+Hewlett-Packard HP LaserJet 1100
+Jan 22 07:26:59 my kernel: [    2.495774] nvidia 0000:04:00.0: PCI INT
+A -> GSI 16 (level, low) -> IRQ 16
+Jan 22 07:26:59 my kernel: [    2.495780] nvidia 0000:04:00.0: setting
+latency timer to 64
+Jan 22 07:26:59 my kernel: [    2.495784] vgaarb: device changed
+decodes: PCI:0000:04:00.0,olddecodes=3Dio+mem,decodes=3Dnone:owns=3Dio+=
+mem
+Jan 22 07:26:59 my kernel: [    2.495862] NVRM: loading NVIDIA UNIX
+x86_64 Kernel Module  195.36.31  Thu Jun  3 08:19:50 PDT 2010
+Jan 22 07:26:59 my kernel: [    2.549543] HDA Intel 0000:00:1b.0: PCI
+INT A -> GSI 16 (level, low) -> IRQ 16
+Jan 22 07:26:59 my kernel: [    2.549567] HDA Intel 0000:00:1b.0:
+setting latency timer to 64
+Jan 22 07:26:59 my kernel: [    2.619123] input: HDA Digital PCBeep as
+/devices/pci0000:00/0000:00:1b.0/input/input6
+Jan 22 07:26:59 my kernel: [    2.709931] Adding 249848k swap on
+/dev/sda2.  Priority:-1 extents:1 across:249848k SS
+Jan 22 07:26:59 my kernel: [    2.784474] loop: module loaded
+Jan 22 07:26:59 my kernel: [    3.118288] EXT4-fs (sda4): mounted
+filesystem with ordered data mode
+Jan 22 07:26:59 my kernel: [    3.174861] EXT4-fs (sdb1): mounted
+filesystem with ordered data mode
+Jan 22 07:26:59 my kernel: [    3.212696] EXT4-fs (sdb2): mounted
+filesystem with ordered data mode
+Jan 22 07:26:59 my kernel: [    3.331711] ip_tables: (C) 2000-2006
+Netfilter Core Team
+Jan 22 07:26:59 my kernel: [    3.341759] nf_conntrack version 0.5.0
+(16384 buckets, 65536 max)
+Jan 22 07:26:59 my kernel: [    3.341943] CONFIG_NF_CT_ACCT is
+deprecated and will be removed soon. Please use
+Jan 22 07:26:59 my kernel: [    3.341945] nf_conntrack.acct=3D1 kernel
+parameter, acct=3D1 nf_conntrack module option or
+Jan 22 07:26:59 my kernel: [    3.341946] sysctl
+net.netfilter.nf_conntrack_acct=3D1 to enable it.
+Jan 22 07:26:59 my kernel: [    3.365328] ip6_tables: (C) 2000-2006
+Netfilter Core Team
+Jan 22 07:26:59 my kernel: [    8.449954] fuse init (API version 7.13)
+Jan 22 07:27:00 my kernel: [    9.362940]   alloc irq_desc for 27 on no=
+de -1
+Jan 22 07:27:00 my kernel: [    9.362942]   alloc kstat_irqs on node -1
+Jan 22 07:27:00 my kernel: [    9.362957] atl1 0000:02:00.0: irq 27
+for MSI/MSI-X
+Jan 22 07:27:00 my kernel: [    9.363242] ADDRCONF(NETDEV_UP): eth1:
+link is not ready
+Jan 22 07:27:00 my kernel: [    9.365260] eth0: link up, 100Mbps,
+full-duplex, lpa 0x45E1
+Jan 22 07:27:01 my kernel: [    9.861987] lp0: using parport0
+(interrupt-driven).
+Jan 22 07:27:01 my kernel: [    9.864872] ppdev: user-space parallel po=
+rt driver
+Jan 22 07:27:11 my kernel: [   19.896007] eth0: no IPv6 routers present
+Jan 22 07:28:33 my kernel: [  102.645811] CPU0 attaching NULL sched-dom=
+ain.
+Jan 22 07:28:33 my kernel: [  102.645816] CPU1 attaching NULL sched-dom=
+ain.
+Jan 22 07:28:33 my kernel: [  102.668591] CPU0 attaching sched-domain:
+Jan 22 07:28:33 my kernel: [  102.668594]  domain 0: span 0-1 level MC
+Jan 22 07:28:33 my kernel: [  102.668596]   groups: 0 1
+Jan 22 07:28:33 my kernel: [  102.668601] CPU1 attaching sched-domain:
+Jan 22 07:28:33 my kernel: [  102.668603]  domain 0: span 0-1 level MC
+Jan 22 07:28:33 my kernel: [  102.668606]   groups: 1 0
+Jan 22 15:07:58 my kernel: [27667.804537] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:07:58 my kernel: [27667.804557] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:07:58 my kernel: [27667.804562] ata4.00: failed command: READ=
+ DMA EXT
+Jan 22 15:07:58 my kernel: [27667.804568] ata4.00: cmd
+25/00:38:cf:12:8a/00:00:4d:00:00/e0 tag 0 dma 28672 in
+Jan 22 15:07:58 my kernel: [27667.804569]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:07:58 my kernel: [27667.804572] ata4.00: status: { DRDY }
+Jan 22 15:07:58 my kernel: [27667.804582] ata4: soft resetting link
+Jan 22 15:07:59 my kernel: [27667.987633] ata4.00: configured for UDMA/=
+133
+Jan 22 15:07:59 my kernel: [27667.987648] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:07:59 my kernel: [27667.987680] ata4: EH complete
+Jan 22 15:08:29 my kernel: [27698.804569] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:08:29 my kernel: [27698.804592] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:08:29 my kernel: [27698.804597] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:08:29 my kernel: [27698.804602] ata4.00: cmd
+c8/00:80:7f:74:08/00:00:00:00:00/e0 tag 0 dma 65536 in
+Jan 22 15:08:29 my kernel: [27698.804603]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:08:29 my kernel: [27698.804605] ata4.00: status: { DRDY }
+Jan 22 15:08:29 my kernel: [27698.804616] ata4: soft resetting link
+Jan 22 15:08:30 my kernel: [27698.988495] ata4.00: configured for UDMA/=
+133
+Jan 22 15:08:30 my kernel: [27698.988505] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:08:30 my kernel: [27698.988530] ata4: EH complete
+Jan 22 15:09:00 my kernel: [27729.804523] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:09:00 my kernel: [27729.804542] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:09:00 my kernel: [27729.804547] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:09:00 my kernel: [27729.804553] ata4.00: cmd
+c8/00:40:3f:21:04/00:00:00:00:00/e0 tag 0 dma 32768 in
+Jan 22 15:09:00 my kernel: [27729.804554]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:09:00 my kernel: [27729.804557] ata4.00: status: { DRDY }
+Jan 22 15:09:00 my kernel: [27729.804567] ata4: soft resetting link
+Jan 22 15:09:01 my kernel: [27729.985869] ata4.00: configured for UDMA/=
+133
+Jan 22 15:09:01 my kernel: [27729.985876] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:09:01 my kernel: [27729.985889] ata4: EH complete
+Jan 22 15:09:31 my kernel: [27760.816048] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:09:31 my kernel: [27760.816069] ata4.00: limiting speed to
+UDMA/100:PIO4
+Jan 22 15:09:31 my kernel: [27760.816073] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:09:31 my kernel: [27760.816077] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:09:31 my kernel: [27760.816083] ata4.00: cmd
+c8/00:48:7f:21:04/00:00:00:00:00/e0 tag 0 dma 36864 in
+Jan 22 15:09:31 my kernel: [27760.816085]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:09:31 my kernel: [27760.816087] ata4.00: status: { DRDY }
+Jan 22 15:09:31 my kernel: [27760.816098] ata4: soft resetting link
+Jan 22 15:09:32 my kernel: [27760.996711] ata4.00: configured for UDMA/=
+100
+Jan 22 15:09:32 my kernel: [27760.996719] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:09:32 my kernel: [27760.996740] ata4: EH complete
+Jan 22 15:10:02 my kernel: [27791.804530] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:10:02 my kernel: [27791.804553] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:10:02 my kernel: [27791.804560] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:10:02 my kernel: [27791.804566] ata4.00: cmd
+c8/00:50:c7:7c:08/00:00:00:00:00/e0 tag 0 dma 40960 in
+Jan 22 15:10:02 my kernel: [27791.804567]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:10:02 my kernel: [27791.804570] ata4.00: status: { DRDY }
+Jan 22 15:10:02 my kernel: [27791.804582] ata4: soft resetting link
+Jan 22 15:10:03 my kernel: [27791.988297] ata4.00: configured for UDMA/=
+100
+Jan 22 15:10:03 my kernel: [27791.988308] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:10:03 my kernel: [27791.988332] ata4: EH complete
+Jan 22 15:10:33 my kernel: [27822.804521] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:10:33 my kernel: [27822.804539] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:10:33 my kernel: [27822.804544] ata4.00: failed command: READ=
+ DMA EXT
+Jan 22 15:10:33 my kernel: [27822.804550] ata4.00: cmd
+25/00:38:7f:20:8a/00:00:4d:00:00/e0 tag 0 dma 28672 in
+Jan 22 15:10:33 my kernel: [27822.804551]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:10:33 my kernel: [27822.804554] ata4.00: status: { DRDY }
+Jan 22 15:10:33 my kernel: [27822.804565] ata4: soft resetting link
+Jan 22 15:10:34 my kernel: [27822.989794] ata4.00: configured for UDMA/=
+100
+Jan 22 15:10:34 my kernel: [27822.989800] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:10:34 my kernel: [27822.989814] ata4: EH complete
+Jan 22 15:11:04 my kernel: [27853.820104] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:11:04 my kernel: [27853.820132] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:11:04 my kernel: [27853.820137] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:11:04 my kernel: [27853.820142] ata4.00: cmd
+c8/00:40:3f:28:04/00:00:00:00:00/e0 tag 0 dma 32768 in
+Jan 22 15:11:04 my kernel: [27853.820143]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:11:04 my kernel: [27853.820145] ata4.00: status: { DRDY }
+Jan 22 15:11:04 my kernel: [27853.820156] ata4: soft resetting link
+Jan 22 15:11:05 my kernel: [27854.004474] ata4.00: configured for UDMA/=
+100
+Jan 22 15:11:05 my kernel: [27854.004482] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:11:05 my kernel: [27854.004503] ata4: EH complete
+Jan 22 15:11:35 my kernel: [27884.804540] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:11:35 my kernel: [27884.804566] ata4.00: limiting speed to
+UDMA/33:PIO4
+Jan 22 15:11:35 my kernel: [27884.804570] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:11:35 my kernel: [27884.804576] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:11:35 my kernel: [27884.804582] ata4.00: cmd
+c8/00:80:7f:28:04/00:00:00:00:00/e0 tag 0 dma 65536 in
+Jan 22 15:11:35 my kernel: [27884.804583]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:11:35 my kernel: [27884.804586] ata4.00: status: { DRDY }
+Jan 22 15:11:35 my kernel: [27884.804598] ata4: soft resetting link
+Jan 22 15:11:36 my kernel: [27884.984946] ata4.00: configured for UDMA/=
+33
+Jan 22 15:11:36 my kernel: [27884.984953] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:11:36 my kernel: [27884.984971] ata4: EH complete
+Jan 22 15:12:06 my kernel: [27915.804529] ata4: lost interrupt (Status =
+0x50)
+Jan 22 15:12:06 my kernel: [27915.804548] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 15:12:06 my kernel: [27915.804554] ata4.00: failed command: READ=
+ DMA
+Jan 22 15:12:06 my kernel: [27915.804559] ata4.00: cmd
+c8/00:80:7f:28:04/00:00:00:00:00/e0 tag 0 dma 65536 in
+Jan 22 15:12:06 my kernel: [27915.804561]          res
+40/00:f0:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 15:12:06 my kernel: [27915.804564] ata4.00: status: { DRDY }
+Jan 22 15:12:06 my kernel: [27915.804575] ata4: soft resetting link
+Jan 22 15:12:07 my kernel: [27915.984902] ata4.00: configured for UDMA/=
+33
+Jan 22 15:12:07 my kernel: [27915.984909] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 15:12:07 my kernel: [27915.984927] ata4: EH complete
+Jan 22 15:12:52 my kernel: [27961.780543] cupsd[1898]: segfault at
+3cf3b ip 000000000003cf3b sp 00007fff28af19d8 error 14 in
+libnss_files-2.11.2.so[7ffb50975000+b000]
+Jan 22 15:13:45 my kernel: [28014.828243] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D92.33.33.179
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D58 ID=3D0 DF =
+PROTO=3DTCP
+SPT=3D80 DPT=3D39734 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.868831] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D195.54.111.91
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D59 ID=3D0 DF =
+PROTO=3DTCP
+SPT=3D80 DPT=3D36214 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.881609] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D50371=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37642 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.892944] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D37335=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37625 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.897322] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D34042=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37626 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.925305] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.118
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D23674=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D36969 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.933365] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D39469=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37640 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.934029] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D34532=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37641 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28014.941446] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.99
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D54104=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D37639 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:13:46 my kernel: [28015.284273] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D92.33.33.179
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D58 ID=3D0 DF =
+PROTO=3DTCP
+SPT=3D80 DPT=3D39734 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:14:14 my kernel: [28043.604663] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D195.54.111.91
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D59 ID=3D0 DF =
+PROTO=3DTCP
+SPT=3D80 DPT=3D36214 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:14:43 my kernel: [28072.785223] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D195.54.111.91
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D59 ID=3D0 DF =
+PROTO=3DTCP
+SPT=3D80 DPT=3D36214 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 15:14:51 my kernel: [28079.949488] [UFW BLOCK] IN=3Deth0 OUT=3D
+MAC=3D00:11:92:86:8d:f8:00:1c:f0:4c:c2:b9:08:00 SRC=3D74.125.79.118
+DST=3D192.168.0.198 LEN=3D40 TOS=3D0x00 PREC=3D0x00 TTL=3D55 ID=3D23681=
+ PROTO=3DTCP
+SPT=3D80 DPT=3D36969 WINDOW=3D0 RES=3D0x00 RST URGP=3D0
+Jan 22 16:56:43 my kernel: [34192.816023] ata4: lost interrupt (Status =
+0x50)
+Jan 22 16:56:43 my kernel: [34192.816040] ata4.00: exception Emask 0x0
+SAct 0x0 SErr 0x0 action 0x6 frozen
+Jan 22 16:56:43 my kernel: [34192.816044] ata4.00: failed command: WRIT=
+E DMA EXT
+Jan 22 16:56:43 my kernel: [34192.816048] ata4.00: cmd
+35/00:08:bf:00:80/00:00:4d:00:00/e0 tag 0 dma 4096 out
+Jan 22 16:56:43 my kernel: [34192.816049]          res
+40/00:00:00:4f:c2/00:00:00:00:00/40 Emask 0x4 (timeout)
+Jan 22 16:56:43 my kernel: [34192.816051] ata4.00: status: { DRDY }
+Jan 22 16:56:43 my kernel: [34192.816060] ata4: soft resetting link
+Jan 22 16:56:44 my kernel: [34192.996387] ata4.00: configured for UDMA/=
+33
+Jan 22 16:56:44 my kernel: [34192.996392] ata4.00: device reported
+invalid CHS sector 0
+Jan 22 16:56:44 my kernel: [34192.996402] ata4: EH complete
