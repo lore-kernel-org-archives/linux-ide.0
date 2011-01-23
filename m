@@ -1,32 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Seagate hard disk firmware issue
-Date: Sun, 23 Jan 2011 13:42:09 +0000
-Message-ID: <20110123134209.25f8b1b9@lxorguk.ukuu.org.uk>
-References: <AANLkTinvjz0n6bq3Q218w2bs6tjVu5-p8WcpH7kzyMS_@mail.gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [PATCH 0/3] libata bug fixes and updates as a precursor for
+ converting libsas to the new eh
+Date: Sun, 23 Jan 2011 08:26:46 -0600
+Message-ID: <1295792806.3007.12.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-14
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:54093 "EHLO
-	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751372Ab1AWNmK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jan 2011 08:42:10 -0500
-In-Reply-To: <AANLkTinvjz0n6bq3Q218w2bs6tjVu5-p8WcpH7kzyMS_@mail.gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:39291 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750972Ab1AWO0u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 23 Jan 2011 09:26:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: BU66ER BAD6ER <debu66er@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-> > =A0 After command completion occurred, registers were:
-> > =A0 ER ST SC SN CL CH DH
-> > =A0 -- -- -- -- -- -- --
-> > =A0 40 51 00 58 e9 a8 00=A0 Error: UNC at LBA =3D 0x00a8e958 =3D 11=
-069784
+While I was playing around with converting libsas to the new error
+handler, I ran into the two locking bugs and the fact that sas uses non
+standard submission paths.  These patches fix all of that.  In theory,
+the error handler locking bug is serious, since the eh_cmd_q list is
+being processed on the wrong lock, but in practise, since libata has one
+host per port, I don't think it will ever have any visible consequence
+(until, of course, libsas comes along with multiple ports per host plus
+non-libata ports).
 
-Uncorrectable media error (bad sectors etc)
+James
+
+---
+
+James Bottomley (3):
+  libata: plumb sas port scan into standard libata paths
+  libata: fix locking for sas paths
+  libata: fix eh locking
+
+ drivers/ata/libata-core.c |   46 +++++++++++++++++++++-----------------------
+ drivers/ata/libata-eh.c   |    9 ++++++-
+ drivers/ata/libata-scsi.c |    4 +-
+ drivers/ata/libata.h      |    1 +
+ 4 files changed, 32 insertions(+), 28 deletions(-)
 
 
-
-I would suggest you instead talk to the drive manufacturer or whoever i=
-s
-responsible for the warranty.
