@@ -1,35 +1,32 @@
-From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
-Subject: Re: sata_via bus errors fixed?
-Date: Mon, 24 Jan 2011 17:23:13 +0000
-Message-ID: <4D3DB581.2080206@mrc-lmb.cam.ac.uk>
-References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk> <20110124170432.GH27510@htj.dyndns.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: patch for "failed to set xfermode (err_mask=0x4)" with PIONEER
+ DVD-RW DVR-212D
+Date: Mon, 24 Jan 2011 21:19:44 +0300
+Message-ID: <4D3DC2C0.9030103@ru.mvista.com>
+References: <4D3DA084.9070609@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ppsw-41.csi.cam.ac.uk ([131.111.8.141]:38598 "EHLO
-	ppsw-41.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152Ab1AXRXP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 12:23:15 -0500
-Received: from mail.mrc-lmb.cam.ac.uk ([131.111.85.9]:32872 helo=mail.lmb.internal)
-	by ppsw-41.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.136]:25)
-	with esmtp id 1PhQ8I-00075b-QC (Exim 4.72) for linux-ide@vger.kernel.org
-	(return-path <dhoworth@mrc-lmb.cam.ac.uk>); Mon, 24 Jan 2011 17:23:14 +0000
-Received: from cpepc210-3.lmb.internal ([10.14.0.2])
-	by mail.lmb.internal with esmtp (Exim 4.63)
-	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>)
-	id 1PhQ8I-00018C-1b
-	for linux-ide@vger.kernel.org; Mon, 24 Jan 2011 17:23:14 +0000
-In-Reply-To: <20110124170432.GH27510@htj.dyndns.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:46078 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab1AXSVm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 13:21:42 -0500
+Received: by eye27 with SMTP id 27so2036985eye.19
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2011 10:21:41 -0800 (PST)
+In-Reply-To: <4D3DA084.9070609@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Francesco Antonacci <fraanto@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, tj@kernel.org
 
-Tejun Heo wrote:
-> Hmmm... there is no message which shows why EH kicked in.  Weird.  Can
-> you please post the output of dmesg instead after those failures?
+Hello.
 
-Thanks for the fast response. Sorry. I posted too short a sample. I'll
-see what I can do this evening.
+Francesco Antonacci wrote:
 
-Cheers, Dave
+> Signed-off-by https://bugzilla.kernel.org/show_bug.cgi?id=27502
+
+    You should sign off with your name and should place the signoff within the 
+patch file. However, the patch should preferably be inserted into the mail in-line.
+
+WBR, Sergei
