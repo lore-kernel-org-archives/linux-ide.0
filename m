@@ -1,41 +1,27 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH #upstream-fixes] libata: DVR-212D can't do SETXFER DVD-RW
- DVR-212D
-Date: Mon, 24 Jan 2011 21:24:44 +0300
-Message-ID: <4D3DC3EC.2010000@ru.mvista.com>
-References: <4D3DA084.9070609@gmail.com> <20110124160125.GC27510@htj.dyndns.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
+Date: Mon, 24 Jan 2011 16:12:59 -0500
+Message-ID: <4D3DEB5B.9080803@garzik.org>
+References: <1295797260.3007.118.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:49188 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981Ab1AXS0Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 13:26:25 -0500
-Received: by ewy5 with SMTP id 5so2053455ewy.19
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2011 10:26:24 -0800 (PST)
-In-Reply-To: <20110124160125.GC27510@htj.dyndns.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47571 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564Ab1AXVND (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 16:13:03 -0500
+In-Reply-To: <1295797260.3007.118.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Francesco Antonacci <fraanto@gmail.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
-Hello.
+About to dive into this.  Thanks for tackling the new-EH conversion, 
+libsas is the last straggler in this regard.  As you noted, "old-EH" is 
+now a synonym for "SAS EH code path".
 
-Tejun Heo wrote:
+	Jeff
 
-> From: Francesco Antonacci <fraanto@gmail.com>
 
-> PIONEER DVR-212D can't to SETXFER like its sibling DVRTD08.  Add
-
-    s/to/do/?
-
-> ATA_HORKAGE_NOSETXFER for it.  Reported in bko#27502.
-
->   https://bugzilla.kernel.org/show_bug.cgi?id=27502
-
-> Signed-off-by: Francesco Antonacci <fraanto@gmail.com>
-> Acked-by: Tejun Heo <tj@kernel.org>
-
-WBR, Sergei
 
