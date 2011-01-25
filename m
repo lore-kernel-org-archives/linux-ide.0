@@ -1,380 +1,118 @@
-From: "Ahmed S. Darwish" <darwish.07@gmail.com>
-Subject: [PATCH -next 2/2][RFC] x86: Saveoops: Reserve low memory and
-	register code
-Date: Tue, 25 Jan 2011 15:53:26 +0200
-Message-ID: <20110125135326.GC10051@laptop>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
+ panic
+Date: Tue, 25 Jan 2011 15:09:48 +0100
+Message-ID: <20110125140948.GA26762@elte.hu>
 References: <20110125134748.GA10051@laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:56177 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753600Ab1AYNxe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 08:53:34 -0500
+Received: from mx3.mail.elte.hu ([157.181.1.138]:40535 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753727Ab1AYOLr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jan 2011 09:11:47 -0500
 Content-Disposition: inline
 In-Reply-To: <20110125134748.GA10051@laptop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, Simon Kagstrom <simon.kagstrom@netinsight.net>, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: "Ahmed S. Darwish" <darwish.07@gmail.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
 
-Using the x86 memblock interface, reserve below 1-Mbyte low memory area=
-s
-for the Saveoops LongMode -> RealMode switch code, ring buffer, and sta=
-ck.
-All the low memory areas are dynamically allocated and reserved, giving
-memblock enough flexibility to choose the best available areas possible=
-=2E
+* Ahmed S. Darwish <darwish.07@gmail.com> wrote:
 
-To trigger Saveoops on panic(), it's registered using the kmsg_dump hoo=
-ks.
-That interface is quite racy for our goals, but it's quickly used now t=
-o
-prototype the code (check the XXX mark for details.)
+> Hi,
+> 
+> I've faced some very early panics in latest kernel. Being a run of the mill
+> x86 laptop, the machine is void of debugging aids like serial ports or
+> network boot.
+> 
+> As a possible solution, below patches prototypes the idea of persistently
+> storing the kernel log ring to a hard disk partition using the enhanced BIOS
+> 0x13 services.
+> 
+> The used BIOS INT 0x13 functions are the same ones originally used by all
+> contemporary bootloaders to load the Linux kernel. If the kernel code is
+> already loaded to RAM and being executed, such parts of the BIOS should be
+> stable enough.
+> 
+> The basic idea is to switch from 64-bit long mode all the way down to 16-bit
+> real-mode. Once in real-mode, we reset the disk controller and write the log
+> buffer to disk using a user-supplied absolute disk block address (LBA).
+> 
+> Doing so, we can capture very early panics (along with earlier log messages)
+> reliably since the writing mechanism has minimal dependency on any Linux code.
+> 
+> Unfortunately, there are problems on some machines.
+> 
+> In my laptop, when calling the BIOS with the "Reset Disk Controllers" command
+> or even issuing a direct "Extend Write" without a controller reset, the BIOS
+> hangs for around __5 minutes__. Afterwards, it returns with a 'Timeout' error
+> code.
+> 
+> The main problem, it seems, is that the BIOS "Reset controller" command is not
+> enough to restore disk hardware to a state understandable by the BIOS code.
+> 
+> So:
+> 
+>  - Is it possible to re-initialize the disk hardware to its POST state (thus
+>    make the BIOS services work reliably) while keeping system RAM unmodified?
+>  - If not, can we do it manually by reprogramming the controllers?
+> 
+> The first patch (#1) implements the longMode -> realMode switch and invokes
+> the BIOS. The second reserves needed low-memory areas for such code and
+> registers a panic logger using the kmsg_dump interface.
+> 
+> Both patches are on '-next' and include XXX marks where further help is also
+> appreciated. Please remember that these patches, while tested, are now for
+> prototyping the technical feasibility of the idea.
+> 
+> Diffstat:
+> 
+>  arch/x86/kernel/saveoops-rmode.S |  483 ++++++++++++++++++++++++++++++++++++++
+>  arch/x86/include/asm/saveoops.h  |   15 ++
+>  arch/x86/kernel/saveoops.c       |  219 +++++++++++++++++
+>  arch/x86/kernel/setup.c          |    9 +
+>  arch/x86/kernel/Makefile         |    3 +
+>  lib/Kconfig.debug                |   15 ++
+>  6 files changed, 744 insertions(+), 0 deletions(-)
 
-Once Saveoops code is triggered, it identity maps the first 2 MBytes (t=
-he
-switch code disables paging), copy the log buffer to its reserved 8086-
-accessible area, and jumps to the switch code (PATCH #1.)
+Ok, i have to admit that while i'm a rabid BIOS-hater i find this debug feature very 
+very interesting, for the plain reason that if it's implemented in a robust and 
+clever way then this has a chance to improve debuggability of pretty much any Linux 
+laptop quite enormously!
 
-Signed-off-by: Ahmed S. Darwish <darwish.07@gmail.com>
----
+While we generally thoroughly hate BIOSes from beginning to end, one thing can be 
+said, a BIOS bootstraps very early during bootup, and it's relatively simple to 
+trigger as well.
 
- arch/x86/kernel/saveoops.c      |  219 +++++++++++++++++++++++++++++++=
-++++++++
- arch/x86/kernel/setup.c         |    9 ++
- arch/x86/include/asm/saveoops.h |   15 +++
- arch/x86/kernel/Makefile        |    3 +
- lib/Kconfig.debug               |   15 +++
- 5 files changed, 261 insertions(+), 0 deletions(-)
+Also, since latest kernels do not stomp on BIOS data structures anymore (low RAM), 
+there's some good chance it's still functional at the point of crash - be that an 
+early crash or a later crash.
 
-diff --git a/arch/x86/kernel/saveoops.c b/arch/x86/kernel/saveoops.c
-new file mode 100644
-index 0000000..f48fc0a
---- /dev/null
-+++ b/arch/x86/kernel/saveoops.c
-@@ -0,0 +1,219 @@
-+/* PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTY=
-PE */
-+
-+/*
-+ * SAVEOOPS -- Save kernel log buffer to disk upon panic()
-+ *
-+ * To safely access disk in situations like very early boot or where t=
-he
-+ * disk access code itself is buggy, we use BIOS INT13h extended servi=
-ces.
-+ * To access such services, switch to 8086 real-mode first.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/compiler.h>
-+#include <linux/log2.h>
-+#include <linux/time.h>
-+#include <linux/kmsg_dump.h>
-+#include <linux/memblock.h>
-+#include <linux/sched.h>
-+
-+#include <asm/page.h>
-+#include <asm/pgtable.h>
-+#include <asm/tlbflush.h>
-+#include <asm/saveoops.h>
-+
-+/*
-+ * We can only access the first MByte in real mode, thus allocate
-+ * low-memory areas for the ring buffer, and rmode code and stack.
-+ */
-+static phys_addr_t ring_buf;
-+static phys_addr_t code_buf;
-+static phys_addr_t rmode_stack;
-+
-+/*
-+ * Below 1-Mbyte pointer to lmode->rmode switch code.
-+ */
-+static void (* __noreturn rmode_switch)(phys_addr_t code_buf,
-+					phys_addr_t ring_buf,
-+					phys_addr_t rmode_stack,
-+					uint64_t disk_lba,
-+					uint64_t ring_buf_len);
-+
-+/*
-+ * Absolute LBA address where the log will be saved on disk.
-+ */
-+static uint64_t disk_lba =3D CONFIG_SAVEOOPS_DISK_LBA;
-+
-+/*
-+ * Extended BIOS services write to disk in units of 512-byte sectors.
-+ * Thus, always align the ring buffer size on a 512-byte boundary.
-+ */
-+#define RMODE_SEGMENT_LIMIT	0x10000UL
-+#define RING_SIZE		(60UL * 1024)
-+#define SAVEOOPS_HEADER		"*SAVEOOPS-WRITTEN KERNEL LOG*"
-+
-+/*
-+ * Page tables to identity map the first 2 Mbytes.
-+ */
-+static __aligned(PAGE_SIZE) pud_t ident_level3[PTRS_PER_PUD];
-+static __aligned(PAGE_SIZE) pmd_t ident_level2[PTRS_PER_PMD];
-+
-+/*
-+ * The lmode->rmode switching code needs to run from an identity page
-+ * since it disables paging.
-+ */
-+static void build_identity_mappings(void)
-+{
-+	pgd_t *pgde;
-+	pud_t *pude;
-+	pmd_t *pmde;
-+
-+	pmde =3D ident_level2;
-+	set_pmd(pmde, __pmd(0 + __PAGE_KERNEL_IDENT_LARGE_EXEC));
-+
-+	pude =3D ident_level3;
-+	set_pud(pude, __pud(__pa(ident_level2) + _KERNPG_TABLE));
-+
-+	pgde =3D init_level4_pgt;
-+	set_pgd(pgde, __pgd(__pa(ident_level3) + _KERNPG_TABLE));
-+
-+	__flush_tlb_all();
-+}
-+
-+/*
-+ * XXX: Our use of kmsg_dump interface is invalid. We completely halt =
-the
-+ *	machine when getting called; this means:
-+ *	- other registered loggers won't have a chance to read the ring
-+ *	- other CPU cores might also be accessing the disk, racing with
-+ *	  BIOS code that will do the same.
-+ *
-+ *	Such interface is now used to get things going. A new interface
-+ *	satisfying our special requirements needs to be created. A
-+ *	solution is to do an rmode->lmode switch after writing to disk.
-+ */
-+static void saveoops_do_dump(struct kmsg_dumper *dumper,
-+			     enum kmsg_dump_reason reason,
-+			     const char *s1, unsigned long l1,
-+			     const char *s2, unsigned long l2)
-+{
-+	unsigned long l1_cpy, l2_cpy, s1_start, s2_start;
-+	struct timeval timestamp;
-+	char *buf, *buf_orig;
-+	int hdr_size;
-+
-+	if (reason !=3D KMSG_DUMP_PANIC)
-+		return;
-+
-+	do_gettimeofday(&timestamp);
-+
-+	buf =3D __va(ring_buf);
-+	buf_orig =3D buf;
-+	memset(buf, '\0', RING_SIZE);
-+	buf +=3D sprintf(buf, "%s\n", SAVEOOPS_HEADER);
-+	buf +=3D sprintf(buf, "%lu.%lu\n", timestamp.tv_sec, timestamp.tv_use=
-c);
-+
-+	hdr_size =3D buf - buf_orig;
-+	l2_cpy =3D min(l2, RING_SIZE - hdr_size);
-+	l1_cpy =3D min(l1, RING_SIZE - hdr_size - l2_cpy);
-+
-+	s2_start =3D l2 - l2_cpy;
-+	s1_start =3D l1 - l1_cpy;
-+	memcpy(buf, s1 + s1_start, l1_cpy);
-+	memcpy(buf + l1_cpy, s2 + s2_start, l2_cpy);
-+
-+	printk(KERN_EMERG "Saveoops: Saving kernel log to boot disk LBA "
-+	       "address %llu\n", disk_lba);
-+
-+	local_irq_disable();
-+	build_identity_mappings();
-+	rmode_switch(code_buf, ring_buf, rmode_stack, disk_lba, RING_SIZE >> =
-9);
-+}
-+
-+static struct kmsg_dumper saveoops_dumper =3D {
-+	.dump =3D saveoops_do_dump,
-+};
-+
-+/*
-+ * Real-mode switch code start and end markers.
-+ * @pmode16: 16-bit protected mode entry point; 8086-segments base.
-+ */
-+extern const char saveoops_start[];
-+extern const char saveoops_end[];
-+extern const char pmode16[];
-+
-+/*
-+ * Simplify real mode segmented-addressing calculations
-+ */
-+#define RMODE_DATA_ALIGN	16
-+
-+void __init saveoops_init(void)
-+{
-+	unsigned int code_size, code_align;
-+	int res;
-+
-+	if (disk_lba =3D=3D -1) {
-+		printk(KERN_INFO "Saveoops: No disk LBA given; will not save "
-+		       "kernel log to disk upon panic.\n");
-+		return;
-+	}
-+
-+	BUILD_BUG_ON(!IS_ALIGNED(RING_SIZE, 512));
-+	BUILD_BUG_ON(RING_SIZE > RMODE_SEGMENT_LIMIT);
-+	BUILD_BUG_ON(RMODE_STACK_LEN > RMODE_SEGMENT_LIMIT);
-+	BUG_ON((saveoops_end - pmode16) > RMODE_SEGMENT_LIMIT);
-+
-+	ring_buf =3D memblock_find_in_range(0, 1<<20, RING_SIZE, RMODE_DATA_A=
-LIGN);
-+	if (ring_buf =3D=3D MEMBLOCK_ERROR) {
-+		printk(KERN_ERR "Saveoops: requesting a low-memory region "
-+		       "for ring buffer failed\n");
-+		return;
-+	}
-+	memblock_x86_reserve_range(ring_buf, ring_buf + RING_SIZE,
-+				   "SAVEOOPS ringbuf");
-+	printk(KERN_INFO "Saveoops: Acquired [0x%llx-0x%llx] for the ring "
-+	       "buffer\n", ring_buf, ring_buf + RING_SIZE);
-+
-+	/* The pmode->rmode switch code =E2=80=9CMUST=E2=80=9D be in a single=
- page */
-+	code_size =3D saveoops_end - saveoops_start;
-+	code_align =3D roundup_pow_of_two(code_size);
-+	code_buf =3D memblock_find_in_range(0, 1<<20, code_size, code_align);
-+	if (code_buf =3D=3D MEMBLOCK_ERROR) {
-+		printk(KERN_ERR "Saveoops: requesting a low-memory region "
-+		       "for mode-switching code failed\n");
-+		goto fail3;
-+	}
-+	memblock_x86_reserve_range(code_buf, code_buf + code_size,
-+				   "SAVEOOPS codebuf");
-+	printk(KERN_INFO "Saveoops: Acquired [0x%llx-0x%llx] for rmode-switch=
- "
-+	       "code\n", code_buf, code_buf + code_size);
-+
-+	rmode_stack =3D memblock_find_in_range(0, 1<<20, RMODE_STACK_LEN,
-+					     RMODE_DATA_ALIGN);
-+	if (rmode_stack =3D=3D MEMBLOCK_ERROR) {
-+		printk(KERN_ERR "Saveoops: requesting a low-memory region "
-+		       "for real-mode stack failed\n");
-+		goto fail2;
-+	}
-+	memblock_x86_reserve_range(rmode_stack, rmode_stack + RMODE_STACK_LEN=
-,
-+				   "SAVEOOPS r-stack");
-+	printk(KERN_INFO "Saveoops: Acquired [0x%llx-0x%llx] for rmode stack\=
-n",
-+	       rmode_stack, rmode_stack + RMODE_STACK_LEN);
-+
-+	res =3D kmsg_dump_register(&saveoops_dumper);
-+	if (res) {
-+		printk(KERN_ERR "Saveoops: registering kmsg dumper failed");
-+		goto fail1;
-+	}
-+
-+	memcpy(__va(code_buf), saveoops_start, code_size);
-+	rmode_switch =3D (void *)code_buf;
-+	return;
-+
-+fail1:
-+	memblock_x86_free_range(rmode_stack, rmode_stack + RMODE_STACK_LEN);
-+fail2:
-+	memblock_x86_free_range(code_buf, code_buf + code_size);
-+fail3:
-+	memblock_x86_free_range(ring_buf, ring_buf + RING_SIZE);
-+}
-+
-+/* PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTYPE - PROTOTY=
-PE */
-diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index d3cfe26..3686df8 100644
---- a/arch/x86/kernel/setup.c
-+++ b/arch/x86/kernel/setup.c
-@@ -50,6 +50,9 @@
- #include <asm/pci-direct.h>
- #include <linux/init_ohci1394_dma.h>
- #include <linux/kvm_para.h>
-+#ifdef CONFIG_SAVEOOPS
-+#include <asm/saveoops.h>
-+#endif
-=20
- #include <linux/errno.h>
- #include <linux/kernel.h>
-@@ -925,6 +928,12 @@ void __init setup_arch(char **cmdline_p)
- 	memblock.current_limit =3D get_max_mapped();
- 	memblock_x86_fill();
-=20
-+#ifdef CONFIG_SAVEOOPS
-+	/* Initialize Saveoops at the earliest point possible: memblock
-+	 * find_in_range is used here to reserve low-memory areas */
-+	saveoops_init();
-+#endif
-+
- 	/* preallocate 4k for mptable mpc */
- 	early_reserve_e820_mpc_new();
+I think the biggest areas of practical concern would be:
 
-diff --git a/arch/x86/include/asm/saveoops.h b/arch/x86/include/asm/sav=
-eoops.h
-new file mode 100644
-index 0000000..d81e840
---- /dev/null
-+++ b/arch/x86/include/asm/saveoops.h
-@@ -0,0 +1,15 @@
-+#ifndef _SAVEOOPS_H
-+#define _SAVEOOPS_H
-+
-+/*
-+ * Definitions shared between Saveoops C and assembly code.
-+ */
-+
-+#define RMODE_STACK_LEN		0x1000	/* Arbitrary */
-+
-+#ifndef __ASSEMBLY__
-+
-+void __init saveoops_init(void);
-+
-+#endif /* !__ASSEMBLY__ */
-+#endif /* _SAVEOOPS_H */
-diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
-index 34244b2..9a097f2 100644
---- a/arch/x86/kernel/Makefile
-+++ b/arch/x86/kernel/Makefile
-@@ -121,4 +121,7 @@ ifeq ($(CONFIG_X86_64),y)
-=20
- 	obj-$(CONFIG_PCI_MMCONFIG)	+=3D mmconf-fam10h_64.o
- 	obj-y				+=3D vsmp_64.o
-+
-+	obj-$(CONFIG_SAVEOOPS)		+=3D saveoops.o
-+	obj-$(CONFIG_SAVEOOPS)		+=3D saveoops-rmode.o
- endif
-diff --git a/lib/Kconfig.debug b/lib/Kconfig.debug
-index 4a78f8c..b994791 100644
---- a/lib/Kconfig.debug
-+++ b/lib/Kconfig.debug
-@@ -231,6 +231,21 @@ config BOOTPARAM_HUNG_TASK_PANIC
-=20
- 	  Say N if unsure.
-=20
-+config SAVEOOPS
-+	bool "Save kernel panics to disk using BIOS"
-+	depends on X86_64
-+	---help---
-+	  <TO-BE-ADDED>
-+
-+config SAVEOOPS_DISK_LBA
-+       int "Boot disk LBA offset to save panic to"
-+       default -1
-+       depends on SAVEOOPS
-+       ---help---
-+	 Use this boot disk LBA address to save the kernel log.
-+	 To find a partition LBA address use: $fdisk -ul
-+	 [VERY DANGEROUS] <FURTHER-INFO-TO-BE-ADDED>
-+
- config BOOTPARAM_HUNG_TASK_PANIC_VALUE
- 	int
- 	depends on DETECT_HUNG_TASK
+ - Can this mechanism ever, under any circumstance corrupt any real data, destroy 
+   the MBR or do other nasties. Can you think of any additional fail-safe measures 
+   where you could _further robustify the BIOS calls_ to make sure it can never go 
+   to the wrong sector(s)? I really do not want to think of trusting a BIOS to 
+   _write to my disk_.
 
---
-Darwish
-http://darwish.07.googlepages.com
+ - Is there some hidden disk area somewhere on PCs, or somewhere on a real partition
+   on typical Linux distributions, which we could use without having to reinstall
+   the box? This would increase utility and availability enormously. I'm thinking of 
+   partition _ends_ which sometimes get rounded in an awkward way and which are 
+   potentially skipped by most Linux filesystems. Even a very small, 512 bytes of 
+   area would be extremely useful for debugging weird suspend hangs ...
+
+ - Could we automate the recovery of the dump, and just put it into the regular 
+   kernel log on the next (successful) bootup (on a feature-enabled kernel)? That 
+   would make the log of the 'previous crash' very conveniently available in dmesg 
+   and the syslog. Tools like kerneloops could make use of it immediately.
+
+All in one, a very intriguing idea IMO, and the hardest bits (lowlevel x86 
+transition) is all implemented already.
+
+Thanks,
+
+	Ingo
