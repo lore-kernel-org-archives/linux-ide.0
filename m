@@ -1,56 +1,45 @@
-From: Toralf =?utf-8?q?F=C3=B6rster?= <toralf.foerster@gmx.de>
-Subject: Re: libata EH running when switching VTs
-Date: Tue, 25 Jan 2011 10:17:12 +0100
-Message-ID: <201101251017.13164.toralf.foerster@gmx.de>
-References: <201101221625.00775.toralf.foerster@gmx.de> <201101221831.09448.toralf.foerster@gmx.de> <4D3E2612.2060808@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: WDC WD20EARS and 4k sector size
+Date: Tue, 25 Jan 2011 11:01:10 +0100
+Message-ID: <20110125100110.GM27510@htj.dyndns.org>
+References: <20110125030410.GA24024@MAIL.13thfloor.at>
+ <yq14o8x3c8t.fsf@sermon.lab.mkp.net>
+ <20110125033259.GC24024@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D3E2612.2060808@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, ide <linux-ide@vger.kernel.org>, Jens Rutschmann <Jens.Rutschmann@gmx.info>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41798 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945Ab1AYKBP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 05:01:15 -0500
+Received: by fxm20 with SMTP id 20so5032933fxm.19
+        for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2011 02:01:14 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20110125033259.GC24024@MAIL.13thfloor.at>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
+Hello,
 
-Robert Hancock wrote at 02:23:30
-> On 01/22/2011 11:31 AM, Toralf F=C3=B6rster wrote:
-> >>> I'm wondering why I get this in /var/log/messages w/ kernel 2.6.3=
-7 when
-> >>> I switch from VT7 (running xorg ) to VT12 (or 1 or 2 or another
-> >>> number) and back:
-> Curious, there seems to be no indication of why EH was triggered,
-> doesn't seem to be have been due to an error. Does this also happen i=
-n
-> single-user mode or with minimal processes running? It's possible tha=
-t
-> userspace is triggering this somehow.
+On Tue, Jan 25, 2011 at 04:32:59AM +0100, Herbert Poetzl wrote:
+> > Align your partitions on a 4K boundary.
+> 
+> While this will ensure that the drive performance is better
+> than without doing so (I'm not using a partition table on that
+> drive anyways, but I get what you mean), this doesn't inform
+> the kernel about proper I/O sizes and for sure doesn't prevent
+> unnecessary read-change-write operations for the disc ...
 
-It happens only, when I switch to the VT7 _and_ X is running there.
-It dos not happen when switching  only between straight consoles like f=
-rom VT1=20
-to VT2 or so.
+Kernel doesn't really care.  Well, the fs should align things to 4KiB
+but all the modern ones already do so.  The only thing necessary is
+aligning the partition table.  Whether the drive lies about physical
+sector or not, most modern distros unconditionally align partitions to
+1MiB.  So, as long as you use a distro which was released in the past
+six month, there's nothing to worry about.
 
-BTW I Cc'ed Jens which have a similar problem with his ThinkPad T61:
+Thanks.
 
->Hi Toralf,
->
->I saw lines similar to yours as well on my T61 during boot. It does no=
-t occur=20
->when switching VTs.
->
->When I switch VTs as you described I get this in dmesg though:
->
->[  491.372673] ata1.00: configured for UDMA/133
->[  491.372677] ata1: EH complete
->[  491.680387] EXT4-fs (sda1): re-mounted. Opts: discard,commit=3D0
->[  491.683110] EXT4-fs (sda3): re-mounted. Opts: discard,commit=3D0
->
->This is with a vanilla 2.6.37
-
---=20
-MfG/Kind regards
-Toralf F=C3=B6rster
-
-pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
+-- 
+tejun
