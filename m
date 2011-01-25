@@ -1,45 +1,36 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Tue, 25 Jan 2011 04:07:40 +0100
-Message-ID: <20110125030740.GB24024@MAIL.13thfloor.at>
-References: <20110113192558.GE16039@MAIL.13thfloor.at> <20110114142018.GA978@htj.dyndns.org> <20110114165957.GH16039@MAIL.13thfloor.at> <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site> <20110117171836.GI27123@htj.dyndns.org> <1295284906.3015.136.camel@mulgrave.site> <20110117172415.GK27123@htj.dyndns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: WDC WD20EARS and 4k sector size
+Date: Mon, 24 Jan 2011 22:15:14 -0500
+Message-ID: <yq14o8x3c8t.fsf@sermon.lab.mkp.net>
+References: <20110125030410.GA24024@MAIL.13thfloor.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:59716 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753128Ab1AYDHl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 22:07:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20110117172415.GK27123@htj.dyndns.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:39024 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751997Ab1AYDP5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 22:15:57 -0500
+In-Reply-To: <20110125030410.GA24024@MAIL.13thfloor.at> (Herbert Poetzl's
+	message of "Tue, 25 Jan 2011 04:04:10 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
-> On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
-> > Expanders aren't SCSI devices either ... that means they don't
-> > appear as visible to standard SCSI mechanisms like INQUIRY (SMP
-> > isn't a SCSI protocol it's a SAS extension). They just appear as
-> > part of the topology in the device tree.
+>>>>> "Herbert" == Herbert Poetzl <herbert@13thfloor.at> writes:
 
-> Ah, okay.  Then, things would be much simpler.  I was worrying about
-> how it would map to SCSI layer including INQUIRY emulations and all
-> those stuff.  Thanks for the info.
+Herbert>  - the drive doesn't report 4k sectors at all, not
+Herbert>    even as physical sector size.
 
-So, any thoughts on how and where to add the PMP to the devices
-available for sending SCSI or ATA commands to?
+There have been numerous threads on this list about EARS not reporting
+block sizes correctly. Check the archives.
 
-I'm willing to try to add the required code, but I'm sure I'll
-benefit from a few hints from the experts ...
 
-thanks,
-Herbert
+Herbert> My question now is, how can I tell the kernel that this drive
+Herbert> actually has 4k physical sectors and that it would be a smart
+Herbert> thing to send requests in some kind of 4k I/O chunks?
 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Align your partitions on a 4K boundary.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
