@@ -1,41 +1,42 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH -next 1/2][RFC] x86: Saveoops: Switch to real-mode and
- call	BIOS
-Date: Tue, 25 Jan 2011 09:26:18 -0800
-Message-ID: <4D3F07BA.5030702@zytor.com>
-References: <20110125134748.GA10051@laptop> <20110125135122.GB10051@laptop>
+From: Tony Luck <tony.luck@intel.com>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon panic
+Date: Tue, 25 Jan 2011 09:32:47 -0800
+Message-ID: <AANLkTikHe8Bq1f-nv8hiAeY7rs7t5MWTvEUSYT81py4S@mail.gmail.com>
+References: <20110125134748.GA10051@laptop>
+	<20110125140948.GA26762@elte.hu>
+	<20110125153649.GA11386@laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110125135122.GB10051@laptop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Ahmed S. Darwish" <darwish.07@gmail.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57690 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890Ab1AYRcs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 12:32:48 -0500
+In-Reply-To: <20110125153649.GA11386@laptop>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Ahmed S. Darwish" <darwish.07@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
-On 01/25/2011 05:51 AM, Ahmed S. Darwish wrote:
-> 
-> We get called here upon panic()s to save the kernel log buffer.
-> 
-> First, switch from 64-bit long mode to 16-bit real mode. Afterwards, save the
-> log buffer to disk using extended INT 0x13 BIOS services. The user has given
-> us an absolute LBA disk address to save the log buffer to.
-> 
-> By x86 design, this code is mandated to run on a single identity-mapped page.
-> 
-> - How to initialize the disk hardware to its POST state (thus making the
->   BIOS code work reliably) while keeping system RAM unmodified?
+On Tue, Jan 25, 2011 at 7:36 AM, Ahmed S. Darwish <darwish.07@gmail.com> wrote:
+> I did not have to re-partition the box here. A kindof a hacky solution was
+> disabling the swap partition and using it for storing the log. That would make
+> the feature available without re-installing the box, at the cost of temporarily
+> disabling swap.
 
-You can't safely do so, really.
+Using swap space as a dump area has a long and established tradition
+going back to the early roots of Unix - so I don't think that it is all that
+hacky. I think that modern systems even write some magic at the start
+of the swap partition that you could use to verify that you were writing to
+the correct spot ... and it should be easy to retrieve your dumped data
+before the swap gets re-enabled by the new kernel after the reboot.
+[Perhaps the new kernel could do this automatically if it finds some
+signature that your code leaves in the swap area so it could stuff the data
+into my /dev/pstore filesystem?]
 
-> - Is it guaranteed that '0x80' will always be the boot disk drive number?
->   If not, we need to be passed the boot drive number from the bootloader.
+One more "is this bit of the BIOS code safe" concern that I have is that
+you'll be using the "write" path of the INT 0x13 code ... which isn't the
+path that is tested by booting ... it *ought* to be OK - but untested paths
+in BIOS seem to be broken paths all too often.
 
-It's not, and we may not even be booting from disk.
-
-This code seems extremely dangerous, in the "may eat your data" kind of
-way.  Using the BIOS once the kernel has run is cantankerous, using it
-to *write* is potentially lethal.
-
-	-hpa
+-Tony
