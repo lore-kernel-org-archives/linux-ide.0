@@ -1,60 +1,33 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Tue, 25 Jan 2011 12:56:06 -0600
-Message-ID: <4D3F1CC6.5080208@linux.vnet.ibm.com>
-References: <1295797260.3007.118.camel@mulgrave.site>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
+ panic
+Date: Tue, 25 Jan 2011 14:04:15 -0500
+Message-ID: <4D3F1EAF.1080609@garzik.org>
+References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu> <20110125153649.GA11386@laptop> <AANLkTikHe8Bq1f-nv8hiAeY7rs7t5MWTvEUSYT81py4S@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:39635 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753334Ab1AYS6e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jan 2011 13:58:34 -0500
-In-Reply-To: <1295797260.3007.118.camel@mulgrave.site>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:43556 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673Ab1AYTEW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 14:04:22 -0500
+In-Reply-To: <AANLkTikHe8Bq1f-nv8hiAeY7rs7t5MWTvEUSYT81py4S@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Robert Jennings <rcj@linux.vnet.ibm.com>, Wayne Boyer <wayneb@linux.vnet.ibm.com>
+To: Tony Luck <tony.luck@intel.com>
+Cc: "Ahmed S. Darwish" <darwish.07@gmail.com>, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
-On 01/23/2011 09:41 AM, James Bottomley wrote:
-> The bad news is that this is a pretty horrific conversion.  Because of
-> the amount of control the new eh wants (and the slew of monolithic
-> assumptions it makes), the entire error handler routine has to be sliced
-> apart and sewn back together to make it callable as part of an existing
-> error handler (rather than trying to do everything on its own).
-> 
-> The even worse news is that unless you have an existing strategy
-> handler, you can't make use of this.  That means that ipr is
-> unconvertable in its current form.  Given the two really nasty options:
-> give ipr its own error handler via its own transport class, or attach
-> ipr to libsas and let it do the work, I'd choose the latter.
-
-I've got a patch set that's been sitting collecting dust for quite some time
-that implements yet another option. The basic idea is that we move away from
-the idea of having a single scsi_host for the entire SAS adapter, but
-rather have one for the SAS devices and one for each SATA rphy.
-
-This allows us to use libata's EH pretty much as is, but does introduce
-some issues to solve:
-
-1. Adapter queue depth. Since we have multiple scsi_hosts for a single
-   HBA, we lose the adapter queue depth tracking done by scsi core.
-   Anything in block that can help us here?
-2. Locking gets messy since we have a lock for each sata rphy as well
-   as one for the sas scsi_host.
-
-There were some other smaller issues as well. I liked the idea of moving
-to multiple scsi_host's since that eliminates the issue of userspace polling an
-empty CD drive causing EH to get invoked and quiescing all SAS I/O as well,
-but it does result in potentially a lot of scsi_hosts getting created.
-
--Brian
+On 01/25/2011 12:32 PM, Tony Luck wrote:
+> One more "is this bit of the BIOS code safe" concern that I have is that
+> you'll be using the "write" path of the INT 0x13 code ... which isn't the
+> path that is tested by booting ... it *ought* to be OK - but untested paths
+> in BIOS seem to be broken paths all too often.
 
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Not really...  as others have noted, we reprogram the controller in a 
+different mode, once the kernel starts.
+
+	Jeff
 
 
