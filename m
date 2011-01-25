@@ -1,47 +1,33 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: WDC WD20EARS and 4k sector size
-Date: Mon, 24 Jan 2011 22:52:54 -0500
-Message-ID: <yq1zkqp1vxl.fsf@sermon.lab.mkp.net>
+Date: Mon, 24 Jan 2011 23:09:00 -0500
+Message-ID: <4D3E4CDC.3090409@garzik.org>
 References: <20110125030410.GA24024@MAIL.13thfloor.at>
-	<yq14o8x3c8t.fsf@sermon.lab.mkp.net>
-	<20110125033259.GC24024@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:53226 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751Ab1AYDyp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 22:54:45 -0500
-In-Reply-To: <20110125033259.GC24024@MAIL.13thfloor.at> (Herbert Poetzl's
-	message of "Tue, 25 Jan 2011 04:32:59 +0100")
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58891 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751768Ab1AYEJE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 23:09:04 -0500
+Received: by vws16 with SMTP id 16so2167391vws.19
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2011 20:09:03 -0800 (PST)
+In-Reply-To: <20110125030410.GA24024@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Herbert" == Herbert Poetzl <herbert@13thfloor.at> writes:
+On 01/24/2011 10:04 PM, Herbert Poetzl wrote:
+> I recently bought the WDC WD20EARS-00MVWB0 because it
+> was really cheap for a drive with 64 MB cache, and I
+> wanted to try out a 4k sector size disk ...
+>
+> Now the drive performs quite well, is rather silent
+> and doesn't use much power or produce much heat, but
+> at first I didn't find anything in Linux indicating
+> that this drive would actually use 4k sectors.
 
->> Align your partitions on a 4K boundary.
+See https://ata.wiki.kernel.org/index.php/ATA_4_KiB_sector_issues
 
-Herbert> While this will ensure that the drive performance is better
-Herbert> than without doing so (I'm not using a partition table on that
-Herbert> drive anyways, but I get what you mean), this doesn't inform
-Herbert> the kernel about proper I/O sizes
-
-The kernel doesn't enforce any "proper" I/O sizes at runtime other than
-the logical block size.
-
-
-Herbert> and for sure doesn't prevent unnecessary read-change-write
-Herbert> operations for the disc ...
-
-The other crucial component is passing the relevant options to mkfs.foo
-to ensure the filesystem is formatted with 4KiB blocks.
-
-If the drive had reported its block size correctly mkfs would have
-picked this information up automatically. In this case, since the drive
-doesn't indicate that it's using Advanced Format, you'll have to pass
-the block size to mkfs by hand.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
