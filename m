@@ -1,44 +1,46 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk
- upon panic
-Date: Tue, 25 Jan 2011 11:02:35 -0500
-Message-ID: <1295971355.4955.104.camel@mulgrave.site>
-References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu>
-	 <20110125153649.GA11386@laptop>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] sata_dwc_460ex: use ATA_PIO4
+Date: Tue, 25 Jan 2011 19:27:35 +0300
+Message-ID: <201101251927.35378.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55127 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750702Ab1AYQCn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jan 2011 11:02:43 -0500
-In-Reply-To: <20110125153649.GA11386@laptop>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:57885 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751251Ab1AYQ25 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 11:28:57 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Ahmed S. Darwish" <darwish.07@gmail.com>
-Cc: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?ISO-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: alan@lxorguk.ukuu.org.uk
 
-On Tue, 2011-01-25 at 17:36 +0200, Ahmed S. Darwish wrote:
-> The complete __roadblock__ I'm currently facing though is restoring the disk
-> controllers to the state originally setup by the BIOS Power-on self-test (POST).
-> I hope such re-initialization is even technically feasible.
-> 
-> Without such re-initialization, we'll just be risking the BIOS code exploding.
-> That was the case in the 5-minute hang described in the cover sheet (PATCH #0).
+Somehow the driver was committed with a bare number for the PIO mask, instead
+of ATA_PIO4...
 
-So this is the bit that's not really technically feasible.  BIOS tends
-to run storage devices in a very primitive way (so it takes basic
-settings, for example and sets the device up for one particular channel
-of access).  When preparing the device for an operating system, we have
-to blow away all the bios stuff and put it into a more generally
-performant mode (this isn't just the storage per se, it's also the
-interrupt and routing).  Unfortunately, currently, we don't bother to
-save the settings the BIOS was using, so there's no way to reinitialise
-the device back to bios without an effective reboot.  Most BIOS doesn't
-seem to contain storage re-POST code that's usable (it's all embedded in
-the boot sequence).
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-James
+---
+The patch is against the recent Linus' tree.
 
+NB: this driver has some more issues (including compilation warnings) --
+meaning that the review process should have been more attentive...
 
+ drivers/ata/sata_dwc_460ex.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+Index: linux-2.6/drivers/ata/sata_dwc_460ex.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/sata_dwc_460ex.c
++++ linux-2.6/drivers/ata/sata_dwc_460ex.c
+@@ -1582,7 +1582,7 @@ static const struct ata_port_info sata_d
+ 	{
+ 		.flags		= ATA_FLAG_SATA | ATA_FLAG_NO_LEGACY |
+ 				  ATA_FLAG_MMIO | ATA_FLAG_NCQ,
+-		.pio_mask	= 0x1f,	/* pio 0-4 */
++		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &sata_dwc_ops,
+ 	},
