@@ -1,33 +1,40 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
- panic
-Date: Tue, 25 Jan 2011 14:04:15 -0500
-Message-ID: <4D3F1EAF.1080609@garzik.org>
-References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu> <20110125153649.GA11386@laptop> <AANLkTikHe8Bq1f-nv8hiAeY7rs7t5MWTvEUSYT81py4S@mail.gmail.com>
+Subject: Re: [PATCH #upstream-fixes] ahci: add another PCI ID for marvell
+Date: Tue, 25 Jan 2011 14:09:31 -0500
+Message-ID: <4D3F1FEB.5050400@garzik.org>
+References: <4CF3BF4A.4080009@kernel.org> <20110125134140.GX27510@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:43556 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:48653 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673Ab1AYTEW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 14:04:22 -0500
-In-Reply-To: <AANLkTikHe8Bq1f-nv8hiAeY7rs7t5MWTvEUSYT81py4S@mail.gmail.com>
+	with ESMTP id S1751598Ab1AYTJg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 14:09:36 -0500
+Received: by vws16 with SMTP id 16so88727vws.19
+        for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2011 11:09:36 -0800 (PST)
+In-Reply-To: <20110125134140.GX27510@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Luck <tony.luck@intel.com>
-Cc: "Ahmed S. Darwish" <darwish.07@gmail.com>, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?ISO-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Borislav Petkov <bp@alien8.de>, Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
 
-On 01/25/2011 12:32 PM, Tony Luck wrote:
-> One more "is this bit of the BIOS code safe" concern that I have is that
-> you'll be using the "write" path of the INT 0x13 code ... which isn't the
-> path that is tested by booting ... it *ought* to be OK - but untested paths
-> in BIOS seem to be broken paths all too often.
+On 01/25/2011 08:41 AM, Tejun Heo wrote:
+> On Mon, Nov 29, 2010 at 03:57:14PM +0100, Tejun Heo wrote:
+>> 1b4b:91a3 seems to be another PCI ID for marvell ahci.  Add it.
+>> Reported and tested in the following thread.
+>>
+>>   http://thread.gmane.org/gmane.linux.kernel/1068354
+>>
+>> Signed-off-by: Tejun Heo<tj@kernel.org>
+>> Reported-by: Borislav Petkov<bp@alien8.de>
+>> Reported-by: Alessandro Tagliapietra<tagliapietra.alessandro@gmail.com>
+>
+> Jeff, ping?
 
+Missed this one, for some reason.  Found, and queued.
 
-Not really...  as others have noted, we reprogram the controller in a 
-different mode, once the kernel starts.
-
-	Jeff
+Will go in the push to Linus this week, but due to LCA he might not pull 
+for a bit.
 
 
