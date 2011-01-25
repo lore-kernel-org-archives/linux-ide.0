@@ -1,57 +1,48 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Tue, 25 Jan 2011 09:14:14 -0500
-Message-ID: <1295964854.4955.21.camel@mulgrave.site>
-References: <20110113192558.GE16039@MAIL.13thfloor.at>
-	 <20110114142018.GA978@htj.dyndns.org>
-	 <20110114165957.GH16039@MAIL.13thfloor.at>
-	 <20110114170407.GE978@htj.dyndns.org>
-	 <20110114173759.GI16039@MAIL.13thfloor.at>
-	 <20110117154042.GG27123@htj.dyndns.org>
-	 <1295281131.3015.44.camel@mulgrave.site>
-	 <20110117171836.GI27123@htj.dyndns.org>
-	 <1295284906.3015.136.camel@mulgrave.site>
-	 <20110117172415.GK27123@htj.dyndns.org>
-	 <20110125030740.GB24024@MAIL.13thfloor.at>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk
+ upon panic
+Date: Tue, 25 Jan 2011 15:49:05 +0100
+Message-ID: <20110125144905.GC27510@htj.dyndns.org>
+References: <20110125134748.GA10051@laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51585 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753742Ab1AYOOS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jan 2011 09:14:18 -0500
-In-Reply-To: <20110125030740.GB24024@MAIL.13thfloor.at>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110125134748.GA10051@laptop>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Ahmed S. Darwish" <darwish.07@gmail.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2011-01-25 at 04:07 +0100, Herbert Poetzl wrote:
-> On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
-> > On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
-> > > Expanders aren't SCSI devices either ... that means they don't
-> > > appear as visible to standard SCSI mechanisms like INQUIRY (SMP
-> > > isn't a SCSI protocol it's a SAS extension). They just appear as
-> > > part of the topology in the device tree.
-> 
-> > Ah, okay.  Then, things would be much simpler.  I was worrying about
-> > how it would map to SCSI layer including INQUIRY emulations and all
-> > those stuff.  Thanks for the info.
-> 
-> So, any thoughts on how and where to add the PMP to the devices
-> available for sending SCSI or ATA commands to?
-> 
-> I'm willing to try to add the required code, but I'm sure I'll
-> benefit from a few hints from the experts ...
+Hello,
 
-Well, I'm not sure I'd count as an expert on this piece:  I haven't read
-the relevant ATA standards.  From what I understand, SES packets are
-encapsulated over an ATA command for SEMB.  In that case, it should be
-fairly simple to recognise this and present a SCSI device which simply
-encapsulates everything sent to it over this protocol.  That would allow
-the ses ULD to attach seamlessly.
+On Tue, Jan 25, 2011 at 03:47:48PM +0200, Ahmed S. Darwish wrote:
+> The main problem, it seems, is that the BIOS "Reset controller" command is not
+> enough to restore disk hardware to a state understandable by the BIOS code.
 
-James
+I doubt many BIOSen would implement this properly.  It's something no
+one ever uses and modern controllers have a lot more states and are
+more complex to reset.
 
+>  - Is it possible to re-initialize the disk hardware to its POST
+>    state (thus make the BIOS services work reliably) while keeping
+>    system RAM unmodified?
 
+I'm afraid this can't be made reliable.  Nobody uses it and the stuff
+we do during pci initialization is enough to leave some BIOSen
+clueless.
+
+>  - If not, can we do it manually by reprogramming the controllers?
+
+It would be only theoretically possible.  We'll basically have to
+write deinitialization routine for different controllers, which of
+course would be super-cold path and not many people would test.
+
+I'm afraid this is gonna be something which works sometimes (or even
+more times than not) but can't ever be made reliable.  I think it
+would be better to head toward usb or other kind of early console.
+
+Thanks.
+
+-- 
+tejun
