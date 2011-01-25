@@ -1,54 +1,45 @@
 From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: WDC WD20EARS and 4k sector size
-Date: Tue, 25 Jan 2011 04:04:10 +0100
-Message-ID: <20110125030410.GA24024@MAIL.13thfloor.at>
+Subject: Re: PMP and SEMB messages to SEP
+Date: Tue, 25 Jan 2011 04:07:40 +0100
+Message-ID: <20110125030740.GB24024@MAIL.13thfloor.at>
+References: <20110113192558.GE16039@MAIL.13thfloor.at> <20110114142018.GA978@htj.dyndns.org> <20110114165957.GH16039@MAIL.13thfloor.at> <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site> <20110117171836.GI27123@htj.dyndns.org> <1295284906.3015.136.camel@mulgrave.site> <20110117172415.GK27123@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:59715 "EHLO
+Received: from MAIL.13thfloor.at ([213.145.232.33]:59716 "EHLO
 	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753041Ab1AYDEL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 22:04:11 -0500
+	with ESMTP id S1753128Ab1AYDHl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2011 22:07:41 -0500
 Content-Disposition: inline
+In-Reply-To: <20110117172415.GK27123@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
+> On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
+> > Expanders aren't SCSI devices either ... that means they don't
+> > appear as visible to standard SCSI mechanisms like INQUIRY (SMP
+> > isn't a SCSI protocol it's a SAS extension). They just appear as
+> > part of the topology in the device tree.
 
-I recently bought the WDC WD20EARS-00MVWB0 because it
-was really cheap for a drive with 64 MB cache, and I
-wanted to try out a 4k sector size disk ...
+> Ah, okay.  Then, things would be much simpler.  I was worrying about
+> how it would map to SCSI layer including INQUIRY emulations and all
+> those stuff.  Thanks for the info.
 
-Now the drive performs quite well, is rather silent
-and doesn't use much power or produce much heat, but
-at first I didn't find anything in Linux indicating
-that this drive would actually use 4k sectors.
+So, any thoughts on how and where to add the PMP to the devices
+available for sending SCSI or ATA commands to?
 
-To shorten things, I asked around on IRC, had a chat
-with some other folks, found a jumper description on
-the WD site talking about an 'Advanced Format' jumper
-and finally contacted WD in a lengthy email thread.
+I'm willing to try to add the required code, but I'm sure I'll
+benefit from a few hints from the experts ...
 
-The results of all this are:
-
- - the drive doesn't report 4k sectors at all, not
-   even as physical sector size.
-
- - the 'Advanced Format' jumper shifts access to the
-   the drive by one sector.
-
-I did some tests to verify that, and I can confirm
-the behaviour of the jumper in question with certain
-benchmark tests (using dm and bonnie++) with and
-without the jumper in place.
-
-My question now is, how can I tell the kernel that
-this drive actually has 4k physical sectors and that
-it would be a smart thing to send requests in some 
-kind of 4k I/O chunks?
-
-Many thanks in advance,
+thanks,
 Herbert
 
-PS: if somebody is interested in the tests done to
-verify the jumper, please let me know ...
+> -- 
+> tejun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
