@@ -1,53 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH UPDATED #upstream-fixes] libata: DVR-212D can't do SETXFER
- DVD-RW DVR-212D
-Date: Tue, 25 Jan 2011 11:54:43 +0100
-Message-ID: <20110125105443.GR27510@htj.dyndns.org>
-References: <4D3DA084.9070609@gmail.com>
- <20110124160125.GC27510@htj.dyndns.org>
+Subject: Re: [PATCH #upstream-fixes] ahci: add another PCI ID for marvell
+Date: Tue, 25 Jan 2011 14:41:40 +0100
+Message-ID: <20110125134140.GX27510@htj.dyndns.org>
+References: <4CF3BF4A.4080009@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42931 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50582 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547Ab1AYKys (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 05:54:48 -0500
-Received: by fxm20 with SMTP id 20so5084004fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2011 02:54:47 -0800 (PST)
+	with ESMTP id S1753183Ab1AYNlx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jan 2011 08:41:53 -0500
+Received: by fxm20 with SMTP id 20so5243407fxm.19
+        for <linux-ide@vger.kernel.org>; Tue, 25 Jan 2011 05:41:52 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20110124160125.GC27510@htj.dyndns.org>
+In-Reply-To: <4CF3BF4A.4080009@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Francesco Antonacci <fraanto@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>
+To: Jeff Garzik <jeff@garzik.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Borislav Petkov <bp@alien8.de>, Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
 
-From: Francesco Antonacci <fraanto@gmail.com>
+On Mon, Nov 29, 2010 at 03:57:14PM +0100, Tejun Heo wrote:
+> 1b4b:91a3 seems to be another PCI ID for marvell ahci.  Add it.
+> Reported and tested in the following thread.
+> 
+>  http://thread.gmane.org/gmane.linux.kernel/1068354
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: Borislav Petkov <bp@alien8.de>
+> Reported-by: Alessandro Tagliapietra <tagliapietra.alessandro@gmail.com>
 
-PIONEER DVR-212D can't do SETXFER like its sibling DVRTD08.  Add
-ATA_HORKAGE_NOSETXFER for it.  Reported in bko#27502.
+Jeff, ping?
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=27502
-
-Signed-off-by: Francesco Antonacci <fraanto@gmail.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
-s/to/do/ as pointed out by Sergei.  :-)
-
-Thanks.
-
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index a31fe96..d4e52e2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4138,6 +4138,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	 * device and controller are SATA.
- 	 */
- 	{ "PIONEER DVD-RW  DVRTD08",	"1.00",	ATA_HORKAGE_NOSETXFER },
-+	{ "PIONEER DVD-RW  DVR-212D",	"1.28", ATA_HORKAGE_NOSETXFER },
- 
- 	/* End Marker */
- 	{ }
-
+-- 
+tejun
