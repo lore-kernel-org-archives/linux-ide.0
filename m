@@ -1,68 +1,41 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk
- upon panic
-Date: Tue, 25 Jan 2011 12:20:23 -0500
-Message-ID: <1295976023.9693.8.camel@mulgrave.site>
-References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu>
-	 <20110125153649.GA11386@laptop> <1295971355.4955.104.camel@mulgrave.site>
-	 <20110125170522.GA16285@laptop>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [PATCH -next 1/2][RFC] x86: Saveoops: Switch to real-mode and
+ call	BIOS
+Date: Tue, 25 Jan 2011 09:26:18 -0800
+Message-ID: <4D3F07BA.5030702@zytor.com>
+References: <20110125134748.GA10051@laptop> <20110125135122.GB10051@laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58272 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751571Ab1AYRUc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Jan 2011 12:20:32 -0500
-In-Reply-To: <20110125170522.GA16285@laptop>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110125135122.GB10051@laptop>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Ahmed S. Darwish" <darwish.07@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?ISO-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2011-01-25 at 19:05 +0200, Ahmed S. Darwish wrote:
-> Hi!
+On 01/25/2011 05:51 AM, Ahmed S. Darwish wrote:
 > 
-> On Tue, Jan 25, 2011 at 11:02:35AM -0500, James Bottomley wrote:
-> > On Tue, 2011-01-25 at 17:36 +0200, Ahmed S. Darwish wrote:
-> > > The complete __roadblock__ I'm currently facing though is restoring the disk
-> > > controllers to the state originally setup by the BIOS Power-on self-test (POST).
-> > > I hope such re-initialization is even technically feasible.
-> > > 
-> > > Without such re-initialization, we'll just be risking the BIOS code exploding.
-> > > That was the case in the 5-minute hang described in the cover sheet (PATCH #0).
-> > 
-> > So this is the bit that's not really technically feasible.  BIOS tends
-> > to run storage devices in a very primitive way (so it takes basic
-> > settings, for example and sets the device up for one particular channel
-> > of access).  When preparing the device for an operating system, we have
-> > to blow away all the bios stuff and put it into a more generally
-> > performant mode (this isn't just the storage per se, it's also the
-> > interrupt and routing).  Unfortunately, currently, we don't bother to
-> > save the settings the BIOS was using, so there's no way to reinitialise
-> > the device back to bios without an effective reboot.
-> >
+> We get called here upon panic()s to save the kernel log buffer.
 > 
-> My current x86 laptop includes the very common ATA PIIX controller. If I
-> dumped the PIC, IOAPIC, and disk controller state in a register file in a
-> safe area, and re-initialized these before giving control to the BIOS, can
-> this move the solution space from being not really technically feasible to
-> "quite possible"?
+> First, switch from 64-bit long mode to 16-bit real mode. Afterwards, save the
+> log buffer to disk using extended INT 0x13 BIOS services. The user has given
+> us an absolute LBA disk address to save the log buffer to.
+> 
+> By x86 design, this code is mandated to run on a single identity-mapped page.
+> 
+> - How to initialize the disk hardware to its POST state (thus making the
+>   BIOS code work reliably) while keeping system RAM unmodified?
 
-So I'm sure it would be possible to reverse engineer and make work a
-solution for a given motherboard, ATA controller and BIOS ... but
-because you have to go all the way up the root of the PCI tree and into
-the interrupt controllers to do this, I don't really think it would ever
-be a usable generic solutions.
+You can't safely do so, really.
 
-I'd really look at the problem another way: Rather than trying to figure
-out how to put a storage subsystem back into bios, if we had a driver
-that never took a given device out of BIOS configuration, as in ran it
-through the suboptimal bios interface in-kernel, it would be ready to
-use the bios interface to dump with.  The problem is that no-one wants
-that for their main disk ... however, it would be less of a problem if
-we dedicated, say, a USB controller and stick to this.
+> - Is it guaranteed that '0x80' will always be the boot disk drive number?
+>   If not, we need to be passed the boot drive number from the bootloader.
 
-James
+It's not, and we may not even be booting from disk.
 
+This code seems extremely dangerous, in the "may eat your data" kind of
+way.  Using the BIOS once the kernel has run is cantankerous, using it
+to *write* is potentially lethal.
 
+	-hpa
