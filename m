@@ -1,54 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_via bus errors fixed?
-Date: Wed, 26 Jan 2011 11:11:19 +0100
-Message-ID: <20110126101119.GE12520@htj.dyndns.org>
-References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk>
- <20110124170432.GH27510@htj.dyndns.org>
- <4D3EA771.3070206@mrc-lmb.cam.ac.uk>
- <20110125105049.GQ27510@htj.dyndns.org>
- <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk>
+From: "Ahmed S. Darwish" <darwish.07@gmail.com>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk
+	upon panic
+Date: Wed, 26 Jan 2011 13:44:15 +0200
+Message-ID: <20110126114415.GB24527@laptop>
+References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu> <20110125150834.GD27510@htj.dyndns.org> <4D3F095E.9000004@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46836 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751978Ab1AZKLX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jan 2011 05:11:23 -0500
-Received: by fxm20 with SMTP id 20so776067fxm.19
-        for <linux-ide@vger.kernel.org>; Wed, 26 Jan 2011 02:11:22 -0800 (PST)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55573 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720Ab1AZLoZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jan 2011 06:44:25 -0500
 Content-Disposition: inline
-In-Reply-To: <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk>
+In-Reply-To: <4D3F095E.9000004@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
-Cc: linux-ide@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, Mark Lord <kernel@teksavvy.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Hello,
+On Tue, Jan 25, 2011 at 09:33:18AM -0800, H. Peter Anvin wrote:
+> On 01/25/2011 07:08 AM, Tejun Heo wrote:
+> 
+> >> All in one, a very intriguing idea IMO, and the hardest bits
+> >> (lowlevel x86 transition) is all implemented already.
+> 
+> Lowlevel x86 transition is not at all the hardest part.  It's
+> detail-oriented but well defined (and, I might add, incompletely
+> implemented -- 64 bits only, not using facilities we already have);
+>
 
-On Wed, Jan 26, 2011 at 10:00:57AM +0000, Dave Howorth wrote:
-> Just a quick progress note. I'm most familiar with Suse and not familiar
-> with kernel builds so last night I installed the pre-built
-> Kernel:/HEAD/11.2 kernel from the opensuse build service. It's 2.6.37.
+Making the transition code applicable to 32-bit CPUs will hopefully be
+quite simple: it's mostly a subset of the posted parts.
 
-There are plenty of howtos on building kernel.  It takes some time to
-get used to but once you get a hang of it there's nothing difficult
-about it.  It usually is best to figure out small kernel configuration
-which contain everything necessary to bring up the root filesystem and
-other important hardware so that you don't have to worry about initrd
-and modules.
+Since I might use that transition code for a different purpose now, any
+facilities not properly used beside the identity mappings?
 
-> It was late so all I did was copy a 1.7 GB file to and from the new disk
-> on the VT6241A controller. No errors were logged. Incidentally, what's
-> the best way of testing for this type of reliability?
-
-The best way would be finding out a workload which doesn't take too
-much time but reliably triggers the issue on a problematic kernel.
-
-> Tonight I plan to compile that kernel, which should confirm that I
-> understand how to do it, and then I'll disable the VIA FIFO workaround
-> as you suggest and see what happens.
-
-Have fun!
+thanks,
 
 -- 
-tejun
+Darwish
+http://darwish.07.googlepages.com
