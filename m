@@ -1,126 +1,46 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Why is scsi_request_fn called every 4 milliseconds?
-Date: Thu, 27 Jan 2011 12:43:51 -0500
-Message-ID: <4D41AED7.3090806@interlog.com>
-References: <AANLkTinidWkKphNbYdtmhZc4G9WOJV-R6Mkyf_Vrpf4r@mail.gmail.com> <1296139406.3050.29.camel@mulgrave.site>
-Reply-To: dgilbert@interlog.com
+From: "Luck, Tony" <tony.luck@intel.com>
+Subject: RE: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk	upon
+ panic
+Date: Thu, 27 Jan 2011 10:35:21 -0800
+Message-ID: <987664A83D2D224EAE907B061CE93D53019438F1BA@orsmsx505.amr.corp.intel.com>
+References: <20110125134748.GA10051@laptop>
+ <AANLkTinU0KYiCd4p=z+=ojbkeEoT2G+CAYvdRU02KJEn@mail.gmail.com>
+ <20110126124954.GC24527@laptop>
+ <987664A83D2D224EAE907B061CE93D53019438EABF@orsmsx505.amr.corp.intel.com>
+ <20110126231620.GA14807@redhat.com>
+ <987664A83D2D224EAE907B061CE93D53019438EB02@orsmsx505.amr.corp.intel.com>
+ <20110126233033.GB14807@redhat.com>
+ <987664A83D2D224EAE907B061CE93D53019438EBB6@orsmsx505.amr.corp.intel.com>
+ <4D40F7F1.3020509@zytor.com> <20110127120039.GD20279@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1296139406.3050.29.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: BingJiun Luo <luobingjiun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:23779 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751726Ab1A0SfZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jan 2011 13:35:25 -0500
+In-Reply-To: <20110127120039.GD20279@elte.hu>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>, "H. Peter Anvin" <hpa@zytor.com>
+Cc: Dave Jones <davej@redhat.com>, "Ahmed S. Darwish" <darwish.07@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, "Hohndel, Dirk" <dirk.hohndel@intel.com>, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, Mark Lord <kernel@teksavvy.com>, Jeff Garzik <jgarzik@pobox.com>, Eric Biederman <ebiederm@xmission.com>, Vivek
 
-On 11-01-27 09:43 AM, James Bottomley wrote:
-> On Thu, 2011-01-27 at 22:04 +0800, BingJiun Luo wrote:
->> I want to measure SATA AHCI Host controller read performance.  Open
->> /dev/sda and using  read(int fildes, void *buf, size_t nbyte) user space
->> function to read 2048 times, each time 64KByets, and total 128 Mbytes.
->>
->> I measured the time start from one step before write CI register inside
->> ahci_qc_issue() function until ahci_port_intr () is called in the interrupt
->> context. It takes about 1 milliseconds to complete one 256KBytes READ
->> DMA EXT command, and spend about 15 microseconds call to scsi_done().
->>
->> However, why scsi_request_fn is called about after 4 milliseconds
->> to pass next IO request for Hardware to issue? It take less if the READ
->> DMA command with less number of sectors.
->
-> I'm not sure I parse the question, but I think you're asking why we
-> chain the next issue from the softirq in SCSI?  That's because most SCSI
-> devices are tagged and the bus is the bottleneck, so after processing
-> the completion, we need to get the next command out ASAP to keep the bus
-> utilised to capacity.
->
->> My questions are:
->> 1. Is it the time to prepare one 256 KB READ DMA EXT command by upper
->> layer (Block Layer or Virtual File system Layer)? Or, It is the time to copy
->> data from kernel space memory to user space memory after data is read
->> back from Hard Drive and delay the next command pass to SCSI?
->
-> Everything in SCSI is done with zero copy (as in we DMA straight to the
-> pagecache page, which is then attached to userspace).
+> - A bar code is encoded and i generally want to know what info i'm sending to
+>   potentially untrusted parties ... also, i want to be sure i'm sending the right
+>   oops, at a glance, before hitting 'send' on the email.
 
-Just to add some numbers to that point, on this CPU:
-     Intel(R) Core(TM) i5 CPU M 540  @ 2.53GHz
-[a Lenovo X201 laptop] with a dummy logical unit
-(pseudo disk) set up with this invocation:
-   $ modprobe scsi_debug delay=0 virtual_gb=2468
-with lk 2.6.37 I measure the following.
+Maybe someone will write an iPhone/Android/Meego app that takes the picture, does
+The decode and lets you look, together with options on whether to just send to
+Your e-mail address, or to Cc; kerneloops?
 
-   $ ddpt if=/dev/bsg/7:0:0:0 bs=512 count=1m bpt=1
-Output file not specified so no copy, just reading input
-1048576+0 records in
-0+0 records out
-time to read data: 4.815756 secs at 111.48 MB/sec
+> - A screenshot of a well-compressed oops output tells a lot of context as well:
+>   surrounding kernel messages, general state of the system when it crashed.
+>   Sometimes it tells me the type of the laptop as well, via the logo visible on the
+>   border of the picture ;-) Context strengthens whether i can *trust* the oops - 
+>   and often i'm really in doubt about oopses and want more context.
 
-That is issuing over 1 million SCSI READ commands from a
-user space program (and reading the data returned) in less
-that 5 seconds. So the SCSI READ command overhead is better
-(i.e. less) than 5 microseconds per command.
+Perhaps some of this context can be encoded in the barcode too?
 
-Increase the "blocks per transfer" (bpt) to 512 to see
-the data throughput (plus fetch 10m blocks) and this
-is the result:
-
-   $ ddpt if=/dev/bsg/7:0:0:0 bs=512 count=10m bpt=512
-Output file not specified so no copy, just reading input
-10485760+0 records in
-0+0 records out
-time to read data: 1.896136 secs at 2831.39 MB/sec
-
-The latter figure is around 800 MB/sec using the Ubuntu
-10.10 stock kernel (lk 2.6.35-24-generic) on the same
-machine. Something increased data throughput considerably
-between lk 2.6.35 and 2.6.37 . OTOH it may be a
-difference in my .config settings.
-
-
-So the latency per command added by the kernel and the
-SCSI subsystem (apart from the low level driver and the
-transport) is measured in microseconds rather than
-milliseconds.
-
-Doug Gilbert
-
-
-PS Another throughput datapoint, using the block
-subsystem (rather than a pass-through):
-   $ ddpt if=/dev/sdb bs=512 count=10m bpt=512
-Output file not specified so no copy, just reading input
-10485760+0 records in
-0+0 records out
-time to read data: 4.807517 secs at 1116.73 MB/sec
-
-
->> I know some architecture has not good enough performance to do memcpy
->> or something like that.
->>
->> 2. If I do not mount /dev/sda to any file system, what is the first
->> kernel function
->> called after read() function from user space? Is it located at VFS or
->> directly to
->> Block layer?
->
-> I think you need to trace this for yourself ... it's complex because
-> read doesn't go to the device, it goes via the page cache, which is also
-> how the VFS operates.  If the pages are all current in the cache, a
-> read() doesn't have to trouble the disk.
->
->> Because I want to keep track the time spend at the layer higher than SCSI.
->>
->> 3. When scsi_done() is called, what is the function to process this completed
->> command and pass the data to user space? I think there might be somewhere
->> inside the code to copy this data from kernel space memory address to user
->> space memory address.
->
-> scsi_done doesn't do anything about completion, it triggers the block
-> softirq to schedule a completion for us when all interrupts are
-> processed.
->
-> James
-
-
+-Tony
