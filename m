@@ -1,43 +1,72 @@
-From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
-	panic
-Date: Wed, 26 Jan 2011 20:35:09 -0800
-Message-ID: <4D40F5FD.6090507@zytor.com>
-References: <20110125134748.GA10051@laptop>
-	<AANLkTinU0KYiCd4p=z+=ojbkeEoT2G+CAYvdRU02KJEn@mail.gmail.com>
-	<20110126124954.GC24527@laptop>
-	<20110126125813.GA26952@elte.hu> <20110126133400.GA3399@laptop>
-	<20110126140030.GB30064@elte.hu>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Why is scsi_request_fn called every 4 milliseconds?
+Date: Thu, 27 Jan 2011 09:43:26 -0500
+Message-ID: <1296139406.3050.29.camel@mulgrave.site>
+References: <AANLkTinidWkKphNbYdtmhZc4G9WOJV-R6Mkyf_Vrpf4r@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <kexec-bounces+glkk-kexec=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <20110126140030.GB30064-X9Un+BFzKDI@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/kexec>,
-	<mailto:kexec-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/kexec/>
-List-Post: <mailto:kexec-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:kexec-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/kexec>,
-	<mailto:kexec-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: kexec-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-Errors-To: kexec-bounces+glkk-kexec=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>
-Cc: Willy Tarreau <wtarreau-Dj75qbTlC0E76Z2rM5mHXA@public.gmane.org>, Dirk Hohndel <hohndel-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, =?ISO-8859-1?Q?Fr=E9d=E9ric_W?= =?ISO-8859-1?Q?eisbecker?= <fweisbec-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, FBDEV-ML <linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, IDE-ML <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, X86-ML <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "Ahmed S. Darwish" <darwish.07-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Ingo Molnar <mingo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>, Vivek Goyal <vgoyal-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Peter Zijlstra <a.p.zijlstra-/NLkJaSkS4VmR6Xm/wNWPw@public.gmane.org>, Dirk.Hohndel-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, Borislav Petkov <bp-Gina5bIWoIWzQB+pC5nmwQ@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Arjan van de Ven <arjan-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Tony Luck <tony.luck-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, KEXEC-ML <kexec-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Haren Myneni <hbabu-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Eric
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinidWkKphNbYdtmhZc4G9WOJV-R6Mkyf_Vrpf4r@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: BingJiun Luo <luobingjiun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 01/26/2011 06:00 AM, Ingo Molnar wrote:
->
-> I mean, use the warm reset vector to truly reset the box.
->
-> Then, once a stable known-good kernel boots, *that* kernel can then recover all the
-> log data which is sitting in a well-known place in RAM, automatically and
-> transparently.
->
-> Basically a bit like kexec, just more convenient and it also goes through the BIOS
-> warm reset, so it might work better than kexec ...
->
+On Thu, 2011-01-27 at 22:04 +0800, BingJiun Luo wrote:
+> I want to measure SATA AHCI Host controller read performance.  Open
+> /dev/sda and using  read(int fildes, void *buf, size_t nbyte) user space
+> function to read 2048 times, each time 64KByets, and total 128 Mbytes.
+> 
+> I measured the time start from one step before write CI register inside
+> ahci_qc_issue() function until ahci_port_intr () is called in the interrupt
+> context. It takes about 1 milliseconds to complete one 256KBytes READ
+> DMA EXT command, and spend about 15 microseconds call to scsi_done().
+> 
+> However, why scsi_request_fn is called about after 4 milliseconds
+> to pass next IO request for Hardware to issue? It take less if the READ
+> DMA command with less number of sectors.
 
-The problem is that the BIOS will often wipe memory.
+I'm not sure I parse the question, but I think you're asking why we
+chain the next issue from the softirq in SCSI?  That's because most SCSI
+devices are tagged and the bus is the bottleneck, so after processing
+the completion, we need to get the next command out ASAP to keep the bus
+utilised to capacity.
 
-	-hpa
+> My questions are:
+> 1. Is it the time to prepare one 256 KB READ DMA EXT command by upper
+> layer (Block Layer or Virtual File system Layer)? Or, It is the time to copy
+> data from kernel space memory to user space memory after data is read
+> back from Hard Drive and delay the next command pass to SCSI?
+
+Everything in SCSI is done with zero copy (as in we DMA straight to the
+pagecache page, which is then attached to userspace).
+
+> I know some architecture has not good enough performance to do memcpy
+> or something like that.
+> 
+> 2. If I do not mount /dev/sda to any file system, what is the first
+> kernel function
+> called after read() function from user space? Is it located at VFS or
+> directly to
+> Block layer?
+
+I think you need to trace this for yourself ... it's complex because
+read doesn't go to the device, it goes via the page cache, which is also
+how the VFS operates.  If the pages are all current in the cache, a
+read() doesn't have to trouble the disk.
+
+> Because I want to keep track the time spend at the layer higher than SCSI.
+> 
+> 3. When scsi_done() is called, what is the function to process this completed
+> command and pass the data to user space? I think there might be somewhere
+> inside the code to copy this data from kernel space memory address to user
+> space memory address.
+
+scsi_done doesn't do anything about completion, it triggers the block
+softirq to schedule a completion for us when all interrupts are
+processed.
+
+James
+
+
