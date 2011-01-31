@@ -1,72 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cdrom: support devices that have check_events but not
- media_changed
-Date: Mon, 31 Jan 2011 11:12:44 +0100
-Message-ID: <20110131101244.GA7459@htj.dyndns.org>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org>
- <1291838262-21274-8-git-send-email-tj@kernel.org>
- <4D44BE3E.5080107@simon.arlott.org.uk>
- <4D44BF64.4060205@simon.arlott.org.uk>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
+ panic
+Date: Mon, 31 Jan 2011 11:45:53 +0100
+Message-ID: <20110131104553.GC32639@elte.hu>
+References: <20110125134748.GA10051@laptop>
+ <4D3F529D.8060406@pobox.com>
+ <4D3F559C.1050809@zytor.com>
+ <201101311329.31562.rusty@rustcorp.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:42535 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751543Ab1AaKrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Jan 2011 05:47:08 -0500
 Content-Disposition: inline
-In-Reply-To: <4D44BF64.4060205@simon.arlott.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: axboe@kernel.dk, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
+In-Reply-To: <201101311329.31562.rusty@rustcorp.com.au>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <rdunlap@xenotime.net>, Mark Lord <kernel@teksavvy.com>, "Ahmed S. Darwish" <darwish.07@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
-Hello,
 
-On Sun, Jan 30, 2011 at 01:31:16AM +0000, Simon Arlott wrote:
-> 93aae17af1172c40c6f74b7294e93a90c3cfaa5d replaced the media_changed op
-> with the check_events op in drivers/scsi/sr.c
+* Rusty Russell <rusty@rustcorp.com.au> wrote:
+
+> > In the end you end up with something that looks, again, like kexec/kdump.
 > 
-> All users that check for the CDC_MEDIA_CHANGED capability try both
-> the check_events op and the media_changed op, but register_cdrom()
-> was requiring media_changed.
-> 
-> This patch fixes the capability checking and removes a redundant
-> check that media_changed != NULL.
-> 
-> The cdrom_select_disc ioctl is also using the two operations, so
-> they should be required for CDC_SELECT_DISC too.
+> That was the proposed solution back then, too.  If I'd realized how long that 
+> would take to arrive, I would have kept pushing...
 
-First of all, thanks a lot for fixing this.  Just minor nits below.
+That's what happens when a feature crosses 2 or 3 project boundaries: from the 
+reasonable 2-3 months upstream arrival time it lengthens to a few years, up to a 
+decade.
 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 14033a3..4716d76 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -409,7 +409,9 @@ int register_cdrom(struct cdrom_device_info *cdi)
->  	}
->  
->  	ENSURE(drive_status, CDC_DRIVE_STATUS );
-> -	ENSURE(media_changed, CDC_MEDIA_CHANGED);
-> +	if (cdo->check_events == NULL && cdo->media_changed == NULL) {
-> +		*change_capability = ~(CDC_MEDIA_CHANGED | CDC_SELECT_DISC);
-> +	}
+The solution is IMO obvious: move the kexec tools into tools/ and integrate it much 
+more tightly and make it all more usable to the average kernel tester.
 
-Can we lose the unnecessary {}?
+Thanks,
 
->  	ENSURE(tray_move, CDC_CLOSE_TRAY | CDC_OPEN_TRAY);
->  	ENSURE(lock_door, CDC_LOCK);
->  	ENSURE(select_speed, CDC_SELECT_SPEED);
-> @@ -1471,7 +1473,7 @@ int cdrom_media_changed(struct cdrom_device_info *cdi)
->  	/* This talks to the VFS, which doesn't like errors - just 1 or 0.  
->  	 * Returning "0" is always safe (media hasn't been changed). Do that 
->  	 * if the low-level cdrom driver dosn't support media changed. */ 
-> -	if (cdi == NULL || cdi->ops->media_changed == NULL)
-> +	if (cdi == NULL)
-
-This change is probably not necessary as cdrom_media_changed() is only
-called from drivers which implement media_changed.  I don't think it's
-gonna break anything but the whole media_changed stuff is scheduled
-for removal anyway, so I think it would be better to keep the changes
-minimal.
-
-Thank you.
-
--- 
-tejun
+	Ingo
