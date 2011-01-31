@@ -1,62 +1,68 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] cdrom: support devices that have check_events but not
- media_changed
-Date: Mon, 31 Jan 2011 14:22:58 +0300
-Message-ID: <4D469B92.6050705@ru.mvista.com>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-8-git-send-email-tj@kernel.org> <4D44BE3E.5080107@simon.arlott.org.uk> <4D44BF64.4060205@simon.arlott.org.uk>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: sata_via bus errors fixed?
+Date: Mon, 31 Jan 2011 12:19:31 +0000
+Message-ID: <4D46A8D3.3000807@mrc-lmb.cam.ac.uk>
+References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk> <20110124170432.GH27510@htj.dyndns.org> <4D3EA771.3070206@mrc-lmb.cam.ac.uk> <20110125105049.GQ27510@htj.dyndns.org> <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk> <20110126101119.GE12520@htj.dyndns.org> <4D4693DB.4070009@mrc-lmb.cam.ac.uk> <20110131105322.GE7459@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:53870 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755329Ab1AaLYM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jan 2011 06:24:12 -0500
-In-Reply-To: <4D44BF64.4060205@simon.arlott.org.uk>
+Received: from ppsw-41.csi.cam.ac.uk ([131.111.8.141]:53275 "EHLO
+	ppsw-41.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543Ab1AaMTt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jan 2011 07:19:49 -0500
+In-Reply-To: <20110131105322.GE7459@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: axboe@kernel.dk, Tejun Heo <tj@kernel.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Tejun Heo wrote:
+>> One thing I still need to investigate is why Ubuntu 10.04 was showing
+>> the problem, but perhaps I never got as far as updating the kernel after
+>> installing it. (AFAIK as installed it is 2.6.31, whilst the current
+>> update is 2.6.32-28 which I think should have the patch)
+> 
+> Most likely.
 
-On 30-01-2011 4:31, Simon Arlott wrote:
+I've just been googling and peeking and it seems there may be another
+possibility but I'm much less familiar with Ubuntu so I could easily be
+misinterpreting something.
 
-> 93aae17af1172c40c6f74b7294e93a90c3cfaa5d replaced the media_changed op
+I have an Ubuntu box at work and I just installed the
+linux-source-2.6.32-28.55 package on it. When I look at sata_via.c I see
+that there's a different (earlier?) version of the patch there than what
+is in 2.6.37 (the test is pdev->device == 0x3249 versus one based on
+board_id)
 
-    Please specify the commit summary in parens, as asked by Linus.
+So it's conceivable that I did update my lucid installation at home but
+that this version of the patch doesn't fix the problem. I'll check
+exactly what's what tonight.
 
-> with the check_events op in drivers/scsi/sr.c
+> So, that leaves the problem sil was seeing.  Are you
+> interested in digging that down too?
 
-> All users that check for the CDC_MEDIA_CHANGED capability try both
-> the check_events op and the media_changed op, but register_cdrom()
-> was requiring media_changed.
+Well I don't mind testing that card with the kernels I've now got,
+assuming I can borrow the card again. I'm a lot less enthusiastic about
+compiling more new versions though.
 
-> This patch fixes the capability checking and removes a redundant
-> check that media_changed != NULL.
+Firstly, I've got to finish sorting out my machine - my backup system
+has stopped working for example and I've still got a bunch of data to
+migrate/integrate from the old disk. And I need to upgrade SUSE to 11.3
+to see if that fixes this problem without introducing any new ones.
 
-> The cdrom_select_disc ioctl is also using the two operations, so
-> they should be required for CDC_SELECT_DISC too.
+Secondly, kernel compilation in my limited experience has been a big
+hassle. Every time I change anything in sata_via.c it seems to want to
+recompile absolutely everything and that takes over two hours. I thought
+make was supposed to do minimal recompilation? That plus a bug in the
+script, the unexpectedly large amount of space required and some finger
+trouble made it a less than smooth process.
 
-> Signed-off-by: Simon Arlott<simon@fire.lp0.eu>
-> Cc: Jens Axboe<axboe@kernel.dk>
-> Cc: Tejun Heo<tj@kernel.org>
-> Cc: Kay Sievers<kay.sievers@vrfy.org>
-[...]
+Since we don't yet know whether a recent kernel fixes my sil problem and
+if it does we don't have any idea of a particular patch, that suggests
+the strategy would be bisection, which probably involves more compiles
+than I'm up for.
 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 14033a3..4716d76 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -409,7 +409,9 @@ int register_cdrom(struct cdrom_device_info *cdi)
->   	}
->
->   	ENSURE(drive_status, CDC_DRIVE_STATUS );
-> -	ENSURE(media_changed, CDC_MEDIA_CHANGED);
-> +	if (cdo->check_events == NULL && cdo->media_changed == NULL) {
-> +		*change_capability = ~(CDC_MEDIA_CHANGED | CDC_SELECT_DISC);
-> +	}
+But first steps first. I'll see if I can test it with my existing kernels.
 
-    {} are not needed here. I think checkstatus.pl should detect this...
-
-WBR, Sergei
+Cheers, Dave
