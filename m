@@ -1,76 +1,184 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon panic
-Date: Mon, 31 Jan 2011 13:29:31 +1030
-Message-ID: <201101311329.31562.rusty@rustcorp.com.au>
-References: <20110125134748.GA10051@laptop> <4D3F529D.8060406@pobox.com> <4D3F559C.1050809@zytor.com>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] ata: pata: Convert pr_*(DRV_NAME ...) to pr_fmt/pr_<level>
+Date: Sun, 30 Jan 2011 20:34:58 -0800
+Message-ID: <1296448498.4131.22.camel@Joe-Laptop>
+References: <201101310359.p0V3x41L010660@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:38592 "EHLO ozlabs.org"
+Received: from mail.perches.com ([173.55.12.10]:3492 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752037Ab1AaC7y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 30 Jan 2011 21:59:54 -0500
-In-Reply-To: <4D3F559C.1050809@zytor.com>
+	id S1752037Ab1AaEfA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Jan 2011 23:35:00 -0500
+In-Reply-To: <201101310359.p0V3x41L010660@hera.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "H. Peter Anvin" <hpa@zytor.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <rdunlap@xenotime.net>, Mark Lord <kernel@teksavvy.com>, "Ahmed S. Darwish" <darwish.07@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 26 Jan 2011 09:28:36 am H. Peter Anvin wrote:
-> On 01/25/2011 02:45 PM, Jeff Garzik wrote:
-> > On 01/25/2011 05:16 PM, Randy Dunlap wrote:
-> >> On Tue, 25 Jan 2011 17:10:49 -0500 Mark Lord wrote:
-> >>
-> >>> On 11-01-25 12:05 PM, Ahmed S. Darwish wrote:
-> >>>>
-> >>>> My current x86 laptop includes the very common ATA PIIX controller.
-> >>>
-> >>>
-> >>> ata_piix is just about ideal for this sort of thing.
-> >>>
-> >>> Except, don't use the BIOS to write the logs,
-> >>> but rather code/use a very simple set of polling-PIO
-> >>> functions to talk directly through the PIIX to the drive.
-> >>>
-> >>> Really really simple code to do that, and it would likely
-> >>> work with anything ata-piix, and most other non-AHCI chipsets too.
-> >>>
-> >>> Not perfect, but probably good enough for a lot of scenarios.
-> >>> The old hd.c driver shows how to read/write a sector at a time,
-> >>> and that kind of code is easily converted to simply poll for completion.
-> >>
-> >> I don't know how/where to find it, but Rusty Russell had a version of this
-> >> many, many years ago.
-> > 
-> > You beat me to the reply :)
-> > 
-> > http://lwn.net/Articles/9905/
-> > 
-> > but IIRC there were updates and improvements.
-> > 
-> 
-> "Not perfect" is really not good enough.  You're writing to the disk, so
-> it *has* to be perfect.  That means dealing with having shared IDE/AHCI
-> device and doing the right thing, and the possibility that the kernel
-> has interrupts enabled, yadda yadda.
+Commit 40d69ba029c8d5de51aaeb5358999266c482d00a
+("pata_hpt{37x|3x2n}: use pr_*(DRV_NAME ...) instead of printk(KERN_* ...)")
+used pr_<level>.
 
-Not for the limited problem of trying to get some logs out.
+Add #define pr_fmt and remove DRV_NAME.
 
-My driver read the sectors, checked it was full of the magic signature, then
-overwrote them.  It's possible for that to screw up, but unlikely.  The boot
-script mailed it off to a central site, reset the sector and rearmed the
-oopsdumper.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/ata/pata_hpt366.c  |    5 +++--
+ drivers/ata/pata_hpt37x.c  |   21 +++++++++++----------
+ drivers/ata/pata_hpt3x2n.c |   11 ++++++-----
+ 3 files changed, 20 insertions(+), 17 deletions(-)
 
-> In the end you end up with something that looks, again, like kexec/kdump.
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index 538ec38..dd8fbb9 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -14,6 +14,7 @@
+  *	Look into engine reset on timeout errors. Should not be required.
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -160,8 +161,8 @@ static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
+ 
+ 	while (list[i] != NULL) {
+ 		if (!strcmp(list[i], model_num)) {
+-			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
+-				   modestr, list[i]);
++			pr_warn("%s is not supported for %s\n",
++				modestr, list[i]);
+ 			return 1;
+ 		}
+ 		i++;
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 4c5b518..0615026 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -14,6 +14,8 @@
+  *	Look into engine reset on timeout errors. Should not be	required.
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -229,8 +231,8 @@ static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
+ 
+ 	while (list[i] != NULL) {
+ 		if (!strcmp(list[i], model_num)) {
+-			pr_warning(DRV_NAME ": %s is not supported for %s.\n",
+-				   modestr, list[i]);
++			pr_warn("%s is not supported for %s\n",
++				modestr, list[i]);
+ 			return 1;
+ 		}
+ 		i++;
+@@ -863,8 +865,8 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 			chip_table = &hpt372;
+ 			break;
+ 		default:
+-			pr_err(DRV_NAME ": Unknown HPT366 subtype, "
+-			       "please report (%d).\n", rev);
++			pr_err("Unknown HPT366 subtype, please report (%d)\n",
++			       rev);
+ 			return -ENODEV;
+ 		}
+ 		break;
+@@ -904,8 +906,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 			*ppi = &info_hpt374_fn1;
+ 		break;
+ 	default:
+-		pr_err(DRV_NAME ": PCI table is bogus, please report (%d).\n",
+-		       dev->device);
++		pr_err("PCI table is bogus, please report (%d)\n", dev->device);
+ 		return -ENODEV;
+ 	}
+ 	/* Ok so this is a chip we support */
+@@ -953,7 +954,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		u8 sr;
+ 		u32 total = 0;
+ 
+-		pr_warning(DRV_NAME ": BIOS has not set timing clocks.\n");
++		pr_warn("BIOS has not set timing clocks\n");
+ 
+ 		/* This is the process the HPT371 BIOS is reported to use */
+ 		for (i = 0; i < 128; i++) {
+@@ -1009,7 +1010,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 					       (f_high << 16) | f_low | 0x100);
+ 		}
+ 		if (adjust == 8) {
+-			pr_err(DRV_NAME ": DPLL did not stabilize!\n");
++			pr_err("DPLL did not stabilize!\n");
+ 			return -ENODEV;
+ 		}
+ 		if (dpll == 3)
+@@ -1017,7 +1018,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		else
+ 			private_data = (void *)hpt37x_timings_50;
+ 
+-		pr_info(DRV_NAME ": bus clock %dMHz, using %dMHz DPLL.\n",
++		pr_info("bus clock %dMHz, using %dMHz DPLL\n",
+ 			MHz[clock_slot], MHz[dpll]);
+ 	} else {
+ 		private_data = (void *)chip_table->clocks[clock_slot];
+@@ -1032,7 +1033,7 @@ static int hpt37x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		if (clock_slot < 2 && ppi[0] == &info_hpt370a)
+ 			ppi[0] = &info_hpt370a_33;
+ 
+-		pr_info(DRV_NAME ": %s using %dMHz bus clock.\n",
++		pr_info("%s using %dMHz bus clock\n",
+ 			chip_table->name, MHz[clock_slot]);
+ 	}
+ 
+diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+index eca68ca..2c11d06 100644
+--- a/drivers/ata/pata_hpt3x2n.c
++++ b/drivers/ata/pata_hpt3x2n.c
+@@ -15,6 +15,8 @@
+  *	Work out best PLL policy
+  */
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -418,7 +420,7 @@ static int hpt3x2n_pci_clock(struct pci_dev *pdev)
+ 		u16 sr;
+ 		u32 total = 0;
+ 
+-		pr_warning(DRV_NAME ": BIOS clock data not set.\n");
++		pr_warn("BIOS clock data not set\n");
+ 
+ 		/* This is the process the HPT371 BIOS is reported to use */
+ 		for (i = 0; i < 128; i++) {
+@@ -528,8 +530,7 @@ hpt372n:
+ 		ppi[0] = &info_hpt372n;
+ 		break;
+ 	default:
+-		pr_err(DRV_NAME ": PCI table is bogus, please report (%d).\n",
+-		       dev->device);
++		pr_err("PCI table is bogus, please report (%d)\n", dev->device);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -578,11 +579,11 @@ hpt372n:
+ 		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
+ 	}
+ 	if (adjust == 8) {
+-		pr_err(DRV_NAME ": DPLL did not stabilize!\n");
++		pr_err("DPLL did not stabilize!\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	pr_info(DRV_NAME ": bus clock %dMHz, using 66MHz DPLL.\n", pci_mhz);
++	pr_info("bus clock %dMHz, using 66MHz DPLL\n", pci_mhz);
+ 
+ 	/*
+ 	 * Set our private data up. We only need a few flags
 
-That was the proposed solution back then, too.  If I'd realized how long
-that would take to arrive, I would have kept pushing...
 
-BTW, anyone know whether distros turn it on?    Ubuntu seems to enable it
-in the config, but I've never seen it in action.  My laptop has frozen
-a couple of times, but maybe it really froze...
-
-Cheers,
-Rusty.
