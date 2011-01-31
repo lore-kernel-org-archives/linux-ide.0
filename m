@@ -1,41 +1,56 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
- panic
-Date: Mon, 31 Jan 2011 11:45:53 +0100
-Message-ID: <20110131104553.GC32639@elte.hu>
-References: <20110125134748.GA10051@laptop>
- <4D3F529D.8060406@pobox.com>
- <4D3F559C.1050809@zytor.com>
- <201101311329.31562.rusty@rustcorp.com.au>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: sata_via bus errors fixed?
+Date: Mon, 31 Jan 2011 10:50:03 +0000
+Message-ID: <4D4693DB.4070009@mrc-lmb.cam.ac.uk>
+References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk> <20110124170432.GH27510@htj.dyndns.org> <4D3EA771.3070206@mrc-lmb.cam.ac.uk> <20110125105049.GQ27510@htj.dyndns.org> <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk> <20110126101119.GE12520@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:42535 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751543Ab1AaKrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Jan 2011 05:47:08 -0500
-Content-Disposition: inline
-In-Reply-To: <201101311329.31562.rusty@rustcorp.com.au>
+Received: from ppsw-50.csi.cam.ac.uk ([131.111.8.150]:35403 "EHLO
+	ppsw-50.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752548Ab1AaKuF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jan 2011 05:50:05 -0500
+In-Reply-To: <20110126101119.GE12520@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <rdunlap@xenotime.net>, Mark Lord <kernel@teksavvy.com>, "Ahmed S. Darwish" <darwish.07@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
+Tejun Heo wrote:
+> There are plenty of howtos on building kernel.  It takes some time to
+> get used to but once you get a hang of it there's nothing difficult
+> about it.
 
-* Rusty Russell <rusty@rustcorp.com.au> wrote:
+Hmm, I've finally managed to get the compilation to work often enough to
+run my tests but I don't think I'll be taking up kernel compiling as a
+hobby :(
 
-> > In the end you end up with something that looks, again, like kexec/kdump.
-> 
-> That was the proposed solution back then, too.  If I'd realized how long that 
-> would take to arrive, I would have kept pushing...
+> The best way would be finding out a workload which doesn't take too
+> much time but reliably triggers the issue on a problematic kernel.
 
-That's what happens when a feature crosses 2 or 3 project boundaries: from the 
-reasonable 2-3 months upstream arrival time it lengthens to a few years, up to a 
-decade.
+That would be booting then :) The dmesg reliably has or does not have
+the error messages.
 
-The solution is IMO obvious: move the kexec tools into tools/ and integrate it much 
-more tightly and make it all more usable to the average kernel tester.
+>> Tonight I plan to compile that kernel, which should confirm that I
+>> understand how to do it, and then I'll disable the VIA FIFO workaround
+>> as you suggest and see what happens.
 
-Thanks,
+OK. So the results are now in:
 
-	Ingo
+(1) stock SUSE HEAD/11.2 (2.6.37) - works fine with no problem
+(2) SUSE 2.6.37 with the 'magic patch' commented out - shows the problem
+(3) stock updated SUSE 11.2 (2.6.31.14) - shows the problem
+(4) stock SUSE 11.2 with the 'magic patch' added (2.6.31.5) - works fine
+with no problem
+
+I think that's fairly indicative that the 'magic patch' is able to cure
+my problem with a VT 6241A controller and a Samsung HD103SJ drive.
+
+One thing I still need to investigate is why Ubuntu 10.04 was showing
+the problem, but perhaps I never got as far as updating the kernel after
+installing it. (AFAIK as installed it is 2.6.31, whilst the current
+update is 2.6.32-28 which I think should have the patch)
+
+Thanks for your help.
+Dave
