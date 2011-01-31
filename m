@@ -1,68 +1,76 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: IO_PAGE_FAULT from SATA card during boot
-Date: Sun, 30 Jan 2011 09:37:26 -0600
-Message-ID: <AANLkTim7+9WVVJAjbj4pNMB9OKVmf2B+XNQ+exDt9_Tm@mail.gmail.com>
-References: <20110129112456.GA13204@arachsys.com>
-	<4D44433F.1040607@gmail.com>
-	<20110130015442.GB13204@arachsys.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon panic
+Date: Mon, 31 Jan 2011 13:29:31 +1030
+Message-ID: <201101311329.31562.rusty@rustcorp.com.au>
+References: <20110125134748.GA10051@laptop> <4D3F529D.8060406@pobox.com> <4D3F559C.1050809@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39853 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab1A3Ph1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Jan 2011 10:37:27 -0500
-Received: by iyj18 with SMTP id 18so4094094iyj.19
-        for <linux-ide@vger.kernel.org>; Sun, 30 Jan 2011 07:37:26 -0800 (PST)
-In-Reply-To: <20110130015442.GB13204@arachsys.com>
+Received: from ozlabs.org ([203.10.76.45]:38592 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752037Ab1AaC7y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 30 Jan 2011 21:59:54 -0500
+In-Reply-To: <4D3F559C.1050809@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Webb <chris.webb@elastichosts.com>
-Cc: linux-ide@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <rdunlap@xenotime.net>, Mark Lord <kernel@teksavvy.com>, "Ahmed S. Darwish" <darwish.07@gmail.com>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@elte.hu>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?q?Fr=E9d=E9ric_Weisbecker?= <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
-On Sat, Jan 29, 2011 at 7:54 PM, Chris Webb <chris.webb@elastichosts.co=
-m> wrote:
-> Robert Hancock <hancockrwd@gmail.com> writes:
->
->> On 01/29/2011 05:24 AM, Chris Webb wrote:
->> >I have several Supermicro H8DGT-HF motherboards (BIOS version 1.1) =
-with Star
->> >Tech PEXSAT32 PCI Express SATA cards attached, and am seeing an
->> >IO_PAGE_FAULT during boot corresponding to this card:
->> >
->> > =A0 IO_PAGE_FAULT device=3D03:00.1 domain=3D0x0000 address=3D0x000=
-00000000403c0 flags=3D0x0050]
->>
->> What's that device 03:00.1? The AHCI controller itself seems to be
->> 03:00.0. Can you post the lspci -v output? Though it could be that
->> maybe the IOMMU can't tell functions on the same device apart, not
->> sure.
->
-> Thanks for the reply. Sure, no problem---here's the lspci -v output i=
-n full:
->
+On Wed, 26 Jan 2011 09:28:36 am H. Peter Anvin wrote:
+> On 01/25/2011 02:45 PM, Jeff Garzik wrote:
+> > On 01/25/2011 05:16 PM, Randy Dunlap wrote:
+> >> On Tue, 25 Jan 2011 17:10:49 -0500 Mark Lord wrote:
+> >>
+> >>> On 11-01-25 12:05 PM, Ahmed S. Darwish wrote:
+> >>>>
+> >>>> My current x86 laptop includes the very common ATA PIIX controller.
+> >>>
+> >>>
+> >>> ata_piix is just about ideal for this sort of thing.
+> >>>
+> >>> Except, don't use the BIOS to write the logs,
+> >>> but rather code/use a very simple set of polling-PIO
+> >>> functions to talk directly through the PIIX to the drive.
+> >>>
+> >>> Really really simple code to do that, and it would likely
+> >>> work with anything ata-piix, and most other non-AHCI chipsets too.
+> >>>
+> >>> Not perfect, but probably good enough for a lot of scenarios.
+> >>> The old hd.c driver shows how to read/write a sector at a time,
+> >>> and that kind of code is easily converted to simply poll for completion.
+> >>
+> >> I don't know how/where to find it, but Rusty Russell had a version of this
+> >> many, many years ago.
+> > 
+> > You beat me to the reply :)
+> > 
+> > http://lwn.net/Articles/9905/
+> > 
+> > but IIRC there were updates and improvements.
+> > 
+> 
+> "Not perfect" is really not good enough.  You're writing to the disk, so
+> it *has* to be perfect.  That means dealing with having shared IDE/AHCI
+> device and doing the right thing, and the possibility that the kernel
+> has interrupts enabled, yadda yadda.
 
-=2E..
+Not for the limited problem of trying to get some logs out.
 
-> 03:00.0 Class 0106: Device 1b4b:9123 (rev 11) (prog-if 01)
-> =A0 =A0 =A0 =A0Subsystem: Device 18ab:9115
-> =A0 =A0 =A0 =A0Flags: bus master, fast devsel, latency 0, IRQ 41
-> =A0 =A0 =A0 =A0I/O ports at d800 [size=3D8]
-> =A0 =A0 =A0 =A0I/O ports at d400 [size=3D4]
-> =A0 =A0 =A0 =A0I/O ports at e800 [size=3D8]
-> =A0 =A0 =A0 =A0I/O ports at e400 [size=3D4]
-> =A0 =A0 =A0 =A0I/O ports at e000 [size=3D16]
-> =A0 =A0 =A0 =A0Memory at febef800 (32-bit, non-prefetchable) [size=3D=
-2K]
-> =A0 =A0 =A0 =A0Expansion ROM at febf0000 [disabled] [size=3D64K]
-> =A0 =A0 =A0 =A0Capabilities: [40] Power Management version 3
-> =A0 =A0 =A0 =A0Capabilities: [50] MSI: Enable+ Count=3D1/1 Maskable- =
-64bit-
-> =A0 =A0 =A0 =A0Capabilities: [70] Express Legacy Endpoint, MSI 00
-> =A0 =A0 =A0 =A0Capabilities: [100] Advanced Error Reporting
-> =A0 =A0 =A0 =A0Kernel driver in use: ahci
+My driver read the sectors, checked it was full of the magic signature, then
+overwrote them.  It's possible for that to screw up, but unlikely.  The boot
+script mailed it off to a central site, reset the sector and rearmed the
+oopsdumper.
 
-Hmm, so that 03:00.1 device doesn't seem to show up at all? I think
-that these Marvell 9123 cards have a PATA controller integrated as
-well, maybe that has something to do with the issue?
+> In the end you end up with something that looks, again, like kexec/kdump.
+
+That was the proposed solution back then, too.  If I'd realized how long
+that would take to arrive, I would have kept pushing...
+
+BTW, anyone know whether distros turn it on?    Ubuntu seems to enable it
+in the config, but I've never seen it in action.  My laptop has frozen
+a couple of times, but maybe it really froze...
+
+Cheers,
+Rusty.
