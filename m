@@ -1,59 +1,64 @@
-From: Simon Arlott <simon@fire.lp0.eu>
-Subject: [PATCH (v2)] cdrom: support devices that have check_events but not
- media_changed
-Date: Mon, 31 Jan 2011 18:26:38 +0000
-Message-ID: <4D46FEDE.7060909@simon.arlott.org.uk>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-8-git-send-email-tj@kernel.org> <4D44BE3E.5080107@simon.arlott.org.uk> <4D44BF64.4060205@simon.arlott.org.uk> <20110131101244.GA7459@htj.dyndns.org>
+From: Viresh Kumar <viresh.nitj@gmail.com>
+Subject: Re: MWDMA Issue: sda: unknown partition table
+Date: Tue, 1 Feb 2011 21:02:13 +0530
+Message-ID: <AANLkTimw4NHmNcXiB1rrQMFMRvmwG5Ww9gj_K7_xw_j-@mail.gmail.com>
+References: <4D395B74.1010705@st.com>
+	<20110121101400.GC2832@htj.dyndns.org>
+	<4D395FE8.8000902@st.com>
+	<4D39752B.7000202@st.com>
+	<20110121163906.GG2832@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from proxima.lp0.eu ([81.2.80.65]:53930 "EHLO proxima.lp0.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753902Ab1AaS0x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Jan 2011 13:26:53 -0500
-In-Reply-To: <20110131101244.GA7459@htj.dyndns.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48763 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750998Ab1BAPcQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2011 10:32:16 -0500
+Received: by bwz15 with SMTP id 15so6434267bwz.19
+        for <linux-ide@vger.kernel.org>; Tue, 01 Feb 2011 07:32:14 -0800 (PST)
+In-Reply-To: <20110121163906.GG2832@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com, sshtylyov@mvista.com
+Cc: viresh kumar <viresh.kumar@st.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
 
-Commit 93aae17af1172c40c6f74b7294e93a90c3cfaa5d ("sr: implement
-sr_check_events()") replaced the media_changed op with the
-check_events op in drivers/scsi/sr.c
+Tejun,
 
-All users that check for the CDC_MEDIA_CHANGED capbility try both
-the check_events op and the media_changed op, but register_cdrom()
-was requiring media_changed.
+On 1/21/11, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Jan 21, 2011 at 05:29:39PM +0530, viresh kumar wrote:
+>> 	sda: unknown partition table
+>
+> and then this probably is unrelated.  So, no IO error is being
+> reported but the above still fails?  How did you verify the read data
+> are actually the same?  Maybe there's a cache alias issue?
+>
 
-This patch fixes the capability checking.
+This issue is solved now and was related to cache only. As i mentioned earlier
+Arasan CF controller doesn't xfer data from/to RAM. And so i was using CPU
+to copy data. After data is passed to libata, in page_unmap, cache was
+getting invalidated.
+And so data written by CPU is lost.
 
-The cdrom_select_disc ioctl is also using the two operations, so
-they should be required for CDC_SELECT_DISC too.
+Now i am using external DMA controller to copy data to CF FIFO, and am able to
+read/write data to CF card.
 
-Signed-off-by: Simon Arlott <simon@fire.lp0.eu>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Kay Sievers <kay.sievers@vrfy.org>
----
- drivers/cdrom/cdrom.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+But i am facing another issue now. I am getting following error
+sometimes, when i
+copy > 10 MB of data to CF card.
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 14033a3..e2c48a7 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -409,7 +409,8 @@ int register_cdrom(struct cdrom_device_info *cdi)
- 	}
- 
- 	ENSURE(drive_status, CDC_DRIVE_STATUS );
--	ENSURE(media_changed, CDC_MEDIA_CHANGED);
-+	if (cdo->check_events == NULL && cdo->media_changed == NULL)
-+		*change_capability = ~(CDC_MEDIA_CHANGED | CDC_SELECT_DISC);
- 	ENSURE(tray_move, CDC_CLOSE_TRAY | CDC_OPEN_TRAY);
- 	ENSURE(lock_door, CDC_LOCK);
- 	ENSURE(select_speed, CDC_SELECT_SPEED);
--- 
-1.7.0.4
+ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata1.00: BMDMA stat 0x5
+ata1.00: failed command: WRITE DMA
+ata1.00: cmd ca/00:00:3f:7f:3c/00:00:00:00:00/e0 tag 0 dma 131072 out
+        res d0/00:00:3f:7f:3c/00:00:00:00:00/e0 Emask 0x2 (HSM violation)
+ata1.00: status: { Busy }
 
--- 
-Simon Arlott
+
+I debugged it further and found that after data is transferred,
+altstatus register is
+returning status 0xd0, which means ATA_BUSY.
+
+I am not sure why this must be returned by card after data is transferred?
+
+--
+viresh
