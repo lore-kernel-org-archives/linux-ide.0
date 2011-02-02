@@ -1,29 +1,25 @@
-From: viresh kumar <viresh.kumar@st.com>
-Subject: Re: MWDMA Issue: sda: unknown partition table
-Date: Wed, 2 Feb 2011 11:28:54 +0530
-Message-ID: <4D48F29E.3080408@st.com>
-References: <4D395B74.1010705@st.com> <20110121101400.GC2832@htj.dyndns.org> <4D395FE8.8000902@st.com> <4D39752B.7000202@st.com> <20110121163906.GG2832@htj.dyndns.org> <AANLkTimw4NHmNcXiB1rrQMFMRvmwG5Ww9gj_K7_xw_j-@mail.gmail.com> <20110201175925.GA20794@bounceswoosh.org> <4D48D2F2.20907@st.com> <20110202055527.GD26790@bounceswoosh.org>
+From: "Ahmed S. Darwish" <darwish.07@gmail.com>
+Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk
+	upon panic
+Date: Wed, 2 Feb 2011 13:13:38 +0200
+Message-ID: <20110202111338.GA15729@laptop>
+References: <20110125134748.GA10051@laptop> <AANLkTinU0KYiCd4p=z+=ojbkeEoT2G+CAYvdRU02KJEn@mail.gmail.com> <20110126124954.GC24527@laptop> <20110127021338.GA20334@redhat.com> <4D40F81E.1030009@zytor.com> <20110127052639.GA16289@laptop> <m1sjweyeax.fsf@fess.ebiederm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:34355 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752377Ab1BBF7Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2011 00:59:25 -0500
-In-Reply-To: <20110202055527.GD26790@bounceswoosh.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <m1sjweyeax.fsf@fess.ebiederm.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>, "Eric W. Biederman" <ebiederm@xmission.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Vivek Goyal <vgoyal@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, =?iso-8859-1?Q?Fr=E9d=E9ric?= Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@suse.de>, Mark Lord <kernel@teksavvy.com>, Jeff Garzik <jgarzik@pobox.com>, Haren
 List-Id: linux-ide@vger.kernel.org
-To: "Eric D. Mudama" <edmudama@bounceswoosh.org>
-Cc: Viresh Kumar <viresh.nitj@gmail.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
 
-On 02/02/2011 11:25 AM, Eric D. Mudama wrote:
->> >Just to get over this doubt, i will try place a small udelay after data is transferred
->> >and before framework is communicated for successful xfer.
-> That's a good thing to try, wouldn't be the first time I've heard of
-> things like that being required.
+Hi,
 
-I tried this, and still get same error sometimes. I took a 100ms delay.
+Quick note: the Internet has just returned back here after a full
+5-day shutdown by the =E2=80=9Cauthorities=E2=80=9D. I will hopefully r=
+eturn back
+home on Saturday to continue working on this.
 
--- 
-viresh
+thanks,
