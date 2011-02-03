@@ -1,60 +1,79 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: IO_PAGE_FAULT from SATA card during boot
-Date: Wed, 02 Feb 2011 18:49:35 -0600
-Message-ID: <4D49FB9F.9040304@gmail.com>
-References: <20110129112456.GA13204@arachsys.com> <4D44433F.1040607@gmail.com> <20110130015442.GB13204@arachsys.com> <AANLkTim7+9WVVJAjbj4pNMB9OKVmf2B+XNQ+exDt9_Tm@mail.gmail.com> <20110202135644.GG11670@arachsys.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: ahci: hotplug failure on 2.6.37
+Date: Wed, 02 Feb 2011 22:40:20 -0500
+Message-ID: <4D4A23A4.30508@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41383 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432Ab1BCAtj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2011 19:49:39 -0500
-Received: by iyj18 with SMTP id 18so559474iyj.19
-        for <linux-ide@vger.kernel.org>; Wed, 02 Feb 2011 16:49:38 -0800 (PST)
-In-Reply-To: <20110202135644.GG11670@arachsys.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:46045 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752184Ab1BCDkX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2011 22:40:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chris Webb <chris.webb@elastichosts.com>
-Cc: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On 02/02/2011 07:56 AM, Chris Webb wrote:
-> Robert Hancock<hancockrwd@gmail.com>  writes:
->
->> On Sat, Jan 29, 2011 at 7:54 PM, Chris Webb<chris.webb@elastichosts.com>  wrote:
->>> 03:00.0 Class 0106: Device 1b4b:9123 (rev 11) (prog-if 01)
->>> ? ? ? ?Subsystem: Device 18ab:9115
->>> ? ? ? ?Flags: bus master, fast devsel, latency 0, IRQ 41
->>> ? ? ? ?I/O ports at d800 [size=8]
->>> ? ? ? ?I/O ports at d400 [size=4]
->>> ? ? ? ?I/O ports at e800 [size=8]
->>> ? ? ? ?I/O ports at e400 [size=4]
->>> ? ? ? ?I/O ports at e000 [size=16]
->>> ? ? ? ?Memory at febef800 (32-bit, non-prefetchable) [size=2K]
->>> ? ? ? ?Expansion ROM at febf0000 [disabled] [size=64K]
->>> ? ? ? ?Capabilities: [40] Power Management version 3
->>> ? ? ? ?Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit-
->>> ? ? ? ?Capabilities: [70] Express Legacy Endpoint, MSI 00
->>> ? ? ? ?Capabilities: [100] Advanced Error Reporting
->>> ? ? ? ?Kernel driver in use: ahci
->>
->> Hmm, so that 03:00.1 device doesn't seem to show up at all? I think
->> that these Marvell 9123 cards have a PATA controller integrated as
->> well, maybe that has something to do with the issue?
->
-> Yes, strange isn't it? There are no other add-on cards in this system, for
-> what it's worth, and the SATA card is definitely failing, so it does look
-> like it might be implicated. I have four such boxes, all of which show
-> identical symptoms.
+Done this a zillion times before without issues,
+but today ahci refused to enumerate a hotplugged drive:
 
-Is it the same model of add-on card?
+[13928.970823] ata9: exception Emask 0x10 SAct 0x0 SErr 0x4000000 action 0xe frozen
+[13928.979011] ata9: irq_stat 0x00000040, connection status changed
+[13928.985803] ata9: SError: { DevExch }
+[13928.991019] ata9: hard resetting link
+[13929.998011] ata9: failed to resume link (SControl 59)
+[13935.553012] ata9: failed to reset engine (errno=-5)
+[13939.493012] ata9: softreset failed (1st FIS failed)
+[13939.499422] ata9: hard resetting link
+[13941.006012] ata9: failed to resume link (SControl 59)
+[13941.512012] ata9: failed to reset engine (errno=-5)
+[13950.000013] ata9: softreset failed (1st FIS failed)
+[13950.005105] ata9: hard resetting link
+[13951.514010] ata9: failed to resume link (SControl 59)
+[13952.019013] ata9: failed to reset engine (errno=-5)
+[13985.506012] ata9: softreset failed (1st FIS failed)
+[13985.510892] ata9: limiting SATA link speed to 1.5 Gbps
+[13985.510897] ata9: hard resetting link
+[13987.017010] ata9: failed to resume link (SControl 59)
+[13991.042012] ata9: failed to reset engine (errno=-5)
+[13991.195049] ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 59)
+[13991.195076] ata9.00: link online but device misclassifed
+[13991.195090] ata9: link online but 1 devices misclassified, device detection
+might fail
+[13991.707016] ata9: exception Emask 0x10 SAct 0x0 SErr 0x5850000 action 0xe
+frozen t4
+[13991.714682] ata9: irq_stat 0x00400040, connection status changed
+[13991.720687] ata9: SError: { PHYRdyChg CommWake LinkSeq TrStaTrns DevExch }
+[13991.727682] ata9: hard resetting link
+[13993.235011] ata9: failed to resume link (SControl 41)
+[13993.240085] ata9: SATA link down (SStatus 0 SControl 41)
+[13993.752016] ata9: exception Emask 0x10 SAct 0x0 SErr 0x5850000 action 0xe
+frozen t3
+[13993.759881] ata9: irq_stat 0x00400040, connection status changed
+[13993.765924] ata9: SError: { PHYRdyChg CommWake LinkSeq TrStaTrns DevExch }
+[13993.774233] ata9: hard resetting link
+[13995.282011] ata9: failed to resume link (SControl 59)
+[14000.836013] ata9: failed to reset engine (errno=-5)
+[14004.274013] ata9: softreset failed (1st FIS failed)
+[14004.279101] ata9: hard resetting link
+[14005.786012] ata9: failed to resume link (SControl 59)
+[14011.340012] ata9: failed to reset engine (errno=-5)
+[14014.780012] ata9: softreset failed (1st FIS failed)
+[14014.784894] ata9: hard resetting link
+[14016.291010] ata9: failed to resume link (SControl 59)
+[14016.797013] ata9: failed to reset engine (errno=-5)
+[14050.284014] ata9: softreset failed (1st FIS failed)
+[14050.288949] ata9: limiting SATA link speed to 1.5 Gbps
+[14050.288953] ata9: hard resetting link
+[14051.797010] ata9: failed to resume link (SControl 59)
+[14055.822012] ata9: failed to reset engine (errno=-5)
+...
 
-This controller apparently has both a SATA and PATA controller on it. 
-The PATA portion doesn't seem to be showing up in lspci, but obviously 
-the BIOS saw some sign of it - and if the IOMMU reporting can be 
-believed, it's trying to do a read request for some reason..
+I had to plug it into a different ahci port to get it recognized
+(it was either that, or reboot).  Worked fine on the other port,
+and worked fine on the failed port after a reboot.
 
->
-> Is there anything I can do to debug this better?
+Some state isn't getting cleared somewhere, but dunno what.
+Probably not unique to 2.6.37.
 
+Cheers
