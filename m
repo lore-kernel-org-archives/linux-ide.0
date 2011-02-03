@@ -1,35 +1,43 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Ingo Molnar <mingo@elte.hu>
 Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
  panic
-Date: Thu, 03 Feb 2011 07:28:22 -0800
-Message-ID: <4D4AC996.4070307@zytor.com>
-References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu> <20110125150834.GD27510@htj.dyndns.org> <20110203143644.GA4085@ucw.cz>
+Date: Thu, 3 Feb 2011 18:57:21 +0100
+Message-ID: <20110203175721.GB8785@elte.hu>
+References: <20110125134748.GA10051@laptop>
+ <20110125140948.GA26762@elte.hu>
+ <20110125150834.GD27510@htj.dyndns.org>
+ <20110203143644.GA4085@ucw.cz>
+ <4D4AC996.4070307@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:48170 "EHLO mail.zytor.com"
+Received: from mx2.mail.elte.hu ([157.181.151.9]:35890 "EHLO mx2.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755984Ab1BCPbe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2011 10:31:34 -0500
-In-Reply-To: <20110203143644.GA4085@ucw.cz>
+	id S1753257Ab1BCR6Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Feb 2011 12:58:16 -0500
+Content-Disposition: inline
+In-Reply-To: <4D4AC996.4070307@zytor.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@elte.hu>, "Ahmed S. Darwish" <darwish.07@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Fr?d?ric Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, "Ahmed S. Darwish" <darwish.07@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Fr?d?ric Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
 
-On 02/03/2011 06:36 AM, Pavel Machek wrote:
+
+* H. Peter Anvin <hpa@zytor.com> wrote:
+
+> On 02/03/2011 06:36 AM, Pavel Machek wrote:
+> > 
+> > Could we read the log area, first, verify it contains signature, write
+> > it back?
+> > 								Pavel
 > 
-> Could we read the log area, first, verify it contains signature, write
-> it back?
-> 								Pavel
+> Yes, but that doesn't guarantee no data corruption caused by handing
+> over from one driver to another.
 
-Yes, but that doesn't guarantee no data corruption caused by handing
-over from one driver to another.
+Waiting a few seconds? Is there any sufficiently high number of X where waiting X 
+seconds would make it safe to touch the hardware? (i.e. it would guarantee that 
+pending commands are flushed, etc.)
 
-	-hpa
+Thanks,
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+	Ingo
