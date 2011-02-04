@@ -1,43 +1,38 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [PATCH 0/2][concept RFC] x86: BIOS-save kernel log to disk upon
- panic
-Date: Thu, 03 Feb 2011 13:07:02 -0800
-Message-ID: <4D4B18F6.8090403@zytor.com>
-References: <20110125134748.GA10051@laptop> <20110125140948.GA26762@elte.hu> <20110125150834.GD27510@htj.dyndns.org> <20110203143644.GA4085@ucw.cz> <4D4AC996.4070307@zytor.com> <20110203175721.GB8785@elte.hu>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: sata_via bus errors fixed?
+Date: Fri, 04 Feb 2011 12:09:43 +0000
+Message-ID: <4D4BEC87.9090006@mrc-lmb.cam.ac.uk>
+References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk> <20110124170432.GH27510@htj.dyndns.org> <4D3EA771.3070206@mrc-lmb.cam.ac.uk> <20110125105049.GQ27510@htj.dyndns.org> <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk> <20110126101119.GE12520@htj.dyndns.org> <4D4693DB.4070009@mrc-lmb.cam.ac.uk> <20110131105322.GE7459@htj.dyndns.org> <4D46A8D3.3000807@mrc-lmb.cam.ac.uk> <20110131132430.GH7459@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:41720 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752426Ab1BCVKN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Feb 2011 16:10:13 -0500
-In-Reply-To: <20110203175721.GB8785@elte.hu>
+Received: from ppsw-41.csi.cam.ac.uk ([131.111.8.141]:45644 "EHLO
+	ppsw-41.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046Ab1BDMJp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2011 07:09:45 -0500
+In-Reply-To: <20110131132430.GH7459@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Pavel Machek <pavel@ucw.cz>, Tejun Heo <tj@kernel.org>, "Ahmed S. Darwish" <darwish.07@gmail.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, X86-ML <x86@kernel.org>, Tony Luck <tony.luck@intel.com>, Dave Jones <davej@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <rdunlap@xenotime.net>, Willy Tarreau <wtarreau@hera.kernel.org>, Willy Tarreau <w@1wt.eu>, Dirk Hohndel <hohndel@infradead.org>, Dirk.Hohndel@intel.com, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Peter Zijlstra <a.p.zijlstra@chello.nl>, Fr?d?ric Weisbecker <fweisbec@gmail.com>, Borislav Petkov <bp@alien8.de>, Arjan van de Ven <arjan@infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On 02/03/2011 09:57 AM, Ingo Molnar wrote:
+Tejun Heo wrote:
+>> Since we don't yet know whether a recent kernel fixes my sil problem and
+>> if it does we don't have any idea of a particular patch, that suggests
+>> the strategy would be bisection, which probably involves more compiles
+>> than I'm up for.
 > 
-> * H. Peter Anvin <hpa@zytor.com> wrote:
-> 
->> On 02/03/2011 06:36 AM, Pavel Machek wrote:
->>>
->>> Could we read the log area, first, verify it contains signature, write
->>> it back?
->>> 								Pavel
->>
->> Yes, but that doesn't guarantee no data corruption caused by handing
->> over from one driver to another.
-> 
-> Waiting a few seconds? Is there any sufficiently high number of X where waiting X 
-> seconds would make it safe to touch the hardware? (i.e. it would guarantee that 
-> pending commands are flushed, etc.)
-> 
+> If sil shows the problem, I'll provide debug patches so that you'll
+> only need to build libata and sata_via.
 
-Probably not... if you have enough control over the hardware to force a
-device reset you should be okay, though.  This kind of comes down to
-wanting a complete set of system drivers, i.e. kexec/kdump again.
+OK, I fixed my backup system and I feel a bit more relaxed now, so I did
+a quick test. I borrowed the Sil 3512-based card again and ran it with
+Knoppix and also with the SUSE 2.6.37 kernel. Neither of them indicated
+any errors with the drive so I suppose that some change between 2.6.32
+and 2.6.37 has already fixed whatever my problem was with that
+controller. One less thing to worry about.
 
-	-hpa
+I haven't got around to doing any of the other things I mentioned yet :(
+
+Cheers, Dave
