@@ -1,57 +1,42 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH 4/4] libata: remove ATA_FLAG_LPM
-Date: Fri, 4 Feb 2011 22:08:22 +0300
-Message-ID: <201102042208.22409.sshtylyov@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13770] System freeze on XFS filesystem recovery on an external
+ disk
+Date: Sun, 6 Feb 2011 14:18:26 GMT
+Message-ID: <201102061418.p16EIQJu002908@demeter1.kernel.org>
+References: <bug-13770-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:40419 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751778Ab1BDTJp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2011 14:09:45 -0500
-Content-Disposition: inline
+Received: from demeter1.kernel.org ([140.211.167.39]:41783 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633Ab1BFOS1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2011 09:18:27 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p16EIQWg002909
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Sun, 6 Feb 2011 14:18:26 GMT
+In-Reply-To: <bug-13770-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: linux-ide@vger.kernel.org
 
-Commit 6b7ae9545ad9875a289f4191c0216b473e313cb9 (libata: reimplement link power
-management) removed the check of ATA_FLAG_LPM but neglected to remove the flag
-itself.  Do it now...
+https://bugzilla.kernel.org/show_bug.cgi?id=13770
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
----
-The patch is against the recent Linus' tree.
+Florian Mickler <florian@mickler.org> changed:
 
- drivers/ata/ahci.h     |    3 +--
- include/linux/libata.h |    1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |UNREPRODUCIBLE
 
-Index: linux-2.6/drivers/ata/ahci.h
-===================================================================
---- linux-2.6.orig/drivers/ata/ahci.h
-+++ linux-2.6/drivers/ata/ahci.h
-@@ -214,8 +214,7 @@ enum {
- 	/* ap->flags bits */
- 
- 	AHCI_FLAG_COMMON		= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA |
--					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN |
--					  ATA_FLAG_LPM,
-+					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
- 
- 	ICH_MAP				= 0x90, /* ICH MAP register */
- 
-Index: linux-2.6/include/linux/libata.h
-===================================================================
---- linux-2.6.orig/include/linux/libata.h
-+++ linux-2.6/include/linux/libata.h
-@@ -194,7 +194,6 @@ enum {
- 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
- 	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
- 	ATA_FLAG_PMP		= (1 << 19), /* controller supports PMP */
--	ATA_FLAG_LPM		= (1 << 20), /* driver can handle LPM */
- 	ATA_FLAG_EM		= (1 << 21), /* driver supports enclosure
- 					      * management */
- 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+
+
+
+--- Comment #9 from Florian Mickler <florian@mickler.org>  2011-02-06 14:18:12 ---
+Thx. I'm closing this as unreproducible.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
