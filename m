@@ -1,353 +1,124 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH fixed] ide/pmac: housekeeping
-Date: Mon, 7 Feb 2011 14:01:31 +0100
-Message-ID: <201102071401.32082.bzolnier@gmail.com>
+Subject: [PATCH 2/2 fixed] cmd640: always use enhanced support
+Date: Mon, 7 Feb 2011 14:02:56 +0100
+Message-ID: <201102071402.57357.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:65130 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975Ab1BGNDw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2011 08:03:52 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org
-
-* remove legacy IDE_PMAC_DEBUG debugging code
-* rename struct pmac_ide_hwif to struct pmac_ide_priv
-* remove pmac_ide_hwif_t
-* remove needless {dev,pci}_get_drvdata() casts
-
-Compile-time tested only.
+List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
 fixed word-wrapping
 
- drivers/ide/pmac.c |   94 +++++++++++++++--------------------------------------
- 1 file changed, 28 insertions(+), 66 deletions(-)
+ drivers/ide/Kconfig  |   10 ----------
+ drivers/ide/cmd640.c |   29 -----------------------------
+ 2 files changed, 39 deletions(-)
 
-Index: b/drivers/ide/pmac.c
+Index: b/drivers/ide/Kconfig
 ===================================================================
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -48,11 +48,9 @@
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -249,16 +249,6 @@ config BLK_DEV_CMD640
+ 	  the "CSA-6400E PCI to IDE controller" that some people have. For
+ 	  details, read <file:Documentation/ide/ide.txt>.
  
- #define DRV_NAME "ide-pmac"
- 
--#undef IDE_PMAC_DEBUG
+-config BLK_DEV_CMD640_ENHANCED
+-	bool "CMD640 enhanced support"
+-	depends on BLK_DEV_CMD640
+-	help
+-	  This option includes support for setting/autotuning PIO modes and
+-	  prefetch on CMD640 IDE interfaces.  For details, read
+-	  <file:Documentation/ide/ide.txt>. If you have a CMD640 IDE interface
+-	  and your BIOS does not already do this for you, then say Y here.
+-	  Otherwise say N.
 -
- #define DMA_WAIT_TIMEOUT	50
+ config BLK_DEV_IDEPNP
+ 	tristate "PNP EIDE support"
+ 	depends on PNP
+Index: b/drivers/ide/cmd640.c
+===================================================================
+--- a/drivers/ide/cmd640.c
++++ b/drivers/ide/cmd640.c
+@@ -82,8 +82,6 @@ static int cmd640_vlb;
+ static u8 prefetch_regs[4]  = {CNTRL, CNTRL, ARTTIM23, ARTTIM23};
+ static u8 prefetch_masks[4] = {CNTRL_DIS_RA0, CNTRL_DIS_RA1, ARTTIM23_DIS_RA2, ARTTIM23_DIS_RA3};
  
--typedef struct pmac_ide_hwif {
-+struct pmac_ide_priv {
- 	unsigned long			regbase;
- 	int				irq;
- 	int				kind;
-@@ -72,7 +70,7 @@ typedef struct pmac_ide_hwif {
- 	 */
- 	volatile struct dbdma_regs __iomem *	dma_regs;
- 	struct dbdma_cmd*		dma_table_cpu;
--} pmac_ide_hwif_t;
-+};
+-#ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
+-
+ static u8 arttim_regs[4] = {ARTTIM0, ARTTIM1, ARTTIM23, ARTTIM23};
+ static u8 drwtim_regs[4] = {DRWTIM0, DRWTIM1, DRWTIM23, DRWTIM23};
  
- enum {
- 	controller_ohare,	/* OHare based */
-@@ -415,8 +413,7 @@ static int pmac_ide_init_dma(ide_hwif_t
- static void pmac_ide_apply_timings(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
+@@ -95,8 +93,6 @@ static u8 setup_counts[4]    = {4, 4, 4,
+ static u8 active_counts[4]   = {16, 16, 16, 16}; /* Active count   (encoded) */
+ static u8 recovery_counts[4] = {16, 16, 16, 16}; /* Recovery count (encoded) */
  
- 	if (drive->dn & 1)
- 		writel(pmif->timings[1], PMAC_IDE_REG(IDE_TIMING_CONFIG));
-@@ -433,8 +430,7 @@ static void pmac_ide_apply_timings(ide_d
- static void pmac_ide_kauai_apply_timings(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
+-#endif /* CONFIG_BLK_DEV_CMD640_ENHANCED */
+-
+ static DEFINE_SPINLOCK(cmd640_lock);
  
- 	if (drive->dn & 1) {
- 		writel(pmif->timings[1], PMAC_IDE_REG(IDE_KAUAI_PIO_CONFIG));
-@@ -453,8 +449,7 @@ static void
- pmac_ide_do_update_timings(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 
- 	if (pmif->kind == controller_sh_ata6 ||
- 	    pmif->kind == controller_un_ata6 ||
-@@ -499,8 +494,7 @@ static void pmac_write_devctl(ide_hwif_t
-  */
- static void pmac_ide_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	const u8 pio = drive->pio_mode - XFER_PIO_0;
- 	struct ide_timing *tim = ide_timing_find_mode(XFER_PIO_0 + pio);
- 	u32 *timings, t;
-@@ -568,11 +562,6 @@ static void pmac_ide_set_pio_mode(ide_hw
- 		}
+ /*
+@@ -282,19 +278,6 @@ static void __set_prefetch_mode(ide_driv
  	}
- 
--#ifdef IDE_PMAC_DEBUG
--	printk(KERN_ERR "%s: Set PIO timing for mode %d, reg: 0x%08x\n",
--		drive->name, pio,  *timings);
--#endif	
--
- 	*timings = t;
- 	pmac_ide_do_update_timings(drive);
  }
-@@ -597,10 +586,6 @@ set_timings_udma_ata4(u32 *timings, u8 s
- 			(rdyToPauseTicks << TR_66_UDMA_RDY2PAUS_SHIFT) |
- 			(addrTicks <<TR_66_UDMA_ADDRSETUP_SHIFT) |
- 			TR_66_UDMA_EN;
--#ifdef IDE_PMAC_DEBUG
--	printk(KERN_ERR "ide_pmac: Set UDMA timing for mode %d, reg: 0x%08x\n",
--		speed & 0xf,  *timings);
--#endif	
  
- 	return 0;
- }
-@@ -698,11 +683,6 @@ set_timings_mdma(ide_drive_t *drive, int
- 		cycleTime = tm[i].cycleTime;
- 		accessTime = tm[i].accessTime;
- 		recTime = tm[i].recoveryTime;
+-#ifndef CONFIG_BLK_DEV_CMD640_ENHANCED
+-/*
+- * Check whether prefetch is on for a drive,
+- * and initialize the unmask flags for safe operation.
+- */
+-static void __init check_prefetch(ide_drive_t *drive, unsigned int index)
+-{
+-	u8 b = get_cmd640_reg(prefetch_regs[index]);
 -
--#ifdef IDE_PMAC_DEBUG
--		printk(KERN_ERR "%s: MDMA, cycleTime: %d, accessTime: %d, recTime: %d\n",
--			drive->name, cycleTime, accessTime, recTime);
+-	__set_prefetch_mode(drive, (b & prefetch_masks[index]) ? 0 : 1);
+-}
+-#else
+-
+ /*
+  * Sets prefetch mode for a drive.
+  */
+@@ -496,13 +479,11 @@ static void cmd640_set_pio_mode(ide_hwif
+ 
+ 	display_clocks(index);
+ }
+-#endif /* CONFIG_BLK_DEV_CMD640_ENHANCED */
+ 
+ static void __init cmd640_init_dev(ide_drive_t *drive)
+ {
+ 	unsigned int i = drive->hwif->channel * 2 + (drive->dn & 1);
+ 
+-#ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
+ 	/*
+ 	 * Reset timing to the slowest speed and turn off prefetch.
+ 	 * This way, the drive identify code has a better chance.
+@@ -513,14 +494,6 @@ static void __init cmd640_init_dev(ide_d
+ 	program_drive_counts(drive, i);
+ 	set_prefetch_mode(drive, i, 0);
+ 	printk(KERN_INFO DRV_NAME ": drive%d timings/prefetch cleared\n", i);
+-#else
+-	/*
+-	 * Set the drive unmask flags to match the prefetch setting.
+-	 */
+-	check_prefetch(drive, i);
+-	printk(KERN_INFO DRV_NAME ": drive%d timings/prefetch(%s) preserved\n",
+-		i, (drive->dev_flags & IDE_DFLAG_NO_IO_32BIT) ? "off" : "on");
+-#endif /* CONFIG_BLK_DEV_CMD640_ENHANCED */
+ }
+ 
+ static int cmd640_test_irq(ide_hwif_t *hwif)
+@@ -535,9 +508,7 @@ static int cmd640_test_irq(ide_hwif_t *h
+ 
+ static const struct ide_port_ops cmd640_port_ops = {
+ 	.init_dev		= cmd640_init_dev,
+-#ifdef CONFIG_BLK_DEV_CMD640_ENHANCED
+ 	.set_pio_mode		= cmd640_set_pio_mode,
 -#endif
- 	}
- 	switch(intf_type) {
- 	case controller_sh_ata6: {
-@@ -772,16 +752,11 @@ set_timings_mdma(ide_drive_t *drive, int
- 			*timings |= TR_33_MDMA_HALFTICK;
- 		}
- 	}
--#ifdef IDE_PMAC_DEBUG
--	printk(KERN_ERR "%s: Set MDMA timing for mode %d, reg: 0x%08x\n",
--		drive->name, speed & 0xf,  *timings);
--#endif	
- }
+ 	.test_irq		= cmd640_test_irq,
+ };
  
- static void pmac_ide_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	int ret = 0;
- 	u32 *timings, *timings2, tl[2];
- 	u8 unit = drive->dn & 1;
-@@ -821,8 +796,7 @@ static void pmac_ide_set_dma_mode(ide_hw
-  * Blast some well known "safe" values to the timing registers at init or
-  * wakeup from sleep time, before we do real calculation
-  */
--static void
--sanitize_timings(pmac_ide_hwif_t *pmif)
-+static void sanitize_timings(struct pmac_ide_priv *pmif)
- {
- 	unsigned int value, value2 = 0;
- 	
-@@ -852,7 +826,7 @@ sanitize_timings(pmac_ide_hwif_t *pmif)
- 	pmif->timings[2] = pmif->timings[3] = value2;
- }
- 
--static int on_media_bay(pmac_ide_hwif_t *pmif)
-+static int on_media_bay(struct pmac_ide_priv *pmif)
- {
- 	return pmif->mdev && pmif->mdev->media_bay != NULL;
- }
-@@ -860,7 +834,7 @@ static int on_media_bay(pmac_ide_hwif_t
- /* Suspend call back, should be called after the child devices
-  * have actually been suspended
-  */
--static int pmac_ide_do_suspend(pmac_ide_hwif_t *pmif)
-+static int pmac_ide_do_suspend(struct pmac_ide_priv *pmif)
- {
- 	/* We clear the timings */
- 	pmif->timings[0] = 0;
-@@ -889,7 +863,7 @@ static int pmac_ide_do_suspend(pmac_ide_
- /* Resume call back, should be called before the child devices
-  * are resumed
-  */
--static int pmac_ide_do_resume(pmac_ide_hwif_t *pmif)
-+static int pmac_ide_do_resume(struct pmac_ide_priv *pmif)
- {
- 	/* Hard reset & re-enable controller (do we really need to reset ? -BenH) */
- 	if (!on_media_bay(pmif)) {
-@@ -918,8 +892,7 @@ static int pmac_ide_do_resume(pmac_ide_h
- 
- static u8 pmac_ide_cable_detect(ide_hwif_t *hwif)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	struct device_node *np = pmif->node;
- 	const char *cable = of_get_property(np, "cable-type", NULL);
- 	struct device_node *root = of_find_node_by_path("/");
-@@ -950,8 +923,7 @@ static u8 pmac_ide_cable_detect(ide_hwif
- static void pmac_ide_init_dev(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 
- 	if (on_media_bay(pmif)) {
- 		if (check_media_bay(pmif->mdev->media_bay) == MB_CD) {
-@@ -1024,7 +996,7 @@ static const struct ide_port_info pmac_p
-  * Setup, register & probe an IDE channel driven by this driver, this is
-  * called by one of the 2 probe functions (macio or PCI).
-  */
--static int __devinit pmac_ide_setup_device(pmac_ide_hwif_t *pmif,
-+static int __devinit pmac_ide_setup_device(struct pmac_ide_priv *pmif,
- 					   struct ide_hw *hw)
- {
- 	struct device_node *np = pmif->node;
-@@ -1143,7 +1115,7 @@ pmac_ide_macio_attach(struct macio_dev *
- {
- 	void __iomem *base;
- 	unsigned long regbase;
--	pmac_ide_hwif_t *pmif;
-+	struct pmac_ide_priv *pmif;
- 	int irq, rc;
- 	struct ide_hw hw;
- 
-@@ -1228,8 +1200,7 @@ out_free_pmif:
- static int
- pmac_ide_macio_suspend(struct macio_dev *mdev, pm_message_t mesg)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(&mdev->ofdev.dev);
- 	int rc = 0;
- 
- 	if (mesg.event != mdev->ofdev.dev.power.power_state.event
-@@ -1245,8 +1216,7 @@ pmac_ide_macio_suspend(struct macio_dev
- static int
- pmac_ide_macio_resume(struct macio_dev *mdev)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(&mdev->ofdev.dev);
- 	int rc = 0;
- 
- 	if (mdev->ofdev.dev.power.power_state.event != PM_EVENT_ON) {
-@@ -1265,7 +1235,7 @@ static int __devinit
- pmac_ide_pci_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- {
- 	struct device_node *np;
--	pmac_ide_hwif_t *pmif;
-+	struct pmac_ide_priv *pmif;
- 	void __iomem *base;
- 	unsigned long rbase, rlen;
- 	int rc;
-@@ -1334,7 +1304,7 @@ out_free_pmif:
- static int
- pmac_ide_pci_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	struct pmac_ide_priv *pmif = pci_get_drvdata(pdev);
- 	int rc = 0;
- 
- 	if (mesg.event != pdev->dev.power.power_state.event
-@@ -1350,7 +1320,7 @@ pmac_ide_pci_suspend(struct pci_dev *pde
- static int
- pmac_ide_pci_resume(struct pci_dev *pdev)
- {
--	pmac_ide_hwif_t *pmif = (pmac_ide_hwif_t *)pci_get_drvdata(pdev);
-+	struct pmac_ide_priv *pmif = pci_get_drvdata(pdev);
- 	int rc = 0;
- 
- 	if (pdev->dev.power.power_state.event != PM_EVENT_ON) {
-@@ -1365,8 +1335,7 @@ pmac_ide_pci_resume(struct pci_dev *pdev
- #ifdef CONFIG_PMAC_MEDIABAY
- static void pmac_ide_macio_mb_event(struct macio_dev* mdev, int mb_state)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(&mdev->ofdev.dev);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(&mdev->ofdev.dev);
- 
- 	switch(mb_state) {
- 	case MB_CD:
-@@ -1468,8 +1437,7 @@ out:
- static int pmac_ide_build_dmatable(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	struct dbdma_cmd *table;
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	struct scatterlist *sg;
-@@ -1546,8 +1514,7 @@ static int pmac_ide_build_dmatable(ide_d
- static int pmac_ide_dma_setup(ide_drive_t *drive, struct ide_cmd *cmd)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	u8 unit = drive->dn & 1, ata4 = (pmif->kind == controller_kl_ata4);
- 	u8 write = !!(cmd->tf_flags & IDE_TFLAG_WRITE);
- 
-@@ -1572,8 +1539,7 @@ static void
- pmac_ide_dma_start(ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma;
- 
- 	dma = pmif->dma_regs;
-@@ -1590,8 +1556,7 @@ static int
- pmac_ide_dma_end (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	u32 dstat;
- 
-@@ -1615,8 +1580,7 @@ static int
- pmac_ide_dma_test_irq (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	unsigned long status, timeout;
- 
-@@ -1670,8 +1634,7 @@ static void
- pmac_ide_dma_lost_irq (ide_drive_t *drive)
- {
- 	ide_hwif_t *hwif = drive->hwif;
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	volatile struct dbdma_regs __iomem *dma = pmif->dma_regs;
- 	unsigned long status = readl(&dma->status);
- 
-@@ -1694,8 +1657,7 @@ static const struct ide_dma_ops pmac_dma
- static int __devinit pmac_ide_init_dma(ide_hwif_t *hwif,
- 				       const struct ide_port_info *d)
- {
--	pmac_ide_hwif_t *pmif =
--		(pmac_ide_hwif_t *)dev_get_drvdata(hwif->gendev.parent);
-+	struct pmac_ide_priv *pmif = dev_get_drvdata(hwif->gendev.parent);
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 
- 	/* We won't need pci_dev if we switch to generic consistent
