@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 18/20] ata_piix: add RDC support
-Date: Tue, 08 Feb 2011 13:25:49 +0100
-Message-ID: <20110208122549.19110.48619.sendpatchset@linux-mhg7.site>
+Subject: [PATCH 20/20] ata_piix: add Radisys R82600 support
+Date: Tue, 08 Feb 2011 13:26:05 +0100
+Message-ID: <20110208122605.19110.40414.sendpatchset@linux-mhg7.site>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
@@ -10,127 +10,249 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->From 4cc4234e2049fa6e97d5a2d3643bb5499e52f838 Mon Sep 17 00:00:00 2001
+>From 2172ad66e1ad14599fe08d4fe898d392f10962d3 Mon Sep 17 00:00:00 2001
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Date: Tue, 8 Feb 2011 12:39:28 +0100
-Subject: [PATCH 18/20] ata_piix: add RDC support
+Subject: [PATCH 20/20] ata_piix: add Radisys R82600 support
 
-Add RDC PATA support to ata_piix and remove no longer
-needed pata_rdc driver.
+Add Radisys R82600 support to ata_piix and remove no longer
+needed pata_radisys driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/Kconfig    |    1 +
- drivers/ata/Makefile   |    1 -
- drivers/ata/ata_piix.c |   14 ++-
- drivers/ata/pata_rdc.c |  384 ------------------------------------------------
- 4 files changed, 13 insertions(+), 387 deletions(-)
- delete mode 100644 drivers/ata/pata_rdc.c
+ drivers/ata/Kconfig        |    1 +
+ drivers/ata/Makefile       |    1 -
+ drivers/ata/ata_piix.c     |   84 ++++++++++++---
+ drivers/ata/pata_radisys.c |  252 --------------------------------------------
+ 4 files changed, 72 insertions(+), 266 deletions(-)
+ delete mode 100644 drivers/ata/pata_radisys.c
 
 diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5a92f24..dc9038d 100644
+index 0e6d193..43bbf74 100644
 --- a/drivers/ata/Kconfig
 +++ b/drivers/ata/Kconfig
-@@ -567,6 +567,7 @@ config PATA_RADISYS
- config PATA_RDC
- 	tristate "RDC PATA support"
- 	depends on PCI
+@@ -559,6 +559,7 @@ config PATA_PDC_OLD
+ config PATA_RADISYS
+ 	tristate "RADISYS 82600 PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
 +	select ATA_PIIX
  	help
- 	  This option enables basic support for the later RDC PATA controllers
- 	  controllers via the new ATA layer. For the RDC 1010, you need to
+ 	  This option enables support for the RADISYS 82600
+ 	  PATA controllers via the new ATA layer
 diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 7e78491..e627f6d 100644
+index 55272af..cddef6e 100644
 --- a/drivers/ata/Makefile
 +++ b/drivers/ata/Makefile
-@@ -58,7 +58,6 @@ obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+@@ -56,7 +56,6 @@ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
+ obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
  obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2027x.o
  obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
- obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
--obj-$(CONFIG_PATA_RDC)		+= pata_rdc.o
+-obj-$(CONFIG_PATA_RADISYS)	+= pata_radisys.o
  obj-$(CONFIG_PATA_SC1200)	+= pata_sc1200.o
  obj-$(CONFIG_PATA_SCC)		+= pata_scc.o
  obj-$(CONFIG_PATA_SCH)		+= pata_sch.o
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index deb7c96..86d12c2 100644
+index 5afa57a..4b00e26 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -1,6 +1,9 @@
- /*
-  *    ata_piix.c - Intel PATA/SATA controllers
-  *
-+ *    This is actually a driver for hardware meeting
-+ *    INCITS 370-2004 (1510D): ATA Host Adapter Standards
+@@ -99,6 +99,12 @@
+  *    SITRE and the slave timing registers. This means that you have to
+  *    set timing per channel, or be clever. Libata tells us whenever it
+  *    does drive selection and we use this to reload the timings.
 + *
-  *    Maintained by:  Jeff Garzik <jgarzik@pobox.com>
-  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
-  *		    on emails.
-@@ -249,6 +252,10 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* IT8213 */
- 	{ 0x1283, 0x8213, PCI_ANY_ID, PCI_ANY_ID, 0, 0, it8213_pata },
++ *    Radisys R82600 - a PIIX relative, this device has a single ATA channel
++ *    and no slave timings, SITRE or PPE. In that sense it is a close relative
++ *    of the original PIIX. It does however support UDMA 33/66 per channel
++ *    although no other modes/timings. Also lacking is 32bit I/O on the ATA
++ *    port.
+  */
  
-+	/* RDC is ICH like */
-+	{ 0x17F3, 0x1011, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
-+	{ 0x17F3, 0x1012, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ #include <linux/kernel.h>
+@@ -160,6 +166,7 @@ enum piix_controller_ids {
+ 	efar_pata,
+ 	it8213_pata,
+ 	oldpiix_pata,
++	radisys_pata,
+ 	ich5_sata,
+ 	ich6_sata,
+ 	ich6m_sata,
+@@ -266,6 +273,9 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* PIIXb (a.k.a. oldpiix) */
+ 	{ 0x8086, 0x1230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, oldpiix_pata },
+ 
++	/* Radisys R82600 */
++	{ 0x1331, 0x8201, PCI_ANY_ID, PCI_ANY_ID, 0, 0, radisys_pata },
 +
  	/* SATA ports */
  	
  	/* 82801EB (ICH5) */
-@@ -665,6 +672,7 @@ MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- MODULE_ALIAS("pata_efar");
+@@ -431,6 +441,14 @@ static struct ata_port_operations oldpiix_pata_ops = {
+ 	.prereset		= piix_pata_prereset,
+ };
+ 
++static struct ata_port_operations radisys_pata_ops = {
++	.inherits		= &ata_bmdma_port_ops,
++	.qc_issue		= oldpiix_qc_issue,
++	.cable_detect		= ata_cable_unknown,
++	.set_piomode		= piix_set_piomode,
++	.set_dmamode		= piix_set_dmamode,
++};
++
+ static const struct piix_map_db ich5_map_db = {
+ 	.mask = 0x7,
+ 	.port_enable = 0x3,
+@@ -685,6 +703,15 @@ static struct ata_port_info piix_port_info[] = {
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.port_ops	= &oldpiix_pata_ops,
+ 	},
++
++	[radisys_pata] =
++	{
++		.flags		= PIIX_PATA_FLAGS,
++		.pio_mask	= ATA_PIO4,
++		.mwdma_mask	= ATA_MWDMA12_ONLY,
++		.udma_mask	= ATA_UDMA24_ONLY,
++		.port_ops	= &radisys_pata_ops,
++	},
+ };
+ 
+ static struct pci_bits piix_enable_bits[] = {
+@@ -701,6 +728,7 @@ MODULE_ALIAS("pata_efar");
  MODULE_ALIAS("pata_it8213");
-+MODULE_ALIAS("pata_rdc");
+ MODULE_ALIAS("pata_rdc");
+ MODULE_ALIAS("pata_oldpiix");
++MODULE_ALIAS("pata_radisys");
  
  struct ich_laptop {
  	u16 device;
-@@ -1670,7 +1678,8 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	 * because some ACPI implementations mess up cable related
- 	 * bits on _STM.  Reported on kernel bz#11879.
- 	 */
--	if (pdev->vendor == PCI_VENDOR_ID_INTEL)
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL ||
-+	    pdev->vendor == PCI_VENDOR_ID_RDC)
- 		pci_read_config_dword(pdev, PIIX_IOCFG, &hpriv->saved_iocfg);
+@@ -831,8 +859,10 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+ 	unsigned long flags;
+ 	unsigned int is_slave	= (adev->devno != 0);
+-	unsigned int has_sitre	= (dev->vendor != 0x8086 ||
+-				   dev->device != 0x1230);
++	unsigned int is_radisys	= (dev->vendor == PCI_VENDOR_ID_RADISYS &&
++				   dev->device == 0x8201);
++	unsigned int has_sitre	= (dev->vendor != PCI_VENDOR_ID_INTEL ||
++				   dev->device != 0x1230) && !is_radisys;
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
+@@ -851,14 +881,21 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 			    { 1, 0 },
+ 			    { 2, 1 },
+ 			    { 2, 3 }, };
++	static const u8 timings_radisys[][2] = {
++			    { 0, 0 },
++			    { 0, 0 },
++			    { 1, 1 },
++			    { 2, 2 },
++			    { 3, 3 }, };
  
- 	/* ICH6R may be driven by either ata_piix or ahci driver
-@@ -1735,7 +1744,8 @@ static void piix_remove_one(struct pci_dev *pdev)
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct piix_host_priv *hpriv = host->private_data;
+-	if (pio >= 2 || use_mwdma)
++	if (pio >= 2 || (pio == 1 && is_radisys) ||
++	    (use_mwdma && !is_radisys))
+ 		control |= 1;	/* TIME1 enable */
+-	if (ata_pio_need_iordy(adev) || use_mwdma)
++	if (ata_pio_need_iordy(adev) || (use_mwdma && !is_radisys))
+ 		control |= 2;	/* IE enable */
+ 	if (dev->vendor != PCI_VENDOR_ID_ITE) {
+ 		/* PPE functionality is for disk only */
+-		if (adev->class == ATA_DEV_ATA)
++		if (adev->class == ATA_DEV_ATA && !is_radisys)
+ 			control |= 4;	/* PPE enable */
+ 	} else {
+ 		/* Bit 2 is set for ATAPI on the IT8213 - reverse of ICH/PIIX */
+@@ -867,9 +904,13 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	}
+ 	/* If the drive MWDMA is faster than it can do PIO then
+ 	   we must force PIO into PIO0 */
+-	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
+-		/* Enable DMA timing only */
+-		control |= 8;	/* PIO cycles in PIO0 */
++	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio)) {
++		if (!is_radisys) {
++			/* Enable DMA timing only */
++			control |= 8;	/* PIO cycles in PIO0 */
++		} else
++			control = 1;
++	}
  
--	if (pdev->vendor == PCI_VENDOR_ID_INTEL)
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL ||
-+	    pdev->vendor == PCI_VENDOR_ID_RDC)
- 		pci_write_config_dword(pdev, PIIX_IOCFG, hpriv->saved_iocfg);
+ 	spin_lock_irqsave(&piix_lock, flags);
  
- 	ata_pci_remove_one(pdev);
-diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
+@@ -888,7 +929,7 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 		/* Load the timing nibble for this slave */
+ 		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
+ 						<< (ap->port_no ? 4 : 0);
+-	} else {
++	} else if (!is_radisys) {
+ 		if (has_sitre) {
+ 			/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
+ 			master_data &= 0xccf0;
+@@ -907,6 +948,14 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 		master_data |=
+ 			(timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
++	} else { /* radisys */
++		/* Enable IE and TIME as appropriate. Clear the other
++		   drive timing bits */
++		master_data &= 0xCCCC;
++		master_data |= (control << (4 * adev->devno));
++		master_data |=
++			(timings_radisys[pio][0] << 12) |
++			(timings_radisys[pio][1] << 8);
+ 	}
+ 
+ 	/* Enable SITRE (separate slave timing register) */
+@@ -995,7 +1044,12 @@ static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, in
+ 		udma_enable |= (1 << devid);
+ 
+ 		pci_read_config_word(dev, 0x4A, &udma_timing);
+-		if (dev->vendor == PCI_VENDOR_ID_EFAR) {
++		if (dev->vendor == PCI_VENDOR_ID_RADISYS) {
++			if (udma == 2)
++				udma_timing &= ~(2 << (adev->devno * 4));
++			else /* UDMA 4 */
++				udma_timing |= (2 << (adev->devno * 4));
++		} else if (dev->vendor == PCI_VENDOR_ID_EFAR) {
+ 			/* Load the UDMA mode number */
+ 			udma_timing &= ~(7 << (4 * devid));
+ 			udma_timing |= udma << (4 * devid);
+@@ -1080,9 +1134,13 @@ static unsigned int oldpiix_qc_issue(struct ata_queued_cmd *qc)
+ 	struct ata_device *adev = qc->dev;
+ 
+ 	if (adev != ap->private_data) {
+-		piix_set_piomode(ap, adev);
+-		if (ata_dma_enabled(adev))
+-			piix_set_dmamode(ap, adev);
++		/* UDMA timing is not shared */
++		if (adev->dma_mode < XFER_UDMA_0) {
++			if (adev->dma_mode)
++				piix_set_dmamode(ap, adev);
++			else if (adev->pio_mode)
++				piix_set_piomode(ap, adev);
++		}
+ 	}
+ 	return ata_bmdma_qc_issue(qc);
+ }
+diff --git a/drivers/ata/pata_radisys.c b/drivers/ata/pata_radisys.c
 deleted file mode 100644
-index a4a0d88..0000000
---- a/drivers/ata/pata_rdc.c
+index e85bb38..0000000
+--- a/drivers/ata/pata_radisys.c
 +++ /dev/null
-@@ -1,384 +0,0 @@
+@@ -1,252 +0,0 @@
 -/*
-- *  pata_rdc		-	Driver for later RDC PATA controllers
+- *    pata_radisys.c - Intel PATA/SATA controllers
 - *
-- *  This is actually a driver for hardware meeting
-- *  INCITS 370-2004 (1510D): ATA Host Adapter Standards
+- *	(C) 2006 Red Hat <alan@lxorguk.ukuu.org.uk>
 - *
-- *  Based on ata_piix.
+- *    Some parts based on ata_piix.c by Jeff Garzik and others.
 - *
-- *  This program is free software; you can redistribute it and/or modify
-- *  it under the terms of the GNU General Public License as published by
-- *  the Free Software Foundation; either version 2, or (at your option)
-- *  any later version.
-- *
-- *  This program is distributed in the hope that it will be useful,
-- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- *  GNU General Public License for more details.
-- *
-- *  You should have received a copy of the GNU General Public License
-- *  along with this program; see the file COPYING.  If not, write to
-- *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+- *    A PIIX relative, this device has a single ATA channel and no
+- *    slave timings, SITRE or PPE. In that sense it is a close relative
+- *    of the original PIIX. It does however support UDMA 33/66 per channel
+- *    although no other modes/timings. Also lacking is 32bit I/O on the ATA
+- *    port.
 - */
 -
 -#include <linux/kernel.h>
@@ -140,145 +262,61 @@ index a4a0d88..0000000
 -#include <linux/blkdev.h>
 -#include <linux/delay.h>
 -#include <linux/device.h>
--#include <linux/gfp.h>
 -#include <scsi/scsi_host.h>
 -#include <linux/libata.h>
--#include <linux/dmi.h>
+-#include <linux/ata.h>
 -
--#define DRV_NAME	"pata_rdc"
--#define DRV_VERSION	"0.01"
+-#define DRV_NAME	"pata_radisys"
+-#define DRV_VERSION	"0.4.4"
 -
--struct rdc_host_priv {
--	u32 saved_iocfg;
--};
--
--/**
-- *	rdc_pata_cable_detect - Probe host controller cable detect info
-- *	@ap: Port for which cable detect info is desired
-- *
-- *	Read 80c cable indicator from ATA PCI device's PCI config
-- *	register.  This register is normally set by firmware (BIOS).
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--
--static int rdc_pata_cable_detect(struct ata_port *ap)
--{
--	struct rdc_host_priv *hpriv = ap->host->private_data;
--	u8 mask;
--
--	/* check BIOS cable detect results */
--	mask = 0x30 << (2 * ap->port_no);
--	if ((hpriv->saved_iocfg & mask) == 0)
--		return ATA_CBL_PATA40;
--	return ATA_CBL_PATA80;
--}
--
--/**
-- *	rdc_pata_prereset - prereset for PATA host controller
-- *	@link: Target link
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	LOCKING:
-- *	None (inherited from caller).
-- */
--static int rdc_pata_prereset(struct ata_link *link, unsigned long deadline)
--{
--	struct ata_port *ap = link->ap;
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	static const struct pci_bits rdc_enable_bits[] = {
--		{ 0x41U, 1U, 0x80UL, 0x80UL },	/* port 0 */
--		{ 0x43U, 1U, 0x80UL, 0x80UL },	/* port 1 */
--	};
--
--	if (!pci_test_config_bits(pdev, &rdc_enable_bits[ap->port_no]))
--		return -ENOENT;
--	return ata_sff_prereset(link, deadline);
--}
--
--static DEFINE_SPINLOCK(rdc_lock);
--
--static void rdc_set_timings(struct ata_port *ap, struct ata_device *adev,
--			    u8 pio, bool use_mwdma)
+-static void radisys_set_timings(struct ata_port *ap, struct ata_device *adev,
+-				u8 pio, bool use_mwdma)
 -{
 -	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned long flags;
--	unsigned int is_slave	= (adev->devno != 0);
--	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
--	unsigned int slave_port	= 0x44;
--	u16 master_data;
--	u8 slave_data;
--	u8 udma_enable;
+-	u16 idetm_data;
 -	int control = 0;
+-
+-	/*
+-	 *	See Intel Document 298600-004 for the timing programing rules
+-	 *	for PIIX/ICH. Note that the early PIIX does not have the slave
+-	 *	timing port at 0x44. The Radisys is a relative of the PIIX
+-	 *	but not the same so be careful.
+-	 */
 -
 -	static const	 /* ISP  RTC */
 -	u8 timings[][2]	= { { 0, 0 },
 -			    { 0, 0 },
--			    { 1, 0 },
--			    { 2, 1 },
--			    { 2, 3 }, };
+-			    { 1, 1 },
+-			    { 2, 2 },
+-			    { 3, 3 }, };
 -
--	if (pio >= 2 || use_mwdma)
+-	if (pio > 0)
 -		control |= 1;	/* TIME1 enable */
--	if (ata_pio_need_iordy(adev) || use_mwdma)
--		control |= 2;	/* IE enable */
--	if (adev->class == ATA_DEV_ATA)
--		control |= 4;	/* PPE enable */
+-	if (ata_pio_need_iordy(adev))
+-		control |= 2;	/* IE IORDY */
 -	/* If the drive MWDMA is faster than it can do PIO then
--	   we must force PIO into PIO0 */
+-	   we must force PIO0 for PIO cycles. */
 -	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
--		/* Enable DMA timing only */
--		control |= 8;	/* PIO cycles in PIO0 */
+-		control = 1;
 -
--	spin_lock_irqsave(&rdc_lock, flags);
+-	pci_read_config_word(dev, 0x40, &idetm_data);
 -
--	/* PIO configuration clears DTE unconditionally.  It will be
--	 * programmed in set_dmamode which is guaranteed to be called
--	 * after set_piomode if any DMA mode is available.
--	 */
--	pci_read_config_word(dev, master_port, &master_data);
--	if (is_slave) {
--		/* clear TIME1|IE1|PPE1|DTE1 */
--		master_data &= 0xff0f;
--		/* Enable SITRE (separate slave timing register) */
--		master_data |= 0x4000;
--		/* enable PPE1, IE1 and TIME1 as needed */
--		master_data |= (control << 4);
--		pci_read_config_byte(dev, slave_port, &slave_data);
--		slave_data &= (ap->port_no ? 0x0f : 0xf0);
--		/* Load the timing nibble for this slave */
--		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
--						<< (ap->port_no ? 4 : 0);
--	} else {
--		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
--		master_data &= 0xccf0;
--		/* Enable PPE, IE and TIME as appropriate */
--		master_data |= control;
--		/* load ISP and RCT */
--		master_data |=
--			(timings[pio][0] << 12) |
+-	/* Enable IE and TIME as appropriate. Clear the other
+-	   drive timing bits */
+-	idetm_data &= 0xCCCC;
+-	idetm_data |= (control << (4 * adev->devno));
+-	idetm_data |= (timings[pio][0] << 12) |
 -			(timings[pio][1] << 8);
--	}
--	pci_write_config_word(dev, master_port, master_data);
--	if (is_slave)
--		pci_write_config_byte(dev, slave_port, slave_data);
+-	pci_write_config_word(dev, 0x40, idetm_data);
 -
--	/* Ensure the UDMA bit is off - it will be turned back on if
--	   UDMA is selected */
--
--	pci_read_config_byte(dev, 0x48, &udma_enable);
--	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
--	pci_write_config_byte(dev, 0x48, udma_enable);
--
--	spin_unlock_irqrestore(&rdc_lock, flags);
+-	/* Track which port is configured */
+-	ap->private_data = adev;
 -}
 -
 -/**
-- *	rdc_set_piomode - Initialize host controller PATA PIO timings
-- *	@ap: Port whose timings we are configuring
-- *	@adev: Drive in question
+- *	radisys_set_piomode - Initialize host controller PATA PIO timings
+- *	@ap: ATA port
+- *	@adev: Device whose timings we are configuring
 - *
 - *	Set PIO mode for device, in host controller PCI config space.
 - *
@@ -286,109 +324,109 @@ index a4a0d88..0000000
 - *	None (inherited from caller).
 - */
 -
--static void rdc_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-static void radisys_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
--	rdc_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
+-	radisys_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
 -}
 -
 -/**
-- *	rdc_set_dmamode - Initialize host controller PATA PIO timings
+- *	radisys_set_dmamode - Initialize host controller PATA DMA timings
 - *	@ap: Port whose timings we are configuring
-- *	@adev: Drive in question
+- *	@adev: Device to program
 - *
-- *	Set UDMA mode for device, in host controller PCI config space.
+- *	Set MWDMA mode for device, in host controller PCI config space.
 - *
 - *	LOCKING:
 - *	None (inherited from caller).
 - */
 -
--static void rdc_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+-static void radisys_set_dmamode (struct ata_port *ap, struct ata_device *adev)
 -{
 -	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned long flags;
--	u8 speed		= adev->dma_mode;
--	int devid		= adev->devno + 2 * ap->port_no;
--	u8 udma_enable		= 0;
+-	u8 udma_enable;
 -
--	if (speed >= XFER_UDMA_0) {
--		unsigned int udma = speed - XFER_UDMA_0;
--		u16 udma_timing;
--		u16 ideconf;
--		int u_clock, u_speed;
+-	/* MWDMA is driven by the PIO timings. */
 -
--		spin_lock_irqsave(&rdc_lock, flags);
+-	pci_read_config_byte(dev, 0x48, &udma_enable);
 -
--		pci_read_config_byte(dev, 0x48, &udma_enable);
--
--		/*
--		 * UDMA is handled by a combination of clock switching and
--		 * selection of dividers
--		 *
--		 * Handy rule: Odd modes are UDMATIMx 01, even are 02
--		 *	       except UDMA0 which is 00
--		 */
--		u_speed = min(2 - (udma & 1), udma);
--		if (udma == 5)
--			u_clock = 0x1000;	/* 100Mhz */
--		else if (udma > 2)
--			u_clock = 1;		/* 66Mhz */
--		else
--			u_clock = 0;		/* 33Mhz */
--
--		udma_enable |= (1 << devid);
--
--		/* Load the CT/RP selection */
--		pci_read_config_word(dev, 0x4A, &udma_timing);
--		udma_timing &= ~(3 << (4 * devid));
--		udma_timing |= u_speed << (4 * devid);
--		pci_write_config_word(dev, 0x4A, udma_timing);
--
--		/* Select a 33/66/100Mhz clock */
--		pci_read_config_word(dev, 0x54, &ideconf);
--		ideconf &= ~(0x1001 << devid);
--		ideconf |= u_clock << devid;
--		pci_write_config_word(dev, 0x54, ideconf);
--
--		pci_write_config_byte(dev, 0x48, udma_enable);
--
--		spin_unlock_irqrestore(&rdc_lock, flags);
--	} else {
--		/* MWDMA is driven by the PIO timings. */
--		unsigned int mwdma = speed - XFER_MW_DMA_0;
+-	if (adev->dma_mode < XFER_UDMA_0) {
+-		unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
 -		const unsigned int needed_pio[3] = {
 -			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
 -		};
 -		int pio = needed_pio[mwdma] - XFER_PIO_0;
 -
--		rdc_set_timings(ap, adev, pio, 1);
+-		radisys_set_timings(ap, adev, pio, 1);
+-
+-		udma_enable &= ~(1 << adev->devno);
+-	} else {
+-		u8 udma_mode;
+-
+-		/* UDMA66 on: UDMA 33 and 66 are switchable via register 0x4A */
+-
+-		pci_read_config_byte(dev, 0x4A, &udma_mode);
+-
+-		if (adev->xfer_mode == XFER_UDMA_2)
+-			udma_mode &= ~(2 << (adev->devno * 4));
+-		else /* UDMA 4 */
+-			udma_mode |= (2 << (adev->devno * 4));
+-
+-		pci_write_config_byte(dev, 0x4A, udma_mode);
+-
+-		udma_enable |= (1 << adev->devno);
 -	}
+-	pci_write_config_byte(dev, 0x48, udma_enable);
+-
+-	/* Track which port is configured */
+-	ap->private_data = adev;
 -}
 -
--static struct ata_port_operations rdc_pata_ops = {
--	.inherits		= &ata_bmdma32_port_ops,
--	.cable_detect		= rdc_pata_cable_detect,
--	.set_piomode		= rdc_set_piomode,
--	.set_dmamode		= rdc_set_dmamode,
--	.prereset		= rdc_pata_prereset,
--};
+-/**
+- *	radisys_qc_issue	-	command issue
+- *	@qc: command pending
+- *
+- *	Called when the libata layer is about to issue a command. We wrap
+- *	this interface so that we can load the correct ATA timings if
+- *	necessary. Our logic also clears TIME0/TIME1 for the other device so
+- *	that, even if we get this wrong, cycles to the other device will
+- *	be made PIO0.
+- */
 -
--static struct ata_port_info rdc_port_info = {
+-static unsigned int radisys_qc_issue(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	struct ata_device *adev = qc->dev;
 -
--	.flags		= ATA_FLAG_SLAVE_POSS,
--	.pio_mask	= ATA_PIO4,
--	.mwdma_mask	= ATA_MWDMA12_ONLY,
--	.udma_mask	= ATA_UDMA5,
--	.port_ops	= &rdc_pata_ops,
--};
+-	if (adev != ap->private_data) {
+-		/* UDMA timing is not shared */
+-		if (adev->dma_mode < XFER_UDMA_0) {
+-			if (adev->dma_mode)
+-				radisys_set_dmamode(ap, adev);
+-			else if (adev->pio_mode)
+-				radisys_set_piomode(ap, adev);
+-		}
+-	}
+-	return ata_bmdma_qc_issue(qc);
+-}
 -
--static struct scsi_host_template rdc_sht = {
+-
+-static struct scsi_host_template radisys_sht = {
 -	ATA_BMDMA_SHT(DRV_NAME),
 -};
 -
+-static struct ata_port_operations radisys_pata_ops = {
+-	.inherits		= &ata_bmdma_port_ops,
+-	.qc_issue		= radisys_qc_issue,
+-	.cable_detect		= ata_cable_unknown,
+-	.set_piomode		= radisys_set_piomode,
+-	.set_dmamode		= radisys_set_dmamode,
+-};
+-
+-
 -/**
-- *	rdc_init_one - Register PIIX ATA PCI device with kernel services
+- *	radisys_init_one - Register PIIX ATA PCI device with kernel services
 - *	@pdev: PCI device to register
-- *	@ent: Entry in rdc_pci_tbl matching with @pdev
+- *	@ent: Entry in radisys_pci_tbl matching with @pdev
 - *
 - *	Called from kernel PCI layer.  We probe for combined mode (sigh),
 - *	and then hand over control to libata, for it to do the rest.
@@ -400,99 +438,60 @@ index a4a0d88..0000000
 - *	Zero on success, or -ERRNO value.
 - */
 -
--static int __devinit rdc_init_one(struct pci_dev *pdev,
--				   const struct pci_device_id *ent)
+-static int radisys_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
 -{
 -	static int printed_version;
--	struct device *dev = &pdev->dev;
--	struct ata_port_info port_info[2];
--	const struct ata_port_info *ppi[] = { &port_info[0], &port_info[1] };
--	unsigned long port_flags;
--	struct ata_host *host;
--	struct rdc_host_priv *hpriv;
--	int rc;
+-	static const struct ata_port_info info = {
+-		.flags		= ATA_FLAG_SLAVE_POSS,
+-		.pio_mask	= ATA_PIO4,
+-		.mwdma_mask	= ATA_MWDMA12_ONLY,
+-		.udma_mask	= ATA_UDMA24_ONLY,
+-		.port_ops	= &radisys_pata_ops,
+-	};
+-	const struct ata_port_info *ppi[] = { &info, NULL };
 -
 -	if (!printed_version++)
 -		dev_printk(KERN_DEBUG, &pdev->dev,
 -			   "version " DRV_VERSION "\n");
 -
--	port_info[0] = rdc_port_info;
--	port_info[1] = rdc_port_info;
--
--	port_flags = port_info[0].flags;
--
--	/* enable device and prepare host */
--	rc = pcim_enable_device(pdev);
--	if (rc)
--		return rc;
--
--	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
--	if (!hpriv)
--		return -ENOMEM;
--
--	/* Save IOCFG, this will be used for cable detection, quirk
--	 * detection and restoration on detach.
--	 */
--	pci_read_config_dword(pdev, 0x54, &hpriv->saved_iocfg);
--
--	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
--	if (rc)
--		return rc;
--	host->private_data = hpriv;
--
--	pci_intx(pdev, 1);
--
--	host->flags |= ATA_HOST_PARALLEL_SCAN;
--
--	pci_set_master(pdev);
--	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, &rdc_sht);
+-	return ata_pci_bmdma_init_one(pdev, ppi, &radisys_sht, NULL, 0);
 -}
 -
--static void rdc_remove_one(struct pci_dev *pdev)
--{
--	struct ata_host *host = dev_get_drvdata(&pdev->dev);
--	struct rdc_host_priv *hpriv = host->private_data;
+-static const struct pci_device_id radisys_pci_tbl[] = {
+-	{ PCI_VDEVICE(RADISYS, 0x8201), },
 -
--	pci_write_config_dword(pdev, 0x54, hpriv->saved_iocfg);
--
--	ata_pci_remove_one(pdev);
--}
--
--static const struct pci_device_id rdc_pci_tbl[] = {
--	{ PCI_DEVICE(0x17F3, 0x1011), },
--	{ PCI_DEVICE(0x17F3, 0x1012), },
 -	{ }	/* terminate list */
 -};
 -
--static struct pci_driver rdc_pci_driver = {
+-static struct pci_driver radisys_pci_driver = {
 -	.name			= DRV_NAME,
--	.id_table		= rdc_pci_tbl,
--	.probe			= rdc_init_one,
--	.remove			= rdc_remove_one,
+-	.id_table		= radisys_pci_tbl,
+-	.probe			= radisys_init_one,
+-	.remove			= ata_pci_remove_one,
 -#ifdef CONFIG_PM
 -	.suspend		= ata_pci_device_suspend,
 -	.resume			= ata_pci_device_resume,
 -#endif
 -};
 -
--
--static int __init rdc_init(void)
+-static int __init radisys_init(void)
 -{
--	return pci_register_driver(&rdc_pci_driver);
+-	return pci_register_driver(&radisys_pci_driver);
 -}
 -
--static void __exit rdc_exit(void)
+-static void __exit radisys_exit(void)
 -{
--	pci_unregister_driver(&rdc_pci_driver);
+-	pci_unregister_driver(&radisys_pci_driver);
 -}
 -
--module_init(rdc_init);
--module_exit(rdc_exit);
+-module_init(radisys_init);
+-module_exit(radisys_exit);
 -
--MODULE_AUTHOR("Alan Cox (based on ata_piix)");
--MODULE_DESCRIPTION("SCSI low-level driver for RDC PATA controllers");
+-MODULE_AUTHOR("Alan Cox");
+-MODULE_DESCRIPTION("SCSI low-level driver for Radisys R82600 controllers");
 -MODULE_LICENSE("GPL");
--MODULE_DEVICE_TABLE(pci, rdc_pci_tbl);
+-MODULE_DEVICE_TABLE(pci, radisys_pci_tbl);
 -MODULE_VERSION(DRV_VERSION);
+-
 -- 
 1.7.1
