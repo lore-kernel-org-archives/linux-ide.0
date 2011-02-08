@@ -1,82 +1,84 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 05/20] pata_efar: always program master_data before slave_data
-Date: Tue, 8 Feb 2011 15:32:03 +0100
-Message-ID: <AANLkTim7VvcBikPW2vHwyfpaodF23btcbp6dYLvhwKQY@mail.gmail.com>
-References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
-	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
-	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
-	<AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
-	<20110208132518.300bb098@lxorguk.ukuu.org.uk>
-	<AANLkTimYbC+zgnct9j75WNR7f4M4m2=hYvODUm9mc-3W@mail.gmail.com>
-	<20110208133922.6cf8142e@lxorguk.ukuu.org.uk>
-	<AANLkTik744+r8y1FK9P6-aOcH0OMLyg5nvfJb2ZBVSdv@mail.gmail.com>
-	<20110208141239.28d80615@lxorguk.ukuu.org.uk>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: IO_PAGE_FAULT from SATA card during boot
+Date: Tue, 8 Feb 2011 08:43:01 -0600
+Message-ID: <AANLkTikTBi7FHoXS1JmKXgvmv4j7ramezO09kksGrJA1@mail.gmail.com>
+References: <20110129112456.GA13204@arachsys.com>
+	<4D44433F.1040607@gmail.com>
+	<20110130015442.GB13204@arachsys.com>
+	<AANLkTim7+9WVVJAjbj4pNMB9OKVmf2B+XNQ+exDt9_Tm@mail.gmail.com>
+	<20110202135644.GG11670@arachsys.com>
+	<4D49FB9F.9040304@gmail.com>
+	<20110203085601.GB2490@arachsys.com>
+	<20110207174838.GA21124@arachsys.com>
+	<4D50A4B8.2070608@gmail.com>
+	<20110208104157.GU2106@amd.com>
+	<20110208110036.GA18763@arachsys.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:36747 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754094Ab1BHOcE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 09:32:04 -0500
-In-Reply-To: <20110208141239.28d80615@lxorguk.ukuu.org.uk>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39120 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754186Ab1BHOnC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 09:43:02 -0500
+Received: by iyj8 with SMTP id 8so3349238iyj.19
+        for <linux-ide@vger.kernel.org>; Tue, 08 Feb 2011 06:43:01 -0800 (PST)
+In-Reply-To: <20110208110036.GA18763@arachsys.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chris Webb <chris.webb@elastichosts.com>
+Cc: "Roedel, Joerg" <Joerg.Roedel@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Tue, Feb 8, 2011 at 3:12 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wro=
-te:
->> respect some of my time spent on all this burdensome silly little
->> driver differences comparisons and read the whole patch set before
->> making comments on individual changes (which you certainly haven't
->> done given timing of your review mails and complexity of changes)..
+On Tue, Feb 8, 2011 at 5:00 AM, Chris Webb <chris.webb@elastichosts.com=
+> wrote:
+> "Roedel, Joerg" <Joerg.Roedel@amd.com> writes:
 >
-> I was hoping you'd improved but apparently not.
-
-I'm not the person who doesn't change..
-
-> Any untested change is dangerous. An untested change that merges driv=
-ers
-> together simply means you can break lots of stuff for no gain at all.
-
-This is why patches were posted to mailing list with a request for a
-real hardware testing:
-
-"All testing was done using QEMU's PIIX3 controller emulation so any te=
-sting
-with real EFAR, IT8213, old PIIX, RDC and Radisys R82600 PATA controlle=
-rs
-would be really appreciated.."
-
-instead of request for a merge.  It was all there in initial mail.
-
-Besides decreased complexity,1400 LOC gone and 5 drivers removed
-cannot be really called "no gain at all".
-
-> If these were all PCI card devices it might make some sense but given
-> they are all motherboard chipsets putting them into one driver merely
-> increases memory use as well.
-
-We can improve situation here by doing generic ATA or SCSI changes
-instead, not worth keeping separate drivers when you make similar
-effect but more maintainable and generic changes.
-
-> As far as stuff like
+>> On Mon, Feb 07, 2011 at 09:04:40PM -0500, Robert Hancock wrote:
+>> > On 02/07/2011 11:48 AM, Chris Webb wrote:
+>> > > I've now done this, swapping in a Highpoint R620. I get the same
+>> > > IO_PAGE_FAULT, same timeouts on the sata card, but lspci now sho=
+ws up the
+>> > > device 03:00.1. I've put the new dmesg and lspci output at
+>> > >
+>> > > =A0 =A0http://cdw.me.uk/tmp/sata-fault-hpt.dmesg
+>> > > =A0 =A0http://cdw.me.uk/tmp/sata-fault-hpt.lspci
+>> > >
+>> > > Again, problem is present both with 2.6.32.25 and 2.6.37.
+>> >
+>> > Curious.. We don't even have a driver loaded for the PATA device o=
+n that
+>> > chip so I don't see how we could be telling it to do anything. As =
+far as
+>> > I can see there are a few possible causes: Either the device is
+>> > generating read requests which appear to come from the PATA functi=
+on
+>> > rather than the SATA one for some reason, the IOMMU is picking up =
+the
+>> > wrong device function for requests from that device, or something =
+in the
+>> > platform is somehow misconfiguring the device to cause this error.=
+ It
+>> > may not be easy to figure out which one is the cause, however.
+>>
+>> The most likely reason for this is, that the add-on card uses both
+>> request-ids (03:00.0 and 03:00.1) for requests originating from the =
+SATA
+>> controler. The address in the page-fault looks like an address the I=
+OMMU
+>> driver would assign but from a device which has no driver loaded.
+>> If this is a know feature of the card the BIOS should detect it an
+>> report it in the IVRS table with an alias-range. The driver would ha=
+ndle
+>> it in this situation. Otherwise it looks like a problem with the
+>> addon-card.
 >
-> =A0=A0 unsigned int has_sitre =A0=3D (dev->vendor !=3D 0x8086 ||
-> =A0=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
-dev->device !=3D 0x1230);
->
-> and the even worse mess you generate with the added patch all the oth=
-er
-> PIIX code does this by flags, and if you had a HAS_SITRE (or NO_SITRE=
-)
-> flag in the device data it would be obvious to anyone reading stuff h=
-ow
-> it all fitted together.
+> Hi Joerg. What's particularly puzzling here is that the symptoms are =
+pretty
+> much the same with two completely different AHCI SATA cards. I expect=
+ed to
+> be able to work around the problem by swapping in a different SATA ca=
+rd with
+> a different chipset, but it seems to be a problem with both.
 
-Now that's what is a real review work.  It will be changed in the next
-revision, thanks!
-
--- Bartlomiej
+Did you try different chipsets? The two sets of output you posted are
+both from Marvell 88SE9123-based cards.
