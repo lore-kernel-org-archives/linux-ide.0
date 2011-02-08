@@ -1,67 +1,56 @@
-From: Chris Webb <chris.webb@elastichosts.com>
-Subject: Re: IO_PAGE_FAULT from SATA card during boot
-Date: Tue, 8 Feb 2011 11:00:36 +0000
-Message-ID: <20110208110036.GA18763@arachsys.com>
-References: <20110129112456.GA13204@arachsys.com>
- <4D44433F.1040607@gmail.com>
- <20110130015442.GB13204@arachsys.com>
- <AANLkTim7+9WVVJAjbj4pNMB9OKVmf2B+XNQ+exDt9_Tm@mail.gmail.com>
- <20110202135644.GG11670@arachsys.com>
- <4D49FB9F.9040304@gmail.com>
- <20110203085601.GB2490@arachsys.com>
- <20110207174838.GA21124@arachsys.com>
- <4D50A4B8.2070608@gmail.com>
- <20110208104157.GU2106@amd.com>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: sata_via bus errors fixed?
+Date: Tue, 08 Feb 2011 11:16:38 +0000
+Message-ID: <4D512616.1060503@mrc-lmb.cam.ac.uk>
+References: <4D3DA387.8080301@mrc-lmb.cam.ac.uk> <20110124170432.GH27510@htj.dyndns.org> <4D3EA771.3070206@mrc-lmb.cam.ac.uk> <20110125105049.GQ27510@htj.dyndns.org> <4D3FF0D9.5040006@mrc-lmb.cam.ac.uk> <20110126101119.GE12520@htj.dyndns.org> <4D4693DB.4070009@mrc-lmb.cam.ac.uk> <20110131105322.GE7459@htj.dyndns.org> <4D46A8D3.3000807@mrc-lmb.cam.ac.uk> <20110131132430.GH7459@htj.dyndns.org> <4D4BEC87.9090006@mrc-lmb.cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:54060 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab1BHLAp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 06:00:45 -0500
-Content-Disposition: inline
-In-Reply-To: <20110208104157.GU2106@amd.com>
+Received: from ppsw-52.csi.cam.ac.uk ([131.111.8.152]:46117 "EHLO
+	ppsw-52.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563Ab1BHLQj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 06:16:39 -0500
+In-Reply-To: <4D4BEC87.9090006@mrc-lmb.cam.ac.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Roedel, Joerg" <Joerg.Roedel@amd.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-"Roedel, Joerg" <Joerg.Roedel@amd.com> writes:
-
-> On Mon, Feb 07, 2011 at 09:04:40PM -0500, Robert Hancock wrote:
-> > On 02/07/2011 11:48 AM, Chris Webb wrote:
-> > > I've now done this, swapping in a Highpoint R620. I get the same
-> > > IO_PAGE_FAULT, same timeouts on the sata card, but lspci now shows up the
-> > > device 03:00.1. I've put the new dmesg and lspci output at
-> > >
-> > >    http://cdw.me.uk/tmp/sata-fault-hpt.dmesg
-> > >    http://cdw.me.uk/tmp/sata-fault-hpt.lspci
-> > >
-> > > Again, problem is present both with 2.6.32.25 and 2.6.37.
-> > 
-> > Curious.. We don't even have a driver loaded for the PATA device on that 
-> > chip so I don't see how we could be telling it to do anything. As far as 
-> > I can see there are a few possible causes: Either the device is 
-> > generating read requests which appear to come from the PATA function 
-> > rather than the SATA one for some reason, the IOMMU is picking up the 
-> > wrong device function for requests from that device, or something in the 
-> > platform is somehow misconfiguring the device to cause this error. It 
-> > may not be easy to figure out which one is the cause, however.
+Dave Howorth wrote:
+> Tejun Heo wrote:
+>>> Since we don't yet know whether a recent kernel fixes my sil problem and
+>>> if it does we don't have any idea of a particular patch, that suggests
+>>> the strategy would be bisection, which probably involves more compiles
+>>> than I'm up for.
+>> If sil shows the problem, I'll provide debug patches so that you'll
+>> only need to build libata and sata_via.
 > 
-> The most likely reason for this is, that the add-on card uses both
-> request-ids (03:00.0 and 03:00.1) for requests originating from the SATA
-> controler. The address in the page-fault looks like an address the IOMMU
-> driver would assign but from a device which has no driver loaded.
-> If this is a know feature of the card the BIOS should detect it an
-> report it in the IVRS table with an alias-range. The driver would handle
-> it in this situation. Otherwise it looks like a problem with the
-> addon-card.
+> OK, I fixed my backup system and I feel a bit more relaxed now, so I did
+> a quick test. I borrowed the Sil 3512-based card again and ran it with
+> Knoppix and also with the SUSE 2.6.37 kernel. Neither of them indicated
+> any errors with the drive so I suppose that some change between 2.6.32
+> and 2.6.37 has already fixed whatever my problem was with that
+> controller. One less thing to worry about.
+> 
+> I haven't got around to doing any of the other things I mentioned yet :(
 
-Hi Joerg. What's particularly puzzling here is that the symptoms are pretty
-much the same with two completely different AHCI SATA cards. I expected to
-be able to work around the problem by swapping in a different SATA card with
-a different chipset, but it seems to be a problem with both.
+Hmm, Things are not quite so clear cut. Yesterday, with the Sil card
+still in the system, I happened to reboot the original unpatched 2.6.32
+kernel and unfortunately everything worked perfectly!
 
-Cheers,
+So there must be some other factor involved. Most likely is that after
+running the main batch of tests I have removed an old PATA drive from
+the system, which was connected to the mainboard. It's also
+theoretically possible of course that every other time I tested the
+system I systematically misaligned a SATA cable when running the old
+kernel or somesuch. Anyway, I no longer have a failing test case for the
+Sil card.
 
-Chris.
+Since I need to plug my new Via card back in anyway, I'll rerun the old
+kernel with that just to see whether it still shows the problem when the
+PATA drive is not in the system.
+
+Cheers, Dave
+
+PS I guess since I haven't heard from you recently, it might be
+appropriate to wish you Happy New Year!
