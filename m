@@ -1,41 +1,31 @@
-From: Per Jessen <per@computer.org>
-Subject: [PATCH] ahci: recognize Marvell 88se9125 PCIe SATA 6.0 Gb/s controller
-Date: Tue, 08 Feb 2011 13:54:32 +0100
-Message-ID: <4D513D08.2040705@computer.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 01/20] ata_piix: SITRE handling fix
+Date: Tue, 8 Feb 2011 13:04:16 +0000
+Message-ID: <20110208130416.675181fe@lxorguk.ukuu.org.uk>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
+	<20110208122337.19110.8889.sendpatchset@linux-mhg7.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from inbound.spamchek.net ([88.198.198.123]:39953 "EHLO
-	outbound.spamchek.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752775Ab1BHMyh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 07:54:37 -0500
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51428 "EHLO
+	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753572Ab1BHNAm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 08:00:42 -0500
+In-Reply-To: <20110208122337.19110.8889.sendpatchset@linux-mhg7.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Sergei Shtylyov <sshtylyov@mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Per Jessen <per@computer.org>
+On Tue, 08 Feb 2011 13:23:37 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Recognize Marvell 88SE9125 PCIe SATA 6.0 Gb/s controller.
+> >From 7b6d27a9d65fef8795fdeee3733316450f840aa6 Mon Sep 17 00:00:00 2001
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Tue, 8 Feb 2011 12:39:24 +0100
+> Subject: [PATCH 01/20] ata_piix: SITRE handling fix
+> 
+> Set SITRE bit also in master-only configurations.
 
-Signed-off-by: Per Jessen <per@computer.org>
-
----
-
-The Marvell 88SE9125 PCIe SATA 6.0 Gb/s controller may be found
-on e.g. the RocketRaid 62X controllers shipped with WDC 3Tb drives.
-I have also submitted an update for pci-ids.
-
-
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -380,6 +380,8 @@
-	{ PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv },	/* 6121 */
-	{ PCI_DEVICE(0x1b4b, 0x9123),
-	   .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
-+	{ PCI_DEVICE(0x1b4b, 0x9125),
-+	   .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
-
-
-	/* Promise */
+Why ?
