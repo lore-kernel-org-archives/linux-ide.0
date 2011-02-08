@@ -1,37 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 05/20] pata_efar: always program master_data before slave_data
-Date: Tue, 8 Feb 2011 14:16:09 +0100
-Message-ID: <AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 05/20] pata_efar: always program master_data before
+ slave_data
+Date: Tue, 8 Feb 2011 13:25:18 +0000
+Message-ID: <20110208132518.300bb098@lxorguk.ukuu.org.uk>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
 	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
+	<AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:65092 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753516Ab1BHNQL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 08:16:11 -0500
-In-Reply-To: <20110208130701.19709cc6@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51649 "EHLO
+	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753781Ab1BHNVo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 08:21:44 -0500
+In-Reply-To: <AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Feb 8, 2011 at 2:07 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Tue, 08 Feb 2011 13:24:09 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
->
->> >From 8acc9371550ce5f98da56f6888ae4b898096ed2c Mon Sep 17 00:00:00 2001
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Date: Tue, 8 Feb 2011 12:39:25 +0100
->> Subject: [PATCH 05/20] pata_efar: always program master_data before slave_data
->>
->> We may need to set SITRE before programming slave_data.
->
-> Do you have a documentation cite for this or is it random fiddling with a
-> driver you can't test ?
+> >> We may need to set SITRE before programming slave_data.
+> >
+> > Do you have a documentation cite for this or is it random fiddling with a
+> > driver you can't test ?
+> 
+> It is good to enable SITRE register before programming it and all
+> Intel controllers
 
-It is good to enable SITRE register before programming it and all
-Intel controllers
-(from which EFAR chipset is derived) are programmed this way (per ata_piix.c).
+That sounds like someone quoting religion. Documentation cite please.
