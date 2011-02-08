@@ -1,219 +1,269 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 17/20] ata_piix: add IT8213 support
-Date: Tue, 08 Feb 2011 13:25:42 +0100
-Message-ID: <20110208122542.19110.63060.sendpatchset@linux-mhg7.site>
+Subject: [PATCH 19/20] ata_piix: add Intel old PIIX support
+Date: Tue, 08 Feb 2011 13:25:57 +0100
+Message-ID: <20110208122557.19110.50743.sendpatchset@linux-mhg7.site>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-ew0-f46.google.com ([209.85.215.46]:61026 "EHLO
 	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754238Ab1BHMZw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 07:25:52 -0500
+	with ESMTP id S1754301Ab1BHM0I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 07:26:08 -0500
 In-Reply-To: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
->From ecf383059c866b4ab646a4bf1fae4abe4fade58a Mon Sep 17 00:00:00 2001
+>From dc3181ebc3a8735bcd6ba334f2ad7945654e1189 Mon Sep 17 00:00:00 2001
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Date: Tue, 8 Feb 2011 12:39:28 +0100
-Subject: [PATCH 17/20] ata_piix: add IT8213 support
+Subject: [PATCH 19/20] ata_piix: add Intel old PIIX support
 
-Add IT8213 support to ata_piix and remove no longer
-needed pata_it8213 driver.
+Add Intel old PIIX support to ata_piix and remove no longer
+needed pata_oldpiix driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/Kconfig       |    1 +
- drivers/ata/Makefile      |    1 -
- drivers/ata/ata_piix.c    |   65 ++++++++++-
- drivers/ata/pata_it8213.c |  284 ---------------------------------------------
- 4 files changed, 62 insertions(+), 289 deletions(-)
- delete mode 100644 drivers/ata/pata_it8213.c
+ drivers/ata/Kconfig        |    1 +
+ drivers/ata/Makefile       |    1 -
+ drivers/ata/ata_piix.c     |   86 +++++++++++++--
+ drivers/ata/pata_oldpiix.c |  264 --------------------------------------------
+ 4 files changed, 78 insertions(+), 274 deletions(-)
+ delete mode 100644 drivers/ata/pata_oldpiix.c
 
 diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 402c90c..5a92f24 100644
+index dc9038d..0e6d193 100644
 --- a/drivers/ata/Kconfig
 +++ b/drivers/ata/Kconfig
-@@ -437,6 +437,7 @@ config PATA_ICSIDE
- config PATA_IT8213
- 	tristate "IT8213 PATA support (Experimental)"
- 	depends on PCI && EXPERIMENTAL
+@@ -523,6 +523,7 @@ config PATA_NS87415
+ config PATA_OLDPIIX
+ 	tristate "Intel PATA old PIIX support"
+ 	depends on PCI
 +	select ATA_PIIX
  	help
- 	  This option enables support for the ITE 821 PATA
-           controllers via the new ATA layer.
+ 	  This option enables support for early PIIX PATA support.
+ 
 diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index b4252bc..7e78491 100644
+index e627f6d..55272af 100644
 --- a/drivers/ata/Makefile
 +++ b/drivers/ata/Makefile
-@@ -45,7 +45,6 @@ obj-$(CONFIG_PATA_HPT37X)	+= pata_hpt37x.o
- obj-$(CONFIG_PATA_HPT3X2N)	+= pata_hpt3x2n.o
- obj-$(CONFIG_PATA_HPT3X3)	+= pata_hpt3x3.o
- obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
--obj-$(CONFIG_PATA_IT8213)	+= pata_it8213.o
- obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
- obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
- obj-$(CONFIG_PATA_MACIO)	+= pata_macio.o
+@@ -53,7 +53,6 @@ obj-$(CONFIG_PATA_MPC52xx)	+= pata_mpc52xx.o
+ obj-$(CONFIG_PATA_NETCELL)	+= pata_netcell.o
+ obj-$(CONFIG_PATA_NINJA32)	+= pata_ninja32.o
+ obj-$(CONFIG_PATA_NS87415)	+= pata_ns87415.o
+-obj-$(CONFIG_PATA_OLDPIIX)	+= pata_oldpiix.o
+ obj-$(CONFIG_PATA_OPTIDMA)	+= pata_optidma.o
+ obj-$(CONFIG_PATA_PDC2027X)	+= pata_pdc2027x.o
+ obj-$(CONFIG_PATA_PDC_OLD)	+= pata_pdc202xx_old.o
 diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 3ce77d3..deb7c96 100644
+index 86d12c2..5afa57a 100644
 --- a/drivers/ata/ata_piix.c
 +++ b/drivers/ata/ata_piix.c
-@@ -86,6 +86,11 @@
-  *    EFAR - a PIIX4 clone with UDMA66 support. Unlike the later
-  *    Intel ICH controllers the EFAR widened the UDMA mode register bits
-  *    and doesn't require the funky clock selection.
+@@ -52,8 +52,8 @@
+  * is fixed in Triton II. With the odd mobile exception the chips then
+  * change little except in gaining more modes until SATA arrives. This
+  * driver supports only the chips with independant timing (that is those
+- * with SITRE and the 0x44 timing register). See pata_oldpiix and pata_mpiix
+- * for the early chip drivers.
++ * with SITRE and the 0x44 timing register). See pata_mpiix for the very
++ * early chip support.
+  *
+  * Errata of note:
+  *
+@@ -94,6 +94,11 @@
+  *    a similar register layout and the same split clock arrangement. Cable
+  *    detection is different, and it does not have slave channels or all the
+  *    clutter of later ICH/SATA setups.
 + *
-+ *    IT8213 - a very Intel ICH like device for timing purposes, having
-+ *    a similar register layout and the same split clock arrangement. Cable
-+ *    detection is different, and it does not have slave channels or all the
-+ *    clutter of later ICH/SATA setups.
++ *    Early PIIX differs significantly from the later PIIX as it lacks
++ *    SITRE and the slave timing registers. This means that you have to
++ *    set timing per channel, or be clever. Libata tells us whenever it
++ *    does drive selection and we use this to reload the timings.
   */
  
  #include <linux/kernel.h>
-@@ -145,6 +150,7 @@ enum piix_controller_ids {
- 	ich_pata_100,		/* ICH up to UDMA 100 */
+@@ -154,6 +159,7 @@ enum piix_controller_ids {
  	ich_pata_100_nomwdma1,	/* ICH up to UDMA 100 but with no MWDMA1*/
  	efar_pata,
-+	it8213_pata,
+ 	it8213_pata,
++	oldpiix_pata,
  	ich5_sata,
  	ich6_sata,
  	ich6m_sata,
-@@ -176,6 +182,7 @@ static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
- static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+@@ -186,6 +192,7 @@ static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev);
  static int ich_pata_cable_detect(struct ata_port *ap);
  static int efar_pata_cable_detect(struct ata_port *ap);
-+static int it8213_pata_cable_detect(struct ata_port *ap);
+ static int it8213_pata_cable_detect(struct ata_port *ap);
++static unsigned int oldpiix_qc_issue(struct ata_queued_cmd *qc);
  static u8 piix_vmw_bmdma_status(struct ata_port *ap);
  static int piix_sidpr_scr_read(struct ata_link *link,
  			       unsigned int reg, u32 *val);
-@@ -239,6 +246,9 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* EFAR */
- 	{ 0x1055, 0x9130, PCI_ANY_ID, PCI_ANY_ID, 0, 0, efar_pata },
+@@ -256,6 +263,9 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x17F3, 0x1011, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
+ 	{ 0x17F3, 0x1012, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich_pata_100 },
  
-+	/* IT8213 */
-+	{ 0x1283, 0x8213, PCI_ANY_ID, PCI_ANY_ID, 0, 0, it8213_pata },
++	/* PIIXb (a.k.a. oldpiix) */
++	{ 0x8086, 0x1230, PCI_ANY_ID, PCI_ANY_ID, 0, 0, oldpiix_pata },
 +
  	/* SATA ports */
  	
  	/* 82801EB (ICH5) */
-@@ -387,6 +397,14 @@ static struct ata_port_operations efar_pata_ops = {
- 	.cable_detect		= efar_pata_cable_detect,
+@@ -412,6 +422,15 @@ static struct ata_port_operations it8213_pata_ops = {
+ 	.cable_detect		= it8213_pata_cable_detect,
  };
  
-+static struct ata_port_operations it8213_pata_ops = {
++static struct ata_port_operations oldpiix_pata_ops = {
 +	.inherits		= &ata_bmdma_port_ops,
++	.qc_issue		= oldpiix_qc_issue,
++	.cable_detect		= ata_cable_40wire,
 +	.set_piomode		= piix_set_piomode,
-+	.set_dmamode		= ich_set_dmamode,
++	.set_dmamode		= piix_set_dmamode,
 +	.prereset		= piix_pata_prereset,
-+	.cable_detect		= it8213_pata_cable_detect,
 +};
 +
  static const struct piix_map_db ich5_map_db = {
  	.mask = 0x7,
  	.port_enable = 0x3,
-@@ -624,6 +642,15 @@ static struct ata_port_info piix_port_info[] = {
- 		.udma_mask	= ATA_UDMA4,
- 		.port_ops	= &efar_pata_ops,
+@@ -658,6 +677,14 @@ static struct ata_port_info piix_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &it8213_pata_ops,
  	},
 +
-+	[it8213_pata] =
++	[oldpiix_pata] =
 +	{
 +		.flags		= PIIX_PATA_FLAGS,
 +		.pio_mask	= ATA_PIO4,
 +		.mwdma_mask	= ATA_MWDMA12_ONLY,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &it8213_pata_ops,
++		.port_ops	= &oldpiix_pata_ops,
 +	},
  };
  
  static struct pci_bits piix_enable_bits[] = {
-@@ -637,6 +664,7 @@ MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
+@@ -673,6 +700,7 @@ MODULE_VERSION(DRV_VERSION);
  MODULE_ALIAS("pata_efar");
-+MODULE_ALIAS("pata_it8213");
+ MODULE_ALIAS("pata_it8213");
+ MODULE_ALIAS("pata_rdc");
++MODULE_ALIAS("pata_oldpiix");
  
  struct ich_laptop {
  	u16 device;
-@@ -723,6 +751,25 @@ static int efar_pata_cable_detect(struct ata_port *ap)
+@@ -803,6 +831,8 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+ 	unsigned long flags;
+ 	unsigned int is_slave	= (adev->devno != 0);
++	unsigned int has_sitre	= (dev->vendor != 0x8086 ||
++				   dev->device != 0x1230);
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
+@@ -848,7 +878,7 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	 * after set_piomode if any DMA mode is available.
+ 	 */
+ 	pci_read_config_word(dev, master_port, &master_data);
+-	if (is_slave) {
++	if (is_slave && has_sitre) {
+ 		/* clear TIME1|IE1|PPE1|DTE1 */
+ 		master_data &= 0xff0f;
+ 		/* enable PPE1, IE1 and TIME1 as needed */
+@@ -859,10 +889,20 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 		slave_data |= ((timings[pio][0] << 2) | timings[pio][1])
+ 						<< (ap->port_no ? 4 : 0);
+ 	} else {
+-		/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
+-		master_data &= 0xccf0;
+-		/* Enable PPE, IE and TIME as appropriate */
+-		master_data |= control;
++		if (has_sitre) {
++			/* clear ISP|RCT|TIME0|IE0|PPE0|DTE0 */
++			master_data &= 0xccf0;
++			/* Enable PPE, IE and TIME as appropriate */
++			master_data |= control;
++		} else {
++			if (!is_slave) {
++				master_data &= 0xCCE0;
++				master_data |= control;
++			} else {
++				master_data &= 0xCC0E;
++				master_data |= (control << 4);
++			}
++		}
+ 		/* load ISP and RCT */
+ 		master_data |=
+ 			(timings[pio][0] << 12) |
+@@ -870,9 +910,10 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	}
+ 
+ 	/* Enable SITRE (separate slave timing register) */
+-	master_data |= 0x4000;
++	if (has_sitre)
++		master_data |= 0x4000;
+ 	pci_write_config_word(dev, master_port, master_data);
+-	if (is_slave)
++	if (is_slave && has_sitre)
+ 		pci_write_config_byte(dev, slave_port, slave_data);
+ 
+ 	/* Ensure the UDMA bit is off - it will be turned back on if
+@@ -885,6 +926,9 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	}
+ 
+ 	spin_unlock_irqrestore(&piix_lock, flags);
++
++	/* Track which port is configured */
++	ap->private_data = adev;
  }
  
  /**
-+ *	it8213_pata_cable_detect	-	check for 40/80 pin
-+ *	@ap: Port
+@@ -1019,6 +1063,30 @@ static void ich_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ 	do_pata_set_dmamode(ap, adev, 1);
+ }
+ 
++/**
++ *	oldpiix_qc_issue	-	command issue
++ *	@qc: command pending
 + *
-+ *	Perform cable detection for the 8213 ATA interface. This is
-+ *	different to the PIIX arrangement
++ *	Called when the libata layer is about to issue a command. We wrap
++ *	this interface so that we can load the correct ATA timings if
++ *	necessary. Our logic also clears TIME0/TIME1 for the other device so
++ *	that, even if we get this wrong, cycles to the other device will
++ *	be made PIO0.
 + */
 +
-+static int it8213_pata_cable_detect(struct ata_port *ap)
++static unsigned int oldpiix_qc_issue(struct ata_queued_cmd *qc)
 +{
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u8 tmp;
++	struct ata_port *ap = qc->ap;
++	struct ata_device *adev = qc->dev;
 +
-+	pci_read_config_byte(pdev, 0x42, &tmp);
-+	if (tmp & 2)	/* The initial docs are incorrect */
-+		return ATA_CBL_PATA40;
-+	return ATA_CBL_PATA80;
++	if (adev != ap->private_data) {
++		piix_set_piomode(ap, adev);
++		if (ata_dma_enabled(adev))
++			piix_set_dmamode(ap, adev);
++	}
++	return ata_bmdma_qc_issue(qc);
 +}
 +
-+/**
-  *	piix_pata_prereset - prereset for PATA host controller
-  *	@link: Target link
-  *	@deadline: deadline jiffies for the operation
-@@ -771,9 +818,15 @@ static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
- 		control |= 1;	/* TIME1 enable */
- 	if (ata_pio_need_iordy(adev) || use_mwdma)
- 		control |= 2;	/* IE enable */
--	/* Intel specifies that the PPE functionality is for disk only */
--	if (adev->class == ATA_DEV_ATA)
--		control |= 4;	/* PPE enable */
-+	if (dev->vendor != PCI_VENDOR_ID_ITE) {
-+		/* PPE functionality is for disk only */
-+		if (adev->class == ATA_DEV_ATA)
-+			control |= 4;	/* PPE enable */
-+	} else {
-+		/* Bit 2 is set for ATAPI on the IT8213 - reverse of ICH/PIIX */
-+		if (adev->class != ATA_DEV_ATA)
-+			control |= 4;	/* PPE enable */
-+	}
- 	/* If the drive MWDMA is faster than it can do PIO then
- 	   we must force PIO into PIO0 */
- 	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
-@@ -880,7 +933,7 @@ static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, in
- 		 *	       except UDMA0 which is 00
- 		 */
- 		u_speed = min(2 - (udma & 1), udma);
--		if (udma == 5)
-+		if (udma > 4)
- 			u_clock = 0x1000;	/* 100Mhz */
- 		else if (udma > 2)
- 			u_clock = 1;		/* 66Mhz */
-@@ -1597,6 +1650,10 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	port_info[0] = piix_port_info[ent->driver_data];
- 	port_info[1] = piix_port_info[ent->driver_data];
- 
-+	/* IT8213 is a single port device. */
-+	if (pdev->vendor == PCI_VENDOR_ID_ITE)
-+		port_info[1] = ata_dummy_port_info;
-+
- 	port_flags = port_info[0].flags;
- 
- 	/* enable device and prepare host */
-diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
+ /*
+  * Serial ATA Index/Data Pair Superset Registers access
+  *
+diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
 deleted file mode 100644
-index e045eab..0000000
---- a/drivers/ata/pata_it8213.c
+index 819192d..0000000
+--- a/drivers/ata/pata_oldpiix.c
 +++ /dev/null
-@@ -1,284 +0,0 @@
+@@ -1,264 +0,0 @@
 -/*
-- *    pata_it8213.c - iTE Tech. Inc.  IT8213 PATA driver
+- *    pata_oldpiix.c - older Intel PATA controllers
 - *
-- *    The IT8213 is a very Intel ICH like device for timing purposes, having
-- *    a similar register layout and the same split clock arrangement. Cable
-- *    detection is different, and it does not have slave channels or all the
-- *    clutter of later ICH/SATA setups.
+- *	(C) 2005 Red Hat
+- *	(C) 2010 Bartlomiej Zolnierkiewicz
+- *
+- *    Some parts based on ata_piix.c by Jeff Garzik and others.
+- *
+- *    Early PIIX differs significantly from the later PIIX as it lacks
+- *    SITRE and the slave timing registers. This means that you have to
+- *    set timing per channel, or be clever. Libata tells us whenever it
+- *    does drive selection and we use this to reload the timings.
+- *
+- *    Because of these behaviour differences PIIX gets its own driver module.
 - */
 -
 -#include <linux/kernel.h>
@@ -227,60 +277,47 @@ index e045eab..0000000
 -#include <linux/libata.h>
 -#include <linux/ata.h>
 -
--#define DRV_NAME	"pata_it8213"
--#define DRV_VERSION	"0.0.3"
+-#define DRV_NAME	"pata_oldpiix"
+-#define DRV_VERSION	"0.5.5"
 -
 -/**
-- *	it8213_pre_reset	-	probe begin
-- *	@link: link
+- *	oldpiix_pre_reset		-	probe begin
+- *	@link: ATA link
 - *	@deadline: deadline jiffies for the operation
 - *
-- *	Filter out ports by the enable bits before doing the normal reset
-- *	and probe.
+- *	Set up cable type and use generic probe init
 - */
 -
--static int it8213_pre_reset(struct ata_link *link, unsigned long deadline)
+-static int oldpiix_pre_reset(struct ata_link *link, unsigned long deadline)
 -{
--	static const struct pci_bits it8213_enable_bits[] = {
--		{ 0x41U, 1U, 0x80UL, 0x80UL },	/* port 0 */
--	};
 -	struct ata_port *ap = link->ap;
 -	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	if (!pci_test_config_bits(pdev, &it8213_enable_bits[ap->port_no]))
+-	static const struct pci_bits oldpiix_enable_bits[] = {
+-		{ 0x41U, 1U, 0x80UL, 0x80UL },	/* port 0 */
+-		{ 0x43U, 1U, 0x80UL, 0x80UL },	/* port 1 */
+-	};
+-
+-	if (!pci_test_config_bits(pdev, &oldpiix_enable_bits[ap->port_no]))
 -		return -ENOENT;
 -
 -	return ata_sff_prereset(link, deadline);
 -}
 -
--/**
-- *	it8213_cable_detect	-	check for 40/80 pin
-- *	@ap: Port
-- *
-- *	Perform cable detection for the 8213 ATA interface. This is
-- *	different to the PIIX arrangement
-- */
+-static DEFINE_SPINLOCK(piix_lock);
 -
--static int it8213_cable_detect(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--	u8 tmp;
--	pci_read_config_byte(pdev, 0x42, &tmp);
--	if (tmp & 2)	/* The initial docs are incorrect */
--		return ATA_CBL_PATA40;
--	return ATA_CBL_PATA80;
--}
--
--static void it8213_set_timings(struct ata_port *ap, struct ata_device *adev,
--			       u8 pio, bool use_mwdma)
+-static void oldpiix_set_timings(struct ata_port *ap, struct ata_device *adev,
+-				u8 pio, bool use_mwdma)
 -{
 -	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	u8 master_port		= ap->port_no ? 0x42 : 0x40;
--	u16 master_data;
+-	unsigned long flags;
+-	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
+-	u16 idetm_data;
 -	int control = 0;
 -
 -	/*
 -	 *	See Intel Document 298600-004 for the timing programing rules
--	 *	for PIIX/ICH. The 8213 is a clone so very similar
+-	 *	for PIIX/ICH. Note that the early PIIX does not have the slave
+-	 *	timing port at 0x44.
 -	 */
 -
 -	static const	 /* ISP  RTC */
@@ -294,8 +331,8 @@ index e045eab..0000000
 -		control |= 1;	/* TIME */
 -	if (ata_pio_need_iordy(adev) || use_mwdma)
 -		control |= 2;	/* IE */
--	/* Bit 2 is set for ATAPI on the IT8213 - reverse of ICH/PIIX */
--	if (adev->class != ATA_DEV_ATA)
+-	/* Intel specifies that the prefetch/posting is for disk only */
+-	if (adev->class == ATA_DEV_ATA)
 -		control |= 4;	/* PPE */
 -	/* If the drive MWDMA is faster than it can do PIO then
 -	   we must force PIO into PIO0 */
@@ -303,33 +340,33 @@ index e045eab..0000000
 -		/* Enable DMA timing only */
 -		control |= 8;	/* PIO cycles in PIO0 */
 -
--	pci_read_config_word(dev, master_port, &master_data);
+-	spin_lock_irqsave(&piix_lock, flags);
 -
--	/* Set PPE, IE, and TIME as appropriate */
+-	pci_read_config_word(dev, idetm_port, &idetm_data);
+-
+-	/*
+-	 * Set PPE, IE and TIME as appropriate.
+-	 * Clear the other drive's timing bits.
+-	 */
 -	if (adev->devno == 0) {
--		master_data &= 0xCCF0;
--		master_data |= control;
--		master_data |= (timings[pio][0] << 12) |
--			(timings[pio][1] << 8);
+-		idetm_data &= 0xCCE0;
+-		idetm_data |= control;
 -	} else {
--		u8 slave_data;
--
--		master_data &= 0xFF0F;
--		master_data |= (control << 4);
--
--		/* Slave timing in separate register */
--		pci_read_config_byte(dev, 0x44, &slave_data);
--		slave_data &= 0xF0;
--		slave_data |= (timings[pio][0] << 2) | timings[pio][1];
--		pci_write_config_byte(dev, 0x44, slave_data);
+-		idetm_data &= 0xCC0E;
+-		idetm_data |= (control << 4);
 -	}
+-	idetm_data |= (timings[pio][0] << 12) |
+-			(timings[pio][1] << 8);
+-	pci_write_config_word(dev, idetm_port, idetm_data);
 -
--	master_data |= 0x4000;	/* Ensure SITRE is set */
--	pci_write_config_word(dev, master_port, master_data);
+-	spin_unlock_irqrestore(&piix_lock, flags);
+-
+-	/* Track which port is configured */
+-	ap->private_data = adev;
 -}
 -
 -/**
-- *	it8213_set_piomode - Initialize host controller PATA PIO timings
+- *	oldpiix_set_piomode - Initialize host controller PATA PIO timings
 - *	@ap: Port whose timings we are configuring
 - *	@adev: Device whose timings we are configuring
 - *
@@ -339,95 +376,81 @@ index e045eab..0000000
 - *	None (inherited from caller).
 - */
 -
--static void it8213_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-static void oldpiix_set_piomode(struct ata_port *ap, struct ata_device *adev)
 -{
--	it8213_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
+-	oldpiix_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
 -}
 -
 -/**
-- *	it8213_set_dmamode - Initialize host controller PATA DMA timings
+- *	oldpiix_set_dmamode - Initialize host controller PATA DMA timings
 - *	@ap: Port whose timings we are configuring
 - *	@adev: Device to program
 - *
-- *	Set UDMA/MWDMA mode for device, in host controller PCI config space.
-- *	This device is basically an ICH alike.
+- *	Set MWDMA mode for device, in host controller PCI config space.
 - *
 - *	LOCKING:
 - *	None (inherited from caller).
 - */
 -
--static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+-static void oldpiix_set_dmamode (struct ata_port *ap, struct ata_device *adev)
 -{
--	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	u8 speed		= adev->dma_mode;
--	int devid		= adev->devno;
--	u8 udma_enable;
+-	/* MWDMA is driven by the PIO timings. */
 -
--	pci_read_config_byte(dev, 0x48, &udma_enable);
+-	unsigned int mwdma	= adev->dma_mode - XFER_MW_DMA_0;
+-	const unsigned int needed_pio[3] = {
+-		XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
+-	};
+-	int pio = needed_pio[mwdma] - XFER_PIO_0;
 -
--	if (speed >= XFER_UDMA_0) {
--		unsigned int udma = speed - XFER_UDMA_0;
--		u16 udma_timing;
--		u16 ideconf;
--		int u_clock, u_speed;
--
--		/* Clocks follow the PIIX style */
--		u_speed = min(2 - (udma & 1), udma);
--		if (udma > 4)
--			u_clock = 0x1000;	/* 100Mhz */
--		else if (udma > 2)
--			u_clock = 1;		/* 66Mhz */
--		else
--			u_clock = 0;		/* 33Mhz */
--
--		udma_enable |= (1 << devid);
--
--		/* Load the UDMA cycle time */
--		pci_read_config_word(dev, 0x4A, &udma_timing);
--		udma_timing &= ~(3 << (4 * devid));
--		udma_timing |= u_speed << (4 * devid);
--		pci_write_config_word(dev, 0x4A, udma_timing);
--
--		/* Load the clock selection */
--		pci_read_config_word(dev, 0x54, &ideconf);
--		ideconf &= ~(0x1001 << devid);
--		ideconf |= u_clock << devid;
--		pci_write_config_word(dev, 0x54, ideconf);
--	} else {
--		/* MWDMA is driven by the PIO timings. */
--		unsigned int mwdma = speed - XFER_MW_DMA_0;
--		static const unsigned int needed_pio[3] = {
--			XFER_PIO_0, XFER_PIO_3, XFER_PIO_4
--		};
--		int pio = needed_pio[mwdma] - XFER_PIO_0;
--
--		it8213_set_timings(ap, adev, pio, 1);
--
--		udma_enable &= ~(1 << devid);
--	}
--	pci_write_config_byte(dev, 0x48, udma_enable);
+-	oldpiix_set_timings(ap, adev, pio, 1);
 -}
 -
--static struct scsi_host_template it8213_sht = {
+-/**
+- *	oldpiix_qc_issue	-	command issue
+- *	@qc: command pending
+- *
+- *	Called when the libata layer is about to issue a command. We wrap
+- *	this interface so that we can load the correct ATA timings if
+- *	necessary. Our logic also clears TIME0/TIME1 for the other device so
+- *	that, even if we get this wrong, cycles to the other device will
+- *	be made PIO0.
+- */
+-
+-static unsigned int oldpiix_qc_issue(struct ata_queued_cmd *qc)
+-{
+-	struct ata_port *ap = qc->ap;
+-	struct ata_device *adev = qc->dev;
+-
+-	if (adev != ap->private_data) {
+-		oldpiix_set_piomode(ap, adev);
+-		if (ata_dma_enabled(adev))
+-			oldpiix_set_dmamode(ap, adev);
+-	}
+-	return ata_bmdma_qc_issue(qc);
+-}
+-
+-
+-static struct scsi_host_template oldpiix_sht = {
 -	ATA_BMDMA_SHT(DRV_NAME),
 -};
 -
--
--static struct ata_port_operations it8213_ops = {
+-static struct ata_port_operations oldpiix_pata_ops = {
 -	.inherits		= &ata_bmdma_port_ops,
--	.cable_detect		= it8213_cable_detect,
--	.set_piomode		= it8213_set_piomode,
--	.set_dmamode		= it8213_set_dmamode,
--	.prereset		= it8213_pre_reset,
+-	.qc_issue		= oldpiix_qc_issue,
+-	.cable_detect		= ata_cable_40wire,
+-	.set_piomode		= oldpiix_set_piomode,
+-	.set_dmamode		= oldpiix_set_dmamode,
+-	.prereset		= oldpiix_pre_reset,
 -};
 -
 -
 -/**
-- *	it8213_init_one - Register 8213 ATA PCI device with kernel services
+- *	oldpiix_init_one - Register PIIX ATA PCI device with kernel services
 - *	@pdev: PCI device to register
-- *	@ent: Entry in it8213_pci_tbl matching with @pdev
+- *	@ent: Entry in oldpiix_pci_tbl matching with @pdev
 - *
-- *	Called from kernel PCI layer.
+- *	Called from kernel PCI layer.  We probe for combined mode (sigh),
+- *	and then hand over control to libata, for it to do the rest.
 - *
 - *	LOCKING:
 - *	Inherited from PCI layer (may sleep).
@@ -436,36 +459,35 @@ index e045eab..0000000
 - *	Zero on success, or -ERRNO value.
 - */
 -
--static int it8213_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+-static int oldpiix_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
 -{
 -	static int printed_version;
 -	static const struct ata_port_info info = {
 -		.flags		= ATA_FLAG_SLAVE_POSS,
 -		.pio_mask	= ATA_PIO4,
 -		.mwdma_mask	= ATA_MWDMA12_ONLY,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &it8213_ops,
+-		.port_ops	= &oldpiix_pata_ops,
 -	};
--	/* Current IT8213 stuff is single port */
--	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
+-	const struct ata_port_info *ppi[] = { &info, NULL };
 -
 -	if (!printed_version++)
 -		dev_printk(KERN_DEBUG, &pdev->dev,
 -			   "version " DRV_VERSION "\n");
 -
--	return ata_pci_bmdma_init_one(pdev, ppi, &it8213_sht, NULL, 0);
+-	return ata_pci_bmdma_init_one(pdev, ppi, &oldpiix_sht, NULL,
+-				      ATA_HOST_PARALLEL_SCAN);
 -}
 -
--static const struct pci_device_id it8213_pci_tbl[] = {
--	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8213), },
+-static const struct pci_device_id oldpiix_pci_tbl[] = {
+-	{ PCI_VDEVICE(INTEL, 0x1230), },
 -
 -	{ }	/* terminate list */
 -};
 -
--static struct pci_driver it8213_pci_driver = {
+-static struct pci_driver oldpiix_pci_driver = {
 -	.name			= DRV_NAME,
--	.id_table		= it8213_pci_tbl,
--	.probe			= it8213_init_one,
+-	.id_table		= oldpiix_pci_tbl,
+-	.probe			= oldpiix_init_one,
 -	.remove			= ata_pci_remove_one,
 -#ifdef CONFIG_PM
 -	.suspend		= ata_pci_device_suspend,
@@ -473,24 +495,25 @@ index e045eab..0000000
 -#endif
 -};
 -
--static int __init it8213_init(void)
+-static int __init oldpiix_init(void)
 -{
--	return pci_register_driver(&it8213_pci_driver);
+-	return pci_register_driver(&oldpiix_pci_driver);
 -}
 -
--static void __exit it8213_exit(void)
+-static void __exit oldpiix_exit(void)
 -{
--	pci_unregister_driver(&it8213_pci_driver);
+-	pci_unregister_driver(&oldpiix_pci_driver);
 -}
 -
--module_init(it8213_init);
--module_exit(it8213_exit);
+-module_init(oldpiix_init);
+-module_exit(oldpiix_exit);
 -
 -MODULE_AUTHOR("Alan Cox");
--MODULE_DESCRIPTION("SCSI low-level driver for the ITE 8213");
+-MODULE_DESCRIPTION("SCSI low-level driver for early PIIX series controllers");
 -MODULE_LICENSE("GPL");
--MODULE_DEVICE_TABLE(pci, it8213_pci_tbl);
+-MODULE_DEVICE_TABLE(pci, oldpiix_pci_tbl);
 -MODULE_VERSION(DRV_VERSION);
+-
 -- 
 1.7.1
 
