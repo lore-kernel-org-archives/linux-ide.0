@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 06/20] pata_it8213: fix register naming used in it8213_set_piomode()
-Date: Tue, 08 Feb 2011 13:24:16 +0100
-Message-ID: <20110208122416.19110.33098.sendpatchset@linux-mhg7.site>
+Subject: [PATCH 08/20] pata_it8213: add UDMA100 and UDMA133 support
+Date: Tue, 08 Feb 2011 13:24:31 +0100
+Message-ID: <20110208122431.19110.30142.sendpatchset@linux-mhg7.site>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
@@ -10,73 +10,43 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->From fd377660531ca5b5d0802fa282ae7c964d0fddd7 Mon Sep 17 00:00:00 2001
+>From d7d8c9c8372230ec596814ca3281564156f94926 Mon Sep 17 00:00:00 2001
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Tue, 8 Feb 2011 12:39:25 +0100
-Subject: [PATCH 06/20] pata_it8213: fix register naming used in it8213_set_piomode()
+Date: Tue, 8 Feb 2011 12:39:26 +0100
+Subject: [PATCH 08/20] pata_it8213: add UDMA100 and UDMA133 support
 
-Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
-and 'master_data' respectively to match register naming used in
-it8213_set_dma_mode() and in ata_piix.c.
+Fixes IDE -> libata regression.
 
-Fix 'master_port' type while at it.
+IDE's it8213 host driver has been supporting those modes
+(per official documentation) since the initial driver's merge
+on Feb 7 2007 (commit 9c6712c0 "ide: add it8213 IDE driver").
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_it8213.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/ata/pata_it8213.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
-index 4d142a2..911f50b 100644
+index ccfd1ae..e045eab 100644
 --- a/drivers/ata/pata_it8213.c
 +++ b/drivers/ata/pata_it8213.c
-@@ -76,8 +76,8 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
- {
- 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
--	u16 idetm_data;
-+	u8 master_port		= ap->port_no ? 0x42 : 0x40;
-+	u16 master_data;
- 	int control = 0;
+@@ -164,7 +164,7 @@ static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
  
- 	/*
-@@ -100,19 +100,19 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	if (adev->class != ATA_DEV_ATA)
- 		control |= 4;	/* PPE */
- 
--	pci_read_config_word(dev, idetm_port, &idetm_data);
-+	pci_read_config_word(dev, master_port, &master_data);
- 
- 	/* Set PPE, IE, and TIME as appropriate */
- 	if (adev->devno == 0) {
--		idetm_data &= 0xCCF0;
--		idetm_data |= control;
--		idetm_data |= (timings[pio][0] << 12) |
-+		master_data &= 0xCCF0;
-+		master_data |= control;
-+		master_data |= (timings[pio][0] << 12) |
- 			(timings[pio][1] << 8);
- 	} else {
- 		u8 slave_data;
- 
--		idetm_data &= 0xFF0F;
--		idetm_data |= (control << 4);
-+		master_data &= 0xFF0F;
-+		master_data |= (control << 4);
- 
- 		/* Slave timing in separate register */
- 		pci_read_config_byte(dev, 0x44, &slave_data);
-@@ -121,8 +121,8 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 		pci_write_config_byte(dev, 0x44, slave_data);
- 	}
- 
--	idetm_data |= 0x4000;	/* Ensure SITRE is set */
--	pci_write_config_word(dev, idetm_port, idetm_data);
-+	master_data |= 0x4000;	/* Ensure SITRE is set */
-+	pci_write_config_word(dev, master_port, master_data);
- }
- 
- /**
+ 		/* Clocks follow the PIIX style */
+ 		u_speed = min(2 - (udma & 1), udma);
+-		if (udma == 5)
++		if (udma > 4)
+ 			u_clock = 0x1000;	/* 100Mhz */
+ 		else if (udma > 2)
+ 			u_clock = 1;		/* 66Mhz */
+@@ -234,7 +234,7 @@ static int it8213_init_one (struct pci_dev *pdev, const struct pci_device_id *en
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+-		.udma_mask 	= ATA_UDMA4, /* FIXME: want UDMA 100? */
++		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &it8213_ops,
+ 	};
+ 	/* Current IT8213 stuff is single port */
 -- 
 1.7.1
