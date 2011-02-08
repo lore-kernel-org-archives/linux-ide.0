@@ -1,34 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 01/20] ata_piix: SITRE handling fix
-Date: Tue, 8 Feb 2011 14:02:20 +0100
-Message-ID: <AANLkTik3vgGpj6cNWysT3dZfkaW9y-apck1P6Ywzy25n@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 05/20] pata_efar: always program master_data before
+ slave_data
+Date: Tue, 8 Feb 2011 13:07:01 +0000
+Message-ID: <20110208130701.19709cc6@lxorguk.ukuu.org.uk>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
-	<20110208122337.19110.8889.sendpatchset@linux-mhg7.site>
-	<20110208130416.675181fe@lxorguk.ukuu.org.uk>
+	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:53841 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753645Ab1BHNCV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 08:02:21 -0500
-In-Reply-To: <20110208130416.675181fe@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:43895 "EHLO
+	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753645Ab1BHND1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 08:03:27 -0500
+In-Reply-To: <20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Feb 8, 2011 at 2:04 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> On Tue, 08 Feb 2011 13:23:37 +0100
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
->
->> >From 7b6d27a9d65fef8795fdeee3733316450f840aa6 Mon Sep 17 00:00:00 2001
->> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
->> Date: Tue, 8 Feb 2011 12:39:24 +0100
->> Subject: [PATCH 01/20] ata_piix: SITRE handling fix
->>
->> Set SITRE bit also in master-only configurations.
->
-> Why ?
+On Tue, 08 Feb 2011 13:24:09 +0100
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Mainly to match other PIIX-alike drivers and make further changes easier..
+> >From 8acc9371550ce5f98da56f6888ae4b898096ed2c Mon Sep 17 00:00:00 2001
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Tue, 8 Feb 2011 12:39:25 +0100
+> Subject: [PATCH 05/20] pata_efar: always program master_data before slave_data
+> 
+> We may need to set SITRE before programming slave_data.
+
+Do you have a documentation cite for this or is it random fiddling with a
+driver you can't test ?
