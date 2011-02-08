@@ -1,39 +1,74 @@
-From: Chris Webb <chris.webb@elastichosts.com>
-Subject: Re: IO_PAGE_FAULT from SATA card during boot
-Date: Tue, 8 Feb 2011 14:48:06 +0000
-Message-ID: <20110208144805.GF19483@arachsys.com>
-References: <20110130015442.GB13204@arachsys.com>
- <AANLkTim7+9WVVJAjbj4pNMB9OKVmf2B+XNQ+exDt9_Tm@mail.gmail.com>
- <20110202135644.GG11670@arachsys.com>
- <4D49FB9F.9040304@gmail.com>
- <20110203085601.GB2490@arachsys.com>
- <20110207174838.GA21124@arachsys.com>
- <4D50A4B8.2070608@gmail.com>
- <20110208104157.GU2106@amd.com>
- <20110208110036.GA18763@arachsys.com>
- <AANLkTikTBi7FHoXS1JmKXgvmv4j7ramezO09kksGrJA1@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH 21/20] ata_piix: add new PIIX_FLAG_* flags
+Date: Tue, 8 Feb 2011 16:52:36 +0100
+Message-ID: <201102081652.36752.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from alpha.arachsys.com ([91.203.57.7]:43447 "EHLO
-	alpha.arachsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752645Ab1BHOsJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 09:48:09 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTikTBi7FHoXS1JmKXgvmv4j7ramezO09kksGrJA1@mail.gmail.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53950 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754320Ab1BHPxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 10:53:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: "Roedel, Joerg" <Joerg.Roedel@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Robert Hancock <hancockrwd@gmail.com> writes:
+Turn open-coded checks in piix_set_timings() into PIIX_FLAG_* flags
+per suggestion from Alan Cox.
 
-> Did you try different chipsets? The two sets of output you posted are
-> both from Marvell 88SE9123-based cards.
+Suggested-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+On top of https://lkml.org/lkml/2011/2/8/97 patchset.
 
-Oh, I may have been a muppet here then. I assumed the HPT cards would be a
-different chipset. I'll find something completely different!
+ drivers/ata/ata_piix.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Cheers,
-
-Chris.
+Index: b/drivers/ata/ata_piix.c
+===================================================================
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -133,6 +133,8 @@ enum {
+ 
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+ 	PIIX_FLAG_SIDPR		= (1 << 29), /* SATA idx/data pair regs */
++	PIIX_FLAG_NO_SITRE	= (1 << 30), /* no SITRE register */
++	PIIX_FLAG_RADISYS	= (1 << 31), /* host is Radisys R82600 */
+ 
+ 	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+ 	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+@@ -698,7 +700,7 @@ static struct ata_port_info piix_port_in
+ 
+ 	[oldpiix_pata] =
+ 	{
+-		.flags		= PIIX_PATA_FLAGS,
++		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_NO_SITRE,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.port_ops	= &oldpiix_pata_ops,
+@@ -706,7 +708,8 @@ static struct ata_port_info piix_port_in
+ 
+ 	[radisys_pata] =
+ 	{
+-		.flags		= PIIX_PATA_FLAGS,
++		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_NO_SITRE |
++				  PIIX_FLAG_RADISYS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.udma_mask	= ATA_UDMA24_ONLY,
+@@ -859,10 +862,8 @@ static void piix_set_timings(struct ata_
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+ 	unsigned long flags;
+ 	unsigned int is_slave	= (adev->devno != 0);
+-	unsigned int is_radisys	= (dev->vendor == PCI_VENDOR_ID_RADISYS &&
+-				   dev->device == 0x8201);
+-	unsigned int has_sitre	= (dev->vendor != PCI_VENDOR_ID_INTEL ||
+-				   dev->device != 0x1230) && !is_radisys;
++	unsigned int is_radisys	= (ap->flags & PIIX_FLAG_RADISYS) ? 1 : 0;
++	unsigned int has_sitre	= (ap->flags & PIIX_FLAG_NO_SITRE) ? 1 : 0;
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
