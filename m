@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 03/20] pata_efar: fix register naming used in efar_set_piomode()
-Date: Tue, 08 Feb 2011 13:23:53 +0100
-Message-ID: <20110208122353.19110.75537.sendpatchset@linux-mhg7.site>
+Subject: [PATCH 05/20] pata_efar: always program master_data before slave_data
+Date: Tue, 08 Feb 2011 13:24:09 +0100
+Message-ID: <20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
@@ -10,85 +10,69 @@ To: linux-ide@vger.kernel.org
 Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->From efbad2a0611e47772c8696a2c5b2037c78554378 Mon Sep 17 00:00:00 2001
+>From 8acc9371550ce5f98da56f6888ae4b898096ed2c Mon Sep 17 00:00:00 2001
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Date: Tue, 8 Feb 2011 12:39:25 +0100
-Subject: [PATCH 03/20] pata_efar: fix register naming used in efar_set_piomode()
+Subject: [PATCH 05/20] pata_efar: always program master_data before slave_data
 
-Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
-and 'master_data' respectively to match register naming used in
-efar_set_dma_mode() and in ata_piix.c.
+We may need to set SITRE before programming slave_data.
 
-Fix efar_set_piomode() documentation and 'master_port' type
-while at it.
+This makes pata_efar match the behavior of IDE's slc90e66 host driver
+and also of libata's ata_piix one.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_efar.c |   22 +++++++++++-----------
- 1 files changed, 11 insertions(+), 11 deletions(-)
+ drivers/ata/pata_efar.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-index a088347..afe92b7 100644
+index 1e2ff7d..7f564d7 100644
 --- a/drivers/ata/pata_efar.c
 +++ b/drivers/ata/pata_efar.c
-@@ -73,7 +73,7 @@ static DEFINE_SPINLOCK(efar_lock);
- /**
-  *	efar_set_piomode - Initialize host controller PATA PIO timings
-  *	@ap: Port whose timings we are configuring
-- *	@adev: um
-+ *	@adev: Device to program
-  *
-  *	Set PIO mode for device, in host controller PCI config space.
-  *
-@@ -85,9 +85,9 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
+@@ -74,10 +74,12 @@ static void efar_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 			     u8 pio, bool use_mwdma)
  {
- 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
  	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
++	unsigned int is_slave	= (adev->devno != 0);
  	unsigned long flags;
--	u16 idetm_data;
-+	u8 master_port		= ap->port_no ? 0x42 : 0x40;
-+	u16 master_data;
+ 	u8 master_port		= ap->port_no ? 0x42 : 0x40;
+ 	u16 master_data;
  	u8 udma_enable;
++	u8 slave_data;
  	int control = 0;
  
-@@ -113,20 +113,20 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 
- 	spin_lock_irqsave(&efar_lock, flags);
- 
--	pci_read_config_word(dev, idetm_port, &idetm_data);
-+	pci_read_config_word(dev, master_port, &master_data);
+ 	/*
+@@ -110,14 +112,13 @@ static void efar_set_timings(struct ata_port *ap, struct ata_device *adev,
+ 	pci_read_config_word(dev, master_port, &master_data);
  
  	/* Set PPE, IE, and TIME as appropriate */
- 	if (adev->devno == 0) {
--		idetm_data &= 0xCCF0;
--		idetm_data |= control;
--		idetm_data |= (timings[pio][0] << 12) |
-+		master_data &= 0xCCF0;
-+		master_data |= control;
-+		master_data |= (timings[pio][0] << 12) |
+-	if (adev->devno == 0) {
++	if (is_slave == 0) {
+ 		master_data &= 0xCCF0;
+ 		master_data |= control;
+ 		master_data |= (timings[pio][0] << 12) |
  			(timings[pio][1] << 8);
  	} else {
  		int shift = 4 * ap->port_no;
- 		u8 slave_data;
+-		u8 slave_data;
  
--		idetm_data &= 0xFF0F;
--		idetm_data |= (control << 4);
-+		master_data &= 0xFF0F;
-+		master_data |= (control << 4);
- 
- 		/* Slave timing in separate register */
+ 		master_data &= 0xFF0F;
+ 		master_data |= (control << 4);
+@@ -126,12 +127,14 @@ static void efar_set_timings(struct ata_port *ap, struct ata_device *adev,
  		pci_read_config_byte(dev, 0x44, &slave_data);
-@@ -135,8 +135,8 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 		pci_write_config_byte(dev, 0x44, slave_data);
+ 		slave_data &= ap->port_no ? 0x0F : 0xF0;
+ 		slave_data |= ((timings[pio][0] << 2) | timings[pio][1]) << shift;
+-		pci_write_config_byte(dev, 0x44, slave_data);
  	}
  
--	idetm_data |= 0x4000;	/* Ensure SITRE is set */
--	pci_write_config_word(dev, idetm_port, idetm_data);
-+	master_data |= 0x4000;	/* Ensure SITRE is set */
-+	pci_write_config_word(dev, master_port, master_data);
+ 	master_data |= 0x4000;	/* Ensure SITRE is set */
+ 	pci_write_config_word(dev, master_port, master_data);
  
++	if (is_slave)
++		pci_write_config_byte(dev, 0x44, slave_data);
++
  	pci_read_config_byte(dev, 0x48, &udma_enable);
  	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
+ 	pci_write_config_byte(dev, 0x48, udma_enable);
 -- 
 1.7.1
