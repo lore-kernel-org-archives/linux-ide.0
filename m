@@ -1,48 +1,79 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ahci: recognize Marvell 88se9125 PCIe SATA 6.0 Gb/s controller
-Date: Tue, 08 Feb 2011 15:14:29 +0300
-Message-ID: <4D5133A5.8090808@ru.mvista.com>
-References: <4D5107D3.7030509@computer.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCHSET] ata: rework support for PIIX-alike PATA controllers
+Date: Tue, 08 Feb 2011 13:23:14 +0100
+Message-ID: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42959 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753772Ab1BHMPp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 07:15:45 -0500
-Received: by bwz15 with SMTP id 15so5945045bwz.19
-        for <linux-ide@vger.kernel.org>; Tue, 08 Feb 2011 04:15:44 -0800 (PST)
-In-Reply-To: <4D5107D3.7030509@computer.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48060 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385Ab1BHMXl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2011 07:23:41 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Per Jessen <per@computer.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-kernel@vger.kernel.org
 
-Hello.
 
-On 08-02-2011 12:07, Per Jessen wrote:
+Hi,
 
-> Hi Jeff
+The following patchset reworks support for PIIX-alike PATA controllers.
 
-    This shouldn't be the part of the changelog.
+The first part rewrites code for programming PIO and MWDMA timings in the
+affected host drivers, while also fixing other issues discovered during
+the main task.  Then the second part adds support for non-Intel PIIX-alike
+controllers to ata_piix host driver and removes separate host drivers.
 
-> Below is a minor patch for drivers/ata/ahci.c for recognising
-> Marvell 88SE9125 PCIe SATA 6.0 Gb/s controller as found on the
-> RocketRaid 62X controller series. I have also submitted updates
-> to pci-ids.
+All in all this greatly simplifies the total code needed for all PIIX-alikes
+support (~1400 LOC are gone and 5 host drivers are removed) and hopefully
+makes it easier to maintain it in the long-term (some drivers already got
+slightly out-of-sync with ata_piix host driver, i.e. pata_rdc lacked locking
+fixes and Power Management support, both issues are fixed by patchset).
 
-> Signed-off-by: Per Jessen <per@computer.org>
+All testing was done using QEMU's PIIX3 controller emulation so any testing
+with real EFAR, IT8213, old PIIX, RDC and Radisys R82600 PATA controllers
+would be really appreciated..
 
-> --- a/drivers/ata/ahci.c 2011-02-02 14:55:16.514999946 +0100
-> +++ b/drivers/ata/ahci.c 2011-02-01 14:01:00.380977830 +0100
-> @@ -380,6 +380,8 @@
-> { PCI_VDEVICE(MARVELL, 0x6121), board_ahci_mv }, /* 6121 */
-> { PCI_DEVICE(0x1b4b, 0x9123),
-> .driver_data = board_ahci_yes_fbs }, /* 88se9128 */
-> + { PCI_DEVICE(0x1b4b, 0x9125),
-> + .driver_data = board_ahci_yes_fbs }, /* 88se9125 */
+ -- Bartlomiej
 
-    Your patch has spaces instead of all tabs.
 
-WBR, Sergei
+The following changes since commit 3c0eee3fe6a3a1c745379547c7e7c904aa64f6d5:
+
+  Linux 2.6.37 (2011-01-04 16:50:19 -0800)
+
+are available:
+
+Bartlomiej Zolnierkiewicz (20):
+      ata_piix: SITRE handling fix
+      ata_piix: unify code for programming PIO and MWDMA timings
+      pata_efar: fix register naming used in efar_set_piomode()
+      pata_efar: unify code for programming PIO and MWDMA timings
+      pata_efar: always program master_data before slave_data
+      pata_it8213: fix register naming used in it8213_set_piomode()
+      pata_it8213: unify code for programming PIO and MWDMA timings
+      pata_it8213: add UDMA100 and UDMA133 support
+      pata_oldpiix: unify code for programming PIO and MWDMA timings
+      pata_radisys: unify code for programming PIO and MWDMA timings
+      pata_rdc: unify code for programming PIO and MWDMA timings
+      pata_rdc: parallel scanning needs an extra locking
+      pata_rdc: add Power Management support
+      pata_oldpiix: add locking for parallel scanning
+      pata_oldpiix: enable parallel scan
+      ata_piix: add EFAR SLC90E66 support
+      ata_piix: add IT8213 support
+      ata_piix: add RDC support
+      ata_piix: add Intel old PIIX support
+      ata_piix: add Radisys R82600 support
+
+ drivers/ata/Kconfig        |    5 +
+ drivers/ata/Makefile       |    5 -
+ drivers/ata/ata_piix.c     |  410 +++++++++++++++++++++++++++++++++-----------
+ drivers/ata/pata_efar.c    |  319 ----------------------------------
+ drivers/ata/pata_it8213.c  |  313 ---------------------------------
+ drivers/ata/pata_oldpiix.c |  289 -------------------------------
+ drivers/ata/pata_radisys.c |  268 -----------------------------
+ drivers/ata/pata_rdc.c     |  401 -------------------------------------------
+ 8 files changed, 315 insertions(+), 1695 deletions(-)
+ delete mode 100644 drivers/ata/pata_efar.c
+ delete mode 100644 drivers/ata/pata_it8213.c
+ delete mode 100644 drivers/ata/pata_oldpiix.c
+ delete mode 100644 drivers/ata/pata_radisys.c
+ delete mode 100644 drivers/ata/pata_rdc.c
