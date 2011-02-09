@@ -1,52 +1,113 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata: implement on-demand HPA unlocking
-Date: Wed, 9 Feb 2011 09:59:35 +0100
-Message-ID: <20110209085935.GE6558@htj.dyndns.org>
-References: <4D51A648.20707@cfl.rr.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 21/20] ata_piix: add new PIIX_FLAG_* flags
+Date: Wed, 9 Feb 2011 10:10:24 +0100
+Message-ID: <201102091010.24914.bzolnier@gmail.com>
+References: <201102081652.36752.bzolnier@gmail.com> <AANLkTikyV579TRSMw_g_rTB7C641fWbdSELP9mpa30bG@mail.gmail.com> <4D518BBC.8050904@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:53733 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753267Ab1BII7l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Feb 2011 03:59:41 -0500
-Received: by bwz15 with SMTP id 15so715097bwz.19
-        for <linux-ide@vger.kernel.org>; Wed, 09 Feb 2011 00:59:39 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D51A648.20707@cfl.rr.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45924 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753246Ab1BIJLG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Feb 2011 04:11:06 -0500
+In-Reply-To: <4D518BBC.8050904@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello,
+Sergei Shtylyov wrote:
 
-On Tue, Feb 08, 2011 at 03:23:36PM -0500, Phillip Susi wrote:
-> It still causes problems with fakeraid striped arrays however, because
-> it detects the partition table on the primary disk, sees partitions
-> beyond the end, and chooses to unlock the HPA to attempt to access those
-> partitions.  This breaks the fakeraid array since the raid metadata left
-> by the bios uses the HPA geometry, which becomes incorrect when the HPA
-> is unlocked.
+> Bartlomiej Zolnierkiewicz wrote:
+> 
+> >>> Turn open-coded checks in piix_set_timings() into PIIX_FLAG_* flags
+> >>> per suggestion from Alan Cox.
+> >>> Suggested-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+> >>> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >> [...]
+> 
+> >>> Index: b/drivers/ata/ata_piix.c
+> >>> ===================================================================
+> >>> --- a/drivers/ata/ata_piix.c
+> >>> +++ b/drivers/ata/ata_piix.c
+> >>> @@ -133,6 +133,8 @@ enum {
+> >>>        PIIX_FLAG_CHECKINTR     = (1 << 28), /* make sure PCI INTx enabled
+> >>> */
+> >>>        PIIX_FLAG_SIDPR         = (1 << 29), /* SATA idx/data pair regs */
+> >>> +       PIIX_FLAG_NO_SITRE      = (1 << 30), /* no SITRE register */
+> 
+> >>   The register in question is called SIDETIM, SITRE is a bit that enables
+> >> its use.
+> 
+> > ICH4-M databook that I have at hand (Intel IDE PRM seems to be gone
+> > from Intel's website, though I'm sure I have a backup _somewhere_) it
+> > is called SLV_IDETIM so lets just stick with the current naming for
+> > now..
+> 
+>     Why not just say that SITRE is a bit, not register? :-)
 
-Fakeraids, awesome as always.  So, they fail if the member disks are
-unlocked?  Aiee...
+Good point.. :-)
 
-> I propose a slight refinement of the method introduced in this patch.
-> Rather than unlock the HPA if a partition goes beyond the end of the
-> current disk, it should check to make sure that doing so will actually
-> make that partition fully accessible, and don't bother unlocking if it
-> won't.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH v2 21/20] ata_piix: add new PIIX_FLAG_* flags
 
-The decision to unlock native capacity is made at the block layer
-where the native capacity is unknown and then when the driver method
-is called it doesn't know how long the partition table wants.  Of
-course, we can change things such that the length partition table
-wants is propagated downwards but I don't know.  How big a problem is
-it?  Does the problem happen with a lot of fakeraids?  Maybe a better
-way is to export BIOS size and let fakeraid use it?
+Turn open-coded checks in piix_set_timings() into PIIX_FLAG_* flags
+per suggestion from Alan Cox.
 
-Thanks.
+Suggested-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+On top of https://lkml.org/lkml/2011/2/8/97 patchset.
 
--- 
-tejun
+v2: s/SITRE register/SITRE bit/ per Sergei's comment
+
+ drivers/ata/ata_piix.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
+
+Index: b/drivers/ata/ata_piix.c
+===================================================================
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -133,6 +133,8 @@ enum {
+ 
+ 	PIIX_FLAG_CHECKINTR	= (1 << 28), /* make sure PCI INTx enabled */
+ 	PIIX_FLAG_SIDPR		= (1 << 29), /* SATA idx/data pair regs */
++	PIIX_FLAG_NO_SITRE	= (1 << 30), /* no SITRE bit */
++	PIIX_FLAG_RADISYS	= (1 << 31), /* host is Radisys R82600 */
+ 
+ 	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+ 	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+@@ -698,7 +700,7 @@ static struct ata_port_info piix_port_in
+ 
+ 	[oldpiix_pata] =
+ 	{
+-		.flags		= PIIX_PATA_FLAGS,
++		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_NO_SITRE,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.port_ops	= &oldpiix_pata_ops,
+@@ -706,7 +708,8 @@ static struct ata_port_info piix_port_in
+ 
+ 	[radisys_pata] =
+ 	{
+-		.flags		= PIIX_PATA_FLAGS,
++		.flags		= PIIX_PATA_FLAGS | PIIX_FLAG_NO_SITRE |
++				  PIIX_FLAG_RADISYS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+ 		.udma_mask	= ATA_UDMA24_ONLY,
+@@ -859,10 +862,8 @@ static void piix_set_timings(struct ata_
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+ 	unsigned long flags;
+ 	unsigned int is_slave	= (adev->devno != 0);
+-	unsigned int is_radisys	= (dev->vendor == PCI_VENDOR_ID_RADISYS &&
+-				   dev->device == 0x8201);
+-	unsigned int has_sitre	= (dev->vendor != PCI_VENDOR_ID_INTEL ||
+-				   dev->device != 0x1230) && !is_radisys;
++	unsigned int is_radisys	= (ap->flags & PIIX_FLAG_RADISYS) ? 1 : 0;
++	unsigned int has_sitre	= (ap->flags & PIIX_FLAG_NO_SITRE) ? 0 : 1;
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+ 	u16 master_data;
