@@ -1,122 +1,70 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] libata: reduce ata_pci_[sff,bmdma]_init_one() size
-Date: Wed, 09 Feb 2011 23:08:31 +0300
-Message-ID: <4D52F43F.5040507@ru.mvista.com>
-References: <201102091515.22677.bzolnier@gmail.com>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: libata: implement on-demand HPA unlocking
+Date: Wed, 9 Feb 2011 15:47:53 -0500
+Message-ID: <AANLkTik58FyjV=uVB8fv9hY_+ZDtJb1CP+7vV=PXnuF-@mail.gmail.com>
+References: <4D51A648.20707@cfl.rr.com> <20110209085935.GE6558@htj.dyndns.org>
+ <4D52B0B3.40900@cfl.rr.com> <20110209153714.558133d7@lxorguk.ukuu.org.uk> <4D52ECB6.4010408@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201102091515.22677.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39405 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab1BIUsO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Feb 2011 15:48:14 -0500
+Received: by iwn9 with SMTP id 9so549581iwn.19
+        for <linux-ide@vger.kernel.org>; Wed, 09 Feb 2011 12:48:13 -0800 (PST)
+In-Reply-To: <4D52ECB6.4010408@cfl.rr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Phillip Susi <psusi@cfl.rr.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello.
+On Wed, Feb 9, 2011 at 2:36 PM, Phillip Susi <psusi@cfl.rr.com> wrote:
+> On 2/9/2011 10:37 AM, Alan Cox wrote:
+>> Unlocking the HPA is actually necessary for sanity on a lot of syste=
+ms
+>
+> Right.. ones that were partitioned using an older kernel with the bug=
+gy
+> behavior of unlocking it by default.
+>
+>> too, and there are really no standards. Remember the primary use of =
+HPA
+>> has actually been to hide most of the disk from buggy BIOSen so that=
+ the
+>> OS can then unlock it after the BIOS has stopped looking.
+>
+> The ATA spec describes the HPA saying:
+>
+> A reserved area for data storage outside the normal operating system
+> file system is required for several
+> specialized applications.
+>
+> This tells me that it is intended for the bios to reserve an area of =
+the
+> disk that the OS should NOT access. =A0So far the only use of it that=
+ I
+> have seen is by bioses to hide a small area, presumably to store
+> platform specific information. =A0I see about a dozen reports on the
+> ubuntu forums and bug tracker each year of people with HPA problems a=
+nd
+> it always seems to be a small area, as opposed to hiding everything
+> above 128 MB or something.
+>
 
-Bartlomiej Zolnierkiewicz wrote:
+Philip,
 
-> Turn both helpers (which are used only during LLDs initialization
-> time and thus are not performance sensitive) into wrappers around
-> the new ata_pci_init_one() function, this cuts 20 LOC and saves
-> ~1.1k of the output code size (x86-64):
+At some point (maybe 10 years ago), Dell used a HPA hidden partition
+to hold a diagnostic partition of some sort.  I never used it, but I
+remember coming across it several times.  I don't recall how big it
+was.
 
->  text    data     bss     dec     hex filename
->   21392       0      19   21411    53a3 drivers/ata/libata-sff.o.before
->   20256       0      19   20275    4f33 drivers/ata/libata-sff.o.after
+I assume their thought was to have a recovery / diagnostic area that
+normal users couldn't get to.  Now they just use a normal partition
+for that.
 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ata/libata-sff.c |  112 +++++++++++++++++++----------------------------
->  1 file changed, 46 insertions(+), 66 deletions(-)
+I gather fakeraids now use a HPA protected to hold metadata for how
+the raid is built, but I may have that wrong.
 
-> Index: b/drivers/ata/libata-sff.c
-> ===================================================================
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-[...]
-> @@ -2538,14 +2517,22 @@ int ata_pci_sff_init_one(struct pci_dev
->  	if (rc)
->  		goto out;
->  
-> -	/* prepare and activate SFF host */
-> -	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-> +	if (bmdma)
-> +		/* prepare and activate BMDMA host */
-> +		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
-> +	else
-> +		/* prepare and activate SFF host */
-> +		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
->  	if (rc)
->  		goto out;
->  	host->private_data = host_priv;
-> -	host->flags |= hflag;
-> +	host->flags |= hflags;
->  
-> -	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
-> +	if (bmdma) {
-> +		pci_set_master(pdev);
-> +		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-> +	} else
-> +		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
-
-    Perhaps this will save even more:
-
-	if (bmdma)
-		pci_set_master(pdev);
-	rc = ata_pci_sff_activate_host(host, bmdma ? ata_bmdma_interrupt :
-						     ata_sff_interrupt, sht);
-
-> @@ -2554,6 +2541,35 @@ out:
->  
->  	return rc;
->  }
-> +
-> +/**
-> + *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-> + *	@pdev: Controller to be initialized
-> + *	@ppi: array of port_info, must be enough for two ports
-> + *	@sht: scsi_host_template to use when registering the host
-> + *	@host_priv: host private_data
-> + *	@hflag: host flags
-> + *
-> + *	This is a helper function which can be called from a driver's
-> + *	xxx_init_one() probe function if the hardware uses traditional
-> + *	IDE taskfile registers and is PIO only.
-> + *
-> + *	ASSUMPTION:
-> + *	Nobody makes a single channel controller that appears solely as
-> + *	the secondary legacy port on PCI.
-> + *
-> + *	LOCKING:
-> + *	Inherited from PCI layer (may sleep).
-> + *
-> + *	RETURNS:
-> + *	Zero on success, negative on errno-based value on error.
-> + */
-> +int ata_pci_sff_init_one(struct pci_dev *pdev,
-> +		 const struct ata_port_info * const *ppi,
-> +		 struct scsi_host_template *sht, void *host_priv, int hflag)
-
-    s/hflag/hflags/ for consistency?
-
-> +{
-> +	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0);
-
-    s/0/false/?
-
-> +}
->  EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
->  
->  #endif /* CONFIG_PCI */
-> @@ -3272,43 +3288,7 @@ int ata_pci_bmdma_init_one(struct pci_de
->  			   struct scsi_host_template *sht, void *host_priv,
->  			   int hflags)
->  {
-[...]
-> +	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1);
-
-    s/1/true/?
-
-WBR, Sergei
+Greg
