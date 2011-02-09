@@ -1,13 +1,13 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata: add CONFIG_SATA_HOST config option
-Date: Wed, 09 Feb 2011 22:57:51 +0300
-Message-ID: <4D52F1BF.3090006@ru.mvista.com>
-References: <201102091514.31355.bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: reduce ata_pci_[sff,bmdma]_init_one() size
+Date: Wed, 09 Feb 2011 23:08:31 +0300
+Message-ID: <4D52F43F.5040507@ru.mvista.com>
+References: <201102091515.22677.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201102091514.31355.bzolnier@gmail.com>
+In-Reply-To: <201102091515.22677.bzolnier@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -17,136 +17,106 @@ Hello.
 
 Bartlomiej Zolnierkiewicz wrote:
 
-> Add CONFIG_SATA_HOST config option (for selecting SATA Host
-> support) to make setup easier on PATA-only systems.
+> Turn both helpers (which are used only during LLDs initialization
+> time and thus are not performance sensitive) into wrappers around
+> the new ata_pci_init_one() function, this cuts 20 LOC and saves
+> ~1.1k of the output code size (x86-64):
 
-> Additionally this allows us to save ~9.5k of the output code
-> size (x86-64) on such systems:
-
->    text    data     bss     dec     hex filename
->   49909    6576      57   56542    dcde drivers/ata/libata-core.o.before
->   31862      16       2   31880    7c88 drivers/ata/libata-eh.o.before
->   20256       0      19   20275    4f33 drivers/ata/libata-sff.o.before
->   44495    6576      57   51128    c7b8 drivers/ata/libata-core.o.after
->   27831      16       2   27849    6cc9 drivers/ata/libata-eh.o.after
->   20144       0      19   20163    4ec3 drivers/ata/libata-sff.o.after
-
-    Good job!
+>  text    data     bss     dec     hex filename
+>   21392       0      19   21411    53a3 drivers/ata/libata-sff.o.before
+>   20256       0      19   20275    4f33 drivers/ata/libata-sff.o.after
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > ---
-> I also wonder if  SATA code should be moved to libata-sata.c (to avoid ifdefs)?
+>  drivers/ata/libata-sff.c |  112 +++++++++++++++++++----------------------------
+>  1 file changed, 46 insertions(+), 66 deletions(-)
 
->  drivers/ata/Kconfig       |   25 ++++++++--
->  drivers/ata/libata-core.c |  107 +++++++++++++++++++++++++++++++++++++++-------
->  drivers/ata/libata-eh.c   |   21 ++++++++-
->  drivers/ata/libata-sff.c  |    8 +++
->  4 files changed, 141 insertions(+), 20 deletions(-)
-
-> Index: b/drivers/ata/Kconfig
+> Index: b/drivers/ata/libata-sff.c
 > ===================================================================
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
 [...]
-> @@ -122,7 +133,7 @@ comment "SFF controllers with custom DMA
+> @@ -2538,14 +2517,22 @@ int ata_pci_sff_init_one(struct pci_dev
+>  	if (rc)
+>  		goto out;
 >  
->  config PDC_ADMA
->  	tristate "Pacific Digital ADMA support"
-> -	depends on PCI
-> +	depends on PCI && SATA_HOST
+> -	/* prepare and activate SFF host */
+> -	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
+> +	if (bmdma)
+> +		/* prepare and activate BMDMA host */
+> +		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+> +	else
+> +		/* prepare and activate SFF host */
+> +		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
+>  	if (rc)
+>  		goto out;
+>  	host->private_data = host_priv;
+> -	host->flags |= hflag;
+> +	host->flags |= hflags;
+>  
+> -	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
+> +	if (bmdma) {
+> +		pci_set_master(pdev);
+> +		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
+> +	} else
+> +		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
 
-    I thought ADMA spec. was designed for PATA... are you sure this should 
-depend on CONFIG_SATA_HOST?
+    Perhaps this will save even more:
 
-> @@ -165,8 +176,6 @@ config ATA_BMDMA
+	if (bmdma)
+		pci_set_master(pdev);
+	rc = ata_pci_sff_activate_host(host, bmdma ? ata_bmdma_interrupt :
+						     ata_sff_interrupt, sht);
+
+> @@ -2554,6 +2541,35 @@ out:
 >  
->  if ATA_BMDMA
->  
-> -comment "SATA SFF controllers with BMDMA"
-> -
->  config ATA_PIIX
->  	tristate "Intel ESB, ICH, PIIX3, PIIX4 PATA/SATA support"
->  	depends on PCI
-> @@ -177,6 +186,10 @@ config ATA_PIIX
->  
->  	  If unsure, say N.
->  
-> +if SATA_HOST
+>  	return rc;
+>  }
 > +
-> +comment "SATA/PATA SFF controllers with BMDMA"
+> +/**
+> + *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
+> + *	@pdev: Controller to be initialized
+> + *	@ppi: array of port_info, must be enough for two ports
+> + *	@sht: scsi_host_template to use when registering the host
+> + *	@host_priv: host private_data
+> + *	@hflag: host flags
+> + *
+> + *	This is a helper function which can be called from a driver's
+> + *	xxx_init_one() probe function if the hardware uses traditional
+> + *	IDE taskfile registers and is PIO only.
+> + *
+> + *	ASSUMPTION:
+> + *	Nobody makes a single channel controller that appears solely as
+> + *	the secondary legacy port on PCI.
+> + *
+> + *	LOCKING:
+> + *	Inherited from PCI layer (may sleep).
+> + *
+> + *	RETURNS:
+> + *	Zero on success, negative on errno-based value on error.
+> + */
+> +int ata_pci_sff_init_one(struct pci_dev *pdev,
+> +		 const struct ata_port_info * const *ppi,
+> +		 struct scsi_host_template *sht, void *host_priv, int hflag)
 
-    How it can be "SATA/PATA" if it's only enabled when CONFIG_SATA_HOST=y?
+    s/hflag/hflags/ for consistency?
 
-> Index: b/drivers/ata/libata-core.c
-> ===================================================================
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
+> +{
+> +	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0);
+
+    s/0/false/?
+
+> +}
+>  EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
+>  
+>  #endif /* CONFIG_PCI */
+> @@ -3272,43 +3288,7 @@ int ata_pci_bmdma_init_one(struct pci_de
+>  			   struct scsi_host_template *sht, void *host_priv,
+>  			   int hflags)
+>  {
 [...]
-> @@ -601,6 +609,9 @@ void ata_tf_from_fis(const u8 *fis, stru
->  	tf->nsect	= fis[12];
->  	tf->hob_nsect	= fis[13];
->  }
-> +#else
-> +void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf) { }
-> +#endif
+> +	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1);
 
-    Is it really ever called by non-SATA code? Ah, it's exported at end of file 
-and so should be defined... isn't it better to carry over the export from the 
-bottom of the file (and thus silence one of checkpatch.pl's warnings :-).
-
-> @@ -2690,6 +2718,7 @@ struct ata_device *ata_dev_pair(struct a
->  	return pair;
->  }
->  
-> +#ifdef CONFIG_SATA_HOST
->  /**
->   *	sata_down_spd_limit - adjust SATA spd limit downward
->   *	@link: Link to adjust SATA spd limit for
-> @@ -2843,6 +2872,18 @@ int sata_set_spd(struct ata_link *link)
->  
->  	return 1;
->  }
-> +#else
-[...]
-> +int sata_set_spd(struct ata_link *link)
-> +{
-> +	return 0;
-> +}
-
-    Again, I don't think that's called by non-SATA code...
-
-> +#endif
-> +EXPORT_SYMBOL_GPL(sata_set_spd);
-
-    Here you're carrying over the export...
-
-> @@ -3436,6 +3477,7 @@ int ata_wait_after_reset(struct ata_link
->  	return ata_wait_ready(link, deadline, check_ready);
->  }
->  
-> +#ifdef CONFIG_SATA_HOST
->  /**
->   *	sata_link_debounce - debounce SATA phy status
->   *	@link: ATA link to debounce SATA phy status for
-> @@ -3638,6 +3680,26 @@ int sata_link_scr_lpm(struct ata_link *l
->  	ehc->i.serror &= ~SERR_PHYRDY_CHG;
->  	return sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
->  }
-> +#else
-> +int sata_link_debounce(struct ata_link *link, const unsigned long *params,
-> +		       unsigned long deadline)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-
-    Again, not called by non-SATA code...
-
-> +int sata_link_resume(struct ata_link *link, const unsigned long *params,
-> +		     unsigned long deadline)
-> +{
-> +	return -EOPNOTSUPP;
-> +}
-
-    This one is not called by non-SATA code now either...
+    s/1/true/?
 
 WBR, Sergei
