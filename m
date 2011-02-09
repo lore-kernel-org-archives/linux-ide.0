@@ -1,176 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: reduce ata_pci_[sff,bmdma]_init_one() size
-Date: Wed, 9 Feb 2011 15:15:22 +0100
-Message-ID: <201102091515.22677.bzolnier@gmail.com>
+From: Phillip Susi <psusi@cfl.rr.com>
+Subject: Re: libata: implement on-demand HPA unlocking
+Date: Wed, 09 Feb 2011 10:20:19 -0500
+Message-ID: <4D52B0B3.40900@cfl.rr.com>
+References: <4D51A648.20707@cfl.rr.com> <20110209085935.GE6558@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58405 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751034Ab1BIPUW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Feb 2011 10:20:22 -0500
+In-Reply-To: <20110209085935.GE6558@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Turn both helpers (which are used only during LLDs initialization
-time and thus are not performance sensitive) into wrappers around
-the new ata_pci_init_one() function, this cuts 20 LOC and saves
-~1.1k of the output code size (x86-64):
+On 2/9/2011 3:59 AM, Tejun Heo wrote:
+> Fakeraids, awesome as always.  So, they fail if the member disks are
+> unlocked?  Aiee...
 
- text    data     bss     dec     hex filename
-  21392       0      19   21411    53a3 drivers/ata/libata-sff.o.before
-  20256       0      19   20275    4f33 drivers/ata/libata-sff.o.after
+Since the metadata is stored relative to the end of the disk, yes,
+unlocking it causes its position to change.  The same problem should
+apply to mdadm, though the odds are much higher that when mdadm created
+the array, it was also running on a kernel that unlocked the HPA.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ata/libata-sff.c |  112 +++++++++++++++++++----------------------------
- 1 file changed, 46 insertions(+), 66 deletions(-)
+> The decision to unlock native capacity is made at the block layer
+> where the native capacity is unknown and then when the driver method
+> is called it doesn't know how long the partition table wants.  Of
+> course, we can change things such that the length partition table
+> wants is propagated downwards but I don't know.  How big a problem is
+> it?  Does the problem happen with a lot of fakeraids?  Maybe a better
+> way is to export BIOS size and let fakeraid use it?
 
-Index: b/drivers/ata/libata-sff.c
-===================================================================
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2491,31 +2491,10 @@ static const struct ata_port_info *ata_s
- 	return NULL;
- }
- 
--/**
-- *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-- *	@pdev: Controller to be initialized
-- *	@ppi: array of port_info, must be enough for two ports
-- *	@sht: scsi_host_template to use when registering the host
-- *	@host_priv: host private_data
-- *	@hflag: host flags
-- *
-- *	This is a helper function which can be called from a driver's
-- *	xxx_init_one() probe function if the hardware uses traditional
-- *	IDE taskfile registers and is PIO only.
-- *
-- *	ASSUMPTION:
-- *	Nobody makes a single channel controller that appears solely as
-- *	the secondary legacy port on PCI.
-- *
-- *	LOCKING:
-- *	Inherited from PCI layer (may sleep).
-- *
-- *	RETURNS:
-- *	Zero on success, negative on errno-based value on error.
-- */
--int ata_pci_sff_init_one(struct pci_dev *pdev,
--		 const struct ata_port_info * const *ppi,
--		 struct scsi_host_template *sht, void *host_priv, int hflag)
-+static int ata_pci_init_one(struct pci_dev *pdev,
-+		const struct ata_port_info * const *ppi,
-+		struct scsi_host_template *sht, void *host_priv,
-+		int hflags, bool bmdma)
- {
- 	struct device *dev = &pdev->dev;
- 	const struct ata_port_info *pi;
-@@ -2538,14 +2517,22 @@ int ata_pci_sff_init_one(struct pci_dev
- 	if (rc)
- 		goto out;
- 
--	/* prepare and activate SFF host */
--	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+	if (bmdma)
-+		/* prepare and activate BMDMA host */
-+		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
-+	else
-+		/* prepare and activate SFF host */
-+		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
- 	if (rc)
- 		goto out;
- 	host->private_data = host_priv;
--	host->flags |= hflag;
-+	host->flags |= hflags;
- 
--	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
-+	if (bmdma) {
-+		pci_set_master(pdev);
-+		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-+	} else
-+		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
- out:
- 	if (rc == 0)
- 		devres_remove_group(&pdev->dev, NULL);
-@@ -2554,6 +2541,35 @@ out:
- 
- 	return rc;
- }
-+
-+/**
-+ *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-+ *	@pdev: Controller to be initialized
-+ *	@ppi: array of port_info, must be enough for two ports
-+ *	@sht: scsi_host_template to use when registering the host
-+ *	@host_priv: host private_data
-+ *	@hflag: host flags
-+ *
-+ *	This is a helper function which can be called from a driver's
-+ *	xxx_init_one() probe function if the hardware uses traditional
-+ *	IDE taskfile registers and is PIO only.
-+ *
-+ *	ASSUMPTION:
-+ *	Nobody makes a single channel controller that appears solely as
-+ *	the secondary legacy port on PCI.
-+ *
-+ *	LOCKING:
-+ *	Inherited from PCI layer (may sleep).
-+ *
-+ *	RETURNS:
-+ *	Zero on success, negative on errno-based value on error.
-+ */
-+int ata_pci_sff_init_one(struct pci_dev *pdev,
-+		 const struct ata_port_info * const *ppi,
-+		 struct scsi_host_template *sht, void *host_priv, int hflag)
-+{
-+	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0);
-+}
- EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
- 
- #endif /* CONFIG_PCI */
-@@ -3272,43 +3288,7 @@ int ata_pci_bmdma_init_one(struct pci_de
- 			   struct scsi_host_template *sht, void *host_priv,
- 			   int hflags)
- {
--	struct device *dev = &pdev->dev;
--	const struct ata_port_info *pi;
--	struct ata_host *host = NULL;
--	int rc;
--
--	DPRINTK("ENTER\n");
--
--	pi = ata_sff_find_valid_pi(ppi);
--	if (!pi) {
--		dev_printk(KERN_ERR, &pdev->dev,
--			   "no valid port_info specified\n");
--		return -EINVAL;
--	}
--
--	if (!devres_open_group(dev, NULL, GFP_KERNEL))
--		return -ENOMEM;
--
--	rc = pcim_enable_device(pdev);
--	if (rc)
--		goto out;
--
--	/* prepare and activate BMDMA host */
--	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
--	if (rc)
--		goto out;
--	host->private_data = host_priv;
--	host->flags |= hflags;
--
--	pci_set_master(pdev);
--	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
-- out:
--	if (rc == 0)
--		devres_remove_group(&pdev->dev, NULL);
--	else
--		devres_release_group(&pdev->dev, NULL);
--
--	return rc;
-+	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1);
- }
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
- 
+It is a big problem for anyone using fakeraid ( which is quite popular
+these days ) and has a bios that enables the HPA.  I think this is a
+better solution because aside from the problems it causes to fakeraid,
+unlocking the HPA defies the relevant standards and will trash whatever
+data the bios is storing there, which is not good either.  Hence why I
+am in favor of the idea of only unlocking the HPA if it is clear that
+the disk was partitioned with a previously broken kernel and so it must
+be unlocked to access existing user data.  That is why I like this
+commit, but it misses the mark in raid situations where the MBR is
+visible on the raw disk, but really is supposed to apply to the whole raid.
+
