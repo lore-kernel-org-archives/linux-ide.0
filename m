@@ -1,59 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: libata: implement on-demand HPA unlocking
-Date: Thu, 10 Feb 2011 10:44:40 +0100
-Message-ID: <20110210094440.GL3770@htj.dyndns.org>
+Date: Thu, 10 Feb 2011 12:46:44 +0000
+Message-ID: <20110210124644.0cec1287@lxorguk.ukuu.org.uk>
 References: <4D51A648.20707@cfl.rr.com>
- <20110209085935.GE6558@htj.dyndns.org>
- <4D52B0B3.40900@cfl.rr.com>
- <20110209153714.558133d7@lxorguk.ukuu.org.uk>
- <20110209153601.GJ3770@htj.dyndns.org>
- <4D52E180.6020908@garzik.org>
- <4D52EEEC.1020602@cfl.rr.com>
+	<20110209085935.GE6558@htj.dyndns.org>
+	<4D52B0B3.40900@cfl.rr.com>
+	<20110209153714.558133d7@lxorguk.ukuu.org.uk>
+	<4D52ECB6.4010408@cfl.rr.com>
+	<20110209211351.3d7eff85@lxorguk.ukuu.org.uk>
+	<4D5306F8.6050106@cfl.rr.com>
+	<20110209213904.4aff945d@lxorguk.ukuu.org.uk>
+	<4D532FFC.2020503@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51583 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753306Ab1BJJop (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 04:44:45 -0500
-Received: by fxm20 with SMTP id 20so1251658fxm.19
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2011 01:44:44 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D52EEEC.1020602@cfl.rr.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:41828 "EHLO
+	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751123Ab1BJMnH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 07:43:07 -0500
+In-Reply-To: <4D532FFC.2020503@cfl.rr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
+> What experience?  The only reason that I have heard for unlocking it is 
 
-On Wed, Feb 09, 2011 at 02:45:48PM -0500, Phillip Susi wrote:
-> Then why did you have libata default to NOT unlocking it, which seems to
-> be the correct thing to do?  When Ubuntu switched to libata they patched
-> it to default to unlocking the HPA because the old ide driver did.  This
-> seems wrong and causes breakage.  Tejun's patch seems to be a good
-> compromise between the two choices: unlock if you think it will help,
-> otherwise, don't, since it might hurt.
+About ten years of distributions, drive hiding magic for old BIOSes and
+other pain.
 
-I don't think that patch supports your argument to begin with but even
-if it did don't get too hung up on the fact that I (or anyone else)
-did something contrary in the past.  I've done a lot of stupid and
-horrible things and changed mind more times than anyone should care
-about.
+> to maintain compatibility with the old ide driver which did so.  What 
+> reason does Linux have to access an area of the disk that the system has 
+> made clear it should not?
 
-I thought it would be a good and safe compromise for distros which
-don't want to unlock by default but look at where we are.  We just
-ended up with failures which are more obscure.  Your proposed addition
-will only push things further that direction.  It might not
-necessarily be a bad thing.  Maybe the level of obscurity then goes
-beyond certain level and we wouldn't have to care about that.
+It's unfortunate you won't listen but continue to spout stuff from a
+standard no vendor, no OS and no product ever followed. ATA is not built
+on strict adherance to formal standards, nor is the PC.
 
-But much better solution seems to be exporting the bios size to others
-and letting the ones which understand storage configuration better
-deal with it.  At the block or libata layer, we simply don't have
-enough information to make those decisions in a reliable manner.
+> What part to you disagree with?  That the compromise in place can have 
+> the benefits of both, but the drawbacks of neither?
 
-Thanks.
+That there is any point doing anything but always unlocking.
 
--- 
-tejun
+> I understand that dmraid could work around the problem, but there should 
+> not be a problem in the first place.  The system has asked that we not 
+> touch that part of the disk
+
+I see no point continuing this discussion if all you want to do is wave a
+'standard' that isn't followed by anyone and breaks stuff and demand we
+follow it. Always unlock in the kernel, make both sets of geometry
+available via sysfs and then fix dmraid. It's an easy problem to solve
+and because dmraid knows a lot about fakeraid stuff it also knows enough
+to peer in various locations and figure out which to use - something that
+the kernel quite intentionally does not.
+
+Alan
