@@ -1,7 +1,7 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: libata: implement on-demand HPA unlocking
-Date: Thu, 10 Feb 2011 12:46:44 +0000
-Message-ID: <20110210124644.0cec1287@lxorguk.ukuu.org.uk>
+Date: Thu, 10 Feb 2011 13:49:01 +0100
+Message-ID: <AANLkTikL6rGvg7PeCzJPAaWm9-4dniCY4NErGUgi_54N@mail.gmail.com>
 References: <4D51A648.20707@cfl.rr.com>
 	<20110209085935.GE6558@htj.dyndns.org>
 	<4D52B0B3.40900@cfl.rr.com>
@@ -12,47 +12,60 @@ References: <4D51A648.20707@cfl.rr.com>
 	<20110209213904.4aff945d@lxorguk.ukuu.org.uk>
 	<4D532FFC.2020503@cfl.rr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:41828 "EHLO
-	localhost.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751123Ab1BJMnH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 07:43:07 -0500
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:34521 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810Ab1BJMtD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 07:49:03 -0500
+Received: by qyj19 with SMTP id 19so2288995qyj.19
+        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2011 04:49:02 -0800 (PST)
 In-Reply-To: <4D532FFC.2020503@cfl.rr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Phillip Susi <psusi@cfl.rr.com>
-Cc: Tejun Heo <tj@kernel.org>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> What experience?  The only reason that I have heard for unlocking it is 
+On Thu, Feb 10, 2011 at 1:23 AM, Phillip Susi <psusi@cfl.rr.com> wrote:
+> On 02/09/2011 04:39 PM, Alan Cox wrote:
+>>
+>> The old IDE driver defaulted to unlocking based upon years of experi=
+ence
+>> in the real world. Jeff insisted on being different, and surprise
+>> surprise everyone ended up setting distro defaults that were differe=
+nt.
+>
+> What experience? =A0The only reason that I have heard for unlocking i=
+t is to
+> maintain compatibility with the old ide driver which did so. =A0What =
+reason
+> does Linux have to access an area of the disk that the system has mad=
+e clear
+> it should not? =A0Aside from the upgrade case, I can not see any upsi=
+de to
+> this, only the downside of breaking on systems that work fine on Wind=
+ows,
+> because it does not disregard the platform request to leave that part=
+ of the
+> disk alone.
 
-About ten years of distributions, drive hiding magic for old BIOSes and
-other pain.
+I wish it was so simple.. HPA was originally used for accessing disk
+area > 128GB (so default to unlock) on systems with buggy BIOSes and
+then on some laptops vendors started to use it in _theirs_ Windows
+versions for recovery area (so default to lock!), somewhere in between
+fakeraid vendors came in to the game and finally we had conflicting
+Linux defaults more as a result of premature deployment by some
+distributions than a policy decision (since there were no feature
+implemented to make a policy decision for).. oh and please do not
+forget about distribution upgrades/downgrades -- not a common case in
+Linux world but such things really do happen.. Do you see a problem
+now?  You just cannot make a one policy nowadays and whatever policy
+you decide on you're going to break some setups.. :-)  HPA policy is
+system _and_ disk _and_ specific configuration dependent so there is
+no way for kernel alone to get all different cases right.  The best we
+can do is export all data points to user-space and let it & user deal
+with the resulting mess..
 
-> to maintain compatibility with the old ide driver which did so.  What 
-> reason does Linux have to access an area of the disk that the system has 
-> made clear it should not?
-
-It's unfortunate you won't listen but continue to spout stuff from a
-standard no vendor, no OS and no product ever followed. ATA is not built
-on strict adherance to formal standards, nor is the PC.
-
-> What part to you disagree with?  That the compromise in place can have 
-> the benefits of both, but the drawbacks of neither?
-
-That there is any point doing anything but always unlocking.
-
-> I understand that dmraid could work around the problem, but there should 
-> not be a problem in the first place.  The system has asked that we not 
-> touch that part of the disk
-
-I see no point continuing this discussion if all you want to do is wave a
-'standard' that isn't followed by anyone and breaks stuff and demand we
-follow it. Always unlock in the kernel, make both sets of geometry
-available via sysfs and then fix dmraid. It's an easy problem to solve
-and because dmraid knows a lot about fakeraid stuff it also knows enough
-to peer in various locations and figure out which to use - something that
-the kernel quite intentionally does not.
-
-Alan
+Thanks,
+Bartlomiej
