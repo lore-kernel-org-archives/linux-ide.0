@@ -1,65 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
 Subject: Re: [PATCH 05/20] pata_efar: always program master_data before slave_data
-Date: Thu, 10 Feb 2011 18:14:54 +0100
-Message-ID: <AANLkTinPYo+mhiRwsNpdNgqADQbk7bvQX=RcZoiN0pbS@mail.gmail.com>
-References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
-	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
-	<4D53F4ED.10903@ru.mvista.com>
+Date: Thu, 10 Feb 2011 20:55:53 +0300
+Message-ID: <4D5426A9.60903@mvista.com>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>	<4D53F4ED.10903@ru.mvista.com> <AANLkTinPYo+mhiRwsNpdNgqADQbk7bvQX=RcZoiN0pbS@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:34580 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750820Ab1BJRO4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 12:14:56 -0500
-In-Reply-To: <4D53F4ED.10903@ru.mvista.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33988 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991Ab1BJR5W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Feb 2011 12:57:22 -0500
+In-Reply-To: <AANLkTinPYo+mhiRwsNpdNgqADQbk7bvQX=RcZoiN0pbS@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Hello.
 
-On Thu, Feb 10, 2011 at 3:23 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> Hello.
->
-> On 08-02-2011 15:24, Bartlomiej Zolnierkiewicz wrote:
-> [...]
->
->> We may need to set SITRE before programming slave_data.
->
->> This makes pata_efar match the behavior of IDE's slc90e66 host drive=
-r
->> and also of libata's ata_piix one.
->
->> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->
-> [...]
->
->> diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
->> index 1e2ff7d..7f564d7 100644
->> --- a/drivers/ata/pata_efar.c
->> +++ b/drivers/ata/pata_efar.c
->> @@ -74,10 +74,12 @@ static void efar_set_timings(struct ata_port *ap=
-,
->> struct ata_device *adev,
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 u8 pio, bool=
- use_mwdma)
->> =A0{
->> =A0 =A0 =A0 =A0struct pci_dev *dev =A0 =A0 =3D to_pci_dev(ap->host->=
-dev);
->> + =A0 =A0 =A0 unsigned int is_slave =A0 =3D (adev->devno !=3D 0);
->
-> =A0 What's the point of this variable? To save one pointer dereferenc=
-e? :-)
+Bartlomiej Zolnierkiewicz wrote:
 
-Make code more similar to ata_piix.c and thus easier for comparisons
-through 'diff -ub'.
+>> On 08-02-2011 15:24, Bartlomiej Zolnierkiewicz wrote:
+>> [...]
 
-In reality it doesn't matter now that much as pata_efar (same for
-pata_oldpiix) vanishes completely at the end of the patch series.. :-)
+>>> We may need to set SITRE before programming slave_data.
+>>> This makes pata_efar match the behavior of IDE's slc90e66 host driver
+>>> and also of libata's ata_piix one.
 
-Thanks,
-Bartlomiej
+>>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+>> [...]
+
+>>> diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
+>>> index 1e2ff7d..7f564d7 100644
+>>> --- a/drivers/ata/pata_efar.c
+>>> +++ b/drivers/ata/pata_efar.c
+>>> @@ -74,10 +74,12 @@ static void efar_set_timings(struct ata_port *ap,
+>>> struct ata_device *adev,
+>>>                             u8 pio, bool use_mwdma)
+>>>  {
+>>>        struct pci_dev *dev     = to_pci_dev(ap->host->dev);
+>>> +       unsigned int is_slave   = (adev->devno != 0);
+
+>>   What's the point of this variable? To save one pointer dereference? :-)
+
+> Make code more similar to ata_piix.c and thus easier for comparisons
+> through 'diff -ub'.
+
+> In reality it doesn't matter now that much as pata_efar (same for
+> pata_oldpiix) vanishes completely at the end of the patch series.. :-)
+
+    Yeah, I understood that. Just don't have time to review the full series yet.
+
+> Thanks,
+> Bartlomiej
+
+WBR, Sergei
