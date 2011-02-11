@@ -1,65 +1,81 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH 1/1] PCI: tune up ICH4 quirk for broken BIOSes
-Date: Fri, 11 Feb 2011 11:32:34 +0100
-Message-ID: <4D551042.10003@gmail.com>
-References: <1294327066-23518-1-git-send-email-jslaby@suse.cz>	<AANLkTinN40GMRL3bJ7LKDmhCYK1AYZfQ+mVYwxDP1ZQe@mail.gmail.com>	<4D3025F4.6020001@gmail.com>	<201101140910.07154.bjorn.helgaas@hp.com>	<4D5112F5.8030700@gmail.com> <20110208132055.1c55ff93@jbarnes-desktop>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH option B 2/2] PCI: do not create quirk I/O regions below
+ PCIBIOS_MIN_IO for ICH
+Date: Fri, 11 Feb 2011 15:09:40 +0300
+Message-ID: <4D552704.1000509@ru.mvista.com>
+References: <4D3025F4.6020001@gmail.com> <1295001146-14910-2-git-send-email-jslaby@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110208132055.1c55ff93@jbarnes-desktop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jesse Barnes <jbarnes@virtuousgeek.org>
-Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41093 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069Ab1BKMK6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2011 07:10:58 -0500
+In-Reply-To: <1295001146-14910-2-git-send-email-jslaby@suse.cz>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jirislaby@gmail.com, Bjorn Helgaas <bjorn.helgaas@hp.com>, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On 02/08/2011 10:20 PM, Jesse Barnes wrote:
-> On Tue, 08 Feb 2011 10:55:01 +0100
-> Jiri Slaby <jirislaby@gmail.com> wrote:
-> 
->> On 01/14/2011 05:10 PM, Bjorn Helgaas wrote:
->>> On Friday, January 14, 2011 03:31:16 am Jiri Slaby wrote:
->>>> On 01/14/2011 01:15 AM, Linus Torvalds wrote:
->>>>> On Thu, Jan 13, 2011 at 3:19 PM, Bjorn Helgaas <bjorn.helgaas@hp.com> wrote:
->>>>>>
->>>>>> I think we're back to the question of why we have the ICH4 quirk in
->>>>>> the first place, and I don't know the answer to that.
->>>>>
->>>>> Iirc, there were several laptops that didn't have the ACPI region
->>>>> mentioned in any of the regular places, and we'd allocate the PCMCIA
->>>>> IO region on top of them. The machine would boot, but if anybody ever
->>>>> inserted a PCCard into the machine, the first access to the IO region
->>>>> would generally just halt it (because it was trying to read the
->>>>> PCCard, but the APCI region decodes first, and then the read from that
->>>>> usually put the CPU in a sleep state that it would never wake up from
->>>>> for obvious reasons).
->>>>>
->>>>> So we do want the ICH4 quirk.
->>>>
->>>> Yes, this is an "official" way how ICH4 (and later) advertises the region.
->>>
->>> The quirk is a bug workaround, *not* the "official, planned" way to
->>> deal with these regions.  The official way is to use ACPI, because
->>> that's a generic way that doesn't require changes for new versions
->>> of ICH.
->>
->> Ok, I understand that. For non-ACPI setups this is probably the only
->> place to look at.
->>
->> Anyway, has anybody had a chance to look at the patches? Any comments,
->> nacks/acks?
->>
->> https://lkml.org/lkml/2011/1/14/115
->> https://lkml.org/lkml/2011/1/14/113
->> https://lkml.org/lkml/2011/1/14/114
-> 
-> I don't have a problem making the quirk quirkier, but it would be nice
-> to get rid of the need for it entirely (though we can leave that to
-> Bjorn :). Can you re-submit these three against my linux-next branch?
+Hello.
 
-Ok, I can. But do you want solution 113 or 114 -- they solve the same,
-but in a different manner?
+On 14-01-2011 13:32, Jiri Slaby wrote:
 
-thanks,
--- 
-js
+> Some broken BIOSes on ICH4 chipset report an ACPI region which is in
+> conflict with legacy IDE ports when ACPI is disabled. Even though the
+> regions overlap, IDE ports are working correctly (we cannot find out
+> the decoding rules on chipsets).
+>
+> So the only problem is the reported region itself, if we don't reserve
+> the region in the quirk everything works as expected.
+
+> This patch avoids reserving any quirk regions below PCIBIOS_MIN_IO
+> which is 0x1000. Some regions might be (and are by a fast google
+> query) below this border, but the only difference is that they won't
+> be reserved anymore. They should still work though the same as before.
+
+> The conflicts look like (1f.0 is bridge, 1f.1 is IDE ctrl):
+> pci 0000:00:1f.1: address space collision: [io 0x0170-0x0177] conflicts with 0000:00:1f.0 [io  0x0100-0x017f]
+
+> At 0x0100 a 128 bytes long ACPI region is reported in the quirk for
+> ICH4. ata_piix then fails to find disks because the IDE legacy ports
+> are zeroed:
+> ata_piix 0000:00:1f.1: device not available (can't reserve [io 0x0000-0x0007])
+
+> References: https://bugzilla.novell.com/show_bug.cgi?id=558740
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>
+> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Thomas Renninger <trenn@suse.de>
+> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+[...]
+
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 8db2426..b3ab2f7 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -554,18 +554,30 @@ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
+>   	u32 region;
+>   	u8 enable;
+>
+> +	/*
+> +	 * The check for PCIBIOS_MIN_IO is to ensure we won't create a conflict
+> +	 * with low legacy (and fixed) ports. We don't know the decoding
+> +	 * priority and can't tell whether the legacy device or the one created
+> +	 * here is really at that address.  This happens on boards with broken
+> +	 * BIOSes.
+> +	*/
+> +
+>   	pci_read_config_byte(dev, ICH_ACPI_CNTL,&enable);
+>   	if (enable&  ICH4_ACPI_EN) {
+>   		pci_read_config_dword(dev, ICH_PMBASE,&region);
+> -		quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
+> -				"ICH4 ACPI/GPIO/TCO");
+> +		region &= PCI_BASE_ADDRESS_IO_MASK;
+
+    Why don't you do the masking right in the patch #1? And is it really 
+necessary if the region size is known to be 128 bytes?
+
+WBR, Sergei
