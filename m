@@ -1,81 +1,126 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH option B 2/2] PCI: do not create quirk I/O regions below
- PCIBIOS_MIN_IO for ICH
-Date: Fri, 11 Feb 2011 15:09:40 +0300
-Message-ID: <4D552704.1000509@ru.mvista.com>
-References: <4D3025F4.6020001@gmail.com> <1295001146-14910-2-git-send-email-jslaby@suse.cz>
+Subject: Re: [Patch] Enable AHCI on certain ich chipsets
+Date: Fri, 11 Feb 2011 15:27:04 +0300
+Message-ID: <4D552B18.8030808@ru.mvista.com>
+References: <20110209115929.GS5778@Redstar.dorchain.net> <4D528F00.1090000@ru.mvista.com> <20110210192321.GB5778@Redstar.dorchain.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41093 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:48864 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab1BKMK6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2011 07:10:58 -0500
-In-Reply-To: <1295001146-14910-2-git-send-email-jslaby@suse.cz>
+	with ESMTP id S1751127Ab1BKM2T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2011 07:28:19 -0500
+Received: by bwz15 with SMTP id 15so3147425bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2011 04:28:18 -0800 (PST)
+In-Reply-To: <20110210192321.GB5778@Redstar.dorchain.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: jbarnes@virtuousgeek.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jirislaby@gmail.com, Bjorn Helgaas <bjorn.helgaas@hp.com>, "David S. Miller" <davem@davemloft.net>, Thomas Renninger <trenn@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Joerg Dorchain <joerg@dorchain.net>
+Cc: linux-ide@vger.kernel.org
 
 Hello.
 
-On 14-01-2011 13:32, Jiri Slaby wrote:
+On 10-02-2011 22:23, Joerg Dorchain wrote:
 
-> Some broken BIOSes on ICH4 chipset report an ACPI region which is in
-> conflict with legacy IDE ports when ACPI is disabled. Even though the
-> regions overlap, IDE ports are working correctly (we cannot find out
-> the decoding rules on chipsets).
->
-> So the only problem is the reported region itself, if we don't reserve
-> the region in the quirk everything works as expected.
+> On Wed, Feb 09, 2011 at 03:56:32PM +0300, Sergei Shtylyov wrote:
+> [Several formal corrections]
 
-> This patch avoids reserving any quirk regions below PCIBIOS_MIN_IO
-> which is 0x1000. Some regions might be (and are by a fast google
-> query) below this border, but the only difference is that they won't
-> be reserved anymore. They should still work though the same as before.
+> Should be addressed by this try.
 
-> The conflicts look like (1f.0 is bridge, 1f.1 is IDE ctrl):
-> pci 0000:00:1f.1: address space collision: [io 0x0170-0x0177] conflicts with 0000:00:1f.0 [io  0x0100-0x017f]
+>>> The patch to ahci.c is required for suspend/resume.
 
-> At 0x0100 a 128 bytes long ACPI region is reported in the quirk for
-> ICH4. ata_piix then fails to find disks because the IDE legacy ports
-> are zeroed:
-> ata_piix 0000:00:1f.1: device not available (can't reserve [io 0x0000-0x0007])
+>>     Need a better description than thatl, I think...
 
-> References: https://bugzilla.novell.com/show_bug.cgi?id=558740
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Bjorn Helgaas <bjorn.helgaas@hp.com>
-> Cc: Jesse Barnes <jbarnes@virtuousgeek.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Thomas Renninger <trenn@suse.de>
-> Cc: Linus Torvalds <torvalds@linux-foundation.org>
+> Well, then it is a bit longer story.
+
+> During resume from suspend to ram, the kernel pci layer restores
+> the registers for the SATA controller once, then says okay, and
+> sets dev->state_saved = false. However, since the restore goes
+> from highest address (the BARs [base address registers]) to
+> lowest register, some of the higher registers are set as RO
+> because according to the lower registers controller is in PIIX
+> mode.  This patch introduces a workaround for
+> this problem, hacking around the PCI API by setting pdev->state_saved = true
+> before we do the restore.
+
+> Admittingly, more testing would be welcome.
+
+> Signed-Off-By: joerg Dorchain<joerg@dorchain.net>
+
+    This only describes drivers/ata/ahci.c change. And looks like it should be 
+in a patch of its own...
+
+> --- linux/drivers/pci/quirks.c.orig	2011-02-04 18:29:03.000000000 +0100
+> +++ linux/drivers/pci/quirks.c	2011-02-09 14:40:15.000000000 +0100
+> @@ -2684,6 +2684,76 @@
 [...]
+> +static void ich789_force_ahci_mode(struct pci_dev *pdev)
+> +{
+> +        u8 amrval;
+> +        u8 sclkgc;
+> +        const int ich89_address_map_reg = 0x90;
+> +        const int ich89_sata_clock_gen_config_reg = 0x9c;
 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8db2426..b3ab2f7 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -554,18 +554,30 @@ static void __devinit quirk_ich4_lpc_acpi(struct pci_dev *dev)
->   	u32 region;
->   	u8 enable;
->
-> +	/*
-> +	 * The check for PCIBIOS_MIN_IO is to ensure we won't create a conflict
-> +	 * with low legacy (and fixed) ports. We don't know the decoding
-> +	 * priority and can't tell whether the legacy device or the one created
-> +	 * here is really at that address.  This happens on boards with broken
-> +	 * BIOSes.
-> +	*/
+    You indent with spaces instead of tab here.
+
 > +
->   	pci_read_config_byte(dev, ICH_ACPI_CNTL,&enable);
->   	if (enable&  ICH4_ACPI_EN) {
->   		pci_read_config_dword(dev, ICH_PMBASE,&region);
-> -		quirk_io_region(dev, region, 128, PCI_BRIDGE_RESOURCES,
-> -				"ICH4 ACPI/GPIO/TCO");
-> +		region &= PCI_BASE_ADDRESS_IO_MASK;
+> +	if (!ich_force_ahci_mode)
+> +		return;
+> +
+> +        /* ICH8 datasheet section 12.1.33 */
+> +        if (!pci_bus_read_config_byte(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 2),
+> +        	ich89_address_map_reg, &amrval))
 
-    Why don't you do the masking right in the patch #1? And is it really 
-necessary if the region size is known to be 128 bytes?
+    You again indent with spaces...
+
+> +	{
+
+    I've clearly said that { should be on the same line as the end of *if* 
+statement.
+
+> +                if (amrval & (BIT(6) | BIT(7))) {
+> +                        dev_printk(KERN_DEBUG, &pdev->dev,
+> +                                        "ICH7/8/9 SATA controller not in IDE mode.  Not modifying.\n");
+> +                        return;
+> +                }
+> +                if (amrval & (BIT(0) | BIT(1)))
+> +                        dev_printk(KERN_DEBUG, &pdev->dev,
+> +                                        "ICH7/8/9 in SATA/PATA combined mode.  Untested.\n");
+> +                /* AHCI mode */
+> +                amrval |= BIT(6);
+> +                amrval &= ~BIT(7);
+> +                pci_bus_read_config_byte(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 2),
+> +                                ich89_sata_clock_gen_config_reg, &sclkgc);
+> +                dev_printk(KERN_DEBUG, &pdev->dev, "sclkgc is %#0x\n", sclkgc);
+> +                pci_bus_write_config_byte(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 2),
+> +                                ich89_address_map_reg, amrval);
+> +                ich_ahci_mode_forced = true;
+> +                dev_printk(KERN_DEBUG, &pdev->dev, "Forced ICH7/8/9 mode PIIX->AHCI\n");
+
+    Again indented with spaces...
+
+> +        }
+> +
+
+    Empty line not needed...
+
+> +}
+
+> --- linux/drivers/ata/ahci.c.orig	2011-02-04 18:13:33.000000000 +0100
+> +++ linux/drivers/ata/ahci.c	2011-02-09 14:30:06.000000000 +0100
+> @@ -640,6 +640,9 @@
+>   	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+>   	int rc;
+>
+> +	/* override check to see if PCI config space is already
+> +	 * restored in pci_restore_state */
+
+    The preferred style for the multi-line comments is this:
+
+/*
+  * bla
+  * bla
+  */
 
 WBR, Sergei
