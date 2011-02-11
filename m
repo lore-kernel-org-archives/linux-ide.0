@@ -1,37 +1,80 @@
-From: Phillip Susi <psusi@cfl.rr.com>
-Subject: Re: libata: implement on-demand HPA unlocking
-Date: Fri, 11 Feb 2011 13:38:55 -0500
-Message-ID: <4D55823F.5000200@cfl.rr.com>
-References: <4D51A648.20707@cfl.rr.com>	<20110209085935.GE6558@htj.dyndns.org>	<4D52B0B3.40900@cfl.rr.com>	<20110209153714.558133d7@lxorguk.ukuu.org.uk>	<4D52ECB6.4010408@cfl.rr.com>	<20110209214118.GA7196@atj.dyndns.org>	<4D5332D2.5090701@cfl.rr.com>	<4D534378.3050304@gmail.com>	<20110210091325.GK3770@htj.dyndns.org>	<4D54387F.3030809@cfl.rr.com>	<20110210193124.321b7ad6@lxorguk.ukuu.org.uk>	<4D557D8A.6050607@cfl.rr.com> <20110211182547.2ede69b5@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [Patch] Enable AHCI on certain ich chipsets
+Date: Fri, 11 Feb 2011 23:50:06 +0300
+Message-ID: <4D55A0FE.30505@ru.mvista.com>
+References: <20110209115929.GS5778@Redstar.dorchain.net> <4D528F00.1090000@ru.mvista.com> <20110210192321.GB5778@Redstar.dorchain.net> <4D552B18.8030808@ru.mvista.com> <20110211173620.GF5778@Redstar.dorchain.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.122]:53536 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756209Ab1BKSi6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2011 13:38:58 -0500
-In-Reply-To: <20110211182547.2ede69b5@lxorguk.ukuu.org.uk>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:58762 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758077Ab1BKUvf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2011 15:51:35 -0500
+Received: by bwz15 with SMTP id 15so3614446bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2011 12:51:33 -0800 (PST)
+In-Reply-To: <20110211173620.GF5778@Redstar.dorchain.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, Ben Hutchings <ben@decadent.org.uk>, Jeff Garzik <jgarzik@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Joerg Dorchain <joerg@dorchain.net>
+Cc: linux-ide@vger.kernel.org
 
-On 2/11/2011 1:25 PM, Alan Cox wrote:
->> When?  Is there any specific case you can think of?
-> 
-> Think about a raid volume where it is full disk and then the magic
-> autolocking crap guesses wrong, the volume goes partly inaccessible while
-> the box is running. Nasty mess.
+Hello.
 
-So a whole disk raid volume that was built with a patched kernel that
-always unlocked and therefore invaded the HPA gets upgraded and now the
-array won't activate.  So now we have the intersection of two rare
-configurations ( most people use partitions rather than the whole disk
-), plus an upgrade.  Valid, but quite rare, and of course, they would
-get the same problem if they ran the unpatched Linus kernel right now.
-Seems to me this rare failure is the fault of using the patched kernel
-and invading the HPA in the first place.
+Joerg Dorchain wrote:
 
-So you either leave the kernel as it is today and have this one problem,
-or you patch it to always unlock, and get several other problems.
+>>> During resume from suspend to ram, the kernel pci layer restores
+>>> the registers for the SATA controller once, then says okay, and
+>>> sets dev->state_saved = false. However, since the restore goes
+>> >from highest address (the BARs [base address registers]) to
+>>> lowest register, some of the higher registers are set as RO
+>>> because according to the lower registers controller is in PIIX
+>>> mode.  This patch introduces a workaround for
+>>> this problem, hacking around the PCI API by setting pdev->state_saved = true
+>>> before we do the restore.
+
+>> This only describes drivers/ata/ahci.c change.
+
+> Well, the functionality of the patch to quirks.c is described in
+> the comments on the top of it. Should that be repeated?
+
+    Yes, certainly.
+
+>> And looks like it
+>> should be in a patch of its own...
+
+> I need both parts in order to use the AHCI driver and having
+> suspend/resume work, hence they are together.
+
+    They are solving two different issues, as far as I understand, hence should 
+be in two different patches. One issue per patch is the basic rule.
+
+> Bye,
+
+> Joerg
+
+> Signed-Off-By: joerg Dorchain<joerg@dorchain.net>
+
+> --- linux/drivers/pci/quirks.c.orig	2011-02-04 18:29:03.000000000 +0100
+> +++ linux/drivers/pci/quirks.c	2011-02-11 13:44:12.000000000 +0100
+> @@ -2684,6 +2684,74 @@
+[...]
+> +static void ich789_force_ahci_mode(struct pci_dev *pdev)
+> +{
+> +	u8 amrval;
+> +	u8 sclkgc;
+> +	const int ich89_address_map_reg = 0x90;
+> +	const int ich89_sata_clock_gen_config_reg = 0x9c;
+> +
+> +	if (!ich_force_ahci_mode)
+> +		return;
+> +
+> +	/* ICH8 datasheet section 12.1.33 */
+> +	if (!pci_bus_read_config_byte(pdev->bus, PCI_DEVFN(PCI_SLOT(pdev->devfn), 2),
+> +        	ich89_address_map_reg, &amrval)) {
+
+    Still spaces at the start of line... run your patches thru 
+scripts/checkpatch.pl -- it notices such style violations.
+
+WBR, Sergei
+
