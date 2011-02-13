@@ -1,46 +1,266 @@
-From: Paul Compaore <paulcompaore12@gmail.com>
-Subject: My Dear Good Friend.
-Date: Sun, 13 Feb 2011 13:31:49 +0900 (KST)
-Message-ID: <381560.44697.qm@web70808.mail.kr3.yahoo.com>
-Reply-To: paulcompaore14@gmail.com
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2] ata: add CONFIG_SATA_HOST config option
+Date: Sun, 13 Feb 2011 17:39:37 +0300
+Message-ID: <4D57ED29.2030801@ru.mvista.com>
+References: <201102111433.41507.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm1-vm1.bullet.mail.kr3.yahoo.com ([111.67.240.243]:47922 "HELO
-	nm1-vm1.bullet.mail.kr3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753811Ab1BMEb5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 12 Feb 2011 23:31:57 -0500
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53193 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624Ab1BMOk4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 13 Feb 2011 09:40:56 -0500
+In-Reply-To: <201102111433.41507.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sshtylyov@mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+Hello.
 
-My Dear Good Friend.
+On 11-02-2011 16:33, Bartlomiej Zolnierkiewicz wrote:
 
-Compliment of the season, how are you and your family? Hope All is well. I am Mr.Paul Compaore, the accountant general in the accounts unit of Bib Bank Burkina (BIB-BF) Ouagadougou Burkina Faso. I got your contact from the Burkina Faso chambers of commerce have some fund to claim in my bank Which will be of benefit to both of us.
+> Add CONFIG_SATA_HOST config option (for selecting SATA Host
+> support) to make setup easier on PATA-only systems.
 
-I want you to be an inheritor of the fund, the fund is in a Doormat account and with your bank information and my Documentation certifies you as the inheritor/beneficiary Since I am an insider and working in the same bank, the Transfer will be processed legally and successfully and I will Be coming down to your country for disbursement.
+> Additionally move SATA-specific code to libata-sata.c which
+> allows us to save ~11.5k of the output code size (x86-64) on
+> PATA-only systems for CONFIG_SATA_HOST=n:
 
-The amount of money involved is ($11.3m) which I want you to Claim for further transfer out of the country to your bank Account, all to our financial benefit. This is very great opportunity as it will take a maximum of 7 banking Working days to be concluded.
+> CONFIG_SATA_HOST=y:
+>     text    data     bss     dec     hex filename
+>    44283    6576      57   50916    c6e4 drivers/ata/libata-core.o
+>    29054      16       2   29072    7190 drivers/ata/libata-eh.o
+>    20085       0      19   20104    4e88 drivers/ata/libata-sff.o
+>     8699       0       0    8699    21fb drivers/ata/libata-sata.o
 
-I as an insider will do my duties perfectly well concerning this transaction for security reasons. This is confidential for successful conclusion and hitch-free transaction. Contact me immediately for further details and mutual Relationship and we will decide together on how to disburse The funds and percentage as well, my private email Address:( paulcompaore14@gmail.com )
+> CONFIG_SATA_HOST=n:
+>     text    data     bss     dec     hex filename
+>    43754    6576      57   50387    c4d3 drivers/ata/libata-core.o
+>    26775      16       2   26793    68a9 drivers/ata/libata-eh.o
+>    20144       0      19   20163    4ec3 drivers/ata/libata-sff.o
 
-If you are interested and capable to handle this business transaction, come up with the information's shown below:- 
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+[...]
 
-1). Your full name: 
-2). Your contact cell phone number: 
-3). Your age: 
-4). Your sex: 
-5). Your occupations: 
-6). Your country and city:
+> Index: b/drivers/ata/libata-core.c
+> ===================================================================
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+[...]
+> @@ -573,34 +494,26 @@ void ata_tf_to_fis(const struct ata_task
+>  	fis[19] = 0;
+>  }
 
-As soon as possible all these information's is submitted to me immediately i will send you full details of this business transaction on the receipt of your response.Reply to my private email: paulcompaore12@gmail.com
+    Hm, what about ata_tf_to_fis()? It shouldn't be needed by non-SATA stuff, 
+moreover it'should be only needed by non-SFF controllers...
 
-Yours truly.
-Mr.Paul Compaore
-Banque Internationale Du Burkina (BIB)
-Burkina (BIB-BF)
+> +#ifndef CONFIG_SATA_HOST
+> +int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+> +		      bool spm_wakeup)
+>   {
+> -	tf->command	= fis[2];	/* status */
+> -	tf->feature	= fis[3];	/* error */
+> -
+> -	tf->lbal	= fis[4];
+> -	tf->lbam	= fis[5];
+> -	tf->lbah	= fis[6];
+> -	tf->device	= fis[7];
+> -
+> -	tf->hob_lbal	= fis[8];
+> -	tf->hob_lbam	= fis[9];
+> -	tf->hob_lbah	= fis[10];
+> -
+> -	tf->nsect	= fis[12];
+> -	tf->hob_nsect	= fis[13];
+> +	return -EOPNOTSUPP;
+> +}
+> +EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
 
+    Shouldn't there be empty line here?
 
-      
+> +int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+> +		       unsigned long deadline)
+> +{
+> +	return -EOPNOTSUPP;
+> +}
+> +EXPORT_SYMBOL_GPL(sata_std_hardreset);
+
+    ... and here?
+
+> Index: b/drivers/ata/libata-sata.c
+> ===================================================================
+> --- /dev/null
+> +++ b/drivers/ata/libata-sata.c
+> @@ -0,0 +1,1242 @@
+[...]
+> +int sata_set_spd(struct ata_link *link)
+> +{
+> +	u32 scontrol;
+> +	int rc;
+> +
+> +	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+
+    I guess checkpatch.pl protests here...
+
+> +		return rc;
+> +
+> +	if (!__sata_set_spd_needed(link,&scontrol))
+> +		return 0;
+> +
+> +	if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+
+    Here too...
+
+> +		return rc;
+> +
+> +	return 1;
+> +}
+> +EXPORT_SYMBOL_GPL(sata_set_spd);
+[...]
+> +int sata_link_debounce(struct ata_link *link, const unsigned long *params,
+> +		       unsigned long deadline)
+> +{
+> +	unsigned long interval = params[0];
+> +	unsigned long duration = params[1];
+> +	unsigned long last_jiffies, t;
+> +	u32 last, cur;
+> +	int rc;
+> +
+> +	t = ata_deadline(jiffies, params[2]);
+> +	if (time_before(t, deadline))
+> +		deadline = t;
+> +
+> +	if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
+
+    And here too...
+
+> +/**
+> + *	sata_link_resume - resume SATA link
+> + *	@link: ATA link to resume SATA
+> + *	@params: timing parameters { interval, duratinon, timeout } in msec
+> + *	@deadline: deadline jiffies for the operation
+> + *
+> + *	Resume SATA phy @link and debounce it.
+> + *
+> + *	LOCKING:
+> + *	Kernel thread context (may sleep)
+> + *
+> + *	RETURNS:
+> + *	0 on success, -errno on failure.
+> + */
+> +int sata_link_resume(struct ata_link *link, const unsigned long *params,
+> +		     unsigned long deadline)
+> +{
+> +	int tries = ATA_LINK_RESUME_TRIES;
+> +	u32 scontrol, serror;
+> +	int rc;
+> +
+> +	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+
+    And here...
+
+> +		return rc;
+> +
+> +	/*
+> +	 * Writes to SControl sometimes get ignored under certain
+> +	 * controllers (ata_piix SIDPR).  Make sure DET actually is
+> +	 * cleared.
+> +	 */
+> +	do {
+> +		scontrol = (scontrol & 0x0f0) | 0x300;
+> +		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+> +			return rc;
+> +		/*
+> +		 * Some PHYs react badly if SStatus is pounded
+> +		 * immediately after resuming.  Delay 200ms before
+> +		 * debouncing.
+> +		 */
+> +		ata_msleep(link->ap, 200);
+> +
+> +		/* is SControl restored correctly? */
+> +		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
+
+    And here...
+
+> +			return rc;
+> +	} while ((scontrol&  0xf0f) != 0x300&&  --tries);
+> +
+> +	if ((scontrol & 0xf0f) != 0x300) {
+> +		ata_link_printk(link, KERN_ERR,
+> +				"failed to resume link (SControl %X)\n",
+> +				scontrol);
+> +		return 0;
+> +	}
+> +
+> +	if (tries<  ATA_LINK_RESUME_TRIES)
+> +		ata_link_printk(link, KERN_WARNING,
+> +				"link resume succeeded after %d retries\n",
+> +				ATA_LINK_RESUME_TRIES - tries);
+> +
+> +	if ((rc = sata_link_debounce(link, params, deadline)))
+
+    And here...
+
+> +		return rc;
+> +
+> +	/* clear SError, some PHYs require this even for SRST to work */
+> +	if (!(rc = sata_scr_read(link, SCR_ERROR, &serror)))
+
+    Here too...
+
+> +		rc = sata_scr_write(link, SCR_ERROR, serror);
+> +
+> +	return rc != -EINVAL ? rc : 0;
+> +}
+> +EXPORT_SYMBOL_GPL(sata_link_resume);
+[...]
+> +int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
+> +			unsigned long deadline,
+> +			bool *online, int (*check_ready)(struct ata_link *))
+> +{
+> +	u32 scontrol;
+> +	int rc;
+> +
+> +	DPRINTK("ENTER\n");
+> +
+> +	if (online)
+> +		*online = false;
+> +
+> +	if (sata_set_spd_needed(link)) {
+> +		/* SATA spec says nothing about how to reconfigure
+> +		 * spd.  To be on the safe side, turn off phy during
+> +		 * reconfiguration.  This works for at least ICH7 AHCI
+> +		 * and Sil3124.
+> +		 */
+> +		if ((rc = sata_scr_read(link, SCR_CONTROL,&scontrol)))
+> +			goto out;
+> +
+> +		scontrol = (scontrol & 0x0f0) | 0x304;
+> +
+> +		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
+
+    And here...
+
+> +			goto out;
+> +
+> +		sata_set_spd(link);
+> +	}
+> +
+> +	/* issue phy wake/reset */
+> +	if ((rc = sata_scr_read(link, SCR_CONTROL,&scontrol)))
+
+    Here too...
+
+> +		goto out;
+> +
+> +	scontrol = (scontrol&  0x0f0) | 0x301;
+> +
+> +	if ((rc = sata_scr_write_flush(link, SCR_CONTROL, scontrol)))
+
+    And here...
+    I understand that you're only moving the code. Perhaps it's worth fixing 
+checkpatch.pl's complaints beforehand -- I was going to look at it...
+
+WBR, Sergei
