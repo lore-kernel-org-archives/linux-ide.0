@@ -1,41 +1,46 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [Patch] Enable AHCI on certain ich chipsets
-Date: Sat, 12 Feb 2011 13:09:37 +0100
-Message-ID: <AANLkTimb3+yk2O2gFVi5_FB-rmf78h-ZRE6a7_KR_dkc@mail.gmail.com>
-References: <20110209115929.GS5778@Redstar.dorchain.net>
-	<4D528F00.1090000@ru.mvista.com>
-	<20110210192321.GB5778@Redstar.dorchain.net>
-	<4D552B18.8030808@ru.mvista.com>
-	<20110211173620.GF5778@Redstar.dorchain.net>
-	<4D55A0FE.30505@ru.mvista.com>
-	<20110212062701.GG5778@Redstar.dorchain.net>
+From: Paul Compaore <paulcompaore12@gmail.com>
+Subject: My Dear Good Friend.
+Date: Sun, 13 Feb 2011 13:31:49 +0900 (KST)
+Message-ID: <381560.44697.qm@web70808.mail.kr3.yahoo.com>
+Reply-To: paulcompaore14@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:40493 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940Ab1BLMJi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Feb 2011 07:09:38 -0500
-Received: by qyk12 with SMTP id 12so2751363qyk.19
-        for <linux-ide@vger.kernel.org>; Sat, 12 Feb 2011 04:09:37 -0800 (PST)
-In-Reply-To: <20110212062701.GG5778@Redstar.dorchain.net>
+Received: from nm1-vm1.bullet.mail.kr3.yahoo.com ([111.67.240.243]:47922 "HELO
+	nm1-vm1.bullet.mail.kr3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753811Ab1BMEb5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Feb 2011 23:31:57 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joerg Dorchain <joerg@dorchain.net>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org
 
-Hi,
 
-On Sat, Feb 12, 2011 at 7:27 AM, Joerg Dorchain <joerg@dorchain.net> wrote:
+My Dear Good Friend.
 
-> The second part just makes sure that the config space change is
-> kept after a resume. Otherwise it comes up as a different PCI
-> id, the AHCI driver finds nothing to work with, the harddisk is
-> gone after resume, not good.
+Compliment of the season, how are you and your family? Hope All is well. I am Mr.Paul Compaore, the accountant general in the accounts unit of Bib Bank Burkina (BIB-BF) Ouagadougou Burkina Faso. I got your contact from the Burkina Faso chambers of commerce have some fund to claim in my bank Which will be of benefit to both of us.
 
-Shouldn't therefore the quirk be applied also during resume (by
-additional use of DECLARE_PCI_FIXUP_RESUME_EARLY in addition to
-existing DECLARE_PCI_FIXUP_EARLY one)?
+I want you to be an inheritor of the fund, the fund is in a Doormat account and with your bank information and my Documentation certifies you as the inheritor/beneficiary Since I am an insider and working in the same bank, the Transfer will be processed legally and successfully and I will Be coming down to your country for disbursement.
 
-Thanks,
-Bartomiej
+The amount of money involved is ($11.3m) which I want you to Claim for further transfer out of the country to your bank Account, all to our financial benefit. This is very great opportunity as it will take a maximum of 7 banking Working days to be concluded.
+
+I as an insider will do my duties perfectly well concerning this transaction for security reasons. This is confidential for successful conclusion and hitch-free transaction. Contact me immediately for further details and mutual Relationship and we will decide together on how to disburse The funds and percentage as well, my private email Address:( paulcompaore14@gmail.com )
+
+If you are interested and capable to handle this business transaction, come up with the information's shown below:- 
+
+1). Your full name: 
+2). Your contact cell phone number: 
+3). Your age: 
+4). Your sex: 
+5). Your occupations: 
+6). Your country and city:
+
+As soon as possible all these information's is submitted to me immediately i will send you full details of this business transaction on the receipt of your response.Reply to my private email: paulcompaore12@gmail.com
+
+Yours truly.
+Mr.Paul Compaore
+Banque Internationale Du Burkina (BIB)
+Burkina (BIB-BF)
+
+
+      
