@@ -1,78 +1,161 @@
-From: Joerg Dorchain <joerg@dorchain.net>
-Subject: Re: [Patch] Enable AHCI on certain ich chipsets
-Date: Mon, 14 Feb 2011 08:41:36 +0100
-Message-ID: <20110214074136.GH5778@Redstar.dorchain.net>
-References: <20110209115929.GS5778@Redstar.dorchain.net>
- <4D528F00.1090000@ru.mvista.com>
- <20110210192321.GB5778@Redstar.dorchain.net>
- <4D552B18.8030808@ru.mvista.com>
- <20110211173620.GF5778@Redstar.dorchain.net>
- <4D55A0FE.30505@ru.mvista.com>
- <20110212062701.GG5778@Redstar.dorchain.net>
- <AANLkTimb3+yk2O2gFVi5_FB-rmf78h-ZRE6a7_KR_dkc@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH v2] ata: add CONFIG_SATA_HOST config option
+Date: Mon, 14 Feb 2011 09:36:49 +0100
+Message-ID: <AANLkTin60En3+5saCeVuGht8w0k1b074WqKLdmo1WE5T@mail.gmail.com>
+References: <201102111433.41507.bzolnier@gmail.com>
+	<4D57ED29.2030801@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Pa4xkLBhPDIhDLv1"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from RedStar.dorchain.net ([212.88.133.153]:46155 "EHLO
-	Redstar.dorchain.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740Ab1BNHlt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2011 02:41:49 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTimb3+yk2O2gFVi5_FB-rmf78h-ZRE6a7_KR_dkc@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:57908 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369Ab1BNIgu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2011 03:36:50 -0500
+In-Reply-To: <4D57ED29.2030801@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+Hi,
 
---Pa4xkLBhPDIhDLv1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On Sun, Feb 13, 2011 at 3:39 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+> Hello.
+>
+> On 11-02-2011 16:33, Bartlomiej Zolnierkiewicz wrote:
+>
+>> Add CONFIG_SATA_HOST config option (for selecting SATA Host
+>> support) to make setup easier on PATA-only systems.
+>
+>> Additionally move SATA-specific code to libata-sata.c which
+>> allows us to save ~11.5k of the output code size (x86-64) on
+>> PATA-only systems for CONFIG_SATA_HOST=3Dn:
+>
+>> CONFIG_SATA_HOST=3Dy:
+>> =A0 =A0text =A0 =A0data =A0 =A0 bss =A0 =A0 dec =A0 =A0 hex filename
+>> =A0 44283 =A0 =A06576 =A0 =A0 =A057 =A0 50916 =A0 =A0c6e4 drivers/at=
+a/libata-core.o
+>> =A0 29054 =A0 =A0 =A016 =A0 =A0 =A0 2 =A0 29072 =A0 =A07190 drivers/=
+ata/libata-eh.o
+>> =A0 20085 =A0 =A0 =A0 0 =A0 =A0 =A019 =A0 20104 =A0 =A04e88 drivers/=
+ata/libata-sff.o
+>> =A0 =A08699 =A0 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A08699 =A0 =A021fb driv=
+ers/ata/libata-sata.o
+>
+>> CONFIG_SATA_HOST=3Dn:
+>> =A0 =A0text =A0 =A0data =A0 =A0 bss =A0 =A0 dec =A0 =A0 hex filename
+>> =A0 43754 =A0 =A06576 =A0 =A0 =A057 =A0 50387 =A0 =A0c4d3 drivers/at=
+a/libata-core.o
+>> =A0 26775 =A0 =A0 =A016 =A0 =A0 =A0 2 =A0 26793 =A0 =A068a9 drivers/=
+ata/libata-eh.o
+>> =A0 20144 =A0 =A0 =A0 0 =A0 =A0 =A019 =A0 20163 =A0 =A04ec3 drivers/=
+ata/libata-sff.o
+>
+>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+>
+> [...]
+>
+>> Index: b/drivers/ata/libata-core.c
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>
+> [...]
+>>
+>> @@ -573,34 +494,26 @@ void ata_tf_to_fis(const struct ata_task
+>> =A0 =A0 =A0 =A0fis[19] =3D 0;
+>> =A0}
+>
+> =A0 Hm, what about ata_tf_to_fis()? It shouldn't be needed by non-SAT=
+A stuff,
+> moreover it'should be only needed by non-SFF controllers...
 
-On Sat, Feb 12, 2011 at 01:09:37PM +0100, Bartlomiej Zolnierkiewicz wrote:
->=20
-> > The second part just makes sure that the config space change is
-> > kept after a resume. Otherwise it comes up as a different PCI
-> > id, the AHCI driver finds nothing to work with, the harddisk is
-> > gone after resume, not good.
->=20
-> Shouldn't therefore the quirk be applied also during resume (by
-> additional use of DECLARE_PCI_FIXUP_RESUME_EARLY in addition to
-> existing DECLARE_PCI_FIXUP_EARLY one)?
+in theory yes but it is actually used by libata-scsi.c
 
-I have considered that, but just not touching the config space
-for having the desired effect seems easier to me.
+>> +#ifndef CONFIG_SATA_HOST
+>> +int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy po=
+licy,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bool spm_wakeup)
+>> =A0{
+>> - =A0 =A0 =A0 tf->command =A0 =A0 =3D fis[2]; =A0 =A0 =A0 /* status =
+*/
+>> - =A0 =A0 =A0 tf->feature =A0 =A0 =3D fis[3]; =A0 =A0 =A0 /* error *=
+/
+>> -
+>> - =A0 =A0 =A0 tf->lbal =A0 =A0 =A0 =A0=3D fis[4];
+>> - =A0 =A0 =A0 tf->lbam =A0 =A0 =A0 =A0=3D fis[5];
+>> - =A0 =A0 =A0 tf->lbah =A0 =A0 =A0 =A0=3D fis[6];
+>> - =A0 =A0 =A0 tf->device =A0 =A0 =A0=3D fis[7];
+>> -
+>> - =A0 =A0 =A0 tf->hob_lbal =A0 =A0=3D fis[8];
+>> - =A0 =A0 =A0 tf->hob_lbam =A0 =A0=3D fis[9];
+>> - =A0 =A0 =A0 tf->hob_lbah =A0 =A0=3D fis[10];
+>> -
+>> - =A0 =A0 =A0 tf->nsect =A0 =A0 =A0 =3D fis[12];
+>> - =A0 =A0 =A0 tf->hob_nsect =A0 =3D fis[13];
+>> + =A0 =A0 =A0 return -EOPNOTSUPP;
+>> +}
+>> +EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
+>
+> =A0 Shouldn't there be empty line here?
 
-Actually this is a reason why I am looking for feedback from
-other people with the chipsets listed in the patch. Is it only my
-system for keeps pci config during suspend/resume or does it work
-for others, too?
-On the other hand, if I understand Sergei correctly, it could be
-a more general effect with it, which is why I'd also appreciated
-some review from an architectural perspective.
+ata_piix needs it
 
-If not, DECLARE_PCI_FIXUP_RESUME_EARLY is fine with me. My main
-objective is to use the ahci driver, and I hope others like to do
-so as well.
+>> +int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0unsigned long deadline)
+>> +{
+>> + =A0 =A0 =A0 return -EOPNOTSUPP;
+>> +}
+>> +EXPORT_SYMBOL_GPL(sata_std_hardreset);
+>
+> =A0 ... and here?
 
-Bye,
+ditto, and it is quite useful to have possibility of building ata_piix
+w/ CONFIG_SATA_HOST=3Dn
 
-Joerg
+>> Index: b/drivers/ata/libata-sata.c
+>> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>> --- /dev/null
+>> +++ b/drivers/ata/libata-sata.c
+>> @@ -0,0 +1,1242 @@
+>
+> [...]
+>>
+>> +int sata_set_spd(struct ata_link *link)
+>> +{
+>> + =A0 =A0 =A0 u32 scontrol;
+>> + =A0 =A0 =A0 int rc;
+>> +
+>> + =A0 =A0 =A0 if ((rc =3D sata_scr_read(link, SCR_CONTROL, &scontrol=
+)))
+>
+> =A0 I guess checkpatch.pl protests here...
 
---Pa4xkLBhPDIhDLv1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+it does ;)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+[...]
 
-iHcEARECADcFAk1Y3LAwFIAAAAAAFQAScGthLWFkZHJlc3NAZ251cGcub3Jnam9l
-cmdAZG9yY2hhaW4ubmV0AAoJEI2OPuD3c7zg6YoAnRKCVcmSJWeNuKW1PGoYAJ52
-+48qAJwJpdyzCP16M7z2VgL0zVUIAgfvfQ==
-=CHYb
------END PGP SIGNATURE-----
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+>> +
+>> + =A0 =A0 =A0 scontrol =3D (scontrol& =A00x0f0) | 0x301;
+>> +
+>> + =A0 =A0 =A0 if ((rc =3D sata_scr_write_flush(link, SCR_CONTROL, sc=
+ontrol)))
+>
+> =A0 And here...
+> =A0 I understand that you're only moving the code. Perhaps it's worth=
+ fixing
+> checkpatch.pl's complaints beforehand -- I was going to look at it...
 
---Pa4xkLBhPDIhDLv1--
+Because code is moved I preferred to leave CodingStyle changes alone
+but I also think that it would be useful to fix them one day (though I
+deferred the work for later due to pragmatic reasons)..
+
+Thanks,
+Bartlomiej
