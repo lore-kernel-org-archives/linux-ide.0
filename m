@@ -1,161 +1,148 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
 Subject: Re: [PATCH v2] ata: add CONFIG_SATA_HOST config option
-Date: Mon, 14 Feb 2011 09:36:49 +0100
-Message-ID: <AANLkTin60En3+5saCeVuGht8w0k1b074WqKLdmo1WE5T@mail.gmail.com>
-References: <201102111433.41507.bzolnier@gmail.com>
-	<4D57ED29.2030801@ru.mvista.com>
+Date: Mon, 14 Feb 2011 15:00:31 +0300
+Message-ID: <4D59195F.9030807@ru.mvista.com>
+References: <201102111433.41507.bzolnier@gmail.com>	<4D57ED29.2030801@ru.mvista.com> <AANLkTin60En3+5saCeVuGht8w0k1b074WqKLdmo1WE5T@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:57908 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369Ab1BNIgu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2011 03:36:50 -0500
-In-Reply-To: <4D57ED29.2030801@ru.mvista.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45367 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752998Ab1BNMB7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2011 07:01:59 -0500
+In-Reply-To: <AANLkTin60En3+5saCeVuGht8w0k1b074WqKLdmo1WE5T@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hi,
+Hello.
 
-On Sun, Feb 13, 2011 at 3:39 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> Hello.
->
-> On 11-02-2011 16:33, Bartlomiej Zolnierkiewicz wrote:
->
->> Add CONFIG_SATA_HOST config option (for selecting SATA Host
->> support) to make setup easier on PATA-only systems.
->
->> Additionally move SATA-specific code to libata-sata.c which
->> allows us to save ~11.5k of the output code size (x86-64) on
->> PATA-only systems for CONFIG_SATA_HOST=3Dn:
->
->> CONFIG_SATA_HOST=3Dy:
->> =A0 =A0text =A0 =A0data =A0 =A0 bss =A0 =A0 dec =A0 =A0 hex filename
->> =A0 44283 =A0 =A06576 =A0 =A0 =A057 =A0 50916 =A0 =A0c6e4 drivers/at=
-a/libata-core.o
->> =A0 29054 =A0 =A0 =A016 =A0 =A0 =A0 2 =A0 29072 =A0 =A07190 drivers/=
-ata/libata-eh.o
->> =A0 20085 =A0 =A0 =A0 0 =A0 =A0 =A019 =A0 20104 =A0 =A04e88 drivers/=
-ata/libata-sff.o
->> =A0 =A08699 =A0 =A0 =A0 0 =A0 =A0 =A0 0 =A0 =A08699 =A0 =A021fb driv=
-ers/ata/libata-sata.o
->
->> CONFIG_SATA_HOST=3Dn:
->> =A0 =A0text =A0 =A0data =A0 =A0 bss =A0 =A0 dec =A0 =A0 hex filename
->> =A0 43754 =A0 =A06576 =A0 =A0 =A057 =A0 50387 =A0 =A0c4d3 drivers/at=
-a/libata-core.o
->> =A0 26775 =A0 =A0 =A016 =A0 =A0 =A0 2 =A0 26793 =A0 =A068a9 drivers/=
-ata/libata-eh.o
->> =A0 20144 =A0 =A0 =A0 0 =A0 =A0 =A019 =A0 20163 =A0 =A04ec3 drivers/=
-ata/libata-sff.o
->
->> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->
-> [...]
->
->> Index: b/drivers/ata/libata-core.c
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->
-> [...]
+On 14-02-2011 11:36, Bartlomiej Zolnierkiewicz wrote:
+
+>>> Add CONFIG_SATA_HOST config option (for selecting SATA Host
+>>> support) to make setup easier on PATA-only systems.
+
+>>> Additionally move SATA-specific code to libata-sata.c which
+>>> allows us to save ~11.5k of the output code size (x86-64) on
+>>> PATA-only systems for CONFIG_SATA_HOST=n:
+
+>>> CONFIG_SATA_HOST=y:
+>>>     text    data     bss     dec     hex filename
+>>>    44283    6576      57   50916    c6e4 drivers/ata/libata-core.o
+>>>    29054      16       2   29072    7190 drivers/ata/libata-eh.o
+>>>    20085       0      19   20104    4e88 drivers/ata/libata-sff.o
+>>>     8699       0       0    8699    21fb drivers/ata/libata-sata.o
+
+>>> CONFIG_SATA_HOST=n:
+>>>     text    data     bss     dec     hex filename
+>>>    43754    6576      57   50387    c4d3 drivers/ata/libata-core.o
+>>>    26775      16       2   26793    68a9 drivers/ata/libata-eh.o
+>>>    20144       0      19   20163    4ec3 drivers/ata/libata-sff.o
+
+>>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+
+>> [...]
+
+>>> Index: b/drivers/ata/libata-core.c
+>>> ===================================================================
+>>> --- a/drivers/ata/libata-core.c
+>>> +++ b/drivers/ata/libata-core.c
 >>
->> @@ -573,34 +494,26 @@ void ata_tf_to_fis(const struct ata_task
->> =A0 =A0 =A0 =A0fis[19] =3D 0;
->> =A0}
->
-> =A0 Hm, what about ata_tf_to_fis()? It shouldn't be needed by non-SAT=
-A stuff,
-> moreover it'should be only needed by non-SFF controllers...
+>> [...]
+>>>
+>>> @@ -573,34 +494,26 @@ void ata_tf_to_fis(const struct ata_task
+>>>         fis[19] = 0;
+>>>   }
 
-in theory yes but it is actually used by libata-scsi.c
+>>    Hm, what about ata_tf_to_fis()? It shouldn't be needed by non-SATA stuff,
+>> moreover it'should be only needed by non-SFF controllers...
 
->> +#ifndef CONFIG_SATA_HOST
->> +int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy po=
-licy,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bool spm_wakeup)
->> =A0{
->> - =A0 =A0 =A0 tf->command =A0 =A0 =3D fis[2]; =A0 =A0 =A0 /* status =
-*/
->> - =A0 =A0 =A0 tf->feature =A0 =A0 =3D fis[3]; =A0 =A0 =A0 /* error *=
-/
->> -
->> - =A0 =A0 =A0 tf->lbal =A0 =A0 =A0 =A0=3D fis[4];
->> - =A0 =A0 =A0 tf->lbam =A0 =A0 =A0 =A0=3D fis[5];
->> - =A0 =A0 =A0 tf->lbah =A0 =A0 =A0 =A0=3D fis[6];
->> - =A0 =A0 =A0 tf->device =A0 =A0 =A0=3D fis[7];
->> -
->> - =A0 =A0 =A0 tf->hob_lbal =A0 =A0=3D fis[8];
->> - =A0 =A0 =A0 tf->hob_lbam =A0 =A0=3D fis[9];
->> - =A0 =A0 =A0 tf->hob_lbah =A0 =A0=3D fis[10];
->> -
->> - =A0 =A0 =A0 tf->nsect =A0 =A0 =A0 =3D fis[12];
->> - =A0 =A0 =A0 tf->hob_nsect =A0 =3D fis[13];
->> + =A0 =A0 =A0 return -EOPNOTSUPP;
->> +}
->> +EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
->
-> =A0 Shouldn't there be empty line here?
+> in theory yes but it is actually used by libata-scsi.c
 
-ata_piix needs it
+    Ah, didn't look here -- I didn't have the full kernel source to grep in...
 
->> +int sata_std_hardreset(struct ata_link *link, unsigned int *class,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0unsigned long deadline)
->> +{
->> + =A0 =A0 =A0 return -EOPNOTSUPP;
->> +}
->> +EXPORT_SYMBOL_GPL(sata_std_hardreset);
->
-> =A0 ... and here?
-
-ditto, and it is quite useful to have possibility of building ata_piix
-w/ CONFIG_SATA_HOST=3Dn
-
->> Index: b/drivers/ata/libata-sata.c
->> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->> --- /dev/null
->> +++ b/drivers/ata/libata-sata.c
->> @@ -0,0 +1,1242 @@
->
-> [...]
+>>> +#ifndef CONFIG_SATA_HOST
+>>> +int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>>> +                     bool spm_wakeup)
+>>>   {
+>>> -       tf->command     = fis[2];       /* status */
+>>> -       tf->feature     = fis[3];       /* error */
+>>> -
+>>> -       tf->lbal        = fis[4];
+>>> -       tf->lbam        = fis[5];
+>>> -       tf->lbah        = fis[6];
+>>> -       tf->device      = fis[7];
+>>> -
+>>> -       tf->hob_lbal    = fis[8];
+>>> -       tf->hob_lbam    = fis[9];
+>>> -       tf->hob_lbah    = fis[10];
+>>> -
+>>> -       tf->nsect       = fis[12];
+>>> -       tf->hob_nsect   = fis[13];
+>>> +       return -EOPNOTSUPP;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
 >>
->> +int sata_set_spd(struct ata_link *link)
->> +{
->> + =A0 =A0 =A0 u32 scontrol;
->> + =A0 =A0 =A0 int rc;
->> +
->> + =A0 =A0 =A0 if ((rc =3D sata_scr_read(link, SCR_CONTROL, &scontrol=
-)))
->
-> =A0 I guess checkpatch.pl protests here...
+>>    Shouldn't there be empty line here?
 
-it does ;)
+> ata_piix needs it
 
-[...]
+    I didn't doubt -- I just asked about empty line between functions. :-)
 
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->> +
->> + =A0 =A0 =A0 scontrol =3D (scontrol& =A00x0f0) | 0x301;
->> +
->> + =A0 =A0 =A0 if ((rc =3D sata_scr_write_flush(link, SCR_CONTROL, sc=
-ontrol)))
->
-> =A0 And here...
-> =A0 I understand that you're only moving the code. Perhaps it's worth=
- fixing
-> checkpatch.pl's complaints beforehand -- I was going to look at it...
+>>> +int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+>>> +                      unsigned long deadline)
+>>> +{
+>>> +       return -EOPNOTSUPP;
+>>> +}
+>>> +EXPORT_SYMBOL_GPL(sata_std_hardreset);
 
-Because code is moved I preferred to leave CodingStyle changes alone
-but I also think that it would be useful to fix them one day (though I
-deferred the work for later due to pragmatic reasons)..
+>>    ... and here?
 
-Thanks,
-Bartlomiej
+> ditto, and it is quite useful to have possibility of building ata_piix
+> w/ CONFIG_SATA_HOST=n
+
+    Of course... but I just asked about empty line. :-)
+
+>>> Index: b/drivers/ata/libata-sata.c
+>>> ===================================================================
+>>> --- /dev/null
+>>> +++ b/drivers/ata/libata-sata.c
+>>> @@ -0,0 +1,1242 @@
+>>
+>> [...]
+>>>
+>>> +int sata_set_spd(struct ata_link *link)
+>>> +{
+>>> +       u32 scontrol;
+>>> +       int rc;
+>>> +
+>>> +       if ((rc = sata_scr_read(link, SCR_CONTROL,&scontrol)))
+
+>>    I guess checkpatch.pl protests here...
+
+> it does ;)
+
+> [...]
+
+>>> +               goto out;
+>>> +
+>>> +       scontrol = (scontrol&    0x0f0) | 0x301;
+>>> +
+>>> +       if ((rc = sata_scr_write_flush(link, SCR_CONTROL, scontrol)))
+
+>>    And here...
+>>    I understand that you're only moving the code. Perhaps it's worth fixing
+>> checkpatch.pl's complaints beforehand -- I was going to look at it...
+
+> Because code is moved I preferred to leave CodingStyle changes alone
+> but I also think that it would be useful to fix them one day (though I
+> deferred the work for later due to pragmatic reasons)..
+
+    OK...
+
+> Thanks,
+> Bartlomiej
+
+WBR, Sergei
