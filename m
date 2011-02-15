@@ -1,62 +1,79 @@
-From: Lin Mac <mkl0301@gmail.com>
-Subject: Re: [PATCH v5 0/3] add CNS3xxx AHCI support
-Date: Tue, 15 Feb 2011 21:02:07 +0800
-Message-ID: <AANLkTimuh_hqfHayieEosMG4v6afj+Hz9U-cUQSNkUUr@mail.gmail.com>
-References: <1294557970-654-1-git-send-email-mkl0301@gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
+Date: Tue, 15 Feb 2011 08:15:06 -0600
+Message-ID: <1297779306.3015.8.camel@mulgrave.site>
+References: <1295797260.3007.118.camel@mulgrave.site>
+	 <1297624717.3001.2.camel@mulgrave.site>  <4D5A254D.8000900@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62501 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885Ab1BONCK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 08:02:10 -0500
-Received: by fxm20 with SMTP id 20so153725fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 05:02:08 -0800 (PST)
-In-Reply-To: <1294557970-654-1-git-send-email-mkl0301@gmail.com>
+Received: from cantor.suse.de ([195.135.220.2]:41257 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751089Ab1BOOPM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Feb 2011 09:15:12 -0500
+In-Reply-To: <4D5A254D.8000900@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, cbouatmailru@gmail.com, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: Mac Lin <mkl0301@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
-2011/1/9  <mkl0301@gmail.com>:
-> From: Mac Lin <mkl0301@gmail.com>
->
-> v5:
-> =A0- Rename ahci_platforms.h to ahci_platform.h
-> =A0- s/pltfm/platform/ in ahci_platform.c
->
-> v4: http://www.spinics.net/lists/linux-ide/msg39852.html
-> =A0- v2 basically, which make SoC-specific changes into separate file=
-s
-> =A0- Rename module ahci_platform to ahci_platforms, into which link t=
-he ahci_platform and the SoC-specific changes
-> =A0- No rename of ahci_platform.c
-> =A0- Some cosmetic code changes since v2
->
-> v3: http://www.spinics.net/lists/arm-kernel/msg109924.html
-> =A0- Make the SoC-specific changes into ahci_platform.c directly.
-> =A0- Some cosmetic code changes
-> =3D> ahci_platform.c is less readable due to SoC-specific changes and=
- macro
->
-> v2: http://www.spinics.net/lists/linux-ide/msg39766.html
-> =A0- Renaming ahci_platform.c to ahci_pltfm.c for linking SoC specifi=
-c changes into ahci_platform, while not changing the module name.
-> =A0- Switch ahci_platform to module device table matching to add SoC =
-specific support
-> =A0- Add CNS3xxx SoC specific AHCI support to ahci_cns3xxx.c
->
-> v1: http://www.spinics.net/lists/arm-kernel/msg106236.html
-> =A0- Add CNS3xxx SoC specific AHCI support to arch/arm/mach-cns3xxx
-> =3D> The changes depends on libahci and libata, i.e. both of them nee=
-d to be built into kernel
->
-> This patchset is based on linux-2.6.37
->
+On Tue, 2011-02-15 at 02:03 -0500, Jeff Garzik wrote:
+> On 02/13/2011 02:18 PM, James Bottomley wrote:
+> > On Sun, 2011-01-23 at 09:41 -0600, James Bottomley wrote:
+> >> The bad news is that this is a pretty horrific conversion.  Because of
+> >> the amount of control the new eh wants (and the slew of monolithic
+> >> assumptions it makes), the entire error handler routine has to be sliced
+> >> apart and sewn back together to make it callable as part of an existing
+> >> error handler (rather than trying to do everything on its own).
+> >>
+> >> The even worse news is that unless you have an existing strategy
+> >> handler, you can't make use of this.  That means that ipr is
+> >> unconvertable in its current form.  Given the two really nasty options:
+> >> give ipr its own error handler via its own transport class, or attach
+> >> ipr to libsas and let it do the work, I'd choose the latter.
+> >> Unfortunately, my power box with IPR has been non-functional for a year
+> >> (and all pleas to IBM to fix it have so far gone unanswered), so I can't
+> >> really do this myself.
+> >>
+> >> Once we carve up libata, it's still a rather complex call sequence for
+> >> libsas because of libata's annoying insistance on calling the error
+> >> handler at the drop of a hat.  The principle differentiator used is the
+> >> fact that if a SCSI command no longer has an associated SAS task, (i.e.
+> >> libsas thinks it's complete) it must be destined for libata.  This works
+> >> correctly in all the ATAPI sense processing instances I've tested.
+> >> Finally, we still have to call port recovery.  Currently, it's
+> >> impossible to tell which port libata thinks is in error (libata knows
+> >> because it has one host per port, but libsas doesn't), so the final
+> >> solution is just to call port recovery for every SATA/STP attached port.
+> >>
+> >> I've tested all of this with mvsas over expander attached ATA devices
+> >> using STP (aic94xx seems to have developed some handling fault for STP,
+> >> which I'll look into next).
+> >
+> > Since there's been remarkably little discussion of the ata changes, I
+> > think it's time to put this in linux-next to see what shakes out.
+> 
+> The fix series was quite straightforward, and the error handler 
+> separation is almost mechanical.  All looks good and tests well here, so 
+> I threw it into libata-dev.git#upstream (and thus linux-next).
 
-ping?
-Please kindly provide your opinion.
+Well, as you know, it's already in scsi-misc; as long as we don't get a
+merge conflict in linux-next, I don't really care.
 
-Best Regards,
-Mac Lin
+However, since it's a SCSI feature, which depends on patches in the scsi
+tree both before and after, it doesn't make a whole lot of sense in the
+ata tree.  It's just one actual patch that is libata impacting (the eh
+split).  The other three correct the sas paths, which only have SCSI
+users.
+
+> Let me know if you want to peel off patch 2/2 here into a post-merge tree...
+
+Well, you're missing the precursor patches to make it functional ...
+what you have will hang fairly fast on an actual SAS device.  But, as
+long as people with SAS only test scsi-misc or linux-next, hopefully it
+won't matter.
+
+James
+
+
