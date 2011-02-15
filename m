@@ -1,62 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Question regarding PORT_IRQ_BAD_PMP (Re: AHCI support Port
- Multiplier problem.)
-Date: Tue, 15 Feb 2011 11:31:50 +0100
-Message-ID: <20110215103150.GI3160@htj.dyndns.org>
-References: <20110107212537.GH7355@mtj.dyndns.org>
- <55871.3142.qm@web74203.mail.tp2.yahoo.com>
- <20110111143726.GE30607@htj.dyndns.org>
- <loom.20110215T051458-468@post.gmane.org>
- <20110215085504.GA3160@htj.dyndns.org>
- <AANLkTimG0Y2XjRTmaSLs0uq4h-zoz-x+k_eA-2Abxmg9@mail.gmail.com>
- <20110215100335.GH3160@htj.dyndns.org>
- <AANLkTin_K=KzYkrfO_pJDe_9LZzSJBbQn=8vjO1HhNG4@mail.gmail.com>
+From: "Jan Beulich" <JBeulich@novell.com>
+Subject: old ide driver incompatible with new flush implementation
+	 (was: conflicting commits (block flush vs. ide))
+Date: Tue, 15 Feb 2011 11:45:25 +0000
+Message-ID: <4D5A75650200007800031F9C@vpn.id2.novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58618 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754563Ab1BOKbz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 05:31:55 -0500
-Received: by fxm20 with SMTP id 20so11913fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 02:31:53 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <AANLkTin_K=KzYkrfO_pJDe_9LZzSJBbQn=8vjO1HhNG4@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Mac <mkl0301@gmail.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Feb 15, 2011 at 06:26:21PM +0800, Lin Mac wrote:
-> 2011/2/15 Tejun Heo <tj@kernel.org>:
-> > On Tue, Feb 15, 2011 at 05:50:55PM +0800, Lin Mac wrote:
-> >> > You're already working around buggy hardware. =A0It isn't surpri=
-sing
-> >> > that both behave incorrectly in their own separate ways. =A0Just=
- do
-> >> > what's necessary to get the hardware working as long as the work=
-around
-> >> > is localized to the specific controller.
-> >>
-> >> If I implement it as a quirk, would you prefer to add a new field
-> >> quirk, or just use flags of ahci_host_priv and add a new AHCI_HFLA=
-G*?
-> >> I prefer the later, but afraid that it's not what it is for.
-> >
-> > Please implement it as a separate ata_port_operations like
-> > ahci_CONTROLLER_NAME_ops and use the customized reset methods.
->=20
-> In fact, I did. But it doesn't get accepted.
->=20
->     [PATCH v5 0/3] add CNS3xxx AHCI support (Cavium Networks)
->     http://www.spinics.net/lists/linux-ide/msg39859.html
->=20
-> And given that there are many of them, shouldn't we implement it as q=
-uirk?
+>>> On 15.02.11 at 10:35, Jan Beulich wrote:
+> BUG: scheduling while atomic: swapper/0/0x10010000
 
-IIRC, the rejected part was the renaming of files and addition of a
-new driver, no?
+Actually, the situation is worse. While the patch sent previously
+allowed that system to boot, it died the moment it tried to
+access its secondary disk (which supports flushes, while the
+primary doesn't):
 
---=20
-tejun
+BUG: scheduling while atomic: swapper/0/0x10010000
+Process swapper (pid: 0, ti=ec004000 task=c04c14e0 task.ti=c04b0000)
+Stack:
+Call Trace:
+Code: cc cc cc cc b8 1c 00 00 00 cd 82 c3 cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc b8 1d 00 00 00 cd 82 <c3> cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc cc 
+Kernel panic - not syncing: scheduling while atomic
+Pid: 0, comm: swapper Not tainted 2.6.37-2011-01-22-xen0 #4
+Call Trace:
+ [<c010827b>] try_stack_unwind+0x14b/0x170
+ [<c010636f>] dump_trace+0x3f/0xf0
+ [<c0107e8b>] show_trace_log_lvl+0x4b/0x60
+ [<c0107eb8>] show_trace+0x18/0x20
+ [<c037104b>] dump_stack+0x6d/0x72
+ [<c03710a7>] panic+0x57/0x15b
+ [<c0129008>] __schedule_bug+0x58/0x60
+ [<c0371786>] schedule+0x466/0x5a0
+ [<c037199f>] _cond_resched+0x2f/0x50
+ [<c02cb8e5>] do_ide_request+0x55/0x450
+ [<c0228698>] __generic_unplug_device+0x28/0x30
+ [<c022ab2c>] blk_flush_complete_seq+0xbc/0x1a0		-> queue_next_fseq() -> elv_insert()
+ [<c022ad9a>] blk_flush_complete_seq_end_io+0x2a/0x70
+ [<c0227a81>] blk_finish_request+0x41/0xa0
+ [<c0227dd9>] blk_end_bidi_request+0x49/0x70
+ [<c0227e3f>] blk_end_request+0xf/0x20
+ [<c02cb484>] ide_end_rq+0x24/0x50
+ [<c02cb4da>] ide_complete_rq+0x2a/0x60
+ [<c02cf70e>] task_no_data_intr+0xde/0x140
+ [<c02cafab>] ide_intr+0x24b/0x370
+ [<c01648cd>] handle_IRQ_event+0x2d/0xc0
+ [<c0166d5a>] handle_fasteoi_irq+0x8a/0x140
+ [<c0105fc2>] handle_irq+0x82/0xd0
+
+(again, I converted the dump_stack() in there to a panic()).
+Adding ide_core.noflush=0.1 allows the system to access
+that secondary disk again, but surely it can't be the
+intention to require this option to be specified universally
+for all drives that support flushes.
+
+Hence the question really is whether instead the might_sleep()
+can't be removed from do_ide_request(), or at least be made
+conditional upon some property of the device.
+
+Jan
+
