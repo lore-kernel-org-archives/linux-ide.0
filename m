@@ -1,66 +1,43 @@
-From: Lin Mac <mkl0301@gmail.com>
-Subject: Re: Question regarding PORT_IRQ_BAD_PMP (Re: AHCI support Port
- Multiplier problem.)
-Date: Tue, 15 Feb 2011 18:26:21 +0800
-Message-ID: <AANLkTin_K=KzYkrfO_pJDe_9LZzSJBbQn=8vjO1HhNG4@mail.gmail.com>
-References: <20110107212537.GH7355@mtj.dyndns.org>
-	<55871.3142.qm@web74203.mail.tp2.yahoo.com>
-	<20110111143726.GE30607@htj.dyndns.org>
-	<loom.20110215T051458-468@post.gmane.org>
-	<20110215085504.GA3160@htj.dyndns.org>
-	<AANLkTimG0Y2XjRTmaSLs0uq4h-zoz-x+k_eA-2Abxmg9@mail.gmail.com>
-	<20110215100335.GH3160@htj.dyndns.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
+ staging.
+Date: Tue, 15 Feb 2011 10:33:45 +0000
+Message-ID: <20110215103345.0b121493@lxorguk.ukuu.org.uk>
+References: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60997 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963Ab1BOK0Y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 05:26:24 -0500
-Received: by fxm20 with SMTP id 20so7600fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 02:26:23 -0800 (PST)
-In-Reply-To: <20110215100335.GH3160@htj.dyndns.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:44675 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751963Ab1BOK3S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 05:29:18 -0500
+In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Hank Janssen <hjanssen@microsoft.com>
+Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Jame.Bottomley@HansenPartnership.com" <Jame.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de" <gregkh@suse.de>
 
-2011/2/15 Tejun Heo <tj@kernel.org>:
-> On Tue, Feb 15, 2011 at 05:50:55PM +0800, Lin Mac wrote:
->> > You're already working around buggy hardware. =A0It isn't surprisi=
-ng
->> > that both behave incorrectly in their own separate ways. =A0Just d=
-o
->> > what's necessary to get the hardware working as long as the workar=
-ound
->> > is localized to the specific controller.
->>
->> If I implement it as a quirk, would you prefer to add a new field
->> quirk, or just use flags of ahci_host_priv and add a new AHCI_HFLAG*=
-?
->> I prefer the later, but afraid that it's not what it is for.
->
-> Please implement it as a separate ata_port_operations like
-> ahci_CONTROLLER_NAME_ops and use the customized reset methods.
+> 	1. Most important thing of course, did we contact the correct subsystem 
+> 	    maintainers?
+> 		i. IDE/Blkvsc		David Miller
 
-In fact, I did. But it doesn't get accepted.
+Libata - Jeff Garzik & linux-ide@vger.kernel.org
 
-    [PATCH v5 0/3] add CNS3xxx AHCI support (Cavium Networks)
-    http://www.spinics.net/lists/linux-ide/msg39859.html
+drivers/ide is obsolete and on its way out.
 
-And given that there are many of them, shouldn't we implement it as qui=
-rk?
+drivers/ata replaced it as the old code couldn't really cope with things
+like SATA NCQ or hotplug. The new stuff can which is probably handy in a
+hypervisor.
 
+> 		ii. SCSI/Storvsc		James Bottomley
 
-    AHCI support Port Multiplier problem. (Faraday)
-    http://www.spinics.net/lists/linux-ide/msg39815.html
+Yes & linux-scsi@vger.kernel.org
 
-    Texas Instruments OMAP L138
+> 		iii. Network/Netvsc	Stephen Hemminger
+> 	2. What is the process to submit the code for review?
 
-    ATI SB600/SB700 (ahci_sb600_softreset)
-    http://kerneltrap.org/mailarchive/git-commits-head/2008/6/14/212231=
-4
+See: Documentation/SubmittingPatches in your kernel tree
 
-Best Regards,
-Mac Lin
+That should answer the rest. If not then keep a tag on things that should
+have been in there but weren't and that can also get updated.
