@@ -1,81 +1,47 @@
-From: Mac Lin <mkl0301@gmail.com>
-Subject: Question regarding =?utf-8?b?UE9SVF9JUlFfQkFEX1BNUA==?= (Re: AHCI support Port Multiplier problem.)
-Date: Tue, 15 Feb 2011 07:48:18 +0000 (UTC)
-Message-ID: <loom.20110215T051458-468@post.gmane.org>
-References: <20110107212537.GH7355@mtj.dyndns.org> <55871.3142.qm@web74203.mail.tp2.yahoo.com> <20110111143726.GE30607@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Question regarding PORT_IRQ_BAD_PMP (Re: AHCI support Port
+ Multiplier problem.)
+Date: Tue, 15 Feb 2011 09:55:04 +0100
+Message-ID: <20110215085504.GA3160@htj.dyndns.org>
+References: <20110107212537.GH7355@mtj.dyndns.org>
+ <55871.3142.qm@web74203.mail.tp2.yahoo.com>
+ <20110111143726.GE30607@htj.dyndns.org>
+ <loom.20110215T051458-468@post.gmane.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:49371 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751178Ab1BOHsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Feb 2011 02:48:33 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1PpFe9-0000N0-KY
-	for linux-ide@vger.kernel.org; Tue, 15 Feb 2011 08:48:30 +0100
-Received: from 211-21-178-166.HINET-IP.hinet.net ([211.21.178.166])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 08:48:29 +0100
-Received: from mkl0301 by 211-21-178-166.HINET-IP.hinet.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 08:48:29 +0100
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37935 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752090Ab1BOIzJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 03:55:09 -0500
+Received: by bwz15 with SMTP id 15so221971bwz.19
+        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 00:55:07 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <loom.20110215T051458-468@post.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Mac Lin <mkl0301@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Tejun Heo <tj <at> kernel.org> writes:
+Hello,
 
-[snip]
+(please always reply-to-all)
 
-> Please take a look at ahci_sb600_softreset() in ahci.c.  The
-> controller had the same problem.  Preferably, please fix your
-> controller but as there are more than one controller with this
-> problem, we probably should implement it as a quirk in libahci.c.
+On Tue, Feb 15, 2011 at 07:48:18AM +0000, Mac Lin wrote:
+> It seems that the PORT_IRQ_BAD_PMP is not getting cleared, or, asserted every
+> time when it "received a FIS from a device that did not have a command
+> outstanding", which is the D2H FIS of softreset.
+> 
+> The sb600, which I assume the code work correctly, seems doesn't have this
+> problem. So I am wondering that whether is this the right behavior on cns3xxx,
+> or  and just another issue of the chip?
 
-I refer to the ahci_sb600_softreset and ahci_sb600_check_ready to make my patch,
-but I found that the following code changes in ahci_sb600_check_ready:
+You're already working around buggy hardware.  It isn't surprising
+that both behave incorrectly in their own separate ways.  Just do
+what's necessary to get the hardware working as long as the workaround
+is localized to the specific controller.
 
-        /*                                                    
-         * There is no need to check TFDATA if BAD PMP is found due to HW bug, 
-                                             
-         * which can save timeout delay.
-         */                                                   
-        if (irq_status & PORT_IRQ_BAD_PMP)
-                return -EIO;
+Good luck.
 
-On my system (CNS3xxx) it result in:
-
-ata2: softreset failed (device not ready)
-ata2: applying PMP SRST workaround and retrying
-ata2: softreset failed (device not ready)
-ata2: reset failed (errno=-5), retrying in 9 secs
-ata2: softreset failed (device not ready)
-ata2: applying PMP SRST workaround and retrying
-ata2: softreset failed (device not ready)
-ata2: reset failed (errno=-5), retrying in 9 secs
-ata2: softreset failed (device not ready)
-ata2: applying PMP SRST workaround and retrying
-ata2: softreset failed (device not ready)
-ata2: reset failed (errno=-5), retrying in 34 secs
-ata2: limiting SATA link speed to 1.5 Gbps
-ata2: softreset failed (device not ready)
-ata2: applying PMP SRST workaround and retrying
-ata2: softreset failed (device not ready)
-ata2: reset failed, giving up
-
-It seems that the PORT_IRQ_BAD_PMP is not getting cleared, or, asserted every
-time when it "received a FIS from a device that did not have a command
-outstanding", which is the D2H FIS of softreset.
-
-The sb600, which I assume the code work correctly, seems doesn't have this
-problem. So I am wondering that whether is this the right behavior on cns3xxx,
-or  and just another issue of the chip?
-
-Best Regards,
-Mac Lin
-
-
-
+-- 
+tejun
