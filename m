@@ -1,7 +1,7 @@
 From: "Jan Beulich" <JBeulich@novell.com>
 Subject: conflicting commits (block flush vs. ide)
-Date: Tue, 15 Feb 2011 09:03:12 +0000
-Message-ID: <4D5A4F600200007800031F2A@vpn.id2.novell.com>
+Date: Tue, 15 Feb 2011 09:35:00 +0000
+Message-ID: <4D5A56D40200007800031F3F@vpn.id2.novell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8BIT
@@ -9,8 +9,10 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj.APAC-3.APAC@kernel.org>
+To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org
+
+(resend because of corrupted email address in first attempt)
 
 Tejun,
 
