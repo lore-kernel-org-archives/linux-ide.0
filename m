@@ -1,88 +1,60 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
- staging. - CORRECTED RECIPIENTS
-Date: Mon, 14 Feb 2011 18:45:33 -0600
-Message-ID: <4D59CCAD.90503@gmail.com>
-References: <8AFC7968D54FB448A30D8F38F259C56233F957D3@TK5EX14MBXC114.redmond.corp.microsoft.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
+Date: Tue, 15 Feb 2011 02:03:41 -0500
+Message-ID: <4D5A254D.8000900@garzik.org>
+References: <1295797260.3007.118.camel@mulgrave.site> <1297624717.3001.2.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52500 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752124Ab1BOApi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2011 19:45:38 -0500
-In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F957D3@TK5EX14MBXC114.redmond.corp.microsoft.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1297624717.3001.2.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Hank Janssen <hjanssen@microsoft.com>
-Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, ide <linux-ide@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de\" \"" <gregkh@suse.de>
 
-On 02/14/2011 05:42 PM, Hank Janssen wrote:
+On 02/13/2011 02:18 PM, James Bottomley wrote:
+> On Sun, 2011-01-23 at 09:41 -0600, James Bottomley wrote:
+>> The bad news is that this is a pretty horrific conversion.  Because of
+>> the amount of control the new eh wants (and the slew of monolithic
+>> assumptions it makes), the entire error handler routine has to be sliced
+>> apart and sewn back together to make it callable as part of an existing
+>> error handler (rather than trying to do everything on its own).
+>>
+>> The even worse news is that unless you have an existing strategy
+>> handler, you can't make use of this.  That means that ipr is
+>> unconvertable in its current form.  Given the two really nasty options:
+>> give ipr its own error handler via its own transport class, or attach
+>> ipr to libsas and let it do the work, I'd choose the latter.
+>> Unfortunately, my power box with IPR has been non-functional for a year
+>> (and all pleas to IBM to fix it have so far gone unanswered), so I can't
+>> really do this myself.
+>>
+>> Once we carve up libata, it's still a rather complex call sequence for
+>> libsas because of libata's annoying insistance on calling the error
+>> handler at the drop of a hat.  The principle differentiator used is the
+>> fact that if a SCSI command no longer has an associated SAS task, (i.e.
+>> libsas thinks it's complete) it must be destined for libata.  This works
+>> correctly in all the ATAPI sense processing instances I've tested.
+>> Finally, we still have to call port recovery.  Currently, it's
+>> impossible to tell which port libata thinks is in error (libata knows
+>> because it has one host per port, but libsas doesn't), so the final
+>> solution is just to call port recovery for every SATA/STP attached port.
+>>
+>> I've tested all of this with mvsas over expander attached ATA devices
+>> using STP (aic94xx seems to have developed some handling fault for STP,
+>> which I'll look into next).
 >
-> MY APOLOGIES-I made a typo on James email address. I corrected it and resend.
-> Sorry for the double email.
->
->
-> Stephen/James/David,
->
-> Greetings to you all. As you might be aware, we submitted Hyper-V drivers to the kernel 2009.
-> We have been extending these drivers with additional functionality and our primary focus now
-> is doing the work needed to exit the staging area.
->
-> To give you some background, the following are Hyper-V specific Linux drivers:
->
->                  hv_vmbus           The vmbus driver that is the bridge between guest and the
-> 			host
->                  hv_storvsc          The SCSI device driver
->                  hv_blkvsc            The IDE driver
+> Since there's been remarkably little discussion of the ata changes, I
+> think it's time to put this in linux-next to see what shakes out.
 
-Given that the IDE subsystem (drivers/ide) is currently in 
-maintenance-only mode, and isn't used by modern distributions, you 
-likely want to make this a libata driver instead.
+The fix series was quite straightforward, and the error handler 
+separation is almost mechanical.  All looks good and tests well here, so 
+I threw it into libata-dev.git#upstream (and thus linux-next).
 
-Though, from what's in current git, it's not clear to me what the HV IDE 
-(and SCSI) drivers are attempting to do. Is it really something that 
-looks like an IDE controller from the guest OS point of view? If not, 
-then having it as an IDE driver would be the wrong thing to do, it 
-should be more of a generic block driver. In that case, then, why are 
-there both SCSI and IDE drivers in the first place?
+Let me know if you want to peel off patch 2/2 here into a post-merge tree...
 
->                  hv_netvsc           The network driver
->
-> We think our drivers are pretty close to be reviewed by the subsystem maintainers.
->
-> We have been  working with Greg on  hv_vmbus, and several other driver issues as it relates to
-> exiting staging. And now we are looking for guidance for the other drivers.
->
-> 	1. Most important thing of course, did we contact the correct subsystem
-> 	    maintainers?
-> 		i. IDE/Blkvsc		David Miller
-> 		ii. SCSI/Storvsc		James Bottomley
-> 		iii. Network/Netvsc	Stephen Hemminger
-> 	2. What is the process to submit the code for review?
-> 	3. Which mailing list(s) do we need to use for the code reviews
-> 	4. I assume normal patch format is required?
-> 	5. What additional information is needed
-> 	6. Once they leave staging where do they need to go? Because they all
-> 	    pretty much come as a package we were thinking drivers/hyperv might
-> 	    be a good place.
->
-> There are still a few outstanding items we are currently working on. But they should be
-> wrapped up shortly. (There are a few remaining FIXME comments in the code we are
-> cleaning up as I write this). But if possible we would like to get your feedback even
-> as we are addressing the issues we currently know about.
->
-> Thanks
->
-> Hank.
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+	Jeff
+
+
 
