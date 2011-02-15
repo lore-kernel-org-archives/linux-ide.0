@@ -1,51 +1,121 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: old ide driver incompatible with new flush implementation
- (was: conflicting commits (block flush vs. ide))
-Date: Tue, 15 Feb 2011 17:30:46 +0100
-Message-ID: <20110215163046.GO3160@htj.dyndns.org>
-References: <4D5A75650200007800031F9C@vpn.id2.novell.com>
- <20110215151314.GJ3160@htj.dyndns.org>
- <4D5AB5D0020000780003207A@vpn.id2.novell.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: sct erc does not work with megaraid
+Date: Tue, 15 Feb 2011 12:17:14 -0500
+Message-ID: <4D5AB51A.2010002@interlog.com>
+References: <4D5A5388.3010208@ngs.ru> <4D5A9FE9.9020409@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:62053 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362Ab1BOQav (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2011 11:30:51 -0500
-Received: by bwz15 with SMTP id 15so602112bwz.19
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2011 08:30:50 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D5AB5D0020000780003207A@vpn.id2.novell.com>
+Received: from smtp.infotech.no ([82.134.31.41]:51853 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754097Ab1BORRX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Feb 2011 12:17:23 -0500
+In-Reply-To: <4D5A9FE9.9020409@interlog.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jan Beulich <JBeulich@novell.com>
-Cc: linux-ide@vger.kernel.org
+To: Artem Bokhan <aptem@ngs.ru>
+Cc: linux-scsi@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 04:20:16PM +0000, Jan Beulich wrote:
-> > Yeah, right.  blk_flush_complete_seq_end_io() is on completion path
-> > and shouldn't call directly into request_fn.  Can you please test
-> > whether the following patch fixes the problem?
-> 
-> Isn't that rather meant to deal with the first of the two cases (i.e.
-> not the one above, where the problem is with the direct call to
-> request_fn from __generic_unplug_device())?
+On 11-02-15 10:46 AM, Douglas Gilbert wrote:
+> On 11-02-15 05:20 AM, Artem Bokhan wrote:
+>> Hello!
+>>
+>> I'm trying to get/set sctserc (SMART Command Transport Error Recovery Control)
+>> data from sata disk attached to lsi megaraid controller with smartmontools, but
+>> this function does not work.
+>>
+>> I want to figure out: is this driver or firmware issue? May someone to help to
+>> fix this?
+>>
+>> The issue can be described as follows:
+>>
+>> The ATA PASS-THROUGH(16) implementation in the SAT layer of the megaraid driver
+>> or firmware does not return the ATA output registers if requested. This violates
+>> SAT standard (http://www.t10.org/drafts.htm#SAT).
+>>
+>> Expected: If CK_COND (bit 5 of CDB[2]) is set, ATA PASS-THROUGH(16) (CDB[0] =
+>> 0x85) shall return a CHECK CONDITION even if the ATA command completed
+>> successfully, and return the ATA output registers in the sense data using ATA
+>> return descriptor format (descriptor code 0x09).
+>>
+>> Observed: If CK_COND is set and the ATA command completed successfully, ATA
+>> PASS-THROUGH(16) does not return a CHECK CONDITION or the sense data does not
+>> contain an ATA return descriptor.
+>>
+>> See also the smartmontools SAT implementation
+>> (http://sourceforge.net/apps/trac/smartmontools/browser/trunk/smartmontools/scsiata.cpp?rev=3258#L146)
+>>
+>> for further info.
+>
+> That code looked familiar but I'm not sure what your
+> point was referring to it. Anyway ...
+>
+> Haven't worked much with Megaraid controllers but mptsas
+> controllers implement SAT (or at least did) in their
+> firmware. So upgrading the firmware on the controller fixed
+> the problems I had (some years back) with SAT compliance.
 
-Right, didn't realize there were two issues.  The following should
-take care of the second one.
+Just doing some tests comparing SAT compliance in libata
+and a LSI SAS 9212-4i4e controller with the latest firmware.
+I would expect a Megaraid controller with recent firmware to
+behave in the same way as a the 9212 (mpt2sas driver).
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 54b123d..fbaa037 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -130,7 +130,7 @@ static struct request *queue_next_fseq(struct request_queue *q)
- 		BUG();
- 	}
- 
--	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
-+	elv_insert(q, rq, ELEVATOR_INSERT_REQUEUE);
- 	return rq;
- }
+The test is to send an ATA IDENTIFY DEVICE command through the
+SCSI ATA PASS-THROUGH (16) command with the CK_COND bit set:
 
--- 
-tejun
+First libata:
+
+# sg_sat_identify --ck_cond /dev/sg1 -vvv
+open /dev/sg1 with flags=0x802
+     ATA pass through (16) cdb: 85 08 2e 00 00 00 01 00 00 00 00 00 00 00 ec 00
+       duration=1 ms
+ATA pass through:  Descriptor format, current;  Sense key: No Sense
+  Additional sense: No additional sense information
+   Descriptor type: ATA Status Return
+     extend=0  error=0x0  sector_count=0x1
+     lba=0x000000
+     device=0x0  status=0x50
+  Raw sense data (in hex):
+         72 00 00 00 00 00 00 0e  09 0c 00 00 00 01 00 00
+         00 00 00 00 00 50 00 00  00 00 00 00 00 00 00 00
+         00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+Seem to have got ATA Result Descriptor but it was not indicated
+#
+
+So libata is broken in its SAT compliance in lk 2.6.37 .
+
+
+And this is what should happen (SATA disk connected to a
+SAS 9212-4i4e controller):
+
+# sg_sat_identify --ck_cond /dev/sg4 -vvv
+open /dev/sg4 with flags=0x802
+     ATA pass through (16) cdb: 85 08 2e 00 00 00 01 00 00 00 00 00 00 00 ec 00
+       duration=2 ms
+ATA pass through:  Descriptor format, current;  Sense key: Recovered Error
+  Additional sense: ATA pass through information available
+   Descriptor type: ATA Status Return
+     extend=0  error=0x0  sector_count=0x0
+     lba=0x000000
+     device=0x0  status=0x50
+  Raw sense data (in hex):
+         72 01 00 1d 00 00 00 0e  09 0c 00 00 00 00 00 00
+         00 00 00 00 00 50 00 00  00 00 00 00 00 00 00 00
+         00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+         00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+Response for IDENTIFY DEVICE ATA command:
+  00     0c5a 3fff c837 0010 0000 0000 003f 0000     .Z ?. .7 .. .. .. .? ..
+  08     0000 0000 2020 2020 2020 2020 2020 2020     .. ..
+.....
+
+
+The sense key of Recovered Error is correct for no error
+to report (as per SAT and SAT-2 standards) and of course
+the response to the IDENTIFY DEVICE should be forwarded
+(libata doesn't do that either).
+
+Doug Gilbert
+
