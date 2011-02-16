@@ -1,39 +1,108 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 1/10] ide: use pci_dev->revision
-Date: Wed, 16 Feb 2011 20:52:58 +0300
-Message-ID: <4D5C0EFA.9060507@ru.mvista.com>
-References: <200708292316.38779.bzolnier@gmail.com> <46D5E77B.5030800@intel.com>
+Subject: Re: [PATCH] ata: sata_dwc_460ex: fix error path
+Date: Wed, 16 Feb 2011 21:10:46 +0300
+Message-ID: <4D5C1326.2010101@ru.mvista.com>
+References: <1284317830-5022-1-git-send-email-segooon@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45672 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37905 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752194Ab1BPRya (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 12:54:30 -0500
-Received: by bwz15 with SMTP id 15so861917bwz.19
-        for <linux-ide@vger.kernel.org>; Wed, 16 Feb 2011 09:54:28 -0800 (PST)
-In-Reply-To: <46D5E77B.5030800@intel.com>
+	with ESMTP id S1750857Ab1BPSMS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 13:12:18 -0500
+In-Reply-To: <1284317830-5022-1-git-send-email-segooon@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Kok, Auke" <auke-jan.h.kok@intel.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
+To: Vasiliy Kulikov <segooon@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: kernel-janitors@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Hello.
 
-Kok, Auke wrote:
+Vasiliy Kulikov wrote:
 
->> Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID so
->> they were not converted by commit 
->> 44c10138fd4bbc4b6d6bff0873c24902f2a9da65.
+> Free all allocated resources on error path.
 
-> that's actually another effort that I'm working on atm. You can either 
-> hold off on your patch or we'll see how my patches bounce against yours ;)
+> Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+> ---
+>  I cannot compile this driver at all, so it is not tested.
 
-    What happened to that effort back then I wonder? I'm now dealing with 
-PCI_CLASS_REVISON piecewise. BTW, there are also new PCI_REVISION_ID users. :-)
+    I can at least compile-test the patch...
 
-> Cheers,
+>  drivers/ata/sata_dwc_460ex.c |   21 ++++++++++++++-------
+>  1 files changed, 14 insertions(+), 7 deletions(-)
+
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index 6cf57c5..ad0535f 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -727,11 +727,15 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
+>  static void dma_dwc_exit(struct sata_dwc_device *hsdev)
+>  {
+>  	dev_dbg(host_pvt.dwc_dev, "%s:\n", __func__);
+> -	if (host_pvt.sata_dma_regs)
+> +	if (host_pvt.sata_dma_regs) {
+>  		iounmap(host_pvt.sata_dma_regs);
+> +		host_pvt.sata_dma_regs = NULL;
+> +	}
+>  
+> -	if (hsdev->irq_dma)
+> +	if (hsdev->irq_dma) {
+>  		free_irq(hsdev->irq_dma, hsdev);
+> +		hsdev->irq_dma = 0;
+> +	}
+>  }
+
+    Are those changes really necessary, i.e. is dma_dwc_exit() called more than 
+once?
+
+> @@ -1606,7 +1610,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+>  	if (hsdev == NULL) {
+>  		dev_err(&ofdev->dev, "kmalloc failed for hsdev\n");
+>  		err = -ENOMEM;
+> -		goto error_out;
+> +		goto error;
+
+    Why not just:
+
+		return err;
+
+>  	}
+>  	memset(hsdev, 0, sizeof(*hsdev));
+>  
+> @@ -1616,7 +1620,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+>  		dev_err(&ofdev->dev, "ioremap failed for SATA register"
+>  			" address\n");
+>  		err = -ENODEV;
+> -		goto error_out;
+> +		goto error_kmalloc;
+>  	}
+>  	hsdev->reg_base = base;
+>  	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
+> @@ -1629,7 +1633,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
+>  	if (!host) {
+>  		dev_err(&ofdev->dev, "ata_host_alloc_pinfo failed\n");
+>  		err = -ENOMEM;
+> -		goto error_out;
+> +		goto error_iomap;
+>  	}
+>  
+>  	host->private_data = hsdev;
+> @@ -1697,8 +1701,11 @@ error_out:
+>  	/* Free SATA DMA resources */
+>  	dma_dwc_exit(hsdev);
+>  
+> -	if (base)
+> -		iounmap(base);
+> +error_iomap:
+> +	iounmap(base);
+> +error_kmalloc:
+> +	kfree(hsdev);
+> +error:
+>  	return err;
+>  }
+
+    Jeff, what's become with this patch? Will you queue it? And will you queue 
+my 4 fixes (and 1 cleanup)?
 
 WBR, Sergei
-
