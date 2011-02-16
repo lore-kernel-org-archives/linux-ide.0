@@ -1,76 +1,39 @@
-From: Hank Janssen <hjanssen@microsoft.com>
-Subject: RE: Process for subsystem maintainers to get Hyper-V code out of
- staging. - CORRECTED RECIPIENTS
-Date: Wed, 16 Feb 2011 17:43:34 +0000
-Message-ID: <8AFC7968D54FB448A30D8F38F259C56233F98FDA@TK5EX14MBXC114.redmond.corp.microsoft.com>
-References: <8AFC7968D54FB448A30D8F38F259C56233F957D3@TK5EX14MBXC114.redmond.corp.microsoft.com>
- <4D59CCAD.90503@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/10] ide: use pci_dev->revision
+Date: Wed, 16 Feb 2011 20:52:58 +0300
+Message-ID: <4D5C0EFA.9060507@ru.mvista.com>
+References: <200708292316.38779.bzolnier@gmail.com> <46D5E77B.5030800@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailb.microsoft.com ([131.107.115.215]:33454 "EHLO
-	smtp.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753703Ab1BPRnf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 12:43:35 -0500
-In-Reply-To: <4D59CCAD.90503@gmail.com>
-Content-Language: en-US
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45672 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752194Ab1BPRya (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 12:54:30 -0500
+Received: by bwz15 with SMTP id 15so861917bwz.19
+        for <linux-ide@vger.kernel.org>; Wed, 16 Feb 2011 09:54:28 -0800 (PST)
+In-Reply-To: <46D5E77B.5030800@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, ide <linux-ide@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de\" \"" <gregkh@suse.de>
+To: "Kok, Auke" <auke-jan.h.kok@intel.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>
 
+Hello.
 
-> From: Robert Hancock [mailto:hancockrwd@gmail.com]
-> Sent: Monday, February 14, 2011 4:46 PM
-> On 02/14/2011 05:42 PM, Hank Janssen wrote:
-> >
-> > MY APOLOGIES-I made a typo on James email address. I corrected it and
-> resend.
-> > Sorry for the double email.
-> >
-> >
-> > Stephen/James/David,
-> >
-> > Greetings to you all. As you might be aware, we submitted Hyper-V
-> drivers to the kernel 2009.
-> > We have been extending these drivers with additional functionality
-> and our primary focus now
-> > is doing the work needed to exit the staging area.
-> >
-> > To give you some background, the following are Hyper-V specific Linux
-> drivers:
-> >
-> >                  hv_vmbus           The vmbus driver that is the
-> bridge between guest and the
-> > 			host
-> >                  hv_storvsc          The SCSI device driver
-> >                  hv_blkvsc            The IDE driver
-> 
-> Given that the IDE subsystem (drivers/ide) is currently in
-> maintenance-only mode, and isn't used by modern distributions, you
-> likely want to make this a libata driver instead.
-> 
-> Though, from what's in current git, it's not clear to me what the HV
-> IDE
-> (and SCSI) drivers are attempting to do. Is it really something that
-> looks like an IDE controller from the guest OS point of view? If not,
-> then having it as an IDE driver would be the wrong thing to do, it
-> should be more of a generic block driver. In that case, then, why are
-> there both SCSI and IDE drivers in the first place?
-> 
+Kok, Auke wrote:
 
-Robert,
+>> Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID so
+>> they were not converted by commit 
+>> 44c10138fd4bbc4b6d6bff0873c24902f2a9da65.
 
-Thank you very much for your responses, today Hyper-V host only supports 
-IDE and SCSI, and the code was initially written against 2.6.9 kernel.
+> that's actually another effort that I'm working on atm. You can either 
+> hold off on your patch or we'll see how my patches bounce against yours ;)
 
-Hyper-V still treats them a separate interface and is designed to emulate
-A pretty old BIOS.
+    What happened to that effort back then I wonder? I'm now dealing with 
+PCI_CLASS_REVISON piecewise. BTW, there are also new PCI_REVISION_ID users. :-)
 
-What my approach will be is to dig into libsata (something I have not
-Much knowledge of) and see if we can use it and find a way to more sanely
-Merge the behavior of Hyper-V's IDE and SCSI.
+> Cheers,
 
-Hank.
+WBR, Sergei
 
