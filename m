@@ -1,108 +1,60 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata: sata_dwc_460ex: fix error path
-Date: Wed, 16 Feb 2011 21:10:46 +0300
-Message-ID: <4D5C1326.2010101@ru.mvista.com>
-References: <1284317830-5022-1-git-send-email-segooon@gmail.com>
+Subject: Re: [PATCH 2/4] sata_dwc_460ex: fix return value of dma_dwc_xfer_setup()
+Date: Wed, 16 Feb 2011 21:33:50 +0300
+Message-ID: <4D5C188E.3090204@ru.mvista.com>
+References: <201101282158.54462.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37905 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56133 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857Ab1BPSMS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 13:12:18 -0500
-In-Reply-To: <1284317830-5022-1-git-send-email-segooon@gmail.com>
+	with ESMTP id S1751314Ab1BPShE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 13:37:04 -0500
+Received: by bwz15 with SMTP id 15so901785bwz.19
+        for <linux-ide@vger.kernel.org>; Wed, 16 Feb 2011 10:37:03 -0800 (PST)
+In-Reply-To: <201101282158.54462.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vasiliy Kulikov <segooon@gmail.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: kernel-janitors@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 Hello.
 
-Vasiliy Kulikov wrote:
+I wrote:
 
-> Free all allocated resources on error path.
+> The caller expects this function to return the DMA channel number on success,
+> while it returns 0...
 
-> Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
 > ---
->  I cannot compile this driver at all, so it is not tested.
+> The patch is against the recent Linus' tree.
 
-    I can at least compile-test the patch...
+>  drivers/ata/sata_dwc_460ex.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
->  drivers/ata/sata_dwc_460ex.c |   21 ++++++++++++++-------
->  1 files changed, 14 insertions(+), 7 deletions(-)
-
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-> index 6cf57c5..ad0535f 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_460ex.c
-> @@ -727,11 +727,15 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
->  static void dma_dwc_exit(struct sata_dwc_device *hsdev)
->  {
->  	dev_dbg(host_pvt.dwc_dev, "%s:\n", __func__);
-> -	if (host_pvt.sata_dma_regs)
-> +	if (host_pvt.sata_dma_regs) {
->  		iounmap(host_pvt.sata_dma_regs);
-> +		host_pvt.sata_dma_regs = NULL;
-> +	}
+> Index: linux-2.6/drivers/ata/sata_dwc_460ex.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/sata_dwc_460ex.c
+> +++ linux-2.6/drivers/ata/sata_dwc_460ex.c
+> @@ -44,7 +44,7 @@
+>  #undef	DRV_NAME
+>  #undef	DRV_VERSION
+>  #define DRV_NAME        "sata-dwc"
+> -#define DRV_VERSION     "1.1"
+> +#define DRV_VERSION     "1.2"
 >  
-> -	if (hsdev->irq_dma)
-> +	if (hsdev->irq_dma) {
->  		free_irq(hsdev->irq_dma, hsdev);
-> +		hsdev->irq_dma = 0;
-> +	}
+>  /* SATA DMA driver Globals */
+>  #define DMA_NUM_CHANS		1
+> @@ -718,7 +718,7 @@ static int dma_dwc_xfer_setup(struct sca
+>  	/* Program the CTL register with src enable / dst enable */
+>  	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].ctl.low),
+>  		 DMA_CTL_LLP_SRCEN | DMA_CTL_LLP_DSTEN);
+> -	return 0;
+> +	return dma_ch;
 >  }
 
-    Are those changes really necessary, i.e. is dma_dwc_exit() called more than 
-once?
-
-> @@ -1606,7 +1610,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
->  	if (hsdev == NULL) {
->  		dev_err(&ofdev->dev, "kmalloc failed for hsdev\n");
->  		err = -ENOMEM;
-> -		goto error_out;
-> +		goto error;
-
-    Why not just:
-
-		return err;
-
->  	}
->  	memset(hsdev, 0, sizeof(*hsdev));
->  
-> @@ -1616,7 +1620,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
->  		dev_err(&ofdev->dev, "ioremap failed for SATA register"
->  			" address\n");
->  		err = -ENODEV;
-> -		goto error_out;
-> +		goto error_kmalloc;
->  	}
->  	hsdev->reg_base = base;
->  	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
-> @@ -1629,7 +1633,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
->  	if (!host) {
->  		dev_err(&ofdev->dev, "ata_host_alloc_pinfo failed\n");
->  		err = -ENOMEM;
-> -		goto error_out;
-> +		goto error_iomap;
->  	}
->  
->  	host->private_data = hsdev;
-> @@ -1697,8 +1701,11 @@ error_out:
->  	/* Free SATA DMA resources */
->  	dma_dwc_exit(hsdev);
->  
-> -	if (base)
-> -		iounmap(base);
-> +error_iomap:
-> +	iounmap(base);
-> +error_kmalloc:
-> +	kfree(hsdev);
-> +error:
->  	return err;
->  }
-
-    Jeff, what's become with this patch? Will you queue it? And will you queue 
-my 4 fixes (and 1 cleanup)?
+    Does not seem a real issue as DMA_NUM_CHANS is 1. How NCQ is going to work 
+though with 1 DMA channel? :-O
 
 WBR, Sergei
