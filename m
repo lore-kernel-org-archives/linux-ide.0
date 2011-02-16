@@ -1,60 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 2/4] sata_dwc_460ex: fix return value of dma_dwc_xfer_setup()
-Date: Wed, 16 Feb 2011 21:33:50 +0300
-Message-ID: <4D5C188E.3090204@ru.mvista.com>
-References: <201101282158.54462.sshtylyov@ru.mvista.com>
+From: Auke Kok <auke-jan.h.kok@intel.com>
+Subject: Re: [PATCH 1/10] ide: use pci_dev->revision
+Date: Wed, 16 Feb 2011 11:26:49 -0800
+Message-ID: <4D5C24F9.3070607@intel.com>
+References: <200708292316.38779.bzolnier@gmail.com> <46D5E77B.5030800@intel.com> <4D5C0EFA.9060507@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56133 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314Ab1BPShE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2011 13:37:04 -0500
-Received: by bwz15 with SMTP id 15so901785bwz.19
-        for <linux-ide@vger.kernel.org>; Wed, 16 Feb 2011 10:37:03 -0800 (PST)
-In-Reply-To: <201101282158.54462.sshtylyov@ru.mvista.com>
+Received: from mga09.intel.com ([134.134.136.24]:61280 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457Ab1BPT0u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Feb 2011 14:26:50 -0500
+In-Reply-To: <4D5C0EFA.9060507@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Greg Kroah-Hartman <gregkh@suse.de>
 
-Hello.
+On 02/16/11 09:52, Sergei Shtylyov wrote:
+> Hello.
+>
+> Kok, Auke wrote:
+>
+>>> Some places were using PCI_CLASS_REVISION instead of PCI_REVISION_ID so
+>>> they were not converted by commit
+>>> 44c10138fd4bbc4b6d6bff0873c24902f2a9da65.
+>
+>> that's actually another effort that I'm working on atm. You can either
+>> hold off on your patch or we'll see how my patches bounce against yours ;)
+>
+>      What happened to that effort back then I wonder? I'm now dealing with
+> PCI_CLASS_REVISON piecewise. BTW, there are also new PCI_REVISION_ID users. :-)
 
-I wrote:
+Ha, that was a while ago :)
 
-> The caller expects this function to return the DMA channel number on success,
-> while it returns 0...
+I've not done any ""real"" driver work for a while now, so feel free to 
+pick this cleanup off the floor and blow some life in it. I currently do 
+not have the time to follow up there :)
 
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-
-> ---
-> The patch is against the recent Linus' tree.
-
->  drivers/ata/sata_dwc_460ex.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-
-> Index: linux-2.6/drivers/ata/sata_dwc_460ex.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/ata/sata_dwc_460ex.c
-> +++ linux-2.6/drivers/ata/sata_dwc_460ex.c
-> @@ -44,7 +44,7 @@
->  #undef	DRV_NAME
->  #undef	DRV_VERSION
->  #define DRV_NAME        "sata-dwc"
-> -#define DRV_VERSION     "1.1"
-> +#define DRV_VERSION     "1.2"
->  
->  /* SATA DMA driver Globals */
->  #define DMA_NUM_CHANS		1
-> @@ -718,7 +718,7 @@ static int dma_dwc_xfer_setup(struct sca
->  	/* Program the CTL register with src enable / dst enable */
->  	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].ctl.low),
->  		 DMA_CTL_LLP_SRCEN | DMA_CTL_LLP_DSTEN);
-> -	return 0;
-> +	return dma_ch;
->  }
-
-    Does not seem a real issue as DMA_NUM_CHANS is 1. How NCQ is going to work 
-though with 1 DMA channel? :-O
-
-WBR, Sergei
+Auke
