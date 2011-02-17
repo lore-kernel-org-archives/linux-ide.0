@@ -1,68 +1,50 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata-sil drive detection issues.
-Date: Thu, 17 Feb 2011 10:58:15 +0100
-Message-ID: <20110217095815.GN19830@htj.dyndns.org>
-References: <4D5C92F4.5000906@crc.id.au>
- <4D5CA2B1.8020905@crc.id.au>
+Subject: Re: [Patch] enable AHCI mode on certain ich chipsets
+Date: Thu, 17 Feb 2011 11:03:30 +0100
+Message-ID: <20110217100330.GO19830@htj.dyndns.org>
+References: <20110216090548.GQ5778@Redstar.dorchain.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61106 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37471 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844Ab1BQJ6U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2011 04:58:20 -0500
-Received: by fxm20 with SMTP id 20so2401338fxm.19
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2011 01:58:19 -0800 (PST)
+	with ESMTP id S1754422Ab1BQKDg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2011 05:03:36 -0500
+Received: by fxm20 with SMTP id 20so2405833fxm.19
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2011 02:03:34 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <4D5CA2B1.8020905@crc.id.au>
+In-Reply-To: <20110216090548.GQ5778@Redstar.dorchain.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
+To: Joerg Dorchain <joerg@dorchain.net>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
-
-On Thu, Feb 17, 2011 at 03:23:13PM +1100, Steven Haigh wrote:
-> I might have acted a bit prematurely on this. After booting off the
-> CentOS 5.5 installation DVD, I noticed that the esata drive at the
-> same problem. After lots of cable swapping and testing, I have found
-> that the esata cable may be faulty as a direct SATA -> drive
-> connection works perfectly.
+On Wed, Feb 16, 2011 at 10:05:48AM +0100, Joerg Dorchain wrote:
+> this patch allows to force ICH7/8/9 into AHCI mode.  This is needed
+> because some BIOSes do not make AHCI-mode operation available to the
+> user.
+> As the Intel documentation states that the OS should not carry
+> out the operation - the user must force this on the kernel
+> commandline using quirk_ich_force_ahci
 > 
-> I am unsure however why my previous test of plugging the esata drive
-> directly to the onboard SATA controller worked - however now this
-> also fails.
+> As this quirk gets called whilst the PCI subsystem is
+> walking the PCI bus, we declare this quirk against the LPC
+> (device 00:1f.0), so that we can frob 00:1f.2 before the PCI
+> code has scanned it.
+> Note: the pci id might change due to this (e.g. from 27c4 to 27c5)
 > 
-> I shall attempt to try some different eSATA cables and report back
-> if I manage to isolate the issue directly to the sata_sil module.
+> For working suspend/resume, the next patch is required, too.
 
-It's probably dependent on timing and not completely reliable.  It's
-rather complicated.  The AC_ERR_NODEV_HINT thing is there primarily
-for PATA controllers so that they don't spend time trying to probe
-empty ports.
+There have been multiple attempts at this and as Jeff pointed out ABAR
+allocation usually is one of the technical roadblocks.
 
-Does the following patch resolve the problem?
+I'm not particularly inclined toward including this patch in upstream
+as long as it can't be enabled by default.  It's just gonna be an
+extra piece of code to carry around which only a handful of people use
+and nobody really knows on which hardware it works or not and to what
+extent.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d4e52e2..d08383f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1908,7 +1908,13 @@ retry:
- 		err_mask = ata_do_dev_read_id(dev, &tf, id);
- 
- 	if (err_mask) {
--		if (err_mask & AC_ERR_NODEV_HINT) {
-+		/*
-+		 * AC_ERR_NODEV_HINT is primarily used to detect empty PATA
-+		 * ports.  Some SATA devices incorrectly trigger it.
-+		 * Ignore if the physical link is positively online.
-+		 */
-+		if ((err_mask & AC_ERR_NODEV_HINT) &&
-+		    !ata_phys_link_online(ata_dev_phys_link(dev))) {
- 			ata_dev_printk(dev, KERN_DEBUG,
- 				       "NODEV after polling detection\n");
- 			return -ENOENT;
-
+Thanks.
 
 -- 
 tejun
