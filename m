@@ -1,97 +1,1046 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WARNING: at kernel/lockdep.c:2323
- trace_hardirqs_on_caller+0xb9/0x16c()
-Date: Thu, 17 Feb 2011 12:28:42 +0100
-Message-ID: <20110217112842.GS19830@htj.dyndns.org>
-References: <4D5A90D0.9040403@free.fr>
- <AANLkTimvue3JbYZUMrt0KppE1f_MNSsyyb+Upbputs=5@mail.gmail.com>
- <20110216.180347.71107177.davem@davemloft.net>
- <AANLkTim4NnyyFqprBoGpimquLP=6fjAanCrbqX=RXwC9@mail.gmail.com>
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: [PATCH] pata_arasan_cf: Adding support for arasan compact flash host controller
+Date: Thu, 17 Feb 2011 17:04:19 +0530
+Message-ID: <0f2a633873dd2fa187afd7feef9fd71daa545b84.1297942328.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:39982 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755384Ab1BQL2u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2011 06:28:50 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTim4NnyyFqprBoGpimquLP=6fjAanCrbqX=RXwC9@mail.gmail.com>
+Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:40878 "EHLO
+	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752010Ab1BQLeq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2011 06:34:46 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yong Zhang <yong.zhang0@gmail.com>
-Cc: David Miller <davem@davemloft.net>, daniel.lezcano@free.fr, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: shiraz.hashim@st.com, amit.goel@st.com, armando.visconti@st.com, Viresh Kumar <viresh.kumar@st.com>
 
-Hello,
+The Arasan CompactFlash Device Controller has three basic modes of
+operation: PC card ATA using I/O mode, PC card ATA using memory mode, PC card
+ATA using true IDE modes.
 
-On Thu, Feb 17, 2011 at 10:43:57AM +0800, Yong Zhang wrote:
-> On Thu, Feb 17, 2011 at 10:03 AM, David Miller <davem@davemloft.net> =
-wrote:
-> > From: Yong Zhang <yong.zhang0@gmail.com>
-> > Date: Thu, 17 Feb 2011 09:37:30 +0800
-> >
-> >> On Tue, Feb 15, 2011 at 10:42 PM, Daniel Lezcano <daniel.lezcano@f=
-ree.fr> wrote:
-> >>> Hi All,
-> >>>
-> >>> I am running a 2.6.38-rc4-next-20110215+ kernel on qemu x86_64 an=
-d the
-> >>> following traces appear in the console:
-> >>>
-> >>> Feb 15 15:00:24 lucid kernel: ------------[ cut here ]-----------=
--
-> >>> Feb 15 15:00:24 lucid kernel: WARNING: at kernel/lockdep.c:2323
-> >>> trace_hardirqs_on_caller+0xb9/0x16c()
-> >>> Feb 15 15:00:24 lucid kernel: Hardware name: Bochs
-> >>> Feb 15 15:00:24 lucid kernel: Pid: 1477, comm: mountall Not taint=
-ed
-> >>> 2.6.38-rc4-next-20110215+ #74
-> >>> Feb 15 15:00:24 lucid kernel: Call Trace:
-> >>> Feb 15 15:00:24 lucid kernel: <IRQ> =A0[<ffffffff8102b8a5>] ?
-> >>> warn_slowpath_common+0x7b/0x93
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff8146c097>] ?
-> >>> _raw_spin_unlock_irq+0x2b/0x30
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff8102b8d2>] ?
-> >>> warn_slowpath_null+0x15/0x17
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff8104f796>] ?
-> >>> trace_hardirqs_on_caller+0xb9/0x16c
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff8104f856>] ?
-> >>> trace_hardirqs_on+0xd/0xf
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff8146c097>] ?
-> >>> _raw_spin_unlock_irq+0x2b/0x30
-> >>> Feb 15 15:00:24 lucid kernel: [<ffffffff812e167e>] ?
-> >>> do_ide_request+0x32/0x590
-> >>
-> >> Seems related to IDE SUBSYSTEM
-> >
-> > Which hasn't had any changes in the past release.
->=20
-> OK.
->=20
-> Cc'ing Tejun Heo
->=20
-> For the back trace, I think __blk_run_queue() is the ligament.
-> As from the comment of __blk_run_queue(), it must be called
-> with the queue lock and interrupts disabled. And the lock
-> is hold through spin_lock_irqsave(q->queue_lock, flags); at
-> blk_end_bidi_request().
->=20
-> But in do_ide_request(), it realse the lock through
-> spin_unlock_irq(q->queue_lock); which make the state
-> inconsistent.
->=20
-> BTW, do_ide_request() also say it might_sleep(), this warning
-> also trigger in Daniel's log.
+Currently driver supports only True IDE mode.
 
-This seems to be the same problem Jan reported and fixed by the
-following patches.
+Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+---
+ MAINTAINERS                         |    8 +
+ drivers/ata/Kconfig                 |    6 +
+ drivers/ata/Makefile                |    1 +
+ drivers/ata/pata_arasan_cf.c        |  740 +++++++++++++++++++++++++++++++++++
+ drivers/ata/pata_arasan_cf.h        |  155 ++++++++
+ include/linux/pata_arasan_cf_data.h |   47 +++
+ 6 files changed, 957 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/pata_arasan_cf.c
+ create mode 100644 drivers/ata/pata_arasan_cf.h
+ create mode 100644 include/linux/pata_arasan_cf_data.h
 
-  http://article.gmane.org/gmane.linux.kernel/1101766/raw
-  http://article.gmane.org/gmane.linux.ide/48819/raw
+diff --git a/MAINTAINERS b/MAINTAINERS
+index af8f8a6..37a0c8e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -557,6 +557,14 @@ S:	Maintained
+ F:	drivers/net/appletalk/
+ F:	net/appletalk/
+ 
++ARASAN COMPACT FLASH PATA CONTROLLER
++M:	Viresh Kumar <viresh.kumar@st.com>
++L:	linux-ide@vger.kernel.org
++S:	Maintained
++F:	include/linux/pata_arasan_cf_data.h
++F:	drivers/ata/pata_arasan_cf.h
++F:	drivers/ata/pata_arasan_cf.c
++
+ ARC FRAMEBUFFER DRIVER
+ M:	Jaya Kumar <jayalk@intworks.biz>
+ S:	Maintained
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index c2328ae..81eac33 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -299,6 +299,12 @@ config PATA_AMD
+ 
+ 	  If unsure, say N.
+ 
++config PATA_ARASAN_CF
++	tristate "ARASAN CompactFlash PATA Controller Support"
++	select DMA_ENGINE
++	help
++	  Say Y here to support the ARASAN CompactFlash PATA controller
++
+ config PATA_ARTOP
+ 	tristate "ARTOP 6210/6260 PATA support"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 27291aa..8ac64e1 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -12,6 +12,7 @@ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
++obj-$(CONFIG_PATA_ARASAN_CF)	+= pata_arasan_cf.o
+ obj-$(CONFIG_PATA_OCTEON_CF)	+= pata_octeon_cf.o
+ obj-$(CONFIG_SATA_QSTOR)	+= sata_qstor.o
+ obj-$(CONFIG_SATA_SX4)		+= sata_sx4.o
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+new file mode 100644
+index 0000000..4181e4b
+--- /dev/null
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -0,0 +1,740 @@
++/*
++ * drivers/ata/pata_arasan_cf.c
++ *
++ * Arasan Compact Flash host controller source file
++ *
++ * Copyright (C) 2011 ST Microelectronics
++ * Viresh Kumar <viresh.kumar@st.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++/*
++ * The Arasan CompactFlash Device Controller IP core has three basic modes of
++ * operation: PC card ATA using I/O mode, PC card ATA using memory mode, PC card
++ * ATA using true IDE modes. This driver supports only True IDE mode currently.
++ *
++ * Arasan CF Controller shares global irq register with Arasan XD Controller.
++ *
++ * Tested on arch/arm/mach-spear13xx
++ */
++
++#include <linux/ata.h>
++#include <linux/clk.h>
++#include <linux/completion.h>
++#include <linux/delay.h>
++#include <linux/dmaengine.h>
++#include <linux/io.h>
++#include <linux/irq.h>
++#include <linux/kernel.h>
++#include <linux/libata.h>
++#include <linux/module.h>
++#include <linux/pata_arasan_cf_data.h>
++#include <linux/platform_device.h>
++#include <linux/pm.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/workqueue.h>
++#include "pata_arasan_cf.h"
++
++#define DRIVER_NAME	"arasan_cf"
++#define TIMEOUT		msecs_to_jiffies(3000)
++
++/**
++ * struct arasan_cf_dev - CF controllers dev structure
++ * @ host: pointer to ata_host structure
++ * @ clk: clk structure, only if HAVE_CLK is defined
++ * @ pbase: physical base address of controller
++ * @ vbase: virtual base address of controller
++ * @ dma_status: status to be updated to framework regarding DMA transfer
++ * @ card_present: Card is present or Not
++ * @ cf_completion: Completion for transfer complete interrupt from controller
++ * @ dma_completion: Completion for DMA transfer complete.
++ * @ dma_chan: Dma channel allocated
++ * @ mask: Mask for DMA transfers
++ * @ wq: Workqueue for DMA transfers
++ * @ work: DMA transfer work
++ * @ qc: qc to be transferred using DMA
++ */
++struct arasan_cf_dev {
++	struct ata_host *host;
++#if defined(CONFIG_HAVE_CLK)
++	struct clk *clk;
++#endif
++
++	dma_addr_t pbase;
++	void __iomem *vbase;
++
++	u8 dma_status;
++	u8 card_present;
++
++	/* dma specific */
++	struct completion cf_completion;
++	struct completion dma_completion;
++	struct dma_chan *dma_chan;
++	dma_cap_mask_t mask;
++	struct workqueue_struct *wq;
++	struct work_struct work;
++	struct ata_queued_cmd *qc;
++};
++
++static struct scsi_host_template arasan_cf_sht = {
++	ATA_PIO_SHT(DRIVER_NAME),
++};
++
++static void cf_dumpregs(struct arasan_cf_dev *acdev)
++{
++	struct device *dev = acdev->host->dev;
++
++	dev_dbg(dev, ": =========== REGISTER DUMP ===========");
++	dev_dbg(dev, ": CFI_STS: %x", readl(acdev->vbase + CFI_STS));
++	dev_dbg(dev, ": IRQ_STS: %x", readl(acdev->vbase + IRQ_STS));
++	dev_dbg(dev, ": IRQ_EN: %x", readl(acdev->vbase + IRQ_EN));
++	dev_dbg(dev, ": OP_MODE: %x", readl(acdev->vbase + OP_MODE));
++	dev_dbg(dev, ": CLK_CFG: %x", readl(acdev->vbase + CLK_CFG));
++	dev_dbg(dev, ": TM_CFG: %x", readl(acdev->vbase + TM_CFG));
++	dev_dbg(dev, ": XFER_CTR: %x", readl(acdev->vbase + XFER_CTR));
++	dev_dbg(dev, ": GIRQ_STS: %x", readl(acdev->vbase + GIRQ_STS));
++	dev_dbg(dev, ": GIRQ_STS_EN: %x", readl(acdev->vbase + GIRQ_STS_EN));
++	dev_dbg(dev, ": GIRQ_SGN_EN: %x", readl(acdev->vbase + GIRQ_SGN_EN));
++	dev_dbg(dev, ": =====================================");
++}
++
++/* Enable/Disable global interrupts shared between CF and XD ctrlr. */
++static void cf_ginterrupt_enable(struct arasan_cf_dev *acdev, u8 enable)
++{
++	/* enable should be 0 or 1 */
++	writel(enable, acdev->vbase + GIRQ_STS_EN);
++	writel(enable, acdev->vbase + GIRQ_SGN_EN);
++}
++
++/* Enable/Disable CF interrupts */
++static void
++cf_interrupt_enable(struct arasan_cf_dev *acdev, u32 mask, u8 enable)
++{
++	u32 val = readl(acdev->vbase + IRQ_EN);
++	/* clear & enable/disable irqs */
++	if (enable) {
++		writel(mask, acdev->vbase + IRQ_STS);
++		writel(val | mask, acdev->vbase + IRQ_EN);
++	} else
++		writel(val & ~mask, acdev->vbase + IRQ_EN);
++}
++
++static void cf_card_reset(struct arasan_cf_dev *acdev)
++{
++	u32 val = readl(acdev->vbase + OP_MODE);
++
++	writel(val | CARD_RESET, acdev->vbase + OP_MODE);
++	udelay(200);
++	writel(val & ~CARD_RESET, acdev->vbase + OP_MODE);
++}
++
++static void cf_ctrl_reset(struct arasan_cf_dev *acdev)
++{
++	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB, acdev->vbase +
++			OP_MODE);
++	writel(readl(acdev->vbase + OP_MODE) | CFHOST_ENB, acdev->vbase +
++			OP_MODE);
++}
++
++static void cf_card_detect(struct arasan_cf_dev *acdev, u32 hotplugged)
++{
++	struct ata_port *ap = acdev->host->ports[0];
++	struct ata_eh_info *ehi = &ap->link.eh_info;
++	u32 val = readl(acdev->vbase + CFI_STS);
++
++	/* Both CD1 & CD2 should be low if card inserted completely */
++	if (!(val & (CARD_DETECT1 | CARD_DETECT2))) {
++		if (acdev->card_present)
++			return;
++		acdev->card_present = 1;
++		cf_card_reset(acdev);
++	} else {
++		if (!acdev->card_present)
++			return;
++		acdev->card_present = 0;
++	}
++
++	if (hotplugged) {
++		ata_ehi_hotplugged(ehi);
++		ata_port_freeze(ap);
++	}
++}
++
++static int cf_init(struct arasan_cf_dev *acdev)
++{
++	struct arasan_cf_pdata *pdata = dev_get_platdata(acdev->host->dev);
++	int ret = 0;
++
++#if defined(CONFIG_HAVE_CLK)
++	ret = clk_enable(acdev->clk);
++	if (ret) {
++		dev_dbg(acdev->host->dev, "clock enable failed");
++		return ret;
++	}
++#endif
++
++	/* configure CF interface clock */
++	writel((pdata->cf_if_clk <= CF_IF_CLK_200M) ? pdata->cf_if_clk :
++			CF_IF_CLK_166M, acdev->vbase + CLK_CFG);
++
++	writel(TRUE_IDE_MODE | CFHOST_ENB, acdev->vbase + OP_MODE);
++	cf_interrupt_enable(acdev, CARD_DETECT_IRQ, 1);
++	cf_ginterrupt_enable(acdev, 1);
++
++	return ret;
++}
++
++static void cf_exit(struct arasan_cf_dev *acdev)
++{
++	cf_ginterrupt_enable(acdev, 0);
++	cf_interrupt_enable(acdev, TRUE_IDE_IRQS, 0);
++	cf_card_reset(acdev);
++	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
++			acdev->vbase + OP_MODE);
++#if defined(CONFIG_HAVE_CLK)
++	clk_disable(acdev->clk);
++#endif
++}
++
++static void dma_callback(void *dev)
++{
++	struct arasan_cf_dev *acdev = (struct arasan_cf_dev *) dev;
++
++	complete(&acdev->dma_completion);
++}
++
++static bool filter(struct dma_chan *chan, void *slave)
++{
++	return true;
++}
++
++static int
++dma_xfer(struct arasan_cf_dev *acdev, dma_addr_t src, dma_addr_t dest, u32 len)
++{
++	struct dma_async_tx_descriptor *tx;
++	struct dma_chan *chan = acdev->dma_chan;
++	dma_cookie_t cookie;
++	unsigned long flags = DMA_PREP_INTERRUPT | DMA_COMPL_SKIP_SRC_UNMAP |
++		DMA_COMPL_SKIP_DEST_UNMAP;
++	int ret = 0;
++
++	tx = chan->device->device_prep_dma_memcpy(chan, dest, src, len, flags);
++	if (!tx) {
++		dev_err(acdev->host->dev, "device_prep_dma_memcpy failed\n");
++		return -EAGAIN;
++	}
++
++	tx->callback = dma_callback;
++	tx->callback_param = acdev;
++	cookie = tx->tx_submit(tx);
++
++	ret = dma_submit_error(cookie);
++	if (ret) {
++		dev_err(acdev->host->dev, "dma_submit_error\n");
++		return ret;
++	}
++
++	chan->device->device_issue_pending(chan);
++
++	/* Wait for DMA to complete */
++	if (!wait_for_completion_timeout(&acdev->dma_completion, TIMEOUT)) {
++		chan->device->device_control(chan, DMA_TERMINATE_ALL, 0);
++		dev_err(acdev->host->dev, "wait_for_completion_timeout\n");
++		return -ETIMEDOUT;
++	}
++
++	return ret;
++}
++
++static inline int wait4buf(struct arasan_cf_dev *acdev)
++{
++	if (!wait_for_completion_timeout(&acdev->cf_completion, TIMEOUT)) {
++		u32 rw = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
++
++		dev_err(acdev->host->dev, "%s TimeOut", rw ? "write" : "read");
++		return -ETIMEDOUT;
++	}
++
++	/* Check if PIO Error interrupt has occured */
++	if (acdev->dma_status & ATA_DMA_ERR)
++		return -EAGAIN;
++
++	return 0;
++}
++
++static int sg_xfer(struct arasan_cf_dev *acdev, struct scatterlist *sg)
++{
++	dma_addr_t dest = 0, src = 0;
++	u32 xfer_cnt, sglen, dma_len, xfer_ctr;
++	u32 write = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
++	int ret = 0;
++
++	sglen = sg_dma_len(sg);
++	if (write) {
++		src = sg_dma_address(sg);
++		dest = acdev->pbase + EXT_WRITE_PORT;
++	} else {
++		dest = sg_dma_address(sg);
++		src = acdev->pbase + EXT_READ_PORT;
++	}
++
++	/*
++	 * For each sg:
++	 * MAX_XFER_COUNT data will be transferred before we get transfer
++	 * complete interrupt. Inbetween after FIFO_SIZE data
++	 * buffer available interrupt will be generated. At this time we will
++	 * fill FIFO again: max FIFO_SIZE data.
++	 */
++	while (sglen) {
++		xfer_cnt = min(sglen, MAX_XFER_COUNT);
++		xfer_ctr = readl(acdev->vbase + XFER_CTR) &
++			~XFER_COUNT_MASK;
++		writel(xfer_ctr | xfer_cnt | XFER_START, acdev->vbase +
++				XFER_CTR);
++
++		/* continue dma xfers untill current sg is completed */
++		while (xfer_cnt) {
++			/* wait for read to complete */
++			if (!write) {
++				ret = wait4buf(acdev);
++				if (ret)
++					goto fail;
++			}
++
++			/* read/write FIFO in chunk of FIFO_SIZE */
++			dma_len = min(xfer_cnt, FIFO_SIZE);
++			ret = dma_xfer(acdev, src, dest, dma_len);
++			if (ret) {
++				dev_err(acdev->host->dev, "dma failed");
++				goto fail;
++			}
++
++			if (write)
++				src += dma_len;
++			else
++				dest += dma_len;
++
++			sglen -= dma_len;
++			xfer_cnt -= dma_len;
++
++			/* wait for write to complete */
++			if (write) {
++				ret = wait4buf(acdev);
++				if (ret)
++					goto fail;
++			}
++		}
++	}
++
++fail:
++	writel(readl(acdev->vbase + XFER_CTR) & ~XFER_START, acdev->vbase +
++			XFER_CTR);
++
++	return ret;
++}
++
++static void data_xfer(struct work_struct *work)
++{
++	struct arasan_cf_dev *acdev = container_of(work, struct arasan_cf_dev,
++			work);
++	struct ata_queued_cmd *qc = acdev->qc;
++	struct scatterlist *sg;
++	u32 temp;
++	int ret = 0;
++
++	/* request dma channels */
++	acdev->dma_chan = dma_request_channel(acdev->mask, filter, NULL);
++	if (!acdev->dma_chan) {
++		dev_err(acdev->host->dev, "Unable to get dma_chan\n");
++		goto chan_request_fail;
++	}
++
++	for_each_sg(qc->sg, sg, qc->n_elem, temp) {
++		ret = sg_xfer(acdev, sg);
++		if (ret)
++			break;
++	}
++
++	dma_release_channel(acdev->dma_chan);
++
++	if (!ret) {
++		acdev->dma_status |= ATA_DMA_INTR;
++		goto bmdma_port_intr;
++	}
++
++	cf_ctrl_reset(acdev);
++	cf_dumpregs(acdev);
++chan_request_fail:
++	acdev->dma_status = ATA_DMA_INTR | ATA_DMA_ERR;
++bmdma_port_intr:
++	ata_bmdma_port_intr(qc->ap, qc);
++}
++
++static irqreturn_t arasan_cf_interrupt(int irq, void *dev)
++{
++	struct arasan_cf_dev *acdev = ((struct ata_host *)dev)->private_data;
++	u32 irqsts;
++
++	irqsts = readl(acdev->vbase + GIRQ_STS);
++	if (!(irqsts & GIRQ_CF))
++		return IRQ_NONE;
++
++	irqsts = readl(acdev->vbase + IRQ_STS);
++	writel(irqsts, acdev->vbase + IRQ_STS);		/* clear irqs */
++	writel(GIRQ_CF, acdev->vbase + GIRQ_STS);	/* clear girqs */
++
++	/* handle only relevant interrupts */
++	irqsts &= ~IGNORED_IRQS;
++
++	if (irqsts & CARD_DETECT_IRQ) {
++		cf_card_detect(acdev, 1);
++		return IRQ_HANDLED;
++	}
++
++	if (irqsts & PIO_XFER_ERR_IRQ) {
++		acdev->dma_status = ATA_DMA_INTR | ATA_DMA_ERR;
++		writel(readl(acdev->vbase + XFER_CTR) & ~XFER_START,
++				acdev->vbase + XFER_CTR);
++		complete(&acdev->cf_completion);
++		dev_err(acdev->host->dev, "pio xfer err irq\n");
++		return IRQ_HANDLED;
++	}
++
++	if (irqsts & BUF_AVAIL_IRQ) {
++		complete(&acdev->cf_completion);
++		return IRQ_HANDLED;
++	}
++
++	if (irqsts & XFER_DONE_IRQ) {
++		struct ata_queued_cmd *qc = acdev->qc;
++
++		/* Send Complete only for write */
++		if (qc->tf.flags & ATA_TFLAG_WRITE)
++			complete(&acdev->cf_completion);
++	}
++
++	return IRQ_HANDLED;
++}
++
++static void arasan_cf_set_piomode(struct ata_port *ap, struct ata_device *adev)
++{
++	struct arasan_cf_dev *acdev = ap->host->private_data;
++	u8 pio = adev->pio_mode - XFER_PIO_0;
++	u32 val;
++
++	/* Arasan ctrl supports Mode0 -> Mode6 */
++	if (pio > 6) {
++		dev_err(ap->dev, "Unknown PIO mode\n");
++		return;
++	}
++
++	val = readl(acdev->vbase + OP_MODE) &
++		~(ULTRA_DMA_ENB | MULTI_WORD_DMA_ENB | DRQ_BLOCK_SIZE_MASK);
++	writel(val, acdev->vbase + OP_MODE);
++	val = readl(acdev->vbase + TM_CFG) & ~TRUEIDE_PIO_TIMING_MASK;
++	val |= pio << TRUEIDE_PIO_TIMING_SHIFT;
++	writel(val, acdev->vbase + TM_CFG);
++
++	cf_interrupt_enable(acdev, BUF_AVAIL_IRQ | XFER_DONE_IRQ, 0);
++	cf_interrupt_enable(acdev, PIO_XFER_ERR_IRQ, 1);
++}
++
++static void arasan_cf_set_dmamode(struct ata_port *ap, struct ata_device *adev)
++{
++	struct arasan_cf_dev *acdev = ap->host->private_data;
++	u32 opmode, tmcfg, dma_mode = adev->dma_mode;
++
++	opmode = readl(acdev->vbase + OP_MODE) & ~(MULTI_WORD_DMA_ENB |
++			ULTRA_DMA_ENB);
++	tmcfg = readl(acdev->vbase + TM_CFG);
++
++	if ((dma_mode >= XFER_UDMA_0) && (dma_mode <= XFER_UDMA_6)) {
++		opmode |= ULTRA_DMA_ENB;
++		tmcfg &= ~ULTRA_DMA_TIMING_MASK;
++		tmcfg |= (dma_mode - XFER_UDMA_0) << ULTRA_DMA_TIMING_SHIFT;
++	} else if ((dma_mode >= XFER_MW_DMA_0) && (dma_mode <= XFER_MW_DMA_4)) {
++		opmode |= MULTI_WORD_DMA_ENB;
++		tmcfg &= ~TRUEIDE_MWORD_DMA_TIMING_MASK;
++		tmcfg |= (dma_mode - XFER_MW_DMA_0) <<
++			TRUEIDE_MWORD_DMA_TIMING_SHIFT;
++	} else {
++		dev_err(ap->dev, "Unknown DMA mode\n");
++		return;
++	}
++
++	writel(opmode, acdev->vbase + OP_MODE);
++	writel(tmcfg, acdev->vbase + TM_CFG);
++	writel(DMA_XFER_MODE, acdev->vbase + XFER_CTR);
++
++	cf_interrupt_enable(acdev, PIO_XFER_ERR_IRQ, 0);
++	cf_interrupt_enable(acdev, BUF_AVAIL_IRQ | XFER_DONE_IRQ, 1);
++}
++
++static void arasan_cf_bmdma_setup(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct arasan_cf_dev *acdev = ap->host->private_data;
++	u32 xfer_ctr = readl(acdev->vbase + XFER_CTR) & ~XFER_DIR_MASK;
++	u32 write = qc->tf.flags & ATA_TFLAG_WRITE;
++
++	xfer_ctr |= write ? XFER_WRITE : XFER_READ;
++	writel(xfer_ctr, acdev->vbase + XFER_CTR);
++
++	acdev->dma_status = ATA_DMA_ACTIVE;
++	ap->ops->sff_exec_command(ap, &qc->tf);
++}
++
++static void arasan_cf_bmdma_start(struct ata_queued_cmd *qc)
++{
++	struct arasan_cf_dev *acdev = qc->ap->host->private_data;
++
++	acdev->qc = qc;
++	queue_work(acdev->wq, &acdev->work);
++}
++
++static void arasan_cf_bmdma_stop(struct ata_queued_cmd *qc)
++{
++	struct ata_port *ap = qc->ap;
++	struct arasan_cf_dev *acdev = ap->host->private_data;
++	u32 xfer_ctr = readl(acdev->vbase + XFER_CTR);
++
++	xfer_ctr &= ~(XFER_COUNT_MASK | XFER_START);
++	writel(xfer_ctr, acdev->vbase + XFER_CTR);
++	ata_sff_dma_pause(ap);
++}
++
++static u8 arasan_cf_bmdma_status(struct ata_port *ap)
++{
++	struct arasan_cf_dev *acdev = ap->host->private_data;
++	return acdev->dma_status;
++}
++
++static int arasan_cf_port_start(struct ata_port *ap)
++{
++	return ata_bmdma_port_start(ap);
++}
++
++static void arasan_cf_bmdma_irq_clear(struct ata_port *ap)
++{
++	/* Nothing to do here */
++}
++
++static struct ata_port_operations arasan_cf_ops = {
++	.inherits = &ata_sff_port_ops,
++	.set_piomode = arasan_cf_set_piomode,
++};
++
++static int __devinit arasan_cf_probe(struct platform_device *pdev)
++{
++	struct arasan_cf_dev *acdev;
++	struct arasan_cf_pdata *pdata = dev_get_platdata(&pdev->dev);
++	struct ata_host *host;
++	struct ata_port *ap;
++	struct resource *res;
++	int irq = platform_get_irq(pdev, 0), ret = 0;
++	irq_handler_t irq_handler = NULL;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -EINVAL;
++
++	if (!devm_request_mem_region(&pdev->dev, res->start, resource_size(res),
++				DRIVER_NAME)) {
++		dev_warn(&pdev->dev, "Failed to get memory region resource\n");
++		return -ENOENT;
++	}
++
++	acdev = devm_kzalloc(&pdev->dev, sizeof(*acdev), GFP_KERNEL);
++	if (!acdev) {
++		dev_warn(&pdev->dev, "kzalloc fail\n");
++		return -ENOMEM;
++	}
++
++	acdev->pbase = res->start;
++	acdev->vbase = devm_ioremap_nocache(&pdev->dev, res->start,
++			resource_size(res));
++	if (!acdev->vbase) {
++		dev_warn(&pdev->dev, "ioremap fail\n");
++		return -ENOMEM;
++	}
++
++#if defined(CONFIG_HAVE_CLK)
++	acdev->clk = clk_get(&pdev->dev, NULL);
++	if (IS_ERR(acdev->clk)) {
++		dev_warn(&pdev->dev, "Clock not found\n");
++		return PTR_ERR(acdev->clk);
++	}
++#endif
++
++	acdev->wq = create_singlethread_workqueue(DRIVER_NAME);
++	if (!acdev->wq) {
++		ret = -ENOMEM;
++		goto err_wq;
++	}
++	INIT_WORK(&acdev->work, data_xfer);
++
++	/* allocate host */
++	host = ata_host_alloc(&pdev->dev, 1);
++	if (!host) {
++		ret = -ENOMEM;
++		dev_warn(&pdev->dev, "alloc host fail\n");
++		goto err_host_alloc;
++	}
++
++	/* if irq is 0, support only PIO */
++	if (irq)
++		irq_handler = arasan_cf_interrupt;
++	else
++		pdata->quirk |= CF_BROKEN_MWDMA | CF_BROKEN_UDMA;
++
++	ap = host->ports[0];
++	host->private_data = acdev;
++	acdev->host = host;
++	ap->ops = &arasan_cf_ops;
++	ap->pio_mask = ATA_PIO6;
++	ap->mwdma_mask = ATA_MWDMA4;
++	ap->udma_mask = ATA_UDMA6;
++
++	init_completion(&acdev->cf_completion);
++	init_completion(&acdev->dma_completion);
++	dma_cap_set(DMA_MEMCPY, acdev->mask);
++
++	/* Handle platform specific quirks */
++	if (pdata->quirk) {
++		if (pdata->quirk & CF_BROKEN_PIO) {
++			ap->ops->set_piomode = NULL;
++			ap->pio_mask = 0;
++		}
++		if (pdata->quirk & CF_BROKEN_MWDMA)
++			ap->mwdma_mask = 0;
++		if (pdata->quirk & CF_BROKEN_UDMA)
++			ap->udma_mask = 0;
++	}
++
++	if (ap->mwdma_mask | ap->udma_mask) {
++		ap->ops->inherits = &ata_bmdma_port_ops;
++		ap->ops->set_dmamode = arasan_cf_set_dmamode;
++		ap->ops->bmdma_setup = arasan_cf_bmdma_setup;
++		ap->ops->bmdma_start = arasan_cf_bmdma_start;
++		ap->ops->bmdma_stop = arasan_cf_bmdma_stop;
++		ap->ops->bmdma_status = arasan_cf_bmdma_status;
++		ap->ops->port_start = arasan_cf_port_start;
++		ap->ops->sff_irq_clear = arasan_cf_bmdma_irq_clear;
++	}
++	ap->flags |= ATA_FLAG_NO_LEGACY | ATA_FLAG_PIO_POLLING;
++
++	ap->ioaddr.cmd_addr = acdev->vbase + ATA_DATA_PORT;
++	ap->ioaddr.data_addr = acdev->vbase + ATA_DATA_PORT;
++	ap->ioaddr.error_addr = acdev->vbase + ATA_ERR_FTR;
++	ap->ioaddr.feature_addr = acdev->vbase + ATA_ERR_FTR;
++	ap->ioaddr.nsect_addr = acdev->vbase + ATA_SC;
++	ap->ioaddr.lbal_addr = acdev->vbase + ATA_SN;
++	ap->ioaddr.lbam_addr = acdev->vbase + ATA_CL;
++	ap->ioaddr.lbah_addr = acdev->vbase + ATA_CH;
++	ap->ioaddr.device_addr = acdev->vbase + ATA_SH;
++	ap->ioaddr.status_addr = acdev->vbase + ATA_STS_CMD;
++	ap->ioaddr.command_addr = acdev->vbase + ATA_STS_CMD;
++	ap->ioaddr.altstatus_addr = acdev->vbase + ATA_ASTS_DCTR;
++	ap->ioaddr.ctl_addr = acdev->vbase + ATA_ASTS_DCTR;
++
++	ata_port_desc(ap, "phy_addr %x virt_addr %p", res->start, acdev->vbase);
++
++	ret = cf_init(acdev);
++	if (ret)
++		goto err_cf_init;
++
++	cf_card_detect(acdev, 0);
++
++	return ata_host_activate(host, irq, irq_handler, 0, &arasan_cf_sht);
++
++err_cf_init:
++err_host_alloc:
++	destroy_workqueue(acdev->wq);
++err_wq:
++#if defined(CONFIG_HAVE_CLK)
++	clk_put(acdev->clk);
++#endif
++	return ret;
++}
++
++static int __devexit arasan_cf_remove(struct platform_device *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
++
++	ata_host_detach(host);
++	cf_exit(acdev);
++	destroy_workqueue(acdev->wq);
++#if defined(CONFIG_HAVE_CLK)
++	clk_put(acdev->clk);
++#endif
++
++	return 0;
++}
++
++#ifdef CONFIG_PM
++static int arasan_cf_suspend(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
++
++	if (acdev->dma_chan) {
++		acdev->dma_chan->device->device_control(acdev->dma_chan,
++				DMA_TERMINATE_ALL, 0);
++		dma_release_channel(acdev->dma_chan);
++	}
++	cf_exit(acdev);
++	return ata_host_suspend(host, PMSG_SUSPEND);
++}
++
++static int arasan_cf_resume(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
++
++	cf_init(acdev);
++	ata_host_resume(host);
++
++	return 0;
++}
++
++static const struct dev_pm_ops arasan_cf_pm_ops = {
++	.suspend	= arasan_cf_suspend,
++	.resume		= arasan_cf_resume,
++};
++#endif
++
++static struct platform_driver arasan_cf_driver = {
++	.probe		= arasan_cf_probe,
++	.remove		= __devexit_p(arasan_cf_remove),
++	.driver		= {
++		.name	= DRIVER_NAME,
++		.owner	= THIS_MODULE,
++#ifdef CONFIG_PM
++		.pm		= &arasan_cf_pm_ops,
++#endif
++	},
++};
++
++static int __init arasan_cf_init(void)
++{
++	return platform_driver_register(&arasan_cf_driver);
++}
++module_init(arasan_cf_init);
++
++static void __exit arasan_cf_exit(void)
++{
++	platform_driver_unregister(&arasan_cf_driver);
++}
++module_exit(arasan_cf_exit);
++
++MODULE_AUTHOR("Viresh Kumar <viresh.kumar@st.com>");
++MODULE_DESCRIPTION("Arasan ATA Compact Flash driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" DRIVER_NAME);
+diff --git a/drivers/ata/pata_arasan_cf.h b/drivers/ata/pata_arasan_cf.h
+new file mode 100644
+index 0000000..af23940
+--- /dev/null
++++ b/drivers/ata/pata_arasan_cf.h
+@@ -0,0 +1,155 @@
++/*
++ * drivers/ata/pata_arasan_cf.h
++ *
++ * Arasan Compact Flash host controller header file
++ *
++ * Copyright (C) 2011 ST Microelectronics
++ * Viresh Kumar <viresh.kumar@st.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++#ifndef _PATA_ARASAN_CF_H
++#define _PATA_ARASAN_CF_H
++
++/* Registers */
++/* CompactFlash Interface Status */
++#define CFI_STS			0x000
++	#define STS_CHG				(1)
++	#define BIN_AUDIO_OUT			(1 << 1)
++	#define CARD_DETECT1			(1 << 2)
++	#define CARD_DETECT2			(1 << 3)
++	#define INP_ACK				(1 << 4)
++	#define CARD_READY			(1 << 5)
++	#define IO_READY			(1 << 6)
++	#define B16_IO_PORT_SEL			(1 << 7)
++/* IRQ */
++#define IRQ_STS			0x004
++/* Interrupt Enable */
++#define IRQ_EN			0x008
++	#define CARD_DETECT_IRQ			(1)
++	#define STATUS_CHNG_IRQ			(1 << 1)
++	#define MEM_MODE_IRQ			(1 << 2)
++	#define IO_MODE_IRQ			(1 << 3)
++	#define TRUE_IDE_MODE_IRQ		(1 << 8)
++	#define PIO_XFER_ERR_IRQ		(1 << 9)
++	#define BUF_AVAIL_IRQ			(1 << 10)
++	#define XFER_DONE_IRQ			(1 << 11)
++	#define IGNORED_IRQS	(STATUS_CHNG_IRQ | MEM_MODE_IRQ | IO_MODE_IRQ |\
++					TRUE_IDE_MODE_IRQ)
++	#define TRUE_IDE_IRQS	(CARD_DETECT_IRQ | PIO_XFER_ERR_IRQ |\
++					BUF_AVAIL_IRQ | XFER_DONE_IRQ)
++/* Operation Mode */
++#define OP_MODE			0x00C
++	#define CARD_MODE_MASK			(0x3)
++	#define MEM_MODE			(0x0)
++	#define IO_MODE				(0x1)
++	#define TRUE_IDE_MODE			(0x2)
++
++	#define CARD_TYPE_MASK			(1 << 2)
++	#define CF_CARD				(0)
++	#define CF_PLUS_CARD			(1 << 2)
++
++	#define CARD_RESET			(1 << 3)
++	#define CFHOST_ENB			(1 << 4)
++	#define OUTPUTS_TRISTATE		(1 << 5)
++	#define ULTRA_DMA_ENB			(1 << 8)
++	#define MULTI_WORD_DMA_ENB		(1 << 9)
++	#define DRQ_BLOCK_SIZE_MASK		(0x3 << 11)
++	#define DRQ_BLOCK_SIZE_512		(0)
++	#define DRQ_BLOCK_SIZE_1024		(1 << 11)
++	#define DRQ_BLOCK_SIZE_2048		(2 << 11)
++	#define DRQ_BLOCK_SIZE_4096		(3 << 11)
++/* CF Interface Clock Configuration */
++#define CLK_CFG			0x010
++	#define CF_IF_CLK_MASK			(0XF)
++/* CF Timing Mode Configuration */
++#define TM_CFG			0x014
++	#define MEM_MODE_TIMING_MASK		(0x3)
++	#define MEM_MODE_TIMING_250NS		(0x0)
++	#define MEM_MODE_TIMING_120NS		(0x1)
++	#define MEM_MODE_TIMING_100NS		(0x2)
++	#define MEM_MODE_TIMING_80NS		(0x3)
++
++	#define IO_MODE_TIMING_MASK		(0x3 << 2)
++	#define IO_MODE_TIMING_250NS		(0x0 << 2)
++	#define IO_MODE_TIMING_120NS		(0x1 << 2)
++	#define IO_MODE_TIMING_100NS		(0x2 << 2)
++	#define IO_MODE_TIMING_80NS		(0x3 << 2)
++
++	#define TRUEIDE_PIO_TIMING_MASK		(0x7 << 4)
++	#define TRUEIDE_PIO_TIMING_SHIFT	4
++
++	#define TRUEIDE_MWORD_DMA_TIMING_MASK	(0x7 << 7)
++	#define TRUEIDE_MWORD_DMA_TIMING_SHIFT	7
++
++	#define ULTRA_DMA_TIMING_MASK		(0x7 << 10)
++	#define ULTRA_DMA_TIMING_SHIFT		10
++/* CF Transfer Address */
++#define XFER_ADDR		0x014
++	#define XFER_ADDR_MASK			(0x7FF)
++	#define MAX_XFER_COUNT			0x20000u
++/* Transfer Control */
++#define XFER_CTR		0x01C
++	#define XFER_COUNT_MASK			(0x3FFFF)
++	#define ADDR_INC_DISABLE		(1 << 24)
++	#define XFER_WIDTH_MASK			(1 << 25)
++	#define XFER_WIDTH_8B			(0)
++	#define XFER_WIDTH_16B			(1 << 25)
++
++	#define MEM_TYPE_MASK			(1 << 26)
++	#define MEM_TYPE_COMMON			(0)
++	#define MEM_TYPE_ATTRIBUTE		(1 << 26)
++
++	#define MEM_IO_XFER_MASK		(1 << 27)
++	#define MEM_XFER			(0)
++	#define IO_XFER				(1 << 27)
++
++	#define DMA_XFER_MODE			(1 << 28)
++
++	#define AHB_BUS_NORMAL_PIO_OPRTN	(~(1 << 29))
++	#define XFER_DIR_MASK			(1 << 30)
++	#define XFER_READ			(0)
++	#define XFER_WRITE			(1 << 30)
++
++	#define XFER_START			(1 << 31)
++/* Write Data Port */
++#define WRITE_PORT		0x024
++/* Read Data Port */
++#define READ_PORT		0x028
++/* ATA Data Port */
++#define ATA_DATA_PORT		0x030
++	#define ATA_DATA_PORT_MASK		(0xFFFF)
++/* ATA Error/Features */
++#define ATA_ERR_FTR		0x034
++/* ATA Sector Count */
++#define ATA_SC			0x038
++/* ATA Sector Number */
++#define ATA_SN			0x03C
++/* ATA Cylinder Low */
++#define ATA_CL			0x040
++/* ATA Cylinder High */
++#define ATA_CH			0x044
++/* ATA Select Card/Head */
++#define ATA_SH			0x048
++/* ATA Status-Command */
++#define ATA_STS_CMD		0x04C
++/* ATA Alternate Status/Device Control */
++#define ATA_ASTS_DCTR		0x050
++/* Extended Write Data Port 0x200-0x3FC */
++#define EXT_WRITE_PORT		0x200
++/* Extended Read Data Port 0x400-0x5FC */
++#define EXT_READ_PORT		0x400
++	#define FIFO_SIZE	0x200u
++/* Global Interrupt Status */
++#define GIRQ_STS		0x800
++/* Global Interrupt Status enable */
++#define GIRQ_STS_EN		0x804
++/* Global Interrupt Signal enable */
++#define GIRQ_SGN_EN		0x808
++	#define GIRQ_CF		(1)
++	#define GIRQ_XD		(1 << 1)
++
++#endif /* _PATA_ARASAN_CF_H */
+diff --git a/include/linux/pata_arasan_cf_data.h b/include/linux/pata_arasan_cf_data.h
+new file mode 100644
+index 0000000..d979fe6
+--- /dev/null
++++ b/include/linux/pata_arasan_cf_data.h
+@@ -0,0 +1,47 @@
++/*
++ * include/linux/pata_arasan_cf_data.h
++ *
++ * Arasan Compact Flash host controller platform data header file
++ *
++ * Copyright (C) 2011 ST Microelectronics
++ * Viresh Kumar <viresh.kumar@st.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++
++#ifndef _PATA_ARASAN_CF_DATA_H
++#define _PATA_ARASAN_CF_DATA_H
++
++#include <linux/platform_device.h>
++
++struct arasan_cf_pdata {
++	u8 cf_if_clk;
++	#define CF_IF_CLK_100M			(0x0)
++	#define CF_IF_CLK_75M			(0x1)
++	#define CF_IF_CLK_66M			(0x2)
++	#define CF_IF_CLK_50M			(0x3)
++	#define CF_IF_CLK_40M			(0x4)
++	#define CF_IF_CLK_33M			(0x5)
++	#define CF_IF_CLK_25M			(0x6)
++	#define CF_IF_CLK_125M			(0x7)
++	#define CF_IF_CLK_150M			(0x8)
++	#define CF_IF_CLK_166M			(0x9)
++	#define CF_IF_CLK_200M			(0xA)
++	/*
++	 * Platform specific incapabilities of CF controller is handled via
++	 * quirks
++	 */
++	u32 quirk;
++	#define CF_BROKEN_PIO			(1)
++	#define CF_BROKEN_MWDMA			(1 << 1)
++	#define CF_BROKEN_UDMA			(1 << 2)
++};
++
++static inline void
++set_arasan_cf_pdata(struct platform_device *pdev, struct arasan_cf_pdata *data)
++{
++	pdev->dev.platform_data = data;
++}
++#endif /* _PATA_ARASAN_CF_DATA_H */
+-- 
+1.7.2.2
 
-Can you please test whether these two patches fix the problem?
-
-Thanks.
-
---=20
-tejun
