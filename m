@@ -1,25 +1,31 @@
-From: Mike Snitzer <snitzer@gmail.com>
-Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call directly
- into q->request_fn() __blk_run_queue()
-Date: Thu, 17 Feb 2011 10:01:51 -0500
-Message-ID: <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
-References: <20110217111511.GQ19830@htj.dyndns.org> <20110217111619.GR19830@htj.dyndns.org>
+From: Matthew Garrett <mjg@redhat.com>
+Subject: Re: [Patch] enable AHCI mode on certain ich chipsets
+Date: Thu, 17 Feb 2011 16:36:49 +0000
+Message-ID: <20110217163649.GC20662@srcf.ucam.org>
+References: <20110216090548.GQ5778@Redstar.dorchain.net> <4D5C2974.4070608@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110217111619.GR19830@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:35335 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756819Ab1BQQhD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2011 11:37:03 -0500
+Content-Disposition: inline
+In-Reply-To: <4D5C2974.4070608@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Joerg Dorchain <joerg@dorchain.net>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-pci maillist <linux-pci@atrey.karlin.mff.cuni.cz>
 
-Hi Tejun,
+On Wed, Feb 16, 2011 at 02:45:56PM -0500, Jeff Garzik wrote:
 
-On Thu, Feb 17, 2011 at 6:16 AM, Tejun Heo <tj@kernel.org> wrote:
+> How is the assignment of the AHCI BAR handled?  Does this happen  
+> automatically because it's an early fixup?
+>
+> That is traditionally the stumbling block...
 
-> Jens, this is applicable to v2.6.37 and 38. =A0The new implementation
-> for 39 would need similar fix but I couldn't find where the tree is.
-> Which branch is it?
+Yes, because it's an early fixup the kernel should allocate it itself. 
+It's small enough that I'd hope we don't have trouble finding one...
 
-for-2.6.39/core
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
