@@ -1,47 +1,44 @@
-From: viresh kumar <viresh.kumar@st.com>
-Subject: Re: [PATCH] pata_arasan_cf: Adding support for arasan compact flash
- host controller
-Date: Fri, 18 Feb 2011 14:48:59 +0530
-Message-ID: <4D5E3983.7050007@st.com>
-References: <0f2a633873dd2fa187afd7feef9fd71daa545b84.1297942328.git.viresh.kumar@st.com> <20110217145235.GY19830@htj.dyndns.org> <4D5DF816.4010907@st.com> <20110218091425.GB21209@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call
+ directly into q->request_fn() __blk_run_queue()
+Date: Fri, 18 Feb 2011 10:49:03 +0100
+Message-ID: <20110218094903.GF21209@htj.dyndns.org>
+References: <20110217111511.GQ19830@htj.dyndns.org>
+ <20110217111619.GR19830@htj.dyndns.org>
+ <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:48768 "EHLO
-	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753393Ab1BRJUb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 04:20:31 -0500
-In-Reply-To: <20110218091425.GB21209@htj.dyndns.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:33372 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866Ab1BRJtN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 04:49:13 -0500
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, amitgoel <amit.goel@st.com>, Armando VISCONTI <armando.visconti@st.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, viresh kumar <viresh.linux@gmail.com>
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 02/18/2011 02:44 PM, Tejun Heo wrote:
->> > No. It doesn't have BMDMA. I just wanted to use existing framework and
->> > routines. And i wasn't sure if just overriding qc_issue alone will be enough.
->> > Should i keep it as it is or modify?
-> I see.  Yeah, if the hardware doesn't really behave like a BMDMA
-> controller (and the fact that you need to override every bmdma ops is
-> a good indication of that), it usually is much cleaner to inherit from
-> sff and implement DMA part in the driver proper.  There are several
-> drivers like that in the tree.
-> 
-> 
->> > Why do these header 
-> 
-> files
->>>  needed?  Unless the driver is gonna be put
->>> > > in multiple .c files, there's no reason to separate out header files.
->>> > > 
->> > 
->> > Ok. include/linux/pata_arasan_cf_data.h is surely required as it will be
->> > used by platforms also. I kept register macros in a separate file to keep .c
->> > clean. I will merge drivers/ata/pata_arasan_cf.h in .c, if you want me to.
-> Yes, please.
+On Thu, Feb 17, 2011 at 10:01:51AM -0500, Mike Snitzer wrote:
+> Hi Tejun,
+>=20
+> On Thu, Feb 17, 2011 at 6:16 AM, Tejun Heo <tj@kernel.org> wrote:
+>=20
+> > Jens, this is applicable to v2.6.37 and 38. =A0The new implementati=
+on
+> > for 39 would need similar fix but I couldn't find where the tree is=
+=2E
+> > Which branch is it?
+>=20
+> for-2.6.39/core
 
-Ok.
+Right, thanks.  Jens, after you apply the two fixes for 2.6.38, I can
+create a merge branch for for-2.6.39/core which you can pull.  Would
+that work for you?
 
--- 
-viresh
+Thanks.
+
+--=20
+tejun
