@@ -1,62 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata-sil drive detection issues.
-Date: Fri, 18 Feb 2011 10:16:29 +0100
-Message-ID: <20110218091629.GC21209@htj.dyndns.org>
-References: <4D5C92F4.5000906@crc.id.au>
- <4D5CA2B1.8020905@crc.id.au>
- <20110217095815.GN19830@htj.dyndns.org>
- <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au>
+From: viresh kumar <viresh.kumar@st.com>
+Subject: Re: [PATCH] pata_arasan_cf: Adding support for arasan compact flash
+ host controller
+Date: Fri, 18 Feb 2011 14:48:59 +0530
+Message-ID: <4D5E3983.7050007@st.com>
+References: <0f2a633873dd2fa187afd7feef9fd71daa545b84.1297942328.git.viresh.kumar@st.com> <20110217145235.GY19830@htj.dyndns.org> <4D5DF816.4010907@st.com> <20110218091425.GB21209@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:52125 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757930Ab1BRJQe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 04:16:34 -0500
-Received: by fxm20 with SMTP id 20so3555354fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 01:16:33 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au>
+Received: from eu1sys200aog103.obsmtp.com ([207.126.144.115]:48768 "EHLO
+	eu1sys200aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753393Ab1BRJUb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 04:20:31 -0500
+In-Reply-To: <20110218091425.GB21209@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, amitgoel <amit.goel@st.com>, Armando VISCONTI <armando.visconti@st.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, viresh kumar <viresh.linux@gmail.com>
 
-Hello,
-
-On Fri, Feb 18, 2011 at 10:20:43AM +1100, Steven Haigh wrote:
-> With this patch applied, my rebuilt kernel based on 2.6.32.26 (due
-> to Xen Dom0 requirements) gives the following:
+On 02/18/2011 02:44 PM, Tejun Heo wrote:
+>> > No. It doesn't have BMDMA. I just wanted to use existing framework and
+>> > routines. And i wasn't sure if just overriding qc_issue alone will be enough.
+>> > Should i keep it as it is or modify?
+> I see.  Yeah, if the hardware doesn't really behave like a BMDMA
+> controller (and the fact that you need to override every bmdma ops is
+> a good indication of that), it usually is much cleaner to inherit from
+> sff and implement DMA part in the driver proper.  There are several
+> drivers like that in the tree.
 > 
-> ata9: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xe frozen
-> ata9: SError: { PHYRdyChg CommWake }
-> ata9: hard resetting link
-> ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata9.00: failed to IDENTIFY (I/O error, err_mask=0x202)
-> ata9: hard resetting link
-> ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata9.00: failed to IDENTIFY (I/O error, err_mask=0x202)
-> ata9: hard resetting link
-> ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata9.00: failed to IDENTIFY (I/O error, err_mask=0x202)
-> ata9: hard resetting link
-> ata9: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata9: EH complete
+> 
+>> > Why do these header 
+> 
+> files
+>>>  needed?  Unless the driver is gonna be put
+>>> > > in multiple .c files, there's no reason to separate out header files.
+>>> > > 
+>> > 
+>> > Ok. include/linux/pata_arasan_cf_data.h is surely required as it will be
+>> > used by platforms also. I kept register macros in a separate file to keep .c
+>> > clean. I will merge drivers/ata/pata_arasan_cf.h in .c, if you want me to.
+> Yes, please.
 
-So, retrying doesn't help at all.
-
-> I would really like to eliminate the possibility of it being my
-> esata enclosure or the sata -> esata cable by using another cable
-> and/or array for testing. New cables will be a few days off as I
-> don't have any of these cables hanging around. My gut feeling says
-> its the cable - as the enclosure works fine via the USB port -
-> however that isn't conlusive proof that the esata port is working as
-> it should!
-
-Yeah, it looks like something is wrong with the setup.  Please let us
-know how the testing goes with the new cable (hopefully shorter).
-
-Thanks.
+Ok.
 
 -- 
-tejun
+viresh
