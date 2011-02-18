@@ -1,77 +1,105 @@
-From: Stefan Bader <stefan.bader@canonical.com>
-Subject: Re: Some hints needed how to handle SATA ALPM failures
-Date: Fri, 18 Feb 2011 17:51:25 +0100
-Message-ID: <4D5EA38D.9060804@canonical.com>
-References: <4D5E6CE1.9020908@canonical.com> <20110218145057.GM21209@htj.dyndns.org> <4D5E9681.7020809@canonical.com> <20110218161640.GR21209@htj.dyndns.org>
+From: viresh kumar <viresh.linux@gmail.com>
+Subject: Re: [PATCH V2 2/2] pata_arasan_cf: Adding support for arasan compact
+ flash host controller
+Date: Fri, 18 Feb 2011 22:28:51 +0530
+Message-ID: <AANLkTi=bK54_OEFh=Fhx9N8TxVcFxUFYJm8XS=MKZdG2@mail.gmail.com>
+References: <cover.1298029161.git.viresh.kumar@st.com>
+	<e2f140271f9db752fdc05e348065b23fc4e4aa29.1298029161.git.viresh.kumar@st.com>
+	<20110218143438.GK21209@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adelie.canonical.com ([91.189.90.139]:38391 "EHLO
-	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100Ab1BRQv2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 11:51:28 -0500
-In-Reply-To: <20110218161640.GR21209@htj.dyndns.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:47735 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932202Ab1BRQ6w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 11:58:52 -0500
+Received: by gxk9 with SMTP id 9so1558233gxk.19
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 08:58:52 -0800 (PST)
+In-Reply-To: <20110218143438.GK21209@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Andy Whitcroft <apw@canonical.com>
+To: ejun Heo <tj@kernel.org>
+Cc: Viresh Kumar <viresh.kumar@st.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, shiraz.hashim@st.com, armando.visconti@st.com, amit.goel@st.com
 
-On 02/18/2011 05:16 PM, Tejun Heo wrote:
-> Hello,
-> 
-> On Fri, Feb 18, 2011 at 04:55:45PM +0100, Stefan Bader wrote:
->> Sorry that was not specific enough. It is remounting ro, which can
->> leave the fs in a better or worse state.
-> 
-> I see and, nope, that shouldn't lead to corrupted filesystem on a
-> journaled filesystem.  I agree it sucks tho.  This shouldn't be
-> happening with newer kernels unless the hardware completely shuts
-> down, which some very early SATA harddrives did but shouldn't happen
-> with most modern devices.  Backporting the fix isn't difficult.
-> 
->>> Also, the whole LPM thing got revamped several releases ago.  Can you
->>> please test how the recent kernels behave?  There will be failures as
->>> not all hardware can handle LPM well but those failures shouldn't lead
->>> to any catastrophic failures like ro remounting of filesystem.
->>
->> The example output given as footnotes in the original post were taken from the
->> latest re-test someone did on a 2.6.38-rc5 kernel (same user also reported bad
->> experience with a 2.6.35 based kernel). The comment we got on that was:
->>
->> "Here's what i get - the drive led lights continuously for about 10 seconds
->> during which any hdd access results in hanging process:"
->>
->> [12348.040077] ata3.00: exception Emask 0x0 SAct 0x1 SErr 0x150000 action 0x6 frozen
->> [12348.040086] ata3: SError: { PHYRdyChg CommWake Dispar }
->> [12348.040091] ata3.00: failed command: READ FPDMA QUEUED
->> [12348.040099] ata3.00: cmd 60/10:00:b0:94:c5/00:00:03:00:00/40 tag 0 ncq 8192 in
->> [12348.040101] res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
->> [12348.040104] ata3.00: status: { DRDY }
->> [12348.040112] ata3: hard resetting link
->> [12348.390082] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->> [12348.404414] ata3.00: configured for UDMA/133
->> [12348.404550] ata3.00: device reported invalid CHS sector 0
->> [12348.404570] ata3: EH complete
->>
->> I believe the details of the failures varied but "READ FPDMA QUEUED" and a
->> timeout were usually involved.
-> 
-> It's on NVIDIA ahci, right?  This shouldn't be happening with intel
-> and jmb ones, which were used while implementing.  The problem is most
-> likely controller dependent.  One possibility is the controller is not
-> happy with DIPM.  Does specifying "medium_power" instead make the
-> problem go away?  Can the bug reporter try some kernel patches?
-> 
+On 2/18/11, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Feb 18, 2011 at 05:10:14PM +0530, Viresh Kumar wrote:
+>> +static struct scsi_host_template arasan_cf_sht = {
+>> +	ATA_PIO_SHT(DRIVER_NAME),
+>> +};
+>
+> Hmmm... You probably have different requirements for .sg_tablesize and
+> .dma_boundary, likely to be more lax.
+>
 
-Yes, it is an Nvidia MCP67 in ahci mode. I can relay the question about
-medium_power and yes we can try patches. If not the reporter, I can prepare
-kernels and ask for testing.
-One question in general would be whether (if it cannot be said for sure which
-controller is good or not) it may be a good idea to add some whitelisting for
-those known to work and disable (or limit the mode) for the unknown.
+I will recheck this structure.
 
--Stefan
-> Thanks.
-> 
+>> +static inline void cf_ctrl_reset(struct arasan_cf_dev *acdev)
+>> +{
+>> +	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB, acdev->vbase +
+>> +			OP_MODE);
+>> +	writel(readl(acdev->vbase + OP_MODE) | CFHOST_ENB, acdev->vbase +
+>> +			OP_MODE);
+>> +}
+>
+> No big deal but I think the following is more preferrable.
+>
+> 	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
+> 	       acdev->vbase + OP_MODE);
+>
+> Applies to other similar line breaks too.
+>
 
+Ok
+
+>> +static inline void dma_complete(struct arasan_cf_dev *acdev)
+>> +{
+>> +	struct ata_queued_cmd *qc = acdev->qc;
+>> +
+>> +	acdev->qc = NULL;
+>> +	ata_sff_interrupt(acdev->irq, acdev->host);
+>> +
+>> +	if (unlikely(qc->err_mask) && ata_is_dma(qc->tf.protocol))
+>> +		ata_ehi_push_desc(&qc->ap->link.eh_info, "DMA stat 0x%x",
+>> +				ATA_DMA_INTR | ATA_DMA_ERR);
+>> +}
+>
+> Those are BMDMA status bits, right?  Why not just print out string
+> describing what's going on?
+>
+
+Ok.
+
+>> +static inline int wait4buf(struct arasan_cf_dev *acdev)
+>> +{
+>> +	if (!wait_for_completion_timeout(&acdev->cf_completion, TIMEOUT)) {
+>> +		u32 rw = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
+>> +
+>> +		dev_err(acdev->host->dev, "%s TimeOut", rw ? "write" : "read");
+>> +		return -ETIMEDOUT;
+>> +	}
+>
+> Like here.
+>
+> Hmmm... so, now there's a work item which requeues itself.  That can't
+> be reliably stopped from freeze() as it's called with host lock held
+> without process context.  I think you should override
+> ->error_handler() which looks like the following,
+>
+
+actually i am disabling controller in freeze. After which we will
+surely get timeout here and
+so finally we will get an error in this work. Wouldn't that be enough?
+
+> arsan_error_handler(...)
+> {
+> 	cancel_work_sync(...);
+> 	cancel_delayed_work_sync(...);
+>
+> 	return ata_sff_error_handler(xxx);
+> }
+>
+
+thanks for your time & feedback.
+
+--
+viresh
