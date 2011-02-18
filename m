@@ -1,44 +1,35 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: [Patch] enable AHCI mode on certain ich chipsets
-Date: Fri, 18 Feb 2011 15:03:20 +0100
-Message-ID: <87aahtsamv.fsf@nemi.mork.no>
-References: <20110216090548.GQ5778@Redstar.dorchain.net>
-	<20110217100330.GO19830@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V1 1/2] libata-sff: add ata_sff_queue_work() &
+ ata_sff_queue_delayed_work()
+Date: Fri, 18 Feb 2011 15:11:59 +0100
+Message-ID: <20110218141159.GJ21209@htj.dyndns.org>
+References: <cover.1298029161.git.viresh.kumar@st.com>
+ <1cad52b042eff06bf671c32e48920bf487d800a4.1298029161.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:50682 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425Ab1BRODf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Feb 2011 09:03:35 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1PqQvl-0007ZT-SM
-	for linux-ide@vger.kernel.org; Fri, 18 Feb 2011 15:03:33 +0100
-Received: from nemi.mork.no ([148.122.252.4])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 15:03:33 +0100
-Received: from bjorn by nemi.mork.no with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 15:03:33 +0100
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48766 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755011Ab1BROMY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 09:12:24 -0500
+Received: by fxm20 with SMTP id 20so3817465fxm.19
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 06:12:23 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1cad52b042eff06bf671c32e48920bf487d800a4.1298029161.git.viresh.kumar@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Viresh Kumar <viresh.kumar@st.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, viresh.linux@gmail.com, shiraz.hashim@st.com, armando.visconti@st.com, amit.goel@st.com
 
-Tejun Heo <tj@kernel.org> writes:
+On Fri, Feb 18, 2011 at 05:10:13PM +0530, Viresh Kumar wrote:
+> This patch adds ata_sff_queue_work() & ata_sff_queue_delayed_work() routine in
+> libata-sff.c file. This routine can be used by ata drivers to use ata_sff_wq.
+> 
+> Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
 
-> I'm not particularly inclined toward including this patch in upstream
-> as long as it can't be enabled by default.  It's just gonna be an
-> extra piece of code to carry around which only a handful of people us=
-e
-> and nobody really knows on which hardware it works or not and to what
-> extent.
+Acked-by: Tejun Heo <tj@kernel.com>
 
-Then enable it by default :-)
+Thanks.
 
-
-
-Bj=C3=B8rn
-
+-- 
+tejun
