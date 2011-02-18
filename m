@@ -1,91 +1,45 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V2 2/2] pata_arasan_cf: Adding support for arasan
- compact flash host controller
-Date: Fri, 18 Feb 2011 15:34:38 +0100
-Message-ID: <20110218143438.GK21209@htj.dyndns.org>
-References: <cover.1298029161.git.viresh.kumar@st.com>
- <e2f140271f9db752fdc05e348065b23fc4e4aa29.1298029161.git.viresh.kumar@st.com>
+Subject: Re: [Patch] enable AHCI mode on certain ich chipsets
+Date: Fri, 18 Feb 2011 15:42:43 +0100
+Message-ID: <20110218144243.GL21209@htj.dyndns.org>
+References: <20110216090548.GQ5778@Redstar.dorchain.net>
+ <20110217100330.GO19830@htj.dyndns.org>
+ <87aahtsamv.fsf@nemi.mork.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:34922 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752830Ab1BROf6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 09:35:58 -0500
-Received: by fxm20 with SMTP id 20so3842834fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 06:35:57 -0800 (PST)
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33879 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751416Ab1BROmt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 09:42:49 -0500
+Received: by bwz15 with SMTP id 15so778886bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 06:42:48 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <e2f140271f9db752fdc05e348065b23fc4e4aa29.1298029161.git.viresh.kumar@st.com>
+In-Reply-To: <87aahtsamv.fsf@nemi.mork.no>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Viresh Kumar <viresh.kumar@st.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, viresh.linux@gmail.com, shiraz.hashim@st.com, armando.visconti@st.com, amit.goel@st.com
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+(please always reply-to-all)
 
-On Fri, Feb 18, 2011 at 05:10:14PM +0530, Viresh Kumar wrote:
-> +static struct scsi_host_template arasan_cf_sht = {
-> +	ATA_PIO_SHT(DRIVER_NAME),
-> +};
+On Fri, Feb 18, 2011 at 03:03:20PM +0100, Bj=F8rn Mork wrote:
+> Tejun Heo <tj@kernel.org> writes:
+>=20
+> > I'm not particularly inclined toward including this patch in upstre=
+am
+> > as long as it can't be enabled by default.  It's just gonna be an
+> > extra piece of code to carry around which only a handful of people =
+use
+> > and nobody really knows on which hardware it works or not and to wh=
+at
+> > extent.
+>=20
+> Then enable it by default :-)
 
-Hmmm... You probably have different requirements for .sg_tablesize and
-.dma_boundary, likely to be more lax.
+That's the point tho.  We can't enable it by default.  It's too
+dangerous.  If there's a way we can safely, I'd be happy to do it.
 
-> +static inline void cf_ctrl_reset(struct arasan_cf_dev *acdev)
-> +{
-> +	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB, acdev->vbase +
-> +			OP_MODE);
-> +	writel(readl(acdev->vbase + OP_MODE) | CFHOST_ENB, acdev->vbase +
-> +			OP_MODE);
-> +}
-
-No big deal but I think the following is more preferrable.
-
-	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
-	       acdev->vbase + OP_MODE);
-
-Applies to other similar line breaks too.
-
-> +static inline void dma_complete(struct arasan_cf_dev *acdev)
-> +{
-> +	struct ata_queued_cmd *qc = acdev->qc;
-> +
-> +	acdev->qc = NULL;
-> +	ata_sff_interrupt(acdev->irq, acdev->host);
-> +
-> +	if (unlikely(qc->err_mask) && ata_is_dma(qc->tf.protocol))
-> +		ata_ehi_push_desc(&qc->ap->link.eh_info, "DMA stat 0x%x",
-> +				ATA_DMA_INTR | ATA_DMA_ERR);
-> +}
-
-Those are BMDMA status bits, right?  Why not just print out string
-describing what's going on?
-
-> +static inline int wait4buf(struct arasan_cf_dev *acdev)
-> +{
-> +	if (!wait_for_completion_timeout(&acdev->cf_completion, TIMEOUT)) {
-> +		u32 rw = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
-> +
-> +		dev_err(acdev->host->dev, "%s TimeOut", rw ? "write" : "read");
-> +		return -ETIMEDOUT;
-> +	}
-
-Like here.
-
-Hmmm... so, now there's a work item which requeues itself.  That can't
-be reliably stopped from freeze() as it's called with host lock held
-without process context.  I think you should override
-->error_handler() which looks like the following,
-
-arsan_error_handler(...)
-{
-	cancel_work_sync(...);
-	cancel_delayed_work_sync(...);
-
-	return ata_sff_error_handler(xxx);
-}
-
-Thanks.
-
--- 
+--=20
 tejun
