@@ -1,66 +1,49 @@
-From: Vasiliy Kulikov <segooon@gmail.com>
-Subject: Re: [PATCH] ata: sata_dwc_460ex: fix error path
-Date: Fri, 18 Feb 2011 20:27:42 +0300
-Message-ID: <20110218172742.GA5238@albatros>
-References: <1284317830-5022-1-git-send-email-segooon@gmail.com>
- <4D5C1326.2010101@ru.mvista.com>
+From: viresh kumar <viresh.linux@gmail.com>
+Subject: Re: [PATCH V2 2/2] pata_arasan_cf: Adding support for arasan compact
+ flash host controller
+Date: Sat, 19 Feb 2011 09:09:54 +0530
+Message-ID: <AANLkTin09CMbcTsQZUV9cwA2tbhr1L6J+BLguTeGMe+9@mail.gmail.com>
+References: <cover.1298029161.git.viresh.kumar@st.com>
+	<e2f140271f9db752fdc05e348065b23fc4e4aa29.1298029161.git.viresh.kumar@st.com>
+	<20110218143438.GK21209@htj.dyndns.org>
+	<AANLkTi=bK54_OEFh=Fhx9N8TxVcFxUFYJm8XS=MKZdG2@mail.gmail.com>
+	<20110218172052.GT21209@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:58896 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856Ab1BRR1t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 12:27:49 -0500
-Content-Disposition: inline
-In-Reply-To: <4D5C1326.2010101@ru.mvista.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45875 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556Ab1BSDjz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2011 22:39:55 -0500
+Received: by iyj8 with SMTP id 8so4152426iyj.19
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2011 19:39:55 -0800 (PST)
+In-Reply-To: <20110218172052.GT21209@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, kernel-janitors@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>, Rupjyoti Sarmah <rsarmah@appliedmicro.com>, Prodyut Hazarika <phazarika@appliedmicro.com>, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Viresh Kumar <viresh.kumar@st.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, shiraz.hashim@st.com, armando.visconti@st.com, amit.goel@st.com
 
-Hi Sergei,
+On 2/18/11, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Feb 18, 2011 at 10:28:51PM +0530, viresh kumar wrote:
+>> > Hmmm... so, now there's a work item which requeues itself.  That can't
+>> > be reliably stopped from freeze() as it's called with host lock held
+>> > without process context.  I think you should override
+>> > ->error_handler() which looks like the following,
+>>
+>> actually i am disabling controller in freeze. After which we will
+>> surely get timeout here and
+>> so finally we will get an error in this work. Wouldn't that be enough?
+>
+> Hmmm... libata usually invokes EH right away after freeze().  It'll
+> abort everything in flight and wake up the EH.  freeze()'s job is to
+> _try_ to quiesce the controller until reset and used when libata isn't
+> sure which state the port is in, so I think you would still need to
+> kill the work items on entry to EH.  BTW, have you tested the EH
+> paths?  Inducing fake failures from interrupt handler and let things
+> just slide so that timeout happens should do the trick.
+>
 
-On Wed, Feb 16, 2011 at 21:10 +0300, Sergei Shtylyov wrote:
-> >@@ -727,11 +727,15 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
-> > static void dma_dwc_exit(struct sata_dwc_device *hsdev)
-> > {
-> > 	dev_dbg(host_pvt.dwc_dev, "%s:\n", __func__);
-> >-	if (host_pvt.sata_dma_regs)
-> >+	if (host_pvt.sata_dma_regs) {
-> > 		iounmap(host_pvt.sata_dma_regs);
-> >+		host_pvt.sata_dma_regs = NULL;
-> >+	}
-> >-	if (hsdev->irq_dma)
-> >+	if (hsdev->irq_dma) {
-> > 		free_irq(hsdev->irq_dma, hsdev);
-> >+		hsdev->irq_dma = 0;
-> >+	}
-> > }
-> 
->    Are those changes really necessary, i.e. is dma_dwc_exit() called
-> more than once?
-
-Because this function may be called once again before
-host_pvt.sata_dma_regs gains new value in sata_dwc_probe().  This would
-lead to double iounmap() and double free_irq().
-
-> >@@ -1606,7 +1610,7 @@ static int sata_dwc_probe(struct platform_device *ofdev,
-> > 	if (hsdev == NULL) {
-> > 		dev_err(&ofdev->dev, "kmalloc failed for hsdev\n");
-> > 		err = -ENOMEM;
-> >-		goto error_out;
-> >+		goto error;
-> 
->    Why not just:
-> 
-> 		return err;
-
-If some resource allocation is added before this line in future then
-"return err" should be changed.  With goto the single cleanup is just
-added to the end of the function.
-
-
-Thanks,
-
--- 
-Vasiliy
+I haven't done any such testing yet. What should i call for fake
+failures from interrupt handler. freeze()?? or As i am doing in
+dma_xfer for real
+failures?
