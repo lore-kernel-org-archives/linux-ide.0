@@ -1,114 +1,150 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 05/20] pata_efar: always program master_data before
- slave_data
-Date: Sun, 20 Feb 2011 11:36:13 +0000
-Message-ID: <20110220113613.105a08e4@lxorguk.ukuu.org.uk>
-References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
-	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
-	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
-	<AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
-	<20110208132518.300bb098@lxorguk.ukuu.org.uk>
-	<4D514754.30203@ru.mvista.com>
-	<AANLkTinE5x=hmQ6Oykw3Tb38HVeL5eHxjdnPOdMt930q@mail.gmail.com>
-	<20110219164811.2e90de88@lxorguk.ukuu.org.uk>
-	<AANLkTi=Lj54hRfkn7qLwoQ7aGSchnzBwy4m2Uok764qD@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 02/20] ata_piix: unify code for programming PIO and MWDMA
+ timings
+Date: Sun, 20 Feb 2011 16:36:28 +0300
+Message-ID: <4D6118DC.80505@ru.mvista.com>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site> <20110208122346.19110.8441.sendpatchset@linux-mhg7.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:47544 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751168Ab1BTLfI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2011 06:35:08 -0500
-In-Reply-To: <AANLkTi=Lj54hRfkn7qLwoQ7aGSchnzBwy4m2Uok764qD@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110208122346.19110.8441.sendpatchset@linux-mhg7.site>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
->         idetm_data |= 0x4000;   /* Ensure SITRE is set */
->         pci_write_config_word(dev, idetm_port, idetm_data);
-> 
-> idetm_port needs to be programmed _before_ slave_data to "ensure SITRE is set".
+On 08.02.2011 15:23, Bartlomiej Zolnierkiewicz wrote:
 
-That isn't what the documentation seems to say. It says it has no effect
-unless SITRE is set not that you can't program the registers.
+>  From ca6c1fbc7d853829524b87a3bcbbb1f67796281c Mon Sep 17 00:00:00 2001
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Date: Tue, 8 Feb 2011 12:39:24 +0100
+> Subject: [PATCH 02/20] ata_piix: unify code for programming PIO and MWDMA timings
 
-> Unless they are obvious or risk is higher than benefit (bugfixes based
-> on code review).  I don't think that ATA code has became recently
-> special in this regard compared to the rest of the kernel.
+> Besides making things noticably simpler it results in ~2% decrease in
+> the driver LOC count and also ~2% decrease in the driver binary size
+> (as measured on x86-32).
 
-They aren't special - random unneeded code changes that haven't been
-tested shouldn't be going into the code unless there is a big gain. For
-obscure ancient devices there isn't a gain.
+> Fix piix_set_piomode() documentation while at it.
 
->      ata_piix: unify code for programming PIO and MWDMA timings
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+[...]
 
-Which as I said makes sense
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 0f4856d..c954f91 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -696,22 +696,11 @@ static int piix_pata_prereset(struct ata_link *link, unsigned long deadline)
+>
+>   static DEFINE_SPINLOCK(piix_lock);
+>
+> -/**
+> - *	piix_set_piomode - Initialize host controller PATA PIO timings
+> - *	@ap: Port whose timings we are configuring
+> - *	@adev: um
+> - *
+> - *	Set PIO mode for device, in host controller PCI config space.
+> - *
+> - *	LOCKING:
+> - *	None (inherited from caller).
+> - */
+> -
+> -static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
+> +static void piix_set_timings(struct ata_port *ap, struct ata_device *adev,
+> +			     u8 pio, bool use_mwdma)
+>   {
+>   	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+>   	unsigned long flags;
+> -	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+>   	unsigned int is_slave	= (adev->devno != 0);
+>   	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+>   	unsigned int slave_port	= 0x44;
+> @@ -732,14 +721,18 @@ static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev)
+>   			    { 2, 1 },
+>   			    { 2, 3 }, };
+>
+> -	if (pio >= 2)
+> +	if (pio >= 2 || use_mwdma)
 
->      pata_efar: fix register naming used in efar_set_piomode()
->      pata_efar: unify code for programming PIO and MWDMA timings
->      pata_efar: always program master_data before slave_data
+    The 'use_mwdma' check is actually superfluous...
 
-All untested
+>   		control |= 1;	/* TIME1 enable */
+> -	if (ata_pio_need_iordy(adev))
+> +	if (ata_pio_need_iordy(adev) || use_mwdma)
+>   		control |= 2;	/* IE enable */
 
->      pata_it8213: fix register naming used in it8213_set_piomode()
->      pata_it8213: unify code for programming PIO and MWDMA timings
->      pata_it8213: add UDMA100 and UDMA133 support
+    Why IORDY is enabled for MWDMA has always been beyond me... I understand 
+that the stupid Intel docs are to be blamed here.
 
-All untested
+> -
+>   	/* Intel specifies that the PPE functionality is for disk only */
+>   	if (adev->class == ATA_DEV_ATA)
+>   		control |= 4;	/* PPE enable */
+> +	/* If the drive MWDMA is faster than it can do PIO then
+> +	   we must force PIO into PIO0 */
 
->      pata_oldpiix: unify code for programming PIO and MWDMA timings
+    It's not the preferred multi-line comment style:
 
-Untested
+/*
+  * bla
+  * bla
+  */
 
->      pata_radisys: unify code for programming PIO and MWDMA timings
+> +	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
 
-Untested
+    Parens not needed around +.
 
->      pata_rdc: unify code for programming PIO and MWDMA timings
->      pata_rdc: parallel scanning needs an extra locking
->      pata_rdc: add Power Management support
+> @@ -803,31 +812,20 @@ static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, in
+>   {
+>   	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+>   	unsigned long flags;
+> -	u8 master_port		= ap->port_no ? 0x42 : 0x40;
+> -	u16 master_data;
+>   	u8 speed		= adev->dma_mode;
+>   	int devid		= adev->devno + 2 * ap->port_no;
+>   	u8 udma_enable		= 0;
+>
+> -	static const	 /* ISP  RTC */
+> -	u8 timings[][2]	= { { 0, 0 },
+> -			    { 0, 0 },
+> -			    { 1, 0 },
+> -			    { 2, 1 },
+> -			    { 2, 3 }, };
+> -
+> -	spin_lock_irqsave(&piix_lock, flags);
+> -
+> -	pci_read_config_word(dev, master_port, &master_data);
+> -	if (ap->udma_mask)
+> -		pci_read_config_byte(dev, 0x48, &udma_enable);
 
-All untested but the locking is a clear bug fix and I think should go in
+    I don't think you should have removed that...
 
->      pata_oldpiix: add locking for parallel scanning
->      pata_oldpiix: enable parallel scan
+> @@ -860,56 +858,20 @@ static void do_pata_set_dmamode(struct ata_port *ap, struct ata_device *adev, in
+>   			   performance (WR_PingPong_En) */
+>   			pci_write_config_word(dev, 0x54, ideconf);
+>   		}
+> +
+> +		pci_write_config_byte(dev, 0x48, udma_enable);
+> +
+> +		spin_unlock_irqrestore(&piix_lock, flags);
+>   	} else {
+[...]
+> -		if (ap->udma_mask)
+> -			udma_enable &= ~(1 << devid);
 
-This is an ancient device on some old pentium class boxes, it's not
-worth adding this stuff really is it ? Well maybe putting the locking in
-or at least comments that it will be needed ?
+    This does not seem correct -- you must disable UDMA when programming MWDMA.
 
-> Most patches has been posted months ago in the past as the part of
-> atang tree.
+> -
+> -		pci_write_config_word(dev, master_port, master_data);
+> +		piix_set_timings(ap, adev, pio, 1);
+>   	}
+> -	/* Don't scribble on 0x48 if the controller does not support UDMA */
+> -	if (ap->udma_mask)
+> -		pci_write_config_byte(dev, 0x48, udma_enable);
+> -
+> -	spin_unlock_irqrestore(&piix_lock, flags);
+>   }
+>
+>   /**
 
-So - where are the test reports
-
-> * pata_it8213: IDE -> libata regression fix (UDMA100/133 support based
-> on vendor / old IDE driver)
-
-I didn't see it tested in the old IDE driver either.
-
-> * pata_oldpiix: locking bug-fix (ACK-ed by you in the past) and
-> parallel scanning support
-
-I'm happy with the locking fix, I don't see the point in the parallel
-scan - and that wants testing because I don't know how the hardware will
-react. Most controllers were not designed for parallel scan and its a
-path windows will never have exercised therefore may well never have been
-tested out.
-
-In the PIIX4+ cases Jeff insisted we chased this down with the hardware
-folks in Intel to be sure it was ok. I'm not sure there is anyone who
-remembers original PIIX however.
-
-> I see a lot of magnitude more risky stuff going elsewhere in the
-> kernel, including ATA itself
-
-And being tested.
-
-efar/it8213/radisys are going to be tricky to find testers for as they
-are rare chips but the RDC is found in some of the embedded
-CPU/ATA/Net/etc in a device embedded x86 devices.
-
-Alan
+WBR, Sergei
