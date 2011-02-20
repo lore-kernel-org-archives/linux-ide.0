@@ -1,18 +1,18 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 04/20] pata_efar: unify code for programming PIO and MWDMA
- timings
-Date: Sun, 20 Feb 2011 17:32:07 +0300
-Message-ID: <4D6125E7.2090706@ru.mvista.com>
-References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site> <20110208122401.19110.20615.sendpatchset@linux-mhg7.site>
+Subject: Re: [PATCH 07/20] pata_it8213: unify code for programming PIO and
+ MWDMA timings
+Date: Sun, 20 Feb 2011 17:37:40 +0300
+Message-ID: <4D612734.20605@ru.mvista.com>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site> <20110208122424.19110.10832.sendpatchset@linux-mhg7.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:35277 "EHLO
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:49560 "EHLO
 	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910Ab1BTOd1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2011 09:33:27 -0500
-In-Reply-To: <20110208122401.19110.20615.sendpatchset@linux-mhg7.site>
+	with ESMTP id S1751818Ab1BTOi7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2011 09:38:59 -0500
+In-Reply-To: <20110208122424.19110.10832.sendpatchset@linux-mhg7.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
@@ -22,55 +22,57 @@ Hello.
 
 On 08-02-2011 15:24, Bartlomiej Zolnierkiewicz wrote:
 
->  From 2de7db4bcc16b7e95cca9ceb5921a6f620be76b7 Mon Sep 17 00:00:00 2001
+>  From 57632718f2e761e69b96e14f6900a487bad5d586 Mon Sep 17 00:00:00 2001
 > From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Date: Tue, 8 Feb 2011 12:39:25 +0100
-> Subject: [PATCH 04/20] pata_efar: unify code for programming PIO and MWDMA timings
+> Date: Tue, 8 Feb 2011 12:39:26 +0100
+> Subject: [PATCH 07/20] pata_it8213: unify code for programming PIO and MWDMA timings
 
-> Besides making things noticably simpler it results in ~10% decrease in
-> the driver LOC count and also ~8% decrease in the driver binary size
+> Besides making things noticably simpler it results in ~9% decrease in
+> the driver LOC count and also ~6% decrease in the driver binary size
 > (as measured on x86-32).
 
 > Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
 [...]
 
-> diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
-> index afe92b7..1e2ff7d 100644
-> --- a/drivers/ata/pata_efar.c
-> +++ b/drivers/ata/pata_efar.c
+> diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
+> index 911f50b..ccfd1ae 100644
+> --- a/drivers/ata/pata_it8213.c
+> +++ b/drivers/ata/pata_it8213.c
 [...]
-> @@ -103,13 +92,18 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
+> @@ -92,13 +81,18 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
 >   			    { 2, 1 },
 >   			    { 2, 3 }, };
 >
-> -	if (pio>  1)
-> +	if (pio>  1 || use_mwdma)
+> -	if (pio > 1)
+> +	if (pio > 1 || use_mwdma)
 >   		control |= 1;	/* TIME */
 > -	if (ata_pio_need_iordy(adev))	/* PIO 3/4 require IORDY */
 > +	if (ata_pio_need_iordy(adev) || use_mwdma)
 >   		control |= 2;	/* IE */
-
-    Same comments as for ata_piix for these two bits...
-
->   	/* Intel specifies that the prefetch/posting is for disk only */
->   	if (adev->class == ATA_DEV_ATA)
+>   	/* Bit 2 is set for ATAPI on the IT8213 - reverse of ICH/PIIX */
+>   	if (adev->class != ATA_DEV_ATA)
 >   		control |= 4;	/* PPE */
 > +	/* If the drive MWDMA is faster than it can do PIO then
 > +	   we must force PIO into PIO0 */
 
-    Fix comment style, like in ata_piix.
+    Fix the comment style, please.
 
 > +	if (use_mwdma && adev->pio_mode < (XFER_PIO_0 + pio))
 
     Parens not needed around +.
 
-> @@ -145,6 +139,22 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
+> +		/* Enable DMA timing only */
+> +		control |= 8;	/* PIO cycles in PIO0 */
+>
+>   	pci_read_config_word(dev, master_port,&master_data);
+>
+> @@ -126,6 +120,22 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
 >   }
 >
 >   /**
-> + *	efar_set_piomode - Initialize host controller PATA PIO timings
+> + *	it8213_set_piomode - Initialize host controller PATA PIO timings
 > + *	@ap: Port whose timings we are configuring
-> + *	@adev: Device to program
+> + *	@adev: Device whose timings we are configuring
 > + *
 > + *	Set PIO mode for device, in host controller PCI config space.
 > + *
@@ -78,21 +80,19 @@ On 08-02-2011 15:24, Bartlomiej Zolnierkiewicz wrote:
 > + *	None (inherited from caller).
 > + */
 > +
-> +static void efar_set_piomode(struct ata_port *ap, struct ata_device *adev)
+> +static void it8213_set_piomode(struct ata_port *ap, struct ata_device *adev)
 > +{
-> +	efar_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
+> +	it8213_set_timings(ap, adev, adev->pio_mode - XFER_PIO_0, 0);
 
-    s/0/false/? Likewise in ata_piix...
+     s/0/false/?
 
-> @@ -158,29 +168,19 @@ static void efar_set_piomode (struct ata_port *ap, struct ata_device *adev)
->   static void efar_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+> @@ -140,23 +150,14 @@ static void it8213_set_piomode (struct ata_port *ap, struct ata_device *adev)
+>   static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
 >   {
 >   	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
-> -	u8 master_port		= ap->port_no ? 0x42 : 0x40;
 > -	u16 master_data;
 >   	u8 speed		= adev->dma_mode;
->   	int devid		= adev->devno + 2 * ap->port_no;
->   	unsigned long flags;
+>   	int devid		= adev->devno;
 >   	u8 udma_enable;
 >
 > -	static const	 /* ISP  RTC */
@@ -102,35 +102,23 @@ On 08-02-2011 15:24, Bartlomiej Zolnierkiewicz wrote:
 > -			    { 2, 1 },
 > -			    { 2, 3 }, };
 > -
-> -	spin_lock_irqsave(&efar_lock, flags);
-> -
-> -	pci_read_config_word(dev, master_port, &master_data);
-> -	pci_read_config_byte(dev, 0x48, &udma_enable);
-> -
->   	if (speed>= XFER_UDMA_0) {
-> -		unsigned int udma	= adev->dma_mode - XFER_UDMA_0;
-> +		unsigned int udma = speed - XFER_UDMA_0;
->   		u16 udma_timing;
->
-> +		spin_lock_irqsave(&efar_lock, flags);
-> +
-> +		pci_read_config_byte(dev, 0x48, &udma_enable);
+> -	pci_read_config_word(dev, 0x40,&master_data);
+>   	pci_read_config_byte(dev, 0x48,&udma_enable);
 
-    Don't think you should have moved this...
+    Strange, here you're not moving that read and nnot removing disabling of 
+UDMA -- is that because of the missing lock?
 
-> +
->   		udma_enable |= (1 << devid);
->
->   		/* Load the UDMA mode number */
-> @@ -188,50 +188,20 @@ static void efar_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+> @@ -184,46 +185,16 @@ static void it8213_set_dmamode (struct ata_port *ap, struct ata_device *adev)
 [...]
-> -		udma_enable &= ~(1 << devid);
-> -		pci_write_config_word(dev, master_port, master_data);
+> +		it8213_set_timings(ap, adev, pio, 1);
 
-    No, you should disable UDMA when programming MWDMA.
+    s/1/true/?
 
-> +		efar_set_timings(ap, adev, pio, 1);
-
-    s/1/true/? Likewise in ata_piix...
+> +
+>   		udma_enable&= ~(1 << devid);
+> -		pci_write_config_word(dev, 0x40, master_data);
+>   	}
+>   	pci_write_config_byte(dev, 0x48, udma_enable);
+>   }
 
 WBR, Sergei
