@@ -1,8 +1,7 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 05/20] pata_efar: always program master_data before
- slave_data
-Date: Sat, 19 Feb 2011 16:48:11 +0000
-Message-ID: <20110219164811.2e90de88@lxorguk.ukuu.org.uk>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 05/20] pata_efar: always program master_data before slave_data
+Date: Sun, 20 Feb 2011 11:38:23 +0100
+Message-ID: <AANLkTi=Lj54hRfkn7qLwoQ7aGSchnzBwy4m2Uok764qD@mail.gmail.com>
 References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
 	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
@@ -10,34 +9,95 @@ References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
 	<20110208132518.300bb098@lxorguk.ukuu.org.uk>
 	<4D514754.30203@ru.mvista.com>
 	<AANLkTinE5x=hmQ6Oykw3Tb38HVeL5eHxjdnPOdMt930q@mail.gmail.com>
+	<20110219164811.2e90de88@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-14
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:46971 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751117Ab1BSQrO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2011 11:47:14 -0500
-In-Reply-To: <AANLkTinE5x=hmQ6Oykw3Tb38HVeL5eHxjdnPOdMt930q@mail.gmail.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:48466 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752858Ab1BTKiY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Feb 2011 05:38:24 -0500
+In-Reply-To: <20110219164811.2e90de88@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-> > =A0 SLC90E66 datasheet only says that SIDETIM register has no effec=
-t without
-> > SITRE bit set.
+On Sat, Feb 19, 2011 at 5:48 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
+ote:
+>> > =A0 SLC90E66 datasheet only says that SIDETIM register has no effe=
+ct without
+>> > SITRE bit set.
+>
+> Which means the current setup is fine yes ?
 
-Which means the current setup is fine yes ?
+That's the problem, the current setup is buggy in slave-only setups:
 
-> Alan, is this explanation sufficient to ACK this patch?  (Thanks
-> Sergei for digging it out.)
->=20
-> Jeff, would it be possible to queue patches #01-15 for 2.6.39=20
+                slave_data |=3D ((timings[pio][0] << 2) |
+timings[pio][1]) << shift;
+                pci_write_config_byte(dev, 0x44, slave_data);
+        }
 
-Have they been tested on the relevant hardware yet - I don't believe th=
-e
-changes should be made for the untested stuff and you indicated you
-agreed with that.
+        idetm_data |=3D 0x4000;   /* Ensure SITRE is set */
+        pci_write_config_word(dev, idetm_port, idetm_data);
 
-The tidyups for the easily tested cases (PIIX4 etc) look sensible
+idetm_port needs to be programmed _before_ slave_data to "ensure SITRE =
+is set".
+
+IOW We currently depend on the BIOS here to set SITRE bit for us..
+
+>> Alan, is this explanation sufficient to ACK this patch? =A0(Thanks
+>> Sergei for digging it out.)
+>>
+>> Jeff, would it be possible to queue patches #01-15 for 2.6.39
+>
+> Have they been tested on the relevant hardware yet - I don't believe =
+the
+> changes should be made for the untested stuff and you indicated you
+> agreed with that.
+
+Unless they are obvious or risk is higher than benefit (bugfixes based
+on code review).  I don't think that ATA code has became recently
+special in this regard compared to the rest of the kernel.
+
+> The tidyups for the easily tested cases (PIIX4 etc) look sensible
+
+Please take look at the changes #01-15 then:
+
+     ata_piix: SITRE handling fix
+     ata_piix: unify code for programming PIO and MWDMA timings
+     pata_efar: fix register naming used in efar_set_piomode()
+     pata_efar: unify code for programming PIO and MWDMA timings
+     pata_efar: always program master_data before slave_data
+     pata_it8213: fix register naming used in it8213_set_piomode()
+     pata_it8213: unify code for programming PIO and MWDMA timings
+     pata_it8213: add UDMA100 and UDMA133 support
+     pata_oldpiix: unify code for programming PIO and MWDMA timings
+     pata_radisys: unify code for programming PIO and MWDMA timings
+     pata_rdc: unify code for programming PIO and MWDMA timings
+     pata_rdc: parallel scanning needs an extra locking
+     pata_rdc: add Power Management support
+     pata_oldpiix: add locking for parallel scanning
+     pata_oldpiix: enable parallel scan
+
+Most patches has been posted months ago in the past as the part of
+atang tree.  They don't contain risky stuff (it was intentionally
+pushed at the end of the patch queue).  We have here obvious register
+naming unification, PIO/DMA folding (it was tested with ata_piix and
+only later ported to other PIIX-like drivers) and:
+
+* para_rdc: locking bug-fix and Power Management support
+
+* pata_it8213: IDE -> libata regression fix (UDMA100/133 support based
+on vendor / old IDE driver)
+
+* pata_oldpiix: locking bug-fix (ACK-ed by you in the past) and
+parallel scanning support
+
+I see a lot of magnitude more risky stuff going elsewhere in the
+kernel, including ATA itself and if there are any concerns left those
+patches (#01-15) I'll be happy to address them.
+
+Thanks,
+Bartlomiej
