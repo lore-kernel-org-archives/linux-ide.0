@@ -1,44 +1,39 @@
-From: "Roedel, Joerg" <Joerg.Roedel@amd.com>
-Subject: Re: IO_PAGE_FAULT from SATA card during boot
-Date: Mon, 21 Feb 2011 10:39:05 +0100
-Message-ID: <20110221093905.GE26519@amd.com>
-References: <4D49FB9F.9040304@gmail.com>
- <20110203085601.GB2490@arachsys.com>
- <20110207174838.GA21124@arachsys.com>
- <4D50A4B8.2070608@gmail.com>
- <20110208104157.GU2106@amd.com>
- <20110208110036.GA18763@arachsys.com>
- <AANLkTikTBi7FHoXS1JmKXgvmv4j7ramezO09kksGrJA1@mail.gmail.com>
- <20110208144805.GF19483@arachsys.com>
- <20110217094005.GS21289@arachsys.com>
- <4D5DBBD1.5020108@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 02/20] ata_piix: unify code for programming PIO and MWDMA
+ timings
+Date: Mon, 21 Feb 2011 14:38:37 +0300
+Message-ID: <4D624EBD.4080400@ru.mvista.com>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>	<20110208122346.19110.8441.sendpatchset@linux-mhg7.site>	<4D6118DC.80505@ru.mvista.com>	<20110220185958.364df4cc@lxorguk.ukuu.org.uk>	<4D617CC8.3020108@ru.mvista.com> <20110220210731.0c774fa7@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe002.messaging.microsoft.com ([213.199.154.140]:20906
-	"EHLO DB3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751439Ab1BUJjM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Feb 2011 04:39:12 -0500
-Content-Disposition: inline
-In-Reply-To: <4D5DBBD1.5020108@gmail.com>
+Received: from mail-ew0-f42.google.com ([209.85.215.42]:47075 "EHLO
+	mail-ew0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760Ab1BULkA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Feb 2011 06:40:00 -0500
+In-Reply-To: <20110220210731.0c774fa7@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Chris Webb <chris.webb@elastichosts.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Feb 17, 2011 at 07:22:41PM -0500, Robert Hancock wrote:
-> Also wonder if we could quirk this in the kernel somehow so that IOMMUs 
-> wouldn't freak out..
+Hello.
 
-Some kind of quirk will be required for the cards out there. I'll think
-about it and post some patches for testing.
+On 21-02-2011 0:07, Alan Cox wrote:
 
-	Joerg
+>>      PIO mode is setup by different code, and it takes care of the IORDY
+>> setting according to the PIO rules (and it gets called). DMA mode setup should
+>> just ignore the IORDY setting as in all other sane drivers.
 
--- 
-AMD Operating System Research Center
+> Well it can't ignore it - but if you mean just keep the bit as is then
 
-Advanced Micro Devices GmbH Einsteinring 24 85609 Dornach
-General Managers: Alberto Bozzo, Andrew Bowd
-Registration: Dornach, Landkr. Muenchen; Registerger. Muenchen, HRB Nr. 43632
+    Yes, I mean this.
 
+> that sounds sensible, have to see what the docs say happens if you ever
+> set MWDMA without IORDY.
+
+    Don't think they say anything on this matter but I can't imagine that 
+IORDY matters for DMA.
+
+WBR, Sergei
