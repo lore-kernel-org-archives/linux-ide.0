@@ -1,135 +1,43 @@
-From: "Joey Lee" <jlee@novell.com>
-Subject: Re: [PATCH RFC v2] support SATA ODD zero power
-Date: Tue, 22 Feb 2011 03:48:31 -0700
-Message-ID: <4D642F2F0200002300028E4A@novprvlin0050.provo.novell.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 05/20] pata_efar: always program master_data before
+ slave_data
+Date: Tue, 22 Feb 2011 11:14:00 +0000
+Message-ID: <20110222111400.1114e8c5@lxorguk.ukuu.org.uk>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
+	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
+	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
+	<AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
+	<20110208132518.300bb098@lxorguk.ukuu.org.uk>
+	<4D514754.30203@ru.mvista.com>
+	<AANLkTinE5x=hmQ6Oykw3Tb38HVeL5eHxjdnPOdMt930q@mail.gmail.com>
+	<4D62C5E1.9070307@pobox.com>
+	<AANLkTi=NQLxRQ+HAsjtWz5HFu7kaJw9sp50kKyK_ZTDv@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: henry.su.ati@gmail.com
-Cc: tj@kernel.org, Joey Lee <JLee@novell.com>, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:59721 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752260Ab1BVLNA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2011 06:13:00 -0500
+In-Reply-To: <AANLkTi=NQLxRQ+HAsjtWz5HFu7kaJw9sp50kKyK_ZTDv@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Henry,
+> I was thinking about re-doing ata_piix part in a way that we could
+> merge it now by adding support for older PIIX-alikes to ata_piix and
+> making it enabled only if "all_piixalikes" module parameter is
+> specified.   This way older drivers would be left untouched for now
+> and we can easily get in-tree testing for a new code.  Does it sound
+> as a viable alternative?
 
-=E6=96=BC =E4=B8=89=EF=BC=8C2010-12-08 =E6=96=BC 17:56 +0000=EF=BC=8Cjo=
-eyli(Joey Lee) =E6=8F=90=E5=88=B0=EF=BC=9A
-> Hi Tejun,=20
->=20
-> Nice can talk with you! :-)
->=20
-> =E6=96=BC =E4=B8=89=EF=BC=8C2010-12-08 =E6=96=BC 18:25 +0100=EF=BC=8C=
-Tejun Heo =E6=8F=90=E5=88=B0=EF=BC=9A
-> > (cc'ing linux-ide)
-> >=20
-> > Hello,
-> >=20
-> > On 12/08/2010 04:36 PM, Joey Lee wrote:
-> > > Dear all expert,=20
-> > >=20
-> > > Hi, m... I just google the SATA ODD zero power support and found =
-Henry
-> > > already contribute the patch:
-> > >=20
-> > >  http://kerneltrap.org/mailarchive/linux-scsi/2010/6/25/6885558
-> > >=20
-> > > And, after first round review,=20
-> > > The second version is here:
-> > >  http://www.spinics.net/lists/linux-scsi/msg44925.html
-> > >=20
-> > > But, I didn't see this patch merged in kernel maintain, does ther=
-e have
-> > > any problem with this patch? or actually the patch already in que=
-ue
-> > > waiting to merge to mainline?
-> > >=20
-> > > I appreciate if can have any comment to me.
-> >=20
-> > IIRC, at the time, the problem was that nobody had the hardware and
-> > the implementation was solely based on the specification only.  I
-> > didn't want it to go in without any actual testing, so it was put o=
-n
-> > hold for the time being.  Do you have access to a device with zsero
-> > power support?  If so, are you willing to test the implementation?
-> >=20
->=20
-> Got it!
-> I will do the testing if I get hardware can support this function.
->=20
+That is the bit to me that makes the least sense. Each of the devices in
+question is found only in the chipset so they can never be in combination
+on a board (except multiple PIIX4 which is already covered)
 
-I received a AMD notebook, there have _PS3 method in DSDT table. After
-test, your SATA ODD zero power patch works to me. The /dev/sr0 was
-removed when there have no media in tray, patch set ODD power to zero.
+Merging them makes it more likely stuff breaks and increases memory usage
+- its a lose/lose situation.
 
-But I have a bit questions:
-
-- I suggest add the kernel config check in drivers/scsi/sr.c like the
-following, it can avoid compiler error when we disable
-BLK_DEV_SR_ZERO_POWER:
-
-+#ifdef CONFIG_BLK_DEV_SR_ZERO_POWER
-+       cd->type =3D buffer[n + 6] >> 5;
-+#endif
-
-
-> > Hmmm... at the same time, I'm a little bit doubtful about its
-> > usefulness.  How much power does it save?  Furthermore, ODDs are of=
-ten
->=20
-> I am not sure how many watts can be save, it's need use 2-channel pow=
-er
-> meter or NetDAQ to verify. I know how to do that, just need the sampl=
-e
-> machine.
->=20
-
-- After hardware guys test power consumption by 2 channel power-metter,
-the patch can save 0.1 - 0.2 W (depend on different ODD hardware) when
-ODD power set to zero. This number is not high.
-
-My question is:
-What's the different between "ODD Zero power" with "SATA Link Power
-Management on ODD"?
-
-(Sorry for I cann't publish more detail power-metter result because it'=
-s
-from my customer's lab.)
-
-
-> > omitted on mobile devices these days.  So, I have a slight reluctan=
-ce
-> > against including it but if the implementation is clean enough and
-> > there is enough benefits it shouldn't be too difficult to overcome.
->=20
-> Fully understood!
->=20
->=20
-> Thank's a lot!
-> Joey Lee
-
-The last question is:
-
-- This Linux patch's behavior is different with Windows platform:
-When ODD go to "Zero power" mode, if I want to open tray then I need
-press ODD's tray button TWICE: The first time is enable ODD power and
-second time for open the tray.
-But, on Windows, just need press tray button ONE time, then the tray ca=
-n
-be opened.=20
-
-Does it possible modify your patch to enable ODD power then direct open
-tray?
-
-
-
-Thank's a lot!
-Joey Lee
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alan
