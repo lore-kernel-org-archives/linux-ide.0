@@ -1,52 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V2 2/2] pata_arasan_cf: Adding support for arasan
- compact flash host controller
-Date: Tue, 22 Feb 2011 09:58:57 +0100
-Message-ID: <20110222085857.GQ31267@htj.dyndns.org>
-References: <cover.1298029161.git.viresh.kumar@st.com>
- <e2f140271f9db752fdc05e348065b23fc4e4aa29.1298029161.git.viresh.kumar@st.com>
- <20110218143438.GK21209@htj.dyndns.org>
- <4D634DD0.60106@st.com>
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: [PATCH V3 0/2] add pata_arasan_cf support
+Date: Tue, 22 Feb 2011 14:32:37 +0530
+Message-ID: <cover.1298358936.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62014 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511Ab1BVI7C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2011 03:59:02 -0500
-Received: by fxm17 with SMTP id 17so2509065fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 22 Feb 2011 00:59:01 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D634DD0.60106@st.com>
+Received: from eu1sys200aog116.obsmtp.com ([207.126.144.141]:38065 "EHLO
+	eu1sys200aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751821Ab1BVJC7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2011 04:02:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: viresh kumar <viresh.kumar@st.com>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "viresh.linux@gmail.com" <viresh.linux@gmail.com>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>, amitgoel <amit.goel@st.com>
+To: tj@kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: shiraz.hashim@st.com, amit.goel@st.com, armando.visconti@st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@st.com>
 
-Hello,
+This patch series adds
+ - ata_sff_queue_work() & ata_sff_queue_delayed_work()
+ - add support for arasan compact flash controller.
 
-On Tue, Feb 22, 2011 at 11:16:56AM +0530, viresh kumar wrote:
-> Actually, we really don't have scatter-gather in our controller.
-> We have to read/write to the same FIFO address for every 512 bytes, after
-> which we get buf_avail interrupt. And Controller can do a maximum transfer
-> of 256 KB after which it gives transfer complete interrupt.
-> 
-> So all sg has to be handled in software, framework or driver.
+Changes Since V2:
+ - arasan_cf_error_handler declared to cancel scheduled work.
+ - modified .sg_tablesize & .dma_boundary in arasan_cf_sht.
+ - lines over 80 columns broken at more logical places.
 
-Yeap, so you don't need to follow the silly BMDMA restrictions.
+Changes Since V1:
+ - add separate patch to introduce ata_sff_queue_work & ata_sff_queue_delayed_work
+ - remove arasan cf drivers workqueue.
+ - remove drivers/ata/pata_arasan_cf.h and put register definitions in
+   pata_arasan_cf.c
+ - take ap->lock and host->lock at relevant places.
+ - use bool for variables which can have value 0 or 1.
+ - remove bmdma part and override freeze, qc_issue routines.
+ - introduce concept of delayed_work if altstatus reg reads ATA_BUSY after =
+DMA
+   xfer are over.
 
-> Also, we will always read/write from/to FIFO. And the external DMA controller
-> doesn't have any limitation of this dma_boudary.
-> 
-> So i feel i should keep
-> .sg_tablesize = SG_ALL,
-> .dma_boundary = 0xFFFFFFFF,
-> 
-> Please correct me if i am wrong.
 
-Looks good to me.
+Viresh Kumar (2):
+  libata-sff: add ata_sff_queue_work() & ata_sff_queue_delayed_work()
+  pata_arasan_cf: Adding support for arasan compact flash host
+    controller
 
-Thanks.
+ MAINTAINERS                         |    7 +
+ drivers/ata/Kconfig                 |    6 +
+ drivers/ata/Makefile                |    1 +
+ drivers/ata/libata-sff.c            |   15 +-
+ drivers/ata/pata_arasan_cf.c        |  957 +++++++++++++++++++++++++++++++++++
+ include/linux/libata.h              |    3 +
+ include/linux/pata_arasan_cf_data.h |   47 ++
+ 7 files changed, 1034 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/ata/pata_arasan_cf.c
+ create mode 100644 include/linux/pata_arasan_cf_data.h
 
 -- 
-tejun
+1.7.2.2
+
