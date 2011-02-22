@@ -1,73 +1,92 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V3 2/2] pata_arasan_cf: Adding support for arasan
- compact flash host controller
-Date: Tue, 22 Feb 2011 10:14:49 +0100
-Message-ID: <20110222091449.GS31267@htj.dyndns.org>
-References: <cover.1298358936.git.viresh.kumar@st.com>
- <53bc03306736e6069737aa6344d71d639cea4912.1298358936.git.viresh.kumar@st.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 05/20] pata_efar: always program master_data before slave_data
+Date: Tue, 22 Feb 2011 10:19:07 +0100
+Message-ID: <AANLkTi=NQLxRQ+HAsjtWz5HFu7kaJw9sp50kKyK_ZTDv@mail.gmail.com>
+References: <20110208122314.19110.4092.sendpatchset@linux-mhg7.site>
+	<20110208122409.19110.4233.sendpatchset@linux-mhg7.site>
+	<20110208130701.19709cc6@lxorguk.ukuu.org.uk>
+	<AANLkTimAioh_xu0qoQCndSWDAYJ4bpWv01NZn_bZ9g2a@mail.gmail.com>
+	<20110208132518.300bb098@lxorguk.ukuu.org.uk>
+	<4D514754.30203@ru.mvista.com>
+	<AANLkTinE5x=hmQ6Oykw3Tb38HVeL5eHxjdnPOdMt930q@mail.gmail.com>
+	<4D62C5E1.9070307@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62983 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752792Ab1BVJOz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2011 04:14:55 -0500
-Received: by fxm17 with SMTP id 17so2521178fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 22 Feb 2011 01:14:54 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <53bc03306736e6069737aa6344d71d639cea4912.1298358936.git.viresh.kumar@st.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:63665 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862Ab1BVJTI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2011 04:19:08 -0500
+In-Reply-To: <4D62C5E1.9070307@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Viresh Kumar <viresh.kumar@st.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, shiraz.hashim@st.com, amit.goel@st.com, armando.visconti@st.com, viresh.linux@gmail.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Feb 22, 2011 at 02:32:39PM +0530, Viresh Kumar wrote:
-> The Arasan CompactFlash Device Controller has three basic modes of
-> operation: PC card ATA using I/O mode, PC card ATA using memory mode, PC card
-> ATA using true IDE modes.
-> 
-> Currently driver supports only True IDE mode.
-> 
-> Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+Hi,
 
-Looks mostly good to me now but just few more things.
+On Mon, Feb 21, 2011 at 9:06 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
+> On 02/19/2011 04:25 AM, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> Jeff, would it be possible to queue patches #01-15 for 2.6.39 if the=
+re
+>> are no further concerns with them (thus leaving the merging of
+>> PIIX-like drivers for later)? =A0They got additional testing on ICH4=
+ and
+>> they look mostly safe& =A0straight-forward compared to #16-21.
+>
+> This seems to directly contradict what you wrote earlier in the threa=
+d,
+>
+> =A0 =A0 =A0 =A0This is why patches were posted to mailing list with a=
+ request
+> =A0 =A0 =A0 =A0for a real hardware testing:
+>
+> =A0 =A0 =A0 =A0"All testing was done using QEMU's PIIX3 controller em=
+ulation
+> =A0 =A0 =A0 =A0so any testing with real EFAR, IT8213, old PIIX, RDC a=
+nd
+> =A0 =A0 =A0 =A0Radisys R82600 PATA controllers would be really apprec=
+iated.."
+>
+> =A0 =A0 =A0 =A0instead of request for a merge. =A0It was all there in=
+ initial
+> =A0 =A0 =A0 =A0mail.
+>
+> and
+>
+> =A0 =A0 =A0 =A0I do not really care that much if it will be merged ev=
+er
+>
+> Regardless of this self-contradictory attitude, I do want useful patc=
+hes and
+> many of these patches seem useful.
 
-> +static inline void dma_complete(struct arasan_cf_dev *acdev)
-> +{
-> +	struct ata_queued_cmd *qc = acdev->qc;
-> +
-> +	acdev->qc = NULL;
-> +	ata_sff_interrupt(acdev->irq, acdev->host);
-> +
-> +	if (unlikely(qc->err_mask) && ata_is_dma(qc->tf.protocol))
-> +		ata_ehi_push_desc(&qc->ap->link.eh_info, "DMA Failed: Timeout");
-> +}
+Nothing self-contradictory there. :)
 
-ata_ehi_push_desc() needs to be called under host lock.  In case I
-missed other places, all functions which modify port/host states need
-to be called under host lock.  Please make sure they are.
+=46irst quote is about patches #01-15 only, not whole patchset (#01-20)
+like the second one, and I still don't care _that_ much personally if
+it gets merged since it is all unpaid & voluntary work.
 
-> +void arasan_cf_error_handler(struct ata_port *ap)
-> +{
-> +	struct arasan_cf_dev *acdev = ap->host->private_data;
-> +
-> +	cancel_work_sync(&acdev->work);
-> +	cancel_delayed_work_sync(&acdev->dwork);
-> +	return ata_sff_error_handler(ap);
-> +}
+> So I will continue watching the Bart/Alan/Sergei threads play out, an=
+d then
+> look at merging the result. =A0In the midst of all the arguing, produ=
+ctive
+> work / forward progress is occurring, so the end result should be pos=
+itive.
+>
+> It would be nice if we could get at least an "it works" test for the =
+older
+> hardware, since those are the changes /least/ likely to be tested by
+> queueing to linux-next.
 
-Please add some comments explaining what's going on with DMA
-processing as this driver is quite unusual.  Here and in the issue
-path.
+I was thinking about re-doing ata_piix part in a way that we could
+merge it now by adding support for older PIIX-alikes to ata_piix and
+making it enabled only if "all_piixalikes" module parameter is
+specified.   This way older drivers would be left untouched for now
+and we can easily get in-tree testing for a new code.  Does it sound
+as a viable alternative?
 
-> +static int __devinit arasan_cf_probe(struct platform_device *pdev)
-> +{
-...
-> +	ap->flags |= ATA_FLAG_PIO_POLLING;
-
-Maybe ATA_FLAG_NO_ATAPI too?
-
-Thanks.
-
--- 
-tejun
+Thanks,
+Bartlomiej
