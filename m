@@ -1,7 +1,7 @@
-From: Lars Randers <lars@nstec.dk>
+From: Robert Hancock <hancockrwd@gmail.com>
 Subject: Re: ExpressCard compact flash card very slow
-Date: Wed, 23 Feb 2011 11:56:19 +0100
-Message-ID: <AANLkTin7VByPhQ-_SNZdNgDhCoKu3j3gbtmkB9obqa4h@mail.gmail.com>
+Date: Wed, 23 Feb 2011 08:41:08 -0600
+Message-ID: <AANLkTime_Rsych048Apawp9K0A+5zYHZfraVU0ZFPpum@mail.gmail.com>
 References: <4D645C59.8090406@gmail.com>
 	<4D649FA2.5010204@gmail.com>
 	<4D64C446.4050803@gmail.com>
@@ -9,19 +9,20 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:62519 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753356Ab1BWK4V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2011 05:56:21 -0500
-Received: by ewy6 with SMTP id 6so1413287ewy.19
-        for <linux-ide@vger.kernel.org>; Wed, 23 Feb 2011 02:56:19 -0800 (PST)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42759 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751377Ab1BWOlJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Feb 2011 09:41:09 -0500
+Received: by iyb26 with SMTP id 26so2824650iyb.19
+        for <linux-ide@vger.kernel.org>; Wed, 23 Feb 2011 06:41:09 -0800 (PST)
 In-Reply-To: <4D64C446.4050803@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Damon Lynch <damonlynch@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-2011/2/23 Damon Lynch <damonlynch@gmail.com>:
+On Wed, Feb 23, 2011 at 2:24 AM, Damon Lynch <damonlynch@gmail.com> wro=
+te:
 > On 02/22/2011 11:48 PM, Robert Hancock wrote:
 >>
 >> The CF adapter probably doesn't support the 80-wire cable detect pro=
@@ -75,9 +76,8 @@ e: enabled,
 > [ =A0 =A01.892395] sd 0:0:0:0: [sda] Attached SCSI disk
 >
 > What next? Can the CF reader be whitelisted by libata?
-> --
-I don't think thats a safe idea, as not all CF adaptors are created equ=
-ally,
-so I could imagine that you could easily break alot of existing machine=
-s
-doing so...
+
+The CF reader portion itself likely isn't identifiable (it's probably
+mostly just passive circuitry). The PATA adapter portion might be
+identifiable, unless it just has a totally generic JMicron device ID..
+What does lspci -vvnn show for it?
