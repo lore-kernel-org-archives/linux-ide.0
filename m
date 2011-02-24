@@ -1,54 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Performance issue with SATA port multiplier
-Date: Thu, 24 Feb 2011 16:21:52 +0100
-Message-ID: <20110224152152.GR7840@htj.dyndns.org>
-References: <AANLkTimWhSbb8i1qPUCiZhGjQpdx1kWG_wyE3-hVScY+@mail.gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: sata-sil drive detection issues.
+Date: Thu, 24 Feb 2011 11:21:47 -0500
+Message-ID: <4D66859B.3020806@teksavvy.com>
+References: <4D5C92F4.5000906@crc.id.au> <4D5CA2B1.8020905@crc.id.au> <20110217095815.GN19830@htj.dyndns.org> <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au> <20110218091629.GC21209@htj.dyndns.org> <4D65C155.7080902@crc.id.au> <20110224083123.GB7840@htj.dyndns.org> <4D662A8B.5050501@crc.id.au> <20110224100609.GF7840@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:57884 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477Ab1BXPV5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 10:21:57 -0500
-Received: by bwz15 with SMTP id 15so1106510bwz.19
-        for <linux-ide@vger.kernel.org>; Thu, 24 Feb 2011 07:21:56 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <AANLkTimWhSbb8i1qPUCiZhGjQpdx1kWG_wyE3-hVScY+@mail.gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:15174 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756216Ab1BXQVu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 11:21:50 -0500
+In-Reply-To: <20110224100609.GF7840@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sylvain LEVEQUE <kag@laposte.net>
-Cc: linux-ide@vger.kernel.org, justin@jmicron.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Steven Haigh <netwiz@crc.id.au>, linux-ide@vger.kernel.org, justin@jmicron.com
 
-(cc'ing Justin)
-
-Hello,
-
-On Thu, Feb 24, 2011 at 03:32:50PM +0100, Sylvain LEVEQUE wrote:
-> I own a Venus T5C mini box based on a JMicron JM393 controller, used
-> in pure port multiplier mode (no JBOD, no RAID). It is plugged in
-> eSATA to a QNAP TS-119 NAS which runs a 2.6.37 kernel on a Marvell
-> Kirkwood 88F6281.
+On 11-02-24 05:06 AM, Tejun Heo wrote:
+>
+>> Near the rear:
+>> JMB352 / 0834 LGBA1 A / 370JF3011 - This looks to be hooked up via
+>> some capacitors to the DATA data lines on both sockets. If I haven't
+>> mentioned before, this is a 2 x SATA drive bay cradle.
 > 
-> When I first started copying data on any disk of the external box, I
-> realized the write speed was low (read speed is OK). Testing with dd
-> and various block sizes shows that the larger the block size, the
-> higher the throughput is. On my NAS, I determined the work buffer size
-> of the cp command to be approximately 8KB.
+> This is the SATA part.
 > 
-> With a 8KB blocksize, when writing a 16MB file with dd on one of the
-> disks, I average at 6,5 MB/s write speed. It is already a great
-> improvement compared to the 393 KB/s write speed I obtained on a
-> 2.6.36 kernel, but it is low compared to results I obtain with higher
-> blocksizes (52,4 MB/s with 4MB blocksize) or using other hardware
-> (laptop with Intel ICH9M-E/M controller reaches 286 MB/s with 8KB
-> blocksize using a 2.6.31 kernel).
+>> A third tiny chip near the JMB352 is:
+>> GL850A / MN2FA01G11 / 911SK03111 - Not 100% sure of the function of
+>> this chip by following the tracks, but it looks like it might be
+>> some kind of a clock source. That is a wild guess though!
 > 
-> When I take one of the disks out and connect it in eSATA with a basic
-> external case, I reach 37,6 MB/s with 8KB blocksize. This result is
-> pretty constant whatever the blocksize value I tested (from 1KB to
-> 16MB, doubling each time).
+> This is USB thingie.
+> 
+> So, the offending part is JMB352.  Justin, when JMB352 is doing e-SATA
+> interface, it's failing IDENTIFY.  sata_sil fails to recognize it and
+> ahci (right? Steven) succeeds only after IDENTIFY failures and
+> retries.  Any ideas what's going on?  When doing e-SATA, is the chip
+> active or passive?  ie. Does it just pass through the signals or do
+> some meddling inbetween?
 
-Sounds like a latency related issue.  Is NCQ being used?
 
--- 
-tejun
+Since this is a dual-SATA device, does it have TWO eSATA ports at the back,
+or just one?  If the latter, then I'd expect to find a port-multiplier in the chain.
+
+Cheers
