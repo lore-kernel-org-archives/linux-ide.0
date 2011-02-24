@@ -1,68 +1,111 @@
-From: Steven Haigh <netwiz@crc.id.au>
-Subject: Re: sata-sil drive detection issues.
-Date: Fri, 25 Feb 2011 03:29:13 +1100
-Message-ID: <4D668759.1020208@crc.id.au>
-References: <4D5C92F4.5000906@crc.id.au> <4D5CA2B1.8020905@crc.id.au> <20110217095815.GN19830@htj.dyndns.org> <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au> <20110218091629.GC21209@htj.dyndns.org> <4D65C155.7080902@crc.id.au> <20110224083123.GB7840@htj.dyndns.org> <4D662A8B.5050501@crc.id.au> <20110224100609.GF7840@htj.dyndns.org> <4D66859B.3020806@teksavvy.com>
+From: Sylvain LEVEQUE <kag@laposte.net>
+Subject: Re: Performance issue with SATA port multiplier
+Date: Thu, 24 Feb 2011 17:30:54 +0100
+Message-ID: <AANLkTikhAYkuhPWBfuSJquzWjLPETTgAnRMohSUq2orC@mail.gmail.com>
+References: <AANLkTimWhSbb8i1qPUCiZhGjQpdx1kWG_wyE3-hVScY+@mail.gmail.com> <20110224152152.GR7840@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.vm.crc.id.au ([203.56.246.92]:44733 "EHLO
-	mail.vm.crc.id.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754164Ab1BXQ3b (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 11:29:31 -0500
-In-Reply-To: <4D66859B.3020806@teksavvy.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51926 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab1BXQbP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 11:31:15 -0500
+Received: by wwb39 with SMTP id 39so957342wwb.1
+        for <linux-ide@vger.kernel.org>; Thu, 24 Feb 2011 08:31:14 -0800 (PST)
+In-Reply-To: <20110224152152.GR7840@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, justin@jmicron.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, justin@jmicron.com
 
-On 25/02/2011 3:21 AM, Mark Lord wrote:
-> On 11-02-24 05:06 AM, Tejun Heo wrote:
->>
->>> Near the rear:
->>> JMB352 / 0834 LGBA1 A / 370JF3011 - This looks to be hooked up via
->>> some capacitors to the DATA data lines on both sockets. If I haven't
->>> mentioned before, this is a 2 x SATA drive bay cradle.
->>
->> This is the SATA part.
->>
->>> A third tiny chip near the JMB352 is:
->>> GL850A / MN2FA01G11 / 911SK03111 - Not 100% sure of the function of
->>> this chip by following the tracks, but it looks like it might be
->>> some kind of a clock source. That is a wild guess though!
->>
->> This is USB thingie.
->>
->> So, the offending part is JMB352.  Justin, when JMB352 is doing e-SATA
->> interface, it's failing IDENTIFY.  sata_sil fails to recognize it and
->> ahci (right? Steven) succeeds only after IDENTIFY failures and
->> retries.  Any ideas what's going on?  When doing e-SATA, is the chip
->> active or passive?  ie. Does it just pass through the signals or do
->> some meddling inbetween?
+Hello
+
+2011/2/24 Tejun Heo <tj@kernel.org>:
 >
+> (cc'ing Justin)
 >
-> Since this is a dual-SATA device, does it have TWO eSATA ports at the back,
-> or just one?  If the latter, then I'd expect to find a port-multiplier in the chain.
+> Hello,
+>
+> On Thu, Feb 24, 2011 at 03:32:50PM +0100, Sylvain LEVEQUE wrote:
+>> I own a Venus T5C mini box based on a JMicron JM393 controller, used
+>> in pure port multiplier mode (no JBOD, no RAID). It is plugged in
+>> eSATA to a QNAP TS-119 NAS which runs a 2.6.37 kernel on a Marvell
+>> Kirkwood 88F6281.
+>>
+>> When I first started copying data on any disk of the external box, I
+>> realized the write speed was low (read speed is OK). Testing with dd
+>> and various block sizes shows that the larger the block size, the
+>> higher the throughput is. On my NAS, I determined the work buffer si=
+ze
+>> of the cp command to be approximately 8KB.
+>>
+>> With a 8KB blocksize, when writing a 16MB file with dd on one of the
+>> disks, I average at 6,5 MB/s write speed. It is already a great
+>> improvement compared to the 393 KB/s write speed I obtained on a
+>> 2.6.36 kernel, but it is low compared to results I obtain with highe=
+r
+>> blocksizes (52,4 MB/s with 4MB blocksize) or using other hardware
+>> (laptop with Intel ICH9M-E/M controller reaches 286 MB/s with 8KB
+>> blocksize using a 2.6.31 kernel).
+>>
+>> When I take one of the disks out and connect it in eSATA with a basi=
+c
+>> external case, I reach 37,6 MB/s with 8KB blocksize. This result is
+>> pretty constant whatever the blocksize value I tested (from 1KB to
+>> 16MB, doubling each time).
+>
+> Sounds like a latency related issue. =C2=A0Is NCQ being used?
 
-Hi Mark,
+I actually already tried disabling it but I didn't see much change so
+moved on to other tests.
 
-There is only one eSATA port on the back of the cradle. From looking at 
-the specs of the JMB352[1], it seems that it has the capability to have 
-3 SATA channels. Two are used for the cradle bays, the third for the 
-uplink to the PC.
+This is what I get for the three drives:
+$ cat /sys/block/sd[c-e]/device/queue_depth
+1
+31
+31
 
-The PDF states:
-"The SATA controller could be configured as host or device. The
-3-port SATA II 3.0G controllers further supports the eSATA to dual SATA 
-communication."
+$ ls -l /dev/disk/by-label/
+lrwxrwxrwx 1 root root 10 2011-02-21 20:36 NASBACKUP -> ../../sdc1
+lrwxrwxrwx 1 root root 10 2011-02-21 20:36 HDD2_SAMSUNG640 -> ../../sdd=
+1
+lrwxrwxrwx 1 root root 10 2011-02-21 20:36 HDD4_SAMSUNG640 -> ../../sde=
+1
 
-[1] - http://www.jmicron.com/PDF/JMB352/JMB352.pdf
+$ dd if=3Dtestfile of=3D/media/NASBACKUP/testfile bs=3D8K
+2048+0 records in
+2048+0 records out
+16777216 bytes (17 MB) copied, 7,34586 s, 2,3 MB/s
 
--- 
-Steven Haigh
+$ dd if=3Dtestfile of=3D/media/HDD2_SAMSUNG640/testfile bs=3D8K
+2048+0 records in
+2048+0 records out
+16777216 bytes (17 MB) copied, 2,77398 s, 6,0 MB/s
 
-Email: netwiz@crc.id.au
-Web: http://www.crc.id.au
-Phone: (03) 9001 6090 - 0412 935 897
-Fax: (03) 8338 0299
+$ dd if=3Dtestfile of=3D/media/HDD4_SAMSUNG640/testfile bs=3D8K
+2048+0 records in
+2048+0 records out
+16777216 bytes (17 MB) copied, 2,62296 s, 6,4 MB/s
+
+Read throughput is ca 30MB/s for all disks.
+
+Now, without NCQ:
+
+# echo 1 > /sys/block/sdd/device/queue_depth
+# echo 1 > /sys/block/sde/device/queue_depth
+$ cat /sys/block/sd[c-e]/device/queue_depth
+1
+1
+1
+
+$ dd if=3Dtestfile of=3D/media/HDD2_SAMSUNG640/testfile bs=3D8K
+2048+0 records in
+2048+0 records out
+16777216 bytes (17 MB) copied, 2,31012 s, 7,3 MB/s
+
+I confirm the observed improvement on the second disk as well.
+
+Thanks
+--=20
+Sylvain
