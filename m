@@ -1,54 +1,33 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: sata-sil drive detection issues.
-Date: Thu, 24 Feb 2011 15:26:55 -0500
-Message-ID: <4D66BF0F.3040907@teksavvy.com>
-References: <4D5C92F4.5000906@crc.id.au> <4D5CA2B1.8020905@crc.id.au> <20110217095815.GN19830@htj.dyndns.org> <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au> <20110218091629.GC21209@htj.dyndns.org> <4D65C155.7080902@crc.id.au> <20110224083123.GB7840@htj.dyndns.org> <4D662A8B.5050501@crc.id.au> <20110224100609.GF7840@htj.dyndns.org> <4D66859B.3020806@teksavvy.com> <4D668759.1020208@crc.id.au> <4D66ABC6.8030909@teksavvy.com>
+From: "Ian Davies" <iandavies198@gmail.com>
+Subject: Please i wait to hear from you urgently, it very important
+Date: Thu, 24 Feb 2011 11:14:15 -0800
+Message-ID: <20110224200930.B5F185E000D__48310.1587313742$1298602519$gmane$org@mail.dumlupinar.edu.tr>
+Reply-To: <iandavies822@yahoo.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:58134 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756518Ab1BXU1N (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 15:27:13 -0500
-In-Reply-To: <4D66ABC6.8030909@teksavvy.com>
+Received: from dpusmtpgw.dumlupinar.edu.tr ([194.27.43.31]:64826 "EHLO
+	dpusmtpgw.dumlupinar.edu.tr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754542Ab1BYCye (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Feb 2011 21:54:34 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Steven Haigh <netwiz@crc.id.au>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, justin@jmicron.com
 
-On 11-02-24 02:04 PM, Mark Lord wrote:
-> On 11-02-24 11:29 AM, Steven Haigh wrote:
->>
->> There is only one eSATA port on the back of the cradle. From looking at the
->> specs of the JMB352[1], it seems that it has the capability to have 3 SATA
->> channels. Two are used for the cradle bays, the third for the uplink to the PC.
->>
->> The PDF states:
->> "The SATA controller could be configured as host or device. The
->> 3-port SATA II 3.0G controllers further supports the eSATA to dual SATA
->> communication."
->>
->> [1] - http://www.jmicron.com/PDF/JMB352/JMB352.pdf
-> 
-> 
-> It would be nice to know what that actually means.
-> The only standard way for a single eSATA to connect to two SATA
-> is via a SATA Port Multiplier.  I wonder if that chip implements one?
+I am Ian Davies ;an accredited vendor of Alliot Groups, a subsidiary firm of Emirates International Holding (EIH); A private equity funds holding company that focuses on hedge funds.
 
-The product brief lists possible operation modes of the chip as:
+I have contacted you in the hope that you can be my associate by accepting to stand as the legal recipient to a Fixed-Income deposit, valued at 25MUSD by provind an International Offshore account to clear the funds.
 
- -- RAID0, RAID1, JBOD, or Port Multiplier
+Once I file your details as the new recipient to the funds, the fundswill be approved through the AUTOMATED CLEARING HOUSE (ACH) - A facility used by financial institutions to distribute electronic debit and credit entries to bank accounts and therefore settles such entries. Under the automated clearing house system. 
 
-So I would guess that the drive detection issues must have something
-to do with the operation mode.  I wonder how one selects *which* mode
-should be used by the chip?
 
-Or quite likely the only hardware mode is "Port Multiplier",
-and the rest are just fakeraid things in software.
+upon approval of your details  as the new recipient; a Credit advice will be issued in your favor and the funds will clear in your account within three banking days. I am willing to give you 40% which is 10MUSD as your commission out of the 25MUSD for your assistance in providing an International Offshore account to clear the funds.
 
-You and Tejun ought to be able to collect some debugging info
-(eg. initial ATA register state on probe) to see if the device
-even tries to report itself as a port multiplier.
 
-Tricky stuff, undocumented hardware.
+I am confident you will be honest enough to adhere to our agreed commissions in spite of the 25MUSD coming through your account. I will need you to forward me your legal names address and phone to file your details on the fund as the new recipient in this first Quater of the financial fiscal year 2011.
+
+Looking forward to working with you.
+Ian Davies
+Accredited vendor
+Alliot Groups PS
+
