@@ -1,44 +1,93 @@
-From: Richard Aplin <drtune@gmail.com>
-Subject: Re: Supporting SATA Target mode (or any data transfer w/crossover
- cable) on AHCI
-Date: Sun, 27 Feb 2011 17:30:31 -0800
-Message-ID: <AANLkTikSJc99fce5+Por2BRqLq1MhicH3LKQgVpUOixm@mail.gmail.com>
-References: <AANLkTi=mPAjKk0kZTuP-3fyQB8Rm0=mo5GDx9BOC073S@mail.gmail.com>
-	<4D6A5B72.6040600@teksavvy.com>
-	<AANLkTikaYHLinw0KbGJ3Rzcg6AZ4VfeQLeHQDt9za5Fh@mail.gmail.com>
+From: Steven Haigh <netwiz@crc.id.au>
+Subject: Re: sata-sil drive detection issues.
+Date: Mon, 28 Feb 2011 21:07:29 +1100
+Message-ID: <4D6B73E1.2040600@crc.id.au>
+References: <4D5C92F4.5000906@crc.id.au> <4D5CA2B1.8020905@crc.id.au> <20110217095815.GN19830@htj.dyndns.org> <a9eccac6fe224ef627fc71e819ba30ae@crc.id.au> <20110218091629.GC21209@htj.dyndns.org> <4D65C155.7080902@crc.id.au> <20110224083123.GB7840@htj.dyndns.org> <4D662A8B.5050501@crc.id.au> <20110224100609.GF7840@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34153 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886Ab1B1Bac (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Feb 2011 20:30:32 -0500
-Received: by iwn34 with SMTP id 34so2682509iwn.19
-        for <linux-ide@vger.kernel.org>; Sun, 27 Feb 2011 17:30:32 -0800 (PST)
-In-Reply-To: <AANLkTikaYHLinw0KbGJ3Rzcg6AZ4VfeQLeHQDt9za5Fh@mail.gmail.com>
+Received: from mail.vm.crc.id.au ([203.56.246.92]:38831 "EHLO
+	mail.vm.crc.id.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777Ab1B1KHx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2011 05:07:53 -0500
+In-Reply-To: <20110224100609.GF7840@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, justin@jmicron.com
 
-BTW for those who missed it, there was another recent (may 2010)
-thread on Marvell Target drivers
-http://www.spinics.net/lists/linux-ide/msg37863.html
+On 24/02/2011 9:06 PM, Tejun Heo wrote:
+> Hello,
+>
+> (cc'ing Justin)
+>
+> On Thu, Feb 24, 2011 at 08:53:15PM +1100, Steven Haigh wrote:
+>> On 24/02/2011 7:31 PM, Tejun Heo wrote:
+>>> Well, yeah, IDENTIFY failure is still there.  Controllers behave
+>>> differently and some may have higher tolerance under certain
+>>> circumstances but the setup just seems quite flimsy for whatever
+>>> reason.
+>>
+>> Yeah - I noticed that. These things can never be simple, can they?!
+>>
+>>>> Could it just be that the cradle is slow to initialise and therefore
+>>>> the sata_sil adapter gives up before the cradle is actually ready?
+>>>>
+>>>> Following this logic, I tried powering up the cradle before
+>>>> connecting the esata cable. I don't see anything in dmesg connecting
+>>>> the esata cable AFTER the cradle has been powered on. Maybe the
+>>>> cradle disables the esata connection if theres no cable connected on
+>>>> powerup?
+>>>
+>>> Is the cradle an active device or is it just power supply +
+>>> eSATA->SATA gender?  Oh, right, you said it also had USB connection,
+>>> so it's an active device.  Can you open it up and see which chip is
+>>> there?
+>>
+>> Of course I can crack it open - thats what makes life fun!
+>>
+>> The top side of the internal PCB is fairly plain with just the SATA
+>> power&  data sockets on it and the various USB ports and card
+>> sockets on the front.
+>>
+>> On the rear, we have a 30Mhz and a 12Mhz oscillator and 3 main CPU
+>> type chips.
+>>
+>> Near the card readers:
+>> GL826 / MX2AE08G08 / 842H35518 - I assume this is the IDE / CF /
+>> card IO chip.
+>
+> Yeah, that's the card reader.
+>
+>> Near the rear:
+>> JMB352 / 0834 LGBA1 A / 370JF3011 - This looks to be hooked up via
+>> some capacitors to the DATA data lines on both sockets. If I haven't
+>> mentioned before, this is a 2 x SATA drive bay cradle.
+>
+> This is the SATA part.
+>
+>> A third tiny chip near the JMB352 is:
+>> GL850A / MN2FA01G11 / 911SK03111 - Not 100% sure of the function of
+>> this chip by following the tracks, but it looks like it might be
+>> some kind of a clock source. That is a wild guess though!
+>
+> This is USB thingie.
+>
+> So, the offending part is JMB352.  Justin, when JMB352 is doing e-SATA
+> interface, it's failing IDENTIFY.  sata_sil fails to recognize it and
+> ahci (right? Steven) succeeds only after IDENTIFY failures and
+> retries.  Any ideas what's going on?  When doing e-SATA, is the chip
+> active or passive?  ie. Does it just pass through the signals or do
+> some meddling inbetween?
 
-where Saeed Bishara posted mods to the GPL Marvell drivers (not
-libata) for chips such as this...
-http://www.marvell.com/products/processors/embedded/kirkwood/FS_88F6180_9x_6281_OpenSource.pdf
-and added some form of C2C / Target support
+Has there been any progress on this as yet? I haven't heard anything in 
+a while...
 
-I don't have such a controller but I'm going to see if I can find one
-in an expresscard format, for testing purposes.
+-- 
+Steven Haigh
 
-I'm still after AHCI support for popular mobo chips, but that may be a
-pipe dream.
-
-Frustratingly I have this suspicion that Target mode support on those
-chips - if not already present - might be possible by updating these
-chip's firmware. I am guessing this is in flash or bios-loaded SRAM
-nowadays. I also guess this avenue will lead nowhere. ;-)
-
-Cheers,
-Rich.
+Email: netwiz@crc.id.au
+Web: http://www.crc.id.au
+Phone: (03) 9001 6090 - 0412 935 897
+Fax: (03) 8338 0299
