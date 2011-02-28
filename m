@@ -1,21 +1,21 @@
-From: Philippe De Muyter <phdm@macqel.be>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 Subject: Re: Intel ICH9M bug : sata unusable with usbserial
-Date: Mon, 28 Feb 2011 20:21:17 +0100
-Message-ID: <20110228192117.GA15092@frolo.macqel>
-References: <20110228140149.GA18189@frolo.macqel> <20110228150553.66d02bc7@lxorguk.ukuu.org.uk> <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org>
+Date: Mon, 28 Feb 2011 11:27:01 -0800
+Message-ID: <20110228192700.GA3305@kroah.com>
+References: <20110228140149.GA18189@frolo.macqel>
+ <20110228150553.66d02bc7@lxorguk.ukuu.org.uk>
+ <20110228151618.GA16322@htj.dyndns.org>
+ <20110228170556.GA29545@frolo.macqel>
+ <20110228173634.GA23008@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailrelay011.isp.belgacom.be ([195.238.6.178]:7174 "EHLO
-	mailrelay011.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752695Ab1B1TVW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2011 14:21:22 -0500
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20110228173634.GA23008@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20110228173634.GA23008-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-usb@vger.kernel.org
 
 On Mon, Feb 28, 2011 at 06:36:34PM +0100, Tejun Heo wrote:
 > On Mon, Feb 28, 2011 at 06:05:56PM +0100, Philippe De Muyter wrote:
@@ -40,9 +40,6 @@ On Mon, Feb 28, 2011 at 06:36:34PM +0100, Tejun Heo wrote:
 > > [    4.431875] pl2303: Prolific PL2303 USB to serial adaptor driver
 > 
 > I believe this is the GPS thingie?
-
-Yes, that's it.  It loads the `usbserial' and `pl2303' modules.
-
 > 
 > ...
 > > [  175.706014] ata1: lost interrupt (Status 0x50)
@@ -54,9 +51,6 @@ Yes, that's it.  It loads the `usbserial' and `pl2303' modules.
 > 
 > There was no screaming IRQ but it definitely looks like IRQ delivery
 > is gone at this point.
-
-I confirm.  After that, any `cat /proc/interrupts' gives the same interrupt count (17183)
-as above for irq 5 (shared by ata_piix and *usb*)
 > 
 > > [  175.706091] ata1: hard resetting link
 > > [  176.162049] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
@@ -85,9 +79,6 @@ as above for irq 5 (shared by ata_piix and *usb*)
 > And it never comes back.  Specifying kernel parameter 'irqpoll' might
 > help but it looks like somehow the GPS thingie kills the IRQ line
 > completely.
-
-My process listening to the GPS receiver continues to get GPS messages each second.
-
 > 
 > cc'ing Greg and linux-usb.  Hey, USB folks, it seems accessing a USB
 > GPS device kills IRQ delivery to ata_piix sharing the same IRQ line as
@@ -96,11 +87,16 @@ My process listening to the GPS receiver continues to get GPS messages each seco
 > 
 >   http://www.spinics.net/lists/linux-ide/msg40425.html
 >   http://www.spinics.net/lists/linux-ide/msg40428.html
-> 
-> Thanks.
-> 
-> -- 
-> tejun
 
--- 
-Philippe De Muyter +32 2 6101532 Macq SA rue de l'Aeronef 2 B-1140 Bruxelles
+That really sounds like an interrupt issue that is higher up than the
+USB host driver, or the ata drivers.
+
+ACPI perhaps?
+
+thanks,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
