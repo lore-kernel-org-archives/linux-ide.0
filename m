@@ -1,57 +1,23 @@
-From: Stephen Clark <sclark46@earthlink.net>
-Subject: Re: NEC ND-4550A problems reading DVD-R
-Date: Tue, 01 Mar 2011 10:47:41 -0500
-Message-ID: <4D6D151D.8030307@earthlink.net>
-References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com>
-Reply-To: sclark46@earthlink.net
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: libata default FUA support
+Date: Tue, 1 Mar 2011 21:33:13 +0100
+Message-ID: <20110301203313.GA1656@gentoo.trippels.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-curtail.atl.sa.earthlink.net ([209.86.89.64]:50242 "EHLO
-	elasmtp-curtail.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756742Ab1CAPrt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Mar 2011 10:47:49 -0500
-In-Reply-To: <4D6CF92A.4020105@teksavvy.com>
+Received: from ud10.udmedia.de ([194.117.254.50]:39337 "EHLO
+	mail.ud10.udmedia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756459Ab1CAUdP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Mar 2011 15:33:15 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Tejun Heo <tj@kernel.org>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 03/01/2011 08:48 AM, Mark Lord wrote:
-> On 11-03-01 03:01 AM, Tejun Heo wrote:
-> ..
->    
->> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
->> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
->> block parameter.  Anyways, the drive actually takes longer than 30secs
->> to recognize the media?
->>      
-> That slow behaviour is not uncommon, especially as drives struggle
-> to recognize various forms of copy-protected media (DVD-Video).
-> A longer default, or tuneable timeout, would help.
->
-> Cheers
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->    
-I agree with Mark, this should be a user tuneable value. My 2006 LG 
-dvd-rw frequently times out
-trying to identify the media. But after numerous timeout error messages 
-it usually suceeds.
-
+FUA support is currently switched off by default in
+drivers/ata/libata-core.c. 
+Given that many modern drives do support FUA now, wouldn't it make sense
+to switch it on without setting a (undocumented) kernel/module
+parameter?
 -- 
-
-"They that give up essential liberty to obtain temporary safety,
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty
-decreases."  (Thomas Jefferson)
-
-
-
+Markus
