@@ -1,60 +1,57 @@
-From: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>
-Subject: Re: Intel ICH9M bug : sata unusable with usbserial
-Date: Tue, 1 Mar 2011 16:00:18 +0100
-Message-ID: <20110301150018.GA17827@frolo.macqel>
-References: <20110228140149.GA18189@frolo.macqel> <20110228150553.66d02bc7@lxorguk.ukuu.org.uk> <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org> <20110228192700.GA3305@kroah.com> <20110301123452.GA1954@frolo.macqel> <20110301141627.GB12881@kroah.com>
+From: Stephen Clark <sclark46@earthlink.net>
+Subject: Re: NEC ND-4550A problems reading DVD-R
+Date: Tue, 01 Mar 2011 10:47:41 -0500
+Message-ID: <4D6D151D.8030307@earthlink.net>
+References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com>
+Reply-To: sclark46@earthlink.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20110301141627.GB12881-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from elasmtp-curtail.atl.sa.earthlink.net ([209.86.89.64]:50242 "EHLO
+	elasmtp-curtail.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756742Ab1CAPrt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Mar 2011 10:47:49 -0500
+In-Reply-To: <4D6CF92A.4020105@teksavvy.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Tejun Heo <tj@kernel.org>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tue, Mar 01, 2011 at 09:16:27AM -0500, Greg KH wrote:
-> On Tue, Mar 01, 2011 at 01:34:52PM +0100, Philippe De Muyter wrote:
-> > previously we had all but one usb interrupts on the same line as ata_piix :
-> >   5:      17183    XT-PIC-XT-PIC    ata_piix, ata_piix, ehci_hcd:usb1, ehci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb5, uhci_hcd:usb6, uhci_hcd:usb7, uhci_hcd:usb8
-> > while now they are spread on different lines : 16, 18, 19, 21 and 22
-> > 
-> > So I wonder if there is still a bug, but that it is not triggered anymore.
-> > 
-> > Is there a way to tell which interrupt line the USB GPS receiver is connected
-> > to ?
-> 
-> See which USB bus the device is on, using lsusb.  It should match up
-> with the usbX number in the above list.
-
-Given that I get :
-
-  tmp199:~ # lsusb
-  ...
-  Bus 007 Device 002: ID 067b:2303 Prolific Technology, Inc. PL2303 Serial Port
-  tmp199:~ # cat /proc/interrupts
-	     CPU0       CPU1
-  ...
-   19:     996143     995511   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
-  tmp199:~ #
-
-my USB GPS receiver and my sata disk still share the same interrupt, I assume ?
-
-What's changed now is that this interrupt line is now IO-APIC-fasteoi instead
-of XT-PIC-XT-PIC.  Maybe there's something to look at there ?
-
-> 
-> Glad enabling APIC in your BIOS fixed this.
-
-I am glad too :)
-
-Thanks
-
-Philippe
+On 03/01/2011 08:48 AM, Mark Lord wrote:
+> On 11-03-01 03:01 AM, Tejun Heo wrote:
+> ..
+>    
+>> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
+>> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
+>> block parameter.  Anyways, the drive actually takes longer than 30secs
+>> to recognize the media?
+>>      
+> That slow behaviour is not uncommon, especially as drives struggle
+> to recognize various forms of copy-protected media (DVD-Video).
+> A longer default, or tuneable timeout, would help.
+>
+> Cheers
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
+>    
+I agree with Mark, this should be a user tuneable value. My 2006 LG 
+dvd-rw frequently times out
+trying to identify the media. But after numerous timeout error messages 
+it usually suceeds.
 
 -- 
-Philippe De Muyter +32 2 6101532 Macq SA rue de l'Aeronef 2 B-1140 Bruxelles
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+"They that give up essential liberty to obtain temporary safety,
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty
+decreases."  (Thomas Jefferson)
+
+
+
