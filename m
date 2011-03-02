@@ -1,211 +1,61 @@
-From: "Jan Beulich" <JBeulich@novell.com>
-Subject: Re: [PATCH v2.6.38-rc5 1/2] block: add @force_kblockd to
-	 __blk_run_queue()
-Date: Wed, 02 Mar 2011 12:53:10 +0000
-Message-ID: <4D6E4BC6020000780003482A@vpn.id2.novell.com>
-References: <20110217111511.GQ19830@htj.dyndns.org>
+From: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
+Subject: Re: Intel ICH9M bug : sata unusable with usbserial
+Date: Wed, 02 Mar 2011 08:34:50 -0500
+Message-ID: <4D6E477A.9020401@teksavvy.com>
+References: <20110228140149.GA18189@frolo.macqel> <20110228150553.66d02bc7@lxorguk.ukuu.org.uk> <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org> <20110228192700.GA3305@kroah.com> <20110301123452.GA1954@frolo.macqel> <20110301141627.GB12881@kroah.com> <20110301150018.GA17827@frolo.macqel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110217111511.GQ19830@htj.dyndns.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20110301150018.GA17827-NqYOdiUDesgPnqCj3zZnUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
->>> On 17.02.11 at 12:15, Tejun Heo <tj@kernel.org> wrote:
-> __blk_run_queue() automatically either calls q->request_fn() directly
-> or schedules kblockd depending on whether the function is recursed.
-> blk-flush implementation needs to be able to explicitly choose
-> kblockd.  Add @force_kblockd.
+On 11-03-01 10:00 AM, Philippe De Muyter wrote:
+> On Tue, Mar 01, 2011 at 09:16:27AM -0500, Greg KH wrote:
+>> On Tue, Mar 01, 2011 at 01:34:52PM +0100, Philippe De Muyter wrote:
+>>> previously we had all but one usb interrupts on the same line as ata_piix :
+>>>   5:      17183    XT-PIC-XT-PIC    ata_piix, ata_piix, ehci_hcd:usb1, ehci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb5, uhci_hcd:usb6, uhci_hcd:usb7, uhci_hcd:usb8
+>>> while now they are spread on different lines : 16, 18, 19, 21 and 22
+>>>
+>>> So I wonder if there is still a bug, but that it is not triggered anymore.
+>>>
+>>> Is there a way to tell which interrupt line the USB GPS receiver is connected
+>>> to ?
+>>
+>> See which USB bus the device is on, using lsusb.  It should match up
+>> with the usbX number in the above list.
 > 
-> All the current users are converted to specify %false for the
-> parameter and this patch doesn't introduce any behavior change.
+> Given that I get :
 > 
-> stable: This is prerequisite for fixing ide oops caused by the new
->         blk-flush implementation.
+>   tmp199:~ # lsusb
+>   ...
+>   Bus 007 Device 002: ID 067b:2303 Prolific Technology, Inc. PL2303 Serial Port
+>   tmp199:~ # cat /proc/interrupts
+> 	     CPU0       CPU1
+>   ...
+>    19:     996143     995511   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
+>   tmp199:~ #
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Jan Beulich <JBeulich@novell.com>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Cc: stable@kernel.org 
+> my USB GPS receiver and my sata disk still share the same interrupt, I assume ?
+> 
+> What's changed now is that this interrupt line is now IO-APIC-fasteoi instead
+> of XT-PIC-XT-PIC.  Maybe there's something to look at there ?
+> 
+>>
+>> Glad enabling APIC in your BIOS fixed this.
+> 
+> I am glad too :)
 
-May I ask what the disposition of this and the second patch is?
-Looking at 2.6.38-rc7 I still don't see either of them, while I
-had hoped that they would both also make it into 2.6.37.2...
+Nothing got "fixed" by doing that.
+Swept under the rug, yes.
 
-Thanks, Jan
+But the bug is still there.
 
-> ---
->  block/blk-core.c                 |   11 ++++++-----
->  block/blk-flush.c                |    2 +-
->  block/cfq-iosched.c              |    6 +++---
->  block/elevator.c                 |    4 ++--
->  drivers/scsi/scsi_lib.c          |    2 +-
->  drivers/scsi/scsi_transport_fc.c |    2 +-
->  include/linux/blkdev.h           |    2 +-
->  7 files changed, 15 insertions(+), 14 deletions(-)
-> 
-> Index: work/block/blk-core.c
-> ===================================================================
-> --- work.orig/block/blk-core.c
-> +++ work/block/blk-core.c
-> @@ -352,7 +352,7 @@ void blk_start_queue(struct request_queu
->  	WARN_ON(!irqs_disabled());
->  
->  	queue_flag_clear(QUEUE_FLAG_STOPPED, q);
-> -	__blk_run_queue(q);
-> +	__blk_run_queue(q, false);
->  }
->  EXPORT_SYMBOL(blk_start_queue);
->  
-> @@ -403,13 +403,14 @@ EXPORT_SYMBOL(blk_sync_queue);
->  /**
->   * __blk_run_queue - run a single device queue
->   * @q:	The queue to run
-> + * @force_kblockd: Don't run @q->request_fn directly.  Use kblockd.
->   *
->   * Description:
->   *    See @blk_run_queue. This variant must be called with the queue lock
->   *    held and interrupts disabled.
->   *
->   */
-> -void __blk_run_queue(struct request_queue *q)
-> +void __blk_run_queue(struct request_queue *q, bool force_kblockd)
->  {
->  	blk_remove_plug(q);
->  
-> @@ -423,7 +424,7 @@ void __blk_run_queue(struct request_queu
->  	 * Only recurse once to avoid overrunning the stack, let the unplug
->  	 * handling reinvoke the handler shortly if we already got there.
->  	 */
-> -	if (!queue_flag_test_and_set(QUEUE_FLAG_REENTER, q)) {
-> +	if (!force_kblockd && !queue_flag_test_and_set(QUEUE_FLAG_REENTER, q)) {
->  		q->request_fn(q);
->  		queue_flag_clear(QUEUE_FLAG_REENTER, q);
->  	} else {
-> @@ -446,7 +447,7 @@ void blk_run_queue(struct request_queue
->  	unsigned long flags;
->  
->  	spin_lock_irqsave(q->queue_lock, flags);
-> -	__blk_run_queue(q);
-> +	__blk_run_queue(q, false);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  }
->  EXPORT_SYMBOL(blk_run_queue);
-> @@ -1053,7 +1054,7 @@ void blk_insert_request(struct request_q
->  
->  	drive_stat_acct(rq, 1);
->  	__elv_add_request(q, rq, where, 0);
-> -	__blk_run_queue(q);
-> +	__blk_run_queue(q, false);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  }
->  EXPORT_SYMBOL(blk_insert_request);
-> Index: work/block/blk-flush.c
-> ===================================================================
-> --- work.orig/block/blk-flush.c
-> +++ work/block/blk-flush.c
-> @@ -69,7 +69,7 @@ static void blk_flush_complete_seq_end_i
->  	 * queue.  Kick the queue in those cases.
->  	 */
->  	if (was_empty && next_rq)
-> -		__blk_run_queue(q);
-> +		__blk_run_queue(q, false);
->  }
->  
->  static void pre_flush_end_io(struct request *rq, int error)
-> Index: work/block/cfq-iosched.c
-> ===================================================================
-> --- work.orig/block/cfq-iosched.c
-> +++ work/block/cfq-iosched.c
-> @@ -3355,7 +3355,7 @@ cfq_rq_enqueued(struct cfq_data *cfqd, s
->  			    cfqd->busy_queues > 1) {
->  				cfq_del_timer(cfqd, cfqq);
->  				cfq_clear_cfqq_wait_request(cfqq);
-> -				__blk_run_queue(cfqd->queue);
-> +				__blk_run_queue(cfqd->queue, false);
->  			} else {
->  				cfq_blkiocg_update_idle_time_stats(
->  						&cfqq->cfqg->blkg);
-> @@ -3370,7 +3370,7 @@ cfq_rq_enqueued(struct cfq_data *cfqd, s
->  		 * this new queue is RT and the current one is BE
->  		 */
->  		cfq_preempt_queue(cfqd, cfqq);
-> -		__blk_run_queue(cfqd->queue);
-> +		__blk_run_queue(cfqd->queue, false);
->  	}
->  }
->  
-> @@ -3731,7 +3731,7 @@ static void cfq_kick_queue(struct work_s
->  	struct request_queue *q = cfqd->queue;
->  
->  	spin_lock_irq(q->queue_lock);
-> -	__blk_run_queue(cfqd->queue);
-> +	__blk_run_queue(cfqd->queue, false);
->  	spin_unlock_irq(q->queue_lock);
->  }
->  
-> Index: work/block/elevator.c
-> ===================================================================
-> --- work.orig/block/elevator.c
-> +++ work/block/elevator.c
-> @@ -602,7 +602,7 @@ void elv_quiesce_start(struct request_qu
->  	 */
->  	elv_drain_elevator(q);
->  	while (q->rq.elvpriv) {
-> -		__blk_run_queue(q);
-> +		__blk_run_queue(q, false);
->  		spin_unlock_irq(q->queue_lock);
->  		msleep(10);
->  		spin_lock_irq(q->queue_lock);
-> @@ -651,7 +651,7 @@ void elv_insert(struct request_queue *q,
->  		 *   with anything.  There's no point in delaying queue
->  		 *   processing.
->  		 */
-> -		__blk_run_queue(q);
-> +		__blk_run_queue(q, false);
->  		break;
->  
->  	case ELEVATOR_INSERT_SORT:
-> Index: work/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- work.orig/drivers/scsi/scsi_lib.c
-> +++ work/drivers/scsi/scsi_lib.c
-> @@ -443,7 +443,7 @@ static void scsi_run_queue(struct reques
->  					&sdev->request_queue->queue_flags);
->  		if (flagset)
->  			queue_flag_set(QUEUE_FLAG_REENTER, sdev->request_queue);
-> -		__blk_run_queue(sdev->request_queue);
-> +		__blk_run_queue(sdev->request_queue, false);
->  		if (flagset)
->  			queue_flag_clear(QUEUE_FLAG_REENTER, sdev->request_queue);
->  		spin_unlock(sdev->request_queue->queue_lock);
-> Index: work/drivers/scsi/scsi_transport_fc.c
-> ===================================================================
-> --- work.orig/drivers/scsi/scsi_transport_fc.c
-> +++ work/drivers/scsi/scsi_transport_fc.c
-> @@ -3829,7 +3829,7 @@ fc_bsg_goose_queue(struct fc_rport *rpor
->  		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
->  	if (flagset)
->  		queue_flag_set(QUEUE_FLAG_REENTER, rport->rqst_q);
-> -	__blk_run_queue(rport->rqst_q);
-> +	__blk_run_queue(rport->rqst_q, false);
->  	if (flagset)
->  		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
->  	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
-> Index: work/include/linux/blkdev.h
-> ===================================================================
-> --- work.orig/include/linux/blkdev.h
-> +++ work/include/linux/blkdev.h
-> @@ -699,7 +699,7 @@ extern void blk_start_queue(struct reque
->  extern void blk_stop_queue(struct request_queue *q);
->  extern void blk_sync_queue(struct request_queue *q);
->  extern void __blk_stop_queue(struct request_queue *q);
-> -extern void __blk_run_queue(struct request_queue *);
-> +extern void __blk_run_queue(struct request_queue *q, bool force_kblockd);
->  extern void blk_run_queue(struct request_queue *);
->  extern int blk_rq_map_user(struct request_queue *, struct request *,
->  			   struct rq_map_data *, void __user *, unsigned long,
+Cheers
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
