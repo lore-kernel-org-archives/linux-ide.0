@@ -1,75 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata default FUA support
-Date: Wed, 2 Mar 2011 09:58:23 +0100
-Message-ID: <20110302085823.GI19669@htj.dyndns.org>
-References: <20110301203313.GA1656@gentoo.trippels.de>
- <4D6D952D.8030609@gmail.com>
- <4D6DF231.5090702@msgid.tls.msk.ru>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: libata: ATA exception error messages in pata_sch module
+ (CONFIG_PATA_SCH)
+Date: Wed, 2 Mar 2011 11:12:51 +0000
+Message-ID: <20110302111251.09d0f1ca@lxorguk.ukuu.org.uk>
+References: <AANLkTikD3NOA7=zOLRaft8TL=sTgPSCHNNKgTP3AfYWD@mail.gmail.com>
+	<4D6D9684.505@gmail.com>
+	<AANLkTikpg2d47rAO=FatTe-53Ju4u+YBXt8VKmani8TN@mail.gmail.com>
+	<AANLkTimyVVZA3-pKyKUTyqTENRi1w2DXHcmAyg-J_8ok@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57912 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754884Ab1CBI62 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2011 03:58:28 -0500
-Received: by fxm17 with SMTP id 17so5675902fxm.19
-        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2011 00:58:27 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <4D6DF231.5090702@msgid.tls.msk.ru>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:45432 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750831Ab1CBLM5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2011 06:12:57 -0500
+In-Reply-To: <AANLkTimyVVZA3-pKyKUTyqTENRi1w2DXHcmAyg-J_8ok@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Kushal Koolwal <kushalkoolwal@gmail.com>, "David S. Miller" <davem@davemloft.net>, Borislav Petkov <petkovbb@gmail.com>, linux-ide@vger.kernel.org
 
-On Wed, Mar 02, 2011 at 10:30:57AM +0300, Michael Tokarev wrote:
-> > I believe the way the block layer uses it, basically it only saves the
-> > overhead of one transaction to the drive. It might be significant on
-> > some workloads (especially on high IOPS drives like SSDs) but it's
-> > likely not a huge deal.
-> 
-> One transaction per what?  If it means extra, especially "large"
-> transaction (lile flush with a wait) per each fsync-like call,
-> that can be huge deal actually, especially on database-like
-> workloads (lots of small syncronous random writes).
+> Reading through the SCH datasheet
+> (http://download.intel.com/design/chipsets/embedded/datashts/319537.pdf)
+> I don't see any mention of a mechanism which can be used to detect the
+> cable. In some cases device-side cable detection can be done but I
+> don't know that all devices support it. So there might not actually be
+> a way to do it on this controller.
 
-The way flushes are used by filesystems is that FUA is usually only
-used right after another FLUSH.  ie. Using FUA replaces FLUSH + commit
-block write + FLUSH sequence to FLUSH + FUA commit block write.  Due
-to the preceding FLUSH, the cache is already empty, so the only
-difference between WRITE + FLUSH and FUA WRITE becomes the extra
-command issue overhead which is usually almost unnoticeable compared
-to the actual IO.
+SCH is going to be on the motherboard so for systems where the detect
+fails it's probably easiest to take the PIIX approach and spot them by
+svid/sdid on the PCI device.
 
-Another thing is that with the recent updates to block FLUSH handling,
-using FUA might even be less efficient.  The new implementation
-aggressively merges those commit writes and flushes.  IOW, depending
-on timing, multiple consecutive commit writes can be merged as,
+All modern devices should support cable detect fine *but* it's perfectly
+valid to have a 40 wire cable providing it is very short, or indeed for a
+CF and SCH to both be on the board. In that case you'd hope they'd wire
+in a trick 80 wire detect but many don't.
 
- FLUSH + commit writes + FLUSH
-
-or
-
- FLUSH + some commit writes + FLUSH + other commit writes + FLUSH
-
-and so on,
-
-These merges will happen with fsync heavy workloads where FLUSH
-performance actually matters and, in these scenarios, FUA writes is
-less effective because it puts extra ordering restrictions on each FUA
-write.  ie. With surrounding FLUSHes, the drive is free to reorder
-commit writes to maximize performance, with FUA, the disk has to jump
-around all over the place to execute each command in the exact issue
-order.
-
-I personally think FUA is a misfeature.  It's a microoptimization with
-shallow benefits even when used properly while putting much heavier
-restriction on actual IO order, which usually is the slow part.
-
-That said, if someone can show FUA actually brings noticeable
-performance benefits, sure, let's do it, but till then, I think it
-would be best to leave it up in the attic.
-
-Thanks.
-
--- 
-tejun
+Alan
