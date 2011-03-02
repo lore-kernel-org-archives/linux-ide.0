@@ -1,61 +1,41 @@
-From: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
-Subject: Re: Intel ICH9M bug : sata unusable with usbserial
-Date: Wed, 02 Mar 2011 08:34:50 -0500
-Message-ID: <4D6E477A.9020401@teksavvy.com>
-References: <20110228140149.GA18189@frolo.macqel> <20110228150553.66d02bc7@lxorguk.ukuu.org.uk> <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org> <20110228192700.GA3305@kroah.com> <20110301123452.GA1954@frolo.macqel> <20110301141627.GB12881@kroah.com> <20110301150018.GA17827@frolo.macqel>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call  directly
+ into q->request_fn() __blk_run_queue()
+Date: Wed, 02 Mar 2011 08:46:46 -0500
+Message-ID: <4D6E4A46.1040709@kernel.dk>
+References: <20110217111511.GQ19830@htj.dyndns.org> <20110217111619.GR19830@htj.dyndns.org> <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com> <20110218094903.GF21209@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20110301150018.GA17827-NqYOdiUDesgPnqCj3zZnUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:49833 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751690Ab1CBNq6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Mar 2011 08:46:58 -0500
+In-Reply-To: <20110218094903.GF21209@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11-03-01 10:00 AM, Philippe De Muyter wrote:
-> On Tue, Mar 01, 2011 at 09:16:27AM -0500, Greg KH wrote:
->> On Tue, Mar 01, 2011 at 01:34:52PM +0100, Philippe De Muyter wrote:
->>> previously we had all but one usb interrupts on the same line as ata_piix :
->>>   5:      17183    XT-PIC-XT-PIC    ata_piix, ata_piix, ehci_hcd:usb1, ehci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb5, uhci_hcd:usb6, uhci_hcd:usb7, uhci_hcd:usb8
->>> while now they are spread on different lines : 16, 18, 19, 21 and 22
->>>
->>> So I wonder if there is still a bug, but that it is not triggered anymore.
->>>
->>> Is there a way to tell which interrupt line the USB GPS receiver is connected
->>> to ?
+On 2011-02-18 04:49, Tejun Heo wrote:
+> On Thu, Feb 17, 2011 at 10:01:51AM -0500, Mike Snitzer wrote:
+>> Hi Tejun,
 >>
->> See which USB bus the device is on, using lsusb.  It should match up
->> with the usbX number in the above list.
-> 
-> Given that I get :
-> 
->   tmp199:~ # lsusb
->   ...
->   Bus 007 Device 002: ID 067b:2303 Prolific Technology, Inc. PL2303 Serial Port
->   tmp199:~ # cat /proc/interrupts
-> 	     CPU0       CPU1
->   ...
->    19:     996143     995511   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
->   tmp199:~ #
-> 
-> my USB GPS receiver and my sata disk still share the same interrupt, I assume ?
-> 
-> What's changed now is that this interrupt line is now IO-APIC-fasteoi instead
-> of XT-PIC-XT-PIC.  Maybe there's something to look at there ?
-> 
+>> On Thu, Feb 17, 2011 at 6:16 AM, Tejun Heo <tj@kernel.org> wrote:
 >>
->> Glad enabling APIC in your BIOS fixed this.
+>>> Jens, this is applicable to v2.6.37 and 38.  The new implementation
+>>> for 39 would need similar fix but I couldn't find where the tree is.
+>>> Which branch is it?
+>>
+>> for-2.6.39/core
 > 
-> I am glad too :)
+> Right, thanks.  Jens, after you apply the two fixes for 2.6.38, I can
+> create a merge branch for for-2.6.39/core which you can pull.  Would
+> that work for you?
 
-Nothing got "fixed" by doing that.
-Swept under the rug, yes.
+Thanks, that would be great. I'm applying them now.
 
-But the bug is still there.
+-- 
+Jens Axboe
 
-Cheers
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
