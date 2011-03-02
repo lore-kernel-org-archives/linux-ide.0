@@ -1,45 +1,75 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes] libata: fix hotplug for drivers which
- don't implement LPM
-Date: Wed, 2 Mar 2011 08:47:21 +0100
-Message-ID: <20110302074721.GF19669@htj.dyndns.org>
-References: <20110224183037.GS7840@htj.dyndns.org>
- <4D6DF58D.5030905@pobox.com>
+Subject: Re: libata default FUA support
+Date: Wed, 2 Mar 2011 09:58:23 +0100
+Message-ID: <20110302085823.GI19669@htj.dyndns.org>
+References: <20110301203313.GA1656@gentoo.trippels.de>
+ <4D6D952D.8030609@gmail.com>
+ <4D6DF231.5090702@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60697 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57912 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175Ab1CBHr0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2011 02:47:26 -0500
+	with ESMTP id S1754884Ab1CBI62 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2011 03:58:28 -0500
+Received: by fxm17 with SMTP id 17so5675902fxm.19
+        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2011 00:58:27 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <4D6DF58D.5030905@pobox.com>
+In-Reply-To: <4D6DF231.5090702@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, stable <stable@kernel.org>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Markus Trippelsdorf <markus@trippelsdorf.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Wed, Mar 02, 2011 at 02:45:17AM -0500, Jeff Garzik wrote:
-> On 02/24/2011 01:30 PM, Tejun Heo wrote:
-> >ata_eh_analyze_serror() suppresses hotplug notifications if LPM is
-> >being used because LPM generates spurious hotplug events.  It compared
-> >whether link->lpm_policy was different from ATA_LPM_MAX_POWER to
-> >determine whether LPM is enabled; however, this is incorrect as for
-> >drivers which don't implement LPM, lpm_policy is always
-> >ATA_LPM_UNKNOWN.  This disabled hotplug detection for all drivers
-> >which don't implement LPM.
-> >
-> >Fix it by comparing whether lpm_policy is greater than
-> >ATA_LPM_MAX_POWER.
-> >
-> >Signed-off-by: Tejun Heo<tj@kernel.org>
-> >Cc: stable@kernel.org
+On Wed, Mar 02, 2011 at 10:30:57AM +0300, Michael Tokarev wrote:
+> > I believe the way the block layer uses it, basically it only saves the
+> > overhead of one transaction to the drive. It might be significant on
+> > some workloads (especially on high IOPS drives like SSDs) but it's
+> > likely not a huge deal.
 > 
-> applied, though putting this into 2.6.38.1 is preferred to changing
-> this at -rc7...  stable@ cc'd.
+> One transaction per what?  If it means extra, especially "large"
+> transaction (lile flush with a wait) per each fsync-like call,
+> that can be huge deal actually, especially on database-like
+> workloads (lots of small syncronous random writes).
 
-Understood.  As long as it ends up in stable@, either way is okay with
-me.  Thank you.
+The way flushes are used by filesystems is that FUA is usually only
+used right after another FLUSH.  ie. Using FUA replaces FLUSH + commit
+block write + FLUSH sequence to FLUSH + FUA commit block write.  Due
+to the preceding FLUSH, the cache is already empty, so the only
+difference between WRITE + FLUSH and FUA WRITE becomes the extra
+command issue overhead which is usually almost unnoticeable compared
+to the actual IO.
+
+Another thing is that with the recent updates to block FLUSH handling,
+using FUA might even be less efficient.  The new implementation
+aggressively merges those commit writes and flushes.  IOW, depending
+on timing, multiple consecutive commit writes can be merged as,
+
+ FLUSH + commit writes + FLUSH
+
+or
+
+ FLUSH + some commit writes + FLUSH + other commit writes + FLUSH
+
+and so on,
+
+These merges will happen with fsync heavy workloads where FLUSH
+performance actually matters and, in these scenarios, FUA writes is
+less effective because it puts extra ordering restrictions on each FUA
+write.  ie. With surrounding FLUSHes, the drive is free to reorder
+commit writes to maximize performance, with FUA, the disk has to jump
+around all over the place to execute each command in the exact issue
+order.
+
+I personally think FUA is a misfeature.  It's a microoptimization with
+shallow benefits even when used properly while putting much heavier
+restriction on actual IO order, which usually is the slow part.
+
+That said, if someone can show FUA actually brings noticeable
+performance benefits, sure, let's do it, but till then, I think it
+would be best to leave it up in the attic.
+
+Thanks.
 
 -- 
 tejun
