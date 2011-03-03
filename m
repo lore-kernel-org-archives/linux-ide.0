@@ -1,35 +1,90 @@
-From: Jorge Bastos <mysql.jorge@decimal.pt>
-Subject: Re: [Bugme-new] [Bug 29922] New: irqpool crash
-Date: Wed, 02 Mar 2011 23:01:31 +0000
-Message-ID: <b6e05e5377137cf8d6e0a78ed1b9f60c@192.168.1.222>
-References: <bug-29922-10286@https.bugzilla.kernel.org/> <20110301152833.66dc5e6f.akpm@linux-foundation.org> <alpine.LFD.2.02.1103021721590.12344@x980>
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: warning of 2.6.37 kernel with gcc-4.5.2
+Date: Wed, 2 Mar 2011 17:12:36 -0800
+Message-ID: <E18F441196CA634DB8E1F1C56A50A8743241DEA698@IRVEXCHCCR01.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <alpine.LFD.2.02.1103021721590.12344@x980>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Len Brown <lenb@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, bugme-daemon@bugzilla.kernel.org
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:2922 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754555Ab1CCBM5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2011 20:12:57 -0500
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: ide <linux-ide@vger.kernel.org>
+Cc: Jian Peng <jipeng@broadcom.com>
 
-Hi Len,
+While compiling 2.6.37 kernel with gcc-4.5.2 based toolchain for MIPS, there are a few warnings
 
-> 
-> The dmesg is 2.6.35.11
-> Does any version of linux earlier or later work properly?
-> 
+  CC      kernel/async.o
+kernel/async.c: In function 'async_synchronize_cookie_domain':
+kernel/async.c:270:10: warning: 'starttime.tv64' may be used uninitialized in this function
+kernel/async.c: In function 'async_run_entry_fn':
+kernel/async.c:122:10: warning: 'calltime.tv64' may be used uninitialized in this function
+...
+  CC      fs/ubifs/super.o
+fs/ubifs/super.c: In function 'ubifs_umount':
+fs/ubifs/super.c:1491:2: warning: statement with no effect
+  CC      fs/ubifs/sb.o
+  CC      fs/ubifs/io.o
+  CC      fs/ubifs/tnc.o
+  CC      fs/ubifs/master.o
+  CC      fs/ubifs/scan.o
+  CC      fs/ubifs/replay.o
+  CC      fs/ubifs/log.o
+  CC      fs/ubifs/commit.o
+  CC      fs/ubifs/gc.o
+  CC      fs/ubifs/orphan.o
+  CC      fs/ubifs/budget.o
+  CC      fs/ubifs/find.o
+  CC      fs/ubifs/tnc_commit.o
+  CC      fs/ubifs/compress.o
+  CC      fs/ubifs/lpt.o
+  CC      fs/ubifs/lprops.o
+  CC      fs/ubifs/recovery.o
+  CC      fs/ubifs/ioctl.o
+  CC      fs/ubifs/lpt_commit.o
+c/lpt_commit.c: In function 'layout_cnodes':
+fs/ubifs/lpt_commit.c:211:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:219:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:233:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:246:5: warning: statement with no effect
+fs/ubifs/lpt_commit.c:254:5: warning: statement with no effect
+fs/ubifs/lpt_commit.c:267:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:276:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:288:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:296:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:308:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:313:2: warning: statement with no effect
+fs/ubifs/lpt_commit.c: In function 'write_cnodes':
+fs/ubifs/lpt_commit.c:395:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:402:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:421:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:436:5: warning: statement with no effect
+fs/ubifs/lpt_commit.c:443:5: warning: statement with no effect
+fs/ubifs/lpt_commit.c:465:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:479:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:493:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:506:4: warning: statement with no effect
+fs/ubifs/lpt_commit.c:520:3: warning: statement with no effect
+fs/ubifs/lpt_commit.c:531:2: warning: statement with no effect
+...
+  CC      drivers/base/power/sysfs.o
+  CC      drivers/base/power/main.o
+drivers/base/power/main.c: In function 'pm_noirq_op.clone.17':
+drivers/base/power/main.c:306:10: warning: 'calltime.tv64' may be used uninitialized in this function
+...
 
-Well, I have no idea.
-With newer kernels I have other type of crash's with a mandatory reboot
-'cause the machine just stop's working.
-Since this is a production server I can't do that test for you :(
-Anyway I'd do that test for you if the machine wasn't production.
+Those in fs/ubifs really bothers me since all of them are for debugging and gcc dislike them.
 
-This crash I sent, didn't stop the machine as it continued working
-normally.
+Did anyone fix it in either changing Makefile or C codes? If not, I will post my patch to get rid of them.
 
-What can I do to help track this? (other than using a newer kernel than
-2.6.35.11)
+Thanks,
+Jian
 
-Jorge,
+
+
+
