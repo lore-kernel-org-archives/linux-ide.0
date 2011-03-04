@@ -1,61 +1,41 @@
-From: Kristen Carlson Accardi <kristen@linux.intel.com>
-Subject: Re: [PATCH] libata: Power off empty ports
-Date: Fri, 4 Mar 2011 10:47:56 -0800
-Message-ID: <20110304104756.20451b33@kcaccard-MOBL3>
-References: <20110304090644.GC20499@htj.dyndns.org>
-	<1299263051-3739-1-git-send-email-kristen@linux.intel.com>
-	<20110304183836.GZ20499@htj.dyndns.org>
+From: Kushal Koolwal <kushalkoolwal@gmail.com>
+Subject: Re: libata: ATA exception error messages in pata_sch module (CONFIG_PATA_SCH)
+Date: Fri, 4 Mar 2011 11:23:58 -0800
+Message-ID: <AANLkTi=dEm3ZjATNCJ_Q43y8EFy5fFpXbgAzBus=E3S5@mail.gmail.com>
+References: <AANLkTikD3NOA7=zOLRaft8TL=sTgPSCHNNKgTP3AfYWD@mail.gmail.com>
+	<4D6D9684.505@gmail.com>
+	<AANLkTikpg2d47rAO=FatTe-53Ju4u+YBXt8VKmani8TN@mail.gmail.com>
+	<AANLkTimyVVZA3-pKyKUTyqTENRi1w2DXHcmAyg-J_8ok@mail.gmail.com>
+	<20110302111251.09d0f1ca@lxorguk.ukuu.org.uk>
+	<AANLkTimRqGkyC=Fqk=ekr3KDCauL92XwMZpj9A9aE0Gc@mail.gmail.com>
+	<20110304131515.3de216ca@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16392 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932436Ab1CDSpj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 4 Mar 2011 13:45:39 -0500
-In-Reply-To: <20110304183836.GZ20499@htj.dyndns.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35676 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759729Ab1CDTX7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 14:23:59 -0500
+Received: by iyb26 with SMTP id 26so2176642iyb.19
+        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2011 11:23:59 -0800 (PST)
+In-Reply-To: <20110304131515.3de216ca@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "David S. Miller" <davem@davemloft.net>, Borislav Petkov <petkovbb@gmail.com>, linux-ide@vger.kernel.org
 
-On Fri, 4 Mar 2011 19:38:36 +0100
-Tejun Heo <tj@kernel.org> wrote:
+> It won't help in your case as far as I can see because you don't have
+> subvendor/subdevice identifiers set just the Intel default ones.
+If that is something that can be set by the BIOS (firmware) then it
+should not be a problem as I do have access to firmware person for
+this system.
 
-> Hello,
-> 
-> On Fri, Mar 04, 2011 at 10:24:11AM -0800, Kristen Carlson Accardi wrote:
-> >  	case ATA_LPM_MIN_POWER:
-> > -		/* no restrictions on LPM transitions */
-> > -		scontrol &= ~(0x3 << 8);
-> > +		if (ata_link_nr_enabled(link) > 0)
-> > +			/* no restrictions on LPM transitions */
-> > +			scontrol &= ~(0x3 << 8);
-> > +		else {
-> > +			/* empty port, power off */
-> > +			scontrol &= ~0xf;
-> > +			scontrol |= (0x1 << 2);
-> > +		}
-> 
-> Why not just do the following?
-> 
-> 	scontrol &= ~(0x3 << 8);
+> You could try dmidecode I guess, but if one isn't right the other is
+> often also missing or incomplete.
+Again, I can provide you the exact SMB1 and SMB2 structure information
+(System Mfg and System Name) that will be reported by the BIOS to the
+Linux kernel. In fact I confirmed that the updated BIOS version for
+this system will have the SMB1 and SMB2 fields set in the BIOS to
+identify the system for Linux kernel.
 
-because, the IPM value is meaningless if we have no devices,
-so this is a wasted operation.
-
-> 	/* if empty, power off */
-> 	if (!ata_link_nr_enabled(link)) {
-> 		scontrol &= ~0xf;
-> 		scontrol |= 0x1 << 2;
-> 	}
-> 
-> Also, can you please provide some details on on which hardware you
-> tested the change and how much power it actually saved?
->
-
-This change was tested on Intel's Sandy Bridge platform.  Your power
-savings will depend on how many implemented ports you have, and how
-many are not being used.  For a system I tested with which had 2 ports
-which I could turn off, I saved 300mW.
- 
+Will that help?
