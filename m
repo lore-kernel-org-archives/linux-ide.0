@@ -1,22 +1,18 @@
-From: Philippe De Muyter <phdm@macqel.be>
+From: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>
 Subject: Re: XT-PIC interrupts blocked by usbserial ? [Was Re: Intel ICH9M
 	bug : sata unusable with usbserial]
-Date: Fri, 4 Mar 2011 15:29:33 +0100
-Message-ID: <20110304142933.GB10821@frolo.macqel>
+Date: Fri, 4 Mar 2011 15:56:45 +0100
+Message-ID: <20110304145645.GC10821@frolo.macqel>
 References: <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org> <20110228192700.GA3305@kroah.com> <20110301123452.GA1954@frolo.macqel> <20110301141627.GB12881@kroah.com> <20110301150018.GA17827@frolo.macqel> <4D6E477A.9020401@teksavvy.com> <20110303145812.GA3489@frolo.macqel> <4D6FD982.2050308@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailrelay009.isp.belgacom.be ([195.238.6.176]:65102 "EHLO
-	mailrelay009.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759294Ab1CDO3h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 09:29:37 -0500
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <4D6FD982.2050308@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <4D6FD982.2050308-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Greg KH <greg@kroah.com>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-usb@vger.kernel.org
 
 On Thu, Mar 03, 2011 at 01:10:10PM -0500, Mark Lord wrote:
 > On 11-03-03 09:58 AM, Philippe De Muyter wrote:
@@ -28,13 +24,6 @@ On Thu, Mar 03, 2011 at 01:10:10PM -0500, Mark Lord wrote:
 > 
 > Blocked until reboot, or until you unplug the GPS/serial thingie from the USB port?
 > 
-
-Unplugging the GPS/serial receiver from the USB port did not restore disk
-access.  But of course, ext4 had also already decided that his log file
-was broken.  I don't know if it would expect to see the disk come again.
-
-Philipe
-
 > 
 > > Switching in the BIOS from 'APIC disabled' to 'APIC enabled' made the problem
 > > disappear.
@@ -108,8 +97,42 @@ Philipe
 > If the numbers increase at a phenomenal rate, then there might
 > be an issue.  With an active GPS, one would expect the numbers to
 > be incrementing steadily, say a few dozen or a hundred or so per second.
+
+I did a small count of the interrupts on the GPS/SATA irq line, with
+the GPS listener process running, but no disk activity.  Here it is
+(IO-APIC-fasteoi mode) :
+
+tmp179:/tmp # cat /proc/interrupts; sleep 10; cat /proc/interrupts
+           CPU0       CPU1
+...
+ 19:       7651       7648   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
+...
+ 19:       8428       8420   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
+...
+tmp179:/tmp #
+
+During those 10 seconds, we received about 1500 characters at 4800 bps.
+
+and now without the GPS listener process running :
+
+tmp179:/tmp # cat /proc/interrupts; sleep 10; cat /proc/interrupts
+           CPU0       CPU1
+...
+ 19:      35361      35316   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
+...
+ 19:      35361      35316   IO-APIC-fasteoi   ata_piix, ata_piix, uhci_hcd:usb5, uhci_hcd:usb7
+...
+tmp179:/tmp #
+
+With the XT-PIC mode, the listener process kept running perfectly,
+but the interrupt counter in /proc/interrupts did not increase.
+
 > 
 > Cheers
 
 -- 
 Philippe De Muyter +32 2 6101532 Macq SA rue de l'Aeronef 2 B-1140 Bruxelles
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
