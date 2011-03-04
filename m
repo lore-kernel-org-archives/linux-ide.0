@@ -1,73 +1,103 @@
-From: Stephen Clark <sclark46@earthlink.net>
-Subject: Re: NEC ND-4550A problems reading DVD-R
-Date: Fri, 04 Mar 2011 09:09:10 -0500
-Message-ID: <4D70F286.5040508@earthlink.net>
-References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com> <4D6D151D.8030307@earthlink.net> <20110304110757.GJ20499@htj.dyndns.org>
-Reply-To: sclark46@earthlink.net
+From: Philippe De Muyter <phdm-vQo90/bmh3WzQB+pC5nmwQ@public.gmane.org>
+Subject: Re: XT-PIC interrupts blocked by usbserial ? [Was Re: Intel ICH9M
+	bug : sata unusable with usbserial]
+Date: Fri, 4 Mar 2011 15:24:43 +0100
+Message-ID: <20110304142443.GA10821@frolo.macqel>
+References: <20110228151618.GA16322@htj.dyndns.org> <20110228170556.GA29545@frolo.macqel> <20110228173634.GA23008@htj.dyndns.org> <20110228192700.GA3305@kroah.com> <20110301123452.GA1954@frolo.macqel> <20110301141627.GB12881@kroah.com> <20110301150018.GA17827@frolo.macqel> <4D6E477A.9020401@teksavvy.com> <20110303145812.GA3489@frolo.macqel> <4D6FB260.6010402@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-spurfowl.atl.sa.earthlink.net ([209.86.89.66]:35739
-	"EHLO elasmtp-spurfowl.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752492Ab1CDOUv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 09:20:51 -0500
-In-Reply-To: <20110304110757.GJ20499@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4D6FB260.6010402-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
+Cc: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mark Lord <kernel@teksavvy.com>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 03/04/2011 06:07 AM, Tejun Heo wrote:
-> (cc'ing Jens and James)
+Hello Serguei,
+
+On Thu, Mar 03, 2011 at 06:23:12PM +0300, Sergei Shtylyov wrote:
+> Hello.
 >
-> On Tue, Mar 01, 2011 at 10:47:41AM -0500, Stephen Clark wrote:
->    
->> On 03/01/2011 08:48 AM, Mark Lord wrote:
->>      
->>> On 11-03-01 03:01 AM, Tejun Heo wrote:
->>> ..
->>>        
->>>> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
->>>> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
->>>> block parameter.  Anyways, the drive actually takes longer than 30secs
->>>> to recognize the media?
->>>>          
->>> That slow behaviour is not uncommon, especially as drives struggle
->>> to recognize various forms of copy-protected media (DVD-Video).
->>> A longer default, or tuneable timeout, would help.
->>>        
->> I agree with Mark, this should be a user tuneable value. My 2006 LG
->> dvd-rw frequently times out
->> trying to identify the media. But after numerous timeout error
->> messages it usually suceeds.
->>      
-> I don't think it should be a user tunable value.  It should be
-> something automatic.  I mean, how many would know to go some cryptic
-> place and increase sr probing timeout?
+> Philippe De Muyter wrote:
 >
-> At the same time, increasing it for other cases is quite unattractive,
-> so it probably would be a good idea to only use higher timeout value
-> for the TUR right after media presence change event.
+>> Summary :
 >
-> Anyone interested in doing it?
+>> When I started to listen to a USB serial GPS receiver, the interrupts
+>> of my sata disk were blocked until reboot :(
 >
-> Thanks.
+>> Switching in the BIOS from 'APIC disabled' to 'APIC enabled' made the 
+>> problem
+>> disappear.
 >
->    
-I don't see this as being any different than all the other obfuscated 
-tunable values that already
-exists. At least I could google or look around for a tunable and maybe 
-change it myself instead of having to
-patch the source.
+>>>>>> previously we had all but one usb interrupts on the same line as 
+>>>>>> ata_piix :
+>>>>>>   5:      17183    XT-PIC-XT-PIC    ata_piix, ata_piix, ehci_hcd:usb1, 
+>>>>>> ehci_hcd:usb2, uhci_hcd:usb3, uhci_hcd:usb5, uhci_hcd:usb6, 
+>>>>>> uhci_hcd:usb7, uhci_hcd:usb8
+>>>>>> while now they are spread on different lines : 16, 18, 19, 21 and 22
+>
+>>>>>> So I wonder if there is still a bug, but that it is not triggered 
+>>>>>> anymore.
+>
+>>>>>> Is there a way to tell which interrupt line the USB GPS receiver is 
+>>>>>> connected
+>>>>>> to ?
+>>>>> See which USB bus the device is on, using lsusb.  It should match up
+>>>>> with the usbX number in the above list.
+>
+>>>> Given that I get :
+>
+>>>>   tmp199:~ # lsusb
+>>>>   ...
+>>>>   Bus 007 Device 002: ID 067b:2303 Prolific Technology, Inc. PL2303 
+>>>> Serial Port
+>>>>   tmp199:~ # cat /proc/interrupts
+>>>> 	     CPU0       CPU1
+>>>>   ...
+>>>>    19:     996143     995511   IO-APIC-fasteoi   ata_piix, ata_piix, 
+>>>> uhci_hcd:usb5, uhci_hcd:usb7
+>>>>   tmp199:~ #
+>
+>>>> my USB GPS receiver and my sata disk still share the same interrupt, I 
+>>>> assume ?
+>
+>>>> What's changed now is that this interrupt line is now IO-APIC-fasteoi 
+>>>> instead
+>>>> of XT-PIC-XT-PIC.  Maybe there's something to look at there ?
+>
+>>>>> Glad enabling APIC in your BIOS fixed this.
+>
+>>>> I am glad too :)
+>
+>>> Nothing got "fixed" by doing that.
+>>> Swept under the rug, yes.
+>
+>>> But the bug is still there.
+>
+>> If it is a bug (what I also believe) it is not a new one :
+>
+>> Before installing 2.6.37-20-desktop (opensuse 11.4) on this new hardware,
+>> I had the same problem with 2.6.31.14-0.6-desktop (opensuse 11.2) and
+>> with 2.6.22.18-0.2-default (opensuse 10.3)
+>
+>> The only interesting file where I find the word 'XT-PIC' is
+>> 	arch/alpha/kernel/irq_i8259.c
+>
+>    Why it's interesting if you're not really on Alpha? Because there is 
+> also arch/x86/kernel/i8259.c (and several others)...
+
+Sorry, I picked the wrong line when doing cut'n paste.  Of course, it is
+
+	arch/x86/kernel/i8259.c
+
+Best regards
+
+Philippe
 
 -- 
-
-"They that give up essential liberty to obtain temporary safety,
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty
-decreases."  (Thomas Jefferson)
-
-
-
+Philippe De Muyter +32 2 6101532 Macq SA rue de l'Aeronef 2 B-1140 Bruxelles
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
