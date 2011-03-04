@@ -1,41 +1,31 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: libata: ATA exception error messages in pata_sch module
- (CONFIG_PATA_SCH)
-Date: Fri, 4 Mar 2011 13:15:15 +0000
-Message-ID: <20110304131515.3de216ca@lxorguk.ukuu.org.uk>
-References: <AANLkTikD3NOA7=zOLRaft8TL=sTgPSCHNNKgTP3AfYWD@mail.gmail.com>
-	<4D6D9684.505@gmail.com>
-	<AANLkTikpg2d47rAO=FatTe-53Ju4u+YBXt8VKmani8TN@mail.gmail.com>
-	<AANLkTimyVVZA3-pKyKUTyqTENRi1w2DXHcmAyg-J_8ok@mail.gmail.com>
-	<20110302111251.09d0f1ca@lxorguk.ukuu.org.uk>
-	<AANLkTimRqGkyC=Fqk=ekr3KDCauL92XwMZpj9A9aE0Gc@mail.gmail.com>
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Should minimum_io_size be adjustable (fake 512/4KB drives)?
+Date: Fri, 4 Mar 2011 14:43:15 +0100
+Message-ID: <20110304134315.GA7044@gentoo.trippels.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:48497 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758463Ab1CDNPT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 08:15:19 -0500
-In-Reply-To: <AANLkTimRqGkyC=Fqk=ekr3KDCauL92XwMZpj9A9aE0Gc@mail.gmail.com>
+Received: from ud10.udmedia.de ([194.117.254.50]:40207 "EHLO
+	mail.ud10.udmedia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752492Ab1CDNnS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 08:43:18 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kushal Koolwal <kushalkoolwal@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "David S. Miller" <davem@davemloft.net>, Borislav Petkov <petkovbb@gmail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Thu, 3 Mar 2011 16:18:14 -0800
-Kushal Koolwal <kushalkoolwal@gmail.com> wrote:
+My new hard-drive (Seagate ST1500DL003) is a 4KB sector drive that
+unfortunately reports a "physical sector size" of 512 byte.
 
-> > SCH is going to be on the motherboard so for systems where the detect
-> > fails it's probably easiest to take the PIIX approach and spot them by
-> > svid/sdid on the PCI device.
-> 
-> As suggested by Alan, what would it take to implement this in the SCH
-> driver? Filing this report at bugzilla?
+cat /sys/block/sda/queue/physical_block_size
+512
+cat /sys/block/sda/queue/logical_block_size
+512
+cat /sys/block/sda/queue/minimum_io_size
+512
 
-It won't help in your case as far as I can see because you don't have
-subvendor/subdevice identifiers set just the Intel default ones. That
-means there isn't an immediate PCI way to tell your system from others.
-
-You could try dmidecode I guess, but if one isn't right the other is
-often also missing or incomplete.
+I have created my filesystems on it with "mkfs.xfs -s size=4096".
+Would there be any (performance) benefit if minimum_io_size could be
+adjusted to 4096 (by the administrator) in this case?
+-- 
+Markus
