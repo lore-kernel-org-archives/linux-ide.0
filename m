@@ -1,82 +1,100 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: XT-PIC interrupts blocked by usbserial ? [Was Re: Intel ICH9M
- bug : sata unusable with usbserial]
-Date: Thu, 03 Mar 2011 19:53:42 -0600
-Message-ID: <4D704626.7070001__10977.0321324051$1299204759$gmane$org@gmail.com>
-References: <Pine.LNX.4.44L0.1103031405110.1669-100000@iolanthe.rowland.org> <4D6FEE56.4080006@teksavvy.com> <4D6FF127.6050209@teksavvy.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] ahci: EM supported message type sysfs attribute
+Date: Fri, 04 Mar 2011 09:54:52 +0100
+Message-ID: <20110304085452.83B5EF90E1@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:40977 "EHLO plane.gmane.org"
+Received: from cantor2.suse.de ([195.135.220.15]:50922 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758917Ab1CDCM3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Mar 2011 21:12:29 -0500
-Received: from public by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <public@plane.gmane.org>)
-	id 1PvKDN-0004Y5-Pd
-	for linux-ide@vger.kernel.org; Fri, 04 Mar 2011 02:53:57 +0100
-In-Reply-To: <4D6FF127.6050209@teksavvy.com>
+	id S1754237Ab1CDIo4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Mar 2011 03:44:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <public-kernel-R6A+fiHC8nRWk0Htik3J/w@plane.gmane.org>
-Cc: Alan Stern <public-stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@plane.gmane.org>, Philippe De Muyter <public-phdm-vQo90/bmh3WzQB+pC5nmwQ@plane.gmane.org>, Greg KH <public-greg-U8xfFu+wG4EAvxtiuMwx3w@plane.gmane.org>, Tejun Heo <public-tj-DgEjT+Ai2ygdnm+yROfE0A@plane.gmane.org>, Alan Cox <public-alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@plane.gmane.org>, public-linux-ide-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org, Greg Kroah-Hartman <public-gregkh-l3A5Bk7waGM@plane.gmane.org>, public-linux-usb-u79uwXL29TY76Z2rM5mHXA@plane.gmane.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
 
+This patch adds an sysfs attribute 'em_message_supported' to the
+ahci host device which prints out the supported enclosure management
+message types.
 
-On 03/03/2011 01:51 PM, Mark Lord wrote:
-> On 11-03-03 02:39 PM, Mark Lord wrote:
->> On 11-03-03 02:06 PM, Alan Stern wrote:
->>> On Thu, 3 Mar 2011, Mark Lord wrote:
->>>
->>>> Mmm.. I missed that part.  Very curious, that.
->>>> I wonder if it could be some issue with how the interrupt controller is set up.
->>>>
->>>> Oh the other hand, this USB-GPS is probably a "full-speed" (slow) device,
->>>> using the UHCI interface rather than EHCI.
->>>>
->>>> The uhci_irq() handler (in uhci-hcd.c) appears to always return IRQ_HANDLED,
->>>> even when it didn't actually handle an IRQ.  If I'm reading the code correctly,
->>>> then that's a bug, and could cause this issue given the "right" peripheral
->>>> (eg. your USB-GPS).
->>>>
->>>> I wonder if uhci_irq() can be a bit more clever and only set IRQ_HANDLED
->>>> for interrupts that it actually had to handle?  Or am I reading it wrong?
->>>
->>> Evidently you didn't see these lines near the start of the routine:
->>>
->>> 	status = inw(uhci->io_addr + USBSTS);
->>> 	if (!(status&  ~USBSTS_HCH))	/* shared interrupt, not mine */
->>> 		return IRQ_NONE;
->>
->> No, I saw those.  But I don't blindly trust comments.  :)
->>
->> To me, those lines say, "if nothing is active on our bus, then return IRQ_NONE".
->> With the USB-GPS, the bus probably always as "something active",
->> even if no URBs have been received at that instant in time.
->>
->> But I don't have the UHCI spec handy to check right now.
->
-> Okay, dug out a UHCI 1.1 spec, and the indication from there
-> is that uhci_irq() can return IRQ_HANDLED in some cases where IRQ_NONE
-> is more appropriate.
->
-> Also, it is not masking the "Reserved" bits from the status register.
-> Presumably most implementations "read zero" for those bits,
-> but perhaps not all do.
->
-> Dunno if this is the cause the XT-PIC errors from earlier in this thread though.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/ahci.h    |    4 ++++
+ drivers/ata/libahci.c |   22 ++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-I'm pretty sure the kernel always has to run all of the IRQ handlers for 
-that interrupt even though one of them says "handled" so this wouldn't 
-cause a lost interrupt. One some devices it's not even possible to tell 
-for sure whether the device actually generated an interrupt or not, so 
-the driver has to return IRQ_HANDLED always.
-
-The required behavior is "if you know for sure you did not generate an 
-interrupt, return IRQ_NONE, otherwise return IRQ_HANDLED".
-
-The only thing falsely returning IRQ_HANDLED really hurts is the 
-screaming-IRQ detection, since the kernel can't tell that the interrupt 
-isn't actually being cleared.
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 3e606c3..daf1f01 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -231,6 +231,10 @@ enum {
+ 	EM_CTL_ALHD		= (1 << 26), /* Activity LED */
+ 	EM_CTL_XMT		= (1 << 25), /* Transmit Only */
+ 	EM_CTL_SMB		= (1 << 24), /* Single Message Buffer */
++	EM_CTL_SGPIO		= (1 << 19), /* SGPIO messages supported */
++	EM_CTL_SES		= (1 << 18), /* SES-2 messages supported */
++	EM_CTL_SAFTE		= (1 << 17), /* SAF-TE messages supported */
++	EM_CTL_LED		= (1 << 16), /* LED messages supported */
+ 
+ 	/* em message type */
+ 	EM_MSG_TYPE_LED		= (1 << 0), /* LED */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 26d4523..633159b 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -109,6 +109,8 @@ static ssize_t ahci_read_em_buffer(struct device *dev,
+ static ssize_t ahci_store_em_buffer(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    const char *buf, size_t size);
++static ssize_t ahci_show_em_supported(struct device *dev,
++				      struct device_attribute *attr, char *buf);
+ 
+ static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
+ static DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
+@@ -116,6 +118,7 @@ static DEVICE_ATTR(ahci_host_version, S_IRUGO, ahci_show_host_version, NULL);
+ static DEVICE_ATTR(ahci_port_cmd, S_IRUGO, ahci_show_port_cmd, NULL);
+ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+ 		   ahci_read_em_buffer, ahci_store_em_buffer);
++static DEVICE_ATTR(em_message_supported, S_IRUGO, ahci_show_em_supported, NULL);
+ 
+ struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_link_power_management_policy,
+@@ -126,6 +129,7 @@ struct device_attribute *ahci_shost_attrs[] = {
+ 	&dev_attr_ahci_host_version,
+ 	&dev_attr_ahci_port_cmd,
+ 	&dev_attr_em_buffer,
++	&dev_attr_em_message_supported,
+ 	NULL
+ };
+ EXPORT_SYMBOL_GPL(ahci_shost_attrs);
+@@ -343,6 +347,24 @@ static ssize_t ahci_store_em_buffer(struct device *dev,
+ 	return size;
+ }
+ 
++static ssize_t ahci_show_em_supported(struct device *dev,
++				      struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	u32 em_ctl;
++
++	em_ctl = readl(mmio + HOST_EM_CTL);
++
++	return sprintf(buf, "%s%s%s%s\n",
++		       em_ctl & EM_CTL_LED ? "led " : "",
++		       em_ctl & EM_CTL_SAFTE ? "saf-te " : "",
++		       em_ctl & EM_CTL_SES ? "ses-2 " : "",
++		       em_ctl & EM_CTL_SGPIO ? "sgpio " : "");
++}
++
+ /**
+  *	ahci_save_initial_config - Save and fixup initial config values
+  *	@dev: target AHCI device
+-- 
+1.6.0.2
 
