@@ -1,31 +1,73 @@
-From: Markus Trippelsdorf <markus@trippelsdorf.de>
-Subject: Should minimum_io_size be adjustable (fake 512/4KB drives)?
-Date: Fri, 4 Mar 2011 14:43:15 +0100
-Message-ID: <20110304134315.GA7044@gentoo.trippels.de>
+From: Stephen Clark <sclark46@earthlink.net>
+Subject: Re: NEC ND-4550A problems reading DVD-R
+Date: Fri, 04 Mar 2011 09:09:10 -0500
+Message-ID: <4D70F286.5040508@earthlink.net>
+References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com> <4D6D151D.8030307@earthlink.net> <20110304110757.GJ20499@htj.dyndns.org>
+Reply-To: sclark46@earthlink.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ud10.udmedia.de ([194.117.254.50]:40207 "EHLO
-	mail.ud10.udmedia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752492Ab1CDNnS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 08:43:18 -0500
-Content-Disposition: inline
+Received: from elasmtp-spurfowl.atl.sa.earthlink.net ([209.86.89.66]:35739
+	"EHLO elasmtp-spurfowl.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752492Ab1CDOUv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 09:20:51 -0500
+In-Reply-To: <20110304110757.GJ20499@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mark Lord <kernel@teksavvy.com>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-My new hard-drive (Seagate ST1500DL003) is a 4KB sector drive that
-unfortunately reports a "physical sector size" of 512 byte.
+On 03/04/2011 06:07 AM, Tejun Heo wrote:
+> (cc'ing Jens and James)
+>
+> On Tue, Mar 01, 2011 at 10:47:41AM -0500, Stephen Clark wrote:
+>    
+>> On 03/01/2011 08:48 AM, Mark Lord wrote:
+>>      
+>>> On 11-03-01 03:01 AM, Tejun Heo wrote:
+>>> ..
+>>>        
+>>>> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
+>>>> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
+>>>> block parameter.  Anyways, the drive actually takes longer than 30secs
+>>>> to recognize the media?
+>>>>          
+>>> That slow behaviour is not uncommon, especially as drives struggle
+>>> to recognize various forms of copy-protected media (DVD-Video).
+>>> A longer default, or tuneable timeout, would help.
+>>>        
+>> I agree with Mark, this should be a user tuneable value. My 2006 LG
+>> dvd-rw frequently times out
+>> trying to identify the media. But after numerous timeout error
+>> messages it usually suceeds.
+>>      
+> I don't think it should be a user tunable value.  It should be
+> something automatic.  I mean, how many would know to go some cryptic
+> place and increase sr probing timeout?
+>
+> At the same time, increasing it for other cases is quite unattractive,
+> so it probably would be a good idea to only use higher timeout value
+> for the TUR right after media presence change event.
+>
+> Anyone interested in doing it?
+>
+> Thanks.
+>
+>    
+I don't see this as being any different than all the other obfuscated 
+tunable values that already
+exists. At least I could google or look around for a tunable and maybe 
+change it myself instead of having to
+patch the source.
 
-cat /sys/block/sda/queue/physical_block_size
-512
-cat /sys/block/sda/queue/logical_block_size
-512
-cat /sys/block/sda/queue/minimum_io_size
-512
-
-I have created my filesystems on it with "mkfs.xfs -s size=4096".
-Would there be any (performance) benefit if minimum_io_size could be
-adjusted to 4096 (by the administrator) in this case?
 -- 
-Markus
+
+"They that give up essential liberty to obtain temporary safety,
+deserve neither liberty nor safety."  (Ben Franklin)
+
+"The course of history shows that as a government grows, liberty
+decreases."  (Thomas Jefferson)
+
+
+
