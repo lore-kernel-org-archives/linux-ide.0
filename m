@@ -1,41 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Include WWN ID in inquiry VPD emulation
-Date: Fri, 04 Mar 2011 12:22:31 -0500
-Message-ID: <4D711FD7.6080507@pobox.com>
-References: <20110304085501.8B331F90E1@ochil.suse.de> <20110304170904.GW20499@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Kristen Carlson Accardi <kristen@linux.intel.com>
+Subject: [PATCH] libata: Power off empty ports
+Date: Fri,  4 Mar 2011 10:24:11 -0800
+Message-ID: <1299263051-3739-1-git-send-email-kristen@linux.intel.com>
+References: <20110304090644.GC20499@htj.dyndns.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:34205 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759919Ab1CDRWe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 12:22:34 -0500
-Received: by qyk7 with SMTP id 7so364306qyk.19
-        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2011 09:22:34 -0800 (PST)
-In-Reply-To: <20110304170904.GW20499@htj.dyndns.org>
+Received: from mga09.intel.com ([134.134.136.24]:18736 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752095Ab1CDSWD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 4 Mar 2011 13:22:03 -0500
+In-Reply-To: <20110304090644.GC20499@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Kristen Carlson Accardi <kristen@linux.intel.com>
 
-On 03/04/2011 12:09 PM, Tejun Heo wrote:
-> Hello, Hannes.
->
-> On Fri, Mar 04, 2011 at 09:55:01AM +0100, Hannes Reinecke wrote:
->> +static inline int ata_id_has_wwn(const u16 *id)
->> +{
->> +	if ((id[ATA_ID_CSF_DEFAULT]&  0xC000) != 0x4000)
->> +		return 0;
->> +	return id[ATA_ID_CSF_DEFAULT]&  (1<<  8);
->> +}
->
-> Can you please make this return bool?  Otherwise,
+Give users the option of completely powering off unoccupied
+SATA ports using the existing min_power link_power_management_policy
+option.  When the use selects this option on an empty port, we
+will power the port off by setting DET to off.  For occupied ports,
+behavior is unchanged.
 
-And if you're highly motivated, a separate patch to update 
-include/linux/ata.h to return bool for obvious ata_id_has_xxx functions 
-would be nice too.
+Signed-off-by: Kristen Carlson Accardi <kristen@linux.intel.com>
+---
+ drivers/ata/libata-core.c |   10 ++++++++--
+ drivers/ata/libata-eh.c   |    2 +-
+ include/linux/libata.h    |    1 +
+ 3 files changed, 10 insertions(+), 3 deletions(-)
 
-But yes, including WWN here is just fine.
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d4e52e2..a650bef 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3619,8 +3619,14 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		scontrol |= (0x2 << 8);
+ 		break;
+ 	case ATA_LPM_MIN_POWER:
+-		/* no restrictions on LPM transitions */
+-		scontrol &= ~(0x3 << 8);
++		if (ata_link_nr_enabled(link) > 0)
++			/* no restrictions on LPM transitions */
++			scontrol &= ~(0x3 << 8);
++		else {
++			/* empty port, power off */
++			scontrol &= ~0xf;
++			scontrol |= (0x1 << 2);
++		}
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 17a6378..f0a31b7 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3381,7 +3381,7 @@ fail:
+ 	return rc;
+ }
+ 
+-static int ata_link_nr_enabled(struct ata_link *link)
++int ata_link_nr_enabled(struct ata_link *link)
+ {
+ 	struct ata_device *dev;
+ 	int cnt = 0;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c9c5d7a..8e78052 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1155,6 +1155,7 @@ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+ 		      ata_postreset_fn_t postreset);
+ extern void ata_std_error_handler(struct ata_port *ap);
++extern int ata_link_nr_enabled(struct ata_link *link);
+ 
+ /*
+  * Base operations to inherit from and initializers for sht
+-- 
+1.7.3.1
 
