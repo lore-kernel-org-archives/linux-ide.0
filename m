@@ -1,41 +1,52 @@
-From: Kushal Koolwal <kushalkoolwal@gmail.com>
-Subject: Re: libata: ATA exception error messages in pata_sch module (CONFIG_PATA_SCH)
-Date: Fri, 4 Mar 2011 11:23:58 -0800
-Message-ID: <AANLkTi=dEm3ZjATNCJ_Q43y8EFy5fFpXbgAzBus=E3S5@mail.gmail.com>
-References: <AANLkTikD3NOA7=zOLRaft8TL=sTgPSCHNNKgTP3AfYWD@mail.gmail.com>
-	<4D6D9684.505@gmail.com>
-	<AANLkTikpg2d47rAO=FatTe-53Ju4u+YBXt8VKmani8TN@mail.gmail.com>
-	<AANLkTimyVVZA3-pKyKUTyqTENRi1w2DXHcmAyg-J_8ok@mail.gmail.com>
-	<20110302111251.09d0f1ca@lxorguk.ukuu.org.uk>
-	<AANLkTimRqGkyC=Fqk=ekr3KDCauL92XwMZpj9A9aE0Gc@mail.gmail.com>
-	<20110304131515.3de216ca@lxorguk.ukuu.org.uk>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: NEC ND-4550A problems reading DVD-R
+Date: Fri, 04 Mar 2011 23:16:46 +0100
+Message-ID: <4D7164CE.80009@kernel.dk>
+References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com> <4D6D151D.8030307@earthlink.net> <20110304110757.GJ20499@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35676 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759729Ab1CDTX7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2011 14:23:59 -0500
-Received: by iyb26 with SMTP id 26so2176642iyb.19
-        for <linux-ide@vger.kernel.org>; Fri, 04 Mar 2011 11:23:59 -0800 (PST)
-In-Reply-To: <20110304131515.3de216ca@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20110304110757.GJ20499@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Stephen Clark <sclark46@earthlink.net>, Mark Lord <kernel@teksavvy.com>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "David S. Miller" <davem@davemloft.net>, Borislav Petkov <petkovbb@gmail.com>, linux-ide@vger.kernel.org
 
-> It won't help in your case as far as I can see because you don't have
-> subvendor/subdevice identifiers set just the Intel default ones.
-If that is something that can be set by the BIOS (firmware) then it
-should not be a problem as I do have access to firmware person for
-this system.
+On 2011-03-04 12:07, Tejun Heo wrote:
+> (cc'ing Jens and James)
+> 
+> On Tue, Mar 01, 2011 at 10:47:41AM -0500, Stephen Clark wrote:
+>> On 03/01/2011 08:48 AM, Mark Lord wrote:
+>>> On 11-03-01 03:01 AM, Tejun Heo wrote:
+>>> ..
+>>>> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
+>>>> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
+>>>> block parameter.  Anyways, the drive actually takes longer than 30secs
+>>>> to recognize the media?
+>>> That slow behaviour is not uncommon, especially as drives struggle
+>>> to recognize various forms of copy-protected media (DVD-Video).
+>>> A longer default, or tuneable timeout, would help.
+>>
+>> I agree with Mark, this should be a user tuneable value. My 2006 LG
+>> dvd-rw frequently times out
+>> trying to identify the media. But after numerous timeout error
+>> messages it usually suceeds.
+> 
+> I don't think it should be a user tunable value.  It should be
+> something automatic.  I mean, how many would know to go some cryptic
+> place and increase sr probing timeout?
+> 
+> At the same time, increasing it for other cases is quite unattractive,
+> so it probably would be a good idea to only use higher timeout value
+> for the TUR right after media presence change event.
+> 
+> Anyone interested in doing it?
 
-> You could try dmidecode I guess, but if one isn't right the other is
-> often also missing or incomplete.
-Again, I can provide you the exact SMB1 and SMB2 structure information
-(System Mfg and System Name) that will be reported by the BIOS to the
-Linux kernel. In fact I confirmed that the updated BIOS version for
-this system will have the SMB1 and SMB2 fields set in the BIOS to
-identify the system for Linux kernel.
+A higher timeout would be the easy fix. And unless there's a solid way
+to detect whether the drive is truly hung or just busy trying to grok
+the media, I think it's the only feasible solution.
 
-Will that help?
+-- 
+Jens Axboe
+
