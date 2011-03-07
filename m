@@ -1,34 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Power off empty ports
-Date: Mon, 7 Mar 2011 18:48:05 +0100
-Message-ID: <20110307174805.GJ20499@htj.dyndns.org>
-References: <20110304090644.GC20499@htj.dyndns.org>
- <1299263051-3739-1-git-send-email-kristen@linux.intel.com>
- <20110304183836.GZ20499@htj.dyndns.org>
- <20110304104756.20451b33@kcaccard-MOBL3>
- <20110305080158.GC20499@htj.dyndns.org>
- <20110307093742.4aaf8386@kcaccard-MOBL3>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call directly into q->request_fn() __blk_run_queue()
+Date: Mon, 07 Mar 2011 14:33:56 -0500
+Message-ID: <x49r5aisp23.fsf@segfault.boston.devel.redhat.com>
+References: <20110217111511.GQ19830@htj.dyndns.org>
+	<20110217111619.GR19830@htj.dyndns.org>
+	<AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
+	<20110218094903.GF21209@htj.dyndns.org> <4D6E4A46.1040709@kernel.dk>
+	<20110304182507.GY20499@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51885 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781Ab1CGR63 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2011 12:58:29 -0500
-Received: by fxm17 with SMTP id 17so4320428fxm.19
-        for <linux-ide@vger.kernel.org>; Mon, 07 Mar 2011 09:58:28 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20110307093742.4aaf8386@kcaccard-MOBL3>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110304182507.GY20499@htj.dyndns.org> (Tejun Heo's message of
+	"Fri, 4 Mar 2011 19:25:07 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kristen Carlson Accardi <kristen@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
 
-On Mon, Mar 07, 2011 at 09:37:42AM -0800, Kristen Carlson Accardi wrote:
-> debating this is even more of a waste of an operation, so I'll be glad
-> to do this whatever way suites your taste.
+Tejun Heo <tj@kernel.org> writes:
 
-Great, thank you.
+> Hello, Jens.
+>
+> On Wed, Mar 02, 2011 at 08:46:46AM -0500, Jens Axboe wrote:
+>> > Right, thanks.  Jens, after you apply the two fixes for 2.6.38, I can
+>> > create a merge branch for for-2.6.39/core which you can pull.  Would
+>> > that work for you?
+>> 
+>> Thanks, that would be great. I'm applying them now.
+>
+> Okay, please pull from the following branch to receive the merge
+> between linux-2.6-block:for-linus and :for-2.6.39/core.
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-for-2.6.39-core
+>
+> HEAD is e83a46bbb1d4c03defd733a64b727632a40059ad but git.korg seems a
+> bit slow to sync, so if you don't see the commit there, please pull
+> from master.korg.
+>
+>  ssh://master.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-for-2.6.39-core
+>
+> Thanks.
 
--- 
-tejun
+I know I'm coming to the party late (and maybe wrong), but I've got some
+questions here.
+
+Tejun, you introduced a commit to the ide driver that made it block in
+its request function.  As far as I know, that's not allowed.  For scsi,
+at least, it has always allowed calling back into the request function
+from the completion handler, and I think this is actully the common case
+(not some corner case).
+
+So, why doesn't the ide driver see calls back into its request function
+from the completion handler?  It's clear that it calls blk_end_request
+from ide_end_rq, which can definitely call __blk_run_queue.  In other
+words, why is it that the flush requests are triggerring this problem
+while normal I/O isn't?
+
+I think the real issue may just be that the ide driver is blocking in
+its request function.  What have I missed?
+
+Thanks!
+Jeff
