@@ -1,43 +1,48 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: Include WWN ID in inquiry VPD emulation
-Date: Mon, 07 Mar 2011 03:27:41 -0500
-Message-ID: <4D7496FD.6040202@pobox.com>
-References: <20110304085501.8B331F90E1@ochil.suse.de> <20110304170904.GW20499@htj.dyndns.org> <4D711FD7.6080507@pobox.com> <4D748FF8.1070903@suse.de>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call  directly
+ into q->request_fn() __blk_run_queue()
+Date: Mon, 07 Mar 2011 09:41:04 +0100
+Message-ID: <4D749A20.9080701@kernel.dk>
+References: <20110217111511.GQ19830@htj.dyndns.org> <20110217111619.GR19830@htj.dyndns.org> <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com> <20110218094903.GF21209@htj.dyndns.org> <4D6E4A46.1040709@kernel.dk> <20110304182507.GY20499@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55365 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255Ab1CGI1z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2011 03:27:55 -0500
-Received: by vxi39 with SMTP id 39so3518504vxi.19
-        for <linux-ide@vger.kernel.org>; Mon, 07 Mar 2011 00:27:54 -0800 (PST)
-In-Reply-To: <4D748FF8.1070903@suse.de>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:40352 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751264Ab1CGIlH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Mar 2011 03:41:07 -0500
+In-Reply-To: <20110304182507.GY20499@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 03/07/2011 02:57 AM, Hannes Reinecke wrote:
-> On 03/04/2011 06:22 PM, Jeff Garzik wrote:
->> And if you're highly motivated, a separate patch to update
->> include/linux/ata.h to return bool for obvious ata_id_has_xxx functions
->> would be nice too.
+On 2011-03-04 19:25, Tejun Heo wrote:
+> Hello, Jens.
+> 
+> On Wed, Mar 02, 2011 at 08:46:46AM -0500, Jens Axboe wrote:
+>>> Right, thanks.  Jens, after you apply the two fixes for 2.6.38, I can
+>>> create a merge branch for for-2.6.39/core which you can pull.  Would
+>>> that work for you?
+>>
+>> Thanks, that would be great. I'm applying them now.
+> 
+> Okay, please pull from the following branch to receive the merge
+> between linux-2.6-block:for-linus and :for-2.6.39/core.
+> 
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-for-2.6.39-core
+> 
+> HEAD is e83a46bbb1d4c03defd733a64b727632a40059ad but git.korg seems a
+> bit slow to sync, so if you don't see the commit there, please pull
+> from master.korg.
+> 
+>  ssh://master.kernel.org/pub/scm/linux/kernel/git/tj/misc.git block-for-2.6.39-core
+> 
+> Thanks.
 
-> Like this?
+Pulled, thanks Tejun.
 
-> -static inline int ata_id_has_fua(const u16 *id)
-> +static inline bool ata_id_has_fua(const u16 *id)
->  {
->  	if ((id[ATA_ID_CFSSE] & 0xC000) != 0x4000)
->  		return 0;
->  	return id[ATA_ID_CFSSE] & (1 << 6);
->  }
-
-Not _quite_ that easy...  one must also s/0/false/ and s/1/true/ where 
-the return value is explicit, rather than the result of an expression.
-
-	Jeff
-
+-- 
+Jens Axboe
 
