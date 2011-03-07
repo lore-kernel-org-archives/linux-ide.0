@@ -1,62 +1,85 @@
-From: Prabhakar Kushwaha <prabhakar@freescale.com>
-Subject: [PATCH] driver/FSL SATA:Fix wrong Device Error Register usage
-Date: Mon, 7 Mar 2011 10:00:21 +0530
-Message-ID: <1299472221-3613-1-git-send-email-prabhakar@freescale.com>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH] libata: Include WWN ID in inquiry VPD emulation
+Date: Mon, 07 Mar 2011 08:56:44 +0100
+Message-ID: <20110307075644.43CD0F90E1@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:49269
-	"EHLO VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751787Ab1CGE3c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2011 23:29:32 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:45717 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752189Ab1CGHqf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Mar 2011 02:46:35 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, meet2prabhu@gmail.com, linuxppc-dev@lists.ozlabs.org, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-When a single device error is detected, the device under the error is indicated
-by the error bit set in the DER. There is a one to one mapping between register
-bit and devices on Port multiplier(PMP) i.e. bit 0 represents PMP device 0 and
-bit 1 represents PMP device 1 etc.
 
-Current implementation treats Device error register value as device number not
-set of bits representing multiple device on PMP. It is changed to consider bit
-level.
-No need to check for each set bit as all command is going to be aborted.
+As per SAT-3 the WWN ID should be included in the VPD page 0x83
+(device identification) emulation.
 
-Signed-off-by: Prabhakar Kushwaha <prabhakar@freescale.com>
-Signed-off-by: Ashish Kalra <B00888@freescale.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch master)
+ drivers/ata/libata-scsi.c |   11 +++++++++++
+ include/linux/ata.h       |    7 +++++++
+ 2 files changed, 18 insertions(+), 0 deletions(-)
 
- This patch is already gone through review of linuxppc-dev mail list.
- Making CC linuxppc-dev@lists.ozlabs.org
-
- drivers/ata/sata_fsl.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index b0214d0..895771c 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1040,12 +1040,14 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 600f635..e60d9e4 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2056,6 +2056,17 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
+ 		      ATA_ID_SERNO_LEN);
+ 	num += ATA_ID_SERNO_LEN;
  
- 		/* find out the offending link and qc */
- 		if (ap->nr_pmp_links) {
-+			unsigned int dev_num;
- 			dereg = ioread32(hcr_base + DE);
- 			iowrite32(dereg, hcr_base + DE);
- 			iowrite32(cereg, hcr_base + CE);
++	if (ata_id_has_wwn(args->id)) {
++		/* SAT defined lu world wide name */
++		/* piv=0, assoc=lu, code_set=binary, designator=NAA */
++		rbuf[num + 0] = 1;
++		rbuf[num + 1] = 3;
++		rbuf[num + 3] = ATA_ID_WWN_LEN;
++		num += 4;
++		ata_id_string(args->id, (unsigned char *) rbuf + num,
++			      ATA_ID_WWN, ATA_ID_WWN_LEN);
++		num += ATA_ID_WWN_LEN;
++	}
+ 	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
+ 	return 0;
+ }
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 0c4929f..198e1ea 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -89,6 +89,7 @@ enum {
+ 	ATA_ID_SPG		= 98,
+ 	ATA_ID_LBA_CAPACITY_2	= 100,
+ 	ATA_ID_SECTOR_SIZE	= 106,
++	ATA_ID_WWN		= 108,
+ 	ATA_ID_LOGICAL_SECTOR_SIZE	= 117,	/* and 118 */
+ 	ATA_ID_LAST_LUN		= 126,
+ 	ATA_ID_DLF		= 128,
+@@ -103,6 +104,7 @@ enum {
+ 	ATA_ID_SERNO_LEN	= 20,
+ 	ATA_ID_FW_REV_LEN	= 8,
+ 	ATA_ID_PROD_LEN		= 40,
++	ATA_ID_WWN_LEN		= 8,
  
--			if (dereg < ap->nr_pmp_links) {
--				link = &ap->pmp_link[dereg];
-+			dev_num = ffs(dereg)-1;
-+			if (dev_num < ap->nr_pmp_links) {
-+				link = &ap->pmp_link[dev_num];
- 				ehi = &link->eh_info;
- 				qc = ata_qc_from_tag(ap, link->active_tag);
- 				/*
+ 	ATA_PCI_CTL_OFS		= 2,
+ 
+@@ -815,6 +817,11 @@ static inline int ata_id_has_unload(const u16 *id)
+ 	return 0;
+ }
+ 
++static inline bool ata_id_has_wwn(const u16 *id)
++{
++	return (id[ATA_ID_CSF_DEFAULT] & 0xC100) == 0x4100;
++}
++
+ static inline int ata_id_form_factor(const u16 *id)
+ {
+ 	u16 val = id[168];
 -- 
-1.7.3
-
+1.6.0.2
 
