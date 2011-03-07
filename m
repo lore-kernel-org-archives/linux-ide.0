@@ -1,18 +1,18 @@
 From: Prabhakar Kushwaha <prabhakar@freescale.com>
 Subject: [PATCH] driver/FSL SATA: Update RX_WATER_MARK for TRANSCFG
-Date: Mon, 7 Mar 2011 09:28:10 +0530
-Message-ID: <1299470290-3451-1-git-send-email-prabhakar@freescale.com>
+Date: Mon, 7 Mar 2011 09:59:30 +0530
+Message-ID: <1299472170-3580-1-git-send-email-prabhakar@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:21546
-	"EHLO VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754959Ab1CGD5W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2011 22:57:22 -0500
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:3324 "EHLO
+	VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753555Ab1CGE27 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2011 23:28:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, meet2prabhu@gmail.com, Prabhakar Kushwaha <prabhakar@freescale.com>
+Cc: jgarzik@pobox.com, meet2prabhu@gmail.com, linuxppc-dev@lists.ozlabs.org, Prabhakar Kushwaha <prabhakar@freescale.com>
 
 RX_WATER_MARK sets the number of locations in Rx FIFO that can be used before
 the transport layer instructs the link layer to transmit HOLDS. Note that it
@@ -27,6 +27,7 @@ Signed-off-by: Prabhakar Kushwaha <prabhakar@freescale.com>
  git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch master)
 
  This patch is already gone through review of linuxppc-dev mail list.
+ Making CC linuxppc-dev@lists.ozlabs.org
 
  drivers/ata/sata_fsl.c |   12 ++++++++++++
  1 files changed, 12 insertions(+), 0 deletions(-)
