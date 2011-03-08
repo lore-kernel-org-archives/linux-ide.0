@@ -1,63 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call
- directly into q->request_fn() __blk_run_queue()
-Date: Tue, 8 Mar 2011 08:54:58 +0100
-Message-ID: <20110308075458.GL20499@htj.dyndns.org>
-References: <20110217111619.GR19830@htj.dyndns.org>
- <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
- <20110218094903.GF21209@htj.dyndns.org>
- <4D6E4A46.1040709@kernel.dk>
- <20110304182507.GY20499@htj.dyndns.org>
- <x49r5aisp23.fsf@segfault.boston.devel.redhat.com>
- <4D7533B1.3070308@kernel.dk>
- <x49mxl6sot4.fsf@segfault.boston.devel.redhat.com>
- <4D7534D6.7020000@kernel.dk>
- <x49ipvusoaj.fsf@segfault.boston.devel.redhat.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH][v2] driver/FSL SATA:Fix wrong Device Error Register usage
+Date: Tue, 8 Mar 2011 11:39:02 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AC6E@saturn3.aculab.com>
+References: <1299555095-2967-1-git-send-email-prabhakar@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45287 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255Ab1CHHzF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Mar 2011 02:55:05 -0500
-Content-Disposition: inline
-In-Reply-To: <x49ipvusoaj.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <1299555095-2967-1-git-send-email-prabhakar@freescale.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: Prabhakar Kushwaha <prabhakar@freescale.com>, linux-ide@vger.kernel.org
+Cc: meet2prabhu@gmail.com, Ashish Kalra <B00888@freescale.com>, jgarzik@pobox.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
+ 
+>  Case when ffs return will never arise.This scenario is 
+> already been discussed
+>  on linuxppc-dev@lists.ozlabs.org. Please see below explanation:
+>  sata_fsl_error_intr() is called during device error.The 
+> mentioned scenario
+>  will never comes. It can be observed via code:-
+>         if (cereg) {   --> cereg is set on command error. 
+> Means there is at least 1 device present.
 
-On Mon, Mar 07, 2011 at 02:50:28PM -0500, Jeff Moyer wrote:
-> > But yes, it sounds like IDE is violating this rule and that's why it was
-> > broken. Even with that, having explicit control of the queue running
-> > does make sense.
+This all relies on the hardware working properly, and
+nothing else accidentally clearing the device 'error'
+bit mask.
 
-Yeah, IDE is the only one which actually depends on it.  At the time I
-thought more drivers would use the sleeping context but that didn't
-happen (yet).  That said, I think it's generally a good idea to
-guarantee context on the issue path (the request_lock requirement
-makes it quite ugly to use but that's a separate issue).  It makes
-things much easier - e.g. we can use mempool and friends for forward
-progress guarantee instead of doing explicit retrying which also can
-hide deadlocks quite effectively.
+Being slightly defensive when the out of range value
+causes an array subscript error seems sensible.
 
-> Well, I wonder if it makes sense *in this case*.  With all of the work
-> going into optimizing the flushing, is deferring work to kblockd really
-> the best idea?  Tejun, do you know if it has any measurable impact?
+It isn't as though the code size or execution time
+matters here.
 
-I don't think it matters.  First of all, the overhead itself isn't
-that big to begin with.  More importantly, the flush optimization is
-not about squeezing out the last cpu cycles out of the existing path.
-It's about consolidating similar operations and thus increasing
-scalability when a storm of fsync's are issued in parallel likely with
-a lot of other IOs.  The kicking path won't be used at all on busy
-queues (queue won't be empty).
-
-So, I don't think there's anything to worry about here.
-
-Thanks.
-
--- 
-tejun
+	David
