@@ -1,88 +1,63 @@
-From: Prabhakar Kushwaha <prabhakar@freescale.com>
-Subject: [PATCH][v2] driver/FSL SATA:Fix wrong Device Error Register usage
-Date: Tue, 8 Mar 2011 09:01:35 +0530
-Message-ID: <1299555095-2967-1-git-send-email-prabhakar@freescale.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call
+ directly into q->request_fn() __blk_run_queue()
+Date: Tue, 8 Mar 2011 08:54:58 +0100
+Message-ID: <20110308075458.GL20499@htj.dyndns.org>
+References: <20110217111619.GR19830@htj.dyndns.org>
+ <AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
+ <20110218094903.GF21209@htj.dyndns.org>
+ <4D6E4A46.1040709@kernel.dk>
+ <20110304182507.GY20499@htj.dyndns.org>
+ <x49r5aisp23.fsf@segfault.boston.devel.redhat.com>
+ <4D7533B1.3070308@kernel.dk>
+ <x49mxl6sot4.fsf@segfault.boston.devel.redhat.com>
+ <4D7534D6.7020000@kernel.dk>
+ <x49ipvusoaj.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:45502
-	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754050Ab1CHDbQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2011 22:31:16 -0500
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45287 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255Ab1CHHzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Mar 2011 02:55:05 -0500
+Content-Disposition: inline
+In-Reply-To: <x49ipvusoaj.fsf@segfault.boston.devel.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com, meet2prabhu@gmail.com, linuxppc-dev@lists.ozlabs.org, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-When a single device error is detected, the device under the error is indicated
-by the error bit set in the DER. There is a one to one mapping between register
-bit and devices on Port multiplier(PMP) i.e. bit 0 represents PMP device 0 and
-bit 1 represents PMP device 1 etc.
+Hello,
 
-Current implementation treats Device error register value as device number not
-set of bits representing multiple device on PMP. It is changed to consider bit
-level.
-No need to check for each set bit as all command is going to be aborted.
+On Mon, Mar 07, 2011 at 02:50:28PM -0500, Jeff Moyer wrote:
+> > But yes, it sounds like IDE is violating this rule and that's why it was
+> > broken. Even with that, having explicit control of the queue running
+> > does make sense.
 
-Signed-off-by: Ashish Kalra <B00888@freescale.com>
-Signed-off-by: Prabhakar Kushwaha <prabhakar@freescale.com>
----
+Yeah, IDE is the only one which actually depends on it.  At the time I
+thought more drivers would use the sleeping context but that didn't
+happen (yet).  That said, I think it's generally a good idea to
+guarantee context on the issue path (the request_lock requirement
+makes it quite ugly to use but that's a separate issue).  It makes
+things much easier - e.g. we can use mempool and friends for forward
+progress guarantee instead of doing explicit retrying which also can
+hide deadlocks quite effectively.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch master)
+> Well, I wonder if it makes sense *in this case*.  With all of the work
+> going into optimizing the flushing, is deferring work to kblockd really
+> the best idea?  Tejun, do you know if it has any measurable impact?
 
- This patch is already gone through review of linuxppc-dev mail list.
- Making CC linuxppc-dev@lists.ozlabs.org
+I don't think it matters.  First of all, the overhead itself isn't
+that big to begin with.  More importantly, the flush optimization is
+not about squeezing out the last cpu cycles out of the existing path.
+It's about consolidating similar operations and thus increasing
+scalability when a storm of fsync's are issued in parallel likely with
+a lot of other IOs.  The kicking path won't be used at all on busy
+queues (queue won't be empty).
 
- Changes for v2: Incorporated Sergei Shtylyov's comment
-	- Put space after -
+So, I don't think there's anything to worry about here.
 
- Case when ffs return will never arise.This scenario is already been discussed
- on linuxppc-dev@lists.ozlabs.org. Please see below explanation:
- sata_fsl_error_intr() is called during device error.The mentioned scenario
- will never comes. It can be observed via code:-
-        if (cereg) {   --> cereg is set on command error. Means there is at least 1 device present.
-                abort = 1;
-                ---
-                ---
-                ---
-                /* find out the offending link and qc */
-                if (ap->nr_pmp_links) {  --> if Port multiplier
-                        ---
-                        ---
-                        if ((ffs(dereg)-1) < ap->nr_pmp_links) {
-                ---
-                ---
-                } else {  -->  Single device
-                        dereg = ioread32(hcr_base + DE);
-                        iowrite32(dereg, hcr_base + DE);
-                        iowrite32(cereg, hcr_base + CE);
+Thanks.
 
- drivers/ata/sata_fsl.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index b0214d0..d71e7c2 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1040,12 +1040,15 @@ static void sata_fsl_error_intr(struct ata_port *ap)
- 
- 		/* find out the offending link and qc */
- 		if (ap->nr_pmp_links) {
-+			unsigned int dev_num;
-+
- 			dereg = ioread32(hcr_base + DE);
- 			iowrite32(dereg, hcr_base + DE);
- 			iowrite32(cereg, hcr_base + CE);
- 
--			if (dereg < ap->nr_pmp_links) {
--				link = &ap->pmp_link[dereg];
-+			dev_num = ffs(dereg) - 1;
-+			if (dev_num < ap->nr_pmp_links) {
-+				link = &ap->pmp_link[dev_num];
- 				ehi = &link->eh_info;
- 				qc = ata_qc_from_tag(ap, link->active_tag);
- 				/*
 -- 
-1.7.3
-
-
+tejun
