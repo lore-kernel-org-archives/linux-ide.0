@@ -1,56 +1,88 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v2.6.38-rc5 2/2] block: blk-flush shouldn't call directly into q->request_fn() __blk_run_queue()
-Date: Mon, 07 Mar 2011 14:50:28 -0500
-Message-ID: <x49ipvusoaj.fsf@segfault.boston.devel.redhat.com>
-References: <20110217111511.GQ19830@htj.dyndns.org>
-	<20110217111619.GR19830@htj.dyndns.org>
-	<AANLkTi=rPKN25yZTziv1dz=Ke0db8ZOwUgKFNzWn9+x7@mail.gmail.com>
-	<20110218094903.GF21209@htj.dyndns.org> <4D6E4A46.1040709@kernel.dk>
-	<20110304182507.GY20499@htj.dyndns.org>
-	<x49r5aisp23.fsf@segfault.boston.devel.redhat.com>
-	<4D7533B1.3070308@kernel.dk>
-	<x49mxl6sot4.fsf@segfault.boston.devel.redhat.com>
-	<4D7534D6.7020000@kernel.dk>
+From: Prabhakar Kushwaha <prabhakar@freescale.com>
+Subject: [PATCH][v2] driver/FSL SATA:Fix wrong Device Error Register usage
+Date: Tue, 8 Mar 2011 09:01:35 +0530
+Message-ID: <1299555095-2967-1-git-send-email-prabhakar@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7512 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755274Ab1CGTui (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Mar 2011 14:50:38 -0500
-In-Reply-To: <4D7534D6.7020000@kernel.dk> (Jens Axboe's message of "Mon, 07
-	Mar 2011 20:41:10 +0100")
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:45502
+	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754050Ab1CHDbQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2011 22:31:16 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@gmail.com>, Jan Beulich <JBeulich@novell.com>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, meet2prabhu@gmail.com, linuxppc-dev@lists.ozlabs.org, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
 
-Jens Axboe <axboe@kernel.dk> writes:
+When a single device error is detected, the device under the error is indicated
+by the error bit set in the DER. There is a one to one mapping between register
+bit and devices on Port multiplier(PMP) i.e. bit 0 represents PMP device 0 and
+bit 1 represents PMP device 1 etc.
 
-> On 2011-03-07 20:39, Jeff Moyer wrote:
->>>> I think the real issue may just be that the ide driver is blocking in
->>>> its request function.  What have I missed?
->>>
->>> So the only case where the request_fn is called and you cannot block, is
->>> if you call it from your completion function. Any other invocation
->>> should be from process context. As long as you remember to drop the
->>> queue lock and re-enable interrupts, it should work. It's not great
->>> style and I would not recommend it for a performance environment, but it
->>> should work.
->> 
->> So are you agreeing with me or disagreeing?  ;-)  It sounds to me like
->> you're saying that the ide driver should be able to cope with being
->> called from softirq context.
->
-> I'm just stating how it should work :-)
->
-> But yes, it sounds like IDE is violating this rule and that's why it was
-> broken. Even with that, having explicit control of the queue running
-> does make sense.
+Current implementation treats Device error register value as device number not
+set of bits representing multiple device on PMP. It is changed to consider bit
+level.
+No need to check for each set bit as all command is going to be aborted.
 
-Well, I wonder if it makes sense *in this case*.  With all of the work
-going into optimizing the flushing, is deferring work to kblockd really
-the best idea?  Tejun, do you know if it has any measurable impact?
+Signed-off-by: Ashish Kalra <B00888@freescale.com>
+Signed-off-by: Prabhakar Kushwaha <prabhakar@freescale.com>
+---
 
-Cheers,
-Jeff
+ git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch master)
+
+ This patch is already gone through review of linuxppc-dev mail list.
+ Making CC linuxppc-dev@lists.ozlabs.org
+
+ Changes for v2: Incorporated Sergei Shtylyov's comment
+	- Put space after -
+
+ Case when ffs return will never arise.This scenario is already been discussed
+ on linuxppc-dev@lists.ozlabs.org. Please see below explanation:
+ sata_fsl_error_intr() is called during device error.The mentioned scenario
+ will never comes. It can be observed via code:-
+        if (cereg) {   --> cereg is set on command error. Means there is at least 1 device present.
+                abort = 1;
+                ---
+                ---
+                ---
+                /* find out the offending link and qc */
+                if (ap->nr_pmp_links) {  --> if Port multiplier
+                        ---
+                        ---
+                        if ((ffs(dereg)-1) < ap->nr_pmp_links) {
+                ---
+                ---
+                } else {  -->  Single device
+                        dereg = ioread32(hcr_base + DE);
+                        iowrite32(dereg, hcr_base + DE);
+                        iowrite32(cereg, hcr_base + CE);
+
+ drivers/ata/sata_fsl.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index b0214d0..d71e7c2 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1040,12 +1040,15 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+ 
+ 		/* find out the offending link and qc */
+ 		if (ap->nr_pmp_links) {
++			unsigned int dev_num;
++
+ 			dereg = ioread32(hcr_base + DE);
+ 			iowrite32(dereg, hcr_base + DE);
+ 			iowrite32(cereg, hcr_base + CE);
+ 
+-			if (dereg < ap->nr_pmp_links) {
+-				link = &ap->pmp_link[dereg];
++			dev_num = ffs(dereg) - 1;
++			if (dev_num < ap->nr_pmp_links) {
++				link = &ap->pmp_link[dev_num];
+ 				ehi = &link->eh_info;
+ 				qc = ata_qc_from_tag(ap, link->active_tag);
+ 				/*
+-- 
+1.7.3
+
+
