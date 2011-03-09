@@ -1,18 +1,18 @@
 From: Prabhakar Kushwaha <prabhakar@freescale.com>
 Subject: [PATCH][v3] driver/FSL SATA:Fix wrong Device Error Register usage
-Date: Wed, 9 Mar 2011 12:44:51 +0530
-Message-ID: <1299654891-692-1-git-send-email-prabhakar@freescale.com>
+Date: Wed, 9 Mar 2011 12:47:18 +0530
+Message-ID: <1299655038-727-1-git-send-email-prabhakar@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:27976 "EHLO
-	TX2EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751476Ab1CIHOP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2011 02:14:15 -0500
+Received: from mail-tx2.bigfish.com ([65.55.88.10]:38446 "EHLO
+	TX2EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751478Ab1CIHbr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2011 02:31:47 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linuxppc-release@linux.freescale.net, jgarzik@pobox.com, meet2prabhu@gmail.com, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
+Cc: linuxppc-dev@lists.ozlabs.org, jgarzik@pobox.com, meet2prabhu@gmail.com, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
 
 When a single device error is detected, the device under the error is indicated
 by the error bit set in the DER. There is a one to one mapping between register
