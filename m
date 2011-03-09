@@ -1,70 +1,187 @@
-From: Prabhakar Kushwaha <prabhakar@freescale.com>
-Subject: [PATCH][v3] driver/FSL SATA:Fix wrong Device Error Register usage
-Date: Wed, 9 Mar 2011 12:47:18 +0530
-Message-ID: <1299655038-727-1-git-send-email-prabhakar@freescale.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 04/16] ide: Convert to bdops->check_events()
+Date: Wed,  9 Mar 2011 10:13:24 +0100
+Message-ID: <1299662016-7721-5-git-send-email-tj@kernel.org>
+References: <1299662016-7721-1-git-send-email-tj@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-tx2.bigfish.com ([65.55.88.10]:38446 "EHLO
-	TX2EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751478Ab1CIHbr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2011 02:31:47 -0500
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63889 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348Ab1CIJNv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2011 04:13:51 -0500
+In-Reply-To: <1299662016-7721-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, jgarzik@pobox.com, meet2prabhu@gmail.com, Prabhakar Kushwaha <prabhakar@freescale.com>, Ashish Kalra <B00888@freescale.com>
+To: axboe@kernel.dk, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, hch@infradead.org
+Cc: Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-When a single device error is detected, the device under the error is indicated
-by the error bit set in the DER. There is a one to one mapping between register
-bit and devices on Port multiplier(PMP) i.e. bit 0 represents PMP device 0 and
-bit 1 represents PMP device 1 etc.
+Convert ->media_changed() to the new ->check_events() method.  The
+conversion is mostly mechanical.  The only notable change is that
+cdrom now doesn't generate any event if @slot_nr isn't CDSL_CURRENT.
+It used to return -EINVAL which would be treated as media changed.  As
+media changer isn't supported anyway, this doesn't make any
+difference.
 
-Current implementation treats Device error register value as device number not
-set of bits representing multiple device on PMP. It is changed to consider bit
-level.
-No need to check for each set bit as all command is going to be aborted.
+This makes ide emit the standard disk events and allows kernel event
+polling.  Currently, only MEDIA_CHANGE event is implemented.  Adding
+support for EJECT_REQUEST shouldn't be difficult; however, given that
+ide driver is already deprecated, it probably is best to leave it
+alone.
 
-Signed-off-by: Ashish Kalra <B00888@freescale.com>
-Signed-off-by: Prabhakar Kushwaha <prabhakar@freescale.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Acked-by: Jens Axboe <axboe@kernel.dk>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
 ---
+ drivers/ide/ide-cd.c       |   10 ++++++----
+ drivers/ide/ide-cd.h       |    3 ++-
+ drivers/ide/ide-cd_ioctl.c |    8 ++++----
+ drivers/ide/ide-gd.c       |   14 ++++++++------
+ 4 files changed, 20 insertions(+), 15 deletions(-)
 
- git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch master)
-
- This patch is already gone through review of linuxppc-dev mail list.
- Making CC linuxppc-dev@lists.ozlabs.org
-
- Changes for v2: Incorporated Sergei Shtylyov's comment
-	- Put space after -
-	- added a line
- Changes for v3: Incorporated David Laight's comment
- 	- Condition check for dereg 0 for hardware error
-
- drivers/ata/sata_fsl.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index b0214d0..ad84ddc 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1040,12 +1040,15 @@ static void sata_fsl_error_intr(struct ata_port *ap)
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 0c73fe3..a2e2909 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1177,7 +1177,7 @@ static struct cdrom_device_ops ide_cdrom_dops = {
+ 	.open			= ide_cdrom_open_real,
+ 	.release		= ide_cdrom_release_real,
+ 	.drive_status		= ide_cdrom_drive_status,
+-	.media_changed		= ide_cdrom_check_media_change_real,
++	.check_events		= ide_cdrom_check_events_real,
+ 	.tray_move		= ide_cdrom_tray_move,
+ 	.lock_door		= ide_cdrom_lock_door,
+ 	.select_speed		= ide_cdrom_select_speed,
+@@ -1702,10 +1702,11 @@ static int idecd_ioctl(struct block_device *bdev, fmode_t mode,
+ }
  
- 		/* find out the offending link and qc */
- 		if (ap->nr_pmp_links) {
-+			unsigned int dev_num;
-+
- 			dereg = ioread32(hcr_base + DE);
- 			iowrite32(dereg, hcr_base + DE);
- 			iowrite32(cereg, hcr_base + CE);
  
--			if (dereg < ap->nr_pmp_links) {
--				link = &ap->pmp_link[dereg];
-+			dev_num = ffs(dereg) - 1;
-+			if (dev_num < ap->nr_pmp_links && dereg != 0) {
-+				link = &ap->pmp_link[dev_num];
- 				ehi = &link->eh_info;
- 				qc = ata_qc_from_tag(ap, link->active_tag);
- 				/*
+-static int idecd_media_changed(struct gendisk *disk)
++static unsigned int idecd_check_events(struct gendisk *disk,
++				       unsigned int clearing)
+ {
+ 	struct cdrom_info *info = ide_drv_g(disk, cdrom_info);
+-	return cdrom_media_changed(&info->devinfo);
++	return cdrom_check_events(&info->devinfo, clearing);
+ }
+ 
+ static int idecd_revalidate_disk(struct gendisk *disk)
+@@ -1723,7 +1724,7 @@ static const struct block_device_operations idecd_ops = {
+ 	.open			= idecd_open,
+ 	.release		= idecd_release,
+ 	.ioctl			= idecd_ioctl,
+-	.media_changed		= idecd_media_changed,
++	.check_events		= idecd_check_events,
+ 	.revalidate_disk	= idecd_revalidate_disk
+ };
+ 
+@@ -1790,6 +1791,7 @@ static int ide_cd_probe(ide_drive_t *drive)
+ 	ide_cd_read_toc(drive, &sense);
+ 	g->fops = &idecd_ops;
+ 	g->flags |= GENHD_FL_REMOVABLE;
++	g->events = DISK_EVENT_MEDIA_CHANGE;
+ 	add_disk(g);
+ 	return 0;
+ 
+diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
+index 93a3cf1..1efc936 100644
+--- a/drivers/ide/ide-cd.h
++++ b/drivers/ide/ide-cd.h
+@@ -111,7 +111,8 @@ int cdrom_check_status(ide_drive_t *, struct request_sense *);
+ int ide_cdrom_open_real(struct cdrom_device_info *, int);
+ void ide_cdrom_release_real(struct cdrom_device_info *);
+ int ide_cdrom_drive_status(struct cdrom_device_info *, int);
+-int ide_cdrom_check_media_change_real(struct cdrom_device_info *, int);
++unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *,
++					 unsigned int clearing, int slot_nr);
+ int ide_cdrom_tray_move(struct cdrom_device_info *, int);
+ int ide_cdrom_lock_door(struct cdrom_device_info *, int);
+ int ide_cdrom_select_speed(struct cdrom_device_info *, int);
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 766b3de..2a6bc50 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -79,8 +79,8 @@ int ide_cdrom_drive_status(struct cdrom_device_info *cdi, int slot_nr)
+ 	return CDS_DRIVE_NOT_READY;
+ }
+ 
+-int ide_cdrom_check_media_change_real(struct cdrom_device_info *cdi,
+-				       int slot_nr)
++unsigned int ide_cdrom_check_events_real(struct cdrom_device_info *cdi,
++					 unsigned int clearing, int slot_nr)
+ {
+ 	ide_drive_t *drive = cdi->handle;
+ 	int retval;
+@@ -89,9 +89,9 @@ int ide_cdrom_check_media_change_real(struct cdrom_device_info *cdi,
+ 		(void) cdrom_check_status(drive, NULL);
+ 		retval = (drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED) ? 1 : 0;
+ 		drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
+-		return retval;
++		return retval ? DISK_EVENT_MEDIA_CHANGE : 0;
+ 	} else {
+-		return -EINVAL;
++		return 0;
+ 	}
+ }
+ 
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 35c4b43..c4ffd48 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -285,11 +285,12 @@ static int ide_gd_getgeo(struct block_device *bdev, struct hd_geometry *geo)
+ 	return 0;
+ }
+ 
+-static int ide_gd_media_changed(struct gendisk *disk)
++static unsigned int ide_gd_check_events(struct gendisk *disk,
++					unsigned int clearing)
+ {
+ 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
+ 	ide_drive_t *drive = idkp->drive;
+-	int ret;
++	bool ret;
+ 
+ 	/* do not scan partitions twice if this is a removable device */
+ 	if (drive->dev_flags & IDE_DFLAG_ATTACH) {
+@@ -297,10 +298,10 @@ static int ide_gd_media_changed(struct gendisk *disk)
+ 		return 0;
+ 	}
+ 
+-	ret = !!(drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED);
++	ret = drive->dev_flags & IDE_DFLAG_MEDIA_CHANGED;
+ 	drive->dev_flags &= ~IDE_DFLAG_MEDIA_CHANGED;
+ 
+-	return ret;
++	return ret ? DISK_EVENT_MEDIA_CHANGE : 0;
+ }
+ 
+ static void ide_gd_unlock_native_capacity(struct gendisk *disk)
+@@ -318,7 +319,7 @@ static int ide_gd_revalidate_disk(struct gendisk *disk)
+ 	struct ide_disk_obj *idkp = ide_drv_g(disk, ide_disk_obj);
+ 	ide_drive_t *drive = idkp->drive;
+ 
+-	if (ide_gd_media_changed(disk))
++	if (ide_gd_check_events(disk, 0))
+ 		drive->disk_ops->get_capacity(drive);
+ 
+ 	set_capacity(disk, ide_gd_capacity(drive));
+@@ -340,7 +341,7 @@ static const struct block_device_operations ide_gd_ops = {
+ 	.release		= ide_gd_release,
+ 	.ioctl			= ide_gd_ioctl,
+ 	.getgeo			= ide_gd_getgeo,
+-	.media_changed		= ide_gd_media_changed,
++	.check_events		= ide_gd_check_events,
+ 	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
+ 	.revalidate_disk	= ide_gd_revalidate_disk
+ };
+@@ -412,6 +413,7 @@ static int ide_gd_probe(ide_drive_t *drive)
+ 	if (drive->dev_flags & IDE_DFLAG_REMOVABLE)
+ 		g->flags = GENHD_FL_REMOVABLE;
+ 	g->fops = &ide_gd_ops;
++	g->events = DISK_EVENT_MEDIA_CHANGE;
+ 	add_disk(g);
+ 	return 0;
+ 
 -- 
-1.7.3
-
+1.7.1
 
