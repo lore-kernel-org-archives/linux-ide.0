@@ -1,14 +1,14 @@
 From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Subject: [RFC 1/2] AHCI Add the AHCI SATA feature on MX53 platforms
-Date: Thu, 10 Mar 2011 16:57:32 +0800
-Message-ID: <1299747453-25077-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Subject: [RFC PATCH 1/2] AHCI Add the AHCI SATA feature on MX53 platforms
+Date: Thu, 10 Mar 2011 16:59:41 +0800
+Message-ID: <1299747582-25123-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe003.messaging.microsoft.com ([213.199.154.141]:14357
-	"EHLO DB3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752007Ab1CJI5t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 03:57:49 -0500
+Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.186]:29024
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751852Ab1CJI7y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 03:59:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
