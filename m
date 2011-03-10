@@ -1,177 +1,21 @@
-From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Subject: [RFC PATCH 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
-Date: Thu, 10 Mar 2011 16:59:42 +0800
-Message-ID: <1299747582-25123-2-git-send-email-Hong-Xing.Zhu@freescale.com>
-References: <1299747582-25123-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: Zhu Richard-R65037 <R65037@freescale.com>
+Subject: Recall: [RFC 1/2] AHCI Add the AHCI SATA feature on MX53 platforms
+Date: Thu, 10 Mar 2011 09:00:40 +0000
+Message-ID: <010C9052C42A00499CE76D637FA5EE900C9B57@039-SN1MPN1-001.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:50007
-	"EHLO DB3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751856Ab1CJI77 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 03:59:59 -0500
-In-Reply-To: <1299747582-25123-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.184]:18175
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751853Ab1CJJAm convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Mar 2011 04:00:42 -0500
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <Hong-Xing.Zhu@freescale.com>
+To: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "kernel@pengutronix.de" <kernel@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "eric@eukrea.com" <eric@eukrea.com>, "eric.miao@linaro.org" <eric.miao@linaro.org>, Zhu Richard-R65037 <R65037@freescale.com>
 
-Signed-off-by: Richard Zhu <Hong-Xing.Zhu@freescale.com>
----
- arch/arm/mach-mx5/board-mx53_loco.c |  120 +++++++++++++++++++++++++++++++++++
- 1 files changed, 120 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm/mach-mx5/board-mx53_loco.c b/arch/arm/mach-mx5/board-mx53_loco.c
-index 0a18f8d..9a7bbea 100644
---- a/arch/arm/mach-mx5/board-mx53_loco.c
-+++ b/arch/arm/mach-mx5/board-mx53_loco.c
-@@ -23,11 +23,13 @@
- #include <linux/fec.h>
- #include <linux/delay.h>
- #include <linux/gpio.h>
-+#include <linux/ahci_platform.h>
- 
- #include <mach/common.h>
- #include <mach/hardware.h>
- #include <mach/imx-uart.h>
- #include <mach/iomux-mx53.h>
-+#include <mach/ahci_sata.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -203,6 +205,123 @@ static const struct imxi2c_platform_data mx53_loco_i2c_data __initconst = {
- 	.bitrate = 100000,
- };
- 
-+/* HW Initialization, if return 0, initialization is successful. */
-+static int sata_init(struct device *dev, void __iomem *addr)
-+{
-+	void __iomem *mmio;
-+	struct clk *clk;
-+	int ret = 0;
-+	u32 tmpdata;
-+
-+	clk = clk_get(dev, "imx_sata_clk");
-+	ret = IS_ERR(clk);
-+	if (ret) {
-+		printk(KERN_ERR "IMX AHCI can't get clock.\n");
-+		return ret;
-+	}
-+	ret = clk_enable(clk);
-+	if (ret) {
-+		printk(KERN_ERR "IMX AHCI can't enable clock.\n");
-+		clk_put(clk);
-+		return ret;
-+	}
-+
-+	/* FSL IMX AHCI SATA uses the internal usb phy1 clk on loco */
-+	clk = clk_get(dev, "usb_phy1");
-+	ret = IS_ERR(clk);
-+	if (ret) {
-+		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
-+		goto no_input_clk;
-+	}
-+	ret = clk_enable(clk);
-+	if (ret) {
-+		printk(KERN_ERR "IMX AHCI Can't enable USB PHY1 clock.\n");
-+		clk_put(clk);
-+		goto no_input_clk;
-+	}
-+
-+	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
-+	clk = clk_get(NULL, "ahb_clk");
-+	ret = IS_ERR(clk);
-+	if (ret) {
-+		printk(KERN_ERR "IMX AHCI can't get AHB clock.\n");
-+		goto no_clk;
-+	}
-+
-+	mmio = ioremap(MX53_SATA_BASE_ADDR, SZ_2K);
-+	if (mmio == NULL) {
-+		printk(KERN_ERR "Failed to map SATA REGS\n");
-+		goto no_clk;
-+	}
-+
-+	tmpdata = readl(mmio + HOST_CAP);
-+	if (!(tmpdata & HOST_CAP_SSS)) {
-+		tmpdata |= HOST_CAP_SSS;
-+		writel(tmpdata, mmio + HOST_CAP);
-+	}
-+
-+	if (!(readl(mmio + HOST_PORTS_IMPL) & 0x1))
-+		writel((readl(mmio + HOST_PORTS_IMPL) | 0x1),
-+			mmio + HOST_PORTS_IMPL);
-+
-+	tmpdata = clk_get_rate(clk) / 1000;
-+	writel(tmpdata, mmio + HOST_TIMER1MS);
-+
-+	iounmap(mmio);
-+
-+	return ret;
-+
-+no_clk:
-+	clk = clk_get(dev, "usb_phy1");
-+	if (IS_ERR(clk)) {
-+		clk = NULL;
-+		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
-+	} else {
-+		clk_disable(clk);
-+		clk_put(clk);
-+	}
-+
-+no_input_clk:
-+	clk = clk_get(dev, "imx_sata_clk");
-+	if (IS_ERR(clk)) {
-+		clk = NULL;
-+		printk(KERN_ERR "IMX AHCI can't get clock.\n");
-+	} else {
-+		clk_disable(clk);
-+		clk_put(clk);
-+	}
-+
-+	return ret;
-+}
-+
-+static void sata_exit(struct device *dev)
-+{
-+	struct clk *clk;
-+
-+	clk = clk_get(dev, "usb_phy1");
-+	if (IS_ERR(clk)) {
-+		clk = NULL;
-+		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
-+	} else {
-+		clk_disable(clk);
-+		clk_put(clk);
-+	}
-+
-+	clk = clk_get(dev, "imx_sata_clk");
-+	if (IS_ERR(clk)) {
-+		clk = NULL;
-+		printk(KERN_ERR "IMX AHCI can't get clock.\n");
-+	} else {
-+		clk_disable(clk);
-+		clk_put(clk);
-+	}
-+}
-+
-+static struct ahci_platform_data sata_data = {
-+	.init = sata_init,
-+	.exit = sata_exit,
-+};
-+
- static void __init mx53_loco_board_init(void)
- {
- 	mxc_iomux_v3_setup_multiple_pads(mx53_loco_pads,
-@@ -215,6 +334,7 @@ static void __init mx53_loco_board_init(void)
- 	imx53_add_imx_i2c(1, &mx53_loco_i2c_data);
- 	imx53_add_sdhci_esdhc_imx(0, NULL);
- 	imx53_add_sdhci_esdhc_imx(2, NULL);
-+	imx53_add_ahci_imx(0, &sata_data);
- }
- 
- static void __init mx53_loco_timer_init(void)
--- 
-1.7.1
-
+Zhu Richard-R65037 would like to recall the message, "[RFC 1/2] AHCI Add the AHCI SATA feature on MX53 platforms".
 
