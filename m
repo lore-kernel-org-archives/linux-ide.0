@@ -1,79 +1,177 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 30802] exception & eSATA hard link resets
-Date: Thu, 10 Mar 2011 08:51:10 GMT
-Message-ID: <201103100851.p2A8pAYr025847@demeter2.kernel.org>
-References: <bug-30802-11633@https.bugzilla.kernel.org/>
+From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Subject: [RFC 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
+Date: Thu, 10 Mar 2011 16:57:33 +0800
+Message-ID: <1299747453-25077-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+References: <1299747453-25077-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:56497 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271Ab1CJIvL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 03:51:11 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p2A8pAxZ025848
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2011 08:51:11 GMT
-In-Reply-To: <bug-30802-11633@https.bugzilla.kernel.org/>
+Received: from db3ehsobe003.messaging.microsoft.com ([213.199.154.141]:14418
+	"EHLO DB3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751403Ab1CJI5v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 03:57:51 -0500
+In-Reply-To: <1299747453-25077-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <Hong-Xing.Zhu@freescale.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=30802
+Signed-off-by: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+---
+ arch/arm/mach-mx5/board-mx53_loco.c |  120 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 120 insertions(+), 0 deletions(-)
 
-
-
-
-
---- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-03-10 08:51:08 ---
-Reply-To: zrubish@googlemail.com
-
-Hi,
-it does not recover. I have to reboot.
-Br,
-
-2011/3/10 <bugzilla-daemon@bugzilla.kernel.org>
-
-> https://bugzilla.kernel.org/show_bug.cgi?id=30802
->
->
-> Robert Hancock <hancockrwd@gmail.com> changed:
->
->           What    |Removed                     |Added
->
-> ----------------------------------------------------------------------------
->                 CC|                            |hancockrwd@gmail.com
->
->
->
->
-> --- Comment #3 from Robert Hancock <hancockrwd@gmail.com>  2011-03-10
-> 02:23:40 ---
-> So you're getting stuff like:
->
-> [20698.759685] ata6: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action
-> 0xe
-> frozen
-> [20698.759691] ata6: irq_stat 0x00400040, connection status changed
-> [20698.759697] ata6: SError: { PHYRdyChg CommWake DevExch }
-> [20698.759706] ata6: hard resetting link
->
-> Your controller's reporting a bunch of link state change events occurring.
-> My
-> first inclination is to suspect a problem with the eSATA cable or drive
-> enclosure. A lot of these seem to be rather flaky as far as power and/or
-> the
-> solidity of the cable connections.
->
-> Does it recover if you disconnect/power off and reconnect the drive?
->
-> --
-> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-> ------- You are receiving this mail because: -------
-> You reported the bug.
->
-
+diff --git a/arch/arm/mach-mx5/board-mx53_loco.c b/arch/arm/mach-mx5/board-mx53_loco.c
+index 0a18f8d..9a7bbea 100644
+--- a/arch/arm/mach-mx5/board-mx53_loco.c
++++ b/arch/arm/mach-mx5/board-mx53_loco.c
+@@ -23,11 +23,13 @@
+ #include <linux/fec.h>
+ #include <linux/delay.h>
+ #include <linux/gpio.h>
++#include <linux/ahci_platform.h>
+ 
+ #include <mach/common.h>
+ #include <mach/hardware.h>
+ #include <mach/imx-uart.h>
+ #include <mach/iomux-mx53.h>
++#include <mach/ahci_sata.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -203,6 +205,123 @@ static const struct imxi2c_platform_data mx53_loco_i2c_data __initconst = {
+ 	.bitrate = 100000,
+ };
+ 
++/* HW Initialization, if return 0, initialization is successful. */
++static int sata_init(struct device *dev, void __iomem *addr)
++{
++	void __iomem *mmio;
++	struct clk *clk;
++	int ret = 0;
++	u32 tmpdata;
++
++	clk = clk_get(dev, "imx_sata_clk");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++		return ret;
++	}
++	ret = clk_enable(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't enable clock.\n");
++		clk_put(clk);
++		return ret;
++	}
++
++	/* FSL IMX AHCI SATA uses the internal usb phy1 clk on loco */
++	clk = clk_get(dev, "usb_phy1");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++		goto no_input_clk;
++	}
++	ret = clk_enable(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI Can't enable USB PHY1 clock.\n");
++		clk_put(clk);
++		goto no_input_clk;
++	}
++
++	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
++	clk = clk_get(NULL, "ahb_clk");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get AHB clock.\n");
++		goto no_clk;
++	}
++
++	mmio = ioremap(MX53_SATA_BASE_ADDR, SZ_2K);
++	if (mmio == NULL) {
++		printk(KERN_ERR "Failed to map SATA REGS\n");
++		goto no_clk;
++	}
++
++	tmpdata = readl(mmio + HOST_CAP);
++	if (!(tmpdata & HOST_CAP_SSS)) {
++		tmpdata |= HOST_CAP_SSS;
++		writel(tmpdata, mmio + HOST_CAP);
++	}
++
++	if (!(readl(mmio + HOST_PORTS_IMPL) & 0x1))
++		writel((readl(mmio + HOST_PORTS_IMPL) | 0x1),
++			mmio + HOST_PORTS_IMPL);
++
++	tmpdata = clk_get_rate(clk) / 1000;
++	writel(tmpdata, mmio + HOST_TIMER1MS);
++
++	iounmap(mmio);
++
++	return ret;
++
++no_clk:
++	clk = clk_get(dev, "usb_phy1");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++no_input_clk:
++	clk = clk_get(dev, "imx_sata_clk");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++	return ret;
++}
++
++static void sata_exit(struct device *dev)
++{
++	struct clk *clk;
++
++	clk = clk_get(dev, "usb_phy1");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++	clk = clk_get(dev, "imx_sata_clk");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++}
++
++static struct ahci_platform_data sata_data = {
++	.init = sata_init,
++	.exit = sata_exit,
++};
++
+ static void __init mx53_loco_board_init(void)
+ {
+ 	mxc_iomux_v3_setup_multiple_pads(mx53_loco_pads,
+@@ -215,6 +334,7 @@ static void __init mx53_loco_board_init(void)
+ 	imx53_add_imx_i2c(1, &mx53_loco_i2c_data);
+ 	imx53_add_sdhci_esdhc_imx(0, NULL);
+ 	imx53_add_sdhci_esdhc_imx(2, NULL);
++	imx53_add_ahci_imx(0, &sata_data);
+ }
+ 
+ static void __init mx53_loco_timer_init(void)
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug.
+1.7.1
+
+
