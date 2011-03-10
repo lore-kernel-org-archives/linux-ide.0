@@ -1,97 +1,55 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 30802] exception & eSATA hard link resets
-Date: Thu, 10 Mar 2011 19:40:23 GMT
-Message-ID: <201103101940.p2AJeNpK008906@demeter1.kernel.org>
-References: <bug-30802-11633@https.bugzilla.kernel.org/>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [PATCH] libsas: fix ata list corruption issue
+Date: Thu, 10 Mar 2011 17:13:18 -0600
+Message-ID: <1299798798.11933.167.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:51985 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125Ab1CJTkZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 14:40:25 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p2AJeNbP008908
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 10 Mar 2011 19:40:23 GMT
-In-Reply-To: <bug-30802-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=30802
+I think this stems from a misunderstanding of how the ata error handler
+works.  ata_scsi_cmd_error_handler() gets called with a passed in list
+of commands to handle.  However, that list may still not be empty when
+it exits.  The command ata_scsi_port_error_handler() must be called
+(which takes no list) before the list will be completely emptied.  This
+bites the sas error handler because the two are called from different
+functions and the original list has gone out of scope before
+ata_scsi_port_error_handler() is called. leading to some commands
+dangling on bare stack, which is a potential memory corruption issue.
+Fix this by manually deleting all outstanding commands from the on-stack
+list before it goes out of scope.
+
+James
+
+---
+
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 16c5094..3356bf3 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -802,6 +802,19 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 		if (!list_empty(&sata_q)) {
+ 			ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata cmd error handler\n");
+ 			ata_scsi_cmd_error_handler(shost, ap, &sata_q);
++			/*
++			 * ata's error handler may leave the cmd on the list
++			 * so make sure they don't remain on a stack list
++			 * about to go out of scope.
++			 *
++			 * This looks strange, since the commands are
++			 * now part of no list, but the next error
++			 * action will be ata_port_error_handler()
++			 * which takes no list and sweeps them up
++			 * anyway from the ata tag array.
++			 */
++			while (!list_empty(&sata_q))
++				list_del_init(sata_q.next);
+ 		}
+ 	} while (ap);
+ 
 
 
-
-
-
---- Comment #7 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-03-10 19:40:20 ---
-Reply-To: zrubish@googlemail.com
-
-Hi,
-you are right in all points:
-- it is that kind of disk
-- I was not using original power supply, because I thought the stronger one
-with the more convenient switch should work... Maybe switch is broken, but
-doesn't matter now.
-
-I've asked the dealer for the original and it works now. I've tested with
-more demanding tests and not a single problem reported. Issue can be closed.
-
-Thank you very much for *excellent* support (among best in my 15 years
-professional IT career),
-Damjan
-
-P.S.: I'll obey guidelines about report in case I'll be in the position to
-do it again (not likely though). However, I intend to attach logs that way
-at the very beginning, but web UI looked for me like there can be only one
-file attached. Therefore I've decided for an archive. Sorry.
-
-2011/3/10 <bugzilla-daemon@bugzilla.kernel.org>
-
-> https://bugzilla.kernel.org/show_bug.cgi?id=30802
->
->
-> Tejun Heo <tj@kernel.org> changed:
->
->           What    |Removed                     |Added
->
-> ----------------------------------------------------------------------------
->                 CC|                            |tj@kernel.org
->
->
->
->
-> --- Comment #6 from Tejun Heo <tj@kernel.org>  2011-03-10 10:40:22 ---
-> First of all, please don't paste kernel log in-line and don't attach them
-> as
-> tar.gz either unless the file is really big.  Attach them as separate
-> text/plain files.
->
-> It definitely looks like hardware problem to me.  You're trying to use wd
-> raptor 15k rpm drive, right?  I don't know your setup but it could be that
-> the
-> enclosure you're using isn't upto the task power-wise.  The FLUSH_CACHE
-> failure
-> combined with PHY going down is also indicative of power problems.  Can you
-> please do the followings?
->
-> 1. Boot and run "smartctl -a" on the hard drive.
-> 2. Trigger the problem.
-> 3. Reset the computer but don't power cycle the enclosure.
-> 4. Run "smartctl -a" on the drive again.
->
-> Post the two outputs from the smartctl.
->
-> Thanks.
->
-> --
-> Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-> ------- You are receiving this mail because: -------
-> You reported the bug.
->
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug.
