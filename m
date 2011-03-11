@@ -1,38 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] libsas: fix ata list corruption issue
-Date: Fri, 11 Mar 2011 11:19:25 -0600
-Message-ID: <1299863968.1970.0.camel@localhost.localdomain>
-References: <1299798798.11933.167.camel@mulgrave.site>
-	 <4D797AC3.2050202@garzik.org>
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 2.6.37.3] ahci: AHCI mode SATA patch for Intel Patsburg SATA RAID controller
+Date: Fri, 11 Mar 2011 11:57:42 -0800
+Message-ID: <201103111157.42656.seth.heasley@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4D797AC3.2050202@garzik.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:18162 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476Ab1CKUKd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Mar 2011 15:10:33 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com
 
-On Thu, 2011-03-10 at 20:28 -0500, Jeff Garzik wrote:
-> On 03/10/2011 06:13 PM, James Bottomley wrote:
-> > I think this stems from a misunderstanding of how the ata error handler
-> > works.  ata_scsi_cmd_error_handler() gets called with a passed in list
-> > of commands to handle.  However, that list may still not be empty when
-> > it exits.  The command ata_scsi_port_error_handler() must be called
-> > (which takes no list) before the list will be completely emptied.  This
-> > bites the sas error handler because the two are called from different
-> > functions and the original list has gone out of scope before
-> > ata_scsi_port_error_handler() is called. leading to some commands
-> > dangling on bare stack, which is a potential memory corruption issue.
-> > Fix this by manually deleting all outstanding commands from the on-stack
-> > list before it goes out of scope.
-> 
-> Good catch...
+This patch adds an updated SATA RAID DeviceID for the Intel Patsburg PCH.
 
-I cannot tell a lie: it was the list debugger code that told me
-something was wrong ... I just looked at it to see what the problem was.
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
 
-James
-
-
+--- linux-2.6.37.3/drivers/ata/ahci.c.orig	2011-03-09 10:30:44.000000000 -0800
++++ linux-2.6.37.3/drivers/ata/ahci.c	2011-03-09 10:31:08.000000000 -0800
+@@ -260,6 +260,7 @@
+ 	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci }, /* PBG RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci }, /* PBG RAID */
++	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
