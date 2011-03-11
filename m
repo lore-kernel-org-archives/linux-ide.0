@@ -1,55 +1,35 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH] libsas: fix ata list corruption issue
-Date: Thu, 10 Mar 2011 17:13:18 -0600
-Message-ID: <1299798798.11933.167.camel@mulgrave.site>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libsas: fix ata list corruption issue
+Date: Thu, 10 Mar 2011 20:28:35 -0500
+Message-ID: <4D797AC3.2050202@garzik.org>
+References: <1299798798.11933.167.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:35743 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753269Ab1CKB2i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2011 20:28:38 -0500
+In-Reply-To: <1299798798.11933.167.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-I think this stems from a misunderstanding of how the ata error handler
-works.  ata_scsi_cmd_error_handler() gets called with a passed in list
-of commands to handle.  However, that list may still not be empty when
-it exits.  The command ata_scsi_port_error_handler() must be called
-(which takes no list) before the list will be completely emptied.  This
-bites the sas error handler because the two are called from different
-functions and the original list has gone out of scope before
-ata_scsi_port_error_handler() is called. leading to some commands
-dangling on bare stack, which is a potential memory corruption issue.
-Fix this by manually deleting all outstanding commands from the on-stack
-list before it goes out of scope.
+On 03/10/2011 06:13 PM, James Bottomley wrote:
+> I think this stems from a misunderstanding of how the ata error handler
+> works.  ata_scsi_cmd_error_handler() gets called with a passed in list
+> of commands to handle.  However, that list may still not be empty when
+> it exits.  The command ata_scsi_port_error_handler() must be called
+> (which takes no list) before the list will be completely emptied.  This
+> bites the sas error handler because the two are called from different
+> functions and the original list has gone out of scope before
+> ata_scsi_port_error_handler() is called. leading to some commands
+> dangling on bare stack, which is a potential memory corruption issue.
+> Fix this by manually deleting all outstanding commands from the on-stack
+> list before it goes out of scope.
 
-James
-
----
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 16c5094..3356bf3 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -802,6 +802,19 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 		if (!list_empty(&sata_q)) {
- 			ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata cmd error handler\n");
- 			ata_scsi_cmd_error_handler(shost, ap, &sata_q);
-+			/*
-+			 * ata's error handler may leave the cmd on the list
-+			 * so make sure they don't remain on a stack list
-+			 * about to go out of scope.
-+			 *
-+			 * This looks strange, since the commands are
-+			 * now part of no list, but the next error
-+			 * action will be ata_port_error_handler()
-+			 * which takes no list and sweeps them up
-+			 * anyway from the ata tag array.
-+			 */
-+			while (!list_empty(&sata_q))
-+				list_del_init(sata_q.next);
- 		}
- 	} while (ap);
- 
+Good catch...
 
 
