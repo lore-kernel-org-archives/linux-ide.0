@@ -1,53 +1,177 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] driver/FSL SATA: Update RX_WATER_MARK for TRANSCFG
-Date: Mon, 14 Mar 2011 14:08:34 +0300
-Message-ID: <4D7DF732.3000504@ru.mvista.com>
-References: <1299470290-3451-1-git-send-email-prabhakar@freescale.com> <4D7DBE60.1040609@pobox.com>
+From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Subject: [RFC PATCH 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
+Date: Mon, 14 Mar 2011 17:55:44 +0800
+Message-ID: <1300096544-1946-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+References: <1300096544-1946-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:42712 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753423Ab1CNLKD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2011 07:10:03 -0400
-Received: by wwk4 with SMTP id 4so1468006wwk.1
-        for <linux-ide@vger.kernel.org>; Mon, 14 Mar 2011 04:10:02 -0700 (PDT)
-In-Reply-To: <4D7DBE60.1040609@pobox.com>
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:27142
+	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750796Ab1CNNyx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2011 09:54:53 -0400
+In-Reply-To: <1300096544-1946-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Prabhakar Kushwaha <prabhakar@freescale.com>, linux-ide@vger.kernel.org, meet2prabhu@gmail.com
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <Hong-Xing.Zhu@freescale.com>
 
-Hello.
+Signed-off-by: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+---
+ arch/arm/mach-mx5/board-mx53_loco.c |  120 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 120 insertions(+), 0 deletions(-)
 
-On 14-03-2011 10:06, Jeff Garzik wrote:
+diff --git a/arch/arm/mach-mx5/board-mx53_loco.c b/arch/arm/mach-mx5/board-mx53_loco.c
+index 0a18f8d..9a7bbea 100644
+--- a/arch/arm/mach-mx5/board-mx53_loco.c
++++ b/arch/arm/mach-mx5/board-mx53_loco.c
+@@ -23,11 +23,13 @@
+ #include <linux/fec.h>
+ #include <linux/delay.h>
+ #include <linux/gpio.h>
++#include <linux/ahci_platform.h>
+ 
+ #include <mach/common.h>
+ #include <mach/hardware.h>
+ #include <mach/imx-uart.h>
+ #include <mach/iomux-mx53.h>
++#include <mach/ahci_sata.h>
+ 
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -203,6 +205,123 @@ static const struct imxi2c_platform_data mx53_loco_i2c_data __initconst = {
+ 	.bitrate = 100000,
+ };
+ 
++/* HW Initialization, if return 0, initialization is successful. */
++static int sata_init(struct device *dev, void __iomem *addr)
++{
++	void __iomem *mmio;
++	struct clk *clk;
++	int ret = 0;
++	u32 tmpdata;
++
++	clk = clk_get(dev, "imx_sata_clk");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++		return ret;
++	}
++	ret = clk_enable(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't enable clock.\n");
++		clk_put(clk);
++		return ret;
++	}
++
++	/* FSL IMX AHCI SATA uses the internal usb phy1 clk on loco */
++	clk = clk_get(dev, "usb_phy1");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++		goto no_input_clk;
++	}
++	ret = clk_enable(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI Can't enable USB PHY1 clock.\n");
++		clk_put(clk);
++		goto no_input_clk;
++	}
++
++	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
++	clk = clk_get(NULL, "ahb_clk");
++	ret = IS_ERR(clk);
++	if (ret) {
++		printk(KERN_ERR "IMX AHCI can't get AHB clock.\n");
++		goto no_clk;
++	}
++
++	mmio = ioremap(MX53_SATA_BASE_ADDR, SZ_2K);
++	if (mmio == NULL) {
++		printk(KERN_ERR "Failed to map SATA REGS\n");
++		goto no_clk;
++	}
++
++	tmpdata = readl(mmio + HOST_CAP);
++	if (!(tmpdata & HOST_CAP_SSS)) {
++		tmpdata |= HOST_CAP_SSS;
++		writel(tmpdata, mmio + HOST_CAP);
++	}
++
++	if (!(readl(mmio + HOST_PORTS_IMPL) & 0x1))
++		writel((readl(mmio + HOST_PORTS_IMPL) | 0x1),
++			mmio + HOST_PORTS_IMPL);
++
++	tmpdata = clk_get_rate(clk) / 1000;
++	writel(tmpdata, mmio + HOST_TIMER1MS);
++
++	iounmap(mmio);
++
++	return ret;
++
++no_clk:
++	clk = clk_get(dev, "usb_phy1");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++no_input_clk:
++	clk = clk_get(dev, "imx_sata_clk");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++	return ret;
++}
++
++static void sata_exit(struct device *dev)
++{
++	struct clk *clk;
++
++	clk = clk_get(dev, "usb_phy1");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get USB PHY1 CLK.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++
++	clk = clk_get(dev, "imx_sata_clk");
++	if (IS_ERR(clk)) {
++		clk = NULL;
++		printk(KERN_ERR "IMX AHCI can't get clock.\n");
++	} else {
++		clk_disable(clk);
++		clk_put(clk);
++	}
++}
++
++static struct ahci_platform_data sata_data = {
++	.init = sata_init,
++	.exit = sata_exit,
++};
++
+ static void __init mx53_loco_board_init(void)
+ {
+ 	mxc_iomux_v3_setup_multiple_pads(mx53_loco_pads,
+@@ -215,6 +334,7 @@ static void __init mx53_loco_board_init(void)
+ 	imx53_add_imx_i2c(1, &mx53_loco_i2c_data);
+ 	imx53_add_sdhci_esdhc_imx(0, NULL);
+ 	imx53_add_sdhci_esdhc_imx(2, NULL);
++	imx53_add_ahci_imx(0, &sata_data);
+ }
+ 
+ static void __init mx53_loco_timer_init(void)
+-- 
+1.7.1
 
->> RX_WATER_MARK sets the number of locations in Rx FIFO that can be used before
->> the transport layer instructs the link layer to transmit HOLDS. Note that it
->> can take some time for the HOLDs to get to the other end, and that in the
->> interim there must be enough room in the FIFO to absorb all data that could
->> arrive.
 
->> Update the new recommended value to 16.
-
->> Signed-off-by: Prabhakar Kushwaha<prabhakar@freescale.com>
->> ---
->> git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git (branch
->> master)
-
->> This patch is already gone through review of linuxppc-dev mail list.
-
->> drivers/ata/sata_fsl.c | 12 ++++++++++++
->> 1 files changed, 12 insertions(+), 0 deletions(-)
-
-> applied
-
-    Jeff, how about my sata_dwc_460ex patches?
-
-http://marc.info/?l=linux-ide&m=129624104118401
-http://marc.info/?l=linux-ide&m=129624121818608
-http://marc.info/?l=linux-ide&m=129624134518793
-http://marc.info/?l=linux-ide&m=129624141318888
-
-WBR, Sergei
