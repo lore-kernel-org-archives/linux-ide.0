@@ -1,42 +1,104 @@
-From: Maxime Bizon <mbizon@freebox.fr>
-Subject: Re: "irq 4: nobody cared" when loading ahci driver on ce4100
-Date: Tue, 15 Mar 2011 18:03:41 +0100
-Message-ID: <1300208621.10827.46.camel@sakura.staff.proxad.net>
-References: <1300129707.28545.34.camel@sakura.staff.proxad.net>
-	 <4D7EB9EB.8030807@gmail.com> <1300162840.2118.4.camel@kero>
-	 <20110315071937.GB8635@htj.dyndns.org>
-	 <1300200509.10827.27.camel@sakura.staff.proxad.net>
-	 <1300201422.10827.39.camel@sakura.staff.proxad.net>
-	 <20110315151931.GA17376@htj.dyndns.org>
-Reply-To: mbizon@freebox.fr
+From: Stefan Bader <stefan.bader@canonical.com>
+Subject: Re: Some hints needed how to handle SATA ALPM failures
+Date: Tue, 15 Mar 2011 19:02:50 +0100
+Message-ID: <4D7FA9CA.5020201@canonical.com>
+References: <4D5E6CE1.9020908@canonical.com> <20110218145057.GM21209@htj.dyndns.org> <4D5E9681.7020809@canonical.com> <20110218161640.GR21209@htj.dyndns.org> <4D5EA38D.9060804@canonical.com> <4D79F92A.20402@canonical.com> <20110311110144.GF13038@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:35693 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932446Ab1CORDt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Mar 2011 13:03:49 -0400
-In-Reply-To: <20110315151931.GA17376@htj.dyndns.org>
+Received: from adelie.canonical.com ([91.189.90.139]:52555 "EHLO
+	adelie.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756529Ab1COSCx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2011 14:02:53 -0400
+In-Reply-To: <20110311110144.GF13038@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Andy Whitcroft <apw@canonical.com>
 
+On 03/11/2011 12:01 PM, Tejun Heo wrote:
+> On Fri, Mar 11, 2011 at 11:27:54AM +0100, Stefan Bader wrote:
+>>> Yes, it is an Nvidia MCP67 in ahci mode. I can relay the question about
+>>> medium_power and yes we can try patches. If not the reporter, I can prepare
+>>> kernels and ask for testing.
+>>> One question in general would be whether (if it cannot be said for sure which
+>>> controller is good or not) it may be a good idea to add some whitelisting for
+>>> those known to work and disable (or limit the mode) for the unknown.
+> 
+> Does the following patch resolve the issue?
+> 
 
-On Tue, 2011-03-15 at 16:19 +0100, Tejun Heo wrote:
+A test kernel with this patch applied was just verified to be resolving the
+issue by one of our affected users.
 
-> Hmm... I don't really like INITIALIZING being tested there.  It's much
-> more cumbersome to explain.  Can you please change ata_port_alloc() to
-> set pflags to INITIALIZING|FROZEN?  And add a comment in ahci briefly
-> noting why the test is necessary?
+-Stefan
 
-will do
-
-I'm trying to test the patch on linus tree instead of old vendor kernel,
-and I will submit it once it's done.
-
--- 
-Maxime
-
+> Thanks.
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index b8d96ce..da75ec3 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -150,7 +150,7 @@ static const struct ata_port_info ahci_port_info[] = {
+>  	{
+>  		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
+>  				 AHCI_HFLAG_YES_NCQ),
+> -		.flags		= AHCI_FLAG_COMMON,
+> +		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
+>  		.pio_mask	= ATA_PIO4,
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 17a6378..3021b95 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -3276,6 +3276,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>  	struct ata_eh_context *ehc = &link->eh_context;
+>  	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
+>  	enum ata_lpm_policy old_policy = link->lpm_policy;
+> +	bool no_dipm = ap->flags & ATA_FLAG_NO_DIPM;
+>  	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
+>  	unsigned int err_mask;
+>  	int rc;
+> @@ -3292,7 +3293,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>  	 */
+>  	ata_for_each_dev(dev, link, ENABLED) {
+>  		bool hipm = ata_id_has_hipm(dev->id);
+> -		bool dipm = ata_id_has_dipm(dev->id);
+> +		bool dipm = ata_id_has_dipm(dev->id) && !no_dipm;
+>  
+>  		/* find the first enabled and LPM enabled devices */
+>  		if (!link_dev)
+> @@ -3349,7 +3350,8 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>  
+>  	/* host config updated, enable DIPM if transitioning to MIN_POWER */
+>  	ata_for_each_dev(dev, link, ENABLED) {
+> -		if (policy == ATA_LPM_MIN_POWER && ata_id_has_dipm(dev->id)) {
+> +		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
+> +		    ata_id_has_dipm(dev->id)) {
+>  			err_mask = ata_dev_set_feature(dev,
+>  					SETFEATURES_SATA_ENABLE, SATA_DIPM);
+>  			if (err_mask && err_mask != AC_ERR_DEV) {
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index c9c5d7a..3ad1eeb 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -137,8 +137,6 @@ enum {
+>  	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
+>  	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
+>  	ATA_DFLAG_AN		= (1 << 7), /* AN configured */
+> -	ATA_DFLAG_HIPM		= (1 << 8), /* device supports HIPM */
+> -	ATA_DFLAG_DIPM		= (1 << 9), /* device supports DIPM */
+>  	ATA_DFLAG_DMADIR	= (1 << 10), /* device requires DMADIR */
+>  	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
+>  
+> @@ -203,6 +201,7 @@ enum {
+>  					      * management */
+>  	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+>  					      * led */
+> +	ATA_FLAG_NO_DIPM	= (1 << 23), /* host not happy with DIPM */
+>  
+>  	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
+>  
 
