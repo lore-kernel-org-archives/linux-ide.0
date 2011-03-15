@@ -1,45 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: "irq 4: nobody cared" when loading ahci driver on ce4100
-Date: Tue, 15 Mar 2011 16:19:31 +0100
-Message-ID: <20110315151931.GA17376@htj.dyndns.org>
-References: <1300129707.28545.34.camel@sakura.staff.proxad.net>
- <4D7EB9EB.8030807@gmail.com>
- <1300162840.2118.4.camel@kero>
- <20110315071937.GB8635@htj.dyndns.org>
- <1300200509.10827.27.camel@sakura.staff.proxad.net>
- <1300201422.10827.39.camel@sakura.staff.proxad.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Kumar Gala <kumar.gala@freescale.com>
+Subject: Re: [PATCH 2/2] dts: Update sata controller compatible for p1022ds board
+Date: Tue, 15 Mar 2011 10:39:54 -0500
+Message-ID: <D20B8B05-5AF1-4410-BA2D-A93B7C0ACD78@freescale.com>
+References: <1295428050-21934-1-git-send-email-B33228@freescale.com> <1295428050-21934-2-git-send-email-B33228@freescale.com>
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35110 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734Ab1COPUR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2011 11:20:17 -0400
-Received: by fxm17 with SMTP id 17so674228fxm.19
-        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2011 08:20:16 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1300201422.10827.39.camel@sakura.staff.proxad.net>
+Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.186]:15003
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751883Ab1COPkC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2011 11:40:02 -0400
+In-Reply-To: <1295428050-21934-2-git-send-email-B33228@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maxime Bizon <mbizon@freebox.fr>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>
+To: Xulei <B33228@freescale.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Tue, Mar 15, 2011 at 04:03:42PM +0100, Maxime Bizon wrote:
-> 
-> On Tue, 2011-03-15 at 15:48 +0100, Maxime Bizon wrote:
-> 
-> > no it doesn't, but this one does:
-> 
-> sorry it does not compile, missing ')', but actually works
-> 
-> I will send a proper patch if you agree with this solution
 
-Hmm... I don't really like INITIALIZING being tested there.  It's much
-more cumbersome to explain.  Can you please change ata_port_alloc() to
-set pflags to INITIALIZING|FROZEN?  And add a comment in ahci briefly
-noting why the test is necessary?
+On Jan 19, 2011, at 3:07 AM, Xulei wrote:
 
-Thanks.
+> Update p1022 sata compatible to "fsl,p1022-sata", "fsl,pq-sata-v2".
+> p1022ds sata controller is v2 version comparing previous FSL sata
+> controller, for example, mpc8536.
+> 
+> Signed-off-by: Lei Xu <B33228@freescale.com>
+> Signed-off-by: Roy Zang <tie-fei.zang@freescale.com>
+> ---
+> arch/powerpc/boot/dts/p1022ds.dts |    4 ++--
+> 1 files changed, 2 insertions(+), 2 deletions(-)
 
--- 
-tejun
+applied
+
+- k
+
