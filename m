@@ -1,96 +1,104 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/2] libata: Implement ATA_FLAG_NO_DIPM and apply it to
- mcp65
-Date: Wed, 16 Mar 2011 11:14:55 +0100
-Message-ID: <20110316101455.GC1752@htj.dyndns.org>
-References: <20110316101425.GB1752@htj.dyndns.org>
+From: Maxime Bizon <mbizon@freebox.fr>
+Subject: [PATCH v2] ahci: don't enable port irq before handler is registered
+Date: Wed, 16 Mar 2011 14:58:32 +0100
+Message-ID: <1300283912.10827.66.camel@sakura.staff.proxad.net>
+References: <1300129707.28545.34.camel@sakura.staff.proxad.net>
+	 <4D7EB9EB.8030807@gmail.com> <1300162840.2118.4.camel@kero>
+	 <20110315071937.GB8635@htj.dyndns.org>
+	 <1300200509.10827.27.camel@sakura.staff.proxad.net>
+	 <1300201422.10827.39.camel@sakura.staff.proxad.net>
+	 <20110315151931.GA17376@htj.dyndns.org>
+	 <1300224158.10827.52.camel@sakura.staff.proxad.net>
+	 <20110316090453.GA31832@htj.dyndns.org>
+Reply-To: mbizon@freebox.fr
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44593 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270Ab1CPKPN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Mar 2011 06:15:13 -0400
-Received: by fxm17 with SMTP id 17so1479454fxm.19
-        for <linux-ide@vger.kernel.org>; Wed, 16 Mar 2011 03:15:12 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20110316101425.GB1752@htj.dyndns.org>
+Received: from smtp4-g21.free.fr ([212.27.42.4]:54190 "EHLO smtp4-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748Ab1CPN6m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Mar 2011 09:58:42 -0400
+In-Reply-To: <20110316090453.GA31832@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: Stefan Bader <stefan.bader@canonical.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, stable@kernel.org
 
-NVIDIA mcp65 familiy of controllers cause command timeouts when DIPM
-is used.  Implement ATA_FLAG_NO_DIPM and apply it.
+From: Maxime Bizon <mbizon@freebox.fr>
 
-This problem was reported by Stefan Bader in the following thread.
+The ahci_pmp_attach() & ahci_pmp_detach() unmask port irqs, but they
+are also called during port initialization, before ahci host irq
+handler is registered. On ce4100 platform, this sometimes triggers
+"irq 4: nobody cared" message when loading driver.
 
- http://thread.gmane.org/gmane.linux.ide/48841
+Fixed this by not touching the register if the port is in frozen
+state, and mark all uninitialized port as frozen.
 
-stable: applicable to 2.6.37 and 38.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Stefan Bader <stefan.bader@canonical.com>
+Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
+Acked-by: Tejun Heo <tj@kernel.org>
 Cc: stable@kernel.org
----
- drivers/ata/ahci.c      |    2 +-
- drivers/ata/libata-eh.c |    6 ++++--
- include/linux/libata.h  |    1 +
- 3 files changed, 6 insertions(+), 3 deletions(-)
 
-Index: work/drivers/ata/ahci.c
-===================================================================
---- work.orig/drivers/ata/ahci.c
-+++ work/drivers/ata/ahci.c
-@@ -150,7 +150,7 @@ static const struct ata_port_info ahci_p
- 	{
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
- 				 AHCI_HFLAG_YES_NCQ),
--		.flags		= AHCI_FLAG_COMMON,
-+		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
- 		.pio_mask	= ATA_PIO4,
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &ahci_ops,
-Index: work/drivers/ata/libata-eh.c
-===================================================================
---- work.orig/drivers/ata/libata-eh.c
-+++ work/drivers/ata/libata-eh.c
-@@ -3276,6 +3276,7 @@ static int ata_eh_set_lpm(struct ata_lin
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
- 	enum ata_lpm_policy old_policy = link->lpm_policy;
-+	bool no_dipm = ap->flags & ATA_FLAG_NO_DIPM;
- 	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
- 	unsigned int err_mask;
- 	int rc;
-@@ -3292,7 +3293,7 @@ static int ata_eh_set_lpm(struct ata_lin
- 	 */
- 	ata_for_each_dev(dev, link, ENABLED) {
- 		bool hipm = ata_id_has_hipm(dev->id);
--		bool dipm = ata_id_has_dipm(dev->id);
-+		bool dipm = ata_id_has_dipm(dev->id) && !no_dipm;
+---
+ drivers/ata/libahci.c     |   17 +++++++++++++++--
+ drivers/ata/libata-core.c |    2 +-
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 26d4523..8498eb5 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1897,7 +1897,17 @@ static void ahci_pmp_attach(struct ata_port *ap)
+ 	ahci_enable_fbs(ap);
  
- 		/* find the first enabled and LPM enabled devices */
- 		if (!link_dev)
-@@ -3349,7 +3350,8 @@ static int ata_eh_set_lpm(struct ata_lin
+ 	pp->intr_mask |= PORT_IRQ_BAD_PMP;
+-	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
++
++	/*
++	 * We must not change the port interrupt mask register if the
++	 * port is marked frozen, the value in pp->intr_mask will be
++	 * restored later when the port is thawed.
++	 *
++	 * Note that during initialization, the port is marked as
++	 * frozen since the irq handler is not yet registered.
++	 */
++	if (!(ap->pflags & ATA_PFLAG_FROZEN))
++		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
+ }
  
- 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
- 	ata_for_each_dev(dev, link, ENABLED) {
--		if (policy == ATA_LPM_MIN_POWER && ata_id_has_dipm(dev->id)) {
-+		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
-+		    ata_id_has_dipm(dev->id)) {
- 			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
- 			if (err_mask && err_mask != AC_ERR_DEV) {
-Index: work/include/linux/libata.h
-===================================================================
---- work.orig/include/linux/libata.h
-+++ work/include/linux/libata.h
-@@ -201,6 +201,7 @@ enum {
- 					      * management */
- 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
- 					      * led */
-+	ATA_FLAG_NO_DIPM	= (1 << 23), /* host not happy with DIPM */
+ static void ahci_pmp_detach(struct ata_port *ap)
+@@ -1913,7 +1923,10 @@ static void ahci_pmp_detach(struct ata_port *ap)
+ 	writel(cmd, port_mmio + PORT_CMD);
  
- 	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
+ 	pp->intr_mask &= ~PORT_IRQ_BAD_PMP;
+-	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
++
++	/* see comment above in ahci_pmp_attach() */
++	if (!(ap->pflags & ATA_PFLAG_FROZEN))
++		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
+ }
  
+ int ahci_port_resume(struct ata_port *ap)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d4e52e2..02d5703 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5480,7 +5480,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	if (!ap)
+ 		return NULL;
+ 	
+-	ap->pflags |= ATA_PFLAG_INITIALIZING;
++	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
+ 	ap->lock = &host->lock;
+ 	ap->print_id = -1;
+ 	ap->host = host;
+-- 
+1.7.1
+
+
+
+
+-- 
+Maxime
+
+
