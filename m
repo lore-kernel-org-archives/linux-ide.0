@@ -1,104 +1,102 @@
-From: Maxime Bizon <mbizon@freebox.fr>
-Subject: [PATCH v2] ahci: don't enable port irq before handler is registered
-Date: Wed, 16 Mar 2011 14:58:32 +0100
-Message-ID: <1300283912.10827.66.camel@sakura.staff.proxad.net>
-References: <1300129707.28545.34.camel@sakura.staff.proxad.net>
-	 <4D7EB9EB.8030807@gmail.com> <1300162840.2118.4.camel@kero>
-	 <20110315071937.GB8635@htj.dyndns.org>
-	 <1300200509.10827.27.camel@sakura.staff.proxad.net>
-	 <1300201422.10827.39.camel@sakura.staff.proxad.net>
-	 <20110315151931.GA17376@htj.dyndns.org>
-	 <1300224158.10827.52.camel@sakura.staff.proxad.net>
-	 <20110316090453.GA31832@htj.dyndns.org>
-Reply-To: mbizon@freebox.fr
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: check dev->gone before submitting sata i/o
+Date: Wed, 16 Mar 2011 17:55:00 -0700
+Message-ID: <20110317005339.24231.41265.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:54190 "EHLO smtp4-g21.free.fr"
+Received: from mga11.intel.com ([192.55.52.93]:45248 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751748Ab1CPN6m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Mar 2011 09:58:42 -0400
-In-Reply-To: <20110316090453.GA31832@htj.dyndns.org>
+	id S1752120Ab1CQAvz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Mar 2011 20:51:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, stable@kernel.org
+To: james.bottomley@suse.de
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, jacek.danecki@intel.com, linux-ide@vger.kernel.org, dmilburn@redhat.com, edmund.nadolski@intel.com
 
-From: Maxime Bizon <mbizon@freebox.fr>
+Head off doomed-to-fail i/o in sas_queuecommand before sending it down
+the ata path.
 
-The ahci_pmp_attach() & ahci_pmp_detach() unmask port irqs, but they
-are also called during port initialization, before ahci host irq
-handler is registered. On ce4100 platform, this sometimes triggers
-"irq 4: nobody cared" message when loading driver.
+Before:
+sd 7:0:0:0: [sdd] Synchronizing SCSI cache
+ata8: no sense translation for status: 0x00
+ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata8.00: device reported invalid CHS sector 0
+ata8: status=0x00 { }
+ata8: no sense translation for status: 0x00
+ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata8.00: device reported invalid CHS sector 0
+ata8: status=0x00 { }
+ata8: no sense translation for status: 0x00
+ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata8.00: device reported invalid CHS sector 0
+ata8: status=0x00 { }
+sd 7:0:0:0: [sdd]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+sd 7:0:0:0: [sdd]  Sense Key : Aborted Command [current] [descriptor]
+sd 7:0:0:0: [sdd]  Add. Sense: No additional sense information
+sd 7:0:0:0: [sdd] Stopping disk
 
-Fixed this by not touching the register if the port is in frozen
-state, and mark all uninitialized port as frozen.
+After:
+sd 9:0:0:0: [sdd] Synchronizing SCSI cache
+sd 9:0:0:0: [sdd]  Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 9:0:0:0: [sdd] Stopping disk
+sd 9:0:0:0: [sdd] START_STOP FAILED
+sd 9:0:0:0: [sdd]  Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
 
-Signed-off-by: Maxime Bizon <mbizon@freebox.fr>
-Acked-by: Tejun Heo <tj@kernel.org>
-Cc: stable@kernel.org
+This is a cosmetic change as sata i/o can still leak to a gone device,
+but this addresses the nominal hotplug case when releasing the target.
 
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/ata/libahci.c     |   17 +++++++++++++++--
- drivers/ata/libata-core.c |    2 +-
- 2 files changed, 16 insertions(+), 3 deletions(-)
+This is neither critical, nor complete (i/o can still sneak in after the
+check), but it makes device removal cleaner in the nominal case (sync cache
+commands triggered by scsi_target removal never enter ata_sas_queuecmd()).
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 26d4523..8498eb5 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1897,7 +1897,17 @@ static void ahci_pmp_attach(struct ata_port *ap)
- 	ahci_enable_fbs(ap);
+However, with the pending/more critical "libsas: fix/amend device gone
+notification in sas_deform_port()" we could go all the way and make it
+impossible to submit i/o to a sata device that libsas has marked as
+gone, and delete the gone check that happens in sas_ata_qc_issue(). But,
+that is encoding more libsas/libata host_lock assumptions...
+
+--
+Dan
+
+[1]: http://marc.info/?l=linux-scsi&m=129791105419577&w=2
+
+ drivers/scsi/libsas/sas_scsi_host.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 1787bd2..ce3efff 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -218,6 +218,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 		struct sas_ha_struct *sas_ha = dev->port->ha;
+ 		struct sas_task *task;
  
- 	pp->intr_mask |= PORT_IRQ_BAD_PMP;
--	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
++		/* If the device fell off, no sense in issuing commands */
++		if (dev->gone) {
++			cmd->result = DID_BAD_TARGET << 16;
++			scsi_done(cmd);
++			goto out;
++		}
 +
-+	/*
-+	 * We must not change the port interrupt mask register if the
-+	 * port is marked frozen, the value in pp->intr_mask will be
-+	 * restored later when the port is thawed.
-+	 *
-+	 * Note that during initialization, the port is marked as
-+	 * frozen since the irq handler is not yet registered.
-+	 */
-+	if (!(ap->pflags & ATA_PFLAG_FROZEN))
-+		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
- }
+ 		if (dev_is_sata(dev)) {
+ 			unsigned long flags;
  
- static void ahci_pmp_detach(struct ata_port *ap)
-@@ -1913,7 +1923,10 @@ static void ahci_pmp_detach(struct ata_port *ap)
- 	writel(cmd, port_mmio + PORT_CMD);
+@@ -228,13 +235,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 			goto out;
+ 		}
  
- 	pp->intr_mask &= ~PORT_IRQ_BAD_PMP;
--	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
-+
-+	/* see comment above in ahci_pmp_attach() */
-+	if (!(ap->pflags & ATA_PFLAG_FROZEN))
-+		writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
- }
- 
- int ahci_port_resume(struct ata_port *ap)
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d4e52e2..02d5703 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5480,7 +5480,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	if (!ap)
- 		return NULL;
- 	
--	ap->pflags |= ATA_PFLAG_INITIALIZING;
-+	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
- 	ap->lock = &host->lock;
- 	ap->print_id = -1;
- 	ap->host = host;
--- 
-1.7.1
-
-
-
-
--- 
-Maxime
-
+-		/* If the device fell off, no sense in issuing commands */
+-		if (dev->gone) {
+-			cmd->result = DID_BAD_TARGET << 16;
+-			scsi_done(cmd);
+-			goto out;
+-		}
+-
+ 		res = -ENOMEM;
+ 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
+ 		if (!task)
 
