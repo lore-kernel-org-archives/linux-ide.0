@@ -1,81 +1,55 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: PMP and Smart Enclosure ...
-Date: Tue, 22 Mar 2011 16:25:29 +0100
-Message-ID: <20110322152529.GB15541@MAIL.13thfloor.at>
-References: <20110322145440.GA15541@MAIL.13thfloor.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: [PATCH 4/4] davinci: da850 evm: register SATA device
+Date: Wed, 23 Mar 2011 17:02:29 +0530
+Message-ID: <1300879949-16379-4-git-send-email-nsekhar@ti.com>
+References: <1300879949-16379-1-git-send-email-nsekhar@ti.com>
+ <1300879949-16379-2-git-send-email-nsekhar@ti.com>
+ <1300879949-16379-3-git-send-email-nsekhar@ti.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:51214 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821Ab1CVPZc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Mar 2011 11:25:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20110322145440.GA15541@MAIL.13thfloor.at>
+Received: from bear.ext.ti.com ([192.94.94.41]:33695 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932487Ab1CWLco (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 23 Mar 2011 07:32:44 -0400
+In-Reply-To: <1300879949-16379-3-git-send-email-nsekhar@ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
+To: davinci-linux-open-source@linux.davincidsp.com
+Cc: Kevin Hilman <khilman@ti.com>, linux-arm-kernel@lists.infradead.org, Sekhar Nori <nsekhar@ti.com>, linux-ide@vger.kernel.org
 
-On Tue, Mar 22, 2011 at 03:54:40PM +0100, Herbert Poetzl wrote:
+Register the platform device for SATA interface
+present on the DA850/OMAP-L138/AM18x EVM.
 
-> following up on a thread about PMP and SEP from earlier this
-> year, I have now prepared a test system which should allow
-> me to control all involved parts (i.e. SATA controller, PMP
-> and the SEP) for testing and debugging ...
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Cc: linux-ide@vger.kernel.org
+---
+ arch/arm/mach-davinci/board-da850-evm.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-> during the initial system tests, I found some strange
-> behaviour, which I am unable to explain, and it might as
-> well be a SATA/PMP bug in Linux ...
+diff --git a/arch/arm/mach-davinci/board-da850-evm.c b/arch/arm/mach-davinci/board-da850-evm.c
+index a7b41bf..3d2c0d7 100644
+--- a/arch/arm/mach-davinci/board-da850-evm.c
++++ b/arch/arm/mach-davinci/board-da850-evm.c
+@@ -1117,6 +1117,8 @@ static __init int da850_evm_init_cpufreq(void)
+ static __init int da850_evm_init_cpufreq(void) { return 0; }
+ #endif
+ 
++#define DA850EVM_SATA_REFCLKPN_RATE	(100 * 1000 * 1000)
++
+ static __init void da850_evm_init(void)
+ {
+ 	int ret;
+@@ -1237,6 +1239,11 @@ static __init void da850_evm_init(void)
+ 	if (ret)
+ 		pr_warning("da850_evm_init: spi 1 registration failed: %d\n",
+ 				ret);
++
++	ret = da850_register_sata(DA850EVM_SATA_REFCLKPN_RATE);
++	if (ret)
++		pr_warning("da850_evm_init: sata registration failed: %d\n",
++				ret);
+ }
+ 
+ #ifdef CONFIG_SERIAL_8250_CONSOLE
+-- 
+1.7.3.2
 
-> the problem basically arises when I pull a drive from the 
-> enclosure (without telling Linux first), wait some time
-> till the kernel becomes aware of the fact, and then put it 
-> back into the enclosure ...
-
-> at this point, the drive indicator (PMP and the drive one)
-> goes on, the drive spins up, but Linux refuses to detect
-> the device ... I tried the following things:
-
->  echo "- - -" >/sys/class/scsi_host/host9/scan
-
->  scsiadd -s 9
-
->  resetting the PMP (via small front panel button)
-
-> note that the target is still listed in sysfs:
-> # ls /sys/class/scsi_host/host9/device/
-> power/  scsi_host/  subsystem@  target9:0:0/  target9:1:0/  target9:2:0/  target9:3:0/  target9:4:0/  uevent
-
-> only way to get the device back seems to be to remove the
-> driver (rmmod sata_sil24) and to reload it again, which is
-> probably a little tricky assuming that the other disks are
-> in use :)
-
-just for the fun of doing it, I tried to tell Linux first that
-the drive will be removed (via scsiadd -r) and discovered that
-this causes an even stranger effect:
-
-# scsiadd -r 13 4 0 0		; seems to remove the target
-# scsiadd -a 13 4 0 0		; seems to add back the target
-
-Host: scsi13 Channel: 04 Id: 00 Lun: 00
-  Vendor: ATA      Model: ST31000340AS     Rev: SD15
-  Type:   Direct-Access                    ANSI  SCSI revision: 05
-
-and sometimes, the devices comes back with a different device
-entry but the same scsi bus/chan/id/lun, in which case, it
-cannot be removed via scsiadd -r anymore, as it just returns
-
- could not remove device 13 4 0 0 : No such device or address
-
-also note that this doesn't change the fact that the device is
-lost till the driver is reloaded once it is unplugged ...
-
-> many thanks in advance,
-> Herbert
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
