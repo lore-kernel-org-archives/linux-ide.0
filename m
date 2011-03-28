@@ -1,48 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata: pata_at91.c bugfix for initial_timing initialisation
-Date: Mon, 28 Mar 2011 15:08:48 +0400
-Message-ID: <4D906C40.6040104@ru.mvista.com>
-References: <1301313545-22730-1-git-send-email-plyatov@gmail.com>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: Re: PMP and Smart Enclosure ...
+Date: Mon, 28 Mar 2011 14:36:23 +0200
+Message-ID: <20110328123623.GD25384@MAIL.13thfloor.at>
+References: <20110322145440.GA15541@MAIL.13thfloor.at> <20110322152529.GB15541@MAIL.13thfloor.at> <20110328085211.GD16530@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:55281 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537Ab1C1MKa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 08:10:30 -0400
-In-Reply-To: <1301313545-22730-1-git-send-email-plyatov@gmail.com>
+Received: from MAIL.13thfloor.at ([213.145.232.33]:50641 "EHLO
+	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751919Ab1C1MgY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 08:36:24 -0400
+Content-Disposition: inline
+In-Reply-To: <20110328085211.GD16530@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Igor Plyatov <plyatov@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+On Mon, Mar 28, 2011 at 10:52:11AM +0200, Tejun Heo wrote:
+> On Tue, Mar 22, 2011 at 04:25:29PM +0100, Herbert Poetzl wrote:
+>>>  echo "- - -" >/sys/class/scsi_host/host9/scan
 
-Igor Plyatov wrote:
+>>>  scsiadd -s 9
 
-> The "struct ata_timing" must contain 10 members, but ".dmack_hold" member was
-> forgotten for "initial_timing" initialisation. This patch fixes such a problem.
+>>>  resetting the PMP (via small front panel button)
 
-> Signed-off-by: Igor Plyatov <plyatov@gmail.com>
-> ---
->  drivers/ata/pata_at91.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
+> Can you please attach kernel log while this is happening?
 
-> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-> index 0da0dcc..d1aaeb5 100644
-> --- a/drivers/ata/pata_at91.c
-> +++ b/drivers/ata/pata_at91.c
-> @@ -49,8 +49,9 @@ struct at91_ide_info {
->  	void __iomem *alt_addr;
->  };
->  
-> -static const struct ata_timing initial_timing =
-> -	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
-> +static const struct ata_timing initial_timing = {
-> +	XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0
-> +};
+sure, any specific debug options and/or config settings
+you want me to use for the test?
 
-    Frankly, I don't see any difference.
+best,
+Herbert
 
-WBR, Sergei
+> Thanks.
+
+> -- 
+> tejun
