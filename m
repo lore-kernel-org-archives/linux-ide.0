@@ -1,39 +1,50 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: PMP and Smart Enclosure ...
-Date: Mon, 28 Mar 2011 14:36:23 +0200
-Message-ID: <20110328123623.GD25384@MAIL.13thfloor.at>
-References: <20110322145440.GA15541@MAIL.13thfloor.at> <20110322152529.GB15541@MAIL.13thfloor.at> <20110328085211.GD16530@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Igor Plyatov <plyatov@gmail.com>
+Subject: [PATCH v4 1/2] ata: pata_at91.c bugfix for initial_timing initialisation
+Date: Mon, 28 Mar 2011 16:56:14 +0400
+Message-ID: <1301316975-27761-1-git-send-email-plyatov@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:50641 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751919Ab1C1MgY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 08:36:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20110328085211.GD16530@htj.dyndns.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34356 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753224Ab1C1M4Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 08:56:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Igor Plyatov <plyatov@gmail.com>
 
-On Mon, Mar 28, 2011 at 10:52:11AM +0200, Tejun Heo wrote:
-> On Tue, Mar 22, 2011 at 04:25:29PM +0100, Herbert Poetzl wrote:
->>>  echo "- - -" >/sys/class/scsi_host/host9/scan
+The "struct ata_timing" must contain 10 members, but ".dmack_hold" member was
+forgotten for "initial_timing" initialisation. This patch fixes such a problem.
 
->>>  scsiadd -s 9
+Signed-off-by: Igor Plyatov <plyatov@gmail.com>
+---
+ drivers/ata/pata_at91.c |   14 ++++++++++++--
+ 1 files changed, 12 insertions(+), 2 deletions(-)
 
->>>  resetting the PMP (via small front panel button)
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 0da0dcc..0267d54 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -49,8 +49,18 @@ struct at91_ide_info {
+ 	void __iomem *alt_addr;
+ };
+ 
+-static const struct ata_timing initial_timing =
+-	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
++static const struct ata_timing initial_timing = {
++	.mode		= XFER_PIO_0,
++	.setup		= 70,
++	.act8b		= 290,
++	.rec8b		= 240,
++	.cyc8b		= 600,
++	.active		= 165,
++	.recover	= 150,
++	.dmack_hold	= 0,
++	.cycle		= 600,
++	.udma		= 0
++};
+ 
+ static unsigned long calc_mck_cycles(unsigned long ns, unsigned long mck_hz)
+ {
+-- 
+1.7.1
 
-> Can you please attach kernel log while this is happening?
-
-sure, any specific debug options and/or config settings
-you want me to use for the test?
-
-best,
-Herbert
-
-> Thanks.
-
-> -- 
-> tejun
