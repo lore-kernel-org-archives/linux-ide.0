@@ -1,60 +1,39 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH v3] ata: pata_at91.c bugfix for high master clock
-Date: Mon, 28 Mar 2011 21:29:55 +0200
-Message-ID: <20110328192955.GA2291@localhost.localdomain>
-References: <1301313595-23156-1-git-send-email-plyatov@gmail.com>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: Re: PMP and Smart Enclosure ...
+Date: Tue, 29 Mar 2011 00:46:42 +0200
+Message-ID: <20110328224642.GJ25384@MAIL.13thfloor.at>
+References: <20110322145440.GA15541@MAIL.13thfloor.at> <20110322152529.GB15541@MAIL.13thfloor.at> <20110328085211.GD16530@htj.dyndns.org> <20110328123623.GD25384@MAIL.13thfloor.at> <20110328160136.GC6736@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:12105 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754816Ab1C1TaH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Mar 2011 15:30:07 -0400
+Received: from MAIL.13thfloor.at ([213.145.232.33]:41469 "EHLO
+	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755452Ab1C1Wqq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 18:46:46 -0400
 Content-Disposition: inline
-In-Reply-To: <1301313595-23156-1-git-send-email-plyatov@gmail.com>
+In-Reply-To: <20110328160136.GC6736@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Igor Plyatov <plyatov@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Mar 28, 2011 at 03:59:55PM +0400, Igor Plyatov wrote:
-> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
-> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
-> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
-> does not detect ATA device.
-> 
-> Signed-off-by: Igor Plyatov <plyatov@gmail.com>
-> ---
->  drivers/ata/pata_at91.c |    8 +++++++-
->  1 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-> index d1aaeb5..3c2bf86 100644
-> --- a/drivers/ata/pata_at91.c
-> +++ b/drivers/ata/pata_at91.c
-> @@ -33,11 +33,12 @@
->  
->  
->  #define DRV_NAME "pata_at91"
-> -#define DRV_VERSION "0.1"
-> +#define DRV_VERSION "0.2"
->  
->  #define CF_IDE_OFFSET	    0x00c00000
->  #define CF_ALT_IDE_OFFSET   0x00e00000
->  #define CF_IDE_RES_SIZE     0x08
-> +#define NCS_RD_PULSE_LIMIT  0x3f /* maximal value for pulse bitfields */
->  
->  struct at91_ide_info {
->  	unsigned long mode;
-> @@ -110,6 +111,11 @@ static void set_smc_timing(struct device *dev,
->  	/* (CS0, CS1, DIR, OE) <= (CFCE1, CFCE2, CFRNW, NCSX) timings */
->  	ncs_read_setup = 1;
->  	ncs_read_pulse = read_cycle - 2;
-> +	if (ncs_read_pulse > NCS_RD_PULSE_LIMIT) {
-> +		ncs_read_pulse = NCS_RD_PULSE_LIMIT;
+On Mon, Mar 28, 2011 at 06:01:36PM +0200, Tejun Heo wrote:
+> On Mon, Mar 28, 2011 at 02:36:23PM +0200, Herbert Poetzl wrote:
+>> sure, any specific debug options and/or config settings
+>> you want me to use for the test?
 
-It's ATA specification break, I explained this already here:
-http://marc.info/?l=linux-ide&m=129254321006232&w=2
-Do we want fix that do not conform specification?
+> CONFIG_PRINTK_TIME would be nice.
 
-Stanislaw
+http://vserver.13thfloor.at/Stuff/SATAPMP/dmesg_2.6.38.txt
+
+note that it seems to be fixed in 2.6.38.2, I'm now
+checking 2.6.38.1 as well to narrow down what fixed
+it ...
+
+thanks,
+Herbert
+
+> Thanks.
+
+> -- 
+> tejun
