@@ -1,73 +1,34 @@
-From: Igor Plyatov <plyatov@gmail.com>
-Subject: Re: [PATCH v3] ata: pata_at91.c bugfix for high master clock
-Date: Mon, 28 Mar 2011 17:04:29 +0400
-Message-ID: <1301317469.29670.5.camel@homepc>
-References: <1301313595-23156-1-git-send-email-plyatov@gmail.com>
-Reply-To: plyatov@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: PMP and Smart Enclosure ...
+Date: Mon, 28 Mar 2011 18:01:36 +0200
+Message-ID: <20110328160136.GC6736@htj.dyndns.org>
+References: <20110322145440.GA15541@MAIL.13thfloor.at>
+ <20110322152529.GB15541@MAIL.13thfloor.at>
+ <20110328085211.GD16530@htj.dyndns.org>
+ <20110328123623.GD25384@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40779 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:39145 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753360Ab1C1NEg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 09:04:36 -0400
-In-Reply-To: <1301313595-23156-1-git-send-email-plyatov@gmail.com>
+	with ESMTP id S1754207Ab1C1QBz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 12:01:55 -0400
+Received: by fxm17 with SMTP id 17so2773552fxm.19
+        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2011 09:01:53 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20110328123623.GD25384@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Herbert Poetzl <herbert@13thfloor.at>
+Cc: linux-ide@vger.kernel.org
 
-Hi!
+On Mon, Mar 28, 2011 at 02:36:23PM +0200, Herbert Poetzl wrote:
+> sure, any specific debug options and/or config settings
+> you want me to use for the test?
 
-Please abandon this patch and use its new version 4 with subjects:
-* "[PATCH v4 1/2] ata: pata_at91.c bugfix for initial_timing
-initialisation"
-* "[PATCH v4 2/2] ata: pata_at91.c bugfix for high master clock"
+CONFIG_PRINTK_TIME would be nice.
 
-Best regards!
---
-Igor Plyatov
+Thanks.
 
-> The AT91SAM9 microcontrollers with master clock higher then 105 MHz
-> and PIO0, have overflow of the NCS_RD_PULSE value in the MSB. This
-> lead to "NCS_RD_PULSE" pulse longer then "NRD_CYCLE" pulse and driver
-> does not detect ATA device.
-> 
-> Signed-off-by: Igor Plyatov <plyatov@gmail.com>
-> ---
->  drivers/ata/pata_at91.c |    8 +++++++-
->  1 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-> index d1aaeb5..3c2bf86 100644
-> --- a/drivers/ata/pata_at91.c
-> +++ b/drivers/ata/pata_at91.c
-> @@ -33,11 +33,12 @@
->  
-> 
->  #define DRV_NAME "pata_at91"
-> -#define DRV_VERSION "0.1"
-> +#define DRV_VERSION "0.2"
->  
->  #define CF_IDE_OFFSET	    0x00c00000
->  #define CF_ALT_IDE_OFFSET   0x00e00000
->  #define CF_IDE_RES_SIZE     0x08
-> +#define NCS_RD_PULSE_LIMIT  0x3f /* maximal value for pulse bitfields */
->  
->  struct at91_ide_info {
->  	unsigned long mode;
-> @@ -110,6 +111,11 @@ static void set_smc_timing(struct device *dev,
->  	/* (CS0, CS1, DIR, OE) <= (CFCE1, CFCE2, CFRNW, NCSX) timings */
->  	ncs_read_setup = 1;
->  	ncs_read_pulse = read_cycle - 2;
-> +	if (ncs_read_pulse > NCS_RD_PULSE_LIMIT) {
-> +		ncs_read_pulse = NCS_RD_PULSE_LIMIT;
-> +		dev_warn(dev, "ncs_read_pulse limited to maximal value %lu\n",
-> +			ncs_read_pulse);
-> +	}
->  
->  	/* Write timings same as read timings */
->  	write_cycle = read_cycle;
-
-
+-- 
+tejun
