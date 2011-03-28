@@ -1,35 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: PMP and Smart Enclosure ...
-Date: Mon, 28 Mar 2011 10:52:11 +0200
-Message-ID: <20110328085211.GD16530@htj.dyndns.org>
-References: <20110322145440.GA15541@MAIL.13thfloor.at>
- <20110322152529.GB15541@MAIL.13thfloor.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Igor Plyatov <plyatov@gmail.com>
+Subject: [PATCH] ata: pata_at91.c bugfix for initial_timing initialisation
+Date: Mon, 28 Mar 2011 15:59:05 +0400
+Message-ID: <1301313545-22730-1-git-send-email-plyatov@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45180 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750776Ab1C1IwQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 04:52:16 -0400
-Received: by bwz15 with SMTP id 15so2242673bwz.19
-        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2011 01:52:15 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20110322152529.GB15541@MAIL.13thfloor.at>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:34553 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752166Ab1C1L70 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 07:59:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Igor Plyatov <plyatov@gmail.com>
 
-On Tue, Mar 22, 2011 at 04:25:29PM +0100, Herbert Poetzl wrote:
-> >  echo "- - -" >/sys/class/scsi_host/host9/scan
-> 
-> >  scsiadd -s 9
-> 
-> >  resetting the PMP (via small front panel button)
+The "struct ata_timing" must contain 10 members, but ".dmack_hold" member was
+forgotten for "initial_timing" initialisation. This patch fixes such a problem.
 
-Can you please attach kernel log while this is happening?
+Signed-off-by: Igor Plyatov <plyatov@gmail.com>
+---
+ drivers/ata/pata_at91.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 0da0dcc..d1aaeb5 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -49,8 +49,9 @@ struct at91_ide_info {
+ 	void __iomem *alt_addr;
+ };
+ 
+-static const struct ata_timing initial_timing =
+-	{XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0};
++static const struct ata_timing initial_timing = {
++	XFER_PIO_0, 70, 290, 240, 600, 165, 150, 600, 0
++};
+ 
+ static unsigned long calc_mck_cycles(unsigned long ns, unsigned long mck_hz)
+ {
 -- 
-tejun
+1.7.1
+
