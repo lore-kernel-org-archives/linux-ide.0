@@ -1,40 +1,35 @@
-From: Daniel Palmer <me@danielpalmer.co.uk>
-Subject: Re: PATA_ARTOP oppes in 2.6.38
-Date: Mon, 28 Mar 2011 08:34:10 +0100
-Message-ID: <4D9039F2.4060407@danielpalmer.co.uk>
-References: <4D8FD6D1.2020501@danielpalmer.co.uk> <19856.14311.395203.113370@pilspetsen.it.uu.se>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: PMP and Smart Enclosure ...
+Date: Mon, 28 Mar 2011 10:52:11 +0200
+Message-ID: <20110328085211.GD16530@htj.dyndns.org>
+References: <20110322145440.GA15541@MAIL.13thfloor.at>
+ <20110322152529.GB15541@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tomato.cardboardbox.org.uk ([174.143.157.65]:39347 "EHLO
-	tomato.cardboardbox.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751605Ab1C1HeT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 03:34:19 -0400
-In-Reply-To: <19856.14311.395203.113370@pilspetsen.it.uu.se>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45180 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750776Ab1C1IwQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2011 04:52:16 -0400
+Received: by bwz15 with SMTP id 15so2242673bwz.19
+        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2011 01:52:15 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20110322152529.GB15541@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
+To: Herbert Poetzl <herbert@13thfloor.at>
 Cc: linux-ide@vger.kernel.org
 
-On 28/03/11 08:25, Mikael Pettersson wrote:
-> pata_artop works fine with 2.6.38 on one of my older ARM boxes
-> (a Synology DS101 NAS, arm/mach-ixp4xx/, BSP not in upstream kernel).
->
-> I'd suspect an issue with your platform (sh?).  A kernel bisection
-> should identify the offending commit.
->    
+On Tue, Mar 22, 2011 at 04:25:29PM +0100, Herbert Poetzl wrote:
+> >  echo "- - -" >/sys/class/scsi_host/host9/scan
+> 
+> >  scsiadd -s 9
+> 
+> >  resetting the PMP (via small front panel button)
 
-Thank you, I too suspected it was something in the arch specific code.. 
-the code for the Landisk boards hasn't changed since ~2007 but some 
-recent commits broke a lot of things. I did send the oops to the person 
-that did the changes (linked in my original mail) and they said they 
-think it's the driver.
-If it works for you though that rules that out to a certain degree.
+Can you please attach kernel log while this is happening?
 
-Thanks again!
+Thanks.
 
-Daniel
-
-
-/me just noticed I spelled oops incorrectly in the subject. oops.
+-- 
+tejun
