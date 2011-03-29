@@ -1,80 +1,62 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: PMP and Smart Enclosure ...
-Date: Tue, 29 Mar 2011 17:39:10 +0200
-Message-ID: <20110329153910.GB25397@MAIL.13thfloor.at>
-References: <20110322145440.GA15541@MAIL.13thfloor.at> <20110322152529.GB15541@MAIL.13thfloor.at> <20110328085211.GD16530@htj.dyndns.org> <20110328123623.GD25384@MAIL.13thfloor.at> <20110328160136.GC6736@htj.dyndns.org> <20110328224642.GJ25384@MAIL.13thfloor.at> <20110328234729.GK25384@MAIL.13thfloor.at> <20110329080321.GG6736@htj.dyndns.org> <20110329144906.GN25384@MAIL.13thfloor.at> <20110329150104.GD29865@htj.dyndns.org>
+From: Pete Clements <clem@clem.clem-digital.net>
+Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
+Date: Tue, 29 Mar 2011 11:51:13 -0400 (EDT)
+Message-ID: <201103291551.p2TFpDqZ001692@clem.clem-digital.net>
+References: <4D91E9DA.4050504@fusionio.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from MAIL.13thfloor.at ([213.145.232.33]:41388 "EHLO
-	MAIL.13thfloor.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240Ab1C2PjM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Mar 2011 11:39:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20110329150104.GD29865@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4D91E9DA.4050504@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Rob Landley <rlandley@parallels.com>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, Mar 29, 2011 at 05:01:04PM +0200, Tejun Heo wrote:
-> On Tue, Mar 29, 2011 at 04:49:06PM +0200, Herbert Poetzl wrote:
->> PS: any thoughts on how/where I should add the device 
->>     interface for the SATA PMP?
+Quoting Jens Axboe
+  > 
+  > On 2011-03-29 16:13, Rob Landley wrote:
+  > > On 03/29/2011 08:59 AM, Jens Axboe wrote:
+  > >> On 2011-03-29 10:52, Rob Landley wrote:
+  > >>> I'm booting all this under kvm or qemu, by the way:
+  > >>>
+  > >>> qemu-system-x86_64 -m 1024 -kernel arch/x86/boot/bzImage \
+  > >>>   -hda ~/sid.ext3 -append "root=/dev/hda rw"
+  > >>>
+  > >>> Sometimes with init=/bin/bash in that last quoted bit.  The root
+  > >>> filesystem's debian sid but that's probably not relevant because it
+  > >>> worked fine with .38.
+  > >>
+  > >> Does this help?
+  > >>
+  > >> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+  > >> index 0e406d73..ca27d30 100644
+  > >> --- a/drivers/ide/ide-io.c
+  > >> +++ b/drivers/ide/ide-io.c
+  > >> @@ -570,8 +570,7 @@ void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq)
+  > >>  	spin_unlock_irqrestore(q->queue_lock, flags);
+  > >>  
+  > >>  	/* Use 3ms as that was the old plug delay */
+  > >> -	if (rq)
+  > >> -		blk_delay_queue(q, 3);
+  > >> +	blk_delay_queue(q, 3);
+  > >>  }
+  > >>  
+  > >>  static int drive_is_ready(ide_drive_t *drive)
+  > >>
+  > > 
+  > > Nope, still hung the same way.
+  > 
+  > Funky. I'll try and reproduce this tonight.
+  > 
+  > -- 
+  > Jens Axboe
+  > 
 
-> One way would be adding a device node for the PMP device but I don't
-> have much idea how it should look like.  The thing is that PMP isn't a
-> completely separate device.  It's more of a dummy hub and an extension
-> of the host SATA bus rather than a separate device.  Maybe it's best
-> to just put it together on the host itself.
+I have had a similiar problem (reported earlier) unable to boot.
+With git15-18 hung with IDE drives (hda), git19-21 moved the hang down to
+the IDE CDROM (hdc). Applied the above patch and now booted into git21 without
+any hang and all appears ok.  This is i386, UP. 
 
-well, as I see it, there is a bunch of options here, with 
-various advantages and of course certain limitations/drawbacks
-
- 1) we could simply add an SCSI device for the PMP
-    e.g. if there is 8:0:0:0 - 8:4:0:0 we could add 8:15:0:0
-
-    pro: probably the most flexible interface as one can
-         send whatever PMP messages they like, but I'm
-         not sure how to handle the replies here
-    con: might need special security etc, but OTOH, you
-         can mess up a disk as well ...
-
- 2) we could add some special IOCTL, based on the existing
-    devices
-
-    pro: could be limited to certain well defined commands
-         and there is no need for new interfaces
-    con: not really associated with the PMP, i.e. more a
-         hack which needs special handling for non PMP
-         attached disks
-
- 3) we could have some specific sysfs interfaces doing
-    certain parts of the communication
-
-    pro: easy to add, well known interface and could be
-         structured and associated with the host controller
-    con: very limited and needs kernel code for each new
-         PMP message, also request/reply type of commands
-         get really ugly soon and finally we need to handle
-         more than one PMP per host
-
- 4) create an i2c module which 'attaches' to the PMP(s)
-
-    pro: no problem with request/reply and basically the
-         proper interface between SEMB and SEP
-    con: only a subset of the PMP messages are related to
-         SEMB/SEP stuff, so that would only solve this
-         particular problem and not e.g. PMP GPIO
-
-I'd lean towards 1, because it will give the most flexibility
-and will allow fast prototyping in userspace, my second choice
-would be 4) as I'm mainly interested in the SEMB/SEP stuff
-right now, but I definitely want to avoid adding something
-with almost zero chance to go upstream :)
-
-thanks,
-Herbert
-
-> -- 
-> tejun
+--
+Pete Clements
