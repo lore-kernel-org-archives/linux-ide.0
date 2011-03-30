@@ -1,46 +1,47 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: PATA_ARTOP reads byte from PCI IO port without mapping it to the right address.
-Date: Wed, 30 Mar 2011 22:00:46 +0200
-Message-ID: <201103302200.47052.arnd@arndb.de>
-References: <4D937FDC.4090607@danielpalmer.co.uk> <20110330202628.5dc8db5f@lxorguk.ukuu.org.uk> <4D93890A.60307@danielpalmer.co.uk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: PATA_ARTOP reads byte from PCI IO port without mapping it to the
+ right address.
+Date: Wed, 30 Mar 2011 12:36:16 -0700
+Message-ID: <AANLkTimokmN5++Qghz-2pTDa7KLnRn_YBW-ox_9tP+XO@mail.gmail.com>
+References: <4D937FDC.4090607@danielpalmer.co.uk> <20110330202628.5dc8db5f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D93890A.60307@danielpalmer.co.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Daniel Palmer <me@danielpalmer.co.uk>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47105 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754227Ab1C3UEe convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Mar 2011 16:04:34 -0400
+In-Reply-To: <20110330202628.5dc8db5f@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Daniel Palmer <me@danielpalmer.co.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 30 March 2011 21:48:26 Daniel Palmer wrote:
-> >  That is the PCI port address.
-> 
-> I don't pretend to understand most of this fully.
-> On the board the PCI address space/PCI controller is apparently at 
-> 0xfe240000
-> So I guess that when that byte is read it should read from 0xfe240000 + 
-> 0x1400?
-> That doesn't happen and a read happens at 0x1400 and an oops results.
-> I don't know enough to point the finger really.
-> 
-> There are probably only 2 people using this board still too. So I doubt 
-> it really matters. :)
+On Wed, Mar 30, 2011 at 12:26 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> w=
+rote:
+>> unsigned long io =3D pci_resource_start(pdev, 4); =A0 =A0 =A0 =A0 =A0=
+ // This
+>> returns 0x1400 on my machine
+>
+> That is the PCI port address.
+>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0u8 reg;
+>>
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ppi[0] =3D &info_628x;
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (inb(io) & 0x10)
+>> =A0 =A0 =A0 =A0 =A0// This reads from 0x1400, which isn't were the p=
+ort actually
+>> is in the processors address
+>
+> This reads from I/O port 0x1400 - your inb logic and I/O port mapping=
+ on
+> the platform is responsible for making that work.
 
-Is this an ARM machine? The platform specific mach/io.h header file
-in that case defines an __io() macro that is responsible for mapping
-port numbers to virtual addresses.
+Indeed. We do _not_ expect inb/outb to do the equivalent of ioremap()
+etc, since the IO port range is just 64kB. The arch code is supposed
+to do whatever mapping it needs statically at bootup, and just make
+inb/outb honor that mapping.
 
-You have to ioremap() the physical address 0xfe240000 to a virtual
-address, and then add the base address to the number inside of the
-__io macro, e.g.
-
-/* in mach/io.h: */
-extern void __iomem *this_board_pci_iospace;
-#define __io(x) ((x & 0xffff) + this_board_pci_iospace)
-
-/* in pci controller setup code: */
-this_board_pci_iospace = ioremap(0xfe240000, 0x10000);
-
-	Arnd
+                          Linus
