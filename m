@@ -1,117 +1,79 @@
-From: Rob Landley <rlandley@parallels.com>
-Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
-Date: Wed, 30 Mar 2011 08:52:04 -0500
-Message-ID: <4D933584.5050005@parallels.com>
-References: <201103291551.p2TFpDqZ001692@clem.clem-digital.net> <4D92C874.7040104@parallels.com> <4D931634.5030807@fusionio.com>
+From: Daniel Palmer <me@danielpalmer.co.uk>
+Subject: PATA_ARTOP reads byte from PCI IO port without mapping it to the
+ right address.
+Date: Wed, 30 Mar 2011 20:09:16 +0100
+Message-ID: <4D937FDC.4090607@danielpalmer.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D931634.5030807@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Pete Clements <clem@clem.clem-digital.net>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tomato.cardboardbox.org.uk ([174.143.157.65]:38080 "EHLO
+	tomato.cardboardbox.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932411Ab1C3TJZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2011 15:09:25 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/30/2011 06:38 AM, Jens Axboe wrote:
-> On 2011-03-30 08:06, Rob Landley wrote:
->> On 03/29/2011 10:51 AM, Pete Clements wrote:
->>> Quoting Jens Axboe
->>>   > 
->>>   > On 2011-03-29 16:13, Rob Landley wrote:
->>>   > > On 03/29/2011 08:59 AM, Jens Axboe wrote:
->>>   > >> On 2011-03-29 10:52, Rob Landley wrote:
->>>   > >>> I'm booting all this under kvm or qemu, by the way:
->>>   > >>>
->>>   > >>> qemu-system-x86_64 -m 1024 -kernel arch/x86/boot/bzImage \
->>>   > >>>   -hda ~/sid.ext3 -append "root=/dev/hda rw"
->>>   > >>>
->>>   > >>> Sometimes with init=/bin/bash in that last quoted bit.  The root
->>>   > >>> filesystem's debian sid but that's probably not relevant because it
->>>   > >>> worked fine with .38.
->>>   > >>
->>>   > >> Does this help?
->>>   > >>
->>>   > >> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
->>>   > >> index 0e406d73..ca27d30 100644
->>>   > >> --- a/drivers/ide/ide-io.c
->>>   > >> +++ b/drivers/ide/ide-io.c
->>>   > >> @@ -570,8 +570,7 @@ void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq)
->>>   > >>  	spin_unlock_irqrestore(q->queue_lock, flags);
->>>   > >>  
->>>   > >>  	/* Use 3ms as that was the old plug delay */
->>>   > >> -	if (rq)
->>>   > >> -		blk_delay_queue(q, 3);
->>>   > >> +	blk_delay_queue(q, 3);
->>>   > >>  }
->>>   > >>  
->>>   > >>  static int drive_is_ready(ide_drive_t *drive)
->>>   > >>
->>>   > > 
->>>   > > Nope, still hung the same way.
->>>   > 
->>>   > Funky. I'll try and reproduce this tonight.
->>>   > 
->>>   > -- 
->>>   > Jens Axboe
->>>   > 
->>>
->>> I have had a similiar problem (reported earlier) unable to boot.
->>> With git15-18 hung with IDE drives (hda), git19-21 moved the hang down to
->>> the IDE CDROM (hdc). Applied the above patch and now booted into git21 without
->>> any hang and all appears ok.
->>
->> It may have made it better for me, it's hard to tell.
->>
->> I did a fresh pull, re-applied the patch, and tried again with
->> init=/bin/sh and it booted to the shell prompt... which then hung when I
->> did "ls -l /".
->>
->> If I let it boot normally, init announces itself, gives a spurious
->> warning about a fstab field (which it's been doing for a while, my fault
->> but harmless), then hangs.
->>
->>> This is i386, UP.
->>
->> I'm doing x86-64 SMP.
-> 
-> I think we have the same issue the other location. How about this, then:
-> 
-> diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-> index 0e406d73..4978ec3 100644
-> --- a/drivers/ide/ide-io.c
-> +++ b/drivers/ide/ide-io.c
-> @@ -549,12 +549,11 @@ plug_device:
->  	spin_unlock_irq(&hwif->lock);
->  	ide_unlock_host(host);
->  plug_device_2:
-> +	blk_delay_queue(q, queue_run_ms);
->  	spin_lock_irq(q->queue_lock);
->  
-> -	if (rq) {
-> +	if (rq)
->  		blk_requeue_request(q, rq);
-> -		blk_delay_queue(q, queue_run_ms);
-> -	}
->  }
->  
->  void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq)
-> @@ -570,8 +569,7 @@ void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq)
->  	spin_unlock_irqrestore(q->queue_lock, flags);
->  
->  	/* Use 3ms as that was the old plug delay */
-> -	if (rq)
-> -		blk_delay_queue(q, 3);
-> +	blk_delay_queue(q, 3);
->  }
->  
->  static int drive_is_ready(ide_drive_t *drive)
-> 
+Hi,
 
-Did a fresh pull and applied that patch.  (It conflicts with your
-previous one, but looks like it includes it.)
+I posted on linux-ide a few days ago about PATA_ARTOP causing an oops in 
+2.6.38.
+Anyhow, it seems this issue has existed for a while but something has 
+changed in the SH code since 2.6.35 that exposes the problem.
+Mikael Pettersson replied to my original post and said that the driver 
+works on his board. I suspect his board isn't reading the byte from the 
+PCI io port (different controller that doesn't enter that code path) or 
+on his board it maps to the right place (or some place that doesn't 
+cause an oops) without out asking for it to be mapped.
 
-Now it hangs after the "EXT3-fs: barriers not enabled" line, doesn't
-make it to init.
+I would write a patch, but I don't understand the linux PCI stuff enough 
+to know what is right.
+I have something that works on my machine (or at least it doesn't oops 
+anymore) but it's probably not the right solution.
 
-Rob
+Anyhow;-
+
+
+unsigned long io = pci_resource_start(pdev, 4);           // This 
+returns 0x1400 on my machine
+                 u8 reg;
+
+                 ppi[0] = &info_628x;
+                 if (inb(io) & 0x10)                                    
+         // This reads from 0x1400, which isn't were the port actually 
+is in the processors address                                             
+                                                      // space and thus 
+an oops happens.
+                         ppi[0] = &info_628x_fast;
+                 /* Mac systems come up with some registers not set as we
+                    will need them */
+
+
+IO port mapping for the pata controller;
+
+    0.040000] pci 0000:00:01.0: BAR 4: set to [io  0x1400-0x140f] (PCI 
+address [0x1400-0x140f])
+[    0.040000] pci 0000:00:01.0: BAR 0: assigned [io  0x1410-0x1417]
+
+
+I guess io should be calculated with pci_iomap(pdev, 4, 0) or something? 
+I don't understand how the PCI stuff works though..
+Looks like the BAR is hardcoded to 4 in the existing code. I have no 
+idea what a BAR is. ;)
+So, that's what I have on my machine.. and I don't get an oops anymore,
+pata seems to be working too. I haven't checked what value is actually 
+being read. So it's possible that it's just reading somewhere that 
+doesn't cause an oops and the issue isn't actually fixed.
+The main issue is the use of inb I guess. I noticed that there was some 
+activity to remove all uses of it in drivers some time back.
+
+Anyhow, that seems to be the problem. If someone who isn't just guessing 
+this stuff could come up with a fix that would be nice.
+I can get my board to boot now anyhow. :)
+
+Regards,
+
+Daniel
+
+
