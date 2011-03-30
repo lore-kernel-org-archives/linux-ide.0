@@ -1,47 +1,50 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: PATA_ARTOP reads byte from PCI IO port without mapping it to the
- right address.
-Date: Wed, 30 Mar 2011 12:36:16 -0700
-Message-ID: <AANLkTimokmN5++Qghz-2pTDa7KLnRn_YBW-ox_9tP+XO@mail.gmail.com>
-References: <4D937FDC.4090607@danielpalmer.co.uk> <20110330202628.5dc8db5f@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: PATA_ARTOP reads byte from PCI IO port without mapping it to
+ the right address.
+Date: Wed, 30 Mar 2011 21:24:40 +0100
+Message-ID: <20110330212440.794e85de@lxorguk.ukuu.org.uk>
+References: <4D937FDC.4090607@danielpalmer.co.uk>
+	<20110330202628.5dc8db5f@lxorguk.ukuu.org.uk>
+	<4D93890A.60307@danielpalmer.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:47105 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754227Ab1C3UEe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Mar 2011 16:04:34 -0400
-In-Reply-To: <20110330202628.5dc8db5f@lxorguk.ukuu.org.uk>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:38132 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932906Ab1C3UYH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2011 16:24:07 -0400
+In-Reply-To: <4D93890A.60307@danielpalmer.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Daniel Palmer <me@danielpalmer.co.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Daniel Palmer <me@danielpalmer.co.uk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 30, 2011 at 12:26 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> w=
-rote:
->> unsigned long io =3D pci_resource_start(pdev, 4); =A0 =A0 =A0 =A0 =A0=
- // This
->> returns 0x1400 on my machine
->
-> That is the PCI port address.
->
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0u8 reg;
->>
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ppi[0] =3D &info_628x;
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (inb(io) & 0x10)
->> =A0 =A0 =A0 =A0 =A0// This reads from 0x1400, which isn't were the p=
-ort actually
->> is in the processors address
->
-> This reads from I/O port 0x1400 - your inb logic and I/O port mapping=
- on
-> the platform is responsible for making that work.
+On Wed, 30 Mar 2011 20:48:26 +0100
+Daniel Palmer <me@danielpalmer.co.uk> wrote:
 
-Indeed. We do _not_ expect inb/outb to do the equivalent of ioremap()
-etc, since the IO port range is just 64kB. The arch code is supposed
-to do whatever mapping it needs statically at bootup, and just make
-inb/outb honor that mapping.
+> 
+> >  That is the PCI port address.
+> 
+> I don't pretend to understand most of this fully.
+> On the board the PCI address space/PCI controller is apparently at 
+> 0xfe240000
+> So I guess that when that byte is read it should read from 0xfe240000 + 
+> 0x1400?
+> That doesn't happen and a read happens at 0x1400 and an oops results.
+> I don't know enough to point the finger really.
+> 
+> There are probably only 2 people using this board still too. So I doubt 
+> it really matters. :)
 
-                          Linus
+That sounds like the inb() function has been broken by a change perhaps
+by some related board change - if your I/O is mapped as you describe I'd
+expect inb() to be implemented as something like
+
+
+	return *(volatile u8 *)(0xfe2400 + addr)
+
+Might be worth bisecting between a good and bad release as it ought to be
+easy to find
+
+Alan
