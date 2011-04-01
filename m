@@ -1,134 +1,185 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.39-rc1 problem
-Date: Fri, 1 Apr 2011 11:01:35 +0200
-Message-ID: <20110401090135.GI3385@htj.dyndns.org>
-References: <1301536052.9909@guyane.yi.org>
- <20110331113523.3c34f360.akpm@linux-foundation.org>
+From: Leon Woestenberg <leon.woestenberg@gmail.com>
+Subject: sata_sil24 driver / Sil3132 controller fails on powerpc
+Date: Fri, 1 Apr 2011 13:52:14 +0200
+Message-ID: <AANLkTikuC3PxPhiH7xNEomaoF-MKx0+VVwgz6YMwyxvj@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47769 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751330Ab1DAJBl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Apr 2011 05:01:41 -0400
-Content-Disposition: inline
-In-Reply-To: <20110331113523.3c34f360.akpm@linux-foundation.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:45150 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753549Ab1DALwQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Apr 2011 07:52:16 -0400
+Received: by bwz15 with SMTP id 15so2454389bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 01 Apr 2011 04:52:14 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: werner@guyane.yi.org, linux-kernel@vger.kernel.org, gregkh@suse.de, mingo@elte.hu, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-(cc linux-scsi)
 Hello,
 
-On Thu, Mar 31, 2011 at 11:35:23AM -0700, Andrew Morton wrote:
-> (cc linux-ide)
-> 
-> On Wed, 30 Mar 2011 22:47:32 -0300 (GFT)
-> werner@guyane.yi.org wrote:
-> 
-> > The mailing list is anyhow blocking my mails, I suppose it didnt
-> > appear there, so I send my error report to you You can send it to
-> > someone wich can correct these erros
+I see the sata_sil24 / Sil 3132 fail on my system.
 
-Can you please provide more details on the circumstances?  When did
-this happen and how reproducible is it?  Which controller is in use
-(lspci -nn)?  Please also attach full output of dmesg including the
-boot messages.
+Linux 2.6.38
+Silicon Image 3132 Mini-PCI Express card on the Freescale PowerPC
+e500v2 based SoC on the P1020RDB board
+Intel SSD attached.
 
-> > ==============================================
-> > Mar 30 03:48:42 werner kernel: ------------[ cut here ]------------
-> > Mar 30 03:48:42 werner kernel: WARNING: at drivers/ata/libata-core.c:5015 ata_qc_issue+0x1ba/0x33c()
-> > Mar 30 03:48:42 werner kernel: Hardware name: System Product Name
-> > Mar 30 03:48:42 werner kernel: Modules linked in: ipv6 snd_usb_audio snd_usbmidi_lib snd_rawmidi snd_seq_device rt2860sta(C) uvcvideo lp snd_hda_codec_realtek tpm_tis tpm tpm_bios rtc_cmos rtc_core rtc_lib asus_atk0110 snd_hda_intel 8139too snd_hda_codec snd_hwdep snd_pcm snd_timer k8temp atl1 snd soundcore snd_page_alloc i2c_nforce2
-> > Mar 30 03:48:42 werner kernel: Pid: 0, comm: swapper Tainted: G         C  2.6.39-rc1 #1
-> 
-> I assume that 2.6.38 was OK and that this is a post-2.6.38 regression?
-> 
-> > Mar 30 03:48:42 werner kernel: Call Trace:
-> > Mar 30 03:48:42 werner kernel:  [<c1a22e33>] ? ata_qc_issue+0x1ba/0x33c
-> > Mar 30 03:48:42 werner kernel:  [<c103ce4b>] warn_slowpath_common+0x7a/0x8f
-> > Mar 30 03:48:42 werner kernel:  [<c1a22e33>] ? ata_qc_issue+0x1ba/0x33c
-> > Mar 30 03:48:42 werner kernel:  [<c103ce82>] warn_slowpath_null+0x22/0x24
-> > Mar 30 03:48:42 werner kernel:  [<c1a22e33>] ata_qc_issue+0x1ba/0x33c
-> > Mar 30 03:48:42 werner kernel:  [<c1a2806c>] ata_scsi_translate+0xdd/0x10b
-> > Mar 30 03:48:43 werner kernel:  [<c1a27d4f>] ? ata_gen_passthru_sense+0x125/0x125
-> > Mar 30 03:48:43 werner kernel:  [<c1a28d98>] ata_scsi_queuecmd+0x178/0x1bb
-> > Mar 30 03:48:43 werner kernel:  [<c17f9c5b>] scsi_dispatch_cmd+0x164/0x1ee
-> > Mar 30 03:48:43 werner kernel:  [<c15526a0>] ? blk_add_timer+0x89/0xab
-> > Mar 30 03:48:43 werner kernel:  [<c17ff113>] scsi_request_fn+0x348/0x483
-> > Mar 30 03:48:43 werner kernel:  [<c154cae0>] __blk_run_queue+0x6c/0xce
-> > Mar 30 03:48:43 werner kernel:  [<c154cfe0>] blk_run_queue+0x22/0x33
-> > Mar 30 03:48:43 werner kernel:  [<c17fe80a>] scsi_run_queue+0x297/0x318
-> > Mar 30 03:48:43 werner kernel:  [<c17ff3f9>] scsi_next_command+0x2d/0x39
-> > Mar 30 03:48:43 werner kernel:  [<c17fff29>] scsi_io_completion+0x41f/0x457
-> > Mar 30 03:48:43 werner kernel:  [<c1a108e4>] ? sd_done+0xe/0x26d
-> > Mar 30 03:48:43 werner kernel:  [<c17ffa2a>] ? scsi_device_unbusy+0x80/0x86
-> > Mar 30 03:48:43 werner kernel:  [<c17f99db>] scsi_finish_command+0xce/0xd6
-> > Mar 30 03:48:43 werner kernel:  [<c17fcafd>] ? scsi_decide_disposition+0xe8/0x16e
-> > Mar 30 03:48:43 werner kernel:  [<c1800058>] scsi_softirq_done+0xe3/0xeb
-> > Mar 30 03:48:43 werner kernel:  [<c107da3b>] ? __rcu_process_callbacks+0x6b/0x227
-> > Mar 30 03:48:43 werner kernel:  [<c155248f>] blk_done_softirq+0x5b/0x68
-> > Mar 30 03:48:43 werner kernel:  [<c10423aa>] __do_softirq+0xa1/0x169
-> > Mar 30 03:48:43 werner kernel:  [<c1042309>] ? irq_enter+0x4d/0x4d
-> > Mar 30 03:48:43 werner kernel:  <IRQ>  [<c1079bf8>] ? irq_to_desc+0x8/0x1e
-> > Mar 30 03:48:43 werner kernel:  [<c10421b8>] ? irq_exit+0x37/0x53
-> > Mar 30 03:48:43 werner kernel:  [<c1004715>] ? do_IRQ+0x8b/0xa1
-> > Mar 30 03:48:43 werner kernel:  [<c1df2330>] ? common_interrupt+0x30/0x40
-> > Mar 30 03:48:43 werner kernel:  [<c10266c4>] ? native_safe_halt+0xa/0xc
-> > Mar 30 03:48:43 werner kernel:  [<c10093ca>] ? default_idle+0xa5/0x11b
-> > Mar 30 03:48:43 werner kernel:  [<c100986e>] ? c1e_idle+0xdd/0xe3
-> > Mar 30 03:48:43 werner kernel:  [<c100262a>] ? cpu_idle+0x86/0x9c
-> > Mar 30 03:48:43 werner kernel:  [<c1d7aaad>] ? rest_init+0x5d/0x5f
-> > Mar 30 03:48:43 werner kernel:  [<c231981d>] ? start_kernel+0x317/0x31d
-> > Mar 30 03:48:43 werner kernel:  [<c231931c>] ? kernel_init+0x12a/0x12a
-> > Mar 30 03:48:43 werner kernel:  [<c23190b6>] ? i386_start_kernel+0xb6/0xbd
-> > Mar 30 03:48:43 werner kernel: ---[ end trace 2f5b85b514efe967 ]---
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:4e:00:bc/00:00:00:00:00/e7 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:af:88:e0/00:00:00:00:00/e0 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:af:88:e0/00:00:00:00:00/e0 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:af:88:e0/00:00:00:00:00/e0 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:af:88:e0/00:00:00:00:00/e0 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
-> > Mar 30 03:48:43 werner kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > Mar 30 03:48:43 werner kernel: ata1.00: failed command: WRITE DMA
-> > Mar 30 03:48:43 werner kernel: ata1.00: cmd ca/00:08:27:06:bc/00:00:00:00:00/e7 tag 0 dma 4096 out
-> > Mar 30 03:48:43 werner kernel:          res 50/00:00:af:88:e0/00:00:00:00:00/e0 Emask 0x40 (internal error)
-> > Mar 30 03:48:43 werner kernel: ata1.00: status: { DRDY }
+MSI disabled already fails during IDENTIFY phase.
+MSI enables does ok for small transfers, but fails on larger transfers.
 
-The triggered condition is the following.
+Inspecting the driver source, I notice PCI flushing reads are missing
+at points I would expect them.
 
-	if (WARN_ON_ONCE(ata_is_data(prot) &&
-	    (!qc->sg || !qc->n_elem || !qc->nbytes)))
-		goto sys_err;
+static int sil24_exec_polled_cmd(struct ata_port *ap, int pmp,
+				 const struct ata_taskfile *tf,
+				 int is_cmd, u32 ctrl,
+				 unsigned long timeout_msec)
+{
+        <...>
+	writel(irq_mask, port + PORT_IRQ_STAT); /* clear IRQs */
+        <...>
+	/* restore IRQ enabled */
+	writel(irq_enabled, port + PORT_IRQ_ENABLE_SET);   <----------------
+PCI flushing read required ??!
+	return rc;
+}
 
-qc->nbytes is 4096 as printed out in "dma 4096 out" in the command
-error messages, so either qc->sg or n_elem is not initialized and both
-are initialized directly from the SCSI command using scsi_sglist(scmd)
-and scsi_sg_count(scmd), so the root cause could be in SCSI layer.
+modprobe sata_sil
 
-Anyways, too little info to determine anything at this point.
+[    8.834613] sata_sil24 0001:03:00.0: version 1.1
+[    8.885581] scsi0 : sata_sil24
+[    8.901420] scsi1 : sata_sil24
+[    8.904642] ata1: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0004000 irq 16
+[    8.911961] ata2: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0006000 irq 16
+[   11.095127] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[   14.906986] eth0: no IPv6 routers present
+[   16.099016] ata1.00: qc timeout (cmd 0xec)
+[   16.103128] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[   18.299050] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[   28.303026] ata1.00: qc timeout (cmd 0xec)
+[   28.307139] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[   28.313233] ata1: limiting SATA link speed to 1.5 Gbps
+[   30.523059] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
 
-Thanks.
 
+modprobe sata_sil msi=1
+
+[   92.984120] sata_sil24 0001:03:00.0: version 1.1
+[   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
+virtual irq 41
+[   92.996229] sata_sil24 0001:03:00.0: Using MSI
+[   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
+[   93.011628] scsi2 : sata_sil24
+[   93.022463] scsi3 : sata_sil24
+[   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0004000 irq 41
+[   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0006000 irq 41
+[   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
+-84148995 sactive 0x0)
+[   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max UDMA/133
+[   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth 31/32)
+[   95.230905] ata3.00: configured for UDMA/100
+[   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
+SSDSA2M080 2CV1 PQ: 0 ANSI: 5
+[   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
+(80.0 GB/74.5 GiB)
+[   95.260219] sd 2:0:0:0: [sda] Write Protect is off
+[   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[   95.283779]  sda: sda1 sda2 sda3 sda4
+[   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
+[   95.965897] EXT3-fs: barriers not enabled
+[   95.977279] kjournald starting.  Commit interval 5 seconds
+[   95.983296] EXT3-fs (sda2): using internal journal
+[   95.988143] EXT3-fs (sda2): recovery complete
+[   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data mode
+[   96.111587] NTFS volume version 3.1.
+[   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
+
+root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=1000
+1000+0 records in
+1000+0 records out
+4096000 bytes (4.1 MB) copied, 0.0315629 s, 130 MB/s
+root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=10000
+10000+0 records in
+10000+0 records out
+40960000 bytes (41 MB) copied, 0.471802 s, 86.8 MB/s
+
+root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=100000
+
+That stalls, I see the controller fail. See dmesg below:
+
+^C^Cdd: reading `/dev/sda': Input/output error
+51804+0 records in
+51804+0 records out
+212189184 bytes (212 MB) copied, 85.6537 s, 2.5 MB/s
+dd: closing input file `/dev/sda': Bad file descriptor
+
+
+[   92.984120] sata_sil24 0001:03:00.0: version 1.1
+[   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
+virtual irq 41
+[   92.996229] sata_sil24 0001:03:00.0: Using MSI
+[   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
+[   93.011628] scsi2 : sata_sil24
+[   93.022463] scsi3 : sata_sil24
+[   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0004000 irq 41
+[   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
+0xc0006000 irq 41
+[   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
+-84148995 sactive 0x0)
+[   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max UDMA/133
+[   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth 31/32)
+[   95.230905] ata3.00: configured for UDMA/100
+[   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
+SSDSA2M080 2CV1 PQ: 0 ANSI: 5
+[   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
+[   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
+(80.0 GB/74.5 GiB)
+[   95.260219] sd 2:0:0:0: [sda] Write Protect is off
+[   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[   95.283779]  sda: sda1 sda2 sda3 sda4
+[   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
+[   95.965897] EXT3-fs: barriers not enabled
+[   95.977279] kjournald starting.  Commit interval 5 seconds
+[   95.983296] EXT3-fs (sda2): using internal journal
+[   95.988143] EXT3-fs (sda2): recovery complete
+[   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data mode
+[   96.111587] NTFS volume version 3.1.
+[   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
+[  285.891036] ata3.00: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x6 frozen
+[  285.898099] ata3.00: failed command: READ FPDMA QUEUED
+[  285.903250] ata3.00: cmd 60/00:00:e0:53:06/01:00:00:00:00/40 tag 0
+ncq 131072 in
+[  285.903255]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  285.918028] ata3.00: status: { DRDY }
+[  285.921689] ata3.00: failed command: READ FPDMA QUEUED
+[  285.926836] ata3.00: cmd 60/00:08:e0:52:06/01:00:00:00:00/40 tag 1
+ncq 131072 in
+[  285.926841]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  285.941615] ata3.00: status: { DRDY }
+[  285.945281] ata3: hard resetting link
+[  288.055034] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+[  293.058999] ata3.00: qc timeout (cmd 0xec)
+[  293.063106] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[  293.069198] ata3.00: revalidation failed (errno=-5)
+[  293.074077] ata3: hard resetting link
+[  295.259018] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+
+What can I do next to investigate and help fix this issue?
+
+Regards,
 -- 
-tejun
+Leon
