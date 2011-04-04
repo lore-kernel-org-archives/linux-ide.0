@@ -1,68 +1,105 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Sun, 03 Apr 2011 14:38:22 -0400
-Message-ID: <1301855902.2631.39.camel@mulgrave.site>
-References: <20110114165957.GH16039@MAIL.13thfloor.at>
-	 <20110114170407.GE978@htj.dyndns.org>
-	 <20110114173759.GI16039@MAIL.13thfloor.at>
-	 <20110117154042.GG27123@htj.dyndns.org>
-	 <1295281131.3015.44.camel@mulgrave.site>
-	 <20110117171836.GI27123@htj.dyndns.org>
-	 <1295284906.3015.136.camel@mulgrave.site>
-	 <20110117172415.GK27123@htj.dyndns.org>
-	 <20110125030740.GB24024@MAIL.13thfloor.at>
-	 <1295964854.4955.21.camel@mulgrave.site>
-	 <20110403173903.GK25397@MAIL.13thfloor.at>
+From: Richard Kennedy <richard@rsk.demon.co.uk>
+Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
+Date: Mon, 04 Apr 2011 14:47:43 +0100
+Message-ID: <1301924863.8526.9.camel@castor.rsk>
+References: <201103291551.p2TFpDqZ001692@clem.clem-digital.net>
+	 <4D92C874.7040104@parallels.com> <4D931634.5030807@fusionio.com>
+	 <4D933584.5050005@parallels.com> <4D94432D.5080601@fusionio.com>
+	 <4D944544.9040705@parallels.com> <4D945247.4080404@fusionio.com>
+	 <4D945976.8000401@fusionio.com> <20110331121100.GD3385@htj.dyndns.org>
+	 <4D9474AA.4070402@fusionio.com> <4D947D12.6070505@rsk.demon.co.uk>
+	 <4D947F29.5050203@fusionio.com> <1301577831.1984.2.camel@castor.rsk>
+	 <4D9482BA.8080807@fusionio.com>  <1301582977.1984.7.camel@castor.rsk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33329 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753137Ab1DCSia (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 3 Apr 2011 14:38:30 -0400
-In-Reply-To: <20110403173903.GK25397@MAIL.13thfloor.at>
+Received: from lon1-post-1.mail.demon.net ([195.173.77.148]:42710 "EHLO
+	lon1-post-1.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754104Ab1DDNrp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Apr 2011 09:47:45 -0400
+In-Reply-To: <1301582977.1984.7.camel@castor.rsk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Tejun Heo <tj@kernel.org>, Rob Landley <rlandley@parallels.com>, Pete Clements <clem@clem.clem-digital.net>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sun, 2011-04-03 at 19:39 +0200, Herbert Poetzl wrote:
-> >> So, any thoughts on how and where to add the PMP to the devices
-> >> available for sending SCSI or ATA commands to?
+On Thu, 2011-03-31 at 15:49 +0100, Richard Kennedy wrote:
+> On Thu, 2011-03-31 at 15:33 +0200, Jens Axboe wrote:
+>[...]
+> > >>> Hi Jens,
+> > >>>
+> > >>> I'm seeing a problem with fio never completing when writing to 2 disks
+> > >>> simultaneously. In my test case I'm writing 2Gb to both a LVM volume & a
+> > >>> pata drive on x86_64 on a AMD X2. Could this be a related issue?
+> > >>>
+> > >>> I'm not getting anything reported in the log, lockup detection doesn't
+> > >>> report anything either. The write seems to have finished (the disk light
+> > >>> activity has stopped) and the cpu cores are both below 10% usage, but
+> > >>> fio never returns. The test does complete some times, but it seems to be
+> > >>> one 1 in 4.
+> > >>
+> > >> So when you say PATA, it's /dev/hdaX something as well?
+> > >>
+> > >>> I'm going to try tracing it and see if I can spot where it's stuck.
+> > >>
+> > >> Thanks, that would be nice.
+> > >>
+> > > The second drive is /dev/sdb1 mounted on /opt, both file systems are
+> > > ext4.
+> > 
+> > So probably not related. What does the fio job look like?
+> > 
+> fio job file --
+> [global]
+> pre_read=1
+> ioengine=mmap
 > 
-> >> I'm willing to try to add the required code, but I'm sure I'll
-> >> benefit from a few hints from the experts ...
+> [f1]
+> size=2g
+> rw=write
+> directory=/home/tests
 > 
-> > Well, I'm not sure I'd count as an expert on this piece:
-> > I haven't read the relevant ATA standards. 
+> [f2]
+> size=2g
+> rw=write
+> directory=/opt/tests
 > 
-> > From what I understand, SES packets are encapsulated over 
-> > an ATA command for SEMB.
+> Fio gets run from a script that also collects stats but it's been
+> running without any problems up until 2.6.39-rc1.
 > 
-> correct, just that it can be any protocol (it's just another
-> bus, usually i2c) with the common protocols being SES and
-> SAF_TE AFAIK
-> 
-> > In that case, it should be fairly simple to recognise
-> > this and present a SCSI device which simply encapsulates
-> > everything sent to it over this protocol. 
-> 
-> do you have any pointers for me how that is done for SCSI?
+Hi Jens
+I've upgrade to the latest fio version in the git repo 1.51 and I'm
+still seeing this problem. 
 
-I don't think I understand the question.  It happens automatically for
-anything part of the SCSI domain.  For SEMB you have to unwind the
-encapsulation and expose the resulting device into the SCSI domain for
-the SES ULD to attach, presumably as a libata target or LUN.  If you're
-asking for basic documentation about how SCSI works, that's in
-Documentation/scsi/ plus some of the kernel docbook stuff.
+Fio gets stuck after it writes the 100% complete message and strace on
+the processes shows this.
 
-> > That would allow the ses ULD to attach seamlessly.
-> 
-> any pointers to such an SES ULD (maybe for testing)?
+the controlling fio process :- 
+ ...
+[pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
+[pid  8439] nanosleep({0, 10000000}, NULL) = 0
+[pid  8439] wait4(8441, 0x7fff848203ac, WNOHANG, NULL) = 0
+[pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
+[pid  8439] nanosleep({0, 10000000}
 
-it's drivers/scsi/ses.c
+& the 2 workers are both stopped here, strace shows only the one line
+for each process.
 
-James
+Process 8441 attached - interrupt to quit
+futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
+
+
+Process 8442 attached - interrupt to quit
+futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
+
+How do I find out which futex it's waiting for? 
+Any ideas where I should look next ?
+
+I can run the same test successfully on 2.6.38 so is it worth trying to
+bisect this ? 
+
+thanks 
+Richard
 
 
