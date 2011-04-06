@@ -1,45 +1,28 @@
-From: Rob Landley <rlandley@parallels.com>
-Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
-Date: Wed, 6 Apr 2011 06:55:00 -0500
-Message-ID: <4D9C5494.1090607@parallels.com>
-References: <201103291551.p2TFpDqZ001692@clem.clem-digital.net> <4D92C874.7040104@parallels.com> <4D931634.5030807@fusionio.com> <4D933584.5050005@parallels.com> <4D94432D.5080601@fusionio.com> <4D944544.9040705@parallels.com> <4D945247.4080404@fusionio.com> <4D945976.8000401@fusionio.com> <20110331121100.GD3385@htj.dyndns.org> <4D9474AA.4070402@fusionio.com>
+From: Leon Woestenberg <leon.woestenberg@gmail.com>
+Subject: known working sata_sil24.c setup on powerpc platforms?
+Date: Wed, 6 Apr 2011 19:00:08 +0200
+Message-ID: <BANLkTimXgi26RHHxyBLoN8YqaDy_PL-hGQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:54953 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755827Ab1DFLzI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Apr 2011 07:55:08 -0400
-In-Reply-To: <4D9474AA.4070402@fusionio.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:42708 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752949Ab1DFRAK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Apr 2011 13:00:10 -0400
+Received: by pvg12 with SMTP id 12so616098pvg.19
+        for <linux-ide@vger.kernel.org>; Wed, 06 Apr 2011 10:00:09 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Tejun Heo <tj@kernel.org>, Pete Clements <clem@clem.clem-digital.net>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linux PPC <linuxppc-dev@ozlabs.org>, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>, "Moffett, Kyle D" <Kyle.D.Moffett@boeing.com>, Jeff Garzik <jeff@garzik.org>
 
-On 03/31/2011 07:33 AM, Jens Axboe wrote:
-> On 2011-03-31 14:11, Tejun Heo wrote:
->> Hello,
->>
->> On Thu, Mar 31, 2011 at 12:37:42PM +0200, Jens Axboe wrote:
->>> It seems to hard hang, looks very odd:
->> I think more likely failure mode is something is looping in block path
->> expecting someone else to do something but as it is busy looping and
->> preemption isn't enabled the someone else can't proceed.  We had a
->> similar problem in md lately.
->>
->>  http://thread.gmane.org/gmane.linux.raid/33020
-> 
-> I think this sound exactly right, and also explains why SMP works. And
-> yes CONFIG_PREEMPT_VOLUNTARY=y is set.
-> 
->> If this is the case, a good way to debug would be triggering sysrq-l
->> multiple times while the machine is hung and see where the CPU is busy
->> looping.
-> 
-> Doesn't respond to sysrq. I'll poke around.
+Hello,
 
-Pulled and retested, still hanging for me right after announcing ext3.
-Just FYI.
+after investigating problems with sata_sil24.c on a freescale p2020
+soc, I wonder if this driver works on powerpc at all?
 
-Rob
+Does anyone know of a working setup of sata_sil24 on a big endian
+powerpc system?
+
+Regards,
+-- 
+Leon
