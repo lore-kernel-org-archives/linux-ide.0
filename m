@@ -1,191 +1,81 @@
-From: Leon Woestenberg <leon.woestenberg@gmail.com>
-Subject: Re: known working sata_sil24.c setup on powerpc platforms?
-Date: Wed, 6 Apr 2011 20:50:12 +0200
-Message-ID: <BANLkTinjn5nt4-0cSo6nUfG8Vt1UrL2Q0g@mail.gmail.com>
-References: <BANLkTimXgi26RHHxyBLoN8YqaDy_PL-hGQ@mail.gmail.com>
-	<C3A1EF35-6CB6-4674-8B0B-44CD1657FE87@boeing.com>
-	<4D9CAD1F.6060500@garzik.org>
+From: Alejandro Riveira =?UTF-8?B?RmVybsOhbmRleg==?=
+	<ariveira@gmail.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Wed, 6 Apr 2011 23:00:21 +0200
+Message-ID: <20110406230021.2ab54966@varda>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
+	<C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:58394 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756548Ab1DFSuO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Apr 2011 14:50:14 -0400
-Received: by pzk9 with SMTP id 9so653378pzk.19
-        for <linux-ide@vger.kernel.org>; Wed, 06 Apr 2011 11:50:13 -0700 (PDT)
-In-Reply-To: <4D9CAD1F.6060500@garzik.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:33423 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab1DFVAl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Apr 2011 17:00:41 -0400
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: "Moffett, Kyle D" <Kyle.D.Moffett@boeing.com>, Linux PPC <linuxppc-dev@ozlabs.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Bruce Stenning <b.stenning@indigovision.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-Hello Jeff, all,
-
-On Wed, Apr 6, 2011 at 8:12 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> On 04/06/2011 01:48 PM, Moffett, Kyle D wrote:
->> On Apr 06, 2011, at 13:00, Leon Woestenberg wrote:
->>> after investigating problems with sata_sil24.c on a freescale p2020
->>> soc, I wonder if this driver works on powerpc at all?
->>>
->>> Does anyone know of a working setup of sata_sil24 on a big endian
->>> powerpc system?
->>
->> Our P2020 boards work fine with legacy PCI interrupts (I think it's a
->> sil3124 over PCI-E); the only deficiency is that MSI does not seem to work.
->>
->
-> We've definitely had issues with sata_sil24 + MSI, also...
->
-> sata_sil24 does work on big endian in general.
->
-
-On my system, I have the contrary to Kyle's experience (thanks for sharing).
-
-PowerPC P2020RDB
-vanilla 2.6.38
-Sil3132 on mini-PCI Express card
+El Wed, 6 Apr 2011 15:57:06 +0100
+Bruce Stenning <b.stenning@indigovision.com> escribi=C3=B3:
 
 
-Enabling msi gets me further than disabling it (default).
+ Just CCing linux-ide
 
-modprobe sata_sil
-
-[    8.834613] sata_sil24 0001:03:00.0: version 1.1
-[    8.885581] scsi0 : sata_sil24
-[    8.901420] scsi1 : sata_sil24
-[    8.904642] ata1: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0004000 irq 16
-[    8.911961] ata2: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0006000 irq 16
-[   11.095127] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   14.906986] eth0: no IPv6 routers present
-[   16.099016] ata1.00: qc timeout (cmd 0xec)
-[   16.103128] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   18.299050] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   28.303026] ata1.00: qc timeout (cmd 0xec)
-[   28.307139] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   28.313233] ata1: limiting SATA link speed to 1.5 Gbps
-[   30.523059] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-
-
-modprobe sata_sil msi=1
-
-[   92.984120] sata_sil24 0001:03:00.0: version 1.1
-[   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
-virtual irq 41
-[   92.996229] sata_sil24 0001:03:00.0: Using MSI
-[   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
-[   93.011628] scsi2 : sata_sil24
-[   93.022463] scsi3 : sata_sil24
-[   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0004000 irq 41
-[   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0006000 irq 41
-[   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
--84148995 sactive 0x0)
-[   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max UDMA/133
-[   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth 31/32)
-[   95.230905] ata3.00: configured for UDMA/100
-[   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
-SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-[   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
-[   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
-(80.0 GB/74.5 GiB)
-[   95.260219] sd 2:0:0:0: [sda] Write Protect is off
-[   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[   95.283779]  sda: sda1 sda2 sda3 sda4
-[   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
-[   95.965897] EXT3-fs: barriers not enabled
-[   95.977279] kjournald starting.  Commit interval 5 seconds
-[   95.983296] EXT3-fs (sda2): using internal journal
-[   95.988143] EXT3-fs (sda2): recovery complete
-[   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data mode
-[   96.111587] NTFS volume version 3.1.
-[   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
-
-root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=1000
-1000+0 records in
-1000+0 records out
-4096000 bytes (4.1 MB) copied, 0.0315629 s, 130 MB/s
-root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=10000
-10000+0 records in
-10000+0 records out
-40960000 bytes (41 MB) copied, 0.471802 s, 86.8 MB/s
-
-root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=100000
-
-That stalls, I see the controller fail. See dmesg below:
-
-^C^Cdd: reading `/dev/sda': Input/output error
-51804+0 records in
-51804+0 records out
-212189184 bytes (212 MB) copied, 85.6537 s, 2.5 MB/s
-dd: closing input file `/dev/sda': Bad file descriptor
-
-
-[   92.984120] sata_sil24 0001:03:00.0: version 1.1
-[   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
-virtual irq 41
-[   92.996229] sata_sil24 0001:03:00.0: Using MSI
-[   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
-[   93.011628] scsi2 : sata_sil24
-[   93.022463] scsi3 : sata_sil24
-[   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0004000 irq 41
-[   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
-0xc0006000 irq 41
-[   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
--84148995 sactive 0x0)
-[   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max UDMA/133
-[   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth 31/32)
-[   95.230905] ata3.00: configured for UDMA/100
-[   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
-SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-[   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
-[   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
-(80.0 GB/74.5 GiB)
-[   95.260219] sd 2:0:0:0: [sda] Write Protect is off
-[   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[   95.283779]  sda: sda1 sda2 sda3 sda4
-[   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
-[   95.965897] EXT3-fs: barriers not enabled
-[   95.977279] kjournald starting.  Commit interval 5 seconds
-[   95.983296] EXT3-fs (sda2): using internal journal
-[   95.988143] EXT3-fs (sda2): recovery complete
-[   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data mode
-[   96.111587] NTFS volume version 3.1.
-[   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
-[  285.891036] ata3.00: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x6 frozen
-[  285.898099] ata3.00: failed command: READ FPDMA QUEUED
-[  285.903250] ata3.00: cmd 60/00:00:e0:53:06/01:00:00:00:00/40 tag 0
-ncq 131072 in
-[  285.903255]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[  285.918028] ata3.00: status: { DRDY }
-[  285.921689] ata3.00: failed command: READ FPDMA QUEUED
-[  285.926836] ata3.00: cmd 60/00:08:e0:52:06/01:00:00:00:00/40 tag 1
-ncq 131072 in
-[  285.926841]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[  285.941615] ata3.00: status: { DRDY }
-[  285.945281] ata3: hard resetting link
-[  288.055034] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[  293.058999] ata3.00: qc timeout (cmd 0xec)
-[  293.063106] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[  293.069198] ata3.00: revalidation failed (errno=-5)
-[  293.074077] ata3: hard resetting link
-[  295.259018] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-
-What can I do next to investigate and help fix this issue?
-
-
-Regards,
--- 
-Leon
+> Please accept my most humble apologies for the lack of line breaks in
+> my previous email.  Here it is again, this time in a more readable
+> format:
+>=20
+> Hello,
+>=20
+> We have a bespoke platform utilising a Marvell MV88SX6041 SATA contro=
+ller
+> on which we have been running Linux 2.6.26 and using the sata_mv driv=
+er.
+>=20
+> We have noticed problems with SATA ports occasionally locking up (on
+> hotplug events) and remaining unresponsive.  The normal kernel loggin=
+g
+> that occurs on hotplug events is no longer emitted for the locked por=
+ts
+> (but will be emitted for the other sata ports that have not exhibited
+> the problem.)  The disks attached to the locked ports are completely
+> unresponsive.  The condition can be cleared by removing the sata_mv
+> kernel module from memory and reloading it, after which the kernel
+> logging becomes active (and the disks are usable) for all ports.
+>=20
+> The following changeset was seen as a strong candidate for addressing
+> this problem:
+>=20
+> http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6.git;a=3D=
+commitdiff;h=3D933cb8e5fcdebd4b666165e3f039f814d62b0e52
+>=20
+> We are now in the process of upgrading to the stable 2.6.38.2 kernel
+> release, but initial testing of this on our platform exhibits the sam=
+e
+> hotplug behaviour.  Hotplug is possible, but occasionally the ports
+> will lock up and not be responsive until sata_mv is removed and
+> reinstalled.  Other than this, the new kernel and driver seem to be
+> operating normally.
+>=20
+> Has this problem been observed elsewhere with kernels that include th=
+e
+> above patch?  Please CC me in replies.
+>=20
+> Kind Regards,
+>=20
+> Bruce Stenning,
+> IndigoVision,
+> b <dot> stenning <at> indigovision <dot> com
+>=20
+>=20
+> Latest News at: http://www.indigovision.com/news2011.php
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
