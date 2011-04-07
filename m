@@ -1,221 +1,198 @@
-From: Kushwaha Prabhakar-B32579 <B32579@freescale.com>
-Subject: RE: known working sata_sil24.c setup on powerpc platforms?
-Date: Thu, 7 Apr 2011 04:48:40 +0000
-Message-ID: <071A08F2C6A57E4E94D980ECA553F87416BDD0@039-SN1MPN1-004.039d.mgd.msft.net>
-References: <BANLkTimXgi26RHHxyBLoN8YqaDy_PL-hGQ@mail.gmail.com>
-	<C3A1EF35-6CB6-4674-8B0B-44CD1657FE87@boeing.com>
-	<4D9CAD1F.6060500@garzik.org>
- <BANLkTinjn5nt4-0cSo6nUfG8Vt1UrL2Q0g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: "Basheer, Mansoor Ahamed" <mansoor.ahamed@ti.com>
+Subject: [PATCH] OMAP: TI816X: Add SATA support
+Date: Thu,  7 Apr 2011 15:54:47 +0530
+Message-ID: <1302171887-3598-1-git-send-email-mansoor.ahamed@ti.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.182]:45431
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751052Ab1DGEst convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Apr 2011 00:48:49 -0400
-In-Reply-To: <BANLkTinjn5nt4-0cSo6nUfG8Vt1UrL2Q0g@mail.gmail.com>
-Content-Language: en-US
+Received: from bear.ext.ti.com ([192.94.94.41]:45564 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751220Ab1DGKZH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Apr 2011 06:25:07 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Leon Woestenberg <leon.woestenberg@gmail.com>
-Cc: "Moffett, Kyle D" <Kyle.D.Moffett@boeing.com>, Linux PPC <linuxppc-dev@ozlabs.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>
+To: linux-omap@vger.kernel.org
+Cc: tony@atomide.com, linux-arm-kernel@lists.arm.linux.org.uk, linux-ide@vger.kernel.org, Mansoor Ahamed <mansoor.ahamed@ti.com>
 
-Hi Leon,
+From: Mansoor Ahamed <mansoor.ahamed@ti.com>
 
-Can you please check p2020rdb.dts for IDSEL entries for pci0/1 node?
+Add support for SATA controller on the
+TI816X devices.
 
-In order to work in legacy mode, IDSEL entries are required. 
+TI816X supports 1 HBA with 2 ports (dedicated DMA).
+This is a Gen 2 HBA with 3Gbps support.
+It supports Port Multiplier but only in
+Command Based Switching mode.
 
---Prabhakar
+The patch adds required platform resource and
+SATA controller initialization routine.
 
-> -----Original Message-----
-> From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-
-> owner@vger.kernel.org] On Behalf Of Leon Woestenberg
-> Sent: Thursday, April 07, 2011 12:20 AM
-> To: Jeff Garzik
-> Cc: Moffett, Kyle D; Linux PPC; linux-ide@vger.kernel.org; Tejun Heo
-> Subject: Re: known working sata_sil24.c setup on powerpc platforms?
-> 
-> Hello Jeff, all,
-> 
-> On Wed, Apr 6, 2011 at 8:12 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> > On 04/06/2011 01:48 PM, Moffett, Kyle D wrote:
-> >> On Apr 06, 2011, at 13:00, Leon Woestenberg wrote:
-> >>> after investigating problems with sata_sil24.c on a freescale p2020
-> >>> soc, I wonder if this driver works on powerpc at all?
-> >>>
-> >>> Does anyone know of a working setup of sata_sil24 on a big endian
-> >>> powerpc system?
-> >>
-> >> Our P2020 boards work fine with legacy PCI interrupts (I think it's a
-> >> sil3124 over PCI-E); the only deficiency is that MSI does not seem to
-> work.
-> >>
-> >
-> > We've definitely had issues with sata_sil24 + MSI, also...
-> >
-> > sata_sil24 does work on big endian in general.
-> >
-> 
-> On my system, I have the contrary to Kyle's experience (thanks for
-> sharing).
-> 
-> PowerPC P2020RDB
-> vanilla 2.6.38
-> Sil3132 on mini-PCI Express card
-> 
-> 
-> Enabling msi gets me further than disabling it (default).
-> 
-> modprobe sata_sil
-> 
-> [    8.834613] sata_sil24 0001:03:00.0: version 1.1
-> [    8.885581] scsi0 : sata_sil24
-> [    8.901420] scsi1 : sata_sil24
-> [    8.904642] ata1: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0004000 irq 16
-> [    8.911961] ata2: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0006000 irq 16
-> [   11.095127] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   14.906986] eth0: no IPv6 routers present
-> [   16.099016] ata1.00: qc timeout (cmd 0xec)
-> [   16.103128] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [   18.299050] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   28.303026] ata1.00: qc timeout (cmd 0xec)
-> [   28.307139] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [   28.313233] ata1: limiting SATA link speed to 1.5 Gbps
-> [   30.523059] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-> 
-> 
-> modprobe sata_sil msi=1
-> 
-> [   92.984120] sata_sil24 0001:03:00.0: version 1.1
-> [   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
-> virtual irq 41
-> [   92.996229] sata_sil24 0001:03:00.0: Using MSI
-> [   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
-> [   93.011628] scsi2 : sata_sil24
-> [   93.022463] scsi3 : sata_sil24
-> [   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0004000 irq 41
-> [   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0006000 irq 41
-> [   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
-> -84148995 sactive 0x0)
-> [   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max
-> UDMA/133
-> [   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth
-> 31/32)
-> [   95.230905] ata3.00: configured for UDMA/100
-> [   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
-> SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-> [   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
-> [   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
-> (80.0 GB/74.5 GiB)
-> [   95.260219] sd 2:0:0:0: [sda] Write Protect is off
-> [   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
-> enabled, doesn't support DPO or FUA
-> [   95.283779]  sda: sda1 sda2 sda3 sda4
-> [   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
-> [   95.965897] EXT3-fs: barriers not enabled
-> [   95.977279] kjournald starting.  Commit interval 5 seconds
-> [   95.983296] EXT3-fs (sda2): using internal journal
-> [   95.988143] EXT3-fs (sda2): recovery complete
-> [   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data
-> mode
-> [   96.111587] NTFS volume version 3.1.
-> [   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
-> 
-> root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=1000
-> 1000+0 records in
-> 1000+0 records out
-> 4096000 bytes (4.1 MB) copied, 0.0315629 s, 130 MB/s root@p1020rdb:~# dd
-> if=/dev/sda of=/dev/null bs=4k count=10000
-> 10000+0 records in
-> 10000+0 records out
-> 40960000 bytes (41 MB) copied, 0.471802 s, 86.8 MB/s
-> 
-> root@p1020rdb:~# dd if=/dev/sda of=/dev/null bs=4k count=100000
-> 
-> That stalls, I see the controller fail. See dmesg below:
-> 
-> ^C^Cdd: reading `/dev/sda': Input/output error
-> 51804+0 records in
-> 51804+0 records out
-> 212189184 bytes (212 MB) copied, 85.6537 s, 2.5 MB/s
-> dd: closing input file `/dev/sda': Bad file descriptor
-> 
-> 
-> [   92.984120] sata_sil24 0001:03:00.0: version 1.1
-> [   92.988897] irq: irq 0 on host /soc@ffe00000/msi@41600 mapped to
-> virtual irq 41
-> [   92.996229] sata_sil24 0001:03:00.0: Using MSI
-> [   93.000675] sata_sil24 0001:03:00.0: enabling bus mastering
-> [   93.011628] scsi2 : sata_sil24
-> [   93.022463] scsi3 : sata_sil24
-> [   93.025695] ata3: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0004000 irq 41
-> [   93.033023] ata4: SATA max UDMA/100 host m128@0xc0000000 port
-> 0xc0006000 irq 41
-> [   95.203029] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   95.209045] ata3: spurious interrupt (slot_stat 0x0 active_tag
-> -84148995 sactive 0x0)
-> [   95.217171] ata3.00: ATA-7: INTEL SSDSA2M080G2GN, 2CV102HD, max
-> UDMA/133
-> [   95.223882] ata3.00: 156301488 sectors, multi 1: LBA48 NCQ (depth
-> 31/32)
-> [   95.230905] ata3.00: configured for UDMA/100
-> [   95.235399] scsi 2:0:0:0: Direct-Access     ATA      INTEL
-> SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-> [   95.244002] sd 2:0:0:0: Attached scsi generic sg0 type 0
-> [   95.252041] sd 2:0:0:0: [sda] 156301488 512-byte logical blocks:
-> (80.0 GB/74.5 GiB)
-> [   95.260219] sd 2:0:0:0: [sda] Write Protect is off
-> [   95.265063] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [   95.270500] sd 2:0:0:0: [sda] Write cache: enabled, read cache:
-> enabled, doesn't support DPO or FUA
-> [   95.283779]  sda: sda1 sda2 sda3 sda4
-> [   95.289482] sd 2:0:0:0: [sda] Attached SCSI disk
-> [   95.965897] EXT3-fs: barriers not enabled
-> [   95.977279] kjournald starting.  Commit interval 5 seconds
-> [   95.983296] EXT3-fs (sda2): using internal journal
-> [   95.988143] EXT3-fs (sda2): recovery complete
-> [   95.992504] EXT3-fs (sda2): mounted filesystem with writeback data
-> mode
-> [   96.111587] NTFS volume version 3.1.
-> [   97.331005] ata4: SATA link down (SStatus 0 SControl 0)
-> [  285.891036] ata3.00: exception Emask 0x0 SAct 0x3 SErr 0x0 action 0x6
-> frozen [  285.898099] ata3.00: failed command: READ FPDMA QUEUED [
-> 285.903250] ata3.00: cmd 60/00:00:e0:53:06/01:00:00:00:00/40 tag 0 ncq
-> 131072 in
-> [  285.903255]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  285.918028] ata3.00: status: { DRDY } [  285.921689] ata3.00: failed
-> command: READ FPDMA QUEUED [  285.926836] ata3.00: cmd
-> 60/00:08:e0:52:06/01:00:00:00:00/40 tag 1 ncq 131072 in
-> [  285.926841]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [  285.941615] ata3.00: status: { DRDY } [  285.945281] ata3: hard
-> resetting link [  288.055034] ata3: SATA link up 3.0 Gbps (SStatus 123
-> SControl 0) [  293.058999] ata3.00: qc timeout (cmd 0xec) [  293.063106]
-> ata3.00: failed to IDENTIFY (I/O error, err_mask=0x4) [  293.069198]
-> ata3.00: revalidation failed (errno=-5) [  293.074077] ata3: hard
-> resetting link [  295.259018] ata3: SATA link up 3.0 Gbps (SStatus 123
-> SControl 0)
-> 
-> What can I do next to investigate and help fix this issue?
-> 
-> 
-> Regards,
-> --
-> Leon
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+The PHY configuration in this patch is
+courtesy of the work done by Zegeye Alemu and
+Swaminathan from TI.
 
+While testing this patch, enable port multiplier
+support if you are actually using one.
+Reason for this behaviour is discussed
+here: http://patchwork.ozlabs.org/patch/78163/
+
+Signed-off-by: Basheer, Mansoor Ahamed <mansoor.ahamed@ti.com>
+---
+This patch depends on patch "TI816X: clock: Add clock data"
+from Hemant Pedanekar <hemantp@ti.com>
+
+ arch/arm/mach-omap2/devices.c |  126 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 126 insertions(+), 0 deletions(-)
+
+diff --git a/arch/arm/mach-omap2/devices.c b/arch/arm/mach-omap2/devices.c
+index d478f53..9c33022 100644
+--- a/arch/arm/mach-omap2/devices.c
++++ b/arch/arm/mach-omap2/devices.c
+@@ -16,6 +16,8 @@
+ #include <linux/clk.h>
+ #include <linux/err.h>
+ #include <linux/slab.h>
++#include <linux/ahci_platform.h>
++#include <linux/dma-mapping.h>
+ 
+ #include <mach/hardware.h>
+ #include <mach/irqs.h>
+@@ -100,6 +102,129 @@ static int __init omap4_l3_init(void)
+ }
+ postcore_initcall(omap4_l3_init);
+ 
++#if defined(CONFIG_SATA_AHCI_PLATFORM) || \
++	defined(CONFIG_SATA_AHCI_PLATFORM_MODULE)
++
++static struct ahci_platform_data omap_sata_pdata;
++static u64 omap_sata_dmamask = DMA_BIT_MASK(32);
++static struct clk *omap_sata_clk;
++
++/* SATA PHY control register offsets */
++#define SATA_P0PHYCR_REG	0x178
++#define SATA_P1PHYCR_REG	0x1F8
++
++#define SATA_PHY_ENPLL(x)	((x) << 0)
++#define SATA_PHY_MPY(x)		((x) << 1)
++#define SATA_PHY_LB(x)		((x) << 5)
++#define SATA_PHY_CLKBYP(x)	((x) << 7)
++#define SATA_PHY_RXINVPAIR(x)	((x) << 9)
++#define SATA_PHY_LBK(x)		((x) << 10)
++#define SATA_PHY_RXLOS(x)	((x) << 12)
++#define SATA_PHY_RXCDR(x)	((x) << 13)
++#define SATA_PHY_RXEQ(x)	((x) << 16)
++#define SATA_PHY_RXENOC(x)	((x) << 20)
++#define SATA_PHY_TXINVPAIR(x)	((x) << 21)
++#define SATA_PHY_TXCM(x)	((x) << 22)
++#define SATA_PHY_TXSWING(x)	((x) << 23)
++#define SATA_PHY_TXDE(x)	((x) << 27)
++
++#define TI816X_SATA_BASE	0x4A140000
++
++static int ti816x_ahci_plat_init(struct device *dev, void __iomem *base)
++{
++	unsigned int phy_val;
++	int ret;
++
++	omap_sata_clk = clk_get(dev, NULL);
++	if (IS_ERR(omap_sata_clk)) {
++		pr_err("ahci : Failed to get SATA clock\n");
++		return PTR_ERR(omap_sata_clk);
++	}
++
++	if (!base) {
++		pr_err("ahci : SATA reg space not mapped, PHY enable failed\n");
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ret = clk_enable(omap_sata_clk);
++	if (ret) {
++		pr_err("ahci : Clock enable failed\n");
++		goto err;
++	}
++
++	phy_val = SATA_PHY_ENPLL(1) |
++			SATA_PHY_MPY(8) |
++			SATA_PHY_LB(0) |
++			SATA_PHY_CLKBYP(0) |
++			SATA_PHY_RXINVPAIR(0) |
++			SATA_PHY_LBK(0) |
++			SATA_PHY_RXLOS(1) |
++			SATA_PHY_RXCDR(4) |
++			SATA_PHY_RXEQ(1) |
++			SATA_PHY_RXENOC(1) |
++			SATA_PHY_TXINVPAIR(0) |
++			SATA_PHY_TXCM(0) |
++			SATA_PHY_TXSWING(7) |
++			SATA_PHY_TXDE(0);
++
++	writel(phy_val, base + SATA_P0PHYCR_REG);
++	writel(phy_val, base + SATA_P1PHYCR_REG);
++
++	return 0;
++err:
++	clk_put(omap_sata_clk);
++	return ret;
++}
++
++static void ti816x_ahci_plat_exit(struct device *dev)
++{
++	clk_disable(omap_sata_clk);
++	clk_put(omap_sata_clk);
++}
++
++/* resources will be filled by soc specific init routine */
++static struct resource omap_ahci_resources[] = {
++	{
++		.flags	= IORESOURCE_MEM,
++	},
++	{
++		.flags	= IORESOURCE_IRQ,
++	}
++};
++
++static struct platform_device omap_ahci_device = {
++	.name	= "ahci",
++	.dev	= {
++		.platform_data = &omap_sata_pdata,
++		.coherent_dma_mask	= DMA_BIT_MASK(32),
++		.dma_mask		= &omap_sata_dmamask,
++	},
++	.num_resources	= ARRAY_SIZE(omap_ahci_resources),
++	.resource	= omap_ahci_resources,
++};
++
++static void ti816x_ahci_init(void)
++{
++	/* fixup platform device info for TI816X */
++	omap_ahci_resources[0].start	= TI816X_SATA_BASE;
++	omap_ahci_resources[0].end	= TI816X_SATA_BASE + 0x10fff;
++	omap_ahci_resources[1].start	= 16; /* SATA IRQ */
++	omap_sata_pdata.init		= ti816x_ahci_plat_init;
++	omap_sata_pdata.exit		= ti816x_ahci_plat_exit;
++}
++
++static inline void omap_init_ahci(void)
++{
++	if (cpu_is_ti816x()) {
++		ti816x_ahci_init();
++		platform_device_register(&omap_ahci_device);
++	}
++}
++#else
++static inline void omap_init_ahci(void) {}
++#endif
++
+ #if defined(CONFIG_VIDEO_OMAP2) || defined(CONFIG_VIDEO_OMAP2_MODULE)
+ 
+ static struct resource cam_resources[] = {
+@@ -667,6 +792,7 @@ static int __init omap2_init_devices(void)
+ 	 * please keep these calls, and their implementations above,
+ 	 * in alphabetical order so they're easier to sort through.
+ 	 */
++	omap_init_ahci();
+ 	omap_init_audio();
+ 	omap_init_camera();
+ 	omap_init_mbox();
+-- 
+1.6.2.4
 
