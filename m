@@ -1,89 +1,67 @@
-From: Pavel Herrmann <morpheus.ibis@gmail.com>
-Subject: Re: [PATCH] support for PMP used in TT BlackX Duet drive dock
-Date: Fri, 8 Apr 2011 10:05:37 +0200
-Message-ID: <201104081005.37191.morpheus.ibis@gmail.com>
-References: <201104071854.10911.morpheus.ibis@gmail.com> <201104072140.59548.morpheus.ibis@gmail.com> <4D9E9605.7030304@garzik.org>
+From: Leon Woestenberg <leon.woestenberg@gmail.com>
+Subject: Re: known working sata_sil24.c setup on powerpc platforms?
+Date: Fri, 8 Apr 2011 10:24:47 +0200
+Message-ID: <BANLkTi=jLZrS+rOBOMq=v3aMCPjNAUjS4w@mail.gmail.com>
+References: <BANLkTimXgi26RHHxyBLoN8YqaDy_PL-hGQ@mail.gmail.com>
+	<C3A1EF35-6CB6-4674-8B0B-44CD1657FE87@boeing.com>
+	<4D9CAD1F.6060500@garzik.org>
+	<BANLkTinjn5nt4-0cSo6nUfG8Vt1UrL2Q0g@mail.gmail.com>
+	<071A08F2C6A57E4E94D980ECA553F87416BDD0@039-SN1MPN1-004.039d.mgd.msft.net>
+	<BANLkTin1KoJ8EsV49naEAZjmq=EZLHXZpQ@mail.gmail.com>
+	<071A08F2C6A57E4E94D980ECA553F87416D3E7@039-SN1MPN1-004.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_RHsnNdJ9G94azeB"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58213 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756089Ab1DHIFl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2011 04:05:41 -0400
-Received: by fxm17 with SMTP id 17so2173247fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 08 Apr 2011 01:05:40 -0700 (PDT)
-In-Reply-To: <4D9E9605.7030304@garzik.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:47387 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773Ab1DHIYs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2011 04:24:48 -0400
+Received: by pzk9 with SMTP id 9so1156123pzk.19
+        for <linux-ide@vger.kernel.org>; Fri, 08 Apr 2011 01:24:47 -0700 (PDT)
+In-Reply-To: <071A08F2C6A57E4E94D980ECA553F87416D3E7@039-SN1MPN1-004.039d.mgd.msft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Kushwaha Prabhakar-B32579 <B32579@freescale.com>
+Cc: "Moffett, Kyle D" <Kyle.D.Moffett@boeing.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Jeff Garzik <jeff@garzik.org>, Linux PPC <linuxppc-dev@ozlabs.org>, Gupta Maneesh-B18878 <B18878@freescale.com>
 
---Boundary-00=_RHsnNdJ9G94azeB
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Hello Prabhakar,
 
-On Friday 08 of April 2011 06:58:45 Jeff Garzik wrote:
-> So you're gonna resend this as a real patch, right?  :)
+On Fri, Apr 8, 2011 at 5:44 AM, Kushwaha Prabhakar-B32579
+<B32579@freescale.com> wrote:
+>> -----Original Message-----
+>> From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-
+>> owner@vger.kernel.org] On Behalf Of Leon Woestenberg
+>> Sent: Thursday, April 07, 2011 10:23 PM
+>> To: Kushwaha Prabhakar-B32579
+>> Cc: Moffett, Kyle D; Linux PPC; linux-ide@vger.kernel.org; Tejun Heo=
+;
+>> Jeff Garzik
+>> Subject: Re: known working sata_sil24.c setup on powerpc platforms?
+>>
+>> On Thu, Apr 7, 2011 at 6:48 AM, Kushwaha Prabhakar-B32579
+>> <B32579@freescale.com> wrote:
+>> > Can you please check p2020rdb.dts for IDSEL entries for pci0/1 nod=
+e?
+>> >
+>> > In order to work in legacy mode, IDSEL entries are required.
+>> >
+>> No, the p1020rdb and p2020rdb do not have the IDSEL entries:
+>> What would the correct IDSEL entries be?
+>
+> For legacy interrupt to work IDSEL values are required.. please find =
+the correct IDSEL values for pci0/1.
+>
+> =A0 =A0 =A0 =A0pci0: pcie@ffe09000 {
+> ...
+> Please try with this.. I am in process of pushing these IDSEL values =
+to upstream.
+>
 
-right :)
-
-this is the tested version (call it V2 if you wish), against 29-rc2 and 28-
-gentoo-r1 (no difference in this file), works in both
-
-I still have no idea what those quirks really do, so test before including
-
-thanks
-Pavel Herrmann
-
---Boundary-00=_RHsnNdJ9G94azeB
-Content-Type: text/x-patch;
-  charset="UTF-8";
-  name="0001-libata-pmp-add-support-for-Thermaltake-BlackX-Duet-e.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0001-libata-pmp-add-support-for-Thermaltake-BlackX-Duet-e.patch"
-
-=46rom a7b09f275faca338805fd697ab41fd13d7f21d41 Mon Sep 17 00:00:00 2001
-=46rom: Pavel Herrmann <morpheus.ibis@gmail.com>
-Date: Thu, 7 Apr 2011 18:15:26 +0200
-Subject: [PATCH] libata-pmp: add support for Thermaltake BlackX Duet esata =
-drive dock
-
-some errors still show up, but the dock works, both drives can be
-accessed at the same time
-
-the chip maker and designation is unknown - possibly jmicron JMB350?
-
-Signed-off-by: Pavel Herrmann <morpheus.ibis@gmail.com>
-=2D--
- drivers/ata/libata-pmp.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 3120596..e6e409d 100644
-=2D-- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -449,6 +449,16 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |=3D ATA_LFLAG_NO_RETRY;
-+	} else if (vendor =3D=3D 0x197b && devid =3D=3D 0x2352) {
-+		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
-+		ata_for_each_link(link, ap, EDGE) {
-+			/* Use same quirks as sil chips	to make it work,
-+			 * not everything might be necessary though
-+			 */
-+			link->flags |=3D ATA_LFLAG_NO_LPM |
-+				       ATA_LFLAG_NO_SRST |
-+				       ATA_LFLAG_ASSUME_ATA;
-+		}
- 	}
- }
-=20
-=2D-=20
-1.7.4.1
+Do you have these for P1020RDB  as well? I found a P1020RDB board that
+has the CE10 errata fixed, so IRQ0 is properly pulled up.
 
 
---Boundary-00=_RHsnNdJ9G94azeB--
+Regards,
+--=20
+Leon
