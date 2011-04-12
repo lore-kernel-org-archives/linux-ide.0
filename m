@@ -1,135 +1,121 @@
-From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Subject: [PATCH V4 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
-Date: Tue, 12 Apr 2011 13:51:12 +0800
-Message-ID: <1302587472-20435-2-git-send-email-Hong-Xing.Zhu@freescale.com>
-References: <1302587472-20435-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: "Basheer, Mansoor Ahamed" <mansoor.ahamed@ti.com>
+Subject: RE: [PATCH] OMAP: TI816X: Add SATA support
+Date: Tue, 12 Apr 2011 12:34:47 +0530
+Message-ID: <5A47E75E594F054BAF48C5E4FC4B92AB037AB22085@dbde02.ent.ti.com>
+References: <1302171887-3598-1-git-send-email-mansoor.ahamed@ti.com>
+	<20110407112328.GX29038@legolas.emea.dhcp.ti.com>	<4D9DDE6C.8050905@ti.com>
+ <87tyea7zq1.fsf@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:33407
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753181Ab1DLFvY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2011 01:51:24 -0400
-In-Reply-To: <1302587472-20435-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:53098 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754742Ab1DLHF1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2011 03:05:27 -0400
+In-Reply-To: <87tyea7zq1.fsf@ti.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <Hong-Xing.Zhu@freescale.com>
+To: "Hilman, Kevin" <khilman@ti.com>, "Cousson, Benoit" <b-cousson@ti.com>
+Cc: "Balbi, Felipe" <balbi@ti.com>, "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>, "tony@atomide.com" <tony@atomide.com>, "linux-arm-kernel@lists.arm.linux.org.uk" <linux-arm-kernel@lists.arm.linux.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Signed-off-by: Richard Zhu <Hong-Xing.Zhu@freescale.com>
----
- arch/arm/mach-mx5/board-mx53_loco.c |   76 +++++++++++++++++++++++++++++++++++
- 1 files changed, 76 insertions(+), 0 deletions(-)
+Hilman, Kevin wrote:
+> "Cousson, Benoit" <b-cousson@ti.com> writes:
+> 
+>> On 4/7/2011 1:23 PM, Balbi, Felipe wrote:
+>>> Hi,
+>>> 
+>>> On Thu, Apr 07, 2011 at 03:54:47PM +0530, Basheer, Mansoor Ahamed
+>>> wrote: 
+>>>> @@ -100,6 +102,129 @@ static int __init omap4_l3_init(void)   }
+>>>>   postcore_initcall(omap4_l3_init);
+>>>> 
+>>>> +#if defined(CONFIG_SATA_AHCI_PLATFORM) || \
+>>>> +	defined(CONFIG_SATA_AHCI_PLATFORM_MODULE)
+>>>> +
+>>>> +static struct ahci_platform_data omap_sata_pdata;
+>>>> +static u64 omap_sata_dmamask = DMA_BIT_MASK(32);
+>>>> +static struct clk *omap_sata_clk;
+>>>> +
+>>>> +/* SATA PHY control register offsets */
+>>>> +#define SATA_P0PHYCR_REG	0x178
+>>>> +#define SATA_P1PHYCR_REG	0x1F8
+>>> 
+>>> prepend all with TI816X_
+>>> 
+>>>> +#define SATA_PHY_ENPLL(x)	((x)<<  0)
+>>>> +#define SATA_PHY_MPY(x)		((x)<<  1)
+>>>> +#define SATA_PHY_LB(x)		((x)<<  5)
+>>>> +#define SATA_PHY_CLKBYP(x)	((x)<<  7)
+>>>> +#define SATA_PHY_RXINVPAIR(x)	((x)<<  9)
+>>>> +#define SATA_PHY_LBK(x)		((x)<<  10)
+>>>> +#define SATA_PHY_RXLOS(x)	((x)<<  12)
+>>>> +#define SATA_PHY_RXCDR(x)	((x)<<  13)
+>>>> +#define SATA_PHY_RXEQ(x)	((x)<<  16)
+>>>> +#define SATA_PHY_RXENOC(x)	((x)<<  20)
+>>>> +#define SATA_PHY_TXINVPAIR(x)	((x)<<  21)
+>>>> +#define SATA_PHY_TXCM(x)	((x)<<  22)
+>>>> +#define SATA_PHY_TXSWING(x)	((x)<<  23)
+>>> 
+>>> the ones which are single bits, you define as:
+>>> 
+>>> #define TI816X_SATA_PHY_TXINVPAIR	(1<<  21)
+>>> 
+>>> or
+>>> 
+>>> #define TI816X_SATA_PHY_TXINVPAIR	BIT(21)
+>>> 
+>>>> +#define SATA_PHY_TXDE(x)	((x)<<  27)
+>>>> +
+>>>> +#define TI816X_SATA_BASE	0x4A140000
+>>> 
+>>> you should probably define these on some header file. Also SATA_BASE
+>>> should be an increment to the global base.
+>> 
+>> In fact, you should even use hwmod data for that.
+>> 
+>>>> +
+>>>> +static int ti816x_ahci_plat_init(struct device *dev, void __iomem
+>>>> *base) +{ +	unsigned int phy_val;
+>>>> +	int ret;
+>>>> +
+>>>> +	omap_sata_clk = clk_get(dev, NULL);
+>>>> +	if (IS_ERR(omap_sata_clk)) {
+>>>> +		pr_err("ahci : Failed to get SATA clock\n");
+>>>> +		return PTR_ERR(omap_sata_clk);
+>>>> +	}
+>>> 
+>>> can't you use pm_runtime do achieve this ?
+>>> 
+>>>> +
+>>>> +	if (!base) {
+>>>> +		pr_err("ahci : SATA reg space not mapped, PHY enable
+>>>> failed\n"); +		ret = -ENOMEM; +		goto err;
+>>>> +	}
+>>>> +
+>>>> +	ret = clk_enable(omap_sata_clk);
+>>>> +	if (ret) {
+>>>> +		pr_err("ahci : Clock enable failed\n");
+>>>> +		goto err;
+>>>> +	}
+>> 
+>> As Felipe suggested, pm_runtime is probably the right API for that.
+>> It should even potentially be done in the driver directly since it is
+>> a generic API and most platform should probably have to enable
+>> "something" at that time.
+> 
+> Just to second what Felipe and Benoit already said:
+> 
+> Much of what this patch does duplicates what would happen
+> "automatcially" if this was done using omap_hwmod/omap_device +
+> runtime PM.  For example, platform_device creation is automatic with
+> hwmod data + omap_device build, and clock management is done by
+> runtime PM. 
+> 
+> Kevin
 
-diff --git a/arch/arm/mach-mx5/board-mx53_loco.c b/arch/arm/mach-mx5/board-mx53_loco.c
-index 0a18f8d..644aaa2 100644
---- a/arch/arm/mach-mx5/board-mx53_loco.c
-+++ b/arch/arm/mach-mx5/board-mx53_loco.c
-@@ -28,6 +28,7 @@
- #include <mach/hardware.h>
- #include <mach/imx-uart.h>
- #include <mach/iomux-mx53.h>
-+#include <mach/ahci_sata.h>
- 
- #include <asm/mach-types.h>
- #include <asm/mach/arch.h>
-@@ -38,6 +39,8 @@
- 
- #define LOCO_FEC_PHY_RST		IMX_GPIO_NR(7, 6)
- 
-+static struct clk *sata_clk, *sata_ref_clk;
-+
- static iomux_v3_cfg_t mx53_loco_pads[] = {
- 	/* FEC */
- 	MX53_PAD_FEC_MDC__FEC_MDC,
-@@ -203,6 +206,78 @@ static const struct imxi2c_platform_data mx53_loco_i2c_data __initconst = {
- 	.bitrate = 100000,
- };
- 
-+/* HW Initialization, if return 0, initialization is successful. */
-+static int mx53_loco_sata_init(struct device *dev, void __iomem *addr)
-+{
-+	u32 tmpdata;
-+	int ret = 0;
-+	struct clk *clk;
-+
-+	sata_clk = clk_get(dev, NULL);
-+	if (IS_ERR(sata_clk)) {
-+		dev_err(dev, "no sata clock.\n");
-+		return PTR_ERR(sata_clk);
-+	}
-+	ret = clk_enable(sata_clk);
-+	if (ret) {
-+		dev_err(dev, "can't enable sata clock.\n");
-+		clk_put(sata_clk);
-+		return ret;
-+	}
-+
-+	/* FSL IMX AHCI SATA uses the internal usb phy1 clk on loco */
-+	sata_ref_clk = clk_get(NULL, "usb_phy1");
-+	if (IS_ERR(sata_ref_clk)) {
-+		dev_err(dev, "no sata ref clock.\n");
-+		ret = PTR_ERR(sata_ref_clk);
-+		goto release_sata_clk;
-+	}
-+	ret = clk_enable(sata_ref_clk);
-+	if (ret) {
-+		dev_err(dev, "can't enable sata ref clock.\n");
-+		clk_put(sata_ref_clk);
-+		goto release_sata_clk;
-+	}
-+
-+	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
-+	clk = clk_get(NULL, "ahb");
-+	if (IS_ERR(clk)) {
-+		dev_err(dev, "no ahb clock.\n");
-+		ret = PTR_ERR(clk);
-+		goto release_sata_ref_clk;
-+	}
-+	tmpdata = clk_get_rate(clk) / 1000;
-+	clk_put(clk);
-+
-+	sata_init(addr, tmpdata);
-+
-+	return ret;
-+
-+release_sata_ref_clk:
-+	clk_disable(sata_ref_clk);
-+	clk_put(sata_ref_clk);
-+
-+release_sata_clk:
-+	clk_disable(sata_clk);
-+	clk_put(sata_clk);
-+
-+	return ret;
-+}
-+
-+static void mx53_loco_sata_exit(struct device *dev)
-+{
-+	clk_disable(sata_ref_clk);
-+	clk_put(sata_ref_clk);
-+
-+	clk_disable(sata_clk);
-+	clk_put(sata_clk);
-+}
-+
-+static struct ahci_platform_data sata_data = {
-+	.init = mx53_loco_sata_init,
-+	.exit = mx53_loco_sata_exit,
-+};
-+
- static void __init mx53_loco_board_init(void)
- {
- 	mxc_iomux_v3_setup_multiple_pads(mx53_loco_pads,
-@@ -215,6 +290,7 @@ static void __init mx53_loco_board_init(void)
- 	imx53_add_imx_i2c(1, &mx53_loco_i2c_data);
- 	imx53_add_sdhci_esdhc_imx(0, NULL);
- 	imx53_add_sdhci_esdhc_imx(2, NULL);
-+	imx53_add_ahci(0, &sata_data);
- }
- 
- static void __init mx53_loco_timer_init(void)
--- 
-1.7.1
+Thanks for your comments.
+I will work on the hwmod patch and submit it again.
 
-
+Mansoor
