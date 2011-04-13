@@ -1,106 +1,46 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Wed, 13 Apr 2011 11:10:43 -0400
-Message-ID: <4DA5BCF3.5080205@teksavvy.com>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com> <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com> <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com> <4D9FACC9.7020200@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
+From: Bruce Stenning <b.stenning@indigovision.com>
+Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Wed, 13 Apr 2011 17:13:07 +0100
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32C772DA253@gretna.indigovision.com>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
+ <4D9CD275.9000002@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
+ <4D9FACC9.7020200@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
+ <4DA5BCF3.5080205@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------070402090709050506040303"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:20501 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756961Ab1DMPKq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 11:10:46 -0400
-In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
+Received: from gretna.indigovision.com ([62.7.85.227]:27113 "EHLO
+	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932899Ab1DMQNO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 12:13:14 -0400
+In-Reply-To: <4DA5BCF3.5080205@teksavvy.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Stenning <b.stenning@indigovision.com>
+To: Mark Lord <kernel@teksavvy.com>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------070402090709050506040303
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-On 11-04-12 06:30 AM, Bruce Stenning wrote:
-..
-> I am currently inserting tracing into 2.6.38.2 to try to work out what is going
-> on.  From mv_write_main_irq_mask I can see that the IRQ for each port is still
-> enabled, even when ports stop responding.
-..
-> One thing I noticed was that there is no spinlock around the
-> mv_save_cached_regs/mv_edma_cfg in mv_hardreset (unlike mv_port_start and
-> mv_port_stop); why is this?
-
-Yeah, I'm suspecting there's a loophole in the logic there somewhere.
-
-I dusted off the 6041 reference card I have here, and played with the cables
-for a while.  Managed to get one port to stop responding to hot plug fairly
-quickly, though I'm not sure how/why.
-
-Then I added a debug printk() to mv_write_main_irq_mask(),
-with no other changes, and that appears to have been enough
-to change the race timing so that I could no longer produce
-the problem.
-
-Bruce, here's a slightly-ugly patch that should remove all
-doubt about races in the irq_mask.  Please apply it, test with it,
-and let me know here if the issue goes away.
-
-Thanks
-
---- old/drivers/ata/sata_mv.c	2011-04-13 11:03:07.442481426 -0400
-+++ linux/drivers/ata/sata_mv.c	2011-04-13 11:07:55.224249621 -0400
-@@ -1027,15 +1027,19 @@
- static void mv_set_main_irq_mask(struct ata_host *host,
- 				 u32 disable_bits, u32 enable_bits)
- {
-+	static spinlock_t irq_mask_lock = __SPIN_LOCK_UNLOCKED(irq_mask_lock); //
-FIXME: per-host would be nicer
- 	struct mv_host_priv *hpriv = host->private_data;
- 	u32 old_mask, new_mask;
-+	unsigned long flags;
-
-+	spin_lock_irqsave(&irq_mask_lock, flags);
- 	old_mask = hpriv->main_irq_mask;
- 	new_mask = (old_mask & ~disable_bits) | enable_bits;
- 	if (new_mask != old_mask) {
- 		hpriv->main_irq_mask = new_mask;
- 		mv_write_main_irq_mask(new_mask, hpriv);
- 	}
-+	spin_unlock_irqrestore(&irq_mask_lock, flags);
- }
-
- static void mv_enable_port_irqs(struct ata_port *ap,
-
---------------070402090709050506040303
-Content-Type: text/x-patch;
- name="sata_mv_irq_mask_lock.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="sata_mv_irq_mask_lock.patch"
-
---- old/drivers/ata/sata_mv.c	2011-04-13 11:03:07.442481426 -0400
-+++ linux/drivers/ata/sata_mv.c	2011-04-13 11:07:55.224249621 -0400
-@@ -1027,15 +1027,19 @@
- static void mv_set_main_irq_mask(struct ata_host *host,
- 				 u32 disable_bits, u32 enable_bits)
- {
-+	static spinlock_t irq_mask_lock = __SPIN_LOCK_UNLOCKED(irq_mask_lock); // FIXME: per-host would be nicer
- 	struct mv_host_priv *hpriv = host->private_data;
- 	u32 old_mask, new_mask;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&irq_mask_lock, flags);
- 	old_mask = hpriv->main_irq_mask;
- 	new_mask = (old_mask & ~disable_bits) | enable_bits;
- 	if (new_mask != old_mask) {
- 		hpriv->main_irq_mask = new_mask;
- 		mv_write_main_irq_mask(new_mask, hpriv);
- 	}
-+	spin_unlock_irqrestore(&irq_mask_lock, flags);
- }
- 
- static void mv_enable_port_irqs(struct ata_port *ap,
-
---------------070402090709050506040303--
+PiBZZWFoLCBJJ20gc3VzcGVjdGluZyB0aGVyZSdzIGEgbG9vcGhvbGUgaW4gdGhlIGxvZ2ljIHRo
+ZXJlIHNvbWV3aGVyZS4NCj4NCj4gSSBkdXN0ZWQgb2ZmIHRoZSA2MDQxIHJlZmVyZW5jZSBjYXJk
+IEkgaGF2ZSBoZXJlLCBhbmQgcGxheWVkIHdpdGggdGhlIGNhYmxlcyBmb3IgYSB3aGlsZS4gIE1h
+bmFnZWQgdG8gPiBnZXQgb25lIHBvcnQgdG8gc3RvcCByZXNwb25kaW5nIHRvIGhvdCBwbHVnIGZh
+aXJseSBxdWlja2x5LCB0aG91Z2ggSSdtIG5vdCBzdXJlIGhvdy93aHkuDQo+DQo+IFRoZW4gSSBh
+ZGRlZCBhIGRlYnVnIHByaW50aygpIHRvIG12X3dyaXRlX21haW5faXJxX21hc2soKSwgd2l0aCBu
+byBvdGhlciBjaGFuZ2VzLCBhbmQgdGhhdCBhcHBlYXJzIHRvID4gaGF2ZSBiZWVuIGVub3VnaCB0
+byBjaGFuZ2UgdGhlIHJhY2UgdGltaW5nIHNvIHRoYXQgSSBjb3VsZCBubyBsb25nZXIgcHJvZHVj
+ZSB0aGUgcHJvYmxlbS4NCj4NCj4gQnJ1Y2UsIGhlcmUncyBhIHNsaWdodGx5LXVnbHkgcGF0Y2gg
+dGhhdCBzaG91bGQgcmVtb3ZlIGFsbCBkb3VidCBhYm91dCByYWNlcyBpbiB0aGUgaXJxX21hc2su
+ICBQbGVhc2UgPiBhcHBseSBpdCwgdGVzdCB3aXRoIGl0LCBhbmQgbGV0IG1lIGtub3cgaGVyZSBp
+ZiB0aGUgaXNzdWUgZ29lcyBhd2F5Lg0KPg0KPiBUaGFua3MNCg0KVGhhbmtzIE1hcmsuIEkgd2Fz
+IGFib3V0IHRvIHRyeSBvdXQgc29tZSB0cmFjaW5nIGluIHdyaXRlbGZsIGJlY2F1c2UgSQ0Kc3Vz
+cGVjdGVkIHRoZSBpcnEgbWFzayB3YXMgZ2V0dGluZyBjbG9iYmVyZWQgc29tZXdoZXJlIGFsb25n
+IHRoZSB3YXksIGJ1dA0KSSdkIGJlZW4gZGlzdHJhY3RlZCBieSBvdGhlciB3b3JrLiAgSSBzaGFs
+bCB0cnkgeW91ciBwYXRjaCBvdXQgYXMgc29vbiBhcw0KSSBjYW4sIGFuZCByZXBvcnQgYmFjay4N
+Cg0KQ2hlZXJzLA0KDQpCcnVjZS4NCg0KDQpCcnVjZSBTdGVubmluZywNCkluZGlnb1Zpc2lvbiwN
+CmIgPGRvdD4gc3Rlbm5pbmcgPGF0PiBpbmRpZ292aXNpb24gPGRvdD4gY29tDQoNCg0KTGF0ZXN0
+IE5ld3MgYXQ6IGh0dHA6Ly93d3cuaW5kaWdvdmlzaW9uLmNvbS9pbmRleC5waHAvZW4vbmV3cy5o
+dG1sDQo=
