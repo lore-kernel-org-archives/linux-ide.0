@@ -1,45 +1,106 @@
-From: Gottfried Haider <gottfried.haider@gmail.com>
-Subject: Re: sata link speed on amd hudson
-Date: Wed, 13 Apr 2011 14:32:44 +0200
-Message-ID: <BANLkTimqoMAUT84se3ZGCTMkn1+ZJWJTWA@mail.gmail.com>
-References: <BANLkTindfgFSi8mZ17xRo1LGky2Mb3w0OQ@mail.gmail.com>
- <20110403092911.GA5998@liondog.tnic> <BANLkTik73+OOOUVS8UKt=6erGbhSRFW3eg@mail.gmail.com>
- <1E8B869C0C6913418421A406C094DF7C011FEC7C@sshaexmb1.amd.com>
- <BANLkTik4uWvRKG_BoTz2y__b4bGGb4pk+Q@mail.gmail.com> <1E8B869C0C6913418421A406C094DF7C011FF4A1@sshaexmb1.amd.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Wed, 13 Apr 2011 11:10:43 -0400
+Message-ID: <4DA5BCF3.5080205@teksavvy.com>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com> <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com> <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com> <4D9FACC9.7020200@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: multipart/mixed;
+ boundary="------------070402090709050506040303"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:37676 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab1DMMdE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 08:33:04 -0400
-Received: by iwn34 with SMTP id 34so544439iwn.19
-        for <linux-ide@vger.kernel.org>; Wed, 13 Apr 2011 05:33:04 -0700 (PDT)
-In-Reply-To: <1E8B869C0C6913418421A406C094DF7C011FF4A1@sshaexmb1.amd.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:20501 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756961Ab1DMPKq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 11:10:46 -0400
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org, "Petkov, Borislav" <Borislav.Petkov@amd.com>
+To: Bruce Stenning <b.stenning@indigovision.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Shane,
+This is a multi-part message in MIME format.
+--------------070402090709050506040303
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+On 11-04-12 06:30 AM, Bruce Stenning wrote:
+..
+> I am currently inserting tracing into 2.6.38.2 to try to work out what is going
+> on.  From mv_write_main_irq_mask I can see that the IRQ for each port is still
+> enabled, even when ports stop responding.
+..
+> One thing I noticed was that there is no spinlock around the
+> mv_save_cached_regs/mv_edma_cfg in mv_hardreset (unlike mv_port_start and
+> mv_port_stop); why is this?
 
->> Can this bit be ignored/overwritten by the driver in theory?
-> I'm not quite sure, but anyway driver should not ignore/overwrite
-> it to modify the platform's policy, which was decided by OEM and
-> verified. We don't know any regression issue either.
+Yeah, I'm suspecting there's a loophole in the logic there somewhere.
 
-I understand the reasoning, just want to make clear that the disk
-performance I am seeing is way below what I had expected. Now I don't
-know if there is SATA 3 Gbps to blame or not - but since both the
-chipset and the drive claim to support it _and_ the drive's specs
-would warrant 6 Gbps (afaics), I'd really want to give that a try.
+I dusted off the 6041 reference card I have here, and played with the cables
+for a while.  Managed to get one port to stop responding to hot plug fairly
+quickly, though I'm not sure how/why.
 
-running hdparm -t /dev/sda on a new Intel SSD 510 (120GB) gives here:
-Timing buffered disk reads: 360 MB in 3.01 seconds = 119.66 MB/sec
+Then I added a debug printk() to mv_write_main_irq_mask(),
+with no other changes, and that appears to have been enough
+to change the race timing so that I could no longer produce
+the problem.
 
-The drive has an advertised sequential read performance of "up to 400
-MB/s (6Gbps)" and a real-world test (on Anandtech) shows at least
-232.1 MB/s of that..
+Bruce, here's a slightly-ugly patch that should remove all
+doubt about races in the irq_mask.  Please apply it, test with it,
+and let me know here if the issue goes away.
 
-Any suggestions?
+Thanks
+
+--- old/drivers/ata/sata_mv.c	2011-04-13 11:03:07.442481426 -0400
++++ linux/drivers/ata/sata_mv.c	2011-04-13 11:07:55.224249621 -0400
+@@ -1027,15 +1027,19 @@
+ static void mv_set_main_irq_mask(struct ata_host *host,
+ 				 u32 disable_bits, u32 enable_bits)
+ {
++	static spinlock_t irq_mask_lock = __SPIN_LOCK_UNLOCKED(irq_mask_lock); //
+FIXME: per-host would be nicer
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	u32 old_mask, new_mask;
++	unsigned long flags;
+
++	spin_lock_irqsave(&irq_mask_lock, flags);
+ 	old_mask = hpriv->main_irq_mask;
+ 	new_mask = (old_mask & ~disable_bits) | enable_bits;
+ 	if (new_mask != old_mask) {
+ 		hpriv->main_irq_mask = new_mask;
+ 		mv_write_main_irq_mask(new_mask, hpriv);
+ 	}
++	spin_unlock_irqrestore(&irq_mask_lock, flags);
+ }
+
+ static void mv_enable_port_irqs(struct ata_port *ap,
+
+--------------070402090709050506040303
+Content-Type: text/x-patch;
+ name="sata_mv_irq_mask_lock.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="sata_mv_irq_mask_lock.patch"
+
+--- old/drivers/ata/sata_mv.c	2011-04-13 11:03:07.442481426 -0400
++++ linux/drivers/ata/sata_mv.c	2011-04-13 11:07:55.224249621 -0400
+@@ -1027,15 +1027,19 @@
+ static void mv_set_main_irq_mask(struct ata_host *host,
+ 				 u32 disable_bits, u32 enable_bits)
+ {
++	static spinlock_t irq_mask_lock = __SPIN_LOCK_UNLOCKED(irq_mask_lock); // FIXME: per-host would be nicer
+ 	struct mv_host_priv *hpriv = host->private_data;
+ 	u32 old_mask, new_mask;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&irq_mask_lock, flags);
+ 	old_mask = hpriv->main_irq_mask;
+ 	new_mask = (old_mask & ~disable_bits) | enable_bits;
+ 	if (new_mask != old_mask) {
+ 		hpriv->main_irq_mask = new_mask;
+ 		mv_write_main_irq_mask(new_mask, hpriv);
+ 	}
++	spin_unlock_irqrestore(&irq_mask_lock, flags);
+ }
+ 
+ static void mv_enable_port_irqs(struct ata_port *ap,
+
+--------------070402090709050506040303--
