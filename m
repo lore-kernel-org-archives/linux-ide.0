@@ -1,113 +1,45 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
-Date: Wed, 13 Apr 2011 12:36:48 +0200
-Message-ID: <4DA57CC0.8010400@fusionio.com>
-References: <201103291551.p2TFpDqZ001692@clem.clem-digital.net>	 <4D92C874.7040104@parallels.com> <4D931634.5030807@fusionio.com>	 <4D933584.5050005@parallels.com> <4D94432D.5080601@fusionio.com>	 <4D944544.9040705@parallels.com> <4D945247.4080404@fusionio.com>	 <4D945976.8000401@fusionio.com> <20110331121100.GD3385@htj.dyndns.org>	 <4D9474AA.4070402@fusionio.com> <4D947D12.6070505@rsk.demon.co.uk>	 <4D947F29.5050203@fusionio.com> <1301577831.1984.2.camel@castor.rsk>	 <4D9482BA.8080807@fusionio.com>  <1301582977.1984.7.camel@castor.rsk>	 <1301924863.8526.9.camel@castor.rsk> <1302690300.1993.7.camel@castor.rsk>
+From: Gottfried Haider <gottfried.haider@gmail.com>
+Subject: Re: sata link speed on amd hudson
+Date: Wed, 13 Apr 2011 14:32:44 +0200
+Message-ID: <BANLkTimqoMAUT84se3ZGCTMkn1+ZJWJTWA@mail.gmail.com>
+References: <BANLkTindfgFSi8mZ17xRo1LGky2Mb3w0OQ@mail.gmail.com>
+ <20110403092911.GA5998@liondog.tnic> <BANLkTik73+OOOUVS8UKt=6erGbhSRFW3eg@mail.gmail.com>
+ <1E8B869C0C6913418421A406C094DF7C011FEC7C@sshaexmb1.amd.com>
+ <BANLkTik4uWvRKG_BoTz2y__b4bGGb4pk+Q@mail.gmail.com> <1E8B869C0C6913418421A406C094DF7C011FF4A1@sshaexmb1.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([64.244.102.31]:36756 "EHLO mx2.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758202Ab1DMKgy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Apr 2011 06:36:54 -0400
-In-Reply-To: <1302690300.1993.7.camel@castor.rsk>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:37676 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab1DMMdE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 08:33:04 -0400
+Received: by iwn34 with SMTP id 34so544439iwn.19
+        for <linux-ide@vger.kernel.org>; Wed, 13 Apr 2011 05:33:04 -0700 (PDT)
+In-Reply-To: <1E8B869C0C6913418421A406C094DF7C011FF4A1@sshaexmb1.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Kennedy <richard@rsk.demon.co.uk>
-Cc: Tejun Heo <tj@kernel.org>, Rob Landley <rlandley@parallels.com>, Pete Clements <clem@clem.clem-digital.net>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "Huang, Shane" <Shane.Huang@amd.com>
+Cc: Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org, "Petkov, Borislav" <Borislav.Petkov@amd.com>
 
-On 2011-04-13 12:25, Richard Kennedy wrote:
-> On Mon, 2011-04-04 at 14:47 +0100, Richard Kennedy wrote:
->> On Thu, 2011-03-31 at 15:49 +0100, Richard Kennedy wrote:
->>> On Thu, 2011-03-31 at 15:33 +0200, Jens Axboe wrote:
->>> [...]
->>>>>>> Hi Jens,
->>>>>>>
->>>>>>> I'm seeing a problem with fio never completing when writing to 2 disks
->>>>>>> simultaneously. In my test case I'm writing 2Gb to both a LVM volume & a
->>>>>>> pata drive on x86_64 on a AMD X2. Could this be a related issue?
->>>>>>>
->>>>>>> I'm not getting anything reported in the log, lockup detection doesn't
->>>>>>> report anything either. The write seems to have finished (the disk light
->>>>>>> activity has stopped) and the cpu cores are both below 10% usage, but
->>>>>>> fio never returns. The test does complete some times, but it seems to be
->>>>>>> one 1 in 4.
->>>>>>
->>>>>> So when you say PATA, it's /dev/hdaX something as well?
->>>>>>
->>>>>>> I'm going to try tracing it and see if I can spot where it's stuck.
->>>>>>
->>>>>> Thanks, that would be nice.
->>>>>>
->>>>> The second drive is /dev/sdb1 mounted on /opt, both file systems are
->>>>> ext4.
->>>>
->>>> So probably not related. What does the fio job look like?
->>>>
->>> fio job file --
->>> [global]
->>> pre_read=1
->>> ioengine=mmap
->>>
->>> [f1]
->>> size=2g
->>> rw=write
->>> directory=/home/tests
->>>
->>> [f2]
->>> size=2g
->>> rw=write
->>> directory=/opt/tests
->>>
->>> Fio gets run from a script that also collects stats but it's been
->>> running without any problems up until 2.6.39-rc1.
->>>
->> Hi Jens
->> I've upgrade to the latest fio version in the git repo 1.51 and I'm
->> still seeing this problem. 
->>
->> Fio gets stuck after it writes the 100% complete message and strace on
->> the processes shows this.
->>
->> the controlling fio process :- 
->>  ...
->> [pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
->> [pid  8439] nanosleep({0, 10000000}, NULL) = 0
->> [pid  8439] wait4(8441, 0x7fff848203ac, WNOHANG, NULL) = 0
->> [pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
->> [pid  8439] nanosleep({0, 10000000}
->>
->> & the 2 workers are both stopped here, strace shows only the one line
->> for each process.
->>
->> Process 8441 attached - interrupt to quit
->> futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
->>
->>
->> Process 8442 attached - interrupt to quit
->> futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
->>
->> How do I find out which futex it's waiting for? 
->> Any ideas where I should look next ?
->>
->> I can run the same test successfully on 2.6.38 so is it worth trying to
->> bisect this ? 
->>
->> thanks 
->> Richard
->>
-> My problem has gone away in v2.6.39-rc3.
-> I've just finished bisecting it down to 6de9843dab3f, & that got
-> reverted in rc3, so no problem ;)
-> 
-> (The data corruption caused by that faulty commit was zeroing out the
-> shared mutexs in fio & the worker threads were getting stuck on the
-> writeout_mutex.)
-
-Great, that's one less regression to worry about :-)
+Hi Shane,
 
 
--- 
-Jens Axboe
+>> Can this bit be ignored/overwritten by the driver in theory?
+> I'm not quite sure, but anyway driver should not ignore/overwrite
+> it to modify the platform's policy, which was decided by OEM and
+> verified. We don't know any regression issue either.
 
+I understand the reasoning, just want to make clear that the disk
+performance I am seeing is way below what I had expected. Now I don't
+know if there is SATA 3 Gbps to blame or not - but since both the
+chipset and the drive claim to support it _and_ the drive's specs
+would warrant 6 Gbps (afaics), I'd really want to give that a try.
+
+running hdparm -t /dev/sda on a new Intel SSD 510 (120GB) gives here:
+Timing buffered disk reads: 360 MB in 3.01 seconds = 119.66 MB/sec
+
+The drive has an advertised sequential read performance of "up to 400
+MB/s (6Gbps)" and a real-world test (on Anandtech) shows at least
+232.1 MB/s of that..
+
+Any suggestions?
