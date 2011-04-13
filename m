@@ -1,129 +1,120 @@
-From: Zhu Richard-R65037 <R65037@freescale.com>
-Subject: RE: [PATCH V4 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
-Date: Wed, 13 Apr 2011 03:06:58 +0000
-Message-ID: <010C9052C42A00499CE76D637FA5EE900D9E8E@039-SN1MPN1-001.039d.mgd.msft.net>
-References: <1302587472-20435-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1302587472-20435-2-git-send-email-Hong-Xing.Zhu@freescale.com>
- <4DA43740.9050806@ru.mvista.com>
+From: Richard Kennedy <richard@rsk.demon.co.uk>
+Subject: Re: Commit 7eaceaccab5f40 causing boot hang.
+Date: Wed, 13 Apr 2011 11:25:00 +0100
+Message-ID: <1302690300.1993.7.camel@castor.rsk>
+References: <201103291551.p2TFpDqZ001692@clem.clem-digital.net>
+	 <4D92C874.7040104@parallels.com> <4D931634.5030807@fusionio.com>
+	 <4D933584.5050005@parallels.com> <4D94432D.5080601@fusionio.com>
+	 <4D944544.9040705@parallels.com> <4D945247.4080404@fusionio.com>
+	 <4D945976.8000401@fusionio.com> <20110331121100.GD3385@htj.dyndns.org>
+	 <4D9474AA.4070402@fusionio.com> <4D947D12.6070505@rsk.demon.co.uk>
+	 <4D947F29.5050203@fusionio.com> <1301577831.1984.2.camel@castor.rsk>
+	 <4D9482BA.8080807@fusionio.com>  <1301582977.1984.7.camel@castor.rsk>
+	 <1301924863.8526.9.camel@castor.rsk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:25047
-	"EHLO VA3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756389Ab1DMDHB convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Apr 2011 23:07:01 -0400
-In-Reply-To: <4DA43740.9050806@ru.mvista.com>
-Content-Language: en-US
+Received: from lon1-post-3.mail.demon.net ([195.173.77.150]:45150 "EHLO
+	lon1-post-3.mail.demon.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757087Ab1DMKZI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2011 06:25:08 -0400
+In-Reply-To: <1301924863.8526.9.camel@castor.rsk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "kernel@pengutronix.de" <kernel@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "eric@eukrea.com" <eric@eukrea.com>, "eric.miao@linaro.org" <eric.miao@linaro.org>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Tejun Heo <tj@kernel.org>, Rob Landley <rlandley@parallels.com>, Pete Clements <clem@clem.clem-digital.net>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Sergei:
-Got that. Thanks for your kindly comments.
-Would change them later.
+On Mon, 2011-04-04 at 14:47 +0100, Richard Kennedy wrote:
+> On Thu, 2011-03-31 at 15:49 +0100, Richard Kennedy wrote:
+> > On Thu, 2011-03-31 at 15:33 +0200, Jens Axboe wrote:
+> >[...]
+> > > >>> Hi Jens,
+> > > >>>
+> > > >>> I'm seeing a problem with fio never completing when writing to 2 disks
+> > > >>> simultaneously. In my test case I'm writing 2Gb to both a LVM volume & a
+> > > >>> pata drive on x86_64 on a AMD X2. Could this be a related issue?
+> > > >>>
+> > > >>> I'm not getting anything reported in the log, lockup detection doesn't
+> > > >>> report anything either. The write seems to have finished (the disk light
+> > > >>> activity has stopped) and the cpu cores are both below 10% usage, but
+> > > >>> fio never returns. The test does complete some times, but it seems to be
+> > > >>> one 1 in 4.
+> > > >>
+> > > >> So when you say PATA, it's /dev/hdaX something as well?
+> > > >>
+> > > >>> I'm going to try tracing it and see if I can spot where it's stuck.
+> > > >>
+> > > >> Thanks, that would be nice.
+> > > >>
+> > > > The second drive is /dev/sdb1 mounted on /opt, both file systems are
+> > > > ext4.
+> > > 
+> > > So probably not related. What does the fio job look like?
+> > > 
+> > fio job file --
+> > [global]
+> > pre_read=1
+> > ioengine=mmap
+> > 
+> > [f1]
+> > size=2g
+> > rw=write
+> > directory=/home/tests
+> > 
+> > [f2]
+> > size=2g
+> > rw=write
+> > directory=/opt/tests
+> > 
+> > Fio gets run from a script that also collects stats but it's been
+> > running without any problems up until 2.6.39-rc1.
+> > 
+> Hi Jens
+> I've upgrade to the latest fio version in the git repo 1.51 and I'm
+> still seeing this problem. 
+> 
+> Fio gets stuck after it writes the 100% complete message and strace on
+> the processes shows this.
+> 
+> the controlling fio process :- 
+>  ...
+> [pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
+> [pid  8439] nanosleep({0, 10000000}, NULL) = 0
+> [pid  8439] wait4(8441, 0x7fff848203ac, WNOHANG, NULL) = 0
+> [pid  8439] wait4(8442, 0x7fff848203ac, WNOHANG, NULL) = 0
+> [pid  8439] nanosleep({0, 10000000}
+> 
+> & the 2 workers are both stopped here, strace shows only the one line
+> for each process.
+> 
+> Process 8441 attached - interrupt to quit
+> futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
+> 
+> 
+> Process 8442 attached - interrupt to quit
+> futex(0x7f9db76a802c, FUTEX_WAIT_PRIVATE, 2, NULL
+> 
+> How do I find out which futex it's waiting for? 
+> Any ideas where I should look next ?
+> 
+> I can run the same test successfully on 2.6.38 so is it worth trying to
+> bisect this ? 
+> 
+> thanks 
+> Richard
+> 
+My problem has gone away in v2.6.39-rc3.
+I've just finished bisecting it down to 6de9843dab3f, & that got
+reverted in rc3, so no problem ;)
 
-Best Regards
-Richard Zhu
+(The data corruption caused by that faulty commit was zeroing out the
+shared mutexs in fio & the worker threads were getting stuck on the
+writeout_mutex.)
+
+regards
+Richard
 
 
-> -----Original Message-----
-> From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
-> Sent: Tuesday, April 12, 2011 7:28 PM
-> To: Zhu Richard-R65037
-> Cc: linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com;
-> kernel@pengutronix.de; linux-ide@vger.kernel.org;
-> avorontsov@ru.mvista.com; eric@eukrea.com; eric.miao@linaro.org
-> Subject: Re: [PATCH V4 2/2] MX53 Enable the AHCI SATA on MX53 LOCO
->
-> Hello.
->
-> On 12-04-2011 9:51, Richard Zhu wrote:
->
-> > Signed-off-by: Richard Zhu<Hong-Xing.Zhu@freescale.com>
-> > ---
-> >   arch/arm/mach-mx5/board-mx53_loco.c |   76
-> +++++++++++++++++++++++++++++++++++
-> >   1 files changed, 76 insertions(+), 0 deletions(-)
->
-> > diff --git a/arch/arm/mach-mx5/board-mx53_loco.c
-> > b/arch/arm/mach-mx5/board-mx53_loco.c
-> > index 0a18f8d..644aaa2 100644
-> > --- a/arch/arm/mach-mx5/board-mx53_loco.c
-> > +++ b/arch/arm/mach-mx5/board-mx53_loco.c
-> [...]
-> > @@ -203,6 +206,78 @@ static const struct imxi2c_platform_data
-> mx53_loco_i2c_data __initconst = {
-> >     .bitrate = 100000,
-> >   };
-> >
-> > +/* HW Initialization, if return 0, initialization is successful. */
-> > +static int mx53_loco_sata_init(struct device *dev, void __iomem
-> > +*addr) {
-> > +   u32 tmpdata;
-> > +   int ret = 0;
-> > +   struct clk *clk;
-> > +
-> > +   sata_clk = clk_get(dev, NULL);
-> > +   if (IS_ERR(sata_clk)) {
-> > +           dev_err(dev, "no sata clock.\n");
-> > +           return PTR_ERR(sata_clk);
-> > +   }
-> > +   ret = clk_enable(sata_clk);
-> > +   if (ret) {
-> > +           dev_err(dev, "can't enable sata clock.\n");
-> > +           clk_put(sata_clk);
->
->     Why duplicate clk_put() which you already have at the end of function?
-> Just define another label there.
->
-> > +           return ret;
-> > +   }
-> > +
-> > +   /* FSL IMX AHCI SATA uses the internal usb phy1 clk on loco */
-> > +   sata_ref_clk = clk_get(NULL, "usb_phy1");
-> > +   if (IS_ERR(sata_ref_clk)) {
-> > +           dev_err(dev, "no sata ref clock.\n");
-> > +           ret = PTR_ERR(sata_ref_clk);
-> > +           goto release_sata_clk;
-> > +   }
-> > +   ret = clk_enable(sata_ref_clk);
-> > +   if (ret) {
-> > +           dev_err(dev, "can't enable sata ref clock.\n");
-> > +           clk_put(sata_ref_clk);
->
->     Same question.
->
-> > +           goto release_sata_clk;
-> > +   }
-> > +
-> > +   /* Get the AHB clock rate, and configure the TIMER1MS reg later */
-> > +   clk = clk_get(NULL, "ahb");
-> > +   if (IS_ERR(clk)) {
-> > +           dev_err(dev, "no ahb clock.\n");
-> > +           ret = PTR_ERR(clk);
-> > +           goto release_sata_ref_clk;
-> > +   }
-> > +   tmpdata = clk_get_rate(clk) / 1000;
-> > +   clk_put(clk);
-> > +
-> > +   sata_init(addr, tmpdata);
-> > +
-> > +   return ret;
-> > +
-> > +release_sata_ref_clk:
-> > +   clk_disable(sata_ref_clk);
-> > +   clk_put(sata_ref_clk);
-> > +
-> > +release_sata_clk:
-> > +   clk_disable(sata_clk);
-> > +   clk_put(sata_clk);
-> > +
-> > +   return ret;
-> > +}
->
-> WBR, Sergei
 
 
