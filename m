@@ -1,57 +1,60 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Fri, 15 Apr 2011 08:35:59 -0400
-Message-ID: <4DA83BAF.2010801@teksavvy.com>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com> <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com> <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com> <alpine.DEB.2.00.1104150510181.14027@uplift.swm.pp.se> <4DA7BC4B.9090104@teksavvy.com> <alpine.DEB.2.00.1104150941220.14027@uplift.swm.pp.se>
+From: Bruce Stenning <b.stenning@indigovision.com>
+Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Fri, 15 Apr 2011 14:21:56 +0100
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32C772DA5DD@gretna.indigovision.com>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
+ <4D9CD275.9000002@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
+ <4D9FACC9.7020200@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
+ <4DA5BCF3.5080205@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
+ <4DA79134.1010508@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:42855 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751502Ab1DOMgC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Apr 2011 08:36:02 -0400
-In-Reply-To: <alpine.DEB.2.00.1104150941220.14027@uplift.swm.pp.se>
+Received: from gretna.indigovision.com ([62.7.85.227]:55132 "EHLO
+	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228Ab1DONWA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Apr 2011 09:22:00 -0400
+In-Reply-To: <4DA79134.1010508@teksavvy.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Justin Maggard <jmaggard10@gmail.com>
 
-On 11-04-15 03:43 AM, Mikael Abrahamsson wrote:
-> On Thu, 14 Apr 2011, Mark Lord wrote:
->
->> I would like to see the output, next time you can get it.
->
-
->Apr 14 18:39:54 host kernel: [  137.276051] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
->Apr 14 18:39:54 host kernel: [  137.284557] ------------[ cut here ]------------
->Apr 14 18:39:54 host kernel: [  137.284626] WARNING: at /build/buildd-linux-2.6_2.6.32-31-amd64-vrfdM4/linux-2.6-2.6.32/debian/build/source_amd64_none/drivers/ata/libata-sff.c:1208 ata_sff_hsm_move+0x47/0x642 [libata]()
->Apr 14 18:39:54 host kernel: [  137.284733] Hardware name: P5E WS Pro
->Apr 14 18:39:54 host kernel: [  137.284797] Modules linked in: ext2 loop snd_pcm snd_timer snd soundcore snd_page_alloc i2c_i801 i2c_core evdev pcspkr asus_atk0110 x38_edac shpchp pci_hotplug edac_core button processor ext3 jbd mbcache sha256_generic aes_x86_64 aes_generic cbc dm_crypt dm_mod usbhid hid sd_mod crc_t10dif sata_mv uhci_hcd sata_sil24 ahci mpt2sas libata sky2 scsi_transport_sas thermal ehci_hcd thermal_sys scsi_mod usbcore nls_base [last unloaded: scsi_wait_scan]
->Apr 14 18:39:54 host kernel: [  137.286426] Pid: 240, comm: ata/1 Not tainted 2.6.32-5-amd64 #1
->Apr 14 18:39:54 host kernel: [  137.286482] Call Trace:
->Apr 14 18:39:54 host kernel: [  137.286536]  [<ffffffffa00b1438>] ? ata_sff_hsm_move+0x47/0x642 [libata]
->Apr 14 18:39:54 host kernel: [  137.286597]  [<ffffffffa00b1438>] ? ata_sff_hsm_move+0x47/0x642 [libata]
->Apr 14 18:39:54 host kernel: [  137.286658]  [<ffffffff8104df00>] ? warn_slowpath_common+0x77/0xa3
->Apr 14 18:39:54 host kernel: [  137.286718]  [<ffffffffa00b1438>] ? ata_sff_hsm_move+0x47/0x642 [libata]
->Apr 14 18:39:54 host kernel: [  137.286780]  [<ffffffffa00b1d87>] ? ata_pio_task+0x9a/0xa6 [libata]
->Apr 14 18:39:54 host kernel: [  137.286838]  [<ffffffff8106186b>] ? worker_thread+0x188/0x21d
->Apr 14 18:39:54 host kernel: [  137.286897]  [<ffffffffa00b1ced>] ? ata_pio_task+0x0/0xa6 [libata]
->Apr 14 18:39:54 host kernel: [  137.286955]  [<ffffffff81064e96>] ? autoremove_wake_function+0x0/0x2e
->Apr 14 18:39:54 host kernel: [  137.287012]  [<ffffffff810616e3>] ? worker_thread+0x0/0x21d
->Apr 14 18:39:54 host kernel: [  137.287068]  [<ffffffff81064bc9>] ? kthread+0x79/0x81
->Apr 14 18:39:54 host kernel: [  137.287124]  [<ffffffff81011baa>] ? child_rip+0xa/0x20
->Apr 14 18:39:54 host kernel: [  137.292927]  [<ffffffff81064b50>] ? kthread+0x0/0x81
->Apr 14 18:39:54 host kernel: [  137.292984]  [<ffffffff81011ba0>] ? child_rip+0x0/0x20
->Apr 14 18:39:54 host kernel: [  137.293041] ---[ end trace 0ce5491cb936fb17 ]---
->Apr 14 18:39:54 host kernel: [  137.306180] ata9.00: failed to IDENTIFY (I/O error, err_mask=0x2)
-
-That's interesting.  It really appears have not a lot to do with sata_mv,
-though there's no guarantee there.
-
-Tejun -- this is 2.6.32, libata trying to identify a newly hot-plugged drive,
-and hitting a warning in libata-sff.c.  Looks self-inflicted to me!  :)
-
-Mikael -- any chance you could someday retry this on 2.6.38.2 ?
-
-Thanks
+PiA+IEkgYWxzbyB0cmllZCBvdXQgbXkgdHJhY2luZyBpbiB3cml0ZWxmbCAod2l0aG91dCBhbnkg
+b3RoZXIgY2hhbmdlcykgYW5kIEkgd2FzDQo+ID4gYWJsZSB0byBsb2NrIHVwIGEgcG9ydCB3aXRo
+b3V0IGFueSBhcHBhcmVudCB1bnVzdWFsIGNoYW5nZXMgdG8gdGhlIHJlZ2lzdGVyDQo+ID4gY29u
+dGFpbmluZyB0aGUgaXJxIG1hc2tzLiAgQXJlIHRoZXJlIG90aGVyIHJvdXRlcyB0byBkaXNhYmxp
+bmcgdGhlIGlycXM/DQo+DQo+IE1tbS4uIHByZXN1bWFibHkgeW91IGFyZSBOT1QgdXNpbmcgTVNJ
+IGludGVycnVwdHMsIHJpZ2h0Pw0KDQpIaSBNYXJrLA0KDQpUaGF0IGlzIGNvcnJlY3Q6DQoNCnNh
+dGFfbXYgMDAwMDowMDowNC4wOiBHZW4tSUkgMzIgc2xvdHMgNCBwb3J0cyBTQ1NJIG1vZGUgSVJR
+IHZpYSBJTlR4DQoNCkkgYW0gYnVpbGRpbmcgd2l0aCBDT05GSUdfQVJDSF9TVVBQT1JUU19NU0k9
+eSwgYnV0IGFsc28gd2l0aCBDT05GSUdfUENJX01TSQ0Kbm90IHNldC4NCg0KV2l0aCBhbGwgdGhp
+cyBkaXNjdXNzaW9uIG9mIFNBVEEgbGluayBzcGVlZCwgSSBvdWdodCB0byBzYXkgdGhhdCB3ZSBs
+aW1pdCBvdXINClNBVEEgbGlua3MgdG8gMS41R2JwcyB3aXRoIHRoZSBmb2xsb3dpbmcga2VybmVs
+IHBhcmFtZXRlcjoNCg0KbGliYXRhLmZvcmNlPTEuNWcNCg0KSSBoYWQgbm90aWNlZCBvY2Nhc2lv
+bmFsIG1lc3NhZ2VzIHNpbWlsYXIgdG8gdGhlIGZvbGxvd2luZyBlYXJsaWVyIGluIHRoZSB3ZWVr
+Og0KDQphdGE0LjAwOiBsaW1pdGluZyBzcGVlZCB0byBVRE1BLzEwMDpQSU80DQoNCkkgd2FzIHN1
+cnByaXNlZCB0byBzZWUgdGhlbSwgYW5kIHRob3VnaHQgdGhleSBtaWdodCBiZSByZWxhdGVkIHRv
+IHRoZSBob3RwbHVnDQppc3N1ZXMsIGJ1dCBJIHdhcyBhYmxlIHRvIHJlcHJvZHVjZSB0aGUgbG9j
+a3VwcyB3aXRob3V0IHRoZXNlIG1lc3NhZ2VzIGJlaW5nDQpnZW5lcmF0ZWQuICBJbiBzb21lIGNh
+c2VzIChidXQgbm90IGFsbCkgYm90aCBzYXRhX2Rvd25fc3BkX2xpbWl0IGFuZA0KYXRhX2Rvd25f
+eGZlcm1hc2tfbGltaXQgYXJlIGNhbGxlZCB3aGVuIGJhY2tpbmcgb2ZmIHRoZSBsaW5rIHNwZWVk
+Lg0KDQpNYXJrLCBJIHdhcyBpbnRyaWd1ZWQgYnkgeW91ciBjb21tZW50IGZyb20gdGhlIGZvbGxv
+d2luZyBtZXNzYWdlOg0KDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LWlkZS9t
+c2czNjkyMi5odG1sDQo+IElmIGl0J3MgbGlrZSB0aGVpciBub24tQUhDSSBjb250cm9sbGVycyAo
+c2F0YV9tdiksIHRoZW4gdGhlIGNoaXBzZXQvcGh5DQo+IGNvdWxkIGJlIHZlcnkgcGFydGljdWxh
+ciBhYm91dCB0aGUgc2VxdWVuY2UvdGltaW5nIHVzZWQgd2hlbiBjaGFuZ2luZyBzcGVlZHMuDQoN
+CklzIGl0IHBvc3NpYmxlIHRoYXQgdGhlIGRyaXZlciBpcyBkb2luZyBzb21lIG9mIHRoZSB3b3Jr
+IHRvIGNoYW5nZSB0aGUgbGluaw0Kc3BlZWQgKGV2ZW4gdGhvdWdoIGl0IGhhcyBub3doZXJlIHRv
+IGdvKSBhbmQgY2xvYmJlcmluZyB0aGUgbGluayBlbnRpcmVseT8NCkkgc2hhbGwgdGFrZSBhbm90
+aGVyIGNsb3NlciBsb29rIGF0IHRoZSBzb3VyY2UgY29kZSBhbmQgdHJhY2luZyBhcm91bmQgaG90
+cGx1Zw0Kdy5yLnQuIGxpbmsgc3BlZWQuDQoNCg0KQ2hlZXJzLA0KDQpCcnVjZS4NCg0KDQpCcnVj
+ZSBTdGVubmluZywNCkluZGlnb1Zpc2lvbiwNCmIgPGRvdD4gc3Rlbm5pbmcgPGF0PiBpbmRpZ292
+aXNpb24gPGRvdD4gY29tDQoNCg0KTGF0ZXN0IE5ld3MgYXQ6IGh0dHA6Ly93d3cuaW5kaWdvdmlz
+aW9uLmNvbS9pbmRleC5waHAvZW4vbmV3cy5odG1sDQo=
