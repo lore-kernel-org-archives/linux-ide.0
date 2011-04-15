@@ -1,60 +1,24 @@
-From: Bruce Stenning <b.stenning@indigovision.com>
-Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Fri, 15 Apr 2011 14:21:56 +0100
-Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32C772DA5DD@gretna.indigovision.com>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
- <4D9CD275.9000002@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
- <4D9FACC9.7020200@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
- <4DA5BCF3.5080205@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
- <4DA79134.1010508@teksavvy.com>
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Fri, 15 Apr 2011 16:04:34 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1104151603460.14027@uplift.swm.pp.se>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com> <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com> <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
+ <alpine.DEB.2.00.1104150510181.14027@uplift.swm.pp.se> <4DA7BC4B.9090104@teksavvy.com> <alpine.DEB.2.00.1104150941220.14027@uplift.swm.pp.se> <4DA83BAF.2010801@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretna.indigovision.com ([62.7.85.227]:55132 "EHLO
-	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228Ab1DONWA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Apr 2011 09:22:00 -0400
-In-Reply-To: <4DA79134.1010508@teksavvy.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4DA83BAF.2010801@teksavvy.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Mark Lord <kernel@teksavvy.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Justin Maggard <jmaggard10@gmail.com>
+Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-PiA+IEkgYWxzbyB0cmllZCBvdXQgbXkgdHJhY2luZyBpbiB3cml0ZWxmbCAod2l0aG91dCBhbnkg
-b3RoZXIgY2hhbmdlcykgYW5kIEkgd2FzDQo+ID4gYWJsZSB0byBsb2NrIHVwIGEgcG9ydCB3aXRo
-b3V0IGFueSBhcHBhcmVudCB1bnVzdWFsIGNoYW5nZXMgdG8gdGhlIHJlZ2lzdGVyDQo+ID4gY29u
-dGFpbmluZyB0aGUgaXJxIG1hc2tzLiAgQXJlIHRoZXJlIG90aGVyIHJvdXRlcyB0byBkaXNhYmxp
-bmcgdGhlIGlycXM/DQo+DQo+IE1tbS4uIHByZXN1bWFibHkgeW91IGFyZSBOT1QgdXNpbmcgTVNJ
-IGludGVycnVwdHMsIHJpZ2h0Pw0KDQpIaSBNYXJrLA0KDQpUaGF0IGlzIGNvcnJlY3Q6DQoNCnNh
-dGFfbXYgMDAwMDowMDowNC4wOiBHZW4tSUkgMzIgc2xvdHMgNCBwb3J0cyBTQ1NJIG1vZGUgSVJR
-IHZpYSBJTlR4DQoNCkkgYW0gYnVpbGRpbmcgd2l0aCBDT05GSUdfQVJDSF9TVVBQT1JUU19NU0k9
-eSwgYnV0IGFsc28gd2l0aCBDT05GSUdfUENJX01TSQ0Kbm90IHNldC4NCg0KV2l0aCBhbGwgdGhp
-cyBkaXNjdXNzaW9uIG9mIFNBVEEgbGluayBzcGVlZCwgSSBvdWdodCB0byBzYXkgdGhhdCB3ZSBs
-aW1pdCBvdXINClNBVEEgbGlua3MgdG8gMS41R2JwcyB3aXRoIHRoZSBmb2xsb3dpbmcga2VybmVs
-IHBhcmFtZXRlcjoNCg0KbGliYXRhLmZvcmNlPTEuNWcNCg0KSSBoYWQgbm90aWNlZCBvY2Nhc2lv
-bmFsIG1lc3NhZ2VzIHNpbWlsYXIgdG8gdGhlIGZvbGxvd2luZyBlYXJsaWVyIGluIHRoZSB3ZWVr
-Og0KDQphdGE0LjAwOiBsaW1pdGluZyBzcGVlZCB0byBVRE1BLzEwMDpQSU80DQoNCkkgd2FzIHN1
-cnByaXNlZCB0byBzZWUgdGhlbSwgYW5kIHRob3VnaHQgdGhleSBtaWdodCBiZSByZWxhdGVkIHRv
-IHRoZSBob3RwbHVnDQppc3N1ZXMsIGJ1dCBJIHdhcyBhYmxlIHRvIHJlcHJvZHVjZSB0aGUgbG9j
-a3VwcyB3aXRob3V0IHRoZXNlIG1lc3NhZ2VzIGJlaW5nDQpnZW5lcmF0ZWQuICBJbiBzb21lIGNh
-c2VzIChidXQgbm90IGFsbCkgYm90aCBzYXRhX2Rvd25fc3BkX2xpbWl0IGFuZA0KYXRhX2Rvd25f
-eGZlcm1hc2tfbGltaXQgYXJlIGNhbGxlZCB3aGVuIGJhY2tpbmcgb2ZmIHRoZSBsaW5rIHNwZWVk
-Lg0KDQpNYXJrLCBJIHdhcyBpbnRyaWd1ZWQgYnkgeW91ciBjb21tZW50IGZyb20gdGhlIGZvbGxv
-d2luZyBtZXNzYWdlOg0KDQpodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3RzL2xpbnV4LWlkZS9t
-c2czNjkyMi5odG1sDQo+IElmIGl0J3MgbGlrZSB0aGVpciBub24tQUhDSSBjb250cm9sbGVycyAo
-c2F0YV9tdiksIHRoZW4gdGhlIGNoaXBzZXQvcGh5DQo+IGNvdWxkIGJlIHZlcnkgcGFydGljdWxh
-ciBhYm91dCB0aGUgc2VxdWVuY2UvdGltaW5nIHVzZWQgd2hlbiBjaGFuZ2luZyBzcGVlZHMuDQoN
-CklzIGl0IHBvc3NpYmxlIHRoYXQgdGhlIGRyaXZlciBpcyBkb2luZyBzb21lIG9mIHRoZSB3b3Jr
-IHRvIGNoYW5nZSB0aGUgbGluaw0Kc3BlZWQgKGV2ZW4gdGhvdWdoIGl0IGhhcyBub3doZXJlIHRv
-IGdvKSBhbmQgY2xvYmJlcmluZyB0aGUgbGluayBlbnRpcmVseT8NCkkgc2hhbGwgdGFrZSBhbm90
-aGVyIGNsb3NlciBsb29rIGF0IHRoZSBzb3VyY2UgY29kZSBhbmQgdHJhY2luZyBhcm91bmQgaG90
-cGx1Zw0Kdy5yLnQuIGxpbmsgc3BlZWQuDQoNCg0KQ2hlZXJzLA0KDQpCcnVjZS4NCg0KDQpCcnVj
-ZSBTdGVubmluZywNCkluZGlnb1Zpc2lvbiwNCmIgPGRvdD4gc3Rlbm5pbmcgPGF0PiBpbmRpZ292
-aXNpb24gPGRvdD4gY29tDQoNCg0KTGF0ZXN0IE5ld3MgYXQ6IGh0dHA6Ly93d3cuaW5kaWdvdmlz
-aW9uLmNvbS9pbmRleC5waHAvZW4vbmV3cy5odG1sDQo=
+On Fri, 15 Apr 2011, Mark Lord wrote:
+
+> Mikael -- any chance you could someday retry this on 2.6.38.2 ?
+
+Well, since the problem went away after I re-seated the SATA cable, I 
+don't think I'll even be able to reproduce it with 2.6.32.
+
+-- 
+Mikael Abrahamsson    email: swmike@swm.pp.se
