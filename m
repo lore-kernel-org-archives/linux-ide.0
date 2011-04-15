@@ -1,38 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 33342] [2.6.39-rc2][bisected] Constant DISK_MEDIA_CHANGE_EVENTS
- from CDROM drive.
-Date: Fri, 15 Apr 2011 17:13:24 GMT
-Message-ID: <201104151713.p3FHDOI8009336@demeter1.kernel.org>
-References: <bug-33342-11633@https.bugzilla.kernel.org/>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: WARNING at libata-core.c:5015 in 2.6.39-rc3-wl+, then lockup.
+ (bisected)
+Date: Fri, 15 Apr 2011 13:57:27 -0400
+Message-ID: <4DA88707.4060704@garzik.org>
+References: <4DA5CF81.4070908@candelatech.com> <4DA5D5D8.8070301@candelatech.com> <4DA5F3BA.3060404@candelatech.com> <4DA87A72.50809@candelatech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:59190 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005Ab1DORNY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Apr 2011 13:13:24 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p3FHDOPm009337
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Fri, 15 Apr 2011 17:13:24 GMT
-In-Reply-To: <bug-33342-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4DA87A72.50809@candelatech.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ben Greear <greearb@candelatech.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=33342
+On 04/15/2011 01:03 PM, Ben Greear wrote:
+> Ok, it took a while, but I think I have this thing somewhat bisected.
+>
+> Starting at commit 4cc4d24efce4672f9b0e7fa27963770ae602998f, I see
+> hard-drive
+> issues. Commits right before this (in git bisect) crash in the
+> networking code
+> quite often, but the hard-drive logic seems to work at least.
+>
+> In later builds (ie, -rc3), the crashes and warnings are different, but
+> they have something to do with the file system. It's difficult to bisect
+> it any better because of all the instability...
+>
+>
+> Here are some console logs from a
+> 4cc4d24efce4672f9b0e7fa27963770ae602998f boot:
 
+(linux-ide added to CC)
 
-Maciej Rutecki <maciej.rutecki@gmail.com> changed:
+hmmm...  that's a merge commit.  Any chance you could mark an individual 
+commit bad, to narrow things down a bit more?  Run "git help bisect" and 
+check out helpful sections "Avoiding testing a commit" and "Bisect skip".
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Blocks|                            |32012
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+	Jeff
