@@ -1,51 +1,32 @@
-From: Bruce Stenning <b.stenning@indigovision.com>
-Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Thu, 14 Apr 2011 17:50:53 +0100
-Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
- <4D9CD275.9000002@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
- <4D9FACC9.7020200@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
- <4DA5BCF3.5080205@teksavvy.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Thu, 14 Apr 2011 20:28:36 -0400
+Message-ID: <4DA79134.1010508@teksavvy.com>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com> <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com> <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com> <4D9FACC9.7020200@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com> <4DA5BCF3.5080205@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretna.indigovision.com ([62.7.85.227]:31273 "EHLO
-	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753448Ab1DNQvB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2011 12:51:01 -0400
-In-Reply-To: <4DA5BCF3.5080205@teksavvy.com>
-Content-Language: en-US
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:8967 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754817Ab1DOA2k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2011 20:28:40 -0400
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
+To: Bruce Stenning <b.stenning@indigovision.com>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-PiA+IE9uZSB0aGluZyBJIG5vdGljZWQgd2FzIHRoYXQgdGhlcmUgaXMgbm8gc3BpbmxvY2sgYXJv
-dW5kIHRoZQ0KPiA+IG12X3NhdmVfY2FjaGVkX3JlZ3MvbXZfZWRtYV9jZmcgaW4gbXZfaGFyZHJl
-c2V0ICh1bmxpa2UgbXZfcG9ydF9zdGFydA0KPiA+IGFuZCBtdl9wb3J0X3N0b3ApOyB3aHkgaXMg
-dGhpcz8NCj4NCj4gWWVhaCwgSSdtIHN1c3BlY3RpbmcgdGhlcmUncyBhIGxvb3Bob2xlIGluIHRo
-ZSBsb2dpYyB0aGVyZSBzb21ld2hlcmUuDQo+DQo+IEkgZHVzdGVkIG9mZiB0aGUgNjA0MSByZWZl
-cmVuY2UgY2FyZCBJIGhhdmUgaGVyZSwgYW5kIHBsYXllZCB3aXRoIHRoZSBjYWJsZXMNCj4gZm9y
-IGEgd2hpbGUuICBNYW5hZ2VkIHRvIGdldCBvbmUgcG9ydCB0byBzdG9wIHJlc3BvbmRpbmcgdG8g
-aG90IHBsdWcgZmFpcmx5DQo+IHF1aWNrbHksIHRob3VnaCBJJ20gbm90IHN1cmUgaG93L3doeS4N
-Cj4NCj4gVGhlbiBJIGFkZGVkIGEgZGVidWcgcHJpbnRrKCkgdG8gbXZfd3JpdGVfbWFpbl9pcnFf
-bWFzaygpLCB3aXRoIG5vIG90aGVyDQo+IGNoYW5nZXMsIGFuZCB0aGF0IGFwcGVhcnMgdG8gaGF2
-ZSBiZWVuIGVub3VnaCB0byBjaGFuZ2UgdGhlIHJhY2UgdGltaW5nDQo+IHNvIHRoYXQgSSBjb3Vs
-ZCBubyBsb25nZXIgcHJvZHVjZSB0aGUgcHJvYmxlbS4NCj4NCj4gQnJ1Y2UsIGhlcmUncyBhIHNs
-aWdodGx5LXVnbHkgcGF0Y2ggdGhhdCBzaG91bGQgcmVtb3ZlIGFsbCBkb3VidCBhYm91dCByYWNl
-cw0KPiBpbiB0aGUgaXJxX21hc2suICBQbGVhc2UgYXBwbHkgaXQsIHRlc3Qgd2l0aCBpdCwgYW5k
-IGxldCBtZSBrbm93IGhlcmUgaWYgdGhlDQo+IGlzc3VlIGdvZXMgYXdheS4NCj4NCj4gVGhhbmtz
-DQo+DQo+IFtwYXRjaF0NCg0KDQpIaSBNYXJrLA0KDQpJIGhhdmUgdHJpZWQgdGhlIHBhdGNoIG91
-dCBhbmQgSSB3YXMgYWJsZSB0byByZXByb2R1Y2UgdGhlIHBvcnQgbG9ja3VwIHdpdGggaXQuDQoN
-CkkgYWxzbyB0cmllZCBvdXQgbXkgdHJhY2luZyBpbiB3cml0ZWxmbCAod2l0aG91dCBhbnkgb3Ro
-ZXIgY2hhbmdlcykgYW5kIEkgd2FzDQphYmxlIHRvIGxvY2sgdXAgYSBwb3J0IHdpdGhvdXQgYW55
-IGFwcGFyZW50IHVudXN1YWwgY2hhbmdlcyB0byB0aGUgcmVnaXN0ZXINCmNvbnRhaW5pbmcgdGhl
-IGlycSBtYXNrcy4gIEFyZSB0aGVyZSBvdGhlciByb3V0ZXMgdG8gZGlzYWJsaW5nIHRoZSBpcnFz
-Pw0KDQpJIHNoYWxsIGNvbnRpbnVlIGxvb2tpbmcuDQoNCkNoZWVycywNCg0KQnJ1Y2UuDQoNCg0K
-QnJ1Y2UgU3Rlbm5pbmcsDQpJbmRpZ29WaXNpb24sDQpiIDxkb3Q+IHN0ZW5uaW5nIDxhdD4gaW5k
-aWdvdmlzaW9uIDxkb3Q+IGNvbQ0KDQoNCkxhdGVzdCBOZXdzIGF0OiBodHRwOi8vd3d3LmluZGln
-b3Zpc2lvbi5jb20vaW5kZXgucGhwL2VuL25ld3MuaHRtbA0K
+On 11-04-14 12:50 PM, Bruce Stenning wrote:
+..
+> I have tried the patch out and I was able to reproduce the port lockup with it.
+
+Bummer.
+
+> I also tried out my tracing in writelfl (without any other changes) and I was
+> able to lock up a port without any apparent unusual changes to the register
+> containing the irq masks.  Are there other routes to disabling the irqs?
+
+
+Mmm.. presumably you are NOT using MSI interrupts, right?
+
