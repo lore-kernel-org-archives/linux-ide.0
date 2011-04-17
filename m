@@ -1,32 +1,50 @@
-From: "jessica" <noreply@netlogmail.com>
-Subject: my photo l
-Date: Sat, 16 Apr 2011 17:53:05 +0100
-Message-ID: <20110416165306.79F5138D80__42074.351598467$1303039409$gmane$org@ABTS-AP-Static-140.249.169.122.airtelbroadband.in>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 32262] 2.6.38-git15+  IDE hangs boot
+Date: Sun, 17 Apr 2011 13:28:53 GMT
+Message-ID: <201104171328.p3HDSrdA015696@demeter1.kernel.org>
+References: <bug-32262-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1250"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ABTS-AP-Static-140.249.169.122.airtelbroadband.in ([122.169.249.140]:38396
-	"EHLO ABTS-AP-Static-140.249.169.122.airtelbroadband.in"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759562Ab1DQLWu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 17 Apr 2011 07:22:50 -0400
+Received: from demeter1.kernel.org ([140.211.167.39]:50614 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752333Ab1DQN2y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Apr 2011 09:28:54 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p3HDSs70015709
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Sun, 17 Apr 2011 13:28:54 GMT
+In-Reply-To: <bug-32262-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-i wannted to send u my photo long ago, but i was afraid that u dont like to see me . check on the links u see my photo, i hope u like it
- 
-Download that and see my photo...
+https://bugzilla.kernel.org/show_bug.cgi?id=32262
 
-http://www.speedyshare.com/files/27992773/DSC01886863.zip
-or
-http://www.sendspace.com/file/0venq4
-or
-http://www.mediafire.com/?8xlaoph1xhtark8
-or
-http://www.filefactory.com/file/cbce364/n/DSC01886863_zip 
-or
-http://turboupload.com/716x682ps23o
-or
-http://www.mlfat4arab.com/sxwvrzwfyexj/DSC01886863.zip.html
+
+
+
+
+--- Comment #1 from Rafael J. Wysocki <rjw@sisk.pl>  2011-04-17 13:28:51 ---
+On Sunday, April 17, 2011, Pete Clements wrote:
+>   > 
+>   > The following bug entry is on the current list of known regressions
+>   > from 2.6.38.  Please verify if it still should be listed and let the tracking team
+>   > know (either way).
+>   > 
+>   > 
+>   > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D32262
+>   > Subject		: 2.6.38-git15+  IDE hangs boot
+>   > Submitter	: Pete Clements <clem@clem.clem-digital.net>
+>   > Date		: 2011-03-25 15:38 (24 days old)
+>   > 
+>   > 
+> 
+> I no longer experience the problem. Don't recall when the fix was integrated
+> (post git19?). (Currently at 39-rc3-git6.)
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
