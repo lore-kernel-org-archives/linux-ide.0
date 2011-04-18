@@ -1,63 +1,47 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
  on parisc
-Date: Mon, 18 Apr 2011 22:09:45 +0100
-Message-ID: <20110418220945.4713e15d@lxorguk.ukuu.org.uk>
+Date: Mon, 18 Apr 2011 22:20:17 +0100
+Message-ID: <20110418222017.4e77fe05@lxorguk.ukuu.org.uk>
 References: <1303152147.7167.12.camel@mulgrave.site>
 	<20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
-	<1303157287.7167.26.camel@mulgrave.site>
+	<1303159802.7167.30.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1303157287.7167.26.camel@mulgrave.site>
-Sender: linux-parisc-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:33142 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752496Ab1DRVTV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Apr 2011 17:19:21 -0400
+In-Reply-To: <1303159802.7167.30.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
-List-Id: linux-ide@vger.kernel.org
 
-> Well your deliberate decision is crashing my box on boot.  That makes
-> this a regression from the IDE cmd64x driver. I hear indirectly there's
-> a similar problem on sparc.
+>	ata_port_desc(host->ports[i], "irq %d", pdev->irq);
+> +		}
+>  	} else if (legacy_mode) {
+>  		if (!ata_port_is_dummy(host->ports[0])) {
+>  			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
 
-Sure - I'm not saying there isn't a problem just cautioning that there is
-more to fixing it than blindly adding checks. If you simply check the
-fields you break the split bridge boxes on x86. They aren't very common
-these days but they probably outnumber PA-RISC Linux users 8)
+This bit looks fine - in fact it's a nice clean up anyway
 
-> No, that analysis is wrong: Parisc (and actually presumably every
-> non-x86) doesn't use legacy mode.  The bars are all wired up (I posted
-> the original lspci output showing this).  The problem is that when you
-> try to prod the registers behind the secondary bar we get an instant
-> crash because the memory doesn't respond ... I'm assuming the secondary
-> bar isn't actually wired up to the chip.
+> +	}
+> +	if (!(reg & ENPORT_SECONDARY)) {
+> +		dev_printk(KERN_NOTICE, &pdev->dev, "Secondary port is disabled\n");
+> +		ppi[1] = &ata_dummy_port_info;
+> +	}
 
-Then your PCI configuration is faulty - no ?
+And you just broke split bridge setups. Also need to check if the bits
+are valid for this chipset in native mode officialy - Sergei probably
+knows the answer to that.
 
-I'd have thought the best way to fix that would be a PCI quirk for the
-platform. However if it's multiple non x86 platforms being hit then the
-driver probably needs the smarts to cope with this weird wiring.
+We can detect the Mobility electronics split bridges at least (and I
+suspect they are the only 'common' CMD64x hot plug device indeed possibly
+the only one) because the parent bridge of the CMD64x will have a PCI
+vendor id of 0x14f2 and a device id 0x0001, 0x0002, or 0x0120.
 
-> > The patch seems to be broken for all these cases and also incredibly
-> > invasive given you can just pass a dummy port in as one of
-> > your struct ata_port_info * pointers to ata_pci_dma_init_one()
-> 
-> You mean in ata_pci_bmdma_init_one()?  yes, that might work ... I still
-> need to know how to detect this.
-> 
-> > You shouldn't need to touch a single line of the core libata code,
-> > although it might be the best way of doing it. Either way if you do the
-> > number of ports needs to be a bitmask instead and you need to leave
-> > native mode alone.
-> 
-> The core libata code looked broken in the assumption that it had to poke
-> a double register pair for sff mode (the hard coded loop over two
-> ports) ... this is what won't work on non-x86 boxes.  
-
-Worked implementation example: drivers/ata/pata_via.c - see the use of
-VIA_IDFLAG_SINGLE
-
-I think that will do what you need ?
 
 Alan
-
