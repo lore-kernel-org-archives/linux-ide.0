@@ -1,49 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: libata-sff/pata_cmd64x problem with hardwired configurations
-Date: Sun, 17 Apr 2011 18:58:24 -0500
-Message-ID: <1303084704.2583.23.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 33412] 2.6.39-rc3 udevadm settle timeout, many hdb events,
+ interrupt storm
+Date: Mon, 18 Apr 2011 04:12:47 GMT
+Message-ID: <201104180412.p3I4ClJS003420@demeter1.kernel.org>
+References: <bug-33412-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46087 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751536Ab1DQX61 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Apr 2011 19:58:27 -0400
+Received: from demeter1.kernel.org ([140.211.167.39]:60537 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab1DREMs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Apr 2011 00:12:48 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p3I4Clc5003421
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Mon, 18 Apr 2011 04:12:47 GMT
+In-Reply-To: <bug-33412-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
-Cc: 622997@bugs.debian.org
+To: linux-ide@vger.kernel.org
 
-I've got a parisc system where the DVD drive is hardwired to a silicon
-image controller:
-
-00:02.0 IDE interface: Silicon Image, Inc. SiI 0649 Ultra ATA/100 PCI to
-ATA Host Controller (rev 02) (prog-if 8f [Master SecP SecO PriP PriO])
-        Subsystem: Silicon Image, Inc. SiI 0649 Ultra ATA/100 PCI to ATA
-Host Controller
-        Flags: bus master, medium devsel, latency 64, IRQ 69
-        I/O ports at 0d18 [size=8]
-        I/O ports at 0d24 [size=4]
-        I/O ports at 0d10 [size=8]
-        I/O ports at 0d20 [size=4]
-        I/O ports at 0d00 [size=16]
-        Capabilities: [60] Power Management version 2
-        Kernel driver in use: pata_cmd64x
-
-The specific problem is that any access to the registers where the
-secondary port should be causes an instant fault on the box (I think
-because the second port just isn't wired up internally, so the memory
-doesn't respond), so the default libata-sff driver that pata_cmd64x is
-attached to causes this by insisting on probing both ports.
-
-I can get all of this working by fixing up all the hard coded knowledge
-in libata-sff only to use a single port.
-
-However, I can't fix the libata-sff driver until I know how to tell
-there's only one port wired.  Does anyone with cmd649 knowledge have any
-idea how I might tell this?
-
-James
+https://bugzilla.kernel.org/show_bug.cgi?id=33412
 
 
+Shaun Ruffell <sruffell@sruffell.net> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sruffell@sruffell.net
+
+
+
+
+--- Comment #1 from Shaun Ruffell <sruffell@sruffell.net>  2011-04-18 04:12:44 ---
+I believe that this issue and issue #33342 are fundamentally related.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
