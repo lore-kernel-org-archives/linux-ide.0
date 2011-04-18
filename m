@@ -1,64 +1,43 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: libata-sff/pata_cmd64x problem with hardwired configurations
-Date: Mon, 18 Apr 2011 20:16:42 +0400
-Message-ID: <4DAC63EA.4000707@ru.mvista.com>
-References: <1303084704.2583.23.camel@mulgrave.site>	 <4DAC0EAB.2090306@ru.mvista.com> <1303142114.7167.6.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot on
+ parisc
+Date: Mon, 18 Apr 2011 13:42:27 -0500
+Message-ID: <1303152147.7167.12.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37391 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755050Ab1DRQSh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Apr 2011 12:18:37 -0400
-Received: by wwa36 with SMTP id 36so5869789wwa.1
-        for <linux-ide@vger.kernel.org>; Mon, 18 Apr 2011 09:18:35 -0700 (PDT)
-In-Reply-To: <1303142114.7167.6.camel@mulgrave.site>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-parisc-owner@vger.kernel.org>
+Sender: linux-parisc-owner@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
+Cc: Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide <linux-ide@vger.kernel.org>, 622997@bugs.debian.org
 
-Hello.
+currently libata-sff is completely ignoring the enabled/disabled status
+of the interfaces.  This is a real problem on parisc because if you
+touch a non responding memory area (i.e. a disabled interface) you crash
+the box.
 
-James Bottomley wrote:
+Fix this up by restoring the enablebits logic to the pata_cmd64x driver.
+To do this, libata-sff has to be modified not to probe both ports if we
+don't have them.  This is done by reintroducing IDE_HFLAG_SINGLE flag as
+ATA_HOST_SFF_SINGLE_PORT which drivers can use to condition libata-sff
+port probing.
 
->>> I can get all of this working by fixing up all the hard coded knowledge
->>> in libata-sff only to use a single port.
->>> However, I can't fix the libata-sff driver until I know how to tell
->>> there's only one port wired.  Does anyone with cmd649 knowledge have any
->>> idea how I might tell this?
+James
 
->>     The secondary port is enabled in the PCI config. space: register 0x51 bit 
->> 3 controls this. Unfortunately, pata_cmd64x driver still doesn't check the 
->> channel enable bits; the cmd64x driver does though, so it might be worth trying...
+---
 
-> So this is the enablebits code in driver/ide
+James Bottomley (2):
+  libata-sff: remove hardcoded requirement for two ports
+  pata_cmd64x: fix crash on boot with disabled secondary port
 
-    We still need to ensure that these are indeed the enable bits that are at 
-play here...
+ drivers/ata/libata-sff.c  |   75 ++++++++++++++++++++++++++++++++------------
+ drivers/ata/pata_cmd64x.c |   22 +++++++++++--
+ include/linux/libata.h    |    1 +
+ 3 files changed, 74 insertions(+), 24 deletions(-)
 
-> that's missing from any of
-> the libata stuff?
+-- 
+1.7.4.1
 
-    Not from any. It's handled in some drivers, like pata_hpt37x, for example -- 
-in their prereset() methods.
 
-> Should this be generic in libata-sff? ...
 
-    There's even libata core function, pci_test_config_bits() that facilitates 
-this check.
-
-> I mean even on an x86 where arbitrary memory can be poked without consequence,
-> trying to activate a disabled port will still produce lots of noise.
-
-    The story with pata_cmd64x is somewhat convoluted: originally (when the 
-libata driver was created) in the IDE driver there were only enable bits for the 
-secondary channel of PCI0646 (and even those wrong); I fixed those and added the 
-enable bits for other chips back in 2007 but it never got propagated to 
-pata_cmd64x. Well, I have some plans for changes to this driver but not much 
-time to actually do them currently...
-
-> James
-
-WBR, Sergei
