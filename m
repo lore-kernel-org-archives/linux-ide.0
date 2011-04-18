@@ -1,110 +1,63 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on
- boot on parisc
-Date: Mon, 18 Apr 2011 15:50:02 -0500
-Message-ID: <1303159802.7167.30.camel@mulgrave.site>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
+ on parisc
+Date: Mon, 18 Apr 2011 22:09:45 +0100
+Message-ID: <20110418220945.4713e15d@lxorguk.ukuu.org.uk>
 References: <1303152147.7167.12.camel@mulgrave.site>
-	 <20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
+	<20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
+	<1303157287.7167.26.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51059 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751290Ab1DRUuF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Apr 2011 16:50:05 -0400
-In-Reply-To: <20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <1303157287.7167.26.camel@mulgrave.site>
+Sender: linux-parisc-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Mon, 2011-04-18 at 20:52 +0100, Alan Cox wrote:
-> You shouldn't need to touch a single line of the core libata code,
-> although it might be the best way of doing it.
+> Well your deliberate decision is crashing my box on boot.  That makes
+> this a regression from the IDE cmd64x driver. I hear indirectly there's
+> a similar problem on sparc.
 
-So how about this, using the dummy port info mechanism.  I get a
-spurious ata2: DUMMY message, but I suppose libata people are used to
-that.  I still have to fix libata to prevent spurious irq information,
-but that's cosmetic.
+Sure - I'm not saying there isn't a problem just cautioning that there is
+more to fixing it than blindly adding checks. If you simply check the
+fields you break the split bridge boxes on x86. They aren't very common
+these days but they probably outnumber PA-RISC Linux users 8)
 
-James
+> No, that analysis is wrong: Parisc (and actually presumably every
+> non-x86) doesn't use legacy mode.  The bars are all wired up (I posted
+> the original lspci output showing this).  The problem is that when you
+> try to prod the registers behind the secondary bar we get an instant
+> crash because the memory doesn't respond ... I'm assuming the secondary
+> bar isn't actually wired up to the chip.
 
----
+Then your PCI configuration is faulty - no ?
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index f8380ce..b1b926c 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2447,13 +2447,18 @@ int ata_pci_sff_activate_host(struct ata_host *host,
- 		return -ENOMEM;
- 
- 	if (!legacy_mode && pdev->irq) {
-+		int i;
-+
- 		rc = devm_request_irq(dev, pdev->irq, irq_handler,
- 				      IRQF_SHARED, drv_name, host);
- 		if (rc)
- 			goto out;
- 
--		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
--		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
-+		for (i = 0; i < 2; i++) {
-+			if (ata_port_is_dummy(host->ports[i]))
-+				continue;
-+			ata_port_desc(host->ports[i], "irq %d", pdev->irq);
-+		}
- 	} else if (legacy_mode) {
- 		if (!ata_port_is_dummy(host->ports[0])) {
- 			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index 905ff76..10dabe9 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -41,6 +41,9 @@
- enum {
- 	CFR 		= 0x50,
- 		CFR_INTR_CH0  = 0x04,
-+	ENPORT		= 0x51,
-+		ENPORT_PRIMARY   = 0x04,
-+		ENPORT_SECONDARY = 0x08,
- 	CMDTIM 		= 0x52,
- 	ARTTIM0 	= 0x53,
- 	DRWTIM0 	= 0x54,
-@@ -328,8 +331,12 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 			.port_ops = &cmd648_port_ops
- 		}
- 	};
--	const struct ata_port_info *ppi[] = { &cmd_info[id->driver_data], NULL };
--	u8 mrdmode;
-+	const struct ata_port_info *ppi[] = { 
-+		&cmd_info[id->driver_data],
-+		&cmd_info[id->driver_data],
-+		NULL
-+	};
-+	u8 mrdmode, reg;
- 	int rc;
- 
- 	rc = pcim_enable_device(pdev);
-@@ -354,6 +361,19 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	mrdmode |= 0x02;	/* Memory read line enable */
- 	pci_write_config_byte(pdev, MRDMODE, mrdmode);
- 
-+	/* check for enabled ports */
-+	pci_read_config_byte(pdev, ENPORT, &reg);
-+	/* the cm643 primary port is always enabled */
-+	if (id->driver_data != 0 && !(reg & ENPORT_PRIMARY)) {
-+		dev_printk(KERN_ERR, &pdev->dev, "Primary port is disabled; detaching\n");
-+		ppi[0] = &ata_dummy_port_info;
-+		
-+	}
-+	if (!(reg & ENPORT_SECONDARY)) {
-+		dev_printk(KERN_NOTICE, &pdev->dev, "Secondary port is disabled\n");
-+		ppi[1] = &ata_dummy_port_info;
-+	}
-+
- 	/* Force PIO 0 here.. */
- 
- 	/* PPC specific fixup copied from old driver */
+I'd have thought the best way to fix that would be a PCI quirk for the
+platform. However if it's multiple non x86 platforms being hit then the
+driver probably needs the smarts to cope with this weird wiring.
 
+> > The patch seems to be broken for all these cases and also incredibly
+> > invasive given you can just pass a dummy port in as one of
+> > your struct ata_port_info * pointers to ata_pci_dma_init_one()
+> 
+> You mean in ata_pci_bmdma_init_one()?  yes, that might work ... I still
+> need to know how to detect this.
+> 
+> > You shouldn't need to touch a single line of the core libata code,
+> > although it might be the best way of doing it. Either way if you do the
+> > number of ports needs to be a bitmask instead and you need to leave
+> > native mode alone.
+> 
+> The core libata code looked broken in the assumption that it had to poke
+> a double register pair for sff mode (the hard coded loop over two
+> ports) ... this is what won't work on non-x86 boxes.  
+
+Worked implementation example: drivers/ata/pata_via.c - see the use of
+VIA_IDFLAG_SINGLE
+
+I think that will do what you need ?
+
+Alan
 
