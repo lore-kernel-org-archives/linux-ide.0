@@ -1,46 +1,62 @@
-From: "Jian Peng" <jipeng2005@gmail.com>
-Subject: [PATCH 1/1] libata: ahci_start_engine compliant to AHCI spec
-Date: Tue, 19 Apr 2011 14:44:59 -0700
-Message-ID: <1303249499-11557-1-git-send-email-jipeng2005@gmail.com>
+From: "Jian Peng" <jipeng@broadcom.com>
+Subject: RE: questions regarding possible violation of AHCI spec in AHCI
+ driver
+Date: Tue, 19 Apr 2011 14:48:01 -0700
+Message-ID: <E18F441196CA634DB8E1F1C56A50A8743242777421@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <4CFF58D2.4040006@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38C43@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFCD56.6050608@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36E@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFD3EB.10800@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E36F@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4CFFE29C.7080205@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA38CD3@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D000C8B.5040904@kernel.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FD72B23@IRVEXCHCCR01.corp.ad.broadcom.com>,<20110111182323.GG15933@htj.dyndns.org>
+ <E18F441196CA634DB8E1F1C56A50A874319FA7E37B@IRVEXCHCCR01.corp.ad.broadcom.com>
+ <4D36358E.40106@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:4846 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018Ab1DSVsL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2011 17:48:11 -0400
+In-Reply-To: <4D36358E.40106@pobox.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>
 
-At the end of section 10.1 of AHCI spec (rev 1.3), it states
+Hi, Jeff/Tejun,
 
-Software shall not set PxCMD.ST to 1 until it is determined that a
-functoinal device is present on the port as determined by
-PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
+I retested my patch using Marvell AHCI controller card and Intel built-in controller with 2.6.38 kernel, it worked well. I resubmitted the patch against Linus git tree in separate email through git send-email already. 
 
-Even though most AHCI host controller works without this additional
-check, specific controller will fail without this.
+Please review it.
 
-Signed-off-by: Jian Peng <jipeng2005@gmail.com>
----
- drivers/ata/libahci.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+Thanks,
+Jian
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 26d4523..39e0698 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -539,6 +539,12 @@ void ahci_start_engine(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	u32 tmp;
-+	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
-+
-+	if (status & (ATA_BUSY | ATA_DRQ) ||
-+	    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
-+	    (tmp & 0x0f) != 0x03)
-+		return;
- 
- 	/* start DMA */
- 	tmp = readl(port_mmio + PORT_CMD);
--- 
-1.7.4.1
+-----Original Message-----
+From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
+Sent: Tuesday, January 18, 2011 4:51 PM
+To: Jian Peng
+Cc: Tejun Heo; Robert Hancock; linux-kernel@vger.kernel.org; ide
+Subject: Re: questions regarding possible violation of AHCI spec in AHCI driver
+
+On 01/11/2011 01:55 PM, Jian Peng wrote:
+> Here is new patch based on your suggestion (against 2.6.37 release)
+[...]
+> I will test host controller made by other vendors and report issues soon.
+
+Any updates?
+
+	Jeff
+
+
+
+
+
