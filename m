@@ -1,39 +1,39 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on
- boot on parisc
-Date: Tue, 19 Apr 2011 08:54:38 -0500
-Message-ID: <1303221278.3171.9.camel@mulgrave.site>
-References: <1303152147.7167.12.camel@mulgrave.site>
-	 <20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
-	 <1303159802.7167.30.camel@mulgrave.site>
-	 <20110418222017.4e77fe05@lxorguk.ukuu.org.uk>
+Subject: Re: libata-sff/pata_cmd64x problem with hardwired configurations
+Date: Tue, 19 Apr 2011 08:59:25 -0500
+Message-ID: <1303221565.3171.12.camel@mulgrave.site>
+References: <1303084704.2583.23.camel@mulgrave.site>
+	 <1303142114.7167.6.camel@mulgrave.site> <4DAC63EA.4000707@ru.mvista.com>
+	 <201104191120.31061.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <20110418222017.4e77fe05@lxorguk.ukuu.org.uk>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41668 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752161Ab1DSN72 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2011 09:59:28 -0400
+In-Reply-To: <201104191120.31061.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide <linux-ide@vger.kernel.org>, 622997@bugs.debian.org
 
-On Mon, 2011-04-18 at 22:20 +0100, Alan Cox wrote:
-> We can detect the Mobility electronics split bridges at least (and I
-> suspect they are the only 'common' CMD64x hot plug device indeed possibly
-> the only one) because the parent bridge of the CMD64x will have a PCI
-> vendor id of 0x14f2 and a device id 0x0001, 0x0002, or 0x0120.
+On Tue, 2011-04-19 at 11:20 +0200, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH v2] pata_cmd64x: add enablebits checking
+> 
+> Fixes IDE -> libata regression.
+> 
+> IDE's cmd64x host driver has been supporting enablebits checking
+> since the initial driver's merge.
 
-Trying to wire in a bridge blacklist looks a bit dicey ... unless you're
-sure this is (and will always be) the only bridge?  How should this
-wiring be done? most of the bridge checks just see if the bridge is in
-the system rather than walking up the device tree; is that OK?
+Actually, the thread discussing the proposed patches is here:
 
-If not, what about just a legacy check on X86, so hedge with
+http://marc.info/?t=130315227100005
 
-if (legacy || !CONFIG_X86)
-
-(or even just dump the legacy check, since you think everything is fine
-on x86 today?)
+I much prefer the dummy interface approach to the prereset one because
+it prevents any possible poke at the registers which will crash the box.
 
 James
 
