@@ -1,53 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on
- boot on parisc
-Date: Tue, 19 Apr 2011 10:02:55 -0500
-Message-ID: <1303225375.3171.13.camel@mulgrave.site>
-References: <1303152147.7167.12.camel@mulgrave.site>
-	 <20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
-	 <1303159802.7167.30.camel@mulgrave.site>
-	 <20110418222017.4e77fe05@lxorguk.ukuu.org.uk>
-	 <1303221278.3171.9.camel@mulgrave.site>
-	 <20110419153615.07733111@lxorguk.ukuu.org.uk>
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [PATCH] libata: Pioneer DVR-216D can't do SETXFER
+Date: Tue, 19 Apr 2011 11:13:32 -0400
+Message-ID: <4DADA69C.4060708@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33503 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751869Ab1DSPDA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2011 11:03:00 -0400
-In-Reply-To: <20110419153615.07733111@lxorguk.ukuu.org.uk>
+Received: from cantor2.suse.de ([195.135.220.15]:38901 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751664Ab1DSPNf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Apr 2011 11:13:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
+To: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 2011-04-19 at 15:36 +0100, Alan Cox wrote:
-> > If not, what about just a legacy check on X86, so hedge with
-> > 
-> > if (legacy || !CONFIG_X86)
-> > 
-> > (or even just dump the legacy check, since you think everything is fine
-> > on x86 today?)
-> 
-> Well in theory you can plug a cardbus one into a non x86 assuming the
-> firmware doesn't explode in protest anyway !
-> 
-> I don't think the bridge walk is particularly tricky - it will always be
-> the direct parent bridge
+ Commit 4a5610a04d415ed94af75bb1159d2621d62c8328 fixed an issue with
+ the Pioneer DVR-212D not handling SETXFER correctly. An openSUSE user
+ reported a similar issue with his DVR-216D that the NOSETXFER horkage
+ worked around for him as well.
 
-OK, that's what I was looking for.  Most of the other bridge checks just
-see if the bridge is present in the system.
+ This patch adds the DVR-216D (1.08) to the horkage list for NOSETXFER.
 
-> So it's a matter of
-> 
-> 	struct pci_dev *bridge = dev->bus->self;
-> 	if (bridge && bridge->vendor == 0x14f2)
+ The issue was reported at:
+ https://bugzilla.novell.com/show_bug.cgi?id=679143
 
-Which vendor is 0x14f2?  It probably should have a PCI_VENDOR_ID_...
-define.
+Reported-by: Volodymyr Kyrychenko <vladimir.kirichenko@gmail.com>
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-James
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4138,6 +4138,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	 */
+ 	{ "PIONEER DVD-RW  DVRTD08",	"1.00",	ATA_HORKAGE_NOSETXFER },
+ 	{ "PIONEER DVD-RW  DVR-212D",	"1.28", ATA_HORKAGE_NOSETXFER },
++	{ "PIONEER DVD-RW  DVR-216D",	"1.08", ATA_HORKAGE_NOSETXFER },
+ 
+ 	/* End Marker */
+ 	{ }
 
-
+-- 
+Jeff Mahoney
+SUSE Labs
