@@ -1,45 +1,43 @@
-From: Seth Heasley <seth.heasley@intel.com>
-Subject: [PATCH 2.6.39-rc3] ata_piix: IDE-mode SATA patch for Intel Panther Point DeviceIDs
-Date: Tue, 19 Apr 2011 16:45:17 -0700
-Message-ID: <201104191645.17789.seth.heasley@intel.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
+ on parisc
+Date: Wed, 20 Apr 2011 10:35:11 +0100
+Message-ID: <20110420103511.2242577e@lxorguk.ukuu.org.uk>
+References: <1303152147.7167.12.camel@mulgrave.site>
+	<20110418205203.56bbdb14@lxorguk.ukuu.org.uk>
+	<1303159802.7167.30.camel@mulgrave.site>
+	<20110418222017.4e77fe05@lxorguk.ukuu.org.uk>
+	<4DADF798.6010705@ru.mvista.com>
+	<20110419221900.67528a07@lxorguk.ukuu.org.uk>
+	<4DADFD2E.9070809@ru.mvista.com>
+	<20110419222838.6a6f36aa@lxorguk.ukuu.org.uk>
+	<1303254709.11237.34.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47010 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753253Ab1DSXxA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Apr 2011 19:53:00 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <1303254709.11237.34.camel@mulgrave.site>
+Sender: linux-parisc-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com
 
-This patch adds the IDE-mode SATA DeviceIDs for the Intel Panther 
-Point PCH.
+> +	struct pci_dev *bridge = pdev->bus->self;
+> +	/* mobility split bridges don't report enabled ports correctly */
+> +	int port_ok = !(bridge && bridge->vendor ==
+> +			PCI_VENDOR_ID_MOBILITY_ELECTRONICS);
+>  
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+The logic seems wrong even by inspection
 
---- linux-2.6.39-rc3/drivers/ata/ata_piix.c.orig	2011-04-11 
-17:21:51.000000000 -0700
-+++ linux-2.6.39-rc3/drivers/ata/ata_piix.c	2011-04-14 
-11:38:04.000000000 -0700
-@@ -309,6 +309,14 @@
- 	{ 0x8086, 0x1d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
- 	/* SATA Controller IDE (PBG) */
- 	{ 0x8086, 0x1d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 
-ich8_2port_sata },
-+	/* SATA Controller IDE (Panther Point) */
-+	{ 0x8086, 0x1e00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	/* SATA Controller IDE (Panther Point) */
-+	{ 0x8086, 0x1e01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
-+	/* SATA Controller IDE (Panther Point) */
-+	{ 0x8086, 0x1e08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 
-ich8_2port_sata },
-+	/* SATA Controller IDE (Panther Point) */
-+	{ 0x8086, 0x1e09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 
-ich8_2port_sata },
- 	{ }	/* terminate list */
- };
- 
+port_ok will be 1 if it isn't a M/E bridge.
+
+> +	/* check for enabled ports */
+> +	pci_read_config_byte(pdev, CNTRL, &reg);
+> +	if (port_ok)
+> +		dev_printk(KERN_NOTICE, &pdev->dev, "Mobility Bridge detected, ignoring CNTRL port enable/disable\n");
+
+If its *not* an ME bridge then print the warning ????
+
+
+Otherwise looks right
