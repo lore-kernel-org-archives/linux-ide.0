@@ -1,35 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 33342] [2.6.39-rc2][bisected] Constant DISK_MEDIA_CHANGE_EVENTS
- from CDROM drive.
-Date: Thu, 21 Apr 2011 17:59:10 GMT
-Message-ID: <201104211759.p3LHxA6N001159@demeter1.kernel.org>
-References: <bug-33342-11633@https.bugzilla.kernel.org/>
+From: Shaun Ruffell <sruffell@digium.com>
+Subject: Re: [PATCH 1/2] block: don't propagate unlisted DISK_EVENTs to  userland
+Date: Thu, 21 Apr 2011 13:02:51 -0500
+Message-ID: <4DB0714B.90701@digium.com>
+References: <20110421170826.GC15988@htj.dyndns.org> <BANLkTinwPt=aRSsh_Ppb8hLOaURh6mL2GQ@mail.gmail.com> <4DB06A06.7030208@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:56582 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab1DUR7L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2011 13:59:11 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p3LHxAuN001160
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2011 17:59:10 GMT
-In-Reply-To: <bug-33342-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4DB06A06.7030208@fusionio.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Neil Brown <neilb@suse.de>, "David S. Miller" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "kay.sievers@vrfy.org" <kay.sievers@vrfy.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=33342
+On 04/21/2011 12:31 PM, Jens Axboe wrote:
+> On 2011-04-21 19:25, Linus Torvalds wrote:
+>> Should I take these as patches, or through Jens/David/Who?
+>>
+>> I'll happily take them as patches, but I'd also like to hear
+>> confirmation from the people who saw the lock-up that it's gone now..
+> 
+> I'm pulling them in now, with the elevator patch referenced in the IO
+> scheduler switch email. I've verified that it fixes the ide-cd bug for
+> me.
 
+Jens, Tejun,
 
+I was never seeing a lockup, just the stream of events, but I applied the
+two patches on top of mainline (584f790467 from yesterday) and do not see
+any issues on the system where I first noticed the constant events [1].
 
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=33342
 
+So,
+Tested-by: Shaun Ruffell <sruffell@digium.com> 
 
---- Comment #3 from Shaun Ruffell <sruffell@sruffell.net>  2011-04-21 17:58:53 ---
-These patches resolve the issue that I originally saw.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Thanks,
+Shaun
