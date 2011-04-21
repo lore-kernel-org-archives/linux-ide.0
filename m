@@ -1,41 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: WARNING at libata-core.c:5015 in 2.6.39-rc3-wl+, then lockup.
- (bisected)
-Date: Thu, 21 Apr 2011 15:25:29 +0200
-Message-ID: <20110421132529.GC31724@htj.dyndns.org>
-References: <4DA5CF81.4070908@candelatech.com>
- <4DA5D5D8.8070301@candelatech.com>
- <4DA5F3BA.3060404@candelatech.com>
- <4DA87A72.50809@candelatech.com>
- <4DA88707.4060704@garzik.org>
- <4DA888D6.40000@candelatech.com>
- <4DAF9066.7090906@candelatech.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/1] libata: ahci_start_engine compliant to AHCI spec
+Date: Thu, 21 Apr 2011 15:40:54 +0200
+Message-ID: <20110421134054.GE31724@htj.dyndns.org>
+References: <1303249499-11557-1-git-send-email-jipeng2005@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:43404 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545Ab1DUNZe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2011 09:25:34 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4DAF9066.7090906@candelatech.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1303249499-11557-1-git-send-email-jipeng2005@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Greear <greearb@candelatech.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-Hello,
+On Tue, Apr 19, 2011 at 02:44:59PM -0700, Jian Peng wrote:
+> At the end of section 10.1 of AHCI spec (rev 1.3), it states
+> 
+> Software shall not set PxCMD.ST to 1 until it is determined that a
+> functoinal device is present on the port as determined by
+> PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
+> 
+> Even though most AHCI host controller works without this additional
+> check, specific controller will fail without this.
+> 
+> Signed-off-by: Jian Peng <jipeng2005@gmail.com>
 
-On Wed, Apr 20, 2011 at 07:03:18PM -0700, Ben Greear wrote:
-> I tried today's kernel (39-rc4+) and it seems much more stable on my
-> system.  So, I think the problem must be fixed.  It appears it was not
-> fixed in the plain 39-rc4, for what that's worth.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Hmmm... interesting.  I don't know of any changes which could have
-affected that but then again I've been half offline for the last three
-weeks.  Can you please try to boot earlier kernel and determine
-whether the kernel version difference is actually making the
-difference?
+But some nitpicks below.
+
+> +	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
+
+It usually isn't customary to initialize variable with a statement
+which has side effect, especially hardware access.  Please make the
+readl a separate statement.
+
+> +	if (status & (ATA_BUSY | ATA_DRQ) ||
+> +	    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
+
+Also, ahci_scr_read() is known not to fail on host port in ahci and
+it's customary to skip error return in such cases in low level
+drivers.
+
+> +	    (tmp & 0x0f) != 0x03)
+> +		return;
+
+And please add comment explaining what condition is being checked.
+It's much easier to read comment than digging through changelog and
+find out what the code is trying to achieve.
 
 Thanks.
 
