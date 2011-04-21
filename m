@@ -1,45 +1,60 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 1/2] block: don't propagate unlisted DISK_EVENTs to  
- userland
-Date: Thu, 21 Apr 2011 20:10:30 +0200
-Message-ID: <4DB07316.5000405@fusionio.com>
-References: <20110421170826.GC15988@htj.dyndns.org> <BANLkTinwPt=aRSsh_Ppb8hLOaURh6mL2GQ@mail.gmail.com> <4DB06A06.7030208@fusionio.com> <4DB0714B.90701@digium.com>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Re: WARNING at libata-core.c:5015 in 2.6.39-rc3-wl+, then lockup.
+ (bisected)
+Date: Thu, 21 Apr 2011 12:31:47 -0700
+Message-ID: <4DB08623.9010905@candelatech.com>
+References: <4DA5CF81.4070908@candelatech.com> <4DA5D5D8.8070301@candelatech.com> <4DA5F3BA.3060404@candelatech.com> <4DA87A72.50809@candelatech.com> <4DA88707.4060704@garzik.org> <4DA888D6.40000@candelatech.com> <4DAF9066.7090906@candelatech.com> <20110421132529.GC31724@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.fusionio.com ([64.244.102.30]:59468 "EHLO mx1.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948Ab1DUSKf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Apr 2011 14:10:35 -0400
-In-Reply-To: <4DB0714B.90701@digium.com>
+Received: from mail.candelatech.com ([208.74.158.172]:43326 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719Ab1DUTca (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2011 15:32:30 -0400
+In-Reply-To: <20110421132529.GC31724@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaun Ruffell <sruffell@digium.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Neil Brown <neilb@suse.de>, "David S. Miller" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "kay.sievers@vrfy.org" <kay.sievers@vrfy.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 2011-04-21 20:02, Shaun Ruffell wrote:
-> On 04/21/2011 12:31 PM, Jens Axboe wrote:
->> On 2011-04-21 19:25, Linus Torvalds wrote:
->>> Should I take these as patches, or through Jens/David/Who?
->>>
->>> I'll happily take them as patches, but I'd also like to hear
->>> confirmation from the people who saw the lock-up that it's gone now..
->>
->> I'm pulling them in now, with the elevator patch referenced in the IO
->> scheduler switch email. I've verified that it fixes the ide-cd bug for
->> me.
-> 
-> Jens, Tejun,
-> 
-> I was never seeing a lockup, just the stream of events, but I applied the
-> two patches on top of mainline (584f790467 from yesterday) and do not see
-> any issues on the system where I first noticed the constant events [1].
-> 
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=33342
+On 04/21/2011 06:25 AM, Tejun Heo wrote:
+> Hello,
+>
+> On Wed, Apr 20, 2011 at 07:03:18PM -0700, Ben Greear wrote:
+>> I tried today's kernel (39-rc4+) and it seems much more stable on my
+>> system.  So, I think the problem must be fixed.  It appears it was not
+>> fixed in the plain 39-rc4, for what that's worth.
+>
+> Hmmm... interesting.  I don't know of any changes which could have
+> affected that but then again I've been half offline for the last three
+> weeks.  Can you please try to boot earlier kernel and determine
+> whether the kernel version difference is actually making the
+> difference?
 
-Great, thanks for testing!
+I tried the 39-rc4-wl (wireless-testing) kernel that was based off of
+39-rc4, and I see hard-drive read errors there, and eventually
+crashes.  I didn't try Linus's 39-rc4.
+
+Yesterday's rc4+ kernel ran fine overnight.
+
+I had previously bisected this to a merge in post 2.6.38 code, but
+I never found time to figure out what part of the merge was
+funky.  In general, from 2.6.38 to very recently, the kernels
+have been very unstable on my systems, with multiple networking
+crashes and this block level and/or hard-drive stuff causing
+trouble, so it's hard to tell exactly when certain bugs
+were introduced.
+
+2.6.38 has been stable, as has 2.6.38-wl.
+
+If there is some other specific commit you'd like me to test
+I can do so.
+
+Thanks,
+Ben
 
 -- 
-Jens Axboe
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
