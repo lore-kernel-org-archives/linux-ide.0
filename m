@@ -1,55 +1,33 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/1] libata: ahci_start_engine compliant to AHCI spec
-Date: Thu, 21 Apr 2011 15:40:54 +0200
-Message-ID: <20110421134054.GE31724@htj.dyndns.org>
-References: <1303249499-11557-1-git-send-email-jipeng2005@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
+ on parisc
+Date: Thu, 21 Apr 2011 10:24:09 -0400
+Message-ID: <4DB03E09.7030100@garzik.org>
+References: <1303152147.7167.12.camel@mulgrave.site> <20110418205203.56bbdb14@lxorguk.ukuu.org.uk> <1303159802.7167.30.camel@mulgrave.site> <20110418222017.4e77fe05@lxorguk.ukuu.org.uk> <4DADF798.6010705@ru.mvista.com> <20110419221900.67528a07@lxorguk.ukuu.org.uk> <4DADFD2E.9070809@ru.mvista.com> <20110419222838.6a6f36aa@lxorguk.ukuu.org.uk> <1303254709.11237.34.camel@mulgrave.site> <4DAEAF9A.1020704@ru.mvista.com> <20110420145616.GB31296@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1303249499-11557-1-git-send-email-jipeng2005@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jian Peng <jipeng2005@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-Reply-To: <20110420145616.GB31296@parisc-linux.org>
+Sender: linux-parisc-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Apr 19, 2011 at 02:44:59PM -0700, Jian Peng wrote:
-> At the end of section 10.1 of AHCI spec (rev 1.3), it states
-> 
-> Software shall not set PxCMD.ST to 1 until it is determined that a
-> functoinal device is present on the port as determined by
-> PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
-> 
-> Even though most AHCI host controller works without this additional
-> check, specific controller will fail without this.
-> 
-> Signed-off-by: Jian Peng <jipeng2005@gmail.com>
+On 04/20/2011 10:56 AM, Matthew Wilcox wrote:
+> On Wed, Apr 20, 2011 at 02:04:10PM +0400, Sergei Shtylyov wrote:
+>>> +#define PCI_VENDOR_ID_MOBILITY_ELECTRONICS	0x14f2
+>>> +
+>>
+>>     The current trend seems to be to only define vendor/device IDs where
+>> they are used and not in pci_ids.h...
+>
+> Device IDs, yes.  Vendor IDs should always go to the pci_ids.h file, since
+> they're likely to be used in multiple places.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Correct; that's the current libata policy.
 
-But some nitpicks below.
+	Jeff
 
-> +	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
 
-It usually isn't customary to initialize variable with a statement
-which has side effect, especially hardware access.  Please make the
-readl a separate statement.
 
-> +	if (status & (ATA_BUSY | ATA_DRQ) ||
-> +	    ahci_scr_read(&ap->link, SCR_STATUS, &tmp) ||
-
-Also, ahci_scr_read() is known not to fail on host port in ahci and
-it's customary to skip error return in such cases in low level
-drivers.
-
-> +	    (tmp & 0x0f) != 0x03)
-> +		return;
-
-And please add comment explaining what condition is being checked.
-It's much easier to read comment than digging through changelog and
-find out what the code is trying to achieve.
-
-Thanks.
-
--- 
-tejun
