@@ -1,35 +1,45 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] ide: unexport DISK_EVENT_MEDIA_CHANGE for ide-gd
- and ide-cd
-Date: Thu, 21 Apr 2011 10:14:04 -0700 (PDT)
-Message-ID: <20110421.101404.02262055.davem@davemloft.net>
-References: <20110421170826.GC15988@htj.dyndns.org>
-	<20110421170925.GD15988@htj.dyndns.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 33342] [2.6.39-rc2][bisected] Constant DISK_MEDIA_CHANGE_EVENTS
+ from CDROM drive.
+Date: Thu, 21 Apr 2011 17:15:19 GMT
+Message-ID: <201104211715.p3LHFJp2016759@demeter2.kernel.org>
+References: <bug-33342-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110421170925.GD15988@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: jaxboe@fusionio.com, torvalds@linux-foundation.org, hch@lst.de, neilb@suse.de, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kay.sievers@vrfy.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:52775 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754527Ab1DURPU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2011 13:15:20 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p3LHFJVN016760
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Thu, 21 Apr 2011 17:15:19 GMT
+In-Reply-To: <bug-33342-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Tejun Heo <tj@kernel.org>
-Date: Thu, 21 Apr 2011 19:09:25 +0200
+https://bugzilla.kernel.org/show_bug.cgi?id=33342
 
-> check_events() implementations in both ide-gd and ide-cd are
-> inadequate for in-kernel event polling.  Both generate media change
-> events continuously when certain conditions are met causing infinite
-> event loop between the driver and userland event handler.
-> 
-> As disk event now supports suppression of unlisted events, simply
-> de-listing DISK_EVENT_MEDIA_CHANGE from disk->events resolves the
-> problem.  Internal handling around media revalidation will behave the
-> same while userland will fall back to userland event polling after
-> detecting the device doesn't support disk events.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Jens Axboe <jaxboe@fusionio.com>
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Tejun Heo <tj@kernel.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |tj@kernel.org
+
+
+
+
+--- Comment #2 from Tejun Heo <tj@kernel.org>  2011-04-21 17:15:15 ---
+FYI, patches to address the issue have been posted.
+
+  http://thread.gmane.org/gmane.linux.ide/49369
+
+Thanks.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
