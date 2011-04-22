@@ -1,60 +1,55 @@
-From: Ben Greear <greearb@candelatech.com>
-Subject: Re: WARNING at libata-core.c:5015 in 2.6.39-rc3-wl+, then lockup.
- (bisected)
-Date: Thu, 21 Apr 2011 12:31:47 -0700
-Message-ID: <4DB08623.9010905@candelatech.com>
-References: <4DA5CF81.4070908@candelatech.com> <4DA5D5D8.8070301@candelatech.com> <4DA5F3BA.3060404@candelatech.com> <4DA87A72.50809@candelatech.com> <4DA88707.4060704@garzik.org> <4DA888D6.40000@candelatech.com> <4DAF9066.7090906@candelatech.com> <20110421132529.GC31724@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
+Date: Sat, 23 Apr 2011 01:32:04 +0200
+Message-ID: <20110422233204.GB1576@mtj.dyndns.org>
+References: <1303202686.3981.216.camel@sli10-conroe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:43326 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752719Ab1DUTca (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Apr 2011 15:32:30 -0400
-In-Reply-To: <20110421132529.GC31724@htj.dyndns.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:58587 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700Ab1DVXcK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2011 19:32:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1303202686.3981.216.camel@sli10-conroe>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
 
-On 04/21/2011 06:25 AM, Tejun Heo wrote:
-> Hello,
->
-> On Wed, Apr 20, 2011 at 07:03:18PM -0700, Ben Greear wrote:
->> I tried today's kernel (39-rc4+) and it seems much more stable on my
->> system.  So, I think the problem must be fixed.  It appears it was not
->> fixed in the plain 39-rc4, for what that's worth.
->
-> Hmmm... interesting.  I don't know of any changes which could have
-> affected that but then again I've been half offline for the last three
-> weeks.  Can you please try to boot earlier kernel and determine
-> whether the kernel version difference is actually making the
-> difference?
+Hello, Shaohua.
 
-I tried the 39-rc4-wl (wireless-testing) kernel that was based off of
-39-rc4, and I see hard-drive read errors there, and eventually
-crashes.  I didn't try Linus's 39-rc4.
+> +	list_splice_init(&q->flush_queue[q->flush_running_idx], &proceed_list);
+> +	/*
+> +	 * If queue doesn't support queueable flush request, we can push the
+> +	 * pending requests to the next stage too. For such queue, there are no
+> +	 * normal requests running when flush request is running, so this still
+> +	 * guarantees the correctness.
+> +	 */
+> +	if (!blk_queue_flush_queueable(q))
+> +		list_splice_tail_init(&q->flush_queue[q->flush_pending_idx],
+> +			&proceed_list);
 
-Yesterday's rc4+ kernel ran fine overnight.
+I can't see how this is safe.  Request completion is decoupled from
+issue.  What prevents low level driver from take in other requests
+before control hits here?  And even if that holds for the current
+implementation, that's hardly something which can be guaranteed from
+!flush_queueable.  Am I missing something?
 
-I had previously bisected this to a merge in post 2.6.38 code, but
-I never found time to figure out what part of the merge was
-funky.  In general, from 2.6.38 to very recently, the kernels
-have been very unstable on my systems, with multiple networking
-crashes and this block level and/or hard-drive stuff causing
-trouble, so it's hard to tell exactly when certain bugs
-were introduced.
+This kind of micro optimization is gonna bring very painful bugs which
+are extremely difficult to reproduce and track down.  It scares the
+hell out of me.  It's gonna silently skip flushes where it shouldn't.
 
-2.6.38 has been stable, as has 2.6.38-wl.
+If you wanna optimize this case, a much better way would be
+implementing back-to-back flush optimization properly such that when
+block layer detects two flushes back-to-back and _KNOWS_ that no
+request has been issued inbetween, the second one is handled as noop.
+Mark the queue clean on flush, dirty on any other request and if the
+queue is clean all flushes can be completed immediately on issue which
+would also allow us to avoid the whole queue at the front or back
+issue without bothering low level drivers at all.
 
-If there is some other specific commit you'd like me to test
-I can do so.
-
-Thanks,
-Ben
+Thanks.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+tejun
