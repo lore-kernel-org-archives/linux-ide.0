@@ -1,59 +1,42 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Sat, 23 Apr 2011 02:56:10 +0200
-Message-ID: <20110423005610.GC1576@mtj.dyndns.org>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
+Date: Sat, 23 Apr 2011 02:56:47 +0200
+Message-ID: <20110423005647.GD1576@mtj.dyndns.org>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
  <4D9CD275.9000002@teksavvy.com>
  <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
  <4D9FACC9.7020200@teksavvy.com>
  <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
- <4DA45CA7.9040102@teksavvy.com>
- <4DA467FB.6020905@teksavvy.com>
+ <4DA5BCF3.5080205@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
+ <4DA79134.1010508@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772DA5DD@gretna.indigovision.com>
+ <4DA86606.308@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:55643 "EHLO
-	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757054Ab1DWA4P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2011 20:56:15 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4DA467FB.6020905@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <4DA86606.308@teksavvy.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Mark Lord <kernel@teksavvy.com>
-Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Justin Maggard <jmaggard10@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-Sorry about delay.  -EWASTRAVELING
-
-On Tue, Apr 12, 2011 at 10:55:55AM -0400, Mark Lord wrote:
-> >> One thing I noticed was that there is no spinlock around the
-> >> mv_save_cached_regs/mv_edma_cfg in mv_hardreset (unlike mv_port_start and
-> >> mv_port_stop); why is this?
+On Fri, Apr 15, 2011 at 11:36:38AM -0400, Mark Lord wrote:
+> On 11-04-15 09:21 AM, Bruce Stenning wrote:
+> ..
+> > sata_mv 0000:00:04.0: Gen-II 32 slots 4 ports SCSI mode IRQ via INTx
+> ..
 > > 
-> > The mv_hardreset path is run from a libata-eh thread,
-> > and it assumes it has exclusive access to the hardware.
+> > I had noticed occasional messages similar to the following earlier in the week:
+> > 
+> > ata4.00: limiting speed to UDMA/100:PIO4
 > 
-> Mmm.. another suspect is sata_mv's ".sff_irq_clear" function.
-> I don't see any locking in libata-sff.c before calling that one.
-> 
-> Tejun -- should libata-sff grab ap->lock before calling .sff_irq_clear,
-> or is that up to the LLD to do?
+> Ugh.   Tejun:  that's just plain silly.
+> Why would we EVER EVER EVER fall back to "PIO" for SATA ???
 
-It depends.  The basic assumption is that inside a single port, most
-of exclusions are achieved implicit either by command protocol or
-freeze/thaw mechanism - ie. either the port is in known state and
-accesses are interlocked or the port is frozen and irq handler won't
-do anything interfering with EH until EH brings the port back to sane
-state.  If something goes wrong in the process, the port will get
-frozen and reset, so we should be able to survive most conditions.
-
-Ports on the same host are a bit more complicated.  Only a single EH
-can proceed on a host.  ie. EHs for two separate ports won't proceed
-at the same time (ap->eh_owner); however, this doesn't prevent from
-normal issue path of another path racing with EH of another port.  In
-this case, the EH routine should grab the host lock explicitly.  The
-latter case wasn't common so the compromise for simplicity.
+Nah, it's just printing both DMA and PIO speed settings.  It's limited
+to UDMA/100 not PIO4.
 
 Thanks.
 
