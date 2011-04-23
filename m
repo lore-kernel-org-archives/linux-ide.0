@@ -1,53 +1,59 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
-Date: Sat, 23 Apr 2011 01:32:04 +0200
-Message-ID: <20110422233204.GB1576@mtj.dyndns.org>
-References: <1303202686.3981.216.camel@sli10-conroe>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Sat, 23 Apr 2011 02:56:10 +0200
+Message-ID: <20110423005610.GC1576@mtj.dyndns.org>
+References: <C1438B59050E1B4C9482FF3266AD6BA32C7493557A@gretna.indigovision.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
+ <4D9CD275.9000002@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
+ <4D9FACC9.7020200@teksavvy.com>
+ <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
+ <4DA45CA7.9040102@teksavvy.com>
+ <4DA467FB.6020905@teksavvy.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ew0-f46.google.com ([209.85.215.46]:58587 "EHLO
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:55643 "EHLO
 	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab1DVXcK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2011 19:32:10 -0400
+	with ESMTP id S1757054Ab1DWA4P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2011 20:56:15 -0400
 Content-Disposition: inline
-In-Reply-To: <1303202686.3981.216.camel@sli10-conroe>
+In-Reply-To: <4DA467FB.6020905@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello, Shaohua.
+Sorry about delay.  -EWASTRAVELING
 
-> +	list_splice_init(&q->flush_queue[q->flush_running_idx], &proceed_list);
-> +	/*
-> +	 * If queue doesn't support queueable flush request, we can push the
-> +	 * pending requests to the next stage too. For such queue, there are no
-> +	 * normal requests running when flush request is running, so this still
-> +	 * guarantees the correctness.
-> +	 */
-> +	if (!blk_queue_flush_queueable(q))
-> +		list_splice_tail_init(&q->flush_queue[q->flush_pending_idx],
-> +			&proceed_list);
+On Tue, Apr 12, 2011 at 10:55:55AM -0400, Mark Lord wrote:
+> >> One thing I noticed was that there is no spinlock around the
+> >> mv_save_cached_regs/mv_edma_cfg in mv_hardreset (unlike mv_port_start and
+> >> mv_port_stop); why is this?
+> > 
+> > The mv_hardreset path is run from a libata-eh thread,
+> > and it assumes it has exclusive access to the hardware.
+> 
+> Mmm.. another suspect is sata_mv's ".sff_irq_clear" function.
+> I don't see any locking in libata-sff.c before calling that one.
+> 
+> Tejun -- should libata-sff grab ap->lock before calling .sff_irq_clear,
+> or is that up to the LLD to do?
 
-I can't see how this is safe.  Request completion is decoupled from
-issue.  What prevents low level driver from take in other requests
-before control hits here?  And even if that holds for the current
-implementation, that's hardly something which can be guaranteed from
-!flush_queueable.  Am I missing something?
+It depends.  The basic assumption is that inside a single port, most
+of exclusions are achieved implicit either by command protocol or
+freeze/thaw mechanism - ie. either the port is in known state and
+accesses are interlocked or the port is frozen and irq handler won't
+do anything interfering with EH until EH brings the port back to sane
+state.  If something goes wrong in the process, the port will get
+frozen and reset, so we should be able to survive most conditions.
 
-This kind of micro optimization is gonna bring very painful bugs which
-are extremely difficult to reproduce and track down.  It scares the
-hell out of me.  It's gonna silently skip flushes where it shouldn't.
-
-If you wanna optimize this case, a much better way would be
-implementing back-to-back flush optimization properly such that when
-block layer detects two flushes back-to-back and _KNOWS_ that no
-request has been issued inbetween, the second one is handled as noop.
-Mark the queue clean on flush, dirty on any other request and if the
-queue is clean all flushes can be completed immediately on issue which
-would also allow us to avoid the whole queue at the front or back
-issue without bothering low level drivers at all.
+Ports on the same host are a bit more complicated.  Only a single EH
+can proceed on a host.  ie. EHs for two separate ports won't proceed
+at the same time (ap->eh_owner); however, this doesn't prevent from
+normal issue path of another path racing with EH of another port.  In
+this case, the EH routine should grab the host lock explicitly.  The
+latter case wasn't common so the compromise for simplicity.
 
 Thanks.
 
