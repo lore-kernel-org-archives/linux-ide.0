@@ -1,44 +1,67 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Sat, 23 Apr 2011 02:56:47 +0200
-Message-ID: <20110423005647.GD1576@mtj.dyndns.org>
-References: <C1438B59050E1B4C9482FF3266AD6BA32C7493559F@gretna.indigovision.com>
- <4D9CD275.9000002@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com>
- <4D9FACC9.7020200@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com>
- <4DA5BCF3.5080205@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772DA491@gretna.indigovision.com>
- <4DA79134.1010508@teksavvy.com>
- <C1438B59050E1B4C9482FF3266AD6BA32C772DA5DD@gretna.indigovision.com>
- <4DA86606.308@teksavvy.com>
+From: "Jian Peng" <jipeng2005@gmail.com>
+Subject: [PATCH 1/1] libata: ahci_start_engine compliant to AHCI spec
+Date: Fri, 22 Apr 2011 23:58:10 -0700
+Message-ID: <1303541890-14528-1-git-send-email-jipeng2005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DA86606.308@teksavvy.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Justin Maggard <jmaggard10@gmail.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:4611 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751033Ab1DWG62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 23 Apr 2011 02:58:28 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <htejun@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>
 
-On Fri, Apr 15, 2011 at 11:36:38AM -0400, Mark Lord wrote:
-> On 11-04-15 09:21 AM, Bruce Stenning wrote:
-> ..
-> > sata_mv 0000:00:04.0: Gen-II 32 slots 4 ports SCSI mode IRQ via INTx
-> ..
-> > 
-> > I had noticed occasional messages similar to the following earlier in the week:
-> > 
-> > ata4.00: limiting speed to UDMA/100:PIO4
-> 
-> Ugh.   Tejun:  that's just plain silly.
-> Why would we EVER EVER EVER fall back to "PIO" for SATA ???
+At the end of section 10.1 of AHCI spec (rev 1.3), it states
 
-Nah, it's just printing both DMA and PIO speed settings.  It's limited
-to UDMA/100 not PIO4.
+Software shall not set PxCMD.ST to 1 until it is determined that
+a functoinal device is present on the port as determined by
+PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
 
-Thanks.
+Even though most AHCI host controller works without this check,
+specific controller will fail under this condition.
 
+Signed-off-by: Jian Peng <jipeng2005@gmail.com>
+---
+ drivers/ata/libahci.c |   21 +++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 26d4523..83ed544 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -539,6 +539,27 @@ void ahci_start_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
++	u8 status;
++
++	status = readl(port_mmio + PORT_TFDATA) & 0xFF;
++
++	/*
++	 * At end of section 10.1 of AHCI spec (rev 1.3), it states
++	 * Software shall not set PxCMD.ST to 1 until it is determined
++	 * that a functoinal device is present on the port as determined by
++	 * PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
++	 *
++	 * Even though most AHCI host controllers work without this check,
++	 * specific controller will fail under this condition
++	 */
++	if (status & (ATA_BUSY | ATA_DRQ))
++		return;
++	else {
++		ahci_scr_read(&ap->link, SCR_STATUS, &tmp);
++
++		if ((tmp & 0xf) != 0x3)
++			return;
++	}
+ 
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
 -- 
-tejun
+1.7.4.1
+
+
