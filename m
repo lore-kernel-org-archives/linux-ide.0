@@ -1,124 +1,32 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH] ATA: pata_at91.c bugfixes
-Date: Sat, 23 Apr 2011 11:36:23 +0200
-Message-ID: <20110423093623.GA3410@localhost.localdomain>
-References: <1303299877-12088-1-git-send-email-plyatov@gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/1] libata: ahci_start_engine compliant to AHCI spec
+Date: Sat, 23 Apr 2011 16:40:44 +0200
+Message-ID: <BANLkTinYzLJAPdpNsZYuDML0eszgw00JcQ@mail.gmail.com>
+References: <1303541890-14528-1-git-send-email-jipeng2005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:23308 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801Ab1DWJg1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 23 Apr 2011 05:36:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1303299877-12088-1-git-send-email-plyatov@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Igor Plyatov <plyatov@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1303541890-14528-1-git-send-email-jipeng2005@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jian Peng <jipeng2005@gmail.com>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hi Igor
+On Sat, Apr 23, 2011 at 8:58 AM, Jian Peng <jipeng2005@gmail.com> wrote:
+> At the end of section 10.1 of AHCI spec (rev 1.3), it states
+>
+> Software shall not set PxCMD.ST to 1 until it is determined that
+> a functoinal device is present on the port as determined by
+> PxTFD.STS.BSY=0, PxTFD.STS.DRQ=0 and PxSSTS.DET=3h
+>
+> Even though most AHCI host controller works without this check,
+> specific controller will fail under this condition.
+>
+> Signed-off-by: Jian Peng <jipeng2005@gmail.com>
 
-On Wed, Apr 20, 2011 at 03:44:37PM +0400, Igor Plyatov wrote:
-> * Fix "initial_timing" structure initialisation. The "struct ata_timing" must
->   contain 10 members, but ".dmack_hold" member was not initialised.
-> * The AT91SAM9 microcontrollers use special coding scheme for SMC_SETUP,
->   SMC_PULSE, SMC_CYCLE registers.
->   Old driver operates correctly only with low master clock values, but
->   with high master clock it incorrectly calculates SMC values and stops
->   to operate, because SMC can be setup only to admissible ranges in special
->   format.
->   New code correctly calculates SMC registers values, adjusts calculated
->   to admissible ranges, enlarges cycles if required and converts values
->   into SMC's format.
-> * Old driver calculates CS_SETUP and CS_PULSE cycles incorrectly
->   because of wrong assumptions.
->   New code calculates:
->       CS_SETUP = SETUP/2
+Acked-by: Tejun Heo <tj@kernel.org>
 
-If you to this, then {RD,WR}_SETUP have to be equal SETUP + SETUP/2
-to generate proper setup (t0) time on IDE bus. I think the best way is
-set CS_SETUP and CS_HOLD to 0 (what your code do if SETUP and HOLD <=1),
-but to do this you need to take care of data float (t6z) 
+Thanks.
 
-> +static const struct ata_timing initial_timing = {
-> +	.mode		= XFER_PIO_0,
-> +	.setup		= 70,
-> +	.act8b		= 290,
-> +	.rec8b		= 240,
-> +	.cyc8b		= 600,
-> +	.active		= 165,
-> +	.recover	= 150,
-> +	.dmack_hold	= 0,
-> +	.cycle		= 600,
-> +	.udma		= 0
-> +};
-
-Is this really needed, why not use ata_timing_find_mode(XFER_PIO_0)?
-
-> +static int adjust_smc_value(unsigned int *value, int *prange,
-> +				unsigned int size)
-> +{
-> +	unsigned char i;
-> +	int remainder;
-> +
-> +	for (i = 0; i < size; i = i + 2) {
-> +		if (*value < prange[i]) {
-> +			remainder = prange[i] - *value;
-> +			*value = prange[i]; /* nearest valid value */
-> +			return remainder;
-> +		}
-> +		else if ((prange[i] <= *value) && (*value <= prange[i+1])) {
-> +			return 0;
-> +		}
-> +	}
-> +	*value = prange[size - 1]; /* assign maximal possible value */
-> +
-> +	return -1; /* invalid value */
-> +}
-[snip]
-> +static void calc_smc_vals(struct device *dev,
-> +				unsigned int *setup, unsigned int *cs_setup,
-> +				unsigned int *pulse, unsigned int *cs_pulse,
-> +				unsigned int *cycle)
-> +{
-> +	int ret_val;
-> +	int cs_hold;
-> +	int range_setup[] = {	/* SMC_SETUP valid ranges */
-> +		0, 31,		/* first  range */
-> +		128, 159,	/* second range */
-> +	};
-> +	int range_pulse[] = {	/* SMC_PULSE valid ranges */
-> +		0, 63,		/* first  range */
-> +		256, 319,	/* second range */
-> +	};
-> +	int range_cycle[] = {	/* SMC_CYCLE valid ranges */
-> +		0, 127,		/* first  range */
-> +		256, 383,	/* second range */
-> +		512, 639,	/* third  range */
-> +		768, 895,	/* fourth range */
-> +	};
-
-Introducing helper structure like
-
-struct smc_range {
-	u16 min, max;
-};
-
-would be a bit cleaner way of coding that (hint: ARRAY_SIZE could be used
-instead of sizeof then)
-
-> -	dev_dbg(dev, "ATA timings: nrd_setup = %lu nrd_pulse = %lu nrd_cycle = %lu\n",
-> -			nrd_setup, nrd_pulse, read_cycle);
-> -	dev_dbg(dev, "ATA timings: nwe_setup = %lu nwe_pulse = %lu nwe_cycle = %lu\n",
-> -			nwe_setup, nwe_pulse, write_cycle);
-> -	dev_dbg(dev, "ATA timings: ncs_read_setup = %lu ncs_read_pulse = %lu\n",
-> -			ncs_read_setup, ncs_read_pulse);
-> -	dev_dbg(dev, "ATA timings: ncs_write_setup = %lu ncs_write_pulse = %lu\n",
-> -			ncs_write_setup, ncs_write_pulse);
-
-It's worth to have some debugging prints to check if values are calculated
-properly.
-
-Thanks
-Stanislaw
+-- 
+tejun
