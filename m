@@ -1,54 +1,72 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH 0/2] libata-sff: prevent irq descriptions for dummy ports
-Date: Sun, 24 Apr 2011 14:31:33 -0500
-Message-ID: <1303673493.5231.13.camel@mulgrave.site>
-References: <1303673315.5231.9.camel@mulgrave.site>
+From: Shaohua Li <shaohua.li@intel.com>
+Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
+Date: Mon, 25 Apr 2011 09:33:28 +0800
+Message-ID: <20110425013328.GA17315@sli10-conroe.sh.intel.com>
+References: <1303202686.3981.216.camel@sli10-conroe>
+ <20110422233204.GB1576@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1303673315.5231.9.camel@mulgrave.site>
-Sender: linux-parisc-owner@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
-Cc: Parisc List <linux-parisc@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@mvista.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:52897 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757865Ab1DYBda (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 24 Apr 2011 21:33:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20110422233204.GB1576@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
 
-This is a cosmetic change to prevent libata-sff adding irq
-descriptions to dummy ports, since the information, while largely
-unused, is erroneous.
-
-Signed-off-by: James Bottomley <James.Bottomley@suse.de>
----
- drivers/ata/libata-sff.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index f8380ce..b1b926c 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2447,13 +2447,18 @@ int ata_pci_sff_activate_host(struct ata_host *host,
- 		return -ENOMEM;
+Hi,
+On Sat, Apr 23, 2011 at 07:32:04AM +0800, Tejun Heo wrote: 
+> > +	list_splice_init(&q->flush_queue[q->flush_running_idx], &proceed_list);
+> > +	/*
+> > +	 * If queue doesn't support queueable flush request, we can push the
+> > +	 * pending requests to the next stage too. For such queue, there are no
+> > +	 * normal requests running when flush request is running, so this still
+> > +	 * guarantees the correctness.
+> > +	 */
+> > +	if (!blk_queue_flush_queueable(q))
+> > +		list_splice_tail_init(&q->flush_queue[q->flush_pending_idx],
+> > +			&proceed_list);
+> 
+> I can't see how this is safe.  Request completion is decoupled from
+> issue.  What prevents low level driver from take in other requests
+> before control hits here?  And even if that holds for the current
+> implementation, that's hardly something which can be guaranteed from
+> !flush_queueable.  Am I missing something?
+Say in one operation of fs, we issue write r1 and r2, after they finishes,
+we issue flush f1. In another operation, we issue write r3 and r4, after
+they finishes, we issue flush f2.
+operation 1: r1 r2  f1
+operation 2:  r3 r4  f2
+At the time f1 finishes and f2 is in queue, we can make sure two things:
+1. r3 and r4 is already finished, otherwise f2 will not be queued.
+2. r3 and r4 should be finished before f1. We can only deliver one request
+out for non-queueable request, so either f1 is dispatched after r3 and r4
+are finished or before r3 and r4 are finished. Because of item1, f1 is
+dispatched after r3 and r4 are finished.
+>From the two items, when f1 is finished, we can let f2 finished, because
+f1 should flush disk cache out for all requests from r1 to r4.
  
- 	if (!legacy_mode && pdev->irq) {
-+		int i;
-+
- 		rc = devm_request_irq(dev, pdev->irq, irq_handler,
- 				      IRQF_SHARED, drv_name, host);
- 		if (rc)
- 			goto out;
- 
--		ata_port_desc(host->ports[0], "irq %d", pdev->irq);
--		ata_port_desc(host->ports[1], "irq %d", pdev->irq);
-+		for (i = 0; i < 2; i++) {
-+			if (ata_port_is_dummy(host->ports[i]))
-+				continue;
-+			ata_port_desc(host->ports[i], "irq %d", pdev->irq);
-+		}
- 	} else if (legacy_mode) {
- 		if (!ata_port_is_dummy(host->ports[0])) {
- 			rc = devm_request_irq(dev, ATA_PRIMARY_IRQ(pdev),
--- 
-1.7.4.1
+> This kind of micro optimization is gonna bring very painful bugs which
+> are extremely difficult to reproduce and track down.  It scares the
+> hell out of me.  It's gonna silently skip flushes where it shouldn't.
+> 
+> If you wanna optimize this case, a much better way would be
+> implementing back-to-back flush optimization properly such that when
+> block layer detects two flushes back-to-back and _KNOWS_ that no
+> request has been issued inbetween, the second one is handled as noop.
+> Mark the queue clean on flush, dirty on any other request and if the
+> queue is clean all flushes can be completed immediately on issue which
+> would also allow us to avoid the whole queue at the front or back
+> issue without bothering low level drivers at all.
+If flush is queueable, I'm not sure if we can do the optimization. For example,
+we dispatch 32 requests in the meantime. and the last request is flush, can
+the hardware guarantee the cache for the first 31 requests are flushed out?
+On the other hand, my optimization works even there are write requests in
+between the back-to-back flush.
 
-
-
+Thanks,
+Shaohua
