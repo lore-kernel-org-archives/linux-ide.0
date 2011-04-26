@@ -1,21 +1,22 @@
 From: Tejun Heo <htejun@gmail.com>
 Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
-Date: Tue, 26 Apr 2011 12:40:14 +0200
-Message-ID: <20110426104014.GA878@htj.dyndns.org>
+Date: Tue, 26 Apr 2011 12:48:43 +0200
+Message-ID: <20110426104843.GB878@htj.dyndns.org>
 References: <1303202686.3981.216.camel@sli10-conroe>
  <20110422233204.GB1576@mtj.dyndns.org>
  <20110425013328.GA17315@sli10-conroe.sh.intel.com>
  <20110425085827.GB17734@mtj.dyndns.org>
- <1303778559.3981.279.camel@sli10-conroe>
+ <20110425091311.GC17734@mtj.dyndns.org>
+ <1303778790.3981.283.camel@sli10-conroe>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60873 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753850Ab1DZKkU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2011 06:40:20 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37449 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752427Ab1DZKss (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2011 06:48:48 -0400
 Content-Disposition: inline
-In-Reply-To: <1303778559.3981.279.camel@sli10-conroe>
+In-Reply-To: <1303778790.3981.283.camel@sli10-conroe>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Shaohua Li <shaohua.li@intel.com>
@@ -23,58 +24,41 @@ Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, 
 
 Hey,
 
-On Tue, Apr 26, 2011 at 08:42:39AM +0800, Shaohua Li wrote:
-> > What I was saying is that request completion is decoupled from driver
-> > fetching requests from block layer and that the order of completion
-> > doesn't necessarily follow the order of execution.  IOW, nothing
-> > guarantees that FLUSH completion code would run before the low level
-> > driver fetches the next command and _completes_ it, in which case your
-> > code would happily mark flush complete after write without actually
-> > doing it.
+On Tue, Apr 26, 2011 at 08:46:30AM +0800, Shaohua Li wrote:
+> the blk-flush is part of block layer. If what you mean is the libata
+> part, block layer doesn't know if flush is queueable without knowledge
+> from driver.
+
+It seems my communication skill towards you sucks badly.  I was
+talking about making both the issue and completion paths cooperate on
+flush sequence handling instead of depending on queuability of flush
+to make assumptions on completion order, which I still think is
+incorrect.
+
+> > Also, another interesting thing to investigate is why the two flushes
+> > didn't get merged in the first place.  The two flushes apparently
+> > didn't have any ordering requirement between them.  Why didn't they
+> > get merged in the first place?  If the first flush were slightly
+> > delayed, the second would have been issued together from the beginning
+> > and we wouldn't have to think about merging them afterwards.  Maybe
+> > what we really need is better algorithm than C1/2/3 described in the
+> > comment?
 >
-> What I described is in the background of non-queueable flush request.
-> For queueable flush, this definitely isn't correct.
+> the sysbench fileio does a 16 threads write-fsync, so it's quite normal
+> a flush is running and another flush is added into pending list.
 
-We're definitely having communication issues.  The above doesn't have
-anything to do with queueability of flushes.  It's about the
-asynchronous nature of block request completion and issue paths, so it
-can happen whether flush is queueable or not, or am I still
-misunderstanding you?
+I think you're optimizing in the wrong place.  These back-to-back
+flushes better be merged on the issue side instead of completion.  The
+current merging rules (basically how long to delay pending flushes)
+are minimal and mechanical (timeout is the only huristic parameter).
 
-> > Eh, wasn't your optimization only applicable if flush is not
-> > queueable?  IIUC, what your optimization achieves is merging
-> > back-to-back flushes and you're achieving that in a _very_ non-obvious
-> > round-about way.  Do it in straight-forward way even if that costs
-> > more lines of code.
->
-> This isn't a problem of more code or less code. I thought my patch is
-> already quite simple.
+For the initial implementation, my goal was matching the numbers of
+Darrick's original implementation at higher level and keeping things
+simple, but the code is intentionally structured to allow easy tuning
+of merging criteria, so I suggest looking there instead of mucking
+with completion path.
 
-Well, then, we'll have to agree to disagree there as it looks really
-hackish to me and I don't think it's even correct as written above.
-
-> The method your described only works for non-queueable flush too. And it
-> has limitation that the requests between two back-to-back flushes must
-> not be write. my patch works for non-queueable flush but has no such
-> limitation.
-
-No, I'm saying you can achieve about the same effect in cleaner and
-safer way if you teach the issue and completion paths properly about
-these back-to-back flushes at the cost of more code changes.  Your
-patch doesn't work reliably whether flush is queueable or not.
-
-> > Darrick, do you see flush performance regression between rc1 and rc2?
-> > You're testing on higher end, so maybe it's still okay for you?
->
-> please ignore the regression. the patch isn't related to the regression,
-> but that problem motivates me to do the patch.
-> Actually I still need the RFC patch in another thread to recover the
-> regression. I hope you and Jens can seriously look at that issue too.
-
-Ah, okay, it's a separately issue.  Sorry about confusing the two.
-I'll continue on another reply.
-
-Thanks.
+Thank you.
 
 -- 
 tejun
