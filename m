@@ -1,41 +1,80 @@
-From: saeed bishara <saeed.bishara@gmail.com>
-Subject: Re: [PATCH 3/4] ata: Add and use ata_print_version_once
-Date: Tue, 26 Apr 2011 10:59:14 +0300
-Message-ID: <BANLkTimsuTYRn0+_Ap+W_a9d6X=zFgngfQ@mail.gmail.com>
-References: <cover.1302907496.git.joe@perches.com>
-	<440aa7f6bb99bec705b83796894f843bfc1b7bf9.1302907497.git.joe@perches.com>
-	<BANLkTikeV-jHXWSDyLmtTTc1d2S9L3eG0Q@mail.gmail.com>
-	<1303073786.31723.14.camel@Joe-Laptop>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
+Date: Tue, 26 Apr 2011 12:40:14 +0200
+Message-ID: <20110426104014.GA878@htj.dyndns.org>
+References: <1303202686.3981.216.camel@sli10-conroe>
+ <20110422233204.GB1576@mtj.dyndns.org>
+ <20110425013328.GA17315@sli10-conroe.sh.intel.com>
+ <20110425085827.GB17734@mtj.dyndns.org>
+ <1303778559.3981.279.camel@sli10-conroe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40613 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753259Ab1DZH7P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2011 03:59:15 -0400
-In-Reply-To: <1303073786.31723.14.camel@Joe-Laptop>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:60873 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850Ab1DZKkU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2011 06:40:20 -0400
+Content-Disposition: inline
+In-Reply-To: <1303778559.3981.279.camel@sli10-conroe>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Mikael Pettersson <mikpe@it.uu.se>, linux-kernel@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Sun, Apr 17, 2011 at 11:56 PM, Joe Perches <joe@perches.com> wrote:
-> On Sun, 2011-04-17 at 13:45 +0300, saeed bishara wrote:
->> On Sat, Apr 16, 2011 at 1:52 AM, Joe Perches <joe@perches.com> wrote:
->> > Use a single mechanism to show driver version.
->> > Reduces text a tiny bit too.
->> > Remove uses of static int printed_version
->> > Add and use ata_print_version(const struct device *, const char *ver)
->> > and ata_print_version_once.
->> any idea why we really need this driver version for in-kernel drivers?
->> isn't the kernel version good enough?
+Hey,
+
+On Tue, Apr 26, 2011 at 08:42:39AM +0800, Shaohua Li wrote:
+> > What I was saying is that request completion is decoupled from driver
+> > fetching requests from block layer and that the order of completion
+> > doesn't necessarily follow the order of execution.  IOW, nothing
+> > guarantees that FLUSH completion code would run before the low level
+> > driver fetches the next command and _completes_ it, in which case your
+> > code would happily mark flush complete after write without actually
+> > doing it.
 >
-> Some think it useful to see what module
-> version is linked against the kernel.
-1. I looked at 3-4 drivers, and found that it didn't modified its
-version since at least 3 years, so it doesn't look to me that this
-version is maintained properly.
-2. anyway, if you still think this feature is needed, then maybe you
-should consider making it generic one, this is not ata specific
-feature.
-saeed
+> What I described is in the background of non-queueable flush request.
+> For queueable flush, this definitely isn't correct.
+
+We're definitely having communication issues.  The above doesn't have
+anything to do with queueability of flushes.  It's about the
+asynchronous nature of block request completion and issue paths, so it
+can happen whether flush is queueable or not, or am I still
+misunderstanding you?
+
+> > Eh, wasn't your optimization only applicable if flush is not
+> > queueable?  IIUC, what your optimization achieves is merging
+> > back-to-back flushes and you're achieving that in a _very_ non-obvious
+> > round-about way.  Do it in straight-forward way even if that costs
+> > more lines of code.
+>
+> This isn't a problem of more code or less code. I thought my patch is
+> already quite simple.
+
+Well, then, we'll have to agree to disagree there as it looks really
+hackish to me and I don't think it's even correct as written above.
+
+> The method your described only works for non-queueable flush too. And it
+> has limitation that the requests between two back-to-back flushes must
+> not be write. my patch works for non-queueable flush but has no such
+> limitation.
+
+No, I'm saying you can achieve about the same effect in cleaner and
+safer way if you teach the issue and completion paths properly about
+these back-to-back flushes at the cost of more code changes.  Your
+patch doesn't work reliably whether flush is queueable or not.
+
+> > Darrick, do you see flush performance regression between rc1 and rc2?
+> > You're testing on higher end, so maybe it's still okay for you?
+>
+> please ignore the regression. the patch isn't related to the regression,
+> but that problem motivates me to do the patch.
+> Actually I still need the RFC patch in another thread to recover the
+> regression. I hope you and Jens can seriously look at that issue too.
+
+Ah, okay, it's a separately issue.  Sorry about confusing the two.
+I'll continue on another reply.
+
+Thanks.
+
+-- 
+tejun
