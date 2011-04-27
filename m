@@ -1,41 +1,86 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Tue, 26 Apr 2011 14:37:09 -0400
-Message-ID: <4DB710D5.6060901@teksavvy.com>
-References: <4D9CD275.9000002@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C749358D0@gretna.indigovision.com> <4D9FACC9.7020200@teksavvy.com> <C1438B59050E1B4C9482FF3266AD6BA32C772D9EB1@gretna.indigovision.com> <4DA45CA7.9040102@teksavvy.com> <4DA467FB.6020905@teksavvy.com> <20110423005610.GC1576@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C775549E4@gretna.indigovision.com> <20110425162242.GB30828@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com> <20110426135027.GI878@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com>
+From: Stanislaw Gruszka <stf_xl@wp.pl>
+Subject: Re: [PATCH] ATA: pata_at91.c bugfixes
+Date: Wed, 27 Apr 2011 20:38:19 +0200
+Message-ID: <20110427183819.GA2285@localhost.localdomain>
+References: <1303299877-12088-1-git-send-email-plyatov@gmail.com>
+ <20110423093623.GA3410@localhost.localdomain>
+ <4DB6684C.7050505@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:37913 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751016Ab1DZShM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Apr 2011 14:37:12 -0400
-In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com>
+Received: from mx4.wp.pl ([212.77.101.8]:14290 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757637Ab1D0SiI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Apr 2011 14:38:08 -0400
+Content-Disposition: inline
+In-Reply-To: <4DB6684C.7050505@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Stenning <b.stenning@indigovision.com>, Tejun Heo <htejun@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Igor Plyatov <plyatov@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11-04-26 11:41 AM, Bruce Stenning wrote:
-> Tejun wrote:
->> Does the following patch resolve the problem?
->>
->> Thanks.
+On Tue, Apr 26, 2011 at 10:38:04AM +0400, Igor Plyatov wrote:
+> >On Wed, Apr 20, 2011 at 03:44:37PM +0400, Igor Plyatov wrote:
+> >>* Fix "initial_timing" structure initialisation. The "struct ata_timing" must
+> >>   contain 10 members, but ".dmack_hold" member was not initialised.
+> >>* The AT91SAM9 microcontrollers use special coding scheme for SMC_SETUP,
+> >>   SMC_PULSE, SMC_CYCLE registers.
+> >>   Old driver operates correctly only with low master clock values, but
+> >>   with high master clock it incorrectly calculates SMC values and stops
+> >>   to operate, because SMC can be setup only to admissible ranges in special
+> >>   format.
+> >>   New code correctly calculates SMC registers values, adjusts calculated
+> >>   to admissible ranges, enlarges cycles if required and converts values
+> >>   into SMC's format.
+> >>* Old driver calculates CS_SETUP and CS_PULSE cycles incorrectly
+> >>   because of wrong assumptions.
+> >>   New code calculates:
+> >>       CS_SETUP = SETUP/2
+> >If you to this, then {RD,WR}_SETUP have to be equal SETUP + SETUP/2
+> >to generate proper setup (t0) time on IDE bus. I think the best way is
+err, setup time is t1 
+
+> >set CS_SETUP and CS_HOLD to 0 (what your code do if SETUP and HOLD<=1),
+> >but to do this you need to take care of data float (t6z)
 > 
-> I have applied that patch, keeping Mark's mv_set_main_irq_mask spinlock patch
-> in place.  I would not like to commit absolutely, for obvious reasons, but I
-> have abused the port considerably and have not been able to coax it into
-> locking up.
+> Why so?
+> 
+> This is not clear for me. Maybe we talk about different things or I
+> have wrong
+> understanding of ATA timings.
+> Can you please look at "Standard Read Cycle" for AT91SAM9 MCU
+> http://www.kicad.ru/files/AT91SAM9G20%20bus%20timing.pdf
+> , CompactFlash connection schematic
+> http://www.kicad.ru/files/CF%20for%20AT91SAM9%20(True%20IDE%20mode).pdf
+> and comment my thoughts?
+Full "External Bus Interface" section from AT91 spec is important,
+because is describe how SMC works internally in CF True IDE mode.
 
-I'm thinking perhaps I should dust off that spinlock patch
-and send something more proper like that upstream.
+> Here is a legend for "Standard Read Cycle" timing diagram.
+> ------------------------------------------------------------------------------
+> Read (NRD) signal parameters:
+> * t0 = cycle = NRD_CYCLE
+> * t1 = setup = NRD_SETUP
+> * t2 = pulse = NRD_PULSE
+> * t9 = hold = NRD_HOLD
+Correct. Also t0 = t1 + t2 + t9 relation must be true.
 
-With that mask register shared among the ports, it is really
-hard to keep track of when we're locked and when not.
-So having a lock just for the shared part of the chip
-has got to be a less error-prone way to do it.
+> Chip Select (NCS) signal parameters:
+> * cs_setup = NCS_RD_SETUP
+> * cs_pulse = NCS_RD_PULSE
+> * cs_cycle = cycle
+You can setup that, but they need to have proper relations with NRD.
+ 
+> Notes:
+> * The NCS_RD_CYCLE is equal to the NRD_CYCLE for AT91SAM9, because they
+>   start/finish simultaneously (HW related).
+No, NCS and NRD are different signals, waveforms are different (if configured
+differently in SMC controller).
 
-I'll pull down a recent -git to patch against first.
+> * The NCS signal is not the same as CS1, CS2 ATA signals! It used only to
+>   enable data bus transceiver U2.
+Well, they are different signals but connected together. All of these are 
+controlled by NCS: CFCE1 (CS1), CFCE2 (CS2), CFRNW (DIR), CFCS0 (OE)
+if SMC is configured in True IDE mode. 
 
-Cheers
+Stanislaw
