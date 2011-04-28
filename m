@@ -1,77 +1,49 @@
-From: Pavel Herrmann <morpheus.ibis@gmail.com>
-Subject: [PATCH v2] support for PMP used in TT BlackX Duet drive dock
-Date: Thu, 28 Apr 2011 22:32:54 +0200
-Message-ID: <201104282232.54770.morpheus.ibis@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: New driver mtipx2xx submission
+Date: Thu, 28 Apr 2011 23:06:05 +0100
+Message-ID: <20110428230605.78c55c70@lxorguk.ukuu.org.uk>
+References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_27cuNXFwaELdVNA"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60725 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970Ab1D1UdE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Apr 2011 16:33:04 -0400
-Received: by fxm17 with SMTP id 17so2079162fxm.19
-        for <linux-ide@vger.kernel.org>; Thu, 28 Apr 2011 13:33:03 -0700 (PDT)
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60413 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754392Ab1D1WE6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Apr 2011 18:04:58 -0400
+In-Reply-To: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>
+Cc: linux-ide@vger.kernel.org
 
---Boundary-00=_27cuNXFwaELdVNA
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+> We have written a new block driver for our AHCI based PCIe SSDs. The
+> main objective of our product is providing high performance. Traffic
+> through OS storage stack is not to able fully utilize the device's
+> capabilty. To improve the traffic to the device and hence
+> showcase/utilize the device's capability, we have come up with this new
+> block driver. This driver includes
+> 	* utilize device's increased queue depth
+> 	* workaround for hardware errata
+> 
+> We want to get this driver into kernel tree to support the device out of
+> the box. Attached this driver as a patch for latest kernel. We would
+> like to get your comments, and also open for discussion.
 
-Please note the comments have been changed to better explain the PMP behaviour
+The kernel starting point would be that we have an AHCI driver. If you
+need workarounds for hardware errata then they can go into it and that is
+fine. We support NCQ so we can use the queue depths. If there are
+extensions then the AHCI driver can be enhanced.
 
---Boundary-00=_27cuNXFwaELdVNA
-Content-Type: text/x-patch;
-  charset="UTF-8";
-  name="0001-libata-pmp-add-support-for-Thermaltake-BlackX-Duet-e.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0001-libata-pmp-add-support-for-Thermaltake-BlackX-Duet-e.patch"
+Similarly if you've got performnace problems going through the libata
+core and AHCI driver the right thing to do is to fix the performance
+problems in the core (or rewrite bits of the core as needed).
 
-=46rom 558ac1479ef159dddad7ee2842f629ed2095ada9 Mon Sep 17 00:00:00 2001
-=46rom: Pavel Herrmann <morpheus.ibis@gmail.com>
-Date: Thu, 7 Apr 2011 18:15:26 +0200
-Subject: [PATCH] libata-pmp: add support for Thermaltake BlackX Duet esata
- drive dock
+I think the starting point would be to explain what problems you see with
+the existing driver, and where the profiling tools say the bottlenecks
+are when you try and get full speed under libata + libata ahci driver.
 
-some errors still show up, but the dock works, both drives can be
-accessed at the same time
+Otherwise we will end up with one AHCIish driver per vendor and it turns
+into a nightmare for maintenance.
 
-the chip maker and designation is unknown - possibly jmicron JMB350?
-
-Signed-off-by: Pavel Herrmann <morpheus.ibis@gmail.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-=2D--
- drivers/ata/libata-pmp.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 3120596..f06b7ea 100644
-=2D-- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -449,6 +449,16 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |=3D ATA_LFLAG_NO_RETRY;
-+	} else if (vendor =3D=3D 0x197b && devid =3D=3D 0x2352) {
-+		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
-+		ata_for_each_link(link, ap, EDGE) {
-+			/* SRST breaks detection and disks get misclassified
-+			 * LPM disabled to avoid potential problems
-+			 */
-+			link->flags |=3D ATA_LFLAG_NO_LPM |
-+				       ATA_LFLAG_NO_SRST |
-+				       ATA_LFLAG_ASSUME_ATA;
-+		}
- 	}
- }
-=20
-=2D-=20
-1.7.5.rc1
-
-
---Boundary-00=_27cuNXFwaELdVNA--
+Alan
