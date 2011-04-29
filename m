@@ -1,32 +1,44 @@
-From: =?ISO-8859-2?Q?Stanis=B3aw_Gruszka?= <stf_xl@wp.pl>
-Subject: Re: [PATCH] ATA: pata_at91.c bugfixes
-Date: Fri, 29 Apr 2011 09:56:54 +0200
-Message-ID: <4dba6f46587df2.89235609@wp.pl>
-References: <1303299877-12088-1-git-send-email-plyatov@gmail.com> <20110423093623.GA3410@localhost.localdomain> <4DB6684C.7050505@gmail.com> <20110427183819.GA2285@localhost.localdomain>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: How to perform SECURITY ERASE on a SEC4 (security enabled/locked)
+ PATA drive ?
+Date: Fri, 29 Apr 2011 09:47:54 -0400
+Message-ID: <4DBAC18A.20407@teksavvy.com>
+References: <BANLkTikZt4Nr3DK3CkZXZ_ORgqjy-MGOUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:22975 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754765Ab1D2H44 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 29 Apr 2011 03:56:56 -0400
-In-reply-to: <1303299877-12088-1-git-send-email-plyatov@gmail.com> <20110423093623.GA3410@localhost.localdomain> <4DB6684C.7050505@gmail.com> <20110427183819.GA2285@localhost.localdomain>
-Content-Disposition: inline
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:61873 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756082Ab1D2Nr4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Apr 2011 09:47:56 -0400
+In-Reply-To: <BANLkTikZt4Nr3DK3CkZXZ_ORgqjy-MGOUA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Igor Plyatov <plyatov@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Maciej Grela <maciej.grela@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-> > * The NCS_RD_CYCLE is equal to the NRD_CYCLE for AT91SAM9, because they
-> >   start/finish simultaneously (HW related).
-> No, NCS and NRD are different signals, waveforms are different (if 
-> configured differently in SMC controller).
-Your sentence is true. NRD and NCS cycle time must be the same (otherwise
-SMC behaviour is undefined), hence both signals start/finish simultaneously.
-Anyway waveforms (setup, and pulse time) can be different. All of thise
-are kinda obvious, no? :-)
+On 11-04-27 04:15 PM, Maciej Grela wrote:
+> Hi ata gurus,
+> 
+> I have a 2.5'' PATA drive with security enabled and unknown password.
+> I'd like to erase that disk and use it. I've been trying to apply the
+> instructions at the libata wiki:
+> https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase but they cover
+> only the scenario in which the drive doesn't have security enabled
+> before we start the procedure. In my case this approach doesn't work
+> because I cannot set the password (step 3a):
 
-Stanislaw
+First, update your hdparm to hdparm-9.37 from sourceforge.
+Distros seem to continue to ship old versions for some weird reason,
+and there have been lots of improvements since the 2008 copy they use.
+
+Then, try this:
 
 
+hdparm --security-set-pass NULL /dev/sdx
+hdparm --security-erase NULL /dev/sdx
+
+
+Cheers
+-ml
