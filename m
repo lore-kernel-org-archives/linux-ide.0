@@ -1,105 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
-Date: Sat, 30 Apr 2011 16:37:58 +0200
-Message-ID: <20110430143758.GK29280@htj.dyndns.org>
-References: <1303202686.3981.216.camel@sli10-conroe>
- <20110422233204.GB1576@mtj.dyndns.org>
- <20110425013328.GA17315@sli10-conroe.sh.intel.com>
- <20110425085827.GB17734@mtj.dyndns.org>
- <20110425091311.GC17734@mtj.dyndns.org>
- <1303778790.3981.283.camel@sli10-conroe>
- <20110426104843.GB878@htj.dyndns.org>
- <1303977055.3981.587.camel@sli10-conroe>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 33342] [2.6.39-rc2][bisected] Constant DISK_MEDIA_CHANGE_EVENTS
+ from CDROM drive.
+Date: Sat, 30 Apr 2011 19:27:39 GMT
+Message-ID: <201104301927.p3UJRdOo008622@demeter2.kernel.org>
+References: <bug-33342-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:62790 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755496Ab1D3OiD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Apr 2011 10:38:03 -0400
-Content-Disposition: inline
-In-Reply-To: <1303977055.3981.587.camel@sli10-conroe>
+Received: from demeter2.kernel.org ([140.211.167.42]:39445 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740Ab1D3T1k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Apr 2011 15:27:40 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p3UJRdU2008624
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-ide@vger.kernel.org>; Sat, 30 Apr 2011 19:27:39 GMT
+In-Reply-To: <bug-33342-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: linux-ide@vger.kernel.org
 
-Hello, Shaohua.
+https://bugzilla.kernel.org/show_bug.cgi?id=33342
 
-On Thu, Apr 28, 2011 at 03:50:55PM +0800, Shaohua Li wrote:
-> Index: linux/block/blk-flush.c
-> ===================================================================
-> --- linux.orig/block/blk-flush.c	2011-04-28 10:23:12.000000000 +0800
-> +++ linux/block/blk-flush.c	2011-04-28 14:12:50.000000000 +0800
-> @@ -158,6 +158,17 @@ static bool blk_flush_complete_seq(struc
->  	switch (seq) {
->  	case REQ_FSEQ_PREFLUSH:
->  	case REQ_FSEQ_POSTFLUSH:
-> +		/*
-> +		 * If queue doesn't support queueable flush request, we just
-> +		 * merge the flush with running flush. For such queue, there
-> +		 * are no normal requests running when flush request is
-> +		 * running, so this still guarantees the correctness.
-> +		 */
-> +		if (!blk_queue_flush_queueable(q)) {
-> +			list_move_tail(&rq->flush.list,
-> +				&q->flush_queue[q->flush_running_idx]);
-> +			break;
-> +		}
 
-As I've said several times already, I really don't like this magic
-being done in the completion path.  Can't you detect the condition on
-issue of the second/following flush and append it to the running list?
-If you already have tried that but this way still seems better, can
-you please explain why?
+Rafael J. Wysocki <rjw@sisk.pl> changed:
 
-Also, this is a separate logic.  Please put it in a separate patch.
-The first patch should implement queue holding while flushing, which
-should remove the regression, right?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
 
-The second patch can optimize back-to-back execution, which might or
-might not buy us tangible performance gain, so it would be nice to
-have some measurement for this change.  Also, this logic isn't
-necessarily related with queueability of flushes, right?  As such, I
-think it would be better for it to be implemented separately from the
-queueability thing, unless doing such increases complexity too much.
 
-> Index: linux/include/linux/blkdev.h
-> ===================================================================
-> --- linux.orig/include/linux/blkdev.h	2011-04-28 10:23:12.000000000 +0800
-> +++ linux/include/linux/blkdev.h	2011-04-28 10:32:54.000000000 +0800
-> @@ -364,6 +364,13 @@ struct request_queue
->  	 * for flush operations
->  	 */
->  	unsigned int		flush_flags;
-> +	unsigned int		flush_not_queueable:1;
-> +	/*
-> +	 * flush_exclusive_running and flush_queue_delayed are only meaningful
-> +	 * when flush request isn't queueable
-> +	 */
-> +	unsigned int		flush_exclusive_running:1;
-> +	unsigned int		flush_queue_delayed:1;
 
-Hmmm... why do you need separate ->flush_exclusive_running?  Doesn't
-pending_idx != running_idx already have the same information?
 
-> Index: linux/block/blk-core.c
-> ===================================================================
-> --- linux.orig/block/blk-core.c	2011-04-28 10:23:12.000000000 +0800
-> +++ linux/block/blk-core.c	2011-04-28 10:53:18.000000000 +0800
-> @@ -929,6 +929,8 @@ void blk_requeue_request(struct request_
->  
->  	BUG_ON(blk_queued_rq(rq));
->  
-> +	if (rq == &q->flush_rq)
-> +		q->flush_exclusive_running = 0;
-
-I don't get this either.  What's requeueing got to do with it?  It
-doesn't matter whether flush gets requeued or not.  Once flush is put
-onto the dispatch list, isn't holding the queue until it's complete
-enough?
-
-Thanks.
+--- Comment #4 from Rafael J. Wysocki <rjw@sisk.pl>  2011-04-30 19:27:34 ---
+Fixed by commits:
+7c88a16 (block: don't propagate unlisted DISK_EVENTs to userland)
+facc31d (block: Don't implicitly trigger event check on disk_unblock_events()).
 
 -- 
-tejun
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
