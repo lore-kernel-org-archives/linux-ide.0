@@ -1,54 +1,75 @@
-From: <Jordan_Hargrave@Dell.com>
-Subject: Re: New driver mtipx2xx submission
-Date: Tue, 3 May 2011 06:09:46 -0500
-Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C4858E135ECA@AUSX7MCPS303.AMER.DELL.COM>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: How to perform SECURITY ERASE on a SEC4 (security enabled/locked)
+ PATA drive ?
+Date: Tue, 03 May 2011 10:55:00 -0400
+Message-ID: <4DC01744.6040206@teksavvy.com>
+References: <BANLkTikZt4Nr3DK3CkZXZ_ORgqjy-MGOUA@mail.gmail.com>	<4DBAC18A.20407@teksavvy.com>	<BANLkTimFg_=KmCRVL=QoO9s-4+T3DmbNQw@mail.gmail.com>	<4DBB7341.1070600@teksavvy.com> <BANLkTi==R1tb-oNp4Sf5DJHS3wjZyC_wLg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausxippc101.us.dell.com ([143.166.85.207]:16025 "EHLO
-	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394Ab1ECLJs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 07:09:48 -0400
-Content-Language: en-US
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:63974 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752757Ab1ECOzE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 10:55:04 -0400
+In-Reply-To: <BANLkTi==R1tb-oNp4Sf5DJHS3wjZyC_wLg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Maciej Grela <maciej.grela@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
->Alan Cox <alan@xxxxxxxxxxxxxxxxxxx> writes:
->
->>> We have written a new block driver for our AHCI based PCIe SSDs. The
->>> main objective of our product is providing high performance. Traffic
->>> through OS storage stack is not to able fully utilize the device's
->>> capabilty. To improve the traffic to the device and hence
->>> showcase/utilize the device's capability, we have come up with this new
->>> block driver. This driver includes
->>> 	* utilize device's increased queue depth
->>> 	* workaround for hardware errata
->>> 
->>> We want to get this driver into kernel tree to support the device out of
->>> the box. Attached this driver as a patch for latest kernel. We would
->>> like to get your comments, and also open for discussion.
+On 11-04-30 04:10 AM, Maciej Grela wrote:
+> 2011/4/30 Mark Lord <kernel@teksavvy.com>:
 >>
->> The kernel starting point would be that we have an AHCI driver. If you
->> need workarounds for hardware errata then they can go into it and that is
->> fine. We support NCQ so we can use the queue depths. If there are
->> extensions then the AHCI driver can be enhanced.
+>> Okay.  Now please do exactly this (and I mean EXACTLY):
+>>
+>> 1. shut down and completely power off the system.
+>> 2. boot up again, and immediately do "hdparm --Istdout /dev/sdb
+>> and post the results here.
+>>
+>> I want to see what the default security state of the drive is,
+>> and that sequence above will tell all.
+>>
 >
->Given the highly parallel nature of these parts, I wouldn't be surprised
->if the ahci queue depth of 31 is one of the main bottlenecks.  Can you
->think of a way to extend the ahci driver in this manner to accommodate
->devices like this one?
+> Hi,
 >
->Cheers,
->Jeff
+> Here is the data:
+..
 
-Correct, the device appears as a single AHCI port device but supports a
-queue depth of 128.  It does this by muxing the registers from port 1,2,3
-onto port 0. I think this might be possible by creating device specific
-port_start, qc_issue and change_queue_depth functions.
+> Security:
+>         Master password revision code = 65534
+>                 supported
+>                 enabled
+>                 locked
+>         not     frozen
+>         not     expired: security count
+>         not     supported: enhanced erase
+>         Security level high
+>         42min for SECURITY ERASE UNIT.
+..
 
---jordan hargrave
-Dell Enterprise Linux Engineering
+Okay, your drive already has a password set on it.
+So to do a --security-erase, you will likely need to
+know and supply that exact password on the command line:
 
+    hdparm --security-erase XXXXXXXX /dev/sdb
 
+If you don't know the password, then you can try this:
+
+    hdparm --security-set-pass NULL --user-master m /dev/sdb
+    hdparm --security-erase    NULL --user-master m /dev/sdb
+
+If that also fails, then you'll have to read through the ATA
+security feature documentation (from the t13 standards),
+and try and understand how the quirky state machine model
+for it is supposed to work.  And then puzzle it out from there.
+
+Not all drives do it in exactly the same way,
+and not all of them strictly follow the standard.
+So it may take some playing around to figure it out.
+
+I don't do this often enough here to remember which brands
+prefer what sequences etc.
+
+Cheers
+-ml
