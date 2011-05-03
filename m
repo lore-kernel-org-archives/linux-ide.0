@@ -1,80 +1,54 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
-Date: Tue, 3 May 2011 10:23:21 +0200
-Message-ID: <20110503082321.GA6556@htj.dyndns.org>
-References: <1303202686.3981.216.camel@sli10-conroe>
- <20110422233204.GB1576@mtj.dyndns.org>
- <20110425013328.GA17315@sli10-conroe.sh.intel.com>
- <20110425085827.GB17734@mtj.dyndns.org>
- <20110425091311.GC17734@mtj.dyndns.org>
- <1303778790.3981.283.camel@sli10-conroe>
- <20110426104843.GB878@htj.dyndns.org>
- <1303977055.3981.587.camel@sli10-conroe>
- <20110430143758.GK29280@htj.dyndns.org>
- <1304405071.3828.11.camel@sli10-conroe>
+From: <Jordan_Hargrave@Dell.com>
+Subject: Re: New driver mtipx2xx submission
+Date: Tue, 3 May 2011 06:09:46 -0500
+Message-ID: <5B3AAEAF6B46EA4D955DF7AD46C2C4858E135ECA@AUSX7MCPS303.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:51989 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751074Ab1ECIX1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 04:23:27 -0400
-Content-Disposition: inline
-In-Reply-To: <1304405071.3828.11.camel@sli10-conroe>
+Received: from ausxippc101.us.dell.com ([143.166.85.207]:16025 "EHLO
+	ausxippc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394Ab1ECLJs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 07:09:48 -0400
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: linux-ide@vger.kernel.org
 
-Hello,
-
-On Tue, May 03, 2011 at 02:44:31PM +0800, Shaohua Li wrote:
-> > As I've said several times already, I really don't like this magic
-> > being done in the completion path.  Can't you detect the condition on
-> > issue of the second/following flush and append it to the running list?
+>Alan Cox <alan@xxxxxxxxxxxxxxxxxxx> writes:
 >
-> hmm, don't understand it. blk_flush_complete_seq is called when the
-> second flush is issued. or do you mean do this when the second flush is
-> issued to disk? but when the second flush is issued the first flush is
-> already finished.
-
-Ah, okay, my bad.  That's the next sequence logic, so the right place.
-Still, please do the followings.
-
-* Put it in a separate patch.
-
-* Preferably, detect the actual condition (back to back flush) rather
-  than the queueability test unless it's too complicated.
-
-* Please make pending/running paths look more symmetrical.
-
-> > If you already have tried that but this way still seems better, can
-> > you please explain why?
-> > 
-> > Also, this is a separate logic.  Please put it in a separate patch.
-> > The first patch should implement queue holding while flushing, which
-> > should remove the regression, right?
+>>> We have written a new block driver for our AHCI based PCIe SSDs. The
+>>> main objective of our product is providing high performance. Traffic
+>>> through OS storage stack is not to able fully utilize the device's
+>>> capabilty. To improve the traffic to the device and hence
+>>> showcase/utilize the device's capability, we have come up with this new
+>>> block driver. This driver includes
+>>> 	* utilize device's increased queue depth
+>>> 	* workaround for hardware errata
+>>> 
+>>> We want to get this driver into kernel tree to support the device out of
+>>> the box. Attached this driver as a patch for latest kernel. We would
+>>> like to get your comments, and also open for discussion.
+>>
+>> The kernel starting point would be that we have an AHCI driver. If you
+>> need workarounds for hardware errata then they can go into it and that is
+>> fine. We support NCQ so we can use the queue depths. If there are
+>> extensions then the AHCI driver can be enhanced.
 >
-> ok. holding queue has no performance gain in my test, but it reduced a
-> lot of request requeue.
-
-No, holding the queue should remove the regression completely.  Please
-read on.
-
-> > Hmmm... why do you need separate ->flush_exclusive_running?  Doesn't
-> > pending_idx != running_idx already have the same information?
+>Given the highly parallel nature of these parts, I wouldn't be surprised
+>if the ahci queue depth of 31 is one of the main bottlenecks.  Can you
+>think of a way to extend the ahci driver in this manner to accommodate
+>devices like this one?
 >
-> when pending_idx != running_idx, flush request is added into queue tail,
-> but this doesn't mean flush request is dispatched to disk. there might
-> be other requests in the queue head, which we should dispatch. And flush
-> request might be reqeueud. Just checking pending_idx != running_idx will
-> cause queue hang because we thought flush is dispatched and then hold
-> the queue, but actually flush isn't dispatched yet, the queue should
-> dispatch other normal requests.
+>Cheers,
+>Jeff
 
-Don't hold elv_next_request().  Hold ->elevator_dispatch_fn().
+Correct, the device appears as a single AHCI port device but supports a
+queue depth of 128.  It does this by muxing the registers from port 1,2,3
+onto port 0. I think this might be possible by creating device specific
+port_start, qc_issue and change_queue_depth functions.
 
-Thanks.
+--jordan hargrave
+Dell Enterprise Linux Engineering
 
--- 
-tejun
+
