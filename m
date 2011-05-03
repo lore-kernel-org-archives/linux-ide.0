@@ -1,90 +1,47 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 3/3] libsas: check dev->gone before submitting sata i/o
-Date: Tue, 03 May 2011 11:36:32 -0700
-Message-ID: <20110503183632.21471.63803.stgit@localhost6.localdomain6>
-References: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
+From: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]"
+	<asamymuthupa@micron.com>
+Subject: [PATCH 0/3] RE: New driver mtipx2xx submission
+Date: Tue, 3 May 2011 14:07:35 -0600
+Message-ID: <22A973199D2C2F46933448F6E7990A300204FB7C@ntxboimbx31.micron.com>
+References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com><20110428230605.78c55c70@lxorguk.ukuu.org.uk><22A973199D2C2F46933448F6E7990A300204F728@ntxboimbx31.micron.com> <20110502184206.25907c5e@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51854 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754251Ab1ECSUX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 May 2011 14:20:23 -0400
-In-Reply-To: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
+Received: from masquerade.micron.com ([137.201.242.130]:24990 "EHLO
+	masquerade.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754781Ab1ECUHq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 16:07:46 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20110502184206.25907c5e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: james.bottomley@suse.de
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jack Wang <jack_wang@usish.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Head off doomed-to-fail i/o in sas_queuecommand before sending it down
-the ata path.
+> > > I think the starting point would be to explain what problems you
+see
+> > with
+> > > the existing driver, and where the profiling tools say the
+bottlenecks
+> > > are when you try and get full speed under libata + libata ahci
+driver.
+> > 
+> > The performance difference is not just because of libata + libata
+ahci
+> > driver. Our driver gets the request before elevator comes into
+picture.
+> > So, the stack starting from elevator,scsi upper, scsi mid, libata
+and
+> > libata ahci driver attributes to the performance difference. 
+>
+> Elevator for flash devices should automatically be null and most of
+the
+> SCSI layer isn't actually used so it would be interesting to know for
+> example what shows up in comparative profiles so that it can be
+optimised
+> or dropped out.
 
-Before:
-sd 7:0:0:0: [sdd] Synchronizing SCSI cache
-ata8: no sense translation for status: 0x00
-ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata8.00: device reported invalid CHS sector 0
-ata8: status=0x00 { }
-ata8: no sense translation for status: 0x00
-ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata8.00: device reported invalid CHS sector 0
-ata8: status=0x00 { }
-ata8: no sense translation for status: 0x00
-ata8: translated ATA stat/err 0x00/00 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata8.00: device reported invalid CHS sector 0
-ata8: status=0x00 { }
-sd 7:0:0:0: [sdd]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 7:0:0:0: [sdd]  Sense Key : Aborted Command [current] [descriptor]
-sd 7:0:0:0: [sdd]  Add. Sense: No additional sense information
-sd 7:0:0:0: [sdd] Stopping disk
-
-After:
-sd 9:0:0:0: [sdd] Synchronizing SCSI cache
-sd 9:0:0:0: [sdd]  Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-sd 9:0:0:0: [sdd] Stopping disk
-sd 9:0:0:0: [sdd] START_STOP FAILED
-sd 9:0:0:0: [sdd]  Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-
-This is a cosmetic change as sata i/o can still leak to a gone device,
-but this addresses the nominal hotplug case when releasing the target.
-
-Acked-by: Jack Wang <jack_wang@usish.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_scsi_host.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 1787bd2..ce3efff 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -218,6 +218,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
- 		struct sas_ha_struct *sas_ha = dev->port->ha;
- 		struct sas_task *task;
- 
-+		/* If the device fell off, no sense in issuing commands */
-+		if (dev->gone) {
-+			cmd->result = DID_BAD_TARGET << 16;
-+			scsi_done(cmd);
-+			goto out;
-+		}
-+
- 		if (dev_is_sata(dev)) {
- 			unsigned long flags;
- 
-@@ -228,13 +235,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
- 			goto out;
- 		}
- 
--		/* If the device fell off, no sense in issuing commands */
--		if (dev->gone) {
--			cmd->result = DID_BAD_TARGET << 16;
--			scsi_done(cmd);
--			goto out;
--		}
--
- 		res = -ENOMEM;
- 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
- 		if (!task)
-
+We are working on getting performance figures for both paths. Meanwhile,
+I am reposting the new patch inline in 3 parts.
