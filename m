@@ -1,47 +1,71 @@
 From: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]"
 	<asamymuthupa@micron.com>
-Subject: [PATCH 0/3] RE: New driver mtipx2xx submission
-Date: Tue, 3 May 2011 14:07:35 -0600
-Message-ID: <22A973199D2C2F46933448F6E7990A300204FB7C@ntxboimbx31.micron.com>
-References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com><20110428230605.78c55c70@lxorguk.ukuu.org.uk><22A973199D2C2F46933448F6E7990A300204F728@ntxboimbx31.micron.com> <20110502184206.25907c5e@lxorguk.ukuu.org.uk>
+Subject: [PATCH 1/3] New driver mtipx2xx submission
+Date: Tue, 3 May 2011 14:14:42 -0600
+Message-ID: <22A973199D2C2F46933448F6E7990A300204FB87@ntxboimbx31.micron.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from masquerade.micron.com ([137.201.242.130]:24990 "EHLO
+Received: from masquerade.micron.com ([137.201.242.130]:30741 "EHLO
 	masquerade.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781Ab1ECUHq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 16:07:46 -0400
+	with ESMTP id S1754324Ab1ECUOp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2011 16:14:45 -0400
+Received: from ntxboimbx31.micron.com (ntxboimbx31.micron.com [137.201.91.17])
+	by masquerade.micron.com (8.13.6/8.13.6) with SMTP id p43KEhG1001275
+	for <linux-ide@vger.kernel.org>; Tue, 3 May 2011 14:14:44 -0600
 Content-class: urn:content-classes:message
-In-Reply-To: <20110502184206.25907c5e@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> > > I think the starting point would be to explain what problems you
-see
-> > with
-> > > the existing driver, and where the profiling tools say the
-bottlenecks
-> > > are when you try and get full speed under libata + libata ahci
-driver.
-> > 
-> > The performance difference is not just because of libata + libata
-ahci
-> > driver. Our driver gets the request before elevator comes into
-picture.
-> > So, the stack starting from elevator,scsi upper, scsi mid, libata
-and
-> > libata ahci driver attributes to the performance difference. 
->
-> Elevator for flash devices should automatically be null and most of
-the
-> SCSI layer isn't actually used so it would be interesting to know for
-> example what shows up in comparative profiles so that it can be
-optimised
-> or dropped out.
+Part 1
 
-We are working on getting performance figures for both paths. Meanwhile,
-I am reposting the new patch inline in 3 parts.
+diff -uNr a/drivers/block/Kconfig b/drivers/block/Kconfig
+--- a/drivers/block/Kconfig	2011-04-15 13:53:48.000000000 -0600
++++ b/drivers/block/Kconfig	2011-05-03 13:00:40.000000000 -0600
+@@ -116,6 +116,8 @@
+ 
+ source "drivers/block/paride/Kconfig"
+ 
++source "drivers/block/mtipx2xx/Kconfig"
++
+ config BLK_CPQ_DA
+ 	tristate "Compaq SMART2 support"
+ 	depends on PCI && VIRT_TO_BUS
+diff -uNr a/drivers/block/mtipx2xx/Kconfig
+b/drivers/block/mtipx2xx/Kconfig
+--- a/drivers/block/mtipx2xx/Kconfig	1969-12-31 17:00:00.000000000
+-0700
++++ b/drivers/block/mtipx2xx/Kconfig	2011-05-03 12:57:34.000000000
+-0600
+@@ -0,0 +1,13 @@
++#
++# mtipx2xx device driver configuration
++#
++
++config BLK_DEV_PCIE_SSD
++        tristate "Block Device Driver for Micron PCIe SSDs"
++        depends on  HOTPLUG_PCI_PCIE
++        default n
++        help
++
++          This option enables block device driver for Micron PCIe SSDs.
+This
++          driver depends on pciehp module to support surprise insertion
++          surprise removal (SRSI) of the device.
+diff -uNr a/drivers/block/mtipx2xx/Makefile
+b/drivers/block/mtipx2xx/Makefile
+--- a/drivers/block/mtipx2xx/Makefile	1969-12-31 17:00:00.000000000
+-0700
++++ b/drivers/block/mtipx2xx/Makefile	2011-05-03 12:57:34.000000000
+-0600
+@@ -0,0 +1,7 @@
++#
++# Makefile for  Block device driver for Micron PCIe SSD
++#
++
++obj-$(CONFIG_BLK_DEV_PCIE_SSD) += mtipx2xx.o
++
++mtipx2xx-y := module.o pci.o block.o ahci.o
