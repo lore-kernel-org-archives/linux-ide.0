@@ -1,85 +1,73 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch v2 2/3] block: hold queue if flush is running for
- non-queueable flush drive
-Date: Wed, 4 May 2011 11:09:45 +0200
-Message-ID: <20110504090945.GD8007@htj.dyndns.org>
-References: <20110504081725.946950281@sli10-conroe.sh.intel.com>
- <20110504082115.270298766@sli10-conroe.sh.intel.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/3] New driver mtipx2xx submission
+Date: Wed, 04 May 2011 14:26:18 +0400
+Message-ID: <4DC129CA.5070905@ru.mvista.com>
+References: <22A973199D2C2F46933448F6E7990A300204FB87@ntxboimbx31.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:56367 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750882Ab1EDJJt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2011 05:09:49 -0400
-Content-Disposition: inline
-In-Reply-To: <20110504082115.270298766@sli10-conroe.sh.intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47620 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355Ab1EDK2A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2011 06:28:00 -0400
+Received: by wwa36 with SMTP id 36so1052550wwa.1
+        for <linux-ide@vger.kernel.org>; Wed, 04 May 2011 03:27:59 -0700 (PDT)
+In-Reply-To: <22A973199D2C2F46933448F6E7990A300204FB87@ntxboimbx31.micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: shaohua.li@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, jgarzik@pobox.com, hch@infradead.org, djwong@us.ibm.com
+To: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Hello.
 
-On Wed, May 04, 2011 at 04:17:27PM +0800, shaohua.li@intel.com wrote:
-> In some drives, flush requests are non-queueable. When flush request is running,
-> normal read/write requests can't run. If block layer dispatches such request,
-> driver can't handle it and requeue it.
-> Tejun suggested we can hold the queue when flush is running. This can avoid
-> unnecessary requeue.
-> Also this can improve performance. Say we have requests f1, w1, f2 (f is flush
-> request, and w is write request). When f1 is running, queue will be hold, so w1
-> will not be added to queue list. Just after f1 is finished, f2 will be
-> dispatched. Since f1 already flushs cache out, f2 can be finished very quickly.
-> In my test, the queue holding completely solves a regression introduced by
-> commit 53d63e6b0dfb9588, which is about 20% regression running a sysbench fileio
-> workload.
-> 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+On 04-05-2011 0:14, Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) 
+[CONTRACTOR] wrote:
 
-It looks good to me now, but some nitpicks.
+> Part 1
 
-> Index: linux/block/blk-flush.c
-> ===================================================================
-> --- linux.orig/block/blk-flush.c	2011-05-04 14:20:33.000000000 +0800
-> +++ linux/block/blk-flush.c	2011-05-04 15:23:50.000000000 +0800
-> @@ -199,6 +199,9 @@ static void flush_end_io(struct request
->  
->  	BUG_ON(q->flush_pending_idx == q->flush_running_idx);
->  
-> +	queued |= q->flush_queue_delayed;
-> +	q->flush_queue_delayed = 0;
+    Need a better description than that.
+
+> diff -uNr a/drivers/block/mtipx2xx/Kconfig
+> b/drivers/block/mtipx2xx/Kconfig
+> --- a/drivers/block/mtipx2xx/Kconfig	1969-12-31 17:00:00.000000000
+> -0700
+> +++ b/drivers/block/mtipx2xx/Kconfig	2011-05-03 12:57:34.000000000
+> -0600
+> @@ -0,0 +1,13 @@
+> +#
+> +# mtipx2xx device driver configuration
+> +#
 > +
->  	/* account completion of the flush request */
->  	q->flush_running_idx ^= 1;
->  	elv_completed_request(q, flush_rq);
+> +config BLK_DEV_PCIE_SSD
+> +        tristate "Block Device Driver for Micron PCIe SSDs"
+> +        depends on  HOTPLUG_PCI_PCIE
+> +        default n
+> +        help
+> +
+> +          This option enables block device driver for Micron PCIe SSDs.
+> This
 
-Can you please do if (queued || q->flush_queue_delayed) instead of
-setting queued?  And please also update the comment above the if
-statement so that it explains the flush_queue_delayed case too.
+    The patch is line-wrapped.
 
-> Index: linux/block/blk.h
-> ===================================================================
-> --- linux.orig/block/blk.h	2011-05-04 14:20:33.000000000 +0800
-> +++ linux/block/blk.h	2011-05-04 16:09:42.000000000 +0800
-> @@ -61,7 +61,17 @@ static inline struct request *__elv_next
->  			rq = list_entry_rq(q->queue_head.next);
->  			return rq;
->  		}
-> -
-> +		/*
-> +		 *  Flush request is running and flush request isn't queeueable
-> +		 *  in the drive, we can hold the queue till flush request is
-> +		 *  finished. Even we don't do this, driver can't dispatch next
-> +		 *  requests and will requeue them.
-> +		 */
+> +          driver depends on pciehp module to support surprise insertion
+> +          surprise removal (SRSI) of the device.
+> diff -uNr a/drivers/block/mtipx2xx/Makefile
+> b/drivers/block/mtipx2xx/Makefile
+> --- a/drivers/block/mtipx2xx/Makefile	1969-12-31 17:00:00.000000000
+> -0700
+> +++ b/drivers/block/mtipx2xx/Makefile	2011-05-03 12:57:34.000000000
+> -0600
+> @@ -0,0 +1,7 @@
+> +#
+> +# Makefile for  Block device driver for Micron PCIe SSD
+> +#
+> +
+> +obj-$(CONFIG_BLK_DEV_PCIE_SSD) += mtipx2xx.o
+> +
+> +mtipx2xx-y := module.o pci.o block.o ahci.o
 
-Please explain the f1, w1, f2 case here as that's the biggest reason
-this optimization is implemented and also explain the use of
-flush_queue_delayed (just explain briefly and refer to
-flush_end_io()).
+    This patch should clearly be the last in the series, as at this point 
+there's no source files yet in this directory.
 
-Thank you.
-
--- 
-tejun
+WBR, Sergei
