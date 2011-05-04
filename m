@@ -1,86 +1,86 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: Re: [PATCH 1/2]block: optimize non-queueable flush request drive
-Date: Wed, 04 May 2011 14:20:14 +0800
-Message-ID: <1304490014.3828.14.camel@sli10-conroe>
-References: <1303202686.3981.216.camel@sli10-conroe>
-	 <20110422233204.GB1576@mtj.dyndns.org>
-	 <20110425013328.GA17315@sli10-conroe.sh.intel.com>
-	 <20110425085827.GB17734@mtj.dyndns.org>
-	 <20110425091311.GC17734@mtj.dyndns.org>
-	 <1303778790.3981.283.camel@sli10-conroe>
-	 <20110426104843.GB878@htj.dyndns.org>
-	 <1303977055.3981.587.camel@sli10-conroe>
-	 <20110430143758.GK29280@htj.dyndns.org>
-	 <1304405071.3828.11.camel@sli10-conroe>
-	 <20110503082321.GA6556@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: shaohua.li@intel.com
+Subject: [patch v2 2/3] block: hold queue if flush is running for non-queueable flush drive
+Date: Wed, 04 May 2011 16:17:27 +0800
+Message-ID: <20110504082115.270298766@sli10-conroe.sh.intel.com>
+References: <20110504081725.946950281@sli10-conroe.sh.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:12552 "EHLO mga14.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:26109 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752092Ab1EDGUR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 May 2011 02:20:17 -0400
-In-Reply-To: <20110503082321.GA6556@htj.dyndns.org>
+	id S1751196Ab1EDIVR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 May 2011 04:21:17 -0400
+Content-Disposition: inline; filename=blk-hold-queue-for-nonqueueable-flush.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jaxboe@fusionio.com, htejun@gmail.com, jgarzik@pobox.com, hch@infradead.org, djwong@us.ibm.com, Shaohua Li <shaohua.li@intel.com>
 
-On Tue, 2011-05-03 at 16:23 +0800, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, May 03, 2011 at 02:44:31PM +0800, Shaohua Li wrote:
-> > > As I've said several times already, I really don't like this magic
-> > > being done in the completion path.  Can't you detect the condition on
-> > > issue of the second/following flush and append it to the running list?
-> >
-> > hmm, don't understand it. blk_flush_complete_seq is called when the
-> > second flush is issued. or do you mean do this when the second flush is
-> > issued to disk? but when the second flush is issued the first flush is
-> > already finished.
-> 
-> Ah, okay, my bad.  That's the next sequence logic, so the right place.
-> Still, please do the followings.
-> 
-> * Put it in a separate patch.
-> 
-> * Preferably, detect the actual condition (back to back flush) rather
->   than the queueability test unless it's too complicated.
-> 
-> * Please make pending/running paths look more symmetrical.
-I retested, and appears just holding queue is already good enough. After
-holding queue, merging back to back flush hasn't too much benefit. So
-I'll not pursue do the back-to-back merge. I'll post my latest patches
-out soon.
+In some drives, flush requests are non-queueable. When flush request is running,
+normal read/write requests can't run. If block layer dispatches such request,
+driver can't handle it and requeue it.
+Tejun suggested we can hold the queue when flush is running. This can avoid
+unnecessary requeue.
+Also this can improve performance. Say we have requests f1, w1, f2 (f is flush
+request, and w is write request). When f1 is running, queue will be hold, so w1
+will not be added to queue list. Just after f1 is finished, f2 will be
+dispatched. Since f1 already flushs cache out, f2 can be finished very quickly.
+In my test, the queue holding completely solves a regression introduced by
+commit 53d63e6b0dfb9588, which is about 20% regression running a sysbench fileio
+workload.
 
-> > > If you already have tried that but this way still seems better, can
-> > > you please explain why?
-> > > 
-> > > Also, this is a separate logic.  Please put it in a separate patch.
-> > > The first patch should implement queue holding while flushing, which
-> > > should remove the regression, right?
-> >
-> > ok. holding queue has no performance gain in my test, but it reduced a
-> > lot of request requeue.
-> 
-> No, holding the queue should remove the regression completely.  Please
-> read on.
-> 
-> > > Hmmm... why do you need separate ->flush_exclusive_running?  Doesn't
-> > > pending_idx != running_idx already have the same information?
-> >
-> > when pending_idx != running_idx, flush request is added into queue tail,
-> > but this doesn't mean flush request is dispatched to disk. there might
-> > be other requests in the queue head, which we should dispatch. And flush
-> > request might be reqeueud. Just checking pending_idx != running_idx will
-> > cause queue hang because we thought flush is dispatched and then hold
-> > the queue, but actually flush isn't dispatched yet, the queue should
-> > dispatch other normal requests.
-> 
-> Don't hold elv_next_request().  Hold ->elevator_dispatch_fn().
-ok, this works.
+Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+---
+ block/blk-flush.c      |    3 +++
+ block/blk.h            |   12 +++++++++++-
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 15 insertions(+), 1 deletion(-)
 
-Thanks,
-Shaohua
+Index: linux/block/blk-flush.c
+===================================================================
+--- linux.orig/block/blk-flush.c	2011-05-04 14:20:33.000000000 +0800
++++ linux/block/blk-flush.c	2011-05-04 15:23:50.000000000 +0800
+@@ -199,6 +199,9 @@ static void flush_end_io(struct request
+ 
+ 	BUG_ON(q->flush_pending_idx == q->flush_running_idx);
+ 
++	queued |= q->flush_queue_delayed;
++	q->flush_queue_delayed = 0;
++
+ 	/* account completion of the flush request */
+ 	q->flush_running_idx ^= 1;
+ 	elv_completed_request(q, flush_rq);
+Index: linux/include/linux/blkdev.h
+===================================================================
+--- linux.orig/include/linux/blkdev.h	2011-05-04 14:24:40.000000000 +0800
++++ linux/include/linux/blkdev.h	2011-05-04 14:29:29.000000000 +0800
+@@ -365,6 +365,7 @@ struct request_queue
+ 	 */
+ 	unsigned int		flush_flags;
+ 	unsigned int		flush_not_queueable:1;
++	unsigned int		flush_queue_delayed:1;
+ 	unsigned int		flush_pending_idx:1;
+ 	unsigned int		flush_running_idx:1;
+ 	unsigned long		flush_pending_since;
+Index: linux/block/blk.h
+===================================================================
+--- linux.orig/block/blk.h	2011-05-04 14:20:33.000000000 +0800
++++ linux/block/blk.h	2011-05-04 16:09:42.000000000 +0800
+@@ -61,7 +61,17 @@ static inline struct request *__elv_next
+ 			rq = list_entry_rq(q->queue_head.next);
+ 			return rq;
+ 		}
+-
++		/*
++		 *  Flush request is running and flush request isn't queeueable
++		 *  in the drive, we can hold the queue till flush request is
++		 *  finished. Even we don't do this, driver can't dispatch next
++		 *  requests and will requeue them.
++		 */
++		if (q->flush_pending_idx != q->flush_running_idx &&
++				!blk_queue_flush_queueable(q)) {
++			q->flush_queue_delayed = 1;
++			return NULL;
++		}
+ 		if (!q->elevator->ops->elevator_dispatch_fn(q, 0))
+ 			return NULL;
+ 	}
 
