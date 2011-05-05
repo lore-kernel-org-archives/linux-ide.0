@@ -1,87 +1,116 @@
-From: Maciej Grela <maciej.grela@gmail.com>
-Subject: Re: How to perform SECURITY ERASE on a SEC4 (security enabled/locked)
- PATA drive ?
-Date: Wed, 4 May 2011 21:43:18 +0200
-Message-ID: <BANLkTikyMQSiNCB10mqR6+0fWoeYc8o2JQ@mail.gmail.com>
-References: <BANLkTikZt4Nr3DK3CkZXZ_ORgqjy-MGOUA@mail.gmail.com>
-	<4DBAC18A.20407@teksavvy.com>
-	<BANLkTimFg_=KmCRVL=QoO9s-4+T3DmbNQw@mail.gmail.com>
-	<4DBB7341.1070600@teksavvy.com>
-	<BANLkTi==R1tb-oNp4Sf5DJHS3wjZyC_wLg@mail.gmail.com>
-	<4DC01744.6040206@teksavvy.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: shaohua.li@intel.com
+Subject: [patch v3 2/3] block: hold queue if flush is running for non-queueable flush drive
+Date: Thu, 05 May 2011 09:59:34 +0800
+Message-ID: <20110505020417.817084678@sli10-conroe.sh.intel.com>
+References: <20110505015932.306763905@sli10-conroe.sh.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37259 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033Ab1EDTnU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2011 15:43:20 -0400
-Received: by vxi39 with SMTP id 39so1496659vxi.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 May 2011 12:43:19 -0700 (PDT)
-In-Reply-To: <4DC01744.6040206@teksavvy.com>
+Received: from mga01.intel.com ([192.55.52.88]:27672 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752271Ab1EECEU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 May 2011 22:04:20 -0400
+Content-Disposition: inline; filename=blk-hold-queue-for-nonqueueable-flush.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: jaxboe@fusionio.com, htejun@gmail.com, hch@infradead.org, jgarzik@pobox.com, djwong@us.ibm.com, sshtylyov@mvista.com, Shaohua Li <shaohua.li@intel.com>
 
-2011/5/3 Mark Lord <kernel@teksavvy.com>:
-> On 11-04-30 04:10 AM, Maciej Grela wrote:
->> 2011/4/30 Mark Lord <kernel@teksavvy.com>:
->>>
->>> Okay. =C2=A0Now please do exactly this (and I mean EXACTLY):
->>>
->>> 1. shut down and completely power off the system.
->>> 2. boot up again, and immediately do "hdparm --Istdout /dev/sdb
->>> and post the results here.
->>>
->>> I want to see what the default security state of the drive is,
->>> and that sequence above will tell all.
->>>
->>
->> Hi,
->>
->> Here is the data:
-> ..
->
->> Security:
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Master password revision code =3D 65534
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 supported
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 enabled
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 locked
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 not =C2=A0 =C2=A0 frozen
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 not =C2=A0 =C2=A0 expired: security coun=
-t
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 not =C2=A0 =C2=A0 supported: enhanced er=
-ase
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 Security level high
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 42min for SECURITY ERASE UNIT.
-> ..
->
-> Okay, your drive already has a password set on it.
-> So to do a --security-erase, you will likely need to
-> know and supply that exact password on the command line:
->
-> =C2=A0 =C2=A0hdparm --security-erase XXXXXXXX /dev/sdb
->
-> If you don't know the password, then you can try this:
->
-> =C2=A0 =C2=A0hdparm --security-set-pass NULL --user-master m /dev/sdb
-> =C2=A0 =C2=A0hdparm --security-erase =C2=A0 =C2=A0NULL --user-master =
-m /dev/sdb
->
-> If that also fails, then you'll have to read through the ATA
-> security feature documentation (from the t13 standards),
-> and try and understand how the quirky state machine model
-> for it is supposed to work. =C2=A0And then puzzle it out from there.
->
+In some drives, flush requests are non-queueable. When flush request is running,
+normal read/write requests can't run. If block layer dispatches such request,
+driver can't handle it and requeue it.
+Tejun suggested we can hold the queue when flush is running. This can avoid
+unnecessary requeue.
+Also this can improve performance. For example, we have request flush1, write1,
+flush 2. flush1 is dispatched, then queue is hold, write1 isn't inserted to
+queue. After flush1 is finished, flush2 will be dispatched. Since disk cache
+is already clean, flush2 will be finished very soon, so looks like flush2 is
+folded to flush1.
+In my test, the queue holding completely solves a regression introduced by
+commit 53d63e6b0dfb95882ec0219ba6bbd50cde423794:
+    block: make the flush insertion use the tail of the dispatch list
 
-Hi,
+    It's not a preempt type request, in fact we have to insert it
+    behind requests that do specify INSERT_FRONT.
+which causes about 20% regression running a sysbench fileio
+workload.
 
-Thanks for all the info, I already did try that approach after
-studying the t13 document. I tried to invoke all the state transitions
-from SEC4 mentioned there without any progress. So I'll take a break
-from trying to solve this problem as it's not very urgent.
+Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+---
+ block/blk-flush.c      |   16 +++++++++++-----
+ block/blk.h            |   21 ++++++++++++++++++++-
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 32 insertions(+), 6 deletions(-)
 
-Best regards,
-Maciej Grela
+Index: linux/block/blk-flush.c
+===================================================================
+--- linux.orig/block/blk-flush.c	2011-05-05 08:36:51.000000000 +0800
++++ linux/block/blk-flush.c	2011-05-05 09:28:37.000000000 +0800
+@@ -212,13 +212,19 @@ static void flush_end_io(struct request
+ 	}
+ 
+ 	/*
+-	 * Moving a request silently to empty queue_head may stall the
+-	 * queue.  Kick the queue in those cases.  This function is called
+-	 * from request completion path and calling directly into
+-	 * request_fn may confuse the driver.  Always use kblockd.
++	 * Kick the queue to avoid stall for two cases:
++	 * 1. Moving a request silently to empty queue_head may stall the
++	 * queue.
++	 * 2. When flush request is running in non-queueable queue, the
++	 * queue is hold. Restart the queue after flush request is finished
++	 * to avoid stall.
++	 * This function is called from request completion path and calling
++	 * directly into request_fn may confuse the driver.  Always use
++	 * kblockd.
+ 	 */
+-	if (queued)
++	if (queued || q->flush_queue_delayed)
+ 		blk_run_queue_async(q);
++	q->flush_queue_delayed = 0;
+ }
+ 
+ /**
+Index: linux/include/linux/blkdev.h
+===================================================================
+--- linux.orig/include/linux/blkdev.h	2011-05-05 09:05:18.000000000 +0800
++++ linux/include/linux/blkdev.h	2011-05-05 09:06:08.000000000 +0800
+@@ -365,6 +365,7 @@ struct request_queue
+ 	 */
+ 	unsigned int		flush_flags;
+ 	unsigned int		flush_not_queueable:1;
++	unsigned int		flush_queue_delayed:1;
+ 	unsigned int		flush_pending_idx:1;
+ 	unsigned int		flush_running_idx:1;
+ 	unsigned long		flush_pending_since;
+Index: linux/block/blk.h
+===================================================================
+--- linux.orig/block/blk.h	2011-05-05 08:36:51.000000000 +0800
++++ linux/block/blk.h	2011-05-05 09:49:34.000000000 +0800
+@@ -61,7 +61,26 @@ static inline struct request *__elv_next
+ 			rq = list_entry_rq(q->queue_head.next);
+ 			return rq;
+ 		}
+-
++		/*
++		 * Flush request is running and flush request isn't queueable
++		 * in the drive, we can hold the queue till flush request is
++		 * finished. Even we don't do this, driver can't dispatch next
++		 * requests and will requeue them. And this can improve
++		 * throughput too. For example, we have request flush1, write1,
++		 * flush 2. flush1 is dispatched, then queue is hold, write1
++		 * isn't inserted to queue. After flush1 is finished, flush2
++		 * will be dispatched. Since disk cache is already clean,
++		 * flush2 will be finished very soon, so looks like flush2 is
++		 * folded to flush1.
++		 * Since the queue is hold, a flag is set to indicate the queue
++		 * should be restarted later. Please see flush_end_io() for
++		 * details.
++		 */
++		if (q->flush_pending_idx != q->flush_running_idx &&
++				!queue_flush_queueable(q)) {
++			q->flush_queue_delayed = 1;
++			return NULL;
++		}
+ 		if (!q->elevator->ops->elevator_dispatch_fn(q, 0))
+ 			return NULL;
+ 	}
+
