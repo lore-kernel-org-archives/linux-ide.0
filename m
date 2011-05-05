@@ -1,16 +1,45 @@
-From: shaohua.li@intel.com
-Subject: [patch v3 0/3] block: optimize flush for non-queueable flush drive
-Date: Thu, 05 May 2011 09:59:32 +0800
-Message-ID: <20110505015932.306763905@sli10-conroe.sh.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: jaxboe@fusionio.com, htejun@gmail.com, hch@infradead.org, jgarzik@pobox.com, djwong@us.ibm.com, sshtylyov@mvista.com
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch v3 1/3] block: add a non-queueable flush flag
+Date: Wed, 04 May 2011 22:17:39 -0400
+Message-ID: <4DC208C3.7070902@pobox.com>
+References: <20110505015932.306763905@sli10-conroe.sh.intel.com> <20110505020417.586891398@sli10-conroe.sh.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:56910 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794Ab1EECRm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2011 22:17:42 -0400
+In-Reply-To: <20110505020417.586891398@sli10-conroe.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: shaohua.li@intel.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, htejun@gmail.com, hch@infradead.org, djwong@us.ibm.com, sshtylyov@mvista.com
 
-Flush request isn't queueable. When it's running, other request
-can't. We can optimize flush performance according to this knowledge
-In my test, I got about 20% performance boost.
+On 05/04/2011 09:59 PM, shaohua.li@intel.com wrote:
+> flush request isn't queueable in some drives. Add a flag to let driver
+> notify block layer about this. We can optimize flush performance with the
+> knowledge.
+>
+> Signed-off-by: Shaohua Li<shaohua.li@intel.com>
+> ---
+>   block/blk-settings.c   |    6 ++++++
+>   include/linux/blkdev.h |    7 +++++++
+>   2 files changed, 13 insertions(+)
 
-v2->v3: mainly adds more comments to explain the optimization and changes
-the code position to enable the optimization in SATA.
+hmmm.
+
+This assumes that flush on new hardware, by default, is queueable.
+
+I think the sense should be reversed:  don't enable the optimization, 
+unless we know the optimization works.
+
+That seems safer than always enabling the optimization, unless we know 
+it does not work.  That is not a fail-safe mode of operation.
+
+	Jeff
+
+
+
+
