@@ -1,23 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch v3 3/3] SATA: enable non-queueable flush flag
-Date: Thu, 05 May 2011 08:33:38 -0400
-Message-ID: <4DC29922.6050406@pobox.com>
-References: <20110505015932.306763905@sli10-conroe.sh.intel.com> <20110505020417.986492128@sli10-conroe.sh.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/3] libsas: fix/amend device gone notification in sas_deform_port()
+Date: Thu, 5 May 2011 17:13:44 -0700
+Message-ID: <BANLkTikhUQ6b3Y=ZAqOmHF8BtP57DQ4zqg@mail.gmail.com>
+References: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
+	<20110503183627.21471.57988.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110505020417.986492128@sli10-conroe.sh.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: shaohua.li@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, htejun@gmail.com, hch@infradead.org, djwong@us.ibm.com, sshtylyov@mvista.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40140 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755020Ab1EFANq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 May 2011 20:13:46 -0400
+In-Reply-To: <20110503183627.21471.57988.stgit@localhost6.localdomain6>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: james.bottomley@suse.de
+Cc: Haipao Fan <haipao.fan@intel.com>, linux-scsi@vger.kernel.org, David Milburn <dmilburn@redhat.com>, Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On 05/04/2011 09:59 PM, shaohua.li@intel.com wrote:
-> Enable non-queueable flush flag for SATA.
+On Tue, May 3, 2011 at 11:36 AM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> This patch also introduces sas_device_gone() which hopefully allows
+> subtle/tricky locking to be dropped from lldd drivers, like the
+> following in mvsas which is broken if the ata path is ever converted =
+to
+> call lldd_execute_task() with irqs enabled:
+[..]
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas=
+/sas_expander.c
+> index 505ffe3..7a785df 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1721,13 +1721,27 @@ out:
+> =A0 =A0 =A0 =A0return res;
+> =A0}
 >
-> Signed-off-by: Shaohua Li<shaohua.li@intel.com>
+> +/* FIXME: delete this routine when/if sas_ata stops submitting tasks
+> + * with host_lock held
+> + */
+> +void sas_device_gone(struct domain_device *dev)
+> +{
+> + =A0 =A0 =A0 struct sas_rphy *rphy =3D dev->rphy;
+> + =A0 =A0 =A0 struct Scsi_Host *shost =3D dev_to_shost(rphy->dev.pare=
+nt);
+> +
+> + =A0 =A0 =A0 /* take the lock to synchronize against incoming sata i=
+/o */
+> + =A0 =A0 =A0 spin_lock_irq(shost->host_lock);
+> + =A0 =A0 =A0 dev->gone =3D 1;
+> + =A0 =A0 =A0 spin_unlock_irq(shost->host_lock);
+> +}
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+Commit a29b5dad "libata: fix locking for sas paths" has gone in since
+this patch was created so this locking no longer has any effect.
 
-This SATA patch should go into the block tree alongside patches 1 & 2.
+Now needs to be dev->sata_dev.ap->lock, will resubmit.
+
+--
+Dan
