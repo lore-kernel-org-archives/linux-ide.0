@@ -1,171 +1,75 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/3] libsas: fix/amend device gone notification in
- sas_deform_port()
-Date: Fri, 06 May 2011 16:43:42 -0700
-Message-ID: <1304725422.30576.99.camel@dwillia2-linux>
-References: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
-	 <20110503183627.21471.57988.stgit@localhost6.localdomain6>
+From: Andrew Lutomirski <luto@mit.edu>
+Subject: [2.6.39 regression] Cougar Point ahci COMRESET on boot
+Date: Fri, 6 May 2011 21:47:30 -0400
+Message-ID: <BANLkTiniZQovB6mYwfi4x1=JYuGMh1y6Cw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59597 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751404Ab1EFX0f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 May 2011 19:26:35 -0400
-In-Reply-To: <20110503183627.21471.57988.stgit@localhost6.localdomain6>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:47622 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab1EGBru (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 May 2011 21:47:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "james.bottomley@suse.de" <james.bottomley@suse.de>
-Cc: "Fan, Haipao" <haipao.fan@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, "Trela, Maciej" <Maciej.Trela@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
->From 0326887e94470d693cf5d10b37058a8b472b046b Mon Sep 17 00:00:00 2001
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 18 Feb 2011 09:22:43 -0800
-Subject: [PATCH v2] libsas: fix/amend device gone notification in sas_deform_port()
+(This is only a regression in the sense that the bug exists in 2.6.38
+but is much worse in 2.6.39-rc6.)
 
-Commit 56dd2c06 "libsas: Don't issue commands to devices that have been
-hot-removed" edited Darrick's original patch to remove setting 'gone' in
-the sas_deform_port() path because that prevented scsi sync cache
-commands from being issued when the driver was unloaded.  However, this
-allows true device gone notifications (as signaled port phy events) to
-trigger sync cache commands to devices that are known to be unreachable.
+I have two Sandy Bridge / Cougar Point machines: one H67 desktop and
+one QM67 laptop.  They have disks from different manufacturers.  Both
+of them have trouble loading ahci on bootup.  On 2.6.38.5, the symptom
+is that, on boot, the system waits 10 seconds or so, then generates a
+COMRESET failed (errno=-16) error, then works.  On 2.6.39-rc6, it's
+worse: it gives the COMRESET error three times and then brings up the
+disk at 1.5Gbps.  That means that my bootup time goes from 10 seconds
+or so on 2.6.38 to 56 seconds on 2.6.39-rc6.
 
-Teach libsas which sas_deform_port() invocations are likely device gone
-events.
+On the desktop on 2.6.38, dmesg |egrep -i 'ata|ahci' says:
 
-Cc: Darrick J. Wong <djwong@us.ibm.com>
-Cc: Haipao Fan <haipao.fan@intel.com>
-Cc: Maciej Trela <maciej.trela@intel.com>
-Cc: David Milburn <dmilburn@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+[    0.857245] libata version 3.00 loaded.
+[    2.036680] ahci 0000:00:1f.2: version 3.0
+[    2.036707] ahci 0000:00:1f.2: PCI INT B -> GSI 19 (level, low) -> IRQ 19
+[    2.036768] ahci 0000:00:1f.2: irq 44 for MSI/MSI-X
+[    2.047240] ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 6 ports 6
+Gbps 0xd impl SATA mode
+[    2.047245] ahci 0000:00:1f.2: flags: 64bit ncq sntf pm led clo pio
+slum part ems apst
+[    2.047252] ahci 0000:00:1f.2: setting latency timer to 64
+[    2.052019] scsi0 : ahci
+[    2.052135] scsi1 : ahci
+[    2.052241] scsi2 : ahci
+[    2.052329] scsi3 : ahci
+[    2.052421] scsi4 : ahci
+[    2.052509] scsi5 : ahci
+[    2.052722] ata1: SATA max UDMA/133 abar m2048@0xfe625000 port
+0xfe625100 irq 44
+[    2.052724] ata2: DUMMY
+[    2.052727] ata3: SATA max UDMA/133 abar m2048@0xfe625000 port
+0xfe625200 irq 44
+[    2.052731] ata4: SATA max UDMA/133 abar m2048@0xfe625000 port
+0xfe625280 irq 44
+[    2.052734] ata5: DUMMY
+[    2.052735] ata6: DUMMY
+[    2.357095] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.357125] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    2.358782] ata4.00: ATAPI: ATAPI   iHAS124   Y, BL0V, max UDMA/100
+[    2.360261] ata3.00: ATA-8: WDC WD20EARS-00MVWB0, 51.0AB51, max UDMA/133
+[    2.360266] ata3.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth
+31/32), AA
+[    2.360706] ata4.00: configured for UDMA/100
+[    2.363496] ata3.00: configured for UDMA/133
+[    7.405154] ata1: link is slow to respond, please be patient (ready=0)
+[   12.094412] ata1: COMRESET failed (errno=-16)
+[   12.401242] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[   12.514036] ata1.00: ATA-9: OCZ-VERTEX3, 2.02, max UDMA/133
+[   12.514041] ata1.00: 468862128 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+[   12.665431] ata1.00: configured for UDMA/133
+[   12.665585] scsi 0:0:0:0: Direct-Access     ATA      OCZ-VERTEX3
+  2.02 PQ: 0 ANSI: 5
+[   12.666026] scsi 2:0:0:0: Direct-Access     ATA      WDC
+WD20EARS-00M 51.0 PQ: 0 ANSI: 5
+[   12.667587] scsi 3:0:0:0: CD-ROM            ATAPI    iHAS124   Y
+  BL0V PQ: 0 ANSI: 5
 
----
-Version 2: drop sas_device_gone().  It did not eliminate scenarios where
-an lldd might need to return i/o from ->lldd_execute_task, and after the
-locking change in 2.6.39 we needed to dig into the sata_dev to take the
-lock.  It can be reintroduced later, but for now do the simple fix by
-itself.
-
-
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 0001374..65c75a9 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -61,7 +61,7 @@ int  sas_init_queue(struct sas_ha_struct *sas_ha);
- int  sas_init_events(struct sas_ha_struct *sas_ha);
- void sas_shutdown_queue(struct sas_ha_struct *sas_ha);
- 
--void sas_deform_port(struct asd_sas_phy *phy);
-+void sas_deform_port(struct asd_sas_phy *phy, int gone);
- 
- void sas_porte_bytes_dmaed(struct work_struct *work);
- void sas_porte_broadcast_rcvd(struct work_struct *work);
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index b459c4b..e0f5018 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -39,7 +39,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 	sas_begin_event(PHYE_LOSS_OF_SIGNAL, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 	phy->error = 0;
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- static void sas_phye_oob_done(struct work_struct *work)
-@@ -66,7 +66,7 @@ static void sas_phye_oob_error(struct work_struct *work)
- 	sas_begin_event(PHYE_OOB_ERROR, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- 
- 	if (!port && phy->enabled && i->dft->lldd_control_phy) {
- 		phy->error++;
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 5257fdf..42fd1f2 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -57,7 +57,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 
- 	if (port) {
- 		if (!phy_is_wideport_member(port, phy))
--			sas_deform_port(phy);
-+			sas_deform_port(phy, 0);
- 		else {
- 			SAS_DPRINTK("%s: phy%d belongs to port%d already(%d)!\n",
- 				    __func__, phy->id, phy->port->id,
-@@ -153,28 +153,31 @@ static void sas_form_port(struct asd_sas_phy *phy)
-  * This is called when the physical link to the other phy has been
-  * lost (on this phy), in Event thread context. We cannot delay here.
-  */
--void sas_deform_port(struct asd_sas_phy *phy)
-+void sas_deform_port(struct asd_sas_phy *phy, int gone)
- {
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct asd_sas_port *port = phy->port;
- 	struct sas_internal *si =
- 		to_sas_internal(sas_ha->core.shost->transportt);
-+	struct domain_device *dev;
- 	unsigned long flags;
- 
- 	if (!port)
- 		return;		  /* done by a phy event */
- 
--	if (port->port_dev)
--		port->port_dev->pathways--;
-+	dev = port->port_dev;
-+	if (dev)
-+		dev->pathways--;
- 
- 	if (port->num_phys == 1) {
-+		if (dev && gone)
-+			dev->gone = 1;
- 		sas_unregister_domain_devices(port);
- 		sas_port_delete(port->port);
- 		port->port = NULL;
- 	} else
- 		sas_port_delete_phy(port->port, phy->phy);
- 
--
- 	if (si->dft->lldd_port_deformed)
- 		si->dft->lldd_port_deformed(phy);
- 
-@@ -244,7 +247,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 	sas_begin_event(PORTE_LINK_RESET_ERR, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_timer_event(struct work_struct *work)
-@@ -256,7 +259,7 @@ void sas_porte_timer_event(struct work_struct *work)
- 	sas_begin_event(PORTE_TIMER_EVENT, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_hard_reset(struct work_struct *work)
-@@ -268,7 +271,7 @@ void sas_porte_hard_reset(struct work_struct *work)
- 	sas_begin_event(PORTE_HARD_RESET, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- /* ---------- SAS port registration ---------- */
-@@ -306,6 +309,6 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha)
- 
- 	for (i = 0; i < sas_ha->num_phys; i++)
- 		if (sas_ha->sas_phy[i]->port)
--			sas_deform_port(sas_ha->sas_phy[i]);
-+			sas_deform_port(sas_ha->sas_phy[i], 0);
- 
- }
-
-
+The laptop looks pretty much the same, as does 2.6.39-rc6.
