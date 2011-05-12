@@ -1,51 +1,62 @@
 From: Igor Plyatov <plyatov@gmail.com>
 Subject: Re: [PATCH] ATA: pata_at91.c bugfixes
-Date: Thu, 12 May 2011 16:03:40 +0400
-Message-ID: <4DCBCC9C.2040209@gmail.com>
-References: <1303299877-12088-1-git-send-email-plyatov@gmail.com> <20110423093623.GA3410@localhost.localdomain> <4DB6684C.7050505@gmail.com> <20110427183819.GA2285@localhost.localdomain> <4DBA9E2F.3070100@gmail.com> <20110501211716.GA5217@localhost.localdomain>
+Date: Thu, 12 May 2011 16:05:09 +0400
+Message-ID: <4DCBCCF5.5040501@gmail.com>
+References: <1303299877-12088-1-git-send-email-plyatov@gmail.com> <4DB4433A.5000609@pobox.com>
 Reply-To: plyatov@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63618 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:36316 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756549Ab1ELMDp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2011 08:03:45 -0400
-Received: by bwz15 with SMTP id 15so1226657bwz.19
-        for <linux-ide@vger.kernel.org>; Thu, 12 May 2011 05:03:43 -0700 (PDT)
-In-Reply-To: <20110501211716.GA5217@localhost.localdomain>
+	with ESMTP id S1756549Ab1ELMFO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2011 08:05:14 -0400
+In-Reply-To: <4DB4433A.5000609@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stf_xl@wp.pl
 
-Hello Stanislaw!
+Hi Jeff!
 
-Thank you for patience and detailed explanations!
-
-Sorry for long delays between answers, but I must work with another 
-projects.
-
+> On 04/20/2011 07:44 AM, Igor Plyatov wrote:
+>> * Fix "initial_timing" structure initialisation. The "struct 
+>> ata_timing" must
+>>    contain 10 members, but ".dmack_hold" member was not initialised.
+>> * The AT91SAM9 microcontrollers use special coding scheme for SMC_SETUP,
+>>    SMC_PULSE, SMC_CYCLE registers.
+>>    Old driver operates correctly only with low master clock values, but
+>>    with high master clock it incorrectly calculates SMC values and stops
+>>    to operate, because SMC can be setup only to admissible ranges in 
+>> special
+>>    format.
+>>    New code correctly calculates SMC registers values, adjusts 
+>> calculated
+>>    to admissible ranges, enlarges cycles if required and converts values
+>>    into SMC's format.
+>> * Old driver calculates CS_SETUP and CS_PULSE cycles incorrectly
+>>    because of wrong assumptions.
+>>    New code calculates:
+>>        CS_SETUP = SETUP/2
+>>        CS_PULSE = PULSE + SETUP/2 + HOLD/2
+>> * This fixes allows to correctly operate with any master clock 
+>> frequency.
+>>
+>> Signed-off-by: Igor Plyatov<plyatov@gmail.com>
+>> ---
+>>   drivers/ata/pata_at91.c |  223 
+>> ++++++++++++++++++++++++++++++++---------------
+>>   1 files changed, 154 insertions(+), 69 deletions(-)
 >
->>>> * The NCS signal is not the same as CS1, CS2 ATA signals! It used only to
->>>>    enable data bus transceiver U2.
->>> Well, they are different signals but connected together. All of these are
->>> controlled by NCS: CFCE1 (CS1), CFCE2 (CS2), CFRNW (DIR), CFCS0 (OE)
->>> if SMC is configured in True IDE mode.
->> I must repeat again - NCS ("CFCS1" from schematic) are completely
->> different signal for different purpose, then A0, A1, A2, CS0, CS1.
->> It used only to enable data bus transceiver U2.
-> So, how in your opinion CS0 and CS1 are controlled? IMO there
-> are delivered from CFCE1 and CFCE2, which itself are delivered
-> from NCS. Here is corresponding quote from atmel documentation
-> you cited above:
+> FYI, the two previous "v4" patches are now applied.
 >
-> "The CFCE1 and CFCE2 waveforms are identical to the corresponding NCSx waveform"
+> Based on the comments from Stanislaw, this patch would need to be 
+> updated anyway.
 
-This makes picture completely clean for me now.
+Thank you for info!
 
-I will publish new version patch for pata_at91.c.
+I will update this patch.
 
 Best regards!
 
