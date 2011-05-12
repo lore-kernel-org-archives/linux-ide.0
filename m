@@ -1,65 +1,43 @@
-From: Igor Plyatov <plyatov@gmail.com>
-Subject: Re: [PATCH] ATA: pata_at91.c bugfixes
-Date: Thu, 12 May 2011 16:05:09 +0400
-Message-ID: <4DCBCCF5.5040501@gmail.com>
-References: <1303299877-12088-1-git-send-email-plyatov@gmail.com> <4DB4433A.5000609@pobox.com>
-Reply-To: plyatov@gmail.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: New driver mtipx2xx submission
+Date: Thu, 12 May 2011 10:39:31 -0400
+Message-ID: <4DCBF123.1050607@garzik.org>
+References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com> <20110428230605.78c55c70@lxorguk.ukuu.org.uk> <x49oc3lndyu.fsf@segfault.boston.devel.redhat.com> <4DC01907.50009@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:36316 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756549Ab1ELMFO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2011 08:05:14 -0400
-In-Reply-To: <4DB4433A.5000609@pobox.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:43601 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757518Ab1ELOje (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2011 10:39:34 -0400
+Received: by ywj3 with SMTP id 3so535337ywj.19
+        for <linux-ide@vger.kernel.org>; Thu, 12 May 2011 07:39:34 -0700 (PDT)
+In-Reply-To: <4DC01907.50009@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stf_xl@wp.pl
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>, linux-ide@vger.kernel.org
 
-Hi Jeff!
-
-> On 04/20/2011 07:44 AM, Igor Plyatov wrote:
->> * Fix "initial_timing" structure initialisation. The "struct 
->> ata_timing" must
->>    contain 10 members, but ".dmack_hold" member was not initialised.
->> * The AT91SAM9 microcontrollers use special coding scheme for SMC_SETUP,
->>    SMC_PULSE, SMC_CYCLE registers.
->>    Old driver operates correctly only with low master clock values, but
->>    with high master clock it incorrectly calculates SMC values and stops
->>    to operate, because SMC can be setup only to admissible ranges in 
->> special
->>    format.
->>    New code correctly calculates SMC registers values, adjusts 
->> calculated
->>    to admissible ranges, enlarges cycles if required and converts values
->>    into SMC's format.
->> * Old driver calculates CS_SETUP and CS_PULSE cycles incorrectly
->>    because of wrong assumptions.
->>    New code calculates:
->>        CS_SETUP = SETUP/2
->>        CS_PULSE = PULSE + SETUP/2 + HOLD/2
->> * This fixes allows to correctly operate with any master clock 
->> frequency.
->>
->> Signed-off-by: Igor Plyatov<plyatov@gmail.com>
->> ---
->>   drivers/ata/pata_at91.c |  223 
->> ++++++++++++++++++++++++++++++++---------------
->>   1 files changed, 154 insertions(+), 69 deletions(-)
+On 05/03/2011 11:02 AM, Mark Lord wrote:
+> On 11-05-02 02:40 PM, Jeff Moyer wrote:
+> ..
+>> Given the highly parallel nature of these parts, I wouldn't be surprised
+>> if the ahci queue depth of 31 is one of the main bottlenecks.  Can you
+>> think of a way to extend the ahci driver in this manner to accommodate
+>> devices like this one?
+> ..
 >
-> FYI, the two previous "v4" patches are now applied.
->
-> Based on the comments from Stanislaw, this patch would need to be 
-> updated anyway.
+> I imagine that another performance drain might be libata's lack of
+> support for host controller queues -->  a hardware queuing layer that
+> exists between the host and the drive's own queuing mechanism.
 
-Thank you for info!
+What do you feel libata lacks, in this area?
 
-I will update this patch.
+AHCI has a host controller queue that it actively manages, and we ship 
+off requests to that queue ASAP.
 
-Best regards!
+	Jeff
 
--- 
-Igor Plyatov
+
 
