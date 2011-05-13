@@ -1,77 +1,52 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: AHCI driver problem on ICH (Re: AHCI driver problem on SB700/SB800 w/ Acer Ferrari One)
-Date: Fri, 13 May 2011 18:56:44 +0200
-Message-ID: <201105131856.44250.rjw@sisk.pl>
-References: <201105120025.34531.rjw@sisk.pl> <20110513143758.33f68a77@xenia.leun.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on
+ boot on parisc
+Date: Fri, 13 May 2011 12:01:58 -0500
+Message-ID: <1305306118.2611.62.camel@mulgrave.site>
+References: <1303673315.5231.9.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:50114 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753337Ab1EMQ4H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 May 2011 12:56:07 -0400
-In-Reply-To: <20110513143758.33f68a77@xenia.leun.net>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44580 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754255Ab1EMRCB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2011 13:02:01 -0400
+In-Reply-To: <1303673315.5231.9.camel@mulgrave.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Leun <lkml20100708@newton.leun.net>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide <linux-ide@vger.kernel.org>
+Cc: Parisc List <linux-parisc@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@mvista.com>
 
-On Friday, May 13, 2011, Michael Leun wrote:
-> On Thu, 12 May 2011 00:25:34 +0200
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+On Sun, 2011-04-24 at 14:28 -0500, James Bottomley wrote:
+> currently libata-sff is completely ignoring the enabled/disabled status
+> of the interfaces.  This is a real problem on parisc because if you
+> touch a non responding memory area (i.e. a disabled interface) you crash
+> the box.
 > 
-> > There seems to be a problem on my Acer box which is related to DIPM
-> > and switching the power source.  Namely, when I detach the AC adapter
-> > from the machine, the disk (which is an Intel SSD) freezes for a
-> > while and something like this appears in dmesg:
-> [...]
-> 
-> Since updating to 2.6.39-rc7 (from 2.6.38.x) I have similar problems
-> with two notebooks using Intel ICH:
-> 
-> Acer PTZ1825
-> 00:1f.2 SATA controller: Intel Corporation ICH9M/M-E SATA AHCI
-> Controller (rev 03) (prog-if 01 [AHCI 1.0]) Subsystem: Acer
-> Incorporated [ALI] Device 0300 Flags: bus master, 66MHz, medium devsel,
-> latency 0, IRQ 42 I/O ports at 30e8 [size=8]
->         I/O ports at 30fc [size=4]
->         I/O ports at 30e0 [size=8]
->         I/O ports at 30f8 [size=4]
->         I/O ports at 3020 [size=32]
->         Memory at d4504000 (32-bit, non-prefetchable) [size=2K]
->         Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
->         Capabilities: [70] Power Management version 3
->         Capabilities: [a8] SATA HBA v1.0
->         Capabilities: [b0] PCI Advanced Features
->         Kernel driver in use: ahci
-> 
-> 
-> Dell Latitude E6510
-> 00:1f.2 SATA controller: Intel Corporation 5 Series/3400 Series Chipset
-> 6 port SATA AHCI Cont roller (rev 05) (prog-if 01 [AHCI 1.0])
->         Subsystem: Dell Device 040b
->         Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 41
->         I/O ports at 8090 [size=8]
->         I/O ports at 8080 [size=4]
->         I/O ports at 8070 [size=8]
->         I/O ports at 8060 [size=4]
->         I/O ports at 8020 [size=32]
->         Memory at e9640000 (32-bit, non-prefetchable) [size=2K]
->         Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
->         Capabilities: [70] Power Management version 3
->         Capabilities: [a8] SATA HBA v1.0
->         Capabilities: [b0] PCI Advanced Features
->         Kernel driver in use: ahci
-> 
-> Patch not tried yet (do not know / not looked into yet where to change
-> for this chipset).
-> 
-> Seems to be a 2.6.39-rcX regression?
+> Fix by checking the CNTRL bits to see if the port is enabled before
+> trying to poke it.
 
-Well, that very well may be the case.
+Ping on this.
 
-Can you verify that it didn't happen with 2.6.38 and earlier?
+Since 1/2 is an essential fix to prevent a boot panic on parisc, I can
+just take them through the parisc tree.
 
-Rafael
+James
+
+
+> James
+> 
+> ---
+> 
+> James Bottomley (2):
+>   pata_cm64x: fix boot crash on parisc
+>   libata-sff: prevent irq descriptions for dummy ports
+> 
+>  drivers/ata/libata-sff.c  |    9 +++++++--
+>  drivers/ata/pata_cmd64x.c |   42 ++++++++++++++++++++++++++++++++++++++----
+>  include/linux/pci_ids.h   |    2 ++
+>  3 files changed, 47 insertions(+), 6 deletions(-)
+> 
+
+
