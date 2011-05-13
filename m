@@ -1,94 +1,77 @@
-From: Stanislaw Gruszka <stf_xl@wp.pl>
-Subject: Re: [PATCH] pata_at91: SMC settings calculation bugfixes, support
- for t6z and IORDY
-Date: Fri, 13 May 2011 09:13:00 +0200
-Message-ID: <20110513071300.GA2584@localhost.localdomain>
-References: <1305224151-11557-1-git-send-email-plyatov@gmail.com>
+From: "Michael Leun" <lkml20100708@newton.leun.net>
+Subject: AHCI driver problem on ICH (Re: AHCI driver problem on SB700/SB800
+ w/ Acer Ferrari One)
+Date: Fri, 13 May 2011 14:37:58 +0200
+Message-ID: <20110513143758.33f68a77@xenia.leun.net>
+References: <201105120025.34531.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:56229 "EHLO mx3.wp.pl"
+Received: from serv04.lahn.de ([213.239.197.57]:53573 "EHLO serv04.lahn.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756911Ab1EMHMi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 May 2011 03:12:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1305224151-11557-1-git-send-email-plyatov@gmail.com>
+	id S1759242Ab1EMNHd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 May 2011 09:07:33 -0400
+In-Reply-To: <201105120025.34531.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Igor Plyatov <plyatov@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello
+On Thu, 12 May 2011 00:25:34 +0200
+"Rafael J. Wysocki" <rjw@sisk.pl> wrote:
 
-On Thu, May 12, 2011 at 10:15:51PM +0400, Igor Plyatov wrote:
-> * New code correctly calculates SMC registers values, adjusts calculated
->   to admissible ranges, enlarges cycles when required and converts values
->   into SMC's format.
-> * Support for TDF cycles (ATA t6z) and IORDY line added.
-> * Eliminate need in the initial_timing structure.
-> * Code cleanup.
+> There seems to be a problem on my Acer box which is related to DIPM
+> and switching the power source.  Namely, when I detach the AC adapter
+> from the machine, the disk (which is an Intel SSD) freezes for a
+> while and something like this appears in dmesg:
+[...]
 
-Generally looks good for me, some remarks below.
+Since updating to 2.6.39-rc7 (from 2.6.38.x) I have similar problems
+with two notebooks using Intel ICH:
 
-> +		int *setup, int *pulse, int *cycle, int *cs_pulse)
-> +{
-> +	int ret_val;
-> +	int err = 0;
-> +	struct smc_range range_setup[] = {	/* SMC_SETUP valid values */
-> +		{.min = 0,	.max = 31},	/* first  range */
-> +		{.min = 128,	.max = 159}	/* second range */
-> +	};
-> +	struct smc_range range_pulse[] = {	/* SMC_PULSE valid values */
-> +		{.min = 0,	.max = 63},	/* first  range */
-> +		{.min = 256,	.max = 319}	/* second range */
-> +	};
-> +	struct smc_range range_cycle[] = {	/* SMC_CYCLE valid values */
-> +		{.min = 0,	.max = 127},	/* first  range */
-> +		{.min = 256,	.max = 383},	/* second range */
-> +		{.min = 512,	.max = 639},	/* third  range */
-> +		{.min = 768,	.max = 895}	/* fourth range */
-> +	};
+Acer PTZ1825
+00:1f.2 SATA controller: Intel Corporation ICH9M/M-E SATA AHCI
+Controller (rev 03) (prog-if 01 [AHCI 1.0]) Subsystem: Acer
+Incorporated [ALI] Device 0300 Flags: bus master, 66MHz, medium devsel,
+latency 0, IRQ 42 I/O ports at 30e8 [size=8]
+        I/O ports at 30fc [size=4]
+        I/O ports at 30e0 [size=8]
+        I/O ports at 30f8 [size=4]
+        I/O ports at 3020 [size=32]
+        Memory at d4504000 (32-bit, non-prefetchable) [size=2K]
+        Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
+        Capabilities: [70] Power Management version 3
+        Capabilities: [a8] SATA HBA v1.0
+        Capabilities: [b0] PCI Advanced Features
+        Kernel driver in use: ahci
 
-These /* ... rage */ comments are useless.
 
-> +	*cs_pulse = *cycle;
-> +	if (*cs_pulse > CS_PULSE_MAXIMUM) {
-> +		dev_err(dev, "unable to calculate valid SMC settings\n");
-> +		return -ER_SMC_CALC;
-> +	}
-> +
-> +	ret_val = adjust_smc_value(cs_pulse, range_pulse,
-> +					ARRAY_SIZE(range_pulse));
-> +	if (ret_val < 0) {
-> +		dev_warn(dev, "maximal SMC CS Pulse value\n");
-> +	} else if (ret_val != 0) {
-> +		*cycle = *cs_pulse;
+Dell Latitude E6510
+00:1f.2 SATA controller: Intel Corporation 5 Series/3400 Series Chipset
+6 port SATA AHCI Cont roller (rev 05) (prog-if 01 [AHCI 1.0])
+        Subsystem: Dell Device 040b
+        Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 41
+        I/O ports at 8090 [size=8]
+        I/O ports at 8080 [size=4]
+        I/O ports at 8070 [size=8]
+        I/O ports at 8060 [size=4]
+        I/O ports at 8020 [size=32]
+        Memory at e9640000 (32-bit, non-prefetchable) [size=2K]
+        Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+        Capabilities: [70] Power Management version 3
+        Capabilities: [a8] SATA HBA v1.0
+        Capabilities: [b0] PCI Advanced Features
+        Kernel driver in use: ahci
 
-cs_pulse and cycle will always have the same value here, so perhaps only
-one variable can be used instead of two.
+Patch not tried yet (do not know / not looked into yet where to change
+for this chipset).
 
-> + * to_smc_format - convert values into SMC format
-> + * @setup: SETUP value of SMC Setup Register
-> + * @pulse: PULSE value of SMC Pulse Register
-> + * @cycle: CYCLE value of SMC Cycle Register
-> + * @cs_pulse: NCS_PULSE value of SMC Pulse Register
-> + */
-> +static void to_smc_format(int *setup, int *pulse, int *cycle, int *cs_pulse)
-> +{
-> +	*setup = (*setup & 0x1f) | ((*setup & 0x80) >> 2);
-> +	*pulse = (*pulse & 0x3f) | ((*pulse & 0x100) >> 2);
-> +	*cycle = (*cycle & 0x7f) | ((*cycle & 0x300) >> 1);
-> +	*cs_pulse = (*cs_pulse & 0x3f) | ((*cs_pulse & 0x100) >> 2);
+Seems to be a 2.6.39-rcX regression?
 
-Ok, here is the difference, but in previous functions cs_pulse seems
-to be unneeded.
 
-> +	do {
-> +		ret = calc_smc_vals(dev, &setup, &pulse, &cycle, &cs_pulse);
-> +	} while (ret == -ER_SMC_RECALC);
+-- 
+MfG,
 
-I do not quite understand why we have to recalculate, could you
-add a short comment or explain?
+Michael Leun
 
-Thanks
-Stanislaw
