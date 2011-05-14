@@ -1,25 +1,44 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant
- to AHCI spec"
-Date: Sat, 14 May 2011 14:49:32 -0400
-Message-ID: <4DCECEBC.10705@pobox.com>
-References: <201105120025.34531.rjw@sisk.pl> <BANLkTimqxmbpP1-+HxhPQS-YoLTh=bHd1Q@mail.gmail.com> <201105132222.11582.rjw@sisk.pl> <201105132244.29605.rjw@sisk.pl> <20110514101807.GA23665@htj.dyndns.org> <20110514102804.GB23665@htj.dyndns.org> <BANLkTi=BNu8mdafPVtbqbKpK4ZcjDDR=YQ@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patch] libata fix
+Date: Sat, 14 May 2011 14:55:43 -0400
+Message-ID: <20110514185543.GA22706@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=BNu8mdafPVtbqbKpK4ZcjDDR=YQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Tejun Heo <tj@kernel.org>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from havoc.gtf.org ([69.61.125.42]:42357 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755535Ab1ENSzo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 14 May 2011 14:55:44 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 05/14/2011 01:47 PM, Linus Torvalds wrote:
-> On Sat, May 14, 2011 at 3:28 AM, Tejun Heo<tj@kernel.org>  wrote:
->>
->> As we're already in -rc7, I'm sending the revert patch to both Jeff
->> and Linus.
->
-> Applied,
 
-ACK, thanks
+This should go in too.
+
+Please pull from 'upstream-linus' branch of
+master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+
+to receive the following updates:
+
+ drivers/ata/libata-eh.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+Tejun Heo (1):
+      libata: fix oops when LPM is used with PMP
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index f26f2fe..dad9fd6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3316,7 +3316,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	struct ata_eh_context *ehc = &link->eh_context;
+ 	struct ata_device *dev, *link_dev = NULL, *lpm_dev = NULL;
+ 	enum ata_lpm_policy old_policy = link->lpm_policy;
+-	bool no_dipm = ap->flags & ATA_FLAG_NO_DIPM;
++	bool no_dipm = link->ap->flags & ATA_FLAG_NO_DIPM;
+ 	unsigned int hints = ATA_LPM_EMPTY | ATA_LPM_HIPM;
+ 	unsigned int err_mask;
+ 	int rc;
