@@ -1,43 +1,50 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] libata SATL: WWN for device id VPD page
-Date: Fri, 13 May 2011 23:28:22 -0400
-Message-ID: <4DCDF6D6.3080701@interlog.com>
-References: <4DCDF422.5060109@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: AHCI driver problem on ICH (Re: AHCI driver problem on
+ SB700/SB800 w/ Acer Ferrari One)
+Date: Sat, 14 May 2011 12:18:07 +0200
+Message-ID: <20110514101807.GA23665@htj.dyndns.org>
+References: <201105120025.34531.rjw@sisk.pl>
+ <BANLkTimqxmbpP1-+HxhPQS-YoLTh=bHd1Q@mail.gmail.com>
+ <201105132222.11582.rjw@sisk.pl>
+ <201105132244.29605.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:51071 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759832Ab1END2i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 May 2011 23:28:38 -0400
-In-Reply-To: <4DCDF422.5060109@interlog.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:51011 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462Ab1ENKSN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 May 2011 06:18:13 -0400
+Content-Disposition: inline
+In-Reply-To: <201105132244.29605.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, jgarzik@redhat.com, Tejun Heo <tj@kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Jian Peng <jipeng2005@gmail.com>
+Cc: Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 11-05-13 11:16 PM, Douglas Gilbert wrote:
-> libata implements a SCSI to ATA Translation Layer and
-> should comply with the SAT (ANSI INCITS 431-2007) and
-> SAT-2 (ANSI INCITS 465-2010).
->
-> Both standards require that if an ATA device supplies
-> a World Wide Name (WWN) then it should appear in the
-> corresponding SCSI device identification VPD page.
->
-> Changelog:
-> - add NAA descriptor to the device identification VPD
-> page for the addressed logical unit. ATA's WWN is
-> in NAA(5) format.
->
-> The attached patch is against lk 2.6.38 .
->
->
-> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+Hello,
 
-I should have checked 2.6.39-rc9 prior to posting. Almost
-the same patch as I proposed is already there.
+On Fri, May 13, 2011 at 10:44:29PM +0200, Rafael J. Wysocki wrote:
+> On Friday, May 13, 2011, Rafael J. Wysocki wrote:
+> > On Friday, May 13, 2011, Tejun Heo wrote:
+> > > Hello,
+> > > 
+> > > Can you guys please take a look at bug#34692?  It seems to be the same problem.
+> > > 
+> > >   https://bugzilla.kernel.org/show_bug.cgi?id=34692
+> > 
+> > Yes, same issue.
+> > 
+> > > The offending commit seems to be 270dac35c2.  Does reverting it
+> > > resolves the problem for you guys too?
+> > 
+> > Yes, it does.
+> 
+> Would you object if I asked Linus to revert that commit?
 
-Doug Gilbert
+Not at all.  I think that's the best option at this point.  I'll send
+revert patch right now.
+
+Thanks.
+
+-- 
+tejun
