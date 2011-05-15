@@ -1,37 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
- on parisc
-Date: Sat, 14 May 2011 15:01:31 -0400
-Message-ID: <4DCED18B.1070801@garzik.org>
-References: <1303673315.5231.9.camel@mulgrave.site> <1305306118.2611.62.camel@mulgrave.site>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant to AHCI spec"
+Date: Sun, 15 May 2011 11:25:19 +0200
+Message-ID: <201105151125.19614.rjw@sisk.pl>
+References: <201105120025.34531.rjw@sisk.pl> <20110514102804.GB23665@htj.dyndns.org> <BANLkTik1nFKX1Eyov_o0Xd0rr01Si5hSqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1305306118.2611.62.camel@mulgrave.site>
-Sender: linux-parisc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@mvista.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:52493 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313Ab1EOJYm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 15 May 2011 05:24:42 -0400
+In-Reply-To: <BANLkTik1nFKX1Eyov_o0Xd0rr01Si5hSqA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 05/13/2011 01:01 PM, James Bottomley wrote:
-> On Sun, 2011-04-24 at 14:28 -0500, James Bottomley wrote:
->> currently libata-sff is completely ignoring the enabled/disabled status
->> of the interfaces.  This is a real problem on parisc because if you
->> touch a non responding memory area (i.e. a disabled interface) you crash
->> the box.
->>
->> Fix by checking the CNTRL bits to see if the port is enabled before
->> trying to poke it.
->
-> Ping on this.
->
-> Since 1/2 is an essential fix to prevent a boot panic on parisc, I can
-> just take them through the parisc tree.
+On Sunday, May 15, 2011, Jian Peng wrote:
+> Hi, Michael/Rafael/Gu,
+> 
+> Could you help me understand the testing environme? I like to reproduce it
+> if it is possible and debug it. The host controller this patch dealing with
+> is not used on PC so my testing environment is quite different.
 
-It's in libata-dev.git#upstream and #NEXT (linux-next) at present.
+Well, the system I can reproduce it on is a production one, so I can't
+really test too much on it.  What exactly would you like to do?
 
-	Jeff
-
-
-
+Rafael
