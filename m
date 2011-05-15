@@ -1,64 +1,64 @@
-From: Michael Leun <lkml20100708@newton.leun.net>
-Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant
- to AHCI spec"
-Date: Sun, 15 May 2011 14:20:18 +0200
-Message-ID: <20110515142018.081d8a47@xenia.leun.net>
-References: <201105120025.34531.rjw@sisk.pl>
-	<20110514102804.GB23665@htj.dyndns.org>
-	<BANLkTik1nFKX1Eyov_o0Xd0rr01Si5hSqA@mail.gmail.com>
-	<201105151125.19614.rjw@sisk.pl>
+From: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+Subject: [PATCH] IDE: Don't powerdown Compaq Triflex IDE device on suspend
+Date: Sun, 15 May 2011 22:32:29 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from serv04.lahn.de ([213.239.197.57]:38132 "EHLO serv04.lahn.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751795Ab1EOMWy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 15 May 2011 08:22:54 -0400
-In-Reply-To: <201105151125.19614.rjw@sisk.pl>
+Received: from artax.karlin.mff.cuni.cz ([195.113.26.195]:53280 "EHLO
+	artax.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753372Ab1EOUkS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2011 16:40:18 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Jian Peng <jipeng2005@gmail.com>, Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: "David S. Miller" <davem@davemloft.net>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, 15 May 2011 11:25:19 +0200
-"Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+Don't powerdown Compaq Triflex IDE device on suspend
 
-> On Sunday, May 15, 2011, Jian Peng wrote:
-> > Hi, Michael/Rafael/Gu,
-> > 
-> > Could you help me understand the testing environme? I like to
-> > reproduce it if it is possible and debug it. The host controller
-> > this patch dealing with is not used on PC so my testing environment
-> > is quite different.
+This fixes APM suspend on Compaq Armada 7400.
+APM BIOS doesn't suspend if IDE is powered down when suspending.
+The Triflex controller is found only on old Compaq boards,
+so this patch will hopefully have no side effects.
 
-We have seen it on at least 3 different controllers from at least 2
-different vendors (I do not know, what hardware Gu has).
+This patch fixes a suspend regression introduced in 
+feb22b7f8e62b1b987a3a1dbad95af767a1df832
 
-So, for now, it looks like to happen on more different controllers than
-not.
+Signed-off-by: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
 
-Testing environment - uhm, what shall I say? On each of the two
-notebooks affected runs 64bit openSuSE 11.4 in more or less default
-configuration (apart from kernel, of course).
+---
+ drivers/ide/triflex.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-Just do a "ls -lR /" and watch kernel log while plugging/unplugging
-power.
-
-Maybe running a 64bit system/kernel is part of picture? As far as I can
-see all affected machines run 64bit.
-
-> Well, the system I can reproduce it on is a production one, so I can't
-> really test too much on it.  What exactly would you like to do?
-
-I've at least one machine available where I can test. So, if there is
-anything (preferably non destructive ;-) ) you want me to test this
-should be possible.
-
-Maybe I'll have a look if my netbook (running 32bit) is also affected.
-
--- 
-MfG,
-
-Michael Leun
-
+Index: linux-2.6.39-rc7-fast/drivers/ide/triflex.c
+===================================================================
+--- linux-2.6.39-rc7-fast.orig/drivers/ide/triflex.c	2011-05-09 21:05:37.000000000 +0200
++++ linux-2.6.39-rc7-fast/drivers/ide/triflex.c	2011-05-15 14:06:14.000000000 +0200
+@@ -113,12 +113,26 @@ static const struct pci_device_id trifle
+ };
+ MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
+ 
++#ifdef CONFIG_PM
++static int triflex_ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
++{
++	/*
++	 * We must not disable or powerdown the device.
++	 * APM bios refuses to suspend if IDE is not accessible.
++	 */
++	pci_save_state(dev);
++	return 0;
++}
++#else
++#define triflex_ide_pci_suspend NULL
++#endif
++
+ static struct pci_driver triflex_pci_driver = {
+ 	.name		= "TRIFLEX_IDE",
+ 	.id_table	= triflex_pci_tbl,
+ 	.probe		= triflex_init_one,
+ 	.remove		= ide_pci_remove,
+-	.suspend	= ide_pci_suspend,
++	.suspend	= triflex_ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+ };
+ 
