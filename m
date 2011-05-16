@@ -1,57 +1,244 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant to AHCI spec"
-Date: Mon, 16 May 2011 13:02:17 -0400
-Message-ID: <20633.1305565337@localhost>
-References: <201105120025.34531.rjw@sisk.pl> <BANLkTimqxmbpP1-+HxhPQS-YoLTh=bHd1Q@mail.gmail.com> <201105132222.11582.rjw@sisk.pl> <201105132244.29605.rjw@sisk.pl> <20110514101807.GA23665@htj.dyndns.org>
-            <20110514102804.GB23665@htj.dyndns.org>
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Subject: Re: WD20EARS: finally reporting 4KByte sector size!
+Date: Mon, 16 May 2011 20:27:52 +0200
+Message-ID: <87zkmm7b6f.fsf@nemi.mork.no>
+References: <4DD0A00D.3030104@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1305565337_2487P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:58781 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938Ab1EPRDz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 May 2011 13:03:55 -0400
-In-Reply-To: Your message of "Sat, 14 May 2011 12:28:04 +0200."
-             <20110514102804.GB23665@htj.dyndns.org>
+Received: from lo.gmane.org ([80.91.229.12]:36139 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751438Ab1EPS2J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 May 2011 14:28:09 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1QM2WS-0007zF-34
+	for linux-ide@vger.kernel.org; Mon, 16 May 2011 20:28:04 +0200
+Received: from nemi.mork.no ([148.122.252.4])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 16 May 2011 20:28:04 +0200
+Received: from bjorn by nemi.mork.no with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 16 May 2011 20:28:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>
+To: linux-ide@vger.kernel.org
 
---==_Exmh_1305565337_2487P
-Content-Type: text/plain; charset=us-ascii
+Mark Lord <kernel@teksavvy.com> writes:
 
-On Sat, 14 May 2011 12:28:04 +0200, Tejun Heo said:
-> This reverts commit 270dac35c26433d06a89150c51e75ca0181ca7e4.
-> 
-> The commits causes command timeouts on AC plug/unplug.  It isn't yet
-> clear why.  As the commit was for a single rather obscure controller,
-> revert the change for now.
-> 
-> The problem was reported and bisected by Gu Rui in bug#34692.
-> 
->  https://bugzilla.kernel.org/show_bug.cgi?id=34692
-> 
-> Also, reported by Rafael and Michael in the following thread.
-> 
->  http://thread.gmane.org/gmane.linux.kernel/1138771
+> I picked up my third WD 2TB "Green" drive today,
+> and lo and behold.. the firmware (51.0AB51) actually
+> reports the real physical sector size (finally!).
+>
+> TA device, with non-removable media
+>
+>         Model Number:       WDC WD20EARS-60MVWB0
+>
+>         Serial Number:      WD-WCAZA4297731
+>
+>         Firmware Revision:  51.0AB51
 
-This also fixes the issue I had with a 10-second pause on my Dell Latitude E6500
-laptop at boot while detecting the CD/DVD drive.
+It's not the firmware revision.  The '6' in the model number seems to
+make the difference. =20
 
---==_Exmh_1305565337_2487P
-Content-Type: application/pgp-signature
+I've got two drives with exactly the same firmware revision, but with a
+WD20EARS-00MVWB0 model mumber and lower serial number (it's still the 3
+platter version), and they both report 512 bytes:
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
 
-iD8DBQFN0ViZcC3lWbTT17ARAlsZAJ91zKbQW9Gq0dUJEYzqYDccsyH3YgCfX/Om
-eOxZRGIEc0/BfbLY5Uhc4wY=
-=ZQ/P
------END PGP SIGNATURE-----
+/dev/sdi:
 
---==_Exmh_1305565337_2487P--
+ATA device, with non-removable media
+        Model Number:       WDC WD20EARS-00MVWB0                   =20
+        Serial Number:      WD-WCAZA3180082
+        Firmware Revision:  51.0AB51
+        Transport:          Serial, SATA 1.0a, SATA II Extensions, SATA=
+ Rev 2.5, SATA Rev 2.6
+Standards:
+        Supported: 8 7 6 5=20
+        Likely used: 8
+Configuration:
+        Logical         max     current
+        cylinders       16383   16383
+        heads           16      16
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:   16514064
+        LBA    user addressable sectors:  268435455
+        LBA48  user addressable sectors: 3907029168
+        Logical/Physical Sector size:           512 bytes
+        device size with M =3D 1024*1024:     1907729 MBytes
+        device size with M =3D 1000*1000:     2000398 MBytes (2000 GB)
+        cache/buffer size  =3D unknown
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Queue depth: 32
+        Standby timer values: spec'd by Standard, with device specific =
+minimum
+        R/W multiple sector transfer: Max =3D 16  Current =3D 0
+        Recommended acoustic management value: 128, current value: 254
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udm=
+a6=20
+             Cycle time: min=3D120ns recommended=3D120ns
+        PIO: pio0 pio1 pio2 pio3 pio4=20
+             Cycle time: no flow control=3D120ns  IORDY flow control=3D=
+120ns
+Commands/features:
+        Enabled Supported:
+           *    SMART feature set
+                Security Mode feature set
+           *    Power Management feature set
+           *    Write cache
+           *    Look-ahead
+           *    Host Protected Area feature set
+           *    WRITE_BUFFER command
+           *    READ_BUFFER command
+           *    NOP cmd
+           *    DOWNLOAD_MICROCODE
+                Power-Up In Standby feature set
+           *    SET_FEATURES required to spinup after power up
+                SET_MAX security extension
+                Automatic Acoustic Management feature set
+           *    48-bit Address feature set
+           *    Device Configuration Overlay feature set
+           *    Mandatory FLUSH_CACHE
+           *    FLUSH_CACHE_EXT
+           *    SMART error logging
+           *    SMART self-test
+           *    General Purpose Logging feature set
+           *    64-bit World wide name
+           *    WRITE_UNCORRECTABLE_EXT command
+           *    {READ,WRITE}_DMA_EXT_GPL commands
+           *    Segmented DOWNLOAD_MICROCODE
+           *    Gen1 signaling speed (1.5Gb/s)
+           *    Gen2 signaling speed (3.0Gb/s)
+           *    Native Command Queueing (NCQ)
+           *    Host-initiated interface power management
+           *    Phy event counters
+           *    NCQ priority information
+                DMA Setup Auto-Activate optimization
+           *    Software settings preservation
+           *    SMART Command Transport (SCT) feature set
+           *    SCT LBA Segment Access (AC2)
+           *    SCT Features Control (AC4)
+           *    SCT Data Tables (AC5)
+                unknown 206[12] (vendor specific)
+                unknown 206[13] (vendor specific)
+Security:=20
+        Master password revision code =3D 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+                supported: enhanced erase
+        392min for SECURITY ERASE UNIT. 392min for ENHANCED SECURITY ER=
+ASE UNIT.
+Logical Unit WWN Device Identifier: 50014ee2055f5ff4
+        NAA             : 5
+        IEEE OUI        : 0014ee
+        Unique ID       : 2055f5ff4
+Checksum: correct
+
+
+/dev/sdj:
+
+ATA device, with non-removable media
+        Model Number:       WDC WD20EARS-00MVWB0                   =20
+        Serial Number:      WD-WCAZA3178640
+        Firmware Revision:  51.0AB51
+        Transport:          Serial, SATA 1.0a, SATA II Extensions, SATA=
+ Rev 2.5, SATA Rev 2.6
+Standards:
+        Supported: 8 7 6 5=20
+        Likely used: 8
+Configuration:
+        Logical         max     current
+        cylinders       16383   16383
+        heads           16      16
+        sectors/track   63      63
+        --
+        CHS current addressable sectors:   16514064
+        LBA    user addressable sectors:  268435455
+        LBA48  user addressable sectors: 3907029168
+        Logical/Physical Sector size:           512 bytes
+        device size with M =3D 1024*1024:     1907729 MBytes
+        device size with M =3D 1000*1000:     2000398 MBytes (2000 GB)
+        cache/buffer size  =3D unknown
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Queue depth: 32
+        Standby timer values: spec'd by Standard, with device specific =
+minimum
+        R/W multiple sector transfer: Max =3D 16  Current =3D 0
+        Recommended acoustic management value: 128, current value: 254
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 udma5 *udm=
+a6=20
+             Cycle time: min=3D120ns recommended=3D120ns
+        PIO: pio0 pio1 pio2 pio3 pio4=20
+             Cycle time: no flow control=3D120ns  IORDY flow control=3D=
+120ns
+Commands/features:
+        Enabled Supported:
+           *    SMART feature set
+                Security Mode feature set
+           *    Power Management feature set
+           *    Write cache
+           *    Look-ahead
+           *    Host Protected Area feature set
+           *    WRITE_BUFFER command
+           *    READ_BUFFER command
+           *    NOP cmd
+           *    DOWNLOAD_MICROCODE
+                Power-Up In Standby feature set
+           *    SET_FEATURES required to spinup after power up
+                SET_MAX security extension
+                Automatic Acoustic Management feature set
+           *    48-bit Address feature set
+           *    Device Configuration Overlay feature set
+           *    Mandatory FLUSH_CACHE
+           *    FLUSH_CACHE_EXT
+           *    SMART error logging
+           *    SMART self-test
+           *    General Purpose Logging feature set
+           *    64-bit World wide name
+           *    WRITE_UNCORRECTABLE_EXT command
+           *    {READ,WRITE}_DMA_EXT_GPL commands
+           *    Segmented DOWNLOAD_MICROCODE
+           *    Gen1 signaling speed (1.5Gb/s)
+           *    Gen2 signaling speed (3.0Gb/s)
+           *    Native Command Queueing (NCQ)
+           *    Host-initiated interface power management
+           *    Phy event counters
+           *    NCQ priority information
+                DMA Setup Auto-Activate optimization
+           *    Software settings preservation
+           *    SMART Command Transport (SCT) feature set
+           *    SCT LBA Segment Access (AC2)
+           *    SCT Features Control (AC4)
+           *    SCT Data Tables (AC5)
+                unknown 206[12] (vendor specific)
+                unknown 206[13] (vendor specific)
+Security:=20
+        Master password revision code =3D 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+                supported: enhanced erase
+        402min for SECURITY ERASE UNIT. 402min for ENHANCED SECURITY ER=
+ASE UNIT.
+Logical Unit WWN Device Identifier: 50014ee2055f7f54
+        NAA             : 5
+        IEEE OUI        : 0014ee
+        Unique ID       : 2055f7f54
+Checksum: correct
+
+
+
+
+Bj=C3=B8rn
 
