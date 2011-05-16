@@ -1,72 +1,111 @@
-From: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Subject: [PATCH] ATA: Don't powerdown Compaq Triflex IDE device on suspend
-Date: Sun, 15 May 2011 22:33:19 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1105152232390.12411@artax.karlin.mff.cuni.cz>
-References: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: WD20EARS: finally reporting 4KByte sector size!
+Date: Sun, 15 May 2011 23:54:53 -0400
+Message-ID: <4DD0A00D.3030104@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from artax.karlin.mff.cuni.cz ([195.113.26.195]:54196 "EHLO
-	artax.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753195Ab1EOUkS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2011 16:40:18 -0400
-In-Reply-To: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:63302 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755582Ab1EPDy4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 May 2011 23:54:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Don't powerdown Compaq Triflex IDE device on suspend
+I picked up my third WD 2TB "Green" drive today,
+and lo and behold.. the firmware (51.0AB51) actually
+reports the real physical sector size (finally!).
 
-This fixes APM suspend on Compaq Armada 7400.
-APM BIOS doesn't suspend if IDE is powered down when suspending.
-The Triflex controller is found only on old Compaq boards,
-so this patch will hopefully have no side effects.
+TA device, with non-removable media
 
-Signed-off-by: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+        Model Number:       WDC WD20EARS-60MVWB0
 
----
- drivers/ata/pata_triflex.c |   23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
+        Serial Number:      WD-WCAZA4297731
 
-Index: linux-2.6.39-rc7-libata/drivers/ata/pata_triflex.c
-===================================================================
---- linux-2.6.39-rc7-libata.orig/drivers/ata/pata_triflex.c	2011-05-09 21:04:22.000000000 +0200
-+++ linux-2.6.39-rc7-libata/drivers/ata/pata_triflex.c	2011-05-15 16:13:31.000000000 +0200
-@@ -210,13 +210,34 @@ static const struct pci_device_id trifle
- 	{ },
- };
- 
-+#ifdef CONFIG_PM
-+static int triflex_ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
-+{
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc = 0;
-+
-+	rc = ata_host_suspend(host, mesg);
-+	if (rc)
-+		return rc;
-+
-+	/*
-+	 * We must not disable or powerdown the device.
-+	 * APM bios refuses to suspend if IDE is not accessible.
-+	 */
-+	pci_save_state(pdev);
-+
-+	return 0;
-+}
-+
-+#endif
-+
- static struct pci_driver triflex_pci_driver = {
- 	.name 		= DRV_NAME,
- 	.id_table	= triflex,
- 	.probe 		= triflex_init_one,
- 	.remove		= ata_pci_remove_one,
- #ifdef CONFIG_PM
--	.suspend	= ata_pci_device_suspend,
-+	.suspend	= triflex_ata_pci_device_suspend,
- 	.resume		= ata_pci_device_resume,
- #endif
- };
+        Firmware Revision:  51.0AB51
 
+        Transport:          Serial, SATA 1.0a, SATA II Extensions, SATA Rev 2.5,
+SATA Rev 2.6
+Standards:
+
+        Supported: 8 7 6 5
+
+        Likely used: 8
+
+Configuration:
+
+        Logical         max     current
+
+        cylinders       16383   16383
+
+        heads           16      16
+
+        sectors/track   63      63
+
+        --
+
+        CHS current addressable sectors:   16514064
+        LBA    user addressable sectors:  268435455
+        LBA48  user addressable sectors: 3907029168
+        Logical  Sector size:                   512 bytes
+        Physical Sector size:                  4096 bytes
+        Logical Sector-0 offset:                  0 bytes
+        device size with M = 1024*1024:     1907729 MBytes
+        device size with M = 1000*1000:     2000398 MBytes (2000 GB)
+        cache/buffer size  = unknown
+        Form Factor: 3.5 inch
+Capabilities:
+        LBA, IORDY(can be disabled)
+        Standby timer values: spec'd by Standard, with device specific minimum
+        R/W multiple sector transfer: Max = 16  Current = 0
+        DMA: mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+             Cycle time: min=120ns recommended=120ns
+        PIO: pio0 pio1 pio2 pio3 pio4
+             Cycle time: no flow control=120ns  IORDY flow control=120ns
+Commands/features:
+        Enabled Supported:
+           *    SMART feature set
+                Security Mode feature set
+           *    Power Management feature set
+           *    Write cache
+           *    Look-ahead
+           *    WRITE_BUFFER command
+           *    READ_BUFFER command
+           *    NOP cmd
+           *    DOWNLOAD_MICROCODE
+           *    48-bit Address feature set
+           *    Device Configuration Overlay feature set
+           *    Mandatory FLUSH_CACHE
+           *    FLUSH_CACHE_EXT
+           *    SMART error logging
+           *    SMART self-test
+           *    General Purpose Logging feature set
+           *    64-bit World wide name
+           *    WRITE_UNCORRECTABLE_EXT command
+           *    {READ,WRITE}_DMA_EXT_GPL commands
+           *    Segmented DOWNLOAD_MICROCODE
+           *    Gen1 signaling speed (1.5Gb/s)
+           *    Gen2 signaling speed (3.0Gb/s)
+           *    SMART Command Transport (SCT) feature set
+           *    SCT LBA Segment Access (AC2)
+           *    SCT Error Recovery Control (AC3)
+           *    SCT Features Control (AC4)
+           *    SCT Data Tables (AC5)
+                unknown 206[12] (vendor specific)
+                unknown 206[13] (vendor specific)
+Security:
+        Master password revision code = 65534
+                supported
+        not     enabled
+        not     locked
+        not     frozen
+        not     expired: security count
+                supported: enhanced erase
+        384min for SECURITY ERASE UNIT. 384min for ENHANCED SECURITY ERASE UNIT.
+Logical Unit WWN Device Identifier: 50014ee2b031c1d4
+        NAA             : 5
+        IEEE OUI        : 0014ee
+        Unique ID       : 2b031c1d4
+Integrity word not set (found 0x0000, expected 0x73a5)
