@@ -1,40 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA PMP support
-Date: Thu, 19 May 2011 17:38:26 +0200
-Message-ID: <20110519153826.GM627@htj.dyndns.org>
-References: <BANLkTi=4oJvigsq7GPMuB8meX0XnDh4VWw@mail.gmail.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: Support for dual-drive pmp?  0x197b:0x2352
+Date: Thu, 19 May 2011 11:53:34 -0400
+Message-ID: <4DD53CFE.9020801@teksavvy.com>
+References: <4DD418EE.8020405@teksavvy.com> <20110519093948.GB627@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:44300 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751527Ab1ESPkQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2011 11:40:16 -0400
-Received: by fxm17 with SMTP id 17so2039737fxm.19
-        for <linux-ide@vger.kernel.org>; Thu, 19 May 2011 08:40:15 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <BANLkTi=4oJvigsq7GPMuB8meX0XnDh4VWw@mail.gmail.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:40749 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933143Ab1ESPxf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2011 11:53:35 -0400
+In-Reply-To: <20110519093948.GB627@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Suchanek <hramrach@centrum.cz>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hello,
-
-On Thu, May 19, 2011 at 05:12:02PM +0200, Michal Suchanek wrote:
-> I bought an eSATA enclosure (evolve doubledock) and I wonder if it can
-> be used as a PMP.
+On 11-05-19 05:39 AM, Tejun Heo wrote:
+> Hello, Mark.
 > 
-> My eSATA port is connected to ICH10 AHCI controller which reportedly
-> supports CBS  PMP.
+> On Wed, May 18, 2011 at 03:07:26PM -0400, Mark Lord wrote:
+>> But it also fails equally well without the patch.  :)
 > 
-> When I connect the dock kernel sees the port going up and I get access
-> to one of the drives.
+> Awesome! :)
 > 
-> I can access a drive in either slot but if both are populated only the
-> primary slot (marked source) is visible.
+>> The eSATA host controller is the ever-popular JMicron:
+>>
+>> 04:00.0 SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA
+>> Controller (rev 02)
+>> (197b:2363)
+>>
+>> Just about everything around here has one of those JMicron chips
+>> for the eSATA ports, so I'm guessing that this problem may be
+>> somewhat more widespread than just my home office.
+> 
+> Can you send me a link of the PMP device?
 
-Can you please post full dmesg output?
+Here's the URL.  It's a dual-bay eSATA/USB2 dock.
+I use these all over the place, with fans added on (by me):
+    ncix.com/products/?sku=36051
 
--- 
-tejun
+>> So what next?
+>> I suspect something isn't quite right in the JMicron AHCI driver code.
+> 
+> I have no idea.  I'll get one and see what's up with it.
+
+Thanks!
+Whatever the chip inside is, it is reasonably clever:
+
+1. With just a single drive installed, it shows up
+as a single-drive, not a PMP.
+
+2. With two drives installed, it enumerates as a PMP.
+
+3. When used over USB2 instead of eSATA, it shows up as a single dev with two LUNs,
+rather than as a USB-hub with two devices.  Fine by me.  :)
+
+4. Spins down the drives when the USB cable is detached (or host sleeps).
+
+Cheers
