@@ -1,49 +1,36 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Support for dual-drive pmp?  0x197b:0x2352
-Date: Thu, 19 May 2011 11:39:48 +0200
-Message-ID: <20110519093948.GB627@htj.dyndns.org>
-References: <4DD418EE.8020405@teksavvy.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant to AHCI spec"
+Date: Thu, 19 May 2011 12:19:27 +0200
+Message-ID: <201105191219.27743.rjw@sisk.pl>
+References: <201105120025.34531.rjw@sisk.pl> <BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com> <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:48527 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932864Ab1ESJk1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2011 05:40:27 -0400
-Received: by bwz15 with SMTP id 15so2193511bwz.19
-        for <linux-ide@vger.kernel.org>; Thu, 19 May 2011 02:40:25 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4DD418EE.8020405@teksavvy.com>
+Received: from ogre.sisk.pl ([217.79.144.158]:38862 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751323Ab1ESKTA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 19 May 2011 06:19:00 -0400
+In-Reply-To: <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: Valdis.Kletnieks@vt.edu, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello, Mark.
+On Thursday, May 19, 2011, Jian Peng wrote:
+> Hi, Rafael,
 
-On Wed, May 18, 2011 at 03:07:26PM -0400, Mark Lord wrote:
-> But it also fails equally well without the patch.  :)
+Hi,
 
-Awesome! :)
+> I am using Dell E6410 with same AHCI host controller as your system, but
+> could not reproduce the bug you found out (using Ubuntu 11.04 and 2.6.39-rc6
+> kernel).
 
-> The eSATA host controller is the ever-popular JMicron:
-> 
-> 04:00.0 SATA controller: JMicron Technology Corp. JMB362/JMB363 Serial ATA
-> Controller (rev 02)
-> (197b:2363)
-> 
-> Just about everything around here has one of those JMicron chips
-> for the eSATA ports, so I'm guessing that this problem may be
-> somewhat more widespread than just my home office.
+OK, do I think correctly you tested without the patch you sent previously?
 
-Can you send me a link of the PMP device?
+> Do you know which config file I need change to perform this testing?
 
-> So what next?
-> I suspect something isn't quite right in the JMicron AHCI driver code.
+I'm not sure what you mean.  The kernel .config?
 
-I have no idea.  I'll get one and see what's up with it.
-
-Thanks.
-
--- 
-tejun
+Rafael
