@@ -1,131 +1,56 @@
-From: Jian Peng <jipeng2005@gmail.com>
-Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant
- to AHCI spec"
-Date: Fri, 20 May 2011 11:21:31 -0700
-Message-ID: <BANLkTik0WV4+p+YWEKC0XataCh0Po_cEPg@mail.gmail.com>
-References: <201105120025.34531.rjw@sisk.pl>
-	<20633.1305565337@localhost>
-	<BANLkTin7NgUMXSVyKn6P0TCrFZ5uaaRL1w@mail.gmail.com>
-	<201105182144.37713.rjw@sisk.pl>
-	<BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com>
-	<BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
-	<10124.1305906020@localhost>
-	<20110520154341.GL31426@htj.dyndns.org>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant to AHCI spec"
+Date: Fri, 20 May 2011 14:25:59 -0400
+Message-ID: <17610.1305915959@localhost>
+References: <201105120025.34531.rjw@sisk.pl> <20633.1305565337@localhost> <BANLkTin7NgUMXSVyKn6P0TCrFZ5uaaRL1w@mail.gmail.com> <201105182144.37713.rjw@sisk.pl> <BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com> <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com> <10124.1305906020@localhost> <20110520154341.GL31426@htj.dyndns.org>
+            <BANLkTi=iNjWsaYCJqP057FkhAXtab5nS=Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; boundary="==_Exmh_1305915959_2669P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:55567 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934748Ab1ETSVc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 14:21:32 -0400
-In-Reply-To: <20110520154341.GL31426@htj.dyndns.org>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:48200 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934878Ab1ETS0L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 14:26:11 -0400
+In-Reply-To: Your message of "Fri, 20 May 2011 10:02:56 PDT."
+             <BANLkTi=iNjWsaYCJqP057FkhAXtab5nS=Q@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Sorry that I need=A0fix my gmail setting to make it show up in LKML.
+--==_Exmh_1305915959_2669P
+Content-Type: text/plain; charset=us-ascii
 
-Hi, Tejun/Valdis,
+On Fri, 20 May 2011 10:02:56 PDT, Jian Peng said:
+> --20cf307f38f6d842a904a3b81730
 
-Since this is an interoperability issue of SATA host controller, the
-first step I want to try it to make sure the tweak that MAKE my
-controller WORK does not break other controllers.
-You are both right that adding this majic 5ms delay at this place
-should not be the final solution.
+> You are both right that adding this majic 5ms delay at this place should not
+> be the final solution.
+> 
+> If this magic 5ms delay works on other affected systems, I plan to post a
+> new patch that inside ahci_start_engine(), still perform same check, and
+> show warning message if failed, but will set a flag, then still set START
+> bit, and if there is such failure flag, add 5ms delay.
+> 
+> Valdis, could you apply the following patch and retest it?
 
-If this magic 5ms delay works on other affected systems, I plan to
-post a new patch that inside ahci_start_engine(), still perform same
-check, and show warning message if failed, but will set a flag, then
-still set START bit, and if there is such failure flag, add 5ms delay.
-
-Valdis, could you apply the following patch and retest it?
-
-Tejun, please review it.
-
---- a/drivers/ata/libahci.c 2011-05-18 14:23:36.564665643 -0700
-
-+++ c/drivers/ata/libahci.c 2011-05-20 09:48:06.194663506 -0700
-@@ -540,6 +540,7 @@
-
-=A0 void __iomem *port_mmio =3D ahci_port_base(ap);
-=A0 u32 tmp;
-=A0 u8 status;
-
-+ int err =3D 0;
+I should be able to do that this weekend.  To clarify - should this be with the
+problem commit 270dac35c26433d06a89150c51e75ca0181ca7e4 applied, or reverted?
 
 
-=A0 status =3D readl(port_mmio + PORT_TFDATA) & 0xFF;
+--==_Exmh_1305915959_2669P
+Content-Type: application/pgp-signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-@@ -553,12 +554,12 @@
+iD8DBQFN1rI3cC3lWbTT17ARAholAKDXyBVpYZyAWJ8gqpx+ye9glWfMIwCeLr/V
+nxlCRWYPv2DT4GrXxJPDTqg=
+=pEhp
+-----END PGP SIGNATURE-----
 
-=A0=A0 * specific controller will fail under this condition
-=A0=A0 */
-=A0 if (status & (ATA_BUSY | ATA_DRQ))
--=A0 return;
+--==_Exmh_1305915959_2669P--
 
-+=A0 err =3D 1;
-
-=A0 else {
-=A0=A0 ahci_scr_read(&ap->link, SCR_STATUS, &tmp);
-
-=A0=A0 if ((tmp & 0xf) !=3D 0x3)
--=A0=A0 return;
-
-+=A0=A0 err =3D 1;
-=A0 }
-
-=A0 /* start DMA */
-@@ -566,6 +567,13 @@
-=A0 tmp |=3D PORT_CMD_START;
-=A0 writel(tmp, port_mmio + PORT_CMD);
-=A0 readl(port_mmio + PORT_CMD); /* flush */
-+
-+ /* Some controllers need longer time to be ready */
-+ if(err) {
-+=A0 printk(KERN_WARNING
-+=A0=A0 "Controller in wrong state when setting START bit\n");
-+=A0 msleep(5);
-+ }
-=A0}
-=A0EXPORT_SYMBOL_GPL(ahci_start_engine);
-
-On Fri, May 20, 2011 at 8:43 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> On Fri, May 20, 2011 at 11:40:20AM -0400, Valdis.Kletnieks@vt.edu wro=
-te:
-> > On Wed, 18 May 2011 17:14:56 PDT, Jian Peng said:
-> >
-> > > > @@ -1353,6 +1332,8 @@
-> > > >
-> > > >
-> > > > =A0 ahci_start_engine(ap);
-> > > >
-> > > > + msleep(5);
-> > > > +
-> > > > =A0 if (online)
-> > > >
-> > > > =A0 =A0*class =3D ahci_dev_classify(ap);
-> > > >
-> >
-> > It may very well be that adding a magic msleep(5) here just Makes I=
-t Work, but
-> > I have a gut feeling that it's in the wrong place (for starters, 'o=
-nline' can't change
-> > during the msleep() unless somebody *else* sets it - in which case =
-the locking
-> > is screwed up as we're not forcing a re-read of the value). =A0The =
-msleep() probably
-> > needs to be before something else further down in the code (but I h=
-ave no idea
-> > exactly what).
->
-> At this point, I think it would be better to simply add a flag and
-> enable the check for the affected controller.
->
-> Thanks.
->
-> --
-> tejun
