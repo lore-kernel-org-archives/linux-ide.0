@@ -1,62 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: Disabling Command Completion Coalescing (CCC) in SATA AHCI
-Date: Fri, 20 May 2011 14:49:27 +0400
-Message-ID: <4DD64737.10706@ru.mvista.com>
-References: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant to AHCI spec"
+Date: Fri, 20 May 2011 11:40:20 -0400
+Message-ID: <10124.1305906020@localhost>
+References: <201105120025.34531.rjw@sisk.pl> <20633.1305565337@localhost> <BANLkTin7NgUMXSVyKn6P0TCrFZ5uaaRL1w@mail.gmail.com> <201105182144.37713.rjw@sisk.pl> <BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com>
+            <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; boundary="==_Exmh_1305906020_2669P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34182 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934104Ab1ETKuQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 06:50:16 -0400
-Received: by bwz15 with SMTP id 15so2842699bwz.19
-        for <linux-ide@vger.kernel.org>; Fri, 20 May 2011 03:50:15 -0700 (PDT)
-In-Reply-To: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:59260 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756141Ab1ETPlU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 11:41:20 -0400
+In-Reply-To: Your message of "Wed, 18 May 2011 17:14:56 PDT."
+             <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pallav Bose <pallavbose@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello.
+--==_Exmh_1305906020_2669P
+Content-Type: text/plain; charset=us-ascii
 
-On 20-05-2011 0:32, Pallav Bose wrote:
+On Wed, 18 May 2011 17:14:56 PDT, Jian Peng said:
 
-> I'm working on 2.6.35.9 version of the Linux kernel and am trying to
-> disable Command Completion Coalescing. I have Native Command Queuing
-> enabled by activating the RAID mode through the BIOS.
+> > @@ -1353,6 +1332,8 @@
+> >
+> >
+> >   ahci_start_engine(ap);
+> >
+> > + msleep(5);
+> > +
+> >   if (online)
+> >
+> >    *class = ahci_dev_classify(ap);
+> >
 
-> I was looking at the Serial ATA AHCI 1.3 Specification and found on
-> page 115 that -
+It may very well be that adding a magic msleep(5) here just Makes It Work, but
+I have a gut feeling that it's in the wrong place (for starters, 'online' can't change
+during the msleep() unless somebody *else* sets it - in which case the locking
+is screwed up as we're not forcing a re-read of the value).  The msleep() probably
+needs to be before something else further down in the code (but I have no idea
+exactly what).
 
-> The CCC feature is only in use when CCC_CTL.EN is set to =911=92. If
-> CCC_CTL.EN is set to =910=92, no CCC interrupts shall be generated.
+--==_Exmh_1305906020_2669P
+Content-Type: application/pgp-signature
 
-> Next, I had a look at the relevant code (namely, the files concerning
-> AHCI) for this version of the kernel but wasn't able to make any
-> progress. I found the following enum constant - HOST_CAP_CCC =3D (1<<
-> 7) - in drivers/ata/ahci.h, but I'm not sure how this should be
-> modified to disable command coalescing. I did set HOST_CAP_CCC to 0
-> but through some experiments that I conducted, I found that responses
-> were being batched.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
 
-    This constant is only used to report the controller capability, I s=
-ee no=20
-other code depending on it, hence there doesn't seem to be any CCC supp=
-ort...
+iD8DBQFN1otkcC3lWbTT17ARAkbWAKCcDK9WjpHXKaCoOJFCpWMpU1POgQCfZPkw
+A7iqndZ6E+a9fXTQ8HEUA4E=
+=1r68
+-----END PGP SIGNATURE-----
 
-[...]
+--==_Exmh_1305906020_2669P--
 
-> The mass storage controller in the system is: Promise Technology, Inc=
-=2E
-> PDC20268 (Ultra100 TX2) (rev 02),
-
-    I don't understand. This controller is not AHCI, and not even SATA =
-one.
-
-> and the HDD being used is: WD Caviar Black (Model number - WD1001FALS=
-).
-
-WBR, Sergei
