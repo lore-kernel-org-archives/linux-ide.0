@@ -1,52 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA PMP support
-Date: Fri, 20 May 2011 11:25:33 +0200
-Message-ID: <20110520092533.GF31426@htj.dyndns.org>
-References: <BANLkTi=4oJvigsq7GPMuB8meX0XnDh4VWw@mail.gmail.com>
- <20110519153826.GM627@htj.dyndns.org>
- <BANLkTikrHcnpKZccYMi0+24THZPYP6bRfg@mail.gmail.com>
- <20110520091530.GE31426@htj.dyndns.org>
- <BANLkTinCqzDToLGuQVOY_vTLzDBv02tZuA@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: Disabling Command Completion Coalescing (CCC) in SATA AHCI
+Date: Fri, 20 May 2011 14:49:27 +0400
+Message-ID: <4DD64737.10706@ru.mvista.com>
+References: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:37131 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:34182 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935485Ab1ETJZh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 05:25:37 -0400
-Received: by bwz15 with SMTP id 15so2791049bwz.19
-        for <linux-ide@vger.kernel.org>; Fri, 20 May 2011 02:25:36 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <BANLkTinCqzDToLGuQVOY_vTLzDBv02tZuA@mail.gmail.com>
+	with ESMTP id S934104Ab1ETKuQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 06:50:16 -0400
+Received: by bwz15 with SMTP id 15so2842699bwz.19
+        for <linux-ide@vger.kernel.org>; Fri, 20 May 2011 03:50:15 -0700 (PDT)
+In-Reply-To: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michal Suchanek <hramrach@centrum.cz>
+To: Pallav Bose <pallavbose@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-On Fri, May 20, 2011 at 11:20:16AM +0200, Michal Suchanek wrote:
-> Hello
->=20
-> On 20 May 2011 11:15, Tejun Heo <tj@kernel.org> wrote:
->=20
-> >
-> >> [ =A0 =A03.080341] ahci 0000:00:1f.2: flags: 64bit ncq sntf led cl=
-o pio ems sxs
-> >
-> > But in this case, the above is enough. =A0Your controller doesn't
-> > support port multiplier. =A0It doesn't have "pmp" flag set.
->=20
-> So the table at
-> https://ata.wiki.kernel.org/index.php/SATA_hardware_features listing
-> ICH10 as having CBS PMP support is bogus?
+Hello.
 
-That tables says "ICH10R only".  Maybe some other variants too.  You
-need to consult the datasheets to determine exactly which products
-enable which features.  It doesn't have much to do with the driver.
-It's the hardware controller marked as not supporting port multiplier
-mostly thanks to intel's product differentiation.
+On 20-05-2011 0:32, Pallav Bose wrote:
 
-Thanks.
+> I'm working on 2.6.35.9 version of the Linux kernel and am trying to
+> disable Command Completion Coalescing. I have Native Command Queuing
+> enabled by activating the RAID mode through the BIOS.
 
---=20
-tejun
+> I was looking at the Serial ATA AHCI 1.3 Specification and found on
+> page 115 that -
+
+> The CCC feature is only in use when CCC_CTL.EN is set to =911=92. If
+> CCC_CTL.EN is set to =910=92, no CCC interrupts shall be generated.
+
+> Next, I had a look at the relevant code (namely, the files concerning
+> AHCI) for this version of the kernel but wasn't able to make any
+> progress. I found the following enum constant - HOST_CAP_CCC =3D (1<<
+> 7) - in drivers/ata/ahci.h, but I'm not sure how this should be
+> modified to disable command coalescing. I did set HOST_CAP_CCC to 0
+> but through some experiments that I conducted, I found that responses
+> were being batched.
+
+    This constant is only used to report the controller capability, I s=
+ee no=20
+other code depending on it, hence there doesn't seem to be any CCC supp=
+ort...
+
+[...]
+
+> The mass storage controller in the system is: Promise Technology, Inc=
+=2E
+> PDC20268 (Ultra100 TX2) (rev 02),
+
+    I don't understand. This controller is not AHCI, and not even SATA =
+one.
+
+> and the HDD being used is: WD Caviar Black (Model number - WD1001FALS=
+).
+
+WBR, Sergei
