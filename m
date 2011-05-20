@@ -1,240 +1,136 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Disabling Command Completion Coalescing (CCC) in SATA AHCI
-Date: Thu, 19 May 2011 20:14:14 -0600
-Message-ID: <4DD5CE76.9040003@gmail.com>
-References: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
+From: Michal Suchanek <hramrach@centrum.cz>
+Subject: Re: SATA PMP support
+Date: Fri, 20 May 2011 10:48:35 +0200
+Message-ID: <BANLkTikrHcnpKZccYMi0+24THZPYP6bRfg@mail.gmail.com>
+References: <BANLkTi=4oJvigsq7GPMuB8meX0XnDh4VWw@mail.gmail.com> <20110519153826.GM627@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64182 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754851Ab1ETCOR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2011 22:14:17 -0400
-Received: by iyb14 with SMTP id 14so2579969iyb.19
-        for <linux-ide@vger.kernel.org>; Thu, 19 May 2011 19:14:16 -0700 (PDT)
-In-Reply-To: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:41075 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933796Ab1ETIs4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 May 2011 04:48:56 -0400
+Received: by ewy4 with SMTP id 4so1103663ewy.19
+        for <linux-ide@vger.kernel.org>; Fri, 20 May 2011 01:48:55 -0700 (PDT)
+In-Reply-To: <20110519153826.GM627@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pallav Bose <pallavbose@gmail.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-On 05/19/2011 02:32 PM, Pallav Bose wrote:
+Hello
+
+On 19 May 2011 17:38, Tejun Heo <tj@kernel.org> wrote:
 > Hello,
 >
-> I'm working on 2.6.35.9 version of the Linux kernel and am trying to
-> disable Command Completion Coalescing. I have Native Command Queuing
-> enabled by activating the RAID mode through the BIOS.
+> On Thu, May 19, 2011 at 05:12:02PM +0200, Michal Suchanek wrote:
+>> I bought an eSATA enclosure (evolve doubledock) and I wonder if it c=
+an
+>> be used as a PMP.
+>>
+>> My eSATA port is connected to ICH10 AHCI controller which reportedly
+>> supports CBS =C2=A0PMP.
+>>
+>> When I connect the dock kernel sees the port going up and I get acce=
+ss
+>> to one of the drives.
+>>
+>> I can access a drive in either slot but if both are populated only t=
+he
+>> primary slot (marked source) is visible.
 >
-> I was looking at the Serial ATA AHCI 1.3 Specification and found on
-> page 115 that -
->
-> The CCC feature is only in use when CCC_CTL.EN is set to =911=92. If
-> CCC_CTL.EN is set to =910=92, no CCC interrupts shall be generated.
->
-> Next, I had a look at the relevant code (namely, the files concerning
-> AHCI) for this version of the kernel but wasn't able to make any
-> progress. I found the following enum constant - HOST_CAP_CCC =3D (1<<
-> 7) - in drivers/ata/ahci.h, but I'm not sure how this should be
-> modified to disable command coalescing. I did set HOST_CAP_CCC to 0
-> but through some experiments that I conducted, I found that responses
-> were being batched.
+> Can you please post full dmesg output?
 
-We don't use CCC. It always defaults to off and we don't turn it on.=20
-Using CCC requires some additional code to handle it which isn't=20
-implemented in the AHCI driver currently.
+This was the part after connecting the enclosure. Here is the part
+from saved boot dmesg where the ahci controller is initialized. What
+other part are you missing?
 
->
-> I conducted an experiment wherein I issued requests of size 64KB from
-> my driver code. 64KB corresponds to 128 sectors (each sector =3D 512
-> bytes).
->
-> When I look at the "response timestamp differences", here is what I f=
-ind:
->
-> Timestamp  | Timestamp |  Difference
->     at             |     at          |  in microsecs
-> ------------------------------------------------------------
-> Sector 255 - Sector 127 =3D  510
-> Sector 383 - Sector 255 =3D  3068
-> Sector 511 - Sector 383 =3D  22
-> Sector 639 - Sector 511 =3D  22
-> Sector 767 - Sector 639 =3D  12
-> Sector 895 - Sector 767 =3D  19
-> Sector 1023 - Sector 895 =3D  13
-> Sector 1151 - Sector 1023 =3D  402
->
-> As you can see, the _response timestamp_ differences seem to suggest
-> that the write completion interrupts are being batched into one and
-> then one single interrupt is being raised, which might explain the
-> really low numbers (tens of microseconds.)
+The box is running for some weeks so I don't have full dmesg, it gets
+logrotated.
 
-I suspect that there is something going on that you're not accounting=20
-for. Are you sure that you're not getting multiple outstanding writes i=
-n=20
-parallel somehow? Although the controller won't batch completions, the=20
-drive is free to do so if there are multiple queued commands outstandin=
-g=20
-at once (it can send a Set Device Bits FIS with multiple bits set).
+Thanks
 
->
-> Clearly, there is some interrupt batching involved here which I need
-> to disable so that an interrupt is raised for each and every write
-> request. Will disabling CCC do the trick, or is there some more
-> complexity involved?
->
-> And yes, I did disable the write cache and a few other caches as well
-> using the following commands:
->
-> hdparm -a0 -W0 /dev/sdd;
-> hdparm -m0 --yes-i-know-what-i-am-doing /dev/sdd;
-> hdparm -A0 /dev/sdd;
->
-> Here is another experiment that I tried.
->
-> Create a bio structure in my driver and call the __make_request()
-> function of the lower level driver. Only one 2560 bytes write request
-> is sent from my driver.
->
-> Once this write is serviced, an interrupt is generated which is
-> intercepted by do_IRQ(). Finally, the function blk_complete_request()
-> is called. Keep in mind that we are still in the top half of the
-> interrupt handler (i.e., interrupt context, not kernel context). Now,
-> we compose another struct bio in blk_complete_request() and call the
-> __make_request() function of the lower level driver. We record a
-> timestamp at this point (say T_0). When the request completion
-> callback is obtained, we record another timestamp (call it T_1). The
-> difference - T_1 - T_0 - is always above 1 millisec. This experiment
-> was repeated numerous times, and each time, the destination sector
-> affected this difference - T_1 - T_0. It was observed that if the
-> destination sectors are separated by approximately 350 sectors, the
-> time difference is about 1.2 millisec for requests of size 2560 bytes=
-=2E
->
-> Every time, the next write request is sent only when the previous
-> request has been serviced. So, all these requests are chained and the
-> disk has to service only one request at a time.
->
-> My understanding is that since the destination sectors of consecutive
-> requests have been separated by a fairly large amount, by the time th=
-e
-> next request is issued, the requested sector would be almost below th=
-e
-> disk head and thus the write should happen immediately and T_1 - T_0
-> should be small (at least<  1 millisec).
->
-> The following lines of code were inserted to block/blk-softirq.c
-> starting at line number 112:
->
->          do_gettimeofday(&tv);
->          time_ms =3D (tv.tv_sec * 1000000) + (tv.tv_usec);
->          if(req&&  req->rq_disk&&  req->rq_disk->disk_name)
->          {
->             if(!strncmp(req->rq_disk->disk_name, "sdd", 3))
->             {
->                if(count<  10) // The experiment involves a total of 1=
-0
-> requests - 1 sent from my driver, and the remaining 9 from here.
->                {
->                   if(req->bio&&  (req->bio->bi_rw =3D=3D 1)&&
-> req->bio->bi_bdev&&  req->bio->bi_bdev->bd_disk&&
-> req->bio->bi_bdev->bd_disk->queue)
->                   {
->                      tracing_on();
->                      trace_printk("Count =3D %d: Receive Timestamp fo=
-r
-> sector #%llu =3D %lu microsecs; bi_size =3D %u\n", count,
-> req->bio->bi_sector, time_ms, req->bio->bi_size);
->
->                      compose_bio_rw(&biop, req->bio->bi_bdev, NULL,
-> NULL, 2560, 1); // This function (defined below) populates a bio
-> structure
->
->                      biop->bi_sector =3D req->bio->bi_sector + 350;
->                      subq =3D req->bio->bi_bdev->bd_disk->queue;
->                      if (subq&&  subq->make_request_fn) {
->                         do_gettimeofday(&tv);
->                         time_ms =3D (tv.tv_sec * 1000000) + (tv.tv_us=
-ec);
->                         trace_printk("Send Timestamp for sector #%llu=
- =3D
-> %lu microsecs\n", biop->bi_sector, time_ms);
->                         count++;
->                         subq->make_request_fn(subq, biop);
->                      }
->                   }
->                }
->                else
->                {
->                   count =3D 0;
->                   tracing_off();
->                }
->             }
->         }
->
-> static int compose_bio_rw(struct bio **biop, struct block_device *bde=
-v,
->                     bio_end_io_t * bi_end_io, void *bi_private, int b=
-i_size,
->                     int bi_vec_size)
->     {
->        struct page *bio_page;
->        struct bio *bio;
->        int order =3D 0, i =3D 0;
->
->        order =3D 0;
->
->        /* Grab a free page and free bio to hold the log record header=
- */
->        while (!(bio_page =3D alloc_pages(GFP_KERNEL, order))) {
->           printk("allocate header_page fails in compose_bio\n");
->           schedule();
->        }
->
->        while (!(bio =3D bio_alloc(GFP_ATOMIC, bi_vec_size
-> /*MAX_BIO_VEC_NUM */ ))) {
->           printk("Allocate header_bio fails in compose_bio\n");
->           schedule();
->        };
->
->        for (i =3D 0; i<  bi_vec_size; i++) {
->           bio->bi_io_vec[i].bv_page =3D&bio_page[i];
->           bio->bi_io_vec[i].bv_offset =3D 0;
->           bio->bi_io_vec[i].bv_len =3D 2560;
->
->        }
->
->        bio->bi_sector =3D -1;              /* we do not know the dest=
-_LBA yet */
->        bio->bi_bdev =3D bdev;           /* set header_bio with same v=
-alue as bio */
->        bio->bi_vcnt =3D bi_vec_size;
->        bio->bi_idx =3D 0;
->        bio->bi_rw =3D 1;
->        bio->bi_size =3D bi_size;
->        bio->bi_end_io =3D bi_end_io;
->        bio->bi_private =3D bi_private;
->        *biop =3D bio;
->        return 0;
->     }
->
-> The mass storage controller in the system is: Promise Technology, Inc=
-=2E
-> PDC20268 (Ultra100 TX2) (rev 02), and the HDD being used is: WD Cavia=
-r
-> Black (Model number - WD1001FALS).
->
-> Thank you for reading this really really long mail and assisting me i=
-n
-> resolving this issue!
->
-> Regards,
-> Pallav
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Michal
 
+[    2.389424] Block layer SCSI generic (bsg) driver version 0.4
+loaded (major 253)
+[    2.687223] libata version 3.00 loaded.
+[    2.653246] SCSI subsystem initialized
+[    3.080221] ahci 0000:00:1f.2: version 3.0
+[    3.080234] ahci 0000:00:1f.2: PCI INT C -> GSI 18 (level, low) -> I=
+RQ 18
+[    3.080265] ahci 0000:00:1f.2: irq 50 for MSI/MSI-X
+[    3.080338] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3
+Gbps 0x2f impl SATA mode
+[    3.080341] ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pio ems=
+ sxs
+[    3.080345] ahci 0000:00:1f.2: setting latency timer to 64
+[    3.112612] scsi0 : ahci
+[    3.112685] scsi1 : ahci
+[    3.112755] scsi2 : ahci
+[    3.112830] scsi3 : ahci
+[    3.112908] scsi4 : ahci
+[    3.112997] scsi5 : ahci
+[    3.114484] ata1: SATA max UDMA/133 abar m2048@0xf0400000 port
+0xf0400100 irq 50
+[    3.114486] ata2: SATA max UDMA/133 abar m2048@0xf0400000 port
+0xf0400180 irq 50
+[    3.114488] ata3: SATA max UDMA/133 abar m2048@0xf0400000 port
+0xf0400200 irq 50
+[    3.114490] ata4: SATA max UDMA/133 abar m2048@0xf0400000 port
+0xf0400280 irq 50
+[    3.114492] ata5: DUMMY
+[    3.114493] ata6: SATA max UDMA/133 abar m2048@0xf0400000 port
+0xf0400380 irq 50
+[    3.114540] ata_generic 0000:00:03.2: PCI INT C -> GSI 18 (level,
+low) -> IRQ 18
+[    3.114579] ata_generic 0000:00:03.2: setting latency timer to 64
+[    3.114976] scsi6 : ata_generic
+[    3.115054] scsi7 : ata_generic
+[    3.115112] ata7: PATA max UDMA/100 cmd 0xfe80 ctl 0xfe90 bmdma 0xfe=
+f0 irq 18
+[    3.115114] ata8: PATA max UDMA/100 cmd 0xfea0 ctl 0xfeb0 bmdma 0xfe=
+f8 irq 18
+[    3.432017] ata3: SATA link down (SStatus 4 SControl 300)
+[    3.432037] ata6: SATA link down (SStatus 0 SControl 300)
+[    3.432057] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    3.432076] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    3.432093] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    3.432226] ata1.00: ATA-8: OCZ-VERTEX, 1.41, max UDMA/133
+[    3.432229] ata1.00: 62533296 sectors, multi 1: LBA48 NCQ (depth 31/=
+32), AA
+[    3.433135] ata2.00: ATAPI: Optiarc DVD+/-RW AD-7200S, 102A, max UDM=
+A/100
+[    3.434706] ata2.00: configured for UDMA/100
+[    3.435188] ata1.00: configured for UDMA/133
+[    3.435313] scsi 0:0:0:0: Direct-Access     ATA      OCZ-VERTEX
+  1.41 PQ: 0 ANSI: 5
+[    3.438451] ata4.00: ATA-7: SAMSUNG HD252HJ, 1AC01118, max UDMA7
+[    3.438454] ata4.00: 488397168 sectors, multi 0: LBA48 NCQ (depth 31=
+/32), AA
+[    3.439613] scsi 1:0:0:0: CD-ROM            Optiarc  DVD+-RW
+AD-7200S 102A PQ: 0 ANSI: 5
+[    3.444879] ata4.00: configured for UDMA/133
+[    3.444962] scsi 3:0:0:0: Direct-Access     ATA      SAMSUNG
+HD252HJ  1AC0 PQ: 0 ANSI: 5
+[    3.624050] sd 0:0:0:0: [sda] 62533296 512-byte logical blocks:
+(32.0 GB/29.8 GiB)
+[    3.624102] sd 3:0:0:0: [sdb] 488397168 512-byte logical blocks:
+(250 GB/232 GiB)
+[    3.624113] sd 0:0:0:0: [sda] Write Protect is off
+[    3.624116] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+[    3.624142] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[    3.624147] sd 3:0:0:0: [sdb] Write Protect is off
+[    3.624149] sd 3:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+[    3.624166] sd 3:0:0:0: [sdb] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[    3.624897]  sda: sda1 sda2 sda3
+[    3.625184] sd 0:0:0:0: [sda] Attached SCSI disk
+[    3.627242] sr0: scsi3-mmc drive: 48x/48x writer dvd-ram cd/rw
+xa/form2 cdda tray
+[    3.627245] cdrom: Uniform CD-ROM driver Revision: 3.20
+[    3.627385] sr 1:0:0:0: Attached scsi CD-ROM sr0
+[    3.650992]  sdb: sdb1 sdb2 sdb3 sdb4
+[    3.651260] sd 3:0:0:0: [sdb] Attached SCSI disk
