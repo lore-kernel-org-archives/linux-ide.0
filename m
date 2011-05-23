@@ -1,48 +1,59 @@
-From: Pallav Bose <pallavbose@gmail.com>
-Subject: Re: Disabling Command Completion Coalescing (CCC) in SATA AHCI
-Date: Mon, 23 May 2011 10:36:31 -0400
-Message-ID: <BANLkTimpTh6Tmw0ZcTYaofayKKVKaCa4iw@mail.gmail.com>
-References: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com> <4DD5CE76.9040003@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH -next] ata: PATA_ARASAN_CF depends on DMADEVICES
+Date: Mon, 23 May 2011 09:21:54 -0700
+Message-ID: <4DDA89A2.8010604@oracle.com>
+References: <20110520165507.cba539d5.sfr@canb.auug.org.au> <20110522173227.5ba18817.randy.dunlap@oracle.com> <4DD9D5EB.3060807@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45770 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755244Ab1EWOgv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2011 10:36:51 -0400
-Received: by iyb14 with SMTP id 14so4717813iyb.19
-        for <linux-ide@vger.kernel.org>; Mon, 23 May 2011 07:36:51 -0700 (PDT)
-In-Reply-To: <4DD5CE76.9040003@gmail.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:30239 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756487Ab1EWQXV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2011 12:23:21 -0400
+In-Reply-To: <4DD9D5EB.3060807@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: viresh kumar <viresh.kumar@st.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hello Robert, Sergei,
+On 05/22/11 20:35, viresh kumar wrote:
+> On 05/23/2011 06:02 AM, Randy Dunlap wrote:
+>> From: Randy Dunlap <randy.dunlap@oracle.com>
+>>
+>> Fix kconfig unmet dependency warning:
+>>
+>> warning: (PATA_ARASAN_CF && VIDEO_TIMBERDALE && SND_SOC_SH4_SIU) selects DMA_ENGINE which has unmet direct dependencies (DMADEVICES)
+>>
+>> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+>> Cc: Viresh Kumar <viresh.kumar@st.com>
+>> ---
+>>  drivers/ata/Kconfig |    1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> --- linux-next-20110520.orig/drivers/ata/Kconfig
+>> +++ linux-next-20110520/drivers/ata/Kconfig
+>> @@ -313,6 +313,7 @@ config PATA_AMD
+>>  
+>>  config PATA_ARASAN_CF
+>>  	tristate "ARASAN CompactFlash PATA Controller Support"
+>> +	depends on DMADEVICES
+>>  	select DMA_ENGINE
+> 
+> Randy,
+> 
+> I think we can also remove this "select DMA_ENGINE" line.
 
-Thank your for your replies.
+In that case, the newly added "depends on" line is not needed either,
+since the "select DMA_ENGINE" is what causes the kconfig warning message.
 
-On Thu, May 19, 2011 at 10:14 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
->
-> I suspect that there is something going on that you're not accounting for. Are you sure that you're not getting multiple outstanding writes in parallel somehow? Although the controller won't batch completions, the drive is free to do so if there are multiple queued commands outstanding at once (it can send a Set Device Bits FIS with multiple bits set).
 
-I don't believe this is the case because a write request is sent only
-_after_ the previous write request's response is received.
+> Otherwise, it looks fine.
+> 
+> Acked-by: Viresh Kumar <viresh.kumar@st.com>
+> 
 
-You mentioned that the drive is free to batch completions if there are
-multiple queued commands outstanding at the same time. Is there a way
-to disable this feature? If my understanding is correct, since CCC is
-out of the picture, the drive is the only one that could be batching
-the responses? Or are there other possible candidates?!
 
-On Fri, May 20, 2011 at 6:49 AM, Sergei Shtylyov <sshtylyov@mvista.com> wrote:
-> I don't understand. This controller is not AHCI, and not even SATA one.
-
-Sorry about that. I should have been more careful when pasting the
-output of lspci. Here is the SATA controller:
-
-RAID bus controller: Intel Corporation 82801 SATA RAID Controller (rev 02)
-
-Regards,
-Pallav
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
