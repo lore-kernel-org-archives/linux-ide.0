@@ -1,51 +1,99 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Mon, 23 May 2011 00:58:22 -0400 (EDT)
-Message-ID: <20110523.005822.594376829594567304.davem@davemloft.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine
+ compliant to AHCI spec"
+Date: Mon, 23 May 2011 14:13:10 +0200
+Message-ID: <20110523121310.GA24439@htj.dyndns.org>
+References: <201105120025.34531.rjw@sisk.pl>
+ <20633.1305565337@localhost>
+ <BANLkTin7NgUMXSVyKn6P0TCrFZ5uaaRL1w@mail.gmail.com>
+ <201105182144.37713.rjw@sisk.pl>
+ <BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com>
+ <BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
+ <10124.1305906020@localhost>
+ <20110520154341.GL31426@htj.dyndns.org>
+ <BANLkTi=iNjWsaYCJqP057FkhAXtab5nS=Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:38568 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010Ab1EWE6y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2011 00:58:54 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:57538 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754555Ab1EWMNQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2011 08:13:16 -0400
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=iNjWsaYCJqP057FkhAXtab5nS=Q@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jian Peng <jipeng2005@gmail.com>
+Cc: Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
+Hello,
 
-Just a few small fixes and cleanups, nothing major.
+On Fri, May 20, 2011 at 10:02:56AM -0700, Jian Peng wrote:
+> Hi, Tejun/Valdis,
+> 
+> Since this is an interoperability issue of SATA host controller, the first
+> step I want to try it to make sure the tweak that MAKE my controller WORK
+> does not break other controllers.
+> You are both right that adding this majic 5ms delay at this place should not
+> be the final solution.
+> 
+> If this magic 5ms delay works on other affected systems, I plan to post a
+> new patch that inside ahci_start_engine(), still perform same check, and
+> show warning message if failed, but will set a flag, then still set START
+> bit, and if there is such failure flag, add 5ms delay.
 
-Please pull, thanks a lot!
+Yeah, sounds like a plan but please add ample comment explaining
+what's going on for which controller including link to the mailing
+list threads.  As we're basically adding a black magic, I would still
+like to enable it only for the affected controllers so that we don't
+have to worry whether there are controllers which are affected by this
+problem but we don't know about.
 
-The following changes since commit df8d06ade6eed9077f658ac8696fc1cb5c081220:
+> --- a/drivers/ata/libahci.c 2011-05-18 14:23:36.564665643 -0700
+> +++ c/drivers/ata/libahci.c 2011-05-20 09:48:06.194663506 -0700
+> @@ -540,6 +540,7 @@
+>   void __iomem *port_mmio = ahci_port_base(ap);
+>   u32 tmp;
+>   u8 status;
+> + int err = 0;
 
-  Merge branch 'omap-fixes-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tmlind/linux-omap-2.6 (2011-05-16 08:55:49 -0700)
+I think
 
-are available in the git repository at:
+ bool stat_failed = false;
 
-  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+would be more in line with recent coding style.
 
-Anton Blanchard (1):
-      ide: Use linux/mutex.h
+>   status = readl(port_mmio + PORT_TFDATA) & 0xFF;
+> 
+> @@ -553,12 +554,12 @@
+>    * specific controller will fail under this condition
+>    */
+>   if (status & (ATA_BUSY | ATA_DRQ))
+> -  return;
+> +  err = 1;
+>   else {
+>    ahci_scr_read(&ap->link, SCR_STATUS, &tmp);
+> 
+>    if ((tmp & 0xf) != 0x3)
+> -   return;
+> +   err = 1;
+>   }
+> 
+>   /* start DMA */
+> @@ -566,6 +567,13 @@
+>   tmp |= PORT_CMD_START;
+>   writel(tmp, port_mmio + PORT_CMD);
+>   readl(port_mmio + PORT_CMD); /* flush */
+> +
+> + /* Some controllers need longer time to be ready */
+> + if(err) {
+> +  printk(KERN_WARNING
+> +   "Controller in wrong state when setting START bit\n");
+> +  msleep(5);
 
-Jiri Slaby (1):
-      IDE: ide-floppy, remove unnecessary NULL check
+ ata_port_printk()?
 
-Joe Perches (1):
-      drivers/ide/pmac.c: Remove unnecessary casts of pci_get_drvdata
+Thanks.
 
-Mariusz Kozlowski (1):
-      ide: fix use after free in ide-acpi
-
-Thiago Farina (1):
-      ide/ide-scan-pci.c: Use for_each_pci_dev().
-
- drivers/ide/ide-acpi.c     |    4 ++--
- drivers/ide/ide-floppy.c   |    2 +-
- drivers/ide/ide-scan-pci.c |    2 +-
- drivers/ide/pmac.c         |    4 ++--
- include/linux/ide.h        |    2 +-
- 5 files changed, 7 insertions(+), 7 deletions(-)
+-- 
+tejun
