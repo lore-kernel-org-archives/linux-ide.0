@@ -1,103 +1,263 @@
-From: Pallav Bose <pallavbose@gmail.com>
-Subject: Re: Disabling Command Completion Coalescing (CCC) in SATA AHCI
-Date: Tue, 24 May 2011 01:16:56 -0400
-Message-ID: <BANLkTinR1nQiKCJc2m_Nm9Y5H8MdTZfV_w@mail.gmail.com>
-References: <BANLkTinPkdTkOQHNnPHwtXq2SMCo-uAALA@mail.gmail.com>
- <4DD5CE76.9040003@gmail.com> <BANLkTimpTh6Tmw0ZcTYaofayKKVKaCa4iw@mail.gmail.com>
- <BANLkTikyf+O5Cb1jvxmyzN4m+ekLLS5xPA@mail.gmail.com>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: [GIT PULL] Start of removal of legacy parallel interfaces for 3.0
+Date: Tue, 24 May 2011 20:08:14 +0200
+Message-ID: <4DDBF40E.7020003@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:50762 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159Ab1EXFRQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2011 01:17:16 -0400
-Received: by iwn34 with SMTP id 34so5459078iwn.19
-        for <linux-ide@vger.kernel.org>; Mon, 23 May 2011 22:17:16 -0700 (PDT)
-In-Reply-To: <BANLkTikyf+O5Cb1jvxmyzN4m+ekLLS5xPA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, David Miller <davem@davemloft.net>, Chris Mason <chris.mason@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Thank you for your response, Robert.
+Hi Linus,
 
-Another question that I have is regarding my second experiment. It's as follows:
+With the 3.0 kernel approaching, now is a great time to get rid of some
+legacy bagage. And what better part to start with than the old IDE code.
+Parallel interfaces are so 1990's, we can't be seen with those on a
+fancy new kernel version.
 
-Create a bio structure in my driver and call the __make_request()
-function of the lower level driver. Only one 2560 bytes write request
-is sent from my driver.
+Next pull will remove parallel SCSI too, about time that old dog got put
+to sleep as well.
 
-Once this write is serviced, an interrupt is generated which is
-intercepted by do_IRQ(). Finally, the function blk_complete_request()
-is called. Keep in mind that we are still in the top half of the
-interrupt handler. Now, we compose another struct bio in
-blk_complete_request() and call the
-__make_request() function. We record a timestamp at this point
-(say T0). When the request completion callback is obtained, we
-record another timestamp (call it T1). The difference - T1 - T0 - is
-always above 1 millisec. This experiment was repeated numerous times,
-and each time, the destination sector affected this difference - T1 - T0.
-It was observed that if the destination sectors are separated by
-approximately 350 sectors, the time difference is about 1.2 millisec
-(never below
-1 millisec) for requests of size 2560 bytes.
+  git://git.kernel.dk/linux-2.6-block.git for-2.6.40/parallel-io
 
-My understanding is that since the destination sectors of consecutive
-requests have been separated by a fairly large amount, by the time the
-next request is issued, the requested sector would be almost below the
-disk head and thus the write should happen immediately and T1 - T0
-should be small (at least < 1 millisec).
+Jens Axboe (1):
+      ide: remove crufty legacy IDE support
 
-The Serial ATA AHCI 1.3 Specification (page 114) states that:
+ arch/arm/include/asm/ide.h               |   23 -
+ arch/h8300/kernel/setup.c                |   10 -
+ arch/m32r/platforms/m32104ut/io.c        |   32 -
+ arch/m32r/platforms/m32700ut/io.c        |   66 -
+ arch/m32r/platforms/mappi2/io.c          |   66 -
+ arch/m32r/platforms/mappi3/io.c          |   95 --
+ arch/m32r/platforms/opsput/io.c          |   66 -
+ arch/m68k/include/asm/ide.h              |   66 -
+ arch/mips/include/asm/ide.h              |   13 -
+ arch/mips/include/asm/mach-generic/ide.h |  138 --
+ arch/parisc/include/asm/ide.h            |   57 -
+ arch/powerpc/include/asm/ide.h           |   17 -
+ arch/sh/boards/mach-cayman/setup.c       |   32 -
+ arch/sparc/include/asm/ide.h             |   97 --
+ arch/tile/include/asm/ide.h              |   25 -
+ drivers/Kconfig                          |    4 -
+ drivers/ide/Kconfig                      |  891 -------------
+ drivers/ide/Makefile                     |  119 --
+ drivers/ide/aec62xx.c                    |  330 -----
+ drivers/ide/ali14xx.c                    |  249 ----
+ drivers/ide/alim15x3.c                   |  602 ---------
+ drivers/ide/amd74xx.c                    |  347 -----
+ drivers/ide/at91_ide.c                   |  366 ------
+ drivers/ide/atiixp.c                     |  211 ---
+ drivers/ide/au1xxx-ide.c                 |  601 ---------
+ drivers/ide/buddha.c                     |  237 ----
+ drivers/ide/cmd640.c                     |  846 ------------
+ drivers/ide/cmd64x.c                     |  448 -------
+ drivers/ide/cs5520.c                     |  168 ---
+ drivers/ide/cs5530.c                     |  295 -----
+ drivers/ide/cs5535.c                     |  220 ----
+ drivers/ide/cs5536.c                     |  317 -----
+ drivers/ide/cy82c693.c                   |  230 ----
+ drivers/ide/delkin_cb.c                  |  193 ---
+ drivers/ide/dtc2278.c                    |  154 ---
+ drivers/ide/falconide.c                  |  178 ---
+ drivers/ide/gayle.c                      |  202 ---
+ drivers/ide/hpt366.c                     | 1548 ----------------------
+ drivers/ide/ht6560b.c                    |  382 ------
+ drivers/ide/icside.c                     |  693 ----------
+ drivers/ide/ide-4drives.c                |   64 -
+ drivers/ide/ide-acpi.c                   |  610 ---------
+ drivers/ide/ide-atapi.c                  |  728 -----------
+ drivers/ide/ide-cd.c                     | 1811 --------------------------
+ drivers/ide/ide-cd.h                     |  126 --
+ drivers/ide/ide-cd_ioctl.c               |  478 -------
+ drivers/ide/ide-cd_verbose.c             |  359 ------
+ drivers/ide/ide-cs.c                     |  364 ------
+ drivers/ide/ide-devsets.c                |  191 ---
+ drivers/ide/ide-disk.c                   |  791 ------------
+ drivers/ide/ide-disk.h                   |   29 -
+ drivers/ide/ide-disk_ioctl.c             |   32 -
+ drivers/ide/ide-disk_proc.c              |  175 ---
+ drivers/ide/ide-dma-sff.c                |  334 -----
+ drivers/ide/ide-dma.c                    |  552 --------
+ drivers/ide/ide-eh.c                     |  441 -------
+ drivers/ide/ide-floppy.c                 |  543 --------
+ drivers/ide/ide-floppy.h                 |   39 -
+ drivers/ide/ide-floppy_ioctl.c           |  304 -----
+ drivers/ide/ide-floppy_proc.c            |   45 -
+ drivers/ide/ide-gd.c                     |  451 -------
+ drivers/ide/ide-gd.h                     |   42 -
+ drivers/ide/ide-generic.c                |  149 ---
+ drivers/ide/ide-h8300.c                  |  109 --
+ drivers/ide/ide-io-std.c                 |  260 ----
+ drivers/ide/ide-io.c                     |  892 -------------
+ drivers/ide/ide-ioctls.c                 |  288 -----
+ drivers/ide/ide-iops.c                   |  531 --------
+ drivers/ide/ide-legacy.c                 |   57 -
+ drivers/ide/ide-lib.c                    |  170 ---
+ drivers/ide/ide-park.c                   |  149 ---
+ drivers/ide/ide-pci-generic.c            |  203 ---
+ drivers/ide/ide-pio-blacklist.c          |   94 --
+ drivers/ide/ide-pm.c                     |  248 ----
+ drivers/ide/ide-pnp.c                    |  111 --
+ drivers/ide/ide-probe.c                  | 1608 -----------------------
+ drivers/ide/ide-proc.c                   |  790 ------------
+ drivers/ide/ide-scan-pci.c               |  111 --
+ drivers/ide/ide-sysfs.c                  |  125 --
+ drivers/ide/ide-tape.c                   | 2075 ------------------------------
+ drivers/ide/ide-taskfile.c               |  674 ----------
+ drivers/ide/ide-timings.c                |  211 ---
+ drivers/ide/ide-xfer-mode.c              |  265 ----
+ drivers/ide/ide.c                        |  415 ------
+ drivers/ide/ide_platform.c               |  147 ---
+ drivers/ide/it8172.c                     |  166 ---
+ drivers/ide/it8213.c                     |  216 ----
+ drivers/ide/it821x.c                     |  715 ----------
+ drivers/ide/jmicron.c                    |  176 ---
+ drivers/ide/macide.c                     |  140 --
+ drivers/ide/ns87415.c                    |  349 -----
+ drivers/ide/opti621.c                    |  178 ---
+ drivers/ide/palm_bk3710.c                |  400 ------
+ drivers/ide/pdc202xx_new.c               |  562 --------
+ drivers/ide/pdc202xx_old.c               |  361 ------
+ drivers/ide/piix.c                       |  474 -------
+ drivers/ide/pmac.c                       | 1728 -------------------------
+ drivers/ide/q40ide.c                     |  167 ---
+ drivers/ide/qd65xx.c                     |  446 -------
+ drivers/ide/qd65xx.h                     |  144 --
+ drivers/ide/rapide.c                     |  106 --
+ drivers/ide/rz1000.c                     |   99 --
+ drivers/ide/sc1200.c                     |  355 -----
+ drivers/ide/scc_pata.c                   |  889 -------------
+ drivers/ide/serverworks.c                |  449 -------
+ drivers/ide/setup-pci.c                  |  664 ----------
+ drivers/ide/sgiioc4.c                    |  631 ---------
+ drivers/ide/siimage.c                    |  845 ------------
+ drivers/ide/sis5513.c                    |  636 ---------
+ drivers/ide/sl82c105.c                   |  365 ------
+ drivers/ide/slc90e66.c                   |  180 ---
+ drivers/ide/tc86c001.c                   |  269 ----
+ drivers/ide/triflex.c                    |  142 --
+ drivers/ide/trm290.c                     |  374 ------
+ drivers/ide/tx4938ide.c                  |  221 ----
+ drivers/ide/tx4939ide.c                  |  642 ---------
+ drivers/ide/umc8672.c                    |  183 ---
+ drivers/ide/via82cxxx.c                  |  537 --------
+ drivers/misc/lkdtm.c                     |   21 -
+ include/linux/ide.h                      | 1558 ----------------------
+ 120 files changed, 0 insertions(+), 44213 deletions(-)
+ delete mode 100644 arch/arm/include/asm/ide.h
+ delete mode 100644 arch/m68k/include/asm/ide.h
+ delete mode 100644 arch/mips/include/asm/ide.h
+ delete mode 100644 arch/mips/include/asm/mach-generic/ide.h
+ delete mode 100644 arch/parisc/include/asm/ide.h
+ delete mode 100644 arch/powerpc/include/asm/ide.h
+ delete mode 100644 arch/sparc/include/asm/ide.h
+ delete mode 100644 arch/tile/include/asm/ide.h
+ delete mode 100644 drivers/ide/Kconfig
+ delete mode 100644 drivers/ide/Makefile
+ delete mode 100644 drivers/ide/aec62xx.c
+ delete mode 100644 drivers/ide/ali14xx.c
+ delete mode 100644 drivers/ide/alim15x3.c
+ delete mode 100644 drivers/ide/amd74xx.c
+ delete mode 100644 drivers/ide/at91_ide.c
+ delete mode 100644 drivers/ide/atiixp.c
+ delete mode 100644 drivers/ide/au1xxx-ide.c
+ delete mode 100644 drivers/ide/buddha.c
+ delete mode 100644 drivers/ide/cmd640.c
+ delete mode 100644 drivers/ide/cmd64x.c
+ delete mode 100644 drivers/ide/cs5520.c
+ delete mode 100644 drivers/ide/cs5530.c
+ delete mode 100644 drivers/ide/cs5535.c
+ delete mode 100644 drivers/ide/cs5536.c
+ delete mode 100644 drivers/ide/cy82c693.c
+ delete mode 100644 drivers/ide/delkin_cb.c
+ delete mode 100644 drivers/ide/dtc2278.c
+ delete mode 100644 drivers/ide/falconide.c
+ delete mode 100644 drivers/ide/gayle.c
+ delete mode 100644 drivers/ide/hpt366.c
+ delete mode 100644 drivers/ide/ht6560b.c
+ delete mode 100644 drivers/ide/icside.c
+ delete mode 100644 drivers/ide/ide-4drives.c
+ delete mode 100644 drivers/ide/ide-acpi.c
+ delete mode 100644 drivers/ide/ide-atapi.c
+ delete mode 100644 drivers/ide/ide-cd.c
+ delete mode 100644 drivers/ide/ide-cd.h
+ delete mode 100644 drivers/ide/ide-cd_ioctl.c
+ delete mode 100644 drivers/ide/ide-cd_verbose.c
+ delete mode 100644 drivers/ide/ide-cs.c
+ delete mode 100644 drivers/ide/ide-devsets.c
+ delete mode 100644 drivers/ide/ide-disk.c
+ delete mode 100644 drivers/ide/ide-disk.h
+ delete mode 100644 drivers/ide/ide-disk_ioctl.c
+ delete mode 100644 drivers/ide/ide-disk_proc.c
+ delete mode 100644 drivers/ide/ide-dma-sff.c
+ delete mode 100644 drivers/ide/ide-dma.c
+ delete mode 100644 drivers/ide/ide-eh.c
+ delete mode 100644 drivers/ide/ide-floppy.c
+ delete mode 100644 drivers/ide/ide-floppy.h
+ delete mode 100644 drivers/ide/ide-floppy_ioctl.c
+ delete mode 100644 drivers/ide/ide-floppy_proc.c
+ delete mode 100644 drivers/ide/ide-gd.c
+ delete mode 100644 drivers/ide/ide-gd.h
+ delete mode 100644 drivers/ide/ide-generic.c
+ delete mode 100644 drivers/ide/ide-h8300.c
+ delete mode 100644 drivers/ide/ide-io-std.c
+ delete mode 100644 drivers/ide/ide-io.c
+ delete mode 100644 drivers/ide/ide-ioctls.c
+ delete mode 100644 drivers/ide/ide-iops.c
+ delete mode 100644 drivers/ide/ide-legacy.c
+ delete mode 100644 drivers/ide/ide-lib.c
+ delete mode 100644 drivers/ide/ide-park.c
+ delete mode 100644 drivers/ide/ide-pci-generic.c
+ delete mode 100644 drivers/ide/ide-pio-blacklist.c
+ delete mode 100644 drivers/ide/ide-pm.c
+ delete mode 100644 drivers/ide/ide-pnp.c
+ delete mode 100644 drivers/ide/ide-probe.c
+ delete mode 100644 drivers/ide/ide-proc.c
+ delete mode 100644 drivers/ide/ide-scan-pci.c
+ delete mode 100644 drivers/ide/ide-sysfs.c
+ delete mode 100644 drivers/ide/ide-tape.c
+ delete mode 100644 drivers/ide/ide-taskfile.c
+ delete mode 100644 drivers/ide/ide-timings.c
+ delete mode 100644 drivers/ide/ide-xfer-mode.c
+ delete mode 100644 drivers/ide/ide.c
+ delete mode 100644 drivers/ide/ide_platform.c
+ delete mode 100644 drivers/ide/it8172.c
+ delete mode 100644 drivers/ide/it8213.c
+ delete mode 100644 drivers/ide/it821x.c
+ delete mode 100644 drivers/ide/jmicron.c
+ delete mode 100644 drivers/ide/macide.c
+ delete mode 100644 drivers/ide/ns87415.c
+ delete mode 100644 drivers/ide/opti621.c
+ delete mode 100644 drivers/ide/palm_bk3710.c
+ delete mode 100644 drivers/ide/pdc202xx_new.c
+ delete mode 100644 drivers/ide/pdc202xx_old.c
+ delete mode 100644 drivers/ide/piix.c
+ delete mode 100644 drivers/ide/pmac.c
+ delete mode 100644 drivers/ide/q40ide.c
+ delete mode 100644 drivers/ide/qd65xx.c
+ delete mode 100644 drivers/ide/qd65xx.h
+ delete mode 100644 drivers/ide/rapide.c
+ delete mode 100644 drivers/ide/rz1000.c
+ delete mode 100644 drivers/ide/sc1200.c
+ delete mode 100644 drivers/ide/scc_pata.c
+ delete mode 100644 drivers/ide/serverworks.c
+ delete mode 100644 drivers/ide/setup-pci.c
+ delete mode 100644 drivers/ide/sgiioc4.c
+ delete mode 100644 drivers/ide/siimage.c
+ delete mode 100644 drivers/ide/sis5513.c
+ delete mode 100644 drivers/ide/sl82c105.c
+ delete mode 100644 drivers/ide/slc90e66.c
+ delete mode 100644 drivers/ide/tc86c001.c
+ delete mode 100644 drivers/ide/triflex.c
+ delete mode 100644 drivers/ide/trm290.c
+ delete mode 100644 drivers/ide/tx4938ide.c
+ delete mode 100644 drivers/ide/tx4939ide.c
+ delete mode 100644 drivers/ide/umc8672.c
+ delete mode 100644 drivers/ide/via82cxxx.c
+ delete mode 100644 include/linux/ide.h
 
-When a software specified number of commands have completed or **a
-software specified timeout has expired, an interrupt is generated by
-hardware to allow software to process completed commands.**
-
-I assumed that this timer maybe the reason why the latency of each
-request is above 1 millisec; that's why I wanted to disable CCC.
-
-Now since CCC is out of the picture, what could be the reason why the
-latency is above 1 millisec always? Can we do better?
-
-Regards,
-Pallav
-
-On Mon, May 23, 2011 at 4:27 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
-> On Mon, May 23, 2011 at 8:36 AM, Pallav Bose <pallavbose@gmail.com> wrote:
->> Hello Robert, Sergei,
->>
->> Thank your for your replies.
->>
->> On Thu, May 19, 2011 at 10:14 PM, Robert Hancock <hancockrwd@gmail.com> wrote:
->>>
->>> I suspect that there is something going on that you're not accounting for. Are you sure that you're not getting multiple outstanding writes in parallel somehow? Although the controller won't batch completions, the drive is free to do so if there are multiple queued commands outstanding at once (it can send a Set Device Bits FIS with multiple bits set).
->>
->> I don't believe this is the case because a write request is sent only
->> _after_ the previous write request's response is received.
->>
->> You mentioned that the drive is free to batch completions if there are
->> multiple queued commands outstanding at the same time. Is there a way
->> to disable this feature? If my understanding is correct, since CCC is
->> out of the picture, the drive is the only one that could be batching
->> the responses? Or are there other possible candidates?!
->
-> I don't think there's any way to disable it in the drive, the firmware
-> either decides to do that or it doesn't. Of course if the commands are
-> truly being serialized then this shouldn't be able to happen either.
->
->>
->> On Fri, May 20, 2011 at 6:49 AM, Sergei Shtylyov <sshtylyov@mvista.com> wrote:
->>> I don't understand. This controller is not AHCI, and not even SATA one.
->>
->> Sorry about that. I should have been more careful when pasting the
->> output of lspci. Here is the SATA controller:
->>
->> RAID bus controller: Intel Corporation 82801 SATA RAID Controller (rev 02)
->>
->> Regards,
->> Pallav
->>
->
+-- 
+Jens Axboe
