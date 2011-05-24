@@ -1,68 +1,48 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [GIT PULL] Start of removal of legacy parallel interfaces for 3.0
-Date: Tue, 24 May 2011 21:39:17 +0200
-Message-ID: <BANLkTi=xZmaMyzjcKv5_YiTavAvVRTPYiw@mail.gmail.com>
-References: <4DDBF40E.7020003@fusionio.com>
-	<BANLkTi=sYVpvEwShbhC65qfaA0Jt3rEjsQ@mail.gmail.com>
-	<4DDBFC30.6030201@fusionio.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/4] libsas updates for 2.6.40 (resend)
+Date: Tue, 24 May 2011 13:17:43 -0700
+Message-ID: <20110524201708.7351.76421.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60821 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001Ab1EXTjT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 May 2011 15:39:19 -0400
-In-Reply-To: <4DDBFC30.6030201@fusionio.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, jacek.danecki@intel.com, linux-ide@vger.kernel.org, edmund.nadolski@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, David Miller <davem@davemloft.net>, Chris Mason <chris.mason@oracle.com>
 
-On Tue, May 24, 2011 at 20:42, Jens Axboe <jaxboe@fusionio.com> wrote:
-> On 2011-05-24 20:37, Linus Torvalds wrote:
->> On Tue, May 24, 2011 at 11:08 AM, Jens Axboe <jaxboe@fusionio.com> w=
-rote:
->>> With the 3.0 kernel approaching, now is a great time to get rid of =
-some
->>> legacy bagage. And what better part to start with than the old IDE =
-code.
->>> Parallel interfaces are so 1990's, we can't be seen with those on a
->>> fancy new kernel version.
-
-NAK.
-
->> No.
->>
->> Guys. Really.
->>
->> Any version numbering change is *not* an excuse to drop any old stuf=
-f,
->> or do anything new and exciting.
->
-> Boy, you guys sure are humorless. I would've thought the reference to
-> killing SCSI next would be a good clue.
->
-> So we can't kill x86 32-bit either?
-
-I wouldn't object to that one. Finally a good reason to kick admins
-who still run
-32-bit distros on 64-bit machines ;-)
-
-Serious... Rumor says there's even a new 32-bit ABI for x86...
-
-Gr{oetje,eeting}s,
-
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
+This is a resend [1] of our pending libsas patch queue, plus one more for .40
+consideration "libsas: Add option for SATA soft reset".  We're still
+investigating whether having a soft reset handler will be beneficial for isci.
+If it does we need an available hook in the .40 baseline, so we can
+drop/hook-up our private implementation.  The only other change from the last
+posting [2] is to drop the problematic locking in "libsas: fix/amend device
+gone notification in sas_deform_port()".
 
 --
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
+Dan
 
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+[1]: http://marc.info/?l=linux-scsi&m=130504487714639&w=2
+[2]: http://marc.info/?l=linux-scsi&m=130444681502181&w=2
+
+---
+
+Dan Williams (3):
+      libsas: flush initial device discovery before completing ->scan_finished()
+      libsas: fix/amend device gone notification in sas_deform_port()
+      libsas: check dev->gone before submitting sata i/o
+
+Dave Jiang (1):
+      libsas: Add option for SATA soft reset
+
+
+ drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
+ drivers/scsi/libsas/sas_ata.c       |   41 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_internal.h  |    2 +-
+ drivers/scsi/libsas/sas_phy.c       |    4 ++-
+ drivers/scsi/libsas/sas_port.c      |   21 ++++++++++--------
+ drivers/scsi/libsas/sas_scsi_host.c |   14 ++++++------
+ drivers/scsi/mvsas/mv_sas.c         |    2 +-
+ drivers/scsi/pm8001/pm8001_sas.c    |    2 +-
+ include/scsi/libsas.h               |   14 ++++++++++++
+ 9 files changed, 79 insertions(+), 23 deletions(-)
