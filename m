@@ -1,118 +1,35 @@
-From: Jian Peng <jipeng2005@gmail.com>
-Subject: Re: [PATCH v2.6.38-rc7] Revert "libata: ahci_start_engine compliant
- to AHCI spec"
-Date: Mon, 23 May 2011 18:04:23 -0700
-Message-ID: <BANLkTinJxu9+kSgb3jYBEBMy9igg0vp1FQ@mail.gmail.com>
-References: <201105120025.34531.rjw@sisk.pl>
-	<20633.1305565337@localhost>
-	<BANLkTin7NgUMXSVyKn6P0TCrFZ5uaaRL1w@mail.gmail.com>
-	<201105182144.37713.rjw@sisk.pl>
-	<BANLkTimZ9pe-FhkJYHTG1Jx8MUPrMHSFbA@mail.gmail.com>
-	<BANLkTim9_1Xt8oE4awbCO1iKUW96YUOv_A@mail.gmail.com>
-	<10124.1305906020@localhost>
-	<20110520154341.GL31426@htj.dyndns.org>
-	<BANLkTi=iNjWsaYCJqP057FkhAXtab5nS=Q@mail.gmail.com>
-	<20110523121310.GA24439@htj.dyndns.org>
+From: viresh kumar <viresh.kumar@st.com>
+Subject: Re: [PATCH -next] ata: PATA_ARASAN_CF depends on DMADEVICES
+Date: Tue, 24 May 2011 09:08:50 +0530
+Message-ID: <4DDB284A.6040603@st.com>
+References: <20110520165507.cba539d5.sfr@canb.auug.org.au> <20110522173227.5ba18817.randy.dunlap@oracle.com> <4DD9D5EB.3060807@st.com> <4DDA89A2.8010604@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:45459 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030717Ab1EXBEY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2011 21:04:24 -0400
-In-Reply-To: <20110523121310.GA24439@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <4DDA89A2.8010604@oracle.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-Hi, Tejun,
+On 05/23/2011 09:51 PM, Randy Dunlap wrote:
+>>> >>  config PATA_ARASAN_CF
+>>> >>  	tristate "ARASAN CompactFlash PATA Controller Support"
+>>> >> +	depends on DMADEVICES
+>>> >>  	select DMA_ENGINE
+>> > 
+>> > Randy,
+>> > 
+>> > I think we can also remove this "select DMA_ENGINE" line.
+> In that case, the newly added "depends on" line is not needed either,
+> since the "select DMA_ENGINE" is what causes the kconfig warning message.
+> 
 
-Defintely. I will clarify it as much as possible and meanwhile, wait
-for it to be tested by reporters.
+Some sort of dependency must be present as PATA_ARASAN is using DMAENGINE
+routines and it will not compile unless DMA_ENGINE is enabled.
 
-Thanks,
-Jian
+So, depends on DMADEVICES will solve all these issues.
 
-On Mon, May 23, 2011 at 5:13 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Fri, May 20, 2011 at 10:02:56AM -0700, Jian Peng wrote:
->> Hi, Tejun/Valdis,
->>
->> Since this is an interoperability issue of SATA host controller, the=
- first
->> step I want to try it to make sure the tweak that MAKE my controller=
- WORK
->> does not break other controllers.
->> You are both right that adding this majic 5ms delay at this place sh=
-ould not
->> be the final solution.
->>
->> If this magic 5ms delay works on other affected systems, I plan to p=
-ost a
->> new patch that inside ahci_start_engine(), still perform same check,=
- and
->> show warning message if failed, but will set a flag, then still set =
-START
->> bit, and if there is such failure flag, add 5ms delay.
->
-> Yeah, sounds like a plan but please add ample comment explaining
-> what's going on for which controller including link to the mailing
-> list threads. =A0As we're basically adding a black magic, I would sti=
-ll
-> like to enable it only for the affected controllers so that we don't
-> have to worry whether there are controllers which are affected by thi=
-s
-> problem but we don't know about.
->
->> --- a/drivers/ata/libahci.c 2011-05-18 14:23:36.564665643 -0700
->> +++ c/drivers/ata/libahci.c 2011-05-20 09:48:06.194663506 -0700
->> @@ -540,6 +540,7 @@
->> =A0 void __iomem *port_mmio =3D ahci_port_base(ap);
->> =A0 u32 tmp;
->> =A0 u8 status;
->> + int err =3D 0;
->
-> I think
->
-> =A0bool stat_failed =3D false;
->
-> would be more in line with recent coding style.
->
->> =A0 status =3D readl(port_mmio + PORT_TFDATA) & 0xFF;
->>
->> @@ -553,12 +554,12 @@
->> =A0 =A0* specific controller will fail under this condition
->> =A0 =A0*/
->> =A0 if (status & (ATA_BUSY | ATA_DRQ))
->> - =A0return;
->> + =A0err =3D 1;
->> =A0 else {
->> =A0 =A0ahci_scr_read(&ap->link, SCR_STATUS, &tmp);
->>
->> =A0 =A0if ((tmp & 0xf) !=3D 0x3)
->> - =A0 return;
->> + =A0 err =3D 1;
->> =A0 }
->>
->> =A0 /* start DMA */
->> @@ -566,6 +567,13 @@
->> =A0 tmp |=3D PORT_CMD_START;
->> =A0 writel(tmp, port_mmio + PORT_CMD);
->> =A0 readl(port_mmio + PORT_CMD); /* flush */
->> +
->> + /* Some controllers need longer time to be ready */
->> + if(err) {
->> + =A0printk(KERN_WARNING
->> + =A0 "Controller in wrong state when setting START bit\n");
->> + =A0msleep(5);
->
-> =A0ata_port_printk()?
->
-> Thanks.
->
-> --
-> tejun
->
+-- 
+viresh
