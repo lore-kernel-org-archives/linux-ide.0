@@ -1,69 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH #upstream] libata: leave port thawed after reset failure
-Date: Wed, 25 May 2011 12:23:56 +0200
-Message-ID: <20110525102356.GH10146@htj.dyndns.org>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: [PATCH #upstream-fixes] libata: fix unexpectedly frozen port
+ after ata_eh_reset()
+Date: Wed, 25 May 2011 11:33:54 +0100
+Message-ID: <4DDCDB12.3020904@mrc-lmb.cam.ac.uk>
+References: <20110525100232.GG10146@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42749 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512Ab1EYKYC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2011 06:24:02 -0400
-Received: by wwa36 with SMTP id 36so8310022wwa.1
-        for <linux-ide@vger.kernel.org>; Wed, 25 May 2011 03:24:00 -0700 (PDT)
-Content-Disposition: inline
+Received: from ppsw-50.csi.cam.ac.uk ([131.111.8.150]:56257 "EHLO
+	ppsw-50.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884Ab1EYK5J (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2011 06:57:09 -0400
+In-Reply-To: <20110525100232.GG10146@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Reartes Guillermo <rtguille@gmail.com>, Bruce Stenning <b.stenning@indigovision.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Bruce Stenning <b.stenning@indigovision.com>
 
-libata EH intentionally left a port frozen if it failed
-ata_eh_reset().  The intention was avoiding continuous loop of resets
-when the controller or attached device is flaky and reporting spurious
-hotplug events.  Once port enters this state, it can be recovered with
-manual rescan, which seemed reasonable.
+Tejun Heo wrote:
 
-However, outside of my convoluted test setup, there have been very few
-reports justifying this choice while there have been more cases where
-the automatic freezing of the port after hotplug attempt of a faulty
-device caused confusion and led to unnecessary resets.
+> -	 * Some controllers can't be frozen very well and may set
+> -	 * spuruious error conditions during reset.  Clear accumulated
+> -	 * error information.  As reset is the final recovery action,
+> -	 * nothing is lost by doing this.
+> +	 * Some controllers can't be frozen very well and may set spuruious
+> +	 * error conditions during reset.  Clear accumulated error
+> +	 * information and re-thaw the port if frozen.  As reset is the
+> +	 * final recovery action and we cross check link onlineness against
+> +	 * device classification later, no hotplug event is lost by this.
 
-This patch changes the behavior so that the port is thawed after reset
-failure.  This change doesn't necessarily solve but makes it easier
-and more intuitive to work around hotplug related problems
-(ie. re-pluggin or power cycling the device) as reported in the
-followings.
-
-  https://bugzilla.kernel.org/show_bug.cgi?id=34712
-  http://thread.gmane.org/gmane.linux.kernel/1123265/focus=49548
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Reartes Guillermo <rtguille@gmail.com>
-Reported-by: Bruce Stenning <b.stenning@indigovision.com>
----
- drivers/ata/libata-eh.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index dfb6e9d..05797fe 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2885,8 +2885,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	    sata_scr_read(link, SCR_STATUS, &sstatus))
- 		rc = -ERESTART;
- 
--	if (rc == -ERESTART || try >= max_tries)
-+	if (rc == -ERESTART || try >= max_tries) {
-+		/*
-+		 * Thaw host port even if reset failed, so that the port
-+		 * can be retried on the next phy event.  This risks
-+		 * repeated EH runs but seems to be a better tradeoff than
-+		 * shutting down a port after a botched hotplug attempt.
-+		 */
-+		if (ata_is_host_link(link))
-+			ata_eh_thaw_port(ap);
- 		goto out;
-+	}
- 
- 	now = jiffies;
- 	if (time_before(now, deadline)) {
+spuruious -> spurious
