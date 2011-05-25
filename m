@@ -1,44 +1,37 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: New driver mtipx2xx submission
-Date: Wed, 25 May 2011 10:36:31 -0400
-Message-ID: <x49lixuyhhs.fsf@segfault.boston.devel.redhat.com>
-References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com>
-	<20110428230605.78c55c70@lxorguk.ukuu.org.uk>
-	<22A973199D2C2F46933448F6E7990A300204F728@ntxboimbx31.micron.com>
-	<20110502184206.25907c5e@lxorguk.ukuu.org.uk>
-	<22A973199D2C2F46933448F6E7990A300214B0D6@ntxboimbx31.micron.com>
-	<20110511202013.075b07cc@lxorguk.ukuu.org.uk>
-	<4DD722DB.8030303@micron.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Wed, 25 May 2011 18:27:11 -0400
+Message-ID: <4DDD823F.5090904@teksavvy.com>
+References: <20110423005610.GC1576@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C775549E4@gretna.indigovision.com> <20110425162242.GB30828@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com> <20110426135027.GI878@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com> <20110426155229.GM878@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554C91@gretna.indigovision.com> <20110430140109.GJ29280@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com> <20110525094127.GF10146@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C7770967B@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7120 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753160Ab1EYOgp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 May 2011 10:36:45 -0400
-In-Reply-To: <4DD722DB.8030303@micron.com> (Asai Thambi S. P.'s message of
-	"Fri, 20 May 2011 20:26:35 -0600")
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:14246 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754275Ab1EYW1N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2011 18:27:13 -0400
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C7770967B@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: asamymuthupa@micron.com
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: Bruce Stenning <b.stenning@indigovision.com>
+Cc: Tejun Heo <htejun@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Asai Thambi S P <asamymuthupa@micron.com> writes:
+On 11-05-25 09:36 AM, Bruce Stenning wrote:
+>> This is a different issue.  libata EH plugs the port if reset fails
+>> repeatedly.  This behavior was implemented to avoid causing continuous
+>> resets on a port in case it has flaky PHY state reporting; however, it
+>> seems to cause more trouble than fixing issues - ie. plugging in a
+>> broken device may end up plugging the port even after the offending
+>> device is removed until manual rescan or reboot.  I've been pondering
+>> about changing the behavior like the following.
+> 
+> Thanks for the explanation, Tejun, and for sending those changes upstream.
+> I shall incorporate these patches into my kernel and keep you informed as
+> to how they behave.
+> 
+> Mark, did you get a chance to clean up the sata_mv spinlock addition in
+> mv_set_main_irq_mask?
 
-> On 5/11/2011 1:20 PM, Alan Cox wrote:
->> So a bigger queue helped (at least in 2006). The AHCI driver can be
->> taught your bigger queue easily enough. The question is where with a
->> *current* kernel are any remaining bottlenecks if you do that and how do
->> we fix them.
->
-> Attached image/table shows the performance numbers on current kernel.
->
-> The main objectives of our new mtipx2xx driver are
-> 	1.) highest performance (see attached image/table),
-> 	2.) lowest CPU utilization, and
-
-Can you collect perf data to show why the ahci driver is taking up so
-much more CPU for the random I/O case?
-
-Thanks,
-Jeff
+Not yet.  I've been waiting to hear back from you as to
+whether they visibly fix anything or not.
