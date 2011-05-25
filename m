@@ -1,77 +1,78 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Wed, 25 May 2011 11:41:27 +0200
-Message-ID: <20110525094127.GF10146@htj.dyndns.org>
-References: <20110423005610.GC1576@mtj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C775549E4@gretna.indigovision.com>
- <20110425162242.GB30828@mtj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com>
- <20110426135027.GI878@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com>
- <20110426155229.GM878@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554C91@gretna.indigovision.com>
- <20110430140109.GJ29280@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH #upstream-fixes] libata: fix unexpectedly frozen port after
+ ata_eh_reset()
+Date: Wed, 25 May 2011 12:02:32 +0200
+Message-ID: <20110525100232.GG10146@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44529 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab1EYKCg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 May 2011 06:02:36 -0400
+Received: by fxm17 with SMTP id 17so5237091fxm.19
+        for <linux-ide@vger.kernel.org>; Wed, 25 May 2011 03:02:35 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bruce Stenning <b.stenning@indigovision.com>
-Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Bruce Stenning <b.stenning@indigovision.com>
 
-Hello, sorry about the long delay.
+To work around controllers which can't properly plug events while
+reset, ata_eh_reset() clears error states and ATA_PFLAG_EH_PENDING
+after reset but before RESET is marked done.  As reset is the final
+recovery action and full verification of devices including onlineness
+and classfication match is done afterwards, this shouldn't lead to
+lost devices or missed hotplug events.
 
-On Tue, May 17, 2011 at 04:30:20PM +0100, Bruce Stenning wrote:
-> __ata_port_freeze: ata4 port frozen
-> ata4: hard resetting link
-> sata_link_hardreset: ENTER
-> ata4: COMRESET failed (errno=-32)
-> sata_link_hardreset: EXIT, rc=-32
-> ata4: reset failed (errno=-32), retrying in 33 secs
-> __ata_port_freeze: ata4 port frozen
-> ata4: hard resetting link
-> sata_link_hardreset: ENTER
-> ata4: COMRESET failed (errno=-32)
-> sata_link_hardreset: EXIT, rc=-32
-> ata4: reset failed, giving up
-> ata_eh_recover: EXIT, rc=-32
-> ata4.00: disabled
-> ata4: EH complete
-> ata_scsi_error: EXIT
-> 
-> The IRQ for that port is masked off afterwards.
+Unfortunately, it forgot to thaw the port when clearing EH_PENDING, so
+if the condition happens after resetting an empty port, the port could
+be left frozen and EH will end without thawing it, making the port
+unresponsive to further hotplug events.
 
-This is a different issue.  libata EH plugs the port if reset fails
-repeatedly.  This behavior was implemented to avoid causing continuous
-resets on a port in case it has flaky PHY state reporting; however, it
-seems to cause more trouble than fixing issues - ie. plugging in a
-broken device may end up plugging the port even after the offending
-device is removed until manual rescan or reboot.  I've been pondering
-about changing the behavior like the following.
+Thaw if the port is frozen after clearing EH_PENDING.  This problem is
+reported by Bruce Stenning in the following thread.
+
+  http://thread.gmane.org/gmane.linux.kernel/1123265
+
+stable: I think we should weather this patch a bit longer in -rcX
+        before sending it to -stable.  Please wait at least a month
+        after this patch makes upstream.  Thanks.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Bruce Stenning <b.stenning@indigovision.com>
+Cc: stable@kernel.org
+---
+ drivers/ata/libata-eh.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index dfb6e9d..05797fe 100644
+index dfb6e9d..094ce48 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -2885,8 +2885,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	    sata_scr_read(link, SCR_STATUS, &sstatus))
- 		rc = -ERESTART;
+@@ -2802,10 +2802,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	}
  
--	if (rc == -ERESTART || try >= max_tries)
-+	if (rc == -ERESTART || try >= max_tries) {
-+		/*
-+		 * Thaw host port even if reset failed, so that the port
-+		 * can be retried on the next phy event.  This risks
-+		 * repeated EH runs but seems to be a better tradeoff than
-+		 * shutting down a port after a botched hotplug attempt.
-+		 */
-+		if (ata_is_host_link(link))
-+			ata_eh_thaw_port(ap);
- 		goto out;
-+	}
+ 	/*
+-	 * Some controllers can't be frozen very well and may set
+-	 * spuruious error conditions during reset.  Clear accumulated
+-	 * error information.  As reset is the final recovery action,
+-	 * nothing is lost by doing this.
++	 * Some controllers can't be frozen very well and may set spuruious
++	 * error conditions during reset.  Clear accumulated error
++	 * information and re-thaw the port if frozen.  As reset is the
++	 * final recovery action and we cross check link onlineness against
++	 * device classification later, no hotplug event is lost by this.
+ 	 */
+ 	spin_lock_irqsave(link->ap->lock, flags);
+ 	memset(&link->eh_info, 0, sizeof(link->eh_info));
+@@ -2814,6 +2815,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
+ 	spin_unlock_irqrestore(link->ap->lock, flags);
  
- 	now = jiffies;
- 	if (time_before(now, deadline)) {
++	if (ap->pflags & ATA_PFLAG_FROZEN)
++		ata_eh_thaw_port(ap);
++
+ 	/*
+ 	 * Make sure onlineness and classification result correspond.
+ 	 * Hotplug could have happened during reset and some
