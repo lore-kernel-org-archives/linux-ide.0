@@ -1,69 +1,51 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/4] libsas: flush initial device discovery before
- completing ->scan_finished()
-Date: Fri, 27 May 2011 23:33:45 -0700
-Message-ID: <BANLkTinS08cRKiqVX6Hei+bJ4EX4hs4Qbg@mail.gmail.com>
-References: <20110524201708.7351.76421.stgit@localhost6.localdomain6>
-	<20110524201748.7351.48220.stgit@localhost6.localdomain6>
-	<BANLkTin8xQcyEiSa__+AfsV=T+NVRUwEhQ@mail.gmail.com>
-	<1306552482.12244.23.camel@mulgrave.site>
+From: Connor Hansen <cmdkhh@gmail.com>
+Subject: [PATCH 1/2] ide-cd: Fix signedness warning
+Date: Mon, 30 May 2011 00:13:32 -0700
+Message-ID: <1306739612-29239-1-git-send-email-cmdkhh@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1306552482.12244.23.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, jacek.danecki@intel.com, jack_wang@usish.com, lindar_liu@usish.com, linux-ide@vger.kernel.org, David Milburn <dmilburn@redhat.com>, edmund.nadolski@intel.com, Srinivas <satyasrinivasp@hcl.in>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:53891 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585Ab1E3HNh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 May 2011 03:13:37 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Connor Hansen <cmdkhh@gmail.com>
 
-On Fri, May 27, 2011 at 8:14 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Fri, 2011-05-27 at 17:41 -0700, Dan Williams wrote:
->> On Tue, May 24, 2011 at 1:17 PM, Dan Williams <dan.j.williams@intel.=
-com> wrote:
->> > During initial scan libsas drivers start their phys and notify lib=
-sas
->> > with PORTE_BYTES_DMAED events as port links are established. =A0Th=
-is
->> > notification in turn causes libsas to post DISCE_DISCOVER_DOMAIN e=
-vents
->> > to the queue. =A0Calling scsi_flush_work() at the end of scan_fini=
-shed
->> > guarantees that all preceding PORTE_BYTES_DMAED events have been
->> > registered in the queue, but it does not guarantee that the result=
-ing
->> > DISCE_DISCOVER_DOMAIN events have been processed because
->> > flush_workqueue() explicitly avoids live-locking with incoming wor=
-k.
->> >
->> > Introduce sas_flush_discovery() to guarantee that all initial disc=
-overy
->> > events have completed. =A0It is called after the driver determines=
- all
->> > initial PORTE_BYTES_DMAED events have had a chance to enter the qu=
-eue.
->> > This does not cover BCNs that are generated during expander bring =
-up,
->> > only the initial sas_discover_domain() event.
->>
->> I notice that scsi-misc picked up all the patches from the series,
->> save this one.
->>
->> Oversight, or nak?
->
-> Neither ... as I've said several times before, I want to use tejun's
-> drain infrastructure for this.
->
+One of the legit warnings 'make W=3D3 drivers/ide/ide-cd.o=C2=B4 genera=
+tes is
 
-Apologies, for the disconnect.
+drivers/ide/ide-cd.c: In function .ide_cdrom_prep_fs.:
+drivers/ide/ide-cd.c:1314: warning: conversion to .unsigned int. from .=
+int. may change the sign of the result
 
-=46ound the drain_workqueue thread...
+because queue_logical_block_size() returns unsigned short but hard_sect
+is defined as int. Fix that no matter how low the potential for this
+becoming a bug is.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Connor Hansen <cmdkhh@gmail.com>
+---
+ drivers/ide/ide-cd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 6e5123b..c1de54a 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1309,7 +1309,7 @@ static int ide_cdrom_probe_capabilities(ide_drive=
+_t *drive)
+ /* standard prep_rq_fn that builds 10 byte cmds */
+ static int ide_cdrom_prep_fs(struct request_queue *q, struct request *=
+rq)
+ {
+-	int hard_sect =3D queue_logical_block_size(q);
++	unsigned short hard_sect =3D queue_logical_block_size(q);
+ 	long block =3D (long)blk_rq_pos(rq) / (hard_sect >> 9);
+ 	unsigned long blocks =3D blk_rq_sectors(rq) / (hard_sect >> 9);
+=20
+--=20
+1.7.4.4
+
