@@ -1,58 +1,43 @@
-From: Connor Hansen <cmdkhh@gmail.com>
-Subject: [PATCH 2/2] ide-cd: Fix another signedness warning
-Date: Mon, 30 May 2011 00:26:58 -0700
-Message-ID: <1306740418-565-1-git-send-email-cmdkhh@gmail.com>
+From: Bruce Stenning <b.stenning@indigovision.com>
+Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Mon, 30 May 2011 14:07:31 +0100
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32C7777DD92@gretna.indigovision.com>
+References: <20110423005610.GC1576@mtj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C775549E4@gretna.indigovision.com>
+ <20110425162242.GB30828@mtj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com>
+ <20110426135027.GI878@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com>
+ <20110426155229.GM878@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C77554C91@gretna.indigovision.com>
+ <20110430140109.GJ29280@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com>
+ <20110525094127.GF10146@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32C7770967B@gretna.indigovision.com>
+ <4DDD823F.5090904@teksavvy.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-px0-f179.google.com ([209.85.212.179]:49770 "EHLO
-	mail-px0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752787Ab1E3H1S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 May 2011 03:27:18 -0400
+Received: from gretna.indigovision.com ([62.7.85.227]:54131 "EHLO
+	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab1E3NHe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 May 2011 09:07:34 -0400
+In-Reply-To: <4DDD823F.5090904@teksavvy.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Borislav Petkov <bp@alien8.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Connor Hansen <cmdkhh@gmail.com>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Tejun Heo <htejun@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-One of the legit warnings 'make W=3 drivers/ide/ide-cd.o generates is
-
-drivers/ide/ide-cd.c: In function ide_cd_queue_pc:
-drivers/ide/ide-cd.c:451:3: warning: conversion to unsigned int from
-      int may change the sign of the result
-
-timeout is passed as an int, but is declared as an unsigned int in
-struct request in include/linux/blkdev.h
-
-Signed-off-by: Connor Hansen <cmdkhh@gmail.com>
----
- drivers/ide/ide-cd.c |    2 +-
- drivers/ide/ide-cd.h |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index c1de54a..f509db5 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -422,7 +422,7 @@ static void ide_cd_request_sense_fixup(ide_drive_t *drive, struct ide_cmd *cmd)
- 
- int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
- 		    int write, void *buffer, unsigned *bufflen,
--		    struct request_sense *sense, int timeout,
-+		    struct request_sense *sense, unsigned int timeout,
- 		    unsigned int cmd_flags)
- {
- 	struct cdrom_info *info = drive->driver_data;
-diff --git a/drivers/ide/ide-cd.h b/drivers/ide/ide-cd.h
-index 1efc936..24292ee 100644
---- a/drivers/ide/ide-cd.h
-+++ b/drivers/ide/ide-cd.h
-@@ -101,7 +101,7 @@ void ide_cd_log_error(const char *, struct request *, struct request_sense *);
- 
- /* ide-cd.c functions used by ide-cd_ioctl.c */
- int ide_cd_queue_pc(ide_drive_t *, const unsigned char *, int, void *,
--		    unsigned *, struct request_sense *, int, unsigned int);
-+		    unsigned *, struct request_sense *, unsigned int, unsigned int);
- int ide_cd_read_toc(ide_drive_t *, struct request_sense *);
- int ide_cdrom_get_capabilities(ide_drive_t *, u8 *);
- void ide_cdrom_update_speed(ide_drive_t *, u8 *);
--- 
-1.7.4.4
-
+PiA+IE1hcmssIGRpZCB5b3UgZ2V0IGEgY2hhbmNlIHRvIGNsZWFuIHVwIHRoZSBzYXRhX212IHNw
+aW5sb2NrIGFkZGl0aW9uIGluDQo+ID4gbXZfc2V0X21haW5faXJxX21hc2s/DQo+DQo+IE5vdCB5
+ZXQuICBJJ3ZlIGJlZW4gd2FpdGluZyB0byBoZWFyIGJhY2sgZnJvbSB5b3UgYXMgdG8NCj4gd2hl
+dGhlciB0aGV5IHZpc2libHkgZml4IGFueXRoaW5nIG9yIG5vdC4NCg0KSGF2aW5nIG5vdyB0ZXN0
+ZWQgd2l0aCBUZWp1bidzIHR3byBwYXRjaGVzIGFuZCB3aXRob3V0IHRoZSBzcGlubG9jayBpbg0K
+bXZfc2V0X21haW5faXJxX21hc2sgZm9yIGEgcmVhc29uYWJsZSB0aW1lLCB0aGUgaG90cGx1ZyBz
+ZWVtcyB0byBiZSB2ZXJ5DQpyZWxpYWJsZS4gIFNvIEkgdGhpbmsgaXQncyBwcm9iYWJseSBiZXN0
+IHRvIGxlYXZlIHRoZSBzcGlubG9jayBvdXQgYW5kDQpjb250aW51ZSB0byBvYnNlcnZlIHRoZSBi
+ZWhhdmlvdXIgd2l0aCBmdXJ0aGVyIHRlc3RpbmcuDQoNClRoYW5rcywNCkJydWNlLg0KDQoNCkxh
+dGVzdCBOZXdzIGF0OiBodHRwOi8vd3d3LmluZGlnb3Zpc2lvbi5jb20vaW5kZXgucGhwL2VuL25l
+d3MuaHRtbA0K
