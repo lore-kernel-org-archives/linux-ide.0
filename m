@@ -1,35 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI driver fails to IDENTIFY in kernel 2.6.39, adapter card ASUS
- U3S6 (Marvell 1b4b:9120)
-Date: Tue, 31 May 2011 23:16:08 +0900
-Message-ID: <BANLkTikJwWSt6sO0zO_pjJ_yvBxbeG7kcg@mail.gmail.com>
-References: <20110530135133.1642dc87@ime5.iment.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40964 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756625Ab1EaOQJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2011 10:16:09 -0400
-Received: by qwk3 with SMTP id 3so2099218qwk.19
-        for <linux-ide@vger.kernel.org>; Tue, 31 May 2011 07:16:08 -0700 (PDT)
-In-Reply-To: <20110530135133.1642dc87@ime5.iment.local>
-Sender: linux-ide-owner@vger.kernel.org
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [RFC PATCH]: System Firmware and SMBIOS Support
+Date: Tue, 31 May 2011 11:50:40 -0400
+Message-ID: <20110531155040.3457.15296.sendpatchset@prarit.bos.redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, x86@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, openipmi-developer@lists.sourceforge.net, platform-dr
+Cc: grant.likely@secretlab.ca, dz@debian.org, rpurdie@rpsys.net, eric.piel@tremplin-utc.net, abelay@mit.edu, johnpol@2ka.mipt.ru, Prarit Bhargava <prarit@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Paul Kosinski <prk@iment.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Hello,
+Sorry for the wide-distribution.  The list of modified files is quite large.
 
-On Tue, May 31, 2011 at 2:51 AM, Paul Kosinski <prk@iment.com> wrote:
-> With the 2.6.39 kernel, the situation is reversed: the card's USB3
-> works, but SATA doesn't. In particular, the booting process reports
-> "failed to IDENTIFY (I/O error, err_mask=0x4)" for disks attached to
-> that adapter, even after trying lower link speeds.
+P.
 
-Does irqpoll kernel parameter make any difference?
+----8<----
 
-Thanks.
+DMI, or the Desktop Management Interface, provides access to OEM and hardware
+specific details about the x86 or ia64 system the kernel is currently runnig
+on.  DMI has been deprecated since 2003, which was the last update of the DMI
+Specification.
 
---
-tejun
+The System Management BIOS, or SMBIOS, supercedes DMI -- the SMBIOS tables
+include the possibility of a _DMI_ entry and tables.  However, in the
+Linux kernel we do not access any of the DMI data and only access SMBIOS data.
+
+Currently, the kernel uses dmi_* functions (as defined in
+drivers/firmware/dmi_scan.c) to access the data.  The functions allow kernel
+subsystems and modules to set specific options based on the platform and BIOS
+version.
+
+The dmi_* functions in the kernel fail in several ways.  First, as
+mentioned the dmi_* functions are really accessing SMBIOS data.  The existing
+code queries for the _SMB_ entry and determines data access after that.  The
+existing dmi_* functions create an array of x86 and ia64 specific entries
+which are defined as part of x86 and ia64 specific udev entries, and allows
+drivers and subsystems to make platform specific decisions.  In addition to
+the arch specific code, the dmi_* code creates a list of "devices" to which
+makes updating very difficult and does not easily scale.
+
+Another key issue with the existing code is that several drivers do their
+own search through the SMBIOS, for example, see drivers/pci/hotplug/cpqphp*.c.
+
+A month (or so) ago I proposed a patch which was based on a simple request
+from a colleague --  create a sysfs file that would export the SMBIOS version.
+This simple request was not something that was easy to do given the layout of
+the existing DMI code.  The request resulted in having to create a new smbios
+class within the kernel, and essentially doing a separate search through
+memory.
+
+This new patchset reworks the existing DMI code into two separate layers.  It is
+based off of the feedback I received previously when discussing the SMBIOS
+version patch on LKML.
+
+The first layer is the System Firmware Interface, which is based upon Alan
+Cox's suggestion of a common platform driver (unfortunately, platform driver
+is already defined and used within the kernel).  This is meant to be an
+arch independent subsystem in the kernel for all arches.  It is a common
+interface which provides access to specific system values in the kernel such
+as the Chassis Manufacturer, the BIOS developer, or the BIOS date.  The
+System Firmware Interface, or sysfw allows for easy updating by simply adding
+fields to an array in include/linux/mod_devicetable.h.
+Standard simple searching functions, sysfw_lookup() and sysfw_callback()
+are provided to the kernel and modules.  sysfw_callback() is similar to
+dmi_check_system() but the new function allows for exact matching which some
+drivers required.
+
+The second layer introduced in this patchset is the SMBIOS sysfw driver.  This
+driver (obviously) registers with the interface and also provides it's own
+interface.  The reason for the separate interface is that specific drivers
+have their own need to search the SMBIOS for OEM or platform specific
+information (see, for example, drivers/watchdog/hpwdt.c, or
+drivers/pci/pci-label.c).  This new driver provides a function, smbios_walk()
+which allows individual drivers or subsystems to traverse the SMBIOS table
+looking for OEM or platform specific data.  The new SMBIOS driver can be
+easily updated by adding SMBIOS structure information to the smbios_struct
+union in include/linux/smbios.h.
+
+These changes are targeted for at least 3.0.1.
+
+A git tree with these changes has been set up here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/prarit/smbios.git
+
+with the latest changes in the smbios-3.0-rc1 branch, and well-tested changes
+on the smbios-2.6.39 branch.
+
+P.
