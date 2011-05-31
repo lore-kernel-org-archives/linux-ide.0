@@ -1,826 +1,932 @@
 From: Prarit Bhargava <prarit@redhat.com>
-Subject: [RFC PATCH 01/35] System Firmware Interface
-Date: Tue, 31 May 2011 11:50:47 -0400
-Message-ID: <20110531155047.3462.78078.sendpatchset@prarit.bos.redhat.com>
-Content-Type: text/plain; charset=us-ascii
+Subject: [RFC PATCH 05/35] drivers/ata changes for SMBIOS and System Firmware
+Date: Tue, 31 May 2011 11:51:14 -0400
+Message-ID: <20110531155114.3484.37835.sendpatchset@prarit.bos.redhat.com>
+Content-Type: text/x-c; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, x86@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, openipmi-developer@lists.sourceforge.net, platform-dr
-Cc: grant.likely@secretlab.ca, dz@debian.org, rpurdie@rpsys.net, eric.piel@tremplin-utc.net, abelay@mit.edu, johnpol@2ka.mipt.ru, Prarit Bhargava <prarit@redhat.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-This patch introduces a general System Firmware interface to the kernel, called
-sysfw.
+drivers/ata changes for SMBIOS and System Firmware
 
-Inlcluded in this interface is the ability to search a standard set of fields,
-sysfw_lookup().  The fields are currently based upon the x86 and ia64 SMBIOS
-fields but exapandable to fields that other arches may introduce.  Also
-included is  the ability to search and match against those fields, and run
-a callback function against the matches, sysfw_callback().
-
-Modify module code to use sysfw instead of old DMI interface.
 ---
- drivers/firmware/Kconfig        |   25 ++++
- drivers/firmware/Makefile       |    3 +-
- drivers/firmware/sysfw-sysfs.c  |  266 +++++++++++++++++++++++++++++++++++++++
- drivers/firmware/sysfw.c        |  163 ++++++++++++++++++++++++
- include/linux/mod_devicetable.h |   62 +++++++++
- include/linux/sysfw.h           |  111 ++++++++++++++++
- init/main.c                     |    3 +
- scripts/mod/file2alias.c        |   52 ++++----
- 8 files changed, 658 insertions(+), 27 deletions(-)
- create mode 100644 drivers/firmware/sysfw-sysfs.c
- create mode 100644 drivers/firmware/sysfw.c
- create mode 100644 include/linux/sysfw.h
+ drivers/ata/acard-ahci.c  |    1 -
+ drivers/ata/ahci.c        |  177 +++++++++++++++++++++++----------------------
+ drivers/ata/ata_piix.c    |  156 +++++++++++++++++++++++-----------------
+ drivers/ata/pata_ali.c    |   18 +++---
+ drivers/ata/pata_cs5530.c |   10 ++--
+ drivers/ata/pata_rdc.c    |    1 -
+ drivers/ata/pata_sch.c    |    1 -
+ drivers/ata/pata_via.c    |   12 ++--
+ drivers/ata/sata_sil.c    |   19 +++---
+ 9 files changed, 208 insertions(+), 187 deletions(-)
 
-diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
-index efba163..79a1b9d 100644
---- a/drivers/firmware/Kconfig
-+++ b/drivers/firmware/Kconfig
-@@ -157,6 +157,31 @@ config SIGMA
- 	  If unsure, say N here.  Drivers that need these helpers will select
- 	  this option automatically.
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index ae22be4..d16b700 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -42,7 +42,6 @@
+ #include <linux/interrupt.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/device.h>
+-#include <linux/dmi.h>
+ #include <linux/gfp.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 71afe03..90100c4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -41,7 +41,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/device.h>
+-#include <linux/dmi.h>
++#include <linux/sysfw.h>
+ #include <linux/gfp.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -742,21 +742,22 @@ static void ahci_pci_print_info(struct ata_host *host)
+  */
+ static void ahci_p5wdh_workaround(struct ata_host *host)
+ {
+-	static struct dmi_system_id sysids[] = {
++	static struct sysfw_id sysids[] = {
+ 		{
+ 			.ident = "P5W DH Deluxe",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR,
+-					  "ASUSTEK COMPUTER INC"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "P5W DH Deluxe"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "ASUSTEK COMPUTER INC"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "P5W DH Deluxe"),
+ 			},
+ 		},
+-		{ }
++		{}
+ 	};
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
  
-+config SYSTEM_FIRMWARE
-+	bool "System Firmware Interface"
-+	default y
-+	help
-+	  Enables common System Firmware Interface to export system firmware
-+	  (SMBIOS, DMI, etc.) information to kernel and userspace.
-+
-+config SYSTEM_FIRMWARE_SYSFS
-+	bool "Export System Firmware identification via sysfs to userspace"
-+	depends on SYSTEM_FIRMWARE
-+	help
-+	  Say Y here if you want to query system identification information
-+	  from userspace through /sys/class/sysfw/id/ or if you want
-+	  system firmware (sysfw) based module auto-loading.
-+
-+config SYSTEM_FIRMWARE_DMI_COMPAT
-+	bool "Export dmi compatibility class in sysfs"
-+	depends on SYSTEM_FIRMWARE
-+	default y
-+	help
-+	  This exposes /sys/class/dmi/* as a pointer to the sysfw class for
-+	  old software.  This is purely a backwards compatability feature and
-+	  should not be used in new user space software.  Please see
-+	  Documentation/ABI for details.
-+
- source "drivers/firmware/google/Kconfig"
+ 	if (pdev->bus->number == 0 && pdev->devfn == PCI_DEVFN(0x1f, 2) &&
+-	    dmi_check_system(sysids)) {
++	    sysfw_callback(sysids)) {
+ 		struct ata_port *ap = host->ports[1];
  
- endmenu
-diff --git a/drivers/firmware/Makefile b/drivers/firmware/Makefile
-index 47338c9..41bc64a 100644
---- a/drivers/firmware/Makefile
-+++ b/drivers/firmware/Makefile
-@@ -13,5 +13,6 @@ obj-$(CONFIG_ISCSI_IBFT_FIND)	+= iscsi_ibft_find.o
- obj-$(CONFIG_ISCSI_IBFT)	+= iscsi_ibft.o
- obj-$(CONFIG_FIRMWARE_MEMMAP)	+= memmap.o
- obj-$(CONFIG_SIGMA)		+= sigma.o
+ 		dev_printk(KERN_INFO, &pdev->dev, "enabling ASUS P5W DH "
+@@ -770,7 +771,7 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+ /* only some SB600 ahci controllers can do 64bit DMA */
+ static bool ahci_sb600_enable_64bit(struct pci_dev *pdev)
+ {
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		/*
+ 		 * The oldest version known to be broken is 0901 and
+ 		 * working is 1501 which was released on 2007-10-26.
+@@ -781,43 +782,41 @@ static bool ahci_sb600_enable_64bit(struct pci_dev *pdev)
+ 		{
+ 			.ident = "ASUS M2A-VM",
+ 			.matches = {
+-				DMI_MATCH(DMI_BOARD_VENDOR,
+-					  "ASUSTeK Computer INC."),
+-				DMI_MATCH(DMI_BOARD_NAME, "M2A-VM"),
++				SYSFW_MATCH(SYSFW_BOARD_VENDOR,
++					    "ASUSTeK Computer INC."),
++				SYSFW_MATCH(SYSFW_BOARD_NAME, "M2A-VM"),
+ 			},
+-			.driver_data = "20071026",	/* yyyymmdd */
++			.driver_data = (void *)20071026, /* yyyymmdd */
+ 		},
+ 		/*
+ 		 * All BIOS versions for the MSI K9A2 Platinum (MS-7376)
+ 		 * support 64bit DMA.
+ 		 *
+-		 * BIOS versions earlier than 1.5 had the Manufacturer DMI
++		 * BIOS versions earlier than 1.5 had the Manufacturer SMBIOS
+ 		 * fields as "MICRO-STAR INTERANTIONAL CO.,LTD".
+ 		 * This spelling mistake was fixed in BIOS version 1.5, so
+ 		 * 1.5 and later have the Manufacturer as
+ 		 * "MICRO-STAR INTERNATIONAL CO.,LTD".
+-		 * So try to match on DMI_BOARD_VENDOR of "MICRO-STAR INTER".
++		 * So try to match on SYSFW_BOARD_VENDOR of "MICRO-STAR INTER".
+ 		 *
+ 		 * BIOS versions earlier than 1.9 had a Board Product Name
+-		 * DMI field of "MS-7376". This was changed to be
++		 * SMBIOS field of "MS-7376". This was changed to be
+ 		 * "K9A2 Platinum (MS-7376)" in version 1.9, but we can still
+-		 * match on DMI_BOARD_NAME of "MS-7376".
++		 * match on SYSFW_BOARD_NAME of "MS-7376".
+ 		 */
+ 		{
+ 			.ident = "MSI K9A2 Platinum",
+ 			.matches = {
+-				DMI_MATCH(DMI_BOARD_VENDOR,
+-					  "MICRO-STAR INTER"),
+-				DMI_MATCH(DMI_BOARD_NAME, "MS-7376"),
++				SYSFW_MATCH(SYSFW_BOARD_VENDOR,
++					    "MICRO-STAR INTER"),
++				SYSFW_MATCH(SYSFW_BOARD_NAME, "MS-7376"),
+ 			},
+ 		},
+-		{ }
++		{}
+ 	};
+-	const struct dmi_system_id *match;
+-	int year, month, date;
+-	char buf[9];
++	const struct sysfw_id *match;
+ 
+-	match = dmi_first_match(sysids);
++	match = sysfw_callback(sysids);
+ 	if (pdev->bus->number != 0 || pdev->devfn != PCI_DEVFN(0x12, 0) ||
+ 	    !match)
+ 		return false;
+@@ -825,14 +824,12 @@ static bool ahci_sb600_enable_64bit(struct pci_dev *pdev)
+ 	if (!match->driver_data)
+ 		goto enable_64bit;
+ 
+-	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
+-	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
 -
- obj-$(CONFIG_GOOGLE_FIRMWARE)	+= google/
-+obj-$(CONFIG_SYSTEM_FIRMWARE)	+= sysfw.o
-+obj-$(CONFIG_SYSTEM_FIRMWARE_SYSFS)	+= sysfw-sysfs.o
-diff --git a/drivers/firmware/sysfw-sysfs.c b/drivers/firmware/sysfw-sysfs.c
-new file mode 100644
-index 0000000..9d68d2a
---- /dev/null
-+++ b/drivers/firmware/sysfw-sysfs.c
-@@ -0,0 +1,266 @@
-+/*
-+ * Export sysfs sysfw_field's to userspace
-+ *
-+ * Updated 2011, Prarit Bhargava, prarit@redhat.com
-+ * Copyright 2007, Lennart Poettering
-+ *
-+ * Licensed under GPLv2
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/sysfw.h>
-+#include <linux/device.h>
-+#include <linux/slab.h>
-+#include <linux/sysfw.h>
-+
-+struct sysfw_device_attribute {
-+	struct device_attribute dev_attr;
-+	int field;
-+};
-+#define to_sysfw_dev_attr(_dev_attr) \
-+	container_of(_dev_attr, struct sysfw_device_attribute, dev_attr)
-+
-+static ssize_t sys_sysfw_field_show(struct device *dev,
-+				  struct device_attribute *attr,
-+				  char *page)
-+{
-+	int field = to_sysfw_dev_attr(attr)->field;
-+	ssize_t len;
-+	len = scnprintf(page, PAGE_SIZE, "%s\n", sysfw_lookup(field));
-+	page[len-1] = '\n';
-+	return len;
-+}
-+
-+#define SYSFW_ATTR(_name, _mode, _show, _field)			\
-+	{ .dev_attr = __ATTR(_name, _mode, _show, NULL),	\
-+	  .field = _field }
-+
-+#define DEFINE_SYSFW_ATTR_WITH_SHOW(_name, _mode, _field)		\
-+static struct sysfw_device_attribute sys_sysfw_##_name##_attr =	\
-+	SYSFW_ATTR(_name, _mode, sys_sysfw_field_show, _field);
-+
-+DEFINE_SYSFW_ATTR_WITH_SHOW(bios_vendor,	0444, SYSFW_BIOS_VENDOR);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(bios_version,	0444, SYSFW_BIOS_VERSION);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(bios_date,		0444, SYSFW_BIOS_DATE);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(sys_vendor,	0444, SYSFW_SYS_VENDOR);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(product_name,	0444, SYSFW_PRODUCT_NAME);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(product_version,	0444, SYSFW_PRODUCT_VERSION);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(product_serial,	0400, SYSFW_PRODUCT_SERIAL);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(product_uuid,	0400, SYSFW_PRODUCT_UUID);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(board_vendor,	0444, SYSFW_BOARD_VENDOR);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(board_name,	0444, SYSFW_BOARD_NAME);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(board_version,	0444, SYSFW_BOARD_VERSION);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(board_serial,	0400, SYSFW_BOARD_SERIAL);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(board_asset_tag,	0444, SYSFW_BOARD_ASSET_TAG);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(chassis_vendor,	0444, SYSFW_CHASSIS_VENDOR);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(chassis_type,	0444, SYSFW_CHASSIS_TYPE);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(chassis_version,	0444, SYSFW_CHASSIS_VERSION);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(chassis_serial,	0400, SYSFW_CHASSIS_SERIAL);
-+DEFINE_SYSFW_ATTR_WITH_SHOW(chassis_asset_tag,	0444, SYSFW_CHASSIS_ASSET_TAG);
-+
-+static void ascii_filter(char *d, const char *s)
-+{
-+	/* Filter out characters we don't want to see in the modalias string */
-+	for (; *s; s++)
-+		if (*s > ' ' && *s < 127 && *s != ':')
-+			*(d++) = *s;
-+
-+	*d = 0;
-+}
-+
-+static ssize_t get_modalias(char *buffer, size_t buffer_size)
-+{
-+	static const struct mafield {
-+		const char *prefix;
-+		int field;
-+	} fields[] = {
-+		{ "bvn", SYSFW_BIOS_VENDOR },
-+		{ "bvr", SYSFW_BIOS_VERSION },
-+		{ "bd",  SYSFW_BIOS_DATE },
-+		{ "svn", SYSFW_SYS_VENDOR },
-+		{ "pn",  SYSFW_PRODUCT_NAME },
-+		{ "pvr", SYSFW_PRODUCT_VERSION },
-+		{ "rvn", SYSFW_BOARD_VENDOR },
-+		{ "rn",  SYSFW_BOARD_NAME },
-+		{ "rvr", SYSFW_BOARD_VERSION },
-+		{ "cvn", SYSFW_CHASSIS_VENDOR },
-+		{ "ct",  SYSFW_CHASSIS_TYPE },
-+		{ "cvr", SYSFW_CHASSIS_VERSION },
-+		{ NULL,  SYSFW_NONE }
-+	};
-+
-+	ssize_t l, left;
-+	char *p;
-+	const struct mafield *f;
-+
-+	strcpy(buffer, "sysfw");
-+	p = buffer + 3; left = buffer_size - 4;
-+
-+	for (f = fields; f->prefix && left > 0; f++) {
-+		const char *c;
-+		char *t;
-+
-+		c = sysfw_lookup(f->field);
-+		if (!c)
-+			continue;
-+
-+		t = kmalloc(strlen(c) + 1, GFP_KERNEL);
-+		if (!t)
-+			break;
-+		ascii_filter(t, c);
-+		l = scnprintf(p, left, ":%s%s", f->prefix, t);
-+		kfree(t);
-+
-+		p += l;
-+		left -= l;
-+	}
-+
-+	p[0] = ':';
-+	p[1] = 0;
-+
-+	return p - buffer + 1;
-+}
-+
-+static ssize_t sys_sysfw_modalias_show(struct device *dev,
-+				     struct device_attribute *attr, char *page)
-+{
-+	ssize_t r;
-+	r = get_modalias(page, PAGE_SIZE-1);
-+	page[r] = '\n';
-+	page[r+1] = 0;
-+	return r+1;
-+}
-+
-+static struct device_attribute sys_sysfw_modalias_attr =
-+	__ATTR(modalias, 0444, sys_sysfw_modalias_show, NULL);
-+
-+static struct attribute *sys_sysfw_attributes[SYSFW_STRING_MAX+2];
-+
-+static struct attribute_group sys_sysfw_attribute_group = {
-+	.attrs = sys_sysfw_attributes,
-+};
-+
-+static const struct attribute_group *sys_sysfw_attribute_groups[] = {
-+	&sys_sysfw_attribute_group,
-+	NULL
-+};
-+
-+static int sysfw_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
-+{
-+	ssize_t len;
-+
-+	if (add_uevent_var(env, "MODALIAS="))
-+		return -ENOMEM;
-+	len = get_modalias(&env->buf[env->buflen - 1],
-+			   sizeof(env->buf) - env->buflen);
-+	if (len >= (sizeof(env->buf) - env->buflen))
-+		return -ENOMEM;
-+	env->buflen += len;
-+	return 0;
-+}
-+
-+static struct class sysfw_class = {
-+	.name = "sysfw",
-+	.dev_release = (void(*)(struct device *)) kfree,
-+	.dev_uevent = sysfw_dev_uevent,
-+};
-+
-+/* Initialization */
-+
-+#define ADD_SYSFW_ATTR(_name, _field) \
-+	if (sysfw_lookup(_field)) \
-+		sys_sysfw_attributes[i++] = \
-+		&sys_sysfw_##_name##_attr.dev_attr.attr;
-+
-+/* In a separate function to keep gcc 3.2 happy - do NOT merge this in
-+   sysfw_id_init! */
-+static void __init sysfw_id_init_attr_table(void)
-+{
-+	int i;
-+
-+	/* Not necessarily all SYSFW fields are available on all
-+	 * systems, hence let's built an attribute table of just
-+	 * what's available */
-+	i = 0;
-+	ADD_SYSFW_ATTR(bios_vendor,       SYSFW_BIOS_VENDOR);
-+	ADD_SYSFW_ATTR(bios_version,      SYSFW_BIOS_VERSION);
-+	ADD_SYSFW_ATTR(bios_date,         SYSFW_BIOS_DATE);
-+	ADD_SYSFW_ATTR(sys_vendor,        SYSFW_SYS_VENDOR);
-+	ADD_SYSFW_ATTR(product_name,      SYSFW_PRODUCT_NAME);
-+	ADD_SYSFW_ATTR(product_version,   SYSFW_PRODUCT_VERSION);
-+	ADD_SYSFW_ATTR(product_serial,    SYSFW_PRODUCT_SERIAL);
-+	ADD_SYSFW_ATTR(product_uuid,      SYSFW_PRODUCT_UUID);
-+	ADD_SYSFW_ATTR(board_vendor,      SYSFW_BOARD_VENDOR);
-+	ADD_SYSFW_ATTR(board_name,        SYSFW_BOARD_NAME);
-+	ADD_SYSFW_ATTR(board_version,     SYSFW_BOARD_VERSION);
-+	ADD_SYSFW_ATTR(board_serial,      SYSFW_BOARD_SERIAL);
-+	ADD_SYSFW_ATTR(board_asset_tag,   SYSFW_BOARD_ASSET_TAG);
-+	ADD_SYSFW_ATTR(chassis_vendor,    SYSFW_CHASSIS_VENDOR);
-+	ADD_SYSFW_ATTR(chassis_type,      SYSFW_CHASSIS_TYPE);
-+	ADD_SYSFW_ATTR(chassis_version,   SYSFW_CHASSIS_VERSION);
-+	ADD_SYSFW_ATTR(chassis_serial,    SYSFW_CHASSIS_SERIAL);
-+	ADD_SYSFW_ATTR(chassis_asset_tag, SYSFW_CHASSIS_ASSET_TAG);
-+	sys_sysfw_attributes[i++] = &sys_sysfw_modalias_attr.attr;
-+}
-+
-+static struct device sysfw_dev;
-+
-+#ifdef CONFIG_SYSTEM_FIRMWARE_DMI_COMPAT
-+static struct class_compat *dmi_compat_class;
-+
-+/* Hopefully someday we can get rid of this.*/
-+static int __init sysfw_legacy_dmi(void)
-+{
-+	int ret;
-+
-+	dmi_compat_class = class_compat_register("dmi");
-+	if (!dmi_compat_class)
-+		return -ENOMEM;
-+
-+	ret = class_compat_create_link(dmi_compat_class, &sysfw_dev, NULL);
-+	if (ret)
-+		return ret;
-+	return 0;
-+}
-+#else
-+static int __init sysfw_legacy_dmi(void)
-+{
-+	return 0;
-+}
-+#endif
-+
-+static int __init sysfw_id_init(void)
-+{
-+	int ret;
-+
-+	sysfw_id_init_attr_table();
-+
-+	ret = class_register(&sysfw_class);
-+	if (ret)
-+		return ret;
-+
-+	sysfw_dev.class = &sysfw_class;
-+	dev_set_name(&sysfw_dev, "id");
-+	sysfw_dev.groups = sys_sysfw_attribute_groups;
-+
-+	ret = device_register(&sysfw_dev);
-+	if (ret)
-+		goto out;
-+
-+	/* Failing to setup legacy DMI is NOT a fatal error */
-+	ret = sysfw_legacy_dmi();
-+	if (ret)
-+		printk(KERN_ERR "SYSFW: DMI Legacy sysfs did not "
-+		       "initialize.\n");
-+
-+	return 0;
-+
-+out:
-+	class_unregister(&sysfw_class);
-+
-+	return ret;
-+}
-+
-+arch_initcall(sysfw_id_init);
-diff --git a/drivers/firmware/sysfw.c b/drivers/firmware/sysfw.c
-new file mode 100644
-index 0000000..bcf5737
---- /dev/null
-+++ b/drivers/firmware/sysfw.c
-@@ -0,0 +1,163 @@
-+/*
-+ * System Firmware (sysfw) support
-+ *
-+ * started by Prarit Bhargava, Copyright (C) 2011 Red Hat, Inc.
-+ *
-+ * SYSFW interface to export commonly used values from System Firmware
-+ *
-+ * Some bits copied directly from original x86 and ia64 dmi*.c files
-+ */
-+#include <linux/device.h>
-+#include <linux/errno.h>
-+#include <linux/init.h>
-+#include <linux/kernel.h>
-+#include <linux/mod_devicetable.h>
-+#include <linux/slab.h>
-+#include <linux/sysfw.h>
-+
-+/* Global sysfw instance */
-+static struct sysfw_driver *sysfw;
-+
-+/* register a firmware driver, no need for sysfw_driver_unregister() */
-+/**
-+ * sysfw_driver_register - register a firmware driver
-+ * @driver: sysfw_driver struct representing driver to register
-+ *
-+ * This function registers a sysfw driver.  Since the FW exists for the
-+ * lifetime of the system there is no need for an unregister function.
-+ */
-+int __init sysfw_driver_register(struct sysfw_driver *driver)
-+{
-+	int ret;
-+
-+	if (!driver->init || !driver->name) {
-+		WARN(1, "System Firmware Interface: driver error\n");
-+		return -EFAULT;
-+	}
-+
-+	sysfw = driver;
-+	ret = sysfw->init();
-+	if (ret)
-+		return -ENODEV;
-+
-+	return 0;
-+}
-+
-+/* called in start_kernel(), after memory management has been initialized. */
-+void __init sysfw_init_late(void)
-+{
-+	if (sysfw && sysfw->late)
-+		sysfw->late();
-+}
-+
-+/**
-+ * sysfw_lookup - find a sysfw value for a given field.
-+ * @field: field to lookup
-+ *
-+ * This function calls into the system firmware and returns an appropriate
-+ * string.
-+ */
-+const char *sysfw_lookup(int field)
-+{
-+	if (sysfw && sysfw->lookup)
-+		return sysfw->lookup(field);
-+	return NULL;
-+}
-+EXPORT_SYMBOL_GPL(sysfw_lookup);
-+
-+/**
-+ * sysfw_vendor_is - checks to see if the vendor fields in the firmware
-+ * contain a string
-+ * @str: string to search for
-+ *
-+ * Returns true/false if the string is in any of the SYSFW_*VENDOR* fields.
-+ */
-+bool sysfw_vendor_is(const char *str)
-+{
-+	static int fields[] = { SYSFW_BIOS_VENDOR, SYSFW_BIOS_VERSION,
-+				SYSFW_SYS_VENDOR, SYSFW_PRODUCT_NAME,
-+				SYSFW_PRODUCT_VERSION, SYSFW_BOARD_VENDOR,
-+				SYSFW_BOARD_NAME, SYSFW_BOARD_VERSION,
-+				SYSFW_NONE };
-+	int i;
-+
-+	if (!sysfw)
-+		return false;
-+
-+	if (!sysfw->lookup)
-+		return false;
-+
-+	for (i = 0; fields[i] != SYSFW_NONE; i++) {
-+		if (sysfw_lookup(i) && strstr(sysfw_lookup(i), str))
-+			return true;
-+	}
-+	return false;
-+}
-+EXPORT_SYMBOL(sysfw_vendor_is);
-+
-+/**
-+ * sysfw_get_date - returns the date of the firmware in YYYYMMDD format.
-+ *
-+ * Retuns the date the firmware was built in YYYYMMDD for easy comparisons.
-+ */
-+int sysfw_get_date(void)
-+{
-+	if (sysfw && sysfw->date)
-+		return sysfw->date();
-+	return 0;
-+}
-+EXPORT_SYMBOL(sysfw_get_date);
-+
-+/* compares and matches the strings in sysfw_id */
-+static bool sysfw_match_fields(const struct sysfw_id *id, int exactmatch)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(id->matches); i++) {
-+		int s = id->matches[i].slot;
-+		if (s == SYSFW_NONE)
-+			break;
-+		if (!sysfw_lookup(s))
-+			continue;
-+		if (exactmatch &&
-+		    !strcmp(sysfw_lookup(s), id->matches[i].substr))
-+			continue;
-+		if (!exactmatch &&
-+		    strstr(sysfw_lookup(s), id->matches[i].substr))
-+			continue;
-+		/* No match */
-+		return false;
-+	}
-+	return true;
-+}
-+
-+static bool sysfw_is_end_of_table(const struct sysfw_id *id)
-+{
-+	return id->matches[0].slot == SYSFW_NONE;
-+}
-+
-+/**
-+ * sysfw_callback - go through a list and run a function on all matching ids
-+ * @list: list of ids to search
-+ *
-+ * This function takes a list of fields and strings to compare, attempts to
-+ * compare the strings to the sysfw fields and runs a callback function for
-+ * each positive comparison.  The comparison can stop by returning 0 in
-+ * the callback function.
-+ */
-+const struct sysfw_id *sysfw_callback(const struct sysfw_id *list)
-+{
-+	const struct sysfw_id *id;
-+
-+	if (!sysfw)
-+		return NULL;
-+
-+	for (id = list; !sysfw_is_end_of_table(id); id++)
-+		if (sysfw_match_fields(id, id->exactmatch)) {
-+			if (id->callback)
-+				id->callback(id);
-+			return id;
-+		}
-+	return NULL;
-+}
-+EXPORT_SYMBOL(sysfw_callback);
-diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-index ae28e93..a206188 100644
---- a/include/linux/mod_devicetable.h
-+++ b/include/linux/mod_devicetable.h
-@@ -482,6 +482,68 @@ struct dmi_system_id {
+-	if (strcmp(buf, match->driver_data) >= 0)
++	if (sysfw_get_date() >= (unsigned long)match->driver_data)
+ 		goto enable_64bit;
+ 	else {
+-		dev_printk(KERN_WARNING, &pdev->dev, "%s: BIOS too old, "
+-			   "forcing 32bit DMA, update BIOS\n", match->ident);
++		dev_printk(KERN_WARNING, &pdev->dev, "%s: BIOS too old, %s "
++			   "forcing 32bit DMA, update BIOS\n", match->ident,
++			   sysfw_lookup(SYSFW_BIOS_DATE));
+ 		return false;
+ 	}
  
- #define DMI_MATCH(a, b)	{ a, b }
+@@ -844,12 +841,14 @@ enable_64bit:
  
-+/*
-+ * sysfw field - right now these are based on x86/ia64's SMBIOS fields.  But
-+ * other arches are certainly welcome to add additional fields.  The
-+ * sys_lookup() functions must be careful to return NULL on non-populated
-+ * fields.
-+ */
-+enum sysfw_field {
-+	SYSFW_NONE,
-+	SYSFW_BIOS_VENDOR,
-+	SYSFW_BIOS_VERSION,
-+	SYSFW_BIOS_DATE,
-+	SYSFW_SYS_VENDOR,
-+	SYSFW_PRODUCT_NAME,
-+	SYSFW_PRODUCT_VERSION,
-+	SYSFW_PRODUCT_SERIAL,
-+	SYSFW_PRODUCT_UUID,
-+	SYSFW_BOARD_VENDOR,
-+	SYSFW_BOARD_NAME,
-+	SYSFW_BOARD_VERSION,
-+	SYSFW_BOARD_SERIAL,
-+	SYSFW_BOARD_ASSET_TAG,
-+	SYSFW_CHASSIS_VENDOR,
-+	SYSFW_CHASSIS_TYPE,
-+	SYSFW_CHASSIS_VERSION,
-+	SYSFW_CHASSIS_SERIAL,
-+	SYSFW_CHASSIS_ASSET_TAG,
-+	SYSFW_STRING_MAX,
-+};
-+
-+struct sysfw_strmatch {
-+	unsigned char slot;
-+	char substr[79];
-+};
-+
-+#ifndef __KERNEL__
-+struct sysfw_id {
-+	kernel_ulong_t callback;
-+	kernel_ulong_t ident;
-+	struct sysfw_strmatch matches[4];
-+	kernel_ulong_t driver_data
-+			__attribute__((aligned(sizeof(kernel_ulong_t))));
-+	kernel_ulong_t exactmatch;
-+};
-+#else
-+struct sysfw_id {
-+	int (*callback)(const struct sysfw_id *);
-+	const char *ident;
-+	struct sysfw_strmatch matches[4];
-+	void *driver_data;
-+	kernel_ulong_t exactmatch;
-+};
-+/*
-+ * struct sysfw_device_id appears during expansion of
-+ * "MODULE_DEVICE_TABLE(sysfw, x)". Compiler doesn't look inside it
-+ * but this is enough for gcc 3.4.6 to error out:
-+ *	error: storage size of '__mod_sysfw_device_table' isn't known
-+ */
-+#define sysfw_device_id sysfw_system_id
-+#endif
-+
-+#define SYSFW_MATCH(a, b)	{ a, b }
-+
- #define PLATFORM_NAME_SIZE	20
- #define PLATFORM_MODULE_PREFIX	"platform:"
+ static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
+ {
+-	static const struct dmi_system_id broken_systems[] = {
++	static const struct sysfw_id broken_systems[] = {
+ 		{
+ 			.ident = "HP Compaq nx6310",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6310"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Compaq nx6310"),
+ 			},
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x1FUL,
+@@ -857,19 +856,20 @@ static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
+ 		{
+ 			.ident = "HP Compaq 6720s",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 6720s"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Compaq 6720s"),
+ 			},
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x1FUL,
+ 		},
+-
+-		{ }	/* terminate list */
++		{}
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++	const struct sysfw_id *id = sysfw_callback(broken_systems);
  
-diff --git a/include/linux/sysfw.h b/include/linux/sysfw.h
-new file mode 100644
-index 0000000..06a0c8c
---- /dev/null
-+++ b/include/linux/sysfw.h
-@@ -0,0 +1,111 @@
-+/*
-+ * include/linux/sysfw.h
-+ *
-+ * System Firmware (sysfw) Interface
-+ */
-+#ifndef _SYSFW_H
-+#define _SYSFW_H
-+
-+#include <linux/mod_devicetable.h>
-+
-+/*
-+ * sysfw_id and sysfw_field (the SYSFW_*) enums are defined in
-+ * mod_devicetable.h
-+ */
-+
-+/*
-+ * sysfw_driver struct -- passed in to sysfw_init() by every firmware
-+ * driver
-+ */
-+struct sysfw_driver {
-+	const char *name;
-+	/* find & evaluate firmware */
-+	int (*init)(void);
-+	/* late init, done after memory management is initialized */
-+	int (*late)(void);
-+	/* find a specific value in sysfw_field */
-+	const char * (*lookup)(int field);
-+	/* return date in YYYYMMDD format */
-+	int (*date)(void);
-+};
-+
-+#ifdef CONFIG_SYSTEM_FIRMWARE
-+/**
-+ * sysfw_driver_register - register a firmware driver
-+ * @driver: sysfw_driver struct representing driver to register
-+ *
-+ * This function registers a sysfw driver.  Since the FW exists for the
-+ * lifetime of the system there is no need for an unregister function.
-+ */
-+extern int sysfw_driver_register(struct sysfw_driver *driver);
-+
-+/**
-+ * sysfw_lookup - find a sysfw value for a given field.
-+ * @field: field to lookup
-+ *
-+ * This function calls into the system firmware and returns an appropriate
-+ * string.
-+ */
-+extern const char *sysfw_lookup(int field);
-+
-+/**
-+ * sysfw_get_date - returns the date of the firmware in YYYYMMDD format.
-+ *
-+ * Retuns the date the firmware was built in YYYYMMDD for easy comparisons.
-+ */
-+extern int sysfw_get_date(void);
-+
-+/**
-+ * sysfw_vendor_is - checks to see if the vendor fields in the firmware
-+ * contain a string
-+ * @str: string to search for
-+ *
-+ * Returns true/false if the string is in any of the SYSFW_*VENDOR* fields.
-+ */
-+extern bool sysfw_vendor_is(const char *str);
-+
-+/**
-+ * sysfw_callback - go through a list and run a function on all matching ids
-+ * @list: list of ids to search
-+ *
-+ * This function takes a list of fields and strings to compare, attempts to
-+ * compare the strings to the sysfw fields and runs a callback function for
-+ * each positive comparison.  The comparison can stop by returning 0 in
-+ * the callback function.  The function returns the first match in the list.
-+ */
-+extern const struct sysfw_id *sysfw_callback(const struct sysfw_id *list);
-+
-+/* Kernel internal only, run after memory management has been initialized */
-+extern void sysfw_init_late(void);
-+
-+#else /* CONFIG_SYSTEM_FIRMWARE */
-+
-+static inline int sysfw_driver_register(struct sysfw_driver *driver)
-+{
-+	return -1;
-+}
-+static inline const char *sysfw_lookup(int field)
-+{
-+	return NULL;
-+}
-+static inline int sysfw_get_date(void)
-+{
-+	return 0;
-+}
-+static inline bool sysfw_vendor_is(const char *str)
-+{
-+	return false;
-+}
-+static const struct sysfw_id *sysfw_callback(const struct sysfw_id *list)
-+{
-+	return NULL;
-+}
-+static inline void sysfw_init_late(void)
-+{
-+	return;
-+}
-+#endif /* CONFIG_SYSTEM_FIRMWARE */
-+
-+#define sysfw_vendor_contains(str) sysfw_vendor_is(str)
-+
-+#endif /* _SYSFW_H */
-diff --git a/init/main.c b/init/main.c
-index cafba67..68e1136 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -68,6 +68,7 @@
- #include <linux/shmem_fs.h>
- #include <linux/slab.h>
- #include <linux/perf_event.h>
-+#include <linux/sysfw.h>
+-	if (dmi) {
+-		unsigned long slot = (unsigned long)dmi->driver_data;
++	if (id) {
++		unsigned long slot = (unsigned long)id->driver_data;
+ 		/* apply the quirk only to on-board controllers */
+ 		return slot == PCI_SLOT(pdev->devfn);
+ 	}
+@@ -879,7 +879,7 @@ static bool ahci_broken_system_poweroff(struct pci_dev *pdev)
  
- #include <asm/io.h>
- #include <asm/bugs.h>
-@@ -553,6 +554,8 @@ asmlinkage void __init start_kernel(void)
+ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ {
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		/*
+ 		 * On HP dv[4-6] and HDX18 with earlier BIOSen, link
+ 		 * to the harddisk doesn't become online after
+@@ -896,38 +896,42 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 		{
+ 			.ident = "dv4",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME,
+-					  "HP Pavilion dv4 Notebook PC"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Pavilion dv4 Notebook PC"),
+ 			},
+-			.driver_data = "20090105",	/* F.30 */
++			.driver_data = (void *)20090105, /* F.30 */
+ 		},
+ 		{
+ 			.ident = "dv5",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME,
+-					  "HP Pavilion dv5 Notebook PC"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Pavilion dv5 Notebook PC"),
+ 			},
+-			.driver_data = "20090506",	/* F.16 */
++			.driver_data = (void *)20090506, /* F.16 */
+ 		},
+ 		{
+ 			.ident = "dv6",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME,
+-					  "HP Pavilion dv6 Notebook PC"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Pavilion dv6 Notebook PC"),
+ 			},
+-			.driver_data = "20090423",	/* F.21 */
++			.driver_data = (void *)20090423, /* F.21 */
+ 		},
+ 		{
+ 			.ident = "HDX18",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME,
+-					  "HP HDX18 Notebook PC"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP HDX18 Notebook PC"),
+ 			},
+-			.driver_data = "20090430",	/* F.23 */
++			.driver_data = (void *)20090430, /* F.23 */
+ 		},
+ 		/*
+ 		 * Acer eMachines G725 has the same problem.  BIOS
+@@ -941,31 +945,27 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 		{
+ 			.ident = "G725",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "eMachines"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "eMachines G725"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "eMachines"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "eMachines G725"),
+ 			},
+-			.driver_data = "20091216",	/* V3.04 */
++			.driver_data = (void *)20091216, /* V3.04 */
+ 		},
+-		{ }	/* terminate list */
++		{}
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(sysids);
+-	int year, month, date;
+-	char buf[9];
++	const struct sysfw_id *id = sysfw_callback(sysids);
  
- 	kmem_cache_init_late();
+-	if (!dmi || pdev->bus->number || pdev->devfn != PCI_DEVFN(0x1f, 2))
++	if (!id || pdev->bus->number || pdev->devfn != PCI_DEVFN(0x1f, 2))
+ 		return false;
  
-+	sysfw_init_late();
-+
- 	/*
- 	 * HACK ALERT! This is early. We're enabling the console before
- 	 * we've done PCI setups etc, and console_init() must be aware of
-diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
-index e26e2fb..92a27e3 100644
---- a/scripts/mod/file2alias.c
-+++ b/scripts/mod/file2alias.c
-@@ -753,26 +753,26 @@ static int do_spi_entry(const char *filename, struct spi_device_id *id,
- 	return 1;
+-	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
+-	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
+-
+-	return strcmp(buf, dmi->driver_data) < 0;
++	return (sysfw_get_date() < (unsigned long)id->driver_data);
  }
  
--static const struct dmifield {
-+static const struct sysfwfield {
- 	const char *prefix;
- 	int field;
--} dmi_fields[] = {
--	{ "bvn", DMI_BIOS_VENDOR },
--	{ "bvr", DMI_BIOS_VERSION },
--	{ "bd",  DMI_BIOS_DATE },
--	{ "svn", DMI_SYS_VENDOR },
--	{ "pn",  DMI_PRODUCT_NAME },
--	{ "pvr", DMI_PRODUCT_VERSION },
--	{ "rvn", DMI_BOARD_VENDOR },
--	{ "rn",  DMI_BOARD_NAME },
--	{ "rvr", DMI_BOARD_VERSION },
--	{ "cvn", DMI_CHASSIS_VENDOR },
--	{ "ct",  DMI_CHASSIS_TYPE },
--	{ "cvr", DMI_CHASSIS_VERSION },
--	{ NULL,  DMI_NONE }
-+} sysfw_fields[] = {
-+	{ "bvn", SYSFW_BIOS_VENDOR },
-+	{ "bvr", SYSFW_BIOS_VERSION },
-+	{ "bd",  SYSFW_BIOS_DATE },
-+	{ "svn", SYSFW_SYS_VENDOR },
-+	{ "pn",  SYSFW_PRODUCT_NAME },
-+	{ "pvr", SYSFW_PRODUCT_VERSION },
-+	{ "rvn", SYSFW_BOARD_VENDOR },
-+	{ "rn",  SYSFW_BOARD_NAME },
-+	{ "rvr", SYSFW_BOARD_VERSION },
-+	{ "cvn", SYSFW_CHASSIS_VENDOR },
-+	{ "ct",  SYSFW_CHASSIS_TYPE },
-+	{ "cvr", SYSFW_CHASSIS_VERSION },
-+	{ NULL,  SYSFW_NONE }
+ static bool ahci_broken_online(struct pci_dev *pdev)
+ {
+ #define ENCODE_BUSDEVFN(bus, slot, func)			\
+ 	(void *)(unsigned long)(((bus) << 8) | PCI_DEVFN((slot), (func)))
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		/*
+ 		 * There are several gigabyte boards which use
+ 		 * SIMG5723s configured as hardware RAID.  Certain
+@@ -982,31 +982,31 @@ static bool ahci_broken_online(struct pci_dev *pdev)
+ 		{
+ 			.ident = "EP45-DQ6",
+ 			.matches = {
+-				DMI_MATCH(DMI_BOARD_VENDOR,
+-					  "Gigabyte Technology Co., Ltd."),
+-				DMI_MATCH(DMI_BOARD_NAME, "EP45-DQ6"),
++				SYSFW_MATCH(SYSFW_BOARD_VENDOR,
++					    "Gigabyte Technology Co., Ltd."),
++				SYSFW_MATCH(SYSFW_BOARD_NAME, "EP45-DQ6"),
+ 			},
+ 			.driver_data = ENCODE_BUSDEVFN(0x0a, 0x00, 0),
+ 		},
+ 		{
+ 			.ident = "EP45-DS5",
+ 			.matches = {
+-				DMI_MATCH(DMI_BOARD_VENDOR,
+-					  "Gigabyte Technology Co., Ltd."),
+-				DMI_MATCH(DMI_BOARD_NAME, "EP45-DS5"),
++				SYSFW_MATCH(SYSFW_BOARD_VENDOR,
++					    "Gigabyte Technology Co., Ltd."),
++				SYSFW_MATCH(SYSFW_BOARD_NAME, "EP45-DS5"),
+ 			},
+ 			.driver_data = ENCODE_BUSDEVFN(0x03, 0x00, 0),
+ 		},
+-		{ }	/* terminate list */
++		{}
+ 	};
+ #undef ENCODE_BUSDEVFN
+-	const struct dmi_system_id *dmi = dmi_first_match(sysids);
++	const struct sysfw_id *id = sysfw_callback(sysids);
+ 	unsigned int val;
+ 
+-	if (!dmi)
++	if (!id)
+ 		return false;
+ 
+-	val = (unsigned long)dmi->driver_data;
++	val = (unsigned long)id->driver_data;
+ 
+ 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
+ }
+@@ -1014,7 +1014,7 @@ static bool ahci_broken_online(struct pci_dev *pdev)
+ #ifdef CONFIG_ATA_ACPI
+ static void ahci_gtf_filter_workaround(struct ata_host *host)
+ {
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		/*
+ 		 * Aspire 3810T issues a bunch of SATA enable commands
+ 		 * via _GTF including an invalid one and one which is
+@@ -1026,24 +1026,25 @@ static void ahci_gtf_filter_workaround(struct ata_host *host)
+ 		{
+ 			.ident = "Aspire 3810T",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Acer"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Aspire 3810T"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "Acer"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "Aspire 3810T"),
+ 			},
+ 			.driver_data = (void *)ATA_ACPI_FILTER_FPDMA_OFFSET,
+ 		},
+-		{ }
++		{}
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(sysids);
++	const struct sysfw_id *id = sysfw_callback(sysids);
+ 	unsigned int filter;
+ 	int i;
+ 
+-	if (!dmi)
++	if (!id)
+ 		return;
+ 
+-	filter = (unsigned long)dmi->driver_data;
++	filter = (unsigned long)id->driver_data;
+ 	dev_printk(KERN_INFO, host->dev,
+ 		   "applying extra ACPI _GTF filter 0x%x for %s\n",
+-		   filter, dmi->ident);
++		   filter, id->ident);
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 6f6e771..d1e0b19 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -93,7 +93,8 @@
+ #include <linux/gfp.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
++#include <linux/smbios.h>
++#include <linux/sysfw.h>
+ 
+ #define DRV_NAME	"ata_piix"
+ #define DRV_VERSION	"2.13"
+@@ -1015,156 +1016,175 @@ static bool piix_irq_check(struct ata_port *ap)
+ }
+ 
+ #ifdef CONFIG_PM
++bool sysfw_match(int field, const char *str)
++{
++	const char *info = sysfw_lookup(field);
++
++	if (info == NULL || str == NULL)
++		return info == str;
++
++	return !strcmp(info, str);
++}
++
+ static int piix_broken_suspend(void)
+ {
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		{
+ 			.ident = "TECRA M3",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M3"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA M3"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M3",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Tecra M3"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "Tecra M3"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M4",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Tecra M4"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "Tecra M4"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M4",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M4"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA M4"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M5",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M5"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA M5"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M6",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M6"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA M6"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA M7",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA M7"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA M7"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "TECRA A8",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "TECRA A8"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "TECRA A8"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite R20",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite R20"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "Satellite R20"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite R25",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite R25"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "Satellite R25"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite U200",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U200"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "Satellite U200"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite U200",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "SATELLITE U200"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "SATELLITE U200"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite Pro U200",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "SATELLITE PRO U200"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "SATELLITE PRO U200"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Satellite U205",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "Satellite U205"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "Satellite U205"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "SATELLITE U205",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "SATELLITE U205"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "SATELLITE U205"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "Portege M500",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "PORTEGE M500"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "PORTEGE M500"),
+ 			},
+ 		},
+ 		{
+ 			.ident = "VGN-BX297XP",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Sony Corporation"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "VGN-BX297XP"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Sony Corporation"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "VGN-BX297XP"),
+ 			},
+ 		},
+-
+-		{ }	/* terminate list */
++		{}
+ 	};
+ 	static const char *oemstrs[] = {
+ 		"Tecra M3,",
+ 	};
+ 	int i;
+ 
+-	if (dmi_check_system(sysids))
++	if (sysfw_callback(sysids))
+ 		return 1;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(oemstrs); i++)
+-		if (dmi_find_device(DMI_DEV_TYPE_OEM_STRING, oemstrs[i], NULL))
++		if (smbios_match_oem_string(oemstrs[i]))
+ 			return 1;
+ 
+ 	/* TECRA M4 sometimes forgets its identify and reports bogus
+-	 * DMI information.  As the bogus information is a bit
+-	 * generic, match as many entries as possible.  This manual
+-	 * matching is necessary because dmi_system_id.matches is
++	 * system firmware(SMBIOS) information.  As the bogus information
++	 * is a bit generic, match as many entries as possible.  This manual
++	 * matching is necessary because sysfw_id.matches is
+ 	 * limited to four entries.
+ 	 */
+-	if (dmi_match(DMI_SYS_VENDOR, "TOSHIBA") &&
+-	    dmi_match(DMI_PRODUCT_NAME, "000000") &&
+-	    dmi_match(DMI_PRODUCT_VERSION, "000000") &&
+-	    dmi_match(DMI_PRODUCT_SERIAL, "000000") &&
+-	    dmi_match(DMI_BOARD_VENDOR, "TOSHIBA") &&
+-	    dmi_match(DMI_BOARD_NAME, "Portable PC") &&
+-	    dmi_match(DMI_BOARD_VERSION, "Version A0"))
++	if (sysfw_match(SYSFW_SYS_VENDOR, "TOSHIBA") &&
++	    sysfw_match(SYSFW_PRODUCT_NAME, "000000") &&
++	    sysfw_match(SYSFW_PRODUCT_VERSION, "000000") &&
++	    sysfw_match(SYSFW_PRODUCT_SERIAL, "000000") &&
++	    sysfw_match(SYSFW_BOARD_VENDOR, "TOSHIBA") &&
++	    sysfw_match(SYSFW_BOARD_NAME, "Portable PC") &&
++	    sysfw_match(SYSFW_BOARD_VERSION, "Version A0"))
+ 		return 1;
+ 
+ 	return 0;
+@@ -1383,7 +1403,7 @@ static bool piix_no_sidpr(struct ata_host *host)
+ 	 * while not responding to SRST protocol causing excessive
+ 	 * detection delay.
+ 	 *
+-	 * Unfortunately, the system doesn't carry enough DMI
++	 * Unfortunately, the system doesn't carry enough SMBIOS
+ 	 * information to identify the machine but does have subsystem
+ 	 * vendor and device set.  As it's unclear whether the
+ 	 * subsystem vendor/device is used only for this specific
+@@ -1475,7 +1495,7 @@ static int __devinit piix_init_sidpr(struct ata_host *host)
+ 
+ static void piix_iocfg_bit18_quirk(struct ata_host *host)
+ {
+-	static const struct dmi_system_id sysids[] = {
++	static const struct sysfw_id sysids[] = {
+ 		{
+ 			/* Clevo M570U sets IOCFG bit 18 if the cdrom
+ 			 * isn't used to boot the system which
+@@ -1483,17 +1503,16 @@ static void piix_iocfg_bit18_quirk(struct ata_host *host)
+ 			 */
+ 			.ident = "M570U",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Clevo Co."),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "M570U"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR, "Clevo Co."),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME, "M570U"),
+ 			},
+ 		},
+-
+-		{ }	/* terminate list */
++		{}
+ 	};
+ 	struct pci_dev *pdev = to_pci_dev(host->dev);
+ 	struct piix_host_priv *hpriv = host->private_data;
+ 
+-	if (!dmi_check_system(sysids))
++	if (!sysfw_callback(sysids))
+ 		return;
+ 
+ 	/* The datasheet says that bit 18 is NOOP but certain systems
+@@ -1510,12 +1529,14 @@ static void piix_iocfg_bit18_quirk(struct ata_host *host)
+ 
+ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
+ {
+-	static const struct dmi_system_id broken_systems[] = {
++	static const struct sysfw_id broken_systems[] = {
+ 		{
+ 			.ident = "HP Compaq 2510p",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq 2510p"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Compaq 2510p"),
+ 			},
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x1FUL,
+@@ -1523,19 +1544,20 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
+ 		{
+ 			.ident = "HP Compaq nc6000",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nc6000"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Compaq nc6000"),
+ 			},
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x1FUL,
+ 		},
+-
+-		{ }	/* terminate list */
++		{}
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++	const struct sysfw_id *id = sysfw_callback(broken_systems);
+ 
+-	if (dmi) {
+-		unsigned long slot = (unsigned long)dmi->driver_data;
++	if (id) {
++		unsigned long slot = (unsigned long)id->driver_data;
+ 		/* apply the quirk only to on-board controllers */
+ 		return slot == PCI_SLOT(pdev->devfn);
+ 	}
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 794ec6e..d6e158b 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -32,7 +32,7 @@
+ #include <linux/delay.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
++#include <linux/sysfw.h>
+ 
+ #define DRV_NAME "pata_ali"
+ #define DRV_VERSION "0.7.8"
+@@ -47,22 +47,22 @@ static struct pci_dev *ali_isa_bridge;
+  *	Cable special cases
+  */
+ 
+-static const struct dmi_system_id cable_dmi_table[] = {
++static const struct sysfw_id cable_override_table[] = {
+ 	{
+ 		.ident = "HP Pavilion N5430",
+ 		.matches = {
+-			DMI_MATCH(DMI_BOARD_VENDOR, "Hewlett-Packard"),
+-			DMI_MATCH(DMI_BOARD_VERSION, "OmniBook N32N-736"),
++			SYSFW_MATCH(SYSFW_BOARD_VENDOR, "Hewlett-Packard"),
++			SYSFW_MATCH(SYSFW_BOARD_VERSION, "OmniBook N32N-736"),
+ 		},
+ 	},
+ 	{
+ 		.ident = "Toshiba Satelite S1800-814",
+ 		.matches = {
+-			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
+-			DMI_MATCH(DMI_PRODUCT_NAME, "S1800-814"),
++			SYSFW_MATCH(SYSFW_SYS_VENDOR, "TOSHIBA"),
++			SYSFW_MATCH(SYSFW_PRODUCT_NAME, "S1800-814"),
+ 		},
+ 	},
+-	{ }
++	{}
  };
  
--static void dmi_ascii_filter(char *d, const char *s)
-+static void sysfw_ascii_filter(char *d, const char *s)
- {
- 	/* Filter out characters we don't want to see in the modalias string */
- 	for (; *s; s++)
-@@ -783,20 +783,20 @@ static void dmi_ascii_filter(char *d, const char *s)
+ static int ali_cable_override(struct pci_dev *pdev)
+@@ -73,8 +73,8 @@ static int ali_cable_override(struct pci_dev *pdev)
+ 	/* Mitac 8317 (Winbook-A) and relatives */
+ 	if (pdev->subsystem_vendor == 0x1071 && pdev->subsystem_device == 0x8317)
+ 		return 1;
+-	/* Systems by DMI */
+-	if (dmi_check_system(cable_dmi_table))
++	/* Systems by SMBIOS */
++	if (sysfw_callback(cable_override_table))
+ 		return 1;
+ 	return 0;
  }
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index f792330..ad42fb95 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -31,7 +31,7 @@
+ #include <linux/delay.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
++#include <linux/sysfw.h>
  
+ #define DRV_NAME	"pata_cs5530"
+ #define DRV_VERSION	"0.7.4"
+@@ -175,12 +175,12 @@ static struct ata_port_operations cs5530_port_ops = {
+ 	.set_dmamode	= cs5530_set_dmamode,
+ };
  
--static int do_dmi_entry(const char *filename, struct dmi_system_id *id,
--			char *alias)
-+static int do_sysfw_entry(const char *filename, struct sysfw_id *id,
-+			  char *alias)
+-static const struct dmi_system_id palmax_dmi_table[] = {
++static const struct sysfw_id palmax_id_table[] = {
+ 	{
+ 		.ident = "Palmax PD1100",
+ 		.matches = {
+-			DMI_MATCH(DMI_SYS_VENDOR, "Cyrix"),
+-			DMI_MATCH(DMI_PRODUCT_NAME, "Caddis"),
++			SYSFW_MATCH(SYSFW_SYS_VENDOR, "Cyrix"),
++			SYSFW_MATCH(SYSFW_PRODUCT_NAME, "Caddis"),
+ 		},
+ 	},
+ 	{ }
+@@ -188,7 +188,7 @@ static const struct dmi_system_id palmax_dmi_table[] = {
+ 
+ static int cs5530_is_palmax(void)
  {
- 	int i, j;
+-	if (dmi_check_system(palmax_dmi_table)) {
++	if (sysfw_callback(palmax_id_table)) {
+ 		printk(KERN_INFO "Palmax PD1100: Disabling DMA on docking port.\n");
+ 		return 1;
+ 	}
+diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
+index 5fbe9b1..497f514 100644
+--- a/drivers/ata/pata_rdc.c
++++ b/drivers/ata/pata_rdc.c
+@@ -31,7 +31,6 @@
+ #include <linux/gfp.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
  
--	sprintf(alias, "dmi*");
-+	sprintf(alias, "sysfw*");
+ #define DRV_NAME	"pata_rdc"
+ #define DRV_VERSION	"0.01"
+diff --git a/drivers/ata/pata_sch.c b/drivers/ata/pata_sch.c
+index e97b32f..8b95c13 100644
+--- a/drivers/ata/pata_sch.c
++++ b/drivers/ata/pata_sch.c
+@@ -33,7 +33,6 @@
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
  
--	for (i = 0; i < ARRAY_SIZE(dmi_fields); i++) {
-+	for (i = 0; i < ARRAY_SIZE(sysfw_fields); i++) {
- 		for (j = 0; j < 4; j++) {
- 			if (id->matches[j].slot &&
--			    id->matches[j].slot == dmi_fields[i].field) {
-+			    id->matches[j].slot == sysfw_fields[i].field) {
- 				sprintf(alias + strlen(alias), ":%s*",
--					dmi_fields[i].prefix);
--				dmi_ascii_filter(alias + strlen(alias),
-+					sysfw_fields[i].prefix);
-+				sysfw_ascii_filter(alias + strlen(alias),
- 						 id->matches[j].substr);
- 				strcat(alias, "*");
- 			}
-@@ -1002,10 +1002,10 @@ void handle_moddevtable(struct module *mod, struct elf_info *info,
- 		do_table(symval, sym->st_size,
- 			 sizeof(struct spi_device_id), "spi",
- 			 do_spi_entry, mod);
--	else if (sym_is(symname, "__mod_dmi_device_table"))
-+	else if (sym_is(symname, "__mod_sysfw_device_table"))
- 		do_table(symval, sym->st_size,
--			 sizeof(struct dmi_system_id), "dmi",
--			 do_dmi_entry, mod);
-+			 sizeof(struct sysfw_id), "sysfw",
-+			 do_sysfw_entry, mod);
- 	else if (sym_is(symname, "__mod_platform_device_table"))
- 		do_table(symval, sym->st_size,
- 			 sizeof(struct platform_device_id), "platform",
+ #define DRV_NAME	"pata_sch"
+ #define DRV_VERSION	"0.2"
+diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+index ac8d7d9..facd7a4 100644
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -61,7 +61,7 @@
+ #include <linux/gfp.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
++#include <linux/sysfw.h>
+ 
+ #define DRV_NAME "pata_via"
+ #define DRV_VERSION "0.3.4"
+@@ -132,12 +132,12 @@ struct via_port {
+  *	Cable special cases
+  */
+ 
+-static const struct dmi_system_id cable_dmi_table[] = {
++static const struct sysfw_id cable_override_table[] = {
+ 	{
+ 		.ident = "Acer Ferrari 3400",
+ 		.matches = {
+-			DMI_MATCH(DMI_BOARD_VENDOR, "Acer,Inc."),
+-			DMI_MATCH(DMI_BOARD_NAME, "Ferrari 3400"),
++			SYSFW_MATCH(SYSFW_BOARD_VENDOR, "Acer,Inc."),
++			SYSFW_MATCH(SYSFW_BOARD_NAME, "Ferrari 3400"),
+ 		},
+ 	},
+ 	{ }
+@@ -145,8 +145,8 @@ static const struct dmi_system_id cable_dmi_table[] = {
+ 
+ static int via_cable_override(struct pci_dev *pdev)
+ {
+-	/* Systems by DMI */
+-	if (dmi_check_system(cable_dmi_table))
++	/* Systems by SMBIOS */
++	if (sysfw_callback(cable_override_table))
+ 		return 1;
+ 	/* Arima W730-K8/Targa Visionary 811/... */
+ 	if (pdev->subsystem_vendor == 0x161F && pdev->subsystem_device == 0x2032)
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index b42edaa..fff0e2b 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -44,7 +44,7 @@
+ #include <linux/device.h>
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+-#include <linux/dmi.h>
++#include <linux/sysfw.h>
+ 
+ #define DRV_NAME	"sata_sil"
+ #define DRV_VERSION	"2.4"
+@@ -707,23 +707,24 @@ static void sil_init_controller(struct ata_host *host)
+ 
+ static bool sil_broken_system_poweroff(struct pci_dev *pdev)
+ {
+-	static const struct dmi_system_id broken_systems[] = {
++	static const struct sysfw_id broken_systems[] = {
+ 		{
+ 			.ident = "HP Compaq nx6325",
+ 			.matches = {
+-				DMI_MATCH(DMI_SYS_VENDOR, "Hewlett-Packard"),
+-				DMI_MATCH(DMI_PRODUCT_NAME, "HP Compaq nx6325"),
++				SYSFW_MATCH(SYSFW_SYS_VENDOR,
++					    "Hewlett-Packard"),
++				SYSFW_MATCH(SYSFW_PRODUCT_NAME,
++					    "HP Compaq nx6325"),
+ 			},
+ 			/* PCI slot number of the controller */
+ 			.driver_data = (void *)0x12UL,
+ 		},
+-
+-		{ }	/* terminate list */
++		{}	/* terminate list */
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(broken_systems);
++	const struct sysfw_id *id = sysfw_callback(broken_systems);
+ 
+-	if (dmi) {
+-		unsigned long slot = (unsigned long)dmi->driver_data;
++	if (id) {
++		unsigned long slot = (unsigned long)id->driver_data;
+ 		/* apply the quirk only to on-board controllers */
+ 		return slot == PCI_SLOT(pdev->devfn);
+ 	}
 -- 
 1.7.5.1
