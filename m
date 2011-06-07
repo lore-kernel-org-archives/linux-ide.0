@@ -1,77 +1,73 @@
-From: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Subject: WRITE DMA EXT failures with JM20330 based sata2ide
-Date: Mon, 06 Jun 2011 20:51:27 +0200
-Message-ID: <isj7ql$4fh$1@dough.gmane.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH/RFC] m68k/bitops: Make bitmap data pointer of atomic ops volatile
+Date: Tue, 7 Jun 2011 09:09:45 +0200
+Message-ID: <BANLkTin8XNA+ocdjUhtzVOQNxOGFsYa1mA@mail.gmail.com>
+References: <1307390873-29687-1-git-send-email-geert@linux-m68k.org>
+	<201106062211.15247.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:34515 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757857Ab1FFTUG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 6 Jun 2011 15:20:06 -0400
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1QTfLI-0003ic-Jl
-	for linux-ide@vger.kernel.org; Mon, 06 Jun 2011 21:20:04 +0200
-Received: from p4fd18e48.dip0.t-ipconnect.de ([79.209.142.72])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2011 21:20:04 +0200
-Received: from Manuel.Spam by p4fd18e48.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jun 2011 21:20:04 +0200
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:38962 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750801Ab1FGHJr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2011 03:09:47 -0400
+In-Reply-To: <201106062211.15247.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-m68k@lists.linux-m68k.org, Akinobu Mita <akinobu.mita@gmail.com>, linux-kernel@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>, linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org
 
-Hello,
+On Mon, Jun 6, 2011 at 22:11, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 06 June 2011 22:07:53 Geert Uytterhoeven wrote:
+>>
+>> This fixes a.o.
+>>
+>> drivers/ide/ide-io.c: In function =E2=80=98ide_lock_host=E2=80=99:
+>> drivers/ide/ide-io.c:415: warning: passing argument 2 of =E2=80=98__=
+constant_test_and_set_bit=E2=80=99 discards qualifiers from pointer tar=
+get type
+>> drivers/ide/ide-io.c:415: warning: passing argument 2 of =E2=80=98__=
+generic_test_and_set_bit=E2=80=99 discards qualifiers from pointer targ=
+et type
+>>
+>> Suggested-by: Ben Hutchings <ben@decadent.org.uk>
+>> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>
+> I think the correct fix would be to mark the variable not volatile, a=
+s it
+> clearly has no business be marked as such. That doesn't mean your pat=
+ch
 
-I already posted this to the file-systems list, but as this might be the wrong 
-list, I'm copying this request to here.
+You mean the host_busy variable in the IDE code?
+That would also apply to context_flag in the DRM code:
 
-I've converted a 1,5TB SATA drive to IDE to run it on a UDMA100 IDE controller.
+drivers/gpu/drm/drm_context.c:233: warning: passing argument 2 of
+=E2=80=98__constant_test_and_set_bit=E2=80=99 discards qualifiers from =
+pointer target
+type
+drivers/gpu/drm/drm_context.c:233: warning: passing argument 2 of
+=E2=80=98__generic_test_and_set_bit=E2=80=99 discards qualifiers from p=
+ointer target
+type
 
-Low traffic applications work well. I'm able to create a xfs or ext4 filesystem 
-and even a fsck runs without problems and without causing error messages on dmesg.
+> is wrong, though. It probably doesn't hurt to do both.
 
-If I start to copy a file with some gigabytes in size to the new disc, then 
-errors like the following keep coming on dmesg:
+asm-generic/bitops/atomic.h has the volatiles everywhere. That's why
+I'm wondering.
 
-ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata2.00: failed command: WRITE DMA EXT
-ata2.00: cmd 35/00:00:30:07:8a/00:04:57:00:00/e0 tag 0 dma 524288 out
-          res 40/00:ff:00:00:00/00:00:00:00:00/40 Emask 0x4 (timeout)
-ata2.00: status: { DRDY }
-ata2: link is slow to respond, please be patient (ready=0)
-ata2: device not ready (errno=-16), forcing hardreset
-ata2: soft resetting link
-ata2.00: configured for UDMA/25
-ata2.00: device reported invalid CHS sector 0
-ata2: EH complete
+Gr{oetje,eeting}s,
 
-The error repeats many times.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
 
-Copying a big file from this disc to another location on the disc, then this 
-also works without errors (maybe because of the slow down of the mixed 
-read/write access). This copy from disc to same disc also failed before I 
-switched the disc to SATA I mode. This is done now, but doesn't seem to fix copy 
-from another disc to the new one.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
 
-Interesting thing is that always WRITE DMA EXT seems to fail. Is there any way 
-to fix this? Maybe it would be a option to increase the timeout, that gets 
-triggered here, so the driver waits longer for the result?
-
-What I definetly need is some workaround to stop the kernel from speeding down 
-until UDMA/25 is reached. This speed is totally unacceptable for such a big 
-drive... :-(
-
-Are there configuration parameters that change how the driver behaves in such 
-situations and how to set them to get around this problem?
-
-Thank you very much in advance for any help...
-
-Yours
-
-Manuel
-
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
