@@ -1,58 +1,46 @@
-From: viresh kumar <viresh.kumar@st.com>
-Subject: drivers/ata/sata_dwc_460ex.c: Do we still need "struct of_device_id
- sata_dwc_match"
-Date: Tue, 7 Jun 2011 16:23:07 +0530
-Message-ID: <4DEE0313.8090002@st.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH/RFC] m68k/bitops: Make bitmap data pointer of atomic ops volatile
+Date: Tue, 7 Jun 2011 13:22:29 +0200
+Message-ID: <201106071322.29884.arnd@arndb.de>
+References: <1307390873-29687-1-git-send-email-geert@linux-m68k.org> <201106062211.15247.arnd@arndb.de> <BANLkTin8XNA+ocdjUhtzVOQNxOGFsYa1mA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:50220 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751398Ab1FGKyg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2011 06:54:36 -0400
+Received: from moutng.kundenserver.de ([212.227.126.186]:49893 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498Ab1FGLWj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2011 07:22:39 -0400
+In-Reply-To: <BANLkTin8XNA+ocdjUhtzVOQNxOGFsYa1mA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "jgarzik@pobox.com" <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>, Grant Likely <grant.likely@secretlab.ca>, rsarmah@appliedmicro.com, Stephen Rothwell <sfr@canb.auug.org.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-m68k@lists.linux-m68k.org, Akinobu Mita <akinobu.mita@gmail.com>, linux-kernel@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>, linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org
 
+On Tuesday 07 June 2011, Geert Uytterhoeven wrote:
+> You mean the host_busy variable in the IDE code?
+> That would also apply to context_flag in the DRM code:
+>=20
+> drivers/gpu/drm/drm_context.c:233: warning: passing argument 2 of
+> =E2=80=98__constant_test_and_set_bit=E2=80=99 discards qualifiers fro=
+m pointer target
+> type
+> drivers/gpu/drm/drm_context.c:233: warning: passing argument 2 of
+> =E2=80=98__generic_test_and_set_bit=E2=80=99 discards qualifiers from=
+ pointer target
+> type
 
-Hello,
+Yes, that fits the same category.
 
-sata_dwc is also present on SPEAr SoC from ST, so i am removing dependency of this
-driver from 460ex and renaming it to sata_dwc.c.
+> > is wrong, though. It probably doesn't hurt to do both.
+>=20
+> asm-generic/bitops/atomic.h has the volatiles everywhere. That's why
+> I'm wondering.
 
-While doing that, i saw following:
+I guess what happened is that some variables are traditionally marked
+as volatile although they shouldn't be, and most architectures have
+adapted their bitops to make the warnings go away. If you see more
+warnings of that kind, it's probably fine to just do the same on m68k.
+The volatile modifier doesn't really hurt in this case.
 
-static const struct of_device_id sata_dwc_match[] = {
-	{ .compatible = "amcc,sata-460ex", },
-	{}
-};
-MODULE_DEVICE_TABLE(of, sata_dwc_match);
-
-
-I don't know if this is still useful or not with platform_device, as it was with
-of_platform_*.
-
-Should i remove it completely? or should i just rewrite following as:
-
-static const struct of_device_id sata_dwc_match[] = {
-	{ .compatible = "amcc,sata_dwc", },
-	{}
-};
-MODULE_DEVICE_TABLE(of, sata_dwc_match);
-
-For this i will also update: arch/powerpc/boot/dts/canyonlands.dts
-
-		SATA0: sata@bffd1000 {
-			compatible = "amcc,sata-460ex";
-			reg = <4 0xbffd1000 0x800 4 0xbffd0800 0x400>;
-			interrupt-parent = <&UIC3>;
-			interrupts = <0x0 0x4       /* SATA */
-				      0x5 0x4>;     /* AHBDMA */
-		};
-
-Thanks for your replies.
-
--- 
-viresh
+	Arnd
