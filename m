@@ -1,39 +1,67 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH/RFC] m68k/bitops: Make bitmap data pointer of atomic ops volatile
-Date: Tue, 7 Jun 2011 15:56:58 +0200
-Message-ID: <201106071556.58381.arnd@arndb.de>
-References: <1307390873-29687-1-git-send-email-geert@linux-m68k.org> <201106071322.29884.arnd@arndb.de> <20110607133500.GX29924@decadent.org.uk>
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: drivers/ata/sata_dwc_460ex.c: Do we still need "struct
+ of_device_id sata_dwc_match"
+Date: Tue, 7 Jun 2011 09:03:57 -0600
+Message-ID: <20110607150357.GG13072@ponder.secretlab.ca>
+References: <4DEE0313.8090002@st.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:50027 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753767Ab1FGN5D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2011 09:57:03 -0400
-In-Reply-To: <20110607133500.GX29924@decadent.org.uk>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:56074 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753055Ab1FGPEA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2011 11:04:00 -0400
+Content-Disposition: inline
+In-Reply-To: <4DEE0313.8090002@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, linux-m68k@lists.linux-m68k.org, Akinobu Mita <akinobu.mita@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dri-devel@lists.freedesktop.org
+To: viresh kumar <viresh.kumar@st.com>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>, rsarmah@appliedmicro.com, Stephen Rothwell <sfr@canb.auug.org.au>
 
-On Tuesday 07 June 2011, Ben Hutchings wrote:
-> On Tue, Jun 07, 2011 at 01:22:29PM +0200, Arnd Bergmann wrote:
+On Tue, Jun 07, 2011 at 04:23:07PM +0530, viresh kumar wrote:
+> 
+> Hello,
+> 
+> sata_dwc is also present on SPEAr SoC from ST, so i am removing dependency of this
+> driver from 460ex and renaming it to sata_dwc.c.
+> 
+> While doing that, i saw following:
+> 
+> static const struct of_device_id sata_dwc_match[] = {
+> 	{ .compatible = "amcc,sata-460ex", },
+> 	{}
+> };
+> MODULE_DEVICE_TABLE(of, sata_dwc_match);
+> 
+> 
+> I don't know if this is still useful or not with platform_device, as it was with
+> of_platform_*.
+> 
+> Should i remove it completely? or should i just rewrite following as:
+> 
+> static const struct of_device_id sata_dwc_match[] = {
+> 	{ .compatible = "amcc,sata_dwc", },
+> 	{}
+> };
+> MODULE_DEVICE_TABLE(of, sata_dwc_match);
 
-> > I guess what happened is that some variables are traditionally marked
-> > as volatile although they shouldn't be, and most architectures have
-> > adapted their bitops to make the warnings go away. If you see more
-> > warnings of that kind, it's probably fine to just do the same on m68k.
-> > The volatile modifier doesn't really hurt in this case.
->  
-> These operations are required to be atomic and therefore they
-> must be suitable for use with volatile-qualified variables.
+No, don't remove it and don't remove the "amcc,sata-460ex" string.
+The compatible property is intended to identify the exact hardware,
+and removing existing strings will break deployed boards.  However, it
+is fine to add new strings to the match table.
 
-As I said, it's not wrong for them to have a volatile qualifier in the
-argument list. However, there should also not be the need for the
-qualifier in any of the callers, because the bitops only work if
-all accesses to the data are done through bitops functions, and that
-means that the qualifier on the variable is completely meaningless.
-
-	Arnd
+> 
+> For this i will also update: arch/powerpc/boot/dts/canyonlands.dts
+> 
+> 		SATA0: sata@bffd1000 {
+> 			compatible = "amcc,sata-460ex";
+> 			reg = <4 0xbffd1000 0x800 4 0xbffd0800 0x400>;
+> 			interrupt-parent = <&UIC3>;
+> 			interrupts = <0x0 0x4       /* SATA */
+> 				      0x5 0x4>;     /* AHBDMA */
+> 		};
+> 
+> Thanks for your replies.
+> 
+> -- 
+> viresh
