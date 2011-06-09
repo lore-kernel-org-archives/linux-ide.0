@@ -1,57 +1,67 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: WRITE DMA EXT failures with JM20330 based sata2ide
-Date: Thu, 9 Jun 2011 16:31:12 +0200
-Message-ID: <BANLkTimuGOGxJgKJsxUc6ACzEcZwgQuTWw@mail.gmail.com>
-References: <isj7ql$4fh$1@dough.gmane.org>
+Subject: Re: SiI 3726 pmp doesn't work with 2.6.38 and Marvell 88SE9123 AHCI
+ controller
+Date: Thu, 9 Jun 2011 16:37:55 +0200
+Message-ID: <20110609143755.GA2615@htj.dyndns.org>
+References: <4DEE6831.9020501@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:61455 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752100Ab1FIObO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2011 10:31:14 -0400
-Received: by qyg14 with SMTP id 14so857798qyg.19
-        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2011 07:31:13 -0700 (PDT)
-In-Reply-To: <isj7ql$4fh$1@dough.gmane.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:41657 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871Ab1FIOh7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2011 10:37:59 -0400
+Received: by fxm17 with SMTP id 17so1021165fxm.19
+        for <linux-ide@vger.kernel.org>; Thu, 09 Jun 2011 07:37:58 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4DEE6831.9020501@seoss.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Manuel Reimer <Manuel.Spam@nurfuerspam.de>
-Cc: linux-ide@vger.kernel.org
+To: Tim Small <tim@seoss.co.uk>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Hello,
 
-On Mon, Jun 6, 2011 at 8:51 PM, Manuel Reimer
-<Manuel.Spam@nurfuerspam.de> wrote:
-> I've converted a 1,5TB SATA drive to IDE to run it on a UDMA100 IDE
-> controller.
+On Tue, Jun 07, 2011 at 07:04:33PM +0100, Tim Small wrote:
+> --- libata-pmp.c.orig 2010-11-22 04:34:38.000000000 +0900
+> +++ libata-pmp.c 2010-11-22 04:42:59.000000000 +0900
+> @@ -286,6 +286,8 @@
+>                         reason = "failed to write Sil3726 Private Register";
+>                         goto fail;
+>                 }
+> + /* nr_ports decrement */
+> + nr_ports--;
+>         }
+>  
+>         if (print_info) {
+> 
+> 
+> 
+> ... and was going to give it a go, but it's not really obvious to me
+> what it does (aside from the err great comment of course), and I
+> couldn't find any other references to this patch on the web, and thought
+> someone here might be able to shed some light on it...
 
-Hmmm...
+3726 has an extra port for SEMB device (ie. it's not connected to
+actual downstream port) and the above will make the kernel ignore that
+port completely.  Maybe we shouldn't issue hardreset either.  Can you
+please try the following patch (without the nr_ports-- hack)?
 
-> ata2.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata2.00: failed command: WRITE DMA EXT
-> ata2.00: cmd 35/00:00:30:07:8a/00:04:57:00:00/e0 tag 0 dma 524288 out
-> =A0 =A0 =A0 =A0 res 40/00:ff:00:00:00/00:00:00:00:00/40 Emask 0x4 (ti=
-meout)
-> ata2.00: status: { DRDY }
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index f06b7ea..3ab4784 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -398,7 +398,8 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 
+ 			/* port 5 is for SEMB device and it doesn't like SRST */
+ 			if (link->pmp == 5)
+-				link->flags |= ATA_LFLAG_NO_SRST |
++				link->flags |= ATA_LFLAG_NO_HRST |
++					       ATA_LFLAG_NO_SRST |
+ 					       ATA_LFLAG_ASSUME_SEMB;
+ 		}
+ 	} else if (vendor == 0x1095 && devid == 0x4723) {
 
-Looks like genuine transmission problems.  Lengthening timeout won't
-help anything.  It will just make it take longer to fail.
 
-> What I definetly need is some workaround to stop the kernel from spee=
-ding
-> down until UDMA/25 is reached. This speed is totally unacceptable for=
- such a
-> big drive... :-(
-
-Currently, there's no way to disable automatic speed down without
-patching the code and given that the mechanism works well for many
-cases, I'm somewhat reluctant to introduce changes / switch solely for
-this case.  You're having a genuine transmission problem and I think
-fixing the underlying hardware issue would be the better choice than
-mucking with EH behaviors.
-
-Thank you.
-
---=20
+-- 
 tejun
