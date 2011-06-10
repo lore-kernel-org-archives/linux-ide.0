@@ -1,42 +1,43 @@
 From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Added advisement against marvell ATA controller in the ATA wiki
- page
-Date: Fri, 10 Jun 2011 17:05:08 +0100
-Message-ID: <4DF240B4.1030901@seoss.co.uk>
-References: <20110610070030.GB15235@htj.dyndns.org> <4DF20BDC.5090109@pobox.com>
+Subject: Re: Power-up-in-standby Hitachi 5K3000 fails with either sata_sil24
+ or pmp, but not direct to AHCI controllers
+Date: Fri, 10 Jun 2011 17:15:47 +0100
+Message-ID: <4DF24333.2010208@seoss.co.uk>
+References: <4DF0C797.201@seoss.co.uk> <20110610102550.GF15235@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([78.47.234.210]:51756 "EHLO
+Received: from relay1.allsecurenet.com ([78.47.234.210]:34836 "EHLO
 	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752482Ab1FJQFW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 12:05:22 -0400
-In-Reply-To: <4DF20BDC.5090109@pobox.com>
+	with ESMTP id S1751164Ab1FJQP4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 12:15:56 -0400
+In-Reply-To: <20110610102550.GF15235@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On 10/06/11 13:19, Mark Lord wrote:
-> It's only the Marvell AHCI controllers that are causing grief.
-> The ones supported by sata_mv are among the very best performing
-> SATA controllers that work with Linux.
+On 10/06/11 11:25, Tejun Heo wrote:
+> On Thu, Jun 09, 2011 at 02:16:07PM +0100, Tim Small wrote:
+>   
+>> ... if I then didn't power down the drive, but instead attached it
+>> to the Marvell controller, it didn't come back, so I'd guess the
+>> interaction with the 3124 has wedged the drive permanently.
+>>     
+> Heh, that's interesting.  The feature isn't very well tested and it
+> wouldn't be too surprising if there are some bugs on all sides
+> (driver, controller and drive firmware).  Can you please try with a
+> drive from a different vendor and see whether it fares any
+> differently?
 >   
 
-
-It looks to me like Marvell have stopped further development on sata_mv
-interface cards - does anyone know if it's the case?  I couldn't find
-any SATA3 6GBps, or PCI-e 2.0 chips, so I assumed that Marvell has gone
-for ahci or mvsas only for it's current/future product ranges?
-
-That's why I chose the 88SE9123 - as they seemed to offer reasonable
-performance/features etc. (albeit single lane PCI express only).
+OK, I'll see what I can get hold of in the way drives which support that
+feature...
 
 Cheers,
 
 Tim.
-
 
 -- 
 South East Open Source Solutions Limited
