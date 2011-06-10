@@ -1,50 +1,46 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Fri, 10 Jun 2011 16:01:55 +0200
-Message-ID: <20110610140155.GJ15235@htj.dyndns.org>
-References: <20110425162242.GB30828@mtj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com>
- <20110426135027.GI878@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com>
- <20110426155229.GM878@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C77554C91@gretna.indigovision.com>
- <20110430140109.GJ29280@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com>
- <20110525094127.GF10146@htj.dyndns.org>
- <4DF20E03.9030502@teksavvy.com>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: Added advisement against marvell ATA controller in the ATA wiki
+ page
+Date: Fri, 10 Jun 2011 17:05:08 +0100
+Message-ID: <4DF240B4.1030901@seoss.co.uk>
+References: <20110610070030.GB15235@htj.dyndns.org> <4DF20BDC.5090109@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:64089 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932238Ab1FJODn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 10:03:43 -0400
-Content-Disposition: inline
-In-Reply-To: <4DF20E03.9030502@teksavvy.com>
+Received: from relay1.allsecurenet.com ([78.47.234.210]:51756 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752482Ab1FJQFW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 12:05:22 -0400
+In-Reply-To: <4DF20BDC.5090109@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Mark Lord <mlord@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
 
-Hello,
+On 10/06/11 13:19, Mark Lord wrote:
+> It's only the Marvell AHCI controllers that are causing grief.
+> The ones supported by sata_mv are among the very best performing
+> SATA controllers that work with Linux.
+>   
 
-(cc'ing Jeff)
 
-On Fri, Jun 10, 2011 at 08:28:51AM -0400, Mark Lord wrote:
-> Tejun, did this ever go upstream and to -stable ??
-> I'm asking because I see the same issue with other SATA controllers,
-> in particular with sata_sil boards.  Hot plug generally works _once_
-> per port, and then stops working.
+It looks to me like Marvell have stopped further development on sata_mv
+interface cards - does anyone know if it's the case?  I couldn't find
+any SATA3 6GBps, or PCI-e 2.0 chips, so I assumed that Marvell has gone
+for ahci or mvsas only for it's current/future product ranges?
 
-The patch is still pending,
+That's why I chose the 88SE9123 - as they seemed to offer reasonable
+performance/features etc. (albeit single lane PCI express only).
 
- http://article.gmane.org/gmane.linux.ide/49613
+Cheers,
 
-I don't think it would be wise to include the patch for -stable tho.
-It's not a regression fix and has some possibility of introducing
-regressions, so....
+Tim.
 
-Thanks.
 
 -- 
-tejun
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+
