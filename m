@@ -1,46 +1,79 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Added advisement against marvell ATA controller in the ATA wiki
- page
-Date: Fri, 10 Jun 2011 14:21:43 +0200
-Message-ID: <20110610122143.GH15235@htj.dyndns.org>
-References: <20110610070030.GB15235@htj.dyndns.org>
- <4DF20BDC.5090109@pobox.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Fri, 10 Jun 2011 08:28:51 -0400
+Message-ID: <4DF20E03.9030502@teksavvy.com>
+References: <20110423005610.GC1576@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C775549E4@gretna.indigovision.com> <20110425162242.GB30828@mtj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554BDC@gretna.indigovision.com> <20110426135027.GI878@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554C70@gretna.indigovision.com> <20110426155229.GM878@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C77554C91@gretna.indigovision.com> <20110430140109.GJ29280@htj.dyndns.org> <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com> <20110525094127.GF10146@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:60133 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755770Ab1FJMVs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 08:21:48 -0400
-Received: by fxm17 with SMTP id 17so1574051fxm.19
-        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2011 05:21:47 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4DF20BDC.5090109@pobox.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:36825 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755770Ab1FJM24 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 08:28:56 -0400
+In-Reply-To: <20110525094127.GF10146@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Bruce Stenning <b.stenning@indigovision.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello, Mark.
-
-On Fri, Jun 10, 2011 at 08:19:40AM -0400, Mark Lord wrote:
-> On 11-06-10 03:00 AM, Tejun Heo wrote:
-> ..
-> > If anyone has _any_ better idea, please share.  As it currently
-> > stands, marvell controllers are the only problematic ones in ATA land
-> > and it would be AWESOME to see it somehow resolved.
-> ..
+On 11-05-25 05:41 AM, Tejun Heo wrote:
+> Hello, sorry about the long delay.
 > 
-> It's only the Marvell AHCI controllers that are causing grief.
-> The ones supported by sata_mv are among the very best performing
-> SATA controllers that work with Linux.
+> On Tue, May 17, 2011 at 04:30:20PM +0100, Bruce Stenning wrote:
+>> __ata_port_freeze: ata4 port frozen
+>> ata4: hard resetting link
+>> sata_link_hardreset: ENTER
+>> ata4: COMRESET failed (errno=-32)
+>> sata_link_hardreset: EXIT, rc=-32
+>> ata4: reset failed (errno=-32), retrying in 33 secs
+>> __ata_port_freeze: ata4 port frozen
+>> ata4: hard resetting link
+>> sata_link_hardreset: ENTER
+>> ata4: COMRESET failed (errno=-32)
+>> sata_link_hardreset: EXIT, rc=-32
+>> ata4: reset failed, giving up
+>> ata_eh_recover: EXIT, rc=-32
+>> ata4.00: disabled
+>> ata4: EH complete
+>> ata_scsi_error: EXIT
+>>
+>> The IRQ for that port is masked off afterwards.
 > 
-> So long as it clarifies that point, then great.
+> This is a different issue.  libata EH plugs the port if reset fails
+> repeatedly.  This behavior was implemented to avoid causing continuous
+> resets on a port in case it has flaky PHY state reporting; however, it
+> seems to cause more trouble than fixing issues - ie. plugging in a
+> broken device may end up plugging the port even after the offending
+> device is removed until manual rescan or reboot.  I've been pondering
+> about changing the behavior like the following.
+> 
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index dfb6e9d..05797fe 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2885,8 +2885,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  	    sata_scr_read(link, SCR_STATUS, &sstatus))
+>  		rc = -ERESTART;
+>  
+> -	if (rc == -ERESTART || try >= max_tries)
+> +	if (rc == -ERESTART || try >= max_tries) {
+> +		/*
+> +		 * Thaw host port even if reset failed, so that the port
+> +		 * can be retried on the next phy event.  This risks
+> +		 * repeated EH runs but seems to be a better tradeoff than
+> +		 * shutting down a port after a botched hotplug attempt.
+> +		 */
+> +		if (ata_is_host_link(link))
+> +			ata_eh_thaw_port(ap);
+>  		goto out;
+> +	}
+>  
+>  	now = jiffies;
+>  	if (time_before(now, deadline)) {
 
-Ah, I was thinking about the mixed PATA/SATA thing when I was writing
-"different generations".  I'll clear it up.
 
-Thanks.
-
--- 
-tejun
+Tejun, did this ever go upstream and to -stable ??
+I'm asking because I see the same issue with other SATA controllers,
+in particular with sata_sil boards.  Hot plug generally works _once_
+per port, and then stops working.
