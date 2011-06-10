@@ -1,54 +1,39 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: SiI 3726 pmp doesn't work with 2.6.38 and Marvell 88SE9123 AHCI
- controller
-Date: Fri, 10 Jun 2011 17:43:39 +0100
-Message-ID: <4DF249BB.3040808@seoss.co.uk>
-References: <4DEE6831.9020501@seoss.co.uk> <20110609143755.GA2615@htj.dyndns.org> <4DF136FF.2010404@seoss.co.uk> <20110610102403.GE15235@htj.dyndns.org>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: Added advisement against marvell ATA controller in the ATA wiki
+ page
+Date: Fri, 10 Jun 2011 13:30:48 -0400
+Message-ID: <4DF254C8.4040404@pobox.com>
+References: <20110610070030.GB15235@htj.dyndns.org>
+ <4DF20BDC.5090109@pobox.com> <4DF240B4.1030901@seoss.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([78.47.234.210]:60799 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752744Ab1FJQno (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 12:43:44 -0400
-In-Reply-To: <20110610102403.GE15235@htj.dyndns.org>
+Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:35558 "EHLO
+	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753107Ab1FJRbC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Jun 2011 13:31:02 -0400
+In-Reply-To: <4DF240B4.1030901@seoss.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
+To: Tim Small <tim@seoss.co.uk>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
 
-On 10/06/11 11:24, Tejun Heo wrote:
-> That's weird.  Link is up but EH is detected to be up but EH didn't
-> probe it.  Is the behavior reproducible?
->   
-
-I think-so, yes.  I'll double-check.
-
-> Maybe FBS support doesn't work as advertised?  Can you please try the
-> following patch?
+On 11-06-10 12:05 PM, Tim Small wrote:
 >
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index d38c40f..a2f4b68 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -444,6 +444,7 @@ void ahci_save_initial_config(struct device *dev,
->  			   "controller can do FBS, turning on CAP_FBS\n");
->  		cap |= HOST_CAP_FBS;
->  	}
-> +	cap &= ~HOST_CAP_FBS;
->  
->  	if (force_port_map && port_map != force_port_map) {
->  		dev_printk(KERN_INFO, dev, "forcing port_map 0x%x -> 0x%x\n",
->
->   
+> It looks to me like Marvell have stopped further development on sata_mv
+> interface cards - does anyone know if it's the case?
 
-OK, will do thanks - I assume this'll force command based switching,
-with it's associated crappy performance tho'...
+Those are known as "EDMA" cards.  I don't know that they've "stopped"
+anything there -- their latest EDMA chips are still widely used on
+boards in the shops today.  And the same core appears in their embedded
+products (eg. the plug computers).
 
-I've ordered an 88SE9128 card (Hightpoint RocketRaid 620) as well, so
-I'll be able to compare the two, as well as a sata_mv 88SX7042 as well.
+But if I were developing new SATA chips, I'd used an industry standard
+interface if at all possible: AHCI.
 
-Cheers,
-
-Tim.
+Cheers
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
