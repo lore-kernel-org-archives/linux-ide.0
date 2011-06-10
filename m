@@ -1,59 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata fix
-Date: Thu, 9 Jun 2011 21:59:14 -0400
-Message-ID: <20110610015914.GA10855@havoc.gtf.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Added advisement against marvell ATA controller in the ATA wiki page
+Date: Fri, 10 Jun 2011 09:00:30 +0200
+Message-ID: <20110610070030.GB15235@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:41631 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756897Ab1FJB73 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Jun 2011 21:59:29 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:32805 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751803Ab1FJHAf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2011 03:00:35 -0400
+Received: by fxm17 with SMTP id 17so1438423fxm.19
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2011 00:00:34 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, mlord@pobox.com
+Cc: Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
 
+Hello, guys.
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+We've been seeing a lot of problems regarding marvell ATA controller
+support.  The blame definitely is shared between marvell and libata
+developers, but I don't know what to do anymore.
 
-to receive the following updates:
+Regrettably, I don't have the time or energy to hunt down chipsets and
+documentation myself and no one else, including marvell, seems
+interested in it either.  So, I've added general advisement against
+marvell ATA chipsets in the ATA wiki page and will continue to advise
+against marvell chipsets.
 
- drivers/ata/libata-eh.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+ https://ata.wiki.kernel.org/index.php/Hardware,_driver_status#Problematic_chipsets
 
-Tejun Heo (1):
-      libata: fix unexpectedly frozen port after ata_eh_reset()
+If anyone has _any_ better idea, please share.  As it currently
+stands, marvell controllers are the only problematic ones in ATA land
+and it would be AWESOME to see it somehow resolved.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index dfb6e9d..7f099d6 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2802,10 +2802,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	}
- 
- 	/*
--	 * Some controllers can't be frozen very well and may set
--	 * spuruious error conditions during reset.  Clear accumulated
--	 * error information.  As reset is the final recovery action,
--	 * nothing is lost by doing this.
-+	 * Some controllers can't be frozen very well and may set spurious
-+	 * error conditions during reset.  Clear accumulated error
-+	 * information and re-thaw the port if frozen.  As reset is the
-+	 * final recovery action and we cross check link onlineness against
-+	 * device classification later, no hotplug event is lost by this.
- 	 */
- 	spin_lock_irqsave(link->ap->lock, flags);
- 	memset(&link->eh_info, 0, sizeof(link->eh_info));
-@@ -2814,6 +2815,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	ap->pflags &= ~ATA_PFLAG_EH_PENDING;
- 	spin_unlock_irqrestore(link->ap->lock, flags);
- 
-+	if (ap->pflags & ATA_PFLAG_FROZEN)
-+		ata_eh_thaw_port(ap);
-+
- 	/*
- 	 * Make sure onlineness and classification result correspond.
- 	 * Hotplug could have happened during reset and some
+Thank you very much.
+
+-- 
+tejun
