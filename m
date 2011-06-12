@@ -1,38 +1,33 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-cd: signedness warning fix again
-Date: Sat, 11 Jun 2011 15:07:06 -0700 (PDT)
-Message-ID: <20110611.150706.985438181862065028.davem@davemloft.net>
-References: <1306993925-26044-1-git-send-email-cmdkhh@gmail.com>
+Subject: [GIT] IDE
+Date: Sat, 11 Jun 2011 22:32:29 -0700 (PDT)
+Message-ID: <20110611.223229.48163370514780394.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:58325 "EHLO
+Received: from shards.monkeyblade.net ([198.137.202.13]:35679 "EHLO
 	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905Ab1FKWIW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jun 2011 18:08:22 -0400
-In-Reply-To: <1306993925-26044-1-git-send-email-cmdkhh@gmail.com>
+	with ESMTP id S1750958Ab1FLFc6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jun 2011 01:32:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: cmdkhh@gmail.com
-Cc: bp@alien8.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Connor Hansen <cmdkhh@gmail.com>
-Date: Wed,  1 Jun 2011 22:52:05 -0700
 
-> One of the legit warnings 'make W=3 drivers/ide/ide-cd.c'
-> generates is:
-> drivers/ide/ide-cd.c: In function ide_cd_do_request
-> drivers/ide/ide-cd.c:828:2: warning: conversion to int from \
-> unsigned int may change the sign of the result
-> drivers/ide/ide-cd.c:833:2: warning: conversion to int from \
-> unsigned int may change the sign of the result
-> 
-> nsectors is declared int, should be unsigned int.
-> 
-> blk_rq-sectors() returns unsigned int, and ide_complete_rq
-> expects unsigned int as well.  Fixes both warnings.
-> 
-> Signed-off-by: Connor Hansen <cmdkhh@gmail.com>
+Please pull to get this signedness fix, thanks!
 
-Applied, thanks.
+The following changes since commit b99ca60c83a631adaba9c2fff8f2dd14d3517a61:
+
+  Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/jmorris/security-testing-2.6 (2011-06-11 19:56:25 -0700)
+
+are available in the git repository at:
+
+  master.kernel.org:/pub/scm/linux/kernel/git/davem/ide-2.6.git master
+
+Connor Hansen (1):
+      ide-cd: signedness warning fix again
+
+ drivers/ide/ide-cd.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
