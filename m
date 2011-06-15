@@ -1,59 +1,94 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: New driver mtipx2xx submission
-Date: Wed, 15 Jun 2011 10:43:56 -0400
-Message-ID: <x49ips75f4j.fsf@segfault.boston.devel.redhat.com>
-References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com>
-	<20110428230605.78c55c70@lxorguk.ukuu.org.uk>
-	<22A973199D2C2F46933448F6E7990A300204F728@ntxboimbx31.micron.com>
-	<20110502184206.25907c5e@lxorguk.ukuu.org.uk>
-	<22A973199D2C2F46933448F6E7990A300214B0D6@ntxboimbx31.micron.com>
-	<20110511202013.075b07cc@lxorguk.ukuu.org.uk>
-	<4DD722DB.8030303@micron.com>
-	<x49lixuyhhs.fsf@segfault.boston.devel.redhat.com>
-	<22A973199D2C2F46933448F6E7990A300239EA77@ntxboimbx31.micron.com>
-	<x49ipsp9voy.fsf@segfault.boston.devel.redhat.com>
-	<20110601212129.11534c55@lxorguk.ukuu.org.uk>
-	<4DF80ADE.8020206@micron.com>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
+Date: Wed, 15 Jun 2011 12:17:47 -0700
+Message-ID: <20110615191747.GA6324@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53592 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755528Ab1FOOoK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Jun 2011 10:44:10 -0400
-In-Reply-To: <4DF80ADE.8020206@micron.com> (Asai Thambi S. P.'s message of
-	"Tue, 14 Jun 2011 19:29:02 -0600")
+Received: from e34.co.us.ibm.com ([32.97.110.152]:54397 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503Ab1FOTST (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2011 15:18:19 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: asamymuthupa@micron.com
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: mbizon@freebox.fr, tj@kernel.org, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Asai Thambi S P <asamymuthupa@micron.com> writes:
+Hi Jeff,
 
-> On 6/1/2011 2:21 PM, Alan Cox wrote:
->>> Thanks, Asai!  I don't think cfq is the ideal I/O scheduler to be
->>> testing.  Could you run again with deadline and/or noop and see how that
->>> changes your throughput and perf report?  Also, just for completeness,
->>> could you tell us which kernel you ran this against?
->
-> kernel 2.6.38.6
+It appears that commit 7b3a24c57d2eeda8dba9c205342b12689c4679f9 broke
+CD-ROMs on the IPR SATA bus on powerpc machines:
 
->> How many processors is this system, just looking at the lock contention
->> which is pretty horrible.
->
-> 8 processors (2 quad-core CPUs)
-> Intel(R) Xeon(R) CPU           X5672  @ 3.20GHz
->
-[...]
-> On looking into the data in below links, lock and block queue are
-> consuming more time when running with ahci driver. Correct me if I
-> missing something.
+ ata_port_alloc: ENTER
+ ata_port_probe: ata1: bus probe begin
+ ata1.00: ata_dev_read_id: ENTER
+ ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+ ata1.00: ata_dev_read_id: ENTER
+ ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+ ata1.00: limiting speed to UDMA7:PIO5
+ ata1.00: ata_dev_read_id: ENTER
+ ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+ ata1.00: disabled
+ ata_port_probe: ata1: bus probe end
+ scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
 
-2.6.39 introduced the on-stack plugging work from Jens, the intent of
-which is to reduce queue lock contention.  It would be great if you
-could run with that kernel and noop to see if we make up some of the
-performance gap (which looks to be just north of 10%).
+The commit in question is tagged as AHCI, but does touch the libata
+core. I'm not well-versed with this code, but here's what I think I know
+:)
 
-Asai, thanks for running these tests and providing all of this data!
+>From __scsi_add_device, we first allocate the target:
 
--Jeff
+ scsi_alloc_target ->
+  shost->hostt->target_alloc ->
+   ipr_target_alloc ->
+    ata_port_alloc ->
+     sets FROZEN
+
+We error out when we allocate the sdev:
+
+ scsi_alloc_sdev ->
+  shost->hostt->slave_alloc ->
+   ipr_slave_alloc ->
+    ipr_ata_slave_alloc ->
+     ata_sas_port_init ->
+      ata_port_probe
+
+>From what I can tell, the only place that explicitly clears the FROZEN
+flag is the error-handling code via ata_eh_thaw_port().
+
+So I thought either we're not invoking the error-handler at probe time
+correctly to kick the port or perhaps the SAS code is not clearing the
+flag?
+
+I tried the following patch:
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d51f979..abd0e0b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3797,6 +3797,7 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+  */
+ int ata_sas_port_start(struct ata_port *ap)
+ {
++       ap->pflags &= ~ATA_PFLAG_FROZEN;
+        return 0;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_start);
+
+and the CD-ROM drive works, but I have no idea if it's the right thing
+to do. I chose this particular change, FWIW, because we call
+ata_sas_port_start before we probe in ata_sas_port_init and it seems
+like we need to mark the port as not frozen before we init it? Perhaps
+that should really be a call to a thaw function, not sure. Let's just
+say the ATA/SAS/SCSI interactions are a bit hard to follow at first :)
+
+Any insight you can provide would be great!
+
+Thanks,
+Nish
+
+
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
