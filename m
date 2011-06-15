@@ -1,114 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ahci: fix pmp softreset with HDD
-Date: Wed, 15 Jun 2011 12:14:36 +0200
-Message-ID: <20110615101436.GT8141@htj.dyndns.org>
-References: <20110614065213.GD8141@htj.dyndns.org>
- <1308132252-1981-1-git-send-email-yuanlmm@gmail.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: New driver mtipx2xx submission
+Date: Wed, 15 Jun 2011 10:43:56 -0400
+Message-ID: <x49ips75f4j.fsf@segfault.boston.devel.redhat.com>
+References: <22A973199D2C2F46933448F6E7990A300204F2BC@ntxboimbx31.micron.com>
+	<20110428230605.78c55c70@lxorguk.ukuu.org.uk>
+	<22A973199D2C2F46933448F6E7990A300204F728@ntxboimbx31.micron.com>
+	<20110502184206.25907c5e@lxorguk.ukuu.org.uk>
+	<22A973199D2C2F46933448F6E7990A300214B0D6@ntxboimbx31.micron.com>
+	<20110511202013.075b07cc@lxorguk.ukuu.org.uk>
+	<4DD722DB.8030303@micron.com>
+	<x49lixuyhhs.fsf@segfault.boston.devel.redhat.com>
+	<22A973199D2C2F46933448F6E7990A300239EA77@ntxboimbx31.micron.com>
+	<x49ipsp9voy.fsf@segfault.boston.devel.redhat.com>
+	<20110601212129.11534c55@lxorguk.ukuu.org.uk>
+	<4DF80ADE.8020206@micron.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48223 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173Ab1FOKOl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2011 06:14:41 -0400
-Content-Disposition: inline
-In-Reply-To: <1308132252-1981-1-git-send-email-yuanlmm@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53592 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755528Ab1FOOoK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Jun 2011 10:44:10 -0400
+In-Reply-To: <4DF80ADE.8020206@micron.com> (Asai Thambi S. P.'s message of
+	"Tue, 14 Jun 2011 19:29:02 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuan-Hsin Chen <yuanlmm@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Yuan-Hsin Chen <yhchen@faraday-tech.com>
+To: asamymuthupa@micron.com
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org
 
-Hello,
+Asai Thambi S P <asamymuthupa@micron.com> writes:
 
-On Wed, Jun 15, 2011 at 06:04:12PM +0800, Yuan-Hsin Chen wrote:
-> From: Yuan-Hsin Chen <yhchen@faraday-tech.com>
-> 
-> When enabling both port multiplier and platform ahci sata,
-> ahci times out while connecting to HDD directly. This is
-> because soft reset fails with IPMS set. Do soft reset
-> again to port 0.
-> 
-> The soft reset sequence is copied from ahci.c.
-> 
-> Signed-off-by: Yuan-Hsin Chen <yhchen@faraday-tech.com>
+> On 6/1/2011 2:21 PM, Alan Cox wrote:
+>>> Thanks, Asai!  I don't think cfq is the ideal I/O scheduler to be
+>>> testing.  Could you run again with deadline and/or noop and see how that
+>>> changes your throughput and perf report?  Also, just for completeness,
+>>> could you tell us which kernel you ran this against?
+>
+> kernel 2.6.38.6
 
-Getting closer.
+>> How many processors is this system, just looking at the lock contention
+>> which is pretty horrible.
+>
+> 8 processors (2 quad-core CPUs)
+> Intel(R) Xeon(R) CPU           X5672  @ 3.20GHz
+>
+[...]
+> On looking into the data in below links, lock and block queue are
+> consuming more time when running with ahci driver. Correct me if I
+> missing something.
 
-> +config SATA_PMP_RST
-> +	bool "SATA PMP softreset"
-> +	depends on SATA_PMP
-> +	default n
-> +	help
-> +	  When enabling both port multiplier and platform ahci sata,
-> +	  ahci times out while connecting to HDD directly in some
-> +	  ahci controller. This is because soft reset fails with
-> +	  IPMS set. Do soft reset again to port 0.
-> +
+2.6.39 introduced the on-stack plugging work from Jens, the intent of
+which is to reduce queue lock contention.  It would be great if you
+could run with that kernel and noop to see if we make up some of the
+performance gap (which looks to be just north of 10%).
 
-Hmmm... Is there any way to detect the specific controller from
-ahci_platform.c?  This is workaround for a controller bug.  It should
-be enabled automatically.  Making it a config option doesn't make
-whole lot of sense.
+Asai, thanks for running these tests and providing all of this data!
 
-> @@ -1329,6 +1338,56 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
->  }
->  EXPORT_SYMBOL_GPL(ahci_do_softreset);
->  
-> +static int ahci_pmp_check_ready(struct ata_link *link)
-> +{
-> +	void __iomem *port_mmio = ahci_port_base(link->ap);
-> +	u8 status = readl(port_mmio + PORT_TFDATA) & 0xFF;
-> +	u32 irq_status = readl(port_mmio + PORT_IRQ_STAT);
-> +
-> +	/*
-> +	 * There is no need to check TFDATA if BAD PMP is found due to HW bug,
-> +	 * which can save timeout delay.
-> +	 */
-> +	if (irq_status & PORT_IRQ_BAD_PMP)
-> +		return -EIO;
-> +
-> +	printk("%s:TFT 0x%x\n", __func__, status);
-> +	return ata_check_ready(status);
-> +}
-> +
-> +static int ahci_pmp_softreset(struct ata_link *link, unsigned int *class,
-> +				unsigned long deadline)
-> +{
-> +	struct ata_port *ap = link->ap;
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	int pmp = sata_srst_pmp(link);
-> +	int rc;
-> +	u32 irq_sts;
-> +
-> +	DPRINTK("ENTER\n");
-> +
-> +	rc = ahci_do_softreset(link, class, pmp, deadline,
-> +			       ahci_pmp_check_ready);
-> +
-> +	/*
-> +	 * Soft reset fails with IPMS set when PMP is enabled but
-> +	 * SATA HDD/ODD is connected to SATA port, do soft reset
-> +	 * again to port 0.
-> +	 */
-> +	if (rc == -EIO) {
-> +		irq_sts = readl(port_mmio + PORT_IRQ_STAT);
-> +		if (irq_sts & PORT_IRQ_BAD_PMP) {
-> +			ata_link_printk(link, KERN_WARNING,
-> +					"applying PMP SRST workaround "
-> +					"and retrying\n");
-> +			rc = ahci_do_softreset(link, class, 0, deadline,
-> +					       ahci_check_ready);
-> +		}
-> +	}
-> +
-> +	return rc;
-> +}
-
-Please make two separate patches.  One to rename & move sb600 ops to
-libahci.c and another to use it for platform.  There's no reason to
-have two identical sets of functions doing the same thing.
-
-Thanks.
-
--- 
-tejun
+-Jeff
