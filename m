@@ -1,29 +1,66 @@
-From: Webmail =?iso-8859-1?b?qQ==?= 2011 Team Upgrade <info@web.com>
-Subject: Urgent Notification
-Date: Tue, 14 Jun 2011 07:26:50 -0500
-Message-ID: <20110614072650.38944w14dva6d768@webmail.ozarkcom.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
+Date: Wed, 15 Jun 2011 15:02:18 -0500
+Message-ID: <4DF90FCA.1040706@linux.vnet.ibm.com>
+References: <20110615191747.GA6324@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from server1.sekhosting.com ([72.29.64.64]:24476 "EHLO
-	server1.sekhosting.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752502Ab1FOT3K convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Jun 2011 15:29:10 -0400
-Content-Disposition: inline
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:58012 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752839Ab1FOUCi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Jun 2011 16:02:38 -0400
+In-Reply-To: <20110615191747.GA6324@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: jgarzik@pobox.com, mbizon@freebox.fr, tj@kernel.org, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+On 06/15/2011 02:17 PM, Nishanth Aravamudan wrote:
+> From what I can tell, the only place that explicitly clears the FROZEN
+> flag is the error-handling code via ata_eh_thaw_port().
+> 
+> So I thought either we're not invoking the error-handler at probe time
+> correctly to kick the port or perhaps the SAS code is not clearing the
+> flag?
+> 
+> I tried the following patch:
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index d51f979..abd0e0b 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3797,6 +3797,7 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+>   */
+>  int ata_sas_port_start(struct ata_port *ap)
+>  {
+> +       ap->pflags &= ~ATA_PFLAG_FROZEN;
+>         return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(ata_sas_port_start);
+> 
+> and the CD-ROM drive works, but I have no idea if it's the right thing
+> to do. I chose this particular change, FWIW, because we call
+> ata_sas_port_start before we probe in ata_sas_port_init and it seems
+> like we need to mark the port as not frozen before we init it? Perhaps
+> that should really be a call to a thaw function, not sure. Let's just
+> say the ATA/SAS/SCSI interactions are a bit hard to follow at first :)
+
+That looks like the right thing to do. For ipr's usage of
+libata, we don't have the concept of a port frozen state, so this flag
+should really never get set. The alternate way to fix this would be to
+only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
+is not NULL.
+
+Thanks,
+
+Brian
 
 
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-DEAR:WEBMAIL ACCOUNT OWNER
-Due to upgrade of our website you are to click this link =20
-http://huoteddd.fileave.com/outlookedi.html and fill the form and =20
-submit to automatically upgrade your webmail account to our new =20
-webmail and also it automatically increase your webmail account space =20
-to be unlimited.
-
-Webmail =A9 2011 Team Upgrade.
 
