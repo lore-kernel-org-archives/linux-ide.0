@@ -1,77 +1,71 @@
-From: Pallav Bose <pallavbose@gmail.com>
-Subject: High per-request latency observed with request_queue of depth 128
-Date: Wed, 15 Jun 2011 17:48:56 -0400
-Message-ID: <BANLkTimc=hYatdz9EsG3qjSyQUqPWnu7oQ@mail.gmail.com>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: Re: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
+Date: Wed, 15 Jun 2011 16:34:17 -0700
+Message-ID: <20110615233417.GB6324@us.ibm.com>
+References: <20110615191747.GA6324@us.ibm.com>
+ <4DF90FCA.1040706@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:42313 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751339Ab1FOVtQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2011 17:49:16 -0400
-Received: by iwn34 with SMTP id 34so639997iwn.19
-        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2011 14:49:16 -0700 (PDT)
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:58288 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752251Ab1FOXeZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 15 Jun 2011 19:34:25 -0400
+Content-Disposition: inline
+In-Reply-To: <4DF90FCA.1040706@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jaxboe@fusionio.com
-Cc: Ganesh Karuppur Rajagopalan <ganesh.kr356@gmail.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: jgarzik@pobox.com, mbizon@freebox.fr, tj@kernel.org, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+On 15.06.2011 [15:02:18 -0500], Brian King wrote:
+> On 06/15/2011 02:17 PM, Nishanth Aravamudan wrote:
+> > From what I can tell, the only place that explicitly clears the FROZEN
+> > flag is the error-handling code via ata_eh_thaw_port().
+> > 
+> > So I thought either we're not invoking the error-handler at probe time
+> > correctly to kick the port or perhaps the SAS code is not clearing the
+> > flag?
+> > 
+> > I tried the following patch:
+> > 
+> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> > index d51f979..abd0e0b 100644
+> > --- a/drivers/ata/libata-scsi.c
+> > +++ b/drivers/ata/libata-scsi.c
+> > @@ -3797,6 +3797,7 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+> >   */
+> >  int ata_sas_port_start(struct ata_port *ap)
+> >  {
+> > +       ap->pflags &= ~ATA_PFLAG_FROZEN;
+> >         return 0;
+> >  }
+> >  EXPORT_SYMBOL_GPL(ata_sas_port_start);
+> > 
+> > and the CD-ROM drive works, but I have no idea if it's the right thing
+> > to do. I chose this particular change, FWIW, because we call
+> > ata_sas_port_start before we probe in ata_sas_port_init and it seems
+> > like we need to mark the port as not frozen before we init it? Perhaps
+> > that should really be a call to a thaw function, not sure. Let's just
+> > say the ATA/SAS/SCSI interactions are a bit hard to follow at first :)
+> 
+> That looks like the right thing to do. For ipr's usage of
+> libata, we don't have the concept of a port frozen state, so this flag
+> should really never get set. The alternate way to fix this would be to
+> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
+> is not NULL.
 
-I'm working on 2.6.39.1 version of the linux kernel and am trying to
-achieve a balance between high throughput and low latency for my
-application. I have a block device driver which composes a struct bio
-and calls the make_request_fn of the device driver to create a struct
-request and then add it to the request_queue. The=A0scsi_request_fn() o=
-f
-the device driver is finally used for servicing the request_queue. I'm
-creating 10,000 requests, each of size 32KB, with destination sectors
-as -- 0, 64, 128, 192, and so on. There is an artificial inter-request
-delay of 150 microsec being introduced by my driver when issuing these
-requests.
+It seemed like ipr is as you say, but I wasn't sure if it was
+appropriate to make the change above in the common libata-scis code or
+not. I don't want to break some other device on accident.
 
-The value of the nr_requests parameter
-(/sys/block/sdc/queue/nr_requests) has been set to 128 by default, and
-nomerges equals 2 (/sys/block/sdc/queue/nomerges), thereby disabling
-all merge algorithms.
-
-On running this experiment, I find that the per-request latency is
-very high -- tens of microseconds in fact.
-
-I don't understand why this is the case. The request_queue is large
-enough (128) such that get_request_wait() (called from
-__make_request() should return immediately when attempting to grab a
-free request. I would expect that scsi_request_fn() would immediately
-start servicing the request_queue and thus freeing slots in the
-request_queue for more requests to be added. In the ideal case, a
-perfect pipelining scenario would be obtained -- some requests are
-being serviced by the disk, some are already present in the
-request_queue, and some more requests are being added to the queue.
-
-Is there any additional batching taking place which increases the
-latency, or perhaps a timer (on a per-request basis) which when fired
-causes the requests to be serviced (and not otherwise)?
-
-I recompiled the kernel after setting BLKDEV_MIN_RQ to 1 and repeated
-the above experiment after setting nr_requests to 2 (the request_queue
-now has a depth of 2 only.) What I observed was that the average
-per-request latency dropped below 1 millisecond. However, the first
-few latencies were, in fact, of the order of tens of microseconds, and
-it gradually dropped below 1 millisecond; by averaging over 10,000
-requests, the average dropped below 1 millisecond (around 850
-microseconds to be more precise.) Those requests which had high
-latencies were primarily caused by get_request_wait() calling
-io_schedule() thus putting the task to sleep. This happened because
-get_request() failed to grab a free request for the composed bio
-(request_queue depth being only 2.)
-
-Can someone help me explain this phenomenon? Why the average latency
-per-request is very high for nr_requests =3D 128 when compared to the
-case where nr_requests =3D 2?
-
-Also note that NCQ has been enabled via the BIOS, and the queue_depth
-has been set to 31; write cache has been disabled.
+Also, I tried your suggestion, but I don't think that can happen in
+ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
+ap->ops typically gets set only after ata_port_alloc returns?
 
 Thanks,
-Pallav
+Nish
+
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
