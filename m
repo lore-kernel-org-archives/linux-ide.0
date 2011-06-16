@@ -1,42 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
-Date: Thu, 16 Jun 2011 09:51:14 +0200
-Message-ID: <20110616075114.GH8141@htj.dyndns.org>
-References: <20110615191747.GA6324@us.ibm.com>
- <4DF90FCA.1040706@linux.vnet.ibm.com>
- <20110615233417.GB6324@us.ibm.com>
+From: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Subject: [PATCH 01/11] drivers/ide: use printk_ratelimited() instead of
+ printk_ratelimit()
+Date: Thu, 16 Jun 2011 14:06:37 +0200
+Message-ID: <0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+References: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:42031 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518Ab1FPHvT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jun 2011 03:51:19 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110615233417.GB6324@us.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, christian.dietrich@informatik.uni-erlangen.de
 List-Id: linux-ide@vger.kernel.org
-To: Nishanth Aravamudan <nacc@us.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, jgarzik@pobox.com, mbizon@freebox.fr, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
-> > That looks like the right thing to do. For ipr's usage of
-> > libata, we don't have the concept of a port frozen state, so this flag
-> > should really never get set. The alternate way to fix this would be to
-> > only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
-> > is not NULL.
-> 
-> It seemed like ipr is as you say, but I wasn't sure if it was
-> appropriate to make the change above in the common libata-scis code or
-> not. I don't want to break some other device on accident.
-> 
-> Also, I tried your suggestion, but I don't think that can happen in
-> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
-> ap->ops typically gets set only after ata_port_alloc returns?
+Since printk_ratelimit() shouldn't be used anymore (see comment in
+include/linux/printk.h), replace it with printk_ratelimited().
 
-Maybe we can test error_handler in ata_sas_port_start()?
+Signed-off-by: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+---
+ drivers/ide/ide-atapi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index 6f218e01..1b04f45 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -8,6 +8,7 @@
+ #include <linux/ide.h>
+ #include <linux/scatterlist.h>
+ #include <linux/gfp.h>
++#include <linux/ratelimit.h>
+ 
+ #include <scsi/scsi.h>
+ 
+@@ -200,8 +201,7 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
+ 	err = blk_rq_map_kern(drive->queue, sense_rq, sense, sense_len,
+ 			      GFP_NOIO);
+ 	if (unlikely(err)) {
+-		if (printk_ratelimit())
+-			printk(KERN_WARNING PFX "%s: failed to map sense "
++		printk_ratelimited(KERN_WARNING PFX "%s: failed to map sense "
+ 					    "buffer\n", drive->name);
+ 		return;
+ 	}
 -- 
-tejun
+1.7.4.1
