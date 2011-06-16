@@ -1,50 +1,62 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
-Date: Thu, 16 Jun 2011 08:28:39 -0500
-Message-ID: <4DFA0507.3090609@linux.vnet.ibm.com>
-References: <20110615191747.GA6324@us.ibm.com> <4DF90FCA.1040706@linux.vnet.ibm.com>	<20110615233417.GB6324@us.ibm.com> <20110616075114.GH8141@htj.dyndns.org>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH 01/11] drivers/ide: use printk_ratelimited() instead of
+ printk_ratelimit()
+Date: Thu, 16 Jun 2011 16:19:30 +0200
+Message-ID: <20110616141930.GA12872@eferding.osrc.amd.com>
+References: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+ <0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:53886 "EHLO e4.ny.us.ibm.com"
+Received: from mail.skyhub.de ([78.46.96.112]:40441 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752138Ab1FPN2m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Jun 2011 09:28:42 -0400
-In-Reply-To: <20110616075114.GH8141@htj.dyndns.org>
+	id S1758085Ab1FPOTN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jun 2011 10:19:13 -0400
+Content-Disposition: inline
+In-Reply-To: <0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Nishanth Aravamudan <nacc@us.ibm.com>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.com
+To: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, christian.dietrich@informatik.uni-erlangen.de
 
-On 06/16/2011 02:51 AM, Tejun Heo wrote:
-> On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
->>> That looks like the right thing to do. For ipr's usage of
->>> libata, we don't have the concept of a port frozen state, so this flag
->>> should really never get set. The alternate way to fix this would be to
->>> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
->>> is not NULL.
->>
->> It seemed like ipr is as you say, but I wasn't sure if it was
->> appropriate to make the change above in the common libata-scis code or
->> not. I don't want to break some other device on accident.
->>
->> Also, I tried your suggestion, but I don't think that can happen in
->> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
->> ap->ops typically gets set only after ata_port_alloc returns?
+On Thu, Jun 16, 2011 at 02:06:37PM +0200, Manuel Zerpies wrote:
+> Since printk_ratelimit() shouldn't be used anymore (see comment in
+> include/linux/printk.h), replace it with printk_ratelimited().
 > 
-> Maybe we can test error_handler in ata_sas_port_start()?
+> Signed-off-by: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+> ---
+>  drivers/ide/ide-atapi.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+> index 6f218e01..1b04f45 100644
+> --- a/drivers/ide/ide-atapi.c
+> +++ b/drivers/ide/ide-atapi.c
+> @@ -8,6 +8,7 @@
+>  #include <linux/ide.h>
+>  #include <linux/scatterlist.h>
+>  #include <linux/gfp.h>
+> +#include <linux/ratelimit.h>
+>  
+>  #include <scsi/scsi.h>
+>  
+> @@ -200,8 +201,7 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
+>  	err = blk_rq_map_kern(drive->queue, sense_rq, sense, sense_len,
+>  			      GFP_NOIO);
+>  	if (unlikely(err)) {
+> -		if (printk_ratelimit())
+> -			printk(KERN_WARNING PFX "%s: failed to map sense "
+> +		printk_ratelimited(KERN_WARNING PFX "%s: failed to map sense "
+>  					    "buffer\n", drive->name);
 
-Good point. Since libsas is converted to the new eh now, we would need to have
-this test.
+Does the printk fit on one line if you do
 
-Thanks,
+	pr_warn_ratelimited(...)
 
-Brian
+instead?
+
+Thanks.
 
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
+Regards/Gruss,
+Boris.
