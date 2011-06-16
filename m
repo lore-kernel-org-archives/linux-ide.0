@@ -1,55 +1,91 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 01/11] drivers/ide: use printk_ratelimited() instead of
- printk_ratelimit()
-Date: Thu, 16 Jun 2011 18:32:20 +0400
-Message-ID: <4DFA13F4.1090305@ru.mvista.com>
-References: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de> <0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+From: Nishanth Aravamudan <nacc@us.ibm.com>
+Subject: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
+Date: Thu, 16 Jun 2011 08:28:36 -0700
+Message-ID: <20110616152836.GA15268@us.ibm.com>
+References: <20110615191747.GA6324@us.ibm.com>
+ <4DF90FCA.1040706@linux.vnet.ibm.com>
+ <20110615233417.GB6324@us.ibm.com>
+ <20110616075114.GH8141@htj.dyndns.org>
+ <4DFA0507.3090609@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:57546 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757865Ab1FPOeF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jun 2011 10:34:05 -0400
-In-Reply-To: <0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:49055 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756968Ab1FPP2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jun 2011 11:28:41 -0400
+Content-Disposition: inline
+In-Reply-To: <4DFA0507.3090609@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, christian.dietrich@informatik.uni-erlangen.de
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Tejun Heo <tj@kernel.org>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.com
 
-Hello.
+On 16.06.2011 [08:28:39 -0500], Brian King wrote:
+> On 06/16/2011 02:51 AM, Tejun Heo wrote:
+> > On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
+> >>> That looks like the right thing to do. For ipr's usage of
+> >>> libata, we don't have the concept of a port frozen state, so this flag
+> >>> should really never get set. The alternate way to fix this would be to
+> >>> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
+> >>> is not NULL.
+> >>
+> >> It seemed like ipr is as you say, but I wasn't sure if it was
+> >> appropriate to make the change above in the common libata-scis code or
+> >> not. I don't want to break some other device on accident.
+> >>
+> >> Also, I tried your suggestion, but I don't think that can happen in
+> >> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
+> >> ap->ops typically gets set only after ata_port_alloc returns?
+> > 
+> > Maybe we can test error_handler in ata_sas_port_start()?
+> 
+> Good point. Since libsas is converted to the new eh now, we would need to have
+> this test.
 
-Manuel Zerpies wrote:
+Commit 7b3a24c57d2eeda8dba9c205342b12689c4679f9 ("ahci: don't enable
+port irq before handler is registered") caused a regression for CD-ROMs
+attached to the IPR SATA bus on Power machines:
 
-> Since printk_ratelimit() shouldn't be used anymore (see comment in
-> include/linux/printk.h), replace it with printk_ratelimited().
+  ata_port_alloc: ENTER
+  ata_port_probe: ata1: bus probe begin
+  ata1.00: ata_dev_read_id: ENTER
+  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+  ata1.00: ata_dev_read_id: ENTER
+  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+  ata1.00: limiting speed to UDMA7:PIO5
+  ata1.00: ata_dev_read_id: ENTER
+  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+  ata1.00: disabled
+  ata_port_probe: ata1: bus probe end
+  scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
 
-> Signed-off-by: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
-> ---
->  drivers/ide/ide-atapi.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+The FROZEN flag added in that commit is only cleared by the new EH code,
+which is not used by ipr. Clear this flag in the SAS code if we don't
+support new EH.
 
-> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-> index 6f218e01..1b04f45 100644
-> --- a/drivers/ide/ide-atapi.c
-> +++ b/drivers/ide/ide-atapi.c
-> @@ -8,6 +8,7 @@
->  #include <linux/ide.h>
->  #include <linux/scatterlist.h>
->  #include <linux/gfp.h>
-> +#include <linux/ratelimit.h>
->  
->  #include <scsi/scsi.h>
->  
-> @@ -200,8 +201,7 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
->  	err = blk_rq_map_kern(drive->queue, sense_rq, sense, sense_len,
->  			      GFP_NOIO);
->  	if (unlikely(err)) {
-> -		if (printk_ratelimit())
-> -			printk(KERN_WARNING PFX "%s: failed to map sense "
-> +		printk_ratelimited(KERN_WARNING PFX "%s: failed to map sense "
+Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
 
-    Why not pr_warn_ratelimited()?
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d51f979..ebe1685 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3797,6 +3797,12 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+  */
+ int ata_sas_port_start(struct ata_port *ap)
+ {
++	/*
++	 * the port is marked as frozen at allocation time, but if we don't
++	 * have new eh, we won't thaw it
++	 */
++	if (!ap->ops->error_handler)
++		ap->pflags &= ~ATA_PFLAG_FROZEN;
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_port_start);
 
-WBR, Sergei
+
+-- 
+Nishanth Aravamudan <nacc@us.ibm.com>
+IBM Linux Technology Center
