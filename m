@@ -1,71 +1,42 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: libata/ipr/powerpc: regression between 2.6.39-rc4 and 2.6.39-rc5
-Date: Wed, 15 Jun 2011 16:34:17 -0700
-Message-ID: <20110615233417.GB6324@us.ibm.com>
+Date: Thu, 16 Jun 2011 09:51:14 +0200
+Message-ID: <20110616075114.GH8141@htj.dyndns.org>
 References: <20110615191747.GA6324@us.ibm.com>
  <4DF90FCA.1040706@linux.vnet.ibm.com>
+ <20110615233417.GB6324@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:58288 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752251Ab1FOXeZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 15 Jun 2011 19:34:25 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42031 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518Ab1FPHvT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jun 2011 03:51:19 -0400
 Content-Disposition: inline
-In-Reply-To: <4DF90FCA.1040706@linux.vnet.ibm.com>
+In-Reply-To: <20110615233417.GB6324@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: jgarzik@pobox.com, mbizon@freebox.fr, tj@kernel.org, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, jgarzik@pobox.com, mbizon@freebox.fr, benh@kernel.crashing.org, wayneb@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 15.06.2011 [15:02:18 -0500], Brian King wrote:
-> On 06/15/2011 02:17 PM, Nishanth Aravamudan wrote:
-> > From what I can tell, the only place that explicitly clears the FROZEN
-> > flag is the error-handling code via ata_eh_thaw_port().
-> > 
-> > So I thought either we're not invoking the error-handler at probe time
-> > correctly to kick the port or perhaps the SAS code is not clearing the
-> > flag?
-> > 
-> > I tried the following patch:
-> > 
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index d51f979..abd0e0b 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -3797,6 +3797,7 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-> >   */
-> >  int ata_sas_port_start(struct ata_port *ap)
-> >  {
-> > +       ap->pflags &= ~ATA_PFLAG_FROZEN;
-> >         return 0;
-> >  }
-> >  EXPORT_SYMBOL_GPL(ata_sas_port_start);
-> > 
-> > and the CD-ROM drive works, but I have no idea if it's the right thing
-> > to do. I chose this particular change, FWIW, because we call
-> > ata_sas_port_start before we probe in ata_sas_port_init and it seems
-> > like we need to mark the port as not frozen before we init it? Perhaps
-> > that should really be a call to a thaw function, not sure. Let's just
-> > say the ATA/SAS/SCSI interactions are a bit hard to follow at first :)
+On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
+> > That looks like the right thing to do. For ipr's usage of
+> > libata, we don't have the concept of a port frozen state, so this flag
+> > should really never get set. The alternate way to fix this would be to
+> > only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
+> > is not NULL.
 > 
-> That looks like the right thing to do. For ipr's usage of
-> libata, we don't have the concept of a port frozen state, so this flag
-> should really never get set. The alternate way to fix this would be to
-> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
-> is not NULL.
+> It seemed like ipr is as you say, but I wasn't sure if it was
+> appropriate to make the change above in the common libata-scis code or
+> not. I don't want to break some other device on accident.
+> 
+> Also, I tried your suggestion, but I don't think that can happen in
+> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
+> ap->ops typically gets set only after ata_port_alloc returns?
 
-It seemed like ipr is as you say, but I wasn't sure if it was
-appropriate to make the change above in the common libata-scis code or
-not. I don't want to break some other device on accident.
+Maybe we can test error_handler in ata_sas_port_start()?
 
-Also, I tried your suggestion, but I don't think that can happen in
-ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
-ap->ops typically gets set only after ata_port_alloc returns?
-
-Thanks,
-Nish
+Thanks.
 
 -- 
-Nishanth Aravamudan <nacc@us.ibm.com>
-IBM Linux Technology Center
+tejun
