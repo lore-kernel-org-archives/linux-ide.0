@@ -1,91 +1,54 @@
-From: Nishanth Aravamudan <nacc@us.ibm.com>
-Subject: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
-Date: Thu, 16 Jun 2011 08:28:36 -0700
-Message-ID: <20110616152836.GA15268@us.ibm.com>
-References: <20110615191747.GA6324@us.ibm.com>
- <4DF90FCA.1040706@linux.vnet.ibm.com>
- <20110615233417.GB6324@us.ibm.com>
- <20110616075114.GH8141@htj.dyndns.org>
- <4DFA0507.3090609@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Subject: [PATCH] ata: remove unnecessary code
+Date: Thu, 16 Jun 2011 11:39:21 -0500
+Message-ID: <1308242361-28859-1-git-send-email-Gregory.Dietsche@cuw.edu>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:49055 "EHLO e1.ny.us.ibm.com"
+Received: from que21.charter.net ([209.225.8.22]:49836 "EHLO que21.charter.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756968Ab1FPP2l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Jun 2011 11:28:41 -0400
-Content-Disposition: inline
-In-Reply-To: <4DFA0507.3090609@linux.vnet.ibm.com>
+	id S1753203Ab1FPRCG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Jun 2011 13:02:06 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Tejun Heo <tj@kernel.org>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.com
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org, Greg Dietsche <Gregory.Dietsche@cuw.edu>
 
-On 16.06.2011 [08:28:39 -0500], Brian King wrote:
-> On 06/16/2011 02:51 AM, Tejun Heo wrote:
-> > On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
-> >>> That looks like the right thing to do. For ipr's usage of
-> >>> libata, we don't have the concept of a port frozen state, so this flag
-> >>> should really never get set. The alternate way to fix this would be to
-> >>> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
-> >>> is not NULL.
-> >>
-> >> It seemed like ipr is as you say, but I wasn't sure if it was
-> >> appropriate to make the change above in the common libata-scis code or
-> >> not. I don't want to break some other device on accident.
-> >>
-> >> Also, I tried your suggestion, but I don't think that can happen in
-> >> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
-> >> ap->ops typically gets set only after ata_port_alloc returns?
-> > 
-> > Maybe we can test error_handler in ata_sas_port_start()?
-> 
-> Good point. Since libsas is converted to the new eh now, we would need to have
-> this test.
+Compile tested.
+remove unnecessary code that matches this coccinelle pattern
+	if (...)
+		return ret;
+	return ret;
 
-Commit 7b3a24c57d2eeda8dba9c205342b12689c4679f9 ("ahci: don't enable
-port irq before handler is registered") caused a regression for CD-ROMs
-attached to the IPR SATA bus on Power machines:
+Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+---
+ drivers/ata/pata_acpi.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
-  ata_port_alloc: ENTER
-  ata_port_probe: ata1: bus probe begin
-  ata1.00: ata_dev_read_id: ENTER
-  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-  ata1.00: ata_dev_read_id: ENTER
-  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-  ata1.00: limiting speed to UDMA7:PIO5
-  ata1.00: ata_dev_read_id: ENTER
-  ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
-  ata1.00: disabled
-  ata_port_probe: ata1: bus probe end
-  scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
-
-The FROZEN flag added in that commit is only cleared by the new EH code,
-which is not used by ipr. Clear this flag in the SAS code if we don't
-support new EH.
-
-Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d51f979..ebe1685 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3797,6 +3797,12 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-  */
- int ata_sas_port_start(struct ata_port *ap)
- {
-+	/*
-+	 * the port is marked as frozen at allocation time, but if we don't
-+	 * have new eh, we won't thaw it
-+	 */
-+	if (!ap->ops->error_handler)
-+		ap->pflags &= ~ATA_PFLAG_FROZEN;
- 	return 0;
+diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+index 91949d9..54145ed 100644
+--- a/drivers/ata/pata_acpi.c
++++ b/drivers/ata/pata_acpi.c
+@@ -195,8 +195,6 @@ static int pacpi_port_start(struct ata_port *ap)
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	struct pata_acpi *acpi;
+ 
+-	int ret;
+-
+ 	if (ap->acpi_handle == NULL)
+ 		return -ENODEV;
+ 
+@@ -205,11 +203,7 @@ static int pacpi_port_start(struct ata_port *ap)
+ 		return -ENOMEM;
+ 	acpi->mask[0] = pacpi_discover_modes(ap, &ap->link.device[0]);
+ 	acpi->mask[1] = pacpi_discover_modes(ap, &ap->link.device[1]);
+-	ret = ata_bmdma_port_start(ap);
+-	if (ret < 0)
+-		return ret;
+-
+-	return ret;
++	return ata_bmdma_port_start(ap);
  }
- EXPORT_SYMBOL_GPL(ata_sas_port_start);
-
-
+ 
+ static struct scsi_host_template pacpi_sht = {
 -- 
-Nishanth Aravamudan <nacc@us.ibm.com>
-IBM Linux Technology Center
+1.7.2.5
+
