@@ -1,85 +1,97 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 01/11] drivers/ide: use printk_ratelimited() instead of
- printk_ratelimit()
-Date: Mon, 20 Jun 2011 12:22:16 +0400
-Message-ID: <4DFF0338.7000407@ru.mvista.com>
-References: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>	<0a1488254bd51475a90133c0fc41a4d34b533ef4.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>	<20110616141930.GA12872@eferding.osrc.amd.com> <BANLkTim=yg+tCxa-JhMYw5zsnBSzQqVnqg@mail.gmail.com>
+From: Yuan-Hsin Chen <yuanlmm@gmail.com>
+Subject: Re: [PATCH v4] ahci: move ahci_sb600_softreset to libahci.c and
+ rename it
+Date: Mon, 20 Jun 2011 16:47:09 +0800
+Message-ID: <BANLkTikyryXaAyf8tRB8uzUHV=eQCRT=Zg@mail.gmail.com>
+References: <20110617120704.GH2611@htj.dyndns.org>
+	<1308557202-1895-1-git-send-email-yuanlmm@gmail.com>
+	<4DFF019B.8030605@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:40659 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395Ab1FTIXW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 04:23:22 -0400
-In-Reply-To: <BANLkTim=yg+tCxa-JhMYw5zsnBSzQqVnqg@mail.gmail.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:53160 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751583Ab1FTIrK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 04:47:10 -0400
+In-Reply-To: <4DFF019B.8030605@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
-Cc: Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, christian.dietrich@informatik.uni-erlangen.de, sshtylyov@mvista.com
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, Yuan-Hsin Chen <yhchen@faraday-tech.com>
 
 Hello.
+I'm really sorry for ignoring your previous e-mail.
+I'll fix it in the next patch. Thanks for reviewing my patch.
 
-On 20-06-2011 12:17, Manuel Zerpies wrote:
+Yuan-Hsin
 
->> Does the printk fit on one line if you do
-
->>         pr_warn_ratelimited(...)
-
->> instead?
-
->> Thanks.
-
->> --
->> Regards/Gruss,
->> Boris.
-
-> No I'm affraid. I tried it, but it didn't fit the 80 chars per line
-> code-styling.
-
-    It's enough that the string literal fits on one line.
-
->> Why not pr_warn_ratelimited()?
-
->> WBR, Sergei
-
-> I just kind of ignored it. As you see, I built it in.
-
-> Here my new patch:
-
-> Since printk_ratelimit() shouldn't be used anymore (see comment in
-> include/linux/printk.h), replace it with printk_ratelimited().
-
-    This doesn't match the patch anymore...
-
-> Signed-off-by: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
-> ---
->   drivers/ide/ide-atapi.c |    6 +++---
->   1 files changed, 3 insertions(+), 3 deletions(-)
-> diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-> index 6f218e01..c9e69d7 100644
-> --- a/drivers/ide/ide-atapi.c
-> +++ b/drivers/ide/ide-atapi.c
-> @@ -8,6 +8,7 @@
->   #include<linux/ide.h>
->   #include<linux/scatterlist.h>
->   #include<linux/gfp.h>
-> +#include<linux/ratelimit.h>
+On Mon, Jun 20, 2011 at 4:15 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+> Hello.
 >
->   #include<scsi/scsi.h>
+> On 20-06-2011 12:06, Yuan-Hsin Chen wrote:
 >
-> @@ -200,9 +201,8 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
->    err = blk_rq_map_kern(drive->queue, sense_rq, sense, sense_len,
->         GFP_NOIO);
->    if (unlikely(err)) {
-> - if (printk_ratelimit())
-> - printk(KERN_WARNING PFX "%s: failed to map sense "
-> -    "buffer\n", drive->name);
-> + pr_warn_ratelimited(PFX "%s: failed to map sense buffer\n",
-> +    drive->name);
->    return;
->    }
-
-    Unfortunately, the new patch is whitespace-damaged.
-
-WBR, Sergei
+>> From: Yuan-Hsin Chen<yhchen@faraday-tech.com>
+>
+>> ahci_sb600_softreset was in ahci.c. This function is used
+>> to fix soft reset failure and renames as ahci_pmp_retry_srst_softres=
+et
+>> in libahci.c.
+>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index 71afe03..2de36b6 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -79,8 +79,6 @@ enum board_ids {
+>> =A0};
+>>
+>> =A0static int ahci_init_one(struct pci_dev *pdev, const struct pci_d=
+evice_id
+>> *ent);
+>> -static int ahci_sb600_softreset(struct ata_link *link, unsigned int
+>> *class,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long dead=
+line);
+>> =A0static int ahci_vt8251_hardreset(struct ata_link *link, unsigned =
+int
+>> *class,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsi=
+gned long deadline);
+>> =A0static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned i=
+nt
+>> *class,
+>> @@ -106,8 +104,7 @@ static struct ata_port_operations ahci_p5wdh_ops=
+ =3D {
+>>
+>> =A0static struct ata_port_operations ahci_sb600_ops =3D {
+>> =A0 =A0 =A0 =A0.inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D&ahci_ops,
+>> - =A0 =A0 =A0 .softreset =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_sb600_s=
+oftreset,
+>> - =A0 =A0 =A0 .pmp_softreset =A0 =A0 =A0 =A0 =A0=3D ahci_sb600_softr=
+eset,
+>> + =A0 =A0 =A0 .softreset =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_pmp_ret=
+ry_srst_softreset,
+>
+> =A0 I have to ask you again: have you tried to compile this?
+>
+>> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+>> index d38c40f..0fd5a30 100644
+>> --- a/drivers/ata/libahci.c
+>> +++ b/drivers/ata/libahci.c
+>> @@ -82,6 +82,8 @@ static void ahci_pmp_attach(struct ata_port *ap);
+>> =A0static void ahci_pmp_detach(struct ata_port *ap);
+>> =A0static int ahci_softreset(struct ata_link *link, unsigned int *cl=
+ass,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0unsigned long dea=
+dline);
+>> +static int ahci_pmp_retry_srst_softreset(struct ata_link *link, uns=
+igned
+>> int *class,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long dead=
+line);
+>
+> =A0 How come this is static if you reference it outside this module?
+>
+> WBR, Sergei
+>
