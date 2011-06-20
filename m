@@ -1,27 +1,41 @@
-From: fl-00@gmx.de
-Subject: Re: [PATCH] libata: Pioneer DVR-216D can't do SETXFER
-Date: Mon, 20 Jun 2011 14:44:42 +0200
-Message-ID: <20110620124442.159870@gmx.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4] ahci: move ahci_sb600_softreset to libahci.c and
+ rename it
+Date: Mon, 20 Jun 2011 14:47:38 +0200
+Message-ID: <20110620124738.GO2611@htj.dyndns.org>
+References: <20110617120704.GH2611@htj.dyndns.org>
+ <1308557202-1895-1-git-send-email-yuanlmm@gmail.com>
+ <20110620081937.GN2611@htj.dyndns.org>
+ <BANLkTi=dgTNUESCstJNFUg6_YLbfwpNF5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:38753 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750945Ab1FTMop (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 08:44:45 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36925 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752248Ab1FTMrn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 08:47:43 -0400
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=dgTNUESCstJNFUg6_YLbfwpNF5g@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Yuan-Hsin Chen <yuanlmm@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sshtylyov@mvista.com, Yuan-Hsin Chen <yhchen@faraday-tech.com>
 
-Unluckily, the patch is done for the pioneer dvd-216d with firmware rev. 1.08. I'm an owner with firmware rev. 1.09 and the patch does not work for me.
-After some research I found lots of reports with various pioneer drives / variants concerning the same issue.
+Hello,
 
-1) is it possible to include the dvd-216d with rev. 1.09 as well (or even better: with any revision)
-2) is there some plan how to cope with such "broken" drives in general without the need to include every single drive in the code?
+On Mon, Jun 20, 2011 at 06:06:52PM +0800, Yuan-Hsin Chen wrote:
+> > Heh, I know I suggested that name but that is one ugly name. =A0If
+> > anyone has any better idea, please come forward.
+>=20
+> How about ahci_pmp_workaround_softreset or ahci_pmp_ipms_set_softrese=
+t?
+> Also applys to ops, ahci_pmp_workaround_ops or ahci_pmp_ipms_set_ops.
 
-Regards,
-Flo
--- 
-NEU: FreePhone - kostenlos mobil telefonieren!			
-Jetzt informieren: http://www.gmx.net/de/go/freephone
+Heh, maybe.  ahci_pmp_workaround_softreset is a bit generic but at
+least doesn't completely stupid.  I don't know. :)
+
+Thanks.
+
+--=20
+tejun
