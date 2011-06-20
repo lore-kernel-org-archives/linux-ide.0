@@ -1,64 +1,92 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: Does Intel Sandy Bridge MB Sata support port multipliers?
-Date: Mon, 20 Jun 2011 10:43:30 +0100
-Message-ID: <4DFF1642.4040404@seoss.co.uk>
-References: <20110620045138.GB21438@merlins.org>
+From: Yuan-Hsin Chen <yuanlmm@gmail.com>
+Subject: Re: [PATCH v4] ahci: move ahci_sb600_softreset to libahci.c and
+ rename it
+Date: Mon, 20 Jun 2011 18:06:52 +0800
+Message-ID: <BANLkTi=dgTNUESCstJNFUg6_YLbfwpNF5g@mail.gmail.com>
+References: <20110617120704.GH2611@htj.dyndns.org>
+	<1308557202-1895-1-git-send-email-yuanlmm@gmail.com>
+	<20110620081937.GN2611@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecurenet.com ([78.47.234.210]:34981 "EHLO
-	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753154Ab1FTJnf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 05:43:35 -0400
-In-Reply-To: <20110620045138.GB21438@merlins.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41290 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276Ab1FTKGy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 06:06:54 -0400
+In-Reply-To: <20110620081937.GN2611@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sshtylyov@mvista.com, Yuan-Hsin Chen <yhchen@faraday-tech.com>
 
-On 20/06/11 05:51, Marc MERLIN wrote:
-> I upgraded the system and was hoping to use onboard sata (it's a Sandy
-> Bridge lga1155).
->   
+Hello.
 
-Which chipset?  Perhaps lspci of the ahci controller device?
-
-> When I plug my PMP into that, the other drives are not detected.
+On Mon, Jun 20, 2011 at 4:19 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Yuan.
 >
-> Where do I find the list of SATA drivers that support PMP.
->   
+> Yeap, almost there, just few very minor things. :)
+>
+> On Mon, Jun 20, 2011 at 04:06:41PM +0800, Yuan-Hsin Chen wrote:
+>> =A0static struct ata_port_operations ahci_sb600_ops =3D {
+>> =A0 =A0 =A0 .inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D &ahci_ops,
+>> - =A0 =A0 .softreset =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_sb600_softr=
+eset,
+>> - =A0 =A0 .pmp_softreset =A0 =A0 =A0 =A0 =A0=3D ahci_sb600_softreset=
+,
+>> + =A0 =A0 .softreset =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_pmp_retry_s=
+rst_softreset,
+>> =A0};
+>
+> Why doesn't sb600 just use ahci_pmp_retry_srst_ops?
+>
+>> @@ -312,6 +312,7 @@ extern struct device_attribute *ahci_sdev_attrs[=
+];
+>> =A0 =A0 =A0 .sdev_attrs =A0 =A0 =A0 =A0 =A0 =A0 =3D ahci_sdev_attrs
+>>
+>> =A0extern struct ata_port_operations ahci_ops;
+>> +extern struct ata_port_operations ahci_pmp_retry_srst_ops;
+>
+> Heh, I know I suggested that name but that is one ugly name. =A0If
+> anyone has any better idea, please come forward.
 
-It's dependant on the hardware and the driver...
+How about ahci_pmp_workaround_softreset or ahci_pmp_ipms_set_softreset?
+Also applys to ops, ahci_pmp_workaround_ops or ahci_pmp_ipms_set_ops.
 
-https://ata.wiki.kernel.org/index.php/SATA_hardware_features
-
-
-
-> Are newer intel MBs with onboard SATA supposed to work?
->   
-
-I believe Intel limit PMP support to certain chipsets and versions (for
-"product differentiation" marketing reasons).  I have an H67 motherboard
-here, and PMP is supported on all 6 ports, but only in "CBS" mode (i.e.
-poor performance if you try to access two drives concurrently).
-
-I'm currently wrestling with PMP support on Marvell AHCI devices....
-
-It seems to work on an 88SE9125 with recent firmware, but not working
-with an 88SE9123 with older firmware.  I'm planning on doing further
-debug later today.
-
-> ahci 0000:00:1f.2: flags: 64bit ncq sntf pm led clo pio slum part ems apst 
->   
-
-no "pmp" in that flag list :-(
-
-Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+>
+>> @@ -82,6 +82,8 @@ static void ahci_pmp_attach(struct ata_port *ap);
+>> =A0static void ahci_pmp_detach(struct ata_port *ap);
+>> =A0static int ahci_softreset(struct ata_link *link, unsigned int *cl=
+ass,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long deadli=
+ne);
+>> +static int ahci_pmp_retry_srst_softreset(struct ata_link *link, uns=
+igned int *class,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long deadline=
+);
+>
+> srst equals softreset, so ahci_pmp_retry_softreset() should do.
+>
+>> +struct ata_port_operations ahci_pmp_retry_srst_ops =3D {
+>> + =A0 =A0 .inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D &ahci_ops,
+>> + =A0 =A0 .softreset =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_pmp_retry_s=
+rst_softreset,
+>> +};
+>> +EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
+>> +
+>> =A0struct ata_port_operations ahci_ops =3D {
+>> =A0 =A0 =A0 .inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D &sata_pmp_port=
+_ops,
+>
+> Maybe it's better to place ahci_pmp_retry_srst_ops after ahci_ops?
+>
+>> +static int ahci_pmp_check_ready(struct ata_link *link)
+>
+> It would be better if the name reflects that it's not for specific
+> workaround.
+>
+> Thank you.
+>
+> --
+> tejun
+>
