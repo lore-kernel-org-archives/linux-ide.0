@@ -1,41 +1,36 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Load cycle and spin down software fixup for WD20EADS and other drives
-Date: Mon, 20 Jun 2011 08:35:29 -0700
-Message-ID: <20110620153529.GG21438@merlins.org>
+From: Yuan-Hsin Chen <yuanlmm@gmail.com>
+Subject: Re: [PATCH v4] ahci: move ahci_sb600_softreset to libahci.c and
+ rename it
+Date: Tue, 21 Jun 2011 11:24:12 +0800
+Message-ID: <BANLkTinYh7doQt_6E7zOy6obhogFxB+hMA@mail.gmail.com>
+References: <20110617120704.GH2611@htj.dyndns.org>
+	<1308557202-1895-1-git-send-email-yuanlmm@gmail.com>
+	<20110620081937.GN2611@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:43572 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317Ab1FTPfc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 11:35:32 -0400
-Received: from merlin by mail1.merlins.org with local (Exim 4.72 #1)
-	id 1QYgVd-0007Zc-Db
-	for <linux-ide@vger.kernel.org>; Mon, 20 Jun 2011 08:35:29 -0700
-Content-Disposition: inline
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:50187 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab1FUDYO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jun 2011 23:24:14 -0400
+In-Reply-To: <20110620081937.GN2611@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sshtylyov@mvista.com, Yuan-Hsin Chen <yhchen@faraday-tech.com>
 
-For the list archives (or the wiki if someone can update it), I should post
-a fix I wrote years ago for two problems with those WD green drives (a few
-others are affected too).
+Hello, Tejun.
 
-wdidle3 is required to tweak some firmware bits that stop the heads from
-parking every 8 seconds on linux.
+On Mon, Jun 20, 2011 at 4:19 PM, Tejun Heo <tj@kernel.org> wrote:
+>> +static int ahci_pmp_check_ready(struct ata_link *link)
+>
+> It would be better if the name reflects that it's not for specific
+> workaround.
 
-And then the drives will not properly spin down on a timeout like most
-drives will hdparm -S 12
+Do you mean it would be better to name it for specific workaround?
+How about ahci_bad_pmp_check_ready? Because this function is
+to avoid checking TFDATA if BAD PMP is found.
 
-As sad as it is, I wrote a small daemon that checks disk access with iostat
-and manually spins the drives down if needed:
-http://marc.merlins.org/perso/linux/post_2010-08-03_Spinning-Down-WD20EADS-Drives-and-Fixing-Load-Cycle.html
-http://marc.merlins.org/linux/scripts/swdisksusp
+Thanks.
 
-Hope this helps someone
-Marc
--- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Yuan-Hsin
