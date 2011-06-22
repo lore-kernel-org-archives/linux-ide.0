@@ -1,37 +1,33 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
-Date: Tue, 21 Jun 2011 16:39:12 -0400
-Message-ID: <4E010170.9050901@pobox.com>
-References: <20110615191747.GA6324@us.ibm.com>
-	<4DF90FCA.1040706@linux.vnet.ibm.com>
-	<20110615233417.GB6324@us.ibm.com>
-	<20110616075114.GH8141@htj.dyndns.org>
-	<4DFA0507.3090609@linux.vnet.ibm.com>
-	<20110616152836.GA15268@us.ibm.com>
-	<20110621160714.GA14174@us.ibm.com>
-	<4E00FF58.7070802@linux.vnet.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Added advisement against marvell ATA controller in the ATA wiki
+ page
+Date: Wed, 22 Jun 2011 11:57:10 +0200
+Message-ID: <20110622095710.GC30101@htj.dyndns.org>
+References: <20110610070030.GB15235@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <4E00FF58.7070802@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, Tejun Heo <tj@kernel.org>, Nishanth Aravamudan <nacc@us.ibm.com>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63647 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837Ab1FVJ5P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jun 2011 05:57:15 -0400
+Received: by fxm17 with SMTP id 17so512670fxm.19
+        for <linux-ide@vger.kernel.org>; Wed, 22 Jun 2011 02:57:13 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20110610070030.GB15235@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, mlord@pobox.com
+Cc: Saeed Bishara <saeed@marvell.com>, Hubert Bailey <hbailey@marvell.com>
 
-On 06/21/2011 04:30 PM, Brian King wrote:
-> Looks good to me. Jeff/Tejun - any issues with merging this?
+Hello,
 
-Looks good here too -- though of course we want to move towards purging 
-old-EH paths :)
+This is bz entry for the combined SATA/PATA marvell ahci, which we
+never properly supported.
 
-Queued...
+  https://bugzilla.kernel.org/show_bug.cgi?id=12075
+
+Thanks.
+
+-- 
+tejun
