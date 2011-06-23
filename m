@@ -1,114 +1,66 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata fixes
-Date: Thu, 23 Jun 2011 16:52:57 -0400
-Message-ID: <20110623205257.GA2013@havoc.gtf.org>
+Subject: Re: [PATCH 05/35] drivers/ata changes for SMBIOS and System Firmware
+Date: Thu, 23 Jun 2011 17:33:04 -0400
+Message-ID: <4E03B110.7060708@garzik.org>
+References: <20110623172240.27628.71518.sendpatchset@prarit.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:42487 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932755Ab1FWUw6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Jun 2011 16:52:58 -0400
-Content-Disposition: inline
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:50169 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759815Ab1FWVdH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2011 17:33:07 -0400
+In-Reply-To: <20110623172240.27628.71518.sendpatchset@prarit.bos.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+
+On 06/23/2011 01:22 PM, Prarit Bhargava wrote:
+> drivers/ata changes for SMBIOS and System Firmware
+>
+> As part of the new SMBIOS and System Firmware code:
+>
+> - Replace old dmi* structures and functions with new sysfw* and smbios*
+> structures and functions in individual drivers
+> - cleanup sysfw_id lookup tables
+> - cleanup of includes for dmi.h and mod_devicetable.h which were included in
+> some files that did not need them
+>
+> Signed-off-by: Prarit Bhargava<prarit@redhat.com>
+> ---
+>   drivers/ata/acard-ahci.c  |    1 -
+>   drivers/ata/ahci.c        |  177 +++++++++++++++++++++++----------------------
+>   drivers/ata/ata_piix.c    |  156 +++++++++++++++++++++++-----------------
+>   drivers/ata/pata_ali.c    |   18 +++---
+>   drivers/ata/pata_cs5530.c |   12 ++--
+>   drivers/ata/pata_rdc.c    |    1 -
+>   drivers/ata/pata_sch.c    |    1 -
+>   drivers/ata/pata_via.c    |   14 ++--
+>   drivers/ata/sata_sil.c    |   19 +++---
+>   9 files changed, 210 insertions(+), 189 deletions(-)
 
 
-1) regression fix for our SAS brethren still using the old EH (== ipr)
 
-2) new PCI IDs, for which apparently I screwed up the credit.  Do you
-want me to redo, or is there some way to annotate without rewriting git
-history?
+>   #ifdef CONFIG_PM
+> +bool sysfw_match(int field, const char *str)
+> +{
+> +	const char *info = sysfw_lookup(field);
+> +
+> +	if (info == NULL || str == NULL)
+> +		return info == str;
+> +
+> +	return !strcmp(info, str);
+> +}
 
-3) expand Pioneer CD-ROM quirks to cover all firmware versions for
-   each quirk'd CD-ROM model.
+It is surprising that nobody else needed this.  I would rather that this 
+sort of thing go into the generic code, where it lived prior to this change.
 
-4) speling fix
+Either way, though,
 
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-Please pull from 'upstream-linus' branch of
-master.kernel.org:/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream-linus
+I presume you'll merge this at the same time as the rest of the rename 
+changes.
 
-to receive the following updates:
-
- drivers/ata/libata-core.c    |    6 +++---
- drivers/ata/libata-scsi.c    |    6 ++++++
- drivers/ata/pata_marvell.c   |    3 +++
- drivers/ata/sata_dwc_460ex.c |    2 +-
- 4 files changed, 13 insertions(+), 4 deletions(-)
-
-Justin P. Mattock (1):
-      drivers/ata/sata_dwc_460ex: Fix typo 'corrresponding'
-
-Linus Torvalds (1):
-      pata_marvell: Add support for 88SE91A0, 88SE91A4
-
-Nishanth Aravamudan (1):
-      libata/sas: only set FROZEN flag if new EH is supported
-
-Tejun Heo (1):
-      libata: apply NOSETXFER horkage to the affected Pioneer drives
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 736bee5..000d03a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4143,9 +4143,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	 * Devices which choke on SETXFER.  Applies only if both the
- 	 * device and controller are SATA.
- 	 */
--	{ "PIONEER DVD-RW  DVRTD08",	"1.00",	ATA_HORKAGE_NOSETXFER },
--	{ "PIONEER DVD-RW  DVR-212D",	"1.28", ATA_HORKAGE_NOSETXFER },
--	{ "PIONEER DVD-RW  DVR-216D",	"1.08", ATA_HORKAGE_NOSETXFER },
-+	{ "PIONEER DVD-RW  DVRTD08",	NULL,	ATA_HORKAGE_NOSETXFER },
-+	{ "PIONEER DVD-RW  DVR-212D",	NULL,	ATA_HORKAGE_NOSETXFER },
-+	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 
- 	/* End Marker */
- 	{ }
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d51f979..927f968 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3797,6 +3797,12 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
-  */
- int ata_sas_port_start(struct ata_port *ap)
- {
-+	/*
-+	 * the port is marked as frozen at allocation time, but if we don't
-+	 * have new eh, we won't thaw it
-+	 */
-+	if (!ap->ops->error_handler)
-+		ap->pflags &= ~ATA_PFLAG_FROZEN;
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(ata_sas_port_start);
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index 75a6a0c..5d7f58a 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -161,6 +161,9 @@ static const struct pci_device_id marvell_pci_tbl[] = {
- 	{ PCI_DEVICE(0x11AB, 0x6121), },
- 	{ PCI_DEVICE(0x11AB, 0x6123), },
- 	{ PCI_DEVICE(0x11AB, 0x6145), },
-+	{ PCI_DEVICE(0x1B4B, 0x91A0), },
-+	{ PCI_DEVICE(0x1B4B, 0x91A4), },
-+
- 	{ }	/* terminate list */
- };
- 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 1c4b3aa..dc88a39 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -389,7 +389,7 @@ static void sata_dwc_tf_dump(struct ata_taskfile *tf)
- /*
-  * Function: get_burst_length_encode
-  * arguments: datalength: length in bytes of data
-- * returns value to be programmed in register corrresponding to data length
-+ * returns value to be programmed in register corresponding to data length
-  * This value is effectively the log(base 2) of the length
-  */
- static  int get_burst_length_encode(int datalength)
