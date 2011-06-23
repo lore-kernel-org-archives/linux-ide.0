@@ -1,90 +1,167 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: mmotm 2011-06-22 - inconsistent {SOFTIRQ-ON-W} ->
- {IN-SOFTIRQ-W} usage.
-Date: Thu, 23 Jun 2011 21:59:23 +0200
-Message-ID: <20110623195923.GA14337@quack.suse.cz>
-References: <201106222042.p5MKgiEe025352@imap1.linux-foundation.org>
- <6189.1308794391@turing-police.cc.vt.edu>
- <1308843516.1022.139.camel@twins>
- <47718.1308844931@turing-police.cc.vt.edu>
- <1308845285.1022.143.camel@twins>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
+Date: Thu, 23 Jun 2011 15:05:41 -0500
+Message-ID: <4E039C95.3070907@linux.vnet.ibm.com>
+References: <20110615191747.GA6324@us.ibm.com> <4DF90FCA.1040706@linux.vnet.ibm.com> <20110615233417.GB6324@us.ibm.com> <20110616075114.GH8141@htj.dyndns.org> <4DFA0507.3090609@linux.vnet.ibm.com> <20110616152836.GA15268@us.ibm.com> <20110621160714.GA14174@us.ibm.com> <4E00FF58.7070802@linux.vnet.ibm.com> <1308803461.32158.191.camel@pasglop> <1308804120.32158.202.camel@pasglop> <20110623171502.GA11855@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53012 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759408Ab1FWT7i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Jun 2011 15:59:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1308845285.1022.143.camel@twins>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:53858 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932313Ab1FWUGD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2011 16:06:03 -0400
+In-Reply-To: <20110623171502.GA11855@us.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Valdis.Kletnieks@vt.edu, Jan Kara <jack@suse.cz>, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Jeff Garzik <jgarzik@pobox.com>, IngIngo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Nishanth Aravamudan <nacc@us.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.comWayne Boyer <wayneb@linux.vnet.ibm.com>
 
-On Thu 23-06-11 18:08:05, Peter Zijlstra wrote:
-> On Thu, 2011-06-23 at 12:02 -0400, Valdis.Kletnieks@vt.edu wrote:
-> > On Thu, 23 Jun 2011 17:38:36 +0200, Peter Zijlstra said:
-> > > On Wed, 2011-06-22 at 21:59 -0400, Valdis.Kletnieks@vt.edu wrote:
-> > > > [   20.254275] {SOFTIRQ-ON-W} state was registered at:
-> > > > [   20.254275]   [<ffffffff8106973b>] mark_irqflags+0xf2/0x13e
-> > > > [   20.254275]   [<ffffffff810699b2>] __lock_acquire+0x22b/0x3e2
-> > > > [   20.254275]   [<ffffffff8106a09f>] lock_acquire+0x103/0x153
-> > > > [   20.254275]   [<ffffffff8157bb01>] _raw_spin_lock+0x36/0x45
-> > > > [   20.254275]   [<ffffffff8110ddf8>] end_writeback+0x33/0x103
-> > > > [   20.254275]   [<ffffffff81125425>] bdev_evict_inode+0x3e/0xbe
-> > > > [   20.254275]   [<ffffffff8110df78>] evict+0xb0/0x173
-> > > > [   20.254275]   [<ffffffff8110e1ea>] iput_final+0x171/0x17a
-> > > > [   20.254275]   [<ffffffff8110e241>] iput+0x4e/0x53
-> > > > [   20.254275]   [<ffffffff81125cad>] __blkdev_put+0x1c0/0x1eb
-> > > > [   20.254275]   [<ffffffff81125ebe>] blkdev_put+0x1e6/0x1f5
-> > > > [   20.254275]   [<ffffffff8121d143>] register_disk+0xea/0x13c
-> > > > [   20.254275]   [<ffffffff8121d2c4>] add_disk+0x12f/0x1a4
-> > > > [   20.254275]   [<ffffffff812ef339>] sd_probe_async+0x115/0x1b5
-> > > > [   20.254275]   [<ffffffff8105ce2f>] async_run_entry_fn+0x99/0x12a
-> > > > [   20.254275]   [<ffffffff810505e8>] process_one_work+0x25d/0x467
-> > > > [   20.254275]   [<ffffffff81051ddb>] worker_thread+0x152/0x206
-> > > > [   20.254275]   [<ffffffff810561fa>] kthread+0x7f/0x87
-> > > > [   20.254275]   [<ffffffff815835d4>] kernel_thread_helper+0x4/0x10=20
-> > > 
-> > > That looks broken. Not having -mm, is there a git tree some place?, I
-> > > cannot quite see how end_writeback() is taking mapping->tree_lock as my
-> > > version looks like:
-> > > 
-> > > void end_writeback(struct inode *inode)
-> > > {
-> > > 	might_sleep();
-> > > 	BUG_ON(inode->i_data.nrpages);
-> > > 	BUG_ON(!list_empty(&inode->i_data.private_list));
-> > 
-> > mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback.patch does this:
-> > 
-> > diff -puN fs/inode.c~mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback fs/inode.c
-> > --- a/fs/inode.c~mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback
-> > +++ a/fs/inode.c
-> > @@ -423,7 +423,14 @@ EXPORT_SYMBOL(remove_inode_hash);
-> >  void end_writeback(struct inode *inode)
-> >  {
-> >         might_sleep();
-> > +       /*
-> > +        * We have to cycle tree_lock here because reclaim can be still in the
-> > +        * process of removing the last page (in __delete_from_page_cache())
-> > +        * and we must not free mapping under it.
-> > +        */
-> > +       spin_lock(&inode->i_data.tree_lock);
-> >         BUG_ON(inode->i_data.nrpages);
-> > +       spin_unlock(&inode->i_data.tree_lock);
-> >         BUG_ON(!list_empty(&inode->i_data.private_list));
-> >         BUG_ON(!(inode->i_state & I_FREEING));
-> >         BUG_ON(inode->i_state & I_CLEAR);
-> > 
-> > Adding Jan Kara to the list, and stable@kernel.org because the patch was cc'ed to there...
+On 06/23/2011 12:15 PM, Nishanth Aravamudan wrote:
+> On 23.06.2011 [14:42:00 +1000], Benjamin Herrenschmidt wrote:
+>> On Thu, 2011-06-23 at 14:31 +1000, Benjamin Herrenschmidt wrote:
+>>> On Tue, 2011-06-21 at 15:30 -0500, Brian King wrote:
+>>>> Looks good to me. Jeff/Tejun - any issues with merging this?
+>>>
+>>> BTW. Current upstream with that patch applied on a machine here leads to
+>>> several oddities, I don't know at this point whether any of that is
+>>> actually a regression :
+>>
+>> Ooops... pressed "send" too quickly. Here's a log excerpt with some
+>> comments:
 > 
-> Yep, that very much wants to be spin_{un,}lock_irq().
-  Oh, right. Stupid me. I'll fix that. Thanks for debugging this.
+> Hrm, I didn't see any of this on my box, which I thought was the same as
+> yours :)
+> 
+>> ipr: IBM Power RAID SCSI Device Driver version: 2.5.2 (April 27, 2011)
+>> ipr 0000:04:00.0: Found IOA with IRQ: 129
+>> ipr 0000:04:00.0: Initializing IOA.
+>> ipr 0000:04:00.0: Starting IOA initialization sequence.
+>> ipr 0000:04:00.0: Adapter firmware version: 04220029
+>> ipr 0000:04:00.0: IOA initialized.
+>> scsi0 : IBM 2B4C Storage Adapter
+>> scsi 0:0:4:0: Direct-Access     IBM      ST9300603SS      BB09 PQ: 0 ANSI: 6
+>> scsi scan: INQUIRY result too short (5), using 36
+>>
+>> -> Are these odd INQUIRY results expected ?
 
-								Honza
+Looking at the log, my guess is that we are dealing with a zero buffer. If we were
+to get an all zero buffer on the Inquiry, we would think it was a Direct-Access
+device with an inquiry response buffer of 5 bytes in length.
+
+>> scsi 0:0:5:0: Direct-Access                                    PQ: 0 ANSI: 0
+>> scsi 0:0:6:0: Direct-Access     IBM      ST9300603SS      BB09 PQ: 0 ANSI: 6
+>> scsi 0:0:7:0: Direct-Access     IBM      ST9300603SS      BB09 PQ: 0 ANSI: 6
+>> scsi scan: INQUIRY result too short (5), using 36
+>> scsi 0:0:18:0: Direct-Access                                    PQ: 0 ANSI: 0
+
+I'm guessing this should really be an Enclosure device here rather than a disk,
+which would be symptomatic of the all zero inquiry buffer.
+
+>> scsi 0:2:18:0: Enclosure         IBM      PSBPD6E4A  3GSAS 0109 PQ: 0 ANSI: 4
+>> scsi: unknown device type 31
+>> scsi 0:255:255:255: No Device         IBM      2B4C001SISIOA    0150 PQ: 0 ANSI: 0
+>>
+>> -> The above looks odd, not sure what it means
+> 
+> The "unknown device type"? I see it all the time on lots of different
+> machines.
+
+That is normal and expected on an ipr adapter. The unknown device seen on every ipr
+adapter at SCSI bus/target/lun 255:255:255 is the adapter itself. It is used by
+the RAID management tools in Linux to do things like RAID configuration via SG_IO.
+
+> 
+>> ipr 0000:05:00.0: Found IOA with IRQ: 130
+>> ipr 0000:05:00.0: Initializing IOA.
+>> scsi 0:254:0:0: Processor         IBM      57CB001SISIOA    0150 PQ: 0 ANSI: 0
+>> ipr 0000:05:00.0: Starting IOA initialization sequence.
+>> ipr 0000:05:00.0: Adapter firmware version: 04220029
+>> ipr 0000:05:00.0: IOA initialized.
+>> scsi1 : IBM 57CB Storage Adapter
+>> scsi scan: INQUIRY result too short (5), using 36
+>> scsi 1:0:4:0: Direct-Access                                    PQ: 0 ANSI: 0
+>> scsi 1:0:5:0: Direct-Access     IBM      ST9300603SS      BB09 PQ: 0 ANSI: 6
+>> scsi scan: INQUIRY result too short (5), using 36
+>> scsi 1:0:6:0: Direct-Access                                    PQ: 0 ANSI: 0
+>> scsi 1:0:7:0: Direct-Access     IBM      ST9300603SS      BB09 PQ: 0 ANSI: 6
+>> scsi 1:0:18:0: Enclosure         IBM      PSBPD6E4A  3GSAS 0109 PQ: 0 ANSI: 4
+>> scsi: On host 1 channel 0 id 18 only 511 (max_scsi_report_luns) of 402653184 luns reported, try increasing max_scsi_report_luns.
+>> scsi: host 1 channel 0 id 18 lun 0xc0000007f01e810f has a LUN larger than currently supported.
+>>
+>> -> Now that looks horribly wrong... that LUN number looks like a kernel pointer
+> 
+> Yeah, that's weird.
+> 
+>> scsi scan: INQUIRY result too short (5), using 36
+>> scsi 1:2:18:0: Direct-Access                                    PQ: 0 ANSI: 0
+>> ata1.00: ATAPI: IBM     RMBO0040532, SA61, max UDMA/100
+>> ata1.00: failed to IDENTIFY (device reports invalid type, err_mask=0x0)
+>> ata1.00: revalidation failed (errno=-22)
+>> ata1.00: disabled
+>>
+>> -> So SATA works "better" with the patch but doesn't actually work properly :-)
+>>
+>> scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+>>
+>> -> That error could give us more info... not sure what it means, we do have plenty of 
+>> memory...
+> 
+> That message is sort of strange. It's not necessarily referring to
+> memory allocation failing, but the port allocation failing in the SCSI
+> code. And that just means an error, like the failed to IDENTIFY above,
+> is occurring in the allocation path. It *can* also mean memory
+> allocation failure, I think, just not in this case.
+> 
+> I don't know much about the following errors, though, sorry.
+> 
+> -Nish
+> 
+>> scsi 1:8:0:0: Enclosure         IBM      VSBPD6E4B  3GSAS   01 PQ: 0 ANSI: 2
+>> scsi: unknown device type 31
+>> scsi 1:255:255:255: No Device         IBM      57CB001SISIOA    0150 PQ: 0 ANSI: 0
+>> work_for_cpu used greatest stack depth: 9520 bytes left
+>> st: Version 20101219, fixed bufsize 32768, s/g segs 256
+>> sd 0:0:4:0: [sda] 585937500 512-byte logical blocks: (300 GB/279 GiB)
+>> sd 0:0:5:0: [sdb] 585937500 512-byte logical blocks: (300 GB/279 GiB)
+>> sd 0:0:6:0: [sdc] 585937500 512-byte logical blocks: (300 GB/279 GiB)
+>> sd 0:0:7:0: [sdd] 585937500 512-byte logical blocks: (300 GB/279 GiB)
+>> sd 0:0:18:0: [sde] READ CAPACITY failed
+>> sd 0:0:18:0: [sde]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>> sd 0:0:18:0: [sde]  Sense Key : Illegal Request [current] 
+>> sd 0:0:18:0: [sde]  Add. Sense: Invalid command operation code
+>>
+>> -> Any idea what's up with that guy ?
+
+If this guy is really an enclosure, this is the response you would get
+on a Read Capacity.
+
+>>
+>> sd 0:0:4:0: Attached scsi generic sg0 type 0
+>> sd 0:0:5:0: [sdb] Write Protect is off
+>> sd 0:0:5:0: Attached scsi generic sg1 type 0
+>> sd 0:0:18:0: [sde] Test WP failed, assume Write Enabled
+>> sd 0:0:6:0: Attached scsi generic sg2 type 0
+>> sd 0:0:18:0: [sde] Asking for cache data failed
+>> sd 0:0:7:0: Attached scsi generic sg3 type 0
+>> sd 0:0:18:0: [sde] Assuming drive cache: write through
+>> sd 1:2:18:0: [sdj] READ CAPACITY failed
+>> sd 1:2:18:0: [sdj]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+>> sd 1:2:18:0: [sdj]  Sense Key : Illegal Request [current] 
+>> sd 1:2:18:0: [sdj]  Add. Sense: Invalid command operation code
+>>
+>> -> And this one ?
+
+Same here.
+
+When did this last work on this system? It seems like this is completely
+separate from the libata issue.
+
+-Brian
 
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
