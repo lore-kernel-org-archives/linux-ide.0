@@ -1,49 +1,59 @@
-From: Hubert Bailey <hbailey@marvell.com>
-Subject: RE: Added advisement against marvell ATA controller in the ATA wiki
- page
-Date: Thu, 23 Jun 2011 04:56:06 -0700
-Message-ID: <B9B10C29375C5B40A2D240808654F60E5EE4DEE029@SC-VEXCH2.marvell.com>
-References: <20110610070030.GB15235@htj.dyndns.org>
- <20110622095710.GC30101@htj.dyndns.org>
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: mmotm 2011-06-22 - inconsistent {SOFTIRQ-ON-W} ->
+ {IN-SOFTIRQ-W} usage.
+Date: Thu, 23 Jun 2011 17:38:36 +0200
+Message-ID: <1308843516.1022.139.camel@twins>
+References: <201106222042.p5MKgiEe025352@imap1.linux-foundation.org>
+	 <6189.1308794391@turing-police.cc.vt.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:41903 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755812Ab1FWL4T convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 23 Jun 2011 07:56:19 -0400
-In-Reply-To: <20110622095710.GC30101@htj.dyndns.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6189.1308794391@turing-police.cc.vt.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Valdis.Kletnieks@vt.edu
+Cc: Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Jeff Garzik <jgarzik@pobox.com>, IngIngo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "mlord@pobox.com" <mlord@pobox.com>
-Cc: Larry Li <lil@marvell.com>
 
- Tejun,
+On Wed, 2011-06-22 at 21:59 -0400, Valdis.Kletnieks@vt.edu wrote:
+> [   20.254275] {SOFTIRQ-ON-W} state was registered at:
+> [   20.254275]   [<ffffffff8106973b>] mark_irqflags+0xf2/0x13e
+> [   20.254275]   [<ffffffff810699b2>] __lock_acquire+0x22b/0x3e2
+> [   20.254275]   [<ffffffff8106a09f>] lock_acquire+0x103/0x153
+> [   20.254275]   [<ffffffff8157bb01>] _raw_spin_lock+0x36/0x45
+> [   20.254275]   [<ffffffff8110ddf8>] end_writeback+0x33/0x103
+> [   20.254275]   [<ffffffff81125425>] bdev_evict_inode+0x3e/0xbe
+> [   20.254275]   [<ffffffff8110df78>] evict+0xb0/0x173
+> [   20.254275]   [<ffffffff8110e1ea>] iput_final+0x171/0x17a
+> [   20.254275]   [<ffffffff8110e241>] iput+0x4e/0x53
+> [   20.254275]   [<ffffffff81125cad>] __blkdev_put+0x1c0/0x1eb
+> [   20.254275]   [<ffffffff81125ebe>] blkdev_put+0x1e6/0x1f5
+> [   20.254275]   [<ffffffff8121d143>] register_disk+0xea/0x13c
+> [   20.254275]   [<ffffffff8121d2c4>] add_disk+0x12f/0x1a4
+> [   20.254275]   [<ffffffff812ef339>] sd_probe_async+0x115/0x1b5
+> [   20.254275]   [<ffffffff8105ce2f>] async_run_entry_fn+0x99/0x12a
+> [   20.254275]   [<ffffffff810505e8>] process_one_work+0x25d/0x467
+> [   20.254275]   [<ffffffff81051ddb>] worker_thread+0x152/0x206
+> [   20.254275]   [<ffffffff810561fa>] kthread+0x7f/0x87
+> [   20.254275]   [<ffffffff815835d4>] kernel_thread_helper+0x4/0x10 
 
-Removing Saeed and adding Larry.
+That looks broken. Not having -mm, is there a git tree some place?, I
+cannot quite see how end_writeback() is taking mapping->tree_lock as my
+version looks like:
 
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-Sent: Wednesday, June 22, 2011 4:57 AM
-To: linux-ide@vger.kernel.org; Jeff Garzik; mlord@pobox.com
-Cc: Saeed Bishara; Hubert Bailey
-Subject: Re: Added advisement against marvell ATA controller in the ATA wiki page
+void end_writeback(struct inode *inode)
+{
+	might_sleep();
+	BUG_ON(inode->i_data.nrpages);
+	BUG_ON(!list_empty(&inode->i_data.private_list));
+	BUG_ON(!(inode->i_state & I_FREEING));
+	BUG_ON(inode->i_state & I_CLEAR);
+	inode_sync_wait(inode);
+	/* don't need i_lock here, no concurrent mods to i_state */
+	inode->i_state = I_FREEING | I_CLEAR;
+}
 
-Hello,
+and I couldn't find tree_lock used in inode_sync_wait() either.
 
-This is bz entry for the combined SATA/PATA marvell ahci, which we never properly supported.
-
-  https://bugzilla.kernel.org/show_bug.cgi?id=12075
-
-Thanks.
-
---
-tejun
-
------
-No virus found in this message.
-Checked by AVG - www.avg.com
-Version: 10.0.1382 / Virus Database: 1513/3719 - Release Date: 06/22/11
+Anyway, mapping->tree_lock is supposed to be an IRQ-safe lock, look at
+all the spin_lock_irq(&mapping->tree_lock) usage in mm/filemap.c.
