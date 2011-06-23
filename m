@@ -1,81 +1,90 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH 00/35]: System Firmware and SMBIOS Support
-Date: Thu, 23 Jun 2011 13:22:06 -0400
-Message-ID: <20110623172206.27602.34306.sendpatchset@prarit.bos.redhat.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: mmotm 2011-06-22 - inconsistent {SOFTIRQ-ON-W} ->
+ {IN-SOFTIRQ-W} usage.
+Date: Thu, 23 Jun 2011 21:59:23 +0200
+Message-ID: <20110623195923.GA14337@quack.suse.cz>
+References: <201106222042.p5MKgiEe025352@imap1.linux-foundation.org>
+ <6189.1308794391@turing-police.cc.vt.edu>
+ <1308843516.1022.139.camel@twins>
+ <47718.1308844931@turing-police.cc.vt.edu>
+ <1308845285.1022.143.camel@twins>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ia64@vger.kernel.org, x86@kernel.org, linux-acpi@vger.kernel.org, linux-ide@vger.kernel.org, openipmi-developer@lists.sourceforge.net, platform-dr
-Cc: grant.likely@secretlab.ca, dz@debian.org, rpurdie@rpsys.net, eric.piel@tremplin-utc.net, abelay@mit.edu, johnpol@2ka.mipt.ru, Prarit Bhargava <prarit@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:53012 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759408Ab1FWT7i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Jun 2011 15:59:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1308845285.1022.143.camel@twins>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Valdis.Kletnieks@vt.edu, Jan Kara <jack@suse.cz>, stable@kernel.org, Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Jeff Garzik <jgarzik@pobox.com>, IngIngo Molnar <mingo@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-DMI, or the Desktop Management Interface, provides access to OEM and hardware
-specific details about the x86 or ia64 system the kernel is currently runnig
-on.  DMI has been deprecated since 2003, which was the last update of the DMI
-Specification.
+On Thu 23-06-11 18:08:05, Peter Zijlstra wrote:
+> On Thu, 2011-06-23 at 12:02 -0400, Valdis.Kletnieks@vt.edu wrote:
+> > On Thu, 23 Jun 2011 17:38:36 +0200, Peter Zijlstra said:
+> > > On Wed, 2011-06-22 at 21:59 -0400, Valdis.Kletnieks@vt.edu wrote:
+> > > > [   20.254275] {SOFTIRQ-ON-W} state was registered at:
+> > > > [   20.254275]   [<ffffffff8106973b>] mark_irqflags+0xf2/0x13e
+> > > > [   20.254275]   [<ffffffff810699b2>] __lock_acquire+0x22b/0x3e2
+> > > > [   20.254275]   [<ffffffff8106a09f>] lock_acquire+0x103/0x153
+> > > > [   20.254275]   [<ffffffff8157bb01>] _raw_spin_lock+0x36/0x45
+> > > > [   20.254275]   [<ffffffff8110ddf8>] end_writeback+0x33/0x103
+> > > > [   20.254275]   [<ffffffff81125425>] bdev_evict_inode+0x3e/0xbe
+> > > > [   20.254275]   [<ffffffff8110df78>] evict+0xb0/0x173
+> > > > [   20.254275]   [<ffffffff8110e1ea>] iput_final+0x171/0x17a
+> > > > [   20.254275]   [<ffffffff8110e241>] iput+0x4e/0x53
+> > > > [   20.254275]   [<ffffffff81125cad>] __blkdev_put+0x1c0/0x1eb
+> > > > [   20.254275]   [<ffffffff81125ebe>] blkdev_put+0x1e6/0x1f5
+> > > > [   20.254275]   [<ffffffff8121d143>] register_disk+0xea/0x13c
+> > > > [   20.254275]   [<ffffffff8121d2c4>] add_disk+0x12f/0x1a4
+> > > > [   20.254275]   [<ffffffff812ef339>] sd_probe_async+0x115/0x1b5
+> > > > [   20.254275]   [<ffffffff8105ce2f>] async_run_entry_fn+0x99/0x12a
+> > > > [   20.254275]   [<ffffffff810505e8>] process_one_work+0x25d/0x467
+> > > > [   20.254275]   [<ffffffff81051ddb>] worker_thread+0x152/0x206
+> > > > [   20.254275]   [<ffffffff810561fa>] kthread+0x7f/0x87
+> > > > [   20.254275]   [<ffffffff815835d4>] kernel_thread_helper+0x4/0x10=20
+> > > 
+> > > That looks broken. Not having -mm, is there a git tree some place?, I
+> > > cannot quite see how end_writeback() is taking mapping->tree_lock as my
+> > > version looks like:
+> > > 
+> > > void end_writeback(struct inode *inode)
+> > > {
+> > > 	might_sleep();
+> > > 	BUG_ON(inode->i_data.nrpages);
+> > > 	BUG_ON(!list_empty(&inode->i_data.private_list));
+> > 
+> > mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback.patch does this:
+> > 
+> > diff -puN fs/inode.c~mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback fs/inode.c
+> > --- a/fs/inode.c~mm-fix-assertion-mapping-nrpages-==-0-in-end_writeback
+> > +++ a/fs/inode.c
+> > @@ -423,7 +423,14 @@ EXPORT_SYMBOL(remove_inode_hash);
+> >  void end_writeback(struct inode *inode)
+> >  {
+> >         might_sleep();
+> > +       /*
+> > +        * We have to cycle tree_lock here because reclaim can be still in the
+> > +        * process of removing the last page (in __delete_from_page_cache())
+> > +        * and we must not free mapping under it.
+> > +        */
+> > +       spin_lock(&inode->i_data.tree_lock);
+> >         BUG_ON(inode->i_data.nrpages);
+> > +       spin_unlock(&inode->i_data.tree_lock);
+> >         BUG_ON(!list_empty(&inode->i_data.private_list));
+> >         BUG_ON(!(inode->i_state & I_FREEING));
+> >         BUG_ON(inode->i_state & I_CLEAR);
+> > 
+> > Adding Jan Kara to the list, and stable@kernel.org because the patch was cc'ed to there...
+> 
+> Yep, that very much wants to be spin_{un,}lock_irq().
+  Oh, right. Stupid me. I'll fix that. Thanks for debugging this.
 
-The System Management BIOS, or SMBIOS, supercedes DMI -- the SMBIOS tables
-include the possibility of a _DMI_ entry and tables.  However, in the
-Linux kernel we do not access any of the DMI data and only access SMBIOS data.
+								Honza
 
-Currently, the kernel uses dmi_* functions (as defined in
-drivers/firmware/dmi_scan.c) to access the data.  The functions allow kernel
-subsystems and modules to set specific options based on the platform and BIOS
-version.
-
-The dmi_* functions in the kernel fail in several ways.  First, as
-mentioned the dmi_* functions are really accessing SMBIOS data.  The existing
-code queries for the _SMB_ entry and determines data access after that.  The
-existing dmi_* functions create an array of x86 and ia64 specific entries
-which are defined as part of x86 and ia64 specific udev entries, and allows
-drivers and subsystems to make platform specific decisions.  In addition to
-the arch specific code, the dmi_* code creates a list of "devices" to which
-makes updating very difficult and does not easily scale.
-
-Another key issue with the existing code is that several drivers do their
-own search through the SMBIOS, for example, see drivers/pci/hotplug/cpqphp*.c.
-
-Two months (or so) ago I proposed a patch which was based on a simple request
-from a colleague --  create a sysfs file that would export the SMBIOS version.
-This simple request was not something that was easy to do given the layout of
-the existing DMI code.  The request resulted in having to create a new smbios
-class within the kernel, and essentially doing a separate search through
-memory.
-
-This new patchset reworks the existing DMI code into two separate layers.  It is
-based off of the feedback I received previously when discussing the SMBIOS
-version patch on LKML.
-
-The first layer is the System Firmware Interface, which is based upon Alan
-Cox's suggestion of a common platform driver (unfortunately, platform driver
-is already defined and used within the kernel).  This is meant to be an
-arch independent subsystem in the kernel for all arches.  It is a common
-interface which provides access to specific system values in the kernel such
-as the Chassis Manufacturer, the BIOS developer, or the BIOS date.  The
-System Firmware Interface, or sysfw allows for easy updating by simply adding
-fields to an array in include/linux/mod_devicetable.h.
-Standard simple searching functions, sysfw_lookup() and sysfw_callback()
-are provided to the kernel and modules.  sysfw_callback() is similar to
-dmi_check_system() but the new function allows for exact matching which some
-drivers required.
-
-The second layer introduced in this patchset is the SMBIOS sysfw driver.  This
-driver (obviously) registers with the interface and also provides it's own
-interface.  The reason for the separate interface is that specific drivers
-have their own need to search the SMBIOS for OEM or platform specific
-information (see, for example, drivers/watchdog/hpwdt.c, or
-drivers/pci/pci-label.c).  This new driver provides a function, smbios_walk()
-which allows individual drivers or subsystems to traverse the SMBIOS table
-looking for OEM or platform specific data.  The new SMBIOS driver can be
-easily updated by adding SMBIOS structure information to the smbios_struct
-union in include/linux/smbios.h.
-
-These changes are targeted for at least 3.2.
-
-A git tree with these changes has been set up here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/prarit/smbios.git
-
-with the latest changes in the smbios-3.0-rc4 branch.
-
-P.
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
