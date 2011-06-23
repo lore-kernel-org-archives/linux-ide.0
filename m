@@ -1,165 +1,118 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: mmotm 2011-06-22 - inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
-Date: Wed, 22 Jun 2011 21:59:51 -0400
-Message-ID: <6189.1308794391@turing-police.cc.vt.edu>
-References: <201106222042.p5MKgiEe025352@imap1.linux-foundation.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
+Date: Thu, 23 Jun 2011 14:31:01 +1000
+Message-ID: <1308803461.32158.191.camel@pasglop>
+References: <20110615191747.GA6324@us.ibm.com>
+	 <4DF90FCA.1040706@linux.vnet.ibm.com> <20110615233417.GB6324@us.ibm.com>
+	 <20110616075114.GH8141@htj.dyndns.org>
+	 <4DFA0507.3090609@linux.vnet.ibm.com> <20110616152836.GA15268@us.ibm.com>
+	 <20110621160714.GA14174@us.ibm.com>  <4E00FF58.7070802@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1308794391_4530P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: Your message of "Wed, 22 Jun 2011 13:05:19 PDT."
-             <201106222042.p5MKgiEe025352@imap1.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Thomas Gleixner <tglx@linutronix.de>, Jeff Garzik <jgarzik@pobox.com>, Peter Zijlstra <peterz@infradead.org>, IngIngo Molnar <mingo@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:53951 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751486Ab1FWEbj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Jun 2011 00:31:39 -0400
+In-Reply-To: <4E00FF58.7070802@linux.vnet.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Nishanth Aravamudan <nacc@us.ibm.com>, Tejun Heo <tj@kernel.org>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.com
 
---==_Exmh_1308794391_4530P
-Content-Type: text/plain; charset=us-ascii
+On Tue, 2011-06-21 at 15:30 -0500, Brian King wrote:
+> Looks good to me. Jeff/Tejun - any issues with merging this?
 
-On Wed, 22 Jun 2011 13:05:19 PDT, akpm@linux-foundation.org said:
-> The mm-of-the-moment snapshot 2011-06-22-13-05 has been uploaded to
-
-Nothing obvious to cause it, and I didn't see it in -rc3-mmotm0615, so I'll toss this at
-Andrew and everybody mentioned in MAINTAINERS for SATA, IRQs, and Lockdep and
-see if anybody has a brilliant idea.
-
-Quite probably relevant - kernel was booted with 'threadirqs', but that's been in
-there since 39-rc7 and I haven't seen this before.
-
-Threw an amazing traceback on boot while trying to fsck the / filesystem on a
-LUKS-encrypted LVM partition:
-
-[    3.828296] dracut: luksOpen /dev/sda2 luks-715ceabf-6f58-4251-9373-ed29e8629a7c
-[   18.127342] dracut: Scanning devices dm-0  for LVM volume groups 
-[   18.164842] dracut: Reading all physical volumes. This may take a while...
-[   18.164995] dracut: Found volume group "vg_blackice" using metadata type lvm2
-[   18.557728] blkid used greatest stack depth: 3904 bytes left
-[   20.095210] dracut: 12 logical volume(s) in volume group "vg_blackice" now active
-[   20.174640] EXT4-fs (dm-3): mounted filesystem with ordered data mode. Opts: (null)
-[   20.233169] dracut: Checking filesystems
-[   20.233210] dracut: fsck -T -t noopts=_netdev -A -a
-[   20.253331] 
-[   20.253500] =================================
-[   20.253803] [ INFO: inconsistent lock state ]
-[   20.254107] 3.0.0-rc4-mmotm0622 #1
-[   20.254275] ---------------------------------
-[   20.254275] inconsistent {SOFTIRQ-ON-W} -> {IN-SOFTIRQ-W} usage.
-[   20.254275] irq/45-ahci/47 [HC0[0]:SC1[1]:HE0:SE0] takes:
-[   20.254275]  (&(&mapping->tree_lock)->rlock){+.?...}, at: [<ffffffff810c031a>] test_clear_page_writeback+0x39/0xd3
-[   20.254275] {SOFTIRQ-ON-W} state was registered at:
-[   20.254275]   [<ffffffff8106973b>] mark_irqflags+0xf2/0x13e
-[   20.254275]   [<ffffffff810699b2>] __lock_acquire+0x22b/0x3e2
-[   20.254275]   [<ffffffff8106a09f>] lock_acquire+0x103/0x153
-[   20.254275]   [<ffffffff8157bb01>] _raw_spin_lock+0x36/0x45
-[   20.254275]   [<ffffffff8110ddf8>] end_writeback+0x33/0x103
-[   20.254275]   [<ffffffff81125425>] bdev_evict_inode+0x3e/0xbe
-[   20.254275]   [<ffffffff8110df78>] evict+0xb0/0x173
-[   20.254275]   [<ffffffff8110e1ea>] iput_final+0x171/0x17a
-[   20.254275]   [<ffffffff8110e241>] iput+0x4e/0x53
-[   20.254275]   [<ffffffff81125cad>] __blkdev_put+0x1c0/0x1eb
-[   20.254275]   [<ffffffff81125ebe>] blkdev_put+0x1e6/0x1f5
-[   20.254275]   [<ffffffff8121d143>] register_disk+0xea/0x13c
-[   20.254275]   [<ffffffff8121d2c4>] add_disk+0x12f/0x1a4
-[   20.254275]   [<ffffffff812ef339>] sd_probe_async+0x115/0x1b5
-[   20.254275]   [<ffffffff8105ce2f>] async_run_entry_fn+0x99/0x12a
-[   20.254275]   [<ffffffff810505e8>] process_one_work+0x25d/0x467
-[   20.254275]   [<ffffffff81051ddb>] worker_thread+0x152/0x206
-[   20.254275]   [<ffffffff810561fa>] kthread+0x7f/0x87
-[   20.254275]   [<ffffffff815835d4>] kernel_thread_helper+0x4/0x10
-[   20.254275] irq event stamp: 115999
-[   20.254275] hardirqs last  enabled at (115998): [<ffffffff81562e60>] end_buffer_async_write.part.14+0x117/0x154
-[   20.254275] hardirqs last disabled at (115999): [<ffffffff8157bbd0>] _raw_spin_lock_irqsave+0x1a/0x57
-[   20.254275] softirqs last  enabled at (115966): [<ffffffff8108d689>] irq_forced_thread_fn+0x35/0x40
-[   20.254275] softirqs last disabled at (115967): [<ffffffff815836cc>] call_softirq+0x1c/0x30
-[   20.254275] 
-[   20.254275] other info that might help us debug this:
-[   20.254275]  Possible unsafe locking scenario:
-[   20.254275] 
-[   20.254275]        CPU0
-[   20.254275]        ----
-[   20.254275]   lock(&(&mapping->tree_lock)->rlock);
-[   20.254275]   <Interrupt>
-[   20.254275]     lock(&(&mapping->tree_lock)->rlock);
-[   20.254275] 
-[   20.254275]  *** DEADLOCK ***
-[   20.254275] 
-[   20.254275] no locks held by irq/45-ahci/47.
-[   20.254275] 
-[   20.254275] stack backtrace:
-[   20.254275] Pid: 47, comm: irq/45-ahci Not tainted 3.0.0-rc4-mmotm0622 #1
-[   20.254275] Call Trace:
-[   20.254275]  <IRQ>  [<ffffffff8155c50e>] print_usage_bug+0x1f5/0x206
-[   20.254275]  [<ffffffff81068837>] ? print_irq_inversion_bug.part.15+0x1ae/0x1ae
-[   20.254275]  [<ffffffff8155c58e>] mark_lock_irq+0x6f/0x120
-[   20.254275]  [<ffffffff810695d6>] mark_lock+0xaf/0x122
-[   20.254275]  [<ffffffff810696cb>] mark_irqflags+0x82/0x13e
-[   20.254275]  [<ffffffff810699b2>] __lock_acquire+0x22b/0x3e2
-[   20.254275]  [<ffffffff810c031a>] ? test_clear_page_writeback+0x39/0xd3
-[   20.254275]  [<ffffffff8106a09f>] lock_acquire+0x103/0x153
-[   20.254275]  [<ffffffff810c031a>] ? test_clear_page_writeback+0x39/0xd3
-[   20.254275]  [<ffffffff8157bbfa>] _raw_spin_lock_irqsave+0x44/0x57
-[   20.254275]  [<ffffffff810c031a>] ? test_clear_page_writeback+0x39/0xd3
-[   20.254275]  [<ffffffff81027b66>] ? __wake_up+0x1d/0x48
-[   20.254275]  [<ffffffff810c031a>] test_clear_page_writeback+0x39/0xd3
-[   20.254275]  [<ffffffff810b7ae1>] end_page_writeback+0x2a/0x4c
-[   20.254275]  [<ffffffff81562e6b>] end_buffer_async_write.part.14+0x122/0x154
-[   20.254275]  [<ffffffff8106a55d>] ? trace_hardirqs_on_caller+0xfd/0x13b
-[   20.254275]  [<ffffffff811209c4>] end_buffer_async_write+0x3e/0x47
-[   20.254275]  [<ffffffff8111f595>] end_bio_bh_io_sync+0x53/0x63
-[   20.254275]  [<ffffffff8111f542>] ? invalidate_inode_buffers+0x5c/0x5c
-[   20.254275]  [<ffffffff81122d87>] bio_endio+0x28/0x2a
-[   20.254275]  [<ffffffff8139e56c>] dec_pending+0x190/0x1b2
-[   20.254275]  [<ffffffff8139e631>] clone_endio+0xa3/0xb0
-[   20.254275]  [<ffffffff81122d87>] bio_endio+0x28/0x2a
-[   20.254275]  [<ffffffff8139e56c>] dec_pending+0x190/0x1b2
-[   20.254275]  [<ffffffff8139e631>] clone_endio+0xa3/0xb0
-[   20.254275]  [<ffffffff81122d87>] bio_endio+0x28/0x2a
-[   20.254275]  [<ffffffff813a6163>] crypt_dec_pending+0x75/0xa1
-[   20.254275]  [<ffffffff813a705f>] crypt_endio+0xba/0xc9
-[   20.254275]  [<ffffffff8121263a>] ? rcu_read_lock+0x35/0x35
-[   20.254275]  [<ffffffff81122d87>] bio_endio+0x28/0x2a
-[   20.254275]  [<ffffffff8121281e>] req_bio_endio+0xc1/0xcd
-[   20.254275]  [<ffffffff8121461a>] blk_update_request+0x15e/0x389
-[   20.254275]  [<ffffffff81214865>] blk_update_bidi_request+0x20/0x90
-[   20.254275]  [<ffffffff81214a39>] blk_end_bidi_request+0x1a/0x58
-[   20.254275]  [<ffffffff81214af3>] blk_end_request+0xb/0xd
-[   20.254275]  [<ffffffff812e644a>] scsi_io_completion+0x1cc/0x4c7
-[   20.254275]  [<ffffffff812df07e>] scsi_finish_command+0xab/0xb4
-[   20.254275]  [<ffffffff812e61d6>] scsi_softirq_done+0xed/0xf6
-[   20.254275]  [<ffffffff81219c34>] blk_done_softirq+0x6c/0x80
-[   20.254275]  [<ffffffff8103e699>] __do_softirq+0x110/0x278
-[   20.254275]  [<ffffffff8108d654>] ? irq_thread_fn+0x37/0x37
-[   20.254275]  [<ffffffff815836cc>] call_softirq+0x1c/0x30
-[   20.254275]  <EOI>  [<ffffffff810031eb>] ? do_softirq+0x44/0xf1
-[   20.254275]  [<ffffffff8103e25a>] _local_bh_enable_ip+0x12a/0x178
-[   20.254275]  [<ffffffff8103e2c0>] local_bh_enable+0xd/0xf
-[   20.254275]  [<ffffffff8108d689>] irq_forced_thread_fn+0x35/0x40
-[   20.254275]  [<ffffffff8108d54a>] irq_thread+0xf6/0x1c9
-[   20.254275]  [<ffffffff8108d454>] ? irq_finalize_oneshot+0xc9/0xc9
-[   20.254275]  [<ffffffff810561fa>] kthread+0x7f/0x87
-[   20.254275]  [<ffffffff815835d4>] kernel_thread_helper+0x4/0x10
-[   20.254275]  [<ffffffff8157c884>] ? retint_restore_args+0xe/0xe
-[   20.254275]  [<ffffffff8105617b>] ? __init_kthread_worker+0x55/0x55
-[   20.254275]  [<ffffffff815835d0>] ? gs_change+0xb/0xb
-[   20.820457] dracut: /dev/mapper/vg_blackice-root: clean, 18016/65536 files, 181204/262144 blocks
-[   20.862866] dracut: Remounting /dev/mapper/vg_blackice-root with -o ro,quota,usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
-[   20.886535] EXT4-fs (dm-3): mounted filesystem with ordered data mode. Opts: quota,usrjquota=aquota.user,grpjquota=aquota.group,jqfmt=vfsv0
-[   20.927228] dracut: Mounted root filesystem /dev/mapper/vg_blackice-root
-[   21.147364] dracut: Switching root
+BTW. Current upstream with that patch applied on a machine here leads to
+several oddities, I don't know at this point whether any of that is
+actually a regression :
 
 
---==_Exmh_1308794391_4530P
-Content-Type: application/pgp-signature
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
 
-iD8DBQFOAp4XcC3lWbTT17ARAgWFAKCRZq9rBC3NoZdG5s2ygLNvX0brZgCgt3J6
-oUh34jW5xrAfg/uxyonFZcY=
-=/c4E
------END PGP SIGNATURE-----
+> Thanks,
+> 
+> Brian
+> 
+> On 06/21/2011 11:07 AM, Nishanth Aravamudan wrote:
+> > Ping on this -- Tejun, Brian, Jeff, this is a pretty annoying 2.6.39
+> > regression which it would be good to have fixed in 3.0.
+> > 
+> > Thanks,
+> > Nish
+> > 
+> > On 16.06.2011 [08:28:36 -0700], Nishanth Aravamudan wrote:
+> >> On 16.06.2011 [08:28:39 -0500], Brian King wrote:
+> >>> On 06/16/2011 02:51 AM, Tejun Heo wrote:
+> >>>> On Wed, Jun 15, 2011 at 04:34:17PM -0700, Nishanth Aravamudan wrote:
+> >>>>>> That looks like the right thing to do. For ipr's usage of
+> >>>>>> libata, we don't have the concept of a port frozen state, so this flag
+> >>>>>> should really never get set. The alternate way to fix this would be to
+> >>>>>> only set ATA_PFLAG_FROZEN in ata_port_alloc if ap->ops->error_handler
+> >>>>>> is not NULL.
+> >>>>>
+> >>>>> It seemed like ipr is as you say, but I wasn't sure if it was
+> >>>>> appropriate to make the change above in the common libata-scis code or
+> >>>>> not. I don't want to break some other device on accident.
+> >>>>>
+> >>>>> Also, I tried your suggestion, but I don't think that can happen in
+> >>>>> ata_port_alloc? ata_port_alloc is allocated ap itself, and it seems like
+> >>>>> ap->ops typically gets set only after ata_port_alloc returns?
+> >>>>
+> >>>> Maybe we can test error_handler in ata_sas_port_start()?
+> >>>
+> >>> Good point. Since libsas is converted to the new eh now, we would need to have
+> >>> this test.
+> >>
+> >> Commit 7b3a24c57d2eeda8dba9c205342b12689c4679f9 ("ahci: don't enable
+> >> port irq before handler is registered") caused a regression for CD-ROMs
+> >> attached to the IPR SATA bus on Power machines:
+> >>
+> >>   ata_port_alloc: ENTER
+> >>   ata_port_probe: ata1: bus probe begin
+> >>   ata1.00: ata_dev_read_id: ENTER
+> >>   ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+> >>   ata1.00: ata_dev_read_id: ENTER
+> >>   ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+> >>   ata1.00: limiting speed to UDMA7:PIO5
+> >>   ata1.00: ata_dev_read_id: ENTER
+> >>   ata1.00: failed to IDENTIFY (I/O error, err_mask=0x40)
+> >>   ata1.00: disabled
+> >>   ata_port_probe: ata1: bus probe end
+> >>   scsi_alloc_sdev: Allocation failure during SCSI scanning, some SCSI devices might not be configured
+> >>
+> >> The FROZEN flag added in that commit is only cleared by the new EH code,
+> >> which is not used by ipr. Clear this flag in the SAS code if we don't
+> >> support new EH.
+> >>
+> >> Reported-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> >> Signed-off-by: Nishanth Aravamudan <nacc@us.ibm.com>
+> >>
+> >> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> >> index d51f979..ebe1685 100644
+> >> --- a/drivers/ata/libata-scsi.c
+> >> +++ b/drivers/ata/libata-scsi.c
+> >> @@ -3797,6 +3797,12 @@ EXPORT_SYMBOL_GPL(ata_sas_port_alloc);
+> >>   */
+> >>  int ata_sas_port_start(struct ata_port *ap)
+> >>  {
+> >> +	/*
+> >> +	 * the port is marked as frozen at allocation time, but if we don't
+> >> +	 * have new eh, we won't thaw it
+> >> +	 */
+> >> +	if (!ap->ops->error_handler)
+> >> +		ap->pflags &= ~ATA_PFLAG_FROZEN;
+> >>  	return 0;
+> >>  }
+> >>  EXPORT_SYMBOL_GPL(ata_sas_port_start);
+> >>
+> >>
+> >> -- 
+> >> Nishanth Aravamudan <nacc@us.ibm.com>
+> >> IBM Linux Technology Center
+> > 
+> 
+> 
 
---==_Exmh_1308794391_4530P--
+
