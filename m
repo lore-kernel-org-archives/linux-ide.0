@@ -1,40 +1,49 @@
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Subject: Re: [PATCH] libata/sas: only set FROZEN flag if new EH is supported
-Date: Thu, 23 Jun 2011 15:10:17 +1000
-Message-ID: <1308805817.32158.204.camel@pasglop>
-References: <20110615191747.GA6324@us.ibm.com>
-	 <4DF90FCA.1040706@linux.vnet.ibm.com> <20110615233417.GB6324@us.ibm.com>
-	 <20110616075114.GH8141@htj.dyndns.org>
-	 <4DFA0507.3090609@linux.vnet.ibm.com> <20110616152836.GA15268@us.ibm.com>
-	 <20110621160714.GA14174@us.ibm.com>  <4E00FF58.7070802@linux.vnet.ibm.com>
-	 <1308803461.32158.191.camel@pasglop>  <1308804120.32158.202.camel@pasglop>
+From: Hubert Bailey <hbailey@marvell.com>
+Subject: RE: Added advisement against marvell ATA controller in the ATA wiki
+ page
+Date: Thu, 23 Jun 2011 04:56:06 -0700
+Message-ID: <B9B10C29375C5B40A2D240808654F60E5EE4DEE029@SC-VEXCH2.marvell.com>
+References: <20110610070030.GB15235@htj.dyndns.org>
+ <20110622095710.GC30101@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1308804120.32158.202.camel@pasglop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Nishanth Aravamudan <nacc@us.ibm.com>, Tejun Heo <tj@kernel.org>, linuxppc-dev@lists.ozlabs.org, wayneb@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, mbizon@freebox.fr, jgarzik@pobox.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:41903 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755812Ab1FWL4T convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Jun 2011 07:56:19 -0400
+In-Reply-To: <20110622095710.GC30101@htj.dyndns.org>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "mlord@pobox.com" <mlord@pobox.com>
+Cc: Larry Li <lil@marvell.com>
 
-On Thu, 2011-06-23 at 14:42 +1000, Benjamin Herrenschmidt wrote:
-> On Thu, 2011-06-23 at 14:31 +1000, Benjamin Herrenschmidt wrote:
-> > On Tue, 2011-06-21 at 15:30 -0500, Brian King wrote:
-> > > Looks good to me. Jeff/Tejun - any issues with merging this?
-> > 
-> > BTW. Current upstream with that patch applied on a machine here leads to
-> > several oddities, I don't know at this point whether any of that is
-> > actually a regression :
-> 
-> Ooops... pressed "send" too quickly. Here's a log excerpt with some
-> comments:
+ Tejun,
 
- .../...
+Removing Saeed and adding Larry.
 
-Ok so most of that is already in 2.6.39, including the odd LUN, so
-nothing new under the sun.
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+Sent: Wednesday, June 22, 2011 4:57 AM
+To: linux-ide@vger.kernel.org; Jeff Garzik; mlord@pobox.com
+Cc: Saeed Bishara; Hubert Bailey
+Subject: Re: Added advisement against marvell ATA controller in the ATA wiki page
 
-I'll do more digging / bisection...
+Hello,
 
-Ben.
+This is bz entry for the combined SATA/PATA marvell ahci, which we never properly supported.
+
+  https://bugzilla.kernel.org/show_bug.cgi?id=12075
+
+Thanks.
+
+--
+tejun
+
+-----
+No virus found in this message.
+Checked by AVG - www.avg.com
+Version: 10.0.1382 / Virus Database: 1513/3719 - Release Date: 06/22/11
