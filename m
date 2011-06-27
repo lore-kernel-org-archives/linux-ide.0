@@ -1,61 +1,37 @@
-From: Marc MERLIN <marc@merlins.org>
+From: Mark Lord <mlord@pobox.com>
 Subject: Re: decoding PMP errors with Marvel SATA controller
-Date: Sun, 26 Jun 2011 17:06:14 -0700
-Message-ID: <20110627000614.GA5362@merlins.org>
-References: <20110626070820.GC24867@merlins.org> <20110626090309.GA12200@mtj.dyndns.org> <4E076E9E.9080400@pobox.com>
+Date: Sun, 26 Jun 2011 21:29:25 -0400
+Message-ID: <4E07DCF5.1090506@pobox.com>
+References: <20110626070820.GC24867@merlins.org>
+ <20110626090309.GA12200@mtj.dyndns.org> <4E076E9E.9080400@pobox.com>
+ <20110627000614.GA5362@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:43342 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755981Ab1F0AGX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jun 2011 20:06:23 -0400
-Content-Disposition: inline
-In-Reply-To: <4E076E9E.9080400@pobox.com>
+Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:60183 "EHLO
+	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756167Ab1F0B32 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Jun 2011 21:29:28 -0400
+In-Reply-To: <20110627000614.GA5362@merlins.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <mlord@pobox.com>
+To: Marc MERLIN <marc@merlins.org>
 Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Larry Li <lil@marvell.com>, hbailey@marvell.com
 
-Speaking of which, what sata chips are recommended nowadays for PMP outside
-sil24 cards?
+On 11-06-26 08:06 PM, Marc MERLIN wrote:
+> Speaking of which, what sata chips are recommended nowadays for PMP outside
+> sil24 cards?
 
-On Sun, Jun 26, 2011 at 01:38:38PM -0400, Mark Lord wrote:
-> > This sounds a lot like another recent PMP problem we had with marvell.
-> > It could be that FIS-based switching doesn't work quite as well for
-> > some reason.
-> 
-> This all *used* to work with sata_mv.
-> But I also recently noticed my sata_mv cards no longer work with the
-> 4-port Marvell PMP here, and that combo definitely did work when I
-> finished with it all (back around 2.6.29 or so).
- 
-I also used it but it was back 2-3 years ago now. I think it even worked
-back in 2.6.18.
+Well, sata_mv cards were once *the* best cards going for PMP.
+Nowadays though, none of the chipsets I have here work with all
+of the PMPs I have here.
 
-> I'm rather distracted here right now with broken internet connectivity,
-> and hunting for new providers etc., so not likely to dig around on it.
-> 
-> Perhaps Marc MERLIN could retest with an older kernel,
-> say 2.6.32 or 2.6.29 even, and see what happens with those.
-> Hopefully it will work there for him, and we'll have a starting
-> point to bisect the issue.
+JMicron are the most common eSATA chips on motherboards,
+but even they have PMP troubles with Linux (but not with Windows).
 
-So it's a bit difficult for me to get too much data on this since it's a
-production system and downtime does come at somewhat of a premium.
-
-However, if whoever may be able to work on it and see what broke (because it
-almost works, I see all the drives on my PMP and I can read data somewhat, I
-just get a lot of somewhat scary errors now) lets me know, if he/she has no
-way to test him/herself, I'll see what I can do to help out and get to
-replicate this with older kernels on either that server, or maybe another
-machine I would have to build for it (trying repeatedly on production data,
-even with backups, not so good :) ).
-
-Thanks for the answer,
-Marc
+So.. dunno.
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
