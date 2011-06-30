@@ -1,59 +1,35 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: PMP SMART error recovery and failure code decoding help
-Date: Wed, 29 Jun 2011 10:14:02 -0700
-Message-ID: <20110629171402.GA10803@merlins.org>
-References: <20110116163950.GA691@merlins.org>
- <20110117132623.GD27123@htj.dyndns.org>
- <20110117164340.GD27342@merlins.org>
- <20110117171209.GH27123@htj.dyndns.org>
- <20110117172924.GE27342@merlins.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Suppressing ATA errors on boot
+Date: Thu, 30 Jun 2011 11:49:37 +0200
+Message-ID: <20110630094937.GO3386@htj.dyndns.org>
+References: <F2FB3B32-A380-40EB-B6DF-02AB30592E3D@jabberwocky.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:38007 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753072Ab1F2RsK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jun 2011 13:48:10 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:38148 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab1F3Jtm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jun 2011 05:49:42 -0400
+Received: by bwd5 with SMTP id 5so1678883bwd.19
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jun 2011 02:49:41 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20110117172924.GE27342@merlins.org>
+In-Reply-To: <F2FB3B32-A380-40EB-B6DF-02AB30592E3D@jabberwocky.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: David Shaw <dshaw@jabberwocky.com>
 Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 17, 2011 at 09:29:24AM -0800, Marc MERLIN wrote:
-> On Mon, Jan 17, 2011 at 06:12:09PM +0100, Tejun Heo wrote:
-> > Hello,
-> > 
-> > On Mon, Jan 17, 2011 at 08:43:40AM -0800, Marc MERLIN wrote:
-> > > > It could be that the drives need to spin up to answer the smart
-> > > > command and the timeout on the smart commands is a bit too short for
-> > > > that to happen.  Forcing a disk access before issuing the smart
-> > > > command could work around the problem.
-> > >  
-> > > Right, although the idea is of course to keep the drives spun down :)
-> > > I haven't been able to find which SMART call is causing those errors yet.
-> > > Does cmd b0/d8:00:00:4f:c2/00:00:00:00:00/00 translate to anything useful?
-> > 
-> > That's SMART ENABLE OPERATIONS.  It turns on SMART.
->  
-> Haha, ok, not as useful as I thought :)
+Hello,
 
-As an update for the list archives, more recent smartmontools (5.40 and
-maybe older) allow this:
-DEVICESCAN -n standby
+On Wed, Jun 29, 2011 at 11:07:11AM -0400, David Shaw wrote:
+> Is there some way to tell libata that those ports shouldn't even be
+> probed?  Alternately, is there a way to selectively prevent those
+> messages from being logged (without affecting the logging for the
+> rest of the boot)?  Or perhaps a third solution?
 
-This tells smartmontools not to talk to drives that are sleeping so that
-it does not spin them back up.
+Can you attach the output of "lspci -nn" and full boot log?
 
-In turn it fixed the related PMP timeout and PMP bus reset issues I was getting
-from those commands.
+Thanks.
 
-Hope this helps someone.
-
-Marc
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/
+tejun
