@@ -1,42 +1,33 @@
-From: "Mr. Allen Williams" <info@wunion.org>
-Subject: 800,000.00(United States Dollars
-Date: Sat, 02 Jul 2011 16:09:41 +0100
-Message-ID: <20110702160941.boex0bo85cw4sco4@webmail.cs.cf.ac.uk>
-Reply-To: western-milan-union@hotmail.co.uk
+From: Alexey Fisher <bug-track@fisher-privat.net>
+Subject: error rate statistic
+Date: Mon, 04 Jul 2011 08:42:23 +0200
+Message-ID: <1309761743.25262.21.camel@zwerg>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from portico.cs.cf.ac.uk ([131.251.169.4]:58649 "EHLO
-	portico.cs.cf.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab1GCSNr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 3 Jul 2011 14:13:47 -0400
-Content-Disposition: inline
+Received: from mailout-de.gmx.net ([213.165.64.23]:37964 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755273Ab1GDGm0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Jul 2011 02:42:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+Hallo all,
+
+I currently working on instruments for early recognition of hardware
+errors. One of the biggest problems are hard drives (i know, you know
+it)... i can't use smart because it completely  fails in some cases.
+Good indicator is kernel log, but it make no sense to parse it all the
+time.
+
+My question is: are there any sysfs interface to check for io errors on
+some drive? I see there is  /sys/block/<dev>/stat interface, is it
+possible to add it there or add a new file?
 
 
-Dear beneficiary,
-
-This is to re-notify you of the 800,000.00(United States Dollars)that was
-deposited
-here in the western union office in your name is available for pickup.
-Contact us via email for your M.T.C.N Numbers.
-
-Contact Person: Mr. Allen Williams
-Email: western-milan-union@hotmail.co.uk
-Tel. +447031977568
-Tel. +447031975981
-
-
-
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
+-- 
+Regards,
+        Alexey
 
