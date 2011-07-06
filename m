@@ -1,41 +1,37 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Problem:  security locked disk and partition table read..
-Date: Wed, 6 Jul 2011 12:41:03 +0100
-Message-ID: <20110706124103.565cc4c6@lxorguk.ukuu.org.uk>
-References: <4D366DF1.3000303@teksavvy.com>
+From: Tim Small <tim@seoss.co.uk>
+Subject: Re: decoding PMP errors with Marvel SATA controller
+Date: Wed, 06 Jul 2011 21:55:02 +0100
+Message-ID: <4E14CBA6.4010908@seoss.co.uk>
+References: <20110626070820.GC24867@merlins.org> <20110626090309.GA12200@mtj.dyndns.org> <4E076E9E.9080400@pobox.com> <20110627000614.GA5362@merlins.org> <4E07DCF5.1090506@pobox.com> <B9B10C29375C5B40A2D240808654F60E5EE470A68B@SC-VEXCH2.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52543 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752661Ab1GFLi0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 07:38:26 -0400
-In-Reply-To: <4D366DF1.3000303@teksavvy.com>
+Received: from relay0.allsecurenet.com ([109.169.27.60]:57279 "EHLO
+	relay0.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756189Ab1GFUzY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 16:55:24 -0400
+In-Reply-To: <B9B10C29375C5B40A2D240808654F60E5EE470A68B@SC-VEXCH2.marvell.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Hubert Bailey <hbailey@marvell.com>
+Cc: 'Mark Lord' <mlord@pobox.com>, Marc MERLIN <marc@merlins.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Larry Li <lil@marvell.com>
 
-> Except.. the kernel (?) sat there for a very long time trying
-> (and failing) over and over and over and over and over and over
-> to read sector-0 (the partition table).  Of course the reads
-> each failed, and then got retried 5-times by SCSI, and then
-> retried again a zillion times at a higher level.
+On 27/06/11 02:58, Hubert Bailey wrote:
+> Typically the biggest issues are with the PMPs that have internal RAID controllers.  These parts do not follow the SATA spec when they are not in RAID mode.
+>   
 
-It gets prodded by the various partition formats, the userspace hotplug
-code and so on, not always for block 0.
+FWIW, the errors and performance issues which I have been seeing with
+the 88SE91xx are with a SiI 3726 - which is AFAIK the most common PMP
+chip, and has no RAID features...
 
-> Why so many attempts to read the partition table???
+Cheers,
 
-Each partitioning format does its own requests. Normally that is fine but
-in this case its bad news.
+Tim.
 
-> Anyway, here's the hack I used:
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.  
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
 
-Presumably we should set a per device flag of 'security locked' and fail
-normal I/O to it but allow the other paths ? The 'proper' way would then
-be to use the key rings and also a kernel event to poke userspace into
-handling it.
-
-Alan
