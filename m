@@ -1,203 +1,190 @@
-From: Sekhar Nori <nsekhar@ti.com>
-Subject: [PATCH 1/5] davinci: psc.h: clean up indentation done using spaces
-Date: Wed, 6 Jul 2011 11:31:20 +0530
-Message-ID: <2112f84888cfb283ddb12f97ebe3d06116e39d94.1309927427.git.nsekhar@ti.com>
-References: <cover.1309927427.git.nsekhar@ti.com>
+From: Richard Kang <turquesa@malgn.com>
+Subject: Re: qc timeout on a marvell 88F6282 board
+Date: Wed, 06 Jul 2011 15:43:27 +0900
+Message-ID: <4E14040F.9030503@malgn.com>
+References: <4E0AEAB1.4090106@malgn.com>	<CAMAG_ef0y=Jg=8eQSWj_e8kwGAtFwJXsvPATiL1fkq57kVzubA@mail.gmail.com>	<4E12CAD1.3030302@malgn.com> <CAMAG_efStJsEeZrdf-eSq89aHrji3t5+RYO+arrUYiAQpn7LgQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:48517 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754082Ab1GFGBq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 02:01:46 -0400
-In-Reply-To: <cover.1309927427.git.nsekhar@ti.com>
+Received: from [125.7.223.35] ([125.7.223.35]:58149 "EHLO mail.malgn.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1752038Ab1GFGna (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Jul 2011 02:43:30 -0400
+In-Reply-To: <CAMAG_efStJsEeZrdf-eSq89aHrji3t5+RYO+arrUYiAQpn7LgQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davinci-linux-open-source@linux.davincidsp.com
-Cc: khilman@ti.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com, Sekhar Nori <nsekhar@ti.com>
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: linux-ide@vger.kernel.org, =?UTF-8?B?6rCV7YOc7ISx?= <kangts@malgn.com>
 
-psc.h has indentation using spaces at a number of places.
-Fix this by indenting using tabs instead.
+2011-07-05 =EC=98=A4=ED=9B=84 7:11, saeed bishara =EC=93=B4 =EA=B8=80:
+> On Tue, Jul 5, 2011 at 11:26 AM, Richard Kang<turquesa@malgn.com>  wr=
+ote:
+>>> 2011/6/29 Richard Kang<turquesa@malgn.com>:
+>>>> Hello.
+>>>>
+>>>> I have a sil3132 pci-e card and a DB-88F6282-A-BP(Marvell developm=
+ent
+>>>> board based on Arm9).
+>>>> I compiled sata_sil24 driver as a module with a cross-compiler.
+>>>>
+>>>> But, when loading the driver, qc timeout error was occurred during
+>>>> ata_read_dev_id.
+>>>> What is wrong, IRQ or DMA ?
+>>> looks to me this is DMA issue, can you force pio mode? you can do t=
+hat
+>>> by adding "libata.dma=3D0" to the kernel command line.
+>>> saeed
+>>>
+>>>> I have 2.6.31.8
+>> Dear saeed,
+>>
+>> I excuted libata.dma=3D0 through "$modprobe libata dma=3D0"
+>> Then I excuted "$modprobe sata_sil24"
+>>
+>> But, result is same as before.
+>> I think sata_sil24 supports only dma not pio, right?
+> I don't think so.
+> can you check if interrupts working fine?
+> you can test that by loading the driver without any connected disk,
+> then check if the controller raises any interrupt from
+> /proc/interrupts when plugging a disk,
+> saeed
+>
+Dear saeed,
 
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- arch/arm/mach-davinci/include/mach/psc.h |  148 +++++++++++++++---------------
- 1 files changed, 74 insertions(+), 74 deletions(-)
+As your instructions, I checked interrupt.
+At first, I load a sata_sil24 driver without a disk. (I added the log.)
 
-diff --git a/arch/arm/mach-davinci/include/mach/psc.h b/arch/arm/mach-davinci/include/mach/psc.h
-index a47e6f2..1110fdd 100644
---- a/arch/arm/mach-davinci/include/mach/psc.h
-+++ b/arch/arm/mach-davinci/include/mach/psc.h
-@@ -30,47 +30,47 @@
- #define	DAVINCI_PWR_SLEEP_CNTRL_BASE	0x01C41000
- 
- /* Power and Sleep Controller (PSC) Domains */
--#define DAVINCI_GPSC_ARMDOMAIN      0
--#define DAVINCI_GPSC_DSPDOMAIN      1
-+#define DAVINCI_GPSC_ARMDOMAIN		0
-+#define DAVINCI_GPSC_DSPDOMAIN		1
- 
--#define DAVINCI_LPSC_VPSSMSTR       0
--#define DAVINCI_LPSC_VPSSSLV        1
--#define DAVINCI_LPSC_TPCC           2
--#define DAVINCI_LPSC_TPTC0          3
--#define DAVINCI_LPSC_TPTC1          4
--#define DAVINCI_LPSC_EMAC           5
--#define DAVINCI_LPSC_EMAC_WRAPPER   6
--#define DAVINCI_LPSC_USB            9
--#define DAVINCI_LPSC_ATA            10
--#define DAVINCI_LPSC_VLYNQ          11
--#define DAVINCI_LPSC_UHPI           12
--#define DAVINCI_LPSC_DDR_EMIF       13
--#define DAVINCI_LPSC_AEMIF          14
--#define DAVINCI_LPSC_MMC_SD         15
--#define DAVINCI_LPSC_McBSP          17
--#define DAVINCI_LPSC_I2C            18
--#define DAVINCI_LPSC_UART0          19
--#define DAVINCI_LPSC_UART1          20
--#define DAVINCI_LPSC_UART2          21
--#define DAVINCI_LPSC_SPI            22
--#define DAVINCI_LPSC_PWM0           23
--#define DAVINCI_LPSC_PWM1           24
--#define DAVINCI_LPSC_PWM2           25
--#define DAVINCI_LPSC_GPIO           26
--#define DAVINCI_LPSC_TIMER0         27
--#define DAVINCI_LPSC_TIMER1         28
--#define DAVINCI_LPSC_TIMER2         29
--#define DAVINCI_LPSC_SYSTEM_SUBSYS  30
--#define DAVINCI_LPSC_ARM            31
--#define DAVINCI_LPSC_SCR2           32
--#define DAVINCI_LPSC_SCR3           33
--#define DAVINCI_LPSC_SCR4           34
--#define DAVINCI_LPSC_CROSSBAR       35
--#define DAVINCI_LPSC_CFG27          36
--#define DAVINCI_LPSC_CFG3           37
--#define DAVINCI_LPSC_CFG5           38
--#define DAVINCI_LPSC_GEM            39
--#define DAVINCI_LPSC_IMCOP          40
-+#define DAVINCI_LPSC_VPSSMSTR		0
-+#define DAVINCI_LPSC_VPSSSLV		1
-+#define DAVINCI_LPSC_TPCC		2
-+#define DAVINCI_LPSC_TPTC0		3
-+#define DAVINCI_LPSC_TPTC1		4
-+#define DAVINCI_LPSC_EMAC		5
-+#define DAVINCI_LPSC_EMAC_WRAPPER	6
-+#define DAVINCI_LPSC_USB		9
-+#define DAVINCI_LPSC_ATA		10
-+#define DAVINCI_LPSC_VLYNQ		11
-+#define DAVINCI_LPSC_UHPI		12
-+#define DAVINCI_LPSC_DDR_EMIF		13
-+#define DAVINCI_LPSC_AEMIF		14
-+#define DAVINCI_LPSC_MMC_SD		15
-+#define DAVINCI_LPSC_McBSP		17
-+#define DAVINCI_LPSC_I2C		18
-+#define DAVINCI_LPSC_UART0		19
-+#define DAVINCI_LPSC_UART1		20
-+#define DAVINCI_LPSC_UART2		21
-+#define DAVINCI_LPSC_SPI		22
-+#define DAVINCI_LPSC_PWM0		23
-+#define DAVINCI_LPSC_PWM1		24
-+#define DAVINCI_LPSC_PWM2		25
-+#define DAVINCI_LPSC_GPIO		26
-+#define DAVINCI_LPSC_TIMER0		27
-+#define DAVINCI_LPSC_TIMER1		28
-+#define DAVINCI_LPSC_TIMER2		29
-+#define DAVINCI_LPSC_SYSTEM_SUBSYS	30
-+#define DAVINCI_LPSC_ARM		31
-+#define DAVINCI_LPSC_SCR2		32
-+#define DAVINCI_LPSC_SCR3		33
-+#define DAVINCI_LPSC_SCR4		34
-+#define DAVINCI_LPSC_CROSSBAR		35
-+#define DAVINCI_LPSC_CFG27		36
-+#define DAVINCI_LPSC_CFG3		37
-+#define DAVINCI_LPSC_CFG5		38
-+#define DAVINCI_LPSC_GEM		39
-+#define DAVINCI_LPSC_IMCOP		40
- 
- #define DM355_LPSC_TIMER3		5
- #define DM355_LPSC_SPI1			6
-@@ -102,39 +102,39 @@
- /*
-  * LPSC Assignments
-  */
--#define DM646X_LPSC_ARM            0
--#define DM646X_LPSC_C64X_CPU       1
--#define DM646X_LPSC_HDVICP0        2
--#define DM646X_LPSC_HDVICP1        3
--#define DM646X_LPSC_TPCC           4
--#define DM646X_LPSC_TPTC0          5
--#define DM646X_LPSC_TPTC1          6
--#define DM646X_LPSC_TPTC2          7
--#define DM646X_LPSC_TPTC3          8
--#define DM646X_LPSC_PCI            13
--#define DM646X_LPSC_EMAC           14
--#define DM646X_LPSC_VDCE           15
--#define DM646X_LPSC_VPSSMSTR       16
--#define DM646X_LPSC_VPSSSLV        17
--#define DM646X_LPSC_TSIF0          18
--#define DM646X_LPSC_TSIF1          19
--#define DM646X_LPSC_DDR_EMIF       20
--#define DM646X_LPSC_AEMIF          21
--#define DM646X_LPSC_McASP0         22
--#define DM646X_LPSC_McASP1         23
--#define DM646X_LPSC_CRGEN0         24
--#define DM646X_LPSC_CRGEN1         25
--#define DM646X_LPSC_UART0          26
--#define DM646X_LPSC_UART1          27
--#define DM646X_LPSC_UART2          28
--#define DM646X_LPSC_PWM0           29
--#define DM646X_LPSC_PWM1           30
--#define DM646X_LPSC_I2C            31
--#define DM646X_LPSC_SPI            32
--#define DM646X_LPSC_GPIO           33
--#define DM646X_LPSC_TIMER0         34
--#define DM646X_LPSC_TIMER1         35
--#define DM646X_LPSC_ARM_INTC       45
-+#define DM646X_LPSC_ARM		0
-+#define DM646X_LPSC_C64X_CPU	1
-+#define DM646X_LPSC_HDVICP0	2
-+#define DM646X_LPSC_HDVICP1	3
-+#define DM646X_LPSC_TPCC	4
-+#define DM646X_LPSC_TPTC0	5
-+#define DM646X_LPSC_TPTC1	6
-+#define DM646X_LPSC_TPTC2	7
-+#define DM646X_LPSC_TPTC3	8
-+#define DM646X_LPSC_PCI		13
-+#define DM646X_LPSC_EMAC	14
-+#define DM646X_LPSC_VDCE	15
-+#define DM646X_LPSC_VPSSMSTR	16
-+#define DM646X_LPSC_VPSSSLV	17
-+#define DM646X_LPSC_TSIF0	18
-+#define DM646X_LPSC_TSIF1	19
-+#define DM646X_LPSC_DDR_EMIF	20
-+#define DM646X_LPSC_AEMIF	21
-+#define DM646X_LPSC_McASP0	22
-+#define DM646X_LPSC_McASP1	23
-+#define DM646X_LPSC_CRGEN0	24
-+#define DM646X_LPSC_CRGEN1	25
-+#define DM646X_LPSC_UART0	26
-+#define DM646X_LPSC_UART1	27
-+#define DM646X_LPSC_UART2	28
-+#define DM646X_LPSC_PWM0	29
-+#define DM646X_LPSC_PWM1	30
-+#define DM646X_LPSC_I2C		31
-+#define DM646X_LPSC_SPI		32
-+#define DM646X_LPSC_GPIO	33
-+#define DM646X_LPSC_TIMER0	34
-+#define DM646X_LPSC_TIMER1	35
-+#define DM646X_LPSC_ARM_INTC	45
- 
- /* PSC0 defines */
- #define DA8XX_LPSC0_TPCC		0
-@@ -243,7 +243,7 @@
- #define PSC_STATE_DISABLE	2
- #define PSC_STATE_ENABLE	3
- 
--#define MDSTAT_STATE_MASK 0x1f
-+#define MDSTAT_STATE_MASK	0x1f
- 
- #ifndef __ASSEMBLER__
- 
--- 
-1.7.3.2
+-----------------------------------------------------------------------=
+---------
+sil24_init_one: @@@ ENTER
+(arch/arm/mm/ioremap.c) __arm_ioremap: phys_addr=3De8084000
+(arch/arm/mm/ioremap.c) __arm_ioremap_pfn: addr=3De0a22000
+(arch/arm/mm/ioremap.c) __arm_ioremap: phys_addr=3De8080000
+(arch/arm/mm/ioremap.c) __arm_ioremap_pfn: addr=3De0a28000
+ata_host_alloc: ### ENTER: max_ports=3D2
+ata_port_alloc: ENTER
+(libata-core.c) ata_link_init
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+ata_port_alloc: LEAVE
+ata_port_alloc: ENTER
+(libata-core.c) ata_link_init
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+ata_port_alloc: LEAVE
+ata_host_alloc: ### LEAVE
+sil24_init_one: DMA_MASK_64 rc=3D0
+sil24_init_controller: =3D=3D=3D ENTER : sil24_init_controller
+sil24_init_controller: host_base=3De0a22000 HOST_CTRL(0x40)=3D81000000
+sil24_init_controller: =3D=3D=3D LEAVE: HOST_CTRL=3D1000003
+sil24_init_one: @@@ LEAVE
+sil24_port_start: ENTER ap=3Dd1668000 ata4294967295
+sil24_port_start: kernel va=3Dffc08000 cb_dma=3D11800000
+sil24_port_start: LEAVE
+__ata_port_freeze: ENTER: ap=3Dd1668000
+__ata_port_freeze: LEAVE: ata4294967295 port frozen
+sil24_port_start: ENTER ap=3Dd164c000 ata4294967295
+sil24_port_start: kernel va=3Dffc27000 cb_dma=3D117a0000
+sil24_port_start: LEAVE
+__ata_port_freeze: ENTER: ap=3Dd164c000
+__ata_port_freeze: LEAVE: ata4294967295 port frozen
+sil24_interrupt: ***** ENTER: sil24_interrupt
+sil24_interrupt: host_base=3De0a22000 HOST_IRQ_STAT=3D0
+sil24_interrupt: ***** LEAVE
+(libata-core.c) ata_host_register *ENTER*
+scsi2 : sata_sil24
+scsi3 : sata_sil24
+ata1: SATA max UDMA/100 host m128@0xe8084000 port 0xe8080000 irq 10
+ata2: SATA max UDMA/100 host m128@0xe8084000 port 0xe8082000 irq 10
+(libata-core.c) ata_host_register *LEAVE*
+ata_port_schedule_eh: port EH scheduled
+ata_scsi_error: ENTER
+(libata-eh.c) ata_scsi_error
+ata_port_flush_task: ENTER
+sil24_error_handler: ENTER
+sil24_init_port: +++ ENTER port_base=3De0a28000
+sil24_init_port: +++ LEAVE
+ata_eh_link_autopsy: ENTER
+ata_eh_recover: ENTER
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+__ata_port_freeze: ENTER: ap=3Dd1668000
+__ata_port_freeze: LEAVE: ata1 port frozen
+sil24_thaw: ENTER
+sil24_thaw: LEAVE: irq_enabled=3D8d3
+ata_eh_thaw_port: ata1 port thawed
+ata_std_postreset: ENTER
+ata1: SATA link down (SStatus 0 SControl 0)
+ata_std_postreset: EXIT
+ata_eh_revalidate_and_attach: ENTER
+ata_eh_recover: EXIT, rc=3D0
+sil24_error_handler: LEAVE
+ata_scsi_error: EXIT
+ata_port_schedule_eh: port EH scheduled
+ata_scsi_error: ENTER
+(libata-eh.c) ata_scsi_error
+ata_port_flush_task: ENTER
+sil24_error_handler: ENTER
+sil24_init_port: +++ ENTER port_base=3De0a2a000
+sil24_init_port: +++ LEAVE
+ata_eh_link_autopsy: ENTER
+ata_eh_recover: ENTER
+ata_dev_init: (libata-core.c) ENTER
+ata_dev_init: (libata-core.c) LEAVE
+__ata_port_freeze: ENTER: ap=3Dd164c000
+__ata_port_freeze: LEAVE: ata2 port frozen
+sil24_thaw: ENTER
+sil24_thaw: LEAVE: irq_enabled=3D8d3
+ata_eh_thaw_port: ata2 port thawed
+ata_std_postreset: ENTER
+ata2: SATA link down (SStatus 0 SControl 0)
+ata_std_postreset: EXIT
+ata_eh_revalidate_and_attach: ENTER
+ata_eh_recover: EXIT, rc=3D0
+sil24_error_handler: LEAVE
+ata_scsi_error: EXIT
+-----------------------------------------------------------------------=
+---------
 
+It seems no problem.
+Then I plug a disk. Followings are debug msg of sil24_interrupt and=20
+contents of /proc/interrupts.
+An interrupt is occurred and no error.
+
+-----------------------------------------------------------------------=
+---------
+sil24_interrupt: ***** ENTER: sil24_interrupt
+sil24_interrupt: host_base=3De0a22000 HOST_IRQ_STAT=3D2
+(sata_sil24.c) sil24_host_intr
+(sata_sil24.c) sil24_host_intr -> sil24_error_intr
+ata_port_schedule_eh: port EH scheduled
+__ata_port_freeze: ENTER: ap=3Dd164c000
+__ata_port_freeze: LEAVE: ata2 port frozen
+sil24_interrupt: ***** LEAVE
+-----------------------------------------------------------------------=
+---------
+sh-3.2# cat /proc/interrupts
+            CPU0
+   1:      20689           -  kw_tick
+  10:          1           -  sata_sil24
+  11:       2901           -  mv_ethernet
+  19:          0           -  ehci_hcd:usb1
+  21:          0           -  mvSata
+  22:          0           -  cesa
+  28:       2145           -  mvsdio
+  29:          0           -  mv64xxx_i2c
+  33:        242           -  serial
+Err:          0
+-----------------------------------------------------------------------=
+---------
+
+I can't find reason of not working. Please advise to me.
+
+Thank you.
