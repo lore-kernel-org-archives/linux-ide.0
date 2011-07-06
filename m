@@ -1,250 +1,203 @@
 From: Sekhar Nori <nsekhar@ti.com>
-Subject: [PATCH v3 4/5] davinci: da850: add support for SATA interface
-Date: Wed, 6 Jul 2011 11:31:23 +0530
-Message-ID: <a3e9af8d16c7e37ad39200f7506a6a937920725b.1309927428.git.nsekhar@ti.com>
+Subject: [PATCH 1/5] davinci: psc.h: clean up indentation done using spaces
+Date: Wed, 6 Jul 2011 11:31:20 +0530
+Message-ID: <2112f84888cfb283ddb12f97ebe3d06116e39d94.1309927427.git.nsekhar@ti.com>
 References: <cover.1309927427.git.nsekhar@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:48527 "EHLO
+Received: from devils.ext.ti.com ([198.47.26.153]:48517 "EHLO
 	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754092Ab1GFGBr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 02:01:47 -0400
+	with ESMTP id S1754082Ab1GFGBq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 02:01:46 -0400
 In-Reply-To: <cover.1309927427.git.nsekhar@ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: davinci-linux-open-source@linux.davincidsp.com
 Cc: khilman@ti.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com, Sekhar Nori <nsekhar@ti.com>
 
-Add support for SATA controller on the
-DA850/OMAP-L138/AM18x devices.
-
-The patch adds the necessary clocks, platform
-resources and a routine to initialize the SATA
-controller.
-
-The PHY configuration in this patch is
-courtesy the work done by Zegeye Alemu,
-Swaminathan and Mansoor Ahamed from TI.
-
-While testing this patch, enable port multiplier
-support iff you are actually using one. The
-reasons of this behaviour are discussed
-here: http://patchwork.ozlabs.org/patch/78163/
-
-ChangeLog:
-v3:
-Removed fields which were being initialized
-to zero in PHY configuration. Moved SATA base
-address definition to the top of the file to
-make it inline with what is done for the rest
-of the modules.
-v2:
-Addressed comments from Sergei. Removed unnecessary
-braces and removed unnecessary else after goto.
+psc.h has indentation using spaces at a number of places.
+Fix this by indenting using tabs instead.
 
 Signed-off-by: Sekhar Nori <nsekhar@ti.com>
 ---
- arch/arm/mach-davinci/da850.c              |    9 ++
- arch/arm/mach-davinci/devices-da8xx.c      |  126 ++++++++++++++++++++++++++++
- arch/arm/mach-davinci/include/mach/da8xx.h |    2 +
- 3 files changed, 137 insertions(+), 0 deletions(-)
+ arch/arm/mach-davinci/include/mach/psc.h |  148 +++++++++++++++---------------
+ 1 files changed, 74 insertions(+), 74 deletions(-)
 
-diff --git a/arch/arm/mach-davinci/da850.c b/arch/arm/mach-davinci/da850.c
-index 133aac4..2c1fad5 100644
---- a/arch/arm/mach-davinci/da850.c
-+++ b/arch/arm/mach-davinci/da850.c
-@@ -373,6 +373,14 @@ static struct clk spi1_clk = {
- 	.flags		= DA850_CLK_ASYNC3,
- };
+diff --git a/arch/arm/mach-davinci/include/mach/psc.h b/arch/arm/mach-davinci/include/mach/psc.h
+index a47e6f2..1110fdd 100644
+--- a/arch/arm/mach-davinci/include/mach/psc.h
++++ b/arch/arm/mach-davinci/include/mach/psc.h
+@@ -30,47 +30,47 @@
+ #define	DAVINCI_PWR_SLEEP_CNTRL_BASE	0x01C41000
  
-+static struct clk sata_clk = {
-+	.name		= "sata",
-+	.parent		= &pll0_sysclk2,
-+	.lpsc		= DA850_LPSC1_SATA,
-+	.gpsc		= 1,
-+	.flags		= PSC_FORCE,
-+};
-+
- static struct clk_lookup da850_clks[] = {
- 	CLK(NULL,		"ref",		&ref_clk),
- 	CLK(NULL,		"pll0",		&pll0_clk),
-@@ -419,6 +427,7 @@ static struct clk_lookup da850_clks[] = {
- 	CLK(NULL,		"usb20",	&usb20_clk),
- 	CLK("spi_davinci.0",	NULL,		&spi0_clk),
- 	CLK("spi_davinci.1",	NULL,		&spi1_clk),
-+	CLK("ahci",		NULL,		&sata_clk),
- 	CLK(NULL,		NULL,		NULL),
- };
+ /* Power and Sleep Controller (PSC) Domains */
+-#define DAVINCI_GPSC_ARMDOMAIN      0
+-#define DAVINCI_GPSC_DSPDOMAIN      1
++#define DAVINCI_GPSC_ARMDOMAIN		0
++#define DAVINCI_GPSC_DSPDOMAIN		1
  
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index fc4e98e..2f7e719 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -14,6 +14,8 @@
- #include <linux/platform_device.h>
- #include <linux/dma-mapping.h>
- #include <linux/serial_8250.h>
-+#include <linux/ahci_platform.h>
-+#include <linux/clk.h>
+-#define DAVINCI_LPSC_VPSSMSTR       0
+-#define DAVINCI_LPSC_VPSSSLV        1
+-#define DAVINCI_LPSC_TPCC           2
+-#define DAVINCI_LPSC_TPTC0          3
+-#define DAVINCI_LPSC_TPTC1          4
+-#define DAVINCI_LPSC_EMAC           5
+-#define DAVINCI_LPSC_EMAC_WRAPPER   6
+-#define DAVINCI_LPSC_USB            9
+-#define DAVINCI_LPSC_ATA            10
+-#define DAVINCI_LPSC_VLYNQ          11
+-#define DAVINCI_LPSC_UHPI           12
+-#define DAVINCI_LPSC_DDR_EMIF       13
+-#define DAVINCI_LPSC_AEMIF          14
+-#define DAVINCI_LPSC_MMC_SD         15
+-#define DAVINCI_LPSC_McBSP          17
+-#define DAVINCI_LPSC_I2C            18
+-#define DAVINCI_LPSC_UART0          19
+-#define DAVINCI_LPSC_UART1          20
+-#define DAVINCI_LPSC_UART2          21
+-#define DAVINCI_LPSC_SPI            22
+-#define DAVINCI_LPSC_PWM0           23
+-#define DAVINCI_LPSC_PWM1           24
+-#define DAVINCI_LPSC_PWM2           25
+-#define DAVINCI_LPSC_GPIO           26
+-#define DAVINCI_LPSC_TIMER0         27
+-#define DAVINCI_LPSC_TIMER1         28
+-#define DAVINCI_LPSC_TIMER2         29
+-#define DAVINCI_LPSC_SYSTEM_SUBSYS  30
+-#define DAVINCI_LPSC_ARM            31
+-#define DAVINCI_LPSC_SCR2           32
+-#define DAVINCI_LPSC_SCR3           33
+-#define DAVINCI_LPSC_SCR4           34
+-#define DAVINCI_LPSC_CROSSBAR       35
+-#define DAVINCI_LPSC_CFG27          36
+-#define DAVINCI_LPSC_CFG3           37
+-#define DAVINCI_LPSC_CFG5           38
+-#define DAVINCI_LPSC_GEM            39
+-#define DAVINCI_LPSC_IMCOP          40
++#define DAVINCI_LPSC_VPSSMSTR		0
++#define DAVINCI_LPSC_VPSSSLV		1
++#define DAVINCI_LPSC_TPCC		2
++#define DAVINCI_LPSC_TPTC0		3
++#define DAVINCI_LPSC_TPTC1		4
++#define DAVINCI_LPSC_EMAC		5
++#define DAVINCI_LPSC_EMAC_WRAPPER	6
++#define DAVINCI_LPSC_USB		9
++#define DAVINCI_LPSC_ATA		10
++#define DAVINCI_LPSC_VLYNQ		11
++#define DAVINCI_LPSC_UHPI		12
++#define DAVINCI_LPSC_DDR_EMIF		13
++#define DAVINCI_LPSC_AEMIF		14
++#define DAVINCI_LPSC_MMC_SD		15
++#define DAVINCI_LPSC_McBSP		17
++#define DAVINCI_LPSC_I2C		18
++#define DAVINCI_LPSC_UART0		19
++#define DAVINCI_LPSC_UART1		20
++#define DAVINCI_LPSC_UART2		21
++#define DAVINCI_LPSC_SPI		22
++#define DAVINCI_LPSC_PWM0		23
++#define DAVINCI_LPSC_PWM1		24
++#define DAVINCI_LPSC_PWM2		25
++#define DAVINCI_LPSC_GPIO		26
++#define DAVINCI_LPSC_TIMER0		27
++#define DAVINCI_LPSC_TIMER1		28
++#define DAVINCI_LPSC_TIMER2		29
++#define DAVINCI_LPSC_SYSTEM_SUBSYS	30
++#define DAVINCI_LPSC_ARM		31
++#define DAVINCI_LPSC_SCR2		32
++#define DAVINCI_LPSC_SCR3		33
++#define DAVINCI_LPSC_SCR4		34
++#define DAVINCI_LPSC_CROSSBAR		35
++#define DAVINCI_LPSC_CFG27		36
++#define DAVINCI_LPSC_CFG3		37
++#define DAVINCI_LPSC_CFG5		38
++#define DAVINCI_LPSC_GEM		39
++#define DAVINCI_LPSC_IMCOP		40
  
- #include <mach/cputype.h>
- #include <mach/common.h>
-@@ -33,6 +35,7 @@
- #define DA8XX_SPI0_BASE			0x01c41000
- #define DA830_SPI1_BASE			0x01e12000
- #define DA8XX_LCD_CNTRL_BASE		0x01e13000
-+#define DA850_SATA_BASE			0x01e18000
- #define DA850_MMCSD1_BASE		0x01e1b000
- #define DA8XX_EMAC_CPPI_PORT_BASE	0x01e20000
- #define DA8XX_EMAC_CPGMACSS_BASE	0x01e22000
-@@ -842,3 +845,126 @@ int __init da8xx_register_spi(int instance, struct spi_board_info *info,
+ #define DM355_LPSC_TIMER3		5
+ #define DM355_LPSC_SPI1			6
+@@ -102,39 +102,39 @@
+ /*
+  * LPSC Assignments
+  */
+-#define DM646X_LPSC_ARM            0
+-#define DM646X_LPSC_C64X_CPU       1
+-#define DM646X_LPSC_HDVICP0        2
+-#define DM646X_LPSC_HDVICP1        3
+-#define DM646X_LPSC_TPCC           4
+-#define DM646X_LPSC_TPTC0          5
+-#define DM646X_LPSC_TPTC1          6
+-#define DM646X_LPSC_TPTC2          7
+-#define DM646X_LPSC_TPTC3          8
+-#define DM646X_LPSC_PCI            13
+-#define DM646X_LPSC_EMAC           14
+-#define DM646X_LPSC_VDCE           15
+-#define DM646X_LPSC_VPSSMSTR       16
+-#define DM646X_LPSC_VPSSSLV        17
+-#define DM646X_LPSC_TSIF0          18
+-#define DM646X_LPSC_TSIF1          19
+-#define DM646X_LPSC_DDR_EMIF       20
+-#define DM646X_LPSC_AEMIF          21
+-#define DM646X_LPSC_McASP0         22
+-#define DM646X_LPSC_McASP1         23
+-#define DM646X_LPSC_CRGEN0         24
+-#define DM646X_LPSC_CRGEN1         25
+-#define DM646X_LPSC_UART0          26
+-#define DM646X_LPSC_UART1          27
+-#define DM646X_LPSC_UART2          28
+-#define DM646X_LPSC_PWM0           29
+-#define DM646X_LPSC_PWM1           30
+-#define DM646X_LPSC_I2C            31
+-#define DM646X_LPSC_SPI            32
+-#define DM646X_LPSC_GPIO           33
+-#define DM646X_LPSC_TIMER0         34
+-#define DM646X_LPSC_TIMER1         35
+-#define DM646X_LPSC_ARM_INTC       45
++#define DM646X_LPSC_ARM		0
++#define DM646X_LPSC_C64X_CPU	1
++#define DM646X_LPSC_HDVICP0	2
++#define DM646X_LPSC_HDVICP1	3
++#define DM646X_LPSC_TPCC	4
++#define DM646X_LPSC_TPTC0	5
++#define DM646X_LPSC_TPTC1	6
++#define DM646X_LPSC_TPTC2	7
++#define DM646X_LPSC_TPTC3	8
++#define DM646X_LPSC_PCI		13
++#define DM646X_LPSC_EMAC	14
++#define DM646X_LPSC_VDCE	15
++#define DM646X_LPSC_VPSSMSTR	16
++#define DM646X_LPSC_VPSSSLV	17
++#define DM646X_LPSC_TSIF0	18
++#define DM646X_LPSC_TSIF1	19
++#define DM646X_LPSC_DDR_EMIF	20
++#define DM646X_LPSC_AEMIF	21
++#define DM646X_LPSC_McASP0	22
++#define DM646X_LPSC_McASP1	23
++#define DM646X_LPSC_CRGEN0	24
++#define DM646X_LPSC_CRGEN1	25
++#define DM646X_LPSC_UART0	26
++#define DM646X_LPSC_UART1	27
++#define DM646X_LPSC_UART2	28
++#define DM646X_LPSC_PWM0	29
++#define DM646X_LPSC_PWM1	30
++#define DM646X_LPSC_I2C		31
++#define DM646X_LPSC_SPI		32
++#define DM646X_LPSC_GPIO	33
++#define DM646X_LPSC_TIMER0	34
++#define DM646X_LPSC_TIMER1	35
++#define DM646X_LPSC_ARM_INTC	45
  
- 	return platform_device_register(&da8xx_spi_device[instance]);
- }
-+
-+#ifdef CONFIG_ARCH_DAVINCI_DA850
-+
-+static struct resource da850_sata_resources[] = {
-+	{
-+		.start	= DA850_SATA_BASE,
-+		.end	= DA850_SATA_BASE + 0x1fff,
-+		.flags	= IORESOURCE_MEM,
-+	},
-+	{
-+		.start	= IRQ_DA850_SATAINT,
-+		.flags	= IORESOURCE_IRQ,
-+	},
-+};
-+
-+/* SATA PHY Control Register offset from AHCI base */
-+#define SATA_P0PHYCR_REG	0x178
-+
-+#define SATA_PHY_MPY(x)		((x) << 0)
-+#define SATA_PHY_LOS(x)		((x) << 6)
-+#define SATA_PHY_RXCDR(x)	((x) << 10)
-+#define SATA_PHY_RXEQ(x)	((x) << 13)
-+#define SATA_PHY_TXSWING(x)	((x) << 19)
-+#define SATA_PHY_ENPLL(x)	((x) << 31)
-+
-+static struct clk *da850_sata_clk;
-+static unsigned long da850_sata_refclkpn;
-+
-+/* Supported DA850 SATA crystal frequencies */
-+#define KHZ_TO_HZ(freq) ((freq) * 1000)
-+static unsigned long da850_sata_xtal[] = {
-+	KHZ_TO_HZ(300000),
-+	KHZ_TO_HZ(250000),
-+	0,			/* Reserved */
-+	KHZ_TO_HZ(187500),
-+	KHZ_TO_HZ(150000),
-+	KHZ_TO_HZ(125000),
-+	KHZ_TO_HZ(120000),
-+	KHZ_TO_HZ(100000),
-+	KHZ_TO_HZ(75000),
-+	KHZ_TO_HZ(60000),
-+};
-+
-+static int da850_sata_init(struct device *dev, void __iomem *addr)
-+{
-+	int i, ret;
-+	unsigned int val;
-+
-+	da850_sata_clk = clk_get(dev, NULL);
-+	if (IS_ERR(da850_sata_clk))
-+		return PTR_ERR(da850_sata_clk);
-+
-+	ret = clk_enable(da850_sata_clk);
-+	if (ret)
-+		goto err0;
-+
-+	/* Enable SATA clock receiver */
-+	val = __raw_readl(DA8XX_SYSCFG1_VIRT(DA8XX_PWRDN_REG));
-+	val &= ~BIT(0);
-+	__raw_writel(val, DA8XX_SYSCFG1_VIRT(DA8XX_PWRDN_REG));
-+
-+	/* Get the multiplier needed for 1.5GHz PLL output */
-+	for (i = 0; i < ARRAY_SIZE(da850_sata_xtal); i++)
-+		if (da850_sata_xtal[i] == da850_sata_refclkpn)
-+			break;
-+
-+	if (i == ARRAY_SIZE(da850_sata_xtal)) {
-+		ret = -EINVAL;
-+		goto err1;
-+	}
-+
-+	val = SATA_PHY_MPY(i + 1) |
-+		SATA_PHY_LOS(1) |
-+		SATA_PHY_RXCDR(4) |
-+		SATA_PHY_RXEQ(1) |
-+		SATA_PHY_TXSWING(3) |
-+		SATA_PHY_ENPLL(1);
-+
-+	__raw_writel(val, addr + SATA_P0PHYCR_REG);
-+
-+	return 0;
-+
-+err1:
-+	clk_disable(da850_sata_clk);
-+err0:
-+	clk_put(da850_sata_clk);
-+	return ret;
-+}
-+
-+static void da850_sata_exit(struct device *dev)
-+{
-+	clk_disable(da850_sata_clk);
-+	clk_put(da850_sata_clk);
-+}
-+
-+static struct ahci_platform_data da850_sata_pdata = {
-+	.init	= da850_sata_init,
-+	.exit	= da850_sata_exit,
-+};
-+
-+static u64 da850_sata_dmamask = DMA_BIT_MASK(32);
-+
-+static struct platform_device da850_sata_device = {
-+	.name	= "ahci",
-+	.id	= -1,
-+	.dev	= {
-+		.platform_data		= &da850_sata_pdata,
-+		.dma_mask		= &da850_sata_dmamask,
-+		.coherent_dma_mask	= DMA_BIT_MASK(32),
-+	},
-+	.num_resources	= ARRAY_SIZE(da850_sata_resources),
-+	.resource	= da850_sata_resources,
-+};
-+
-+int __init da850_register_sata(unsigned long refclkpn)
-+{
-+	da850_sata_refclkpn = refclkpn;
-+	if (!da850_sata_refclkpn)
-+		return -EINVAL;
-+
-+	return platform_device_register(&da850_sata_device);
-+}
-+#endif
-diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
-index ad64da7..eaca7d8 100644
---- a/arch/arm/mach-davinci/include/mach/da8xx.h
-+++ b/arch/arm/mach-davinci/include/mach/da8xx.h
-@@ -57,6 +57,7 @@ extern unsigned int da850_max_speed;
- #define DA8XX_SYSCFG1_BASE	(IO_PHYS + 0x22C000)
- #define DA8XX_SYSCFG1_VIRT(x)	(da8xx_syscfg1_base + (x))
- #define DA8XX_DEEPSLEEP_REG	0x8
-+#define DA8XX_PWRDN_REG		0x18
+ /* PSC0 defines */
+ #define DA8XX_LPSC0_TPCC		0
+@@ -243,7 +243,7 @@
+ #define PSC_STATE_DISABLE	2
+ #define PSC_STATE_ENABLE	3
  
- #define DA8XX_PSC0_BASE		0x01c10000
- #define DA8XX_PLL0_BASE		0x01c11000
-@@ -89,6 +90,7 @@ int da850_register_cpufreq(char *async_clk);
- int da8xx_register_cpuidle(void);
- void __iomem * __init da8xx_get_mem_ctlr(void);
- int da850_register_pm(struct platform_device *pdev);
-+int __init da850_register_sata(unsigned long refclkpn);
+-#define MDSTAT_STATE_MASK 0x1f
++#define MDSTAT_STATE_MASK	0x1f
  
- extern struct platform_device da8xx_serial_device;
- extern struct emac_platform_data da8xx_emac_pdata;
+ #ifndef __ASSEMBLER__
+ 
 -- 
 1.7.3.2
 
