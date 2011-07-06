@@ -1,55 +1,40 @@
-From: saeed bishara <saeed.bishara@gmail.com>
-Subject: Re: qc timeout on a marvell 88F6282 board
-Date: Tue, 5 Jul 2011 13:11:48 +0300
-Message-ID: <CAMAG_efStJsEeZrdf-eSq89aHrji3t5+RYO+arrUYiAQpn7LgQ@mail.gmail.com>
-References: <4E0AEAB1.4090106@malgn.com>
-	<CAMAG_ef0y=Jg=8eQSWj_e8kwGAtFwJXsvPATiL1fkq57kVzubA@mail.gmail.com>
-	<4E12CAD1.3030302@malgn.com>
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: [PATCH 0/5] davinci: da850: add SATA support
+Date: Wed, 6 Jul 2011 11:31:19 +0530
+Message-ID: <cover.1309927427.git.nsekhar@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:52004 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752Ab1GEKLs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2011 06:11:48 -0400
-Received: by vws1 with SMTP id 1so4069224vws.19
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jul 2011 03:11:48 -0700 (PDT)
-In-Reply-To: <4E12CAD1.3030302@malgn.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:32871 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754041Ab1GFGBo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Jul 2011 02:01:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Kang <turquesa@malgn.com>
-Cc: linux-ide@vger.kernel.org
+To: davinci-linux-open-source@linux.davincidsp.com
+Cc: khilman@ti.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com, Sekhar Nori <nsekhar@ti.com>
 
-On Tue, Jul 5, 2011 at 11:26 AM, Richard Kang <turquesa@malgn.com> wrote:
->
->> 2011/6/29 Richard Kang<turquesa@malgn.com>:
->>>
->>> Hello.
->>>
->>> I have a sil3132 pci-e card and a DB-88F6282-A-BP(Marvell development
->>> board based on Arm9).
->>> I compiled sata_sil24 driver as a module with a cross-compiler.
->>>
->>> But, when loading the driver, qc timeout error was occurred during
->>> ata_read_dev_id.
->>> What is wrong, IRQ or DMA ?
->>
->> looks to me this is DMA issue, can you force pio mode? you can do that
->> by adding "libata.dma=0" to the kernel command line.
->> saeed
->>
->>> I have 2.6.31.8
->
-> Dear saeed,
->
-> I excuted libata.dma=0 through "$modprobe libata dma=0"
-> Then I excuted "$modprobe sata_sil24"
->
-> But, result is same as before.
-> I think sata_sil24 supports only dma not pio, right?
-I don't think so.
-can you check if interrupts working fine?
-you can test that by loading the driver without any connected disk,
-then check if the controller raises any interrupt from
-/proc/interrupts when plugging a disk,
-saeed
+This series add support for platform AHCI driver on
+DA850/OMAP-L138/AM18x. Towards this purpose, it also
+adds support for forced module transtitions on PSC.
+
+Sekhar Nori (5):
+  davinci: psc.h: clean up indentation done using spaces
+  davinci: pass clock flags to davinci_psc_config()
+  davinci: enable forced transitions on PSC
+  davinci: da850: add support for SATA interface
+  davinci: da850 evm: register SATA device
+
+ arch/arm/mach-davinci/board-da850-evm.c    |    7 ++
+ arch/arm/mach-davinci/clock.c              |    8 +-
+ arch/arm/mach-davinci/clock.h              |    1 +
+ arch/arm/mach-davinci/da850.c              |    9 ++
+ arch/arm/mach-davinci/devices-da8xx.c      |  126 +++++++++++++++++++++++
+ arch/arm/mach-davinci/include/mach/da8xx.h |    2 +
+ arch/arm/mach-davinci/include/mach/psc.h   |  151 ++++++++++++++--------------
+ arch/arm/mach-davinci/psc.c                |   14 +++-
+ 8 files changed, 237 insertions(+), 81 deletions(-)
+
+-- 
+1.7.3.2
+
