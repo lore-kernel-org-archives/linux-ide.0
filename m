@@ -1,32 +1,41 @@
-From: saeed bishara <saeed.bishara@gmail.com>
-Subject: Re: qc timeout on a marvell 88F6282 board
-Date: Wed, 6 Jul 2011 11:07:33 +0300
-Message-ID: <CAMAG_efiyOdFCs4TAe0NusQ7yxLFg6gyajqSX51a965jEPioJw@mail.gmail.com>
-References: <4E0AEAB1.4090106@malgn.com>
-	<CAMAG_ef0y=Jg=8eQSWj_e8kwGAtFwJXsvPATiL1fkq57kVzubA@mail.gmail.com>
-	<4E12CAD1.3030302@malgn.com>
-	<CAMAG_efStJsEeZrdf-eSq89aHrji3t5+RYO+arrUYiAQpn7LgQ@mail.gmail.com>
-	<4E14040F.9030503@malgn.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Problem:  security locked disk and partition table read..
+Date: Wed, 6 Jul 2011 12:41:03 +0100
+Message-ID: <20110706124103.565cc4c6@lxorguk.ukuu.org.uk>
+References: <4D366DF1.3000303@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54753 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab1GFIHe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 04:07:34 -0400
-Received: by vws1 with SMTP id 1so4743577vws.19
-        for <linux-ide@vger.kernel.org>; Wed, 06 Jul 2011 01:07:33 -0700 (PDT)
-In-Reply-To: <4E14040F.9030503@malgn.com>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:52543 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752661Ab1GFLi0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2011 07:38:26 -0400
+In-Reply-To: <4D366DF1.3000303@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Kang <turquesa@malgn.com>
-Cc: linux-ide@vger.kernel.org, =?UTF-8?B?6rCV7YOc7ISx?= <kangts@malgn.com>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Richard,
+> Except.. the kernel (?) sat there for a very long time trying
+> (and failing) over and over and over and over and over and over
+> to read sector-0 (the partition table).  Of course the reads
+> each failed, and then got retried 5-times by SCSI, and then
+> retried again a zillion times at a higher level.
 
- this board is supported by mainline kernel, can you try latest
-version (3.0-rcX)?
-> I can't find reason of not working. Please advise to me.
->
-> Thank you.
->
+It gets prodded by the various partition formats, the userspace hotplug
+code and so on, not always for block 0.
+
+> Why so many attempts to read the partition table???
+
+Each partitioning format does its own requests. Normally that is fine but
+in this case its bad news.
+
+> Anyway, here's the hack I used:
+
+Presumably we should set a per device flag of 'security locked' and fail
+normal I/O to it but allow the other paths ? The 'proper' way would then
+be to use the key rings and also a kernel event to poke userspace into
+handling it.
+
+Alan
