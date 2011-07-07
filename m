@@ -1,33 +1,22 @@
-From: Tim Small <tim@seoss.co.uk>
+From: Tim Small <tim@buttersideup.com>
 Subject: Re: SiI 3726 pmp doesn't work with 2.6.38 and Marvell 88SE9123 AHCI
  controller
-Date: Thu, 07 Jul 2011 19:43:39 +0100
-Message-ID: <4E15FE5B.3000405@seoss.co.uk>
+Date: Thu, 07 Jul 2011 19:30:34 +0100
+Message-ID: <4E15FB4A.809@buttersideup.com>
 References: <4DEE6831.9020501@seoss.co.uk> <20110609143755.GA2615@htj.dyndns.org> <4DF136FF.2010404@seoss.co.uk> <20110610102403.GE15235@htj.dyndns.org> <4DF249BB.3040808@seoss.co.uk> <4E14C6ED.5040208@buttersideup.com> <4E15A2F1.7080106@seoss.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay0.allsecurenet.com ([109.169.27.60]:54335 "EHLO
-	relay0.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248Ab1GGSnl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2011 14:43:41 -0400
-Received: from [78.105.152.189] (helo=zebedee.buttersideup.com)
-	by relay0.allsecurenet.com with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <tim@seoss.co.uk>)
-	id 1QetY4-00070L-HY
-	for linux-ide@vger.kernel.org; Thu, 07 Jul 2011 19:43:40 +0100
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-	by zebedee.buttersideup.com (Postfix) with ESMTP id F0EAF415B8
-	for <linux-ide@vger.kernel.org>; Thu,  7 Jul 2011 19:43:39 +0100 (BST)
+Received: from relay1.allsecurenet.com ([78.47.234.210]:58598 "EHLO
+	relay1.allsecurenet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab1GGSxm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2011 14:53:42 -0400
 In-Reply-To: <4E15A2F1.7080106@seoss.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-Sorry - I accidentally sent this from the wrong email address, which I
-think kept it from reaching the list.
+To: Tejun Heo <tj@kernel.org>, Hubert Bailey <hbailey@marvell.com>, lil@marvell.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 On 07/07/11 13:13, Tim Small wrote:
 > 2x 2G Hitachi drives connected via a SiI 3726, and to the 88SE9125 card
@@ -382,7 +371,8 @@ root@netboot:~# while true ; do sh -c "(hdparm -t /dev/sdb & hdparm -t
 
 
 ... a little slower, and with some strange performance dips (e.g. the
-65M figure).
+65M figure). 
+
 
 After all this, I tried a "smartctl -x /dev/sd[bc]" and got this for sdb:
 
