@@ -1,66 +1,47 @@
-From: Gene Heskett <gene.heskett@gmail.com>
-Subject: Re: [BUG 2.6.38.8] Bisected to commit 5fb46ae7b8c51b05a12c6a66108e8d398c20ee09
-Date: Thu, 7 Jul 2011 00:43:45 -0400
-Message-ID: <201107070043.45510.gene.heskett@gmail.com>
-References: <4E11BAE0.5020208@t-online.de> <20110707003338.GA25302@suse.de> <4E1534DC.3020306@t-online.de>
+From: Richard Kang <turquesa@malgn.com>
+Subject: Re: qc timeout on a marvell 88F6282 board
+Date: Thu, 07 Jul 2011 15:36:14 +0900
+Message-ID: <4E1553DE.5050504@malgn.com>
+References: <4E0AEAB1.4090106@malgn.com>	<CAMAG_ef0y=Jg=8eQSWj_e8kwGAtFwJXsvPATiL1fkq57kVzubA@mail.gmail.com>	<4E12CAD1.3030302@malgn.com>	<CAMAG_efStJsEeZrdf-eSq89aHrji3t5+RYO+arrUYiAQpn7LgQ@mail.gmail.com>	<4E14040F.9030503@malgn.com> <CAMAG_efiyOdFCs4TAe0NusQ7yxLFg6gyajqSX51a965jEPioJw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4E1534DC.3020306@t-online.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Knut Petersen <Knut_Petersen@t-online.de>Knut Petersen <Knut_Petersen@t-online.de>
-Cc: Greg KH <gregkh@suse.de>, axboe@kernel.dk, kay.sievers@vrfy.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [125.7.223.35] ([125.7.223.35]:49514 "EHLO mail.malgn.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776Ab1GGGgQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 7 Jul 2011 02:36:16 -0400
+In-Reply-To: <CAMAG_efiyOdFCs4TAe0NusQ7yxLFg6gyajqSX51a965jEPioJw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: saeed bishara <saeed.bishara@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thursday, July 07, 2011, Knut Petersen wrote:
->Am 07.07.2011 02:33, schrieb Greg KH:
->> On Mon, Jul 04, 2011 at 03:06:40PM +0200, Knut Petersen wrote:
->>> Hi everybody!
->>> 
->>> An openSuse 11.2 system reliably refused to boot properly with kernel
->>> 2.6.38.8 although the prior 2.6.38.y kernels worked fine.  After a
->>> few seconds booting stopped. Several <ctrl-c> did help, but a lot of
->>> services were not started properly, only the root partition was
->>> available. Nothing unusual could be found in the kernel messages.
->>> 
->>> I bisected the problem to commit
->>> 5fb46ae7b8c51b05a12c6a66108e8d398c20ee09.
->>> 
->>> That gave me the idea to disconnect the Plextor PX-755A dvd drive  and
->>> to try 2.6.38.8 again. It booted without problem.
->> 
->> Does the 2.6.39.2 kernel work properly for you?
+2011-07-06 =EC=98=A4=ED=9B=84 5:07, saeed bishara =EC=93=B4 =EA=B8=80:
+> Richard,
 >
->Yes.  Kernel 2.6.38[,1,2,3,4,5,6,7] 2.6.39[1,2] 3.0-git are ok, only
->2.6.38.8 is broken in the way described above.
+>   this board is supported by mainline kernel, can you try latest
+> version (3.0-rcX)?
+>> I can't find reason of not working. Please advise to me.
+>>
+>> Thank you.
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
->cu,
-> knut
 
-FWIW guys, running a Texstar built 2.6.38.8-pae-bfs kernel here, but my dvd 
-writer, which works, is (from messages at last boot)
-scsi 4:0:0:0: CD-ROM ATAPI iHAS324 A BL1D PQ: 0 ANSI: 5
+Dear saeed,
 
-Assigned to /dev/sr0.
+I tested sata_sil24 driver with 3.0.0-rc6.
+At first booting, machine id was not supported in new kernel.
+And I replaced id(0x690) of DB-88F6281-BP with 0x20f.
+After changing machine id, booting was completed.
 
-And I cannot duplicate this.  My problems are shutdown/reboot related, it 
-"turning off swap"
-"-f" on the next line, and it is hung till I tap the hardware reset button.
+I loaded "libata dma=3D0" and "sata_sil24".
+But result was same to before. -> qc timeout(0xec)
 
-In your case I'd suspect something in the Plextor that could be as simple 
-as a dusty led/ir combo that detects the disk.  But dvd writers have become 
-so cheap they are hardly worth pulling the covers off to check.
-
-Cheers, gene
--- 
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-O give me a home,
-Where the buffalo roam,
-Where the deer and the antelope play,
-Where seldom is heard
-A discouraging word,
-'Cause what can an antelope say?
+Thank you.
