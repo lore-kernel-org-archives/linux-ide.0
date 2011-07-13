@@ -1,64 +1,85 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SiI 3726 pmp doesn't work with 2.6.38 and Marvell 88SE9123 AHCI
- controller
-Date: Wed, 13 Jul 2011 09:34:14 +0200
-Message-ID: <20110713073414.GC2872@htj.dyndns.org>
-References: <20110609143755.GA2615@htj.dyndns.org>
- <4DF136FF.2010404@seoss.co.uk>
- <20110610102403.GE15235@htj.dyndns.org>
- <4DF249BB.3040808@seoss.co.uk>
- <4E14C6ED.5040208@buttersideup.com>
- <4E15A2F1.7080106@seoss.co.uk>
- <4E15FB4A.809@buttersideup.com>
- <4E15FD43.6030701@seoss.co.uk>
- <B9B10C29375C5B40A2D240808654F60E5EE470A72D@SC-VEXCH2.marvell.com>
- <4E16D37D.1030701@seoss.co.uk>
+Subject: Re: ahci_start_engine compliance with AHCI spec
+Date: Wed, 13 Jul 2011 15:14:07 +0200
+Message-ID: <20110713131407.GN2872@htj.dyndns.org>
+References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:42256 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41480 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643Ab1GMHeT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2011 03:34:19 -0400
-Received: by bwd5 with SMTP id 5so4621721bwd.19
-        for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2011 00:34:18 -0700 (PDT)
+	with ESMTP id S1752141Ab1GMNOM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2011 09:14:12 -0400
 Content-Disposition: inline
-In-Reply-To: <4E16D37D.1030701@seoss.co.uk>
+In-Reply-To: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@seoss.co.uk>
-Cc: Hubert Bailey <hbailey@marvell.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Larry Li <lil@marvell.com>
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
 
 Hello,
 
-On Fri, Jul 08, 2011 at 10:53:01AM +0100, Tim Small wrote:
-> On 08/07/11 05:42, Hubert Bailey wrote:
->> The 9125 is a simple controller without a internal processor.  The
->> 9123 contains an internal processor to enhance RAID 0/1 operations.
->> If you are testing in a JBOD configuration you will not take
->> advantage of the 9123 internal proces sor.
+On Fri, Jul 08, 2011 at 04:01:17PM -0700, Brian Norris wrote:
+> I am able to reproduce the regressions seen by Rafael and Michael on
+> my Dell Latitude E6410 laptop, in case that's helpful.
+
+Oh yes, it is.
+
+> - ahci_init_one
+> -- ata_host_activate
+> --- ata_host_start
+> ---- ahci_port_start
+> ---- ahci_port_resume
+> ----- ahci_start_port
+> ------ ahci_power_up [1]
+> ------ ahci_start_engine (DRQ or BSY *will* be active) [2]
 > 
-> OK, that's fine.  I have a nice fast CPU in the system which runs the
-> Linux md code (which I can debug if necessary) with very high
-> throughput, and it even works across controller cards.  A JBOD is what I
-> want.
+> and later
+> 
+> - scsi_error_handler
+> -- ata_scsi_error
+> --- ata_scsi_port_error_handler
+> ---- ahci_error_handler
+> ----- sata_pmp_error_handler
+> ------ ata_eh_recover
+> ------- ata_eh_reset
+> -------- ata_do_reset
+> --------- ahci_hardreset
+> ---------- ahci_start_engine (DRQ, BSY cleared, link up)
+> 
+> I'm not sure if the "error_handler" and "hard reset" processes are
+> intended for initialization...as I said I'm a little new!
 
-Yeah, especially for RAID 0/1, there isn't much 'acceleration' to do
-and with the abundant extra cores and vast amount of main memory these
-days hardware support for even R5/6 doesn't seem too useful.
+That's how it's supposed to work.  EH is integral part of probing
+sequence.
 
-> Please could you acknowledge that there is actually a problem here?  I
-> don't know whether it's with the 88SE91xx controllers, or with the Linux
-> AHCI driver (or Linux PMP support), but this is clearly not correct
-> behaviour.  This fault doesn't appear when using a SiI3132, or an
-> 88SX7042.  I don't currently have a different AHCI+FBS capable
-> controller to double-check against, but may be able to check against an
-> Intel one in a couple of weeks time.
+> I have a few other questions:
+> 
+> What operation could be putting devices in DRQ or BSY states during
+> initialization but before ahci_start_engine?
 
-Oh sure, it's not working properly.  Looking at the performance
-numbers you posted for Windows, it seems the Windows driver isn't
-using FBS either.  Larry, Hubert, can you guys please confirm this?
-Should we blacklist FBS support for some of marvell ahci's?
+Hmmm... I have no idea, maybe it has something to do with the first
+D2H Reg FIS device sends after link gets reset during controller init?
+
+> I bring up all of this because it seems that if I put some amount of
+> "wait time" between [1] and [2] above, then my system transitions from
+> DRQ to BSY and its link is connected (PxSSTS.DET == 0x3). I still
+> don't know why the device is BSY, but at least it solves my problem...
+> Perhaps I will try implementing the wait with ata_wait_register (or
+> maybe ata_wait_ready + ata_phys_link_online) on the PxSSTS.DET flags
+> and send a patch.
+
+Hmmm... what happens if you don't comment out ahci_start_engine() call
+from ahci_start_port()?
+
+> Sorry if this e-mail is too complicated or disorganized. I've been
+> racking my brain on this one for a few weeks now, and I've only come
+> up with a few half answers and some more questions. Feel free to ask
+> for more explanation, but don't worry if I don't respond immediately,
+> as I am on vacation for all of next week. If I don't get to them
+> before I leave, I will get to your replies when I return.
+
+Is this the same IP block that Jian Peng was using?
 
 Thanks.
 
