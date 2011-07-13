@@ -1,87 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci_start_engine compliance with AHCI spec
-Date: Wed, 13 Jul 2011 15:14:07 +0200
-Message-ID: <20110713131407.GN2872@htj.dyndns.org>
-References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+Date: Wed, 13 Jul 2011 15:34:25 +0200
+Message-ID: <20110713133425.GP2872@htj.dyndns.org>
+References: <359604ECF8F440408B9634E6146249B42923805F@mail.scl.local>
+ <20110628095723.GC3386@htj.dyndns.org>
+ <359604ECF8F440408B9634E6146249B4321BDEE6@mail.scl.local>
+ <20110712150113.GC4347@mtj.dyndns.org>
+ <359604ECF8F440408B9634E6146249B4321C2569@mail.scl.local>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41480 "EHLO
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39238 "EHLO
 	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752141Ab1GMNOM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2011 09:14:12 -0400
+	with ESMTP id S1753335Ab1GMNeb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2011 09:34:31 -0400
+Received: by bwd5 with SMTP id 5so4838119bwd.19
+        for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2011 06:34:30 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
+In-Reply-To: <359604ECF8F440408B9634E6146249B4321C2569@mail.scl.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
+To: Derry Bryson <derry@high-rely.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 Hello,
 
-On Fri, Jul 08, 2011 at 04:01:17PM -0700, Brian Norris wrote:
-> I am able to reproduce the regressions seen by Rafael and Michael on
-> my Dell Latitude E6410 laptop, in case that's helpful.
-
-Oh yes, it is.
-
-> - ahci_init_one
-> -- ata_host_activate
-> --- ata_host_start
-> ---- ahci_port_start
-> ---- ahci_port_resume
-> ----- ahci_start_port
-> ------ ahci_power_up [1]
-> ------ ahci_start_engine (DRQ or BSY *will* be active) [2]
+On Tue, Jul 12, 2011 at 07:21:17PM +0000, Derry Bryson wrote:
+> > One suspicion I have is that the PSU in the enclosure isn't stable
+> > enough to maintain PHY state while multiples drives are powering up.
+> > If this is the case, PHYs may keep flickering well over a second which
+> > libata doesn't expect them to.  Beefing up the PSU (or using a second
+> > PSU to power some of the harddrives) and see whether anything changes
+> > would be a good way to test it.
 > 
-> and later
+> I doubt it is a PSU issue for a couple of reasons:  1) all drives (5) are
+> detected properly if I power the unit (external hard drive box, not computer) 
+> off and on, and 2) it fails the same way with only 1 drive in the unit.
 > 
-> - scsi_error_handler
-> -- ata_scsi_error
-> --- ata_scsi_port_error_handler
-> ---- ahci_error_handler
-> ----- sata_pmp_error_handler
-> ------ ata_eh_recover
-> ------- ata_eh_reset
-> -------- ata_do_reset
-> --------- ahci_hardreset
-> ---------- ahci_start_engine (DRQ, BSY cleared, link up)
-> 
-> I'm not sure if the "error_handler" and "hard reset" processes are
-> intended for initialization...as I said I'm a little new!
+> I will, however, try to test with a larger power supply tomorrow.
 
-That's how it's supposed to work.  EH is integral part of probing
-sequence.
+I see.  Yeah, it doesn't seem to be PHY flickering.  It looks like
+IDENTIFY is failing before disk finishes spinning up, which isn't the
+correct behavior.  SRST is supposed to wait for disk spin up
+completion.  I don't know why sil24 softreset is failing without
+waiting for spinup.  I'll see whether I can reproduce the problem
+here.
 
-> I have a few other questions:
-> 
-> What operation could be putting devices in DRQ or BSY states during
-> initialization but before ahci_start_engine?
-
-Hmmm... I have no idea, maybe it has something to do with the first
-D2H Reg FIS device sends after link gets reset during controller init?
-
-> I bring up all of this because it seems that if I put some amount of
-> "wait time" between [1] and [2] above, then my system transitions from
-> DRQ to BSY and its link is connected (PxSSTS.DET == 0x3). I still
-> don't know why the device is BSY, but at least it solves my problem...
-> Perhaps I will try implementing the wait with ata_wait_register (or
-> maybe ata_wait_ready + ata_phys_link_online) on the PxSSTS.DET flags
-> and send a patch.
-
-Hmmm... what happens if you don't comment out ahci_start_engine() call
-from ahci_start_port()?
-
-> Sorry if this e-mail is too complicated or disorganized. I've been
-> racking my brain on this one for a few weeks now, and I've only come
-> up with a few half answers and some more questions. Feel free to ask
-> for more explanation, but don't worry if I don't respond immediately,
-> as I am on vacation for all of next week. If I don't get to them
-> before I leave, I will get to your replies when I return.
-
-Is this the same IP block that Jian Peng was using?
-
-Thanks.
+Thank you.
 
 -- 
 tejun
