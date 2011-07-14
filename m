@@ -1,42 +1,42 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: sata_mv WARNING: at drivers/ata/libata-sff.c:1322
-Date: Wed, 13 Jul 2011 18:41:22 -0400
-Message-ID: <4E1E1F12.8040100@pobox.com>
-References: <20110626070820.GC24867@merlins.org>
- <20110626090309.GA12200@mtj.dyndns.org> <4E076E9E.9080400@pobox.com>
- <20110629034125.GC32153@merlins.org> <4E0AA1C1.6020406@pobox.com>
- <20110629050341.GB10580@merlins.org> <20110629150713.GG10580@merlins.org>
- <4E0B4CC7.5000601@pobox.com> <20110712142938.GB4347@mtj.dyndns.org>
- <CAMHSBOWrU0MRuDOvAsU-=hqZnZrRp2ry6zvYTH0M8kwXfopryQ@mail.gmail.com>
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+Date: Thu, 14 Jul 2011 09:14:59 +0200
+Message-ID: <20110714071459.GB3455@htj.dyndns.org>
+References: <359604ECF8F440408B9634E6146249B42923805F@mail.scl.local>
+ <20110628095723.GC3386@htj.dyndns.org>
+ <359604ECF8F440408B9634E6146249B4321BDEE6@mail.scl.local>
+ <20110712150113.GC4347@mtj.dyndns.org>
+ <359604ECF8F440408B9634E6146249B4321C2569@mail.scl.local>
+ <20110713133425.GP2872@htj.dyndns.org>
+ <20110713143936.GQ2872@htj.dyndns.org>
+ <359604ECF8F440408B9634E6146249B4321C2695@mail.scl.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:36678 "EHLO
-	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752612Ab1GMWlY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jul 2011 18:41:24 -0400
-In-Reply-To: <CAMHSBOWrU0MRuDOvAsU-=hqZnZrRp2ry6zvYTH0M8kwXfopryQ@mail.gmail.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34876 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752783Ab1GNHPG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2011 03:15:06 -0400
+Received: by eyx24 with SMTP id 24so2379420eyx.19
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jul 2011 00:15:05 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <359604ECF8F440408B9634E6146249B4321C2695@mail.scl.local>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Marc MERLIN <marc@merlins.org>, linux-ide@vger.kernel.org, Larry Li <lil@marvell.com>, hbailey@marvell.com
+To: Derry Bryson <derry@high-rely.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 11-07-13 04:54 PM, Gwendal Grignou wrote:
-> I put the warning because a new pio task should not be queued while
-> another one is pending. Therefore, either sff_pio_task_link is NULL
-> [no task pending] or sff_pio_task_link is equal to the link of the
-> task [assumed to be the task in progress].
-> I must have missed something and did not cleanup sff_pio_task_link
-> properly in case of error...
-..
+Hello,
 
-I wonder if any of those changes are what broke PMP support?
-I have a Marvell PMP here that used to work when I finished with sata_mv,
-but no longer works with it now.
+On Wed, Jul 13, 2011 at 04:23:27PM +0000, Derry Bryson wrote:
+> [   92.980476] ata1.02: IDENTIFY failed, irq_stat=0x60002 cerr=4
 
-??
+The controller is saying that it failed to transmit command FIS
+because PHYRDY state changed, so that is PHY flickering.  Can you
+please bump the second debounce timing to 1000 (not only the first one
+but always) and see whether the failure pattern changes?
+
+Thanks.
+
 -- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+tejun
