@@ -1,33 +1,42 @@
-From: Seth Heasley <seth.heasley@intel.com>
-Subject: [PATCH 3.0-rc7] ahci: RAID-mode SATA patch for Intel Panther Point DeviceIDs
-Date: Thu, 14 Jul 2011 16:50:49 -0700
-Message-ID: <201107141650.49929.seth.heasley@intel.com>
+From: Vasiliy Kulikov <segoon@openwall.com>
+Subject: Re: [PATCH] acpi: constify ops structs
+Date: Fri, 15 Jul 2011 10:35:26 +0400
+Message-ID: <20110715063526.GB3166@albatros>
+References: <20110625170752.GA10458@albatros>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38235 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932152Ab1GNXt7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Jul 2011 19:49:59 -0400
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:44793 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964778Ab1GOGfl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2011 02:35:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20110625170752.GA10458@albatros>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: seth.heasley@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Len Brown <lenb@kernel.org>
+Cc: kernel-hardening@lists.openwall.com, Shaohua Li <shaohua.li@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-This patch adds an additional SATA RAID controller DeviceID for the Intel Panther Point PCH.
+Hi Len,
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
----
+On Sat, Jun 25, 2011 at 21:07 +0400, Vasiliy Kulikov wrote:
+> Structs battery_file, acpi_dock_ops, file_operations,
+> thermal_cooling_device_ops, thermal_zone_device_ops, kernel_param_ops
+> are not changed in runtime.  It is safe to make them const.
+> register_hotplug_dock_device() was altered to take const "ops" argument
+> to respect acpi_dock_ops' const notion.
+> 
+> Signed-off-by: Vasiliy Kulikov <segoon@openwall.com>
+> ---
 
---- linux-3.0-rc7/drivers/ata/ahci.c.orig	2011-07-14 16:07:21.000000000 -0700
-+++ linux-3.0-rc7/drivers/ata/ahci.c	2011-07-14 16:35:06.000000000 -0700
-@@ -267,6 +267,7 @@
- 	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci }, /* Panther Point RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci }, /* Panther Point RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther Point RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci }, /* Panther Point RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+Any problems with the patch?
+
+>  Len, I think it can be applied as a single patch to acpi tree as the
+>  only non-acpi thing is acpi_dock_ops in ata/ and pci/, which is really
+>  trivial.
+
+Thanks,
+
+-- 
+Vasiliy Kulikov
+http://www.openwall.com - bringing security into open computing environments
