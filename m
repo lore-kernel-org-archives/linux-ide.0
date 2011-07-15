@@ -1,30 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] acpi: constify ops structs
-Date: Fri, 15 Jul 2011 02:58:35 -0400
-Message-ID: <4E1FE51B.70009@pobox.com>
-References: <20110625170752.GA10458@albatros> <20110715063526.GB3166@albatros>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 0/2] fix libata-sff and pata_cmd64x to not crash on boot
+ on parisc
+Date: Fri, 15 Jul 2011 19:45:56 +0400
+Message-ID: <4E2060B4.3090300@ru.mvista.com>
+References: <1303673315.5231.9.camel@mulgrave.site> <1305306118.2611.62.camel@mulgrave.site> <4DCED18B.1070801@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20110715063526.GB3166@albatros>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Vasiliy Kulikov <segoon@openwall.com>
-Cc: Len Brown <lenb@kernel.org>, kernel-hardening@lists.openwall.com, Shaohua Li <shaohua.li@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39862 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806Ab1GOPrv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2011 11:47:51 -0400
+In-Reply-To: <4DCED18B.1070801@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide <linux-ide@vger.kernel.org>, Parisc List <linux-parisc@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sshtylyov@mvista.com>
 
-On 07/15/2011 02:35 AM, Vasiliy Kulikov wrote:
-> Hi Len,
->
-> On Sat, Jun 25, 2011 at 21:07 +0400, Vasiliy Kulikov wrote:
->> Structs battery_file, acpi_dock_ops, file_operations,
->> thermal_cooling_device_ops, thermal_zone_device_ops, kernel_param_ops
->> are not changed in runtime.  It is safe to make them const.
->> register_hotplug_dock_device() was altered to take const "ops" argument
->> to respect acpi_dock_ops' const notion.
->>
->> Signed-off-by: Vasiliy Kulikov<segoon@openwall.com>
+Hello.
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+Jeff Garzik wrote:
 
+>> On Sun, 2011-04-24 at 14:28 -0500, James Bottomley wrote:
+>>> currently libata-sff is completely ignoring the enabled/disabled status
+>>> of the interfaces.  This is a real problem on parisc because if you
+>>> touch a non responding memory area (i.e. a disabled interface) you crash
+>>> the box.
+
+>>> Fix by checking the CNTRL bits to see if the port is enabled before
+>>> trying to poke it.
+
+>> Ping on this.
+
+>> Since 1/2 is an essential fix to prevent a boot panic on parisc, I can
+>> just take them through the parisc tree.
+
+> It's in libata-dev.git#upstream and #NEXT (linux-next) at present.
+
+    I'm wondering about the other drivers that check the channel enable bits in 
+their prereset() methods. James has shown that such code would still crash on 
+such platforms as PARISC (I suspect many more platfroms which don't silently 
+ignore the target aborts in the PCI space like x86 does). I think all such 
+drivers should be converted to the early port disable detection scheme used in 
+the pata_cmd64x driver (an some others)...
+
+>     Jeff
+
+WBR, Sergei
 
