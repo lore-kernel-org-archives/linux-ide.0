@@ -1,54 +1,313 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Western Digital Scorpio and ICH10R on Debian - NCQ issue?
-Date: Fri, 15 Jul 2011 19:16:37 -0600
-Message-ID: <4E20E675.2010707@gmail.com>
-References: <C70A636B101FD44999B82525C3E92AFAD8CE5C@otis.burlington.evertz.tv>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Arnaud Patard (Rtp) <arnaud.patard@rtp-net.org>
+Subject: [patch 1/1] ata: Add iMX pata support
+Date: Sat, 16 Jul 2011 23:04:08 +0200
+Message-ID: <20110716210420.234549871@rtp-net.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:41242 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751883Ab1GPBQl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2011 21:16:41 -0400
-Received: by iwn6 with SMTP id 6so1596478iwn.19
-        for <linux-ide@vger.kernel.org>; Fri, 15 Jul 2011 18:16:40 -0700 (PDT)
-In-Reply-To: <C70A636B101FD44999B82525C3E92AFAD8CE5C@otis.burlington.evertz.tv>
+Received: from lebrac.rtp-net.org ([88.191.135.105]:57571 "EHLO
+	lebrac.rtp-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab1GPV0U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jul 2011 17:26:20 -0400
+Content-Disposition: inline; filename=efika_pata_driver.patch
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sandra Escandor <sescandor@evertz.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: s.hauer@pengutronix.de, jgarzik@pobox.com
 
-On 07/12/2011 10:21 AM, Sandra Escandor wrote:
-> The Situation:
-> It appears that a WRITE FPDMA QUEUED failed command causes driver
-> timeouts - this in turn locks up the RAID (which once worked pretty
-> well). This occurred during high I/O.
->
-> The question:
-> 1. Is it a good idea to turn off NCQ? I've read in different posts that
-> it helps some, but not others - I'm currently on the way to getting an
-> experimental box setup, but I wanted to confirm if this was a good idea.
+Add basic support for pata on iMX. It has been tested only on imx51.
+SDMA support will probably be added later so this version supports only
+PIO.
 
-Not really a solution to anything, at least not likely in this case. 
-More of a workaround that might happen to work by chance.
+Signed-off-by: Arnaud Patard <arnaud.patard@rtp-net.org>
+Index: linux-2.6-submit/drivers/ata/Kconfig
+===================================================================
+--- linux-2.6-submit.orig/drivers/ata/Kconfig	2011-07-16 22:29:41.000000000 +0200
++++ linux-2.6-submit/drivers/ata/Kconfig	2011-07-16 22:31:38.000000000 +0200
+@@ -467,6 +467,15 @@ config PATA_ICSIDE
+ 	  interface card.  This is not required for ICS partition support.
+ 	  If you are unsure, say N to this.
+ 
++config PATA_IMX
++	tristate "PATA support for Freescale iMX (Experimental)"
++	depends on ARCH_MX5 && EXPERIMENTAL
++	help
++	  This option enables support for the PATA host available on Freescale
++          iMX SoCs.
++
++	  If unsure, say N.
++
+ config PATA_IT8213
+ 	tristate "IT8213 PATA support (Experimental)"
+ 	depends on PCI && EXPERIMENTAL
+Index: linux-2.6-submit/drivers/ata/Makefile
+===================================================================
+--- linux-2.6-submit.orig/drivers/ata/Makefile	2011-07-16 22:29:41.000000000 +0200
++++ linux-2.6-submit/drivers/ata/Makefile	2011-07-16 22:31:38.000000000 +0200
+@@ -48,6 +48,7 @@ obj-$(CONFIG_PATA_HPT37X)	+= pata_hpt37x
+ obj-$(CONFIG_PATA_HPT3X2N)	+= pata_hpt3x2n.o
+ obj-$(CONFIG_PATA_HPT3X3)	+= pata_hpt3x3.o
+ obj-$(CONFIG_PATA_ICSIDE)	+= pata_icside.o
++obj-$(CONFIG_PATA_IMX)		+= pata_imx.o
+ obj-$(CONFIG_PATA_IT8213)	+= pata_it8213.o
+ obj-$(CONFIG_PATA_IT821X)	+= pata_it821x.o
+ obj-$(CONFIG_PATA_JMICRON)	+= pata_jmicron.o
+Index: linux-2.6-submit/drivers/ata/pata_imx.c
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ linux-2.6-submit/drivers/ata/pata_imx.c	2011-07-16 22:35:41.000000000 +0200
+@@ -0,0 +1,254 @@
++/*
++ * Freescale iMX PATA driver
++ *
++ * Copyright (C) 2011 Arnaud Patard <arnaud.patard@rtp-net.org>
++ *
++ * Based on pata_platform - Copyright (C) 2006 - 2007  Paul Mundt
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * TODO:
++ * - dmaengine support
++ * - check if timing stuff needed
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/blkdev.h>
++#include <scsi/scsi_host.h>
++#include <linux/ata.h>
++#include <linux/libata.h>
++#include <linux/platform_device.h>
++#include <linux/clk.h>
++
++#define DRV_NAME "pata_imx"
++
++#define PATA_IMX_ATA_CONTROL		0x24
++#define PATA_IMX_ATA_CTRL_FIFO_RST_B	(1<<7)
++#define PATA_IMX_ATA_CTRL_ATA_RST_B	(1<<6)
++#define PATA_IMX_ATA_CTRL_IORDY_EN	(1<<0)
++#define PATA_IMX_ATA_INT_EN		0x2C
++#define PATA_IMX_ATA_INTR_ATA_INTRQ2	(1<<3)
++#define PATA_IMX_DRIVE_DATA		0xA0
++#define PATA_IMX_DRIVE_CONTROL		0xD8
++
++struct pata_imx_priv {
++	struct clk *clk;
++	/* timings/interrupt/control regs */
++	u8 *host_regs;
++};
++
++static int pata_imx_set_mode(struct ata_link *link, struct ata_device **unused)
++{
++	struct ata_device *dev;
++
++	ata_for_each_dev(dev, link, ENABLED) {
++		dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
++		dev->xfer_shift = ATA_SHIFT_PIO;
++		dev->flags |= ATA_DFLAG_PIO;
++		ata_dev_printk(dev, KERN_INFO, "configured for PIO\n");
++	}
++	return 0;
++}
++
++static struct scsi_host_template pata_imx_sht = {
++	ATA_PIO_SHT(DRV_NAME),
++};
++
++static struct ata_port_operations pata_imx_port_ops = {
++	.inherits		= &ata_sff_port_ops,
++	.sff_data_xfer		= ata_sff_data_xfer_noirq,
++	.cable_detect		= ata_cable_unknown,
++	.set_mode		= pata_imx_set_mode,
++};
++
++static void pata_imx_setup_port(struct ata_ioports *ioaddr)
++{
++	/* Fixup the port shift for platforms that need it */
++	ioaddr->data_addr	= ioaddr->cmd_addr + (ATA_REG_DATA    << 2);
++	ioaddr->error_addr	= ioaddr->cmd_addr + (ATA_REG_ERR     << 2);
++	ioaddr->feature_addr	= ioaddr->cmd_addr + (ATA_REG_FEATURE << 2);
++	ioaddr->nsect_addr	= ioaddr->cmd_addr + (ATA_REG_NSECT   << 2);
++	ioaddr->lbal_addr	= ioaddr->cmd_addr + (ATA_REG_LBAL    << 2);
++	ioaddr->lbam_addr	= ioaddr->cmd_addr + (ATA_REG_LBAM    << 2);
++	ioaddr->lbah_addr	= ioaddr->cmd_addr + (ATA_REG_LBAH    << 2);
++	ioaddr->device_addr	= ioaddr->cmd_addr + (ATA_REG_DEVICE  << 2);
++	ioaddr->status_addr	= ioaddr->cmd_addr + (ATA_REG_STATUS  << 2);
++	ioaddr->command_addr	= ioaddr->cmd_addr + (ATA_REG_CMD     << 2);
++}
++
++static int __devinit pata_imx_probe(struct platform_device *pdev)
++{
++	struct ata_host *host;
++	struct ata_port *ap;
++	struct pata_imx_priv *priv;
++	int irq = 0;
++	struct resource *io_res;
++	struct resource *irq_res;
++
++	io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (io_res == NULL)
++		return -EINVAL;
++
++	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (irq_res == NULL)
++		return -EINVAL;
++	irq = irq_res->start;
++
++	priv = kzalloc(sizeof(struct pata_imx_priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	priv->clk = clk_get(&pdev->dev, "imx-pata");
++	if (!priv->clk)
++		dev_warn(&pdev->dev, "Failed to get clock\n");
++	else
++		clk_enable(priv->clk);
++
++
++	host = ata_host_alloc(&pdev->dev, 1);
++	if (!host)
++		goto free_priv;
++
++	host->private_data = priv;
++	ap = host->ports[0];
++
++	ap->ops = &pata_imx_port_ops;
++	/* pio 0-4 */
++	ap->pio_mask = ATA_PIO4;
++	ap->flags |= ATA_FLAG_SLAVE_POSS;
++
++	priv->host_regs = devm_ioremap(&pdev->dev, io_res->start, 0x40);
++	ap->ioaddr.cmd_addr = devm_ioremap(&pdev->dev,
++					io_res->start + PATA_IMX_DRIVE_DATA,
++					0x20);
++	ap->ioaddr.ctl_addr = devm_ioremap(&pdev->dev,
++					io_res->start + PATA_IMX_DRIVE_CONTROL,
++					0x04);
++	if (!priv->host_regs || !ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr) {
++		dev_err(&pdev->dev, "failed to map IO/CTL base\n");
++		goto free_priv;
++	}
++
++	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
++
++	pata_imx_setup_port(&ap->ioaddr);
++
++	ata_port_desc(ap, "cmd 0x%llx ctl 0x%llx",
++		(unsigned long long)io_res->start + PATA_IMX_DRIVE_DATA,
++		(unsigned long long)io_res->start + PATA_IMX_DRIVE_CONTROL);
++
++	/* deassert resets */
++	__raw_writel(PATA_IMX_ATA_CTRL_FIFO_RST_B |
++			PATA_IMX_ATA_CTRL_ATA_RST_B |
++			PATA_IMX_ATA_CTRL_IORDY_EN,
++			priv->host_regs + PATA_IMX_ATA_CONTROL);
++	/* enable interrupts */
++	__raw_writel(PATA_IMX_ATA_INTR_ATA_INTRQ2,
++			priv->host_regs + PATA_IMX_ATA_INT_EN);
++
++	/* activate */
++	return ata_host_activate(host, irq, ata_sff_interrupt, 0,
++				&pata_imx_sht);
++
++free_priv:
++	if (priv->clk)
++		clk_disable(priv->clk);
++	kfree(priv);
++	return -ENOMEM;
++}
++
++static int __devexit pata_imx_remove(struct platform_device *pdev)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct pata_imx_priv *priv = host->private_data;
++
++	ata_host_detach(host);
++
++	__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
++
++	if (priv->clk)
++		clk_disable(priv->clk);
++
++	kfree(priv);
++
++	return 0;
++}
++
++#ifdef CONFIG_PM
++static int pata_imx_suspend(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ata_host *host = platform_get_drvdata(pdev);
++	struct pata_imx_priv *priv = host->private_data;
++	int ret;
++
++	ret = ata_host_suspend(host, PMSG_SUSPEND);
++
++	if (!ret)
++		__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
++
++	if (priv->clk)
++		clk_disable(priv->clk);
++
++	return ret;
++}
++
++static int pata_imx_resume(struct device *dev)
++{
++	struct platform_device *pdev = to_platform_device(dev);
++	struct ata_host *host = platform_get_drvdata(pdev);
++	struct pata_imx_priv *priv = host->private_data;
++
++	if (priv->clk)
++		clk_enable(priv->clk);
++
++	__raw_writel(PATA_IMX_ATA_CTRL_FIFO_RST_B |
++			PATA_IMX_ATA_CTRL_ATA_RST_B |
++			PATA_IMX_ATA_CTRL_IORDY_EN,
++			priv->host_regs + PATA_IMX_ATA_CONTROL);
++
++	__raw_writel(PATA_IMX_ATA_INTR_ATA_INTRQ2,
++			priv->host_regs + PATA_IMX_ATA_INT_EN);
++
++	ata_host_resume(host);
++
++	return 0;
++}
++
++static const struct dev_pm_ops pata_imx_pm_ops = {
++	.suspend	= pata_imx_suspend,
++	.resume		= pata_imx_resume,
++};
++#endif
++
++static struct platform_driver pata_imx_driver = {
++	.probe		= pata_imx_probe,
++	.remove		= __devexit_p(pata_imx_remove),
++	.driver = {
++		.name		= DRV_NAME,
++		.owner		= THIS_MODULE,
++#ifdef CONFIG_PM
++		.pm		= &pata_imx_pm_ops,
++#endif
++	},
++};
++
++static int __init pata_imx_init(void)
++{
++	return platform_driver_register(&pata_imx_driver);
++}
++
++static void __exit pata_imx_exit(void)
++{
++	platform_driver_unregister(&pata_imx_driver);
++}
++module_init(pata_imx_init);
++module_exit(pata_imx_exit);
++
++MODULE_AUTHOR("Arnaud Patard <arnaud.patard@rtp-net.org>");
++MODULE_DESCRIPTION("low-level driver for iMX PATA");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" DRV_NAME);
 
-> 2. Are there known issues with the ICH10R + WD7500BPKT-00PK4T0 and the
-> libata driver?
-
-Nothing known, no.
-
->
-> The System:
-> Four WDC WD7500BPKT-00PK4T0 drives (Western Digital Scorpio) - in RAID10
-> array created using mdadm 3.1.4
-> ICH10R sata controller.
-> Kernel 2.6.32-5-amd64
-
-The fact that you have multiple drives and the problem tends to occur 
-during heavy I/O may point to a power issue. This has been known to 
-happen when some of the drives aren't getting enough power when there 
-are spikes in power draw during I/O access. In this case, using a 
-beefier power supply or spreading the drives out across different cables 
-from the PSU may help.
 
