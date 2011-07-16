@@ -1,14 +1,14 @@
 From: Gwendal Grignou <gwendal@google.com>
 Subject: [PATCH] Prevent warning during PMP error recovery
-Date: Fri, 15 Jul 2011 17:32:02 -0700
-Message-ID: <1310776322-12911-1-git-send-email-gwendal@google.com>
-References: <20110715155520.GB25319@merlins.org>
+Date: Fri, 15 Jul 2011 17:34:50 -0700
+Message-ID: <1310776490-13245-1-git-send-email-gwendal@google.com>
+References: <1310776322-12911-1-git-send-email-gwendal@google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:20603 "EHLO
+Received: from smtp-out.google.com ([216.239.44.51]:28900 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216Ab1GPAc6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2011 20:32:58 -0400
-In-Reply-To: <20110715155520.GB25319@merlins.org>
+	with ESMTP id S1751216Ab1GPAfM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jul 2011 20:35:12 -0400
+In-Reply-To: <1310776322-12911-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
@@ -16,8 +16,6 @@ Cc: mlord@pobox.com, linux-ide@vger.kernel.org, lil@marvell.com, hbailey@marvell
 
 Cleanup sff_pio_task_link when a command is cancel while the
 pio_task thread has been scheduled.
-
-Change-Id: I4397bed3ee0878d92933d4897eed025ffaf3a9bd
 
 Signed-off-by: Gwendal Grignou <gwendal@google.com>
 ---
