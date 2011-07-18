@@ -1,140 +1,69 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [patch 1/1] ata: Add iMX pata support
-Date: Sun, 17 Jul 2011 17:32:14 +0400
-Message-ID: <4E22E45E.40807@ru.mvista.com>
-References: <20110716210420.234549871@rtp-net.org>
+From: "Sandra Escandor" <sescandor@evertz.com>
+Subject: RE: Western Digital Scorpio and ICH10R on Debian - NCQ issue?
+Date: Mon, 18 Jul 2011 08:42:21 -0400
+Message-ID: <C70A636B101FD44999B82525C3E92AFADCE88F@otis.burlington.evertz.tv>
+References: <C70A636B101FD44999B82525C3E92AFAD8CE5C@otis.burlington.evertz.tv> <4E20E675.2010707@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:55860 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755753Ab1GQNdb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jul 2011 09:33:31 -0400
-Received: by wwg11 with SMTP id 11so2384780wwg.1
-        for <linux-ide@vger.kernel.org>; Sun, 17 Jul 2011 06:33:30 -0700 (PDT)
-In-Reply-To: <20110716210420.234549871@rtp-net.org>
+Received: from router.evertz.com ([204.187.63.106]:31354 "EHLO mail.evertz.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751642Ab1GRMpA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2011 08:45:00 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4E20E675.2010707@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Arnaud Patard (Rtp)" <arnaud.patard@rtp-net.org>
-Cc: linux-ide@vger.kernel.org, s.hauer@pengutronix.de, jgarzik@pobox.com
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Thanks for the insight Robert. Do you (or anyone else on the list) know
+if there are any utilities that exist that would be able to allow me to
+observe (and log) the power consumption of the drives during high I/O?
 
-On 17-07-2011 1:04, Arnaud Patard (Rtp) wrote:
+-----Original Message-----
+From: Robert Hancock [mailto:hancockrwd@gmail.com] 
+Sent: Friday, July 15, 2011 9:17 PM
+To: Sandra Escandor
+Cc: linux-ide@vger.kernel.org
+Subject: Re: Western Digital Scorpio and ICH10R on Debian - NCQ issue?
 
-> Add basic support for pata on iMX. It has been tested only on imx51.
-> SDMA support will probably be added later so this version supports only
-> PIO.
+On 07/12/2011 10:21 AM, Sandra Escandor wrote:
+> The Situation:
+> It appears that a WRITE FPDMA QUEUED failed command causes driver
+> timeouts - this in turn locks up the RAID (which once worked pretty
+> well). This occurred during high I/O.
+>
+> The question:
+> 1. Is it a good idea to turn off NCQ? I've read in different posts
+that
+> it helps some, but not others - I'm currently on the way to getting an
+> experimental box setup, but I wanted to confirm if this was a good
+idea.
 
-> Signed-off-by: Arnaud Patard<arnaud.patard@rtp-net.org>
-[...]
-> Index: linux-2.6-submit/drivers/ata/pata_imx.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ linux-2.6-submit/drivers/ata/pata_imx.c	2011-07-16 22:35:41.000000000 +0200
-> @@ -0,0 +1,254 @@
-[...]
-> + * TODO:
-> + * - dmaengine support
-> + * - check if timing stuff needed
+Not really a solution to anything, at least not likely in this case. 
+More of a workaround that might happen to work by chance.
 
-    Sure, it's needed, especially if you want to support DMA.
+> 2. Are there known issues with the ICH10R + WD7500BPKT-00PK4T0 and the
+> libata driver?
 
-> +#define PATA_IMX_ATA_CONTROL		0x24
-> +#define PATA_IMX_ATA_CTRL_FIFO_RST_B	(1<<7)
-> +#define PATA_IMX_ATA_CTRL_ATA_RST_B	(1<<6)
-> +#define PATA_IMX_ATA_CTRL_IORDY_EN	(1<<0)
+Nothing known, no.
 
-    So, it seems to support advanced PIO modes...
+>
+> The System:
+> Four WDC WD7500BPKT-00PK4T0 drives (Western Digital Scorpio) - in
+RAID10
+> array created using mdadm 3.1.4
+> ICH10R sata controller.
+> Kernel 2.6.32-5-amd64
 
-> +static int __devinit pata_imx_probe(struct platform_device *pdev)
-> +{
-> +	struct ata_host *host;
-> +	struct ata_port *ap;
-> +	struct pata_imx_priv *priv;
-> +	int irq = 0;
-> +	struct resource *io_res;
-> +	struct resource *irq_res;
-> +
-> +	io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	if (io_res == NULL)
-> +		return -EINVAL;
-> +
-> +	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+The fact that you have multiple drives and the problem tends to occur 
+during heavy I/O may point to a power issue. This has been known to 
+happen when some of the drives aren't getting enough power when there 
+are spikes in power draw during I/O access. In this case, using a 
+beefier power supply or spreading the drives out across different cables
 
-    Why not use platform_get_irq()?
+from the PSU may help.
 
-> +	if (irq_res == NULL)
-> +		return -EINVAL;
-> +	irq = irq_res->start;
-> +
-> +	priv = kzalloc(sizeof(struct pata_imx_priv), GFP_KERNEL);
-> +	if (!priv)
-> +		return -ENOMEM;
-> +
-> +	priv->clk = clk_get(&pdev->dev, "imx-pata");
-
-    Does iMX support clkdev?
-
-[...]
-> +	ap->ops = &pata_imx_port_ops;
-> +	/* pio 0-4 */
-> +	ap->pio_mask = ATA_PIO4;
-
-    But you don't support PIO1-4!
-
-> +	ap->flags |= ATA_FLAG_SLAVE_POSS;
-> +
-> +	priv->host_regs = devm_ioremap(&pdev->dev, io_res->start, 0x40);
-> +	ap->ioaddr.cmd_addr = devm_ioremap(&pdev->dev,
-> +					io_res->start + PATA_IMX_DRIVE_DATA,
-> +					0x20);
-> +	ap->ioaddr.ctl_addr = devm_ioremap(&pdev->dev,
-> +					io_res->start + PATA_IMX_DRIVE_CONTROL,
-> +					0x04);
-
-    Why not ioremap all registers as one block?
-
-> +	ata_port_desc(ap, "cmd 0x%llx ctl 0x%llx",
-> +		(unsigned long long)io_res->start + PATA_IMX_DRIVE_DATA,
-> +		(unsigned long long)io_res->start + PATA_IMX_DRIVE_CONTROL);
-> +
-> +	/* deassert resets */
-> +	__raw_writel(PATA_IMX_ATA_CTRL_FIFO_RST_B |
-> +			PATA_IMX_ATA_CTRL_ATA_RST_B |
-> +			PATA_IMX_ATA_CTRL_IORDY_EN,
-
-    You can't enable IORDY by default, only when the drive supports it!
-
-[...]
-> +#ifdef CONFIG_PM
-> +static int pata_imx_suspend(struct device *dev)
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ata_host *host = platform_get_drvdata(pdev);
-
-    You can just use dev_get_drvdata(), without calling to_platfrom_device().
-
-> +	struct pata_imx_priv *priv = host->private_data;
-> +	int ret;
-> +
-> +	ret = ata_host_suspend(host, PMSG_SUSPEND);
-> +
-
-    Empty line not needed here...
-
-> +	if (!ret)
-> +		__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
-[...]
-> +static int pata_imx_resume(struct device *dev)
-> +{
-> +	struct platform_device *pdev = to_platform_device(dev);
-> +	struct ata_host *host = platform_get_drvdata(pdev);
-
-    Just use dev_get_drvdata().
-
-> +	struct pata_imx_priv *priv = host->private_data;
-[...]
-
-WBR, Sergei
