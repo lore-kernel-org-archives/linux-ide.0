@@ -1,47 +1,52 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Detection of hot plugging of e-SATA on a port multiplier
-Date: Thu, 21 Jul 2011 10:39:26 +0200
-Message-ID: <20110721083926.GD3455@htj.dyndns.org>
-References: <CAL33XeQQZdknYVJN=XfvnLwdWxBwf1dBbKwQe+MKA7Deo3jsrA@mail.gmail.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Bug#634180: [PATCH] ahci: Add JMicron 362 device IDs
+Date: Fri, 22 Jul 2011 01:43:22 +0200
+Message-ID: <1311291802.28569.93.camel@localhost>
+Reply-To: Ben Hutchings <ben@decadent.org.uk>, 634180@bugs.debian.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f171.google.com ([209.85.215.171]:43470 "EHLO
-	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690Ab1GUIjb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2011 04:39:31 -0400
-Received: by eye22 with SMTP id 22so1322338eye.2
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2011 01:39:30 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CAL33XeQQZdknYVJN=XfvnLwdWxBwf1dBbKwQe+MKA7Deo3jsrA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist=m.gmane.org@lists.debian.org>
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.634180.B634180.131129181928776@bugs.debian.org>
+List-Post: <mailto:debian-bugs-dist@lists.debian.org>
+List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>, 634180@bugs.debian.org
 List-Id: linux-ide@vger.kernel.org
-To: vinit bidkar <vinitbidkar@gmail.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On Tue, Jul 19, 2011 at 11:41:57AM +0530, vinit bidkar wrote:
-> Hi Jeff, Tejun,
-> 
-> Got your mail
-> Need some info detection of e-sata hot plug connected to a port multiplier.
-> 
-> System:
-> Kernel - 2.6.x
-> PMP - Marvell make
-> 
-> There is one internal HDD on port 0 and provision to hot plug e-SATA on port
-> 1 of the PMP.
-> 
-> Internal HDD gets detected at bootup. No problems here.
-> 
-> MY PROBLEM - How to detect e-SATA when the system is running (hot plug).
-> 
-> MY PROBABLE SOLUTION - Keep polling the PMP ports to find attachment and
-> detachment of e-SATA on various ports and inform the application about the
-> same.
+The JMicron JMB362 controller supports AHCI only, but some revisions
+use the IDE class code.  These need to be matched by device ID.
 
-Eh?  Why doesn't it work automatically?  Doesn't the host controller
-support Snotification?
+These additions have apparently been included by QNAP in their NAS
+devices using these controllers.
 
--- 
-tejun
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+This is basically the same change made by unknown persons at QNAP.
+However, I think the only copyrightable part (if any) is the comment,
+which is my own.  Therefore I believe I can sign this off myself.
+
+Ben.
+
+ drivers/ata/ahci.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index fd318ac..67dbd6a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -263,6 +263,9 @@ static const struct pci_device_id ahci_pci_tbl[] =3D {
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
++	/* JMicron 362B and 362C have an AHCI function with IDE class code */
++	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
++	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
+=20
+ 	/* ATI */
+ 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
+--=20
+1.7.5.4
