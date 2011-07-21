@@ -1,115 +1,47 @@
-From: Derry Bryson <derry@high-rely.com>
-Subject: RE: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
-Date: Thu, 21 Jul 2011 16:22:07 +0000
-Message-ID: <359604ECF8F440408B9634E6146249B4322F2566@mail.scl.local>
-References: <359604ECF8F440408B9634E6146249B42923805F@mail.scl.local>
- <20110628095723.GC3386@htj.dyndns.org>
- <359604ECF8F440408B9634E6146249B4321BDEE6@mail.scl.local>
- <20110712150113.GC4347@mtj.dyndns.org>
- <359604ECF8F440408B9634E6146249B4321C2569@mail.scl.local>
- <20110713133425.GP2872@htj.dyndns.org>
- <20110713143936.GQ2872@htj.dyndns.org>
- <359604ECF8F440408B9634E6146249B4321C2695@mail.scl.local>
- <20110714071459.GB3455@htj.dyndns.org>
- <359604ECF8F440408B9634E6146249B4322F1E0A@mail.scl.local>
- <20110721090022.GF3455@htj.dyndns.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Detection of hot plugging of e-SATA on a port multiplier
+Date: Thu, 21 Jul 2011 10:39:26 +0200
+Message-ID: <20110721083926.GD3455@htj.dyndns.org>
+References: <CAL33XeQQZdknYVJN=XfvnLwdWxBwf1dBbKwQe+MKA7Deo3jsrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cal3-mh481-a.smtproutes.com ([208.70.89.235]:55849 "EHLO
-	cal3-mh481-a.smtproutes.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751949Ab1GUQW2 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jul 2011 12:22:28 -0400
-In-Reply-To: <20110721090022.GF3455@htj.dyndns.org>
-Content-Language: en-US
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:43470 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751690Ab1GUIjb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2011 04:39:31 -0400
+Received: by eye22 with SMTP id 22so1322338eye.2
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2011 01:39:30 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <CAL33XeQQZdknYVJN=XfvnLwdWxBwf1dBbKwQe+MKA7Deo3jsrA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "tj@kernel.org" <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: vinit bidkar <vinitbidkar@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Tejun: 
-
-Here are the specs on the port multiplier board:
-
-Lycom ST-126RM (http://www.lycom.com.tw/)
-Sil3726 chip revision 17
-EEPROM FW Version: 1.0114
-
-Also there is another problem:  ports that are not connected at power on
-are ignored until a port that was connected at power on is hotplugged.  So,
-for instance, if I turn the unit on with only a drive on the first port, the
-other four ports will not work and I don't even see kernel messages when
-hotplugging until I hotplug the first port.  I haven't looked into this yet,
-but it would seem the driver must be disabling the ports and they are not
-looked at again until the hard reset is performed.
-
-Let me know if I can help in any way.
-
-Thanks,
-
-Derry Bryson
-Sr. Software Engineer 
-
-Highly Reliable Systems
-www.High-Rely.com
-"Making Backup Invisible"
-
-Phone: 775.329.5139 X129
-Fax:     775.370.1001
-
-Sales & Support: 877.384.6838
-
-This e-mail and any files transmitted with it are the property of Highly Reliable Systems, Inc. This (email) information is confidential, and is intended solely for the use of the individual or entity to whom this e-mail is addressed. If you are not one of the named recipient(s) or otherwise have reason to believe that you have received this message in error, please notify the sender and delete this message immediately from your computer. Any other use, disclosure, retention, dissemination, forwarding, printing, distribution or copying of this e-mail is strictly prohibited.
-
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of tj@kernel.org
-> Sent: Thursday, July 21, 2011 2:00 AM
-> To: Derry Bryson
-> Cc: linux-ide@vger.kernel.org
-> Subject: Re: Problem w/ hotplug on sata_sil24 w/ PMP (sil3726)
+On Tue, Jul 19, 2011 at 11:41:57AM +0530, vinit bidkar wrote:
+> Hi Jeff, Tejun,
 > 
-> On Thu, Jul 14, 2011 at 05:37:37PM +0000, Derry Bryson wrote:
-> > Hi:
-> >
-> > Dmesg with second timing value set to 1000 always, hotplugging WD 3TB
-> drive:
-> >
-> > [  139.145917] ata5.00: exception Emask 0x10 SAct 0x0 SErr 0x4050000
-> action 0xf
-> > [  139.156180] ata5.00: SError: { PHYRdyChg CommWake DevExch }
-> > [  139.166619] ata5.00: hard resetting link
-> > [  140.430401] ata5.00: SATA link up 3.0 Gbps (SStatus 123 SControl
-> 320)
-> > [  140.430453] ata5.00: issuing IDENTIFY
-> > [  140.430480] ata5.00: IDENTIFY failed, irq_stat=0x60002 cerr=4
-> > [  140.430521] ata5.00: failed to IDENTIFY (I/O error, err_mask=0x11)
-> ...
-> > [  145.431276] ata5.00: hard resetting link
-> > [  145.431298] ata5.00: XXXX hardreset hotplugged = false
-> > [  145.431304] ata5.00: XXX0 hardreset debounce 5 100 2000
-> > [  145.431310] ata5.00: XXX1 hardreset debounce 5 1000 2000
-> > [  146.690413] ata5.00: SATA link up 3.0 Gbps (SStatus 123 SControl
-> 320)
-> ...
-> > [  152.940451] ata5.00: issuing IDENTIFY
-> > [  152.940477] ata5.00: IDENTIFY failed, irq_stat=0x60002 cerr=4
-> > [  152.940518] ata5.00: failed to IDENTIFY (I/O error, err_mask=0x11)
+> Got your mail
+> Need some info detection of e-sata hot plug connected to a port multiplier.
 > 
-> So, no change.  Weird.  I think we need to implement retry backoff
-> properly anyways but am still wondering why probing failure behaves
-> differently for you.  I'll try with similar drive but maybe it's
-> difference in PMP firmware?
+> System:
+> Kernel - 2.6.x
+> PMP - Marvell make
 > 
-> Thanks.
+> There is one internal HDD on port 0 and provision to hot plug e-SATA on port
+> 1 of the PMP.
 > 
-> --
-> tejun
+> Internal HDD gets detected at bootup. No problems here.
 > 
+> MY PROBLEM - How to detect e-SATA when the system is running (hot plug).
 > 
-> -----
-> No virus found in this message.
-> Checked by AVG - www.avg.com
-> Version: 10.0.1390 / Virus Database: 1518/3777 - Release Date: 07/20/11
+> MY PROBABLE SOLUTION - Keep polling the PMP ports to find attachment and
+> detachment of e-SATA on various ports and inform the application about the
+> same.
 
+Eh?  Why doesn't it work automatically?  Doesn't the host controller
+support Snotification?
+
+-- 
+tejun
