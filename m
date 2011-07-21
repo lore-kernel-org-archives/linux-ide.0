@@ -1,34 +1,81 @@
-From: Pallav Bose <pallavbose@gmail.com>
-Subject: Submitting a BIO from a work queue
-Date: Wed, 20 Jul 2011 11:20:40 -0400
-Message-ID: <CANk-0YtMSmnVw+0BVb=Grj8qhEmV-XDDX3QpxaB=7qvf19nyOQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ahci_start_engine compliance with AHCI spec
+Date: Thu, 21 Jul 2011 10:49:17 +0200
+Message-ID: <20110721084917.GE3455@htj.dyndns.org>
+References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
+ <20110713131407.GN2872@htj.dyndns.org>
+ <CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37414 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302Ab1GTPVB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jul 2011 11:21:01 -0400
-Received: by iyb12 with SMTP id 12so272110iyb.19
-        for <linux-ide@vger.kernel.org>; Wed, 20 Jul 2011 08:21:00 -0700 (PDT)
+Received: from mail-ey0-f171.google.com ([209.85.215.171]:53057 "EHLO
+	mail-ey0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752388Ab1GUItW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2011 04:49:22 -0400
+Content-Disposition: inline
+In-Reply-To: <CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Ganesh Karuppur Rajagopalan <ganesh.kr356@gmail.com>
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
 
 Hello,
 
-I'm using 2.6.39.1 version of the Linux kernel. In my block device
-driver, I'm queuing a=A0struct work_struct=A0from the bottom half of th=
-e
-interrupt handler, i.e., in the=A0->bi_end_io=A0function of a previousl=
-y
-submitted BIO. The work queue handler function then submits the next
-BIO to be processed. The system becomes unresponsive when we do this.
-We believe that calling=A0submit_bio()=A0from our work queue handler
-function in this setup is causing the problem. Can someone explain
-what the problem is in this scenario?
+On Mon, Jul 18, 2011 at 11:40:17AM -0700, Brian Norris wrote:
+> On Wed, Jul 13, 2011 at 6:14 AM, Tejun Heo <tj@kernel.org> wrote:
+> > On Fri, Jul 08, 2011 at 04:01:17PM -0700, Brian Norris wrote:
+> >> I'm not sure if the "error_handler" and "hard reset" processes are
+> >> intended for initialization...as I said I'm a little new!
+> >
+> > That's how it's supposed to work. =A0EH is integral part of probing
+> > sequence.
+>=20
+> I began to suspect that was the case. It just seemed awkward that the
+> expected operation includes a code path named "error".
 
-Thanks,
-Pallav
+Heh, well, SCSI called it error_handler but inside ATA I usually call
+it exception handler and probing / hot plugging / etc are exceptional
+cases compared to boring sending and receiving of bits to already
+attached devices. ;)
+
+> >> I have a few other questions:
+> >>
+> >> What operation could be putting devices in DRQ or BSY states durin=
+g
+> >> initialization but before ahci_start_engine?
+> >
+> > Hmmm... I have no idea, maybe it has something to do with the first
+> > D2H Reg FIS device sends after link gets reset during controller in=
+it?
+>=20
+> OK, I'll try to track that one down, but I think that DRQ is set much
+> earlier in the initialization than that and won't be cleared until
+> between ahci_power_up() and ahci_start_engine() - I tried
+> wait-and-poll at several different points in the process to understan=
+d
+> the HBA/device initialization process.
+
+I see.
+
+> > Hmmm... what happens if you don't comment out ahci_start_engine() c=
+all
+> > from ahci_start_port()?
+>=20
+> I wasn't commenting out the ahci_start_engine() from
+> ahci_start_port(). Can you clarify what you mean?
+
+Oh, I meant "what if you comment out..."  I wrote that sentence in
+negative and then switched but forgot removing "don't".
+
+> > Is this the same IP block that Jian Peng was using?
+>=20
+> Yes, it is. I'm taking over some of his work.
+
+Is there any way to detect that particular IP block.  It's the only
+one with this problem so maybe we just should treat it specially.
+
+Thanks.
+
+--=20
+tejun
