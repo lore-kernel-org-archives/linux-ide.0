@@ -1,93 +1,40 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: ahci_start_engine compliance with AHCI spec
-Date: Thu, 21 Jul 2011 10:13:16 -0700
-Message-ID: <CAN8TOE_dCg6Wi_trE97hXjBPnZi4jpLyoeUEVrbMpgDH-BwKWA@mail.gmail.com>
-References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
-	<20110713131407.GN2872@htj.dyndns.org>
-	<CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
-	<20110721084917.GE3455@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] Prevent warning during PMP error recovery
+Date: Thu, 21 Jul 2011 09:25:30 +0200
+Message-ID: <20110721072530.GX3455@htj.dyndns.org>
+References: <20110715155520.GB25319@merlins.org>
+ <1310776322-12911-1-git-send-email-gwendal@google.com>
+ <20110721072420.GW3455@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:34925 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949Ab1GURNS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2011 13:13:18 -0400
-In-Reply-To: <20110721084917.GE3455@htj.dyndns.org>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:37247 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752285Ab1GUHZf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2011 03:25:35 -0400
+Received: by ewy4 with SMTP id 4so1011572ewy.19
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2011 00:25:34 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20110721072420.GW3455@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: mlord@pobox.com, linux-ide@vger.kernel.org, lil@marvell.com, hbailey@marvell.com, marc@merlins.org
 
-On Thu, Jul 21, 2011 at 1:49 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Mon, Jul 18, 2011 at 11:40:17AM -0700, Brian Norris wrote:
->> On Wed, Jul 13, 2011 at 6:14 AM, Tejun Heo <tj@kernel.org> wrote:
->> > Hmmm... what happens if you don't comment out ahci_start_engine() =
-call
->> > from ahci_start_port()?
->>
->> I wasn't commenting out the ahci_start_engine() from
->> ahci_start_port(). Can you clarify what you mean?
->
-> Oh, I meant "what if you comment out..." =A0I wrote that sentence in
-> negative and then switched but forgot removing "don't".
+On Thu, Jul 21, 2011 at 09:24:20AM +0200, Tejun Heo wrote:
+> On Fri, Jul 15, 2011 at 05:32:02PM -0700, Gwendal Grignou wrote:
+> > Cleanup sff_pio_task_link when a command is cancel while the
+> > pio_task thread has been scheduled.
+> > 
+> > Change-Id: I4397bed3ee0878d92933d4897eed025ffaf3a9bd
+> > 
+> > Signed-off-by: Gwendal Grignou <gwendal@google.com>
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
 
-OK, well I tried simply commenting out that ahci_start_engine() on
-both my special controller and on the Dell E6410 laptop and it worked
-just fine (solved my issues and didn't cause any issues on the Dell).
-Is this safe? It seems like we end up calling ahci_start_engine() at
-the end of the error handling process anyway, so maybe this call is
-not really necessary in the first place?
+Oooh, Jeff isn't cc'd.  Please re-send to jgarzik with Acked-by added.
 
-Anyway, I also tried my own fix for this: adding a small delay to wait
-for some link recognition at the end of ahci_power_up(). I'm not sure
-if this is the greatest, but it also works for both systems I'm
-testing. I included the test patch here (based on linux-2.6). BTW, I'm
-not sure my mail will be formatted perfectly here. I can resend with
-my other mailer if needed.
+Thank you.
 
->> > Is this the same IP block that Jian Peng was using?
->>
->> Yes, it is. I'm taking over some of his work.
->
-> Is there any way to detect that particular IP block. =A0It's the only
-> one with this problem so maybe we just should treat it specially.
-
-I'm not sure how easy it would be to detect this particular version.
-Besides, that is not our first choice solution, as our special-case
-fix would not be very well tested for logic bugs.
-
-Brian
-
----
- drivers/ata/libahci.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 41223c7..0c0c444 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -657,6 +657,19 @@ static void ahci_power_up(struct ata_port *ap)
-
-        /* wake up link */
-        writel(cmd | PORT_CMD_ICC_ACTIVE, port_mmio + PORT_CMD);
-+
-+       /*
-+        * Wait for PxSSTS.DET =3D=3D 1h or 3h, step 5 of 10.1.1 in
-+        * AHCI 1.3 spec. See 10.10.2 for spin-up procedure.
-+        */
-+       if (ata_wait_register(ap, port_mmio + ahci_scr_offset(ap, SCR_S=
-TATUS),
-+                               0x01, 0x00, 1, 10)) {
-+               /* also wait for DRQ to be cleared */
-+               ata_wait_register(ap, port_mmio + PORT_TFDATA, ATA_DRQ,
-+                               ATA_DRQ, 1, 10);
-+
-+               /* proceed with step 6, 7 of 10.1.1 in AHCI 1.3 spec? *=
-/
-+       }
- }
-
- static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy pol=
-icy,
+-- 
+tejun
