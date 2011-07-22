@@ -1,37 +1,40 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH #upstream] ahci: start engine only during soft/hard resets
-Date: Fri, 22 Jul 2011 13:41:14 -0700
-Message-ID: <CAN8TOE_Gd1TdFNFAf6dTQrkzLQbdJstXGqnqrs1tbzX8hgrzhQ@mail.gmail.com>
-References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
-	<20110713131407.GN2872@htj.dyndns.org>
-	<CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
-	<20110721084917.GE3455@htj.dyndns.org>
-	<CAN8TOE_dCg6Wi_trE97hXjBPnZi4jpLyoeUEVrbMpgDH-BwKWA@mail.gmail.com>
-	<20110722090317.GH2622@htj.dyndns.org>
-	<20110722094126.GI2622@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH] Prevent warning during PMP error recovery
+Date: Fri, 22 Jul 2011 13:48:32 -0700
+Message-ID: <1311367712-15331-1-git-send-email-gwendal@google.com>
+References: <20110721072530.GX3455@htj.dyndns.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:56053 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074Ab1GVUlQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2011 16:41:16 -0400
-In-Reply-To: <20110722094126.GI2622@htj.dyndns.org>
+Received: from smtp-out.google.com ([216.239.44.51]:13828 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067Ab1GVUtc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2011 16:49:32 -0400
+In-Reply-To: <20110721072530.GX3455@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
+To: jeff@garzik.org
+Cc: tj@kernel.org, mlord@pobox.com, linux-ide@vger.kernel.org, lil@marvell.com, hbailey@marvell.com, marc@merlins.org, Gwendal Grignou <gwendal@google.com>
 
-On Fri, Jul 22, 2011 at 2:41 AM, Tejun Heo <tj@kernel.org> wrote:
-> This is another attempt at fixing the same problem that 270dac35c2
-> (libata: ahci_start_engine compliant to AHCI spec) tried to solve.
-> Unfortunately, 270dac35c2 created regressions for a lot more common
-> controllers and got reverted.
+Cleanup sff_pio_task_link when a command is cancel while the
+pio_task thread has been scheduled.
 
-I've tested this on my problem controller with success so far. Also
-tried on Dell Latitude E6410 (with various boot, suspend, resume,
-unplug power, etc. cycles) with no problem. Thanks Tejun!
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/libata-sff.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-In case it's useful I'll give a tested-by:
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 996a7a5..c24127d 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1333,6 +1333,7 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+ 
+ 	cancel_delayed_work_sync(&ap->sff_pio_task);
+ 	ap->hsm_task_state = HSM_ST_IDLE;
++	ap->sff_pio_task_link = NULL;
+ 
+ 	if (ata_msg_ctl(ap))
+ 		ata_port_dbg(ap, "%s: EXIT\n", __func__);
+-- 
+1.7.3.1
 
-Tested-by: Brian Norris <computersforpeace@gmail.com>
