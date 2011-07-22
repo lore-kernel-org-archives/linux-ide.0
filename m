@@ -1,52 +1,82 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Bug#634180: [PATCH] ahci: Add JMicron 362 device IDs
-Date: Fri, 22 Jul 2011 01:43:22 +0200
-Message-ID: <1311291802.28569.93.camel@localhost>
-Reply-To: Ben Hutchings <ben@decadent.org.uk>, 634180@bugs.debian.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ahci_start_engine compliance with AHCI spec
+Date: Fri, 22 Jul 2011 11:03:17 +0200
+Message-ID: <20110722090317.GH2622@htj.dyndns.org>
+References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
+ <20110713131407.GN2872@htj.dyndns.org>
+ <CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
+ <20110721084917.GE3455@htj.dyndns.org>
+ <CAN8TOE_dCg6Wi_trE97hXjBPnZi4jpLyoeUEVrbMpgDH-BwKWA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <bounce-debian-bugs-dist=glddb-debian-bugs-dist=m.gmane.org@lists.debian.org>
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.634180.B634180.131129181928776@bugs.debian.org>
-List-Post: <mailto:debian-bugs-dist@lists.debian.org>
-List-Help: <mailto:debian-bugs-dist-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-bugs-dist-request@lists.debian.org?subject=unsubscribe>
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>, 634180@bugs.debian.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-fx0-f52.google.com ([209.85.161.52]:42673 "EHLO
+	mail-fx0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605Ab1GVJDW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jul 2011 05:03:22 -0400
+Content-Disposition: inline
+In-Reply-To: <CAN8TOE_dCg6Wi_trE97hXjBPnZi4jpLyoeUEVrbMpgDH-BwKWA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
 
-The JMicron JMB362 controller supports AHCI only, but some revisions
-use the IDE class code.  These need to be matched by device ID.
+Hello, Brian.
 
-These additions have apparently been included by QNAP in their NAS
-devices using these controllers.
+On Thu, Jul 21, 2011 at 10:13:16AM -0700, Brian Norris wrote:
+> On Thu, Jul 21, 2011 at 1:49 AM, Tejun Heo <tj@kernel.org> wrote:
+> > On Mon, Jul 18, 2011 at 11:40:17AM -0700, Brian Norris wrote:
+> >> On Wed, Jul 13, 2011 at 6:14 AM, Tejun Heo <tj@kernel.org> wrote:
+> >> > Hmmm... what happens if you don't comment out ahci_start_engine(=
+) call
+> >> > from ahci_start_port()?
+> >>
+> >> I wasn't commenting out the ahci_start_engine() from
+> >> ahci_start_port(). Can you clarify what you mean?
+> >
+> > Oh, I meant "what if you comment out..." =A0I wrote that sentence i=
+n
+> > negative and then switched but forgot removing "don't".
+>=20
+> OK, well I tried simply commenting out that ahci_start_engine() on
+> both my special controller and on the Dell E6410 laptop and it worked
+> just fine (solved my issues and didn't cause any issues on the Dell).
+> Is this safe? It seems like we end up calling ahci_start_engine() at
+> the end of the error handling process anyway, so maybe this call is
+> not really necessary in the first place?
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
-This is basically the same change made by unknown persons at QNAP.
-However, I think the only copyrightable part (if any) is the comment,
-which is my own.  Therefore I believe I can sign this off myself.
+Yes, I believe so.
 
-Ben.
+> Anyway, I also tried my own fix for this: adding a small delay to wai=
+t
+> for some link recognition at the end of ahci_power_up(). I'm not sure
+> if this is the greatest, but it also works for both systems I'm
+> testing. I included the test patch here (based on linux-2.6). BTW, I'=
+m
+> not sure my mail will be formatted perfectly here. I can resend with
+> my other mailer if needed.
 
- drivers/ata/ahci.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+The problem is that both my and your approach aren't ultimately safe
+on this particular IP block.  I don't think it's possible make things
+completely safe for it.  There's no mutual exclusion against PHY
+events - be it flaky signal, power surge or actual hotplug - and
+driver operation.  No matter how careful the driver behaves, if PHY
+events happen after the last check before starting DMA engine, DRQ may
+be set by the time driver gets to it.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index fd318ac..67dbd6a 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -263,6 +263,9 @@ static const struct pci_device_id ahci_pci_tbl[] =3D {
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
-+	/* JMicron 362B and 362C have an AHCI function with IDE class code */
-+	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
-+	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
-=20
- 	/* ATI */
- 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
+The IP block you're dealing with is inherently buggy.  What the spec
+means, I think, is the DMA engine might not start or behave properly
+if enabled while DRQ is set, which is fine.  Driver will notice that,
+reset stuff and retry.  It is *completely* different from "the
+controller becomes brick until power cycled if that happens".  So, we
+can work around all we want but that is one buggy controller.  If
+possible, please tell the manufacturer or licensor to fix it.
+
+=46or now, let's first try removing ahci_start_engine() call from
+port_start and see how that goes.
+
+Thanks.
+
 --=20
-1.7.5.4
+tejun
