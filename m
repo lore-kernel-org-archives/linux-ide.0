@@ -1,44 +1,65 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata/ahci_platform: Add support for enabling/disabling
- clock.
-Date: Sat, 23 Jul 2011 18:14:04 -0400
-Message-ID: <4E2B47AC.1010101@pobox.com>
-References: <211461c299bab630fda07f81963cab0b5f40c98d.1307609821.git.viresh.kumar@st.com> <4E08634F.3040902@st.com>
+Subject: Re: [PATCH Resend] ATA: Debugging options for the ATA subsystem
+Date: Sat, 23 Jul 2011 18:17:29 -0400
+Message-ID: <4E2B4879.7000903@pobox.com>
+References: <e6eda088c6d3761ac4f5d1719489be61356e3a8a.1307591731.git.viresh.kumar@st.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52881 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978Ab1GWWOI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jul 2011 18:14:08 -0400
-Received: by qwk3 with SMTP id 3so1595964qwk.19
-        for <linux-ide@vger.kernel.org>; Sat, 23 Jul 2011 15:14:06 -0700 (PDT)
-In-Reply-To: <4E08634F.3040902@st.com>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:39476 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab1GWWRb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Jul 2011 18:17:31 -0400
+Received: by qyk9 with SMTP id 9so1863514qyk.19
+        for <linux-ide@vger.kernel.org>; Sat, 23 Jul 2011 15:17:30 -0700 (PDT)
+In-Reply-To: <e6eda088c6d3761ac4f5d1719489be61356e3a8a.1307591731.git.viresh.kumar@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: viresh kumar <viresh.kumar@st.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Armando VISCONTI <armando.visconti@st.com>, Shiraz HASHIM <shiraz.hashim@st.com>, Vipin KUMAR <vipin.kumar@st.com>, Rajeev KUMAR <rajeev-dlh.kumar@st.com>, Deepak SIKRI <deepak.sikri@st.com>, Vipul Kumar SAMAR <vipulkumar.samar@st.com>, Amit VIRDI <Amit.VIRDI@st.com>, Pratyush ANAND <pratyush.anand@st.com>, Bhupesh SHARMA <bhupesh.sharma@st.com>, "viresh.linux@gmail.com" <viresh.linux@gmail.com>
+To: Viresh Kumar <viresh.kumar@st.com>
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com
 
-On 06/27/2011 07:02 AM, viresh kumar wrote:
-> On 06/09/2011 02:28 PM, Viresh KUMAR wrote:
->> On many architectures, drivers are supposed to enable/disable functional clock
->> of device. This patch adds support for clock enabling/disabling in
->> ahci_platform.c.
->>
->> Signed-off-by: Viresh Kumar<viresh.kumar@st.com>
->> ---
->>   drivers/ata/ahci.h          |    4 ++++
->>   drivers/ata/ahci_platform.c |   36 +++++++++++++++++++++++++++++++-----
->>   2 files changed, 35 insertions(+), 5 deletions(-)
->>
+On 06/08/2011 11:56 PM, Viresh Kumar wrote:
+> This adds Kconfig options for DEBUG and VERBOSE_DEBUG to the ATA subsystem
 >
-> Hi Jeff,
+> Signed-off-by: Viresh Kumar<viresh.kumar@st.com>
+> ---
+>   drivers/ata/Kconfig  |   14 ++++++++++++++
+>   drivers/ata/Makefile |    2 ++
+>   2 files changed, 16 insertions(+), 0 deletions(-)
 >
-> Any inputs on this patch?
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 5dd1e4c..e1ac908 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -22,6 +22,20 @@ menuconfig ATA
+>
+>   if ATA
+>
+> +config ATA_DEBUG
+> +        bool "ATA debugging"
+> +        help
+> +          This is an option for use by developers; most people should
+> +          say N here.  This enables ATA core and driver debugging.
+> +
+> +config ATA_VDEBUG
+> +        bool "ATA verbose debugging"
+> +        depends on ATA_DEBUG
+> +        help
+> +          This is an option for use by developers; most people should
+> +          say N here.  This enables deeper (more verbose) debugging of
+> +          the ATA core and drivers.
+> +
 
-Is it actually -used- somewhere?
+There does not seem to be a large, driving need for this.  It is 
+straightforward to update the header file for the esoteric, voluminous 
+debugging.
 
-It certainly looks straightforward...
+If you are missing critical hardware or software errors, that is an 
+argument that those error messages should be outside of DEBUG/VDEBUG, 
+shipped with every kernel.
+
+	Jeff
+
 
 
