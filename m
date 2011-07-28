@@ -1,58 +1,50 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 2/2] drivers/ide/cy82c693.c: Add missing pci_dev_put
-Date: Thu, 28 Jul 2011 18:26:47 +0200
-Message-ID: <1311870407-22461-2-git-send-email-julia@diku.dk>
+From: David Ronis <ronis@ronispc.chem.mcgill.ca>
+Subject: Re: boot failure in 2.6.39.3
+Date: Thu, 28 Jul 2011 13:24:00 -0400
+Message-ID: <1311873840.3223.2.camel@montroll.chem.mcgill.ca>
+References: <1311808122.4630.12.camel@montroll.chem.mcgill.ca>
+	 <4E312D95.6090805@mrc-lmb.cam.ac.uk>
+Reply-To: David.Ronis@McGill.CA
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:50290 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755186Ab1G1Q0y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jul 2011 12:26:54 -0400
+Received: from torrent.CC.McGill.CA ([132.206.27.49]:48421 "EHLO
+	torrent.cc.mcgill.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754138Ab1G1RYF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2011 13:24:05 -0400
+In-Reply-To: <4E312D95.6090805@mrc-lmb.cam.ac.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Cc: linux-ide@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+Hi Dave,
 
-Pci_get_slot calls pci_dev_get, so pci_dev_put is needed before leaving the
-function in the case where pci_get_slot is locally used.
+Thanks for the reply.  I've posted a jpg of the last screen at
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+http://ronispc.chem.mcgill.ca/ronis/images/boot_crash.jpg
 
-// <smpl>
-@@
-local idexpression x;
-expression e;
-@@
+Note the material before the backtrace.  The disks and partitions seem
+correct.
 
-*x = pci_get_slot(...)
-... when != true x == NULL
-    when != pci_dev_put(x)
-    when != e = x
-    when != if (x != NULL) {<+... pci_dev_put(x); ...+>}
-*return ...;
-// </smpl>
+David
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
 
----
-Not tested.
-
- drivers/ide/cy82c693.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/ide/cy82c693.c b/drivers/ide/cy82c693.c
-index 3be60da..67cbcfa 100644
---- a/drivers/ide/cy82c693.c
-+++ b/drivers/ide/cy82c693.c
-@@ -141,6 +141,8 @@ static void cy82c693_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- 		pci_write_config_byte(dev, CY82_IDE_SLAVE_IOW, time_16);
- 		pci_write_config_byte(dev, CY82_IDE_SLAVE_8BIT, time_8);
- 	}
-+	if (hwif->index > 0)
-+		pci_dev_put(dev);
- }
- 
- static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
-
+On Thu, 2011-07-28 at 10:36 +0100, Dave Howorth wrote:
+> David Ronis wrote:
+> > I've just tried to upgrade from a slackware-2.6.37.6-huge (most drivers
+> > are enabled at least as modules) to 2.6.39.3, built locally.   The
+> > resulting kernel won't boot (generating an oops).   What I see on the
+> > console is a list of the various disk partitions (sd driver) and then a
+> > complaint about not being able to mount /dev/root.   (The older kernel
+> > works fine-the disks using the ata_pixx driver).
+> > 
+> > My suspicion is that I've misconfigured the kernel.  Any suggestions?
+> 
+> Show the detail log of the oops?! Use a photo if necessary.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
