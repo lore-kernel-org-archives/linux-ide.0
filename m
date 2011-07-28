@@ -1,80 +1,40 @@
-From: William King <quentusrex@gmail.com>
-Subject: Re: Seagate harddrives problems with SB7x0 AHCI
-Date: Wed, 27 Jul 2011 18:42:21 -0700
-Message-ID: <4E30BE7D.2040705@gmail.com>
-References: <4E30B9CE.4010800@gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: Machine check exception
+Date: Thu, 28 Jul 2011 09:47:19 +0200
+Message-ID: <20110728074719.GA16261@liondog.tnic>
+References: <4E2FF0EC.2020704@gmail.com>
+ <20110727130319.GA26923@gere.osrc.amd.com>
+ <4E302F6C.3@gmail.com>
+ <20110727170309.GB26923@gere.osrc.amd.com>
+ <4E307AF3.40109@gmail.com>
+ <4E308360.8080302@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:61155 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754549Ab1G1Bli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jul 2011 21:41:38 -0400
-In-Reply-To: <4E30B9CE.4010800@gmail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:46102 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754929Ab1G1HrX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jul 2011 03:47:23 -0400
+Content-Disposition: inline
+In-Reply-To: <4E308360.8080302@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "F. P. Beekhof" <fpbeekhof@gmail.com>
+Cc: Borislav Petkov <bp@amd64.org>, Jeff Garzik <jgarzik@pobox.com>, Mikael Pettersson <mikpe@it.uu.se>, linux-ide@vger.kernel.org
 
-Correction: The fio test completes in 4 minutes on Alpha.
+On Wed, Jul 27, 2011 at 11:30:08PM +0200, F. P. Beekhof wrote:
+> Note: after a suspend/resume cycle, the register value is back at 8,
+> so I have to run the commands again to set it to 100008
+> 
+> # rdmsr -x 0xc001001f
+> 100008
+> (suspend / resume)
+> # rdmsr -x 0xc001001f
+> 8
 
-On 07/27/2011 06:22 PM, William King wrote:
-> Problem:
-> I have run into what appears to be a driver problem with the Seagate
-> Barracuda 7200.12 drives. The symptom is io load of 10-15 times the load
-> for other drives. To the point the box becomes fully io-bound and
-> unresponsive when even installing apt packages or rsync of a 100MB file.
->
-> Background:
-> I have two servers with nearly identical hardware: Alpha has Seagate
-> Barracuda 7200.12 1TB drives model: ST31000528AS and Bravo that has
-> Western Digital Cavaliar Black 1TB model: 'WDC WD1001FALS-0'. Both
-> servers have Ubuntu 11.04 64bit server installed, and have fully updated
-> to the 2.3.38-10 kernel. More hardware info and logs can be located
-> here: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/815540
->
-> The server hardware manufacturer page is:
-> http://www.supermicro.com/Aplus/system/1U/1042/AS-1042G-TF.cfm
->
-> Command outputs:
-> # lspci |grep SATA
-> 00:11.0 SATA controller: ATI Technologies Inc SB7x0/SB8x0/SB9x0 SATA
-> Controller [AHCI mode]
->
-> # uname -a
-> Linux alpha-mule 2.6.38-10-server #46-Ubuntu SMP Tue Jun 28 16:31:00 UTC
-> 2011 x86_64 x86_64 x86_64 GNU/Linux
->
->
-> Steps to confirm/reproduce and narrow scope:
-> I have taken the hard drives from Bravo, put them into Alpha reinstalled
-> and there is no problem. Also I have placed some older Seagate Barracuda
-> 7200.9 80GB drives in Alpha and the problem does not exist then either.
-> I used iotop and iostats to watch the reported io load as well as the
-> read/write speeds to the disk. I then used rsync with a bandwidth
-> limitation to measure the performance difference between the two servers
-> in terms of server load and iotop reported IO%.
->
-> A cat of /proc/interrupts show an order of magnitude more interrupts for
-> ahci on Alpha than Bravo for the same amount of traffic during an rsync.
->
-> I have hdparm -t /dev/sda test and have seen a performance of ~50MB/s on
-> the Seagate 7200.12 drive while the specs and other benchmarks claim
-> speeds of up to 140MB/s. The Western Digital in the same hardware are
-> able to reach speeds of ~105MB/s and the Seagate 7200.9 gets ~65MB/s.
-> The hard drive was not in use at the time of the hdparm test.
->
-> I took a perf capture of a fio random read test on each machines. The
-> test completes in 4 seconds on Alpha and 2 minutes 45 seconds on Bravo
-> and the perf stats show all the extra time being spent in the kernel
-> scheduler section.
->
-> I initially had the Seagate hard drives on firmware CC46 then updated
-> them to the latest firmware of CC49. No change detected between firmwares.
->
-> I have setup alpha to be able to rebuild the Ubuntu Kernel with patches
-> so I can easily test new changes. Also I have the linux kernel git tree
-> cloned so while it would be possible, I would be more comfortable
-> testing on the Ubuntu version of the 2.6.38-10 kernel.
->
-> -William King
+Yeah, that's ok for now, just to test whether this fixes your issue. You
+can add the wrmsr call to some post-resume hooks on your system.
+
+-- 
+Regards/Gruss,
+    Boris.
