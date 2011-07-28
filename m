@@ -1,38 +1,58 @@
-From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
-Subject: Re: boot failure in 2.6.39.3
-Date: Thu, 28 Jul 2011 10:36:21 +0100
-Message-ID: <4E312D95.6090805@mrc-lmb.cam.ac.uk>
-References: <1311808122.4630.12.camel@montroll.chem.mcgill.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 2/2] drivers/ide/cy82c693.c: Add missing pci_dev_put
+Date: Thu, 28 Jul 2011 18:26:47 +0200
+Message-ID: <1311870407-22461-2-git-send-email-julia@diku.dk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ppsw-51.csi.cam.ac.uk ([131.111.8.151]:34316 "EHLO
-	ppsw-51.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753630Ab1G1JgY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jul 2011 05:36:24 -0400
-Received: from mail.mrc-lmb.cam.ac.uk ([131.111.85.9]:44810 helo=mail.lmb.internal)
-	by ppsw-51.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.138]:25)
-	with esmtp id 1QmN0v-00063I-ZA (Exim 4.72) for linux-ide@vger.kernel.org
-	(return-path <dhoworth@mrc-lmb.cam.ac.uk>); Thu, 28 Jul 2011 10:36:21 +0100
-Received: from cpepc210-3.lmb.internal ([10.14.0.2])
-	by mail.lmb.internal with esmtp (Exim 4.63)
-	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>)
-	id 1QmN0v-0000rG-F2
-	for linux-ide@vger.kernel.org; Thu, 28 Jul 2011 10:36:21 +0100
-In-Reply-To: <1311808122.4630.12.camel@montroll.chem.mcgill.ca>
+Received: from mgw2.diku.dk ([130.225.96.92]:50290 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755186Ab1G1Q0y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 28 Jul 2011 12:26:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-David Ronis wrote:
-> I've just tried to upgrade from a slackware-2.6.37.6-huge (most drivers
-> are enabled at least as modules) to 2.6.39.3, built locally.   The
-> resulting kernel won't boot (generating an oops).   What I see on the
-> console is a list of the various disk partitions (sd driver) and then a
-> complaint about not being able to mount /dev/root.   (The older kernel
-> works fine-the disks using the ata_pixx driver).
-> 
-> My suspicion is that I've misconfigured the kernel.  Any suggestions?
+From: Julia Lawall <julia@diku.dk>
 
-Show the detail log of the oops?! Use a photo if necessary.
+Pci_get_slot calls pci_dev_get, so pci_dev_put is needed before leaving the
+function in the case where pci_get_slot is locally used.
+
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+local idexpression x;
+expression e;
+@@
+
+*x = pci_get_slot(...)
+... when != true x == NULL
+    when != pci_dev_put(x)
+    when != e = x
+    when != if (x != NULL) {<+... pci_dev_put(x); ...+>}
+*return ...;
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+Not tested.
+
+ drivers/ide/cy82c693.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ide/cy82c693.c b/drivers/ide/cy82c693.c
+index 3be60da..67cbcfa 100644
+--- a/drivers/ide/cy82c693.c
++++ b/drivers/ide/cy82c693.c
+@@ -141,6 +141,8 @@ static void cy82c693_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ 		pci_write_config_byte(dev, CY82_IDE_SLAVE_IOW, time_16);
+ 		pci_write_config_byte(dev, CY82_IDE_SLAVE_8BIT, time_8);
+ 	}
++	if (hwif->index > 0)
++		pci_dev_put(dev);
+ }
+ 
+ static void __devinit init_iops_cy82c693(ide_hwif_t *hwif)
+
