@@ -1,47 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ahci_start_engine compliance with AHCI spec
-Date: Thu, 4 Aug 2011 11:44:19 +0200
-Message-ID: <20110804094419.GA2731@htj.dyndns.org>
-References: <CAN8TOE9CCSiS2koyx=UsZj=9KwaWZW5yDjUUqgJf2=qZU70k1w@mail.gmail.com>
- <20110713131407.GN2872@htj.dyndns.org>
- <CAN8TOE9Rjujf9aLQGONDULNasFiQmVkiUPWUDX=Vf0Nx2pka7w@mail.gmail.com>
- <20110721084917.GE3455@htj.dyndns.org>
- <CAN8TOE_dCg6Wi_trE97hXjBPnZi4jpLyoeUEVrbMpgDH-BwKWA@mail.gmail.com>
- <20110722090317.GH2622@htj.dyndns.org>
- <CAN8TOE8ZoE0xRvLPhDZtKZSwXg1mQLGtp8f2C75S+XuCrFM1YA@mail.gmail.com>
+From: Raja Appuswamy <raja.btl@gmail.com>
+Subject: regarding NCQ implementation
+Date: Fri, 5 Aug 2011 15:54:15 +0200
+Message-ID: <CAJbmVfc8icgOciAi=d8XCUJhPok3G8r6TTk7utZgoFZ5Y=AYRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48509 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751675Ab1HDJoY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Aug 2011 05:44:24 -0400
-Content-Disposition: inline
-In-Reply-To: <CAN8TOE8ZoE0xRvLPhDZtKZSwXg1mQLGtp8f2C75S+XuCrFM1YA@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:33285 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753867Ab1HENyQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Aug 2011 09:54:16 -0400
+Received: by qwk3 with SMTP id 3so1531344qwk.19
+        for <linux-ide@vger.kernel.org>; Fri, 05 Aug 2011 06:54:15 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: linux-ide@vger.kernel.org, Valdis.Kletnieks@vt.edu, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Michael Leun <lkml20100708@newton.leun.net>, linux-kernel@vger.kernel.org, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
+To: linux-ide@vger.kernel.org
 
-Hello,
-
-On Tue, Aug 02, 2011 at 05:06:13PM -0700, Brian Norris wrote:
-> Can DRQ be set from 0->1 without a software-initiated action? I didn't
-> think it was directly tied to PHY events, and so we can fairly well
-> predict that it will remain 0.
-
-Sure it can.  It's updated by Register D2H FISes sent by the device.
-It can change after a PHY event; otherwise, I don't think it would get
-set during init without any command in flight, right?
-
-> Yes, I believe the hardware designers know how buggy this is...but
-> it's still worth some effort to fix the software as well as possible
-> for current hardware behavior.
-
-Yeap, sure, let's get it working for majority of cases.  I just wanted
-to point out that the hardware eventually needs to be fixed.
-
-Thanks.
-
--- 
-tejun
+Hey guys,
+   Over the past few days i've been trying to work on modifying the
+AHCI driver for an experimental research operating system to support
+NCQ. I already have a fully functional AHCI driver without command
+queuing. But when i try to  READ FPDMA QUEUED command instead of the
+READ DMA command, i get an interrupt with the P0IS register containing
+the mask 0x45000008 (TFES, OFS and SDBS bits set). SERR reports
+3000400 which is a protocol violation error with the DIAG field
+reporting an unknown FIS.
+On dumping the log page, i get 41h as status (DRDY and ATA_ERR if i am
+right)  and 84h as
+feature/error. The non-ncq driver works just fine without any issues
+and there is absolutely no way the hardware is at fault this time. I
+have checked out the linux code and a 84h error refers to the ICRC and
+ATA_ABORTED bits if i am not mistaken. I would really appreciate any
+help from devs regarding how to debug this issue further. Also, are
+any of the other values i get back from REAL LOG EXT useful for
+debugging? If so, how do i interpret them?  I know this is not a linux
+related question. So if you think i should be targeting a different
+mailing list, i'd really appreciate it if you could please point me in
+the right direction and i'll definitely stop bugging you guys.
+Thanks in advance,
+Raja
