@@ -1,112 +1,101 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Allow (forced) AHCI mode on Intel 5 series, 3400 series chipsets
-Date: Mon, 8 Aug 2011 12:07:31 +0200
-Message-ID: <20110808100731.GI23937@htj.dyndns.org>
-References: <4E3D9EF9.4050906@vmars.tuwien.ac.at>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 3/9] drivers/ata/sata_dwc_460ex.c: add missing kfree
+Date: Mon,  8 Aug 2011 13:17:57 +0200
+Message-ID: <1312802283-9107-3-git-send-email-julia@diku.dk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35723 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355Ab1HHKHg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2011 06:07:36 -0400
-Received: by fxh19 with SMTP id 19so5203422fxh.19
-        for <linux-ide@vger.kernel.org>; Mon, 08 Aug 2011 03:07:35 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4E3D9EF9.4050906@vmars.tuwien.ac.at>
+Received: from mgw2.diku.dk ([130.225.96.92]:53547 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751468Ab1HHLSL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Aug 2011 07:18:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bernhard Froemel <froemel@vmars.tuwien.ac.at>
-Cc: linux-ide@vger.kernel.org, joerg@dorchain.net, sshtylyov@mvista.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-Hello,
+From: Julia Lawall <julia@diku.dk>
 
-On Sat, Aug 06, 2011 at 10:07:21PM +0200, Bernhard Froemel wrote:
-> The EFI/bios on the Apple Macbook Pro 6 series (and other Intel Chipset
-> based Macs and Macbook (Pros)) is ignorant of the SATA controller
-> AHCI/IDE mode settings. It is not possible to configure the EFI/bios to
-> set the SATA controller into the AHCI mode and even if the controller is
-> put into AHCI mode (e.g. by the bootloader) it is not correctly restored
-> during sleep/suspend-wakeup cycles. The attached patch attempts to fix
-> this by
-> 1) registering the actual SATA controller mode and/or forcibly set it to
-> AHCI mode (kernel command parameter: i5s_3400s_force_ahci=1) during
-> system boot
-> 2) restoring the AHCI mode after wakeup depending on the mode the
-> controller was during system boot
-> 
-> The patch should have no impact on systems where an EFI/bios takes care
-> about setting and correctly restoring the SATA controller mode: For
-> those systems the kernel command parameter 'i5s_3400s_force_ahci=1' only
-> acts as an additional feature to override the actual EFI/bios setting.
+Currently, error handling code in this function calls the function
+sata_dwc_port_stop, but this function has essentially no effect if hsdevp
+has not been stored in ap, which is the case throughout this function.  The
+only effect is to print a debugging message including ap->print_id.
+
+The code is rewritten to not call sata_dwc_port_stop, but instead to jump
+to a local label that prints the original error message and the print_id
+information.  In the case where hsdevp has been already allocated (but not
+yet stored in ap), this value is freed as well.
+
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@exists@
+local idexpression x;
+statement S,S1;
+expression E;
+identifier fl;
+expression *ptr != NULL;
+@@
+
+x = \(kmalloc\|kzalloc\|kcalloc\)(...);
 ...
-> +static int __init i5s_3400s_force_ahci_setup(char *str)
-> +{
-> +	if (!strcmp(str, "1"))
-> +		i5s_3400s_force_ahci = 1;
-> +	return 0;
-> +}
-> +early_param("i5s_3400s_force_ahci", i5s_3400s_force_ahci_setup);
+if (x == NULL) S
+<... when != x
+     when != if (...) { <+...kfree(x)...+> }
+     when any
+     when != true x == NULL
+x->fl
+...>
+(
+if (x == NULL) S1
+|
+if (...) { ... when != x
+               when forall
+(
+ return \(0\|<+...x...+>\|ptr\);
+|
+* return ...;
+)
+}
+)
+// </smpl>
 
-Just setting variable if the parameter is specified would be enough.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-> +static void __devinit i5s_3400s_fixup(struct pci_dev *dev)
-> +{
-> +	u16 amap;
-> +	pci_bus_read_config_word(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-> +		I5S_REG_AMAP, &amap);
-> +	if (amap & 0x60) {
-> +		printk(KERN_DEBUG I5S_PREFIX
-> +			"SATA controller mode: AHCI (0x%04x)\n", amap);
-> +		i5s_3400s_force_ahci = 1;
-> +	} else {
-> +		printk(KERN_DEBUG I5S_PREFIX
-> +			"SATA controller mode: NON AHCI (0x%04x)\n", amap);
-> +		if (i5s_3400s_force_ahci && (amap & 0xE0) == 0) {
-> +			amap |= 0x60;
-> +			printk(KERN_DEBUG I5S_PREFIX
-> +				"Putting SATA controller into AHCI (0x%04x)\n",
-> +				amap);
-> +			pci_bus_write_config_word(dev->bus,
-> +				PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-> +				I5S_REG_AMAP, amap);
-> +		}
-> +	}
-> +}
-> +static void i5s_3400s_fixup_resume(struct pci_dev *dev)
-> +{
-> +	u16 amap;
-> +	pci_bus_read_config_word(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-> +		I5S_REG_AMAP, &amap);
-> +	if (!(amap & 0x60)) {
-> +		printk(KERN_DEBUG I5S_PREFIX
-> +			"SATA controller mode: NON AHCI (0x%04x)\n", amap);
-> +		amap &= ~BIT(7);
-> +		amap |= 0x60;
-> +	  printk(KERN_DEBUG I5S_PREFIX
-> +			"Restoring AHCI mode of SATA controller (0x%04x)\n",
-> +			amap);
-> +		/* MAP - Address Map Register:  AHCI mode + 6 SATA ports */
-> +		pci_bus_write_config_word(dev->bus,
-> +			PCI_DEVFN(PCI_SLOT(dev->devfn), 2), I5S_REG_AMAP,
-> +			amap);
-> +	} else {
-> +		printk(KERN_DEBUG I5S_PREFIX
-> +			"SATA controller mode: AHCI (0x%04x)\n", amap);
-> +	}
-> +}
+---
+ drivers/ata/sata_dwc_460ex.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Shouldn't the resume fixup also check force_ahci?  It looks like it
-would put the controller into ahci mode even if it was in ide mode
-during boot.
-
-At any rate, unless there's a broken BIOS which boots into ahci mode
-but resumes into ide mode, I personally don't feel too enthusiastic
-about forcing the controller into ahci mode depending on a kernel
-paramster.  If it can be decided automatically and enabled by default,
-for sure.  If not, it's not gonna be all that useful anyway.
-
-Thanks.
-
--- 
-tejun
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 0a9a774..5c42374 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1329,7 +1329,7 @@ static int sata_dwc_port_start(struct ata_port *ap)
+ 			dev_err(ap->dev, "%s: dma_alloc_coherent failed\n",
+ 				 __func__);
+ 			err = -ENOMEM;
+-			goto CLEANUP;
++			goto CLEANUP_ALLOC;
+ 		}
+ 	}
+ 
+@@ -1349,15 +1349,13 @@ static int sata_dwc_port_start(struct ata_port *ap)
+ 	/* Clear any error bits before libata starts issuing commands */
+ 	clear_serror();
+ 	ap->private_data = hsdevp;
++	dev_dbg(ap->dev, "%s: done\n", __func__);
++	return 0;
+ 
++CLEANUP_ALLOC:
++	kfree(hsdevp);
+ CLEANUP:
+-	if (err) {
+-		sata_dwc_port_stop(ap);
+-		dev_dbg(ap->dev, "%s: fail\n", __func__);
+-	} else {
+-		dev_dbg(ap->dev, "%s: done\n", __func__);
+-	}
+-
++	dev_dbg(ap->dev, "%s: fail. ap->id = %d\n", __func__, ap->print_id);
+ 	return err;
+ }
+ 
