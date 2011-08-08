@@ -1,188 +1,212 @@
-From: Bernhard Froemel <froemel@vmars.tuwien.ac.at>
-Subject: Re: Allow (forced) AHCI mode on Intel 5 series, 3400 series chipsets
-Date: Mon, 08 Aug 2011 13:53:20 +0200
-Message-ID: <4E3FCE30.1060605@vmars.tuwien.ac.at>
-References: <4E3D9EF9.4050906@vmars.tuwien.ac.at> <20110808100731.GI23937@htj.dyndns.org>
+From: Jim Cromie <jim.cromie@gmail.com>
+Subject: BUG: sleeping function called from invalid context at /home/jimc/projects/lx/linux-2.6/drivers/ide/ide-io.c:468
+Date: Mon, 8 Aug 2011 15:54:31 -0600
+Message-ID: <CAJfuBxxX96V8KiSyNrV62UxKmQWjnqZb=MvUbS8FMG1sFMeHzg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000705060106020808000903"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from luna.vmars.tuwien.ac.at ([128.130.39.29]:42829 "EHLO
-	mail.vmars.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752069Ab1HHMAG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2011 08:00:06 -0400
-In-Reply-To: <20110808100731.GI23937@htj.dyndns.org>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:65183 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310Ab1HHVzC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Aug 2011 17:55:02 -0400
+Received: by yie30 with SMTP id 30so1199455yie.19
+        for <linux-ide@vger.kernel.org>; Mon, 08 Aug 2011 14:55:01 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, joerg@dorchain.net, sshtylyov@mvista.com
+To: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000705060106020808000903
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+I got this 2x,
+once when running aptitude in one terminal, wc afile in another
+again when running apt-get install file
 
-Hello,
-On 08/08/2011 12:07 PM, Tejun Heo wrote:
-> Hello,
-> 
-Thanks for your comments!
+this is running personal build of v3.0+, on voyage-0.7.5+ (daily build ~ 8/2)
+with this bootline:
+root=LABEL=ROOT_FS console=ttyS0,115200n8 all_generic_ide ide_core.nodma=0.1 ide
+_core.nodma=0.0 panic=20 reboot=bios
 
-> On Sat, Aug 06, 2011 at 10:07:21PM +0200, Bernhard Froemel wrote:
->> +static int __init i5s_3400s_force_ahci_setup(char *str)
->> +{
->> +	if (!strcmp(str, "1"))
->> +		i5s_3400s_force_ahci = 1;
->> +	return 0;
->> +}
->> +early_param("i5s_3400s_force_ahci", i5s_3400s_force_ahci_setup);
-> 
-> Just setting variable if the parameter is specified would be enough.
-I wanted to catch cases like 'i5s_3400s_force_ahci=0', but I can see
-that this is probably not a problem.
+The BUG listing is at end of this email.
+I dont really know what Im doing, but Ive got lockdep built,
+so here are the greps of the 2 locks held by flush:
 
->> +static void i5s_3400s_fixup_resume(struct pci_dev *dev)
->> [...]
->> +}
-> 
-> Shouldn't the resume fixup also check force_ahci?  It looks like it
-> would put the controller into ahci mode even if it was in ide mode
-> during boot.
-Right you are; I have no idea how that ended up wrong - I should
-probably really don't make any changes after I tested the patch.
-Attached the revised and tested patch.
+root@voyage:~# grep 'type->s_umount_key' /proc/lockdep |wc
+     26     222    1797
 
-> 
-> At any rate, unless there's a broken BIOS which boots into ahci mode
-> but resumes into ide mode, I personally don't feel too enthusiastic
-> about forcing the controller into ahci mode depending on a kernel
-> paramster.  
-I renamed the force variable and it should be clearer now:
+only 1 is for #15
+root@voyage:~# grep -n 'type->s_umount_key#15' /proc/lockdep
+2283:c04d8a24 OPS:     548 FD:   57 BD:    1 ++++..: &type->s_umount_key#15
 
-case a) EFI/bios is not broken and correctly restores the SATA
-controller mode before control is given back to the kernel:
-The patch has no influence beside when the user decides to supply the
-kernel parameter '': Then this patch will put the SATA controller into
-AHCI mode during boot and will correctly handle resume.
+it is:
+c04d8a24 OPS:     548 FD:   57 BD:    1 ++++..: &type->s_umount_key#15c
+ -> [c04d7ae0] dcache_lru_lock
+ -> [c0a65698] &(&dentry->d_lock)->rlocky#15' /proc/lockdep
+ -> [c04d8a34] &sb->s_type->i_lock_key#12
+ -> [c04d5f78] rcu_kthread_wq.lock
+ -> [c0547774] &rq->lock
+ -> [c0a65cd4] &(&sbi->s_lock)->rlock
+ -> [c0a656f8] &(&mapping->tree_lock)->rlock
+ -> [c04d7f58] &sb->s_type->i_lock_key#3
+ -> [c04d7b24] inode_wb_list_lock
+ -> [c054d2c0] &(&base->lock)->rlock
+ -> [c0a6893c] &(&q->__queue_lock)->rlock
+ -> [c0a68984] &(&ret->lock)->rlock
+ -> [c883c9ac] &(&hwif->lock)->rlock
+ -> [c0a63d74] key#18
+ -> [c0a6582c] vfsmount_lock
+ -> [c0a656e8] &(&mapping->private_lock)->rlock
+ -> [c0a63d5c] &(&zone->lru_lock)->rlock
+ -> [c0a63f58] &(&bdi->wb_lock)->rlock
+ -> [c0a658b8] key#22
+ -> [c0a6511c] &(&parent->list_lock)->rlock
+ -> [c04d7b04] inode_sb_list_lock
+ -> [c0a63d64] &(&zone->lock)->rlock
+ -> [c0a65184] files_lglock
+ -> [c04d6c64] pcpu_alloc_mutex
+ -> [c054d368] &(&gcwq->lock)->rlock
+ -> [c04d6bfc] pcpu_lock
+ -> [c0a63d6c] key#6
+ -> [c0a656f0] &mapping->i_mmap_mutex
+ -> [c0a65ce8] &ei->truncate_mutex
+ -> [c05477d8] &p->pi_lock
 
-case b) EFI/bios does not allow to set AHCI and/or does not restore AHCI
-(e.g., Apple systems based on that chipset) on resume: The patch enables
-AHCI usage on those systems. Without the patch you could previously only
-put the SATA controller into AHCI by means of a bootloader -- but then
-you still can't resume, because the controller is in the wrong mode
-after resume.
 
-> If it can be decided automatically and enabled by default,
-> for sure.  If not, it's not gonna be all that useful anyway.
-Unfortunately, we'd need to e.g. evaluate DMI info to limit the patch to
-systems which are known to not provide an AHCI configuration option in
-there EFI/bios. Also we still need some means to tell the kernel whether
-to put the SATA controller into AHCI or remain in the default (IDE)
-mode: a kernel command parameter crossed my mind first.
+root@voyage:~# grep 'type->s_umount_key' /proc/lockdep_chains |wc
+    338     676   11652
 
-Additional to my original submission I ensured to only set the
-controller into AHCI mode when it's according to the datasheet 'safe'.
+108 of them are for #15, let me know if you want to see them..
 
-Thanks,
-  Bernhard
 
---------------000705060106020808000903
-Content-Type: text/x-patch;
- name="i5s_3400s_ahci_handling_for_incapable_efi.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="i5s_3400s_ahci_handling_for_incapable_efi.patch"
+root@voyage:~# grep -n 'mapping->i_mmap_mutex' /proc/lockdep |wc
+     11      49     503
+root@voyage:~# grep -n 'mapping->i_mmap_mutex' /proc/lockdep_chains |wc
+     71     142    2829
 
-Signed-off-by: Bernhard Froemel <froemel@vmars.tuwien.ac.at>
---- a/drivers/pci/quirks.c	2011-07-22 04:17:23.000000000 +0200
-+++ b/drivers/pci/quirks.c	2011-08-08 13:37:54.459428437 +0200
-@@ -2799,6 +2799,87 @@
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_TI, 0xb800, fixup_ti816x_class);
- 
-+/*
-+ * Workaround for EFIs/Bios that do not allow to set (and/or restore upon
-+ * resume) the SATA controller AHCI mode within the Intel 5 Series/3400
-+ * Series chipset. The SATA controller mode is registered during the boot
-+ * process. In case of a resume, these fixups check the current controller
-+ * mode against the earlier registered one and will restore it to AHCI
-+ * mode if necessary. The user can force AHCI by setting the kernel
-+ * command parameter 'i5s_3400s_force_ahci=1'.
-+ *
-+ * The PCI device id (and register contents) change during mode switch, so
-+ * these fixups are attached to the LPC and expect that:
-+ * -) the SATA controller is on 00:1f.2
-+ * -) the SATA controller device is initialized/resumed *after* the LPC device
-+*/
-+
-+#define I5S_REG_AMAP		0x90
-+#define I5S_PREFIX			"[i5s_3400s ** FIXUP] "
-+static int i5s_3400s_sata_ahci;
-+
-+static int __init i5s_3400s_force_ahci_setup(char *str)
-+{
-+	i5s_3400s_sata_ahci = 1;
-+	return 0;
-+}
-+early_param("i5s_3400s_force_ahci", i5s_3400s_force_ahci_setup);
-+
-+static void __devinit i5s_3400s_fixup(struct pci_dev *dev)
-+{
-+	u16 amap;
-+	pci_bus_read_config_word(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-+		I5S_REG_AMAP, &amap);
-+	if (amap & 0x60) {
-+		printk(KERN_DEBUG I5S_PREFIX
-+			"SATA controller mode: AHCI (0x%04x)\n", amap);
-+		i5s_3400s_sata_ahci = 1;
-+	} else {
-+		printk(KERN_DEBUG I5S_PREFIX
-+			"SATA controller mode: NON AHCI (0x%04x)\n", amap);
-+		/* only honor i5s_3400s_sata ahci if the controller is
-+		in a mode were it's safe (IDE Mode, MV == 0x0) to
-+		switch to AHCI */
-+		if (i5s_3400s_sata_ahci && (amap & 0xC3) == 0) {
-+			amap |= 0x60;
-+			printk(KERN_DEBUG I5S_PREFIX
-+				"Putting SATA controller into AHCI (0x%04x)\n",
-+				amap);
-+			pci_bus_write_config_word(dev->bus,
-+				PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-+				I5S_REG_AMAP, amap);
-+		}
-+	}
-+}
-+static void i5s_3400s_fixup_resume(struct pci_dev *dev)
-+{
-+	u16 amap;
-+	pci_bus_read_config_word(dev->bus, PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-+		I5S_REG_AMAP, &amap);
-+	if (!(amap & 0x60)) {
-+		printk(KERN_DEBUG I5S_PREFIX
-+			"SATA controller mode: NON AHCI (0x%04x)\n", amap);
-+		if (i5s_3400s_sata_ahci && (amap & 0xc3) == 0) {
-+			amap &= ~BIT(7);
-+			amap |= 0x60;
-+			printk(KERN_DEBUG I5S_PREFIX
-+				"Restoring AHCI mode of SATA controller (0x%04x)\n",
-+				amap);
-+			/* MAP - Address Map Register:  AHCI mode + 6 SATA
-+			ports */
-+			pci_bus_write_config_word(dev->bus,
-+				PCI_DEVFN(PCI_SLOT(dev->devfn), 2),
-+				I5S_REG_AMAP, amap);
-+		}
-+	} else {
-+		printk(KERN_DEBUG I5S_PREFIX
-+			"SATA controller mode: AHCI (0x%04x)\n", amap);
-+	}
-+}
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x3b09,
-+	i5s_3400s_fixup_resume);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x3b09, i5s_3400s_fixup);
-+
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
- {
+heres one of the ones in /proc/lockdep,
+which has the same +.+.-. flags, and has FD, BD
 
---------------000705060106020808000903--
+c0a656f0 OPS:  254395 FD:   23 BD:   46 +.+.-.: &mapping->i_mmap_mutex
+ -> [c0547774] &rq->lock
+ -> [c04d5f78] rcu_kthread_wq.lock
+ -> [c0a63d64] &(&zone->lock)->rlock
+ -> [c0547800] &(&mm->page_table_lock)->rlock
+ -> [c0a6893c] &(&q->__queue_lock)->rlock
+ -> [c054d368] &(&gcwq->lock)->rlock
+ -> [c883c9ac] &(&hwif->lock)->rlock
+ -> [c054d2c0] &(&base->lock)->rlock
+ -> [c04c7614] pgd_lock
+
+
+Again, Im just guessing blindly, let me know if something else would be helpful.
+
+thanks
+Jim Cromie
+
+
+BUG: sleeping function called from invalid context at
+/home/jimc/projects/lx/linux-2.6/drivers/ide/ide-io.c:468
+in_atomic(): 1, irqs_disabled(): 0, pid: 2956, name: flush-3:0
+2 locks held by flush-3:0/2956:
+ #0:  (&type->s_umount_key#15){++++..}, at: [<c0199121>]
+writeback_inodes_wb+0xcd/0x13b
+ #1:  (&mapping->i_mmap_mutex){+.+.-.}, at: [<c0174cf1>] page_mkclean+0x65/0x10b
+Pid: 2956, comm: flush-3:0 Not tainted 3.0.0-skc-dyndbg+ #349
+Call Trace:
+ [<c0117264>] __might_sleep+0xd4/0xdb
+ [<c8830f53>] do_ide_request+0x3d/0x46d [ide_core]
+ [<c025dca7>] ? cfq_service_tree_add+0x198/0x1fa
+ [<c02535ff>] __blk_run_queue+0x14/0x16
+ [<c025e789>] cfq_insert_request+0x3d0/0x404
+ [<c0252f6e>] __elv_add_request+0x13e/0x169
+ [<c025562d>] blk_flush_plug_list+0x11b/0x152
+ [<c037b785>] schedule+0x1e0/0x445
+ [<c0163843>] ? test_set_page_writeback+0xb7/0xc1
+ [<c013e883>] ? mark_lock+0x26/0x1e4
+ [<c013ea86>] ? mark_held_locks+0x45/0x61
+ [<c037c189>] ? __mutex_lock_common+0x1ef/0x34e
+ [<c0119285>] ? get_parent_ip+0xb/0x31
+ [<c037c1b4>] __mutex_lock_common+0x21a/0x34e
+ [<c037c3b2>] mutex_lock_nested+0x2d/0x36
+ [<c0174cf1>] ? page_mkclean+0x65/0x10b
+ [<c0174cf1>] page_mkclean+0x65/0x10b
+ [<c013ea86>] ? mark_held_locks+0x45/0x61
+ [<c01638dc>] ? clear_page_dirty_for_io+0x8f/0xa5
+ [<c013ebca>] ? trace_hardirqs_on_caller+0x128/0x156
+ [<c016387a>] clear_page_dirty_for_io+0x2d/0xa5
+ [<c0163af3>] write_cache_pages+0x156/0x243
+ [<c01a3bf9>] ? i_size_read+0x46/0x46
+ [<c01d1e1b>] ? ext2_get_inode+0xdd/0xdd
+ [<c01a3b18>] mpage_writepages+0x58/0x84
+ [<c01d1e1b>] ? ext2_get_inode+0xdd/0xdd
+ [<c01d1d1a>] ext2_writepages+0xd/0xf
+ [<c016454c>] do_writepages+0x1a/0x27
+ [<c0198622>] writeback_single_inode+0xa3/0x19d
+ [<c037cd2f>] ? _raw_spin_lock+0x2c/0x34
+ [<c0198bc7>] writeback_sb_inodes+0xb3/0x130
+ [<c0199179>] writeback_inodes_wb+0x125/0x13b
+ [<c0199332>] wb_writeback+0x1a3/0x21c
+ [<c01994c6>] wb_do_writeback+0x11b/0x12f
+ [<c0199525>] bdi_writeback_thread+0x4b/0xfe
+ [<c01994da>] ? wb_do_writeback+0x12f/0x12f
+ [<c013013e>] kthread+0x61/0x66
+ [<c01300dd>] ? __init_kthread_worker+0x42/0x42
+ [<c037e1c6>] kernel_thread_helper+0x6/0xd
+BUG: sleeping function called from invalid context at
+/home/jimc/projects/lx/linux-2.6/drivers/ide/ide-io.c:468
+in_atomic(): 1, irqs_disabled(): 0, pid: 3448, name: aptitude
+2 locks held by aptitude/3448:
+ #0:  (&mm->mmap_sem){++++++}, at: [<c0113df7>] do_page_fault+0x101/0x2b6
+ #1:  (&mapping->i_mmap_mutex){+.+.-.}, at: [<c0175c1e>]
+page_referenced+0x125/0x1ab
+Pid: 3448, comm: aptitude Not tainted 3.0.0-skc-dyndbg+ #349
+Call Trace:
+ [<c0117264>] __might_sleep+0xd4/0xdb
+ [<c8830f53>] do_ide_request+0x3d/0x46d [ide_core]
+ [<c025de16>] ? cfq_resort_rr_list+0x1f/0x23
+ [<c025dca7>] ? cfq_service_tree_add+0x198/0x1fa
+ [<c02535ff>] __blk_run_queue+0x14/0x16
+ [<c025e789>] cfq_insert_request+0x3d0/0x404
+ [<c0252f6e>] __elv_add_request+0x13e/0x169
+ [<c025562d>] blk_flush_plug_list+0x11b/0x152
+ [<c037b785>] schedule+0x1e0/0x445
+ [<c013e883>] ? mark_lock+0x26/0x1e4
+ [<c013ea86>] ? mark_held_locks+0x45/0x61
+ [<c037c189>] ? __mutex_lock_common+0x1ef/0x34e
+ [<c0119285>] ? get_parent_ip+0xb/0x31
+ [<c037c1b4>] __mutex_lock_common+0x21a/0x34e
+ [<c037c3b2>] mutex_lock_nested+0x2d/0x36
+ [<c0175c1e>] ? page_referenced+0x125/0x1ab
+ [<c0175c1e>] page_referenced+0x125/0x1ab
+ [<c0116709>] ? need_resched+0x14/0x1e
+ [<c0167206>] shrink_page_list+0x157/0x5a8
+ [<c016576f>] ? __pagevec_release+0x18/0x21
+ [<c013ea86>] ? mark_held_locks+0x45/0x61
+ [<c037d219>] ? _raw_spin_unlock_irq+0x22/0x45
+ [<c0167910>] shrink_inactive_list+0x172/0x22d
+ [<c0167cba>] shrink_zone+0x2ef/0x397
+ [<c0119285>] ? get_parent_ip+0xb/0x31
+ [<c01683e1>] do_try_to_free_pages+0x77/0x201
+ [<c01683e1>] ? do_try_to_free_pages+0x77/0x201
+ [<c0168685>] try_to_free_pages+0x70/0x78
+ [<c0163247>] __alloc_pages_nodemask+0x357/0x4d6
+ [<c01648ab>] __do_page_cache_readahead+0xc5/0x1ac
+ [<c0164a3c>] ra_submit+0x17/0x1c
+ [<c0164be7>] ondemand_readahead+0x1a6/0x1ae
+ [<c0164c45>] page_cache_async_readahead+0x56/0x61
+ [<c015f9ad>] filemap_fault+0xc7/0x315
+ [<c016e6ae>] __do_fault+0x39/0x280
+ [<c025464b>] ? submit_bio+0x95/0x9d
+ [<c017024c>] handle_pte_fault+0x1ee/0x51f
+ [<c01705f3>] handle_mm_fault+0x76/0x87
+ [<c0113f8d>] do_page_fault+0x297/0x2b6
+ [<c013d5e6>] ? trace_hardirqs_off_caller+0x99/0xf8
+ [<c0113cf6>] ? vmalloc_sync_all+0xa1/0xa1
+ [<c037d9bd>] error_code+0x5d/0x70
+ [<c0113cf6>] ? vmalloc_sync_all+0xa1/0xa1
+ [<c015dfe0>] ? file_read_actor+0x28/0xb2
+ [<c0119327>] ? sub_preempt_count+0x7c/0x89
+ [<c015f5b9>] generic_file_aio_read+0x37b/0x55c
+ [<c017fac1>] do_sync_read+0x89/0xc4
+ [<c017fa38>] ? do_sync_write+0xc4/0xc4
+ [<c018009e>] vfs_read+0x73/0x9f
+ [<c0180105>] sys_read+0x3b/0x5d
+ [<c037d605>] syscall_call+0x7/0xb
+ [<c0370000>] ? svc_recv+0x650/0x685
