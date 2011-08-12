@@ -1,22 +1,33 @@
-From: joystick <joystick@shiftmail.org>
-Subject: TRIM / UNMAP read response
-Date: Fri, 12 Aug 2011 15:28:14 +0200
-Message-ID: <4E452A6E.4040809@shiftmail.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: TRIM / UNMAP read response
+Date: Fri, 12 Aug 2011 10:55:29 -0400
+Message-ID: <4E453EE1.4050705@interlog.com>
+References: <4E452A6E.4040809@shiftmail.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from blade3.isti.cnr.it ([194.119.192.19]:50722 "EHLO
-	BLADE3.ISTI.CNR.IT" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324Ab1HLNyz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2011 09:54:55 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4E452A6E.4040809@shiftmail.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: joystick <joystick@shiftmail.org>
+Cc: linux-ide@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi all IDE and SCSI ml's,
+On 11-08-12 09:28 AM, joystick wrote:
+> Hi all IDE and SCSI ml's,
+>
+> is it guaranteed by the standards that reading from a device a region that has
+> been TRIMmed (IDE) or UNMAPped (SCSI) will certainly return zeroes?
 
-is it guaranteed by the standards that reading from a device a region 
-that has been TRIMmed (IDE) or UNMAPped (SCSI) will certainly return zeroes?
+ATA:
+In 'hdparm -I' you need to see this line:
+    *  Deterministic read ZEROs after TRIM
+[See the ATA IDENTIFY DEVICE command]
 
-Thank you
+SCSI:
+In the READ CAPACITY (16) response the LBPRZ needs to
+be set to 1. Recently the same LBPRZ bit was added to
+the Logical Block Provisioning VPD page (sbc3r27.pdf).
+
+Doug Gilbert
