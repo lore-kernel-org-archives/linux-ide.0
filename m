@@ -1,165 +1,222 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH v3 2/3] drivers/block/mtip32xx: Adding source for hardware
-  related operations
-Date: Fri, 12 Aug 2011 10:42:42 +0200
-Message-ID: <4E44E782.7090309@fusionio.com>
-References: <22A973199D2C2F46933448F6E7990A3002C80026@ntxboimbx31.micron.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Manuel Lauss <manuel.lauss@googlemail.com>
+Subject: [PATCH 4/8] MIPS: au1xxx: au1xxx-ide: remove pb1200/db1200 header dep
+Date: Fri, 12 Aug 2011 11:39:41 +0200
+Message-ID: <1313141985-5830-5-git-send-email-manuel.lauss@googlemail.com>
+References: <1313141985-5830-1-git-send-email-manuel.lauss@googlemail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([66.114.96.31]:40424 "EHLO mx2.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652Ab1HLIms (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Aug 2011 04:42:48 -0400
-In-Reply-To: <22A973199D2C2F46933448F6E7990A3002C80026@ntxboimbx31.micron.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:44408 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786Ab1HLJj6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2011 05:39:58 -0400
+Received: by mail-fx0-f46.google.com with SMTP id 19so2197858fxh.19
+        for <linux-ide@vger.kernel.org>; Fri, 12 Aug 2011 02:39:57 -0700 (PDT)
+In-Reply-To: <1313141985-5830-1-git-send-email-manuel.lauss@googlemail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Moyer <jmoyer@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Christoph Hellwig <hch@infradead.org>
+To: Linux-MIPS <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>
+Cc: Manuel Lauss <manuel.lauss@googlemail.com>, linux-ide@vger.kernel.org
 
-On 2011-08-11 20:52, Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR] wrote:
-> +#define HW_CMD_TBL_HDR_SZ      0x80
-> +#define HW_RX_FIS_SZ           0x100
-> +#define HW_CMD_SLOT_SZ         (MTIP_MAX_COMMAND_SLOTS * 32)
-> +#define HW_CMD_TBL_SZ          (HW_CMD_TBL_HDR_SZ + (MTIP_MAX_SG * 16))
-> +#define HW_CMD_TBL_AR_SZ       (HW_CMD_TBL_SZ * MTIP_MAX_COMMAND_SLOTS)
-> +#define HW_PORT_PRIV_DMA_SZ \
-> +               (HW_CMD_SLOT_SZ + HW_CMD_TBL_AR_SZ + HW_RX_FIS_SZ)
-> +
-> +#define HBA_CAPS               0x00
-> +#define        HOST_CTRL               0x04
-> +#define HOST_IRQ_STAT          0x08
-> +#define PORTS_IMPL             0x0c
-> +#define VERSION                        0x10
-> +#define CCCC                   0x14
-> +#define CCCP                   0x18
-> +#define        EML                     0x1c
-> +#define        EMC                     0x20
-> +#define        EX_HOST_CAP             0x24
-> +
-> +#define HOST_CAP_64            (1 << 31)
-> +#define        HOST_IRQ_EN             (1 << 1)
-> +#define        HOST_RESET              (1 << 0)
-> +#define HOST_HSORG             0xFC
-> +#define HSORG_DISABLE_SLOTGRP_INTR (1<<24)
-> +#define HSORG_DISABLE_SLOTGRP_PXIS (1<<16)
-> +#define HSORG_HWREV            0xFF00
-> +#define HSORG_STYLE            0x8
-> +#define HSORG_SLOTGROUPS       0x7
-> +
-> +#define PORT_LST_ADDR          0x00
-> +#define PORT_LST_ADDR_HI       0x04
-> +#define PORT_FIS_ADDR          0x08
-> +#define PORT_FIS_ADDR_HI       0x0c
-> +#define PORT_IRQ_STAT          0x10
-> +#define PORT_IRQ_EN            0x14
-> +#define PORT_CMD               0x18
-> +#define PORT_TFDATA            0x20
-> +#define PORT_SCR_STAT          0x28
-> +#define PORT_SCR_CTL           0x2c
-> +#define PORT_SCR_ERR           0x30
-> +#define PORT_SACTIVE           0x34
-> +#define PORT_COMMAND_ISSUE     0x38
-> +#define PORT_SCR_NTF           0x3c
-> +#define PORT_SDBV              0x7C
-> +
-> +#define PORT_CMD_ICC_ACTIVE    (1 << 28)
-> +#define PORT_CMD_LIST_ON       (1 << 15)
-> +#define PORT_CMD_FIS_RX                (1 << 4)
-> +#define PORT_CMD_CLO           (1 << 3)
-> +#define PORT_CMD_START         (1 << 0)
-> +#define PORT_OFFSET            0x100
-> +#define PORT_MEM_SIZE          0x80
-> +#define        RX_FIS_D2H_REG          0x40
-> +#define        RX_FIS_PIO              0x20
-> +
-> +#define        PORT_IRQ_COLD_PRES      (1 << 31)
-> +#define        PORT_IRQ_TF_ERR         (1 << 30)
-> +#define        PORT_IRQ_HBUS_ERR       (1 << 29)
-> +#define        PORT_IRQ_HBUS_DATA_ERR  (1 << 28)
-> +#define        PORT_IRQ_IF_ERR         (1 << 27)
-> +#define        PORT_IRQ_IF_NONFATAL    (1 << 26)
-> +#define        PORT_IRQ_OVERFLOW       (1 << 24)
-> +#define        PORT_IRQ_BAD_PMP        (1 << 23)
-> +#define        PORT_IRQ_PHYRDY         (1 << 22)
-> +#define        PORT_IRQ_DEV_ILCK       (1 << 7)
-> +#define        PORT_IRQ_CONNECT        (1 << 6)
-> +#define        PORT_IRQ_DPS            (1 << 5)
-> +#define        PORT_IRQ_UNK_FIS        (1 << 4)
-> +#define        PORT_IRQ_SDB_FIS        (1 << 3)
-> +#define        PORT_IRQ_DMAS_FIS       (1 << 2)
-> +#define        PORT_IRQ_PIOS_FIS       (1 << 1)
-> +#define        PORT_IRQ_D2H_REG_FIS    (1 << 0)
+au1xxx-ide uses defines from the pb1200/db1200 headers:
+get DBDMA ID through platform resource information,
+hardcode register spacing.  The only 2 users of this driver (and
+the only boards it can really work on realiably) use the same
+register layout.
 
-Again lots of things that should be shared with ahci.
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Manuel Lauss <manuel.lauss@googlemail.com>
+---
+I'd like for this to go through the MIPS tree, as other changes in it
+depend on it.
 
-> +/*
-> + * Obtain an empty command slot.
-> + *
-> + * This function needs to be reentrant since it could be called
-> + * at the same time on multiple CPUs. The allocation of the
-> + * command slot must be atomic.
-> + *
-> + * @port Pointer to the port data structure.
-> + *
-> + * return value
-> + *     >= 0    Index of command slot obtained.
-> + *     -1      No command slots available.
-> + */
-> +static int get_slot(struct mtip_port *port)
-> +{
-> +       int slot, i;
-> +       unsigned int num_command_slots = port->dd->slot_groups * 32;
-> +
-> +       /*
-> +        * Try 10 times, because there is a small race here.
-> +        *  that's ok, because it's still cheaper than a lock.
-> +        */
+ arch/mips/alchemy/devboards/db1200/platform.c  |    7 +++-
+ arch/mips/alchemy/devboards/pb1200/platform.c  |    8 ++++-
+ arch/mips/include/asm/mach-au1x00/au1xxx_ide.h |    1 +
+ arch/mips/include/asm/mach-db1x00/db1200.h     |    2 -
+ arch/mips/include/asm/mach-pb1x00/pb1200.h     |    2 -
+ drivers/ide/au1xxx-ide.c                       |   44 ++++++++++++++----------
+ 6 files changed, 40 insertions(+), 24 deletions(-)
 
-Might want to expand on what that race is.
-
-> +static irqreturn_t mtip_irq_handler(int irq, void *instance)
-> +{
-> +       struct driver_data *dd = instance;
-> +#ifdef MTIP_USE_TASKLET
-> +       tasklet_schedule(&dd->tasklet);
-> +       return IRQ_HANDLED;
-> +#else
-> +       return mtip_handle_irq(dd);
-> +#endif
-> +}
-
-Have you experimented with blk-iopoll?
-
-> +/*
-> + * Byte-swap ATA ID strings.
-> + *
-> + * ATA identify data contains strings in byte-swapped 16-bit words.
-> + * They must be swapped (on all architectures) to be usable as C
-> strings.
-> + * This function swaps bytes in-place.
-> + *
-> + * @buf The buffer location of the string
-> + * @len The number of bytes to swap
-> + *
-> + * return value
-> + *     None
-> + */
-> +static inline void ata_swap_string(u16 *buf, unsigned int len)
-> +{
-> +       int i;
-> +       for (i = 0; i < (len/2); i++)
-> +               be16_to_cpus(&buf[i]);
-> +}
-
-I'm pretty sure we have the exact same thing in IDE and libata, so lets
-put this somewhere we they can all use it.
-
-Overall looks very clean. If you take care of the little things
-mentioned by me and Christoph, I don't see anything stopping this from
-being merged for 3.2.
-
+diff --git a/arch/mips/alchemy/devboards/db1200/platform.c b/arch/mips/alchemy/devboards/db1200/platform.c
+index 95c7327..6fd070d 100644
+--- a/arch/mips/alchemy/devboards/db1200/platform.c
++++ b/arch/mips/alchemy/devboards/db1200/platform.c
+@@ -213,7 +213,12 @@ static struct resource db1200_ide_res[] = {
+ 		.start	= DB1200_IDE_INT,
+ 		.end	= DB1200_IDE_INT,
+ 		.flags	= IORESOURCE_IRQ,
+-	}
++	},
++	[2] = {
++		.start	= DSCR_CMD0_DMA_REQ1,
++		.end	= DSCR_CMD0_DMA_REQ1,
++		.flags	= IORESOURCE_DMA,
++	},
+ };
+ 
+ static u64 ide_dmamask = DMA_BIT_MASK(32);
+diff --git a/arch/mips/alchemy/devboards/pb1200/platform.c b/arch/mips/alchemy/devboards/pb1200/platform.c
+index c52809d..6ac0494 100644
+--- a/arch/mips/alchemy/devboards/pb1200/platform.c
++++ b/arch/mips/alchemy/devboards/pb1200/platform.c
+@@ -26,6 +26,7 @@
+ 
+ #include <asm/mach-au1x00/au1xxx.h>
+ #include <asm/mach-au1x00/au1100_mmc.h>
++#include <asm/mach-au1x00/au1xxx_dbdma.h>
+ #include <asm/mach-db1x00/bcsr.h>
+ 
+ #include "../platform.h"
+@@ -115,7 +116,12 @@ static struct resource ide_resources[] = {
+ 		.start	= IDE_INT,
+ 		.end	= IDE_INT,
+ 		.flags	= IORESOURCE_IRQ
+-	}
++	},
++	[2] = {
++		.start	= DSCR_CMD0_DMA_REQ1,
++		.end	= DSCR_CMD0_DMA_REQ1,
++		.flags	= IORESOURCE_DMA,
++	},
+ };
+ 
+ static u64 ide_dmamask = DMA_BIT_MASK(32);
+diff --git a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h b/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+index 5656c72..e306384 100644
+--- a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
++++ b/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+@@ -58,6 +58,7 @@ typedef struct {
+ #endif
+ 	int			irq;
+ 	u32			regbase;
++	int			ddma_id;
+ } _auide_hwif;
+ 
+ /******************************************************************************/
+diff --git a/arch/mips/include/asm/mach-db1x00/db1200.h b/arch/mips/include/asm/mach-db1x00/db1200.h
+index 3404248..7a39657 100644
+--- a/arch/mips/include/asm/mach-db1x00/db1200.h
++++ b/arch/mips/include/asm/mach-db1x00/db1200.h
+@@ -46,8 +46,6 @@
+ 
+ #define IDE_PHYS_ADDR		0x18800000
+ #define IDE_REG_SHIFT		5
+-#define IDE_DDMA_REQ		DSCR_CMD0_DMA_REQ1
+-#define IDE_RQSIZE		128
+ 
+ #define DB1200_IDE_PHYS_ADDR	IDE_PHYS_ADDR
+ #define DB1200_IDE_PHYS_LEN	(16 << IDE_REG_SHIFT)
+diff --git a/arch/mips/include/asm/mach-pb1x00/pb1200.h b/arch/mips/include/asm/mach-pb1x00/pb1200.h
+index 0ecff1c..56865e9 100644
+--- a/arch/mips/include/asm/mach-pb1x00/pb1200.h
++++ b/arch/mips/include/asm/mach-pb1x00/pb1200.h
+@@ -76,8 +76,6 @@
+ #define IDE_REG_SHIFT		5
+ #define IDE_PHYS_LEN		(16 << IDE_REG_SHIFT)
+ #define IDE_INT 		PB1200_IDE_INT
+-#define IDE_DDMA_REQ		DSCR_CMD0_DMA_REQ1
+-#define IDE_RQSIZE		128
+ 
+ #define NAND_PHYS_ADDR 	0x1C000000
+ 
+diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
+index b26c234..c778373 100644
+--- a/drivers/ide/au1xxx-ide.c
++++ b/drivers/ide/au1xxx-ide.c
+@@ -43,6 +43,10 @@
+ #define DRV_NAME	"au1200-ide"
+ #define DRV_AUTHOR	"Enrico Walther <enrico.walther@amd.com> / Pete Popov <ppopov@embeddedalley.com>"
+ 
++#ifndef IDE_REG_SHIFT
++#define IDE_REG_SHIFT 5
++#endif
++
+ /* enable the burstmode in the dbdma */
+ #define IDE_AU1XXX_BURSTMODE	1
+ 
+@@ -317,10 +321,11 @@ static void auide_ddma_rx_callback(int irq, void *param)
+ }
+ #endif /* end CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA */
+ 
+-static void auide_init_dbdma_dev(dbdev_tab_t *dev, u32 dev_id, u32 tsize, u32 devwidth, u32 flags)
++static void auide_init_dbdma_dev(dbdev_tab_t *dev, u32 dev_id, u32 tsize,
++				 u32 devwidth, u32 flags, u32 regbase)
+ {
+ 	dev->dev_id          = dev_id;
+-	dev->dev_physaddr    = (u32)IDE_PHYS_ADDR;
++	dev->dev_physaddr    = CPHYSADDR(regbase);
+ 	dev->dev_intlevel    = 0;
+ 	dev->dev_intpolarity = 0;
+ 	dev->dev_tsize       = tsize;
+@@ -344,7 +349,7 @@ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ 	dbdev_tab_t source_dev_tab, target_dev_tab;
+ 	u32 dev_id, tsize, devwidth, flags;
+ 
+-	dev_id	 = IDE_DDMA_REQ;
++	dev_id	 = hwif->ddma_id;
+ 
+ 	tsize    =  8; /*  1 */
+ 	devwidth = 32; /* 16 */
+@@ -356,20 +361,17 @@ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ #endif
+ 
+ 	/* setup dev_tab for tx channel */
+-	auide_init_dbdma_dev( &source_dev_tab,
+-			      dev_id,
+-			      tsize, devwidth, DEV_FLAGS_OUT | flags);
++	auide_init_dbdma_dev(&source_dev_tab, dev_id, tsize, devwidth,
++			     DEV_FLAGS_OUT | flags, auide->regbase);
+  	auide->tx_dev_id = au1xxx_ddma_add_device( &source_dev_tab );
+ 
+-	auide_init_dbdma_dev( &source_dev_tab,
+-			      dev_id,
+-			      tsize, devwidth, DEV_FLAGS_IN | flags);
++	auide_init_dbdma_dev(&source_dev_tab, dev_id, tsize, devwidth,
++			     DEV_FLAGS_IN | flags, auide->regbase);
+  	auide->rx_dev_id = au1xxx_ddma_add_device( &source_dev_tab );
+ 	
+ 	/* We also need to add a target device for the DMA */
+-	auide_init_dbdma_dev( &target_dev_tab,
+-			      (u32)DSCR_CMD0_ALWAYS,
+-			      tsize, devwidth, DEV_FLAGS_ANYUSE);
++	auide_init_dbdma_dev(&target_dev_tab, (u32)DSCR_CMD0_ALWAYS, tsize,
++			     devwidth, DEV_FLAGS_ANYUSE, auide->regbase);
+ 	auide->target_dev_id = au1xxx_ddma_add_device(&target_dev_tab);	
+  
+ 	/* Get a channel for TX */
+@@ -411,14 +413,12 @@ static int auide_ddma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+ #endif
+ 
+ 	/* setup dev_tab for tx channel */
+-	auide_init_dbdma_dev( &source_dev_tab,
+-			      (u32)DSCR_CMD0_ALWAYS,
+-			      8, 32, DEV_FLAGS_OUT | flags);
++	auide_init_dbdma_dev(&source_dev_tab, (u32)DSCR_CMD0_ALWAYS, 8, 32,
++			     DEV_FLAGS_OUT | flags, auide->regbase);
+  	auide->tx_dev_id = au1xxx_ddma_add_device( &source_dev_tab );
+ 
+-	auide_init_dbdma_dev( &source_dev_tab,
+-			      (u32)DSCR_CMD0_ALWAYS,
+-			      8, 32, DEV_FLAGS_IN | flags);
++	auide_init_dbdma_dev(&source_dev_tab, (u32)DSCR_CMD0_ALWAYS, 8, 32,
++			     DEV_FLAGS_IN | flags, auide->regbase);
+  	auide->rx_dev_id = au1xxx_ddma_add_device( &source_dev_tab );
+ 	
+ 	/* Get a channel for TX */
+@@ -540,6 +540,14 @@ static int au_ide_probe(struct platform_device *dev)
+ 		goto out;
+ 	}
+ 
++	res = platform_get_resource(dev, IORESOURCE_DMA, 0);
++	if (!res) {
++		pr_debug("%s: no DDMA ID resource\n", DRV_NAME);
++		ret = -ENODEV;
++		goto out;
++	}
++	ahwif->ddma_id = res->start;
++
+ 	memset(&hw, 0, sizeof(hw));
+ 	auide_setup_ports(&hw, ahwif);
+ 	hw.irq = ahwif->irq;
 -- 
-Jens Axboe
+1.7.6
 
