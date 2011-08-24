@@ -1,42 +1,39 @@
-From: Michal =?ISO-8859-1?Q?Mal=FD?= <madcatxster@gmail.com>
-Subject: [BUG + FIX]xfermode setting fails with PIONEER DVD-RW  DVRTD08A
-Date: Wed, 24 Aug 2011 15:09:25 +0200
-Message-ID: <1462587.9v6Adyj5AV@qosmio-x300>
+From: "Favour" <y-u@centrum.cz>
+Subject: VERY INTERESTED IN YOUR RELATIONSHIP!
+Date: Wed, 24 Aug 2011 21:57:28 +0200
+Message-ID: <20110824215728.2A1E86D6@centrum.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41984 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839Ab1HXNJ3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2011 09:09:29 -0400
-Received: by bke11 with SMTP id 11so872212bke.19
-        for <linux-ide@vger.kernel.org>; Wed, 24 Aug 2011 06:09:28 -0700 (PDT)
+Received: from gmmr3.centrum.cz ([90.183.38.155]:49982 "EHLO gmmr3.centrum.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751617Ab1HXT5a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Aug 2011 15:57:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
-
-Since kernel 3.0.3 I've been getting "ata5.00: failed to set xfermode (err_mask=0x4)" error message during boot. This also rendered my DVD drive inoperable. I've never had this issue before. I attached a trivial patch that 
-seems to have fixed the issue for me.
-
----
- drivers/ata/libata-core.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4a3a5ae..0705038 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4124,6 +4124,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	 * device and controller are SATA.
- 	 */
- 	{ "PIONEER DVD-RW  DVRTD08",	NULL,	ATA_HORKAGE_NOSETXFER },
-+	{ "PIONEER DVD-RW  DVRTD08A",	NULL,	ATA_HORKAGE_NOSETXFER },
- 	{ "PIONEER DVD-RW  DVR-212D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 
--- 
-1.7.6
 
 
+Hello, Dear,
+
+How are you? Hope you are fine? Well, i' m fine and my names are Favour=
+ Debor, 23years old , 5'''7'' tall, I am single and never been married.=
+ Am interested in finding the right man that I will spend the rest of m=
+y life with and who is equally interested in finding the right Woman of=
+ His heart.
+I found your contact information today at ''www.iantd.com''! and i=C2=A0=
+ became so much=C2=A0=C2=A0 interested to communicate with you.
+
+it is my pleasure to inform you that=C2=A0 ,Love is patient and kind. L=
+ove is not jealous or boastful or proud or rude. Love does not demand i=
+ts own way. Love is not irritable, and it keeps no record of when it ha=
+s been wronged. It is never glad about injustice but rejoices whenever =
+the truth wins out. Love never gives up, never loses faith, is always h=
+opeful, and endures through every circumstance.
+
+( favour_debor62@yahoo.com) , that is my mail contact. I really care fo=
+r your relationship
+Please Waiting to read
+
+Yours Faithfully
+=46avour
