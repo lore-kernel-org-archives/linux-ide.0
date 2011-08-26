@@ -1,39 +1,65 @@
-From: "Favour" <y-u@centrum.cz>
-Subject: VERY INTERESTED IN YOUR RELATIONSHIP!
-Date: Wed, 24 Aug 2011 21:57:28 +0200
-Message-ID: <20110824215728.2A1E86D6@centrum.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Port Multiplier vendor mismatch '0x1095' != '0x101'
+Date: Fri, 26 Aug 2011 08:58:15 +0200
+Message-ID: <20110826065815.GB2632@htj.dyndns.org>
+References: <20110826064050.GD17614@merlins.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gmmr3.centrum.cz ([90.183.38.155]:49982 "EHLO gmmr3.centrum.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617Ab1HXT5a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Aug 2011 15:57:30 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:64310 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750704Ab1HZG6U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2011 02:58:20 -0400
+Received: by bke11 with SMTP id 11so2295554bke.19
+        for <linux-ide@vger.kernel.org>; Thu, 25 Aug 2011 23:58:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20110826064050.GD17614@merlins.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marc MERLIN <marc@merlins.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, mlord@pobox.com
 
+Hello,
 
-Hello, Dear,
+On Thu, Aug 25, 2011 at 11:40:50PM -0700, Marc MERLIN wrote:
+> ata11.15: hard resetting link
+> ata11.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
+> ata11.15: PMP revalidation failed (errno=-19)
+> ata11.15: hard resetting link
+> ata11.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
+> ata11.15: PMP revalidation failed (errno=-19)
+> ata11.15: limiting SATA link speed to 1.5 Gbps
+> ata11.15: hard resetting link
+> ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
+> ata11.15: PMP revalidation failed (errno=-19)
+> ata11.15: failed to recover PMP after 5 tries, giving up
+> ata11.15: Port Multiplier detaching
+> ata11.00: disabled
+> ata11.01: disabled
+> ata11.02: disabled
+> ata11.03: disabled
+> ata11.04: disabled
+> ata11.00: disabled
+> ata11: hard resetting link
+> ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata11.15: Port Multiplier <unknown>, 0x0101:0x9669 r1, 1 ports, feat 0x96690101/0x96690101
 
-How are you? Hope you are fine? Well, i' m fine and my names are Favour=
- Debor, 23years old , 5'''7'' tall, I am single and never been married.=
- Am interested in finding the right man that I will spend the rest of m=
-y life with and who is equally interested in finding the right Woman of=
- His heart.
-I found your contact information today at ''www.iantd.com''! and i=C2=A0=
- became so much=C2=A0=C2=A0 interested to communicate with you.
+Either the controller or port multiplier (more likely the controller)
+got completely confused.  It's basically reporting random garbage for
+the identification data for the port multiplier.  I don't know what
+went on there but probably the controller needed a strong kick in the
+butt to come back into sane state.  Anyways, there isn't much the port
+multiplier layer can do if the controller is reporting garbage for
+data read from PMP.
 
-it is my pleasure to inform you that=C2=A0 ,Love is patient and kind. L=
-ove is not jealous or boastful or proud or rude. Love does not demand i=
-ts own way. Love is not irritable, and it keeps no record of when it ha=
-s been wronged. It is never glad about injustice but rejoices whenever =
-the truth wins out. Love never gives up, never loses faith, is always h=
-opeful, and endures through every circumstance.
+Mark, have you seen anything like this?  Could it be that the
+controller goes out of proper configuration after certain condition
+and needs to be reset/reconfigured?
 
-( favour_debor62@yahoo.com) , that is my mail contact. I really care fo=
-r your relationship
-Please Waiting to read
+Thanks.
 
-Yours Faithfully
-=46avour
+-- 
+tejun
