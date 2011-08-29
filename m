@@ -1,117 +1,102 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: Port Multiplier vendor mismatch '0x1095' != '0x101'
-Date: Fri, 26 Aug 2011 11:44:20 -0700
-Message-ID: <20110826184420.GM17614@merlins.org>
-References: <20110826064050.GD17614@merlins.org> <20110826065815.GB2632@htj.dyndns.org>
+From: Richard Zhu <richard.zhu@linaro.org>
+Subject: [PATCH V6 2/5] ahci_plt Add the board_ids and pi refer to different features
+Date: Mon, 29 Aug 2011 15:18:55 +0800
+Message-ID: <1314602339-18392-2-git-send-email-richard.zhu@linaro.org>
+References: <1314602339-18392-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:35949 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086Ab1HZSoY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Aug 2011 14:44:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20110826065815.GB2632@htj.dyndns.org>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:47792
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752825Ab1H2HU0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Aug 2011 03:20:26 -0400
+In-Reply-To: <1314602339-18392-1-git-send-email-richard.zhu@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, mlord@pobox.com
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-On Fri, Aug 26, 2011 at 08:58:15AM +0200, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Aug 25, 2011 at 11:40:50PM -0700, Marc MERLIN wrote:
-> > ata11.15: hard resetting link
-> > ata11.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
-> > ata11.15: PMP revalidation failed (errno=-19)
-> > ata11.15: hard resetting link
-> > ata11.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
-> > ata11.15: PMP revalidation failed (errno=-19)
-> > ata11.15: limiting SATA link speed to 1.5 Gbps
-> > ata11.15: hard resetting link
-> > ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> > ata11.15: Port Multiplier vendor mismatch '0x1095' != '0x101'
-> > ata11.15: PMP revalidation failed (errno=-19)
-> > ata11.15: failed to recover PMP after 5 tries, giving up
-> > ata11.15: Port Multiplier detaching
-> > ata11.00: disabled
-> > ata11.01: disabled
-> > ata11.02: disabled
-> > ata11.03: disabled
-> > ata11.04: disabled
-> > ata11.00: disabled
-> > ata11: hard resetting link
-> > ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata11.15: Port Multiplier <unknown>, 0x0101:0x9669 r1, 1 ports, feat 0x96690101/0x96690101
-> 
-> Either the controller or port multiplier (more likely the controller)
-> got completely confused.  It's basically reporting random garbage for
-> the identification data for the port multiplier.  I don't know what
-> went on there but probably the controller needed a strong kick in the
-> butt to come back into sane state.  Anyways, there isn't much the port
-> multiplier layer can do if the controller is reporting garbage for
-> data read from PMP.
+On imx53 AHCI, soft reset fails with IPMS set when PMP
+is enabled but SATA HDD/ODD is connected to SATA port,
+do soft reset again to port 0.
+So the 'ahci_pmp_retry_srst_ops' is required when imx53
+ahci is present.
+
+Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+---
+ drivers/ata/ahci_platform.c |   44 +++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 38 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 6fef1fa..f32c91e 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -23,6 +23,41 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
  
-Understood. I'm glad you could read those logs better than I could :)
-
-For that it's worth, the raid is still rebuilding 12H later and while I was
-initially getting some error/warning messages on the console last night,
-they have now stopped:
-
-ata11.00: status: { DRDY }
-ata11.01: exception Emask 0x100 SAct 0x1 SErr 0x0 action 0x6 frozen
-ata11.01: failed command: READ FPDMA QUEUED
-ata11.01: cmd 60/08:00:f7:0c:2c/00:00:56:00:00/40 tag 0 ncq 4096 in
-         res 40/00:04:f7:0c:2c/00:00:56:00:00/40 Emask 0x100 (unknown error)
-ata11.01: status: { DRDY }
-ata11.02: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.03: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.04: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.05: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.15: exception Emask 0x100 SAct 0x0 SErr 0x400000 action 0x6 frozen
-ata11.15: edma_err_cause=40000000 pp_flags=00000007
-ata11.15: SError: { Handshk }
-ata11.00: exception Emask 0x100 SAct 0x2 SErr 0x0 action 0x6 frozen
-ata11.00: failed command: WRITE FPDMA QUEUED
-ata11.00: cmd 61/f8:08:17:77:9e/03:00:5f:00:00/40 tag 1 ncq 520192 out
-         res 40/00:04:0f:7b:9e/00:00:5f:00:00/40 Emask 0x100 (unknown error)
-ata11.00: status: { DRDY }
-ata11.01: exception Emask 0x100 SAct 0x1 SErr 0x0 action 0x6 frozen
-ata11.01: failed command: READ FPDMA QUEUED
-ata11.01: cmd 60/08:00:0f:7b:9e/00:00:5f:00:00/40 tag 0 ncq 4096 in
-         res 40/00:04:0f:7b:9e/00:00:5f:00:00/40 Emask 0x100 (unknown error)
-ata11.01: status: { DRDY }      
-ata11.02: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.03: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-ata11.04: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
-
-However it looks that after the first errors downgraded my ports to 1.5G,
-I'm now stuck with a much slower rebuild speed:
-      [=========>...........]  recovery = 45.2% (884261384/1953511424) finish=771.1min speed=23109K/sec
-
-Once I'm in that state, can I get back to 3G, or do I need to reboot
-to get there?
-
-> Mark, have you seen anything like this?  Could it be that the
-> controller goes out of proper configuration after certain condition
-> and needs to be reset/reconfigured?
-
-I know you meant Mark Lord, but if that helps, it looks like said condition
-was only reached with a drive that had a genuine error when I tried to do a
-raid rebuild.
-
-Thankfully my system has otherwise been stable so far with a fair amount of
-IO on those drives / PMP / Card.
-
-The upgrade to 3.0.1 probably didn't help much, but it can't hurt to try
-that either.
-
-Thanks for your reply,
-Marc
++enum ahci_type {
++	AHCI,		/* standard platform ahci */
++	IMX53_AHCI,	/* ahci on i.mx53 */
++};
++
++static struct platform_device_id ahci_devtype[] = {
++	{
++		.name = "ahci",
++		.driver_data = AHCI,
++	}, {
++		.name = "imx53-ahci",
++		.driver_data = IMX53_AHCI,
++	}, {
++		/* sentinel */
++	}
++};
++MODULE_DEVICE_TABLE(platform, ahci_devtype);
++
++
++static const struct ata_port_info ahci_port_info[] = {
++	/* by features */
++	[AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[IMX53_AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_pmp_retry_srst_ops,
++	},
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT("ahci_platform"),
+ };
+@@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev->platform_data;
+-	struct ata_port_info pi = {
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	};
++	struct platform_device_id *id_entry = platform_get_device_id(pdev);
++	struct ata_port_info pi = ahci_port_info[id_entry->driver_data];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+@@ -177,6 +208,7 @@ static struct platform_driver ahci_driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 	},
++	.id_table	= ahci_devtype,
+ };
+ 
+ static int __init ahci_init(void)
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+1.7.1
+
+
