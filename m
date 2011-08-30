@@ -1,42 +1,39 @@
-From: Eric Miao <eric.miao@linaro.org>
-Subject: Re: [PATCH V6 2/5] ahci_plt Add the board_ids and pi refer to
-	different features
-Date: Tue, 30 Aug 2011 17:07:28 +0800
-Message-ID: <CAMPhdO9ndyAq57ptBKXo1owWLatJaTeOXvEvzoxcfh19h=piBg@mail.gmail.com>
-References: <1314602339-18392-1-git-send-email-richard.zhu@linaro.org>
-	<1314602339-18392-2-git-send-email-richard.zhu@linaro.org>
-	<20110829121214.GA15484@oksana.dev.rtsoft.ru>
-	<CAMPhdO_XsrGTiiKpALVU7tZiAO_C5d_9XKoVjL_BHwpcqzXcFg@mail.gmail.com>
-	<CAJNCFVJKvO+W0ogn-3GOsR8ygtn5KWtqTc2sw6HuNB2-x7ZviA@mail.gmail.com>
-	<CAJNCFVKPUW95F0Wt9eVWs0+ne1pdXreYi6uSKH2TkR+Qt_sm4A@mail.gmail.com>
+From: Richard Zhu <richard.zhu@linaro.org>
+Subject: [PATCH V7 4/5] MX53 Enable the AHCI SATA on MX53 LOCO board
+Date: Tue, 30 Aug 2011 17:56:09 +0800
+Message-ID: <1314698171-7937-4-git-send-email-richard.zhu@linaro.org>
+References: <1314698171-7937-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <CAJNCFVKPUW95F0Wt9eVWs0+ne1pdXreYi6uSKH2TkR+Qt_sm4A@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: linux-arm-kernel-bounces@lists.infradead.org
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Richard Zhu <richard.zhu@linaro.org>, Anton Vorontsov <avorontsov@ru.mvista.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, jgarzik@pobox.com, kernel@pengutronix.de, eric@eukrea.com
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:50098
+	"EHLO AM1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750768Ab1H3J43 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2011 05:56:29 -0400
+In-Reply-To: <1314698171-7937-1-git-send-email-richard.zhu@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-On Tue, Aug 30, 2011 at 3:07 PM, Richard Zhu <richard.zhu@linaro.org> wrote:
-> Hi:
-> One more concern, the .../drivers/ata/ahci.h file should be moved to
-> .../include/linux/ folder.
-> Because that the kinds of macros used in the ata_port_info and the
-> ahci_pmp_retry_srst_ops are
-> all defined in the .../drivers/ata/ahci.h file.
-> Otherwise, the ata_port_info can't be defined in the board related
-> platform data.
->
-> How we can handle this case?
+Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+---
+ arch/arm/mach-mx5/board-mx53_loco.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-That's indeed an issue, Anton, what's your suggestion?
+diff --git a/arch/arm/mach-mx5/board-mx53_loco.c b/arch/arm/mach-mx5/board-mx53_loco.c
+index 4e1d51d..76a7af7 100644
+--- a/arch/arm/mach-mx5/board-mx53_loco.c
++++ b/arch/arm/mach-mx5/board-mx53_loco.c
+@@ -273,6 +273,7 @@ static void __init mx53_loco_board_init(void)
+ 	imx53_add_sdhci_esdhc_imx(2, &mx53_loco_sd3_data);
+ 	imx_add_gpio_keys(&loco_button_data);
+ 	gpio_led_register_device(-1, &mx53loco_leds_data);
++	imx53_add_ahci_imx(0, NULL);
+ }
+ 
+ static void __init mx53_loco_timer_init(void)
+-- 
+1.7.1
+
+
