@@ -1,57 +1,102 @@
-From: Eric Miao <eric.y.miao@gmail.com>
+From: Hector Oron <hector.oron@gmail.com>
 Subject: Re: [PATCH V7 1/5] AHCI Add the AHCI SATA feature on the MX53 platforms
-Date: Wed, 31 Aug 2011 19:04:21 +0800
-Message-ID: <27DACB75-EF61-4A32-B11C-E1044B0FB0B2@gmail.com>
-References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org> <1314762635-3923-2-git-send-email-richard.zhu@linaro.org> <87k49t99u4.fsf@lebrac.rtp-net.org>
-Mime-Version: 1.0 (iPhone Mail 8F190)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+Date: Wed, 31 Aug 2011 13:57:06 +0100
+Message-ID: <CAODfWeEueF45_yvPV5Zxbva6K2gEfKZbY2qoqySYFPZWnSgLsg@mail.gmail.com>
+References: <1314698171-7937-1-git-send-email-richard.zhu@linaro.org>
+	<CAODfWeEm8bkySXxb1qopbH1VMu-V+33k5x+0+qjABzesT0amOA@mail.gmail.com>
+	<CAJNCFV+XFGEba1J2dXDa4YVwqduAPV5y=5JYEXAZ0uv+S60vvw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:64480 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754386Ab1HaLEl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 07:04:41 -0400
-Received: by ywf7 with SMTP id 7so454386ywf.19
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 04:04:40 -0700 (PDT)
-In-Reply-To: <87k49t99u4.fsf@lebrac.rtp-net.org>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:64253 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755169Ab1HaM5H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 08:57:07 -0400
+Received: by qyk15 with SMTP id 15so2343804qyk.19
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 05:57:06 -0700 (PDT)
+In-Reply-To: <CAJNCFV+XFGEba1J2dXDa4YVwqduAPV5y=5JYEXAZ0uv+S60vvw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Arnaud Patard (Rtp)" <arnaud.patard@rtp-net.org>
-Cc: Richard Zhu <richard.zhu@linaro.org>, "eric@eukrea.com" <eric@eukrea.com>, "eric.miao@linaro.org" <eric.miao@linaro.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "kernel@pengutronix.de" <kernel@pengutronix.de>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: Richard Zhu <richard.zhu@linaro.org>
+Cc: Wolfram Sang <w.sang@pengutronix.de>, linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, eric.miao@linaro.org, linux-ide@vger.kernel.org, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
 
-Hi Arnaud,
+Hello,
 
-You can just use Linus tree v3.1-rc4 as the base for this.
+2011/8/31 Richard Zhu <richard.zhu@linaro.org>:
+> Hi Hector:
+> Thanks for your help to tests these patches.
 
-Sent from my iPhone
+Note I rebased this patches against 'imx-features' branch on Sascha's t=
+ree.
+I am noticing some obscure (to me) messages from kernel:
 
-On Aug 31, 2011, at 6:03 PM, Arnaud Patard (Rtp) <arnaud.patard@rtp-net.org> wrote:
+[    6.874694] Adding 9767516k swap on /dev/sda3.  Priority:-1
+extents:1 across:9767516k
+[    7.073106] EXT4-fs (sda2): re-mounted. Opts: errors=3Dremount-ro
+[    7.708399] ata1.00: exception Emask 0x12 SAct 0x3 SErr 0x1280500
+action 0x6 frozen
+[    7.716219] ata1.00: irq_stat 0x08000000, interface fatal error
+[    7.722216] ata1: SError: { UnrecovData Proto 10B8B BadCRC TrStaTrns=
+ }
+[    7.728780] ata1.00: failed command: READ FPDMA QUEUED
+[    7.733995] ata1.00: cmd 60/00:00:f2:11:32/01:00:00:00:00/40 tag 0
+ncq 131072 in
+[    7.734002]          res 40/00:04:f2:11:32/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[    7.749468] ata1.00: status: { DRDY }
+[    7.753176] ata1.00: failed command: READ FPDMA QUEUED
+[    7.758356] ata1.00: cmd 60/18:08:c2:14:32/00:00:00:00:00/40 tag 1
+ncq 12288 in
+[    7.758363]          res 40/00:04:f2:11:32/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[    7.773739] ata1.00: status: { DRDY }
+[    7.777448] ata1: hard resetting link
+[    8.750427] ata1: softreset failed (device not ready)
+[    8.755551] ata1: applying PMP SRST workaround and retrying
+[    8.960435] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    8.981938] ata1.00: configured for UDMA/133
+[    8.986535] ata1: EH complete
+[   12.147912] eth0: Freescale FEC PHY driver [Generic PHY]
+(mii_bus:phy_addr=3D1:00, irq=3D-1)
+[   12.521870] ata1.00: exception Emask 0x12 SAct 0xf SErr 0x800500
+action 0x6 frozen
+[   12.529518] ata1.00: irq_stat 0x08000000, interface fatal error
+[   12.535546] ata1: SError: { UnrecovData Proto LinkSeq }
+[   12.540851] ata1.00: failed command: READ FPDMA QUEUED
+[   12.546039] ata1.00: cmd 60/00:00:a2:19:2c/01:00:00:00:00/40 tag 0
+ncq 131072 in
+[   12.546046]          res 40/00:14:7a:aa:2c/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[   12.561519] ata1.00: status: { DRDY }
+[   12.565209] ata1.00: failed command: READ FPDMA QUEUED
+[   12.570419] ata1.00: cmd 60/00:08:1a:e9:2c/01:00:00:00:00/40 tag 1
+ncq 131072 in
+[   12.570426]          res 40/00:14:7a:aa:2c/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[   12.585890] ata1.00: status: { DRDY }
+[   12.589578] ata1.00: failed command: READ FPDMA QUEUED
+[   12.594776] ata1.00: cmd 60/00:10:7a:aa:2c/01:00:00:00:00/40 tag 2
+ncq 131072 in
+[   12.594783]          res 40/00:14:7a:aa:2c/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[   12.610240] ata1.00: status: { DRDY }
+[   12.613945] ata1.00: failed command: READ FPDMA QUEUED
+[   12.619118] ata1.00: cmd 60/e0:18:1a:10:2c/00:00:00:00:00/40 tag 3
+ncq 114688 in
+[   12.619125]          res 40/00:14:7a:aa:2c/00:00:00:00:00/40 Emask
+0x12 (ATA bus error)
+[   12.634583] ata1.00: status: { DRDY }
+[   12.638292] ata1: hard resetting link
+[   13.790424] ata1: softreset failed (device not ready)
+[   13.795543] ata1: applying PMP SRST workaround and retrying
+[   14.000437] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[   14.021749] ata1.00: configured for UDMA/133
+[   14.026836] ata1: EH complete
+[   14.140774] PHY: 1:00 - Link is Up - 100/Full
 
-> Richard Zhu <richard.zhu@linaro.org> writes:
-> Hi,
-> 
-> 
->> @@ -1503,6 +1519,9 @@ static struct clk_lookup mx53_lookups[] = {
->>    _REGISTER_CLOCK("imx-ssi.1", NULL, ssi2_clk)
->>    _REGISTER_CLOCK("imx-ssi.2", NULL, ssi3_clk)
->>    _REGISTER_CLOCK("imx-keypad", NULL, dummy_clk)
->> +    _REGISTER_CLOCK("imx53-ahci.0", "ahci", sata_clk)
->> +    _REGISTER_CLOCK("imx53-ahci.0", "ahci_phy", ahci_phy_clk)
->> +    _REGISTER_CLOCK("imx53-ahci.0", "ahci_dma", ahci_dma_clk)
->> };
->> 
->> static void clk_tree_init(void)
-> 
-> Which tree has been used for this patch ? For instance, on current
-> imx-features branch of Sascha's tree, there's a pata_imx clock defined
-> here (see [1]). Should I try to apply it on top of some other branch ?
-> 
-> Arnaud
-> 
-> [1] http://git.pengutronix.de/?p=imx/linux-2.6.git;a=commit;h=03b20b07be130e44faf29f787c66ce5cce5afb2a
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+Best regards,
+--=20
+=C2=A0H=C3=A9ctor Or=C3=B3n =C2=A0-.. . -... .. .- -. =C2=A0 -.. . ...-=
+ . .-.. --- .--. . .-.
