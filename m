@@ -1,50 +1,70 @@
-From: Arnaud Patard (Rtp) <arnaud.patard@rtp-net.org>
+From: Richard Zhu <richard.zhu@linaro.org>
 Subject: Re: [PATCH V7 0/5] imx53 ahci driver v7
-Date: Wed, 31 Aug 2011 08:55:10 +0200
-Message-ID: <87obz683zl.fsf@lebrac.rtp-net.org>
+Date: Wed, 31 Aug 2011 15:16:22 +0800
+Message-ID: <CAJNCFVLzmOGsXw5tpQjSkKH7foLx+LMYF=qoJ_tvo9YoO6KxGQ@mail.gmail.com>
 References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
+	<87obz683zl.fsf@lebrac.rtp-net.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lebrac.rtp-net.org ([88.191.135.105]:42157 "EHLO
-	lebrac.rtp-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754086Ab1HaGzx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 02:55:53 -0400
-In-Reply-To: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
-	(Richard Zhu's message of "Wed, 31 Aug 2011 11:50:30 +0800")
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:58838 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199Ab1HaHQX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 03:16:23 -0400
+Received: by gxk21 with SMTP id 21so335821gxk.19
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 00:16:22 -0700 (PDT)
+In-Reply-To: <87obz683zl.fsf@lebrac.rtp-net.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhu@linaro.org>
+To: Arnaud Patard <arnaud.patard@rtp-net.org>
 Cc: linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, eric.miao@linaro.org, linux-ide@vger.kernel.org, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
 
-Richard Zhu <richard.zhu@linaro.org> writes:
+Hi Arnaud:
+These serial patches are same to the v7 patch sent yesterday.
+Just add the cover-letter description, and the acked, tested info in
+the commit msg.
 
-Hi,
+Best Regards
+Richard Zhu
 
-> *** BLURB HERE ***
-> This is the seventh iteration of the imx53 ahci patch. Changes between
-> v5 and v7 are described in the following description.
+On 31 August 2011 14:55, Arnaud Patard <arnaud.patard@rtp-net.org> wrot=
+e:
+> Richard Zhu <richard.zhu@linaro.org> writes:
 >
-> ChangeLog v5->v6:
->  - Move the most ahci initialization codes from the board related files
->  to the common ahci_sata file.
+> Hi,
 >
->  - Add the imx53 ahci's own ata_port_info definition in ahci_platform
->  driver, since the 'ahci_pmp_retry_srst_ops' is required when imx53
->  ahci is present.
+>> *** BLURB HERE ***
+>> This is the seventh iteration of the imx53 ahci patch. Changes betwe=
+en
+>> v5 and v7 are described in the following description.
+>>
+>> ChangeLog v5->v6:
+>> =A0- Move the most ahci initialization codes from the board related =
+files
+>> =A0to the common ahci_sata file.
+>>
+>> =A0- Add the imx53 ahci's own ata_port_info definition in ahci_platf=
+orm
+>> =A0driver, since the 'ahci_pmp_retry_srst_ops' is required when imx5=
+3
+>> =A0ahci is present.
+>>
+>> ChangeLog v6->v7:
+>> =A0- Define the default imx53 ahci platform data, reduce the modific=
+atons
+>> =A0on the board related files.
+>>
+>> =A0- Handle the sata_pwr_en pin obviously on smd board.
+>>
+> Sorry to disturb you with silly questions, but a v7 has already been
+> sent yesterday [1]. Is this patchset the same as yesterday or did you
+> modify some parts ?
 >
-> ChangeLog v6->v7:
->  - Define the default imx53 ahci platform data, reduce the modificatons
->  on the board related files.
+> Thanks,
+> Arnaud
 >
->  - Handle the sata_pwr_en pin obviously on smd board.
+> [1]
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2011-August/063=
+195.html
 >
-Sorry to disturb you with silly questions, but a v7 has already been
-sent yesterday [1]. Is this patchset the same as yesterday or did you
-modify some parts ?
-
-Thanks,
-Arnaud
-
-[1]
-http://lists.infradead.org/pipermail/linux-arm-kernel/2011-August/063195.html
