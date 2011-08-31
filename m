@@ -1,14 +1,14 @@
 From: Richard Zhu <richard.zhu@linaro.org>
-Subject: [PATCH V7 3/5] MX53 Enable the AHCI SATA on MX53 ARD board
-Date: Wed, 31 Aug 2011 11:50:33 +0800
-Message-ID: <1314762635-3923-4-git-send-email-richard.zhu@linaro.org>
+Subject: [PATCH V7 2/5] ahci_plt Add the board_ids and pi refer to different features
+Date: Wed, 31 Aug 2011 11:50:32 +0800
+Message-ID: <1314762635-3923-3-git-send-email-richard.zhu@linaro.org>
 References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:18551 "EHLO
-	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589Ab1HaDut (ORCPT
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:8669 "EHLO
+	VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752202Ab1HaDut (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2011 23:50:49 -0400
 In-Reply-To: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
@@ -16,23 +16,87 @@ List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
 Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
----
- arch/arm/mach-mx5/board-mx53_ard.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On imx53 AHCI, soft reset fails with IPMS set when PMP
+is enabled but SATA HDD/ODD is connected to SATA port,
+do soft reset again to port 0.
+So the 'ahci_pmp_retry_srst_ops' is required when imx53
+ahci is present.
 
-diff --git a/arch/arm/mach-mx5/board-mx53_ard.c b/arch/arm/mach-mx5/board-mx53_ard.c
-index 76a67c4..f7cbbc0 100644
---- a/arch/arm/mach-mx5/board-mx53_ard.c
-+++ b/arch/arm/mach-mx5/board-mx53_ard.c
-@@ -234,6 +234,7 @@ static void __init mx53_ard_board_init(void)
- 	imx53_add_imx_i2c(1, &mx53_ard_i2c2_data);
- 	imx53_add_imx_i2c(2, &mx53_ard_i2c3_data);
- 	imx_add_gpio_keys(&ard_button_data);
-+	imx53_add_ahci_imx(0, NULL);
- }
+Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+Acked-by: Eric Miao <eric.miao@linaro.org>
+---
+ drivers/ata/ahci_platform.c |   44 +++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 38 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 6fef1fa..c03277d 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -23,6 +23,41 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
  
- static void __init mx53_ard_timer_init(void)
++enum ahci_type {
++	AHCI,		/* standard platform ahci */
++	IMX53_AHCI,	/* ahci on i.mx53 */
++};
++
++static struct platform_device_id ahci_devtype[] = {
++	{
++		.name = "ahci",
++		.driver_data = AHCI,
++	}, {
++		.name = "imx53-ahci",
++		.driver_data = IMX53_AHCI,
++	}, {
++		/* sentinel */
++	}
++};
++MODULE_DEVICE_TABLE(platform, ahci_devtype);
++
++
++static const struct ata_port_info ahci_port_info[] = {
++	/* by features */
++	[AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[IMX53_AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_pmp_retry_srst_ops,
++	},
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT("ahci_platform"),
+ };
+@@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev->platform_data;
+-	struct ata_port_info pi = {
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	};
++	const struct platform_device_id *id = platform_get_device_id(pdev);
++	struct ata_port_info pi = ahci_port_info[id->driver_data];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+@@ -177,6 +208,7 @@ static struct platform_driver ahci_driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 	},
++	.id_table	= ahci_devtype,
+ };
+ 
+ static int __init ahci_init(void)
 -- 
 1.7.1
 
