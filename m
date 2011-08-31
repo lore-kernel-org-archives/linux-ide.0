@@ -1,102 +1,90 @@
 From: Richard Zhu <richard.zhu@linaro.org>
-Subject: [PATCH V7 2/5] ahci_plt Add the board_ids and pi refer to different features
-Date: Wed, 31 Aug 2011 11:50:32 +0800
-Message-ID: <1314762635-3923-3-git-send-email-richard.zhu@linaro.org>
+Subject: [PATCH V7 5/5] MX53 Enable the AHCI SATA on MX53 SMD board
+Date: Wed, 31 Aug 2011 11:50:35 +0800
+Message-ID: <1314762635-3923-6-git-send-email-richard.zhu@linaro.org>
 References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:8669 "EHLO
-	VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752202Ab1HaDut (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2011 23:50:49 -0400
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:33589
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752202Ab1HaDuz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2011 23:50:55 -0400
 In-Reply-To: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
 Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-On imx53 AHCI, soft reset fails with IPMS set when PMP
-is enabled but SATA HDD/ODD is connected to SATA port,
-do soft reset again to port 0.
-So the 'ahci_pmp_retry_srst_ops' is required when imx53
-ahci is present.
-
 Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
-Acked-by: Eric Miao <eric.miao@linaro.org>
 ---
- drivers/ata/ahci_platform.c |   44 +++++++++++++++++++++++++++++++++++++-----
- 1 files changed, 38 insertions(+), 6 deletions(-)
+ arch/arm/mach-mx5/board-mx53_smd.c |   32 ++++++++++++++++++++++++++++++++
+ 1 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 6fef1fa..c03277d 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -23,6 +23,41 @@
- #include <linux/ahci_platform.h>
- #include "ahci.h"
+diff --git a/arch/arm/mach-mx5/board-mx53_smd.c b/arch/arm/mach-mx5/board-mx53_smd.c
+index bc02894..3005c7c 100644
+--- a/arch/arm/mach-mx5/board-mx53_smd.c
++++ b/arch/arm/mach-mx5/board-mx53_smd.c
+@@ -26,6 +26,7 @@
+ #include <mach/common.h>
+ #include <mach/hardware.h>
+ #include <mach/iomux-mx53.h>
++#include <mach/ahci_sata.h>
  
-+enum ahci_type {
-+	AHCI,		/* standard platform ahci */
-+	IMX53_AHCI,	/* ahci on i.mx53 */
-+};
+ #include <asm/mach-types.h>
+ #include <asm/mach/arch.h>
+@@ -35,6 +36,7 @@
+ #include "devices-imx53.h"
+ 
+ #define SMD_FEC_PHY_RST		IMX_GPIO_NR(7, 6)
++#define MX53_SMD_SATA_PWR_EN    IMX_GPIO_NR(3, 3)
+ 
+ static iomux_v3_cfg_t mx53_smd_pads[] = {
+ 	MX53_PAD_CSI0_DAT10__UART1_TXD_MUX,
+@@ -111,6 +113,35 @@ static const struct imxi2c_platform_data mx53_smd_i2c_data __initconst = {
+ 	.bitrate = 100000,
+ };
+ 
++static int mx53_smd_sata_init(struct device *dev, void __iomem *addr)
++{
++	int ret;
 +
-+static struct platform_device_id ahci_devtype[] = {
-+	{
-+		.name = "ahci",
-+		.driver_data = AHCI,
-+	}, {
-+		.name = "imx53-ahci",
-+		.driver_data = IMX53_AHCI,
-+	}, {
-+		/* sentinel */
++	/* Enable SATA PWR */
++	ret = gpio_request(MX53_SMD_SATA_PWR_EN, "ahci-sata-pwr");
++	if (ret) {
++		printk(KERN_ERR "failed to get SATA_PWR_EN: %d\n", ret);
++		return ret;
 +	}
++	gpio_direction_output(MX53_SMD_SATA_PWR_EN, 1);
++
++	return sata_init(dev, addr);
++}
++
++void mx53_smd_sata_exit(struct device *dev)
++{
++	sata_exit(dev);
++
++	/* Disable SATA PWR */
++	gpio_direction_output(MX53_SMD_SATA_PWR_EN, 0);
++	gpio_free(MX53_SMD_SATA_PWR_EN);
++}
++
++static struct ahci_platform_data sata_data = {
++	.init = mx53_smd_sata_init,
++	.exit = mx53_smd_sata_exit,
 +};
-+MODULE_DEVICE_TABLE(platform, ahci_devtype);
 +
-+
-+static const struct ata_port_info ahci_port_info[] = {
-+	/* by features */
-+	[AHCI] = {
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_ops,
-+	},
-+	[IMX53_AHCI] = {
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_pmp_retry_srst_ops,
-+	},
-+};
-+
- static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT("ahci_platform"),
- };
-@@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_device *pdev)
+ static void __init mx53_smd_board_init(void)
  {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_platform_data *pdata = dev->platform_data;
--	struct ata_port_info pi = {
--		.flags		= AHCI_FLAG_COMMON,
--		.pio_mask	= ATA_PIO4,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
--	};
-+	const struct platform_device_id *id = platform_get_device_id(pdev);
-+	struct ata_port_info pi = ahci_port_info[id->driver_data];
- 	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	struct ahci_host_priv *hpriv;
- 	struct ata_host *host;
-@@ -177,6 +208,7 @@ static struct platform_driver ahci_driver = {
- 		.name = "ahci",
- 		.owner = THIS_MODULE,
- 	},
-+	.id_table	= ahci_devtype,
- };
+ 	imx53_soc_init();
+@@ -125,6 +156,7 @@ static void __init mx53_smd_board_init(void)
+ 	imx53_add_sdhci_esdhc_imx(0, NULL);
+ 	imx53_add_sdhci_esdhc_imx(1, NULL);
+ 	imx53_add_sdhci_esdhc_imx(2, NULL);
++	imx53_add_ahci_imx(0, &sata_data);
+ }
  
- static int __init ahci_init(void)
+ static void __init mx53_smd_timer_init(void)
 -- 
 1.7.1
 
