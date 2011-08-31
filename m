@@ -1,70 +1,152 @@
-From: Richard Zhu <richard.zhu@linaro.org>
-Subject: Re: [PATCH V7 0/5] imx53 ahci driver v7
-Date: Wed, 31 Aug 2011 15:16:22 +0800
-Message-ID: <CAJNCFVLzmOGsXw5tpQjSkKH7foLx+LMYF=qoJ_tvo9YoO6KxGQ@mail.gmail.com>
-References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org>
-	<87obz683zl.fsf@lebrac.rtp-net.org>
+From: Eric Miao <eric.miao@linaro.org>
+Subject: Re: [PATCH V7 2/5] ahci_plt Add the board_ids and pi refer to
+ different features
+Date: Wed, 31 Aug 2011 16:28:58 +0800
+Message-ID: <CAMPhdO9Tvp9HeXYe=C8hHavAKSm2wO7ObKbv5n9PTeC4gQPJBg@mail.gmail.com>
+References: <1314762635-3923-1-git-send-email-richard.zhu@linaro.org> <1314762635-3923-3-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58838 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199Ab1HaHQX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 03:16:23 -0400
-Received: by gxk21 with SMTP id 21so335821gxk.19
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 00:16:22 -0700 (PDT)
-In-Reply-To: <87obz683zl.fsf@lebrac.rtp-net.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:47467 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029Ab1HaI3T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 04:29:19 -0400
+Received: by vxi9 with SMTP id 9so252247vxi.19
+        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 01:29:18 -0700 (PDT)
+In-Reply-To: <1314762635-3923-3-git-send-email-richard.zhu@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnaud Patard <arnaud.patard@rtp-net.org>
-Cc: linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, eric.miao@linaro.org, linux-ide@vger.kernel.org, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
+To: Richard Zhu <richard.zhu@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, linux-ide@vger.kernel.org, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
 
-Hi Arnaud:
-These serial patches are same to the v7 patch sent yesterday.
-Just add the cover-letter description, and the acked, tested info in
-the commit msg.
+On Wed, Aug 31, 2011 at 11:50 AM, Richard Zhu <richard.zhu@linaro.org> =
+wrote:
+> On imx53 AHCI, soft reset fails with IPMS set when PMP
+> is enabled but SATA HDD/ODD is connected to SATA port,
+> do soft reset again to port 0.
+> So the 'ahci_pmp_retry_srst_ops' is required when imx53
+> ahci is present.
+>
+> Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+> Acked-by: Eric Miao <eric.miao@linaro.org>
+> ---
+> =C2=A0drivers/ata/ahci_platform.c | =C2=A0 44 +++++++++++++++++++++++=
+++++++++++++++-----
+> =C2=A01 files changed, 38 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.=
+c
+> index 6fef1fa..c03277d 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -23,6 +23,41 @@
+> =C2=A0#include <linux/ahci_platform.h>
+> =C2=A0#include "ahci.h"
+>
+> +enum ahci_type {
+> + =C2=A0 =C2=A0 =C2=A0 AHCI, =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* st=
+andard platform ahci */
+> + =C2=A0 =C2=A0 =C2=A0 IMX53_AHCI, =C2=A0 =C2=A0 /* ahci on i.mx53 */
+> +};
+> +
+> +static struct platform_device_id ahci_devtype[] =3D {
+> + =C2=A0 =C2=A0 =C2=A0 {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .name =3D "ahci",
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .driver_data =3D A=
+HCI,
+> + =C2=A0 =C2=A0 =C2=A0 }, {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .name =3D "imx53-a=
+hci",
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .driver_data =3D I=
+MX53_AHCI,
+> + =C2=A0 =C2=A0 =C2=A0 }, {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 /* sentinel */
+> + =C2=A0 =C2=A0 =C2=A0 }
+> +};
+> +MODULE_DEVICE_TABLE(platform, ahci_devtype);
+> +
 
-Best Regards
-Richard Zhu
+I still prefer this way as this is most flexible. We'll see how we can =
+better
+organize this along with newly added ahci controllers.
 
-On 31 August 2011 14:55, Arnaud Patard <arnaud.patard@rtp-net.org> wrot=
-e:
-> Richard Zhu <richard.zhu@linaro.org> writes:
+Jeff,
+
+Can you take this patch through? Or if you are good with this, we can
+also push this one along with the other  patches to go through sascha's
+imx tree.
+
+> +
+> +static const struct ata_port_info ahci_port_info[] =3D {
+> + =C2=A0 =C2=A0 =C2=A0 /* by features */
+> + =C2=A0 =C2=A0 =C2=A0 [AHCI] =3D {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .flags =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0=3D AHCI_FLAG_COMMON,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .pio_mask =C2=A0 =C2=
+=A0 =C2=A0 =3D ATA_PIO4,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .udma_mask =C2=A0 =
+=C2=A0 =C2=A0=3D ATA_UDMA6,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .port_ops =C2=A0 =C2=
+=A0 =C2=A0 =3D &ahci_ops,
+> + =C2=A0 =C2=A0 =C2=A0 },
+> + =C2=A0 =C2=A0 =C2=A0 [IMX53_AHCI] =3D {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .flags =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0=3D AHCI_FLAG_COMMON,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .pio_mask =C2=A0 =C2=
+=A0 =C2=A0 =3D ATA_PIO4,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .udma_mask =C2=A0 =
+=C2=A0 =C2=A0=3D ATA_UDMA6,
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .port_ops =C2=A0 =C2=
+=A0 =C2=A0 =3D &ahci_pmp_retry_srst_ops,
+> + =C2=A0 =C2=A0 =C2=A0 },
+> +};
+> +
+> =C2=A0static struct scsi_host_template ahci_platform_sht =3D {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0AHCI_SHT("ahci_platform"),
+> =C2=A0};
+> @@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_devic=
+e *pdev)
+> =C2=A0{
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct device *dev =3D &pdev->dev;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ahci_platform_data *pdata =3D dev->=
+platform_data;
+> - =C2=A0 =C2=A0 =C2=A0 struct ata_port_info pi =3D {
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .flags =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0=3D AHCI_FLAG_COMMON,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .pio_mask =C2=A0 =C2=
+=A0 =C2=A0 =3D ATA_PIO4,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .udma_mask =C2=A0 =
+=C2=A0 =C2=A0=3D ATA_UDMA6,
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .port_ops =C2=A0 =C2=
+=A0 =C2=A0 =3D &ahci_ops,
+> - =C2=A0 =C2=A0 =C2=A0 };
+> + =C2=A0 =C2=A0 =C2=A0 const struct platform_device_id *id =3D platfo=
+rm_get_device_id(pdev);
+> + =C2=A0 =C2=A0 =C2=A0 struct ata_port_info pi =3D ahci_port_info[id-=
+>driver_data];
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0const struct ata_port_info *ppi[] =3D { &p=
+i, NULL };
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ahci_host_priv *hpriv;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0struct ata_host *host;
+> @@ -177,6 +208,7 @@ static struct platform_driver ahci_driver =3D {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.name =3D "ahc=
+i",
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0.owner =3D THI=
+S_MODULE,
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0},
+> + =C2=A0 =C2=A0 =C2=A0 .id_table =C2=A0 =C2=A0 =C2=A0 =3D ahci_devtyp=
+e,
+> =C2=A0};
 >
-> Hi,
+> =C2=A0static int __init ahci_init(void)
+> --
+> 1.7.1
 >
->> *** BLURB HERE ***
->> This is the seventh iteration of the imx53 ahci patch. Changes betwe=
-en
->> v5 and v7 are described in the following description.
->>
->> ChangeLog v5->v6:
->> =A0- Move the most ahci initialization codes from the board related =
-files
->> =A0to the common ahci_sata file.
->>
->> =A0- Add the imx53 ahci's own ata_port_info definition in ahci_platf=
-orm
->> =A0driver, since the 'ahci_pmp_retry_srst_ops' is required when imx5=
-3
->> =A0ahci is present.
->>
->> ChangeLog v6->v7:
->> =A0- Define the default imx53 ahci platform data, reduce the modific=
-atons
->> =A0on the board related files.
->>
->> =A0- Handle the sata_pwr_en pin obviously on smd board.
->>
-> Sorry to disturb you with silly questions, but a v7 has already been
-> sent yesterday [1]. Is this patchset the same as yesterday or did you
-> modify some parts ?
 >
-> Thanks,
-> Arnaud
 >
-> [1]
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2011-August/063=
-195.html
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 >
