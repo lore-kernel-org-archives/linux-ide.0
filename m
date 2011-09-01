@@ -1,37 +1,58 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH v4] drivers/block/mtip32xx: Adding new driver mtip32xx
-Date: Thu, 1 Sep 2011 13:46:59 -0600
-Message-ID: <4E5FE133.3060904@fusionio.com>
-References: <22A973199D2C2F46933448F6E7990A3002C80026@ntxboimbx31.micron.com> <4E44E782.7090309@fusionio.com> <2A9BE4FF6209B644B6F8EB62DE6AEA1E07663ED4@ntxfrembx01.micron.com> <x49y5y8xd4i.fsf@segfault.boston.devel.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Tim Nufire <linux_ide_tim@ibink.com>
+Subject: Power-Up In Standby & Hitachi Deskstar 5K3000 drives
+Date: Thu, 1 Sep 2011 14:34:55 -0700
+Message-ID: <D0EDEE65-2C64-415C-9659-74F91CB0CCF1@ibink.com>
+Mime-Version: 1.0 (Apple Message framework v1244.3)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([66.114.96.31]:44044 "EHLO mx2.fusionio.com"
+Received: from yak.ibink.com ([173.255.217.96]:55313 "EHLO yak.ibink.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757601Ab1IATrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 1 Sep 2011 15:47:04 -0400
-In-Reply-To: <x49y5y8xd4i.fsf@segfault.boston.devel.redhat.com>
+	id S1758039Ab1IAVe4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Sep 2011 17:34:56 -0400
+Received: from c-67-188-108-139.hsd1.ca.comcast.net ([67.188.108.139] helo=[10.100.0.192])
+	by yak.ibink.com with esmtpsa (TLS1.0:RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.72)
+	(envelope-from <linux_ide_tim@ibink.com>)
+	id 1QzEuW-00021r-GK
+	for linux-ide@vger.kernel.org; Thu, 01 Sep 2011 14:34:56 -0700
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: "Sam Bradshaw (sbradshaw)" <sbradshaw@micron.com>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "hch@infradead.org" <hch@infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>
+To: linux-ide@vger.kernel.org
 
-On 2011-09-01 13:43, Jeff Moyer wrote:
-> "Sam Bradshaw (sbradshaw)" <sbradshaw@micron.com> writes:
-> 
->> New patch for mtip32xx driver based on feedback from
->> Jens Axboe, Christoph Hellwig, and Alan Cox.
-> 
-> Hi, Sam,
-> 
-> The patch is line-wrapped.  Could you fix your mailer settings and
-> re-send?
+Hello,
 
-JFYI, it's already queued up in a for-3.2/mtip32xx branch in my tree,
-unwrapped. So might be easier to just take a peek there. Branch is
-intended to be merged into for-3.2/drivers eventually.
+I'm using 3TB Hitachi Deskstar 5K3000 drives in a custom 45 drive high density enclosure (http://blog.backblaze.com/2011/07/20/petabytes-on-a-budget-v2-0revealing-more-secrets) and need to limit the inrush current at startup by stagger the drive spin-up. Since I can't control drive power through by backplanes, the best way to do this appears to be by enabling the Power-Up In Standby feature on the drives via 'hdparm -s1'. Unfortunately this is not working for me....
 
--- 
-Jens Axboe
+I believe the problem I'm having is that the Hitachi Deskstar 5K3000 drives require a SET FEATURES subcommand to spin-up to active state when the device has powered-up into Standby. I'm getting this from section 9.1 in the following spec:
 
+http://www.hitachigst.com/tech/techlib.nsf/techdocs/FFDF1FA949853DBD8825785A005CBC55/$file/DS5K3000_US5K3000_OEMSpecRev1.1.pdf
+
+Section 4.17 in the ATA spec that I found at http://t13.org/Documents/UploadedDocuments/docs2006/D1699r3f-ATA8-ACS.pdf says the following:
+
+   A device may implement a SET FEATURES subcommand that notifies the device to spin-up to the Active state when the 
+   device has powered-up into Standby. If the device implements this SET FEATURES subcommand and power-up into Standby 
+   is enabled, the device shall remain in Standby until the SET FEATURES subcommand is received. If the device implements 
+   this SET FEATURES subcommand, the fact that the feature is implemented is reported in the IDENTIFY DEVICE or IDENTIFY 
+   PACKET DEVICE data.
+   .
+   .
+   .
+   If the device does not implement the SET FEATURES subcommand to spin-up the device after power-up and power-up into 
+   Standby is enabled, the device shall spin-up upon receipt of the first command that requires the device to access the 
+   media.
+
+Section 7.47.8 then says:
+
+   Subcommand code 07h shall cause a device that has powered-up into Standby to go to the Active state (see 4.17 and figure 7).
+
+>From this I'm concluding the following:
+
+1) Not all drives require the spin up subcommand which explains why this works for some drives
+
+2) Our Hitachi drives require this command and the libATA drivers don't appear to support it
+
+Is this right? If so, is there a reason why the libATA does not support this feature? I'm running Debian 5 with a 2.6.32 kernel... Has this been implemented upstream? Would this be a feature hard to add/backport? 
+
+Thanks,
+Tim
