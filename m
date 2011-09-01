@@ -1,196 +1,151 @@
-From: Richard Zhu <richard.zhu@linaro.org>
-Subject: Re: [PATCH V7 1/5] AHCI Add the AHCI SATA feature on the MX53 platforms
-Date: Thu, 1 Sep 2011 11:09:15 +0800
-Message-ID: <CAJNCFVLP7gA_7vBjwVNkQaSg8LZ4hROLdNCx8SBVah=F1ptrhQ@mail.gmail.com>
-References: <1314698171-7937-1-git-send-email-richard.zhu@linaro.org>
-	<CAODfWeEm8bkySXxb1qopbH1VMu-V+33k5x+0+qjABzesT0amOA@mail.gmail.com>
-	<CAJNCFV+XFGEba1J2dXDa4YVwqduAPV5y=5JYEXAZ0uv+S60vvw@mail.gmail.com>
-	<CAODfWeEueF45_yvPV5Zxbva6K2gEfKZbY2qoqySYFPZWnSgLsg@mail.gmail.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH RFC] ata_piix: ignore disks in a hyper-v guest
+Date: Thu, 1 Sep 2011 17:43:40 +0200
+Message-ID: <20110901154340.GA12375@aepfle.de>
+References: <1314469874-7017-1-git-send-email-kys@microsoft.com>
+ <20110830124856.GA17520@aepfle.de>
+ <6E21E5352C11B742B20C142EB499E048081B5363@TK5EX14MBXC126.redmond.corp.microsoft.com>
+ <20110830174330.GE22868@kroah.com>
+ <20110830180434.GA10090@aepfle.de>
+ <20110830181945.GC24865@kroah.com>
+ <20110831091156.GA16104@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:58824 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757503Ab1IADJQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Aug 2011 23:09:16 -0400
-Received: by gwaa12 with SMTP id a12so617630gwa.19
-        for <linux-ide@vger.kernel.org>; Wed, 31 Aug 2011 20:09:16 -0700 (PDT)
-In-Reply-To: <CAODfWeEueF45_yvPV5Zxbva6K2gEfKZbY2qoqySYFPZWnSgLsg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110831091156.GA16104@aepfle.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: KY Srinivasan <kys@microsoft.com>, devel@linuxdriverproject.org, gregkh@suse.de, linux-kernel@vger.kernel.org, virtualization@lists.osdl.org
 List-Id: linux-ide@vger.kernel.org
-To: Hector Oron <hector.oron@gmail.com>
-Cc: Wolfram Sang <w.sang@pengutronix.de>, linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, eric.miao@linaro.org, linux-ide@vger.kernel.org, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
 
-Hi Hector:
-What's happen before "> [    7.073106] EXT4-fs (sda2): re-mounted.
-Opts: errors=3Dremount-ro"?
-I re-based the patches to Sascha's imx-features branch, my sata device =
-can work.
-Test sw environment:  Sascha's imx-features branch,
-Test hw environment: iMX53 loco board, 32G sandisk ssd, tftp download
-the kernel image,
- and the nfs type rootfs is mounted.
+On Wed, Aug 31, Olaf Hering wrote:
 
-loop: module loaded
-ahci: SSS flag set, parallel bus scan disabled
-ahci imx53-ahci.0: AHCI 0001.0100 32 slots 1 ports 3 Gbps 0x1 impl plat=
-form mode
-ahci imx53-ahci.0: flags: ncq sntf stag pm led clo only pmp pio slum pa=
-rt ccc
-scsi0 : ahci_platform
-ata1: SATA max UDMA/133 mmio [mem 0x10000000-0x10000fff] port 0x100 irq=
- 28
-=46EC Ethernet Driver
-fec_enet_mii_bus: probed
-ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-Initializing USB Mass Storage driver...
-usbcore: registered new interface driver usb-storage
-USB Mass Storage support registered.
-mousedev: PS/2 mouse device common for all mice
-input: mma8450 as /devices/virtual/input/input0
-i2c /dev entries driver
-imx2-wdt imx2-wdt.0: IMX2+ Watchdog Timer enabled. timeout=3D60s (noway=
-out=3D0)
-sdhci: Secure Digital Host Controller Interface driver
-sdhci: Copyright(c) Pierre Ossman
-sdhci-pltfm: SDHCI platform and OF driver helper
-mmc0: no vmmc regulator found
-mmc0: SDHCI controller on sdhci-esdhc-imx53.0 [sdhci-esdhc-imx53.0] usi=
-ng DMA
-mmc1: no vmmc regulator found
-mmc1: SDHCI controller on sdhci-esdhc-imx53.2 [sdhci-esdhc-imx53.2] usi=
-ng DMA
-usbcore: registered new interface driver usbhid
-usbhid: USB HID core driver
-TCP cubic registered
-NET: Registered protocol family 17
-Registering the dns_resolver key type
-VFP support v0.3: implementor 41 architecture 3 part 30 variant c rev 2
-input: gpio-keys as /devices/platform/gpio-keys/input/input1
-drivers/rtc/hctosys.c: unable to open rtc device (rtc0)
-eth0: Freescale FEC PHY driver [SMSC LAN8710/LAN8720]
-(mii_bus:phy_addr=3D1:00, irq=3D-1)
-mmc0: host does not support reading read-only switch. assuming write-en=
-able.
-mmc0: new high speed SDHC card at address 0001
-mmcblk0: mmc0:0001 00000 3.79 GiB
- mmcblk0: p1 p2 p3
-ata1: softreset failed (device not ready)
-ata1: applying PMP SRST workaround and retrying
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ATA-8: SanDisk SSD P4 32GB, SSD 8.00, max UDMA/133
-ata1.00: 62533296 sectors, multi 1: LBA48
-ata1.00: configured for UDMA/133
-scsi 0:0:0:0: Direct-Access     ATA      SanDisk SSD P4 3 SSD  PQ: 0 AN=
-SI: 5
-sd 0:0:0:0: [sda] 62533296 512-byte logical blocks: (32.0 GB/29.8 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1 sda2
-sd 0:0:0:0: [sda] Attached SCSI disk
-PHY: 1:00 - Link is Up - 100/Full
-Sending DHCP requests ., OK
+> After some more testing it looks like the hv_blkvsc driver claimed the
+> ide major #3, so the ide_core could not bind to the emulated IDE
+> hardware. The modprobe.conf rules prevented that ata_piix gets loaded.
+> If I force a module load order of 'ata_piix ;hv_blkvsc' both ata_piix
+> and hv_blkvsc will bind to the same drive, just as shown in my previous
+> mail. So there is appearently no way to shutdown the IDE ports like it
+> is done with xen_emul_unplug= option for Xen guests.
+> 
+> Maybe some hack is needed for a hyper-v specific unplug if Windows does
+> indeed lack that feature. Now that ata_piix is compiled into the kernel,
+> there is nothing to a modprobe.conf rule can "fix".
 
-Best Regards
-Richard Zhu
+Here is an attempt to ignore disks in a hyper-v disks, and let ata_piix
+handle only the configured cdrom devices (iso of physical).
+If the disks are not ignored, they will appear twice, once through
+ata_piix and once through hv_storvsc.
 
-On 31 August 2011 20:57, Hector Oron <hector.oron@gmail.com> wrote:
-> Hello,
->
-> 2011/8/31 Richard Zhu <richard.zhu@linaro.org>:
->> Hi Hector:
->> Thanks for your help to tests these patches.
->
-> Note I rebased this patches against 'imx-features' branch on Sascha's=
- tree.
-> I am noticing some obscure (to me) messages from kernel:
->
-> [ =A0 =A06.874694] Adding 9767516k swap on /dev/sda3. =A0Priority:-1
-> extents:1 across:9767516k
-> [ =A0 =A07.073106] EXT4-fs (sda2): re-mounted. Opts: errors=3Dremount=
--ro
-> [ =A0 =A07.708399] ata1.00: exception Emask 0x12 SAct 0x3 SErr 0x1280=
-500
-> action 0x6 frozen
-> [ =A0 =A07.716219] ata1.00: irq_stat 0x08000000, interface fatal erro=
-r
-> [ =A0 =A07.722216] ata1: SError: { UnrecovData Proto 10B8B BadCRC TrS=
-taTrns }
-> [ =A0 =A07.728780] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 =A07.733995] ata1.00: cmd 60/00:00:f2:11:32/01:00:00:00:00/40 t=
-ag 0
-> ncq 131072 in
-> [ =A0 =A07.734002] =A0 =A0 =A0 =A0 =A0res 40/00:04:f2:11:32/00:00:00:=
-00:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 =A07.749468] ata1.00: status: { DRDY }
-> [ =A0 =A07.753176] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 =A07.758356] ata1.00: cmd 60/18:08:c2:14:32/00:00:00:00:00/40 t=
-ag 1
-> ncq 12288 in
-> [ =A0 =A07.758363] =A0 =A0 =A0 =A0 =A0res 40/00:04:f2:11:32/00:00:00:=
-00:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 =A07.773739] ata1.00: status: { DRDY }
-> [ =A0 =A07.777448] ata1: hard resetting link
-> [ =A0 =A08.750427] ata1: softreset failed (device not ready)
-> [ =A0 =A08.755551] ata1: applying PMP SRST workaround and retrying
-> [ =A0 =A08.960435] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl =
-300)
-> [ =A0 =A08.981938] ata1.00: configured for UDMA/133
-> [ =A0 =A08.986535] ata1: EH complete
-> [ =A0 12.147912] eth0: Freescale FEC PHY driver [Generic PHY]
-> (mii_bus:phy_addr=3D1:00, irq=3D-1)
-> [ =A0 12.521870] ata1.00: exception Emask 0x12 SAct 0xf SErr 0x800500
-> action 0x6 frozen
-> [ =A0 12.529518] ata1.00: irq_stat 0x08000000, interface fatal error
-> [ =A0 12.535546] ata1: SError: { UnrecovData Proto LinkSeq }
-> [ =A0 12.540851] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 12.546039] ata1.00: cmd 60/00:00:a2:19:2c/01:00:00:00:00/40 tag=
- 0
-> ncq 131072 in
-> [ =A0 12.546046] =A0 =A0 =A0 =A0 =A0res 40/00:14:7a:aa:2c/00:00:00:00=
-:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 12.561519] ata1.00: status: { DRDY }
-> [ =A0 12.565209] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 12.570419] ata1.00: cmd 60/00:08:1a:e9:2c/01:00:00:00:00/40 tag=
- 1
-> ncq 131072 in
-> [ =A0 12.570426] =A0 =A0 =A0 =A0 =A0res 40/00:14:7a:aa:2c/00:00:00:00=
-:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 12.585890] ata1.00: status: { DRDY }
-> [ =A0 12.589578] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 12.594776] ata1.00: cmd 60/00:10:7a:aa:2c/01:00:00:00:00/40 tag=
- 2
-> ncq 131072 in
-> [ =A0 12.594783] =A0 =A0 =A0 =A0 =A0res 40/00:14:7a:aa:2c/00:00:00:00=
-:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 12.610240] ata1.00: status: { DRDY }
-> [ =A0 12.613945] ata1.00: failed command: READ FPDMA QUEUED
-> [ =A0 12.619118] ata1.00: cmd 60/e0:18:1a:10:2c/00:00:00:00:00/40 tag=
- 3
-> ncq 114688 in
-> [ =A0 12.619125] =A0 =A0 =A0 =A0 =A0res 40/00:14:7a:aa:2c/00:00:00:00=
-:00/40 Emask
-> 0x12 (ATA bus error)
-> [ =A0 12.634583] ata1.00: status: { DRDY }
-> [ =A0 12.638292] ata1: hard resetting link
-> [ =A0 13.790424] ata1: softreset failed (device not ready)
-> [ =A0 13.795543] ata1: applying PMP SRST workaround and retrying
-> [ =A0 14.000437] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 30=
-0)
-> [ =A0 14.021749] ata1.00: configured for UDMA/133
-> [ =A0 14.026836] ata1: EH complete
-> [ =A0 14.140774] PHY: 1:00 - Link is Up - 100/Full
->
->
-> Best regards,
-> --
-> =A0H=E9ctor Or=F3n =A0-.. . -... .. .- -. =A0 -.. . ...- . .-.. --- .=
---. . .-.
->
+Once hv_storvsc can also handle the configured cdrom devices, the added
+piix_pata_read_id() function can be removed again. Only the check in
+piix_init() or something similar needs to be done.
+
+Maybe there is a better way enable only ATA_DEV_ATAPI?
+
+
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+
+---
+ drivers/ata/ata_piix.c |   54 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 54 insertions(+)
+
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -98,6 +98,10 @@
+ #define DRV_NAME	"ata_piix"
+ #define DRV_VERSION	"2.13"
+ 
++#if defined(CONFIG_HYPERV_STORAGE) || defined(CONFIG_HYPERV_STORAGE_MODULE)
++#define PIIX_IGNORE_ATA_ON_HYPERV 1
++#endif
++
+ enum {
+ 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
+ 	ICH5_PMR		= 0x90, /* port mapping register */
+@@ -164,6 +168,7 @@ struct piix_host_priv {
+ static int piix_init_one(struct pci_dev *pdev,
+ 			 const struct pci_device_id *ent);
+ static void piix_remove_one(struct pci_dev *pdev);
++static unsigned int piix_pata_read_id(struct ata_device *adev, struct ata_taskfile *tf, u16 *id);
+ static int piix_pata_prereset(struct ata_link *link, unsigned long deadline);
+ static void piix_set_piomode(struct ata_port *ap, struct ata_device *adev);
+ static void piix_set_dmamode(struct ata_port *ap, struct ata_device *adev);
+@@ -346,6 +351,7 @@ static struct ata_port_operations piix_p
+ 	.set_piomode		= piix_set_piomode,
+ 	.set_dmamode		= piix_set_dmamode,
+ 	.prereset		= piix_pata_prereset,
++	.read_id		= piix_pata_read_id,
+ };
+ 
+ static struct ata_port_operations piix_vmw_ops = {
+@@ -619,6 +625,24 @@ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, piix_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ 
++#if defined(PIIX_IGNORE_ATA_ON_HYPERV)
++static int piix_msft_hyperv(void)
++{
++	static const struct dmi_system_id hv_dmi_ident[]  = {
++		{
++			.ident = "Hyper-V",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "Microsoft Corporation"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Virtual Machine"),
++				DMI_MATCH(DMI_BOARD_NAME, "Virtual Machine"),
++			},
++		},
++		{ }	/* terminate list */
++	};
++	return !!dmi_check_system(hv_dmi_ident);
++}
++#endif
++
+ struct ich_laptop {
+ 	u16 device;
+ 	u16 subvendor;
+@@ -702,6 +726,29 @@ static int piix_pata_prereset(struct ata
+ 	return ata_sff_prereset(link, deadline);
+ }
+ 
++/**
++ *
++ */
++static unsigned int piix_pata_read_id(struct ata_device *adev, struct ata_taskfile *tf, u16 *id)
++{
++	unsigned int err_mask = ata_do_dev_read_id(adev, tf, id);
++#if defined(PIIX_IGNORE_ATA_ON_HYPERV)
++	/*
++	 * Ignore disks in a hyper-v guest.
++	 * There is no unplug protocol like it is done with xen_emul_unplug= option.
++	 * Emulate the unplug by ignoring disks when the hv_storvsc driver is enabled.
++	 * If the disks are not ignored, they will appear twice: once through piix and once through hv_storvsc.
++	 * Because hv_storvsc does not handle ATAPI devices, the piix driver is still required.
++	 * Once hv_storvsc handles all devices, this function can be removed and the whole driver should be disabled in a hyper-v guest.
++	 */
++	if (ata_id_is_ata(id) && piix_msft_hyperv()) {
++		ata_dev_printk(adev, KERN_WARNING, "ATA device ignored in Hyper-V guest\n");
++		id[ATA_ID_CONFIG] |= (1 << 15);
++	}
++#endif
++	return err_mask;
++}
++
+ static DEFINE_SPINLOCK(piix_lock);
+ 
+ /**
+@@ -1679,6 +1726,13 @@ static int __init piix_init(void)
+ {
+ 	int rc;
+ 
++#if defined(PIIX_IGNORE_ATA_ON_HYPERV)
++	/* disabled until hv_storvsc drives also cdrom devices */
++	if (0 && piix_msft_hyperv()) {
++		printk(KERN_DEBUG "%s: hv_storvsc will bind to storage\n", __func__);
++		return -ENODEV;
++	}
++#endif
+ 	DPRINTK("pci_register_driver\n");
+ 	rc = pci_register_driver(&piix_pci_driver);
+ 	if (rc)
