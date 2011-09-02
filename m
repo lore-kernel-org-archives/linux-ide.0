@@ -1,56 +1,79 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Fri, 2 Sep 2011 10:13:05 +0900
-Message-ID: <20110902011305.GE2752@htj.dyndns.org>
-References: <20110430140109.GJ29280@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32C777089B2@gretna.indigovision.com>
- <20110525094127.GF10146@htj.dyndns.org>
- <4DF20E03.9030502@teksavvy.com>
- <20110610140155.GJ15235@htj.dyndns.org>
- <4DF25526.9010800@teksavvy.com>
- <20110611121957.GA7980@mtj.dyndns.org>
- <4DF4F30B.70702@teksavvy.com>
- <20110613104856.GC16021@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Rob Herring <robherring2@gmail.com>
+Subject: [PATCH] ahci: add DT binding for Calxeda AHCI controller
+Date: Fri,  2 Sep 2011 10:10:15 -0500
+Message-ID: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43999 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932809Ab1IBBNN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Sep 2011 21:13:13 -0400
-Content-Disposition: inline
-In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:57540 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab1IBPKi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Sep 2011 11:10:38 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Stenning <b.stenning@indigovision.com>
-Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
+Cc: Rob Herring <rob.herring@calxeda.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-Hello,
+From: Rob Herring <rob.herring@calxeda.com>
 
-On Mon, Aug 29, 2011 at 04:49:29PM +0100, Bruce Stenning wrote:
-> I should mention that we are now working on kernel 2.6.39.4 (and are choosing
-> not to go with 3.x to limit changes as we progress towards final testing.)
+Add devicetree match table to ahci platform driver for Calxeda Highbank
+AHCI controller.
 
-I don't think it would make any difference.  The core EH hasn't
-changed for some time now.
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: devicetree-discuss@lists.ozlabs.org
+---
+ .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
+ drivers/ata/ahci_platform.c                        |    7 +++++++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/calxeda-sata.txt
 
-> [...]
-> ata4: EH complete
-> ata_scsi_error: EXIT
-> __ata_port_freeze: ata4 port frozen
-> ata_port_schedule_eh: port EH scheduled
-> ata_scsiop_noop: ENTER
-> ata_scsiop_read_cap: ENTER
-> ata_scsiop_mode_sense: ENTER
-> ata_scsiop_mode_sense: ENTER
-> ata_scsiop_mode_sense: ENTER
-
-That's weird.  Another EH is scheduled after one completes but EH
-doesn't kick in.  Hmmm... can't see how that can happen.  How easily
-can you reproduce the problem?
-
-Thanks.
-
+diff --git a/Documentation/devicetree/bindings/ata/calxeda-sata.txt b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+new file mode 100644
+index 0000000..79caa56
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+@@ -0,0 +1,17 @@
++* Calxeda SATA Controller
++
++SATA nodes are defined to describe on-chip Serial ATA controllers.
++Each SATA controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains "calxeda,hb-ahci"
++- interrupts        : <interrupt mapping for SATA IRQ>
++- reg               : <registers mapping>
++
++Example:
++        sata@ffe08000 {
++		compatible = "calxeda,hb-ahci";
++                reg = <0xffe08000 0x1000>;
++                interrupts = <115>;
++        };
++
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 6fef1fa..9bfc970 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -171,11 +171,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct of_device_id ahci_of_match[] = {
++	{ .compatible = "calxeda,hb-ahci", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, ahci_of_match);
++
+ static struct platform_driver ahci_driver = {
+ 	.remove = __devexit_p(ahci_remove),
+ 	.driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
++		.of_match_table = ahci_of_match,
+ 	},
+ };
+ 
 -- 
-tejun
+1.7.5.4
+
