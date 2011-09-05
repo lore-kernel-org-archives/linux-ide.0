@@ -1,45 +1,29 @@
-From: Mark Lord <mlord@pobox.com>
-Subject: Re: Decoding marvel + Sil PMP errors / NCQ disabled due to excessive
- errors / 1.5G downgrade
-Date: Fri, 02 Sep 2011 19:09:24 -0400
-Message-ID: <4E616224.5040009@pobox.com>
-References: <20110831022005.GI19892@merlins.org>
+From: Bernhard Froemel <froemel@vmars.tuwien.ac.at>
+Subject: Re: Allow (forced) AHCI mode on Intel 5 series, 3400 series chipsets
+Date: Mon, 05 Sep 2011 17:39:50 +0200
+Message-ID: <4E64ED46.7000201@vmars.tuwien.ac.at>
+References: <4E3D9EF9.4050906@vmars.tuwien.ac.at> <20110808100731.GI23937@htj.dyndns.org> <4E3FCE30.1060605@vmars.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:39519 "EHLO
-	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756464Ab1IBXJZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Sep 2011 19:09:25 -0400
-In-Reply-To: <20110831022005.GI19892@merlins.org>
+Received: from luna.vmars.tuwien.ac.at ([128.130.39.29]:48531 "EHLO
+	mail.vmars.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753362Ab1IEPmI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Sep 2011 11:42:08 -0400
+In-Reply-To: <4E3FCE30.1060605@vmars.tuwien.ac.at>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc MERLIN <marc@merlins.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, joerg@dorchain.net, sshtylyov@mvista.com
 
-On 11-08-30 10:20 PM, Marc MERLIN wrote:
-> Hi Mark and Tejun,
-> 
-> Would you have any idea of what I'm seeing here?
-> 
-> This is with kernel 3.0.1,
-> 02:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 PCI-e 4-port SATA-II (rev 02)
-> 
-> and a Sil PMP.
-...
+Hello,
 
-At present, I don't think either of my PMPs work with any of my SATA controllers
-using recent kernels.  They all used to work back in the 2.6.2x kernels,
-and I have not reloaded one of those to retest with (due to lack of ext4 in those).
+are there any more objections with this patch [1]? or do I need to
+resubmit to a specific person?
+I'd really like to get it into the kernel ;)
 
-Something's just not right in PMP land.
-The same PMPs work fine on the same hardware in WinXP.
+Cheers,
+ Bernhard
 
-I wonder what we're missing?
-
-I'm also travelling without internet access for the next month.  :)
--- 
-Mark Lord
-Real-Time Remedies Inc.
-mlord@pobox.com
+[1] http://www.spinics.net/lists/linux-ide/msg41438.html
