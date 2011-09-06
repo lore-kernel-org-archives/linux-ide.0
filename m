@@ -1,7 +1,7 @@
 From: Bruce Stenning <b.stenning@indigovision.com>
 Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Tue, 6 Sep 2011 13:19:44 +0100
-Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54B00@gretna.indigovision.com>
+Date: Tue, 6 Sep 2011 13:26:19 +0100
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54B0E@gretna.indigovision.com>
 References: <20110525094127.GF10146@htj.dyndns.org>
  <4DF20E03.9030502@teksavvy.com> <20110610140155.GJ15235@htj.dyndns.org>
  <4DF25526.9010800@teksavvy.com> <20110611121957.GA7980@mtj.dyndns.org>
@@ -14,46 +14,33 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretna.indigovision.com ([62.7.85.227]:38852 "EHLO
+Received: from gretna.indigovision.com ([62.7.85.227]:38974 "EHLO
 	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754178Ab1IFMTt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2011 08:19:49 -0400
-In-Reply-To: <20110906034544.GB18425@mtj.dyndns.org>
+	with ESMTP id S1754372Ab1IFM0W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2011 08:26:22 -0400
 Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-> Can you please add some debug printk's to scsi_schedule_eh() and see
-> whether scsi_eh_wakeup() is invoked from there?  It seems likely that
-> the problem is caused by race conditions around
-> SHOST_[CANCEL_]RECOVERY flags.
+I wrote:
+> ata4: EH complete
+> Waking error handler thread
+> scsi_eh_wakeup: succeeded
+> scsi_schedule_eh: succeeded
+> scsi_restart_operations: waking up host to restart
+> Error handler scsi_eh_3 sleeping
 
-I did manage to reproduce the lockup again yesterday with a slightly
-different mix of tracing, including adding tracing to scsi_eh_wakeup()
-and scsi_schedule_eh().  It looks like the EH is being scheduled, but
-the EH thread goes immediately back to sleep and doesn't wake up:
+Sorry, I hit 'send' before thinking fully.  A short while before the above,
+the following was logged:
 
-ata4: EH complete
 Waking error handler thread
 scsi_eh_wakeup: succeeded
-scsi_schedule_eh: succeeded
-scsi_restart_operations: waking up host to restart
-Error handler scsi_eh_3 sleeping
+Error handler scsi_eh_3 waking up
 
-Is it attempting to wake the scsi_eh_3 thread while scsi_error_handler
-is still processing an EH, which then calls scsi_restart_operations and
-puts the scsi_eh_3 thread back to sleep again?
-
-Some while after the lockup, there was some tracing relating to SCSI
-operations timing out, but the port was still unresponsive.  The unit
-is not entirely stable in this state, and our application software was
-no longer able to strobe softdog, so the unit rebooted.  Enough was
-running for the serial console to be responsive before the reboot,
-however.
-
-Thanks,
+This suggests that scsi_error_handler was indeed running when the subsequent
+wake-up was attempted.
 
 Bruce.
 
