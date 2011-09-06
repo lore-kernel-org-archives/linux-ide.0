@@ -1,63 +1,69 @@
-From: Yegor Yefremov <yegorslists@googlemail.com>
-Subject: kerenl 3.0.3: irq x: nobody cared problem
-Date: Tue, 6 Sep 2011 11:09:45 +0200
-Message-ID: <CAGm1_kti=qsb5NLh3bKPimeqSfx6zQ81_dgNVPzj59exG-HGUg@mail.gmail.com>
+From: Alan Cox <alan@linux.intel.com>
+Subject: Re: [RFC PATCH #upstream-fixes] libata: don't use 32bit PIO for
+ small transfers
+Date: Tue, 6 Sep 2011 10:49:52 +0100
+Message-ID: <20110906104952.0c930a93@bob.linux.org.uk>
+References: <20110906042101.GE18425@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:37885 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753714Ab1IFJKG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2011 05:10:06 -0400
-Received: by vws1 with SMTP id 1so4569609vws.19
-        for <linux-ide@vger.kernel.org>; Tue, 06 Sep 2011 02:10:05 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]:3042 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753299Ab1IFJnu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Sep 2011 05:43:50 -0400
+In-Reply-To: <20110906042101.GE18425@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: tj@kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, tom.leiming@gmail.com, seth.heasley@intel.com
 
-I'm using a ks8695 based board with more or less self-made IDE
-controller (EPLD). Most CF cards wprked without a problem with kernel
-2.6.33 and legacy IDE driver. Now I ported our platform to 3.0.3 and
-both legacy driver and libata driver give following error:
+On Tue, 6 Sep 2011 13:21:01 +0900
+Tejun Heo <tj@kernel.org> wrote:
 
-ks8695_ether Ethernet driver, V1.02
-irq 3: nobody cared (try booting with the "irqpoll" option)
-[<c002fbbc>] (unwind_backtrace+0x0/0xe4) from [<c005ffc8>]
-(__report_bad_irq.clone.6+0x24/0xa8)
-[<c005ffc8>] (__report_bad_irq.clone.6+0x24/0xa8) from [<c0060234>]
-(note_interrupt+0x194/0x240)
-[<c0060234>] (note_interrupt+0x194/0x240) from [<c005ee58>]
-(handle_irq_event_percpu+0x150/0x17c)
-[<c005ee58>] (handle_irq_event_percpu+0x150/0x17c) from [<c005eeac>]
-(handle_irq_event+0x28/0x38)
-[<c005eeac>] (handle_irq_event+0x28/0x38) from [<c006090c>]
-(handle_level_irq+0xbc/0xe4)
-[<c006090c>] (handle_level_irq+0xbc/0xe4) from [<c005e868>]
-(generic_handle_irq+0x34/0x48)
-[<c005e868>] (generic_handle_irq+0x34/0x48) from [<c002505c>]
-(asm_do_IRQ+0x5c/0x80)
-[<c002505c>] (asm_do_IRQ+0x5c/0x80) from [<c002aa88>] (__irq_svc+0x28/0xa0)
-Exception stack(0xc3419ed0 to 0xc3419f18)
-9ec0:                                     c036a394 00000000 c036a384 60000013
-9ee0: 0000002a 00000003 c03822f8 c036a364 00000000 c0382220 c3419f2c 00000003
-9f00: 00000000 c3419f18 c003a544 c003a54c 60000013 ffffffff
-[<c002aa88>] (__irq_svc+0x28/0xa0) from [<c003a54c>] (vprintk+0x310/0x348)
-[<c003a54c>] (vprintk+0x310/0x348) from [<c02b57f4>] (printk+0x18/0x24)
-[<c02b57f4>] (printk+0x18/0x24) from [<c0018244>] (ks8695_init+0x14/0x30)
-[<c0018244>] (ks8695_init+0x14/0x30) from [<c00088f8>]
-(do_one_initcall+0xa8/0x178)
-[<c00088f8>] (do_one_initcall+0xa8/0x178) from [<c0008a3c>]
-(kernel_init+0x74/0x110)
-[<c0008a3c>] (kernel_init+0x74/0x110) from [<c002bd74>]
-(kernel_thread_exit+0x0/0x8)
-handlers:
-[<c01896d8>] ata_sff_interrupt
-Disabling IRQ #3
-ks8695_ether ks8695_ether.0: ks8695 ethernet (WAN) MAC: 00:04:d9:80:91:69
-ks8695_ether ks8695_ether.1: ks8695 ethernet (LAN) MAC: 00:04:d9:80:91:6a
+> Some configurations have problems with using 32bit PIO on ATAPI cdb
+> transfers.  The most likely cause is different division of payload
+> across FISes but hasn't been confirmed.  There isn't much to be gained
+> by using 32bit PIO for small transfers.  Play it safe and use 16bit
+> PIO for transfers smaller than 512 bytes.
 
-Any idea how solve the problem? The driver fails on every CF card
-compared to 2.6.33, which made problems only by some CF types.
+This seems to me to be the wrong approach as it hurts lots of other
+commands unnecessarily and may cause regressions on other setups
+because their behaviour is unnecessarily changed and performance
+reduced.
 
-Yegor
+The problem report is specific to Sandybridge in IDE mode, which is a
+recent controller so it should be chased up with the Intel folks who
+submitted the device ID as an apparent hardware problem - that way if
+it is a chipset problem (and I have no idea if it is) it might get a
+proper workaround, or fixed in future.
+
+Secondly it's a SATA specific problem.
+
+Thirdly we've been doing 32bit PIO on old IDE since it was invented.
+
+This seems an extreme reaction for a report of a single specific
+problem on a single specific device and controller.
+
+So NACK.
+
+Add a piix_sata_data_xfer32_maybe() function to the ata_piix driver
+specifically for this chipset.
+
+
+I've added Seth who submitted the relevant PCI identifers to the email.
+I'm a bit at a loss to understand why none of the previous discussion
+or patch was Cc'd in his direction ?
+
+Seth - the bug report is
+https://bugzilla.kernel.org/show_bug.cgi?id=40592
+
+and I guess the underlying question is "Are there any known 32bit PIO
+errata that would explain this ?"
+
+Before the changes go in it might also be worth testing CD burning and
+audio ripping etc to see if the problem is one dependent on transfer
+size or the fact the transfer is the cdb on a SATA transfer, so that
+any fixing is done right.
+
+Alan
