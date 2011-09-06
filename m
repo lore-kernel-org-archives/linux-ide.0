@@ -1,47 +1,119 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #upstream-fixes] libata: clear PIO pad area
-Date: Wed, 7 Sep 2011 02:30:14 +0900
-Message-ID: <20110906173014.GL18425@mtj.dyndns.org>
-References: <20110906040905.GD18425@mtj.dyndns.org>
- <4E65F09F.6020508@ru.mvista.com>
- <20110906165854.GK18425@mtj.dyndns.org>
- <4E6656F5.1050901@ru.mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Dan McGee <dpmcgee@gmail.com>
+Subject: [PATCH 1/2] pata_sis: extract a sis_port_base() method
+Date: Tue,  6 Sep 2011 14:21:58 -0500
+Message-ID: <1315336919-2737-1-git-send-email-dpmcgee@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:48047 "EHLO
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:52070 "EHLO
 	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034Ab1IFRaV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2011 13:30:21 -0400
-Received: by gwaa12 with SMTP id a12so3669424gwa.19
-        for <linux-ide@vger.kernel.org>; Tue, 06 Sep 2011 10:30:21 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4E6656F5.1050901@ru.mvista.com>
+	with ESMTP id S1754378Ab1IFTWE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2011 15:22:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, tom.leiming@gmail.com
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-On Tue, Sep 06, 2011 at 09:23:01PM +0400, Sergei Shtylyov wrote:
-> >There were devices which puke on random garbage at the end of CDB and
-> 
->    Note that ATAPI CDBs are always aligned to 4 bytes, so this path
-> should never be hit when sending them.
+This is similar to the existing sis_old_port_base() method. We do this
+same calculation and logic in multiple places (with one more to come in
+a future patch), so extracting it into a method makes sense.
 
-Ah, okay, but still, let's just clear it.  There's nothing to be
-gained by not clearing several bytes there.
+Reviewed-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Signed-off-by: Dan McGee <dpmcgee@gmail.com>
+---
+ drivers/ata/pata_sis.c |   46 ++++++++++++++++++++++++++++------------------
+ 1 files changed, 28 insertions(+), 18 deletions(-)
 
-> >in general sending indeterministic garbage to external device is a bad
-> >idea.  It increases chance of problems which can be difficult to
-> >reproduce and track down while gaining nothing.
-> 
->    Problems with "don't care" padding bytes? Dunno...
-
-Oh yeah, IIRC there were multiple devices which puked on "don't care"
-garbage bytes in CDB.  Don't underestimate the crappiness of cheap
-ATAPI devices. :)
-
-Thanks.
-
+diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
+index 533f2ae..9374400 100644
+--- a/drivers/ata/pata_sis.c
++++ b/drivers/ata/pata_sis.c
+@@ -89,6 +89,29 @@ static int sis_old_port_base(struct ata_device *adev)
+ }
+ 
+ /**
++ *	sis_port_base		-	return PCI configuration base for dev
++ *	@adev: device
++ *
++ *	Returns the base of the PCI configuration registers for this port
++ *	number.
++ */
++
++static int sis_port_base(struct ata_device *adev)
++{
++	struct ata_port *ap = adev->link->ap;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	int port = 0x40;
++	u32 reg54;
++
++	/* If bit 14 is set then the registers are mapped at 0x70 not 0x40 */
++	pci_read_config_dword(pdev, 0x54, &reg54);
++	if (reg54 & 0x40000000)
++		port = 0x70;
++
++	return  port + (8 * ap->port_no) +  (4 * adev->devno);
++}
++
++/**
+  *	sis_133_cable_detect	-	check for 40/80 pin
+  *	@ap: Port
+  *	@deadline: deadline jiffies for the operation
+@@ -266,9 +289,8 @@ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+-	int port = 0x40;
++	int port;
+ 	u32 t1;
+-	u32 reg54;
+ 	int speed = adev->pio_mode - XFER_PIO_0;
+ 
+ 	const u32 timing133[] = {
+@@ -288,12 +310,7 @@ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 
+ 	sis_set_fifo(ap, adev);
+ 
+-	/* If bit 14 is set then the registers are mapped at 0x70 not 0x40 */
+-	pci_read_config_dword(pdev, 0x54, &reg54);
+-	if (reg54 & 0x40000000)
+-		port = 0x70;
+-	port += 8 * ap->port_no +  4 * adev->devno;
+-
++	port = sis_port_base(adev);
+ 	pci_read_config_dword(pdev, port, &t1);
+ 	t1 &= 0xC0C00FFF;	/* Mask out timing */
+ 
+@@ -465,21 +482,14 @@ static void sis_133_early_set_dmamode (struct ata_port *ap, struct ata_device *a
+ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+-	int speed = adev->dma_mode - XFER_MW_DMA_0;
+-	int port = 0x40;
++	int port;
+ 	u32 t1;
+-	u32 reg54;
+ 
+ 	/* bits 4- cycle time 8 - cvs time */
+ 	static const u32 timing_u100[] = { 0x6B0, 0x470, 0x350, 0x140, 0x120, 0x110, 0x000 };
+ 	static const u32 timing_u133[] = { 0x9F0, 0x6A0, 0x470, 0x250, 0x230, 0x220, 0x210 };
+ 
+-	/* If bit 14 is set then the registers are mapped at 0x70 not 0x40 */
+-	pci_read_config_dword(pdev, 0x54, &reg54);
+-	if (reg54 & 0x40000000)
+-		port = 0x70;
+-	port += (8 * ap->port_no) +  (4 * adev->devno);
+-
++	port = sis_port_base(adev);
+ 	pci_read_config_dword(pdev, port, &t1);
+ 
+ 	if (adev->dma_mode < XFER_UDMA_0) {
+@@ -487,7 +497,7 @@ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 		/* FIXME: need data sheet to add MWDMA here. Also lacking on
+ 		   ide/pci driver */
+ 	} else {
+-		speed = adev->dma_mode - XFER_UDMA_0;
++		int speed = adev->dma_mode - XFER_UDMA_0;
+ 		/* if & 8 no UDMA133 - need info for ... */
+ 		t1 &= ~0x00000FF0;
+ 		t1 |= 0x00000004;
 -- 
-tejun
+1.7.6.1
+
