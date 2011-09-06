@@ -1,43 +1,65 @@
-From: Arnaud Patard (Rtp) <arnaud.patard@rtp-net.org>
-Subject: Re: [PATCH V7 1/5] AHCI Add the AHCI SATA feature on the MX53 platforms
-Date: Mon, 05 Sep 2011 21:25:46 +0200
-Message-ID: <877h5m7pvp.fsf@lebrac.rtp-net.org>
-References: <1314698171-7937-1-git-send-email-richard.zhu@linaro.org>
-	<CAODfWeEm8bkySXxb1qopbH1VMu-V+33k5x+0+qjABzesT0amOA@mail.gmail.com>
-	<CAJNCFV+XFGEba1J2dXDa4YVwqduAPV5y=5JYEXAZ0uv+S60vvw@mail.gmail.com>
-	<CAODfWeEueF45_yvPV5Zxbva6K2gEfKZbY2qoqySYFPZWnSgLsg@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Tue, 6 Sep 2011 12:45:44 +0900
+Message-ID: <20110906034544.GB18425@mtj.dyndns.org>
+References: <20110525094127.GF10146@htj.dyndns.org>
+ <4DF20E03.9030502@teksavvy.com>
+ <20110610140155.GJ15235@htj.dyndns.org>
+ <4DF25526.9010800@teksavvy.com>
+ <20110611121957.GA7980@mtj.dyndns.org>
+ <4DF4F30B.70702@teksavvy.com>
+ <20110613104856.GC16021@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
+ <20110902011305.GE2752@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8D9854F7@gretna.indigovision.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lebrac.rtp-net.org ([88.191.135.105]:51607 "EHLO
-	lebrac.rtp-net.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378Ab1IET0e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Sep 2011 15:26:34 -0400
-In-Reply-To: <CAODfWeEueF45_yvPV5Zxbva6K2gEfKZbY2qoqySYFPZWnSgLsg@mail.gmail.com>
-	(Hector Oron's message of "Wed, 31 Aug 2011 13:57:06 +0100")
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41916 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752366Ab1IFDpw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Sep 2011 23:45:52 -0400
+Content-Disposition: inline
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32D8D9854F7@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hector Oron <hector.oron@gmail.com>
-Cc: Richard Zhu <richard.zhu@linaro.org>, eric@eukrea.com, Wolfram Sang <w.sang@pengutronix.de>, eric.miao@linaro.org, linux-ide@vger.kernel.org, kernel@pengutronix.de, avorontsov@ru.mvista.com, jgarzik@pobox.com, linux-arm-kernel@lists.infradead.org
+To: Bruce Stenning <b.stenning@indigovision.com>
+Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hector Oron <hector.oron@gmail.com> writes:
+Hello,
 
-> Hello,
+On Fri, Sep 02, 2011 at 05:22:38PM +0100, Bruce Stenning wrote:
+> Unfortunately it has so far been quite difficult to reproduce when specifically
+> attempting to.  In normal use cases I reproduced it twice by unplugging a drive
+> from a RAID array with redundancy intact.  This was out of around a dozen
+> cycles of waiting until redundancy was restored while the unit was under load,
+> popping the disk, reinserting, and triggering a RAID rebuild.
 
-Hi,
+Hmm... that's unfortunate.
 
->
-> 2011/8/31 Richard Zhu <richard.zhu@linaro.org>:
->> Hi Hector:
->> Thanks for your help to tests these patches.
->
-> Note I rebased this patches against 'imx-features' branch on Sascha's tree.
-> I am noticing some obscure (to me) messages from kernel:
+> I have only twice managed to trigger a lockup deliberately.  In both cases the
+> tracing showed a scheduled EH which was subsequently not enacted.
+> 
+> How long could it take for the EH to be enacted?  In the lockups that I
+> have reproduced it did not seem to have recovered minutes later, but perhaps
+> if I had waited longer...?  I have noticed that error recovery sometimes backs
+> off for 8s and even 33s, but it always warns when that sort of delay is coming
+> up.
 
-Currently testing with probably same checkout of imx-features branch
-with a sata 3.5" drive. Running badblocks in non destructive write mode
-and so far, so good (it's slow but it may comes from my drive).
+It should happen pretty quickly.  In such cases, fastdrain is
+activated and all pending commands are aborted if they complete in 3
+secs and then EH should kick in.  The backoff is from reset path only
+to give breathing time for devices which take long time to spin up and
+doesn't apply in this case.
 
-Did you test if there was a bad cable or faulty drive PSU ?
+> I shall continue to try to track down why the scheduled EH does not happen.
 
-Arnaud
+Can you please add some debug printk's to scsi_schedule_eh() and see
+whether scsi_eh_wakeup() is invoked from there?  It seems likely that
+the problem is caused by race conditions around
+SHOST_[CANCEL_]RECOVERY flags.
+
+Thanks.
+
+-- 
+tejun
