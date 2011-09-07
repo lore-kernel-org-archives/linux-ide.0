@@ -1,121 +1,65 @@
 From: Dan McGee <dpmcgee@gmail.com>
-Subject: [PATCH 1/5] pata_sis: extract a sis_port_base() method
-Date: Wed,  7 Sep 2011 11:23:18 -0500
-Message-ID: <1315412602-6560-2-git-send-email-dpmcgee@gmail.com>
-References: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:57783 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756479Ab1IGQXj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 12:23:39 -0400
-In-Reply-To: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH 0/5 v2] pata_sis fixes and driver cleanup
+Date: Wed,  7 Sep 2011 11:23:17 -0500
+Message-ID: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-This is similar to the existing sis_old_port_base() method. We do this
-same calculation and logic in multiple places (with one more to come in
-a future patch), so extracting it into a method makes sense.
+This started as just two patches to use the correct UDMA 100 timings on
+chipsets not supporting UDMA 133 but has grown a bit. This resubmit fixes the
+following issues, much of them pointed out by Sergei Shtylyov:
 
-Reviewed-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Signed-off-by: Dan McGee <dpmcgee@gmail.com>
----
- drivers/ata/pata_sis.c |   46 ++++++++++++++++++++++++++++------------------
- 1 files changed, 28 insertions(+), 18 deletions(-)
+* Ensure 0xC0 is used to mask, not 0xE0
+* Move all 'static const' changes to separate patch
+* Formatting cleanups- don't introduce new formatting issues, and add a patch
+  to fix existing ones
+* Comment referred to bit 14, but it is bit 30 as we grab a word, not two bytes
+* Use dev_info(), not printk() directly
+* Adjust commit message to include old commit summary
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index 533f2ae..10af293 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -89,6 +89,29 @@ static int sis_old_port_base(struct ata_device *adev)
- }
- 
- /**
-+ *	sis_port_base		-	return PCI configuration base for dev
-+ *	@adev: device
-+ *
-+ *	Returns the base of the PCI configuration registers for this port
-+ *	number.
-+ */
-+
-+static int sis_port_base(struct ata_device *adev)
-+{
-+	struct ata_port *ap = adev->link->ap;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	int port = 0x40;
-+	u32 reg54;
-+
-+	/* If bit 30 is set then the registers are mapped at 0x70 not 0x40 */
-+	pci_read_config_dword(pdev, 0x54, &reg54);
-+	if (reg54 & 0x40000000)
-+		port = 0x70;
-+
-+	return port + (8 * ap->port_no) + (4 * adev->devno);
-+}
-+
-+/**
-  *	sis_133_cable_detect	-	check for 40/80 pin
-  *	@ap: Port
-  *	@deadline: deadline jiffies for the operation
-@@ -266,9 +289,8 @@ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
- static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
--	int port = 0x40;
-+	int port;
- 	u32 t1;
--	u32 reg54;
- 	int speed = adev->pio_mode - XFER_PIO_0;
- 
- 	const u32 timing133[] = {
-@@ -288,12 +310,7 @@ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 
- 	sis_set_fifo(ap, adev);
- 
--	/* If bit 14 is set then the registers are mapped at 0x70 not 0x40 */
--	pci_read_config_dword(pdev, 0x54, &reg54);
--	if (reg54 & 0x40000000)
--		port = 0x70;
--	port += 8 * ap->port_no +  4 * adev->devno;
--
-+	port = sis_port_base(adev);
- 	pci_read_config_dword(pdev, port, &t1);
- 	t1 &= 0xC0C00FFF;	/* Mask out timing */
- 
-@@ -465,21 +482,14 @@ static void sis_133_early_set_dmamode (struct ata_port *ap, struct ata_device *a
- static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- {
- 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
--	int speed = adev->dma_mode - XFER_MW_DMA_0;
--	int port = 0x40;
-+	int port;
- 	u32 t1;
--	u32 reg54;
- 
- 	/* bits 4- cycle time 8 - cvs time */
- 	static const u32 timing_u100[] = { 0x6B0, 0x470, 0x350, 0x140, 0x120, 0x110, 0x000 };
- 	static const u32 timing_u133[] = { 0x9F0, 0x6A0, 0x470, 0x250, 0x230, 0x220, 0x210 };
- 
--	/* If bit 14 is set then the registers are mapped at 0x70 not 0x40 */
--	pci_read_config_dword(pdev, 0x54, &reg54);
--	if (reg54 & 0x40000000)
--		port = 0x70;
--	port += (8 * ap->port_no) +  (4 * adev->devno);
--
-+	port = sis_port_base(adev);
- 	pci_read_config_dword(pdev, port, &t1);
- 
- 	if (adev->dma_mode < XFER_UDMA_0) {
-@@ -487,7 +497,7 @@ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 		/* FIXME: need data sheet to add MWDMA here. Also lacking on
- 		   ide/pci driver */
- 	} else {
--		speed = adev->dma_mode - XFER_UDMA_0;
-+		int speed = adev->dma_mode - XFER_UDMA_0;
- 		/* if & 8 no UDMA133 - need info for ... */
- 		t1 &= ~0x00000FF0;
- 		t1 |= 0x00000004;
+The first two patches are the critical ones that fix a regression between the
+old IDE stack and the new (P)ATA one.
+
+Dan McGee (5):
+  pata_sis: extract a sis_port_base() method
+  pata_sis: add mode_filter method for certain sis5513 chipsets
+  pata_sis: enable MWDMA for UDMA 133 chipset
+  pata_sis: mark most const data static as well
+  pata_sis: code style cleanups for consistency
+
+ drivers/ata/pata_sis.c |  154 +++++++++++++++++++++++++++++++-----------------
+ 1 files changed, 99 insertions(+), 55 deletions(-)
+
+$ python2 scripts/bloat-o-meter pata_sis.ko.old drivers/ata/pata_sis.ko
+add/remove: 8/0 grow/shrink: 5/6 up/down: 313/-251 (62)
+function                                     old     new   delta
+static.sis_port_base                           -      83     +83
+sis_133_mode_filter                            -      82     +82
+static.udma_bits                               7      31     +24
+sis_init_one                                 695     719     +24
+static.timing133                               -      20     +20
+static.timing100                               -      20     +20
+static.timing_u133                            28      40     +12
+static.timing_u100                            28      40     +12
+static.mwdma_bits                              -      12     +12
+sis_133_set_dmamode                          195     204      +9
+static.recovery                                -       5      +5
+static.actrec                                  -       5      +5
+static.active                                  -       5      +5
+sis_100_set_piomode                          129     111     -18
+sis_old_set_dmamode                          192     171     -21
+sis_100_set_dmamode                          156     134     -22
+sis_old_set_piomode                          229     193     -36
+sis_66_set_dmamode                           216     171     -45
+sis_133_set_piomode                          265     156    -109
+
+$ size pata_sis.ko.old drivers/ata/pata_sis.ko
+   text    data     bss     dec     hex filename
+   4524    2724       4    7252    1c54 pata_sis.ko.old
+   4649    2724       4    7377    1cd1 drivers/ata/pata_sis.ko
+
 -- 
 1.7.6.1
-
