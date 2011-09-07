@@ -1,101 +1,73 @@
-From: Dan McGee <dpmcgee@gmail.com>
-Subject: [PATCH 4/5] pata_sis: mark most const data static as well
-Date: Wed,  7 Sep 2011 11:23:21 -0500
-Message-ID: <1315412602-6560-5-git-send-email-dpmcgee@gmail.com>
-References: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
+From: Bruce Stenning <b.stenning@indigovision.com>
+Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Wed, 7 Sep 2011 13:09:10 +0100
+Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
+References: <4DF25526.9010800@teksavvy.com>
+ <20110611121957.GA7980@mtj.dyndns.org> <4DF4F30B.70702@teksavvy.com>
+ <20110613104856.GC16021@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
+ <20110902011305.GE2752@htj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8D9854F7@gretna.indigovision.com>
+ <20110906034544.GB18425@mtj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8DA54B00@gretna.indigovision.com>
+ <20110906163355.GG18425@mtj.dyndns.org>
+ <20110906164221.GH18425@mtj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:41495 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752323Ab1IGQcA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 12:32:00 -0400
-In-Reply-To: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
+Received: from gretna.indigovision.com ([62.7.85.227]:39320 "EHLO
+	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752991Ab1IHAWN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 20:22:13 -0400
+In-Reply-To: <20110906164221.GH18425@mtj.dyndns.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-This pushes timing and other values into preinitialized read-only data
-sections rather than being inlined into the code. None of these
-functions are called more than a handful of times, so reducing code size
-makes sense.
+Hi Tejun,
 
-Signed-off-by: Dan McGee <dpmcgee@gmail.com>
----
- drivers/ata/pata_sis.c |   20 ++++++++++----------
- 1 files changed, 10 insertions(+), 10 deletions(-)
+Sorry for sending so many emails yesterday; I blame the dental anaesthetic
+I received in the morning for being so jumpy on the send button ;-)
 
-diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index a42668b..d886b0b 100644
---- a/drivers/ata/pata_sis.c
-+++ b/drivers/ata/pata_sis.c
-@@ -231,8 +231,8 @@ static void sis_old_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	u8 t1, t2;
- 	int speed = adev->pio_mode - XFER_PIO_0;
- 
--	const u8 active[]   = { 0x00, 0x07, 0x04, 0x03, 0x01 };
--	const u8 recovery[] = { 0x00, 0x06, 0x04, 0x03, 0x03 };
-+	static const u8 active[]   = { 0x00, 0x07, 0x04, 0x03, 0x01 };
-+	static const u8 recovery[] = { 0x00, 0x06, 0x04, 0x03, 0x03 };
- 
- 	sis_set_fifo(ap, adev);
- 
-@@ -267,7 +267,7 @@ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	int port = sis_old_port_base(adev);
- 	int speed = adev->pio_mode - XFER_PIO_0;
- 
--	const u8 actrec[] = { 0x00, 0x67, 0x44, 0x33, 0x31 };
-+	static const u8 actrec[] = { 0x00, 0x67, 0x44, 0x33, 0x31 };
- 
- 	sis_set_fifo(ap, adev);
- 
-@@ -293,14 +293,14 @@ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
- 	u32 t1;
- 	int speed = adev->pio_mode - XFER_PIO_0;
- 
--	const u32 timing133[] = {
-+	static const u32 timing133[] = {
- 		0x28269000,	/* Recovery << 24 | Act << 16 | Ini << 12 */
- 		0x0C266000,
- 		0x04263000,
- 		0x0C0A3000,
- 		0x05093000
- 	};
--	const u32 timing100[] = {
-+	static const u32 timing100[] = {
- 		0x1E1C6000,	/* Recovery << 24 | Act << 16 | Ini << 12 */
- 		0x091C4000,
- 		0x031C2000,
-@@ -341,8 +341,8 @@ static void sis_old_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u16 timing;
- 
--	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
--	const u16 udma_bits[]  = { 0xE000, 0xC000, 0xA000 };
-+	static const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
-+	static const u16 udma_bits[]  = { 0xE000, 0xC000, 0xA000 };
- 
- 	pci_read_config_word(pdev, drive_pci, &timing);
- 
-@@ -381,8 +381,8 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	u16 timing;
- 
- 	/* MWDMA 0-2 and UDMA 0-5 */
--	const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
--	const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000, 0x8000 };
-+	static const u16 mwdma_bits[] = { 0x008, 0x302, 0x301 };
-+	static const u16 udma_bits[]  = { 0xF000, 0xD000, 0xB000, 0xA000, 0x9000, 0x8000 };
- 
- 	pci_read_config_word(pdev, drive_pci, &timing);
- 
-@@ -419,7 +419,7 @@ static void sis_100_set_dmamode (struct ata_port *ap, struct ata_device *adev)
- 	int drive_pci = sis_old_port_base(adev);
- 	u8 timing;
- 
--	const u8 udma_bits[]  = { 0x8B, 0x87, 0x85, 0x83, 0x82, 0x81};
-+	static const u8 udma_bits[]  = { 0x8B, 0x87, 0x85, 0x83, 0x82, 0x81};
- 
- 	pci_read_config_byte(pdev, drive_pci + 1, &timing);
- 
--- 
-1.7.6.1
+> Can you please instrument the followings?
+>
+> * print the caller of scsi_eh_wakeup().  "%pF" w/ (void *)_RET_IP_
+>   should do it.
+>
+> * print why scsi_eh is going back to sleep immediately.
+>   ie. shost->host_failed, host_eh_scheduled, host_busy in
+>   scsi_error_handler().  It would also be nice to add some printks
+>   around schedule() and enable PRINTK_TIME.
 
+I can certainly try this.  Could you confirm whether my thoughts about a race
+between the scsi_eh thread and the wake-up are plausible?  I backtracked
+yesterday because I thought the scsi_eh thread would get rescheduled naturally,
+not realising that when the task state is TASK_INTERRUPTIBLE schedule() takes
+the task off the run queue (so it needs to be explicitly woken.)
+
+Here is my thinking again:
+
+shost->host_eh_scheduled is read here in scsi_error_handler:
+
+        set_current_state(TASK_INTERRUPTIBLE);
+        while (!kthread_should_stop()) {
+                if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
+
+There's no locking in scsi_error_handler (though functions it calls probably
+claim locks.)
+
+When scheduling an EH, scsi_schedule_eh takes the shost->host_lock, increments
+shost->host_eh_scheduled, and then wakes the EH thread.  If this happens
+between the scsi_eh thread reading host_eh_scheduled and sending itself back
+to sleep (when the scsi_eh thread's state is TASK_INTERRUPTIBLE) nothing will
+wake up the thread again and host_eh_scheduled will not get inspected.
+host_eh_scheduled is stuck at 1 with the scsi_eh thread asleep, and it won't
+get woken again because the ata port has been frozen and irqs are masked off.
+
+Bruce.
+
+
+Latest News at: http://www.indigovision.com/index.php/en/news.html
