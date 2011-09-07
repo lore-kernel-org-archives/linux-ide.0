@@ -1,7 +1,7 @@
 From: Dan McGee <dpmcgee@gmail.com>
-Subject: [PATCH 3/5] pata_sis: enable MWDMA for UDMA 133 chipset
-Date: Wed,  7 Sep 2011 11:23:20 -0500
-Message-ID: <1315412602-6560-4-git-send-email-dpmcgee@gmail.com>
+Subject: [PATCH 5/5] pata_sis: code style cleanups for consistency
+Date: Wed,  7 Sep 2011 11:23:22 -0500
+Message-ID: <1315412602-6560-6-git-send-email-dpmcgee@gmail.com>
 References: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1315412602-6560-1-git-send-email-dpmcgee@gmail.com>
@@ -10,67 +10,179 @@ To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-This ports the timing values over from the old IDE driver into the new
-PATA-based one. The comment was lying when it stated the old driver was
-not MWDMA capable.
-
-Boot tested on actual hardware using 'libata.force=mwdma2'.
+Remove a lot of '  ' (double spaces) as well as ensuring use of tabs vs.
+spaces is appropriate and consistent.
 
 Signed-off-by: Dan McGee <dpmcgee@gmail.com>
 ---
- drivers/ata/pata_sis.c |   25 +++++++++++++++++--------
- 1 files changed, 17 insertions(+), 8 deletions(-)
+ drivers/ata/pata_sis.c |   38 +++++++++++++++++++-------------------
+ 1 files changed, 19 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
-index fb4e90f..a42668b 100644
+index d886b0b..b0edc7d 100644
 --- a/drivers/ata/pata_sis.c
 +++ b/drivers/ata/pata_sis.c
-@@ -485,21 +485,30 @@ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+@@ -55,7 +55,7 @@ static const struct sis_laptop sis_laptop[] = {
+ 	/* devid, subvendor, subdev */
+ 	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
+ 	{ 0x5513, 0x1734, 0x105F },	/* FSC Amilo A1630 */
+-	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
++	{ 0x5513, 0x1071, 0x8640 },	/* EasyNote K5305 */
+ 	/* end marker */
+ 	{ 0, }
+ };
+@@ -76,7 +76,7 @@ static int sis_short_ata40(struct pci_dev *dev)
+ }
+ 
+ /**
+- *	sis_old_port_base		-	return PCI configuration base for dev
++ *	sis_old_port_base - return PCI configuration base for dev
+  *	@adev: device
+  *
+  *	Returns the base of the PCI configuration registers for this port
+@@ -85,11 +85,11 @@ static int sis_short_ata40(struct pci_dev *dev)
+ 
+ static int sis_old_port_base(struct ata_device *adev)
+ {
+-	return  0x40 + (4 * adev->link->ap->port_no) +  (2 * adev->devno);
++	return 0x40 + (4 * adev->link->ap->port_no) + (2 * adev->devno);
+ }
+ 
+ /**
+- *	sis_port_base		-	return PCI configuration base for dev
++ *	sis_port_base - return PCI configuration base for dev
+  *	@adev: device
+  *
+  *	Returns the base of the PCI configuration registers for this port
+@@ -112,7 +112,7 @@ static int sis_port_base(struct ata_device *adev)
+ }
+ 
+ /**
+- *	sis_133_cable_detect	-	check for 40/80 pin
++ *	sis_133_cable_detect - check for 40/80 pin
+  *	@ap: Port
+  *	@deadline: deadline jiffies for the operation
+  *
+@@ -133,7 +133,7 @@ static int sis_133_cable_detect(struct ata_port *ap)
+ }
+ 
+ /**
+- *	sis_66_cable_detect	-	check for 40/80 pin
++ *	sis_66_cable_detect - check for 40/80 pin
+  *	@ap: Port
+  *
+  *	Perform cable detection on the UDMA66, UDMA100 and early UDMA133
+@@ -155,7 +155,7 @@ static int sis_66_cable_detect(struct ata_port *ap)
+ 
+ 
+ /**
+- *	sis_pre_reset		-	probe begin
++ *	sis_pre_reset - probe begin
+  *	@link: ATA link
+  *	@deadline: deadline jiffies for the operation
+  *
+@@ -183,7 +183,7 @@ static int sis_pre_reset(struct ata_link *link, unsigned long deadline)
+ 
+ 
+ /**
+- *	sis_set_fifo	-	Set RWP fifo bits for this device
++ *	sis_set_fifo - Set RWP fifo bits for this device
+  *	@ap: Port
+  *	@adev: Device
+  *
+@@ -226,7 +226,7 @@ static void sis_set_fifo(struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_old_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int port = sis_old_port_base(adev);
+ 	u8 t1, t2;
+ 	int speed = adev->pio_mode - XFER_PIO_0;
+@@ -263,7 +263,7 @@ static void sis_old_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int port = sis_old_port_base(adev);
+ 	int speed = adev->pio_mode - XFER_PIO_0;
+ 
+@@ -288,7 +288,7 @@ static void sis_100_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int port;
+ 	u32 t1;
+ 	int speed = adev->pio_mode - XFER_PIO_0;
+@@ -336,7 +336,7 @@ static void sis_133_set_piomode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_old_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int speed = adev->dma_mode - XFER_MW_DMA_0;
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u16 timing;
+@@ -375,7 +375,7 @@ static void sis_old_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int speed = adev->dma_mode - XFER_MW_DMA_0;
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u16 timing;
+@@ -414,7 +414,7 @@ static void sis_66_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_100_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int speed = adev->dma_mode - XFER_MW_DMA_0;
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u8 timing;
+@@ -448,7 +448,7 @@ static void sis_100_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void sis_133_early_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int speed = adev->dma_mode - XFER_MW_DMA_0;
+ 	int drive_pci = sis_old_port_base(adev);
+ 	u8 timing;
+@@ -481,7 +481,7 @@ static void sis_133_early_set_dmamode (struct ata_port *ap, struct ata_device *a
+ 
+ static void sis_133_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
  	int port;
  	u32 t1;
  
--	/* bits 4- cycle time 8 - cvs time */
--	static const u32 timing_u100[] = { 0x6B0, 0x470, 0x350, 0x140, 0x120, 0x110, 0x000 };
--	static const u32 timing_u133[] = { 0x9F0, 0x6A0, 0x470, 0x250, 0x230, 0x220, 0x210 };
--
- 	port = sis_port_base(adev);
- 	pci_read_config_dword(pdev, port, &t1);
- 
- 	if (adev->dma_mode < XFER_UDMA_0) {
-+		/* Recovery << 24 | Act << 16 | Ini << 12, like PIO modes */
-+		static const u32 timing_u100[] = { 0x19154000, 0x06072000, 0x04062000 };
-+		static const u32 timing_u133[] = { 0x221C6000, 0x0C0A3000, 0x05093000 };
-+		int speed = adev->dma_mode - XFER_MW_DMA_0;
-+
-+		t1 &= 0xC0C00FFF;
-+		/* disable UDMA */
- 		t1 &= ~0x00000004;
--		/* FIXME: need data sheet to add MWDMA here. Also lacking on
--		   ide/pci driver */
-+		if (t1 & 0x08)
-+			t1 |= timing_u133[speed];
-+		else
-+			t1 |= timing_u100[speed];
- 	} else {
-+		/* bits 4- cycle time 8 - cvs time */
-+		static const u32 timing_u100[] = { 0x6B0, 0x470, 0x350, 0x140, 0x120, 0x110, 0x000 };
-+		static const u32 timing_u133[] = { 0x9F0, 0x6A0, 0x470, 0x250, 0x230, 0x220, 0x210 };
- 		int speed = adev->dma_mode - XFER_UDMA_0;
--		/* if & 8 no UDMA133 - need info for ... */
-+
- 		t1 &= ~0x00000FF0;
-+		/* enable UDMA */
- 		t1 |= 0x00000004;
- 		if (t1 & 0x08)
- 			t1 |= timing_u133[speed];
-@@ -620,7 +629,7 @@ static const struct ata_port_info sis_info100_early = {
- static const struct ata_port_info sis_info133 = {
- 	.flags		= ATA_FLAG_SLAVE_POSS,
- 	.pio_mask	= ATA_PIO4,
--	/* No MWDMA */
-+	.mwdma_mask	= ATA_MWDMA2,
- 	.udma_mask	= ATA_UDMA6,
- 	.port_ops	= &sis_133_ops,
- };
+@@ -710,7 +710,7 @@ static void sis_fixup(struct pci_dev *pdev, struct sis_chipset *sis)
+  *	@pdev: PCI device to register
+  *	@ent: Entry in sis_pci_tbl matching with @pdev
+  *
+- *	Called from kernel PCI layer.  We probe for combined mode (sigh),
++ *	Called from kernel PCI layer. We probe for combined mode (sigh),
+  *	and then hand over control to libata, for it to do the rest.
+  *
+  *	LOCKING:
+@@ -820,10 +820,10 @@ static int sis_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			}
+ 			break;
+ 		case 0x0180:	/* SIS 965/965L */
+-			chipset =  &sis133;
++			chipset = &sis133;
+ 			break;
+ 		case 0x1180:	/* SIS 966/966L */
+-			chipset =  &sis133;
++			chipset = &sis133;
+ 			break;
+ 		}
+ 	}
 -- 
 1.7.6.1
