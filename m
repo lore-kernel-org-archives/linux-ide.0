@@ -1,70 +1,66 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Thu, 8 Sep 2011 10:16:40 +0900
-Message-ID: <20110908011640.GA5381@mtj.dyndns.org>
-References: <4DF4F30B.70702@teksavvy.com>
- <20110613104856.GC16021@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
- <20110902011305.GE2752@htj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32D8D9854F7@gretna.indigovision.com>
- <20110906034544.GB18425@mtj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32D8DA54B00@gretna.indigovision.com>
- <20110906163355.GG18425@mtj.dyndns.org>
- <20110906164221.GH18425@mtj.dyndns.org>
- <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Keng-Yu Lin <kengyu@canonical.com>
+Subject: [PATCH] achi, ata_generic: Add ASMedia ASM1061 support
+Date: Thu,  8 Sep 2011 11:43:46 +0800
+Message-ID: <1315453426-8796-1-git-send-email-kengyu@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:65105 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757688Ab1IHBQu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 21:16:50 -0400
-Content-Disposition: inline
-In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:52735 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142Ab1IHDnx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 23:43:53 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Stenning <b.stenning@indigovision.com>
-Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Jeff Garzik <jgarzik@pobox.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 
-Hello,
+ASM1061 PCI-E to SATA bridge controller has two variants.
+One works under AHCI and the other works with ata_generic.
 
-On Wed, Sep 07, 2011 at 01:09:10PM +0100, Bruce Stenning wrote:
-> Sorry for sending so many emails yesterday; I blame the dental anaesthetic
-> I received in the morning for being so jumpy on the send button ;-)
+Add the PCI vendor ID and product IDs accordingly.
 
-Oh the fun. :)
+Signed-off-by: Keng-Yu Lin <kengyu@canonical.com>
+---
+ drivers/ata/ahci.c        |    3 +++
+ drivers/ata/ata_generic.c |    1 +
+ include/linux/pci_ids.h   |    4 ++++
+ 3 files changed, 8 insertions(+), 0 deletions(-)
 
-> I can certainly try this.  Could you confirm whether my thoughts about a race
-> between the scsi_eh thread and the wake-up are plausible?  I backtracked
-> yesterday because I thought the scsi_eh thread would get rescheduled naturally,
-> not realising that when the task state is TASK_INTERRUPTIBLE schedule() takes
-> the task off the run queue (so it needs to be explicitly woken.)
-> 
-> Here is my thinking again:
-> 
-> shost->host_eh_scheduled is read here in scsi_error_handler:
-> 
->         set_current_state(TASK_INTERRUPTIBLE);
->         while (!kthread_should_stop()) {
->                 if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
-> 
-> There's no locking in scsi_error_handler (though functions it calls probably
-> claim locks.)
-> 
-> When scheduling an EH, scsi_schedule_eh takes the shost->host_lock, increments
-> shost->host_eh_scheduled, and then wakes the EH thread.  If this happens
-> between the scsi_eh thread reading host_eh_scheduled and sending itself back
-> to sleep (when the scsi_eh thread's state is TASK_INTERRUPTIBLE) nothing will
-> wake up the thread again and host_eh_scheduled will not get inspected.
-> host_eh_scheduled is stuck at 1 with the scsi_eh thread asleep, and it won't
-> get woken again because the ata port has been frozen and irqs are masked off.
-
-I don't think there's a race condition there.  set_current_state()
-implies memory barrier and wake_up_process() implies wmb().  host_eh
-either sees the inrecremented eh_scheduled count or TASK_RUNNING set
-by wake_up_process(), so it can't miss an event.
-
-Thanks.
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 71afe03..4899aad 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -397,6 +397,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Promise */
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+ 
++	/* Asmedia */
++	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1061 */
++
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index 721d38b..8187503 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -220,6 +220,7 @@ static struct pci_device_id ata_generic[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_HINT,   PCI_DEVICE_ID_HINT_VXPROII_IDE), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
++	{ PCI_DEVICE(PCI_VENDOR_ID_ASMEDIA,PCI_DEVICE_ID_ASM1061_IDE), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
+ 	  .driver_data = ATA_GEN_FORCE_DMA },
+ 	/*
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index f8910e1..87182b8 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2844,3 +2844,7 @@
+ 
+ #define PCI_VENDOR_ID_XEN		0x5853
+ #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
++
++#define PCI_VENDOR_ID_ASMEDIA		0x1b21
++#define PCI_DEVICE_ID_ASM1061_IDE	0x0611
++#define PCI_DEVICE_ID_ASM1061_AHCI	0x0612
 -- 
-tejun
+1.7.5.4
+
