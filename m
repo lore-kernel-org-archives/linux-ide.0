@@ -1,9 +1,8 @@
-From: Bruce Stenning <b.stenning@indigovision.com>
-Subject: RE: sata_mv port lockup on hotplug (kernel 2.6.38.2)
-Date: Wed, 7 Sep 2011 13:09:10 +0100
-Message-ID: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
-References: <4DF25526.9010800@teksavvy.com>
- <20110611121957.GA7980@mtj.dyndns.org> <4DF4F30B.70702@teksavvy.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: sata_mv port lockup on hotplug (kernel 2.6.38.2)
+Date: Thu, 8 Sep 2011 10:16:40 +0900
+Message-ID: <20110908011640.GA5381@mtj.dyndns.org>
+References: <4DF4F30B.70702@teksavvy.com>
  <20110613104856.GC16021@htj.dyndns.org>
  <C1438B59050E1B4C9482FF3266AD6BA32D8D984D03@gretna.indigovision.com>
  <20110902011305.GE2752@htj.dyndns.org>
@@ -12,62 +11,60 @@ References: <4DF25526.9010800@teksavvy.com>
  <C1438B59050E1B4C9482FF3266AD6BA32D8DA54B00@gretna.indigovision.com>
  <20110906163355.GG18425@mtj.dyndns.org>
  <20110906164221.GH18425@mtj.dyndns.org>
+ <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gretna.indigovision.com ([62.7.85.227]:39320 "EHLO
-	gretna.indigovision.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991Ab1IHAWN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 20:22:13 -0400
-In-Reply-To: <20110906164221.GH18425@mtj.dyndns.org>
-Content-Language: en-US
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:65105 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757688Ab1IHBQu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 21:16:50 -0400
+Content-Disposition: inline
+In-Reply-To: <C1438B59050E1B4C9482FF3266AD6BA32D8DA54C99@gretna.indigovision.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
+To: Bruce Stenning <b.stenning@indigovision.com>
 Cc: Mark Lord <kernel@teksavvy.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Hi Tejun,
+Hello,
 
-Sorry for sending so many emails yesterday; I blame the dental anaesthetic
-I received in the morning for being so jumpy on the send button ;-)
+On Wed, Sep 07, 2011 at 01:09:10PM +0100, Bruce Stenning wrote:
+> Sorry for sending so many emails yesterday; I blame the dental anaesthetic
+> I received in the morning for being so jumpy on the send button ;-)
 
-> Can you please instrument the followings?
->
-> * print the caller of scsi_eh_wakeup().  "%pF" w/ (void *)_RET_IP_
->   should do it.
->
-> * print why scsi_eh is going back to sleep immediately.
->   ie. shost->host_failed, host_eh_scheduled, host_busy in
->   scsi_error_handler().  It would also be nice to add some printks
->   around schedule() and enable PRINTK_TIME.
+Oh the fun. :)
 
-I can certainly try this.  Could you confirm whether my thoughts about a race
-between the scsi_eh thread and the wake-up are plausible?  I backtracked
-yesterday because I thought the scsi_eh thread would get rescheduled naturally,
-not realising that when the task state is TASK_INTERRUPTIBLE schedule() takes
-the task off the run queue (so it needs to be explicitly woken.)
+> I can certainly try this.  Could you confirm whether my thoughts about a race
+> between the scsi_eh thread and the wake-up are plausible?  I backtracked
+> yesterday because I thought the scsi_eh thread would get rescheduled naturally,
+> not realising that when the task state is TASK_INTERRUPTIBLE schedule() takes
+> the task off the run queue (so it needs to be explicitly woken.)
+> 
+> Here is my thinking again:
+> 
+> shost->host_eh_scheduled is read here in scsi_error_handler:
+> 
+>         set_current_state(TASK_INTERRUPTIBLE);
+>         while (!kthread_should_stop()) {
+>                 if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
+> 
+> There's no locking in scsi_error_handler (though functions it calls probably
+> claim locks.)
+> 
+> When scheduling an EH, scsi_schedule_eh takes the shost->host_lock, increments
+> shost->host_eh_scheduled, and then wakes the EH thread.  If this happens
+> between the scsi_eh thread reading host_eh_scheduled and sending itself back
+> to sleep (when the scsi_eh thread's state is TASK_INTERRUPTIBLE) nothing will
+> wake up the thread again and host_eh_scheduled will not get inspected.
+> host_eh_scheduled is stuck at 1 with the scsi_eh thread asleep, and it won't
+> get woken again because the ata port has been frozen and irqs are masked off.
 
-Here is my thinking again:
+I don't think there's a race condition there.  set_current_state()
+implies memory barrier and wake_up_process() implies wmb().  host_eh
+either sees the inrecremented eh_scheduled count or TASK_RUNNING set
+by wake_up_process(), so it can't miss an event.
 
-shost->host_eh_scheduled is read here in scsi_error_handler:
+Thanks.
 
-        set_current_state(TASK_INTERRUPTIBLE);
-        while (!kthread_should_stop()) {
-                if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
-
-There's no locking in scsi_error_handler (though functions it calls probably
-claim locks.)
-
-When scheduling an EH, scsi_schedule_eh takes the shost->host_lock, increments
-shost->host_eh_scheduled, and then wakes the EH thread.  If this happens
-between the scsi_eh thread reading host_eh_scheduled and sending itself back
-to sleep (when the scsi_eh thread's state is TASK_INTERRUPTIBLE) nothing will
-wake up the thread again and host_eh_scheduled will not get inspected.
-host_eh_scheduled is stuck at 1 with the scsi_eh thread asleep, and it won't
-get woken again because the ata port has been frozen and irqs are masked off.
-
-Bruce.
-
-
-Latest News at: http://www.indigovision.com/index.php/en/news.html
+-- 
+tejun
