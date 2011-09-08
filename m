@@ -1,66 +1,46 @@
-From: Keng-Yu Lin <kengyu@canonical.com>
-Subject: [PATCH] achi, ata_generic: Add ASMedia ASM1061 support
-Date: Thu,  8 Sep 2011 11:43:46 +0800
-Message-ID: <1315453426-8796-1-git-send-email-kengyu@canonical.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52735 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932142Ab1IHDnx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2011 23:43:53 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] achi, ata_generic: Add ASMedia ASM1061 support
+Date: Thu, 8 Sep 2011 10:40:00 +0100
+Message-ID: <20110908104000.53823901@lxorguk.ukuu.org.uk>
+References: <1315453426-8796-1-git-send-email-kengyu@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <1315453426-8796-1-git-send-email-kengyu@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Keng-Yu Lin <kengyu@canonical.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 
-ASM1061 PCI-E to SATA bridge controller has two variants.
-One works under AHCI and the other works with ata_generic.
+On Thu,  8 Sep 2011 11:43:46 +0800
+Keng-Yu Lin <kengyu@canonical.com> wrote:
 
-Add the PCI vendor ID and product IDs accordingly.
+> ASM1061 PCI-E to SATA bridge controller has two variants.
+> One works under AHCI and the other works with ata_generic.
 
-Signed-off-by: Keng-Yu Lin <kengyu@canonical.com>
----
- drivers/ata/ahci.c        |    3 +++
- drivers/ata/ata_generic.c |    1 +
- include/linux/pci_ids.h   |    4 ++++
- 3 files changed, 8 insertions(+), 0 deletions(-)
+ata_generic should be an absolute last resort - it doesn't support error
+recovery by speed dropping, mode setting, hotplug, timing tuning etc. 
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 71afe03..4899aad 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -397,6 +397,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Promise */
- 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
- 
-+	/* Asmedia */
-+	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1061 */
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 721d38b..8187503 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -220,6 +220,7 @@ static struct pci_device_id ata_generic[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_HINT,   PCI_DEVICE_ID_HINT_VXPROII_IDE), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_VIA,    PCI_DEVICE_ID_VIA_82C561), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_ASMEDIA,PCI_DEVICE_ID_ASM1061_IDE), },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
- 	  .driver_data = ATA_GEN_FORCE_DMA },
- 	/*
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index f8910e1..87182b8 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2844,3 +2844,7 @@
- 
- #define PCI_VENDOR_ID_XEN		0x5853
- #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
-+
-+#define PCI_VENDOR_ID_ASMEDIA		0x1b21
-+#define PCI_DEVICE_ID_ASM1061_IDE	0x0611
-+#define PCI_DEVICE_ID_ASM1061_AHCI	0x0612
--- 
-1.7.5.4
+Is there any documentation on the device or does it appear to follow the
+usual mode setting behaviours ? The web page merely says
 
+"Bus Master Programming Interface to IDE ATA Controller Rev. 1.0"
+
+which covers only the basic transfers and not timing (ie ata_generic) as
+you say but there are a few ways to find out more about how it works
+
+- dump the PCI space in IDE mode and see if it looks like d1510r1 - some
+  controllers are pretty unimaginative and so follow follow Appendix B
+  of this document.
+
+- see if it will run with the pata_acpi driver (ie it has _GTM and
+  similar methods in the BIOS). If it does then this is preferable as it
+  can do limited mode handling and you can also see what the ACPI code
+  itself actually does for _GTM/_STM.
+
+- See if Asmedia will provide documentation. I don't see anything useful
+  on the English web site but perhaps someone has as Asmedia contact ?
+
+The AHCI one looks good - AHCI standardises all this
+stuff so the AHCI one can just be a device id.
