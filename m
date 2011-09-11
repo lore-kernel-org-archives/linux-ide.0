@@ -1,79 +1,34 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 02/28] ide-{cd,floppy,tape}: Do not include <linux/irq.>
-Date: Sun, 11 Sep 2011 13:59:28 +0200
-Message-ID: <1315742394-16036-3-git-send-email-geert@linux-m68k.org>
-References: <1315742394-16036-1-git-send-email-geert@linux-m68k.org>
+From: "Mr. Daniel Tsai" <danieltsai0@aol.com>
+Subject: Business transaction.
+Date: Sun, 11 Sep 2011 17:07:14 +0200
+Message-ID: <20110911150716.9AEDF4276B8_E6CCEA4F__20868.3675541126$1315798740$gmane$org@radon.cen.brad.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1315742394-16036-1-git-send-email-geert@linux-m68k.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-m68k@lists.linux-m68k.org
-Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hydrogen.cen.brad.ac.uk ([143.53.238.3]:59218 "EHLO
+	hydrogen.cen.brad.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753091Ab1ILDih (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2011 23:38:37 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: danieltsai0@aol.com
 
-The top of <linux/irq.h> has this comment:
+Hello my friend. My name is Daniel Tsai and
 
- * Please do not include this file in generic code.  There is currently
- * no requirement for any architecture to implement anything held
- * within this file.
- *
- * Thanks. --rmk
+I live in Hong Kong. I want you to be my
 
-Remove inclusion of <linux/irq.>, to prevent the following compile erro=
-r
-from happening soon:
+partner in a business transaction of 44.5Million USD.
 
-| include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq_d=
-ata=E2=80=99
-| include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq_c=
-hip=E2=80=99
+If you are interested for more details,
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Acked-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ide/ide-cd.c     |    1 -
- drivers/ide/ide-floppy.c |    1 -
- drivers/ide/ide-tape.c   |    1 -
- 3 files changed, 0 insertions(+), 3 deletions(-)
+you MUST reply me to my private email address:
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 04b0956..8126824 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -43,7 +43,6 @@
- /* For SCSI -> ATAPI command conversion */
- #include <scsi/scsi.h>
-=20
--#include <linux/irq.h>
- #include <linux/io.h>
- #include <asm/byteorder.h>
- #include <linux/uaccess.h>
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 61fdf54..3d42043 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -35,7 +35,6 @@
- #include <scsi/scsi_ioctl.h>
-=20
- #include <asm/byteorder.h>
--#include <linux/irq.h>
- #include <linux/uaccess.h>
- #include <linux/io.h>
- #include <asm/unaligned.h>
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 7ecb1ad..ce8237d 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -41,7 +41,6 @@
- #include <scsi/scsi.h>
-=20
- #include <asm/byteorder.h>
--#include <linux/irq.h>
- #include <linux/uaccess.h>
- #include <linux/io.h>
- #include <asm/unaligned.h>
---=20
-1.7.0.4
+danieltsai11@yahoo.com.hk or danieltsai95@aol.com
+
+when I get your message, I will tell you what
+
+to do next. Thank you.
+
+Mr. Daniel Tsai
