@@ -1,44 +1,37 @@
-From: Anton Vorontsov <cbouatmailru@gmail.com>
-Subject: Re: [PATCH] ata: Make pata_of_platform.c compile again and work on
- non-PPC platforms
-Date: Mon, 12 Sep 2011 18:22:24 +0400
-Message-ID: <20110912142224.GA3671@oksana.dev.rtsoft.ru>
-References: <1315398986-10078-1-git-send-email-pawel.moll@arm.com>
+From: Richard Crewe <rcrewe@plxtech.com>
+Subject: Soft-reset on a FIS-Based-Switching AHCI interface
+Date: Mon, 12 Sep 2011 15:02:45 +0100
+Message-ID: <4E6E1105.6060103@plxtech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:64553 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755012Ab1ILOW2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 10:22:28 -0400
-Received: by wyh22 with SMTP id 22so3549544wyh.19
-        for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2011 07:22:27 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1315398986-10078-1-git-send-email-pawel.moll@arm.com>
+Received: from jupiter.oxsemi.com ([62.255.240.98]:45170 "EHLO
+	jupiter.oxsemi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756913Ab1ILOeO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 10:34:14 -0400
+Received: from mercury.oxsemi.com (mercury.oxsemi.com [192.168.8.11])
+	by jupiter.oxsemi.com (8.12.11/8.12.11) with ESMTP id p8CE3B4F018451
+	for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2011 15:03:15 +0100
+Received: from muttley.corp.oxsemi.com (muttley.corp.oxsemi.com [192.168.9.11])
+	by mercury.oxsemi.com (8.12.11/8.12.11) with ESMTP id p8CE36AL020613
+	for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2011 15:03:06 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pawel Moll <pawel.moll@arm.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Sep 07, 2011 at 01:36:26PM +0100, Pawel Moll wrote:
-> This patch adds missing #includes, makes the driver selectable on
-> non-PPC OF-enabled platforms and fixes property value accesses to
-> be correct in Little Endian system.
-> 
-> Cc: Anton Vorontsov <avorontsov@ru.mvista.com>
-> Signed-off-by: Pawel Moll <pawel.moll@arm.com>
+The AHCI spec. seems to indicate that a soft-reset can only be performed 
+if FBS is disabled.
 
-On Mon, Sep 12, 2011 at 03:16:52PM +0100, Pawel Moll wrote:
-> It seems your ack got lost when vger.kernel.org was down...
->
-> Would you mind re-posting it?
+Looking at the LibATA and LibAHCI code at the moment, I can't see where 
+this is done. The soft-reset happens during error recovery when the port 
+re-enumerates devices.
 
-Sure thing.
-
-Acked-by: Anton Vorontsov <cbouatmailru@gmail.com>
-
-Thanks!
+Am I missing something or is this a _relatively_ less-well tested area 
+of the LibATA/AHCI operation?
 
 -- 
-Anton Vorontsov
-Email: cbouatmailru@gmail.com
+Richard Crewe, Software Engineer
+PLX Technology Ltd. Registered in England, company number 2733820
+Registered Address: 25 Milton Park, Abingdon, Oxfordshire. UK. OX14 4SH
+
