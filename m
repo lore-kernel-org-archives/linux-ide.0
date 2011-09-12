@@ -1,37 +1,34 @@
-From: Richard Crewe <rcrewe@plxtech.com>
-Subject: Soft-reset on a FIS-Based-Switching AHCI interface
-Date: Mon, 12 Sep 2011 15:02:45 +0100
-Message-ID: <4E6E1105.6060103@plxtech.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v4] drivers/block/mtip32xx: Adding new driver mtip32xx
+Date: Mon, 12 Sep 2011 11:02:28 -0400
+Message-ID: <20110912150228.GA5771@infradead.org>
+References: <22A973199D2C2F46933448F6E7990A3002C80026@ntxboimbx31.micron.com>
+ <4E44E782.7090309@fusionio.com>
+ <2A9BE4FF6209B644B6F8EB62DE6AEA1E07663ED4@ntxfrembx01.micron.com>
+ <20110909085433.GA9593@infradead.org>
+ <4E69D519.8070802@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jupiter.oxsemi.com ([62.255.240.98]:45170 "EHLO
-	jupiter.oxsemi.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756913Ab1ILOeO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 10:34:14 -0400
-Received: from mercury.oxsemi.com (mercury.oxsemi.com [192.168.8.11])
-	by jupiter.oxsemi.com (8.12.11/8.12.11) with ESMTP id p8CE3B4F018451
-	for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2011 15:03:15 +0100
-Received: from muttley.corp.oxsemi.com (muttley.corp.oxsemi.com [192.168.9.11])
-	by mercury.oxsemi.com (8.12.11/8.12.11) with ESMTP id p8CE36AL020613
-	for <linux-ide@vger.kernel.org>; Mon, 12 Sep 2011 15:03:06 +0100
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:58109
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757275Ab1ILPCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 11:02:40 -0400
+Content-Disposition: inline
+In-Reply-To: <4E69D519.8070802@fusionio.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Sam Bradshaw (sbradshaw)" <sbradshaw@micron.com>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "jmoyer@redhat.com" <jmoyer@redhat.com>, "Asai Thambi Samymuthu Pattrayasamy (asamymuthupa) [CONTRACTOR]" <asamymuthupa@micron.com>
 
-The AHCI spec. seems to indicate that a soft-reset can only be performed 
-if FBS is disabled.
+On Fri, Sep 09, 2011 at 10:58:01AM +0200, Jens Axboe wrote:
+> >    Documentation/block/writeback_cache_control.txt file is the canonical
+> >    resource.  Implementing your driver at the make_request layer
+> >    unfortunately means you will have to do all the hard work yourself.
+> >  - also the call to blk_queue_flush(queue, 0); from ->make_request for
+> >    a non-data request is completely wrong.
+> 
+> I noticed both of these flush/fua problems too and have fixed them up.
 
-Looking at the LibATA and LibAHCI code at the moment, I can't see where 
-this is done. The soft-reset happens during error recovery when the port 
-re-enumerates devices.
-
-Am I missing something or is this a _relatively_ less-well tested area 
-of the LibATA/AHCI operation?
-
--- 
-Richard Crewe, Software Engineer
-PLX Technology Ltd. Registered in England, company number 2733820
-Registered Address: 25 Milton Park, Abingdon, Oxfordshire. UK. OX14 4SH
+I still can't find any fixes in your repository.
 
