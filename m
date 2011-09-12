@@ -1,34 +1,50 @@
-From: "Mr. Daniel Tsai" <danieltsai0@aol.com>
-Subject: Business transaction.
-Date: Sun, 11 Sep 2011 17:07:14 +0200
-Message-ID: <20110911150716.9AEDF4276B8_E6CCEA4F__20868.3675541126$1315798740$gmane$org@radon.cen.brad.ac.uk>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 02/28] ide-{cd,floppy,tape}: Do not include <linux/irq.>
+Date: Mon, 12 Sep 2011 13:59:50 +0400
+Message-ID: <4E6DD816.7040809@ru.mvista.com>
+References: <1315742394-16036-1-git-send-email-geert@linux-m68k.org> <1315742394-16036-3-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydrogen.cen.brad.ac.uk ([143.53.238.3]:59218 "EHLO
-	hydrogen.cen.brad.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091Ab1ILDih (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Sep 2011 23:38:37 -0400
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:46663 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816Ab1ILKAg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 06:00:36 -0400
+In-Reply-To: <1315742394-16036-3-git-send-email-geert@linux-m68k.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: danieltsai0@aol.com
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello my friend. My name is Daniel Tsai and
+Hello.
 
-I live in Hong Kong. I want you to be my
+On 11-09-2011 15:59, Geert Uytterhoeven wrote:
 
-partner in a business transaction of 44.5Million USD.
+> The top of <linux/irq.h> has this comment:
 
-If you are interested for more details,
+>   * Please do not include this file in generic code.  There is curren=
+tly
+>   * no requirement for any architecture to implement anything held
+>   * within this file.
+>   *
+>   * Thanks. --rmk
 
-you MUST reply me to my private email address:
+> Remove inclusion of <linux/irq.>, to prevent the following compile er=
+ror
 
-danieltsai11@yahoo.com.hk or danieltsai95@aol.com
+    <linux/irq.h>? You've also typoed in the subject.
 
-when I get your message, I will tell you what
+> from happening soon:
 
-to do next. Thank you.
+> | include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq=
+_data=E2=80=99
+> | include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq=
+_chip=E2=80=99
 
-Mr. Daniel Tsai
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Acked-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: linux-ide@vger.kernel.org
+
+WBR, Sergei
