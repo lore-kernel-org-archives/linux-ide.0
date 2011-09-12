@@ -1,50 +1,22 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 02/28] ide-{cd,floppy,tape}: Do not include <linux/irq.>
-Date: Mon, 12 Sep 2011 13:59:50 +0400
-Message-ID: <4E6DD816.7040809@ru.mvista.com>
-References: <1315742394-16036-1-git-send-email-geert@linux-m68k.org> <1315742394-16036-3-git-send-email-geert@linux-m68k.org>
+From: "Sabah Rahil" <rabil_sabah@hotmail.com>
+Subject: Assalam-o-alaikum!
+Date: Mon, 12 Sep 2011 09:33:05 -0300 (BRT)
+Message-ID: <47349.190.144.165.226.1315830785.squirrel@webmail.usb.org.br>
+Reply-To: rabil_sabah@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:46663 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816Ab1ILKAg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Sep 2011 06:00:36 -0400
-In-Reply-To: <1315742394-16036-3-git-send-email-geert@linux-m68k.org>
+Received: from usb.org.br ([200.178.205.154]:49284 "EHLO usb.org.br"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752562Ab1ILMhw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Sep 2011 08:37:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+Greetings. My name is Sabah Rahil , i'm in urgent need of your assistance please
+respond to my email.
 
-On 11-09-2011 15:59, Geert Uytterhoeven wrote:
+Regards
+Sabah Rahil
 
-> The top of <linux/irq.h> has this comment:
-
->   * Please do not include this file in generic code.  There is curren=
-tly
->   * no requirement for any architecture to implement anything held
->   * within this file.
->   *
->   * Thanks. --rmk
-
-> Remove inclusion of <linux/irq.>, to prevent the following compile er=
-ror
-
-    <linux/irq.h>? You've also typoed in the subject.
-
-> from happening soon:
-
-> | include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq=
-_data=E2=80=99
-> | include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq=
-_chip=E2=80=99
-
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Acked-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: linux-ide@vger.kernel.org
-
-WBR, Sergei
