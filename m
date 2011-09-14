@@ -1,59 +1,48 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: libata-dev moved to github
-Date: Wed, 14 Sep 2011 10:28:33 +1000
-Message-ID: <20110914102833.a9bfb70c65dbdcf807031913@canb.auug.org.au>
-References: <4E6FBDAA.9010701@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Soft-reset on a FIS-Based-Switching AHCI interface
+Date: Wed, 14 Sep 2011 01:04:32 -0400
+Message-ID: <4E7035E0.3000408@garzik.org>
+References: <4E6E1105.6060103@plxtech.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__14_Sep_2011_10_28_33_+1000_Xv5HVI5VbnkEmgyQ"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:34090 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab1INA2j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Sep 2011 20:28:39 -0400
-In-Reply-To: <4E6FBDAA.9010701@garzik.org>
+Received: from mail-vw0-f42.google.com ([209.85.212.42]:63081 "EHLO
+	mail-vw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248Ab1INFMe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2011 01:12:34 -0400
+Received: by vwl1 with SMTP id 1so2006757vwl.1
+        for <linux-ide@vger.kernel.org>; Tue, 13 Sep 2011 22:12:33 -0700 (PDT)
+In-Reply-To: <4E6E1105.6060103@plxtech.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Richard Crewe <rcrewe@plxtech.com>
+Cc: linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
 
---Signature=_Wed__14_Sep_2011_10_28_33_+1000_Xv5HVI5VbnkEmgyQ
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 09/12/2011 10:02 AM, Richard Crewe wrote:
+> The AHCI spec. seems to indicate that a soft-reset can only be performed
+> if FBS is disabled.
 
-Hi Jeff,
+Can you cite section numbers / specific references for this?
 
-On Tue, 13 Sep 2011 16:31:38 -0400 Jeff Garzik <jeff@garzik.org> wrote:
+
+> Looking at the LibATA and LibAHCI code at the moment, I can't see where
+> this is done. The soft-reset happens during error recovery when the port
+> re-enumerates devices.
 >
-> Since k.org seems to be taking a while, libata-dev.git has moved to=20
-> github:  git://github.com/jgarzik/libata-dev.git
->=20
-> The branch names remain the same:
->=20
-> NEXT - linux-next branch (hello Stephen, please pull this)
+> Am I missing something or is this a _relatively_ less-well tested area
+> of the LibATA/AHCI operation?
 
-I have switched from today, thanks.
+I cannot see where FBS is disabled for soft-reset, either.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+FBS is pretty new, hasn't changed much at all since its initial 
+implementation on an AMD reference board, and is (obviously) only used 
+with PMPs.  FBS is a pretty small subset of the total AHCI population, 
+so I doubt the code is exercised heavily except for a very few, large 
+storage installations.
 
---Signature=_Wed__14_Sep_2011_10_28_33_+1000_Xv5HVI5VbnkEmgyQ
-Content-Type: application/pgp-signature
+	Jeff
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQEcBAEBAgAGBQJOb/UxAAoJEDMEi1NhKgbsPnYIAJekS133PqVPS/ug3r4MKXUp
-HAJ8LJql2sssjWl149O5Qozps+E+aSU5O5ZVRFq95HXrV9ec4bbCaNSeMa1Fmo7m
-4Wm8nMkOg7c4l5q02nO0c8HeAdIo1YQhurMdTERsvoaYEqjo6RdhL5o3IbZa8X5c
-ExhYzzEOFwsla7Un29vSaNLeVYjaUaT0hAiDfcVY8seC/+87bXyew4sRLdk5RdD/
-r70vYvRVuSWmVQE5vCuv+l6jSnrVCt6QhhapWlZP37HuUcFIYVLWkJnbX8TgeKqY
-e4kerdlv+LQ4jwmL6yikFD+BgzCv3rBXD6xea6dqSv4yuwRbs7LdyO9l0PufnUU=
-=EZD9
------END PGP SIGNATURE-----
 
---Signature=_Wed__14_Sep_2011_10_28_33_+1000_Xv5HVI5VbnkEmgyQ--
+
