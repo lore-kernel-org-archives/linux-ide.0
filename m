@@ -1,48 +1,75 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Soft-reset on a FIS-Based-Switching AHCI interface
-Date: Wed, 14 Sep 2011 01:04:32 -0400
-Message-ID: <4E7035E0.3000408@garzik.org>
-References: <4E6E1105.6060103@plxtech.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [RFC PATCH #upstream-fixes] libata: don't use 32bit PIO for small transfers
+Date: Wed, 14 Sep 2011 15:44:43 +0800
+Message-ID: <CACVXFVO0LzxSj=7Q054gcK5x9fDuNniE0GteKmpYNOXWAc-0gw@mail.gmail.com>
+References: <20110906042101.GE18425@mtj.dyndns.org>
+	<20110906104952.0c930a93@bob.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f42.google.com ([209.85.212.42]:63081 "EHLO
-	mail-vw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751248Ab1INFMe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2011 01:12:34 -0400
-Received: by vwl1 with SMTP id 1so2006757vwl.1
-        for <linux-ide@vger.kernel.org>; Tue, 13 Sep 2011 22:12:33 -0700 (PDT)
-In-Reply-To: <4E6E1105.6060103@plxtech.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55140 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751306Ab1INHop (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2011 03:44:45 -0400
+Received: by ywb5 with SMTP id 5so1192501ywb.19
+        for <linux-ide@vger.kernel.org>; Wed, 14 Sep 2011 00:44:44 -0700 (PDT)
+In-Reply-To: <20110906104952.0c930a93@bob.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Crewe <rcrewe@plxtech.com>
-Cc: linux-ide@vger.kernel.org, Shane Huang <Shane.Huang@amd.com>
+To: Alan Cox <alan@linux.intel.com>
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, seth.heasley@intel.com
 
-On 09/12/2011 10:02 AM, Richard Crewe wrote:
-> The AHCI spec. seems to indicate that a soft-reset can only be performed
-> if FBS is disabled.
+Hi Tejun and Alan,
 
-Can you cite section numbers / specific references for this?
+Thanks for your spending time on the bug.
 
+On Tue, Sep 6, 2011 at 5:49 PM, Alan Cox <alan@linux.intel.com> wrote:
 
-> Looking at the LibATA and LibAHCI code at the moment, I can't see where
-> this is done. The soft-reset happens during error recovery when the port
-> re-enumerates devices.
 >
-> Am I missing something or is this a _relatively_ less-well tested area
-> of the LibATA/AHCI operation?
+> So NACK.
+>
+> Add a piix_sata_data_xfer32_maybe() function to the ata_piix driver
+> specifically for this chipset.
 
-I cannot see where FBS is disabled for soft-reset, either.
+Could you accept the quirk patch below to make these controllers working
+at least now?
 
-FBS is pretty new, hasn't changed much at all since its initial 
-implementation on an AMD reference board, and is (obviously) only used 
-with PMPs.  FBS is a pretty small subset of the total AHCI population, 
-so I doubt the code is exercised heavily except for a very few, large 
-storage installations.
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 43107e9..eb7ea56 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -341,11 +341,12 @@ static struct ata_port_operations piix_sata_ops = {
+ };
 
-	Jeff
+ static struct ata_port_operations piix_pata_ops = {
+-	.inherits		= &piix_sata_ops,
++	.inherits		= &ata_bmdma32_port_ops,
+ 	.cable_detect		= ata_cable_40wire,
+ 	.set_piomode		= piix_set_piomode,
+ 	.set_dmamode		= piix_set_dmamode,
+ 	.prereset		= piix_pata_prereset,
++	.sff_irq_check		= piix_irq_check,
+ };
+
+ static struct ata_port_operations piix_vmw_ops = {
+@@ -1585,6 +1586,15 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 				"on poweroff and hibernation\n");
+ 	}
+
++	/*
++	 * Sandybridge chipset H61/P67/H67 have broken 32 mode up to now
++	 * see https://bugzilla.kernel.org/show_bug.cgi?id=40592
++	 */
++	if (pdev->vendor == PCI_VENDOR_ID_INTEL && pdev->device == 0x1c00)
++		piix_sata_ops.inherits = &ata_bmdma_port_ops;
++	else
++		piix_sata_ops.inherits = &ata_bmdma32_port_ops;
++
+ 	port_info[0] = piix_port_info[ent->driver_data];
+ 	port_info[1] = piix_port_info[ent->driver_data];
 
 
 
-
+thanks,
+-- 
+Ming Lei
