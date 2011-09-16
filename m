@@ -1,78 +1,101 @@
-From: thibaut bethune <thibaut.bethune@gmail.com>
-Subject: ATA TRIM on non-AHCI motherboards ?
-Date: Wed, 14 Sep 2011 21:23:20 +0200
-Message-ID: <CAACN17gFBF=-UjWzAm_g3QNemyN6to3NaQqBJepWKH=DQkx7-Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Dave Martin <dave.martin@linaro.org>
+Subject: [PATCH] pata-generic/of: Make probing via device tree non-powerpc-specific
+Date: Fri, 16 Sep 2011 15:38:10 +0100
+Message-ID: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f42.google.com ([209.85.212.42]:33310 "EHLO
-	mail-vw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757430Ab1INTXk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Sep 2011 15:23:40 -0400
-Received: by vwl1 with SMTP id 1so3263889vwl.1
-        for <linux-ide@vger.kernel.org>; Wed, 14 Sep 2011 12:23:40 -0700 (PDT)
+Received: from mail-wy0-f180.google.com ([74.125.82.180]:64213 "EHLO
+	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752849Ab1IPOi1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2011 10:38:27 -0400
+Received: by wyj26 with SMTP id 26so4835481wyj.11
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2011 07:38:26 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: devicetree-discuss@lists.ozlabs.org, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org
+Cc: patches@linaro.org, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.infradead.org, Dave Martin <dave.martin@linaro.org>
 
-Hello,
+This patch enables device-tree-based probing of the pata-generic
+platform driver across all architectures:
 
-I'd like to know if my system is ATA TRIM compatible :
+  * make the pata_of_generic module depend on OF instead of PPC_OF;
+  * supply some missing inclues;
+  * replace endianness-sensitive raw access to device tree data
+    with of_property_read_u32() calls.
 
-1=B0) I've just bought a SATA SSD (Crucial M4) which handles TRIM
-2=B0) I'm running Linux 2.6.33 whch also handles TRIM (ext4 + "discard"=
- option)
-3=B0) My motherboard (ASRock Conroe 1333 DVI/H R2.02, featuring the ICH=
-7
-southbridge) doesn't handle AHCI. Yet 48-bit LBA addressing is
-supported.
+Signed-off-by: Dave Martin <dave.martin@linaro.org>
+---
 
-I did some research and I've read that 48-bit LBA addressing should be
-enough to get TRIM IF the driver is compatible.
+Tested on ARM Versatile Express, with my soon-to-be-posted device
+tree support patches.
 
-Is it the case ?
+I'm not in a position to build/test this for powerpc easily --
+if anyone is able to do that, it would be appreciated.
 
-Thanks in advance
+Grant, does this require similar cleanup to the isp1760 USB hcd driver?
 
-Thibaut
-35'
-=46rance
+Cheers
+---Dave
 
-Here is the output of "lspci -nn" on my system
+ drivers/ata/Kconfig            |    2 +-
+ drivers/ata/pata_of_platform.c |   16 +++++++---------
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-00:00.0 Host bridge [0600]: Intel Corporation 82945G/GZ/P/PL Memory
-Controller Hub [8086:2770] (rev 02)
-00:02.0 VGA compatible controller [0300]: Intel Corporation 82945G/GZ
-Integrated Graphics Controller [8086:2772] (rev 02)
-00:1b.0 Audio device [0403]: Intel Corporation N10/ICH 7 Family High
-Definition Audio Controller [8086:27d8] (rev 01)
-00:1c.0 PCI bridge [0604]: Intel Corporation N10/ICH 7 Family PCI
-Express Port 1 [8086:27d0] (rev 01)
-00:1c.1 PCI bridge [0604]: Intel Corporation N10/ICH 7 Family PCI
-Express Port 2 [8086:27d2] (rev 01)
-00:1d.0 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-UHCI Controller #1 [8086:27c8] (rev 01)
-00:1d.1 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-UHCI Controller #2 [8086:27c9] (rev 01)
-00:1d.2 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-UHCI Controller #3 [8086:27ca] (rev 01)
-00:1d.3 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-UHCI Controller #4 [8086:27cb] (rev 01)
-00:1d.7 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB2
-EHCI Controller [8086:27cc] (rev 01)
-00:1e.0 PCI bridge [0604]: Intel Corporation 82801 PCI Bridge
-[8086:244e] (rev e1)
-00:1f.0 ISA bridge [0601]: Intel Corporation 82801GB/GR (ICH7 Family)
-LPC Interface Bridge [8086:27b8] (rev 01)
-00:1f.1 IDE interface [0101]: Intel Corporation 82801G (ICH7 Family)
-IDE Controller [8086:27df] (rev 01)
-00:1f.2 IDE interface [0101]: Intel Corporation N10/ICH7 Family SATA
-IDE Controller [8086:27c0] (rev 01)
-00:1f.3 SMBus [0c05]: Intel Corporation N10/ICH 7 Family SMBus
-Controller [8086:27da] (rev 01)
-01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (rev
-01)
-03:02.0 FireWire (IEEE 1394) [0c00]: Texas Instruments TSB12LV23
-IEEE-1394 Controller [104c:8019]
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 5987e0b..c6ef9d0 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -820,7 +820,7 @@ config PATA_PLATFORM
+ 
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+-	depends on PATA_PLATFORM && PPC_OF
++	depends on PATA_PLATFORM && OF
+ 	help
+ 	  This option enables support for generic directly connected ATA
+ 	  devices commonly found on embedded systems with OpenFirmware
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index f305400..ac7c9f7 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -11,6 +11,9 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/ata_platform.h>
+ 
+@@ -21,10 +24,9 @@ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
+ 	struct resource io_res;
+ 	struct resource ctl_res;
+ 	struct resource irq_res;
+-	unsigned int reg_shift = 0;
+-	int pio_mode = 0;
++	u32 reg_shift = 0;
++	u32 pio_mode = 0;
+ 	int pio_mask;
+-	const u32 *prop;
+ 
+ 	ret = of_address_to_resource(dn, 0, &io_res);
+ 	if (ret) {
+@@ -55,13 +57,9 @@ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
+ 	else
+ 		irq_res.flags = 0;
+ 
+-	prop = of_get_property(dn, "reg-shift", NULL);
+-	if (prop)
+-		reg_shift = *prop;
++	of_property_read_u32(dn, "reg-shift", &reg_shift);
+ 
+-	prop = of_get_property(dn, "pio-mode", NULL);
+-	if (prop) {
+-		pio_mode = *prop;
++	if (of_property_read_u32(dn, "pio-mode", &pio_mode)) {
+ 		if (pio_mode > 6) {
+ 			dev_err(&ofdev->dev, "invalid pio-mode\n");
+ 			return -EINVAL;
+-- 
+1.7.4.1
+
