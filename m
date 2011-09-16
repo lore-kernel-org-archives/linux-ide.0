@@ -1,14 +1,16 @@
 From: Dave Martin <dave.martin@linaro.org>
-Subject: [PATCH] pata-generic/of: Make probing via device tree non-powerpc-specific
-Date: Fri, 16 Sep 2011 15:38:10 +0100
-Message-ID: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
+Subject: [PATCH v2] pata-generic/of: Make probing via device tree non-powerpc-specific
+Date: Fri, 16 Sep 2011 17:22:00 +0100
+Message-ID: <1316190120-17010-1-git-send-email-dave.martin@linaro.org>
+References: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f180.google.com ([74.125.82.180]:64213 "EHLO
+Received: from mail-wy0-f180.google.com ([74.125.82.180]:46517 "EHLO
 	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752849Ab1IPOi1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2011 10:38:27 -0400
-Received: by wyj26 with SMTP id 26so4835481wyj.11
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2011 07:38:26 -0700 (PDT)
+	with ESMTP id S1751332Ab1IPQWR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2011 12:22:17 -0400
+Received: by wyj26 with SMTP id 26so4949623wyj.11
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2011 09:22:16 -0700 (PDT)
+In-Reply-To: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: devicetree-discuss@lists.ozlabs.org, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org
@@ -24,6 +26,9 @@ platform driver across all architectures:
 
 Signed-off-by: Dave Martin <dave.martin@linaro.org>
 ---
+v2: correct sense of the check of_property_read_u32(dn, "pio-mode",
+&pio_mode).  Somehow I posted an old version of this patch, depite
+having already fixed this...
 
 Tested on ARM Versatile Express, with my soon-to-be-posted device
 tree support patches.
@@ -32,9 +37,6 @@ I'm not in a position to build/test this for powerpc easily --
 if anyone is able to do that, it would be appreciated.
 
 Grant, does this require similar cleanup to the isp1760 USB hcd driver?
-
-Cheers
----Dave
 
  drivers/ata/Kconfig            |    2 +-
  drivers/ata/pata_of_platform.c |   16 +++++++---------
@@ -54,7 +56,7 @@ index 5987e0b..c6ef9d0 100644
  	  This option enables support for generic directly connected ATA
  	  devices commonly found on embedded systems with OpenFirmware
 diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index f305400..ac7c9f7 100644
+index f305400..e6e9aa9 100644
 --- a/drivers/ata/pata_of_platform.c
 +++ b/drivers/ata/pata_of_platform.c
 @@ -11,6 +11,9 @@
@@ -92,7 +94,7 @@ index f305400..ac7c9f7 100644
 -	prop = of_get_property(dn, "pio-mode", NULL);
 -	if (prop) {
 -		pio_mode = *prop;
-+	if (of_property_read_u32(dn, "pio-mode", &pio_mode)) {
++	if (!of_property_read_u32(dn, "pio-mode", &pio_mode)) {
  		if (pio_mode > 6) {
  			dev_err(&ofdev->dev, "invalid pio-mode\n");
  			return -EINVAL;
