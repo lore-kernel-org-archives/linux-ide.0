@@ -1,103 +1,125 @@
-From: Dave Martin <dave.martin@linaro.org>
-Subject: [PATCH v2] pata-generic/of: Make probing via device tree non-powerpc-specific
-Date: Fri, 16 Sep 2011 17:22:00 +0100
-Message-ID: <1316190120-17010-1-git-send-email-dave.martin@linaro.org>
-References: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
+From: Dave Pitts <dpitts@cozx.com>
+Subject: sata_sil24 on libata driver issue
+Date: Fri, 16 Sep 2011 11:25:43 -0600
+Message-ID: <4E738697.8090103@cozx.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------090101030900060208090904"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f180.google.com ([74.125.82.180]:46517 "EHLO
-	mail-wy0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332Ab1IPQWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2011 12:22:17 -0400
-Received: by wyj26 with SMTP id 26so4949623wyj.11
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2011 09:22:16 -0700 (PDT)
-In-Reply-To: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
+Received: from dsl228.bldr.co.csd.net ([205.240.12.228]:48835 "EHLO
+	pullman.cozx.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753761Ab1IPRfZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Sep 2011 13:35:25 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: devicetree-discuss@lists.ozlabs.org, Grant Likely <grant.likely@secretlab.ca>, linux-ide@vger.kernel.org
-Cc: patches@linaro.org, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.infradead.org, Dave Martin <dave.martin@linaro.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
 
-This patch enables device-tree-based probing of the pata-generic
-platform driver across all architectures:
+This is a multi-part message in MIME format.
+--------------090101030900060208090904
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-  * make the pata_of_generic module depend on OF instead of PPC_OF;
-  * supply some missing inclues;
-  * replace endianness-sensitive raw access to device tree data
-    with of_property_read_u32() calls.
+Hello:
 
-Signed-off-by: Dave Martin <dave.martin@linaro.org>
----
-v2: correct sense of the check of_property_read_u32(dn, "pio-mode",
-&pio_mode).  Somehow I posted an old version of this patch, depite
-having already fixed this...
+I didn't know who to contact for the sata_sil24 driver as there is no e-mail 
+address for the developer...
 
-Tested on ARM Versatile Express, with my soon-to-be-posted device
-tree support patches.
+Anyway, I'm working with a client that is running CentOS 5.5 with the sata_sil24 
+and libata drivers. The application does async I/O using the sg layer 
+(/dev/sgxx) and gets the errors shown in the attachment. The messages from 
+"Engine" are the errors that the application is seeing. It appears that the I/O 
+is timing out with the aborted command status. The question is why?? What's 
+going on??
 
-I'm not in a position to build/test this for powerpc easily --
-if anyone is able to do that, it would be appreciated.
+Any ideas on this would be great. Also, maybe fixed in newer kernels?
 
-Grant, does this require similar cleanup to the isp1760 USB hcd driver?
+Thanks in advance...
 
- drivers/ata/Kconfig            |    2 +-
- drivers/ata/pata_of_platform.c |   16 +++++++---------
- 2 files changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5987e0b..c6ef9d0 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -820,7 +820,7 @@ config PATA_PLATFORM
- 
- config PATA_OF_PLATFORM
- 	tristate "OpenFirmware platform device PATA support"
--	depends on PATA_PLATFORM && PPC_OF
-+	depends on PATA_PLATFORM && OF
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems with OpenFirmware
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index f305400..e6e9aa9 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -11,6 +11,9 @@
- 
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/of_irq.h>
- #include <linux/of_platform.h>
- #include <linux/ata_platform.h>
- 
-@@ -21,10 +24,9 @@ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
- 	struct resource io_res;
- 	struct resource ctl_res;
- 	struct resource irq_res;
--	unsigned int reg_shift = 0;
--	int pio_mode = 0;
-+	u32 reg_shift = 0;
-+	u32 pio_mode = 0;
- 	int pio_mask;
--	const u32 *prop;
- 
- 	ret = of_address_to_resource(dn, 0, &io_res);
- 	if (ret) {
-@@ -55,13 +57,9 @@ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
- 	else
- 		irq_res.flags = 0;
- 
--	prop = of_get_property(dn, "reg-shift", NULL);
--	if (prop)
--		reg_shift = *prop;
-+	of_property_read_u32(dn, "reg-shift", &reg_shift);
- 
--	prop = of_get_property(dn, "pio-mode", NULL);
--	if (prop) {
--		pio_mode = *prop;
-+	if (!of_property_read_u32(dn, "pio-mode", &pio_mode)) {
- 		if (pio_mode > 6) {
- 			dev_err(&ofdev->dev, "invalid pio-mode\n");
- 			return -EINVAL;
 -- 
-1.7.4.1
+Dave Pitts             PULLMAN: Travel and sleep in safety and comfort.
+dpitts@cozx.com        My other RV IS a Pullman (Colorado Pine).
+http://www.cozx.com
 
+
+--------------090101030900060208090904
+Content-Type: text/plain;
+ name="messages.sil24"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="messages.sil24"
+
+Sep 16 10:16:08 646cf843 kernel: ata3.00: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.01: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.02: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.03: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.04: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.05: failed to read SCR 1 (Emask=0x40)
+Sep 16 10:16:08 646cf843 kernel: ata3.15: exception Emask 0x4 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.01: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.02: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.03: exception Emask 0x100 SAct 0x8 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.03: cmd 60/40:18:c0:1e:35/00:00:00:00:00/40 tag 3 ncq 32768 in
+Sep 16 10:16:08 646cf843 kernel:          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+Sep 16 10:16:08 646cf843 kernel: ata3.03: status: { DRDY }
+Sep 16 10:16:08 646cf843 kernel: ata3.04: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.05: exception Emask 0x100 SAct 0x0 SErr 0x0 action 0x6 frozen
+Sep 16 10:16:08 646cf843 kernel: ata3.15: hard resetting link
+Sep 16 10:16:08 646cf843 kernel: ata3: controller in dubious state, performing PORT_RST
+Sep 16 10:16:10 646cf843 kernel: ata3.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+Sep 16 10:16:10 646cf843 kernel: ata3.00: hard resetting link
+Sep 16 10:16:10 646cf843 kernel: ata3.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+Sep 16 10:16:10 646cf843 kernel: ata3.01: hard resetting link
+Sep 16 10:16:11 646cf843 kernel: ata3.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Sep 16 10:16:11 646cf843 kernel: ata3.02: hard resetting link
+Sep 16 10:16:11 646cf843 kernel: ata3.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Sep 16 10:16:11 646cf843 kernel: ata3.03: hard resetting link
+Sep 16 10:16:11 646cf843 kernel: ata3.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Sep 16 10:16:11 646cf843 kernel: ata3.04: hard resetting link
+Sep 16 10:16:11 646cf843 kernel: ata3.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+Sep 16 10:16:11 646cf843 kernel: ata3.05: hard resetting link
+Sep 16 10:16:12 646cf843 kernel: ata3.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+Sep 16 10:16:12 646cf843 kernel: ata3.00: configured for UDMA/100
+Sep 16 10:16:12 646cf843 kernel: ata3.01: configured for UDMA/100
+Sep 16 10:16:12 646cf843 kernel: ata3.02: configured for UDMA/100
+Sep 16 10:16:12 646cf843 kernel: ata3.03: configured for UDMA/100
+Sep 16 10:16:12 646cf843 kernel: ata3.04: configured for UDMA/100
+Sep 16 10:16:12 646cf843 Engine[5067]: [41C25940]<04> SgInt  [sg_err_category             (sg_int.c  :1284)]: masked_status=0x01, host_status=0x00, driver_status=0x0E
+Sep 16 10:16:12 646cf843 Engine[5067]: [41C25940]<04> SgInt  [sg_err_category             (sg_int.c  :1309)]: SENSE INFO: response code=72 SK=B ASC=0 ASCQ=0 
+Sep 16 10:16:12 646cf843 Engine[5067]: [40F97940]<04> BE     [BE_IO_Complete         (be_perform_io.c: 493)]:  IO ERROR: op=READ, drive=00.00.01.05 (0x500108600008D00E) lba=0x351EC0(0x40), code=-16, retryLevel=0, timeout=1000 ms, resp_time=5121(sg says 5121) ms 
+Sep 16 10:16:12 646cf843 kernel: sd 6:3:0:0: timing out command, waited 1s
+Sep 16 10:16:12 646cf843 kernel: ata3: EH complete
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdl: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdl: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdl: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdm: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdm: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdm: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdn: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdn: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdn: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdo: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdo: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdo: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdp: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdp: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdp: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdl: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdl: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdl: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdm: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdm: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdm: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdn: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdn: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdn: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdo: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdo: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdo: drive cache: write back
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdp: 3907029168 512-byte hdwr sectors (2000399 MB)
+Sep 16 10:16:12 646cf843 kernel: sdp: Write Protect is off
+Sep 16 10:16:12 646cf843 kernel: SCSI device sdp: drive cache: write back
+Sep 16 10:16:13 646cf843 Engine[5067]: [42C6C940]<05> Scrub  [Scrub_HandleMsg_Response              (scrub_task.c   : 439)]: FAILED read: beCmd=0x83e728, lba=3481280, error=-16
+
+--------------090101030900060208090904--
