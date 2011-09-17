@@ -1,57 +1,59 @@
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH v2] pata-generic/of: Make probing via device tree
- non-powerpc-specific
-Date: Sat, 17 Sep 2011 09:37:32 -0600
-Message-ID: <20110917153732.GR3523@ponder.secretlab.ca>
-References: <1316183890-13677-1-git-send-email-dave.martin@linaro.org>
- <1316190120-17010-1-git-send-email-dave.martin@linaro.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] pata-generic/of: Make probing via device tree non-powerpc-specific
+Date: Sat, 17 Sep 2011 20:35:57 +0200
+Message-ID: <2922376.ufKFh1svrE@wuerfel>
+References: <1316183890-13677-1-git-send-email-dave.martin@linaro.org> <20110916214313.GB16381@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:39328 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212Ab1IQPhc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2011 11:37:32 -0400
-Received: by gxk6 with SMTP id 6so2834027gxk.19
-        for <linux-ide@vger.kernel.org>; Sat, 17 Sep 2011 08:37:32 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1316190120-17010-1-git-send-email-dave.martin@linaro.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:58690 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751352Ab1IQSgp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2011 14:36:45 -0400
+In-Reply-To: <20110916214313.GB16381@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Martin <dave.martin@linaro.org>
-Cc: devicetree-discuss@lists.ozlabs.org, linux-ide@vger.kernel.org, patches@linaro.org, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.infradead.org
+To: devicetree-discuss@lists.ozlabs.org
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Dave Martin <dave.martin@linaro.org>, patches@linaro.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.infradead.org
 
-On Fri, Sep 16, 2011 at 05:22:00PM +0100, Dave Martin wrote:
-> This patch enables device-tree-based probing of the pata-generic
-> platform driver across all architectures:
+On Friday 16 September 2011 22:43:13 Russell King - ARM Linux wrote:
+> On Fri, Sep 16, 2011 at 03:38:10PM +0100, Dave Martin wrote:
+> > This patch enables device-tree-based probing of the pata-generic
+> > platform driver across all architectures:
+> > 
+> >   * make the pata_of_generic module depend on OF instead of PPC_OF;
+> >   * supply some missing inclues;
+> >   * replace endianness-sensitive raw access to device tree data
+> >     with of_property_read_u32() calls.
+> > 
+> > Signed-off-by: Dave Martin <dave.martin@linaro.org>
+> > ---
+> > 
+> > Tested on ARM Versatile Express, with my soon-to-be-posted device
+> > tree support patches.
 > 
->   * make the pata_of_generic module depend on OF instead of PPC_OF;
->   * supply some missing inclues;
->   * replace endianness-sensitive raw access to device tree data
->     with of_property_read_u32() calls.
+> This may not be the correct way to support the CF slot on Versatile
+> Express - it depends whether the CF slot on VE supports just CF
+> memory cards or whether it can take any CF card.
 > 
-> Signed-off-by: Dave Martin <dave.martin@linaro.org>
-> ---
-> v2: correct sense of the check of_property_read_u32(dn, "pio-mode",
-> &pio_mode).  Somehow I posted an old version of this patch, depite
-> having already fixed this...
-> 
-> Tested on ARM Versatile Express, with my soon-to-be-posted device
-> tree support patches.
-> 
-> I'm not in a position to build/test this for powerpc easily --
-> if anyone is able to do that, it would be appreciated.
+> If the latter, then what may be inserted could be a CF network card,
+> and that means it's probably wrong to tell the kernel that what's
+> there is a PATA interface.
 
-What driver is normally used for versatile express pata?  This driver
-is kind of legacy in that it was created when there was a split
-between platform_device and of_platform_devices.  But that split was a
-bad idea and the same driver should be used regardless of whether or
-not DT is enabled.  pata_of_platform.c really should be removed.
+The documentation at
+http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0447e/CACECHFJ.html
+claims that the slot only supports TrueIDE and PIO/Taskfile mode, which
+are the two modes for CF memory cards. Of course this is highly dependent
+on what you load into the FPGA that implements the CF interface on
+the versatile express, but at least for the currect Versatile Express
+FPGA load it should be right.
 
-So, instead of removing the PPC_OF restriction from
-pata_of_platform.c, you should look at adding DT support to the
-existing binding.  Bonus points if you can roll pata_of_platform.c
-support into pata_platform.c (assuming that is the correct driver).
+Also, the patch makes sense regardless of versatile express, it's just
+basic cleanup.
 
-g.
+One extension we might want to add eventually is support for the UDMA
+modes that are present on most of the current CF cards but not supported
+by this driver (AFAICT).
 
+	Arnd
