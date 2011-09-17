@@ -1,18 +1,18 @@
 From: Grant Likely <grant.likely@secretlab.ca>
 Subject: [PATCH] Merge pata_of_platform.c into pata_platform.c
-Date: Sat, 17 Sep 2011 15:34:16 -0600
-Message-ID: <20110917213227.20572.66544.stgit@ponder>
+Date: Sat, 17 Sep 2011 15:36:19 -0600
+Message-ID: <20110917213532.20710.92002.stgit@ponder>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:57729 "EHLO
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:43911 "EHLO
 	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619Ab1IQVeT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2011 17:34:19 -0400
+	with ESMTP id S1752619Ab1IQVgW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Sep 2011 17:36:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, DaveMartindave.martin@linaro.org
+To: linux-ide@vger.kernel.org, Dave Martin <dave.martin@linaro.org>, linux-kernel@vger.kernel.org
 
 There is no need for two drivers anymore
 
@@ -20,6 +20,7 @@ Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
 Cc: Dave Martin <dave.martin@linaro.org>
 COMPILE TESTED ONLY
 ---
+[resend - I flubbed Dave's email address]
 
 Dave, as I mentioned in the other thread, this is the patch that I
 hacked together to get rid of pata_of_platform.c.  Can you take over
@@ -154,7 +155,7 @@ index f305400..0000000
 -MODULE_AUTHOR("Anton Vorontsov <avorontsov@ru.mvista.com>");
 -MODULE_LICENSE("GPL");
 diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 2067308..4671eed 100644
+index 2067308..adc435a 100644
 --- a/drivers/ata/pata_platform.c
 +++ b/drivers/ata/pata_platform.c
 @@ -17,6 +17,7 @@
