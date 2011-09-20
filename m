@@ -1,103 +1,56 @@
-From: thibaut bethune <thibaut.bethune@gmail.com>
-Subject: Re: ATA TRIM on non-AHCI motherboards ?
-Date: Tue, 20 Sep 2011 01:35:51 +0200
-Message-ID: <CAACN17jsVRZ=nXWzvDMSHLmaR1s5a38j_1YWvhq8FFA63_nU6w@mail.gmail.com>
-References: <CAACN17gFBF=-UjWzAm_g3QNemyN6to3NaQqBJepWKH=DQkx7-Q@mail.gmail.com>
+From: Dave Martin <dave.martin@linaro.org>
+Subject: Re: [PATCH] Merge pata_of_platform.c into pata_platform.c
+Date: Tue, 20 Sep 2011 10:53:22 +0100
+Message-ID: <CA+wbFddrRDz5sxWcwh3QMXKJDbGDZbhfDeiiRvxdwQ-4D5Ad5g@mail.gmail.com>
+References: <20110917213532.20710.92002.stgit@ponder>
+	<20110919163850.GA2108@arm.com>
+	<20110919171055.GA30517@ponder.secretlab.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:34825 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab1ISXgM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2011 19:36:12 -0400
-Received: by qyk7 with SMTP id 7so7020515qyk.19
-        for <linux-ide@vger.kernel.org>; Mon, 19 Sep 2011 16:36:11 -0700 (PDT)
-In-Reply-To: <CAACN17gFBF=-UjWzAm_g3QNemyN6to3NaQqBJepWKH=DQkx7-Q@mail.gmail.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:50392 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755036Ab1ITJxX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Sep 2011 05:53:23 -0400
+In-Reply-To: <20110919171055.GA30517@ponder.secretlab.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Grant Likely <grant.likely@secretlab.ca>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello again
+On Mon, Sep 19, 2011 at 6:10 PM, Grant Likely <grant.likely@secretlab.c=
+a> wrote:
+> On Mon, Sep 19, 2011 at 05:39:02PM +0100, Dave Martin wrote:
+>> On Sat, Sep 17, 2011 at 03:36:19PM -0600, Grant Likely wrote:
+>> > There is no need for two drivers anymore
+>> >
+>> > Signed-off-by: Grant Likely <grant.likely@secretlab.ca>
+>> > Cc: Dave Martin <dave.martin@linaro.org>
+>> > COMPILE TESTED ONLY
+>> > ---
+>> > [resend - I flubbed Dave's email address]
+>> >
+>> > Dave, as I mentioned in the other thread, this is the patch that I
+>> > hacked together to get rid of pata_of_platform.c. =A0Can you take =
+over
+>> > on this patch please?
+>>
+>> This seems to work for me on vexpress.
+>>
+>> Can you clarify what you mean by "take over"?
+>
+> Adopt it. =A0Give it a home. =A0Shepherd it to help it find it's way =
+into
+> mainline. =A0:-)
+>
+> The patch isn't complete. =A0I've not cleaned up the Kconfig or Makef=
+ile
+> and it needs some more due diligence to review and make sure that the
+> pata_of_platform functionality has moved into pata_platform.c.
 
-I've formatted my SSD using ext4 and enabled TRIM using the "discard" o=
-ption.
-Then i've run that test
-https://sites.google.com/site/lightrush/random-1/checkiftrimonext4isena=
-bledandworking
-and it failed : no TRIM with that configuration.
+OK, assume for now that I will own this fow now -- If I get stuck,
+I'll come back to you.
 
-Since it's theorically possible to get TRIM without AHCI, only using
-48-bit LBA addressing, do you know if a can find a driver that would
-enable TRIM ?
-
-thanks in advance
-
-Thibaut
-=46rance
-
-2011/9/14 thibaut bethune <thibaut.bethune@gmail.com>:
-> Hello,
->
-> I'd like to know if my system is ATA TRIM compatible :
->
-> 1=B0) I've just bought a SATA SSD (Crucial M4) which handles TRIM
-> 2=B0) I'm running Linux 2.6.33 whch also handles TRIM (ext4 + "discar=
-d" option)
-> 3=B0) My motherboard (ASRock Conroe 1333 DVI/H R2.02, featuring the I=
-CH7
-> southbridge) doesn't handle AHCI. Yet 48-bit LBA addressing is
-> supported.
->
-> I did some research and I've read that 48-bit LBA addressing should b=
-e
-> enough to get TRIM IF the driver is compatible.
->
-> Is it the case ?
->
-> Thanks in advance
->
-> Thibaut
-> 35'
-> France
->
-> Here is the output of "lspci -nn" on my system
->
-> 00:00.0 Host bridge [0600]: Intel Corporation 82945G/GZ/P/PL Memory
-> Controller Hub [8086:2770] (rev 02)
-> 00:02.0 VGA compatible controller [0300]: Intel Corporation 82945G/GZ
-> Integrated Graphics Controller [8086:2772] (rev 02)
-> 00:1b.0 Audio device [0403]: Intel Corporation N10/ICH 7 Family High
-> Definition Audio Controller [8086:27d8] (rev 01)
-> 00:1c.0 PCI bridge [0604]: Intel Corporation N10/ICH 7 Family PCI
-> Express Port 1 [8086:27d0] (rev 01)
-> 00:1c.1 PCI bridge [0604]: Intel Corporation N10/ICH 7 Family PCI
-> Express Port 2 [8086:27d2] (rev 01)
-> 00:1d.0 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-> UHCI Controller #1 [8086:27c8] (rev 01)
-> 00:1d.1 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-> UHCI Controller #2 [8086:27c9] (rev 01)
-> 00:1d.2 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-> UHCI Controller #3 [8086:27ca] (rev 01)
-> 00:1d.3 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB
-> UHCI Controller #4 [8086:27cb] (rev 01)
-> 00:1d.7 USB Controller [0c03]: Intel Corporation N10/ICH 7 Family USB=
-2
-> EHCI Controller [8086:27cc] (rev 01)
-> 00:1e.0 PCI bridge [0604]: Intel Corporation 82801 PCI Bridge
-> [8086:244e] (rev e1)
-> 00:1f.0 ISA bridge [0601]: Intel Corporation 82801GB/GR (ICH7 Family)
-> LPC Interface Bridge [8086:27b8] (rev 01)
-> 00:1f.1 IDE interface [0101]: Intel Corporation 82801G (ICH7 Family)
-> IDE Controller [8086:27df] (rev 01)
-> 00:1f.2 IDE interface [0101]: Intel Corporation N10/ICH7 Family SATA
-> IDE Controller [8086:27c0] (rev 01)
-> 00:1f.3 SMBus [0c05]: Intel Corporation N10/ICH 7 Family SMBus
-> Controller [8086:27da] (rev 01)
-> 01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-> RTL8111/8168B PCI Express Gigabit Ethernet controller [10ec:8168] (re=
-v
-> 01)
-> 03:02.0 FireWire (IEEE 1394) [0c00]: Texas Instruments TSB12LV23
-> IEEE-1394 Controller [104c:8019]
->
+Cheers
+---Dave
