@@ -1,48 +1,40 @@
-From: Sujit Reddy <sujitreddy243@gmail.com>
-Subject: SATA: Data requests which cross 1K boundary on AXI bus causing data
- integrity failures.
-Date: Wed, 21 Sep 2011 13:26:26 +0530
-Message-ID: <CA+b=54y4ifRbK07WNQ=PhmszAHE6dXT7Fjy6CiJ2mQ2Da1a9uw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62697 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750873Ab1IUH41 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Sep 2011 03:56:27 -0400
-Received: by yxl31 with SMTP id 31so933843yxl.19
-        for <linux-ide@vger.kernel.org>; Wed, 21 Sep 2011 00:56:27 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+From: Yong Zhang <yong.zhang0@gmail.com>
+Subject: [PATCH 25/57] ata: irq: Remove IRQF_DISABLED
+Date: Wed, 21 Sep 2011 17:28:26 +0800
+Message-ID: <1316597339-29861-26-git-send-email-yong.zhang0@gmail.com>
+References: <1316597339-29861-1-git-send-email-yong.zhang0@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1316597339-29861-1-git-send-email-yong.zhang0@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: tglx@linutronix.de, yong.zhang0@gmail.com, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jeff@garzik.org
 
-Hi,
+Since commit [c58543c8: genirq: Run irq handlers with interrupts disabled],
+We run all interrupt handlers with interrupts disabled
+and we even check and yell when an interrupt handler
+returns with interrupts enabled (see commit [b738a50a:
+genirq: Warn when handler enables interrupts]).
 
-I have a query regarding 1KB boundary crossing of AXI bus. We have a
-sata master port connected to AXI bus via IB2AXI bridge. The Internal
-Bus (IB) doesn't handle requests that cross 1KB boundary. It works
-well with AHB bus but not with AXI bus. To my knowledge, AHB splits up
-transfers into 1KB boundary and then send it to the device. But as per
-ARM AXI protocol it is not guaranteed that the transfers are split
-into 1KB bursts. We don't have the IB bus compliant to this protocol
-and still accepts only 1KB bursts. This is causing data integrity
-failures whenever the data sizes cross 1KB boundary and I would like
-to have a software workaround for this.
+So now this flag is a NOOP and can be removed.
 
-My SATA master port is AHCI compliant and we use ahci_platform.c as
-LLD. The workaround I can think of is to have the PRD entry size limit
-to 1KB instead of 4MB (but not sure where to do this in the code).
-This would lead to higher RAM consumption for large data but it is
-okay for me to live with it. Also, I would like to make the data
-buffers aligned to 1KB (for ex: if I have a last request as 512bytes,
-I would like to pad with extra bytes to make it aligned with 1KB and
-send it to the device).
+Signed-off-by: Yong Zhang <yong.zhang0@gmail.com>
+---
+ drivers/ata/pata_mpc52xx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Please let me know if you have any inputs regarding this. I have
-little knowledge of libata framework in Linux so any suggestions to
-find a different workaround or a pointer to a driver which handles
-similar case are welcome.
-
-Thanks
-Sujit
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index 2fcac51..3e17463 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -780,7 +780,7 @@ mpc52xx_ata_probe(struct platform_device *op)
+ 	}
+ 
+ 	task_irq = bcom_get_task_irq(dmatsk);
+-	ret = request_irq(task_irq, &mpc52xx_ata_task_irq, IRQF_DISABLED,
++	ret = request_irq(task_irq, &mpc52xx_ata_task_irq, 0,
+ 				"ATA task", priv);
+ 	if (ret) {
+ 		dev_err(&op->dev, "error requesting DMA IRQ\n");
+-- 
+1.7.4.1
