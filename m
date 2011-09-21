@@ -1,27 +1,63 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 3/5] libsas: dynamic queue depth
-Date: Tue, 20 Sep 2011 18:18:08 -0400
-Message-ID: <20110920221808.GC2530@infradead.org>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+Date: Wed, 21 Sep 2011 09:13:22 +0800
+Message-ID: <D08979F49ABE4A0D9992E8E7B5D34C2D@usish.com.cn>
 References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
- <20110920221038.1094.7832.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110920221038.1094.7832.stgit@localhost6.localdomain6>
+In-Reply-To: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Mark Salyzyn <msalyzyn@us.xyratex.com>, Christoph Hellwig <hch@lst.de>
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jgarzik@pobox.com, JBottomley@parallels.com
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Sep 20, 2011 at 03:10:46PM -0700, Dan Williams wrote:
-> The queue-depth for libsas-attached devices initializes to 32 and can
-> only be increased manually via sysfs to a max of 64, while mpt2sas
-> attached devices initialize to 254 and dynamically float via the
-> midlayer ->change_queue_depth interface.
-> 
-> No performance regression was observed with this change on the isci
-> driver.
+Hi Dan
 
-Looks reasonable to me.
+Thanks for doing this, I'm OK with the patchset.
+Reviewed-by: Jack Wang <jack_wang@usish.com>
+
+ [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+> 
+> While enabling atapi device support for isci we encountered a condition
+> whereby multiple srX devices (one for every possible LUN) were exported
+> by the midlayer.  Looking at other drivers showed that they had a local
+> workaround for this and other conditions in custom
+> ->slave_{alloc|configure} methods.  Rather than add custom workaround
+> for isci this patchset uplevels those workarounds to libsas proper.
+> 
+> Patch 3/5 is tagged RFC as I do not know the original history behind
+> hard limiting libsas end devices to a queue_depth of 32.  At least mvsas
+> has been bumping this up to 64 on its own.
+> 
+> ---
+> 
+> Dan Williams (5):
+>       libsas: disable scanning lun > 0 on ata devices
+>       libsas: fix ->change_queue_{depth|type} for sata devices
+>       libsas: dynamic queue depth
+>       mvsas: remove mvs_slave_{alloc|configure}
+>       pm8001: remove pm8001_slave_{alloc|configure}
+> 
+> 
+>  drivers/ata/libata-core.c           |    1 +
+>  drivers/ata/libata-scsi.c           |   44
+> +++++++++++++++++++++++------------
+>  drivers/scsi/libsas/sas_scsi_host.c |   42
+> +++++++++++++++++++--------------
+>  drivers/scsi/mvsas/mv_init.c        |    4 ++-
+>  drivers/scsi/mvsas/mv_sas.c         |   30 ------------------------
+>  drivers/scsi/mvsas/mv_sas.h         |    2 --
+>  drivers/scsi/pm8001/pm8001_init.c   |    4 ++-
+>  drivers/scsi/pm8001/pm8001_sas.c    |   31 +------------------------
+>  drivers/scsi/pm8001/pm8001_sas.h    |    2 --
+>  drivers/scsi/scsi_transport_sas.c   |   10 ++++++--
+>  include/linux/libata.h              |    2 ++
+>  11 files changed, 69 insertions(+), 103 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
