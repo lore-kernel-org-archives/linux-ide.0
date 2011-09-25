@@ -1,210 +1,83 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: Can reading a raid drive trigger all the other drives in that set?
-Date: Sat, 24 Sep 2011 15:33:46 -0700
-Message-ID: <20110924223346.GB11340@merlins.org>
-References: <20110831022005.GI19892@merlins.org> <4E616224.5040009@pobox.com> <20110628162205.GG20420@merlins.org> <20110902012327.GK30313@merlins.org> <CAFx4rwTDCm67QpegfxpVjqeRHmCt=a3z1tNQB2zvW7=0AV-aSQ@mail.gmail.com>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] ata: make DVD drive recognisable on systems with Intel
+ Sandybridge CPT chipset
+Date: Sun, 25 Sep 2011 09:03:45 +0900
+Message-ID: <20110925000345.GD29319@htj.dyndns.org>
+References: <1316656512-4829-1-git-send-email-ming.lei@canonical.com>
+ <20110924015859.GZ29319@htj.dyndns.org>
+ <DEC3922D1904474A8862C7BFF516EA9A16E813AA@ORSMSX101.amr.corp.intel.com>
+ <CACVXFVN20XfKab+7SVtT_BCLN0hs-sFHbhTzknF0gNGneERNUg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:55408 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752522Ab1IXWdx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Sep 2011 18:33:53 -0400
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:43243 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505Ab1IYADw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Sep 2011 20:03:52 -0400
+Received: by pzk1 with SMTP id 1so10795670pzk.1
+        for <linux-ide@vger.kernel.org>; Sat, 24 Sep 2011 17:03:51 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <4E616224.5040009@pobox.com> <CAFx4rwTDCm67QpegfxpVjqeRHmCt=a3z1tNQB2zvW7=0AV-aSQ@mail.gmail.com>
+In-Reply-To: <CACVXFVN20XfKab+7SVtT_BCLN0hs-sFHbhTzknF0gNGneERNUg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Doug Dumitru <doug@easyco.com>, Mark Lord <mlord@pobox.com>
-Cc: linux-raid@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Ming Lei <ming.lei@canonical.com>
+Cc: "Heasley, Seth" <seth.heasley@intel.com>, "alan@linux.intel.com" <alan@linux.intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-Mark/Tejun et all, my issue may be linked to the fact that I'm using a =
-port
-multiplier for my drives. If so, please let me know if that might be th=
-e
-case.
+Hello,
 
-I'm not quite sure what's going on, but it looks like for 2 sets of 5 d=
-rives,
-ST drive reads from a drive in sleep mode can happen in // (i.e. all dr=
-ives spin up
-in //) whereas the WDC drives seem to hang the kernel block layer so th=
-at the next
-drive will not be read and spun up before the previous one was.
-
-Is that possible?
-If not, any idea what's going on?
-
-=46or what it's worth, all the drives are on the same SIL PMP plugged i=
-nto the
-same Marvel SATA card.
-
-On Fri, Sep 02, 2011 at 02:28:21PM -0700, Doug Dumitru wrote:
-> On Thu, Sep 1, 2011 at 6:23 PM, Marc MERLIN <marc@merlins.org> wrote:
-> > > I have ext4 over lvm2 on a sw raid5 with 2.6.39.1
-> > >
-> > > In order to save power I have my drives spin down.
-> > >
-> > > When I access my filesystem mount point, I get hangs of 30sec or =
-a bit more
-> > > as each and every drive are woken up serially.
-> > >
-> > > Is there any chance to put a patch in the block layer so that whe=
-n it gets a
-> > > read on a block after a certain timeout, it just does one dummy r=
-ead on all
-> > > the other droves in parallel so that all the drives have a chance=
- to spin
-> > > back up at the same time and not serially?
-> >
-> > Ok, so the lack of answer probably means 'no' :)
-> >
-> > Given that, is there a user space way to do this?
-> > I'm thinking I might be able to poll drives every second to see if =
-they
-> > were spun down and got an IO. If any drive gets an IO, then the oth=
-er
-> > ones all get a dummy read, although I'd have to make sure that read=
- is
-> > random so that it can't be in the cache.
->
-> What you are looking to do is not really what raid is all about.
-> Essentially, the side effect of a drive wakeup is non optimal in that
-> the raid layer is not aware of this event.  Then again, the drive doe=
-s
-> this invisibly, so no software is really aware.
+On Sat, Sep 24, 2011 at 09:34:09PM +0800, Ming Lei wrote:
+> On Sat, Sep 24, 2011 at 9:58 AM, Tejun Heo <htejun@gmail.com> wrote:
+> > Hello,
+> > No, this wouldn't work. =A0Ops inheritance isn't dynamic.
 >=20
-> You "could" fix this with a "filter" plug-in.  Basically, you could
-> write a device mapper plug-in that watched IO and after some length o=
-f
-> pause kicked off dummy reads so that all drives would wake up.  In
-> terms of code, this would probably be less than 300 lines to implemen=
-t
-> the module.
+> I am sure that I have tested the patch and it does work.
+
+Yeah, but not by design.  That field is assumed to be static.
+Inheritance currently is finalized during the first use of the
+operation structure, where the first use also includes being inherited
+by other ops structure, so doing it like that is asking for obscure
+bugs.
+
+> > Please define a separate ata_port_operations for controller which
+> > require 16bit PIO - piix_pata16_ops, create a new controller id (sa=
+y,
+> > ich_snb_pata), add an accompanying port_info entry and device_id
+> > entry.
 >=20
-> Writing a device mapper plug-in is not that hard (see dm-zero.c for a
-> hello-world example), but it is kernel code and does require a pretty
-> good understanding of the BIO structure and how things flow.  If you
-> had such a module, you would load it with a dmsetup command and then
-> use the 2nd mapper device instead of /dev/mdX.
+> In fact, I am not familiar with sata, but just want to fix the proble=
+m.
+> If you have a better patch, please ignore mine and apply yours.
 
-I just had a little time to work at what I thought would be the userspa=
-ce
-solution to this.
+Sure I can do that but it would be better if you can revise your
+patch.  Please take a look at how different ops are mapped to
+different device IDs.  You just need to create another variant to be
+mapped to the problematic device IDs.
 
-Please have a quick look at:
-http://marc.merlins.org/linux/scripts/swraidwakeup
-Basiscally, I use=20
-iostat -z 1
-to detect access to /dev/md5 and then read a random sector from all its
-drives in //.
+> On Sat, Sep 24, 2011 at 12:28 PM, Heasley, Seth <seth.heasley@intel.c=
+om> wrote:
+> >>Have we successfully localized the problem to SNB? =A0If so, great.
+> >
+> > No, we haven't. =A0I've reproduced the issue on two newer Intel chi=
+psets. =A0In > IDE mode, ATAPI just isn't working on SATA3 ports. =A0Wi=
+th the provided
+> > patch, the issue is resolved. =A0At what cost, I can't say. =A0But =
+if a patch will
+> > go in for the 6 Series, we need to apply it to the other platforms =
+as well. =A0I > can provide the DeviceIDs.
+>=20
+> I have seen someone reported the same problem on the device with
+> pci device id of 0x1c01[1]. I have asked them to test the patch but w=
+ithout
+> any response, so I had to not include the dev id in the patch.
 
-The idea is of course trigger a spinup of all the drive in // as oppose=
-d to
-waiting for the raid block layer to serially wait for the first drive, =
-and
-then the second, and the third, etc...
+Developing partial blacklist w/o knowing what's going on is messy.  If
+we discover that something wasn't quite what we suspected it was and
+had to revise, it'll be tricky to verify whicn ones need to remain.
+Alan, can someone from intel verify the issue?  Is there an errata we
+can look at?
 
-My script outputs what it does and I can tell that when I access the ra=
-id
-while the drives are sleeping, those 5 commands are sent at the same ti=
-me:
-dd if=3D/dev/sdh of=3D/dev/null bs=3D1024 ibs=3D1024 skip=3D304955122 c=
-ount=3D1 2>/dev/null &
-dd if=3D/dev/sdi of=3D/dev/null bs=3D1024 ibs=3D1024 skip=3D32879776 co=
-unt=3D1 2>/dev/null &
-dd if=3D/dev/sdj of=3D/dev/null bs=3D1024 ibs=3D1024 skip=3D214592398 c=
-ount=3D1 2>/dev/null &
-dd if=3D/dev/sdk of=3D/dev/null bs=3D1024 ibs=3D1024 skip=3D128138452 c=
-ount=3D1 2>/dev/null &
-dd if=3D/dev/sdl of=3D/dev/null bs=3D1024 ibs=3D1024 skip=3D397070851 c=
-ount=3D1 2>/dev/null &
+Thanks.
 
-I'm working with 2 sets of drives:
-/dev/sdc: ST3500630AS: 34=B0C
-/dev/sdd: ST3500630AS: 35=B0C
-/dev/sde: ST3750640AS: 36=B0C
-/dev/sdf: ST3500630AS: 36=B0C
-/dev/sdg: ST3500630AS: 36=B0C
-
-/dev/sdh: WDC WD20EARS-00MVWB0: 38=B0C
-/dev/sdi: WDC WD20EADS-00W4B0: 38=B0C
-/dev/sdj: WDC WD20EADS-00S2B0: 45=B0C
-/dev/sdk: WDC WD20EADS-00R6B0: 41=B0C
-/dev/sdl: WDC WD20EADS-00R6B0: 41=B0C
-
-(I use hddtemp since it's a handy way to see if the drive is sleeping o=
-r
-not without waking it up).
-
-On my raidset with the Seagate drives, the spin up in 7 seconds at the =
-same
-time:
-
-Here's an example wakeup with 4 drives sleeping and one awake:
-/usr/bin/time -f 'sdc: %E secs' dd if=3D/dev/sdc of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D227835482 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdd: %E secs' dd if=3D/dev/sdd of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D158569697 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sde: %E secs' dd if=3D/dev/sde of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D244180302 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdf: %E secs' dd if=3D/dev/sdf of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D257519832 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdg: %E secs' dd if=3D/dev/sdg of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D248812549 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-sdg: 0:00.01 secs
-sdc: 0:07.56 secs
-sdf: 0:07.60 secs
-sdd: 0:07.78 secs
-sde: 0:07.89 secs
-
-
-On my other raid, my code still runs the 5 dd commands at the same time=
-, but the block layer
-seems to run them sequentially even though they were scheduled at the s=
-ame time.
-
-1) does that make sense?
-2) could that be related to the fact that the drives are on a port mult=
-iplier?
-3) if so, why is it affecting the WDC drives but not the ST drives? Do =
-the WDC
-   drives hang the kernel when issued a command while in sleep mode, bu=
-t not the ST drives?
-
-/usr/bin/time -f 'sdh: %E secs' dd if=3D/dev/sdh of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D31905054 count=3D1 2>&1 | grep -Ev '(records|copie=
-d)' &
-/usr/bin/time -f 'sdi: %E secs' dd if=3D/dev/sdi of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D261665955 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdj: %E secs' dd if=3D/dev/sdj of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D244694085 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdk: %E secs' dd if=3D/dev/sdk of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D323059576 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-/usr/bin/time -f 'sdl: %E secs' dd if=3D/dev/sdl of=3D/dev/null bs=3D10=
-24 ibs=3D1024 skip=3D286720059 count=3D1 2>&1 | grep -Ev '(records|copi=
-ed)' &
-sdh: 0:06.91 secs
-sdi: 0:10.38 secs
-sdk: 0:20.82 secs
-sdl: 0:31.29 secs
-sdj: 0:31.91 secs
-
-
-Thanks,
-Marc
 --=20
-"A mouse is a device used to point at the xterm you want to type in" - =
-A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet=
- cooking
-Home page: http://marc.merlins.org/ =20
+tejun
