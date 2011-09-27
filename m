@@ -1,40 +1,66 @@
-From: "Heasley, Seth" <seth.heasley@intel.com>
-Subject: RE: [PATCH] ata: make DVD drive recognisable on systems with Intel
- Sandybridge CPT chipset
-Date: Mon, 26 Sep 2011 16:52:23 +0000
-Message-ID: <DEC3922D1904474A8862C7BFF516EA9A16E8169D@ORSMSX101.amr.corp.intel.com>
-References: <1316656512-4829-1-git-send-email-ming.lei@canonical.com>
-	<20110924015859.GZ29319@htj.dyndns.org>
-	<DEC3922D1904474A8862C7BFF516EA9A16E813AA@ORSMSX101.amr.corp.intel.com>
-	<CACVXFVN20XfKab+7SVtT_BCLN0hs-sFHbhTzknF0gNGneERNUg@mail.gmail.com>
-	<20110925000345.GD29319@htj.dyndns.org>
- <CACVXFVOo3CYxGJrwi0cZRwx=PWaK16EEuMfN1WDzFFA=TU0AuA@mail.gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [3.1-rc6] kmalloc(64) leak from IDE
+Date: Tue, 27 Sep 2011 19:07:55 +0200
+Message-ID: <20110927170755.GA31384@gere.osrc.amd.com>
+References: <20110922072643.GA27232@hostway.ca>
+ <20110922084811.GC17640@liondog.tnic>
+ <20110922202337.GB32661@hostway.ca>
+ <20110923072118.GA13293@liondog.tnic>
+ <20110923173808.GB26481@hostway.ca>
+ <20110925085818.GA10947@liondog.tnic>
+ <20110926080549.GA14697@hostway.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34211 "EHLO mga03.intel.com"
+Received: from mail.skyhub.de ([78.46.96.112]:57847 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751651Ab1IZQw2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 26 Sep 2011 12:52:28 -0400
-In-Reply-To: <CACVXFVOo3CYxGJrwi0cZRwx=PWaK16EEuMfN1WDzFFA=TU0AuA@mail.gmail.com>
-Content-Language: en-US
+	id S1751913Ab1I0RHz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Sep 2011 13:07:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20110926080549.GA14697@hostway.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, Tejun Heo <htejun@gmail.com>
-Cc: "alan@linux.intel.com" <alan@linux.intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Accardi, Kristen C" <kristen.c.accardi@intel.com>
+To: Simon Kirby <sim@hostway.ca>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-PlNldGgsIGNvdWxkIHlvdSBwcm92aWRlIHRoZSBEZXZpY2VJRHMgc28gdGhhdCB3ZSBjYW4gbWFr
-ZSBhIHF1aXJrIGZvcg0KPnRoZW0NCj5ub3c/DQoNClRoZSBEZXZpY2VJRHMgSSd2ZSByZXByb2R1
-Y2VkIHRoZSBpc3N1ZSB3aXRoIGFyZSB0aGUgZm9sbG93aW5nOg0KDQoxYzAwLCAxYzAxICg2IFNl
-cmllcy9Db3VnYXIgUG9pbnQpDQoxZDAwIChQYXRzYnVyZykNCjFlMDAsIDFlMDEgKFBhbnRoZXIg
-UG9pbnQpDQoNCj4+IERldmVsb3BpbmcgcGFydGlhbCBibGFja2xpc3Qgdy9vIGtub3dpbmcgd2hh
-dCdzIGdvaW5nIG9uIGlzIG1lc3N5LiDCoElmDQo+PiB3ZSBkaXNjb3ZlciB0aGF0IHNvbWV0aGlu
-ZyB3YXNuJ3QgcXVpdGUgd2hhdCB3ZSBzdXNwZWN0ZWQgaXQgd2FzIGFuZA0KPj4gaGFkIHRvIHJl
-dmlzZSwgaXQnbGwgYmUgdHJpY2t5IHRvIHZlcmlmeSB3aGljbiBvbmVzIG5lZWQgdG8gcmVtYWlu
-Lg0KPj4gQWxhbiwgY2FuIHNvbWVvbmUgZnJvbSBpbnRlbCB2ZXJpZnkgdGhlIGlzc3VlPyDCoElz
-IHRoZXJlIGFuIGVycmF0YSB3ZQ0KPj4gY2FuIGxvb2sgYXQ/DQoNCkFkZGluZyBLcmlzdGluIEFj
-Y2FyZGkgdG8gdGhlIHRocmVhZC4gIEkndmUgcmVwcm8nZCB0aGUgaXNzdWUgb24gc2V2ZXJhbCBz
-eXN0ZW1zIGFuZCBjYW4gdmVyaWZ5IGFueSBwYXRjaCB0aGF0J3MgcHJvcG9zZWQsIGJ1dCBJIGRv
-bid0IGhhdmUgdGhlIFNBVEEgZXhwZXJ0aXNlIHRvIHByb3ZpZGUgbXVjaCBlbHNlLg0KDQotU2V0
-aAkNCg==
+(forgot to Cc linux-ide earlier, sorry)
+
+On Mon, Sep 26, 2011 at 01:05:50AM -0700, Simon Kirby wrote:
+> Ok, good. It's still running without any problem, and no new leaks
+> reported.
+
+Ok.
+
+[..]
+
+> > backporting it to -stable is a good point. I'll add the proper tagging
+> > to the patch.
+> 
+> Do you know in which version the issue started, then?
+> 
+> If not, all I have to start with is that it was fine on 2.6.36, and I can
+> bisect it, if that would help.
+
+This is exactly the question: AFAICT, it could be that changes in the
+block layer at some point have caused the ide bust and since almost no
+one tests ide...
+
+The patch adding the dynamic ide_cmd struct allocation is
+395d8ef5bebe547a80737692f9789d2e36da16f2 from 2008 and I don't think it
+caused the issue then but I could also be remembering it wrong.
+
+So I wouldn't bisect it but test stable trees after 2.6.36 to see
+whether they have the issue, and if so, only then the patch should be
+backported.
+
+And this is not that easy now with k.org down but looking at
+
+http://web.archive.org/web/20110725015737/http://kernel.org/
+
+the only stable trees which need to be tested are 2.6.39 and 3.0.
+
+How does that sound?
+
+-- 
+Regards/Gruss,
+Boris.
