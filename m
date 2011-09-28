@@ -1,140 +1,282 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH] ata: make DVD drive recognisable on systems with Intel
- Sandybridge CPT chipset
-Date: Wed, 28 Sep 2011 12:58:25 +0800
-Message-ID: <CACVXFVPR2qA-N2wi6c2ranOLuhRVuQQ5nhdE=4m1hxjW-Z=Ohw@mail.gmail.com>
-References: <1316656512-4829-1-git-send-email-ming.lei@canonical.com>
-	<20110924015859.GZ29319@htj.dyndns.org>
-	<DEC3922D1904474A8862C7BFF516EA9A16E813AA@ORSMSX101.amr.corp.intel.com>
-	<CACVXFVN20XfKab+7SVtT_BCLN0hs-sFHbhTzknF0gNGneERNUg@mail.gmail.com>
-	<20110925000345.GD29319@htj.dyndns.org>
-	<CACVXFVOo3CYxGJrwi0cZRwx=PWaK16EEuMfN1WDzFFA=TU0AuA@mail.gmail.com>
-	<CACVXFVMWn4o3WKznydUqdhfZK2xTQ-+=SFqYtP0J4DzagWphcQ@mail.gmail.com>
+From: Richard Zhu <richard.zhu@linaro.org>
+Subject: [PATCH V9 1/5] AHCI Add the AHCI SATA feature on the MX53 platforms
+Date: Wed, 28 Sep 2011 15:41:53 +0800
+Message-ID: <1317195717-21174-2-git-send-email-richard.zhu@linaro.org>
+References: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49496 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688Ab1I1E61 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Sep 2011 00:58:27 -0400
-Received: from mail-ww0-f44.google.com ([74.125.82.44])
-	by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_ARCFOUR_SHA1:16)
-	(Exim 4.71)
-	(envelope-from <ming.lei@canonical.com>)
-	id 1R8mDx-0002pE-Su
-	for linux-ide@vger.kernel.org; Wed, 28 Sep 2011 04:58:25 +0000
-Received: by wwf22 with SMTP id 22so8307859wwf.1
-        for <linux-ide@vger.kernel.org>; Tue, 27 Sep 2011 21:58:25 -0700 (PDT)
-In-Reply-To: <CACVXFVMWn4o3WKznydUqdhfZK2xTQ-+=SFqYtP0J4DzagWphcQ@mail.gmail.com>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:22880
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752058Ab1I1HmO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Sep 2011 03:42:14 -0400
+In-Reply-To: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: "Heasley, Seth" <seth.heasley@intel.com>, "alan@linux.intel.com" <alan@linux.intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-Hi Tejun,
+Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+Tested-by: Hector Oron Martinez <hector.oron@gmail.com>
+---
+ arch/arm/mach-mx5/clock-mx51-mx53.c             |   19 +++
+ arch/arm/mach-mx5/devices-imx53.h               |    2 +
+ arch/arm/plat-mxc/devices/Kconfig               |    4 +
+ arch/arm/plat-mxc/devices/Makefile              |    1 +
+ arch/arm/plat-mxc/devices/platform-ahci-imx.c   |  156 +++++++++++++++++++++++
+ arch/arm/plat-mxc/include/mach/devices-common.h |   10 ++
+ 6 files changed, 192 insertions(+), 0 deletions(-)
+ create mode 100644 arch/arm/plat-mxc/devices/platform-ahci-imx.c
 
-On Mon, Sep 26, 2011 at 3:23 PM, Ming Lei <ming.lei@canonical.com> wrot=
-e:
-
-> How about this one below?
->
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 43107e9..b35086b 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -147,6 +147,7 @@ enum piix_controller_ids {
-> =A0 =A0 =A0 =A0ich8m_apple_sata, =A0 =A0 =A0 /* locks up on second po=
-rt enable */
-> =A0 =A0 =A0 =A0tolapai_sata,
-> =A0 =A0 =A0 =A0piix_pata_vmw, =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* P=
-IIX4 for VMware, spurious DMA_ERR */
-> + =A0 =A0 =A0 ich8_sata_snb,
-> =A0};
->
-> =A0struct piix_map_db {
-> @@ -298,7 +299,7 @@ static const struct pci_device_id piix_pci_tbl[] =
-=3D {
-> =A0 =A0 =A0 =A0/* SATA Controller IDE (PCH) */
-> =A0 =A0 =A0 =A0{ 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_s=
-ata },
-> =A0 =A0 =A0 =A0/* SATA Controller IDE (CPT) */
-> - =A0 =A0 =A0 { 0x8086, 0x1c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sa=
-ta },
-> + =A0 =A0 =A0 { 0x8086, 0x1c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sa=
-ta_snb },
-> =A0 =A0 =A0 =A0/* SATA Controller IDE (CPT) */
-> =A0 =A0 =A0 =A0{ 0x8086, 0x1c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_s=
-ata },
-> =A0 =A0 =A0 =A0/* SATA Controller IDE (CPT) */
-> @@ -335,6 +336,11 @@ static struct scsi_host_template piix_sht =3D {
-> =A0 =A0 =A0 =A0ATA_BMDMA_SHT(DRV_NAME),
-> =A0};
->
-> +static struct ata_port_operations piix_sata_snb_ops =3D {
-> + =A0 =A0 =A0 .inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D &ata_bmdma_po=
-rt_ops,
-> + =A0 =A0 =A0 .sff_irq_check =A0 =A0 =A0 =A0 =A0=3D piix_irq_check,
-> +};
-> +
-> =A0static struct ata_port_operations piix_sata_ops =3D {
-> =A0 =A0 =A0 =A0.inherits =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D &ata_bmdma32=
-_port_ops,
-> =A0 =A0 =A0 =A0.sff_irq_check =A0 =A0 =A0 =A0 =A0=3D piix_irq_check,
-> @@ -478,6 +484,7 @@ static const struct piix_map_db *piix_map_db_tabl=
-e[] =3D {
-> =A0 =A0 =A0 =A0[ich8_2port_sata] =A0 =A0 =A0 =3D &ich8_2port_map_db,
-> =A0 =A0 =A0 =A0[ich8m_apple_sata] =A0 =A0 =A0=3D &ich8m_apple_map_db,
-> =A0 =A0 =A0 =A0[tolapai_sata] =A0 =A0 =A0 =A0 =A0=3D &tolapai_map_db,
-> + =A0 =A0 =A0 [ich8_sata_snb] =A0 =A0 =A0 =A0 =3D &ich8_map_db,
-> =A0};
->
-> =A0static struct ata_port_info piix_port_info[] =3D {
-> @@ -606,6 +613,15 @@ static struct ata_port_info piix_port_info[] =3D=
- {
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0.port_ops =A0 =A0 =A0 =3D &piix_vmw_op=
-s,
-> =A0 =A0 =A0 =A0},
->
-> + =A0 =A0 =A0 [ich8_sata_snb] =3D
-> + =A0 =A0 =A0 {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .flags =A0 =A0 =A0 =A0 =A0=3D PIIX_SATA=
-_FLAGS | PIIX_FLAG_SIDPR,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =A0 =A0 =A0 =3D ATA_PIO4,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =A0 =A0 =3D ATA_MWDMA2,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =A0 =A0 =A0=3D ATA_UDMA6,
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 .port_ops =A0 =A0 =A0 =3D &piix_sata_sn=
-b_ops,
-> + =A0 =A0 =A0 },
-> +
-> =A0};
->
-> =A0static struct pci_bits piix_enable_bits[] =3D {
-
-After testing, I found the patch above does not make DVD drive work.
-But plus the below[1], dvd drive starts to working. Since piix_sidpr_sa=
-ta_ops
-is hardcode in ata_piix.c, looks like it is a bit difficult to figure
-out a clean fix.
-
-Tejun, could you give some comments about it?
-
-thanks,
---
-Ming Lei
-
-[1],
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 150d286..3b3785d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -376,7 +376,7 @@ static struct scsi_host_template piix_sidpr_sht =3D=
- {
+diff --git a/arch/arm/mach-mx5/clock-mx51-mx53.c b/arch/arm/mach-mx5/clock-mx51-mx53.c
+index 7f20308..e1fadaf 100644
+--- a/arch/arm/mach-mx5/clock-mx51-mx53.c
++++ b/arch/arm/mach-mx5/clock-mx51-mx53.c
+@@ -1397,6 +1397,22 @@ static struct clk esdhc4_mx53_clk = {
+ 	.secondary = &esdhc4_ipg_clk,
  };
+ 
++static struct clk sata_clk = {
++	.parent = &ipg_clk,
++	.enable = _clk_max_enable,
++	.enable_reg = MXC_CCM_CCGR4,
++	.enable_shift = MXC_CCM_CCGRx_CG1_OFFSET,
++	.disable = _clk_max_disable,
++};
++
++static struct clk ahci_phy_clk = {
++	.parent = &usb_phy1_clk,
++};
++
++static struct clk ahci_dma_clk = {
++	.parent = &ahb_clk,
++};
++
+ DEFINE_CLOCK(mipi_esc_clk, 0, MXC_CCM_CCGR4, MXC_CCM_CCGRx_CG5_OFFSET, NULL, NULL, NULL, &pll2_sw_clk);
+ DEFINE_CLOCK(mipi_hsc2_clk, 0, MXC_CCM_CCGR4, MXC_CCM_CCGRx_CG4_OFFSET, NULL, NULL, &mipi_esc_clk, &pll2_sw_clk);
+ DEFINE_CLOCK(mipi_hsc1_clk, 0, MXC_CCM_CCGR4, MXC_CCM_CCGRx_CG3_OFFSET, NULL, NULL, &mipi_hsc2_clk, &pll2_sw_clk);
+@@ -1503,6 +1519,9 @@ static struct clk_lookup mx53_lookups[] = {
+ 	_REGISTER_CLOCK("imx-ssi.1", NULL, ssi2_clk)
+ 	_REGISTER_CLOCK("imx-ssi.2", NULL, ssi3_clk)
+ 	_REGISTER_CLOCK("imx-keypad", NULL, dummy_clk)
++	_REGISTER_CLOCK("imx53-ahci.0", "ahci", sata_clk)
++	_REGISTER_CLOCK("imx53-ahci.0", "ahci_phy", ahci_phy_clk)
++	_REGISTER_CLOCK("imx53-ahci.0", "ahci_dma", ahci_dma_clk)
+ };
+ 
+ static void clk_tree_init(void)
+diff --git a/arch/arm/mach-mx5/devices-imx53.h b/arch/arm/mach-mx5/devices-imx53.h
+index c27fe8b..1ab399e 100644
+--- a/arch/arm/mach-mx5/devices-imx53.h
++++ b/arch/arm/mach-mx5/devices-imx53.h
+@@ -40,3 +40,5 @@ extern const struct imx_imx_ssi_data imx53_imx_ssi_data[];
+ extern const struct imx_imx_keypad_data imx53_imx_keypad_data;
+ #define imx53_add_imx_keypad(pdata)	\
+ 	imx_add_imx_keypad(&imx53_imx_keypad_data, pdata)
++
++extern struct platform_device *__init imx53_add_ahci_imx(void);
+diff --git a/arch/arm/plat-mxc/devices/Kconfig b/arch/arm/plat-mxc/devices/Kconfig
+index bd294ad..f63887b 100644
+--- a/arch/arm/plat-mxc/devices/Kconfig
++++ b/arch/arm/plat-mxc/devices/Kconfig
+@@ -76,3 +76,7 @@ config IMX_HAVE_PLATFORM_SDHCI_ESDHC_IMX
+ 
+ config IMX_HAVE_PLATFORM_SPI_IMX
+ 	bool
++
++config IMX_HAVE_PLATFORM_AHCI
++	bool
++	default y if ARCH_MX53
+diff --git a/arch/arm/plat-mxc/devices/Makefile b/arch/arm/plat-mxc/devices/Makefile
+index b41bf97..e858ad9 100644
+--- a/arch/arm/plat-mxc/devices/Makefile
++++ b/arch/arm/plat-mxc/devices/Makefile
+@@ -25,3 +25,4 @@ obj-$(CONFIG_IMX_HAVE_PLATFORM_MXC_RTC) += platform-mxc_rtc.o
+ obj-$(CONFIG_IMX_HAVE_PLATFORM_MXC_W1) += platform-mxc_w1.o
+ obj-$(CONFIG_IMX_HAVE_PLATFORM_SDHCI_ESDHC_IMX) += platform-sdhci-esdhc-imx.o
+ obj-$(CONFIG_IMX_HAVE_PLATFORM_SPI_IMX) +=  platform-spi_imx.o
++obj-$(CONFIG_IMX_HAVE_PLATFORM_AHCI) +=  platform-ahci-imx.o
+diff --git a/arch/arm/plat-mxc/devices/platform-ahci-imx.c b/arch/arm/plat-mxc/devices/platform-ahci-imx.c
+new file mode 100644
+index 0000000..d8a56ae
+--- /dev/null
++++ b/arch/arm/plat-mxc/devices/platform-ahci-imx.c
+@@ -0,0 +1,156 @@
++/*
++ * Copyright (C) 2011 Freescale Semiconductor, Inc. All Rights Reserved.
++ */
++
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++
++ * You should have received a copy of the GNU General Public License along
++ * with this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
++ */
++
++#include <linux/io.h>
++#include <linux/clk.h>
++#include <linux/err.h>
++#include <linux/device.h>
++#include <linux/dma-mapping.h>
++#include <asm/sizes.h>
++#include <mach/hardware.h>
++#include <mach/devices-common.h>
++
++#define imx_ahci_imx_data_entry_single(soc, _devid)		\
++	{								\
++		.devid = _devid,					\
++		.iobase = soc ## _SATA_BASE_ADDR,			\
++		.irq = soc ## _INT_SATA,				\
++	}
++
++#ifdef CONFIG_SOC_IMX53
++const struct imx_ahci_imx_data imx53_ahci_imx_data __initconst =
++	imx_ahci_imx_data_entry_single(MX53, "imx53-ahci");
++#endif
++
++enum {
++	HOST_CAP = 0x00,
++	HOST_CAP_SSS = (1 << 27), /* Staggered Spin-up */
++	HOST_PORTS_IMPL	= 0x0c,
++	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
++};
++
++static struct clk *sata_clk, *sata_ref_clk;
++
++/* AHCI module Initialization, if return 0, initialization is successful. */
++static int imx_sata_init(struct device *dev, void __iomem *addr)
++{
++	u32 tmpdata;
++	int ret = 0;
++	struct clk *clk;
++
++	sata_clk = clk_get(dev, "ahci");
++	if (IS_ERR(sata_clk)) {
++		dev_err(dev, "no sata clock.\n");
++		return PTR_ERR(sata_clk);
++	}
++	ret = clk_enable(sata_clk);
++	if (ret) {
++		dev_err(dev, "can't enable sata clock.\n");
++		goto put_sata_clk;
++	}
++
++	/* Get the AHCI SATA PHY CLK */
++	sata_ref_clk = clk_get(dev, "ahci_phy");
++	if (IS_ERR(sata_ref_clk)) {
++		dev_err(dev, "no sata ref clock.\n");
++		ret = PTR_ERR(sata_ref_clk);
++		goto release_sata_clk;
++	}
++	ret = clk_enable(sata_ref_clk);
++	if (ret) {
++		dev_err(dev, "can't enable sata ref clock.\n");
++		goto put_sata_ref_clk;
++	}
++
++	/* Get the AHB clock rate, and configure the TIMER1MS reg later */
++	clk = clk_get(dev, "ahci_dma");
++	if (IS_ERR(clk)) {
++		dev_err(dev, "no dma clock.\n");
++		ret = PTR_ERR(clk);
++		goto release_sata_ref_clk;
++	}
++	tmpdata = clk_get_rate(clk) / 1000;
++	clk_put(clk);
++
++	writel(tmpdata, addr + HOST_TIMER1MS);
++
++	tmpdata = readl(addr + HOST_CAP);
++	if (!(tmpdata & HOST_CAP_SSS)) {
++		tmpdata |= HOST_CAP_SSS;
++		writel(tmpdata, addr + HOST_CAP);
++	}
++
++	if (!(readl(addr + HOST_PORTS_IMPL) & 0x1))
++		writel((readl(addr + HOST_PORTS_IMPL) | 0x1),
++			addr + HOST_PORTS_IMPL);
++
++	return 0;
++
++release_sata_ref_clk:
++	clk_disable(sata_ref_clk);
++put_sata_ref_clk:
++	clk_put(sata_ref_clk);
++release_sata_clk:
++	clk_disable(sata_clk);
++put_sata_clk:
++	clk_put(sata_clk);
++
++	return ret;
++}
++
++static void imx_sata_exit(struct device *dev)
++{
++	clk_disable(sata_ref_clk);
++	clk_put(sata_ref_clk);
++
++	clk_disable(sata_clk);
++	clk_put(sata_clk);
++
++}
++struct platform_device *__init imx_add_ahci_imx(
++		const struct imx_ahci_imx_data *data,
++		const struct ahci_platform_data *pdata)
++{
++	struct resource res[] = {
++		{
++			.start = data->iobase,
++			.end = data->iobase + SZ_4K - 1,
++			.flags = IORESOURCE_MEM,
++		}, {
++			.start = data->irq,
++			.end = data->irq,
++			.flags = IORESOURCE_IRQ,
++		},
++	};
++
++	return imx_add_platform_device_dmamask(data->devid, 0,
++			res, ARRAY_SIZE(res),
++			pdata, sizeof(*pdata),  DMA_BIT_MASK(32));
++}
++
++struct platform_device *__init imx53_add_ahci_imx(void)
++{
++	struct ahci_platform_data pdata = {
++		.init = imx_sata_init,
++		.exit = imx_sata_exit,
++	};
++
++	return imx_add_ahci_imx(&imx53_ahci_imx_data, &pdata);
++}
+diff --git a/arch/arm/plat-mxc/include/mach/devices-common.h b/arch/arm/plat-mxc/include/mach/devices-common.h
+index 524538a..f04e063 100644
+--- a/arch/arm/plat-mxc/include/mach/devices-common.h
++++ b/arch/arm/plat-mxc/include/mach/devices-common.h
+@@ -301,3 +301,13 @@ struct platform_device *__init imx_add_spi_imx(
+ struct platform_device *imx_add_imx_dma(void);
+ struct platform_device *imx_add_imx_sdma(char *name,
+ 	resource_size_t iobase, int irq, struct sdma_platform_data *pdata);
++
++#include <linux/ahci_platform.h>
++struct imx_ahci_imx_data {
++	const char *devid;
++	resource_size_t iobase;
++	resource_size_t irq;
++};
++struct platform_device *__init imx_add_ahci_imx(
++		const struct imx_ahci_imx_data *data,
++		const struct ahci_platform_data *pdata);
+-- 
+1.7.1
 
- static struct ata_port_operations piix_sidpr_sata_ops =3D {
--	.inherits		=3D &piix_sata_ops,
-+	.inherits		=3D &piix_sata_snb_ops,
- 	.hardreset		=3D sata_std_hardreset,
- 	.scr_read		=3D piix_sidpr_scr_read,
- 	.scr_write		=3D piix_sidpr_scr_write,
+
