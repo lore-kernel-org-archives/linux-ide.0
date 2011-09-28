@@ -1,72 +1,103 @@
 From: Richard Zhu <richard.zhu@linaro.org>
-Subject: [PATCH V9 0/5] imx53 ahci driver v9
-Date: Wed, 28 Sep 2011 15:41:52 +0800
-Message-ID: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
+Subject: [PATCH V9 2/5] ahci_plt Add the board_ids and pi refer to different features
+Date: Wed, 28 Sep 2011 15:41:54 +0800
+Message-ID: <1317195717-21174-3-git-send-email-richard.zhu@linaro.org>
+References: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: linux-arm-kernel-bounces@lists.infradead.org
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: kernel@pengutronix.de, eric.miao@linaro.org, linux-ide@vger.kernel.org, Richard Zhu <richard.zhu@linaro.org>, eric@eukrea.com, avorontsov@ru.mvista.com, jgarzik@pobox.com
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:43071 "EHLO
+	TX2EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752245Ab1I1Hn7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Sep 2011 03:43:59 -0400
+In-Reply-To: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: jgarzik@pobox.com, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org, Richard Zhu <richard.zhu@linaro.org>
 
-*** BLURB HERE ***
-This is the seventh iteration of the imx53 ahci patch. Changes between
-v5 and v7 are described in the following description.
+On imx53 AHCI, soft reset fails with IPMS set when PMP
+is enabled but SATA HDD/ODD is connected to SATA port,
+do soft reset again to port 0.
+So the 'ahci_pmp_retry_srst_ops' is required when imx53
+ahci is present.
 
-ChangeLog v5->v6:
- - Move the most ahci initialization codes from the board related files
-   to the common ahci_sata file.
+Signed-off-by: Richard Zhu <richard.zhu@linaro.org>
+Acked-by: Eric Miao <eric.miao@linaro.org>
+---
+ drivers/ata/ahci_platform.c |   44 +++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 38 insertions(+), 6 deletions(-)
 
- - Add the imx53 ahci's own ata_port_info definition in ahci_platform
-   driver, since the 'ahci_pmp_retry_srst_ops' is required when imx53
-   ahci is present.
- V6: http://www.spinics.net/lists/arm-kernel/msg138254.html
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 6fef1fa..c03277d 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -23,6 +23,41 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
+ 
++enum ahci_type {
++	AHCI,		/* standard platform ahci */
++	IMX53_AHCI,	/* ahci on i.mx53 */
++};
++
++static struct platform_device_id ahci_devtype[] = {
++	{
++		.name = "ahci",
++		.driver_data = AHCI,
++	}, {
++		.name = "imx53-ahci",
++		.driver_data = IMX53_AHCI,
++	}, {
++		/* sentinel */
++	}
++};
++MODULE_DEVICE_TABLE(platform, ahci_devtype);
++
++
++static const struct ata_port_info ahci_port_info[] = {
++	/* by features */
++	[AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
++	[IMX53_AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_pmp_retry_srst_ops,
++	},
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT("ahci_platform"),
+ };
+@@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev->platform_data;
+-	struct ata_port_info pi = {
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_ops,
+-	};
++	const struct platform_device_id *id = platform_get_device_id(pdev);
++	struct ata_port_info pi = ahci_port_info[id->driver_data];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+@@ -177,6 +208,7 @@ static struct platform_driver ahci_driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 	},
++	.id_table	= ahci_devtype,
+ };
+ 
+ static int __init ahci_init(void)
+-- 
+1.7.1
 
-ChangeLog v6->v7:
- - Define the default imx53 ahci platform data, reduce the modificatons
-   on the board related files.
 
- - Handle the sata_pwr_en pin obviously on smd board.
- V7: http://www.spinics.net/lists/arm-kernel/msg138569.html
-
-ChangeLog V7->V8
- - Accept Sascha's suggestions.
-   * Rename sata_init/sata_exit to imx_sata_init/imx_sata_exit.
-   * move the init/exit as static functions to platform-ahci-imx.c file.
-     Make a wrapper on these functions, and avoid to pass the function
-     hooks by platform data.
-   V8: http://www.spinics.net/lists/arm-kernel/msg141500.html
-
-ChangeLog V8->V9
- - Use gpio_request_one to replace the gpio_request and gpio_direction_output
-   when enable the sata power on mx53 smd board.
-
-Richard Zhu (5):
-  AHCI Add the AHCI SATA feature on the MX53 platforms
-  ahci_plt Add the board_ids and pi refer to different features
-  MX53 Enable the AHCI SATA on MX53 ARD board
-  MX53 Enable the AHCI SATA on MX53 LOCO board
-  MX53 Enable the AHCI SATA on MX53 SMD board
-
- arch/arm/mach-mx5/board-mx53_ard.c              |    1 +
- arch/arm/mach-mx5/board-mx53_loco.c             |    1 +
- arch/arm/mach-mx5/board-mx53_smd.c              |   16 +++
- arch/arm/mach-mx5/clock-mx51-mx53.c             |   19 +++
- arch/arm/mach-mx5/devices-imx53.h               |    2 +
- arch/arm/plat-mxc/devices/Kconfig               |    4 +
- arch/arm/plat-mxc/devices/Makefile              |    1 +
- arch/arm/plat-mxc/devices/platform-ahci-imx.c   |  156 +++++++++++++++++++++++
- arch/arm/plat-mxc/include/mach/devices-common.h |   10 ++
- drivers/ata/ahci_platform.c                     |   44 ++++++-
- 10 files changed, 248 insertions(+), 6 deletions(-)
- create mode 100644 arch/arm/plat-mxc/devices/platform-ahci-imx.c
