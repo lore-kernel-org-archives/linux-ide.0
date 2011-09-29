@@ -1,119 +1,63 @@
-From: Simon Kirby <sim@hostway.ca>
-Subject: Re: [3.1-rc6] kmalloc(64) leak from IDE
-Date: Thu, 29 Sep 2011 15:45:05 -0700
-Message-ID: <20110929224505.GC7959@hostway.ca>
-References: <20110922072643.GA27232@hostway.ca> <20110922084811.GC17640@liondog.tnic> <20110922202337.GB32661@hostway.ca> <20110923072118.GA13293@liondog.tnic> <20110923173808.GB26481@hostway.ca> <20110925085818.GA10947@liondog.tnic> <20110926080549.GA14697@hostway.ca> <20110927170755.GA31384@gere.osrc.amd.com> <20110929092705.GA809@liondog.tnic>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@ih-intel.com>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuivmnIDmlrDlub/kuqTkvJrkubDlrrbjgIHmtbc=?=
+	=?utf-8?B?5YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Thu, 29 Sep 2011 23:05:33 +0000 (UTC)
+Message-ID: <20120930005013716642@ih-intel.com>
+Reply-To: <1339625218@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110929092705.GA809@liondog.tnic>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [211.144.136.18] ([211.144.136.18]:2100 "HELO ih-intel.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with SMTP
+	id S1752127Ab1I2XF2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Sep 2011 19:05:28 -0400
+Date: Sun, 30 Sep 2012 00:49:59 +0800
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linseis@t-online.de, linux-ide@vger.kernel.org, linvwert@comcast.net, linxia9990@126.com, linxu@bainayuan.com, linyiandre@hotmail.com, linyue19@hotmail.com, linzhenfei_
 
-On Thu, Sep 29, 2011 at 11:27:05AM +0200, Borislav Petkov wrote:
+576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrbjgIHlsZXk
+vJrkubDlrrbjgIHmtbflhbPmlbDmja4sQjJC6K+i55uY5Lmw5a62NTAw5LiH44CCDQoNCuS4gOWF
+sTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn6KGM5Lia5YiG5aW957G777yM
+5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8miANCjHvvIwyMDEx5pil5a2j
+MTA55bGK5bm/5Lqk5Lya5Lmw5a625pWw5o2u5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc
+5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a655piT5oiQ5Y2V77yBIA0KMu+8jOacgOaWsOWFqOeQ
+g+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgDQoz77yMMjAwOOW5tCwyMDA55bm0LDIw
+MTDlubQg5pil5a2jK+eni+Wto+W5v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEw
+NiAxMDcgMTA4IOWFseWFreWxiiDlhbExMjAuNuS4h+aVsOaNruOAgg0KNO+8jDIwMTDlubTlm73p
+mYXkv4PplIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3Rv
+cnnvvIzpnZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjXvvIwyMDEw5bm05Yiw6aaZ5riv6YeH
+6LSt55qE5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLk
+uIfmlbDmja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjbvvIw2MC445LiH5p2h5pyA5paw
+5Zu95aSWQjJC5Lmw5a626K+i55uY44CCDQo377yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBp
+ZXJz54mI5pWw5o2uIDHljYPkuIfjgIINCjjvvIznvqTlj5Hova/ku7bvvIznvqTlj5Hova/ku7bn
+moTpg6jnvbLkuI7lronoo4XjgIINCg0K5YWxIDUwMOS4h+S4quS5sOWutu+8jOavj+S4quWdh+ac
+iUVtYWlsLiANCg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/l
+pKnpg73mnInkubDlrrblm57lpI3jgIINCg0K6KaB55qE5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUy
+MTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEzMzk2MjUyMThAcXEuY29tDQropoHnmoTm
+ipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMz
+OTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4ICAg5oiW6ICF
+56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0KIA0KDQror5rkv6HkuLrmnKzv
+vIzlpoLmnpzkuI3kv6Hku7vmnKzkuros5Y+v5Lul6LWw5reY5a6d5Lqk5piTLOaUtui0p+mqjOiv
+geWQjuWGjeS7mOasvizov5nmmK/lr7nmgqjmnIDlpb3nmoTkv53pmpzkuobjgIIgDQoNCuS/neiv
+geavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue
+5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KDQoNCg0K5bm/5Lqk
+5Lya5Lmw5a625oyJ5Lqn5ZOB57G75Yir5YiG57G777yM5YiG5Li65Lul5LiL5Yeg57G777yaDQox
+IOWKnuWFrOiuvuWkhw0KMiDnvJbnu4flj4rol6Tpk4Hlt6Xoibrlk4ENCjMg546755KDDQo0IOmk
+kOWOqOeUqOWFtw0KNSDovabovoYNCjYg5aSn5Z6L5py65qKw5Y+K6K6+5aSHDQo3IOeUteWtkOeU
+teawlA0KOCDnlLXlrZDmtojotLnlk4ENCjkg57q657uHDQoxMCDmnI3oo4UNCjExIOS4quS6uuaK
+pOeQhg0KMTIg5bel56iL5py65qKwDQoxMyDlt6XlhbcNCjE0IOWMluW3pQ0KMTUg6K6h566X5py6
+5Y+K6YCa6K6vDQoxNiDlrrblsYXnlKjlk4ENCjE3IOWutuWxheijhemlsA0KMTgg5a625YW3DQox
+OSDlrrbnlKjnlLXlmagNCjIwIOW7uuetkeWPiuijhemlsOadkOaWmQ0KMjEg6IqC5pel55So5ZOB
+DQoyMiDnpLzlk4Hlj4rotaDlk4ENCjIzIOaRqeaJmOi9pg0KMjQg5rG96L2m6YWN5Lu2DQoyNSDp
+o5/lk4ENCjI2IOmZtueTtw0KMjcg6ZOB55+zDQoyOCDnjqnlhbcNCjI5IOWNq+a1tA0KMzAg5LqU
+6YeRDQozMSDlsI/lnovmnLrmorANCjMyIOmeiw0KMzMg5LyR6Zey55So5ZOBDQozNCDljLvnlpcN
+CjM1IOa1tOWupOS6p+WTgQ0KMzYg5Zut5p6XDQozNyDnhafmmI7kuqflk4ENCjM4IOmSn+ihqOec
+vOmVnA0KMzkg6Ieq6KGM6L2mDQo0MCDljIUNCg0KDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrbl
+m57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp
+6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIIN
+CuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K
 
-> On Tue, Sep 27, 2011 at 07:07:55PM +0200, Borislav Petkov wrote:
-> > (forgot to Cc linux-ide earlier, sorry)
-> > 
-> > On Mon, Sep 26, 2011 at 01:05:50AM -0700, Simon Kirby wrote:
-> > > Ok, good. It's still running without any problem, and no new leaks
-> > > reported.
-> > 
-> > Ok.
-> > 
-> > [..]
-> > 
-> > > > backporting it to -stable is a good point. I'll add the proper tagging
-> > > > to the patch.
-> > > 
-> > > Do you know in which version the issue started, then?
-> > > 
-> > > If not, all I have to start with is that it was fine on 2.6.36, and I can
-> > > bisect it, if that would help.
-> > 
-> > This is exactly the question: AFAICT, it could be that changes in the
-> > block layer at some point have caused the ide bust and since almost no
-> > one tests ide...
-> > 
-> > The patch adding the dynamic ide_cmd struct allocation is
-> > 395d8ef5bebe547a80737692f9789d2e36da16f2 from 2008 and I don't think it
-> > caused the issue then but I could also be remembering it wrong.
-> > 
-> > So I wouldn't bisect it but test stable trees after 2.6.36 to see
-> > whether they have the issue, and if so, only then the patch should be
-> > backported.
-> > 
-> > And this is not that easy now with k.org down but looking at
-> > 
-> > http://web.archive.org/web/20110725015737/http://kernel.org/
-> > 
-> > the only stable trees which need to be tested are 2.6.39 and 3.0.
-> > 
-> > How does that sound?
-> 
-> Btw, here's the patch, if you would like to test 2.6.39 once without it
-> to see whether kmemleak screams and once with it, I'll add the stable
-> tagging.
-> 
-> Thanks.
-> 
-> --
-> >From 96414ddbfecaaa3d265794c0792d816cf3c1e33d Mon Sep 17 00:00:00 2001
-> From: Borislav Petkov <bp@alien8.de>
-> Date: Sun, 25 Sep 2011 13:38:04 +0200
-> Subject: [PATCH] ide-disk: Fix request requeuing
-> 
-> Simon Kirby reported that on his RAID setup with idedisk underneath
-> the box OOMs after a couple of days of runtime. Running with
-> CONFIG_DEBUG_KMEMLEAK pointed to idedisk_prep_fn() which unconditionally
-> allocates an ide_cmd struct. However, ide_requeue_and_plug() can be
-> called more than once per request, either from the request issue or the
-> IRQ handler path and do blk_peek_request() ends up in idedisk_prep_fn()
-> repeatedly, allocating a struct ide_cmd everytime and "forgetting" the
-> previous pointer.
-> 
-> Make sure the code reuses the old allocated chunk.
-> 
-> Reported-and-tested-by: Simon Kirby <sim@hostway.ca>
-> Link: http://marc.info/?l=linux-kernel&m=131667641517919
-> Link: http://lkml.kernel.org/r/20110922072643.GA27232@hostway.ca
-> Signed-off-by: Borislav Petkov <bp@alien8.de>
-> ---
->  drivers/ide/ide-disk.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-> index 274798068a54..16f69be820c7 100644
-> --- a/drivers/ide/ide-disk.c
-> +++ b/drivers/ide/ide-disk.c
-> @@ -435,7 +435,12 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
->  	if (!(rq->cmd_flags & REQ_FLUSH))
->  		return BLKPREP_OK;
->  
-> -	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
-> +	if (rq->special) {
-> +		cmd = rq->special;
-> +		memset(cmd, 0, sizeof(*cmd));
-> +	} else {
-> +		cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
-> +	}
->  
->  	/* FIXME: map struct ide_taskfile on rq->cmd[] */
->  	BUG_ON(cmd == NULL);
-> -- 
-> 1.7.5.3.401.gfb674
 
-Tested against on 2.6.39 with and without this patch, and it definitely
-leaks without it and does not leak with it. 3.0 and 3.1-rc8 also seems
-good with the patch.
-
-I tested on another IDE box (with an old Quantum Fireball 6.4GB!) and
-even with software RAID, I could not see the leak, so I had to use the
-original box, of course. The only difference I could see is the test
-box has piix and the production box has via82cxxx, but anyway...
-
-Thanks!
-
-Simon-
