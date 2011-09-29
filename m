@@ -1,78 +1,119 @@
-From: Jim Paris <jim@jtan.com>
-Subject: Re: Possible MD RAID 5 or sata_sil driver issues.
-Date: Thu, 29 Sep 2011 16:50:16 -0400
-Message-ID: <20110929205016.GA28611@psychosis.jim.sh>
-References: <CAPoxMrn17Z63GDiZ4fOskRoBauQwOd12RMBgBtBGgmB=+gU9VA@mail.gmail.com>
+From: Simon Kirby <sim@hostway.ca>
+Subject: Re: [3.1-rc6] kmalloc(64) leak from IDE
+Date: Thu, 29 Sep 2011 15:45:05 -0700
+Message-ID: <20110929224505.GC7959@hostway.ca>
+References: <20110922072643.GA27232@hostway.ca> <20110922084811.GC17640@liondog.tnic> <20110922202337.GB32661@hostway.ca> <20110923072118.GA13293@liondog.tnic> <20110923173808.GB26481@hostway.ca> <20110925085818.GA10947@liondog.tnic> <20110926080549.GA14697@hostway.ca> <20110927170755.GA31384@gere.osrc.amd.com> <20110929092705.GA809@liondog.tnic>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from jim.sh ([75.150.123.25]:59808 "EHLO psychosis.jim.sh"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757558Ab1I2U6n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 29 Sep 2011 16:58:43 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAPoxMrn17Z63GDiZ4fOskRoBauQwOd12RMBgBtBGgmB=+gU9VA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20110929092705.GA809@liondog.tnic>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jim Mills <jmills007@gmail.com>
-Cc: neilb@suse.de, neilb@cse.unsw.edu.au, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Jim Mills wrote:
-> Possible MD RAID 5 or sata_sil driver issues.
-> 
-> Summary:
-> I created an XFS filesystem on top of a MD RAID5 across 4 SATA drives
-> connected to a single SIL3114 PCI card.
-> 
-> Problem:  I am seeing errors and corrupted files, as checked by CRC
-> and PAR2.  This is a brand new filesystem, on new drives.  The drives
-> do not have smart errors, and have even been zeroed out, as well as
-> reading all blocks with offline smart checks, badblocks, and even
-> ddrescue.  This also shows up in the mismatch_cnt after sending check
-> to sync_action.  Sending repair to sync_action, and then later sending
-> check doesn't fix it.
-> 
-> I have seen this issue regardless if it is XFS or even EXT4, so I am
-> not assuming it is not related to the filesystem.  Although I did note
-> that MD didn't start recovering after being created until a filesystem
-> was created.
-> 
-> I do not see these issues when using the drives without RAID.
-> 
-> This leaves me with the only common pieces is the card and the md
-> software, which is why I am writing both of you.  It might be
-> something weird with the interaction of the two.
-> 
-> I have tried looking at the sata_sil code, and don't see an easy way
-> to enable debugging via insmod.  I have not tried turning on any debug
-> in md, and can't unload it as my root, etc. is on a md mirror.
-> 
-> Linux Kernel: SUSE 3.0.4-2-desktop.
-> SiI 3114 IDE BIOS	4/22/2008	5.5.0.0
-> 
-> Please let me know what additional details would be helpful, and if I
-> should point this at a particular email distribution.
+On Thu, Sep 29, 2011 at 11:27:05AM +0200, Borislav Petkov wrote:
 
-Just some random input from a bystander:
+> On Tue, Sep 27, 2011 at 07:07:55PM +0200, Borislav Petkov wrote:
+> > (forgot to Cc linux-ide earlier, sorry)
+> > 
+> > On Mon, Sep 26, 2011 at 01:05:50AM -0700, Simon Kirby wrote:
+> > > Ok, good. It's still running without any problem, and no new leaks
+> > > reported.
+> > 
+> > Ok.
+> > 
+> > [..]
+> > 
+> > > > backporting it to -stable is a good point. I'll add the proper tagging
+> > > > to the patch.
+> > > 
+> > > Do you know in which version the issue started, then?
+> > > 
+> > > If not, all I have to start with is that it was fine on 2.6.36, and I can
+> > > bisect it, if that would help.
+> > 
+> > This is exactly the question: AFAICT, it could be that changes in the
+> > block layer at some point have caused the ide bust and since almost no
+> > one tests ide...
+> > 
+> > The patch adding the dynamic ide_cmd struct allocation is
+> > 395d8ef5bebe547a80737692f9789d2e36da16f2 from 2008 and I don't think it
+> > caused the issue then but I could also be remembering it wrong.
+> > 
+> > So I wouldn't bisect it but test stable trees after 2.6.36 to see
+> > whether they have the issue, and if so, only then the patch should be
+> > backported.
+> > 
+> > And this is not that easy now with k.org down but looking at
+> > 
+> > http://web.archive.org/web/20110725015737/http://kernel.org/
+> > 
+> > the only stable trees which need to be tested are 2.6.39 and 3.0.
+> > 
+> > How does that sound?
+> 
+> Btw, here's the patch, if you would like to test 2.6.39 once without it
+> to see whether kmemleak screams and once with it, I'll add the stable
+> tagging.
+> 
+> Thanks.
+> 
+> --
+> >From 96414ddbfecaaa3d265794c0792d816cf3c1e33d Mon Sep 17 00:00:00 2001
+> From: Borislav Petkov <bp@alien8.de>
+> Date: Sun, 25 Sep 2011 13:38:04 +0200
+> Subject: [PATCH] ide-disk: Fix request requeuing
+> 
+> Simon Kirby reported that on his RAID setup with idedisk underneath
+> the box OOMs after a couple of days of runtime. Running with
+> CONFIG_DEBUG_KMEMLEAK pointed to idedisk_prep_fn() which unconditionally
+> allocates an ide_cmd struct. However, ide_requeue_and_plug() can be
+> called more than once per request, either from the request issue or the
+> IRQ handler path and do blk_peek_request() ends up in idedisk_prep_fn()
+> repeatedly, allocating a struct ide_cmd everytime and "forgetting" the
+> previous pointer.
+> 
+> Make sure the code reuses the old allocated chunk.
+> 
+> Reported-and-tested-by: Simon Kirby <sim@hostway.ca>
+> Link: http://marc.info/?l=linux-kernel&m=131667641517919
+> Link: http://lkml.kernel.org/r/20110922072643.GA27232@hostway.ca
+> Signed-off-by: Borislav Petkov <bp@alien8.de>
+> ---
+>  drivers/ide/ide-disk.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index 274798068a54..16f69be820c7 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -435,7 +435,12 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
+>  	if (!(rq->cmd_flags & REQ_FLUSH))
+>  		return BLKPREP_OK;
+>  
+> -	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
+> +	if (rq->special) {
+> +		cmd = rq->special;
+> +		memset(cmd, 0, sizeof(*cmd));
+> +	} else {
+> +		cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
+> +	}
+>  
+>  	/* FIXME: map struct ide_taskfile on rq->cmd[] */
+>  	BUG_ON(cmd == NULL);
+> -- 
+> 1.7.5.3.401.gfb674
 
-The md raid5 code and sata_sil drivers can usually be considered
-really solid, they're very commonly used and well-tested.
+Tested against on 2.6.39 with and without this patch, and it definitely
+leaks without it and does not leak with it. 3.0 and 3.1-rc8 also seems
+good with the patch.
 
-I had similar issues once, with file corruption sometimes showing up
-on a MD raid5.  The disks always tested out fine individually (writing
-pseudorandom data and reading it back), and they were still fine with
-a raid1 across all disks, so I thought it might be raid5 related.  It
-turns out that it was actually bad RAM on one of the HDDs, and the
-glitch was triggered only by certain access patterns that showed up
-while writing to the raid5 array.
+I tested on another IDE box (with an old Quantum Fireball 6.4GB!) and
+even with software RAID, I could not see the leak, so I had to use the
+original box, of course. The only difference I could see is the test
+box has piix and the production box has via82cxxx, but anyway...
 
-It's probably worth looking into hardware issues.  Maybe your power
-supply isn't good enough and these particular access patterns trigger
-a problem.  Or system RAM could be bad, or maybe your motherboard has
-problems with heavy traffic on the PCI bus, etc.
+Thanks!
 
-It could help to figure out exactly what the corruption is, by writing
-known data to the entire raid5 array and seeing where it differs when
-you read it back.
-
--jim
+Simon-
