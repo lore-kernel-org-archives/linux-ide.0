@@ -1,56 +1,55 @@
 From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [3.1-rc6] kmalloc(64) leak from IDE
-Date: Fri, 30 Sep 2011 08:40:19 +0200
-Message-ID: <20110930064019.GA8092@liondog.tnic>
-References: <20110922072643.GA27232@hostway.ca>
- <20110922084811.GC17640@liondog.tnic>
- <20110922202337.GB32661@hostway.ca>
- <20110923072118.GA13293@liondog.tnic>
- <20110923173808.GB26481@hostway.ca>
- <20110925085818.GA10947@liondog.tnic>
- <20110926080549.GA14697@hostway.ca>
- <20110927170755.GA31384@gere.osrc.amd.com>
- <20110929092705.GA809@liondog.tnic>
- <20110929224505.GC7959@hostway.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: [PATCH] ide-disk: Fix request requeuing
+Date: Fri, 30 Sep 2011 08:45:32 +0200
+Message-ID: <1317365132-9422-1-git-send-email-bp@alien8.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:40058 "EHLO mail.skyhub.de"
+Received: from mail.skyhub.de ([78.46.96.112]:37613 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899Ab1I3GkY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Sep 2011 02:40:24 -0400
-Content-Disposition: inline
-In-Reply-To: <20110929224505.GC7959@hostway.ca>
+	id S1756945Ab1I3Gpg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Sep 2011 02:45:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Kirby <sim@hostway.ca>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Simon Kirby <sim@hostway.ca>, David Miller <davem@davemloft.net>, Borislav Petkov <bp@alien8.de>
 
-On Thu, Sep 29, 2011 at 03:45:05PM -0700, Simon Kirby wrote:
-> Tested against on 2.6.39 with and without this patch, and it
-> definitely leaks without it and does not leak with it. 3.0 and 3.1-rc8
-> also seems good with the patch.
+Simon Kirby reported that on his RAID setup with idedisk underneath
+the box OOMs after a couple of days of runtime. Running with
+CONFIG_DEBUG_KMEMLEAK pointed to idedisk_prep_fn() which unconditionally
+allocates an ide_cmd struct. However, ide_requeue_and_plug() can be
+called more than once per request, either from the request issue or the
+IRQ handler path and do blk_peek_request() ends up in idedisk_prep_fn()
+repeatedly, allocating a struct ide_cmd everytime and "forgetting" the
+previous pointer.
 
-Good job, thanks!
+Make sure the code reuses the old allocated chunk.
 
-> I tested on another IDE box (with an old Quantum Fireball 6.4GB!) and
+Reported-and-tested-by: Simon Kirby <sim@hostway.ca>
+Cc: <stable@kernel.org> [ 39.x, 3.0.x ]
+Link: http://marc.info/?l=linux-kernel&m=131667641517919
+Link: http://lkml.kernel.org/r/20110922072643.GA27232@hostway.ca
+Signed-off-by: Borislav Petkov <bp@alien8.de>
+---
+ drivers/ide/ide-disk.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-:-)
-
-> even with software RAID, I could not see the leak, so I had to use the
-> original box, of course. The only difference I could see is the test
-> box has piix and the production box has via82cxxx, but anyway...
-
-It might be because the production box drive is reporting of being
-capable of doing write cache flushes, i.e. it should say something like
-
-ideXX: cache flushes supported
-
-in dmesg. idedisk_prep_fn() is contingent on that and is used only then
-AFAICT.
-
-Thanks again for testing.
-
+diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+index 274798068a54..16f69be820c7 100644
+--- a/drivers/ide/ide-disk.c
++++ b/drivers/ide/ide-disk.c
+@@ -435,7 +435,12 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
+ 	if (!(rq->cmd_flags & REQ_FLUSH))
+ 		return BLKPREP_OK;
+ 
+-	cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
++	if (rq->special) {
++		cmd = rq->special;
++		memset(cmd, 0, sizeof(*cmd));
++	} else {
++		cmd = kzalloc(sizeof(*cmd), GFP_ATOMIC);
++	}
+ 
+ 	/* FIXME: map struct ide_taskfile on rq->cmd[] */
+ 	BUG_ON(cmd == NULL);
 -- 
-Regards/Gruss,
-    Boris.
+1.7.5.3.401.gfb674
+
