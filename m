@@ -1,40 +1,35 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-disk: Fix request requeuing
-Date: Mon, 03 Oct 2011 14:28:31 -0400 (EDT)
-Message-ID: <20111003.142831.762307541860800487.davem@davemloft.net>
-References: <1317365132-9422-1-git-send-email-bp@alien8.de>
+Subject: [GIT] IDE
+Date: Mon, 03 Oct 2011 15:35:09 -0400 (EDT)
+Message-ID: <20111003.153509.1840897953839267838.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:60166 "EHLO
+Received: from shards.monkeyblade.net ([198.137.202.13]:46398 "EHLO
 	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932478Ab1JCS3s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2011 14:29:48 -0400
-In-Reply-To: <1317365132-9422-1-git-send-email-bp@alien8.de>
+	with ESMTP id S1756250Ab1JCTfN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2011 15:35:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bp@alien8.de
-Cc: linux-ide@vger.kernel.org, sim@hostway.ca
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Borislav Petkov <bp@alien8.de>
-Date: Fri, 30 Sep 2011 08:45:32 +0200
 
-> Simon Kirby reported that on his RAID setup with idedisk underneath
-> the box OOMs after a couple of days of runtime. Running with
-> CONFIG_DEBUG_KMEMLEAK pointed to idedisk_prep_fn() which unconditionally
-> allocates an ide_cmd struct. However, ide_requeue_and_plug() can be
-> called more than once per request, either from the request issue or the
-> IRQ handler path and do blk_peek_request() ends up in idedisk_prep_fn()
-> repeatedly, allocating a struct ide_cmd everytime and "forgetting" the
-> previous pointer.
-> 
-> Make sure the code reuses the old allocated chunk.
-> 
-> Reported-and-tested-by: Simon Kirby <sim@hostway.ca>
-> Cc: <stable@kernel.org> [ 39.x, 3.0.x ]
-> Link: http://marc.info/?l=linux-kernel&m=131667641517919
-> Link: http://lkml.kernel.org/r/20110922072643.GA27232@hostway.ca
-> Signed-off-by: Borislav Petkov <bp@alien8.de>
+Please pull to get this request leak fix from Borislav Petkov.
 
-Applied, thanks a lot.
+Thanks!
+
+The following changes since commit 9b13776977d45505469edc6decc93e9e3799afe2:
+
+  Merge branch 'for-linus' of git://git.infradead.org/users/sameo/mfd-2.6 (2011-10-02 19:23:44 -0700)
+
+are available in the git repository at:
+
+  git://github.com/davem330/ide.git master
+
+Borislav Petkov (1):
+      ide-disk: Fix request requeuing
+
+ drivers/ide/ide-disk.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
