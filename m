@@ -1,23 +1,19 @@
-From: Rob Herring <robherring2@gmail.com>
+From: Grant Likely <grant.likely@secretlab.ca>
 Subject: Re: [PATCH] ahci: add DT binding for Calxeda AHCI controller
-Date: Mon, 03 Oct 2011 21:30:11 -0500
-Message-ID: <4E8A6FB3.4090909@gmail.com>
+Date: Tue, 4 Oct 2011 11:59:46 -0600
+Message-ID: <20111004175946.GA2870@ponder.secretlab.ca>
 References: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:42969 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752838Ab1JDCaP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2011 22:30:15 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Herring <robherring2@gmail.com>
+Cc: linux-ide@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-On 09/02/2011 10:10 AM, Rob Herring wrote:
+On Fri, Sep 02, 2011 at 10:10:15AM -0500, Rob Herring wrote:
 > From: Rob Herring <rob.herring@calxeda.com>
 > 
 > Add devicetree match table to ahci platform driver for Calxeda Highbank
@@ -28,12 +24,10 @@ On 09/02/2011 10:10 AM, Rob Herring wrote:
 > Cc: linux-ide@vger.kernel.org
 > Cc: linux-kernel@vger.kernel.org
 > Cc: devicetree-discuss@lists.ozlabs.org
+
+Acked-by: Grant Likely <grant.likely@secretlab.ca>
+
 > ---
-
-Any comments on this?
-
-Rob
-
 >  .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
 >  drivers/ata/ahci_platform.c                        |    7 +++++++
 >  2 files changed, 24 insertions(+), 0 deletions(-)
@@ -85,4 +79,11 @@ Rob
 >  	},
 >  };
 >  
-
+> -- 
+> 1.7.5.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
