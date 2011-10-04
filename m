@@ -1,66 +1,88 @@
-From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@kesis.net>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuivmnIDmlrDlub/kuqTkvJrkubDlrrbjgIHmtbc=?=
-	=?utf-8?B?5YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Mon, 3 Oct 2011 21:52:49 +0000 (UTC)
-Message-ID: <20121004054959411367@kesis.net>
-Reply-To: <467643975@qq.com>
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: [PATCH] ahci: add DT binding for Calxeda AHCI controller
+Date: Mon, 03 Oct 2011 21:30:11 -0500
+Message-ID: <4E8A6FB3.4090909@gmail.com>
+References: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sso.keei.re.kr ([211.35.39.22]:45309 "HELO kesis.net"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1757621Ab1JCVwm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Oct 2011 17:52:42 -0400
-Received: from kesis.net
-        by vger.kernel.org with ESMTP (kesis.net)
-        for linux-ide@vger.kernel.org; Tue, 4 Oct 2011 06:49:14 +0900 (KST)
-Date: Thu, 4 Oct 2012 05:49:54 +0800
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:42969 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838Ab1JDCaP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Oct 2011 22:30:15 -0400
+In-Reply-To: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linsongpower@yahoo.com.cn, lintiantain@163.com, linuo898989@163.com, linux-ide@vger.kernel.org, linwei.1987@163.com, linwenfuming@163.com, linxd@tdtk.com, linxiangmei13
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrbjgIHlsZXk
-vJrkubDlrrbjgIHmtbflhbPmlbDmja4sQjJC6K+i55uY5Lmw5a62NTAw5LiH44CCDQoNCuS4gOWF
-sTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn6KGM5Lia5YiG5aW957G777yM
-5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8miANCjHvvIwyMDEx5pil5a2j
-MTA55bGK5bm/5Lqk5Lya5Lmw5a625pWw5o2u5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc
-5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a655piT5oiQ5Y2V77yBIA0KMu+8jOacgOaWsOWFqOeQ
-g+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgDQoz77yMMjAwOOW5tCwyMDA55bm0LDIw
-MTDlubQg5pil5a2jK+eni+Wto+W5v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEw
-NiAxMDcgMTA4IOWFseWFreWxiiDlhbExMjAuNuS4h+aVsOaNruOAgg0KNO+8jDIwMTDlubTlm73p
-mYXkv4PplIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3Rv
-cnnvvIzpnZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjXvvIwyMDEw5bm05Yiw6aaZ5riv6YeH
-6LSt55qE5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLk
-uIfmlbDmja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjbvvIw2MC445LiH5p2h5pyA5paw
-5Zu95aSWQjJC5Lmw5a626K+i55uY44CCDQo377yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBp
-ZXJz54mI5pWw5o2uIDHljYPkuIfjgIINCjjvvIznvqTlj5Hova/ku7bvvIznvqTlj5Hova/ku7bn
-moTpg6jnvbLkuI7lronoo4XjgIINCg0K5YWxIDUwMOS4h+S4quS5sOWutu+8jOavj+S4quWdh+ac
-iUVtYWlsLiANCg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/l
-pKnpg73mnInkubDlrrblm57lpI3jgIINCg0K6KaB55qE5oqT57Sn6IGU57O7UVE6IDQ2NzY0Mzk3
-NSAgICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDQ2NzY0Mzk3NUBxcS5jb20NCuimgeeahOaK
-k+e0p+iBlOezu1FROiA0Njc2NDM5NzUgICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiA0Njc2
-NDM5NzVAcXEuY29tDQropoHnmoTmipPntKfogZTns7tRUTogNDY3NjQzOTc1ICAgIOaIluiAheer
-i+WNs+WbnuWkjemCrueusTogNDY3NjQzOTc1QHFxLmNvbQ0KDQror5rkv6HkuLrmnKzvvIzlpoLm
-npzkuI3kv6Hku7vmnKzkuros5Y+v5Lul6LWw5reY5a6d5Lqk5piTLOaUtui0p+mqjOivgeWQjuWG
-jeS7mOasvizov5nmmK/lr7nmgqjmnIDlpb3nmoTkv53pmpzkuobjgIIgDQoNCuS/neivgeavj+Wk
-qemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CC
-DQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KDQoNCg0K5bm/5Lqk5Lya5Lmw
-5a625oyJ5Lqn5ZOB57G75Yir5YiG57G777yM5YiG5Li65Lul5LiL5Yeg57G777yaDQoxIOWKnuWF
-rOiuvuWkhw0KMiDnvJbnu4flj4rol6Tpk4Hlt6Xoibrlk4ENCjMg546755KDDQo0IOmkkOWOqOeU
-qOWFtw0KNSDovabovoYNCjYg5aSn5Z6L5py65qKw5Y+K6K6+5aSHDQo3IOeUteWtkOeUteawlA0K
-OCDnlLXlrZDmtojotLnlk4ENCjkg57q657uHDQoxMCDmnI3oo4UNCjExIOS4quS6uuaKpOeQhg0K
-MTIg5bel56iL5py65qKwDQoxMyDlt6XlhbcNCjE0IOWMluW3pQ0KMTUg6K6h566X5py65Y+K6YCa
-6K6vDQoxNiDlrrblsYXnlKjlk4ENCjE3IOWutuWxheijhemlsA0KMTgg5a625YW3DQoxOSDlrrbn
-lKjnlLXlmagNCjIwIOW7uuetkeWPiuijhemlsOadkOaWmQ0KMjEg6IqC5pel55So5ZOBDQoyMiDn
-pLzlk4Hlj4rotaDlk4ENCjIzIOaRqeaJmOi9pg0KMjQg5rG96L2m6YWN5Lu2DQoyNSDpo5/lk4EN
-CjI2IOmZtueTtw0KMjcg6ZOB55+zDQoyOCDnjqnlhbcNCjI5IOWNq+a1tA0KMzAg5LqU6YeRDQoz
-MSDlsI/lnovmnLrmorANCjMyIOmeiw0KMzMg5LyR6Zey55So5ZOBDQozNCDljLvnlpcNCjM1IOa1
-tOWupOS6p+WTgQ0KMzYg5Zut5p6XDQozNyDnhafmmI7kuqflk4ENCjM4IOmSn+ihqOecvOmVnA0K
-Mzkg6Ieq6KGM6L2mDQo0MCDljIUNCg0KDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3j
-gIINCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ
-5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCuS/neiv
-geavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K
+On 09/02/2011 10:10 AM, Rob Herring wrote:
+> From: Rob Herring <rob.herring@calxeda.com>
+> 
+> Add devicetree match table to ahci platform driver for Calxeda Highbank
+> AHCI controller.
+> 
+> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+> Cc: Jeff Garzik <jgarzik@pobox.com>
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: devicetree-discuss@lists.ozlabs.org
+> ---
 
+Any comments on this?
+
+Rob
+
+>  .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
+>  drivers/ata/ahci_platform.c                        |    7 +++++++
+>  2 files changed, 24 insertions(+), 0 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/calxeda-sata.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/calxeda-sata.txt b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+> new file mode 100644
+> index 0000000..79caa56
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+> @@ -0,0 +1,17 @@
+> +* Calxeda SATA Controller
+> +
+> +SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +Each SATA controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains "calxeda,hb-ahci"
+> +- interrupts        : <interrupt mapping for SATA IRQ>
+> +- reg               : <registers mapping>
+> +
+> +Example:
+> +        sata@ffe08000 {
+> +		compatible = "calxeda,hb-ahci";
+> +                reg = <0xffe08000 0x1000>;
+> +                interrupts = <115>;
+> +        };
+> +
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 6fef1fa..9bfc970 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -171,11 +171,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+>  	return 0;
+>  }
+>  
+> +static const struct of_device_id ahci_of_match[] = {
+> +	{ .compatible = "calxeda,hb-ahci", },
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, ahci_of_match);
+> +
+>  static struct platform_driver ahci_driver = {
+>  	.remove = __devexit_p(ahci_remove),
+>  	.driver = {
+>  		.name = "ahci",
+>  		.owner = THIS_MODULE,
+> +		.of_match_table = ahci_of_match,
+>  	},
+>  };
+>  
 
