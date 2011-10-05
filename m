@@ -1,89 +1,81 @@
-From: Grant Likely <grant.likely@secretlab.ca>
-Subject: Re: [PATCH] ahci: add DT binding for Calxeda AHCI controller
-Date: Tue, 4 Oct 2011 11:59:46 -0600
-Message-ID: <20111004175946.GA2870@ponder.secretlab.ca>
-References: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] ata_piix: make DVD Drive recognisable on systems with
+ Intel Sandybridge chipsets(v1)
+Date: Wed, 05 Oct 2011 13:45:08 +0400
+Message-ID: <4E8C2724.7030608@mvista.com>
+References: <1317433412-15963-1-git-send-email-ming.lei@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1314976215-23902-1-git-send-email-robherring2@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robherring2@gmail.com>
-Cc: linux-ide@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>, Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:43350 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933732Ab1JEJqB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Oct 2011 05:46:01 -0400
+Received: by wwn22 with SMTP id 22so6106337wwn.1
+        for <linux-ide@vger.kernel.org>; Wed, 05 Oct 2011 02:46:00 -0700 (PDT)
+In-Reply-To: <1317433412-15963-1-git-send-email-ming.lei@canonical.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: ming.lei@canonical.com
+Cc: htejun@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, seth.heasley@intel.com, Alan Cox <alan@linux.intel.com>
 
-On Fri, Sep 02, 2011 at 10:10:15AM -0500, Rob Herring wrote:
-> From: Rob Herring <rob.herring@calxeda.com>
-> 
-> Add devicetree match table to ahci platform driver for Calxeda Highbank
-> AHCI controller.
-> 
-> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
-> Cc: Jeff Garzik <jgarzik@pobox.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: devicetree-discuss@lists.ozlabs.org
+On 01.10.2011 5:43, ming.lei@canonical.com wrote:
 
-Acked-by: Grant Likely <grant.likely@secretlab.ca>
+> From: Ming Lei <ming.lei@canonical.com>
 
+> This quirk patch fixes one kind of bug inside some Intel Sandybridge
+> chipsets, see reports from
+
+>         https://bugzilla.kernel.org/show_bug.cgi?id=40592.
+
+> Many guys also have reported the problem before:
+
+> 	https://bugs.launchpad.net/bugs/737388
+> 	https://bugs.launchpad.net/bugs/794642
+> 	https://bugs.launchpad.net/bugs/782389
+> 	......
+
+> With help from Tejun, the problem is found to be caused by 32bit PIO
+> mode, so introduce the quirk patch to disable 32bit PIO on SATA piix
+> for some Sandybridge CPT chipsets.
+
+> Seth also tested the patch on all five affected chipsets
+> (pci device ID: 0x1c00, 0x1c01, 0x1d00, 0x1e00, 0x1e01), and found
+> the patch does fix the problem.
+
+> Tested-by: Heasley, Seth<seth.heasley@intel.com>
+> Cc: Alan Cox<alan@linux.intel.com>
+> Signed-off-by: Ming Lei<ming.lei@canonical.com>
+> Signed-off-by: Tejun Heo<htejun@gmail.com>
 > ---
->  .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
->  drivers/ata/ahci_platform.c                        |    7 +++++++
->  2 files changed, 24 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/calxeda-sata.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/calxeda-sata.txt b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
-> new file mode 100644
-> index 0000000..79caa56
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
-> @@ -0,0 +1,17 @@
-> +* Calxeda SATA Controller
-> +
-> +SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +Each SATA controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains "calxeda,hb-ahci"
-> +- interrupts        : <interrupt mapping for SATA IRQ>
-> +- reg               : <registers mapping>
-> +
-> +Example:
-> +        sata@ffe08000 {
-> +		compatible = "calxeda,hb-ahci";
-> +                reg = <0xffe08000 0x1000>;
-> +                interrupts = <115>;
-> +        };
-> +
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index 6fef1fa..9bfc970 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -171,11 +171,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
->  	return 0;
->  }
->  
-> +static const struct of_device_id ahci_of_match[] = {
-> +	{ .compatible = "calxeda,hb-ahci", },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, ahci_of_match);
-> +
->  static struct platform_driver ahci_driver = {
->  	.remove = __devexit_p(ahci_remove),
->  	.driver = {
->  		.name = "ahci",
->  		.owner = THIS_MODULE,
-> +		.of_match_table = ahci_of_match,
->  	},
->  };
->  
-> -- 
-> 1.7.5.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+>   drivers/ata/ata_piix.c |   37 ++++++++++++++++++++++++++++++++-----
+>   include/linux/libata.h |    1 +
+>   2 files changed, 33 insertions(+), 5 deletions(-)
+
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 43107e9..70095be 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -113,6 +113,8 @@ enum {
+>   	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+>   	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+>
+> +	PIIX_FLAG_PIO16		= ATA_FLAG_PIO16,
+
+    It's not clear why are you declaring a ganeric flag and then add a local 
+name for it...
+
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index efd6f98..dc68de5 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -207,6 +207,7 @@ enum {
+>   	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+>   					      * led */
+>   	ATA_FLAG_NO_DIPM	= (1 << 23), /* host not happy with DIPM */
+> +	ATA_FLAG_PIO16		= (1 << 24),  /*16bit PIO */
+
+    Please, fix the formatting. Or better totally remove this.
+
+WBR, Sergei
