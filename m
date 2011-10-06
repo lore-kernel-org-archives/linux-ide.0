@@ -1,104 +1,134 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] libata: Allow SOFT_RESET for Sil3726
-Date: Thu, 06 Oct 2011 14:42:46 +0400
-Message-ID: <4E8D8626.6070000@mvista.com>
-References: <CAMHSBOWbaLjbWZ7PNwTa-AsZRAzrOGLgSip=q2=u+qVQW4u3mQ@mail.gmail.com> <1317881037-11831-1-git-send-email-gwendal@google.com>
+Subject: Re: [PATCH] libata: Convert LED disk trigger from IDE to libata
+Date: Thu, 06 Oct 2011 14:53:19 +0400
+Message-ID: <4E8D889F.7010401@mvista.com>
+References: <38bd3a0590c6b069e2e6ff63d2bc4d039a703f02.1317657893.git.joerg@alea.gnuu.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37434 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754615Ab1JFKni (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 06:43:38 -0400
-Received: by wwf22 with SMTP id 22so4036603wwf.1
-        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2011 03:43:36 -0700 (PDT)
-In-Reply-To: <1317881037-11831-1-git-send-email-gwendal@google.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:51918 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755286Ab1JFKyM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 06:54:12 -0400
+In-Reply-To: <38bd3a0590c6b069e2e6ff63d2bc4d039a703f02.1317657893.git.joerg@alea.gnuu.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: mihrcke@gmail.com, linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Richard Purdie <rpurdie@rpsys.net>, "David S. Miller" <davem@davemloft.net>, Jeff Garzik <jgarzik@pobox.com>, Paul Mackerras <paulus@samba.org>
 
 Hello.
 
-On 06-10-2011 10:03, Gwendal Grignou wrote:
+On 03-10-2011 20:07, J=F6rg Sommer wrote:
 
-> Allow controllers to send SOFT_RESET to Sil3726 PMP.
-> This PMP does not accept frames until the drive connected to
-> its port spins up.
-> Some controller [Sil3132 family] can not wait for the drive to spinup
-> and fails the reset, leading to unnecessary speed downgrade.
+> This patch converts the trigger for the LED at the front of Apple's
+> iBooks to libata. It's merely a replacement of the string ide by disk=
+=2E
 
-> Not allowing to send SOFT_RESET can lead some drive slow to spinup
-> to be ignored and produces weird error messages.
+> The patch is taken from http://dev.gentoo.org/~josejx/ata.patch. I've
+> asked Joseph Jezak if he intends to send this patch upstream, but as =
+he
+> did not reply I'll do so.
 
-> This fix allows the error handler to wait if the controller is unable
-> to send a SOFT_RESET.
+    The patch needs to be signed off, it cannot be applied otherwise.
 
-> Change-Id: I7eeea152facb4b76e5c69cfde5ef8188874fbaba
-
-    Please get rid of this line, it has no place in the upstream commit.
-
-> Signed-off-by: Gwendal Grignou<gwendal@google.com>
 > ---
->   drivers/ata/libata-eh.c  |   11 ++++++++++-
->   drivers/ata/libata-pmp.c |   10 ++++------
->   include/linux/libata.h   |    1 +
->   3 files changed, 15 insertions(+), 7 deletions(-)
+>   arch/powerpc/configs/pmac32_defconfig |    2 +-
+>   arch/powerpc/configs/ppc6xx_defconfig |    2 +-
+>   drivers/ata/libata-core.c             |    4 ++
+>   drivers/ide/ide-disk.c                |    2 +-
+>   drivers/leds/Kconfig                  |   10 +++---
+>   drivers/leds/Makefile                 |    2 +-
+>   drivers/leds/ledtrig-disk.c           |   64 ++++++++++++++++++++++=
++++++++++++
+>   drivers/leds/ledtrig-ide-disk.c       |   64 ----------------------=
+-----------
+>   drivers/macintosh/Kconfig             |   11 +++---
+>   drivers/macintosh/via-pmu-led.c       |    4 +-
+>   include/linux/leds.h                  |    6 ++--
+>   11 files changed, 87 insertions(+), 84 deletions(-)
+>   create mode 100644 drivers/leds/ledtrig-disk.c
+>   delete mode 100644 drivers/leds/ledtrig-ide-disk.c
 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 49af350..60223c3 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2805,7 +2805,14 @@ int ata_eh_reset(struct ata_link *link, int classify,
->   	    sata_scr_read(link, SCR_STATUS,&sstatus))
->   		rc = -ERESTART;
+    You should use -C/-M git options to detect file renames.
+
+> diff --git a/arch/powerpc/configs/pmac32_defconfig b/arch/powerpc/con=
+figs/pmac32_defconfig
+> index f8b394a..cff5d4e 100644
+> --- a/arch/powerpc/configs/pmac32_defconfig
+> +++ b/arch/powerpc/configs/pmac32_defconfig
+> @@ -180,7 +180,7 @@ CONFIG_ADB=3Dy
+>   CONFIG_ADB_CUDA=3Dy
+>   CONFIG_ADB_PMU=3Dy
+>   CONFIG_ADB_PMU_LED=3Dy
+> -CONFIG_ADB_PMU_LED_IDE=3Dy
+> +CONFIG_ADB_PMU_LED_DISK=3Dy
+>   CONFIG_PMAC_APM_EMU=3Dm
+>   CONFIG_PMAC_MEDIABAY=3Dy
+>   CONFIG_PMAC_BACKLIGHT=3Dy
+> diff --git a/arch/powerpc/configs/ppc6xx_defconfig b/arch/powerpc/con=
+figs/ppc6xx_defconfig
+> index 04360f9..c56464d 100644
+> --- a/arch/powerpc/configs/ppc6xx_defconfig
+> +++ b/arch/powerpc/configs/ppc6xx_defconfig
+> @@ -471,7 +471,7 @@ CONFIG_ADB=3Dy
+>   CONFIG_ADB_CUDA=3Dy
+>   CONFIG_ADB_PMU=3Dy
+>   CONFIG_ADB_PMU_LED=3Dy
+> -CONFIG_ADB_PMU_LED_IDE=3Dy
+> +CONFIG_ADB_PMU_LED_DISK=3Dy
+>   CONFIG_PMAC_APM_EMU=3Dy
+>   CONFIG_PMAC_MEDIABAY=3Dy
+>   CONFIG_PMAC_BACKLIGHT=3Dy
+
+    Defconfigs should be changed by a separate patch.
+
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4a3a5ae..d37e3a2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -66,6 +66,7 @@
+>   #include<asm/byteorder.h>
+>   #include<linux/cdrom.h>
+>   #include<linux/ratelimit.h>
+> +#include<linux/leds.h>
 >
-> -	if (rc == -ERESTART || try>= max_tries)
-> +	if (try>= max_tries)
-> +		goto out;
+>   #include "libata.h"
+>   #include "libata-transport.h"
+> @@ -4823,6 +4824,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+>   {
+>   	struct ata_port *ap =3D qc->ap;
+>
+> +	/* Trigger the LED (if available) */
+> +	ledtrig_disk_activity();
 > +
-> +	/* Some PMP will not serve SRST until the disk is spunup,
-> +	 * if the controller can not wait for the PMP to acknowledge the frame,
-> +	 * wait here */
+>   	/* XXX: New EH and old EH use different mechanisms to
+>   	 * synchronize EH with regular execution path.
+>   	 *
 
-    The preferred multi-line comment style:
+    This also seems a material for the separate patch. You should first=
+ do a=20
+file/function rename and then add support for libata, I think.
 
-/*
-  * bla
-  * bla
-  */
-
-> +	if (rc == -ERESTART&&
-> +	    !((lflags&  ATA_LFLAG_WAIT_SRST)&&  (reset == softreset)))
->   		goto out;
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index 2747980..cb25bd6 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -186,7 +186,7 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t=
+ *drive, struct request *rq,
+>   	BUG_ON(drive->dev_flags&  IDE_DFLAG_BLOCKED);
+>   	BUG_ON(rq->cmd_type !=3D REQ_TYPE_FS);
 >
->   	now = jiffies;
-[...]
-> diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-> index ad0e71d..5fbbe2f 100644
-> --- a/drivers/ata/libata-pmp.c
-> +++ b/drivers/ata/libata-pmp.c
-> @@ -365,13 +365,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
->   	if (vendor == 0x1095&&  devid == 0x3726) {
->   		/* sil3726 quirks */
->   		ata_for_each_link(link, ap, EDGE) {
-> -			/* Class code report is unreliable and SRST
-> -			 * times out under certain configurations.
-> -			 */
-> +			/* Class code report is unreliable */
-> +			/* PMP does not forward SRST until the drive spins up */
->   			if (link->pmp < 5)
-> -				link->flags |= ATA_LFLAG_NO_SRST |
-> -					       ATA_LFLAG_ASSUME_ATA;
-> -
+> -	ledtrig_ide_activity();
+> +	ledtrig_disk_activity();
 
-    Why remove the empty line?
-
-> +				link->flags |= ATA_LFLAG_ASSUME_ATA |
-> +					       ATA_LFLAG_WAIT_SRST;
->   			/* port 5 is for SEMB device and it doesn't like SRST */
->   			if (link->pmp == 5)
->   				link->flags |= ATA_LFLAG_NO_SRST |
+    Hm, the trigger point seems asymmetric to that one you added to lib=
+ata.=20
+Here you trigger before executing a request, and in libata after a comm=
+and=20
+completes; also, in libata you also trigger on ATAPI devices, while her=
+e only=20
+on ATA devices...
 
 WBR, Sergei
