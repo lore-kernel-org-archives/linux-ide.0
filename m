@@ -1,74 +1,98 @@
-From: "Dan Pereira" <danp_48@yahoo.com>
-Subject: Learn to receive $500 to $3,500 a day in cash ....
-Date: Thu, 6 Oct 2011 02:54:42 -0700 (PDT)
-Message-ID: <201110060954.p969sghb042357@mail3.spagack2.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] ata_piix: make DVD Drive recognisable on systems with
+ Intel Sandybridge chipsets(v1)
+Date: Thu, 06 Oct 2011 14:39:11 +0400
+Message-ID: <4E8D854F.6000107@mvista.com>
+References: <1317433412-15963-1-git-send-email-ming.lei@canonical.com> <4E8C2724.7030608@mvista.com> <CACVXFVPrZELDuO=Aa+HrccpwnOw7UB5eQEW0=y_aUEt794rHgA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.spagack2.com ([74.122.159.222]:59360 "EHLO
-	mail3.spagack2.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754394Ab1JFJ4F (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 05:56:05 -0400
-Received: from mail3.spagack2.com (localhost.mail3.spagack2.com [127.0.0.1])
-	by mail3.spagack2.com (8.13.8/8.12.7) with ESMTP id p969sgjr042377
-	for <linux-ide@vger.kernel.org>; Thu, 6 Oct 2011 02:54:43 -0700 (PDT)
-	(envelope-from u789mobs@reliablecontact.com)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41501 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755830Ab1JFKkF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 06:40:05 -0400
+Received: by wyg34 with SMTP id 34so2653092wyg.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2011 03:40:03 -0700 (PDT)
+In-Reply-To: <CACVXFVPrZELDuO=Aa+HrccpwnOw7UB5eQEW0=y_aUEt794rHgA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>
+Cc: htejun@gmail.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, seth.heasley@intel.com, Alan Cox <alan@linux.intel.com>
 
+Hello.
 
-Hi http://forums.penny-arcade.com
+On 06-10-2011 13:27, Ming Lei wrote:
 
+>>> This quirk patch fixes one kind of bug inside some Intel Sandybridge
+>>> chipsets, see reports from
 
-Rake in $500 to $3500 Cash From Home..
+>>>         https://bugzilla.kernel.org/show_bug.cgi?id=40592.
 
-=46ind Out How People Just Like You Are Making
-$3500, Cash Per Day From the Comfort Of Home!
+>>> Many guys also have reported the problem before:
 
-=2EGetting This Cash Is Soo Easy, Once You Know How!
-(Yeah....it sounds Crazy, but It Works!)
+>>>         https://bugs.launchpad.net/bugs/737388
+>>>         https://bugs.launchpad.net/bugs/794642
+>>>         https://bugs.launchpad.net/bugs/782389
+>>>         ......
 
-See Videos, pics and teatimoials!
+>>> With help from Tejun, the problem is found to be caused by 32bit PIO
+>>> mode, so introduce the quirk patch to disable 32bit PIO on SATA piix
+>>> for some Sandybridge CPT chipsets.
 
-This flat out works..Give it a look...
-=3D>>Click belowNow!<<=3D=3D
+>>> Seth also tested the patch on all five affected chipsets
+>>> (pci device ID: 0x1c00, 0x1c01, 0x1d00, 0x1e00, 0x1e01), and found
+>>> the patch does fix the problem.
 
-http://trckrs.com/48184/m1
+>>> Tested-by: Heasley, Seth<seth.heasley@intel.com>
+>>> Cc: Alan Cox<alan@linux.intel.com>
+>>> Signed-off-by: Ming Lei<ming.lei@canonical.com>
+>>> Signed-off-by: Tejun Heo<htejun@gmail.com>
+>>> ---
+>>>   drivers/ata/ata_piix.c |   37 ++++++++++++++++++++++++++++++++-----
+>>>   include/linux/libata.h |    1 +
+>>>   2 files changed, 33 insertions(+), 5 deletions(-)
 
- It's working like crazy and it't
-100% Recession Proff...
+>>> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+>>> index 43107e9..70095be 100644
+>>> --- a/drivers/ata/ata_piix.c
+>>> +++ b/drivers/ata/ata_piix.c
+>>> @@ -113,6 +113,8 @@ enum {
+>>>         PIIX_PATA_FLAGS         = ATA_FLAG_SLAVE_POSS,
+>>>         PIIX_SATA_FLAGS         = ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+>>>
+>>> +       PIIX_FLAG_PIO16         = ATA_FLAG_PIO16,
 
-Give it a look!
+>>    It's not clear why are you declaring a ganeric flag and then add a local
+>> name for it...
 
-This flat out works..Give it a look...
-=3D>>Click belowNow!<<=3D=3D
+> It is just same with other flags, isn't it?
 
-http://trckrs.com/48184/m1
+    No. Read the the ata_piix.c source attentively, looking for PIIX_FLAG_* 
+definitions.
 
-It=92s surprisingly cool!
+>>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>>> index efd6f98..dc68de5 100644
+>>> --- a/include/linux/libata.h
+>>> +++ b/include/linux/libata.h
+>>> @@ -207,6 +207,7 @@ enum {
+>>>         ATA_FLAG_SW_ACTIVITY    = (1<<  22), /* driver supports sw activity
+>>>                                               * led */
+>>>         ATA_FLAG_NO_DIPM        = (1<<  23), /* host not happy with DIPM */
+>>> +       ATA_FLAG_PIO16          = (1<<  24),  /*16bit PIO */
+>>
+>>    Please, fix the formatting. Or better totally remove this.
 
-Dan and Noel
+> It is used to describe if the controller only supports 16bit PIO, and it
+> is introduced to fix the problem on SNB chips.
 
+    I don't yet see why it should be a generic flag: we have 
+ata_bmdma_port_ops and ata_bmdma32_port_ops to be used for 16-bit and 32-bit 
+PIO. You're only using this flag locally to ata_piix.c, hence it should be 
+local to that file.
 
+> thanks,
+> --
+> Ming Lei
 
-His was a Com.Merical adv.Sent to you by:
-Dan Pereira, 11383 Golf Road, Turlock, CA 95380
-In compliance with Federal law, should you choose to=20
-Un.Subscribe from our network, you may do so using the
-Un.Subscribe instruction found below.  We are fully compliant with CAN-=
-SPAM Act of 2005-Please use the Un.Subscribe link prvided:
-
-
-
-
-
-
-
-
-To remove this email address from further mailings click on  the link b=
-elow  while connected to the internet.
-http://www.reliablecontact.com/cgi-bin/maxsponder/maxuseradmin.cgi?func=
-tion=3Dmanualdelete3&email=3Dlinux-ide*vger.kernel.org&un=3Drichardpere=
-ira
+WBR, Sergei
