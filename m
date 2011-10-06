@@ -1,110 +1,78 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH V9 2/5] ahci_plt Add the board_ids and pi refer to different
- features
-Date: Thu, 06 Oct 2011 02:22:01 -0400
-Message-ID: <4E8D4909.9030603@pobox.com>
-References: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org> <1317195717-21174-3-git-send-email-richard.zhu@linaro.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: Allow SOFT_RESET for Sil3726
+Date: Thu, 6 Oct 2011 01:03:14 -0700
+Message-ID: <20111006080314.GB373@dhcp-172-17-108-109.mtv.corp.google.com>
+References: <CAMHSBOWbaLjbWZ7PNwTa-AsZRAzrOGLgSip=q2=u+qVQW4u3mQ@mail.gmail.com>
+ <1317881037-11831-1-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55828 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935288Ab1JFGWF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 02:22:05 -0400
-Received: by qadb15 with SMTP id b15so1744721qad.19
-        for <linux-ide@vger.kernel.org>; Wed, 05 Oct 2011 23:22:04 -0700 (PDT)
-In-Reply-To: <1317195717-21174-3-git-send-email-richard.zhu@linaro.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35636 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932374Ab1JFIDT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 04:03:19 -0400
+Received: by gyg10 with SMTP id 10so2334803gyg.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2011 01:03:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1317881037-11831-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhu@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, kernel@pengutronix.de, linux-ide@vger.kernel.org, avorontsov@ru.mvista.com, eric@eukrea.com, eric.miao@linaro.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: mihrcke@gmail.com, linux-ide@vger.kernel.org
 
-On 09/28/2011 03:41 AM, Richard Zhu wrote:
-> On imx53 AHCI, soft reset fails with IPMS set when PMP
-> is enabled but SATA HDD/ODD is connected to SATA port,
-> do soft reset again to port 0.
-> So the 'ahci_pmp_retry_srst_ops' is required when imx53
-> ahci is present.
->
-> Signed-off-by: Richard Zhu<richard.zhu@linaro.org>
-> Acked-by: Eric Miao<eric.miao@linaro.org>
-> ---
->   drivers/ata/ahci_platform.c |   44 +++++++++++++++++++++++++++++++++++++-----
->   1 files changed, 38 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index 6fef1fa..c03277d 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -23,6 +23,41 @@
->   #include<linux/ahci_platform.h>
->   #include "ahci.h"
->
-> +enum ahci_type {
-> +	AHCI,		/* standard platform ahci */
-> +	IMX53_AHCI,	/* ahci on i.mx53 */
-> +};
+Hello, Gwendal.
+
+Which tree is this patch against?
+
+On Wed, Oct 05, 2011 at 11:03:57PM -0700, Gwendal Grignou wrote:
+> Allow controllers to send SOFT_RESET to Sil3726 PMP.
+> This PMP does not accept frames until the drive connected to
+> its port spins up.
+
+Do you mean until the device sets RDY by sending D2H Reg FIS?
+
+> Some controller [Sil3132 family] can not wait for the drive to spinup
+> and fails the reset, leading to unnecessary speed downgrade.
+> Not allowing to send SOFT_RESET can lead some drive slow to spinup
+> to be ignored and produces weird error messages.
+
+Yeap, I agree this is nasty.
+
+> @@ -2805,7 +2805,14 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  	    sata_scr_read(link, SCR_STATUS, &sstatus))
+>  		rc = -ERESTART;
+>  
+> -	if (rc == -ERESTART || try >= max_tries)
+> +	if (try >= max_tries)
+> +		goto out;
 > +
-> +static struct platform_device_id ahci_devtype[] = {
-> +	{
-> +		.name = "ahci",
-> +		.driver_data = AHCI,
-> +	}, {
-> +		.name = "imx53-ahci",
-> +		.driver_data = IMX53_AHCI,
-> +	}, {
-> +		/* sentinel */
-> +	}
-> +};
-> +MODULE_DEVICE_TABLE(platform, ahci_devtype);
-> +
-> +
-> +static const struct ata_port_info ahci_port_info[] = {
-> +	/* by features */
-> +	[AHCI] = {
-> +		.flags		= AHCI_FLAG_COMMON,
-> +		.pio_mask	= ATA_PIO4,
-> +		.udma_mask	= ATA_UDMA6,
-> +		.port_ops	=&ahci_ops,
-> +	},
-> +	[IMX53_AHCI] = {
-> +		.flags		= AHCI_FLAG_COMMON,
-> +		.pio_mask	= ATA_PIO4,
-> +		.udma_mask	= ATA_UDMA6,
-> +		.port_ops	=&ahci_pmp_retry_srst_ops,
-> +	},
-> +};
-> +
->   static struct scsi_host_template ahci_platform_sht = {
->   	AHCI_SHT("ahci_platform"),
->   };
-> @@ -31,12 +66,8 @@ static int __init ahci_probe(struct platform_device *pdev)
->   {
->   	struct device *dev =&pdev->dev;
->   	struct ahci_platform_data *pdata = dev->platform_data;
-> -	struct ata_port_info pi = {
-> -		.flags		= AHCI_FLAG_COMMON,
-> -		.pio_mask	= ATA_PIO4,
-> -		.udma_mask	= ATA_UDMA6,
-> -		.port_ops	=&ahci_ops,
-> -	};
-> +	const struct platform_device_id *id = platform_get_device_id(pdev);
-> +	struct ata_port_info pi = ahci_port_info[id->driver_data];
->   	const struct ata_port_info *ppi[] = {&pi, NULL };
->   	struct ahci_host_priv *hpriv;
->   	struct ata_host *host;
-> @@ -177,6 +208,7 @@ static struct platform_driver ahci_driver = {
->   		.name = "ahci",
->   		.owner = THIS_MODULE,
->   	},
-> +	.id_table	= ahci_devtype,
->   };
+> +	/* Some PMP will not serve SRST until the disk is spunup,
+> +	 * if the controller can not wait for the PMP to acknowledge the frame,
+> +	 * wait here */
+> +	if (rc == -ERESTART &&
+> +	    !((lflags & ATA_LFLAG_WAIT_SRST) && (reset == softreset)))
+>  		goto out;
+>  
+>  	now = jiffies;
+> @@ -2820,6 +2827,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  			delta = schedule_timeout_uninterruptible(delta);
+>  	}
+>  
+> +	if (rc == -ERESTART)
+> +		goto out;
 
-Looks good...  I queued this one.
+So, now libata waits for full reset period before proceeding to reset
+PMP.  Hmmm... yeah, it makes sense.  Unfortunately, the only way to
+achieve spinup wait in this case is waiting blindly and libata's reset
+timeouts are configured to accomodate drive spinup times.  PMP SCR
+failure kinda destroys those blind wait periods.
 
-	Jeff
+I'm not too sure about ATA_LFLAG_WAIT_SRST.  I don't think making the
+new behavior default would hurt.
 
+Can you please post before & after logs?
 
+Thank you.
 
-
+-- 
+tejun
