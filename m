@@ -1,40 +1,46 @@
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: Re: [PATCH V9 2/5] ahci_plt Add the board_ids and pi refer to
-	different features
-Date: Fri, 7 Oct 2011 14:44:30 +0200
-Message-ID: <20111007124430.GC31404@pengutronix.de>
-References: <1317195717-21174-1-git-send-email-richard.zhu@linaro.org>
-	<1317195717-21174-3-git-send-email-richard.zhu@linaro.org>
-	<4E8D4909.9030603@pobox.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH 1/2] sata_mv: release clock on ata_host_activate() failure
+Date: Fri, 7 Oct 2011 19:22:33 +0400
+Message-ID: <201110071922.33410.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:55925 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752781Ab1JGPai (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Oct 2011 11:30:38 -0400
 Content-Disposition: inline
-In-Reply-To: <4E8D4909.9030603@pobox.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
-	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: linux-arm-kernel-bounces@lists.infradead.org
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: eric@eukrea.com, eric.miao@linaro.org, linux-ide@vger.kernel.org, Richard Zhu <richard.zhu@linaro.org>, kernel@pengutronix.de, avorontsov@ru.mvista.com, linux-arm-kernel@lists.infradead.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Thu, Oct 06, 2011 at 02:22:01AM -0400, Jeff Garzik wrote:
-> 
-> Looks good...  I queued this one.
+mv_platfrom_probe() forgets to call clk_disable() and clk_put() iff
+ata_host_activate() fails...
 
-Ok, I'll take care for the rest of this series.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Sascha
+---
 
--- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+ drivers/ata/sata_mv.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/ata/sata_mv.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/sata_mv.c
++++ linux-2.6/drivers/ata/sata_mv.c
+@@ -4087,8 +4087,11 @@ static int mv_platform_probe(struct plat
+ 	dev_info(&pdev->dev, "slots %u ports %d\n",
+ 		 (unsigned)MV_MAX_Q_DEPTH, host->n_ports);
+ 
+-	return ata_host_activate(host, platform_get_irq(pdev, 0), mv_interrupt,
+-				 IRQF_SHARED, &mv6_sht);
++	rc = ata_host_activate(host, platform_get_irq(pdev, 0), mv_interrupt,
++			       IRQF_SHARED, &mv6_sht);
++	if (!rc)
++		return 0;
++
+ err:
+ #if defined(CONFIG_HAVE_CLK)
+ 	if (!IS_ERR(hpriv->clk)) {
