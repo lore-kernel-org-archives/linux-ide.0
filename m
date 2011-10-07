@@ -1,64 +1,158 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [PATCH] ata_piix: make DVD Drive recognisable on systems with
- Intel Sandybridge chipsets(v1)
-Date: Fri, 7 Oct 2011 11:31:02 +0800
-Message-ID: <CACVXFVMny_pjPBAs8n1ztNHVGe2ZVkZzGPV-mvtXswQhU_rkWQ@mail.gmail.com>
-References: <1317433412-15963-1-git-send-email-ming.lei@canonical.com>
-	<4E8C2724.7030608@mvista.com>
-	<CACVXFVPrZELDuO=Aa+HrccpwnOw7UB5eQEW0=y_aUEt794rHgA@mail.gmail.com>
-	<4E8D854F.6000107@mvista.com>
-	<CACVXFVO9TWDC-+5g2n6knWErWL4U8zNqBxy99Jc4hDB1VGzKQQ@mail.gmail.com>
-	<20111006165437.GA3953@google.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: ming.lei@canonical.com
+Subject: [PATCH] ata_piix: make DVD Drive recognisable on systems with Intel Sandybridge chipsets(v2)
+Date: Fri,  7 Oct 2011 11:50:22 +0800
+Message-ID: <1317959422-12860-1-git-send-email-ming.lei@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50025 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759534Ab1JGDbH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 23:31:07 -0400
-Received: from mail-gx0-f174.google.com ([209.85.161.174])
-	by youngberry.canonical.com with esmtpsa (TLS1.0:RSA_ARCFOUR_SHA1:16)
-	(Exim 4.71)
-	(envelope-from <ming.lei@canonical.com>)
-	id 1RC19N-0000qC-HW
-	for linux-ide@vger.kernel.org; Fri, 07 Oct 2011 03:31:05 +0000
-Received: by ggnv2 with SMTP id v2so2376831ggn.19
-        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2011 20:31:03 -0700 (PDT)
-In-Reply-To: <20111006165437.GA3953@google.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:42303 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755602Ab1JGDui (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Oct 2011 23:50:38 -0400
+Received: by yxl31 with SMTP id 31so3269454yxl.19
+        for <linux-ide@vger.kernel.org>; Thu, 06 Oct 2011 20:50:37 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org, seth.heasley@intel.com, Alan Cox <alan@linux.intel.com>
+To: htejun@gmail.com, jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, seth.heasley@intel.com, Ming Lei <ming.lei@canonical.com>, Alan Cox <alan@linux.intel.com>
 
-Hi,
+From: Ming Lei <ming.lei@canonical.com>
 
-On Fri, Oct 7, 2011 at 12:54 AM, Tejun Heo <htejun@gmail.com> wrote:
-> Hello,
->
-> On Thu, Oct 06, 2011 at 07:53:46PM +0800, Ming Lei wrote:
->> This flag is to stored into ata_port flags, so it is better to defin=
-e a global
->> flag. Otherwise, you have to select a value carefully which must not=
- be
->> defined in ata_port flags already, which way is very error-prone and=
- not
->> friendly.
->
-> Bits 24:31 of ata_port flags are reserved for driver-specific uses.
-> Also, this is controller-wide not port-wide, so you can also add
-> piix_host_priv->flags and use it.
->
->> Anyway, I have not see obvious drawbacks to define a global ata_port
->> flag.
->
-> Sergei is right here. =A0Please move it to driver specific flags. =A0=
-If we
-> end up doing this for multiple controllers, then we can move the flag
-> (and handling of it too) to generic code.
+This quirk patch fixes one kind of bug inside some Intel Sandybridge
+chipsets, see reports from
 
-OK, will update the patch to use local flag.
+       https://bugzilla.kernel.org/show_bug.cgi?id=40592.
 
-thanks,
---
-Ming Lei
+Many guys also have reported the problem before:
+
+	https://bugs.launchpad.net/bugs/737388
+	https://bugs.launchpad.net/bugs/794642
+	https://bugs.launchpad.net/bugs/782389
+	......
+
+With help from Tejun, the problem is found to be caused by 32bit PIO
+mode, so introduce the quirk patch to disable 32bit PIO on SATA piix
+for some Sandybridge CPT chipsets.
+
+Seth also tested the patch on all five affected chipsets
+(pci device ID: 0x1c00, 0x1c01, 0x1d00, 0x1e00, 0x1e01), and found
+the patch does fix the problem.
+
+Tested-by: Heasley, Seth <seth.heasley@intel.com>
+Cc: Alan Cox <alan@linux.intel.com>
+Signed-off-by: Ming Lei <ming.lei@canonical.com>
+Acked-by: Tejun Heo <htejun@gmail.com>
+---
+v2: avoid to use global flag
+---
+ drivers/ata/ata_piix.c |   37 ++++++++++++++++++++++++++++++++-----
+ 1 files changed, 32 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 43107e9..cc431d6 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -113,6 +113,8 @@ enum {
+ 	PIIX_PATA_FLAGS		= ATA_FLAG_SLAVE_POSS,
+ 	PIIX_SATA_FLAGS		= ATA_FLAG_SATA | PIIX_FLAG_CHECKINTR,
+ 
++	PIIX_FLAG_PIO16		= (1 << 30), /*support 16bit PIO only*/
++
+ 	PIIX_80C_PRI		= (1 << 5) | (1 << 4),
+ 	PIIX_80C_SEC		= (1 << 7) | (1 << 6),
+ 
+@@ -147,6 +149,7 @@ enum piix_controller_ids {
+ 	ich8m_apple_sata,	/* locks up on second port enable */
+ 	tolapai_sata,
+ 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
++	ich8_sata_snb,
+ };
+ 
+ struct piix_map_db {
+@@ -177,6 +180,7 @@ static int piix_sidpr_scr_write(struct ata_link *link,
+ static int piix_sidpr_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 			      unsigned hints);
+ static bool piix_irq_check(struct ata_port *ap);
++static int piix_port_start(struct ata_port *ap);
+ #ifdef CONFIG_PM
+ static int piix_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+ static int piix_pci_device_resume(struct pci_dev *pdev);
+@@ -298,21 +302,21 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* SATA Controller IDE (PCH) */
+ 	{ 0x8086, 0x3b2e, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
+ 	/* SATA Controller IDE (CPT) */
+-	{ 0x8086, 0x1c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	{ 0x8086, 0x1c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (CPT) */
+-	{ 0x8086, 0x1c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	{ 0x8086, 0x1c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (CPT) */
+ 	{ 0x8086, 0x1c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (CPT) */
+ 	{ 0x8086, 0x1c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (PBG) */
+-	{ 0x8086, 0x1d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	{ 0x8086, 0x1d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (PBG) */
+ 	{ 0x8086, 0x1d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (Panther Point) */
+-	{ 0x8086, 0x1e00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	{ 0x8086, 0x1e00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Panther Point) */
+-	{ 0x8086, 0x1e01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata },
++	{ 0x8086, 0x1e01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Panther Point) */
+ 	{ 0x8086, 0x1e08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (Panther Point) */
+@@ -338,6 +342,7 @@ static struct scsi_host_template piix_sht = {
+ static struct ata_port_operations piix_sata_ops = {
+ 	.inherits		= &ata_bmdma32_port_ops,
+ 	.sff_irq_check		= piix_irq_check,
++	.port_start		= piix_port_start,
+ };
+ 
+ static struct ata_port_operations piix_pata_ops = {
+@@ -478,6 +483,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
+ 	[ich8_2port_sata]	= &ich8_2port_map_db,
+ 	[ich8m_apple_sata]	= &ich8m_apple_map_db,
+ 	[tolapai_sata]		= &tolapai_map_db,
++	[ich8_sata_snb]		= &ich8_map_db,
+ };
+ 
+ static struct ata_port_info piix_port_info[] = {
+@@ -606,6 +612,19 @@ static struct ata_port_info piix_port_info[] = {
+ 		.port_ops	= &piix_vmw_ops,
+ 	},
+ 
++	/*
++	 * some Sandybridge chipsets have broken 32 mode up to now,
++	 * see https://bugzilla.kernel.org/show_bug.cgi?id=40592
++	 */
++	[ich8_sata_snb] =
++	{
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR | PIIX_FLAG_PIO16,
++		.pio_mask	= ATA_PIO4,
++		.mwdma_mask	= ATA_MWDMA2,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &piix_sata_ops,
++	},
++
+ };
+ 
+ static struct pci_bits piix_enable_bits[] = {
+@@ -649,6 +668,14 @@ static const struct ich_laptop ich_laptop[] = {
+ 	{ 0, }
+ };
+ 
++static int piix_port_start(struct ata_port *ap)
++{
++	if (!(ap->flags & PIIX_FLAG_PIO16))
++		ap->pflags |= ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE;
++
++	return ata_bmdma_port_start(ap);
++}
++
+ /**
+  *	ich_pata_cable_detect - Probe host controller cable detect info
+  *	@ap: Port for which cable detect info is desired
+-- 
+1.7.5.4
+
