@@ -1,45 +1,131 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sc1200: do not use c99 style comments
-Date: Tue, 11 Oct 2011 20:05:49 +0200
-Message-ID: <201110112005.49645.bzolnier@gmail.com>
+Subject: [PATCH 3/3] pata_serverworks: add serverworks_fixup()
+Date: Tue, 11 Oct 2011 20:13:53 +0200
+Message-ID: <201110112013.54217.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:65369 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755503Ab1JKSZr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 14:25:47 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sc1200: do not use c99 style comments
+Subject: [PATCH] pata_serverworks: add serverworks_fixup()
+
+Factor out common code from serverworks_[re]init_one() to
+serverworks_fixup().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_sc1200.c |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+earlier references:
+https://lkml.org/lkml/2009/11/25/386
 
-Index: b/drivers/ata/pata_sc1200.c
+ drivers/ata/pata_serverworks.c |   57 ++++++++++++++++++++---------------------
+ 1 file changed, 29 insertions(+), 28 deletions(-)
+
+Index: b/drivers/ata/pata_serverworks.c
 ===================================================================
---- a/drivers/ata/pata_sc1200.c
-+++ b/drivers/ata/pata_sc1200.c
-@@ -86,10 +86,14 @@ static int sc1200_clock(void)
- static void sc1200_set_piomode(struct ata_port *ap, struct ata_device *adev)
- {
- 	static const u32 pio_timings[4][5] = {
--		{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
--		{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
--		{0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
--		{0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}	// format1, 66Mhz
-+		/* format0, 33Mhz */
-+		{ 0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010 },
-+		/* format1, 33Mhz */
-+		{ 0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010 },
-+		/* format1, 48Mhz */
-+		{ 0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021 },
-+		/* format1, 66Mhz */
-+		{ 0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131 }
- 	};
+--- a/drivers/ata/pata_serverworks.c
++++ b/drivers/ata/pata_serverworks.c
+@@ -372,6 +372,31 @@ static void serverworks_fixup_ht1000(str
+ 	pci_write_config_byte(pdev, 0x5A, btr);
+ }
  
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++static int serverworks_fixup(struct pci_dev *pdev)
++{
++	int rc = 0;
++
++	/* Force master latency timer to 64 PCI clocks */
++	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x40);
++
++	switch (pdev->device) {
++	case PCI_DEVICE_ID_SERVERWORKS_OSB4IDE:
++		rc = serverworks_fixup_osb4(pdev);
++		break;
++	case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
++		ata_pci_bmdma_clear_simplex(pdev);
++		/* fall through */
++	case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE:
++	case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2:
++		rc = serverworks_fixup_csb(pdev);
++		break;
++	case PCI_DEVICE_ID_SERVERWORKS_HT1000IDE:
++		serverworks_fixup_ht1000(pdev);
++		break;
++	}
++
++	return rc;
++}
+ 
+ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+@@ -409,13 +434,12 @@ static int serverworks_init_one(struct p
+ 	if (rc)
+ 		return rc;
+ 
+-	/* Force master latency timer to 64 PCI clocks */
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x40);
++	rc = serverworks_fixup(pdev);
+ 
+ 	/* OSB4 : South Bridge and IDE */
+ 	if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_OSB4IDE) {
+ 		/* Select non UDMA capable OSB4 if we can't do fixups */
+-		if ( serverworks_fixup_osb4(pdev) < 0)
++		if (rc < 0)
+ 			ppi[0] = &info[1];
+ 	}
+ 	/* setup CSB5/CSB6 : South Bridge and IDE option RAID */
+@@ -425,19 +449,13 @@ static int serverworks_init_one(struct p
+ 
+ 		 /* If the returned btr is the newer revision then
+ 		    select the right info block */
+-		 if (serverworks_fixup_csb(pdev) == 3)
++		 if (rc == 3)
+ 		 	ppi[0] = &info[3];
+ 
+ 		/* Is this the 3rd channel CSB6 IDE ? */
+ 		if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)
+ 			ppi[1] = &ata_dummy_port_info;
+ 	}
+-	/* setup HT1000E */
+-	else if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_HT1000IDE)
+-		serverworks_fixup_ht1000(pdev);
+-
+-	if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE)
+-		ata_pci_bmdma_clear_simplex(pdev);
+ 
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &serverworks_sht, NULL, 0);
+ }
+@@ -452,24 +470,7 @@ static int serverworks_reinit_one(struct
+ 	if (rc)
+ 		return rc;
+ 
+-	/* Force master latency timer to 64 PCI clocks */
+-	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x40);
+-
+-	switch (pdev->device) {
+-		case PCI_DEVICE_ID_SERVERWORKS_OSB4IDE:
+-			serverworks_fixup_osb4(pdev);
+-			break;
+-		case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
+-			ata_pci_bmdma_clear_simplex(pdev);
+-			/* fall through */
+-		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE:
+-		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2:
+-			serverworks_fixup_csb(pdev);
+-			break;
+-		case PCI_DEVICE_ID_SERVERWORKS_HT1000IDE:
+-			serverworks_fixup_ht1000(pdev);
+-			break;
+-	}
++	(void)serverworks_fixup(pdev);
+ 
+ 	ata_host_resume(host);
+ 	return 0;
