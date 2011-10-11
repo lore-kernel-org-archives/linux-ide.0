@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] pata_sil680: minor CodingStyle fixups
-Date: Tue, 11 Oct 2011 20:21:50 +0200
-Message-ID: <201110112021.51236.bzolnier@gmail.com>
+Subject: [PATCH 2/3] pata_sil680: constify tables
+Date: Tue, 11 Oct 2011 20:20:28 +0200
+Message-ID: <201110112020.28868.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,107 +13,45 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sil680: minor CodingStyle fixups
+Subject: [PATCH] pata_sil680: constify tables
+
+Constify tables in sil680_set_[pio,dma]mode().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_sil680.c |   58 ++++++++++++++++++++++++++--------------------
- 1 file changed, 33 insertions(+), 25 deletions(-)
+ drivers/ata/pata_sil680.c |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 Index: b/drivers/ata/pata_sil680.c
 ===================================================================
 --- a/drivers/ata/pata_sil680.c
 +++ b/drivers/ata/pata_sil680.c
-@@ -81,7 +81,8 @@ static unsigned long sil680_seldev(struc
-  *	space for us.
-  */
+@@ -105,8 +105,12 @@ static int sil680_cable_detect(struct at
  
--static int sil680_cable_detect(struct ata_port *ap) {
-+static int sil680_cable_detect(struct ata_port *ap)
-+{
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	unsigned long addr = sil680_selreg(ap, 0);
- 	u8 ata66;
-@@ -175,7 +176,7 @@ static void sil680_set_dmamode(struct at
- 	mode &= ~(0x03 << port_shift);
- 
- 	/* Extract scsc */
--	scsc = (scsc & 0x30) ? 1: 0;
-+	scsc = (scsc & 0x30) ? 1 : 0;
- 
- 	if (adev->dma_mode >= XFER_UDMA_0) {
- 		multi = 0x10C1;
-@@ -214,7 +215,7 @@ static u8 sil680_init_chip(struct pci_de
+ static void sil680_set_piomode(struct ata_port *ap, struct ata_device *adev)
  {
- 	u8 tmpbyte	= 0;
+-	static u16 speed_p[5] = { 0x328A, 0x2283, 0x1104, 0x10C3, 0x10C1 };
+-	static u16 speed_t[5] = { 0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1 };
++	static const u16 speed_p[5] = {
++		0x328A, 0x2283, 0x1104, 0x10C3, 0x10C1
++	};
++	static const u16 speed_t[5] = {
++		0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1
++	};
  
--        /* FIXME: double check */
-+	/* FIXME: double check */
- 	pci_write_config_byte(pdev, PCI_CACHE_LINE_SIZE,
- 			      pdev->revision ? 1 : 255);
+ 	unsigned long tfaddr = sil680_selreg(ap, 0x02);
+ 	unsigned long addr = sil680_seldev(ap, adev, 0x04);
+@@ -153,11 +157,11 @@ static void sil680_set_piomode(struct at
  
-@@ -232,22 +233,22 @@ static u8 sil680_init_chip(struct pci_de
- 		*try_mmio = (tmpbyte & 1) || pci_resource_start(pdev, 5);
- #endif
+ static void sil680_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ {
+-	static u8 ultra_table[2][7] = {
++	static const u8 ultra_table[2][7] = {
+ 		{ 0x0C, 0x07, 0x05, 0x04, 0x02, 0x01, 0xFF },	/* 100MHz */
+ 		{ 0x0F, 0x0B, 0x07, 0x05, 0x03, 0x02, 0x01 },	/* 133Mhz */
+ 	};
+-	static u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
++	static const u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
  
--	switch(tmpbyte & 0x30) {
--		case 0x00:
--			/* 133 clock attempt to force it on */
--			pci_write_config_byte(pdev, 0x8A, tmpbyte|0x10);
--			break;
--		case 0x30:
--			/* if clocking is disabled */
--			/* 133 clock attempt to force it on */
--			pci_write_config_byte(pdev, 0x8A, tmpbyte & ~0x20);
--			break;
--		case 0x10:
--			/* 133 already */
--			break;
--		case 0x20:
--			/* BIOS set PCI x2 clocking */
--			break;
-+	switch (tmpbyte & 0x30) {
-+	case 0x00:
-+		/* 133 clock attempt to force it on */
-+		pci_write_config_byte(pdev, 0x8A, tmpbyte|0x10);
-+		break;
-+	case 0x30:
-+		/* if clocking is disabled */
-+		/* 133 clock attempt to force it on */
-+		pci_write_config_byte(pdev, 0x8A, tmpbyte & ~0x20);
-+		break;
-+	case 0x10:
-+		/* 133 already */
-+		break;
-+	case 0x20:
-+		/* BIOS set PCI x2 clocking */
-+		break;
- 	}
- 
- 	pci_read_config_byte(pdev,   0x8A, &tmpbyte);
-@@ -265,12 +266,19 @@ static u8 sil680_init_chip(struct pci_de
- 	pci_write_config_dword(pdev, 0xB8, 0x43924392);
- 	pci_write_config_dword(pdev, 0xBC, 0x40094009);
- 
--	switch(tmpbyte & 0x30) {
--		case 0x00: printk(KERN_INFO "sil680: 100MHz clock.\n");break;
--		case 0x10: printk(KERN_INFO "sil680: 133MHz clock.\n");break;
--		case 0x20: printk(KERN_INFO "sil680: Using PCI clock.\n");break;
--		/* This last case is _NOT_ ok */
--		case 0x30: printk(KERN_ERR "sil680: Clock disabled ?\n");
-+	switch (tmpbyte & 0x30) {
-+	case 0x00:
-+		printk(KERN_INFO "sil680: 100MHz clock.\n");
-+		break;
-+	case 0x10:
-+		printk(KERN_INFO "sil680: 133MHz clock.\n");
-+		break;
-+	case 0x20:
-+		printk(KERN_INFO "sil680: Using PCI clock.\n");
-+		break;
-+	/* This last case is _NOT_ ok */
-+	case 0x30:
-+		printk(KERN_ERR "sil680: Clock disabled ?\n");
- 	}
- 	return tmpbyte & 0x30;
- }
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	unsigned long ma = sil680_seldev(ap, adev, 0x08);
