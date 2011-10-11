@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/3] pata_serverworks: cleanup cable detection
-Date: Tue, 11 Oct 2011 20:11:44 +0200
-Message-ID: <201110112011.44748.bzolnier@gmail.com>
+Subject: [PATCH 1/3] pata_sil680: documentation fixes
+Date: Tue, 11 Oct 2011 20:17:05 +0200
+Message-ID: <201110112017.06133.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,73 +13,75 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_serverworks: cleanup cable detection
+Subject: [PATCH v2] pata_sil680: documentation fixes
+
+Fix documentation for sil680_sel[reg,dev]() and sil680_set_[pio,dma]mode().
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-earlier references:
-https://lkml.org/lkml/2010/1/18/324
+ drivers/ata/pata_sil680.c |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
- drivers/ata/pata_serverworks.c |   37 +++++++------------------------------
- 1 file changed, 7 insertions(+), 30 deletions(-)
-
-Index: b/drivers/ata/pata_serverworks.c
+Index: b/drivers/ata/pata_sil680.c
 ===================================================================
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -57,32 +57,14 @@ static const char *csb_bad_ata100[] = {
- };
+--- a/drivers/ata/pata_sil680.c
++++ b/drivers/ata/pata_sil680.c
+@@ -38,11 +38,12 @@
  
  /**
-- *	dell_cable	-	Dell serverworks cable detection
-+ *	oem_cable	-	Dell/Sun serverworks cable detection
-  *	@ap: ATA port to do cable detect
+  *	sil680_selreg		-	return register base
+- *	@hwif: interface
++ *	@ap: ATA interface
+  *	@r: config offset
   *
-- *	Dell hide the 40/80 pin select for their interfaces in the top two
-- *	bits of the subsystem ID.
-+ *	Dell PowerEdge and Sun Cobalt 'Alpine' hide the 40/80 pin select
-+ *	for their interfaces in the top two bits of the subsystem ID.
+- *	Turn a config register offset into the right address in either
+- *	PCI space or MMIO space to access the control register in question
++ *	Turn a config register offset into the right address in PCI space
++ *	to access the control register in question.
++ *
+  *	Thankfully this is a configuration operation so isn't performance
+  *	criticial.
+  */
+@@ -56,12 +57,12 @@ static unsigned long sil680_selreg(struc
+ 
+ /**
+  *	sil680_seldev		-	return register base
+- *	@hwif: interface
++ *	@ap: ATA interface
+  *	@r: config offset
+  *
+- *	Turn a config register offset into the right address in either
+- *	PCI space or MMIO space to access the control register in question
+- *	including accounting for the unit shift.
++ *	Turn a config register offset into the right address in PCI space
++ *	to access the control register in question including accounting for
++ *	the unit shift.
   */
  
--static int dell_cable(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
--		return ATA_CBL_PATA80;
--	return ATA_CBL_PATA40;
--}
--
--/**
-- *	sun_cable	-	Sun Cobalt 'Alpine' cable detection
-- *	@ap: ATA port to do cable select
-- *
-- *	Cobalt CSB5 IDE hides the 40/80pin in the top two bits of the
-- *	subsystem ID the same as dell. We could use one function but we may
-- *	need to extend the Dell one in future
-- */
--
--static int sun_cable(struct ata_port *ap)
-+static int oem_cable(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
+@@ -93,7 +94,7 @@ static int sil680_cable_detect(struct at
+ }
  
-@@ -97,15 +79,10 @@ struct sv_cable_table {
- 	int (*cable_detect)(struct ata_port *ap);
- };
+ /**
+- *	sil680_set_piomode	-	set initial PIO mode data
++ *	sil680_set_piomode	-	set PIO mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+  *
+@@ -140,12 +141,13 @@ static void sil680_set_piomode(struct at
+ }
  
--/*
-- *	Note that we don't copy the old serverworks code because the old
-- *	code contains obvious mistakes
-- */
--
- static struct sv_cable_table cable_detect[] = {
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  oem_cable },
- 	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
+ /**
+- *	sil680_set_dmamode	-	set initial DMA mode data
++ *	sil680_set_dmamode	-	set DMA mode data
+  *	@ap: ATA interface
+  *	@adev: ATA device
+  *
+- *	Program the MWDMA/UDMA modes for the sil680 k
+- *	chipset. The MWDMA mode values are pulled from a lookup table
++ *	Program the MWDMA/UDMA modes for the sil680 chipset.
++ *
++ *	The MWDMA mode values are pulled from a lookup table
+  *	while the chipset uses mode number for UDMA.
+  */
+ 
