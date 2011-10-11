@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_hpt366: add hpt36x_find_mode() helper
-Date: Tue, 11 Oct 2011 19:52:31 +0200
-Message-ID: <201110111952.31615.bzolnier@gmail.com>
+Subject: [PATCH 3/3] pata_cmd64x: remove dead CMD646 rev 1 code
+Date: Tue, 11 Oct 2011 19:59:03 +0200
+Message-ID: <201110111959.04056.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,89 +13,82 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_hpt366: add hpt36x_find_mode() helper
-
-Factor out code for finding the register programming information
-from hpt366_set_mode() to hpt36x_find_mode().
-
-This makes pata_hpt366 driver more similar to pata_{37x,3x2n} ones.
+Subject: [PATCH] pata_cmd64x: remove dead CMD646 rev 1 code
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-pata_hpt{37x,3x2n} drivers can also be made to use *set_mode()
+ drivers/ata/pata_cmd64x.c |   33 ++-------------------------------
+ 1 file changed, 2 insertions(+), 31 deletions(-)
 
-earlier references:
-https://lkml.org/lkml/2009/11/27/241
-
- drivers/ata/pata_hpt366.c |   35 +++++++++++++++++++++++++----------
- 1 file changed, 25 insertions(+), 10 deletions(-)
-
-Index: b/drivers/ata/pata_hpt366.c
+Index: b/drivers/ata/pata_cmd64x.c
 ===================================================================
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -111,6 +111,28 @@ static const struct hpt_clock hpt366_25[
- 	{	0,		0x01208585	}
- };
- 
-+/**
-+ *	hpt36x_find_mode	-	find the hpt36x timing
-+ *	@ap: ATA port
-+ *	@speed: transfer mode
-+ *
-+ *	Return the 32bit register programming information for this channel
-+ *	that matches the speed provided.
-+ */
-+
-+static u32 hpt36x_find_mode(struct ata_port *ap, int speed)
-+{
-+	struct hpt_clock *clocks = ap->host->private_data;
-+
-+	while (clocks->xfer_mode) {
-+		if (clocks->xfer_mode == speed)
-+			return clocks->timing;
-+		clocks++;
-+	}
-+	BUG();
-+	return 0xffffffffU;	/* silence compiler warning */
-+}
-+
- static const char * const bad_ata33[] = {
- 	"Maxtor 92720U8", "Maxtor 92040U6", "Maxtor 91360U4", "Maxtor 91020U3",
- 	"Maxtor 90845U3", "Maxtor 90650U2",
-@@ -210,10 +232,9 @@ static int hpt36x_cable_detect(struct at
- static void hpt366_set_mode(struct ata_port *ap, struct ata_device *adev,
- 			    u8 mode)
- {
--	struct hpt_clock *clocks = ap->host->private_data;
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u32 addr = 0x40 + 4 * adev->devno;
--	u32 mask, reg;
-+	u32 mask, reg, t;
- 
- 	/* determine timing mask and find matching clock entry */
- 	if (mode < XFER_MW_DMA_0)
-@@ -223,13 +244,7 @@ static void hpt366_set_mode(struct ata_p
- 	else
- 		mask = 0x30070000;
- 
--	while (clocks->xfer_mode) {
--		if (clocks->xfer_mode == mode)
--			break;
--		clocks++;
--	}
--	if (!clocks->xfer_mode)
--		BUG();
-+	t = hpt36x_find_mode(ap, mode);
- 
- 	/*
- 	 * Combine new mode bits with old config bits and disable
-@@ -237,7 +252,7 @@ static void hpt366_set_mode(struct ata_p
- 	 * problems handling I/O errors later.
- 	 */
- 	pci_read_config_dword(pdev, addr, &reg);
--	reg = ((reg & ~mask) | (clocks->timing & mask)) & ~0xc0000000;
-+	reg = ((reg & ~mask) | (t & mask)) & ~0xc0000000;
- 	pci_write_config_dword(pdev, addr, reg);
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -249,18 +249,6 @@ static void cmd648_bmdma_stop(struct ata
+ 	pci_write_config_byte(pdev, dma_reg, dma_intr | dma_mask);
  }
  
+-/**
+- *	cmd646r1_dma_stop	-	DMA stop callback
+- *	@qc: Command in progress
+- *
+- *	Stub for now while investigating the r1 quirk in the old driver.
+- */
+-
+-static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
+-{
+-	ata_bmdma_stop(qc);
+-}
+-
+ static struct scsi_host_template cmd64x_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+@@ -276,12 +264,6 @@ static struct ata_port_operations cmd64x
+ 	.cable_detect	= ata_cable_40wire,
+ };
+ 
+-static struct ata_port_operations cmd646r1_port_ops = {
+-	.inherits	= &cmd64x_base_ops,
+-	.bmdma_stop	= cmd646r1_bmdma_stop,
+-	.cable_detect	= ata_cable_40wire,
+-};
+-
+ static struct ata_port_operations cmd648_port_ops = {
+ 	.inherits	= &cmd64x_base_ops,
+ 	.bmdma_stop	= cmd648_bmdma_stop,
+@@ -326,12 +308,6 @@ static int cmd64x_init_one(struct pci_de
+ 			.udma_mask = ATA_UDMA2,
+ 			.port_ops = &cmd64x_port_ops
+ 		},
+-		{	/* CMD 646 rev 1  */
+-			.flags = ATA_FLAG_SLAVE_POSS,
+-			.pio_mask = ATA_PIO4,
+-			.mwdma_mask = ATA_MWDMA2,
+-			.port_ops = &cmd646r1_port_ops
+-		},
+ 		{	/* CMD 648 */
+ 			.flags = ATA_FLAG_SLAVE_POSS,
+ 			.pio_mask = ATA_PIO4,
+@@ -374,11 +350,6 @@ static int cmd64x_init_one(struct pci_de
+ 			ppi[0] = &cmd_info[2];
+ 			ppi[1] = &cmd_info[2];
+ 		}
+-		/* Early rev with other problems ? */
+-		else if (pdev->revision == 1) {
+-			ppi[0] = &cmd_info[3];
+-			ppi[1] = &cmd_info[3];
+-		}
+ 		/* revs 1,2 have no CNTRL_CH0 */
+ 		if (pdev->revision < 3)
+ 			cntrl_ch0_ok = 0;
+@@ -423,8 +394,8 @@ static int cmd64x_reinit_one(struct pci_
+ static const struct pci_device_id cmd64x[] = {
+ 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_643), 0 },
+ 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_646), 1 },
+-	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 4 },
+-	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 5 },
++	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 3 },
++	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 4 },
+ 
+ 	{ },
+ };
