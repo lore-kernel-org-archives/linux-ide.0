@@ -1,52 +1,76 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
 Subject: Re: [PATCH] mv_sas: OCZ RevoDrive3 & zDrive R4 support
-Date: Tue, 11 Oct 2011 15:57:43 -0500
-Message-ID: <1318366663.2992.29.camel@dabdike.int.hansenpartnership.com>
+Date: Tue, 11 Oct 2011 21:21:43 +0000
+Message-ID: <robbat2-20111011T211421-450808012Z@orbis-terrarum.net>
 References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org>
-	 <1318132024-12426-1-git-send-email-robbat2@gentoo.org>
-	 <robbat2-20111011T204841-021218330Z@orbis-terrarum.net>
+ <1318132024-12426-1-git-send-email-robbat2@gentoo.org>
+ <robbat2-20111011T204841-021218330Z@orbis-terrarum.net>
+ <1318366663.2992.29.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aF3LVLvitz/VQU3c"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <robbat2-20111011T204841-021218330Z@orbis-terrarum.net>
+Content-Disposition: inline
+In-Reply-To: <1318366663.2992.29.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org
+Cc: "	Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2011-10-11 at 20:50 +0000, Robin H. Johnson wrote:
-> On Sat, Oct 08, 2011 at 08:47:04PM -0700, Robin H. Johnson wrote:
-> > From: "Robin H. Johnson" <robbat2@gentoo.org>
-> > 
-> > In the OCZ RevoDrive3/zDrive R4 series, the "OCZ SuperScale Storage
-> > Controller" with "Virtualized Controller Architecture 2.0" really seems
-> > to be a Marvell 88SE9485 part, with OCZ firmware/BIOS.
-> > 
-> > Developed and tested on OCZ RevoDrive3 120GB [PCI 1b85:1021]
-> 
-> Is there anything blocking getting this ack'd or applied to the SCSI
-> tree? I've seen no comments from the lists.
-> 
-> I've also posted it on the OCZ Forums, and gotten some users confirming
-> it works there.
 
-Well, when you put things like
+--aF3LVLvitz/VQU3c
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-"NOT FOR COMMIT USE; TESTING ONLY; NO WARRANTY; DANGER!"
+On Tue, Oct 11, 2011 at 03:57:43PM -0500,  James Bottomley wrote:
+> Well, when you put things like
+>=20
+> "NOT FOR COMMIT USE; TESTING ONLY; NO WARRANTY; DANGER!"
+>=20
+> and
+>=20
+> "I constructed this patch for my friend to test, completely blind.
+> I haven't heard back from him at all yet, but I thought that the wider
+> community might find it useful for testing as well. I think it _should_
+> work, just need to figure out what the correct chip variant is."
+>=20
+> On the patch it tends to make maintainers exercise extreme caution.
+> Thus comments from others (preferably successful test reports) or acks
+> from Marvell or Vertex would be very helpful.
+Both of those were on the first version of the patch, when I'd written
+the code and not run it at all. After that, I got access to a RevoDrive3
+remotely, and run about 5TiB of data through it for testing.
 
-and
+The second version of the patch removed those warnings, and described
+some of my testing:
+http://thread.gmane.org/gmane.linux.kernel/1200731/focus=3D50312
 
-"I constructed this patch for my friend to test, completely blind.
-I haven't heard back from him at all yet, but I thought that the wider
-community might find it useful for testing as well. I think it _should_
-work, just need to figure out what the correct chip variant is."
+Some fio performance numbers:
+http://paste.pocoo.org/show/489716/
 
-On the patch it tends to make maintainers exercise extreme caution.
-Thus comments from others (preferably successful test reports) or acks
-from Marvell or Vertex would be very helpful.
+dmesg/hdparm/smartctl:
+http://www.ocztechnologyforum.com/forum/showthread.php?95151-Linux-patch-su=
+pport-for-RevoDrive3-RevoDrive3-X2-zDrive-R4&p=3D686054&viewfull=3D1#post68=
+6054
 
-James
+--=20
+Robin Hugh Johnson
+Gentoo Linux: Developer, Trustee & Infrastructure Lead
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
 
+--aF3LVLvitz/VQU3c
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
 
+iEYEARECAAYFAk6Us2cACgkQPpIsIjIzwiyS4ACfTl9WChJbrfzIxgrbaXiNWDB+
+9LEAn3QUlUISMBzeh3E91F11LbKX3yXi
+=h3y7
+-----END PGP SIGNATURE-----
+
+--aF3LVLvitz/VQU3c--
