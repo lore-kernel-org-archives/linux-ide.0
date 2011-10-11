@@ -1,38 +1,24 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend
- SSD
-Date: Tue, 11 Oct 2011 20:39:50 +0100
-Message-ID: <20111011203950.44b714d0@lxorguk.ukuu.org.uk>
-References: <20091117.043002.224755438.davem@davemloft.net>
-	<Pine.LNX.4.64.0911181151140.5068@hs20-bc2-1.build.redhat.com>
-	<201110111912.01574.bzolnier@gmail.com>
-	<20111011.150504.1435090249037873103.davem@davemloft.net>
+Subject: Re: [PATCH 3/3] pata_sil680: minor CodingStyle fixups
+Date: Tue, 11 Oct 2011 20:47:46 +0100
+Message-ID: <20111011204746.2c7448ff@lxorguk.ukuu.org.uk>
+References: <201110112021.51236.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55623 "EHLO
-	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754933Ab1JKTln (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 15:41:43 -0400
-In-Reply-To: <20111011.150504.1435090249037873103.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201110112021.51236.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: bzolnier@gmail.com, mpatocka@redhat.com, linux-ide@vger.kernel.org
 
-On Tue, 11 Oct 2011 15:05:04 -0400 (EDT)
-David Miller <davem@davemloft.net> wrote:
+On Tue, 11 Oct 2011 20:21:50 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Tue, 11 Oct 2011 19:12:01 +0200
+> Subject: [PATCH] pata_sil680: minor CodingStyle fixups
 > 
-> > Still valid for 3.1.  Dave, ping?
-> 
-> Feedback given and changes requested/required, patch was not updated
-> and resubmitted by the author:
-> 
-> http://patchwork.ozlabs.org/patch/38764/
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-The last state on this I saw it seemd that exactly one person had seen it
-on exactly one machine ? Has that changed ?
+Acked-by: Alan Cox <alan@linux.intel.com>
