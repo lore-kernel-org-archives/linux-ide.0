@@ -1,75 +1,185 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Don't powerdown Compaq Triflex IDE device on suspend
-Date: Tue, 11 Oct 2011 18:56:05 +0200
-Message-ID: <201110111856.05491.bzolnier@gmail.com>
-References: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz>
+Subject: [PATCH] libata: reduce ata_pci_[sff,bmdma]_init_one() size
+Date: Tue, 11 Oct 2011 19:22:16 +0200
+Message-ID: <201110111922.16501.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45986 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755063Ab1JKROb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 13:14:31 -0400
-Received: by ggnv2 with SMTP id v2so5911233ggn.19
-        for <linux-ide@vger.kernel.org>; Tue, 11 Oct 2011 10:14:30 -0700 (PDT)
-In-Reply-To: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:52681 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755148Ab1JKRjB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 13:39:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Cc: "David S. Miller" <davem@davemloft.net>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Mikulas Patocka wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] libata: reduce ata_pci_[sff,bmdma]_init_one() size
 
-> Don't powerdown Compaq Triflex IDE device on suspend
-> 
-> This fixes APM suspend on Compaq Armada 7400.
-> APM BIOS doesn't suspend if IDE is powered down when suspending.
-> The Triflex controller is found only on old Compaq boards,
-> so this patch will hopefully have no side effects.
-> 
-> This patch fixes a suspend regression introduced in 
-> feb22b7f8e62b1b987a3a1dbad95af767a1df832
-> 
-> Signed-off-by: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+Turn both helpers (which are used only during LLDs initialization
+time and thus are not performance sensitive) into wrappers around
+the new ata_pci_init_one() function, this cuts 20 LOC and saves
+~1.1k of the output code size (x86-64):
 
-Reviewed-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+ text    data     bss     dec     hex filename
+  21392       0      19   21411    53a3 drivers/ata/libata-sff.o.before
+  20256       0      19   20275    4f33 drivers/ata/libata-sff.o.after
 
-This patch is still valid for 3.1.  Dave, ping?
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+earlier references:
+https://lkml.org/lkml/2011/2/9/150
 
-> ---
->  drivers/ide/triflex.c |   16 +++++++++++++++-
->  1 file changed, 15 insertions(+), 1 deletion(-)
-> 
-> Index: linux-2.6.39-rc7-fast/drivers/ide/triflex.c
-> ===================================================================
-> --- linux-2.6.39-rc7-fast.orig/drivers/ide/triflex.c	2011-05-09 21:05:37.000000000 +0200
-> +++ linux-2.6.39-rc7-fast/drivers/ide/triflex.c	2011-05-15 14:06:14.000000000 +0200
-> @@ -113,12 +113,26 @@ static const struct pci_device_id trifle
->  };
->  MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
->  
-> +#ifdef CONFIG_PM
-> +static int triflex_ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
-> +{
-> +	/*
-> +	 * We must not disable or powerdown the device.
-> +	 * APM bios refuses to suspend if IDE is not accessible.
-> +	 */
-> +	pci_save_state(dev);
-> +	return 0;
-> +}
-> +#else
-> +#define triflex_ide_pci_suspend NULL
-> +#endif
-> +
->  static struct pci_driver triflex_pci_driver = {
->  	.name		= "TRIFLEX_IDE",
->  	.id_table	= triflex_pci_tbl,
->  	.probe		= triflex_init_one,
->  	.remove		= ide_pci_remove,
-> -	.suspend	= ide_pci_suspend,
-> +	.suspend	= triflex_ide_pci_suspend,
->  	.resume		= ide_pci_resume,
->  };
+ drivers/ata/libata-sff.c |  111 +++++++++++++++++++----------------------------
+ 1 file changed, 46 insertions(+), 65 deletions(-)
+
+Index: b/drivers/ata/libata-sff.c
+===================================================================
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -2507,31 +2507,10 @@ static const struct ata_port_info *ata_s
+ 	return NULL;
+ }
+ 
+-/**
+- *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
+- *	@pdev: Controller to be initialized
+- *	@ppi: array of port_info, must be enough for two ports
+- *	@sht: scsi_host_template to use when registering the host
+- *	@host_priv: host private_data
+- *	@hflag: host flags
+- *
+- *	This is a helper function which can be called from a driver's
+- *	xxx_init_one() probe function if the hardware uses traditional
+- *	IDE taskfile registers and is PIO only.
+- *
+- *	ASSUMPTION:
+- *	Nobody makes a single channel controller that appears solely as
+- *	the secondary legacy port on PCI.
+- *
+- *	LOCKING:
+- *	Inherited from PCI layer (may sleep).
+- *
+- *	RETURNS:
+- *	Zero on success, negative on errno-based value on error.
+- */
+-int ata_pci_sff_init_one(struct pci_dev *pdev,
+-		 const struct ata_port_info * const *ppi,
+-		 struct scsi_host_template *sht, void *host_priv, int hflag)
++static int ata_pci_init_one(struct pci_dev *pdev,
++		const struct ata_port_info * const *ppi,
++		struct scsi_host_template *sht, void *host_priv,
++		int hflags, bool bmdma)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	const struct ata_port_info *pi;
+@@ -2553,14 +2532,22 @@ int ata_pci_sff_init_one(struct pci_dev
+ 	if (rc)
+ 		goto out;
+ 
+-	/* prepare and activate SFF host */
+-	rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
++	if (bmdma)
++		/* prepare and activate BMDMA host */
++		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
++	else
++		/* prepare and activate SFF host */
++		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
+ 	if (rc)
+ 		goto out;
+ 	host->private_data = host_priv;
+-	host->flags |= hflag;
++	host->flags |= hflags;
+ 
+-	rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
++	if (bmdma) {
++		pci_set_master(pdev);
++		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
++	} else
++		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
+ out:
+ 	if (rc == 0)
+ 		devres_remove_group(&pdev->dev, NULL);
+@@ -2569,6 +2556,35 @@ out:
+ 
+ 	return rc;
+ }
++
++/**
++ *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
++ *	@pdev: Controller to be initialized
++ *	@ppi: array of port_info, must be enough for two ports
++ *	@sht: scsi_host_template to use when registering the host
++ *	@host_priv: host private_data
++ *	@hflag: host flags
++ *
++ *	This is a helper function which can be called from a driver's
++ *	xxx_init_one() probe function if the hardware uses traditional
++ *	IDE taskfile registers and is PIO only.
++ *
++ *	ASSUMPTION:
++ *	Nobody makes a single channel controller that appears solely as
++ *	the secondary legacy port on PCI.
++ *
++ *	LOCKING:
++ *	Inherited from PCI layer (may sleep).
++ *
++ *	RETURNS:
++ *	Zero on success, negative on errno-based value on error.
++ */
++int ata_pci_sff_init_one(struct pci_dev *pdev,
++		 const struct ata_port_info * const *ppi,
++		 struct scsi_host_template *sht, void *host_priv, int hflag)
++{
++	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0);
++}
+ EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
+ 
+ #endif /* CONFIG_PCI */
+@@ -3286,42 +3302,7 @@ int ata_pci_bmdma_init_one(struct pci_de
+ 			   struct scsi_host_template *sht, void *host_priv,
+ 			   int hflags)
+ {
+-	struct device *dev = &pdev->dev;
+-	const struct ata_port_info *pi;
+-	struct ata_host *host = NULL;
+-	int rc;
+-
+-	DPRINTK("ENTER\n");
+-
+-	pi = ata_sff_find_valid_pi(ppi);
+-	if (!pi) {
+-		dev_err(&pdev->dev, "no valid port_info specified\n");
+-		return -EINVAL;
+-	}
+-
+-	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+-		return -ENOMEM;
+-
+-	rc = pcim_enable_device(pdev);
+-	if (rc)
+-		goto out;
+-
+-	/* prepare and activate BMDMA host */
+-	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+-	if (rc)
+-		goto out;
+-	host->private_data = host_priv;
+-	host->flags |= hflags;
+-
+-	pci_set_master(pdev);
+-	rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
+- out:
+-	if (rc == 0)
+-		devres_remove_group(&pdev->dev, NULL);
+-	else
+-		devres_release_group(&pdev->dev, NULL);
+-
+-	return rc;
++	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1);
+ }
+ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
+ 
