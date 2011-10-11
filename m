@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 3/3] pata_cmd64x: remove dead CMD646 rev 1 code
-Date: Tue, 11 Oct 2011 19:59:03 +0200
-Message-ID: <201110111959.04056.bzolnier@gmail.com>
+Subject: [PATCH] pata_cs5535: no need to program PIO0 timings during device init
+Date: Tue, 11 Oct 2011 20:04:05 +0200
+Message-ID: <201110112004.05251.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,82 +13,45 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: remove dead CMD646 rev 1 code
+Subject: [PATCH] pata_cs5535: no need to program PIO0 timings during device init
+
+Core libata code takes care of it nowadays.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_cmd64x.c |   33 ++-------------------------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+earlier references:
+https://lkml.org/lkml/2009/11/25/345
 
-Index: b/drivers/ata/pata_cmd64x.c
+ drivers/ata/pata_cs5535.c |   12 ------------
+ 1 file changed, 12 deletions(-)
+
+Index: b/drivers/ata/pata_cs5535.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -249,18 +249,6 @@ static void cmd648_bmdma_stop(struct ata
- 	pci_write_config_byte(pdev, dma_reg, dma_intr | dma_mask);
+--- a/drivers/ata/pata_cs5535.c
++++ b/drivers/ata/pata_cs5535.c
+@@ -67,8 +67,6 @@
+ 
+ #define CS5535_CABLE_DETECT    0x48
+ 
+-#define CS5535_BAD_PIO(timings) ( (timings&~0x80000000UL)==0x00009172 )
+-
+ /**
+  *	cs5535_cable_detect	-	detect cable type
+  *	@ap: Port to detect on
+@@ -188,16 +186,6 @@ static int cs5535_init_one(struct pci_de
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
+ 
+-	u32 timings, dummy;
+-
+-	/* Check the BIOS set the initial timing clock. If not set the
+-	   timings for PIO0 */
+-	rdmsr(ATAC_CH0D0_PIO, timings, dummy);
+-	if (CS5535_BAD_PIO(timings))
+-		wrmsr(ATAC_CH0D0_PIO, 0xF7F4F7F4UL, 0);
+-	rdmsr(ATAC_CH0D1_PIO, timings, dummy);
+-	if (CS5535_BAD_PIO(timings))
+-		wrmsr(ATAC_CH0D1_PIO, 0xF7F4F7F4UL, 0);
+ 	return ata_pci_bmdma_init_one(dev, ppi, &cs5535_sht, NULL, 0);
  }
  
--/**
-- *	cmd646r1_dma_stop	-	DMA stop callback
-- *	@qc: Command in progress
-- *
-- *	Stub for now while investigating the r1 quirk in the old driver.
-- */
--
--static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
--{
--	ata_bmdma_stop(qc);
--}
--
- static struct scsi_host_template cmd64x_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
-@@ -276,12 +264,6 @@ static struct ata_port_operations cmd64x
- 	.cable_detect	= ata_cable_40wire,
- };
- 
--static struct ata_port_operations cmd646r1_port_ops = {
--	.inherits	= &cmd64x_base_ops,
--	.bmdma_stop	= cmd646r1_bmdma_stop,
--	.cable_detect	= ata_cable_40wire,
--};
--
- static struct ata_port_operations cmd648_port_ops = {
- 	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd648_bmdma_stop,
-@@ -326,12 +308,6 @@ static int cmd64x_init_one(struct pci_de
- 			.udma_mask = ATA_UDMA2,
- 			.port_ops = &cmd64x_port_ops
- 		},
--		{	/* CMD 646 rev 1  */
--			.flags = ATA_FLAG_SLAVE_POSS,
--			.pio_mask = ATA_PIO4,
--			.mwdma_mask = ATA_MWDMA2,
--			.port_ops = &cmd646r1_port_ops
--		},
- 		{	/* CMD 648 */
- 			.flags = ATA_FLAG_SLAVE_POSS,
- 			.pio_mask = ATA_PIO4,
-@@ -374,11 +350,6 @@ static int cmd64x_init_one(struct pci_de
- 			ppi[0] = &cmd_info[2];
- 			ppi[1] = &cmd_info[2];
- 		}
--		/* Early rev with other problems ? */
--		else if (pdev->revision == 1) {
--			ppi[0] = &cmd_info[3];
--			ppi[1] = &cmd_info[3];
--		}
- 		/* revs 1,2 have no CNTRL_CH0 */
- 		if (pdev->revision < 3)
- 			cntrl_ch0_ok = 0;
-@@ -423,8 +394,8 @@ static int cmd64x_reinit_one(struct pci_
- static const struct pci_device_id cmd64x[] = {
- 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_643), 0 },
- 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_646), 1 },
--	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 4 },
--	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 5 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 3 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 4 },
- 
- 	{ },
- };
