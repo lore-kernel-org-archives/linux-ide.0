@@ -1,42 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_ali: fix "Satelite" typo
-Date: Tue, 11 Oct 2011 19:40:58 +0200
-Message-ID: <201110111940.59158.bzolnier@gmail.com>
+Subject: [PATCH] pata_artop: unify ->prereset methods
+Date: Tue, 11 Oct 2011 19:45:52 +0200
+Message-ID: <201110111945.52701.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:46351 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab1JKSZP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 14:25:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_ali: fix "Satelite" typo
+Subject: [PATCH] pata_artop: unify ->prereset methods
 
-Cosmetic fix but thanks to it pata_ali's DMI table now matches
-alim15x3's one.
+* Unify ->prereset methods for ATP850 and ATP86x[R] chipsets.
+
+* Fix ->prereset documentation while at it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
- drivers/ata/pata_ali.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+earlier references:
+https://lkml.org/lkml/2009/11/25/315
 
-Index: b/drivers/ata/pata_ali.c
+ drivers/ata/pata_artop.c |   26 +++++---------------------
+ 1 file changed, 5 insertions(+), 21 deletions(-)
+
+Index: b/drivers/ata/pata_artop.c
 ===================================================================
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -56,7 +56,7 @@ static const struct dmi_system_id cable_
- 		},
- 	},
- 	{
--		.ident = "Toshiba Satelite S1800-814",
-+		.ident = "Toshiba Satellite S1800-814",
- 		.matches = {
- 			DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
- 			DMI_MATCH(DMI_PRODUCT_NAME, "S1800-814"),
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -39,31 +39,15 @@
+ 
+ static int clock = 0;
+ 
+-static int artop6210_pre_reset(struct ata_link *link, unsigned long deadline)
+-{
+-	struct ata_port *ap = link->ap;
+-	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	const struct pci_bits artop_enable_bits[] = {
+-		{ 0x4AU, 1U, 0x02UL, 0x02UL },	/* port 0 */
+-		{ 0x4AU, 1U, 0x04UL, 0x04UL },	/* port 1 */
+-	};
+-
+-	if (!pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
+-		return -ENOENT;
+-
+-	return ata_sff_prereset(link, deadline);
+-}
+-
+ /**
+- *	artop6260_pre_reset	-	check for 40/80 pin
++ *	artop62x0_pre_reset	-	probe begin
+  *	@link: link
+  *	@deadline: deadline jiffies for the operation
+  *
+- *	The ARTOP hardware reports the cable detect bits in register 0x49.
+  *	Nothing complicated needed here.
+  */
+ 
+-static int artop6260_pre_reset(struct ata_link *link, unsigned long deadline)
++static int artop62x0_pre_reset(struct ata_link *link, unsigned long deadline)
+ {
+ 	static const struct pci_bits artop_enable_bits[] = {
+ 		{ 0x4AU, 1U, 0x02UL, 0x02UL },	/* port 0 */
+@@ -73,7 +57,7 @@ static int artop6260_pre_reset(struct at
+ 	struct ata_port *ap = link->ap;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 
+-	/* Odd numbered device ids are the units with enable bits (the -R cards) */
++	/* Odd numbered device ids are the units with enable bits. */
+ 	if ((pdev->device & 1) &&
+ 	    !pci_test_config_bits(pdev, &artop_enable_bits[ap->port_no]))
+ 		return -ENOENT;
+@@ -317,7 +301,7 @@ static struct ata_port_operations artop6
+ 	.cable_detect		= ata_cable_40wire,
+ 	.set_piomode		= artop6210_set_piomode,
+ 	.set_dmamode		= artop6210_set_dmamode,
+-	.prereset		= artop6210_pre_reset,
++	.prereset		= artop62x0_pre_reset,
+ 	.qc_defer		= artop6210_qc_defer,
+ };
+ 
+@@ -326,7 +310,7 @@ static struct ata_port_operations artop6
+ 	.cable_detect		= artop6260_cable_detect,
+ 	.set_piomode		= artop6260_set_piomode,
+ 	.set_dmamode		= artop6260_set_dmamode,
+-	.prereset		= artop6260_pre_reset,
++	.prereset		= artop62x0_pre_reset,
+ };
+ 
+ 
