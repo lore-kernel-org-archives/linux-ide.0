@@ -1,120 +1,101 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 1/3] pata_cmd64x: add cmd64x_fixup()
-Date: Tue, 11 Oct 2011 19:56:03 +0200
-Message-ID: <201110111956.03480.bzolnier@gmail.com>
+Subject: [PATCH] pata_hpt366: add hpt36x_find_mode() helper
+Date: Tue, 11 Oct 2011 19:52:31 +0200
+Message-ID: <201110111952.31615.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:65369 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755356Ab1JKSZa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2011 14:25:30 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_cmd64x: add cmd64x_fixup()
+Subject: [PATCH] pata_hpt366: add hpt36x_find_mode() helper
 
-Factor out common code from cmd64x_[re]init_one() to cmd64x_fixup().
+Factor out code for finding the register programming information
+from hpt366_set_mode() to hpt36x_find_mode().
 
-Remove stale comment and fix a minor CodingStyle issue while at it.
+This makes pata_hpt366 driver more similar to pata_{37x,3x2n} ones.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
+pata_hpt{37x,3x2n} drivers can also be made to use *set_mode()
+
 earlier references:
-https://lkml.org/lkml/2009/11/25/355
+https://lkml.org/lkml/2009/11/27/241
 
- drivers/ata/pata_cmd64x.c |   42 ++++++++++++++++++++----------------------
- 1 file changed, 20 insertions(+), 22 deletions(-)
+ drivers/ata/pata_hpt366.c |   35 +++++++++++++++++++++++++----------
+ 1 file changed, 25 insertions(+), 10 deletions(-)
 
-Index: b/drivers/ata/pata_cmd64x.c
+Index: b/drivers/ata/pata_hpt366.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -288,6 +288,22 @@ static struct ata_port_operations cmd648
- 	.cable_detect	= cmd648_cable_detect,
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -111,6 +111,28 @@ static const struct hpt_clock hpt366_25[
+ 	{	0,		0x01208585	}
  };
  
-+static void cmd64x_fixup(struct pci_dev *pdev)
++/**
++ *	hpt36x_find_mode	-	find the hpt36x timing
++ *	@ap: ATA port
++ *	@speed: transfer mode
++ *
++ *	Return the 32bit register programming information for this channel
++ *	that matches the speed provided.
++ */
++
++static u32 hpt36x_find_mode(struct ata_port *ap, int speed)
 +{
-+	u8 mrdmode;
++	struct hpt_clock *clocks = ap->host->private_data;
 +
-+	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
-+	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
-+	mrdmode &= ~0x30;	/* IRQ set up */
-+	mrdmode |= 0x02;	/* Memory read line enable */
-+	pci_write_config_byte(pdev, MRDMODE, mrdmode);
-+
-+	/* PPC specific fixup copied from old driver */
-+#ifdef CONFIG_PPC
-+	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
-+#endif
++	while (clocks->xfer_mode) {
++		if (clocks->xfer_mode == speed)
++			return clocks->timing;
++		clocks++;
++	}
++	BUG();
++	return 0xffffffffU;	/* silence compiler warning */
 +}
 +
- static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ static const char * const bad_ata33[] = {
+ 	"Maxtor 92720U8", "Maxtor 92040U6", "Maxtor 91360U4", "Maxtor 91020U3",
+ 	"Maxtor 90845U3", "Maxtor 90650U2",
+@@ -210,10 +232,9 @@ static int hpt36x_cable_detect(struct at
+ static void hpt366_set_mode(struct ata_port *ap, struct ata_device *adev,
+ 			    u8 mode)
  {
- 	static const struct ata_port_info cmd_info[6] = {
-@@ -336,7 +352,7 @@ static int cmd64x_init_one(struct pci_de
- 		&cmd_info[id->driver_data],
- 		NULL
- 	};
--	u8 mrdmode, reg;
-+	u8 reg;
- 	int rc;
- 	struct pci_dev *bridge = pdev->bus->self;
- 	/* mobility split bridges don't report enabled ports correctly */
-@@ -368,11 +384,7 @@ static int cmd64x_init_one(struct pci_de
- 			cntrl_ch0_ok = 0;
- 	}
+-	struct hpt_clock *clocks = ap->host->private_data;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	u32 addr = 0x40 + 4 * adev->devno;
+-	u32 mask, reg;
++	u32 mask, reg, t;
  
--	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
--	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
--	mrdmode &= ~ 0x30;	/* IRQ set up */
--	mrdmode |= 0x02;	/* Memory read line enable */
--	pci_write_config_byte(pdev, MRDMODE, mrdmode);
-+	cmd64x_fixup(pdev);
+ 	/* determine timing mask and find matching clock entry */
+ 	if (mode < XFER_MW_DMA_0)
+@@ -223,13 +244,7 @@ static void hpt366_set_mode(struct ata_p
+ 	else
+ 		mask = 0x30070000;
  
- 	/* check for enabled ports */
- 	pci_read_config_byte(pdev, CNTRL, &reg);
-@@ -388,13 +400,6 @@ static int cmd64x_init_one(struct pci_de
- 		ppi[1] = &ata_dummy_port_info;
- 	}
+-	while (clocks->xfer_mode) {
+-		if (clocks->xfer_mode == mode)
+-			break;
+-		clocks++;
+-	}
+-	if (!clocks->xfer_mode)
+-		BUG();
++	t = hpt36x_find_mode(ap, mode);
  
--	/* Force PIO 0 here.. */
--
--	/* PPC specific fixup copied from old driver */
--#ifdef CONFIG_PPC
--	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
--#endif
--
- 	return ata_pci_bmdma_init_one(pdev, ppi, &cmd64x_sht, NULL, 0);
+ 	/*
+ 	 * Combine new mode bits with old config bits and disable
+@@ -237,7 +252,7 @@ static void hpt366_set_mode(struct ata_p
+ 	 * problems handling I/O errors later.
+ 	 */
+ 	pci_read_config_dword(pdev, addr, &reg);
+-	reg = ((reg & ~mask) | (clocks->timing & mask)) & ~0xc0000000;
++	reg = ((reg & ~mask) | (t & mask)) & ~0xc0000000;
+ 	pci_write_config_dword(pdev, addr, reg);
  }
  
-@@ -402,21 +407,14 @@ static int cmd64x_init_one(struct pci_de
- static int cmd64x_reinit_one(struct pci_dev *pdev)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
--	u8 mrdmode;
- 	int rc;
- 
- 	rc = ata_pci_device_do_resume(pdev);
- 	if (rc)
- 		return rc;
- 
--	pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 64);
--	pci_read_config_byte(pdev, MRDMODE, &mrdmode);
--	mrdmode &= ~ 0x30;	/* IRQ set up */
--	mrdmode |= 0x02;	/* Memory read line enable */
--	pci_write_config_byte(pdev, MRDMODE, mrdmode);
--#ifdef CONFIG_PPC
--	pci_write_config_byte(pdev, UDIDETCR0, 0xF0);
--#endif
-+	cmd64x_fixup(pdev);
-+
- 	ata_host_resume(host);
- 	return 0;
- }
