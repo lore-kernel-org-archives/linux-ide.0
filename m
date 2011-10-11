@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_scc: add proper cable detection method
-Date: Tue, 11 Oct 2011 20:07:24 +0200
-Message-ID: <201110112007.24530.bzolnier@gmail.com>
+Subject: [PATCH] pata_cs5520: remove incorrect warning message
+Date: Tue, 11 Oct 2011 20:00:44 +0200
+Message-ID: <201110112000.44960.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,48 +13,26 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_scc: add proper cable detection method
-
-Use standard ata_cable_80wire() method for the cable detection,
-as a bonus this allows us to use the default ->prereset method.
+Subject: [PATCH] pata_cs5520: remove incorrect warning message
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-earlier references:
-https://lkml.org/lkml/2009/11/25/373
+ drivers/ata/pata_cs5520.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
- drivers/ata/pata_scc.c |   14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
-
-Index: b/drivers/ata/pata_scc.c
+Index: b/drivers/ata/pata_cs5520.c
 ===================================================================
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -827,18 +827,6 @@ static unsigned int scc_data_xfer (struc
- }
+--- a/drivers/ata/pata_cs5520.c
++++ b/drivers/ata/pata_cs5520.c
+@@ -148,10 +148,8 @@ static int __devinit cs5520_init_one(str
+ 	if (pcicfg & 2)
+ 		ppi[1] = &pi;
  
- /**
-- *	scc_pata_prereset - prepare for reset
-- *	@ap: ATA port to be reset
-- *	@deadline: deadline jiffies for the operation
-- */
--
--static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
--{
--	link->ap->cbl = ATA_CBL_PATA80;
--	return ata_sff_prereset(link, deadline);
--}
--
--/**
-  *	scc_postreset - standard postreset callback
-  *	@ap: the target ata_port
-  *	@classes: classes of attached devices
-@@ -947,7 +935,7 @@ static struct ata_port_operations scc_pa
- 	.bmdma_status		= scc_bmdma_status,
- 	.sff_data_xfer		= scc_data_xfer,
+-	if ((pcicfg & 0x40) == 0) {
+-		dev_warn(&pdev->dev, "DMA mode disabled. Enabling.\n");
++	if ((pcicfg & 0x40) == 0)
+ 		pci_write_config_byte(pdev, 0x60, pcicfg | 0x40);
+-	}
  
--	.prereset		= scc_pata_prereset,
-+	.cable_detect		= ata_cable_80wire,
- 	.softreset		= scc_softreset,
- 	.postreset		= scc_postreset,
+ 	pi.mwdma_mask = id->driver_data;
  
