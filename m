@@ -1,67 +1,106 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] libata: Allow SOFT_RESET for Sil3726
-Date: Wed, 12 Oct 2011 10:03:11 -0400
-Message-ID: <4E959E1F.20001@teksavvy.com>
-References: <CAMHSBOWbaLjbWZ7PNwTa-AsZRAzrOGLgSip=q2=u+qVQW4u3mQ@mail.gmail.com> <1317881037-11831-1-git-send-email-gwendal@google.com> <20111006080314.GB373@dhcp-172-17-108-109.mtv.corp.google.com> <CAMHSBOXhmhaRQgA104U+yajDLwyjVAeMqYUvUZFvZNroL0urug@mail.gmail.com> <20111006221026.GA7085@google.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] IDE: Don't powerdown Compaq Triflex IDE device on suspend
+Date: Wed, 12 Oct 2011 16:31:51 +0200
+Message-ID: <201110121631.52099.bzolnier@gmail.com>
+References: <alpine.DEB.2.00.1105152228530.12411@artax.karlin.mff.cuni.cz> <201110111856.05491.bzolnier@gmail.com> <20111011.150225.289373201920187790.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:9138 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750936Ab1JLOMi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 10:12:38 -0400
-In-Reply-To: <20111006221026.GA7085@google.com>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:47912 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016Ab1JLOij (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 10:38:39 -0400
+Received: by eye27 with SMTP id 27so809970eye.19
+        for <linux-ide@vger.kernel.org>; Wed, 12 Oct 2011 07:38:38 -0700 (PDT)
+In-Reply-To: <20111011.150225.289373201920187790.davem@davemloft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Gwendal Grignou <gwendal@google.com>, mihrcke@gmail.com, linux-ide@vger.kernel.org, derry@high-rely.com
+To: David Miller <davem@davemloft.net>
+Cc: mikulas@artax.karlin.mff.cuni.cz, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-On 11-10-06 06:10 PM, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Oct 06, 2011 at 01:44:27PM -0700, Gwendal Grignou wrote:
->> Yes. Until the device sends the async D2H Reg FIS indicating the drive
->> spun up, the MPM does not accept the SoftRest FIS from the controller.
->> On most controller, that fine, the controller state machine keeps
->> retrying, but on Sil3132 it stops after a second or so and send an
->> error back to the driver.
-> 
-> I see.
-> 
->>> So, now libata waits for full reset period before proceeding to reset
->>> PMP.  Hmmm... yeah, it makes sense.  Unfortunately, the only way to
->>> achieve spinup wait in this case is waiting blindly and libata's reset
->>> timeouts are configured to accomodate drive spinup times.  PMP SCR
->>> failure kinda destroys those blind wait periods.
->>
->> Yes, I totally agree this blind wait is not clean. Normally we would
->> wait until an event occurs [async FIS] and have the timeout just for
->> the error case.
->> Here we wait [10s] because we think the device is spinning up.
-> 
-> Yes but that's exactly how the reset timeouts are set up.  They're
-> supposed to provide reasonable spinup timeouts when the proper wait
-> mechanisms can't do so and here it becomes a problem because the blind
-> timeouts are circumvented by SCR read failure handling.
-> 
->>> I'm not too sure about ATA_LFLAG_WAIT_SRST.  I don't think making the
->>> new behavior default would hurt.
->>
->> I see your point. But if there is no PMP, Sil3132 is behaving, there
->> is no need of this logic.
-> 
-> Yes, sure, the behavior is necessary iff PMP is attached as that's
-> only time SCR read failure can occur anyway and I think it would
-> generally be a good idea to always enforce the blind timeouts if PMP
-> is attached, so no need for ATA_LFLAG_WAIT_SRST.
+David Miller wrote:
 
-I wonder if this same logic is more generally applicable for PMP
-rather than sil3132 specific?  What I've read thus far in this thread
-sounds very much like the issues I see here with PMPs not working
-on JMB and Marvell controllers (where they USED to work fine).
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Date: Tue, 11 Oct 2011 18:56:05 +0200
+> 
+> > Mikulas Patocka wrote:
+> > 
+> >> Don't powerdown Compaq Triflex IDE device on suspend
+> >> 
+> >> This fixes APM suspend on Compaq Armada 7400.
+> >> APM BIOS doesn't suspend if IDE is powered down when suspending.
+> >> The Triflex controller is found only on old Compaq boards,
+> >> so this patch will hopefully have no side effects.
+> >> 
+> >> This patch fixes a suspend regression introduced in 
+> >> feb22b7f8e62b1b987a3a1dbad95af767a1df832
+> >> 
+> >> Signed-off-by: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+> > 
+> > Reviewed-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > 
+> > This patch is still valid for 3.1.  Dave, ping?
+> 
+> Feedback was given on this patch, and changes were requested.  The patch
+> was never fixed up and resubmitted by the author:
+> 
+> 	http://patchwork.ozlabs.org/patch/95665/
 
-Gwendal, have you got a version of that patch which applies the same
-change globally rather than only for sil3132?  I'd like to try it out here.
+Here is updated patch:
 
-Thanks
+From:	Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+Subject: [PATCH] IDE: Don't powerdown Compaq Triflex IDE device on suspend
+
+Don't powerdown Compaq Triflex IDE device on suspend
+
+This fixes APM suspend on Compaq Armada 7400.
+APM BIOS doesn't suspend if IDE is powered down when suspending.
+The Triflex controller is found only on old Compaq boards,
+so this patch will hopefully have no side effects.
+
+This patch fixes a suspend regression introduced in 
+feb22b7f8e62b1b987a3a1dbad95af767a1df832 ("ide: add proper PCI PM
+support (v2)").
+
+Signed-off-by: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+[bart: add commit's summary in parens]
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/triflex.c |   16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+Index: linux-2.6.39-rc7-fast/drivers/ide/triflex.c
+===================================================================
+--- linux-2.6.39-rc7-fast.orig/drivers/ide/triflex.c	2011-05-09 21:05:37.000000000 +0200
++++ linux-2.6.39-rc7-fast/drivers/ide/triflex.c	2011-05-15 14:06:14.000000000 +0200
+@@ -113,12 +113,26 @@ static const struct pci_device_id trifle
+ };
+ MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
+ 
++#ifdef CONFIG_PM
++static int triflex_ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
++{
++	/*
++	 * We must not disable or powerdown the device.
++	 * APM bios refuses to suspend if IDE is not accessible.
++	 */
++	pci_save_state(dev);
++	return 0;
++}
++#else
++#define triflex_ide_pci_suspend NULL
++#endif
++
+ static struct pci_driver triflex_pci_driver = {
+ 	.name		= "TRIFLEX_IDE",
+ 	.id_table	= triflex_pci_tbl,
+ 	.probe		= triflex_init_one,
+ 	.remove		= ide_pci_remove,
+-	.suspend	= ide_pci_suspend,
++	.suspend	= triflex_ide_pci_suspend,
+ 	.resume		= ide_pci_resume,
+ };
+ 
+
