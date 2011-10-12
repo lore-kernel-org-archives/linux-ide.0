@@ -1,62 +1,54 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: ide_port_wait_ready() fix
-Date: Wed, 12 Oct 2011 16:59:55 +0200
-Message-ID: <201110121659.55961.bzolnier@gmail.com>
-References: <201110111913.18492.bzolnier@gmail.com> <20111011.151739.917285592017305911.davem@davemloft.net>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_arasan_cf: remove bogus to_platform_device() calls
+Date: Wed, 12 Oct 2011 19:09:09 +0400
+Message-ID: <201110121909.09664.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111011.151739.917285592017305911.davem@davemloft.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:49233 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753126Ab1JLPKf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 11:10:35 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com, viresh.kumar@st.com
 
-David Miller wrote:
+The suspend()/resume() methods already get the right 'struct device' to get the
+driver data from -- there's no need to get to the 'struct platform_device' that
+contains that 'struct device' just to call dev_get_drvdata()...
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Tue, 11 Oct 2011 19:13:18 +0200
-> 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] ide: ide_port_wait_ready() fix
-> > 
-> > Fix for commit a20b2a4 ("ide: skip probe if there are no devices on
-> > the port (v2)").  We must check for slave device before failing.
-> > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> This will mishandle the case where there is no slave in the device
-> list.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-I don't see it:
+---
+This patch is against the recent Linus' tree.
 
-@ -598,7 +598,7 @@ static int ide_port_wait_ready(ide_hwif_
+ drivers/ata/pata_arasan_cf.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_arasan_cf.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_arasan_cf.c
++++ linux-2.6/drivers/ata/pata_arasan_cf.c
+@@ -922,8 +922,7 @@ static int __devexit arasan_cf_remove(st
+ #ifdef CONFIG_PM
+ static int arasan_cf_suspend(struct device *dev)
  {
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
- 	ide_drive_t *drive;
--	int i, rc;
-+	int i, rc, prev_rc = 0;
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
  
- 	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
+ 	if (acdev->dma_chan) {
+@@ -937,8 +936,7 @@ static int arasan_cf_suspend(struct devi
  
-@@ -623,8 +623,10 @@ static int ide_port_wait_ready(ide_hwif_
- 			tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
- 			mdelay(2);
- 			rc = ide_wait_not_busy(hwif, 35000);
--			if (rc)
-+			if (prev_rc && rc)
- 				goto out;
-+			prev_rc = rc;
-+			rc = 0;
- 		} else
- 			printk(KERN_DEBUG "%s: ide_wait_not_busy() skipped\n",
- 					  drive->name);
-
-If there is no slave device but there is a master device the code falls-through
-and returns a success.
-
-The patch fixes regression introduced in commit a20b2a4 as some esoteric
-setups return ide_wait_not_busy() -ENODEV error on master device while there
-is slave device present in the system.
+ static int arasan_cf_resume(struct device *dev)
+ {
+-	struct platform_device *pdev = to_platform_device(dev);
+-	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
+ 
+ 	cf_init(acdev);
