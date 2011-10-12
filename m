@@ -1,115 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 3/3] pata_cmd64x: remove dead CMD646 rev 1 code
-Date: Wed, 12 Oct 2011 17:22:50 +0200
-Message-ID: <201110121722.50358.bzolnier@gmail.com>
-References: <201110111959.04056.bzolnier@gmail.com> <20111011205803.0c696a21@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_scc: add proper cable detection method
+Date: Wed, 12 Oct 2011 17:16:37 +0200
+Message-ID: <201110121716.37990.bzolnier@gmail.com>
+References: <201110112007.24530.bzolnier@gmail.com> <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111011205803.0c696a21@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63883 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302Ab1JLP2o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 11:28:44 -0400
+In-Reply-To: <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 
 Alan Cox wrote:
 
-> On Tue, 11 Oct 2011 19:59:03 +0200
+> On Tue, 11 Oct 2011 20:07:24 +0200
 > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
 > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] pata_cmd64x: remove dead CMD646 rev 1 code
+> > Subject: [PATCH] pata_scc: add proper cable detection method
 > > 
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > Use standard ata_cable_80wire() method for the cable detection,
+> > as a bonus this allows us to use the default ->prereset method.
 > 
-> You forgot to document why it is dead and why it should be removed
+> What documentation have you got that confirms that the hardcoding is not
+> needed. It goes back to the original code and I see nothing saying that
+> the device has standard PC style cable detect.
+
+The driver predates standard cable detect routines and open-codes its
+own one.  There should be no functionality changes caused by this patch.
+
+Commit a619f981b ("libata: PATA driver for Celleb") is from Jan 2007
+while ata_cable_80wire() was added by commit be0d18d ("libata: cable
+detection fixes") in Mar 2007.
+
+> You should also I think cc the Toshiba maintainers
+
+added to cc:.
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] pata_cmd64x: remove dead CMD646 rev 1 code
+Subject: [PATCH] pata_scc: add proper cable detection method
 
-cmd646r1_bmdma_stop() just calls the standard ata_bmdma_stop()
-helper and it has been the case since the driver introduction
-by commit 669a5db ("[libata] Add a bunch of PATA drivers.") in
-Aug 2006.
+Use standard ata_cable_80wire() method for the cable detection,
+as a bonus this allows us to use the default ->prereset method.
 
+Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-v2: updated patch description
+earlier references:
+https://lkml.org/lkml/2009/11/25/373
 
- drivers/ata/pata_cmd64x.c |   33 ++-------------------------------
- 1 file changed, 2 insertions(+), 31 deletions(-)
+ drivers/ata/pata_scc.c |   14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-Index: b/drivers/ata/pata_cmd64x.c
+Index: b/drivers/ata/pata_scc.c
 ===================================================================
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -249,18 +249,6 @@ static void cmd648_bmdma_stop(struct ata
- 	pci_write_config_byte(pdev, dma_reg, dma_intr | dma_mask);
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -827,18 +827,6 @@ static unsigned int scc_data_xfer (struc
  }
  
--/**
-- *	cmd646r1_dma_stop	-	DMA stop callback
-- *	@qc: Command in progress
-- *
-- *	Stub for now while investigating the r1 quirk in the old driver.
+ /**
+- *	scc_pata_prereset - prepare for reset
+- *	@ap: ATA port to be reset
+- *	@deadline: deadline jiffies for the operation
 - */
 -
--static void cmd646r1_bmdma_stop(struct ata_queued_cmd *qc)
+-static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
 -{
--	ata_bmdma_stop(qc);
+-	link->ap->cbl = ATA_CBL_PATA80;
+-	return ata_sff_prereset(link, deadline);
 -}
 -
- static struct scsi_host_template cmd64x_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- };
-@@ -276,12 +264,6 @@ static struct ata_port_operations cmd64x
- 	.cable_detect	= ata_cable_40wire,
- };
+-/**
+  *	scc_postreset - standard postreset callback
+  *	@ap: the target ata_port
+  *	@classes: classes of attached devices
+@@ -947,7 +935,7 @@ static struct ata_port_operations scc_pa
+ 	.bmdma_status		= scc_bmdma_status,
+ 	.sff_data_xfer		= scc_data_xfer,
  
--static struct ata_port_operations cmd646r1_port_ops = {
--	.inherits	= &cmd64x_base_ops,
--	.bmdma_stop	= cmd646r1_bmdma_stop,
--	.cable_detect	= ata_cable_40wire,
--};
--
- static struct ata_port_operations cmd648_port_ops = {
- 	.inherits	= &cmd64x_base_ops,
- 	.bmdma_stop	= cmd648_bmdma_stop,
-@@ -326,12 +308,6 @@ static int cmd64x_init_one(struct pci_de
- 			.udma_mask = ATA_UDMA2,
- 			.port_ops = &cmd64x_port_ops
- 		},
--		{	/* CMD 646 rev 1  */
--			.flags = ATA_FLAG_SLAVE_POSS,
--			.pio_mask = ATA_PIO4,
--			.mwdma_mask = ATA_MWDMA2,
--			.port_ops = &cmd646r1_port_ops
--		},
- 		{	/* CMD 648 */
- 			.flags = ATA_FLAG_SLAVE_POSS,
- 			.pio_mask = ATA_PIO4,
-@@ -374,11 +350,6 @@ static int cmd64x_init_one(struct pci_de
- 			ppi[0] = &cmd_info[2];
- 			ppi[1] = &cmd_info[2];
- 		}
--		/* Early rev with other problems ? */
--		else if (pdev->revision == 1) {
--			ppi[0] = &cmd_info[3];
--			ppi[1] = &cmd_info[3];
--		}
- 		/* revs 1,2 have no CNTRL_CH0 */
- 		if (pdev->revision < 3)
- 			cntrl_ch0_ok = 0;
-@@ -423,8 +394,8 @@ static int cmd64x_reinit_one(struct pci_
- static const struct pci_device_id cmd64x[] = {
- 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_643), 0 },
- 	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_646), 1 },
--	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 4 },
--	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 5 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_648), 3 },
-+	{ PCI_VDEVICE(CMD, PCI_DEVICE_ID_CMD_649), 4 },
+-	.prereset		= scc_pata_prereset,
++	.cable_detect		= ata_cable_80wire,
+ 	.softreset		= scc_softreset,
+ 	.postreset		= scc_postreset,
  
- 	{ },
- };
