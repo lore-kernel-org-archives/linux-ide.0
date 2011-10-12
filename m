@@ -1,68 +1,33 @@
-From: "Dan Pereira" <danp_48@yahoo.com>
-Subject: Have You Send this Yet!
-Date: Tue, 11 Oct 2011 08:20:46 -0700 (PDT)
-Message-ID: <201110111520.p9BFKkvj042673@mail3.spagack2.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] piix: ICH7 MWDMA1 errata
+Date: Wed, 12 Oct 2011 14:16:39 +0400
+Message-ID: <4E956907.1090908@mvista.com>
+References: <201110111924.55510.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail3.spagack2.com ([74.122.159.222]:56937 "EHLO
-	mail3.spagack2.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751727Ab1JLE43 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 00:56:29 -0400
-Received: from mail3.spagack2.com (localhost.mail3.spagack2.com [127.0.0.1])
-	by mail3.spagack2.com (8.13.8/8.12.7) with ESMTP id p9BFKlL5042684
-	for <linux-ide@vger.kernel.org>; Tue, 11 Oct 2011 08:20:47 -0700 (PDT)
-	(envelope-from u789mobs@reliablecontact.com)
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:56991 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751804Ab1JLKRc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 06:17:32 -0400
+In-Reply-To: <201110111924.55510.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Hello.
 
+On 11-10-2011 21:24, Bartlomiej Zolnierkiewicz wrote:
 
-Hi http://forums.penny-arcade.com,
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Subject: [PATCH] piix: ICH7 MWDMA1 errata
 
+> Based on libata commit c611bed7.
 
-Discover how average people who have never made a cent in the past
-Are now making $1,000+ every month,=20
-With the Potential of making $50,000 a month
-Just "Plug In"... to Your
-Own Fully Automated=20
-  Turn Key...Global Marketing $ystem
-Receive $500-$3,500 Monthly or MORE
-Not MLM...and
-No Selling...
-No Cold Phone Calling.=20
-Complete plug-in-system!
+    Could you quote the commit's summary too?
 
-Check-it-Out!
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
 
-
-http://trckrs.com/48184/m5
-
-
-It=92s surprisingly cool!
-
-Dan and Noel
-
-
-
-His was a Com.Merical adv.Sent to you by:
-Dan Pereira, 11383 Golf Road, Turlock, CA 95380
-In compliance with Federal law, should you choose to=20
-Un.Subscribe from our network, you may do so using the
-Un.Subscribe instruction found below.  We are fully compliant with CAN-=
-SPAM Act of 2005-Please use the Un.Subscribe link prvided:
-
-
-
-
-
-
-
-
-To remove this email address from further mailings click on  the link b=
-elow  while connected to the internet.
-http://www.reliablecontact.com/cgi-bin/maxsponder/maxuseradmin.cgi?func=
-tion=3Dmanualdelete3&email=3Dlinux-ide*vger.kernel.org&un=3Drichardpere=
-ira
+WBR, Sergei
