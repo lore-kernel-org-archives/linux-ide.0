@@ -1,94 +1,25 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pata_scc: add proper cable detection method
-Date: Wed, 12 Oct 2011 17:16:37 +0200
-Message-ID: <201110121716.37990.bzolnier@gmail.com>
-References: <201110112007.24530.bzolnier@gmail.com> <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_cs5520: remove incorrect warning message
+Date: Wed, 12 Oct 2011 18:50:07 +0100
+Message-ID: <20111012185007.6eb594b0@lxorguk.ukuu.org.uk>
+References: <201110112000.44960.bzolnier@gmail.com>
+	<20111011205616.15d0b3b3@lxorguk.ukuu.org.uk>
+	<201110121727.46778.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63883 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302Ab1JLP2o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Oct 2011 11:28:44 -0400
-In-Reply-To: <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201110121727.46778.bzolnier@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kou Ishizaki <kou.ishizaki@toshiba.co.jp>, Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 
-Alan Cox wrote:
+O> This driver dooen't even use DMA mode so warning about forcing the setting
+> may be puzzling.  In addition we do the same thing cs5520_reinit_one()
+> but without warning the user this time.  Thus removal of the warning makes
+> it easier for *_reinit_one() replacement by ->init_host method later
+> (patch is ready for this).
 
-> On Tue, 11 Oct 2011 20:07:24 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] pata_scc: add proper cable detection method
-> > 
-> > Use standard ata_cable_80wire() method for the cable detection,
-> > as a bonus this allows us to use the default ->prereset method.
-> 
-> What documentation have you got that confirms that the hardcoding is not
-> needed. It goes back to the original code and I see nothing saying that
-> the device has standard PC style cable detect.
-
-The driver predates standard cable detect routines and open-codes its
-own one.  There should be no functionality changes caused by this patch.
-
-Commit a619f981b ("libata: PATA driver for Celleb") is from Jan 2007
-while ata_cable_80wire() was added by commit be0d18d ("libata: cable
-detection fixes") in Mar 2007.
-
-> You should also I think cc the Toshiba maintainers
-
-added to cc:.
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_scc: add proper cable detection method
-
-Use standard ata_cable_80wire() method for the cable detection,
-as a bonus this allows us to use the default ->prereset method.
-
-Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-earlier references:
-https://lkml.org/lkml/2009/11/25/373
-
- drivers/ata/pata_scc.c |   14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
-
-Index: b/drivers/ata/pata_scc.c
-===================================================================
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -827,18 +827,6 @@ static unsigned int scc_data_xfer (struc
- }
- 
- /**
-- *	scc_pata_prereset - prepare for reset
-- *	@ap: ATA port to be reset
-- *	@deadline: deadline jiffies for the operation
-- */
--
--static int scc_pata_prereset(struct ata_link *link, unsigned long deadline)
--{
--	link->ap->cbl = ATA_CBL_PATA80;
--	return ata_sff_prereset(link, deadline);
--}
--
--/**
-  *	scc_postreset - standard postreset callback
-  *	@ap: the target ata_port
-  *	@classes: classes of attached devices
-@@ -947,7 +935,7 @@ static struct ata_port_operations scc_pa
- 	.bmdma_status		= scc_bmdma_status,
- 	.sff_data_xfer		= scc_data_xfer,
- 
--	.prereset		= scc_pata_prereset,
-+	.cable_detect		= ata_cable_80wire,
- 	.softreset		= scc_softreset,
- 	.postreset		= scc_postreset,
- 
+The re-init case won't find it mis-set. And the CS5520 is not a normal
+controller even for DMA so I'd prefer it left as is.
