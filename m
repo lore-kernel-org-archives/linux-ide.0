@@ -1,31 +1,31 @@
 From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] piix: add new short cable IDs
-Date: Thu, 13 Oct 2011 16:55:56 +0100
-Message-ID: <20111013165556.0454731d@lxorguk.ukuu.org.uk>
-References: <201110131520.15650.bzolnier@gmail.com>
+Subject: Re: [PATCH] libata: ata_timing_compute() fixup
+Date: Thu, 13 Oct 2011 16:56:41 +0100
+Message-ID: <20111013165641.0a151cb0@lxorguk.ukuu.org.uk>
+References: <201110131517.33197.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55813 "EHLO
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:55823 "EHLO
 	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753213Ab1JMPzu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 11:55:50 -0400
-In-Reply-To: <201110131520.15650.bzolnier@gmail.com>
+	with ESMTP id S1754759Ab1JMP44 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 11:56:56 -0400
+In-Reply-To: <201110131517.33197.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 13 Oct 2011 15:20:15 +0200
+On Thu, 13 Oct 2011 15:17:32 +0200
 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] piix: add new short cable IDs
+> Subject: [PATCH] libata: ata_timing_compute() fixup
 > 
-> Based on commits 6034734 ("ata_piix: Add new laptop short
-> cable IDs") and 760cdb7 ("ata_piix: Add new short cable ID")
-> for ata_piix.
+> XFER_SW_DMA_0 mode should be excluded from the extended cycle timing
+> computations.
 
-On unknown XYZ is hardly maintainable data
+We don't support SWDMA but yes that is a bug
 
+Acked-by: Alan Cox <alan@linux.intel.com>
