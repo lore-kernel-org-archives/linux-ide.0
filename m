@@ -1,30 +1,184 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_pcmcia/ide-cs: move IDs table to
- <linux/pata_pcmcia_ids.h>
-Date: Thu, 13 Oct 2011 13:55:12 +0100
-Message-ID: <20111013135512.42719bcf@lxorguk.ukuu.org.uk>
-References: <201110131312.14498.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] pata_via: add via_fixup()
+Date: Thu, 13 Oct 2011 14:54:48 +0200
+Message-ID: <201110131454.48888.bzolnier@gmail.com>
+References: <201110131310.51896.bzolnier@gmail.com> <4E96D81F.8000400@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201110131312.14498.bzolnier@gmail.com>
+In-Reply-To: <4E96D81F.8000400@mvista.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 13 Oct 2011 13:12:14 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] pata_pcmcia/ide-cs: move IDs table to <linux/pata_pcmcia_ids.h>
+Hi,
+
+Sergei Shtylyov wrote:
+
+> Hello.
 > 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/ata/pata_pcmcia.c       |   74 +---------------------------------------
->  drivers/ide/ide-cs.c            |   74 +---------------------------------------
->  include/linux/pata_pcmcia_ids.h |   70 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 75 insertions(+), 143 deletions(-)
+> On 13-10-2011 15:10, Bartlomiej Zolnierkiewicz wrote:
+> 
+> > From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > Subject: [PATCH] pata_via: add via_fixup()
+> 
+> > Factor out common code from via_[re]init_one() to via_fixup().
+> 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > ---
+> > earlier references:
+> > https://lkml.org/lkml/2009/11/25/381
+> 
+> >   drivers/ata/pata_via.c |   49 +++++++++++++++++++++++--------------------------
+> >   1 file changed, 23 insertions(+), 26 deletions(-)
+> 
+> > Index: b/drivers/ata/pata_via.c
+> > ===================================================================
+> > --- a/drivers/ata/pata_via.c
+> > +++ b/drivers/ata/pata_via.c
+> > @@ -491,6 +491,27 @@ static void via_config_fifo(struct pci_d
+> >   	}
+> >   }
+> >
+> > +static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
+> > +{
+> > +	u32 timing;
+> > +
+> > +	/* Initialise the FIFO for the enabled channels. */
+> > +	via_config_fifo(pdev, config->flags);
+> > +
+> > +	if (config->udma_mask == ATA_UDMA4) {
+> > +		/* The 66 MHz devices require we enable the clock */
+> > +		pci_read_config_dword(pdev, 0x50,&timing);
+> > +		timing |= 0x80008;
+> > +		pci_write_config_dword(pdev, 0x50, timing);
+> > +	}
+> 
+>     Hm, via_init_one() doesn't do this now... but used to do this before your 
+> patch:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=460f5318460a9a3b2562d8055b9fb1c60b768e1f
+> 
+>     Was that patch wrong or am I misundertanding?
 
-Acked-by: Alan Cox <alan@linux.intel.com>
+It seems that the previous patch was wrong and I haven't noticed it earlier
+because both patches were in my patch queue.
+
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH v2] pata_via: add via_fixup()
+
+* Fix via_init_one() to enable clock on 66 MHz devices
+  (bug introduced in commit 460f531 "pata_via: store UDMA masks
+   in via_isa_bridges table").
+
+* Factor out common code from via_[re]init_one() to via_fixup().
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+v2: updated patch description
+
+earlier references:
+https://lkml.org/lkml/2009/11/25/381
+
+ drivers/ata/pata_via.c |   49 +++++++++++++++++++++++--------------------------
+ 1 file changed, 23 insertions(+), 26 deletions(-)
+
+Index: b/drivers/ata/pata_via.c
+===================================================================
+--- a/drivers/ata/pata_via.c
++++ b/drivers/ata/pata_via.c
+@@ -491,6 +491,27 @@ static void via_config_fifo(struct pci_d
+ 	}
+ }
+ 
++static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
++{
++	u32 timing;
++
++	/* Initialise the FIFO for the enabled channels. */
++	via_config_fifo(pdev, config->flags);
++
++	if (config->udma_mask == ATA_UDMA4) {
++		/* The 66 MHz devices require we enable the clock */
++		pci_read_config_dword(pdev, 0x50, &timing);
++		timing |= 0x80008;
++		pci_write_config_dword(pdev, 0x50, timing);
++	}
++	if (config->flags & VIA_BAD_CLK66) {
++		/* Disable the 66MHz clock on problem devices */
++		pci_read_config_dword(pdev, 0x50, &timing);
++		timing &= ~0x80008;
++		pci_write_config_dword(pdev, 0x50, timing);
++	}
++}
++
+ /**
+  *	via_init_one		-	discovery callback
+  *	@pdev: PCI device
+@@ -553,7 +574,6 @@ static int via_init_one(struct pci_dev *
+ 	const struct via_isa_bridge *config;
+ 	static int printed_version;
+ 	u8 enable;
+-	u32 timing;
+ 	unsigned long flags = id->driver_data;
+ 	int rc;
+ 
+@@ -593,9 +613,6 @@ static int via_init_one(struct pci_dev *
+ 			return -ENODEV;
+ 	}
+ 
+-	/* Initialise the FIFO for the enabled channels. */
+-	via_config_fifo(pdev, config->flags);
+-
+ 	/* Clock set up */
+ 	switch (config->udma_mask) {
+ 	case 0x00:
+@@ -621,12 +638,7 @@ static int via_init_one(struct pci_dev *
+ 		return -ENODEV;
+  	}
+ 
+-	if (config->flags & VIA_BAD_CLK66) {
+-		/* Disable the 66MHz clock on problem devices */
+-		pci_read_config_dword(pdev, 0x50, &timing);
+-		timing &= ~0x80008;
+-		pci_write_config_dword(pdev, 0x50, timing);
+-	}
++	via_fixup(pdev, config);
+ 
+ 	/* We have established the device type, now fire it up */
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &via_sht, (void *)config, 0);
+@@ -645,29 +657,14 @@ static int via_init_one(struct pci_dev *
+ 
+ static int via_reinit_one(struct pci_dev *pdev)
+ {
+-	u32 timing;
+ 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
+-	const struct via_isa_bridge *config = host->private_data;
+ 	int rc;
+ 
+ 	rc = ata_pci_device_do_resume(pdev);
+ 	if (rc)
+ 		return rc;
+ 
+-	via_config_fifo(pdev, config->flags);
+-
+-	if (config->udma_mask == ATA_UDMA4) {
+-		/* The 66 MHz devices require we enable the clock */
+-		pci_read_config_dword(pdev, 0x50, &timing);
+-		timing |= 0x80008;
+-		pci_write_config_dword(pdev, 0x50, timing);
+-	}
+-	if (config->flags & VIA_BAD_CLK66) {
+-		/* Disable the 66MHz clock on problem devices */
+-		pci_read_config_dword(pdev, 0x50, &timing);
+-		timing &= ~0x80008;
+-		pci_write_config_dword(pdev, 0x50, timing);
+-	}
++	via_fixup(pdev, host->private_data);
+ 
+ 	ata_host_resume(host);
+ 	return 0;
