@@ -1,14 +1,14 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] pata_rdc: parallel scanning needs an extra locking
-Date: Thu, 13 Oct 2011 18:08:31 +0200
-Message-ID: <201110131808.31470.bzolnier@gmail.com>
-References: <201110131606.04496.bzolnier@gmail.com> <20111013164923.23683fcb@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
+Date: Thu, 13 Oct 2011 18:10:01 +0200
+Message-ID: <201110131810.02228.bzolnier@gmail.com>
+References: <201110131744.23090.bzolnier@gmail.com> <20111013165405.3d4d93b8@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111013164923.23683fcb@lxorguk.ukuu.org.uk>
+In-Reply-To: <20111013165405.3d4d93b8@lxorguk.ukuu.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -16,34 +16,20 @@ List-Id: linux-ide@vger.kernel.org
 
 Alan Cox wrote:
 
-> On Thu, 13 Oct 2011 16:06:04 +0200
+> On Thu, 13 Oct 2011 17:44:22 +0200
 > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > 
 > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH] pata_rdc: parallel scanning needs an extra locking
+> > Subject: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
 > > 
-> > This is similar change as commit 60c3be3 ("ata_piix: parallel scanning
-> > on PATA needs an extra locking") for ata_piix host driver.
+> > Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
+> > and 'master_data' respectively to match register naming used in
+> > it8213_set_dmamode() and in ata_piix.c.
 > 
-> Again has anyone verified with the vendor that the RDC can support
-> parallel scanning ?
+> I do question this renaming. Surely we should reflect the names on the
+> data sheets if anything ?
 
-Upstream has always used it:
-
-commit 6b406782ad0408f9cb480c2e1b543d194e8206d0
-Author: Alan Cox <alan@linux.intel.com>
-Date:   Wed Jun 24 18:29:44 2009 +0100
-
-    [libata] Add pata_rdc driver for RDC ATA devices
-    
-    From: Alan Cox <alan@linux.intel.com>
-    
-    Signed-off-by: Alan Cox <alan@linux.intel.com>
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-...
-+
-+       host->flags |= ATA_HOST_PARALLEL_SCAN;
-+
-...
-
-My patch only adds needed locking.
+Please lets have some consistency in the driver first (same names used
+in ->set_piomode and ->set_dmamode)..  we can always do global rename
+later if needed.
+ 
