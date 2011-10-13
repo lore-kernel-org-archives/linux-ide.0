@@ -1,50 +1,49 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: make ata_sff_data_xfer_noirq() work with 32-bit PIO
-Date: Thu, 13 Oct 2011 15:04:43 +0200
-Message-ID: <201110131504.43311.bzolnier@gmail.com>
+Subject: [PATCH v2] ide: fix for ide_timing quantisation errors
+Date: Thu, 13 Oct 2011 15:16:03 +0200
+Message-ID: <201110131516.03408.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57043 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755252Ab1JMNUu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 09:20:50 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] libata: make ata_sff_data_xfer_noirq() work with 32-bit PIO
+Subject: [PATCH v2] ide: fix for ide_timing quantisation errors
 
-Always use ata_sff_data_xfer32() in ata_sff_data_xfer_noirq()
-so the latter can be also used for host controllers supporting
-32-bit PIO operations.
-
-It is a completely safe thing to do because if 32-bit PIO is
-not supported or enabled ata_sff_data_xfer32() will fallback
-to a standard method.
+Based on commit 4f701d1 ("ata_timing: ensure t->cycle is always
+correct") for libata.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
+v2: fixed comment style
+
 earlier references:
-https://lkml.org/lkml/2009/11/25/335
+https://lkml.org/lkml/2010/1/18/274
 
- drivers/ata/libata-sff.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ide/ide-timings.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Index: b/drivers/ata/libata-sff.c
+Index: b/drivers/ide/ide-timings.c
 ===================================================================
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -838,7 +838,7 @@ unsigned int ata_sff_data_xfer_noirq(str
- 	unsigned int consumed;
+--- a/drivers/ide/ide-timings.c
++++ b/drivers/ide/ide-timings.c
+@@ -206,6 +206,14 @@ int ide_timing_compute(ide_drive_t *driv
+ 		t->recover = t->cycle - t->active;
+ 	}
  
- 	local_irq_save(flags);
--	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
-+	consumed = ata_sff_data_xfer32(dev, buf, buflen, rw);
- 	local_irq_restore(flags);
- 
- 	return consumed;
++	/*
++	 * In a few cases quantisation may produce enough errors to
++	 * leave t->cycle too low for the sum of active and recovery
++	 * if so we must correct this
++	 */
++	if (t->active + t->recover > t->cycle)
++		t->cycle = t->active + t->recover;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ide_timing_compute);
