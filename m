@@ -1,129 +1,45 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] ide: ide_port_wait_ready() fix
-Date: Thu, 13 Oct 2011 19:44:07 +0200
-Message-ID: <201110131944.31645.bzolnier@gmail.com>
-References: <201110121659.55961.bzolnier@gmail.com> <201110131241.04759.bzolnier@gmail.com> <20111013.132527.2221791090526837668.davem@davemloft.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/2] pata_oldpiix: enable parallel scan
+Date: Thu, 13 Oct 2011 20:12:15 +0100
+Message-ID: <20111013201215.50541413@lxorguk.ukuu.org.uk>
+References: <201110131603.34443.bzolnier@gmail.com>
+	<20111013164753.69a5e92c@lxorguk.ukuu.org.uk>
+	<201110131806.27248.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:39270 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753831Ab1JMRo6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 13:44:58 -0400
-In-Reply-To: <20111013.132527.2221791090526837668.davem@davemloft.net>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:43547 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752352Ab1JMTMW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 15:12:22 -0400
+In-Reply-To: <201110131806.27248.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-David Miller wrote:
+On Thu, 13 Oct 2011 18:06:08 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Date: Thu, 13 Oct 2011 12:41:04 +0200
+> Alan Cox wrote:
 > 
-> > David Miller wrote:
+> > On Thu, 13 Oct 2011 16:03:34 +0200
+> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > > 
-> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >> Date: Wed, 12 Oct 2011 16:59:55 +0200
-> >> 
-> >> > David Miller wrote:
-> >> > 
-> >> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >> >> Date: Tue, 11 Oct 2011 19:13:18 +0200
-> >> >> 
-> >> >> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >> >> > Subject: [PATCH] ide: ide_port_wait_ready() fix
-> >> >> > 
-> >> >> > Fix for commit a20b2a4 ("ide: skip probe if there are no devices on
-> >> >> > the port (v2)").  We must check for slave device before failing.
-> >> >> > 
-> >> >> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> >> >> 
-> >> >> This will mishandle the case where there is no slave in the device
-> >> >> list.
-> >> > 
-> >> > I don't see it:
-> >> > 
-> >> > @ -598,7 +598,7 @@ static int ide_port_wait_ready(ide_hwif_
-> >> >  {
-> >> >  	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
-> >> >  	ide_drive_t *drive;
-> >> > -	int i, rc;
-> >> > +	int i, rc, prev_rc = 0;
-> >> >  
-> >> >  	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
-> >> >  
-> >> > @@ -623,8 +623,10 @@ static int ide_port_wait_ready(ide_hwif_
-> >> >  			tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
-> >> >  			mdelay(2);
-> >> >  			rc = ide_wait_not_busy(hwif, 35000);
-> >> > -			if (rc)
-> >> > +			if (prev_rc && rc)
-> >> >  				goto out;
-> >> > +			prev_rc = rc;
-> >> > +			rc = 0;
-> >> >  		} else
-> >> >  			printk(KERN_DEBUG "%s: ide_wait_not_busy() skipped\n",
-> >> >  					  drive->name);
-> >> > 
-> >> > If there is no slave device but there is a master device the code falls-through
-> >> > and returns a success.
-> >> 
-> >> That's not what we want, if there is only a master device and no slave device
-> >> in the list this loop is iterating over we want to return the error code
-> >> in "rc", not zero.
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Subject: [PATCH] pata_oldpiix: enable parallel scan
+> > > 
+> > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 > > 
-> > No, we want to return zero (success) since at least once device was found
-> > (otherwise we fail probe on some esoteric setups returning -ENODEV from
-> > ide_wait_not_busy() for master device).
-> > 
-> > This is how this function worked before commit a20b2a4 if you want something
-> > else okay but it needs to work with aforementioned setups.
+> > Have you tested this. When I talked with Intel people about parallel
+> > scanning nobody in Intel I could find could answer whether it was safe on
+> > the ancient PIIX versions.
 > 
-> You unconditionally assign "prev_rc = rc" and set "rc = 0" so if we only run
-> the loop once, we return zero.
+> No, it wasn't tested on the real hardware.
 > 
-> And we do this even if that one device gave a non-zero return value.
-> 
-> That's not what we want.
+> I think it should be in libata-dev or -mm/-next for rather long time..
 
-Here is revised patch:
-
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] ide: ide_port_wait_ready() fix
-
-Fix for commit a20b2a4 ("ide: skip probe if there are no devices on
-the port (v2)").  We must check for slave device before failing.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
- drivers/ide/ide-probe.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-Index: b/drivers/ide/ide-probe.c
-===================================================================
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -598,7 +598,7 @@ static int ide_port_wait_ready(ide_hwif_
- {
- 	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
- 	ide_drive_t *drive;
--	int i, rc;
-+	int i, rc, prev_rc = 0;
- 
- 	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
- 
-@@ -623,8 +623,9 @@ static int ide_port_wait_ready(ide_hwif_
- 			tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
- 			mdelay(2);
- 			rc = ide_wait_not_busy(hwif, 35000);
--			if (rc)
-+			if (prev_rc && rc)
- 				goto out;
-+			prev_rc = rc;
- 		} else
- 			printk(KERN_DEBUG "%s: ide_wait_not_busy() skipped\n",
- 					  drive->name);
-
+I don't see it's worth adding, its near impossible to test and its for
+old hardware that doesn't fast boot anyway. Really it's the netbook
+generation devices where this matters.
