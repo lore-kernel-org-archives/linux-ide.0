@@ -1,40 +1,94 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH 2/2] pata_oldpiix: enable parallel scan
-Date: Thu, 13 Oct 2011 16:03:34 +0200
-Message-ID: <201110131603.34443.bzolnier@gmail.com>
+Subject: [PATCH] pata_rdc: parallel scanning needs an extra locking
+Date: Thu, 13 Oct 2011 16:06:04 +0200
+Message-ID: <201110131606.04496.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:43215 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754529Ab1JMOGo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 10:06:44 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_oldpiix: enable parallel scan
+Subject: [PATCH] pata_rdc: parallel scanning needs an extra locking
+
+This is similar change as commit 60c3be3 ("ata_piix: parallel scanning
+on PATA needs an extra locking") for ata_piix host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-earlier references:
-https://lkml.org/lkml/2011/2/8/111
-https://lkml.org/lkml/2010/2/18/275
+ drivers/ata/pata_rdc.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
- drivers/ata/pata_oldpiix.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-Index: b/drivers/ata/pata_oldpiix.c
+Index: b/drivers/ata/pata_rdc.c
 ===================================================================
---- a/drivers/ata/pata_oldpiix.c
-+++ b/drivers/ata/pata_oldpiix.c
-@@ -258,7 +258,8 @@ static int oldpiix_init_one (struct pci_
- 
- 	ata_print_version_once(&pdev->dev, DRV_VERSION);
- 
--	return ata_pci_bmdma_init_one(pdev, ppi, &oldpiix_sht, NULL, 0);
-+	return ata_pci_bmdma_init_one(pdev, ppi, &oldpiix_sht, NULL,
-+				      ATA_HOST_PARALLEL_SCAN);
+--- a/drivers/ata/pata_rdc.c
++++ b/drivers/ata/pata_rdc.c
+@@ -86,6 +86,8 @@ static int rdc_pata_prereset(struct ata_
+ 	return ata_sff_prereset(link, deadline);
  }
  
- static const struct pci_device_id oldpiix_pci_tbl[] = {
++static DEFINE_SPINLOCK(rdc_lock);
++
+ /**
+  *	rdc_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+@@ -101,6 +103,7 @@ static void rdc_set_piomode(struct ata_p
+ {
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned long flags;
+ 	unsigned int is_slave	= (adev->devno != 0);
+ 	unsigned int master_port= ap->port_no ? 0x42 : 0x40;
+ 	unsigned int slave_port	= 0x44;
+@@ -124,6 +127,8 @@ static void rdc_set_piomode(struct ata_p
+ 	if (adev->class == ATA_DEV_ATA)
+ 		control |= 4;	/* PPE enable */
+ 
++	spin_lock_irqsave(&rdc_lock, flags);
++
+ 	/* PIO configuration clears DTE unconditionally.  It will be
+ 	 * programmed in set_dmamode which is guaranteed to be called
+ 	 * after set_piomode if any DMA mode is available.
+@@ -161,6 +166,8 @@ static void rdc_set_piomode(struct ata_p
+ 	pci_read_config_byte(dev, 0x48, &udma_enable);
+ 	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
+ 	pci_write_config_byte(dev, 0x48, udma_enable);
++
++	spin_unlock_irqrestore(&rdc_lock, flags);
+ }
+ 
+ /**
+@@ -177,6 +184,7 @@ static void rdc_set_piomode(struct ata_p
+ static void rdc_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ {
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
++	unsigned long flags;
+ 	u8 master_port		= ap->port_no ? 0x42 : 0x40;
+ 	u16 master_data;
+ 	u8 speed		= adev->dma_mode;
+@@ -190,6 +198,8 @@ static void rdc_set_dmamode(struct ata_p
+ 			    { 2, 1 },
+ 			    { 2, 3 }, };
+ 
++	spin_lock_irqsave(&rdc_lock, flags);
++
+ 	pci_read_config_word(dev, master_port, &master_data);
+ 	pci_read_config_byte(dev, 0x48, &udma_enable);
+ 
+@@ -271,6 +281,8 @@ static void rdc_set_dmamode(struct ata_p
+ 		pci_write_config_word(dev, master_port, master_data);
+ 	}
+ 	pci_write_config_byte(dev, 0x48, udma_enable);
++
++	spin_unlock_irqrestore(&rdc_lock, flags);
+ }
+ 
+ static struct ata_port_operations rdc_pata_ops = {
