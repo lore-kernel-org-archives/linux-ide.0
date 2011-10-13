@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_ali: cleanup ali_set_piomode()
-Date: Thu, 13 Oct 2011 13:09:25 +0200
-Message-ID: <201110131309.26032.bzolnier@gmail.com>
+Subject: [PATCH] pata_sc1200: fix DRV_NAME
+Date: Thu, 13 Oct 2011 12:53:05 +0200
+Message-ID: <201110131253.05596.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,36 +13,23 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_ali: cleanup ali_set_piomode()
-
-Merge ali_fifo_control() calls.
-
-This changes behavior but there shouldn't be any problems with it.
+Subject: [PATCH] pata_sc1200: fix DRV_NAME
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-earlier references:
-https://lkml.org/lkml/2010/1/18/258
+ drivers/ata/pata_sc1200.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/ata/pata_ali.c |    7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
-
-Index: b/drivers/ata/pata_ali.c
+Index: b/drivers/ata/pata_sc1200.c
 ===================================================================
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -222,12 +222,9 @@ static void ali_set_piomode(struct ata_p
- 	}
+--- a/drivers/ata/pata_sc1200.c
++++ b/drivers/ata/pata_sc1200.c
+@@ -38,7 +38,7 @@
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
  
- 	/* PIO FIFO is only permitted on ATA disk */
--	if (adev->class != ATA_DEV_ATA)
--		ali_fifo_control(ap, adev, 0x00);
--	ali_program_modes(ap, adev, &t, 0);
--	if (adev->class == ATA_DEV_ATA)
--		ali_fifo_control(ap, adev, 0x05);
-+	ali_fifo_control(ap, adev, (adev->class == ATA_DEV_ATA) ? 0x05 : 0x00);
+-#define DRV_NAME	"sc1200"
++#define DRV_NAME	"pata_sc1200"
+ #define DRV_VERSION	"0.2.6"
  
-+	ali_program_modes(ap, adev, &t, 0);
- }
- 
- /**
+ #define SC1200_REV_A	0x00
