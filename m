@@ -1,58 +1,89 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_it8213: add UDMA100 and UDMA133 support
-Date: Thu, 13 Oct 2011 18:11:29 +0200
-Message-ID: <201110131811.30054.bzolnier@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide: ide_port_wait_ready() fix
+Date: Thu, 13 Oct 2011 13:25:27 -0400 (EDT)
+Message-ID: <20111013.132527.2221791090526837668.davem@davemloft.net>
+References: <201110121659.55961.bzolnier@gmail.com>
+	<20111012.150349.1115347260310770962.davem@davemloft.net>
+	<201110131241.04759.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37716 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383Ab1JMQLz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 12:11:55 -0400
+Received: from shards.monkeyblade.net ([198.137.202.13]:42651 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753821Ab1JMRZc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 13:25:32 -0400
+In-Reply-To: <201110131241.04759.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
+To: bzolnier@gmail.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_it8213: add UDMA100 and UDMA133 support
+Date: Thu, 13 Oct 2011 12:41:04 +0200
 
-Fixes IDE -> libata regression.
+> David Miller wrote:
+> 
+>> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> Date: Wed, 12 Oct 2011 16:59:55 +0200
+>> 
+>> > David Miller wrote:
+>> > 
+>> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> >> Date: Tue, 11 Oct 2011 19:13:18 +0200
+>> >> 
+>> >> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> >> > Subject: [PATCH] ide: ide_port_wait_ready() fix
+>> >> > 
+>> >> > Fix for commit a20b2a4 ("ide: skip probe if there are no devices on
+>> >> > the port (v2)").  We must check for slave device before failing.
+>> >> > 
+>> >> > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+>> >> 
+>> >> This will mishandle the case where there is no slave in the device
+>> >> list.
+>> > 
+>> > I don't see it:
+>> > 
+>> > @ -598,7 +598,7 @@ static int ide_port_wait_ready(ide_hwif_
+>> >  {
+>> >  	const struct ide_tp_ops *tp_ops = hwif->tp_ops;
+>> >  	ide_drive_t *drive;
+>> > -	int i, rc;
+>> > +	int i, rc, prev_rc = 0;
+>> >  
+>> >  	printk(KERN_DEBUG "Probing IDE interface %s...\n", hwif->name);
+>> >  
+>> > @@ -623,8 +623,10 @@ static int ide_port_wait_ready(ide_hwif_
+>> >  			tp_ops->write_devctl(hwif, ATA_DEVCTL_OBS);
+>> >  			mdelay(2);
+>> >  			rc = ide_wait_not_busy(hwif, 35000);
+>> > -			if (rc)
+>> > +			if (prev_rc && rc)
+>> >  				goto out;
+>> > +			prev_rc = rc;
+>> > +			rc = 0;
+>> >  		} else
+>> >  			printk(KERN_DEBUG "%s: ide_wait_not_busy() skipped\n",
+>> >  					  drive->name);
+>> > 
+>> > If there is no slave device but there is a master device the code falls-through
+>> > and returns a success.
+>> 
+>> That's not what we want, if there is only a master device and no slave device
+>> in the list this loop is iterating over we want to return the error code
+>> in "rc", not zero.
+> 
+> No, we want to return zero (success) since at least once device was found
+> (otherwise we fail probe on some esoteric setups returning -ENODEV from
+> ide_wait_not_busy() for master device).
+> 
+> This is how this function worked before commit a20b2a4 if you want something
+> else okay but it needs to work with aforementioned setups.
 
-IDE's it8213 host driver has been supporting those modes
-(per official documentation) since the initial driver's merge
-on Feb 7 2007 (commit 9c6712c0 "ide: add it8213 IDE driver").
+You unconditionally assign "prev_rc = rc" and set "rc = 0" so if we only run
+the loop once, we return zero.
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-earlier references:
-https://lkml.org/lkml/2011/2/8/105
-https://lkml.org/lkml/2009/11/25/324
+And we do this even if that one device gave a non-zero return value.
 
- drivers/ata/pata_it8213.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: b/drivers/ata/pata_it8213.c
-===================================================================
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -164,7 +164,7 @@ static void it8213_set_dmamode (struct a
- 
- 		/* Clocks follow the PIIX style */
- 		u_speed = min(2 - (udma & 1), udma);
--		if (udma == 5)
-+		if (udma > 4)
- 			u_clock = 0x1000;	/* 100Mhz */
- 		else if (udma > 2)
- 			u_clock = 1;		/* 66Mhz */
-@@ -234,7 +234,7 @@ static int it8213_init_one (struct pci_d
- 		.flags		= ATA_FLAG_SLAVE_POSS,
- 		.pio_mask	= ATA_PIO4,
- 		.mwdma_mask	= ATA_MWDMA12_ONLY,
--		.udma_mask 	= ATA_UDMA4, /* FIXME: want UDMA 100? */
-+		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &it8213_ops,
- 	};
- 	/* Current IT8213 stuff is single port */
+That's not what we want.
