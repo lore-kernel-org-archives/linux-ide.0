@@ -1,83 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
-Date: Thu, 13 Oct 2011 17:44:22 +0200
-Message-ID: <201110131744.23090.bzolnier@gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 2/2] pata_oldpiix: enable parallel scan
+Date: Thu, 13 Oct 2011 16:47:53 +0100
+Message-ID: <20111013164753.69a5e92c@lxorguk.ukuu.org.uk>
+References: <201110131603.34443.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:51524 "EHLO
+	www.etchedpixels.co.uk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754300Ab1JMPtY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 11:49:24 -0400
+In-Reply-To: <201110131603.34443.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
+On Thu, 13 Oct 2011 16:03:34 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
-and 'master_data' respectively to match register naming used in
-it8213_set_dmamode() and in ata_piix.c.
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] pata_oldpiix: enable parallel scan
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-v2: don't change master_port type
-
-earlier references:
-https://lkml.org/lkml/2011/2/8/103
-
- drivers/ata/pata_it8213.c |   20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-Index: b/drivers/ata/pata_it8213.c
-===================================================================
---- a/drivers/ata/pata_it8213.c
-+++ b/drivers/ata/pata_it8213.c
-@@ -76,8 +76,8 @@ static void it8213_set_piomode (struct a
- {
- 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
- 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
--	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
--	u16 idetm_data;
-+	unsigned int master_port = ap->port_no ? 0x42 : 0x40;
-+	u16 master_data;
- 	int control = 0;
- 
- 	/*
-@@ -100,19 +100,19 @@ static void it8213_set_piomode (struct a
- 	if (adev->class != ATA_DEV_ATA)
- 		control |= 4;	/* PPE */
- 
--	pci_read_config_word(dev, idetm_port, &idetm_data);
-+	pci_read_config_word(dev, master_port, &master_data);
- 
- 	/* Set PPE, IE, and TIME as appropriate */
- 	if (adev->devno == 0) {
--		idetm_data &= 0xCCF0;
--		idetm_data |= control;
--		idetm_data |= (timings[pio][0] << 12) |
-+		master_data &= 0xCCF0;
-+		master_data |= control;
-+		master_data |= (timings[pio][0] << 12) |
- 			(timings[pio][1] << 8);
- 	} else {
- 		u8 slave_data;
- 
--		idetm_data &= 0xFF0F;
--		idetm_data |= (control << 4);
-+		master_data &= 0xFF0F;
-+		master_data |= (control << 4);
- 
- 		/* Slave timing in separate register */
- 		pci_read_config_byte(dev, 0x44, &slave_data);
-@@ -121,8 +121,8 @@ static void it8213_set_piomode (struct a
- 		pci_write_config_byte(dev, 0x44, slave_data);
- 	}
- 
--	idetm_data |= 0x4000;	/* Ensure SITRE is set */
--	pci_write_config_word(dev, idetm_port, idetm_data);
-+	master_data |= 0x4000;	/* Ensure SITRE is set */
-+	pci_write_config_word(dev, master_port, master_data);
- }
- 
- /**
+Have you tested this. When I talked with Intel people about parallel
+scanning nobody in Intel I could find could answer whether it was safe on
+the ancient PIIX versions.
