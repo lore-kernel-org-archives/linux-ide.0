@@ -1,35 +1,58 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
-Date: Thu, 13 Oct 2011 18:10:01 +0200
-Message-ID: <201110131810.02228.bzolnier@gmail.com>
-References: <201110131744.23090.bzolnier@gmail.com> <20111013165405.3d4d93b8@lxorguk.ukuu.org.uk>
+Subject: [PATCH] pata_it8213: add UDMA100 and UDMA133 support
+Date: Thu, 13 Oct 2011 18:11:29 +0200
+Message-ID: <201110131811.30054.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111013165405.3d4d93b8@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37716 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383Ab1JMQLz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 12:11:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] pata_it8213: add UDMA100 and UDMA133 support
 
-> On Thu, 13 Oct 2011 17:44:22 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > Subject: [PATCH v2] pata_it8213: fix register naming used in it8213_set_piomode()
-> > 
-> > Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
-> > and 'master_data' respectively to match register naming used in
-> > it8213_set_dmamode() and in ata_piix.c.
-> 
-> I do question this renaming. Surely we should reflect the names on the
-> data sheets if anything ?
+Fixes IDE -> libata regression.
 
-Please lets have some consistency in the driver first (same names used
-in ->set_piomode and ->set_dmamode)..  we can always do global rename
-later if needed.
+IDE's it8213 host driver has been supporting those modes
+(per official documentation) since the initial driver's merge
+on Feb 7 2007 (commit 9c6712c0 "ide: add it8213 IDE driver").
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+earlier references:
+https://lkml.org/lkml/2011/2/8/105
+https://lkml.org/lkml/2009/11/25/324
+
+ drivers/ata/pata_it8213.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: b/drivers/ata/pata_it8213.c
+===================================================================
+--- a/drivers/ata/pata_it8213.c
++++ b/drivers/ata/pata_it8213.c
+@@ -164,7 +164,7 @@ static void it8213_set_dmamode (struct a
  
+ 		/* Clocks follow the PIIX style */
+ 		u_speed = min(2 - (udma & 1), udma);
+-		if (udma == 5)
++		if (udma > 4)
+ 			u_clock = 0x1000;	/* 100Mhz */
+ 		else if (udma > 2)
+ 			u_clock = 1;		/* 66Mhz */
+@@ -234,7 +234,7 @@ static int it8213_init_one (struct pci_d
+ 		.flags		= ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask	= ATA_PIO4,
+ 		.mwdma_mask	= ATA_MWDMA12_ONLY,
+-		.udma_mask 	= ATA_UDMA4, /* FIXME: want UDMA 100? */
++		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &it8213_ops,
+ 	};
+ 	/* Current IT8213 stuff is single port */
