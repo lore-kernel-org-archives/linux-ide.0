@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sl82c105: add Power Management support
-Date: Thu, 13 Oct 2011 13:16:24 +0200
-Message-ID: <201110131316.24409.bzolnier@gmail.com>
+Subject: [PATCH] pata_cs5536: forward port changes from cs5536
+Date: Thu, 13 Oct 2011 13:05:24 +0200
+Message-ID: <201110131305.25001.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -9,104 +9,216 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Martin K. Petersen" <mkp@mkp.net>
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_sl82c105: add Power Management support
+Subject: [PATCH] pata_cs5536: forward port changes from cs5536
 
-Fixes IDE -> libata regression.
+* Fix cable detection to also account for the slave device cable bit.
 
-There shouldn't be any problems with it as corresponding IDE's host
-driver (sl82c105) has been supporting PCI Power Management since
-Oct 10 2008 (commit feb22b7f "ide: add proper PCI PM support (v2)")
-and IDE PM since Jun 14 2003 (patch v2.5.73 "ide: Power Management").
+* Disable UDMA when programming MWDMA in cs5536_set_dmamode().
 
+* Don't change UDMA settings in cs5536_set_piomode().
+
+* Add cs5536_program_dtc() helper.
+
+* Cleanup and uninline cs5536_[read,write]() methods.
+
+Cc: Martin K. Petersen <mkp@mkp.net>
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
-earlier references:
-https://lkml.org/lkml/2009/11/25/385
+ drivers/ata/pata_cs5536.c |   99 +++++++++++++++++++---------------------------
+ 1 file changed, 42 insertions(+), 57 deletions(-)
 
- drivers/ata/pata_sl82c105.c |   37 ++++++++++++++++++++++++++++++++-----
- 1 file changed, 32 insertions(+), 5 deletions(-)
-
-Index: b/drivers/ata/pata_sl82c105.c
+Index: b/drivers/ata/pata_cs5536.c
 ===================================================================
---- a/drivers/ata/pata_sl82c105.c
-+++ b/drivers/ata/pata_sl82c105.c
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
 @@ -1,6 +1,7 @@
  /*
-  * pata_sl82c105.c 	- SL82C105 PATA for new ATA layer
-  *			  (C) 2005 Red Hat Inc
+  * pata_cs5536.c	- CS5536 PATA for new ATA layer
+  *			  (C) 2007 Martin K. Petersen <mkp@mkp.net>
 + *			  (C) 2011 Bartlomiej Zolnierkiewicz
   *
-  * Based in part on linux/drivers/ide/pci/sl82c105.c
-  * 		SL82C105/Winbond 553 IDE driver
-@@ -278,6 +279,14 @@ static int sl82c105_bridge_revision(stru
- 	return bridge->revision;
- }
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -55,24 +56,16 @@ MODULE_PARM_DESC(msr, "Force using MSR t
+ #define DRV_VERSION	"0.0.8"
  
-+static void sl82c105_fixup(struct pci_dev *pdev)
-+{
-+	u32 val;
+ enum {
+-	CFG			= 0,
+-	DTC			= 1,
+-	CAST			= 2,
+-	ETC			= 3,
+-
+-	MSR_IDE_BASE		= 0x51300000,
+-	MSR_IDE_CFG		= (MSR_IDE_BASE + 0x10),
+-	MSR_IDE_DTC		= (MSR_IDE_BASE + 0x12),
+-	MSR_IDE_CAST		= (MSR_IDE_BASE + 0x13),
+-	MSR_IDE_ETC		= (MSR_IDE_BASE + 0x14),
+-
++	MSR_IDE_CFG		= 0x51300010,
+ 	PCI_IDE_CFG		= 0x40,
+-	PCI_IDE_DTC		= 0x48,
+-	PCI_IDE_CAST		= 0x4c,
+-	PCI_IDE_ETC		= 0x50,
+ 
+-	IDE_CFG_CHANEN		= 0x2,
+-	IDE_CFG_CABLE		= 0x10000,
++	CFG			= 0,
++	DTC			= 2,
++	CAST			= 3,
++	ETC			= 4,
 +
-+	pci_read_config_dword(pdev, 0x40, &val);
-+	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
-+	pci_write_config_dword(pdev, 0x40, val);
-+}
++	IDE_CFG_CHANEN		= (1 << 1),
++	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
  
- static int sl82c105_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- {
-@@ -295,7 +304,6 @@ static int sl82c105_init_one(struct pci_
- 	/* for now use only the first port */
- 	const struct ata_port_info *ppi[] = { &info_early,
- 					       NULL };
--	u32 val;
- 	int rev;
- 	int rc;
+ 	IDE_D0_SHIFT		= 24,
+ 	IDE_D1_SHIFT		= 16,
+@@ -84,45 +77,50 @@ enum {
+ 	IDE_CAST_CMD_MASK	= 0xff,
+ 	IDE_CAST_CMD_SHIFT	= 24,
  
-@@ -312,13 +320,28 @@ static int sl82c105_init_one(struct pci_
- 	else
- 		ppi[0] = &info_dma;
- 
--	pci_read_config_dword(dev, 0x40, &val);
--	val |= CTRL_P0EN | CTRL_P0F16 | CTRL_P1F16;
--	pci_write_config_dword(dev, 0x40, val);
-+	sl82c105_fixup(dev);
- 
- 	return ata_pci_bmdma_init_one(dev, ppi, &sl82c105_sht, NULL, 0);
- }
- 
-+#ifdef CONFIG_PM
-+static int sl82c105_reinit_one(struct pci_dev *pdev)
-+{
-+	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	int rc;
-+
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
-+
-+	sl82c105_fixup(pdev);
-+
-+	ata_host_resume(host);
-+	return 0;
-+}
-+#endif
-+
- static const struct pci_device_id sl82c105[] = {
- 	{ PCI_VDEVICE(WINBOND, PCI_DEVICE_ID_WINBOND_82C105), },
- 
-@@ -329,7 +352,11 @@ static struct pci_driver sl82c105_pci_dr
- 	.name 		= DRV_NAME,
- 	.id_table	= sl82c105,
- 	.probe 		= sl82c105_init_one,
--	.remove		= ata_pci_remove_one
-+	.remove		= ata_pci_remove_one,
-+#ifdef CONFIG_PM
-+	.suspend	= ata_pci_device_suspend,
-+	.resume		= sl82c105_reinit_one,
-+#endif
+-	IDE_ETC_NODMA		= 0x03,
++	IDE_ETC_UDMA_MASK	= 0xc0,
  };
  
- static int __init sl82c105_init(void)
+-static const u32 msr_reg[4] = {
+-	MSR_IDE_CFG, MSR_IDE_DTC, MSR_IDE_CAST, MSR_IDE_ETC,
+-};
+-
+-static const u8 pci_reg[4] = {
+-	PCI_IDE_CFG, PCI_IDE_DTC, PCI_IDE_CAST, PCI_IDE_ETC,
+-};
+-
+-static inline int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
++static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+ 	if (unlikely(use_msr)) {
+ 		u32 dummy __maybe_unused;
+ 
+-		rdmsr(msr_reg[reg], *val, dummy);
++		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
+ 		return 0;
+ 	}
+ 
+-	return pci_read_config_dword(pdev, pci_reg[reg], val);
++	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
+ }
+ 
+-static inline int cs5536_write(struct pci_dev *pdev, int reg, int val)
++static int cs5536_write(struct pci_dev *pdev, int reg, int val)
+ {
+ 	if (unlikely(use_msr)) {
+-		wrmsr(msr_reg[reg], val, 0);
++		wrmsr(MSR_IDE_CFG + reg, val, 0);
+ 		return 0;
+ 	}
+ 
+-	return pci_write_config_dword(pdev, pci_reg[reg], val);
++	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
++}
++
++static void cs5536_program_dtc(struct ata_device *adev, u8 tim)
++{
++	struct pci_dev *pdev = to_pci_dev(adev->link->ap->host->dev);
++	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
++	u32 dtc;
++
++	cs5536_read(pdev, DTC, &dtc);
++	dtc &= ~(IDE_DRV_MASK << dshift);
++	dtc |= tim << dshift;
++	cs5536_write(pdev, DTC, dtc);
+ }
+ 
+ /**
+  *	cs5536_cable_detect	-	detect cable type
+  *	@ap: Port to detect on
+  *
+- *	Perform cable detection for ATA66 capable cable. Return a libata
+- *	cable type.
++ *	Perform cable detection for ATA66 capable cable.
++ *
++ *	Returns a cable type.
+  */
+ 
+ static int cs5536_cable_detect(struct ata_port *ap)
+@@ -132,7 +130,7 @@ static int cs5536_cable_detect(struct at
+ 
+ 	cs5536_read(pdev, CFG, &cfg);
+ 
+-	if (cfg & (IDE_CFG_CABLE << ap->port_no))
++	if (cfg & IDE_CFG_CABLE)
+ 		return ATA_CBL_PATA80;
+ 	else
+ 		return ATA_CBL_PATA40;
+@@ -162,19 +160,15 @@ static void cs5536_set_piomode(struct at
+ 	struct ata_device *pair = ata_dev_pair(adev);
+ 	int mode = adev->pio_mode - XFER_PIO_0;
+ 	int cmdmode = mode;
+-	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+ 	int cshift = adev->devno ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
+-	u32 dtc, cast, etc;
++	u32 cast;
+ 
+ 	if (pair)
+ 		cmdmode = min(mode, pair->pio_mode - XFER_PIO_0);
+ 
+-	cs5536_read(pdev, DTC, &dtc);
+-	cs5536_read(pdev, CAST, &cast);
+-	cs5536_read(pdev, ETC, &etc);
++	cs5536_program_dtc(adev, drv_timings[mode]);
+ 
+-	dtc &= ~(IDE_DRV_MASK << dshift);
+-	dtc |= drv_timings[mode] << dshift;
++	cs5536_read(pdev, CAST, &cast);
+ 
+ 	cast &= ~(IDE_CAST_DRV_MASK << cshift);
+ 	cast |= addr_timings[mode] << cshift;
+@@ -182,12 +176,7 @@ static void cs5536_set_piomode(struct at
+ 	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
+ 	cast |= cmd_timings[cmdmode] << IDE_CAST_CMD_SHIFT;
+ 
+-	etc &= ~(IDE_DRV_MASK << dshift);
+-	etc |= IDE_ETC_NODMA << dshift;
+-
+-	cs5536_write(pdev, DTC, dtc);
+ 	cs5536_write(pdev, CAST, cast);
+-	cs5536_write(pdev, ETC, etc);
+ }
+ 
+ /**
+@@ -208,25 +197,21 @@ static void cs5536_set_dmamode(struct at
+ 	};
+ 
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	u32 dtc, etc;
++	u32 etc;
+ 	int mode = adev->dma_mode;
+ 	int dshift = adev->devno ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+ 
+-	if (mode >= XFER_UDMA_0) {
+-		cs5536_read(pdev, ETC, &etc);
++	cs5536_read(pdev, ETC, &etc);
+ 
++	if (mode >= XFER_UDMA_0) {
+ 		etc &= ~(IDE_DRV_MASK << dshift);
+ 		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
+-
+-		cs5536_write(pdev, ETC, etc);
+ 	} else { /* MWDMA */
+-		cs5536_read(pdev, DTC, &dtc);
+-
+-		dtc &= ~(IDE_DRV_MASK << dshift);
+-		dtc |= mwdma_timings[mode - XFER_MW_DMA_0] << dshift;
+-
+-		cs5536_write(pdev, DTC, dtc);
++		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
++		cs5536_program_dtc(adev, mwdma_timings[mode - XFER_MW_DMA_0]);
+ 	}
++
++	cs5536_write(pdev, ETC, etc);
+ }
+ 
+ static struct scsi_host_template cs5536_sht = {
