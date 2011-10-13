@@ -1,110 +1,103 @@
-From: <akira2.iguchi@toshiba.co.jp>
-Subject: RE: [PATCH] pata_scc: add proper cable detection method
-Date: Thu, 13 Oct 2011 07:23:19 +0000
-Message-ID: <0AD1ABF616D7584184961C46C6BECD283C156EEA@TGXML215.toshiba.local>
-References: <201110112007.24530.bzolnier@gmail.com>
- <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
- <201110121716.37990.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH] cy82c693: fix PCI device selection
+Date: Thu, 13 Oct 2011 12:28:54 +0200
+Message-ID: <201110131229.09178.bzolnier@gmail.com>
+References: <201110111937.32501.bzolnier@gmail.com> <201110121652.10495.bzolnier@gmail.com> <20111012.150207.1100668688848833225.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from imx9.toshiba.co.jp ([202.33.96.51]:62856 "EHLO
-	imx9.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751748Ab1JMH3n convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 03:29:43 -0400
-In-Reply-To: <201110121716.37990.bzolnier@gmail.com>
-Content-Language: ja-JP
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111012.150207.1100668688848833225.davem@davemloft.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kou.ishizaki@toshiba.co.jp
 
-Thank you for maintaining our code.
-This patch makes no difference in functionality.
+David Miller wrote:
 
-Acked-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-Acked-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-
-> -----Original Message-----
-> From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com]
-> Sent: Thursday, October 13, 2011 12:17 AM
-> To: Alan Cox
-> Cc: Jeff Garzik; linux-ide@vger.kernel.org;
-> linux-kernel@vger.kernel.org; ishizaki ko(石崎 浩 ○府□放Ｎブ○放送
-> 機); iguchi akira(井口 晃 ○Ｌジ□ＬＳ開○ＬＳ二)
-> Subject: Re: [PATCH] pata_scc: add proper cable detection method
-> 
-> Alan Cox wrote:
-> 
-> > On Tue, 11 Oct 2011 20:07:24 +0200
-> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> >
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Subject: [PATCH] pata_scc: add proper cable detection method
-> > >
-> > > Use standard ata_cable_80wire() method for the cable detection, as a
-> > > bonus this allows us to use the default ->prereset method.
-> >
-> > What documentation have you got that confirms that the hardcoding is
-> > not needed. It goes back to the original code and I see nothing saying
-> > that the device has standard PC style cable detect.
-> 
-> The driver predates standard cable detect routines and open-codes its own
-> one.  There should be no functionality changes caused by this patch.
-> 
-> Commit a619f981b ("libata: PATA driver for Celleb") is from Jan 2007 while
-> ata_cable_80wire() was added by commit be0d18d ("libata: cable detection
-> fixes") in Mar 2007.
-> 
-> > You should also I think cc the Toshiba maintainers
-> 
-> added to cc:.
-> 
 > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] pata_scc: add proper cable detection method
+> Date: Wed, 12 Oct 2011 16:52:10 +0200
 > 
-> Use standard ata_cable_80wire() method for the cable detection, as a bonus
-> this allows us to use the default ->prereset method.
+> > David Miller wrote:
+> > 
+> >> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> >> Date: Tue, 11 Oct 2011 19:37:32 +0200
+> >> 
+> >> > While at it remove redundant pci_get_slot() call as cy82c693_init_one()
+> >> > already takes care of keeping the reference on the second port's PCI
+> >> > device.
+> >> 
+> >> Please do not submit unrelated changes with a bug fix, and as IDE is
+> >> in long-term maintainence I would not accept a risky refinement like
+> >> this anyways.
+> > 
+> > Removed code is just bogus, we cannot fail in ->set_pio_mode method.
+> > 
+> > Please take a look at the code:
+> >  
+> > -	/* select primary or secondary channel */
+> > -	if (hwif->index > 0) {  /* drive is on the secondary channel */
+> > -		dev = pci_get_slot(dev->bus, dev->devfn+1);
+> > -		if (!dev) {
+> > -			printk(KERN_ERR "%s: tune_drive: "
+> > -				"Cannot find secondary interface!\n",
+> > -				drive->name);
+> > -			return;
+> > -		}
+> > -	}
+> > 
+> > Please apply the patch,
 > 
-> Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
-> Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
-> earlier references:
-> https://lkml.org/lkml/2009/11/25/373
+> Sorry, I will not do that, please respin the patch with the unrelated
+> pieces removed.  I don't care how obvious it is to you.
 > 
->  drivers/ata/pata_scc.c |   14 +-------------
->  1 file changed, 1 insertion(+), 13 deletions(-)
-> 
-> Index: b/drivers/ata/pata_scc.c
-> ===================================================================
-> --- a/drivers/ata/pata_scc.c
-> +++ b/drivers/ata/pata_scc.c
-> @@ -827,18 +827,6 @@ static unsigned int scc_data_xfer (struc  }
-> 
->  /**
-> - *	scc_pata_prereset - prepare for reset
-> - *	@ap: ATA port to be reset
-> - *	@deadline: deadline jiffies for the operation
-> - */
-> -
-> -static int scc_pata_prereset(struct ata_link *link, unsigned long
-> deadline) -{
-> -	link->ap->cbl = ATA_CBL_PATA80;
-> -	return ata_sff_prereset(link, deadline);
-> -}
-> -
-> -/**
->   *	scc_postreset - standard postreset callback
->   *	@ap: the target ata_port
->   *	@classes: classes of attached devices
-> @@ -947,7 +935,7 @@ static struct ata_port_operations scc_pa
->  	.bmdma_status		= scc_bmdma_status,
->  	.sff_data_xfer		= scc_data_xfer,
-> 
-> -	.prereset		= scc_pata_prereset,
-> +	.cable_detect		= ata_cable_80wire,
->  	.softreset		= scc_softreset,
->  	.postreset		= scc_postreset,
-> 
+> The IDE layer is not a place for refinements or simplifications any
+> longer, I'm sorry if that isn't clear to you.
+
+Calling pci_get_slot() inside ->set_pio_mode is a bug since this method
+cannot fail but if you want to leave it as it is here is an updated patch:
+
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH v2] cy82c693: fix PCI device selection
+
+Wrong PCI device may be selected by cy82c693_set_pio_mode() if modular
+IDE host drivers are used and there are additional IDE PCI devices
+installed in the system.  Fix it.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ drivers/ide/cy82c693.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+Index: b/drivers/ide/cy82c693.c
+===================================================================
+--- a/drivers/ide/cy82c693.c
++++ b/drivers/ide/cy82c693.c
+@@ -1,7 +1,7 @@
+ /*
+  *  Copyright (C) 1998-2000 Andreas S. Krebs (akrebs@altavista.net), Maintainer
+  *  Copyright (C) 1998-2002 Andre Hedrick <andre@linux-ide.org>, Integrator
+- *  Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
++ *  Copyright (C) 2007-2011 Bartlomiej Zolnierkiewicz
+  *
+  * CYPRESS CY82C693 chipset IDE controller
+  *
+@@ -90,7 +90,7 @@ static void cy82c693_set_pio_mode(ide_hw
+ 	u8 time_16, time_8;
+ 
+ 	/* select primary or secondary channel */
+-	if (hwif->index > 0) {  /* drive is on the secondary channel */
++	if (drive->dn > 1) {  /* drive is on the secondary channel */
+ 		dev = pci_get_slot(dev->bus, dev->devfn+1);
+ 		if (!dev) {
+ 			printk(KERN_ERR "%s: tune_drive: "
+@@ -141,7 +141,7 @@ static void cy82c693_set_pio_mode(ide_hw
+ 		pci_write_config_byte(dev, CY82_IDE_SLAVE_IOW, time_16);
+ 		pci_write_config_byte(dev, CY82_IDE_SLAVE_8BIT, time_8);
+ 	}
+-	if (hwif->index > 0)
++	if (drive->dn > 1)
+ 		pci_dev_put(dev);
+ }
+ 
