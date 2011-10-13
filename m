@@ -1,63 +1,110 @@
-From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@02.cn>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
-	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Thu, 13 Oct 2011 06:49:44 +0000 (UTC)
-Message-ID: <20121013144028858151__47858.5458164618$1318488584$gmane$org@02.cn>
-Reply-To: <1339625218@qq.com>
+From: <akira2.iguchi@toshiba.co.jp>
+Subject: RE: [PATCH] pata_scc: add proper cable detection method
+Date: Thu, 13 Oct 2011 07:23:19 +0000
+Message-ID: <0AD1ABF616D7584184961C46C6BECD283C156EEA@TGXML215.toshiba.local>
+References: <201110112007.24530.bzolnier@gmail.com>
+ <20111011205415.1d5708af@lxorguk.ukuu.org.uk>
+ <201110121716.37990.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-2022-jp"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [221.11.8.186] ([221.11.8.186]:48135 "HELO mail.02.cn"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with SMTP
-	id S1751612Ab1JMGtl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Oct 2011 02:49:41 -0400
-Date: Sat, 13 Oct 2012 14:40:20 +0800
+Received: from imx9.toshiba.co.jp ([202.33.96.51]:62856 "EHLO
+	imx9.toshiba.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748Ab1JMH3n convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 03:29:43 -0400
+In-Reply-To: <201110121716.37990.bzolnier@gmail.com>
+Content-Language: ja-JP
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linemxandtools@yahoo.com, lintrade654@hotmail.com, linuci@live.com, linamarinbulla@hotmail.com, linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org, linuxstb@i-83-67-212
+To: bzolnier@gmail.com, alan@lxorguk.ukuu.org.uk
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kou.ishizaki@toshiba.co.jp
 
-576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
-ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
-DQrnvqTlj5Hova/ku7YrMTA55bGK5bm/5Lqk5Lya5Lmw5a6244CB5rW35YWz5pWw5o2u44CB5pCc
-57Si5byV5pOO5Lmw5a62LEIyQuivouebmOS5sOWutuWFsTUwMOS4hyzku4UxMOWFg+avj+WkqeOA
-giANCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ
-5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KMeOA
-gee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHku7/kurrl
-t6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul5LiK44CC
-IA0KMuOAgTUwMOS4h+S5sOWutui1hOa6kO+8miDotaDpgIHnmoQ1MDDkuIfkubDlrrbotYTmupDl
-upPvvIzmm7TmlrAgKOWPr+S7peaMieeFp+aCqOeahOS6p+WTgeaPkOWPluWHuuadpe+8jOabtOey
-vuWHhuW8gOWPkSnjgIIgDQoz44CB6LaF57qn5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLrvvJog
-5YaF572u5LqGNjAw5LiH6KGM5Lia5YWz6ZSu6K+N77yM5qC55o2u6ZW/5bC+6K+N5pCc57Si77yM
-57uT5p6c5pu057K+56Gu5Yy56YWN77yb5q+P5aSp6IO95pCc57SiMS0y5LiH5Lul5LiK5Lmw5a62
-55yf5a6eRU1BSUzvvIzmiJDljZXnjofpq5jjgIIgDQogDQoNCuimgeeahOaKk+e0p+iBlOezu1FR
-OiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5j
-b20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWk
-jemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1
-MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCiANCuWF
-jei0uei1oOmAgToNCuS4gOWFsTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn
-6KGM5Lia5YiG5aW957G777yM5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8
-miANCjHvvIwyMDEx5pil5a2jMTA55bGK5bm/5Lqk5Lya5Lmw5a62546w5Zy66K+i55uY5pWw5o2u
-5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a65
-5piT5oiQ5Y2V77yBIA0KMu+8jOi0reS5sOWQjuWPr+S7peWFjei0ueabtOaWsDIwMTHnp4vlraPl
-ub/kuqTkvJorMjAxMuaYpeWto+W5v+S6pOS8muS5sOWutuaVsOaNruOAguWkqui2heWAvOS6huOA
-gg0KM++8jOacgOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgKOacgOaW
-sOabtOaWsOaXpeacnyAyMDExLTA1LTE25pelKQ0KNO+8jDIwMDjlubQsMjAwOeW5tCwyMDEw5bm0
-IOaYpeWtoyvnp4vlraPlub/kuqTkvJrkubDlrrblkI3lvZXvvIwxMDMgMTA0IDEwNSAxMDYgMTA3
-IDEwOCDlhbHlha3lsYog5YWxMTIwLjbkuIfmlbDmja7jgIINCjXvvIwyMDEw5bm05Zu96ZmF5L+D
-6ZSA5Y2P5Lya77yIUFBBSe+8ieaIkOWRmOWQjeWNlSBQUEFJIE1lbWJlcnMgRGlyZWN0b3J577yM
-6Z2e5bi46YeN6KaB55qE5aSn5Lmw5a6244CCDQo277yMMjAxMOW5tOWIsOmmmea4r+mHh+i0reea
-hOWbveWkluWuouS6uuWQjeW9lSjpppnmuK/otLjlj5HlsYDmj5Dkvpsp77yM5YWxNy4y5LiH5pWw
-5o2u77yM6LaF57qn6YeN6KaB55qE5Lmw5a6244CCDQo377yMNDguNjjkuIfmnaHmnIDmlrDkubDl
-rrbor6Lnm5jvvIzotK3kubDlkI7mr4/mnIjmm7TmlrAgMS0y5LiH5p2h77yM5YyF5ousMumDqOWI
-hu+8jDHvvIzmnIDmlrDnmoTor6Lnm5ggMu+8jOacgOaWsOeahOWxleS8muS5sOWutuOAguWFjei0
-ueabtOaWsDM25Liq5pyI44CCDQo477yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBpZXJz54mI
-5pWw5o2uIDHljYPkuIfjgIINCg0KDQror5rkv6HkuLrmnKzvvIzmlK/mjIHmlK/ku5jlrp3mi4Xk
-v53kuqTmmJMgKOWFiOWPkei0p+W5tuWuieijheiuvue9rue+pOWPkei9r+S7tu+8jOeEtuWQjuS7
-mOasvikg5b275bqV5omT5raI5oKo55qEIOmhvuiZkeOAgg0KDQogDQoNCg0KIA0KDQrnsr7lh4bm
-lbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7l
-h4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrn
-sr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQo=
+Thank you for maintaining our code.
+This patch makes no difference in functionality.
 
+Acked-by: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+Acked-by: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
 
+> -----Original Message-----
+> From: Bartlomiej Zolnierkiewicz [mailto:bzolnier@gmail.com]
+> Sent: Thursday, October 13, 2011 12:17 AM
+> To: Alan Cox
+> Cc: Jeff Garzik; linux-ide@vger.kernel.org;
+> linux-kernel@vger.kernel.org; ishizaki ko(石崎 浩 ○府□放Ｎブ○放送
+> 機); iguchi akira(井口 晃 ○Ｌジ□ＬＳ開○ＬＳ二)
+> Subject: Re: [PATCH] pata_scc: add proper cable detection method
+> 
+> Alan Cox wrote:
+> 
+> > On Tue, 11 Oct 2011 20:07:24 +0200
+> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+> >
+> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> > > Subject: [PATCH] pata_scc: add proper cable detection method
+> > >
+> > > Use standard ata_cable_80wire() method for the cable detection, as a
+> > > bonus this allows us to use the default ->prereset method.
+> >
+> > What documentation have you got that confirms that the hardcoding is
+> > not needed. It goes back to the original code and I see nothing saying
+> > that the device has standard PC style cable detect.
+> 
+> The driver predates standard cable detect routines and open-codes its own
+> one.  There should be no functionality changes caused by this patch.
+> 
+> Commit a619f981b ("libata: PATA driver for Celleb") is from Jan 2007 while
+> ata_cable_80wire() was added by commit be0d18d ("libata: cable detection
+> fixes") in Mar 2007.
+> 
+> > You should also I think cc the Toshiba maintainers
+> 
+> added to cc:.
+> 
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] pata_scc: add proper cable detection method
+> 
+> Use standard ata_cable_80wire() method for the cable detection, as a bonus
+> this allows us to use the default ->prereset method.
+> 
+> Cc: Kou Ishizaki <kou.ishizaki@toshiba.co.jp>
+> Cc: Akira Iguchi <akira2.iguchi@toshiba.co.jp>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+> earlier references:
+> https://lkml.org/lkml/2009/11/25/373
+> 
+>  drivers/ata/pata_scc.c |   14 +-------------
+>  1 file changed, 1 insertion(+), 13 deletions(-)
+> 
+> Index: b/drivers/ata/pata_scc.c
+> ===================================================================
+> --- a/drivers/ata/pata_scc.c
+> +++ b/drivers/ata/pata_scc.c
+> @@ -827,18 +827,6 @@ static unsigned int scc_data_xfer (struc  }
+> 
+>  /**
+> - *	scc_pata_prereset - prepare for reset
+> - *	@ap: ATA port to be reset
+> - *	@deadline: deadline jiffies for the operation
+> - */
+> -
+> -static int scc_pata_prereset(struct ata_link *link, unsigned long
+> deadline) -{
+> -	link->ap->cbl = ATA_CBL_PATA80;
+> -	return ata_sff_prereset(link, deadline);
+> -}
+> -
+> -/**
+>   *	scc_postreset - standard postreset callback
+>   *	@ap: the target ata_port
+>   *	@classes: classes of attached devices
+> @@ -947,7 +935,7 @@ static struct ata_port_operations scc_pa
+>  	.bmdma_status		= scc_bmdma_status,
+>  	.sff_data_xfer		= scc_data_xfer,
+> 
+> -	.prereset		= scc_pata_prereset,
+> +	.cable_detect		= ata_cable_80wire,
+>  	.softreset		= scc_softreset,
+>  	.postreset		= scc_postreset,
+> 
