@@ -1,37 +1,71 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_rdc: parallel scanning needs an extra locking
-Date: Thu, 13 Oct 2011 20:11:36 +0100
-Message-ID: <20111013201136.20594eff@lxorguk.ukuu.org.uk>
-References: <201110131606.04496.bzolnier@gmail.com>
-	<20111013164923.23683fcb@lxorguk.ukuu.org.uk>
-	<201110131808.31470.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] libata: fix for transport xfer attributes
+Date: Thu, 13 Oct 2011 22:03:45 +0200
+Message-ID: <201110132203.45394.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201110131808.31470.bzolnier@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:58632 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301Ab1JMURT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 16:17:19 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 13 Oct 2011 18:08:31 +0200
-Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH] libata: fix for transport xfer attributes
 
-> Alan Cox wrote:
-> 
-> > On Thu, 13 Oct 2011 16:06:04 +0200
-> > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > 
-> > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > Subject: [PATCH] pata_rdc: parallel scanning needs an extra locking
-> > > 
-> > > This is similar change as commit 60c3be3 ("ata_piix: parallel scanning
-> > > on PATA needs an extra locking") for ata_piix host driver.
-> > 
-> > Again has anyone verified with the vendor that the RDC can support
-> > parallel scanning ?
-> 
-> Upstream has always used it:
+Fix display of pio_mode, dma_mode and xfer_mode device attributes.
 
-Fair enough as nobody has complained.
+before:
+$ cat /sys/class/ata_device/dev1.0/xfer_mode
+XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_UDMA_3, XFER_UDMA_2, XF
+ER_UDMA_1, XFER_UDMA_0, XFER_MW_DMA_4, XFER_MW_DMA_3, XFER_MW_DMA_2, XFER_SW_DMA
+_2, XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2
+
+after:
+$ cat /sys/class/ata_device/dev1.0/xfer_mode
+XFER_UDMA_6
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+ Documentation/ABI/testing/sysfs-ata |    4 ++--
+ drivers/ata/libata-transport.c      |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+Index: b/Documentation/ABI/testing/sysfs-ata
+===================================================================
+--- a/Documentation/ABI/testing/sysfs-ata
++++ b/Documentation/ABI/testing/sysfs-ata
+@@ -59,12 +59,12 @@ class
+ 
+ dma_mode
+ 
+-	Transfer modes supported by the device when in DMA mode.
++	Transfer mode currently used by the device when in DMA mode.
+ 	Mostly used by PATA device.
+ 
+ pio_mode
+ 
+-	Transfer modes supported by the device when in PIO mode.
++	Transfer mode currently used by the device when in PIO mode.
+ 	Mostly used by PATA device.
+ 
+ xfer_mode
+Index: b/drivers/ata/libata-transport.c
+===================================================================
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -194,7 +194,7 @@ static struct {
+ 	{ XFER_PIO_0,			"XFER_PIO_0" },
+ 	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
+ };
+-ata_bitfield_name_match(xfer,ata_xfer_names)
++ata_bitfield_name_search(xfer, ata_xfer_names)
+ 
+ /*
+  * ATA Port attributes
