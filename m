@@ -1,34 +1,79 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] cy82c693: fix PCI device selection
-Date: Thu, 13 Oct 2011 17:05:36 -0400 (EDT)
-Message-ID: <20111013.170536.562162672545514574.davem@davemloft.net>
-References: <201110121652.10495.bzolnier@gmail.com>
-	<20111012.150207.1100668688848833225.davem@davemloft.net>
-	<201110131229.09178.bzolnier@gmail.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] libata: fix for transport xfer attributes
+Date: Thu, 13 Oct 2011 18:14:54 -0400
+Message-ID: <4E9762DE.1060009@pobox.com>
+References: <201110132203.45394.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:37392 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753105Ab1JMVFj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 17:05:39 -0400
-In-Reply-To: <201110131229.09178.bzolnier@gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:65186 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754593Ab1JMWO6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 18:14:58 -0400
+In-Reply-To: <201110132203.45394.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bzolnier@gmail.com
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Date: Thu, 13 Oct 2011 12:28:54 +0200
+On 10/13/2011 04:03 PM, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> Subject: [PATCH] libata: fix for transport xfer attributes
+>
+> Fix display of pio_mode, dma_mode and xfer_mode device attributes.
+>
+> before:
+> $ cat /sys/class/ata_device/dev1.0/xfer_mode
+> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_UDMA_3, XFER_UDMA_2, XF
+> ER_UDMA_1, XFER_UDMA_0, XFER_MW_DMA_4, XFER_MW_DMA_3, XFER_MW_DMA_2, XFER_SW_DMA
+> _2, XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2
+>
+> after:
+> $ cat /sys/class/ata_device/dev1.0/xfer_mode
+> XFER_UDMA_6
+>
+> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> ---
+>   Documentation/ABI/testing/sysfs-ata |    4 ++--
+>   drivers/ata/libata-transport.c      |    2 +-
+>   2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> Index: b/Documentation/ABI/testing/sysfs-ata
+> ===================================================================
+> --- a/Documentation/ABI/testing/sysfs-ata
+> +++ b/Documentation/ABI/testing/sysfs-ata
+> @@ -59,12 +59,12 @@ class
+>
+>   dma_mode
+>
+> -	Transfer modes supported by the device when in DMA mode.
+> +	Transfer mode currently used by the device when in DMA mode.
+>   	Mostly used by PATA device.
+>
+>   pio_mode
+>
+> -	Transfer modes supported by the device when in PIO mode.
+> +	Transfer mode currently used by the device when in PIO mode.
+>   	Mostly used by PATA device.
+>
+>   xfer_mode
+> Index: b/drivers/ata/libata-transport.c
+> ===================================================================
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -194,7 +194,7 @@ static struct {
+>   	{ XFER_PIO_0,			"XFER_PIO_0" },
+>   	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
+>   };
+> -ata_bitfield_name_match(xfer,ata_xfer_names)
+> +ata_bitfield_name_search(xfer, ata_xfer_names)
 
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH v2] cy82c693: fix PCI device selection
-> 
-> Wrong PCI device may be selected by cy82c693_set_pio_mode() if modular
-> IDE host drivers are used and there are additional IDE PCI devices
-> installed in the system.  Fix it.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+"fix" or not it is an ABI change... who is impacted?  Has anyone used 
+the current, pre-patch behavior as documented?
 
-Applied.
+	Jeff
+
+
+
+
