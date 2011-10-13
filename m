@@ -1,85 +1,100 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] pata_via: add via_fixup()
-Date: Thu, 13 Oct 2011 19:09:32 +0400
-Message-ID: <4E96FF2C.5070101@mvista.com>
-References: <201110131310.51896.bzolnier@gmail.com> <4E96D81F.8000400@mvista.com> <201110131454.48888.bzolnier@gmail.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH v2] pata_efar: fix register naming used in efar_set_piomode()
+Date: Thu, 13 Oct 2011 17:44:14 +0200
+Message-ID: <201110131744.14352.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:45353 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614Ab1JMPLA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 11:11:00 -0400
-In-Reply-To: <201110131454.48888.bzolnier@gmail.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:62322 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318Ab1JMPoy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 11:44:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: [PATCH v2] pata_efar: fix register naming used in efar_set_piomode()
 
-On 10/13/2011 04:54 PM, Bartlomiej Zolnierkiewicz wrote:
+Rename 'idetm_port' and 'idetm_data' variables to 'master_port'
+and 'master_data' respectively to match register naming used in
+efar_set_dmamode() and in ata_piix.c.
 
->> On 13-10-2011 15:10, Bartlomiej Zolnierkiewicz wrote:
+Fix efar_set_piomode() documentation while at it.
 
->>> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->>> Subject: [PATCH] pata_via: add via_fixup()
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+---
+v2: don't change idetm_port type
 
->>> Factor out common code from via_[re]init_one() to via_fixup().
+earlier references:
+https://lkml.org/lkml/2011/2/8/100
 
->>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->>> ---
->>> earlier references:
->>> https://lkml.org/lkml/2009/11/25/381
+ drivers/ata/pata_efar.c |   22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
->>>    drivers/ata/pata_via.c |   49 +++++++++++++++++++++++--------------------------
->>>    1 file changed, 23 insertions(+), 26 deletions(-)
-
->>> Index: b/drivers/ata/pata_via.c
->>> ===================================================================
->>> --- a/drivers/ata/pata_via.c
->>> +++ b/drivers/ata/pata_via.c
->>> @@ -491,6 +491,27 @@ static void via_config_fifo(struct pci_d
->>>    	}
->>>    }
->>>
->>> +static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
->>> +{
->>> +	u32 timing;
->>> +
->>> +	/* Initialise the FIFO for the enabled channels. */
->>> +	via_config_fifo(pdev, config->flags);
->>> +
->>> +	if (config->udma_mask == ATA_UDMA4) {
->>> +		/* The 66 MHz devices require we enable the clock */
->>> +		pci_read_config_dword(pdev, 0x50,&timing);
->>> +		timing |= 0x80008;
->>> +		pci_write_config_dword(pdev, 0x50, timing);
->>> +	}
-
->>      Hm, via_init_one() doesn't do this now... but used to do this before your
->> patch:
-
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=460f5318460a9a3b2562d8055b9fb1c60b768e1f
-
->>      Was that patch wrong or am I misundertanding?
-
-> It seems that the previous patch was wrong and I haven't noticed it earlier
-> because both patches were in my patch queue.
-
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH v2] pata_via: add via_fixup()
-
-> * Fix via_init_one() to enable clock on 66 MHz devices
->    (bug introduced in commit 460f531 "pata_via: store UDMA masks
->     in via_isa_bridges table").
-
-> * Factor out common code from via_[re]init_one() to via_fixup().
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-
-    OK, but don't you think the fix should be separate from refactor (and be 
-applied to -stable)?
-
-WBR, Sergei
+Index: b/drivers/ata/pata_efar.c
+===================================================================
+--- a/drivers/ata/pata_efar.c
++++ b/drivers/ata/pata_efar.c
+@@ -73,7 +73,7 @@ static DEFINE_SPINLOCK(efar_lock);
+ /**
+  *	efar_set_piomode - Initialize host controller PATA PIO timings
+  *	@ap: Port whose timings we are configuring
+- *	@adev: um
++ *	@adev: Device to program
+  *
+  *	Set PIO mode for device, in host controller PCI config space.
+  *
+@@ -85,9 +85,9 @@ static void efar_set_piomode (struct ata
+ {
+ 	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
+ 	struct pci_dev *dev	= to_pci_dev(ap->host->dev);
+-	unsigned int idetm_port= ap->port_no ? 0x42 : 0x40;
++	unsigned int master_port = ap->port_no ? 0x42 : 0x40;
+ 	unsigned long flags;
+-	u16 idetm_data;
++	u16 master_data;
+ 	u8 udma_enable;
+ 	int control = 0;
+ 
+@@ -113,20 +113,20 @@ static void efar_set_piomode (struct ata
+ 
+ 	spin_lock_irqsave(&efar_lock, flags);
+ 
+-	pci_read_config_word(dev, idetm_port, &idetm_data);
++	pci_read_config_word(dev, master_port, &master_data);
+ 
+ 	/* Set PPE, IE, and TIME as appropriate */
+ 	if (adev->devno == 0) {
+-		idetm_data &= 0xCCF0;
+-		idetm_data |= control;
+-		idetm_data |= (timings[pio][0] << 12) |
++		master_data &= 0xCCF0;
++		master_data |= control;
++		master_data |= (timings[pio][0] << 12) |
+ 			(timings[pio][1] << 8);
+ 	} else {
+ 		int shift = 4 * ap->port_no;
+ 		u8 slave_data;
+ 
+-		idetm_data &= 0xFF0F;
+-		idetm_data |= (control << 4);
++		master_data &= 0xFF0F;
++		master_data |= (control << 4);
+ 
+ 		/* Slave timing in separate register */
+ 		pci_read_config_byte(dev, 0x44, &slave_data);
+@@ -135,8 +135,8 @@ static void efar_set_piomode (struct ata
+ 		pci_write_config_byte(dev, 0x44, slave_data);
+ 	}
+ 
+-	idetm_data |= 0x4000;	/* Ensure SITRE is set */
+-	pci_write_config_word(dev, idetm_port, idetm_data);
++	master_data |= 0x4000;	/* Ensure SITRE is set */
++	pci_write_config_word(dev, master_port, master_data);
+ 
+ 	pci_read_config_byte(dev, 0x48, &udma_enable);
+ 	udma_enable &= ~(1 << (2 * ap->port_no + adev->devno));
