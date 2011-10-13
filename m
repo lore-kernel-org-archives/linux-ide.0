@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_via: add via_fixup()
-Date: Thu, 13 Oct 2011 13:10:51 +0200
-Message-ID: <201110131310.51896.bzolnier@gmail.com>
+Subject: [PATCH] pata_ali: cleanup ali_set_piomode()
+Date: Thu, 13 Oct 2011 13:09:25 +0200
+Message-ID: <201110131309.26032.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
@@ -13,110 +13,36 @@ Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] pata_via: add via_fixup()
+Subject: [PATCH] pata_ali: cleanup ali_set_piomode()
 
-Factor out common code from via_[re]init_one() to via_fixup().
+Merge ali_fifo_control() calls.
+
+This changes behavior but there shouldn't be any problems with it.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 ---
 earlier references:
-https://lkml.org/lkml/2009/11/25/381
+https://lkml.org/lkml/2010/1/18/258
 
- drivers/ata/pata_via.c |   49 +++++++++++++++++++++++--------------------------
- 1 file changed, 23 insertions(+), 26 deletions(-)
+ drivers/ata/pata_ali.c |    7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Index: b/drivers/ata/pata_via.c
+Index: b/drivers/ata/pata_ali.c
 ===================================================================
---- a/drivers/ata/pata_via.c
-+++ b/drivers/ata/pata_via.c
-@@ -491,6 +491,27 @@ static void via_config_fifo(struct pci_d
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -222,12 +222,9 @@ static void ali_set_piomode(struct ata_p
  	}
+ 
+ 	/* PIO FIFO is only permitted on ATA disk */
+-	if (adev->class != ATA_DEV_ATA)
+-		ali_fifo_control(ap, adev, 0x00);
+-	ali_program_modes(ap, adev, &t, 0);
+-	if (adev->class == ATA_DEV_ATA)
+-		ali_fifo_control(ap, adev, 0x05);
++	ali_fifo_control(ap, adev, (adev->class == ATA_DEV_ATA) ? 0x05 : 0x00);
+ 
++	ali_program_modes(ap, adev, &t, 0);
  }
  
-+static void via_fixup(struct pci_dev *pdev, const struct via_isa_bridge *config)
-+{
-+	u32 timing;
-+
-+	/* Initialise the FIFO for the enabled channels. */
-+	via_config_fifo(pdev, config->flags);
-+
-+	if (config->udma_mask == ATA_UDMA4) {
-+		/* The 66 MHz devices require we enable the clock */
-+		pci_read_config_dword(pdev, 0x50, &timing);
-+		timing |= 0x80008;
-+		pci_write_config_dword(pdev, 0x50, timing);
-+	}
-+	if (config->flags & VIA_BAD_CLK66) {
-+		/* Disable the 66MHz clock on problem devices */
-+		pci_read_config_dword(pdev, 0x50, &timing);
-+		timing &= ~0x80008;
-+		pci_write_config_dword(pdev, 0x50, timing);
-+	}
-+}
-+
  /**
-  *	via_init_one		-	discovery callback
-  *	@pdev: PCI device
-@@ -553,7 +574,6 @@ static int via_init_one(struct pci_dev *
- 	const struct via_isa_bridge *config;
- 	static int printed_version;
- 	u8 enable;
--	u32 timing;
- 	unsigned long flags = id->driver_data;
- 	int rc;
- 
-@@ -593,9 +613,6 @@ static int via_init_one(struct pci_dev *
- 			return -ENODEV;
- 	}
- 
--	/* Initialise the FIFO for the enabled channels. */
--	via_config_fifo(pdev, config->flags);
--
- 	/* Clock set up */
- 	switch (config->udma_mask) {
- 	case 0x00:
-@@ -621,12 +638,7 @@ static int via_init_one(struct pci_dev *
- 		return -ENODEV;
-  	}
- 
--	if (config->flags & VIA_BAD_CLK66) {
--		/* Disable the 66MHz clock on problem devices */
--		pci_read_config_dword(pdev, 0x50, &timing);
--		timing &= ~0x80008;
--		pci_write_config_dword(pdev, 0x50, timing);
--	}
-+	via_fixup(pdev, config);
- 
- 	/* We have established the device type, now fire it up */
- 	return ata_pci_bmdma_init_one(pdev, ppi, &via_sht, (void *)config, 0);
-@@ -645,29 +657,14 @@ static int via_init_one(struct pci_dev *
- 
- static int via_reinit_one(struct pci_dev *pdev)
- {
--	u32 timing;
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
--	const struct via_isa_bridge *config = host->private_data;
- 	int rc;
- 
- 	rc = ata_pci_device_do_resume(pdev);
- 	if (rc)
- 		return rc;
- 
--	via_config_fifo(pdev, config->flags);
--
--	if (config->udma_mask == ATA_UDMA4) {
--		/* The 66 MHz devices require we enable the clock */
--		pci_read_config_dword(pdev, 0x50, &timing);
--		timing |= 0x80008;
--		pci_write_config_dword(pdev, 0x50, timing);
--	}
--	if (config->flags & VIA_BAD_CLK66) {
--		/* Disable the 66MHz clock on problem devices */
--		pci_read_config_dword(pdev, 0x50, &timing);
--		timing &= ~0x80008;
--		pci_write_config_dword(pdev, 0x50, timing);
--	}
-+	via_fixup(pdev, host->private_data);
- 
- 	ata_host_resume(host);
- 	return 0;
