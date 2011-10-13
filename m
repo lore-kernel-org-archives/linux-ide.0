@@ -1,117 +1,48 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/3] pata_serverworks: cleanup cable detection
-Date: Thu, 13 Oct 2011 12:32:18 +0200
-Message-ID: <201110131232.18514.bzolnier@gmail.com>
-References: <201110112011.44748.bzolnier@gmail.com> <201110121705.39026.bzolnier@gmail.com> <20111012185548.4fa03544@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Don't use UDMA on VIA UDMA33 controller with Transcend SSD
+Date: Thu, 13 Oct 2011 12:35:22 +0200
+Message-ID: <201110131235.40956.bzolnier@gmail.com>
+References: <20091117.043002.224755438.davem@davemloft.net> <201110121638.09605.bzolnier@gmail.com> <20111012185952.3f36718b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111012185548.4fa03544@lxorguk.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:35213 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754739Ab1JMKmP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 06:42:15 -0400
+Received: by mail-gy0-f174.google.com with SMTP id 13so1660159gyb.19
+        for <linux-ide@vger.kernel.org>; Thu, 13 Oct 2011 03:42:14 -0700 (PDT)
+In-Reply-To: <20111012185952.3f36718b@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: David Miller <davem@davemloft.net>, mpatocka@redhat.com, linux-ide@vger.kernel.org
 
 Alan Cox wrote:
 
-> On Wed, 12 Oct 2011 17:05:38 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > Alan Cox wrote:
+> > > The last state on this I saw it seemd that exactly one person had seen it
+> > > on exactly one machine ? Has that changed ?
 > > 
-> > > On Tue, 11 Oct 2011 20:11:44 +0200
-> > > Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> > > 
-> > > > From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > > Subject: [PATCH] pata_serverworks: cleanup cable detection
-> > > > 
-> > > > Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> > > 
-> > > Again no documentation although its at least a bit more obvious why
-> > 
-> > The patch only merges identical cable routines for Dell and Sun
-> > systems into common oem_cable() one.  No behavior changes here.
+> > No, you're right here.
 > 
-> So put that that in the patch info. It seems fine to me but it ought to
-> be there
+> So as far as is known its a weird glitch on one persons box with one
+> device with one firmware that's not been replicated ?
+> 
+> That's not a patch candidate really is it.
 
-Ok.
+Should we revert following commit then?
 
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH v2] pata_serverworks: cleanup cable detection
+commit 10734fc8d5fbf89e88519d72e58cce83be21941a
+Author: Alan Cox <alan@linux.intel.com>
+Date:   Mon Nov 30 13:22:43 2009 +0000
 
-Merge identical cable routines for Dell and Sun systems into
-common oem_cable() one.
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
----
-v2: updated patch description
-
-earlier references:
-https://lkml.org/lkml/2010/1/18/324
-
- drivers/ata/pata_serverworks.c |   37 +++++++------------------------------
- 1 file changed, 7 insertions(+), 30 deletions(-)
-
-Index: b/drivers/ata/pata_serverworks.c
-===================================================================
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -57,32 +57,14 @@ static const char *csb_bad_ata100[] = {
- };
- 
- /**
-- *	dell_cable	-	Dell serverworks cable detection
-+ *	oem_cable	-	Dell/Sun serverworks cable detection
-  *	@ap: ATA port to do cable detect
-  *
-- *	Dell hide the 40/80 pin select for their interfaces in the top two
-- *	bits of the subsystem ID.
-+ *	Dell PowerEdge and Sun Cobalt 'Alpine' hide the 40/80 pin select
-+ *	for their interfaces in the top two bits of the subsystem ID.
-  */
- 
--static int dell_cable(struct ata_port *ap)
--{
--	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
--
--	if (pdev->subsystem_device & (1 << (ap->port_no + 14)))
--		return ATA_CBL_PATA80;
--	return ATA_CBL_PATA40;
--}
--
--/**
-- *	sun_cable	-	Sun Cobalt 'Alpine' cable detection
-- *	@ap: ATA port to do cable select
-- *
-- *	Cobalt CSB5 IDE hides the 40/80pin in the top two bits of the
-- *	subsystem ID the same as dell. We could use one function but we may
-- *	need to extend the Dell one in future
-- */
--
--static int sun_cable(struct ata_port *ap)
-+static int oem_cable(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 
-@@ -97,15 +79,10 @@ struct sv_cable_table {
- 	int (*cable_detect)(struct ata_port *ap);
- };
- 
--/*
-- *	Note that we don't copy the old serverworks code because the old
-- *	code contains obvious mistakes
-- */
--
- static struct sv_cable_table cable_detect[] = {
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, dell_cable },
--	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  sun_cable  },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_VENDOR_ID_DELL, oem_cable },
-+	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_VENDOR_ID_SUN,  oem_cable },
- 	{ PCI_DEVICE_ID_SERVERWORKS_OSB4IDE,   PCI_ANY_ID, ata_cable_40wire  },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB5IDE,   PCI_ANY_ID, ata_cable_unknown },
- 	{ PCI_DEVICE_ID_SERVERWORKS_CSB6IDE,   PCI_ANY_ID, ata_cable_unknown },
+    pata_via: Blacklist some combinations of Transcend Flash and via
+    
+    Reported by Mikulas Patocka.
+    
+    VIA VT82C586B + Transcend TS64GSSD25-M v0826 does not work in UDMA mode
+    
+    Signed-off-by: Alan Cox <alan@linux.intel.com>
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
