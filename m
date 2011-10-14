@@ -1,47 +1,54 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] pata_pcmcia/ide-cs: move IDs table to
- <linux/pata_pcmcia_ids.h>
-Date: Fri, 14 Oct 2011 14:17:15 -0400 (EDT)
-Message-ID: <20111014.141715.847854706049881596.davem@davemloft.net>
-References: <201110131312.14498.bzolnier@gmail.com>
-	<4E986988.6080106@pobox.com>
+From: Grant Grundler <grundler@google.com>
+Subject: Re: [PATCH] libata: fix for transport xfer attributes
+Date: Fri, 14 Oct 2011 12:12:26 -0700
+Message-ID: <CANEJEGtzwQkDG1KmqVizmW8=SWuhYgjH02TgLaQzU-76TYUZZg@mail.gmail.com>
+References: <201110132203.45394.bzolnier@gmail.com>
+	<4E9762DE.1060009@pobox.com>
+	<201110141158.33983.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:38174 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751663Ab1JNSRb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2011 14:17:31 -0400
-In-Reply-To: <4E986988.6080106@pobox.com>
+Received: from smtp-out.google.com ([216.239.44.51]:63188 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755366Ab1JNTMa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2011 15:12:30 -0400
+Received: from hpaq13.eem.corp.google.com (hpaq13.eem.corp.google.com [172.25.149.13])
+	by smtp-out.google.com with ESMTP id p9EJCTAX001059
+	for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2011 12:12:29 -0700
+Received: from qyk30 (qyk30.prod.google.com [10.241.83.158])
+	by hpaq13.eem.corp.google.com with ESMTP id p9EJ6mSZ001562
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2011 12:12:28 -0700
+Received: by qyk30 with SMTP id 30so586369qyk.9
+        for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2011 12:12:27 -0700 (PDT)
+In-Reply-To: <201110141158.33983.bzolnier@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: bzolnier@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan@lxorguk.ukuu.org.uk
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gwendal Grignou ` <gwendal@google.com>
 
-From: Jeff Garzik <jgarzik@pobox.com>
-Date: Fri, 14 Oct 2011 12:55:36 -0400
+On Fri, Oct 14, 2011 at 2:58 AM, Bartlomiej Zolnierkiewicz
+<bzolnier@gmail.com> wrote:
+=2E..
+>> "fix" or not it is an ABI change... who is impacted? =C2=A0Has anyon=
+e used
+>> the current, pre-patch behavior as documented?
+>
+> I doubt that anyone has used it given the current incorrect behavior =
+but lets
+> ask libata transport authors..
 
-> On 10/13/2011 07:12 AM, Bartlomiej Zolnierkiewicz wrote:
->> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->> Subject: [PATCH] pata_pcmcia/ide-cs: move IDs table
->> to<linux/pata_pcmcia_ids.h>
->>
->> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
->> ---
->>   drivers/ata/pata_pcmcia.c | 74
->>   +---------------------------------------
->>   drivers/ide/ide-cs.c | 74 +---------------------------------------
->>   include/linux/pata_pcmcia_ids.h | 70
->>   +++++++++++++++++++++++++++++++++++++
->>   3 files changed, 75 insertions(+), 143 deletions(-)
-> 
-> I'm torn...  it is an obvious and simple consolidation, but I dislike
-> dropping such a driver-specific turd in include/linux.  I also wonder
-> if we want to continue adding new IDs to ide-cs?
-> 
-> David, any opinions?  I'm basically ok with any option: (a) take
-> Bart's patch as-is (with your acked-by), (b) ignore the patch and set
-> a no-new-ids policy for ide-cs, (c) other?
+Gwendal is the primary author.
 
-Option 'b' please, thanks.
+I'm not aware of any uses either.
+
+Based on this kernel.org documentation:
+    http://www.kernel.org/doc/Documentation/ABI/testing/sysfs-ata
+
+    "xfer_mode   Current transfer mode."
+
+I agree with Bartomiej that current behavior is incorrect.
+
+cheers,
+grant
