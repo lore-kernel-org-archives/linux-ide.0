@@ -1,79 +1,79 @@
-From: Jeff Garzik <jgarzik@pobox.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [PATCH] libata: fix for transport xfer attributes
-Date: Thu, 13 Oct 2011 18:14:54 -0400
-Message-ID: <4E9762DE.1060009@pobox.com>
-References: <201110132203.45394.bzolnier@gmail.com>
+Date: Fri, 14 Oct 2011 11:58:33 +0200
+Message-ID: <201110141158.33983.bzolnier@gmail.com>
+References: <201110132203.45394.bzolnier@gmail.com> <4E9762DE.1060009@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:65186 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754593Ab1JMWO6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2011 18:14:58 -0400
-In-Reply-To: <201110132203.45394.bzolnier@gmail.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:64887 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904Ab1JNJ7K (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2011 05:59:10 -0400
+In-Reply-To: <4E9762DE.1060009@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gwendal Grignou ` <gwendal@google.com>, Grant Grundler <grundler@google.com>
 
-On 10/13/2011 04:03 PM, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> Subject: [PATCH] libata: fix for transport xfer attributes
->
-> Fix display of pio_mode, dma_mode and xfer_mode device attributes.
->
-> before:
-> $ cat /sys/class/ata_device/dev1.0/xfer_mode
-> XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_UDMA_3, XFER_UDMA_2, XF
-> ER_UDMA_1, XFER_UDMA_0, XFER_MW_DMA_4, XFER_MW_DMA_3, XFER_MW_DMA_2, XFER_SW_DMA
-> _2, XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2
->
-> after:
-> $ cat /sys/class/ata_device/dev1.0/xfer_mode
-> XFER_UDMA_6
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
-> ---
->   Documentation/ABI/testing/sysfs-ata |    4 ++--
->   drivers/ata/libata-transport.c      |    2 +-
->   2 files changed, 3 insertions(+), 3 deletions(-)
->
-> Index: b/Documentation/ABI/testing/sysfs-ata
-> ===================================================================
-> --- a/Documentation/ABI/testing/sysfs-ata
-> +++ b/Documentation/ABI/testing/sysfs-ata
-> @@ -59,12 +59,12 @@ class
->
->   dma_mode
->
-> -	Transfer modes supported by the device when in DMA mode.
-> +	Transfer mode currently used by the device when in DMA mode.
->   	Mostly used by PATA device.
->
->   pio_mode
->
-> -	Transfer modes supported by the device when in PIO mode.
-> +	Transfer mode currently used by the device when in PIO mode.
->   	Mostly used by PATA device.
->
->   xfer_mode
-> Index: b/drivers/ata/libata-transport.c
-> ===================================================================
-> --- a/drivers/ata/libata-transport.c
-> +++ b/drivers/ata/libata-transport.c
-> @@ -194,7 +194,7 @@ static struct {
->   	{ XFER_PIO_0,			"XFER_PIO_0" },
->   	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
->   };
-> -ata_bitfield_name_match(xfer,ata_xfer_names)
-> +ata_bitfield_name_search(xfer, ata_xfer_names)
+Jeff Garzik wrote:
 
-"fix" or not it is an ABI change... who is impacted?  Has anyone used 
-the current, pre-patch behavior as documented?
+> On 10/13/2011 04:03 PM, Bartlomiej Zolnierkiewicz wrote:
+> > From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > Subject: [PATCH] libata: fix for transport xfer attributes
+> >
+> > Fix display of pio_mode, dma_mode and xfer_mode device attributes.
+> >
+> > before:
+> > $ cat /sys/class/ata_device/dev1.0/xfer_mode
+> > XFER_UDMA_7, XFER_UDMA_6, XFER_UDMA_5, XFER_UDMA_4, XFER_UDMA_3, XFER_UDMA_2, XF
+> > ER_UDMA_1, XFER_UDMA_0, XFER_MW_DMA_4, XFER_MW_DMA_3, XFER_MW_DMA_2, XFER_SW_DMA
+> > _2, XFER_PIO_6, XFER_PIO_5, XFER_PIO_4, XFER_PIO_3, XFER_PIO_2
+> >
+> > after:
+> > $ cat /sys/class/ata_device/dev1.0/xfer_mode
+> > XFER_UDMA_6
+> >
+> > Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+> > ---
+> >   Documentation/ABI/testing/sysfs-ata |    4 ++--
+> >   drivers/ata/libata-transport.c      |    2 +-
+> >   2 files changed, 3 insertions(+), 3 deletions(-)
+> >
+> > Index: b/Documentation/ABI/testing/sysfs-ata
+> > ===================================================================
+> > --- a/Documentation/ABI/testing/sysfs-ata
+> > +++ b/Documentation/ABI/testing/sysfs-ata
+> > @@ -59,12 +59,12 @@ class
+> >
+> >   dma_mode
+> >
+> > -	Transfer modes supported by the device when in DMA mode.
+> > +	Transfer mode currently used by the device when in DMA mode.
+> >   	Mostly used by PATA device.
+> >
+> >   pio_mode
+> >
+> > -	Transfer modes supported by the device when in PIO mode.
+> > +	Transfer mode currently used by the device when in PIO mode.
+> >   	Mostly used by PATA device.
+> >
+> >   xfer_mode
+> > Index: b/drivers/ata/libata-transport.c
+> > ===================================================================
+> > --- a/drivers/ata/libata-transport.c
+> > +++ b/drivers/ata/libata-transport.c
+> > @@ -194,7 +194,7 @@ static struct {
+> >   	{ XFER_PIO_0,			"XFER_PIO_0" },
+> >   	{ XFER_PIO_SLOW,		"XFER_PIO_SLOW" }
+> >   };
+> > -ata_bitfield_name_match(xfer,ata_xfer_names)
+> > +ata_bitfield_name_search(xfer, ata_xfer_names)
+> 
+> "fix" or not it is an ABI change... who is impacted?  Has anyone used 
+> the current, pre-patch behavior as documented?
 
-	Jeff
-
-
-
-
+I doubt that anyone has used it given the current incorrect behavior but lets
+ask libata transport authors..
