@@ -1,37 +1,71 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 3/3] pata_sil680: minor CodingStyle fixups
-Date: Fri, 14 Oct 2011 12:45:44 -0400
-Message-ID: <4E986738.9050504@pobox.com>
-References: <201110112021.51236.bzolnier@gmail.com> <4E957080.6020102@mvista.com> <20111012120305.0b5f8f06@lxorguk.ukuu.org.uk>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2 2/4] ata_piix: unify code for programming PIO and MWDMA
+ timings
+Date: Fri, 14 Oct 2011 20:51:25 +0400
+Message-ID: <4E98688D.3070505@mvista.com>
+References: <201110131539.11190.bzolnier@gmail.com> <4E9824AC.6020902@mvista.com> <201110141543.27060.bzolnier@gmail.com> <4E9866A4.80302@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:49523 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755138Ab1JNQpr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2011 12:45:47 -0400
-In-Reply-To: <20111012120305.0b5f8f06@lxorguk.ukuu.org.uk>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42241 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754629Ab1JNQwx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2011 12:52:53 -0400
+In-Reply-To: <4E9866A4.80302@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/12/2011 07:03 AM, Alan Cox wrote:
->
+Hello.
+
+On 10/14/2011 08:43 PM, Sergei Shtylyov wrote:
+
+>>>> From: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+>>>> Subject: [PATCH v2] ata_piix: unify code for programming PIO and MWDMA timings
+
+>>>> Besides making things noticably simpler it results in ~2% decrease in
+>>>> the driver LOC count and also ~2% decrease in the driver binary size
+>>>> (as measured on x86-32).
+
+>>>> Fix piix_set_piomode() documentation while at it.
+
+>>>> Signed-off-by: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
+
+>>> I'm still inclined to NAK this patch.
+
+>>>> ---
+>>>> v2: remove use_mwdma variable and fix comment style
+
+>>>> earlier references:
+>>>> https://lkml.org/lkml/2011/2/8/99
+
+>>>> drivers/ata/ata_piix.c | 111 ++++++++++++++++---------------------------------
+>>>> 1 file changed, 38 insertions(+), 73 deletions(-)
+
+>>>> Index: b/drivers/ata/ata_piix.c
+>>>> ===================================================================
+>>>> --- a/drivers/ata/ata_piix.c
+>>>> +++ b/drivers/ata/ata_piix.c
+[...]
+
+>> We still have following code at the end of piix_set_timings():
+
+>> /* Ensure the UDMA bit is off - it will be turned back on if
+>> UDMA is selected */
 >>
->>> +	/* This last case is _NOT_ ok */
->>> +	case 0x30:
->>> +		printk(KERN_ERR "sil680: Clock disabled ?\n");
->>
->>      pr_err()? Or checkpatch.pl doesn't complain about it (I forgot)?
->
-> dev_ would be even better but that seems to be a separate thing. The
-> existing patch is still a move in the right direction.
+>> if (ap->udma_mask) {
+>> pci_read_config_byte(dev, 0x48,&udma_enable);
+>> udma_enable&= ~(1<< (2 * ap->port_no + adev->devno));
+>> pci_write_config_byte(dev, 0x48, udma_enable);
+>> }
 
-agreed x 2
+>> so everything should be OK.
 
-To be specific, it should be
+> Ah, I should have looked... Didn't expect it to be there, and it in fact
+> shouldn't be there, but now I'm OK with your patch. :-)
 
-	dev_err(&pdev->dev
+    But I would have preferred the above code to be removed, of course.
 
+WBR, Sergei
