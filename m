@@ -1,24 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: fix for transport xfer attributes
-Date: Fri, 14 Oct 2011 20:31:38 +0100
-Message-ID: <20111014203138.5d3460d5@lxorguk.ukuu.org.uk>
-References: <201110132203.45394.bzolnier@gmail.com>
-	<4E9762DE.1060009@pobox.com>
-	<201110141158.33983.bzolnier@gmail.com>
-	<CANEJEGtzwQkDG1KmqVizmW8=SWuhYgjH02TgLaQzU-76TYUZZg@mail.gmail.com>
+From: "Microsoft Office" <info@winner.com>
+Subject: MESSAGE FROM BILL GATES.
+Date: Mon, 17 Oct 2011 11:31:25 +0530
+Message-ID: <20111017060129.YVCT1579.viefep20-int.chello.at__14260.7740046971$1318834175$gmane$org@edge01.upcmail.net>
+Reply-To: <microsoftgame6@gala.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CANEJEGtzwQkDG1KmqVizmW8=SWuhYgjH02TgLaQzU-76TYUZZg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gwendal Grignou ` <gwendal@google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fep32.mx.upcmail.net ([62.179.121.50]:36051 "EHLO
+	fep32.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462Ab1JQGtV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2011 02:49:21 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->     "xfer_mode   Current transfer mode."
-> 
-> I agree with Bartomiej that current behavior is incorrect.
+Your Email Id has won 750,000.00GBP with a HP Laptop and a BlackBerry Phone in the MICROSOFT NATIONAL PROMOTION DRAW Promo 2011. send your
 
-Well we should probably fix the document and add the current transfer
-mode as its own sysfs entry - much less risky.
+Names.
+Address.
+Sex.
+Age.
+Tel.
+Occupation.
+Country.
+*City/State:
+ 
+Dr.Terry Cole
+Email: microsoftgame6@gala.net
