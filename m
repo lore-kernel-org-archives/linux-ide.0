@@ -1,83 +1,67 @@
 From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] [libata]Issue SRST to Sil3726 PMP
-Date: Wed, 19 Oct 2011 17:17:01 -0700
-Message-ID: <1319069822-21351-1-git-send-email-gwendal@google.com>
+Subject: Re: [PATCH] [libata]Issue SRST to Sil3726 PMP
+Date: Wed, 19 Oct 2011 17:28:38 -0700
+Message-ID: <CAMHSBOVAAq+f0K49QjD4ZV249BH_gQJ=UMA4OYSWOpOKpgkX6g@mail.gmail.com>
 References: <4E959E1F.20001@teksavvy.com>
+	<1319068962-18983-2-git-send-email-gwendal@google.com>
+	<20111020000700.GT25124@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:15527 "EHLO
+Received: from smtp-out.google.com ([216.239.44.51]:62136 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751007Ab1JTARi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2011 20:17:38 -0400
-In-Reply-To: <4E959E1F.20001@teksavvy.com>
+	with ESMTP id S1751300Ab1JTA2l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2011 20:28:41 -0400
+Received: from hpaq12.eem.corp.google.com (hpaq12.eem.corp.google.com [172.25.149.12])
+	by smtp-out.google.com with ESMTP id p9K0Se9e008621
+	for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2011 17:28:40 -0700
+Received: from qadc1 (qadc1.prod.google.com [10.224.32.129])
+	by hpaq12.eem.corp.google.com with ESMTP id p9K0OTuX025014
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2011 17:28:39 -0700
+Received: by qadc1 with SMTP id c1so4300447qad.0
+        for <linux-ide@vger.kernel.org>; Wed, 19 Oct 2011 17:28:38 -0700 (PDT)
+In-Reply-To: <20111020000700.GT25124@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com, kernel@teksavvy.com, mihrcke@gmail.com, derry@high-rely.com
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: kernel@teksavvy.com, mihrcke@gmail.com, derry@high-rely.com, linux-ide@vger.kernel.org
 
-By issuing SRST,
-. We re enable staggered spin up
-. We allow slow disks to spin up while we are still in initial error handler
+On Wed, Oct 19, 2011 at 5:07 PM, Tejun Heo <htejun@gmail.com> wrote:
+> Hello,
+>
+> On Wed, Oct 19, 2011 at 05:02:42PM -0700, Gwendal Grignou wrote:
+>> Reenable sending SRST to devices connected behind a Sil3726 PMP.
+>> This allow staggered spinups and handles drives that spins up slowly.
+>>
+>> While the drives spin up, the PMP will not accept SRST.
+>> Most controller reissues the reset until the drive is ready, while
+>> some [Sil3124] returns an error.
+>> In ata_eh_error, wait 10s before reset the ATA port and try again.
+>
+> While I agree with the change, the description doesn't seem too
+> accurate.
+>
+> * The behavior change applies to all PMPs.
+I just re-enable SRST for Sil3726, not the other PMPs. For the other
+ones where ATA_LFLAG_NO_SRST is still set, we will not issue softreset
+and therefore will not try to access the spining disk until we send
+the first identify.
+For the other PMP where SRST was allowed, I guess the Sil3132
+controller would have offline the disks or downgrade the speed
+unnecessarily.
+>
+> * I hope 3726 change is in a separate patch.
+>
+> * It waits for reset deadline which currently happens to be 10s.
+That's correct.
 
-However, some controller fails sending SRST while the disk is spinning up
-behind the port multiplier.
-To avoid slow disk to be ignored, or link to be downgraded unnecessarily, wait 10s if
-SRST fails before resetting the ATA port.
+I update the description.
 
-With a Sil3132.
-Before the patch:
-[  236.184036] ata4.15: hard resetting link
-[  236.184038] ata4: controller in dubious state, performing PORT_RST
-[  238.338048] ata4.15: SATA link up 1.5 Gbps (SStatus 113 SControl 10)
-[  239.549102] ata4.00: hard resetting link
-[  239.854315] ata4.00: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  239.854344] ata4.01: hard resetting link
-[  240.159316] ata4.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  240.159344] ata4.02: hard resetting link
-[  240.464316] ata4.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  240.464343] ata4.03: hard resetting link
-[  240.769314] ata4.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  240.769342] ata4.04: hard resetting link
-[  241.074316] ata4.04: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  241.074344] ata4.05: hard resetting link
-[  241.379314] ata4.05: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  241.382672] ata4.00: configured for UDMA/100 
-[  241.492027] ata4.01: failed to IDENTIFY (I/O error, err_mask=0x11)
-[  241.492030] ata4.01: revalidation failed (errno=-5)
-[  241.492033] ata4.15: hard resetting link
-
-After the patch:
-[   19.436422] ata4.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-[   19.454715] ata4.00: hard resetting link
-[   19.880032] ata4.00: softreset failed (SRST command error)
-[   19.880048] ata4.00: failed to read SCR 0 (Emask=0x40)
-[   19.880051] ata4.00: reset failed (errno=-85), retrying in 10 secs 
-[   29.454092] ata4.00: reset failed, giving up
-[   29.454099] ata4.15: hard resetting link
-[   29.454102] ata4: controller in dubious state, performing PORT_RST 
-[   31.608046] ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   31.608431] ata4.00: hard resetting link
-[   31.924284] ata4.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[   31.924335] ata4.01: hard resetting link 
-[   32.350029] ata4.01: softreset failed (SRST command error)
-[   32.460032] ata4.01: failed to read SCR 0 (Emask=0x1)
-[   32.460036] ata4.01: reset failed (errno=-85), retrying in 10 secs 
-[   41.924139] ata4.01: reset failed, giving up 
-[   41.924146] ata4.15: hard resetting link
-[   41.924148] ata4: controller in dubious state, performing PORT_RST
-[   44.078047] ata4.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-[   44.078384] ata4.00: hard resetting link
-
-Patch also tested with Marvel 7042 and Sil3726.
-
-Signed off version.
-
-Gwendal Grignou (1):
-  [libata]Issue SRST to Sil3726 PMP
-
- drivers/ata/libata-eh.c  |   12 +++++++++++-
- drivers/ata/libata-pmp.c |    7 ++-----
- 2 files changed, 13 insertions(+), 6 deletions(-)
-
--- 
-1.7.3.1
-
+Gwendal.
+>
+> Thanks.
+>
+> --
+> tejun
+>
