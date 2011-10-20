@@ -1,46 +1,33 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [PATCH ] ide-{cd,floppy,tape}: Do not include <linux/irq.h>
-Date: Thu, 20 Oct 2011 14:37:14 +0200
-Message-ID: <20111020123714.GB28316@gere.osrc.amd.com>
-References: <1319112675-27523-1-git-send-email-geert@linux-m68k.org>
+From: Michal =?ISO-8859-1?Q?Mal=FD?= <madcatxster@gmail.com>
+Subject: [PATCH] Failed to set xfermode (err_mask=0x4) with PIONEER DVRTD08A
+Date: Thu, 20 Oct 2011 15:36:43 +0200
+Message-ID: <5076334.A6YMT6Muoz@qosmio-x300>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1319112675-27523-1-git-send-email-geert@linux-m68k.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:39153 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297Ab1JTNgz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2011 09:36:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Thu, Oct 20, 2011 at 02:11:15PM +0200, Geert Uytterhoeven wrote:
-> The top of <linux/irq.h> has this comment:
->=20
->  * Please do not include this file in generic code.  There is current=
-ly
->  * no requirement for any architecture to implement anything held
->  * within this file.
->  *
->  * Thanks. --rmk
->=20
-> Remove inclusion of <linux/irq.h>, to prevent the following compile e=
-rror
-> from happening soon:
->=20
-> | include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq=
-_data=E2=80=99
-> | include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq=
-_chip=E2=80=99
->=20
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Acked-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: linux-ide@vger.kernel.org
+Hi,
 
-Acked-by: Borislav Petkov <bp@alien8.de>
+I haven't had this problem until the upgrade to 3.0 kernel. If I recall correctly, all 3.0.x versions except 3.0.3 needed this patch to get my DVD drive working, I've no idea what changed that the A-less entry in libata-core.c no longer works with the DVRTD08A drive.
 
-Thanks.
+---
+--- linux-3.0.7/drivers/ata/libata-core.c.old	2011-10-16 23:15:11.000000000 +0200
++++ linux-3.0.7/drivers/ata/libata-core.c	2011-10-20 15:25:12.730104223 +0200
+@@ -4144,6 +4144,7 @@
+ 	 * device and controller are SATA.
+ 	 */
+ 	{ "PIONEER DVD-RW  DVRTD08",	NULL,	ATA_HORKAGE_NOSETXFER },
++	{ "PIONEER DVD-RW  DVRTD08A",	NULL,	ATA_HORKAGE_NOSETXFER },
+ 	{ "PIONEER DVD-RW  DVR-212D",	NULL,	ATA_HORKAGE_NOSETXFER },
+ 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+ 
 
---=20
-Regards/Gruss,
-Boris.
