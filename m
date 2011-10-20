@@ -1,64 +1,80 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] [libata-transport]Fix display of sata speed
-Date: Wed, 19 Oct 2011 23:33:53 -0700
-Message-ID: <1319092433-12726-1-git-send-email-gwendal@google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:32645 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131Ab1JTGd5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Oct 2011 02:33:57 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH ] ide-{cd,floppy,tape}: Do not include <linux/irq.h>
+Date: Thu, 20 Oct 2011 14:11:15 +0200
+Message-ID: <1319112675-27523-1-git-send-email-geert@linux-m68k.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Borislav Petkov <petkovbb@gmail.com>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-ide@vger.kernel.org
-To: htejun@gmail.com
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
-On a system with controller and disk supporting 6.0Gbps,
-sata_spd was incorrectly set to 3.0Gbps.
+The top of <linux/irq.h> has this comment:
 
+ * Please do not include this file in generic code.  There is currently
+ * no requirement for any architecture to implement anything held
+ * within this file.
+ *
+ * Thanks. --rmk
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
+Remove inclusion of <linux/irq.h>, to prevent the following compile err=
+or
+from happening soon:
+
+| include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq_d=
+ata=E2=80=99
+| include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq_c=
+hip=E2=80=99
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: linux-ide@vger.kernel.org
 ---
- drivers/ata/libata-transport.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+RESEND: Fixed typo in commit message, as pointed out by Sergei Shtylyov
+        <sshtylyov@mvista.com>
 
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index ce9dc62..1172a67 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -312,25 +312,25 @@ int ata_tport_add(struct device *parent,
- /*
-  * ATA link attributes
-  */
-+static int noop(int x) { return x; }
- 
--
--#define ata_link_show_linkspeed(field)					\
-+#define ata_link_show_linkspeed(field, format)			        \
- static ssize_t								\
- show_ata_link_##field(struct device *dev,				\
- 		      struct device_attribute *attr, char *buf)		\
- {									\
- 	struct ata_link *link = transport_class_to_link(dev);		\
- 									\
--	return sprintf(buf,"%s\n", sata_spd_string(fls(link->field)));	\
-+	return sprintf(buf,"%s\n", sata_spd_string(format(link->field))); \
- }
- 
--#define ata_link_linkspeed_attr(field)					\
--	ata_link_show_linkspeed(field)					\
-+#define ata_link_linkspeed_attr(field, format)				\
-+	ata_link_show_linkspeed(field, format)				\
- static DEVICE_ATTR(field, S_IRUGO, show_ata_link_##field, NULL)
- 
--ata_link_linkspeed_attr(hw_sata_spd_limit);
--ata_link_linkspeed_attr(sata_spd_limit);
--ata_link_linkspeed_attr(sata_spd);
-+ata_link_linkspeed_attr(hw_sata_spd_limit, fls);
-+ata_link_linkspeed_attr(sata_spd_limit, fls);
-+ata_link_linkspeed_attr(sata_spd, noop);
- 
- 
- static DECLARE_TRANSPORT_CLASS(ata_link_class,
--- 
-1.7.3.1
+ drivers/ide/ide-cd.c     |    1 -
+ drivers/ide/ide-floppy.c |    1 -
+ drivers/ide/ide-tape.c   |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 04b0956..8126824 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -43,7 +43,6 @@
+ /* For SCSI -> ATAPI command conversion */
+ #include <scsi/scsi.h>
+=20
+-#include <linux/irq.h>
+ #include <linux/io.h>
+ #include <asm/byteorder.h>
+ #include <linux/uaccess.h>
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 61fdf54..3d42043 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -35,7 +35,6 @@
+ #include <scsi/scsi_ioctl.h>
+=20
+ #include <asm/byteorder.h>
+-#include <linux/irq.h>
+ #include <linux/uaccess.h>
+ #include <linux/io.h>
+ #include <asm/unaligned.h>
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 7ecb1ad..ce8237d 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -41,7 +41,6 @@
+ #include <scsi/scsi.h>
+=20
+ #include <asm/byteorder.h>
+-#include <linux/irq.h>
+ #include <linux/uaccess.h>
+ #include <linux/io.h>
+ #include <asm/unaligned.h>
+--=20
+1.7.0.4
