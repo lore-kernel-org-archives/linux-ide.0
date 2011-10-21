@@ -1,63 +1,40 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 00/28 v6] m68k: Convert to genirq
-Date: Thu, 20 Oct 2011 17:02:57 +0200
-Message-ID: <CAMuHMdVMp65XzV2zu7V8sgwsniCAxD7NDDnHSvp5gO-8g1ovHg@mail.gmail.com>
-References: <1315742394-16036-1-git-send-email-geert@linux-m68k.org>
-	<CAMuHMdWOhKcoDoyTnKJzruZ=gpV5uKNFpXnGCkrac7oEkCihJw@mail.gmail.com>
-	<alpine.LNX.2.00.1110202347320.2696@nippy.intranet>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: [upstream-next] ahci start engine
+Date: Fri, 21 Oct 2011 15:27:40 -0700
+Message-ID: <CAN8TOE8mTWrHOZd08RhZttARGsa74fGmB7f044GHScA87PJcyg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1110202347320.2696@nippy.intranet>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:45693 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692Ab1JUW1l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Oct 2011 18:27:41 -0400
+Received: by wyg36 with SMTP id 36so4456083wyg.19
+        for <linux-ide@vger.kernel.org>; Fri, 21 Oct 2011 15:27:40 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On Thu, Oct 20, 2011 at 15:40, Finn Thain <fthain@telegraphics.com.au> =
-wrote:
-> On Thu, 20 Oct 2011, Geert Uytterhoeven wrote:
->
->> > There are some known issues with drivers, which Finn and Michael a=
-re
->> > looking into.
->>
->> Any fixes I still have to apply?
->
-> I did some further testing on Baboon and OSS hardware etc. and I didn=
-'t
-> find any new regressions to fix.
->
-> There is a cleanup patch though --
-> http://article.gmane.org/gmane.linux.ports.m68k/2726
+Hi Jeff,
 
-OK, I'll add it.
+If you recall, there was an AHCI hardware bug I was working on a while
+back that Tejun helped me solve (or at least mitigate). In the end, a
+patch was pushed to your libata-dev/upstream-next branch at
+kernel.org. Since then, kernel.org went down (along with your tree). I
+only recently located your new github repository, and I can't find the
+patch anywhere. Has it been dropped? This is the patch header leftover
+in my tree:
 
->> Updated, on top of m68k master (which is at v3.1-rc10 now).
->> http://git.kernel.org/?p=3Dlinux/kernel/git/geert/linux-m68k.git;a=3D=
-shortlog;h=3Drefs/heads/m68k-genirq
->>
->> If noone objects, I'd like to add this to the m68k master and for-3.=
-2
->> branches.
->
-> Sounds good. The mac_esp fix I sent is already in linux-next.
+commit 936f82ad2254a6712175a36daee9517d6b7a4982
+Author: Tejun Heo <tj@kernel.org>
+Date:   Fri Jul 22 11:41:26 2011 +0200
 
-Thanks for reminding me I still have to apply that one :-)
+    ahci: start engine only during soft/hard resets
 
-Gr{oetje,eeting}s,
 
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
+I can resubmit the entire patch to you if you'd like. I'd appreciate
+it if this could make it upstream soon.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+Thanks,
+Brian
