@@ -1,46 +1,59 @@
-From: Chris Dunlop <chris@onthe.net.au>
-Subject: [PATCH] sata_sis.c: trivial spelling fix
-Date: Mon, 24 Oct 2011 10:38:18 +1100
-Message-ID: <20111019053337.GA30312@onthe.net.au>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [RFC] libsas: the trouble with ata resets
+Date: Sun, 23 Oct 2011 16:48:57 -0700
+Message-ID: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp1.onthe.net.au ([203.22.196.249]:36060 "EHLO
-	smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab1JWXpJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Oct 2011 19:45:09 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by smtp1.onthe.net.au (Postfix) with ESMTP id 619E360FAA
-	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:04 +1100 (EST)
-Received: from smtp1.onthe.net.au ([127.0.0.1])
-	by localhost (smtp1.onthe.net.au [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Nk7eoS9UJ+cy for <linux-ide@vger.kernel.org>;
-	Mon, 24 Oct 2011 10:39:03 +1100 (EST)
-Received: from o1.office.otn.net.au (unknown [180.148.179.26])
-	by smtp1.onthe.net.au (Postfix) with ESMTP id C763460DB6
-	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:03 +1100 (EST)
-Received: from achates.office.onthe.net.au (achates.office.onthe.net.au [10.1.32.53])
-	by o1.office.otn.net.au (Postfix) with ESMTP id A96B87A636
-	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:03 +1100 (EST)
-Content-Disposition: inline
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:46798 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab1JWXs6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Oct 2011 19:48:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, "edmund.nadolski" <edmund.nadolski@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>, Jack Wang <jack_wang@usish.com>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>
 
-Trivial spelling fix.
+Currently libsas has a problem with prematurely dropping sata devices
+during recovery.  Libata knows that some devices can take quite a
+while to recover from a reset and re-establish the link.  The fact
+that sas_ata_hard_reset() ignores its 'deadline'  parameter is
+evidence that it ignores the link management aspects of what libata
+wants from a ->hardreset() handler.
 
-Signed-off-by: Chris Dunlop <chris@onthe.net.au>
+item1: teach sas_ata_hard_reset() to check that the link came back up.
+ For direct attached devices the lldd will need the deadline
+parameter, and for expander attached perform smp polling to wait for
+the link to come back.
 
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index 447d9c0..95ec435 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -104,7 +104,7 @@ static const struct ata_port_info sis_port_info = {
- };
- 
- MODULE_AUTHOR("Uwe Koziolek");
--MODULE_DESCRIPTION("low-level driver for Silicon Integratad Systems SATA controller");
-+MODULE_DESCRIPTION("low-level driver for Silicon Integrated Systems SATA controller");
- MODULE_LICENSE("GPL");
- MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
+Now, during this time that libata is trying to recover the connection
+in the host-eh context libsas will start receiving BCNs in the
+host-workqueue context.  In the unfortunate cases libsas may take
+removal action on a device that will come back with a bit more time.
+While libata-eh is in progress libsas should not take any action on
+the ata phys in question..
+
+item2:  flush eh before trying to determine what action to take on a phy.
+
+In the case of libsas not all resets are initiated by the eh process
+(the sas transport class can reset a phy directly).  It seems libata
+takes care to arrange for user requested resets to occur under the
+control of eh, and libsas should do the same.
+
+item3: teach all reset entry points to kick and flush eh for ata devices
+
+A corollary for items 1 and 3 is that there is a difference between
+scheduling the reset and performing the reset.
+->lldd_I_T_nexus_reset() is currently called twice, once by sas-eh to
+manage sas_tasks and again by ata-eh to recover the device.  Likely we
+need a new ->lldd_ata_hard_reset() handler that is called by ata-eh,
+while ->lldd_I_T_nexus_reset() cleans up the sas_tasks and just
+schedules reset on the ata_port.
+
+item4: allow for lldd's to provide a direct ->lldd_ata_hard_reset()
+which can be assumed to only be called from ata-eh context.
+
+Any other pain points in reset handling?
+
+--
+Dan
