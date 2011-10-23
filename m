@@ -1,75 +1,46 @@
-From: Paul Schilling <paul.s.schilling@gmail.com>
-Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC bug.
-Date: Sun, 23 Oct 2011 11:26:04 -0500
-Message-ID: <CAC=G6szPCgSDB_1te3wZx2GGBiHMXMuQBQznSfjy2n1GtfCPxA@mail.gmail.com>
-References: <1319346300-18151-1-git-send-email-paul.s.schilling@gmail.com>
-	<1732355.g0uNX7XlKI@donald.sf-tec.de>
+From: Chris Dunlop <chris@onthe.net.au>
+Subject: [PATCH] sata_sis.c: trivial spelling fix
+Date: Mon, 24 Oct 2011 10:38:18 +1100
+Message-ID: <20111019053337.GA30312@onthe.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1732355.g0uNX7XlKI@donald.sf-tec.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp1.onthe.net.au ([203.22.196.249]:36060 "EHLO
+	smtp1.onthe.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab1JWXpJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Oct 2011 19:45:09 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp1.onthe.net.au (Postfix) with ESMTP id 619E360FAA
+	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:04 +1100 (EST)
+Received: from smtp1.onthe.net.au ([127.0.0.1])
+	by localhost (smtp1.onthe.net.au [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Nk7eoS9UJ+cy for <linux-ide@vger.kernel.org>;
+	Mon, 24 Oct 2011 10:39:03 +1100 (EST)
+Received: from o1.office.otn.net.au (unknown [180.148.179.26])
+	by smtp1.onthe.net.au (Postfix) with ESMTP id C763460DB6
+	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:03 +1100 (EST)
+Received: from achates.office.onthe.net.au (achates.office.onthe.net.au [10.1.32.53])
+	by o1.office.otn.net.au (Postfix) with ESMTP id A96B87A636
+	for <linux-ide@vger.kernel.org>; Mon, 24 Oct 2011 10:39:03 +1100 (EST)
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Thanks, That was a good catch.  I had that extra struct for another
-revision of the RDC peripheral integrated into the
-Vortex86DX.  I removed it when I moved it to the pata_rdc.c driver but
-forgot the struct.  The it821x driver works
-for the RDC drivers when DMA is turned off.  But the RDC driver is the
-more logical choice.
+Trivial spelling fix.
 
-I will make the fix and send out the new patch.
+Signed-off-by: Chris Dunlop <chris@onthe.net.au>
 
-I accidentally sent this through the gmail interface with html on,
-Some of you may get this email twice.
-
-Thanks,
-Paul Schilling
-
-On Sun, Oct 23, 2011 at 3:20 AM, Rolf Eike Beer <eike-kernel@sf-tec.de>=
- wrote:
->
-> Paul Schilling wrote:
-> > This fixes a DMA issue related to a CRC bug on
-> > the RDC pata peripherial found on the vortex86sx and vortex86dx.
-> >
-> > Signed-off-by: Paul Schilling <paul.s.schilling@gmail.com>
-> > ---
-> > =A0drivers/ata/pata_it821x.c | =A0 22 ++++++++++++++++++----
-> > =A0drivers/ata/pata_rdc.c =A0 =A0| =A0 29 ++++++++++++++++++++++++-=
-----
-> > =A0drivers/ide/it821x.c =A0 =A0 =A0| =A0 =A09 +++++++--
-> > =A0include/linux/pci_ids.h =A0 | =A0 =A02 ++
-> > =A04 files changed, 51 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-> > index c5532b9..5f8a54a 100644
-> > --- a/drivers/ata/pata_it821x.c
-> > +++ b/drivers/ata/pata_it821x.c
-> > @@ -897,7 +897,16 @@ static int it821x_init_one(struct pci_dev *pde=
-v, const
-> > struct pci_device_id *id) static const struct ata_port_info info_rd=
-c_11 =3D {
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 .flags =3D ATA_FLAG_SLAVE_POSS,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =3D ATA_PIO4,
-> > - =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D ATA_MWDMA2,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D 0,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =3D 0,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 /* No UDMA */
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .port_ops =3D &it821x_rdc_port_ops
-> > + =A0 =A0 };
-> > + =A0 =A0 static const struct ata_port_info info_rdc_01 =3D {
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .flags =3D ATA_FLAG_SLAVE_POSS,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =3D ATA_PIO4,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D 0,
-> > + =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =3D 0,
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* No UDMA */
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 .port_ops =3D &it821x_rdc_port_ops
-> > =A0 =A0 =A0 };
->
-> Why do you define this if it is never used?
->
-> Eike
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index 447d9c0..95ec435 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -104,7 +104,7 @@ static const struct ata_port_info sis_port_info = {
+ };
+ 
+ MODULE_AUTHOR("Uwe Koziolek");
+-MODULE_DESCRIPTION("low-level driver for Silicon Integratad Systems SATA controller");
++MODULE_DESCRIPTION("low-level driver for Silicon Integrated Systems SATA controller");
+ MODULE_LICENSE("GPL");
+ MODULE_DEVICE_TABLE(pci, sis_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
