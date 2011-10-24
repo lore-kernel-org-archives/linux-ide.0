@@ -1,59 +1,98 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC] libsas: the trouble with ata resets
-Date: Sun, 23 Oct 2011 16:48:57 -0700
-Message-ID: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: [PATCH] ahci: add DT binding for Calxeda AHCI controller
+Date: Mon, 24 Oct 2011 09:20:07 -0500
+Message-ID: <4EA57417.8060709@gmail.com>
+References: <1314976215-23902-1-git-send-email-robherring2@gmail.com> <4E8A6FB3.4090909@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:46798 "EHLO
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:36640 "EHLO
 	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987Ab1JWXs6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Oct 2011 19:48:58 -0400
+	with ESMTP id S932172Ab1JXOUM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2011 10:20:12 -0400
+In-Reply-To: <4E8A6FB3.4090909@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, "edmund.nadolski" <edmund.nadolski@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>, Jack Wang <jack_wang@usish.com>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-Currently libsas has a problem with prematurely dropping sata devices
-during recovery.  Libata knows that some devices can take quite a
-while to recover from a reset and re-establish the link.  The fact
-that sas_ata_hard_reset() ignores its 'deadline'  parameter is
-evidence that it ignores the link management aspects of what libata
-wants from a ->hardreset() handler.
+Jeff,
 
-item1: teach sas_ata_hard_reset() to check that the link came back up.
- For direct attached devices the lldd will need the deadline
-parameter, and for expander attached perform smp polling to wait for
-the link to come back.
+On 10/03/2011 09:30 PM, Rob Herring wrote:
+> On 09/02/2011 10:10 AM, Rob Herring wrote:
+>> From: Rob Herring <rob.herring@calxeda.com>
+>>
+>> Add devicetree match table to ahci platform driver for Calxeda Highbank
+>> AHCI controller.
+>>
+>> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+>> Cc: Jeff Garzik <jgarzik@pobox.com>
+>> Cc: linux-ide@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Cc: devicetree-discuss@lists.ozlabs.org
+>> ---
+> 
+> Any comments on this?
+> 
 
-Now, during this time that libata is trying to recover the connection
-in the host-eh context libsas will start receiving BCNs in the
-host-workqueue context.  In the unfortunate cases libsas may take
-removal action on a device that will come back with a bit more time.
-While libata-eh is in progress libsas should not take any action on
-the ata phys in question..
+Ping.
 
-item2:  flush eh before trying to determine what action to take on a phy.
+Can you please apply this for 3.2.
 
-In the case of libsas not all resets are initiated by the eh process
-(the sas transport class can reset a phy directly).  It seems libata
-takes care to arrange for user requested resets to occur under the
-control of eh, and libsas should do the same.
+Regards,
+Rob
 
-item3: teach all reset entry points to kick and flush eh for ata devices
+>>  .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
+>>  drivers/ata/ahci_platform.c                        |    7 +++++++
+>>  2 files changed, 24 insertions(+), 0 deletions(-)
+>>  create mode 100644 Documentation/devicetree/bindings/ata/calxeda-sata.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/calxeda-sata.txt b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+>> new file mode 100644
+>> index 0000000..79caa56
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
+>> @@ -0,0 +1,17 @@
+>> +* Calxeda SATA Controller
+>> +
+>> +SATA nodes are defined to describe on-chip Serial ATA controllers.
+>> +Each SATA controller should have its own node.
+>> +
+>> +Required properties:
+>> +- compatible        : compatible list, contains "calxeda,hb-ahci"
+>> +- interrupts        : <interrupt mapping for SATA IRQ>
+>> +- reg               : <registers mapping>
+>> +
+>> +Example:
+>> +        sata@ffe08000 {
+>> +		compatible = "calxeda,hb-ahci";
+>> +                reg = <0xffe08000 0x1000>;
+>> +                interrupts = <115>;
+>> +        };
+>> +
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index 6fef1fa..9bfc970 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -171,11 +171,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct of_device_id ahci_of_match[] = {
+>> +	{ .compatible = "calxeda,hb-ahci", },
+>> +	{},
+>> +};
+>> +MODULE_DEVICE_TABLE(of, ahci_of_match);
+>> +
+>>  static struct platform_driver ahci_driver = {
+>>  	.remove = __devexit_p(ahci_remove),
+>>  	.driver = {
+>>  		.name = "ahci",
+>>  		.owner = THIS_MODULE,
+>> +		.of_match_table = ahci_of_match,
+>>  	},
+>>  };
+>>  
+> 
 
-A corollary for items 1 and 3 is that there is a difference between
-scheduling the reset and performing the reset.
-->lldd_I_T_nexus_reset() is currently called twice, once by sas-eh to
-manage sas_tasks and again by ata-eh to recover the device.  Likely we
-need a new ->lldd_ata_hard_reset() handler that is called by ata-eh,
-while ->lldd_I_T_nexus_reset() cleans up the sas_tasks and just
-schedules reset on the ata_port.
-
-item4: allow for lldd's to provide a direct ->lldd_ata_hard_reset()
-which can be assumed to only be called from ata-eh context.
-
-Any other pain points in reset handling?
-
---
-Dan
