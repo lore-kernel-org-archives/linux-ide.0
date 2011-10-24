@@ -1,98 +1,131 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH] ahci: add DT binding for Calxeda AHCI controller
-Date: Mon, 24 Oct 2011 09:20:07 -0500
-Message-ID: <4EA57417.8060709@gmail.com>
-References: <1314976215-23902-1-git-send-email-robherring2@gmail.com> <4E8A6FB3.4090909@gmail.com>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: [PATCH v2/RESEND] mv_sas: OCZ RevoDrive3 & zDrive R4 support
+Date: Mon, 24 Oct 2011 22:30:08 +0000
+Message-ID: <20111024223008.GB3305@orbis-terrarum.net>
+References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:36640 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932172Ab1JXOUM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Oct 2011 10:20:12 -0400
-In-Reply-To: <4E8A6FB3.4090909@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/GPgYEyhnw15BExa"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1318032026-21913-1-git-send-email-robbat2@gentoo.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: "Robin H. Johnson" <robbat2@gentoo.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-Jeff,
 
-On 10/03/2011 09:30 PM, Rob Herring wrote:
-> On 09/02/2011 10:10 AM, Rob Herring wrote:
->> From: Rob Herring <rob.herring@calxeda.com>
->>
->> Add devicetree match table to ahci platform driver for Calxeda Highbank
->> AHCI controller.
->>
->> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
->> Cc: Jeff Garzik <jgarzik@pobox.com>
->> Cc: linux-ide@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Cc: devicetree-discuss@lists.ozlabs.org
->> ---
-> 
-> Any comments on this?
-> 
+--/GPgYEyhnw15BExa
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Ping.
+In the OCZ RevoDrive3/zDrive R4 series, the "OCZ SuperScale Storage
+Controller" with "Virtualized Controller Architecture 2.0" really seems
+to be a Marvell 88SE9485 part, with OCZ firmware/BIOS.
 
-Can you please apply this for 3.2.
+Developed and tested on OCZ RevoDrive3 120GB [PCI 1b85:1021]
 
-Regards,
-Rob
+Should work on:
+- OCZ RevoDrive3 (2x SandForce 2281)
+- OCZ RevoDrive3 X2 (4x SandForce 2281)
+- OCZ zDrive R4 CM84 (4x SandForce 2281)
+- OCZ zDrive R4 CM88 (8x SandForce 2281)
+- OCZ zDrive R4 RM84 (4x SandForce 2582)
+- OCZ zDrive R4 RM88 (8x SandForce 2582)
 
->>  .../devicetree/bindings/ata/calxeda-sata.txt       |   17 +++++++++++++++++
->>  drivers/ata/ahci_platform.c                        |    7 +++++++
->>  2 files changed, 24 insertions(+), 0 deletions(-)
->>  create mode 100644 Documentation/devicetree/bindings/ata/calxeda-sata.txt
->>
->> diff --git a/Documentation/devicetree/bindings/ata/calxeda-sata.txt b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
->> new file mode 100644
->> index 0000000..79caa56
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ata/calxeda-sata.txt
->> @@ -0,0 +1,17 @@
->> +* Calxeda SATA Controller
->> +
->> +SATA nodes are defined to describe on-chip Serial ATA controllers.
->> +Each SATA controller should have its own node.
->> +
->> +Required properties:
->> +- compatible        : compatible list, contains "calxeda,hb-ahci"
->> +- interrupts        : <interrupt mapping for SATA IRQ>
->> +- reg               : <registers mapping>
->> +
->> +Example:
->> +        sata@ffe08000 {
->> +		compatible = "calxeda,hb-ahci";
->> +                reg = <0xffe08000 0x1000>;
->> +                interrupts = <115>;
->> +        };
->> +
->> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
->> index 6fef1fa..9bfc970 100644
->> --- a/drivers/ata/ahci_platform.c
->> +++ b/drivers/ata/ahci_platform.c
->> @@ -171,11 +171,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
->>  	return 0;
->>  }
->>  
->> +static const struct of_device_id ahci_of_match[] = {
->> +	{ .compatible = "calxeda,hb-ahci", },
->> +	{},
->> +};
->> +MODULE_DEVICE_TABLE(of, ahci_of_match);
->> +
->>  static struct platform_driver ahci_driver = {
->>  	.remove = __devexit_p(ahci_remove),
->>  	.driver = {
->>  		.name = "ahci",
->>  		.owner = THIS_MODULE,
->> +		.of_match_table = ahci_of_match,
->>  	},
->>  };
->>  
-> 
+All of this because a friend recently bought a OCZ RevoDrive3 and was
+bitten by the lack of Linux support.
 
+Notes from testing:
+-------------------
+- SMART works.
+- VPD Device Identification is "OCZ-REVODRIVE3"
+- Thin provisioning/TRIM seems to be implemented as WRITE SAME UNMAP,
+  with deterministic (non-zero) read after TRIM, but I'm not sure if it
+  works 100% in my testing.
+- Some of the tuning in the firmware seems to ensure much better
+  performance when in a RAID0 setup than using the two devices
+  seperately.
+
+I have not tested booting from the SSD, because all of this was
+developed and tested remotely from the actual hardware.
+
+Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+Thanks-To: Gordon Pritchard <gordp@sfu.ca>
+---
+ drivers/scsi/mvsas/mv_init.c |   10 ++++++++++
+ include/linux/pci_ids.h      |    2 ++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
+
+Resending for the v3.2 merge window.
+
+I tested it with more than 5TiB of IO, no stability problems detected.
+
+Some fio performance numbers:
+http://paste.pocoo.org/show/489716/
+ =20
+dmesg/hdparm/smartctl:
+http://www.ocztechnologyforum.com/forum/showthread.php?95151-Linux-patch-su=
+pport-for-RevoDrive3-RevoDrive3-X2-zDrive-R4&p=3D686054&viewfull=3D1#post68=
+6054
+
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 4e9af66..b88315a 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -723,6 +723,16 @@ static struct pci_device_id __devinitdata mvs_pci_tabl=
+e[] =3D {
+ 		.class_mask	=3D 0,
+ 		.driver_data	=3D chip_9485,
+ 	},
++	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3 */
++	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1041), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1042), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1043), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1044), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1080), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1083), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
++	{ PCI_VDEVICE(OCZ, 0x1084), chip_9485}, /* OCZ RevoDrive3/zDriveR4 (exact=
+ model unknown) */
+=20
+ 	{ }	/* terminate list */
+ };
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ae96bbe..3fe46e9 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2868,3 +2868,5 @@
+=20
+ #define PCI_VENDOR_ID_XEN		0x5853
+ #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
++
++#define PCI_VENDOR_ID_OCZ		0x1b85
+--=20
+1.7.7
+
+
+--/GPgYEyhnw15BExa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+
+iEYEARECAAYFAk6l5vAACgkQPpIsIjIzwizbkwCeK5PZ+Oae8/EUVnayf5pyB14d
+pacAoLOtUrHUeIhDnnOstyp2MCnIatj4
+=6zqG
+-----END PGP SIGNATURE-----
+
+--/GPgYEyhnw15BExa--
