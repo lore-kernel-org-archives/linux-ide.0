@@ -1,75 +1,158 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re:[RFC] libsas: the trouble with ata resets
-Date: Wed, 26 Oct 2011 11:04:29 +0800
-Message-ID: <660ADDE5D3A1477593E284FFA68F76E3@usish.com.cn>
-References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'IDE/ATA development list' <linux-ide@vger.kernel.org>
-Cc: "'Skirvin, Jeffrey D'" <jeffrey.d.skirvin@intel.com>, 'Jacek Danecki' <jacek.danecki@intel.com>, "'edmund.nadolski'" <edmund.nadolski@intel.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Hannes Reinecke' <hare@suse.de>, 'David Milburn' <dmilburn@redhat.com>, 'Jeff Garzik' <jeff@garzik.org>, 'James Bottomley' <jbottomley@parallels.com>
+From: Paul Schilling <paul.s.schilling@gmail.com>
+Subject: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC bug.
+Date: Tue, 25 Oct 2011 23:16:04 -0500
+Message-ID: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
+References: <fix vortex86>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57875 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775Ab1JZERL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Oct 2011 00:17:11 -0400
+In-Reply-To: <fix vortex86>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@
+Cc: Paul Schilling <Paul.S.Schilling@gmail.com>, Paul Schilling <paul.s.schilling@gmail.com>
 
-I have seen this problem too, but have not figure out how to do the right
-thing. Add Jeff and James to CC, maybe they have more insight idea to fix
-this.
+This fixes a DMA issue related to a CRC bug on
+the RDC pata peripherial found on the vortex86sx and vortex86dx.
 
-BTW: how to push Redhat and SUSE to include the libsas fix like: T-T support
-and others will cause this oops.
+Signed-off-by: Paul Schilling <paul.s.schilling@gmail.com>
+---
+ drivers/ata/pata_it821x.c |   14 ++++++++++----
+ drivers/ata/pata_rdc.c    |   29 ++++++++++++++++++++++++-----
+ drivers/ide/it821x.c      |    9 +++++++--
+ include/linux/pci_ids.h   |    2 ++
+ 4 files changed, 43 insertions(+), 11 deletions(-)
 
-Jack
-
-[RFC] libsas: the trouble with ata resets
-> 
-> Currently libsas has a problem with prematurely dropping sata devices
-> during recovery.  Libata knows that some devices can take quite a
-> while to recover from a reset and re-establish the link.  The fact
-> that sas_ata_hard_reset() ignores its 'deadline'  parameter is
-> evidence that it ignores the link management aspects of what libata
-> wants from a ->hardreset() handler.
-> 
-> item1: teach sas_ata_hard_reset() to check that the link came back up.
->  For direct attached devices the lldd will need the deadline
-> parameter, and for expander attached perform smp polling to wait for
-> the link to come back.
-> 
-> Now, during this time that libata is trying to recover the connection
-> in the host-eh context libsas will start receiving BCNs in the
-> host-workqueue context.  In the unfortunate cases libsas may take
-> removal action on a device that will come back with a bit more time.
-> While libata-eh is in progress libsas should not take any action on
-> the ata phys in question..
-> 
-> item2:  flush eh before trying to determine what action to take on a phy.
-> 
-> In the case of libsas not all resets are initiated by the eh process
-> (the sas transport class can reset a phy directly).  It seems libata
-> takes care to arrange for user requested resets to occur under the
-> control of eh, and libsas should do the same.
-> 
-> item3: teach all reset entry points to kick and flush eh for ata devices
-> 
-> A corollary for items 1 and 3 is that there is a difference between
-> scheduling the reset and performing the reset.
-> ->lldd_I_T_nexus_reset() is currently called twice, once by sas-eh to
-> manage sas_tasks and again by ata-eh to recover the device.  Likely we
-> need a new ->lldd_ata_hard_reset() handler that is called by ata-eh,
-> while ->lldd_I_T_nexus_reset() cleans up the sas_tasks and just
-> schedules reset on the ata_port.
-> 
-> item4: allow for lldd's to provide a direct ->lldd_ata_hard_reset()
-> which can be assumed to only be called from ata-eh context.
-> 
-> Any other pain points in reset handling?
-> 
-> --
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index c5532b9..72c91f2 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -897,7 +897,8 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	static const struct ata_port_info info_rdc_11 = {
+ 		.flags = ATA_FLAG_SLAVE_POSS,
+ 		.pio_mask = ATA_PIO4,
+-		.mwdma_mask = ATA_MWDMA2,
++		.mwdma_mask = 0,
++		.udma_mask = 0,
+ 		/* No UDMA */
+ 		.port_ops = &it821x_rdc_port_ops
+ 	};
+@@ -911,11 +912,16 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return rc;
+ 
+ 	if (pdev->vendor == PCI_VENDOR_ID_RDC) {
+-		/* Deal with Vortex86SX */
+-		if (pdev->revision == 0x11)
++		if (((pdev->revision == 0x11) || (pdev->revision == 0x13)) &&
++		    (pdev->device == PCI_DEVICE_ID_RDC_D1010)) {
++			/* Deal with Vortex86SX */
+ 			ppi[0] = &info_rdc_11;
+-		else
++			printk(KERN_INFO DRV_NAME
++			       ": Detected Vortex86SX/DX Bug.\n");
++			printk(KERN_INFO DRV_NAME ": Disabling UDMA.\n");
++		} else {
+ 			ppi[0] = &info_rdc;
++		}
+ 	} else {
+ 		/* Force the card into bypass mode if so requested */
+ 		if (it8212_noraid) {
+diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
+index 2b38127..441521c 100644
+--- a/drivers/ata/pata_rdc.c
++++ b/drivers/ata/pata_rdc.c
+@@ -290,6 +290,16 @@ static struct ata_port_info rdc_port_info = {
+ 	.port_ops	= &rdc_pata_ops,
+ };
+ 
++static struct ata_port_info vortex_port_info = {
++	.flags = ATA_FLAG_SLAVE_POSS,
++	.pio_mask = ATA_PIO4,
++	.mwdma_mask = 0,
++	.udma_mask = 0,
++	/* No UDMA */
++	.port_ops	= &rdc_pata_ops,
++};
++
++
+ static struct scsi_host_template rdc_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ };
+@@ -322,16 +332,25 @@ static int __devinit rdc_init_one(struct pci_dev *pdev,
+ 
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+ 
+-	port_info[0] = rdc_port_info;
+-	port_info[1] = rdc_port_info;
+-
+-	port_flags = port_info[0].flags;
+-
+ 	/* enable device and prepare host */
+ 	rc = pcim_enable_device(pdev);
+ 	if (rc)
+ 		return rc;
+ 
++	if ((pdev->revision == 0x01) &&
++			(pdev->device ==  PCI_DEVICE_ID_RDC_D1011)) {
++		/* Deal with Vortex86DX */
++		port_info[0] = vortex_port_info;
++		port_info[1] = vortex_port_info;
++		printk(KERN_INFO DRV_NAME ": Detected Vortex86DX Bug.\n");
++		printk(KERN_INFO DRV_NAME ": Disabling UDMA.\n");
++	} else {
++		port_info[0] = rdc_port_info;
++		port_info[1] = rdc_port_info;
++	}
++
++	port_flags = port_info[0].flags;
++
+ 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+ 	if (!hpriv)
+ 		return -ENOMEM;
+diff --git a/drivers/ide/it821x.c b/drivers/ide/it821x.c
+index 2e3169f..82c6bc7 100644
+--- a/drivers/ide/it821x.c
++++ b/drivers/ide/it821x.c
+@@ -581,10 +581,14 @@ static void __devinit init_hwif_it821x(ide_hwif_t *hwif)
+ 	hwif->ultra_mask = ATA_UDMA6;
+ 	hwif->mwdma_mask = ATA_MWDMA2;
+ 
+-	/* Vortex86SX quirk: prevent Ultra-DMA mode to fix BadCRC issue */
++	/* Vortex86SX and Vortex86DX quirk: prevent
++	 * Ultra-DMA mode to fix BadCRC issue when
++	 * using DMA mode */
+ 	if (idev->quirks & QUIRK_VORTEX86) {
+-		if (dev->revision == 0x11)
++		if (((dev->revision == 0x11) || (dev->revision == 0x13))
++				|| (dev->revision == 0x01)) {
+ 			hwif->ultra_mask = 0;
++		}
+ 	}
+ }
+ 
+@@ -680,6 +684,7 @@ static const struct pci_device_id it821x_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8211), 0 },
+ 	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8212), 0 },
+ 	{ PCI_VDEVICE(RDC, PCI_DEVICE_ID_RDC_D1010), QUIRK_VORTEX86 },
++	{ PCI_VDEVICE(RDC, PCI_DEVICE_ID_RDC_D1011), QUIRK_VORTEX86 },
+ 	{ 0, },
+ };
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ae96bbe..237da92 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2259,6 +2259,8 @@
+ #define PCI_DEVICE_ID_RDC_R6060		0x6060
+ #define PCI_DEVICE_ID_RDC_R6061		0x6061
+ #define PCI_DEVICE_ID_RDC_D1010		0x1010
++#define PCI_DEVICE_ID_RDC_D1011		0x1011
++#define PCI_DEVICE_ID_RDC_D1012		0x1012
+ 
+ #define PCI_VENDOR_ID_LENOVO		0x17aa
+ 
+-- 
+1.7.6.4
 
