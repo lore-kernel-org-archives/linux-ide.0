@@ -1,51 +1,81 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC
- bug.
-Date: Fri, 28 Oct 2011 19:27:10 +0100
-Message-ID: <20111028192710.361093ea@pyx>
-References: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
-	<20111027084310.2b7da753@pyx>
-	<CAC=G6sz9tpLnxWN7_Ts+rcNf-YQZw-4VQUNo6vKNeHOnOPOHVA@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] ata port runtime pm
+Date: Fri, 28 Oct 2011 14:51:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1110281444170.2175-100000@iolanthe.rowland.org>
+References: <201110281931.54527.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [85.13.70.251] ([85.13.70.251]:34308 "EHLO
-	localhost.localdomain" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754037Ab1J1S1U convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Oct 2011 14:27:20 -0400
-In-Reply-To: <CAC=G6sz9tpLnxWN7_Ts+rcNf-YQZw-4VQUNo6vKNeHOnOPOHVA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201110281931.54527.rjw@sisk.pl>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Zhang, Rui" <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>, Linux PM list <linux-pm@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Paul Schilling <paul.s.schilling@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 
-On Thu, 27 Oct 2011 13:55:21 -0500
-Paul Schilling <paul.s.schilling@gmail.com> wrote:
+On Fri, 28 Oct 2011, Rafael J. Wysocki wrote:
 
-> The Vortex86dx uses RDC IDE peripheral integrated into the SOC.  The
-> CRC design is
-> broken in the Vortex86dx and sx.  The original reference can be found
-> in the Linux kernel itself.
->=20
-> The Vortex86sx uses the RDC D1010.
-> The Vortex86dx uses the RDC D1011.
-> Both of which have broken CRC hardware which breaks DMA.
+> On Friday, October 28, 2011, Lin Ming wrote:
+> > On Fri, 2011-10-28 at 11:37 +0800, Jeff Garzik wrote:
+> > > On 10/27/2011 11:21 PM, Lin Ming wrote:
+> > > > @@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> > > >
+> > > >   	ap = ata_shost_to_port(shost);
+> > > >
+> > > > +	if (pm_runtime_suspended(&ap->tdev))
+> > > > +		pm_runtime_resume(&ap->tdev);
+> > > > +	pm_runtime_mark_last_busy(&ap->tdev);
+> > > > +	pm_request_autosuspend(&ap->tdev);
+> > > > +
+> > > >   	spin_lock_irqsave(ap->lock, irq_flags);
+> > > >
+> > > 
+> > > 
+> > > Putting this into the core command dispatch fast-path is rather 
+> > > disappointing.  That's at least one additional lock, plus some atomic 
+> > > instructions and tests.
 
-CRC hardware is only used for *UDMA* yet your change also disabled MWDM=
-A.
+And it calls pm_runtime_resume(), which requires process context, from 
+within a SCSI queuecmd routine, which runs in interrupt context.
 
+> > Maybe move suspend request to the resume function, as below.
+> > 
+> > static int ata_port_runtime_resume(struct device *dev)
+> > {
+> >         struct ata_port *ap = to_ata_port(dev);
+> >         int rc;
+> > 
+> >         rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+> >                 ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
+> > 
+> >         pm_runtime_mark_last_busy(dev);
+> >         pm_request_autosuspend(dev);
+> > 
+> >         return rc;
+> > }
+> > 
+> > Then the fast-path looks like,
+> > 
+> > @@ -3208,6 +3209,9 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost,
+> > struct scsi_cmnd *cmd)
+> > 
+> >         ap = ata_shost_to_port(shost);
+> > 
+> > +       if (pm_runtime_suspended(&ap->tdev))
+> > +               pm_runtime_resume(&ap->tdev);
+> > +
 
-> >> =C2=A0 =C2=A0 =C2=A0 static const struct ata_port_info info_rdc_11=
- =3D {
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .flags =3D ATA_FL=
-AG_SLAVE_POSS,
-> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .pio_mask =3D ATA=
-_PIO4,
-> >> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .mwdma_mask =3D ATA_MW=
-DMA2,
-> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .mwdma_mask =3D 0,
-> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 .udma_mask =3D 0,
+Unfortunately that won't work.  It's got a race; the device might be 
+active when the pm_runtime_suspended() test runs and then it might 
+suspend immediately after.
 
-Why ?
+> >         spin_lock_irqsave(ap->lock, irq_flags);
+> > 
+> >         ata_scsi_dump_cdb(ap, cmd);
+> > 
+> > What do you think?
+
+See the example code in section 9 of 
+Documentation/power/runtime_pm.txt for the outline of a general 
+approach.
+
+Alan Stern
