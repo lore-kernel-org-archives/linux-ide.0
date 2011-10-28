@@ -1,112 +1,244 @@
-From: Paul Schilling <paul.s.schilling@gmail.com>
-Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC bug.
-Date: Thu, 27 Oct 2011 14:03:41 -0500
-Message-ID: <CAC=G6sydfsBGYKcmvxzXQ=qam_Qz9wwABD_EEnrHUiW2RZM6Bw@mail.gmail.com>
-References: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
-	<20111027084310.2b7da753@pyx>
-	<CAC=G6sz9tpLnxWN7_Ts+rcNf-YQZw-4VQUNo6vKNeHOnOPOHVA@mail.gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [RFC] ata port runtime pm
+Date: Fri, 28 Oct 2011 11:20:15 +0800
+Message-ID: <1319772015.18801.62.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:35677 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750802Ab1J0TDm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Oct 2011 15:03:42 -0400
-In-Reply-To: <CAC=G6sz9tpLnxWN7_Ts+rcNf-YQZw-4VQUNo6vKNeHOnOPOHVA@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:7293 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754391Ab1J1DVP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 27 Oct 2011 23:21:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Priyanka Gupta <ankaguptaca@gmail.com>, Zhang Rui <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>
 
-The Gmail web client wrapped the text on me.
+Hi, all
 
-Look at line 914 in drivers/ata/pata_it821x.c for references to the
-Vortex86sx bug.
+I send this out early to get feedback how to do ata port runtime pm.
 
-Thanks,
-Paul
+There was some discussion early this year trying to add runtime pm
+support to sata_mv controller driver.
+http://marc.info/?l=linux-ide&m=129403126729115&w=2
 
-On Thu, Oct 27, 2011 at 1:55 PM, Paul Schilling
-<paul.s.schilling@gmail.com> wrote:
-> The Vortex86dx uses RDC IDE peripheral integrated into the SOC. =A0Th=
-e
-> CRC design is
-> broken in the Vortex86dx and sx. =A0The original reference can be fou=
-nd
-> in the Linux kernel itself.
->
-> The Vortex86sx uses the RDC D1010.
-> The Vortex86dx uses the RDC D1011.
-> Both of which have broken CRC hardware which breaks DMA.
->
-> The pata_821x.c had the following code in it to handle the RDC
-> hardware used in the Vortex86SX.
->
-> 4fca377f (Jeff Garzik =A0 =A0 =A0 =A0 =A0 =A0 =A0 2011-02-15 01:13:24=
- -0500 913)
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 914)
-> =A0if (pdev->vendor =3D=3D PCI_VENDOR_ID_RDC) {
-> 4a99d95f (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02009-01-11 19:5=
-1:08 +0000 915)
-> =A0 =A0 =A0 =A0 /* Deal with Vortex86SX */
-> 4a99d95f (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02009-01-11 19:5=
-1:08 +0000 916)
-> =A0 =A0 =A0 =A0 if (pdev->revision =3D=3D 0x11)
-> 4a99d95f (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02009-01-11 19:5=
-1:08 +0000 917)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ppi[0] =3D &info_rdc_11;
-> 4a99d95f (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02009-01-11 19:5=
-1:08 +0000 918)
-> =A0 =A0 =A0 =A0 else
-> 4a99d95f (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02009-01-11 19:5=
-1:08 +0000 919)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ppi[0] =3D &info_rdc;
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 920) =A0 =A0 =A0} else {
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 921)
-> =A0 =A0 =A0 =A0 /* Force the card into bypass mode if so requested */
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 922)
-> =A0 =A0 =A0 =A0 if (it8212_noraid) {
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 923)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_INFO DRV_NAME ": forcing =
-bypass
-> mode.\n");
-> 963e4975 (Alan Cox =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A02008-07-24 17:1=
-6:06 +0100 924)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 it821x_disable_raid(pdev);
->
-> Thanks,
-> Paul Schilling
->
-> On Thu, Oct 27, 2011 at 2:43 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> =
-wrote:
->> On Tue, 25 Oct 2011 23:16:04 -0500
->> Paul Schilling <paul.s.schilling@gmail.com> wrote:
->>
->>> This fixes a DMA issue related to a CRC bug on
->>> the RDC pata peripherial found on the vortex86sx and vortex86dx.
->>
->> What is the RDC erratum reference for this ? Also it seems to make n=
-o
->> sense
->>
->>
->>> =A0 =A0 =A0 static const struct ata_port_info info_rdc_11 =3D {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .flags =3D ATA_FLAG_SLAVE_POSS,
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =3D ATA_PIO4,
->>> - =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D ATA_MWDMA2,
->>> + =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D 0,
->>> + =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =3D 0,
->>
->> MWDMA is not part of the CRC hardware anyway
->>
->> Are you sure these newer variants are simply not using a different s=
-et of
->> timing parameters thus showing bugs on your system ?
->>
->
+Here I focus on ata port runtime pm, not controller.
+
+In below conceptual patch, I did
+
+0. Set autosuspend delay to 3 minutes for ata port
+1. Split a new function ata_port_request_pm from ata_host_request_pm
+2. Add device_type "ata_port_type" which implements callbacks for
+   runtime pm core
+3. Resume port in ata_scsi_queuecmd if needed
+4. Request auto suspend in ata_scsi_queuecmd
+
+CAUTION: this patch DOES NOT work at all.
+I just threw it out for discussion.
+
+Any idea?
+Thanks.
+
+Lin Ming
+---
+ drivers/ata/libata-core.c |  126 +++++++++++++++++++++++++++++++++------------
+ drivers/ata/libata-scsi.c |    6 ++
+ 2 files changed, 99 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4a3a5ae..e0c1a15 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -66,6 +66,7 @@
+ #include <asm/byteorder.h>
+ #include <linux/cdrom.h>
+ #include <linux/ratelimit.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
+@@ -5234,51 +5235,62 @@ bool ata_link_offline(struct ata_link *link)
+ }
+ 
+ #ifdef CONFIG_PM
+-static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
++static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+ 			       int wait)
+ {
++	struct ata_link *link;
+ 	unsigned long flags;
+-	int i, rc;
++	int rc;
+ 
+-	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap = host->ports[i];
+-		struct ata_link *link;
++	/* Previous resume operation might still be in
++	 * progress.  Wait for PM_PENDING to clear.
++	 */
++	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		ata_port_wait_eh(ap);
++		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
++	}
+ 
+-		/* Previous resume operation might still be in
+-		 * progress.  Wait for PM_PENDING to clear.
+-		 */
+-		if (ap->pflags & ATA_PFLAG_PM_PENDING) {
+-			ata_port_wait_eh(ap);
+-			WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+-		}
++	/* request PM ops to EH */
++	spin_lock_irqsave(ap->lock, flags);
+ 
+-		/* request PM ops to EH */
+-		spin_lock_irqsave(ap->lock, flags);
++	ap->pm_mesg = mesg;
++	if (wait) {
++		rc = 0;
++		ap->pm_result = &rc;
++	}
+ 
+-		ap->pm_mesg = mesg;
+-		if (wait) {
+-			rc = 0;
+-			ap->pm_result = &rc;
+-		}
++	ap->pflags |= ATA_PFLAG_PM_PENDING;
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		link->eh_info.action |= action;
++		link->eh_info.flags |= ehi_flags;
++	}
+ 
+-		ap->pflags |= ATA_PFLAG_PM_PENDING;
+-		ata_for_each_link(link, ap, HOST_FIRST) {
+-			link->eh_info.action |= action;
+-			link->eh_info.flags |= ehi_flags;
+-		}
++	ata_port_schedule_eh(ap);
+ 
+-		ata_port_schedule_eh(ap);
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
++	/* wait and check result */
++	if (wait) {
++		ata_port_wait_eh(ap);
++		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
++	}
+ 
+-		/* wait and check result */
+-		if (wait) {
+-			ata_port_wait_eh(ap);
+-			WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+-			if (rc)
+-				return rc;
+-		}
++	return rc;
++}
++
++static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
++			       unsigned int action, unsigned int ehi_flags,
++			       int wait)
++{
++	int i, rc;
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap = host->ports[i];
++
++		rc = ata_port_request_pm(ap, mesg, action, ehi_flags, wait);
++		if (rc)
++			return rc;
+ 	}
+ 
+ 	return 0;
+@@ -5874,6 +5886,45 @@ void ata_host_init(struct ata_host *host, struct device *dev,
+ 	host->ops = ops;
+ }
+ 
++#define to_ata_port(d) container_of(d, struct ata_port, tdev)
++
++static int ata_port_runtime_suspend(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++	struct Scsi_Host *shost = ap->scsi_host;
++	int rc;
++
++	/* TODO: sync with hardware access */
++
++	if (shost->host_busy)
++		return -EBUSY;
++
++	rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
++	return rc;
++}
++
++static int ata_port_runtime_resume(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++	int rc;
++
++	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
++		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
++	return rc;
++}
++
++static const struct dev_pm_ops ata_port_pm_ops = {
++	.runtime_suspend = ata_port_runtime_suspend,
++	.runtime_resume = ata_port_runtime_resume,
++};
++
++static struct device_type ata_port_type = {
++	.name = "ata_port",
++#ifdef CONFIG_PM
++	.pm = &ata_port_pm_ops,
++#endif
++};
++
+ int ata_port_probe(struct ata_port *ap)
+ {
+ 	int rc = 0;
+@@ -5903,6 +5954,15 @@ int ata_port_probe(struct ata_port *ap)
+ 		rc = ata_bus_probe(ap);
+ 		DPRINTK("ata%u: bus probe end\n", ap->print_id);
+ 	}
++
++	ap->tdev.type = &ata_port_type;
++	pm_runtime_set_active(&ap->tdev);
++	pm_runtime_use_autosuspend(&ap->tdev);
++	/* 3 minutes idle to auto suspend */
++	pm_runtime_set_autosuspend_delay(&ap->tdev, 180*1000);
++	pm_runtime_enable(&ap->tdev);
++	pm_request_autosuspend(&ap->tdev);
++
+ 	return rc;
+ }
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 46d087f..88fc7fe 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -48,6 +48,7 @@
+ #include <linux/hdreg.h>
+ #include <linux/uaccess.h>
+ #include <linux/suspend.h>
++#include <linux/pm_runtime.h>
+ #include <asm/unaligned.h>
+ 
+ #include "libata.h"
+@@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 
+ 	ap = ata_shost_to_port(shost);
+ 
++	if (pm_runtime_suspended(&ap->tdev))
++		pm_runtime_resume(&ap->tdev);
++	pm_runtime_mark_last_busy(&ap->tdev);
++	pm_request_autosuspend(&ap->tdev);
++
+ 	spin_lock_irqsave(ap->lock, irq_flags);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+
+
