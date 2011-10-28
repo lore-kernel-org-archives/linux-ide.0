@@ -1,19 +1,15 @@
 From: Lin Ming <ming.m.lin@intel.com>
 Subject: [RFC] ata port runtime pm
-Date: Fri, 28 Oct 2011 11:20:15 +0800
-Message-ID: <1319772015.18801.62.camel@minggr>
+Date: Fri, 28 Oct 2011 11:21:12 +0800
+Message-ID: <1319772072.24236.0.camel@minggr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7293 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754391Ab1J1DVP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Oct 2011 23:21:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Priyanka Gupta <ankaguptaca@gmail.com>, Zhang Rui <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>
+List-Id: linux-ide@vger.kernel.org
 
 Hi, all
 
@@ -240,5 +236,3 @@ index 46d087f..88fc7fe 100644
  	spin_lock_irqsave(ap->lock, irq_flags);
  
  	ata_scsi_dump_cdb(ap, cmd);
-
-
