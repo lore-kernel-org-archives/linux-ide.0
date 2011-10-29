@@ -1,81 +1,73 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC] ata port runtime pm
-Date: Fri, 28 Oct 2011 14:51:17 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1110281444170.2175-100000@iolanthe.rowland.org>
-References: <201110281931.54527.rjw@sisk.pl>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2/RESEND] mv_sas: OCZ RevoDrive3 & zDrive R4 support
+Date: Sat, 29 Oct 2011 16:34:41 +0200
+Message-ID: <4EAC0F01.5070404@mvista.com>
+References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org> <20111024223008.GB3305@orbis-terrarum.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201110281931.54527.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Zhang, Rui" <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>, Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62217 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933035Ab1J2OfL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2011 10:35:11 -0400
+In-Reply-To: <20111024223008.GB3305@orbis-terrarum.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Robin H. Johnson" <robbat2@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, 28 Oct 2011, Rafael J. Wysocki wrote:
+Hello.
 
-> On Friday, October 28, 2011, Lin Ming wrote:
-> > On Fri, 2011-10-28 at 11:37 +0800, Jeff Garzik wrote:
-> > > On 10/27/2011 11:21 PM, Lin Ming wrote:
-> > > > @@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-> > > >
-> > > >   	ap = ata_shost_to_port(shost);
-> > > >
-> > > > +	if (pm_runtime_suspended(&ap->tdev))
-> > > > +		pm_runtime_resume(&ap->tdev);
-> > > > +	pm_runtime_mark_last_busy(&ap->tdev);
-> > > > +	pm_request_autosuspend(&ap->tdev);
-> > > > +
-> > > >   	spin_lock_irqsave(ap->lock, irq_flags);
-> > > >
-> > > 
-> > > 
-> > > Putting this into the core command dispatch fast-path is rather 
-> > > disappointing.  That's at least one additional lock, plus some atomic 
-> > > instructions and tests.
+On 25.10.2011 0:30, Robin H. Johnson wrote:
 
-And it calls pm_runtime_resume(), which requires process context, from 
-within a SCSI queuecmd routine, which runs in interrupt context.
+> In the OCZ RevoDrive3/zDrive R4 series, the "OCZ SuperScale Storage
+> Controller" with "Virtualized Controller Architecture 2.0" really seems
+> to be a Marvell 88SE9485 part, with OCZ firmware/BIOS.
+>
+> Developed and tested on OCZ RevoDrive3 120GB [PCI 1b85:1021]
+>
+> Should work on:
+> - OCZ RevoDrive3 (2x SandForce 2281)
+> - OCZ RevoDrive3 X2 (4x SandForce 2281)
+> - OCZ zDrive R4 CM84 (4x SandForce 2281)
+> - OCZ zDrive R4 CM88 (8x SandForce 2281)
+> - OCZ zDrive R4 RM84 (4x SandForce 2582)
+> - OCZ zDrive R4 RM88 (8x SandForce 2582)
+>
+> All of this because a friend recently bought a OCZ RevoDrive3 and was
+> bitten by the lack of Linux support.
+>
+> Notes from testing:
+> -------------------
+> - SMART works.
+> - VPD Device Identification is "OCZ-REVODRIVE3"
+> - Thin provisioning/TRIM seems to be implemented as WRITE SAME UNMAP,
+>    with deterministic (non-zero) read after TRIM, but I'm not sure if it
+>    works 100% in my testing.
+> - Some of the tuning in the firmware seems to ensure much better
+>    performance when in a RAID0 setup than using the two devices
+>    seperately.
+>
+> I have not tested booting from the SSD, because all of this was
+> developed and tested remotely from the actual hardware.
+>
+> Signed-off-by: Robin H. Johnson<robbat2@gentoo.org>
+> Thanks-To: Gordon Pritchard<gordp@sfu.ca>
+[...]
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index ae96bbe..3fe46e9 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2868,3 +2868,5 @@
+>
+>   #define PCI_VENDOR_ID_XEN		0x5853
+>   #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
+> +
+> +#define PCI_VENDOR_ID_OCZ		0x1b85
 
-> > Maybe move suspend request to the resume function, as below.
-> > 
-> > static int ata_port_runtime_resume(struct device *dev)
-> > {
-> >         struct ata_port *ap = to_ata_port(dev);
-> >         int rc;
-> > 
-> >         rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
-> >                 ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
-> > 
-> >         pm_runtime_mark_last_busy(dev);
-> >         pm_request_autosuspend(dev);
-> > 
-> >         return rc;
-> > }
-> > 
-> > Then the fast-path looks like,
-> > 
-> > @@ -3208,6 +3209,9 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost,
-> > struct scsi_cmnd *cmd)
-> > 
-> >         ap = ata_shost_to_port(shost);
-> > 
-> > +       if (pm_runtime_suspended(&ap->tdev))
-> > +               pm_runtime_resume(&ap->tdev);
-> > +
+    The vendor ID macros in this file are sorted by the ID value (except 
+Xen, it seems).
 
-Unfortunately that won't work.  It's got a race; the device might be 
-active when the pm_runtime_suspended() test runs and then it might 
-suspend immediately after.
+WBR. Sergei
 
-> >         spin_lock_irqsave(ap->lock, irq_flags);
-> > 
-> >         ata_scsi_dump_cdb(ap, cmd);
-> > 
-> > What do you think?
-
-See the example code in section 9 of 
-Documentation/power/runtime_pm.txt for the outline of a general 
-approach.
-
-Alan Stern
