@@ -1,73 +1,62 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2/RESEND] mv_sas: OCZ RevoDrive3 & zDrive R4 support
-Date: Sat, 29 Oct 2011 16:34:41 +0200
-Message-ID: <4EAC0F01.5070404@mvista.com>
-References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org> <20111024223008.GB3305@orbis-terrarum.net>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Sat, 29 Oct 2011 15:13:06 -0400
+Message-ID: <28364.1319915586@turing-police.cc.vt.edu>
+References: <20111026202235.GA20928@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; boundary="==_Exmh_1319915586_3122P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:62217 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933035Ab1J2OfL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2011 10:35:11 -0400
-In-Reply-To: <20111024223008.GB3305@orbis-terrarum.net>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:35128 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750874Ab1J2TNW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2011 15:13:22 -0400
+In-Reply-To: Your message of "Wed, 26 Oct 2011 16:22:35 EDT."
+             <20111026202235.GA20928@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hello.
+--==_Exmh_1319915586_3122P
+Content-Type: text/plain; charset=us-ascii
 
-On 25.10.2011 0:30, Robin H. Johnson wrote:
+On Wed, 26 Oct 2011 16:22:35 EDT, Jeff Garzik said:
 
-> In the OCZ RevoDrive3/zDrive R4 series, the "OCZ SuperScale Storage
-> Controller" with "Virtualized Controller Architecture 2.0" really seems
-> to be a Marvell 88SE9485 part, with OCZ firmware/BIOS.
->
-> Developed and tested on OCZ RevoDrive3 120GB [PCI 1b85:1021]
->
-> Should work on:
-> - OCZ RevoDrive3 (2x SandForce 2281)
-> - OCZ RevoDrive3 X2 (4x SandForce 2281)
-> - OCZ zDrive R4 CM84 (4x SandForce 2281)
-> - OCZ zDrive R4 CM88 (8x SandForce 2281)
-> - OCZ zDrive R4 RM84 (4x SandForce 2582)
-> - OCZ zDrive R4 RM88 (8x SandForce 2582)
->
-> All of this because a friend recently bought a OCZ RevoDrive3 and was
-> bitten by the lack of Linux support.
->
-> Notes from testing:
-> -------------------
-> - SMART works.
-> - VPD Device Identification is "OCZ-REVODRIVE3"
-> - Thin provisioning/TRIM seems to be implemented as WRITE SAME UNMAP,
->    with deterministic (non-zero) read after TRIM, but I'm not sure if it
->    works 100% in my testing.
-> - Some of the tuning in the firmware seems to ensure much better
->    performance when in a RAID0 setup than using the two devices
->    seperately.
->
-> I have not tested booting from the SSD, because all of this was
-> developed and tested remotely from the actual hardware.
->
-> Signed-off-by: Robin H. Johnson<robbat2@gentoo.org>
-> Thanks-To: Gordon Pritchard<gordp@sfu.ca>
-[...]
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index ae96bbe..3fe46e9 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2868,3 +2868,5 @@
->
->   #define PCI_VENDOR_ID_XEN		0x5853
->   #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
-> +
-> +#define PCI_VENDOR_ID_OCZ		0x1b85
+>    For this reason, I am tempted to modify my new, GPG-signed pull request
+>    template as follows, for subsequent pull requests:
+> 
+> 	---<begin GPG signed text>---
+> 
+>    	pull req description
+> 
+> 	"Please pull from $branch\n$url $branch"
+> 
+> 	"Top of tree is $sha1_commit"
+> 
+> 	---<end GPG signed text>---
+> 
+> 	diffstat
+> 	diff
 
-    The vendor ID macros in this file are sorted by the ID value (except 
-Xen, it seems).
+Note that this can be problematic as well - there's probably a lot of tools out there
+that will be less than gracious when presented with a GPG-signed text with non-signed
+trailing text.  Maybe GPG-sign from "pull request" to "diffstat" and make the diff an
+attachment? (That would also allow attaching a gzip'ed diff, which would save vger's
+bandwidth :)
 
-WBR. Sergei
+--==_Exmh_1319915586_3122P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFOrFBCcC3lWbTT17ARArL0AKCO3joUvywQDH+AzvxXBb35Jl24IgCeLTjl
+SphzIrWvZAHiJk9EgQaceIw=
+=Ern0
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1319915586_3122P--
 
