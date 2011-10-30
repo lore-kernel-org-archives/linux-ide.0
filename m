@@ -1,53 +1,92 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Sat, 29 Oct 2011 15:27:09 -0400
-Message-ID: <4EAC538D.10606@garzik.org>
-References: <20111026202235.GA20928@havoc.gtf.org> <28364.1319915586@turing-police.cc.vt.edu>
+From: JiSheng Zhang <jszhang3@gmail.com>
+Subject: [PATCH] ahci_platform: add suspend & resume support
+Date: Sun, 30 Oct 2011 14:21:22 +0800
+Message-ID: <20111030142122.560216e2@ustc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47869 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751072Ab1J2T1M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Oct 2011 15:27:12 -0400
-In-Reply-To: <28364.1319915586@turing-police.cc.vt.edu>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, avorontsov@mvista.com, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-
-On 10/29/2011 03:13 PM, Valdis.Kletnieks@vt.edu wrote:
-> On Wed, 26 Oct 2011 16:22:35 EDT, Jeff Garzik said:
->
->>     For this reason, I am tempted to modify my new, GPG-signed pull request
->>     template as follows, for subsequent pull requests:
->>
->> 	---<begin GPG signed text>---
->>
->>     	pull req description
->>
->> 	"Please pull from $branch\n$url $branch"
->>
->> 	"Top of tree is $sha1_commit"
->>
->> 	---<end GPG signed text>---
->>
->> 	diffstat
->> 	diff
->
-> Note that this can be problematic as well - there's probably a lot of tools out there
-> that will be less than gracious when presented with a GPG-signed text with non-signed
-> trailing text.  Maybe GPG-sign from "pull request" to "diffstat" and make the diff an
-> attachment? (That would also allow attaching a gzip'ed diff, which would save vger's
-> bandwidth :)
-
-I'm not sure I buy that.  A GPG-signed email, something that's been 
-around for more than decade, transits the system with unsigned email 
-headers.  GPG content is commonly delivered buried inside a larger 
-container.
-
-	Jeff
 
 
+Signed-off-by: JiSheng Zhang <jszhang3@gmail.com>
+---
+ drivers/ata/ahci_platform.c |   54 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 54 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index c03277d..60ff9eb 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -202,12 +202,66 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
++static int ahci_suspend(struct platform_device *pdev, pm_message_t mesg)
++{
++	struct ata_host *host = dev_get_drvdata(&pdev->dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	u32 ctl;
++
++	if (mesg.event & PM_EVENT_SLEEP) {
++		/* AHCI spec rev1.1 section 8.3.3:
++		 * Software must disable interrupts prior to requesting a
++		 * transition of the HBA to D3 state.
++		 */
++		ctl = readl(mmio + HOST_CTL);
++		ctl &= ~HOST_IRQ_EN;
++		writel(ctl, mmio + HOST_CTL);
++		readl(mmio + HOST_CTL); /* flush */
++	}
++
++	return ata_host_suspend(host, mesg);
++}
++
++static int ahci_resume(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct ahci_platform_data *pdata = dev->platform_data;
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int rc;
++
++	if (pdata && pdata->init) {
++		rc = pdata->init(dev, hpriv->mmio);
++		if (rc)
++			return rc;
++	}
++
++	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
++		rc = ahci_reset_controller(host);
++		if (rc)
++			return rc;
++
++		ahci_init_controller(host);
++	}
++
++	ata_host_resume(host);
++
++	return 0;
++}
++#endif
++
+ static struct platform_driver ahci_driver = {
+ 	.remove = __devexit_p(ahci_remove),
+ 	.driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 	},
++#ifdef CONFIG_PM
++	.suspend = ahci_suspend,
++	.resume = ahci_resume,
++#endif
+ 	.id_table	= ahci_devtype,
+ };
+ 
+-- 
+1.7.6.3
