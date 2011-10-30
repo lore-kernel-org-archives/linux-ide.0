@@ -1,59 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Sun, 30 Oct 2011 14:05:01 +0400
-Message-ID: <1319969101.5215.20.camel@dabdike>
-References: <20111026202235.GA20928@havoc.gtf.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 01/27] ide-{cd,floppy,tape}: Do not include <linux/irq.h>
+Date: Sun, 30 Oct 2011 13:48:09 +0100
+Message-ID: <1319978915-10933-2-git-send-email-geert@linux-m68k.org>
+References: <1319978915-10933-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60588 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755516Ab1J3KFG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2011 06:05:06 -0400
-In-Reply-To: <20111026202235.GA20928@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1319978915-10933-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-m68k@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Greg Ungerer <gerg@uclinux.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, 2011-10-26 at 16:22 -0400, Jeff Garzik wrote:
-> 2) The GPG wrapping causes all '^-' lines to become '^- -'.  This does NOT
->    reflect the true 'git diff' output, of course.
-> 
->    For this reason, I am tempted to modify my new, GPG-signed pull request
->    template as follows, for subsequent pull requests:
-> 
-> 	---<begin GPG signed text>---
-> 
->    	pull req description
-> 
-> 	"Please pull from $branch\n$url $branch"
-> 
-> 	"Top of tree is $sha1_commit"
-> 
-> 	---<end GPG signed text>---
-> 
-> 	diffstat
-> 	diff
-> 
->    That ensures that the critical part -- sha1 commit for top of tree --
->    is GPG signed, while the diff will be outside the signed area and therefore
->    not mangled by wrapping.
+The top of <linux/irq.h> has this comment:
 
-You can fix this by using mime and detached signatures as well but I
-wouldn't worry too much about it.  What emerged at KS is that Linus uses
-gmail and gmail has no integration with pgp, thus pgp signing of pull
-requests is superfluous since Linus won't add the steps of saving the
-message to a text file and manually running pgp over it to verify
-because of the huge elongation in workflow this causes especially during
-a merge window.
+ * Please do not include this file in generic code.  There is currently
+ * no requirement for any architecture to implement anything held
+ * within this file.
+ *
+ * Thanks. --rmk
 
-Ted Ts'o recommended using signed tags, but they're also a manual check.
-I think the ultimate consensus will be that we'll have to wait until git
-itself has pgp key handling built in (which the git people are looking
-at) before we move to using the web of trust in pull requests.
+Remove inclusion of <linux/irq.h>, to prevent the following compile err=
+or
+from happening soon:
 
-James
+| include/linux/irq.h:132: error: redefinition of =E2=80=98struct irq_d=
+ata=E2=80=99
+| include/linux/irq.h:286: error: redefinition of =E2=80=98struct irq_c=
+hip=E2=80=99
 
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Borislav Petkov <bp@alien8.de>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ide/ide-cd.c     |    1 -
+ drivers/ide/ide-floppy.c |    1 -
+ drivers/ide/ide-tape.c   |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 04b0956..8126824 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -43,7 +43,6 @@
+ /* For SCSI -> ATAPI command conversion */
+ #include <scsi/scsi.h>
+=20
+-#include <linux/irq.h>
+ #include <linux/io.h>
+ #include <asm/byteorder.h>
+ #include <linux/uaccess.h>
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 61fdf54..3d42043 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -35,7 +35,6 @@
+ #include <scsi/scsi_ioctl.h>
+=20
+ #include <asm/byteorder.h>
+-#include <linux/irq.h>
+ #include <linux/uaccess.h>
+ #include <linux/io.h>
+ #include <asm/unaligned.h>
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 7ecb1ad..ce8237d 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -41,7 +41,6 @@
+ #include <scsi/scsi.h>
+=20
+ #include <asm/byteorder.h>
+-#include <linux/irq.h>
+ #include <linux/uaccess.h>
+ #include <linux/io.h>
+ #include <asm/unaligned.h>
+--=20
+1.7.0.4
