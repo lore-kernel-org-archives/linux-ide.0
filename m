@@ -1,87 +1,54 @@
-From: Junio C Hamano <gitster@pobox.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 15:03:09 -0700
-Message-ID: <7v4nyoq0o2.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
+Date: Mon, 31 Oct 2011 15:18:28 -0700
+Message-ID: <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <20111031084048.GA11807__21610.4542407722$1320051469$gmane$org@elte.hu>
+ <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:46089 "EHLO
-	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755491Ab1JaWDN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 18:03:13 -0400
-In-Reply-To: <20111031084048.GA11807__21610.4542407722$1320051469$gmane$org@elte.hu> (Ingo
- Molnar's message of "Mon, 31 Oct 2011 09:40:48 +0100")
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Junio C Hamano <gitster@pobox.com>
+Cc: git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: git@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Ingo Molnar <mingo@elte.hu> writes:
-
-> * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+On Mon, Oct 31, 2011 at 11:23 AM, Junio C Hamano <gitster@pobox.com> wr=
+ote:
 >
->> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive 
->> pain in the butt. We need to automate this some sane way, both for 
->> the sender and for the recipient.
->
-> The most practical form would be if Git supported such oneliner pull 
-> requests:
->
->  git pull git://foo.com bar.branch                           \
->   --pull-sha1 0acf00014bcfd71090c3b0d43c98e970108064e4       \
->   --gpg-by: "Ingo Molnar <mingo@kernel.org>"                 \
->   --gpg-sig: 8a6f134afd1d212fe21345
->
-> maintainers could just paste them into a shell and it would abort if 
-> it's not trusted. The maintainer verifies the visible, 'Ingo Molnar' 
-> bit. The 8a6f134afd1d212fe21345 is a signed-by-Ingo-Molnar version of 
-> this content:
->
->     git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4
+> It certainly lets you run "git tag --verify" after you pulled and wil=
+l
+> give you assurance that you pulled the right thing from the right per=
+son,
+> but what do you plan to do to the tag from your lieutenants after you
+> fetched and verified? =A0I count 379 merges by you between 3.0 (2011-=
+07-21)
+> and 3.1 (2011-10-24), which would mean you would see 4-5 tags per day=
+ on
+> average. =A0Will these tags be pushed out to your public history?
 
-As a command line syntax, I think the new "--flag"s should all come
-before non flag options to the "pull" subcommand, i.e.
+No, you misunderstand.
 
-    git pull --sha1 0acf00014bcfd71090c3b0d43c98e970108064e4 \
-    	     --gpg-by "Ingo Molnar <mingo@kernel.org>" \
-             git://foo.com bar.branch
+I can do that kind of "crazy manual check of a tag" today. And it's
+too painful to be useful in the long run (or even the short run - I'd
+much prefer the pgp signature in the email which is easier to check
+and more visible anyway). Fetching a tag by name and saving it as a
+tag is indeed pointless.
 
-I do not understand what you meant by that "8a6f13...". When I run
+But what would be nice is that "git pull" would fetch the tag (based
+on name) *automatically*, and not actually create a tag in my
+repository at all. Instead, if would use the tag to check the
+signature, and - if we do this right - also use the tag contents to
+populate the merge commit message.
 
-    $ echo "git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4" |
-      gpg -sa
+In other words, no actual tag would ever be left around as a turd, it
+would simply be used as an automatic communication channel between the
+"git push -s" of the submitter and my subsequent "git pull". Neither
+side would have to do anything special, and the tag would never show
+up in any relevant tree (it could even be in a totally separate
+namespace like "refs/pullmarker/<branchname>" or something).
 
-I would get about 20 lines of solid gibberish, nothing close to that
-clean and concise 20-or-so character sequence.
-
-In any case, I do not think that "this site, that branch" information is
-essential for the purpose of validation. I think I saw Linus responding to
-a pull request saying "Your pull request says master but I found nothing
-there; I assume you meant for-linus branch" or something similar, and as
-long as that matches the expectation of the contributor, especially if you
-specify "I want you to get _this_ commit" in your request-pull message, it
-should not matter how/where Linus gets the history leading to that commit.
-
-As "git-pull" is still a scripted Porcelain, interested people should be
-able to experiment this idea by doing something like this:
-
- 1. The requestor signs the tip commit to be fetched with the version of
-    git from the "next" branch, i.e. "git commit -S", and pushes it to his
-    publishing location;
-
- 2. Around line 207, "git pull" spawns "git fetch", stops if dry-run. At
-    that point, you can:
-
-    - parse FETCH_HEAD and verify the SHA-1 matches what you got from the
-      command line;
-
-    - run "git show -s --show-signature FETCH_HEAD" (again, use the
-      version of git from the "next" branch) to let GPG parse the
-      signature.
-
-    and stop if either test fails.
-
+                                 Linus
