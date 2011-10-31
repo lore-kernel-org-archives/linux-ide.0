@@ -1,28 +1,46 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 15:33:41 -0700
-Message-ID: <4EAF2245.90308@zytor.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com> <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com> <4EAF1F40.3030907@zytor.com> <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com>
+Date: Mon, 31 Oct 2011 15:34:40 -0700
+Message-ID: <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
+ <4EAF1FF6.3000500@zytor.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:41080 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755673Ab1JaWfD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 18:35:03 -0400
+In-Reply-To: <4EAF1FF6.3000500@zytor.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 10/31/2011 03:30 PM, Linus Torvalds wrote:
-> 
-> But if you do the normal "git pull git://git.kernel.org/name/of/repo"
-> - which is how things happen as a result of a pull request - you won't
-> get tags at all - you have to ask for them by name or use "--tags" to
-> get them all.
-> 
+On Mon, Oct 31, 2011 at 3:23 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+>
+> I use enigmail which is a Thunderbird plugin; it works quite well, bu=
+t,
+> well, it requires Thunderbird. =A0I think many GUI MUAs have similar
+> plugins, but text MTAs might be worse, I don't know.
 
-Didn't realize that... I guess I'm too used to named remotes.
+I have never met a GUI MUA I like before google webmail. And the
+advantage of google webmail isn't so much the GUI MUA, as the fact
+that it doesn't suck like IMAP, and does the automatic folders and
+good handling of archives right.
 
-If so, just using a tag should be fine, no?
+The reason I switched away from pine was that pine is fine (apart from
+the archival thing) if you have all your mail local. But "local mail"
+is painful when traveling, or when trying to interact with mail using
+a mobile phone etc.
 
-	-hpa
+And IMAP mail in turn is totally useless both when traveling *and*
+when at home.
+
+So no, thunderbird isn't an option. A command line interface that just
+verifies the gpg signature is what I'd like to see.
+
+                    Linus
