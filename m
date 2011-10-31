@@ -1,38 +1,87 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Junio C Hamano <gitster@pobox.com>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 14:46:25 -0700
-Message-ID: <4EAF1731.2070908@zytor.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+Date: Mon, 31 Oct 2011 15:03:09 -0700
+Message-ID: <7v4nyoq0o2.fsf@alter.siamese.dyndns.org>
+References: <20111026202235.GA20928@havoc.gtf.org>
+ <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <20111031084048.GA11807__21610.4542407722$1320051469$gmane$org@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:39869 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932356Ab1JaVqo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 17:46:44 -0400
-In-Reply-To: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:46089 "EHLO
+	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755491Ab1JaWDN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Oct 2011 18:03:13 -0400
+In-Reply-To: <20111031084048.GA11807__21610.4542407722$1320051469$gmane$org@elte.hu> (Ingo
+ Molnar's message of "Mon, 31 Oct 2011 09:40:48 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Ingo Molnar <mingo@elte.hu>
+Cc: git@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 10/30/2011 10:12 AM, Linus Torvalds wrote:
-> 
-> Actually, I have been running "gpg --verify" on the email that use the
-> standard PGP encapsulation (ie the kind that Jeff used, that has
-> "-----BEGIN PGP SIGNED MESSAGE-----" in it.
-> 
-> It's the rfc3516-type email (aka protocol="application/pgp-encrypted")
-> type that I can't even verify, because that's not something that gpg
-> knows inherently how to check: you have to decode the message the
-> right way and know what the rules are, and I have no intention of
-> trying to figure it out. I have yet to find any usable tool that is
-> able to check it, and I'm certainly not going to waste time trying to
-> parse the rfc and write my own.
-> 
+Ingo Molnar <mingo@elte.hu> writes:
 
-What client are you using (or are you using the gmail web interface?)
+> * Linus Torvalds <torvalds@linux-foundation.org> wrote:
+>
+>> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive 
+>> pain in the butt. We need to automate this some sane way, both for 
+>> the sender and for the recipient.
+>
+> The most practical form would be if Git supported such oneliner pull 
+> requests:
+>
+>  git pull git://foo.com bar.branch                           \
+>   --pull-sha1 0acf00014bcfd71090c3b0d43c98e970108064e4       \
+>   --gpg-by: "Ingo Molnar <mingo@kernel.org>"                 \
+>   --gpg-sig: 8a6f134afd1d212fe21345
+>
+> maintainers could just paste them into a shell and it would abort if 
+> it's not trusted. The maintainer verifies the visible, 'Ingo Molnar' 
+> bit. The 8a6f134afd1d212fe21345 is a signed-by-Ingo-Molnar version of 
+> this content:
+>
+>     git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4
 
-	-hpa
+As a command line syntax, I think the new "--flag"s should all come
+before non flag options to the "pull" subcommand, i.e.
+
+    git pull --sha1 0acf00014bcfd71090c3b0d43c98e970108064e4 \
+    	     --gpg-by "Ingo Molnar <mingo@kernel.org>" \
+             git://foo.com bar.branch
+
+I do not understand what you meant by that "8a6f13...". When I run
+
+    $ echo "git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4" |
+      gpg -sa
+
+I would get about 20 lines of solid gibberish, nothing close to that
+clean and concise 20-or-so character sequence.
+
+In any case, I do not think that "this site, that branch" information is
+essential for the purpose of validation. I think I saw Linus responding to
+a pull request saying "Your pull request says master but I found nothing
+there; I assume you meant for-linus branch" or something similar, and as
+long as that matches the expectation of the contributor, especially if you
+specify "I want you to get _this_ commit" in your request-pull message, it
+should not matter how/where Linus gets the history leading to that commit.
+
+As "git-pull" is still a scripted Porcelain, interested people should be
+able to experiment this idea by doing something like this:
+
+ 1. The requestor signs the tip commit to be fetched with the version of
+    git from the "next" branch, i.e. "git commit -S", and pushes it to his
+    publishing location;
+
+ 2. Around line 207, "git pull" spawns "git fetch", stops if dry-run. At
+    that point, you can:
+
+    - parse FETCH_HEAD and verify the SHA-1 matches what you got from the
+      command line;
+
+    - run "git show -s --show-signature FETCH_HEAD" (again, use the
+      version of git from the "next" branch) to let GPG parse the
+      signature.
+
+    and stop if either test fails.
 
