@@ -1,24 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
- ExpressCard, sometimes fails to boot
-Date: Sun, 30 Oct 2011 14:12:40 -0700
-Message-ID: <20111030211240.GE7696@google.com>
-References: <4E930916.6050503@gmail.com>
+From: "Aries Lee" <arieslee@jmicron.com>
+Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch } ExpressCard, sometimes fails to boot
+Date: Mon, 31 Oct 2011 10:59:55 +0800
+Message-ID: <201110310300.p9V3021e019006@jmr105.jmicron.com>
+References: <20111030211240.GE7696@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:34774 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752516Ab1J3VMq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2011 17:12:46 -0400
-Received: by ywf7 with SMTP id 7so433329ywf.19
-        for <linux-ide@vger.kernel.org>; Sun, 30 Oct 2011 14:12:46 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <4E930916.6050503@gmail.com>
+Received: from spamfilter.jmicron.com ([220.130.51.235]:10167 "EHLO
+	jmsspam.jmicron.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753855Ab1JaDLb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2011 23:11:31 -0400
+In-Reply-To: <20111030211240.GE7696@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Orson <orson.wellies@gmail.com>
-Cc: linux-ide@vger.kernel.org, arieslee@jmicron.com
+To: 'Tejun Heo' <tj@kernel.org>, 'Orson' <orson.wellies@gmail.com>
+Cc: linux-ide@vger.kernel.org
+
+Hi Tejun,
+
+Is it possible to install windows OS on the same hardware,
+If it still get the same error, that we can conclude it as a hardware issue.
+
+
+------------------------------------------------
+Aries Lee
+JMicron Technology Corp.
+1F, No.13, Innovation Road 1, Science-Based Industrial Park, 
+Hsin-Chu, Taiwan
+Tel : 886-3-579-7389 ext:8829
+-----------------------------------------------------Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+Sent: Monday, October 31, 2011 5:13 AM
+To: Orson
+Cc: linux-ide@vger.kernel.org; arieslee@jmicron.com
+Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
+ExpressCard, sometimes fails to boot
 
 Hello,
 
@@ -42,13 +60,16 @@ probe whether new device appeared on the port.  Does it work if you
 plug an actual hard drive into the port?  Looks more like wrong wiring
 than anything else.  Aries, any ideas?
 
- ahci 0000:10:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA mode
+ ahci 0000:10:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA
+mode
  ahci 0000:10:00.0: flags: 64bit ncq pm led clo pmp pio slum part
  ahci 0000:10:00.0: setting latency timer to 64
  scsi1 : ahci
  ata1: SATA max UDMA/133 abar m8192@0xd0000000 port 0xd0000100 irq 16
  ata2: SATA max UDMA/133 abar m8192@0xd0000000 port 0xd0000180 irq 16
- ata1: SATA link down (SStatus 0 SControOct  9 23:45:46 hp-laptop kernel: [    1.414084] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe frozen
+ ata1: SATA link down (SStatus 0 SControOct  9 23:45:46 hp-laptop kernel: [
+1.414084] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe
+frozen
  ata1: irq_stat 0x00000040, connection status changed
  ata1: SError: { PHYInt CommWake DevExch }
  ata1: hard resetting link
@@ -92,3 +113,4 @@ than anything else.  Aries, any ideas?
 
 -- 
 tejun
+
