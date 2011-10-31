@@ -1,62 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Ingo Molnar <mingo@elte.hu>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 12:19:10 +0400
-Message-ID: <1320049150.8283.19.camel@dabdike>
+Date: Mon, 31 Oct 2011 09:40:48 +0100
+Message-ID: <20111031084048.GA11807@elte.hu>
 References: <20111026202235.GA20928@havoc.gtf.org>
-	 <1319969101.5215.20.camel@dabdike>
-	 <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33895 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754417Ab1JaITR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 04:19:17 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-
-On Sun, 2011-10-30 at 10:12 -0700, Linus Torvalds wrote:
-> On Sun, Oct 30, 2011 at 3:05 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> >
-> > You can fix this by using mime and detached signatures as well but I
-> > wouldn't worry too much about it.  What emerged at KS is that Linus uses
-> > gmail and gmail has no integration with pgp, thus pgp signing of pull
-> > requests is superfluous since Linus won't add the steps of saving the
-> > message to a text file and manually running pgp over it to verify
-> > because of the huge elongation in workflow this causes especially during
-> > a merge window.
-> 
-> Actually, I have been running "gpg --verify" on the email that use the
-> standard PGP encapsulation (ie the kind that Jeff used, that has
-> "-----BEGIN PGP SIGNED MESSAGE-----" in it.
-> 
-> It's the rfc3516-type email (aka protocol="application/pgp-encrypted")
-> type that I can't even verify, because that's not something that gpg
-> knows inherently how to check: you have to decode the message the
-> right way and know what the rules are, and I have no intention of
-> trying to figure it out. I have yet to find any usable tool that is
-> able to check it, and I'm certainly not going to waste time trying to
-> parse the rfc and write my own.
-
-OK, so I get clearly no partial PGP messages and no using rfc3516
-formatted pgp mail.
-
-> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive
-> pain in the butt. We need to automate this some sane way, both for the
-> sender and for the recipient.
-
-But this doesn't help with what practise you want us to follow.  Do you
-want us to send full signed email using pgp encapsulation for pull
-requests in spite of the mangling it does to attached patches and the
-amount of extra pain it causes you?  Or is relying on looking at the
-received headers and always using public email lists to detect spoofing
-by revocation OK until we find a mechanism for integrating pgp into git?
-
-James
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
 
+* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+
+> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive 
+> pain in the butt. We need to automate this some sane way, both for 
+> the sender and for the recipient.
+
+The most practical form would be if Git supported such oneliner pull 
+requests:
+
+ git pull git://foo.com bar.branch                           \
+  --pull-sha1 0acf00014bcfd71090c3b0d43c98e970108064e4       \
+  --gpg-by: "Ingo Molnar <mingo@kernel.org>"                 \
+  --gpg-sig: 8a6f134afd1d212fe21345
+
+maintainers could just paste them into a shell and it would abort if 
+it's not trusted. The maintainer verifies the visible, 'Ingo Molnar' 
+bit. The 8a6f134afd1d212fe21345 is a signed-by-Ingo-Molnar version of 
+this content:
+
+    git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4
+
+And Git would verify that what ends up being pulled is indeed 
+0acf00014bcfd and also verifies that it was signed by me.
+
+[ If we are extra diligent/paranoid then beyond the sha1 we might 
+  even GPG sign the shortlog, or even the full raw log of all commits 
+  leading to the sha1: this introduces some Git shortlog and patch 
+  formatting version dependency though.
+
+  Git could also double check foo.com's DNS coherency, or check it 
+  against a known-trusted whitelist of domain names specified in the 
+  maintainer's .gitconfig, as an extra layer. ]
+
+Doing it in this form would remove all the mail formatting madness - 
+one could paste such a pull request into a shell straight away, from 
+HTML email, from text email, from MIME email, etc.
+
+In fact i would trust such a Git based solution far more than any 
+opaque, invisible tool that claims to have checked a signature with 
+cooperation of my mail client (ha!).
+
+The only somewhat non-obvious bit is that Git should be *very* 
+careful about its key ID and signature parsing strategy, to protect 
+against social engineering attacks.
+
+For example neither this:
+
+  --gpg-by: "Ingo Molnar <mingo@kernal.org>"
+
+nor this:
+
+  --pgp-by: "Ingo Molnar <mingo@kernel.org>"
+
+malicious pull request should slip through in any fashion:
+
+ - Git should only use keys that are in your ring of trust - not pull 
+   keys from the public keyring automatically and just check 
+   coherency of the pull request or such. [I'm sure people will be 
+   tempted to have such a feature - but that temptation should be 
+   resisted.]
+
+ - Git should abort the moment it sees an unknown option
+
+Thanks,
+
+	Ingo
