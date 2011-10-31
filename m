@@ -1,106 +1,83 @@
-From: Junio C Hamano <gitster@pobox.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 16:09:09 -0700
-Message-ID: <7vlis0oj1m.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
- <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <4EAF1F40.3030907@zytor.com>
- <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com>
- <4EAF2245.90308@zytor.com>
- <CA+55aFzedaAzzWfzhqVf8y8ZW0jeb56hZwdV3UodSp8Q_Qhc2A@mail.gmail.com>
- <7vvcr4ojvp.fsf@alter.siamese.dyndns.org>
+Date: Mon, 31 Oct 2011 19:55:02 -0400
+Message-ID: <4EAF3556.3000001@garzik.org>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com> <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com> <4EAF1F40.3030907@zytor.com> <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com> <4EAF2245.90308@zytor.com> <7vzkggok6u.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7vvcr4ojvp.fsf@alter.siamese.dyndns.org> (Junio C. Hamano's
- message of "Mon, 31 Oct 2011 15:51:06 -0700")
+In-Reply-To: <7vzkggok6u.fsf@alter.siamese.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Junio C Hamano <gitster@pobox.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Junio C Hamano <gitster@pobox.com> writes:
-
-> Linus Torvalds <torvalds@linux-foundation.org> writes:
-> ...
-> As I already said, I do not think notes is a good match as a tool to do
-> this.
+On 10/31/2011 06:44 PM, Junio C Hamano wrote:
+> "H. Peter Anvin"<hpa@zytor.com>  writes:
 >
->> matters is that "git push" and "git pull" would JustWork(tm), and
->> check the signature if one exists, without having to cut-and-paste
->> data that simply shouldn't be visible to the user.
+>> On 10/31/2011 03:30 PM, Linus Torvalds wrote:
+>>>
+>>> But if you do the normal "git pull git://git.kernel.org/name/of/repo"
+>>> - which is how things happen as a result of a pull request - you won't
+>>> get tags at all - you have to ask for them by name or use "--tags" to
+>>> get them all.
+>>>
 >>
->> I abhor the interface Ingo suggested, for example....
+>> Didn't realize that... I guess I'm too used to named remotes.
+>>
+>> If so, just using a tag should be fine, no?
 >
-> Some cut-and-paste (or piping the e-mail to a command) would be necessary
-> evil, though, as you would have GPG keys from more than one trusted person
-> in your keyring, and when you are responding to a pull-request from person
-> A, finding a valid commit signed by person B should not be a success, but
-> at least should raise a warning.
+> So nobody is worried about this (quoting from my earlier message)?
+>
+>     On the other hand, the consumers of "Linus kernel" may want to say that
+>     they trust your tree and your tags because they can verify them with your
+>     GPG signature, but also they can independently verify the lieutenants'
+>     trees you pulled from are genuine.
+>
+> A signed emphemeral tag is usable as means to verify authenticity in a
+> hop-by-hop fashion, but that does not leave a permanent trail that can be
+> used for auditing.
 
-So here is a quick hack that does not involve cut-and-paste (it depends on
-the signed-commit topic in 'next').
+The main worry is Linus ($human_who_pulls) gets 
+cryptographically-verified data at the time he pulls.  Once Linus 
+republishes his tree (git push), there will be few, if any, wanting to 
+verify Jeff Garzik's signature.
 
- $ git pull --require-signature
+So no, I don't see that as a _driving_ need in the kernel's case.
 
-would trigger signature verification and stops you after fetching but
-before merging.
+And IMO the kernel will be a mix of signed and unsigned content for a 
+while, possibly forever.
 
- git-pull.sh |   25 ++++++++++++++++++++++++-
- 1 files changed, 24 insertions(+), 1 deletions(-)
 
-diff --git a/git-pull.sh b/git-pull.sh
-index 9868a0b..f3b4c93 100755
---- a/git-pull.sh
-+++ b/git-pull.sh
-@@ -39,7 +39,7 @@ test -z "$(git ls-files -u)" || die_conflict
- test -f "$GIT_DIR/MERGE_HEAD" && die_merge
- 
- strategy_args= diffstat= no_commit= squash= no_ff= ff_only=
--log_arg= verbosity= progress= recurse_submodules=
-+log_arg= verbosity= progress= recurse_submodules= must_be_signed=
- merge_args=
- curr_branch=$(git symbolic-ref -q HEAD)
- curr_branch_short="${curr_branch#refs/heads/}"
-@@ -60,6 +60,8 @@ do
- 		diffstat=--no-stat ;;
- 	--stat|--summary)
- 		diffstat=--stat ;;
-+	--require-signature)
-+		must_be_signed=yes ;;
- 	--log|--no-log)
- 		log_arg=$1 ;;
- 	--no-c|--no-co|--no-com|--no-comm|--no-commi|--no-commit)
-@@ -208,6 +210,27 @@ orig_head=$(git rev-parse -q --verify HEAD)
- git fetch $verbosity $progress $dry_run $recurse_submodules --update-head-ok "$@" || exit 1
- test -z "$dry_run" || exit 0
- 
-+if test -n "$must_be_signed"
-+then
-+	signature=$(git show -s --format='%G?' FETCH_HEAD)
-+	case "$signature" in
-+	G)
-+		case "$verbosity" in
-+		*' '-v*)
-+			git show -s --show-signature FETCH_HEAD ;;
-+		esac
-+		;;
-+	B)
-+		echo >&2 "Bad signature on the tip commit"
-+		exit 1
-+		;;
-+	*)
-+		echo >&2 "Tip commit must be signed"
-+		exit 1
-+		;;
-+	fi
-+fi
-+
- curr_head=$(git rev-parse -q --verify HEAD)
- if test -n "$orig_head" && test "$curr_head" != "$orig_head"
- then
+And Linus wrote:
+> [ Example gpg-signed small block that the attached patch adds to the
+> pull request: ]
+>
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+>
+> Commit be3fa9125e708348c7baf04ebe9507a72a9d1800
+> from git.kernel.org/pub/git
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v2.0.18 (GNU/Linux)
+>
+> iQEcBAEBAgAGBQJOrsILAAoJEHm+PkMAQRiGxZcH/31e0RrBitXUPKxHJajD58yh
+> SIEe/7i6E2RUSFva3KybEuFslcR8p8DYzDQTPLejStvnkO8v0lXu9s9R53tvjLMF
+> aaQXLOgrOC2RqvzP4F27O972h32YpLBkwIdWQGAhYcUOdKYDZ9RfgEgtdJwSYuL+
+> oJ7TjLrtkcILaFmr9nYZC+0Fh7z+84R8kR53v0iBHJQOFfssuMjUWCoj9aEY12t+
+> pywXuVk2FsuYvhniCAcyU6Y1K9aXaf6w5iOY2hx/ysXtUBnv92F7lcathxQkvgjO
+> fA7/TXEcummOv5KQFc9vckd5Z1gN2ync5jhfnmlT2uiobE6mNdCbOVlCOpsKQkU=
+> =l5PG
+> -----END PGP SIGNATURE-----
+
+
+This is my preference for kernel pull requests at the moment.  That has 
+one advantage over Junio's "git pull --require-signature" and signed 
+commits, notably, the URL is signed.
+
+But in general signed commits would be nice, too.  pull-generated merge 
+requests would need to be signed, potentially introducing an additional 
+interactive step (GPG passphrase request) into an automated process.
+
+	Jeff
