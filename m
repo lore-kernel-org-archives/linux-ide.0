@@ -1,84 +1,51 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 09:40:48 +0100
-Message-ID: <20111031084048.GA11807@elte.hu>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+From: JiSheng Zhang <jszhang3@gmail.com>
+Subject: [PATCH V2 1/2] ahci_platform: use dev_get_platdata()
+Date: Mon, 31 Oct 2011 21:20:10 +0800
+Message-ID: <20111031212010.5035af2b@ustc>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40765 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1JaNGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 09:06:06 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, avorontsov@mvista.com, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
+Use dev_get_platdata() to retrieve the struct ahci_platform_data data
+from the platform.
 
-> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive 
-> pain in the butt. We need to automate this some sane way, both for 
-> the sender and for the recipient.
+Signed-off-by: JiSheng Zhang <jszhang3@gmail.com>
+---
+ drivers/ata/ahci_platform.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-The most practical form would be if Git supported such oneliner pull 
-requests:
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index c03277d..45edba9 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -65,7 +65,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ static int __init ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+-	struct ahci_platform_data *pdata = dev->platform_data;
++	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	const struct platform_device_id *id = platform_get_device_id(pdev);
+ 	struct ata_port_info pi = ahci_port_info[id->driver_data];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+@@ -191,7 +191,7 @@ err0:
+ static int __devexit ahci_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+-	struct ahci_platform_data *pdata = dev->platform_data;
++	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 
+ 	ata_host_detach(host);
+-- 
+1.7.6.3
 
- git pull git://foo.com bar.branch                           \
-  --pull-sha1 0acf00014bcfd71090c3b0d43c98e970108064e4       \
-  --gpg-by: "Ingo Molnar <mingo@kernel.org>"                 \
-  --gpg-sig: 8a6f134afd1d212fe21345
-
-maintainers could just paste them into a shell and it would abort if 
-it's not trusted. The maintainer verifies the visible, 'Ingo Molnar' 
-bit. The 8a6f134afd1d212fe21345 is a signed-by-Ingo-Molnar version of 
-this content:
-
-    git://foo.com bar.branch 0acf00014bcfd71090c3b0d43c98e970108064e4
-
-And Git would verify that what ends up being pulled is indeed 
-0acf00014bcfd and also verifies that it was signed by me.
-
-[ If we are extra diligent/paranoid then beyond the sha1 we might 
-  even GPG sign the shortlog, or even the full raw log of all commits 
-  leading to the sha1: this introduces some Git shortlog and patch 
-  formatting version dependency though.
-
-  Git could also double check foo.com's DNS coherency, or check it 
-  against a known-trusted whitelist of domain names specified in the 
-  maintainer's .gitconfig, as an extra layer. ]
-
-Doing it in this form would remove all the mail formatting madness - 
-one could paste such a pull request into a shell straight away, from 
-HTML email, from text email, from MIME email, etc.
-
-In fact i would trust such a Git based solution far more than any 
-opaque, invisible tool that claims to have checked a signature with 
-cooperation of my mail client (ha!).
-
-The only somewhat non-obvious bit is that Git should be *very* 
-careful about its key ID and signature parsing strategy, to protect 
-against social engineering attacks.
-
-For example neither this:
-
-  --gpg-by: "Ingo Molnar <mingo@kernal.org>"
-
-nor this:
-
-  --pgp-by: "Ingo Molnar <mingo@kernel.org>"
-
-malicious pull request should slip through in any fashion:
-
- - Git should only use keys that are in your ring of trust - not pull 
-   keys from the public keyring automatically and just check 
-   coherency of the pull request or such. [I'm sure people will be 
-   tempted to have such a feature - but that temptation should be 
-   resisted.]
-
- - Git should abort the moment it sees an unknown option
-
-Thanks,
-
-	Ingo
