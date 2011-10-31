@@ -1,130 +1,62 @@
-From: <r66093@freescale.com>
-Subject: [PATCH] libata-pmp: add schedule timeout to support some PMP cards
-Date: Mon, 31 Oct 2011 11:57:20 +0800
-Message-ID: <1320033440-1106-1-git-send-email-r66093@freescale.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Mon, 31 Oct 2011 12:19:10 +0400
+Message-ID: <1320049150.8283.19.camel@dabdike>
+References: <20111026202235.GA20928@havoc.gtf.org>
+	 <1319969101.5215.20.camel@dabdike>
+	 <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:54222
-	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752060Ab1JaFJ1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 01:09:27 -0400
-Received: from mail65-am1 (localhost.localdomain [127.0.0.1])	by
- mail65-am1-R.bigfish.com (Postfix) with ESMTP id EFA6B738139	for
- <linux-ide@vger.kernel.org>; Mon, 31 Oct 2011 05:09:20 +0000 (UTC)
-Received: from AM1EHSMHS014.bigfish.com (unknown [10.3.201.254])	by
- mail65-am1.bigfish.com (Postfix) with ESMTP id A6296440050	for
- <linux-ide@vger.kernel.org>; Mon, 31 Oct 2011 05:09:20 +0000 (UTC)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33895 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754417Ab1JaITR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 04:19:17 -0400
+In-Reply-To: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jerry Huang <r66093@freescale.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-From: Jerry Huang <r66093freescale.com>
+On Sun, 2011-10-30 at 10:12 -0700, Linus Torvalds wrote:
+> On Sun, Oct 30, 2011 at 3:05 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> >
+> > You can fix this by using mime and detached signatures as well but I
+> > wouldn't worry too much about it.  What emerged at KS is that Linus uses
+> > gmail and gmail has no integration with pgp, thus pgp signing of pull
+> > requests is superfluous since Linus won't add the steps of saving the
+> > message to a text file and manually running pgp over it to verify
+> > because of the huge elongation in workflow this causes especially during
+> > a merge window.
+> 
+> Actually, I have been running "gpg --verify" on the email that use the
+> standard PGP encapsulation (ie the kind that Jeff used, that has
+> "-----BEGIN PGP SIGNED MESSAGE-----" in it.
+> 
+> It's the rfc3516-type email (aka protocol="application/pgp-encrypted")
+> type that I can't even verify, because that's not something that gpg
+> knows inherently how to check: you have to decode the message the
+> right way and know what the rules are, and I have no intention of
+> trying to figure it out. I have yet to find any usable tool that is
+> able to check it, and I'm certainly not going to waste time trying to
+> parse the rfc and write my own.
 
-With Freescale SATA controller, some PMP cards(e.g JMB393 PMP card)
-can't work on some platforms (e.g mpc837x, p1022):
-During PMP initialize, when reading the PMP SCR, we will observe the TIMEOUT
-error because PMP card SCR is not ready.
-Therefore, we need enough time to wait for the PMP card ready for SCR read:
-1. read the SCR after 1ms sleep,
-2. if failed, looping until read success or timeout (count = 0)
+OK, so I get clearly no partial PGP messages and no using rfc3516
+formatted pgp mail.
 
-below is the error log:
-fsl-sata e0018000.sata: Sata FSL Platform/CSB Driver init
-scsi0 : sata_fsl
-ata1: SATA max UDMA/133 irq 44
-ata1: Signature Update detected @ 504 msecs
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf
-ata2.00: hard resetting link
-ata2.15: qc timeout (cmd 0xe4)
-ata2.00: failed to read SCR 0 (Emask=0x4)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2: ATA_SRST issue failed
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: reset failed, giving up
-ata2.15: hard resetting link
-ata2: Hardreset failed, not off-lined 0
-ata2: No Signature Update
-ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: hard resetting link
-ata2.15: qc timeout (cmd 0xe4)
-ata2.00: failed to read SCR 0 (Emask=0x4)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2: ATA_SRST issue failed
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: reset failed, giving up
-ata2.15: hard resetting link
-ata2: Hardreset failed, not off-lined 0
-ata2: No Signature Update
-ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: hard resetting link
-ata2.15: qc timeout (cmd 0xe4)
-ata2.00: failed to read SCR 0 (Emask=0x4)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2: ATA_SRST issue failed
-ata2.00: failed to read SCR 0 (Emask=0x40)
-ata2.00: reset failed, giving up
-ata2.00: failed to recover link after 3 tries, disabling
-ata2.15: hard resetting link
-ata2: Hardreset failed, not off-lined 0
-ata2: No Signature Update
-ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.15: qc timeout (cmd 0xe4)
-ata2.00: failed to read SCR 0 (Emask=0x4)
-ata2.00: failed to write SCR 1 (Emask=0x40)
-ata2.00: failed to clear SError.N (errno=-5)
-ata2.15: hard resetting link
-ata2: Hardreset failed, not off-lined 0
-ata2: No Signature Update
-ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.01: hard resetting link
-ata2.01: failed to resume link (SControl 0)
-ata2.01: SATA link down (SStatus 0 SControl 0)
-ata2.02: hard resetting link
-ata2.02: failed to resume link (SControl 0)
-ata2.02: SATA link down (SStatus 0 SControl 0)
-......
-ata2.14: hard resetting link
-ata2.14: failed to resume link (SControl 0)
-ata2.14: SATA link down (SStatus 0 SControl 0)
-ata2: EH complete
+> That said, even the "BEGIN PGP SIGNED MESSAGE" things are a massive
+> pain in the butt. We need to automate this some sane way, both for the
+> sender and for the recipient.
 
-Signed-off-by: Jerry Huang <r66093@freescale.com>
----
- drivers/ata/libata-pmp.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
+But this doesn't help with what practise you want us to follow.  Do you
+want us to send full signed email using pgp encapsulation for pull
+requests in spite of the mangling it does to attached patches and the
+amount of extra pain it causes you?  Or is relying on looking at the
+received headers and always using public email lists to detect spoofing
+by revocation OK until we find a mechanism for integrating pgp into git?
 
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 224faab..18d5f8e 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -140,11 +140,19 @@ int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc)
- int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *r_val)
- {
- 	unsigned int err_mask;
-+	int count = 20;	/* try 20 times */
- 
- 	if (reg > SATA_PMP_PSCR_CONTROL)
- 		return -EINVAL;
- 
--	err_mask = sata_pmp_read(link, reg, r_val);
-+	do {
-+		set_current_state(TASK_INTERRUPTIBLE);
-+		schedule_timeout(1 * HZ / 1000); /* sleep 1 msecond */
-+		set_current_state(TASK_RUNNING);
-+
-+		err_mask = sata_pmp_read(link, reg, r_val);
-+	} while ((count--) && err_mask);
-+
- 	if (err_mask) {
- 		ata_link_printk(link, KERN_WARNING, "failed to read SCR %d "
- 				"(Emask=0x%x)\n", reg, err_mask);
--- 
-1.7.4.1
+James
 
 
