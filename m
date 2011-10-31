@@ -1,116 +1,130 @@
-From: "Aries Lee" <arieslee@jmicron.com>
-Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch } ExpressCard, sometimes fails to boot
-Date: Mon, 31 Oct 2011 10:59:55 +0800
-Message-ID: <201110310300.p9V3021e019006@jmr105.jmicron.com>
-References: <20111030211240.GE7696@google.com>
+From: <r66093@freescale.com>
+Subject: [PATCH] libata-pmp: add schedule timeout to support some PMP cards
+Date: Mon, 31 Oct 2011 11:57:20 +0800
+Message-ID: <1320033440-1106-1-git-send-email-r66093@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from spamfilter.jmicron.com ([220.130.51.235]:10167 "EHLO
-	jmsspam.jmicron.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753855Ab1JaDLb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 30 Oct 2011 23:11:31 -0400
-In-Reply-To: <20111030211240.GE7696@google.com>
+Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:54222
+	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752060Ab1JaFJ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 01:09:27 -0400
+Received: from mail65-am1 (localhost.localdomain [127.0.0.1])	by
+ mail65-am1-R.bigfish.com (Postfix) with ESMTP id EFA6B738139	for
+ <linux-ide@vger.kernel.org>; Mon, 31 Oct 2011 05:09:20 +0000 (UTC)
+Received: from AM1EHSMHS014.bigfish.com (unknown [10.3.201.254])	by
+ mail65-am1.bigfish.com (Postfix) with ESMTP id A6296440050	for
+ <linux-ide@vger.kernel.org>; Mon, 31 Oct 2011 05:09:20 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <tj@kernel.org>, 'Orson' <orson.wellies@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jerry Huang <r66093@freescale.com>
 
-Hi Tejun,
+From: Jerry Huang <r66093freescale.com>
 
-Is it possible to install windows OS on the same hardware,
-If it still get the same error, that we can conclude it as a hardware issue.
+With Freescale SATA controller, some PMP cards(e.g JMB393 PMP card)
+can't work on some platforms (e.g mpc837x, p1022):
+During PMP initialize, when reading the PMP SCR, we will observe the TIMEOUT
+error because PMP card SCR is not ready.
+Therefore, we need enough time to wait for the PMP card ready for SCR read:
+1. read the SCR after 1ms sleep,
+2. if failed, looping until read success or timeout (count = 0)
 
+below is the error log:
+fsl-sata e0018000.sata: Sata FSL Platform/CSB Driver init
+scsi0 : sata_fsl
+ata1: SATA max UDMA/133 irq 44
+ata1: Signature Update detected @ 504 msecs
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.00: failed to recover link after 3 tries, disabling
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to write SCR 1 (Emask=0x40)
+ata2.00: failed to clear SError.N (errno=-5)
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.01: hard resetting link
+ata2.01: failed to resume link (SControl 0)
+ata2.01: SATA link down (SStatus 0 SControl 0)
+ata2.02: hard resetting link
+ata2.02: failed to resume link (SControl 0)
+ata2.02: SATA link down (SStatus 0 SControl 0)
+......
+ata2.14: hard resetting link
+ata2.14: failed to resume link (SControl 0)
+ata2.14: SATA link down (SStatus 0 SControl 0)
+ata2: EH complete
 
-------------------------------------------------
-Aries Lee
-JMicron Technology Corp.
-1F, No.13, Innovation Road 1, Science-Based Industrial Park, 
-Hsin-Chu, Taiwan
-Tel : 886-3-579-7389 ext:8829
------------------------------------------------------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-Sent: Monday, October 31, 2011 5:13 AM
-To: Orson
-Cc: linux-ide@vger.kernel.org; arieslee@jmicron.com
-Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
-ExpressCard, sometimes fails to boot
+Signed-off-by: Jerry Huang <r66093@freescale.com>
+---
+ drivers/ata/libata-pmp.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
-Hello,
-
-(cc'ing Aries of jmicron)
-
-On Mon, Oct 10, 2011 at 06:02:46PM +0300, Orson wrote:
-> I tried my xpress54 card JMB362/363 on Debian Wheezy testing, with
-> kernel 3.0.0-1-amd64 (Debian 3.0.0.-3).
-> 
-> The card was inserted into the express slot without any external
-> disk attached and I experienced the same problems I had been having
-> with debian squeeze, perhaps even more consistently.
-> 
-> I am now only using single port JMB 360 cards which operate flawlessly.
-> 
-> I am attaching a kernel log with the said card inserted.
-
-Hmmm.... it looks like the controller is continuously raising
-connection status changed state and libata is faithfully trying to
-probe whether new device appeared on the port.  Does it work if you
-plug an actual hard drive into the port?  Looks more like wrong wiring
-than anything else.  Aries, any ideas?
-
- ahci 0000:10:00.0: AHCI 0001.0000 32 slots 2 ports 3 Gbps 0x3 impl SATA
-mode
- ahci 0000:10:00.0: flags: 64bit ncq pm led clo pmp pio slum part
- ahci 0000:10:00.0: setting latency timer to 64
- scsi1 : ahci
- ata1: SATA max UDMA/133 abar m8192@0xd0000000 port 0xd0000100 irq 16
- ata2: SATA max UDMA/133 abar m8192@0xd0000000 port 0xd0000180 irq 16
- ata1: SATA link down (SStatus 0 SControOct  9 23:45:46 hp-laptop kernel: [
-1.414084] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe
-frozen
- ata1: irq_stat 0x00000040, connection status changed
- ata1: SError: { PHYInt CommWake DevExch }
- ata1: hard resetting link
- ata1: COMRESET failed (errno=-32)
- ata1: reset failed (errno=-32), retrying in 8 secs
- ata1: limiting SATA link speed to 1.5 Gbps
- ata1: hard resetting link
- ata1: SATA link down (SStatus 0 SControl 310)
- ata1: EH complete
- ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe frozen
- ata1: irq_stat 0x00000040, connection status changed
- ata1: SError: { PHYInt CommWake DevExch }
- ata1: hard resetting link
- ata1: COMRESET failed (errno=-32)
- ata1: reset failed (errno=-32), retrying in 8 secs
- ata1: hard resetting link
- ata1: SATA link down (SStatus 0 SControl 310)
- ata1: EH complete
- ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe frozen
- ata1: irq_stat 0x00000040, connection status changed
- ata1: SError: { PHYInt CommWake DevExch }
- ata1: limiting SATA link speed to 1.5 Gbps
- ata1: hard resetting link
- ata1: SATA link down (SStatus 0 SControl 310)
- ata1: EH complete
- ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe frozen
- ata1: irq_stat 0x00000040, connection status changed
- ata1: SError: { PHYInt CommWake DevExch }
- ata1: limiting SATA link speed to 1.5 Gbps
- ata1: hard resetting link
- ata1: SATA link down (SStatus 0 SControl 310)
- ata1: EH complete
- ata1: exception Emask 0x10 SAct 0x0 SErr 0x4060000 action 0xe frozen
- ata1: irq_stat 0x00000040, connection status changed
- ata1: SError: { PHYInt CommWake DevExch }
- ata1: limiting SATA link speed to 1.5 Gbps
- ata1: hard resetting link
- ata1: SATA link down (SStatus 0 SControl 310)
- ata1: EH complete
- (repeat...)
-
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 224faab..18d5f8e 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -140,11 +140,19 @@ int sata_pmp_qc_defer_cmd_switch(struct ata_queued_cmd *qc)
+ int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *r_val)
+ {
+ 	unsigned int err_mask;
++	int count = 20;	/* try 20 times */
+ 
+ 	if (reg > SATA_PMP_PSCR_CONTROL)
+ 		return -EINVAL;
+ 
+-	err_mask = sata_pmp_read(link, reg, r_val);
++	do {
++		set_current_state(TASK_INTERRUPTIBLE);
++		schedule_timeout(1 * HZ / 1000); /* sleep 1 msecond */
++		set_current_state(TASK_RUNNING);
++
++		err_mask = sata_pmp_read(link, reg, r_val);
++	} while ((count--) && err_mask);
++
+ 	if (err_mask) {
+ 		ata_link_printk(link, KERN_WARNING, "failed to read SCR %d "
+ 				"(Emask=0x%x)\n", reg, err_mask);
 -- 
-tejun
+1.7.4.1
+
 
