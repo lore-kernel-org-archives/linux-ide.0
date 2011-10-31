@@ -1,124 +1,55 @@
-From: Junio C Hamano <gitster@pobox.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 11:23:55 -0700
-Message-ID: <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+From: Paul Schilling <paul.s.schilling@gmail.com>
+Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC bug.
+Date: Mon, 31 Oct 2011 14:07:45 -0500
+Message-ID: <CAC=G6sz=PkDoODYh4beT_eRhkm+ZhUxtLnrBXPPuFJW3n+6Vcg@mail.gmail.com>
+References: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
+	<20111027084310.2b7da753@pyx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com> (Linus
- Torvalds's message of "Mon, 31 Oct 2011 08:53:59 -0700")
+In-Reply-To: <20111027084310.2b7da753@pyx>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+Hi,
 
-> For the people who use "git request-pull", I'm attaching a trivial
-> patch to make it add this kind of signature if you give it the "-s"
-> flag. It basically just adds a hunk like the appended crazy example to
-> the pull request, and it's small enough and simple enough that it
-> makes verification simple too with just the above kind of trivial
-> cut-and-paste thing.
+When I developed this patch for the Vortex86dx.  I recall trying many
+combinations of udma and mwdma.  At the time I developed it, I came
+to the conclusion that both udma and mwdma both failed with CRC
+errors being reported.  I am not readily set-up to redo the testing to
+see if mwdma is indeed also affected by the errata.  It will be a coupl=
+e
+of weeks before I can re-test this patch on the hardware with mwdma
+turned on.
+
+Thanks,
+Paul
+
+On Thu, Oct 27, 2011 at 2:43 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
+ote:
+> On Tue, 25 Oct 2011 23:16:04 -0500
+> Paul Schilling <paul.s.schilling@gmail.com> wrote:
 >
-> (Junio cc'd, I think he had something more complicated in mind)
-
-You have misread me this time.
-
-I think the minimalistic "paste this line to your 'git pull' command line
-and expect to get history leading to this commit" like you did in your
-patch would be the solution that is the least painful and still useful,
-which is an important criterion for wide adoption.
-
-> Now, admittedly it would be *even nicer* if this gpg-signed block was
-> instead uploaded as a signed tag automatically, and "git pull" would
-> notice such a signed tag (tagname the same as the branch name + date
-> or something) and would download and verify the tag as I pull. Then I
-> wouldn't even need to actually do the cut-and-paste at all. But this
-> is the *really* simple approach that gets up 95% of the way there.
-
-I however have a small trouble with "lieutenants use signed tags in order
-to prove who they are to Linus", depending on the details.
-
-It certainly lets you run "git tag --verify" after you pulled and will
-give you assurance that you pulled the right thing from the right person,
-but what do you plan to do to the tag from your lieutenants after you
-fetched and verified?  I count 379 merges by you between 3.0 (2011-07-21)
-and 3.1 (2011-10-24), which would mean you would see 4-5 tags per day on
-average.  Will these tags be pushed out to your public history?
-
-On one hand, we (not just you but the consumers of "Linus kernel") can
-consider these tags are of ephemeral nature. Once they are used for _you_
-to verify the authenticity, they are not needed anymore. The consumers of
-"Linus kernel" by definition trusts what you publish, so as long as they
-have a way to verify the tip commit you push out, they _should_ be happy.
-If you take this stance, you would not push these tags out so that you do
-not have to contaminate the tags namespace with them, and you might even
-choose to discard them once you pulled and verified the lieutenants' tips
-to avoid contamination of your own refs namespace.
-
-On the other hand, the consumers of "Linus kernel" may want to say that
-they trust your tree and your tags because they can verify them with your
-GPG signature, but also they can independently verify the lieutenants'
-trees you pulled from are genuine. Keeping signed tags and publishing them
-is one way to make it possible, but 400 extra tags in 3 months feels like
-an approach with too much downside (i.e. noise) for that benefit.
-
-On Git mailing list, we have been toying with a couple of ideas. The
-simplest one (cooking in next) is to allow committers to add gpg signature
-in an additional header of the commit objects. "git show" and friends are
-taught how to verify these signatures when asked.
-
-This might have a potential downside on the lieutenants' workflow; after
-integrating the work by their sub-lieutenants and by themselves, they
-would test and review the result to convince themselves that it is worth
-asking you to pull, and then they have to either
-
-    (1) "commit --amend --gpg-signature" the tip; or
-
-    (2) "commit --allow-empty --gpg-signature" to add an empty commit
-        whose sole purpose is to hold the signature (and avoid amending
-        the tip)
-
-before pushing it out, asking you to pull.
-
-An alternative we have discussed was to store gpg signature for the commit
-("push certificate") somewhere in notes tree and push that out, certifying
-that the commit indeed came from the pusher, but that would:
-
- (1) require upstreams to fetch (and possibly suffer from merge conflicts
-     in notes tree) push certificate whenever they pull from their
-     lieutenants; and
-
- (2) require downstreams to also fetch the notes tree for "push
-     certificates" (especially when the central repository is shared among
-     multiple people) before adding their own signature and then push it
-     back (and possiblly suffer from "non-fast-forward" in notes tree).
-
-both of which are downsides coming from "notes" being not a very good
-match for what these signatures are trying to achieve.
-
-Namely, the current "notes" mechanism is designed to keep track of history
-of changes made to notes attached to commits, but for the signature
-application, we do not care about the order that signatures came to two
-separate commits. "Non-fast-forward" conflicts while pushing, or having to
-fetch and merge before adding one's own signature, are unwanted burden
-imposed only by choosing to use "notes" for storing and conveying the
-signature.
-
-Also the "notes" approach would end up mixing "push certificates" for
-different branches (this won't be an issue in your repository where there
-is only one branch) into a single "notes" tree. We would want to use
-something that behaves more like the "auto-following" semantics of tag
-objects. You would want to fetch only signatures that are attached to the
-commits you are fetching. Use of signed tags, or commit objects that can
-be signed in-place, have this property, but storing signature in notes
-tree does not give it to us.
-
-I think further discussions on this should continue on the git mailing
-list.
+>> This fixes a DMA issue related to a CRC bug on
+>> the RDC pata peripherial found on the vortex86sx and vortex86dx.
+>
+> What is the RDC erratum reference for this ? Also it seems to make no
+> sense
+>
+>
+>> =A0 =A0 =A0 static const struct ata_port_info info_rdc_11 =3D {
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .flags =3D ATA_FLAG_SLAVE_POSS,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =3D ATA_PIO4,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D ATA_MWDMA2,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D 0,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =3D 0,
+>
+> MWDMA is not part of the CRC hardware anyway
+>
+> Are you sure these newer variants are simply not using a different se=
+t of
+> timing parameters thus showing bugs on your system ?
+>
