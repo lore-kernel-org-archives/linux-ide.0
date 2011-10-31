@@ -1,47 +1,41 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 15:51:52 -0700
-Message-ID: <4EAF2688.9000508@zytor.com>
-References: <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com> <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com> <4EAF1F40.3030907@zytor.com> <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com> <4EAF2245.90308@zytor.com> <7vzkggok6u.fsf@alter.siamese.dyndns.org> <20111031224905.GQ16825@thunk.org>
+Date: Mon, 31 Oct 2011 15:52:26 -0700
+Message-ID: <CA+55aFwnVZ-mK3FChvFn778Z-cT107f4v-h0CDmwkP88=Z9aHA@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <4EAF1F40.3030907@zytor.com> <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com>
+ <4EAF2245.90308@zytor.com> <7vzkggok6u.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:40810 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934711Ab1JaWwH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 18:52:07 -0400
-In-Reply-To: <20111031224905.GQ16825@thunk.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7vzkggok6u.fsf@alter.siamese.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Junio C Hamano <gitster@pobox.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>, Junio C Hamano <gitster@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership>
 
-On 10/31/2011 03:49 PM, Ted Ts'o wrote:
-> On Mon, Oct 31, 2011 at 03:44:25PM -0700, Junio C Hamano wrote:
->> So nobody is worried about this (quoting from my earlier message)?
->>
->>    On the other hand, the consumers of "Linus kernel" may want to say that
->>    they trust your tree and your tags because they can verify them with your
->>    GPG signature, but also they can independently verify the lieutenants'
->>    trees you pulled from are genuine.
->>
->> A signed emphemeral tag is usable as means to verify authenticity in a
->> hop-by-hop fashion, but that does not leave a permanent trail that can be
->> used for auditing.
-> 
-> Oh, there are definitely people who worry about this.  They tend to be
-> security poeple, though, so the goal is how do we leave the permanent
-> trail in a way that doesn't generate too much noise or otherwise makes
-> life difficult for developers who don't care.
-> 
+On Mon, Oct 31, 2011 at 3:44 PM, Junio C Hamano <gitster@pobox.com> wrote:
+>
+> So nobody is worried about this (quoting from my earlier message)?
 
-Could we introduce a tag namespace that doesn't show up in gitweb by
-default, and perhaps doesn't resolve in abbreviated form?
+No, because you haven't been reading what we write.
 
-This is basically what Linus suggested, as far as I understand:
-something like refs/pulls/hpa/tip-123-456 which is otherwise a normal
-tag object?
+The tag is useless.
 
-	-hpa
+The information *in* the tag is not. But it shouldn't be saved in the
+tag (or note, or whatever). Because that's just an annoying place for
+it to be, with no upside.
 
+Save it in the commit we generate. BAM! Useful, readable, permanent,
+and independently verifiable.
 
+And the advantage is that we can make that same mechanism add
+"maintainer notes" to the merge message too. Right now some
+maintainers write good notes about what the merge will bring in, but
+they are basically lost, because git is so good at merging and doesn't
+even stop to ask people to edit the merge message.
+
+                    Linus
