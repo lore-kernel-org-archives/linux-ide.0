@@ -1,55 +1,38 @@
-From: Paul Schilling <paul.s.schilling@gmail.com>
-Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC bug.
-Date: Mon, 31 Oct 2011 14:07:45 -0500
-Message-ID: <CAC=G6sz=PkDoODYh4beT_eRhkm+ZhUxtLnrBXPPuFJW3n+6Vcg@mail.gmail.com>
-References: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
-	<20111027084310.2b7da753@pyx>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Mon, 31 Oct 2011 14:46:25 -0700
+Message-ID: <4EAF1731.2070908@zytor.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111027084310.2b7da753@pyx>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([198.137.202.10]:39869 "EHLO mail.zytor.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932356Ab1JaVqo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Oct 2011 17:46:44 -0400
+In-Reply-To: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hi,
+On 10/30/2011 10:12 AM, Linus Torvalds wrote:
+> 
+> Actually, I have been running "gpg --verify" on the email that use the
+> standard PGP encapsulation (ie the kind that Jeff used, that has
+> "-----BEGIN PGP SIGNED MESSAGE-----" in it.
+> 
+> It's the rfc3516-type email (aka protocol="application/pgp-encrypted")
+> type that I can't even verify, because that's not something that gpg
+> knows inherently how to check: you have to decode the message the
+> right way and know what the rules are, and I have no intention of
+> trying to figure it out. I have yet to find any usable tool that is
+> able to check it, and I'm certainly not going to waste time trying to
+> parse the rfc and write my own.
+> 
 
-When I developed this patch for the Vortex86dx.  I recall trying many
-combinations of udma and mwdma.  At the time I developed it, I came
-to the conclusion that both udma and mwdma both failed with CRC
-errors being reported.  I am not readily set-up to redo the testing to
-see if mwdma is indeed also affected by the errata.  It will be a coupl=
-e
-of weeks before I can re-test this patch on the hardware with mwdma
-turned on.
+What client are you using (or are you using the gmail web interface?)
 
-Thanks,
-Paul
+	-hpa
 
-On Thu, Oct 27, 2011 at 2:43 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
-ote:
-> On Tue, 25 Oct 2011 23:16:04 -0500
-> Paul Schilling <paul.s.schilling@gmail.com> wrote:
->
->> This fixes a DMA issue related to a CRC bug on
->> the RDC pata peripherial found on the vortex86sx and vortex86dx.
->
-> What is the RDC erratum reference for this ? Also it seems to make no
-> sense
->
->
->> =A0 =A0 =A0 static const struct ata_port_info info_rdc_11 =3D {
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .flags =3D ATA_FLAG_SLAVE_POSS,
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 .pio_mask =3D ATA_PIO4,
->> - =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D ATA_MWDMA2,
->> + =A0 =A0 =A0 =A0 =A0 =A0 .mwdma_mask =3D 0,
->> + =A0 =A0 =A0 =A0 =A0 =A0 .udma_mask =3D 0,
->
-> MWDMA is not part of the CRC hardware anyway
->
-> Are you sure these newer variants are simply not using a different se=
-t of
-> timing parameters thus showing bugs on your system ?
->
