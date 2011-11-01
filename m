@@ -1,42 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Tue, 01 Nov 2011 16:35:36 +0400
-Message-ID: <1320150936.17402.10.camel@dabdike>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
-	 <1320126812.7701.17.camel@dabdike>
-	 <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Tue, 1 Nov 2011 11:13:09 -0200
+Message-ID: <20111101131309.GA30604@khazad-dum.debian.net>
+References: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <4EAF1731.2070908@zytor.com>
+ <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
+ <4EAF1FF6.3000500@zytor.com>
+ <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+ <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
+ <4EAF66C7.6080909@zytor.com>
+ <CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
+ <3f01b4a5-8dfa-4eb4-bfa3-490d5ebf0281@email.android.com>
+ <1320124759.7701.2.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: JiSheng Zhang <jszhang3@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1320124759.7701.2.camel@dabdike>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "hpanvin@gmail.com" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>, david@lang.hm, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2011-11-01 at 14:35 +0800, JiSheng Zhang wrote:
-> 2011/11/1 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> > On Tue, 2011-11-01 at 13:31 +0800, JiSheng Zhang wrote:
-> >> Currently, there's no start/stop management in scsi cdrom driver to
-> >> spin up/down the motor do we need to implement it?
-> >
-> > Say more ... like what you think it buys.  The auto spin down of a CD
-> > tends to be the best power control we have and it's not even clear that
-> > manufacturers have implemented any other useful power states.
+On Tue, 01 Nov 2011, James Bottomley wrote:
+> On Mon, 2011-10-31 at 21:25 -0700, hpanvin@gmail.com wrote:
+> > Body searches are still slow, at least with dovecot on the server.  No
+> > idea about gmail as the server.
 > 
-> Does it mean the behavior depends on manufacturers? Some cd will spin
-> down automatically?
+> Actually, my experience is different.  I do use body searches a lot (not
+> TSA approved ones, obviously) and I found they're much faster after
+> switching to dovecot (from wu-imapd).  However, they also burn massive
+> amounts of CPU time on my server, so it probably helps that I only have
+> a couple of mail users.
 
-All CDs spin down when not reading (or burning) since the motor power is
-pretty high.  Most also do speed adjustments on the fly as well to try
-to match platter speed and read or burn rate.
+Well, Cyrus IMAP provides fast server-side body searches using indexes, but
+you'd have to configure it properly to use that feature.  It is lightweight
+on the server side after the initial indexing (yes, it can do incremental
+and staggered indexing).  Maybe Dovecot also needs some configuration to
+index mailboxes for fast searching?
 
->  Even so, how about during shutdown just after reading
-> something from cdrom?
+wu-imapd is not something one should bring up on polite conversation.
 
-What's the use case?  For internal CDs, shutdown removes power anyway.
-
-James
-
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
