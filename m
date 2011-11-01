@@ -1,57 +1,64 @@
-From: "hpanvin@gmail.com" <hpa@zytor.com>
+From: david@lang.hm
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 21:25:41 -0700
-Message-ID: <3f01b4a5-8dfa-4eb4-bfa3-490d5ebf0281@email.android.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com> <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com> <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm> <4EAF66C7.6080909@zytor.com> <CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
+Date: Mon, 31 Oct 2011 21:58:33 -0700 (PDT)
+Message-ID: <alpine.DEB.2.02.1110312151040.31794@asgard.lang.hm>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
+ <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com> <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm> <CA+55aFy=Wz4zxjoPJer=OfA2Jsh1FA_ahUpa8sw=5UJuAyEsFQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42293 "EHLO mail.zytor.com"
+Received: from mail.lang.hm ([64.81.33.126]:41867 "EHLO bifrost.lang.hm"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750817Ab1KAEZy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Nov 2011 00:25:54 -0400
-In-Reply-To: <CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
+	id S1750791Ab1KAE6q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Nov 2011 00:58:46 -0400
+In-Reply-To: <CA+55aFy=Wz4zxjoPJer=OfA2Jsh1FA_ahUpa8sw=5UJuAyEsFQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: david@lang.hm, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Body searches are still slow, at least with dovecot on the server.  No idea about gmail as the server.
+On Mon, 31 Oct 2011, Linus Torvalds wrote:
 
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
->On Mon, Oct 31, 2011 at 8:25 PM, H. Peter Anvin <hpa@zytor.com> wrote:
+> On Mon, Oct 31, 2011 at 7:17 PM,  <david@lang.hm> wrote:
 >>
->> I use IMAP on my phone, and with Thunderpants... I mean
->Thunderbird...
->> and it works quite nicely.
+>> what IMAP servers have you used? I find that with a good IMAP server I can
+>> get away with _very_ little processing power in the client and get good
+>> performance (I still am using pine, but with a cyrus IMAP server)
 >
->Including things like searching lkml etc?
+> I've used pine (and then alpine) to cyrus servers too. That was what
+> LF used to have on the server side. It absolutely sucked.
 >
->I've been successful in using IMAP for just reading my inbox (even
->over a cell network). Then IMAP is reasonably fine, at least if you do
->client-side caching.
->
->But not for actual real *work*, where I actually search for specific
->email authors and words in the body? Not so much.
->
->Maybe it's because I'm used to having all my mail locally, but
->searching all my emails is one of my most common operations. The gmail
->web interface does that fine. IMAP has never worked for me, despite
->some client/server combinations allegedly supporting server-side
->searches. Maybe I never hit the right combination, but I tested things
->that were *supposed* to do it.
->
->Actually, most of my attempts at using IMAP have been unacceptably
->slow even when I don't do searches. I used to do huge inboxes, which
->brought just about anything to a standstill. I only got rid of my
->habit of big inboxes thanks to another gmail feature - you don't have
->to save your non-inbox email in a folder, you can just "archive" it
->and it goes away but is still easily searchable.
+> That combination is supposed to do server-side searching etc, but you
+> couldn't tell from the performance. It was disgusting.
+
+interesting, that's the setup I have and the server side searching works 
+well for me (searching for random text works much better if I have the 
+server update it's squatter indexes frequently). I did find that different 
+filesystems made a HUGE difference in system performance (with ext2/3 
+being the worst). I use XFS, but I see a lot of people reporting good 
+results with ext4, btrfs, and ZFS.
+
+the biggest folder I have has >250K messages in it and takes >20G. random 
+text searches on that take 5-10 seconds (much better than I could do on 
+my local drives)
+
+> I'm sure it works much better with a fast local network, but quite
+> frankly, that obviates the need for IMAP in the first place. If you
+> have your mail locally, there are better models than IMAP for handling
+> it.
+
+I agree that it's not strictly needed if you store everything local, but I 
+don't want to have all that mail on my non-mirrored, small laptop drive 
+(even if it is a SSD). I've suffered too many disk failures over the years 
+to not have my mail store on redundant drives :-)
+
+David Lang
+
+> So the only situation I've found IMAP reasonable has been at corporate
+> settings where you're not talking DSL or cable modem speeds, but use
+> IMAP as a way to avoid NFS-mounting the mail spool, which is even
+> worse. But actually working over slowish internet connections? No
+> thank you.
 >
 >                         Linus
-
--- 
-Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+>
