@@ -1,57 +1,42 @@
-From: david@lang.hm
+From: "H. Peter Anvin" <hpa@zytor.com>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 19:17:41 -0700 (PDT)
-Message-ID: <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
- <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+Date: Mon, 31 Oct 2011 20:25:59 -0700
+Message-ID: <4EAF66C7.6080909@zytor.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com> <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com> <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="680960-1478385170-1320113862=:31794"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:57481 "EHLO bifrost.lang.hm"
+Received: from terminus.zytor.com ([198.137.202.10]:42051 "EHLO mail.zytor.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752642Ab1KACSG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 22:18:06 -0400
-In-Reply-To: <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+	id S1753101Ab1KAD0P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 31 Oct 2011 23:26:15 -0400
+In-Reply-To: <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: david@lang.hm
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On 10/31/2011 07:17 PM, david@lang.hm wrote:
+> 
+> what IMAP servers have you used? I find that with a good IMAP server I
+> can get away with _very_ little processing power in the client and get
+> good performance (I still am using pine, but with a cyrus IMAP server)
+> 
+> there are a bunch of IMAP servers out there that are horrible (and even
+> more IMAP clients that are really doing POP and storing everything
+> locally, just using the IMAP protocol)
+> 
 
---680960-1478385170-1320113862=:31794
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8BIT
+Last I checked if you used pine against an IMAP server it did absolutely
+no caching, in which case you're of course screwed.
 
-On Mon, 31 Oct 2011, Linus Torvalds wrote:
+I use IMAP on my phone, and with Thunderpants... I mean Thunderbird...
+and it works quite nicely.
 
-> On Mon, Oct 31, 2011 at 3:23 PM, H. Peter Anvin <hpa@zytor.com> wrote:
->>
->> I use enigmail which is a Thunderbird plugin; it works quite well, but,
->> well, it requires Thunderbird.  I think many GUI MUAs have similar
->> plugins, but text MTAs might be worse, I don't know.
->
-> I have never met a GUI MUA I like before google webmail. And the
-> advantage of google webmail isn't so much the GUI MUA, as the fact
-> that it doesn't suck like IMAP, and does the automatic folders and
-> good handling of archives right.
->
-> The reason I switched away from pine was that pine is fine (apart from
-> the archival thing) if you have all your mail local. But "local mail"
-> is painful when traveling, or when trying to interact with mail using
-> a mobile phone etc.
->
-> And IMAP mail in turn is totally useless both when traveling *and*
-> when at home.
+	-hpa
 
-what IMAP servers have you used? I find that with a good IMAP server I can 
-get away with _very_ little processing power in the client and get good 
-performance (I still am using pine, but with a cyrus IMAP server)
+-- 
+H. Peter Anvin, Intel Open Source Technology Center
+I work for Intel.  I don't speak on their behalf.
 
-there are a bunch of IMAP servers out there that are horrible (and even 
-more IMAP clients that are really doing POP and storing everything 
-locally, just using the IMAP protocol)
-
-David Lang
---680960-1478385170-1320113862=:31794--
