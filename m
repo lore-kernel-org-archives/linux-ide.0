@@ -1,37 +1,93 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Is there any elegant way to re-identify and re-configure xfer mode
-Date: Tue, 1 Nov 2011 11:19:57 -0700
-Message-ID: <CAOS58YPxZSdGWT+3Wgo7mvrL0xzJE-F7WGKC7LryVUFuUe9xSQ@mail.gmail.com>
-References: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] ata port runtime pm
+Date: Tue, 1 Nov 2011 15:34:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1111011528561.1983-100000@iolanthe.rowland.org>
+References: <1320135145.3489.19.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48259 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752718Ab1KASUt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 14:20:49 -0400
-In-Reply-To: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:57054 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750839Ab1KATex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 15:34:53 -0400
+In-Reply-To: <1320135145.3489.19.camel@minggr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: JiSheng Zhang <jszhang3@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Zhang, Rui" <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>, Linux PM list <linux-pm@vger.kernel.org>
 
-On Mon, Oct 31, 2011 at 11:27 PM, JiSheng Zhang <jszhang3@gmail.com> wrote:
-> The problem is the model, vendor and xfer mode etc is changed also, I
-> need to re-identify and re-configure it.
-> I did these by manually call
-> ata_scsi_find_dev()=>ata_dev_read_id()=>ata_dev_configure()=>ata_set_mode()
+On Tue, 1 Nov 2011, Lin Ming wrote:
 
->From userland,
+> On Sat, 2011-10-29 at 02:51 +0800, Alan Stern wrote:
+> > On Fri, 28 Oct 2011, Rafael J. Wysocki wrote:
+> > 
+> > > On Friday, October 28, 2011, Lin Ming wrote:
+> > > > On Fri, 2011-10-28 at 11:37 +0800, Jeff Garzik wrote:
+> > > > > On 10/27/2011 11:21 PM, Lin Ming wrote:
+> > > > > > @@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> > > > > >
+> > > > > >   	ap = ata_shost_to_port(shost);
+> > > > > >
+> > > > > > +	if (pm_runtime_suspended(&ap->tdev))
+> > > > > > +		pm_runtime_resume(&ap->tdev);
+> > > > > > +	pm_runtime_mark_last_busy(&ap->tdev);
+> > > > > > +	pm_request_autosuspend(&ap->tdev);
+> > > > > > +
+> > > > > >   	spin_lock_irqsave(ap->lock, irq_flags);
+> > > > > >
+> > > > > 
+> > > > > 
+> > > > > Putting this into the core command dispatch fast-path is rather 
+> > > > > disappointing.  That's at least one additional lock, plus some atomic 
+> > > > > instructions and tests.
+> > 
+> > And it calls pm_runtime_resume(), which requires process context, from 
+> > within a SCSI queuecmd routine, which runs in interrupt context.
+> 
+> Hi, 
+> 
+> Thanks to point this out. I change the code to do ata port runtime
+> suspend/resume through scsi layer.
+> 
+> scsi host runtime suspend/resume framework is already there(scsi_pm.c).
+> So I only need to insert hooks for ata port in
+> scsi_runtime_suspend/resume(...).
+> 
+> But I found a live lock when testing my patch.
+> 
+> <scsi host runtime suspend>
+>   scsi_autopm_put_host
+>     pm_runtime_put_sync
+>       <scsi_host runtime pm status updated to RPM_SUSPENDING>
+>       ......
+>         <call libata hook to do suspend>
+>           <wake up scsi EH to handle suspend>
+>           <wait for scsi EH ...>
+> 
+> <scsi EH wake up>
+>   scsi_error_handler
+>     <resume scsi host>
+>     scsi_autopm_get_host
+>       pm_runtime_get_sync
+>       .....
+>         <sleep to wait for the ongoing scsi host suspend> 
+> 
+> libata schedules scsi EH to handle suspend, then dead lock happens
+> because scsi EH in turn waits for the ongoing suspend.
+> 
+> Any idea how to resolve this dead lock?
 
-# echo - - - > /sys/class/scsi_host/hostX/rescan
+This is a nasty problem.  I've known for a long time that the 
+scsi_autopm_get_host() call in the error handler was going to lead to 
+problems.
 
->From kernel,
+For now, it seems best to assume that when the error handler starts, 
+the device will still be active.  Therefore the scsi_autopm_get_host() 
+should be replaced by something that calls pm_runtime_get_noresume() 
+instead of pm_runtime_get_sync().
 
-    spin_lock_irqsave(ap->lock, flags);
-    dev->link.eh_info.dev_action[dev->devno] |= ATA_EH_REVALIDATE;
-    ata_port_schedule_eh(ap);
-    spin_unlock_irqrestore(ap->lock, flags);
+You can try replacing one function call with the other, or you can 
+define a new scsi_autopm_get_host_noresume() routine.
 
--- 
-tejun
+Alan Stern
+
