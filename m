@@ -1,7 +1,7 @@
-From: Junio C Hamano <gitster@pobox.com>
+From: Ted Ts'o <tytso@mit.edu>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Tue, 01 Nov 2011 14:56:47 -0700
-Message-ID: <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+Date: Tue, 1 Nov 2011 18:39:17 -0400
+Message-ID: <20111101223917.GG32161@thunk.org>
 References: <20111026202235.GA20928@havoc.gtf.org>
  <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
@@ -13,130 +13,54 @@ References: <20111026202235.GA20928@havoc.gtf.org>
  <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com> (Linus
- Torvalds's message of "Tue, 1 Nov 2011 14:21:59 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from li9-11.members.linode.com ([67.18.176.11]:48895 "EHLO
+	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753887Ab1KAWjW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Nov 2011 18:39:22 -0400
+Content-Disposition: inline
+In-Reply-To: <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
-
-> Having thought about it, I'm also not convinced I really want to
-> pollute the "git log" output with information that realistically
-> almost nobody cares about. The primary use is just for the person who
-> pulls things to verify it, after that the information is largely stale
-> and almost certain to never be interesting to anybody ever again. It's
-> *theoretically* useful if somebody wants to go back and re-verify, but
-> at the same time that really isn't expected to be the common case.
-> ...
+On Tue, Nov 01, 2011 at 02:21:59PM -0700, Linus Torvalds wrote:
 > So I'm wondering if we want to save it at all. it's quite possible
 > that realistically speaking "google the mailing list archives" is the
 > *right* way to look up the signature if it is ever needed later.
 
-I'd rather want to hear opinions from people who base their work on public
-kernels (e.g. distros, and companies who roll their own prod kernels), on
-that.
+Given the number of trees that you merge in every merge window (never
+mind over an entire release), I don't think "google the mailing list
+archives" is going to scale.  Finding some way to keep it along with
+the merge window seems the right thing.  I agree that it should hidden
+normally, but that's a UI display issue.  Heck, we could just hide
+after the terminating NULL in the commit description, per a discussion
+on the git list 2-3 weeks ago.  :-)
 
-But my gut feeling is that "usually hidden not to disturb normal users,
-but is cast in stone in the history and cannot be lost" strikes the right
-balance. Both your "next merge commit records the signature together with
-the largely useless merge summary cruft but everybody learned to ignore it
-with 'log --no-merges' anyway so it does not hurt to have it there" and
-the commit signature topic from the next branch [*1*] that puts the
-signature in the object header and teaches '--show-signature' option to
-the log family to show it share this property.
-
-> Maybe just verifying the email message (with the suggested kind of
-> change to "git request-pull") is actually the right approach. And what
-> I should do is to just wrap my "git pull" in some script that I can
-> just cut-and-paste the gpg-signed thing into, and which just does the
-> "gpg --verify" on it, and then does the "git pull" after that.
->
 > Because in many ways, "git request-pull" is when you do want to sign
 > stuff. A developer might well want to push out his stuff for some
 > random internal testing (linux-next, for example), and then only later
 > decide "Ok, it was all good, now I want to make it 'official' and ask
 > Linus to pull it", and sign it at *that* time, rather than when
 > actually pushing it out.
->
-> And I suspect signing the pull request fits better into peoples
-> existing workflow anyway - sending out the email to ask the maintainer
-> to pull really is the "special event", rather than pushing out the
-> code itself.
 
-"I can silently push and re-push or even rewind-and-then-push until I
-officially send pull-request out" fits well with the "defer the decision
-as much as possible" model Git takes in general, and I find certain
-attractiveness in it.
+Sure, the signed content should be buried in the commit that it
+describes.  Whether we carry it in an emphemeral tag or in the git
+request-pull is not really important from a security perspective.  The
+tag is nicer simply because the person doing the pull won't need to
+cut and paste the signature information.
 
-But on the other hand, in many ways, publishing your commit to the outside
-world, not necessarily for getting pulled into the final destination
-(i.e. your tree) but merely for other people to try it out, is the point
-of no return (aka "don't rewind or rebase once you publish").  "pushing
-out" might be less special than "please pull", but it still is special.
+One approach which might work is if git request-pull sends the e-mail
+message with the git shortlog and diffstat, *and* an MIME attachment
+that contained all of the necessary information.  The maintainer would
+then save the attachment, and feed it to git, which will display the
+git shortlog and diffstat, ask for confirmation, and then embed the
+digital signature into the merge commit.
 
-Also there is nothing lost if you sign commits whenever you push them
-out.
+The only problem with that is (a) you'd have to get over your hatred
+of attachment (but if you're using Gmail hopefully that's relative
+convenient :-), and (b) LKML list filter would have to be taught to
+tolerate git-generated attachments.
 
-
-[Footnote]
-
-*1* Here are three examples on the same commit that is signed for
-illustration.
-
-------------------------------------------------
-$ git show -s pu
-commit c9d870fceac787fdb1c1c43b136c1a94ab2ab005
-Merge: 8367c51 71f45ee
-Author: Junio C Hamano <gitster@pobox.com>
-Date:   Mon Oct 31 20:06:58 2011 -0700
-
-    Merge branch 'jc/stream-to-pack' into pu
-    
-    * jc/stream-to-pack:
-      Bulk check-in
-      finish_tmp_packfile(): a helper function
-      create_tmp_packfile(): a helper function
-      write_pack_header(): a helper function
-------------------------------------------------
-$ git show -s --show-signature pu
-commit c9d870fceac787fdb1c1c43b136c1a94ab2ab005
-gpg: Signature made Mon 31 Oct 2011 08:07:04 PM PDT using RSA key ID 96AFE6CB
-gpg: Good signature from "Junio C Hamano <gitster@pobox.com>"
-gpg:                 aka "Junio C Hamano <junio@pobox.com>"
-gpg:                 aka "Junio C Hamano <jch@google.com>"
-Merge: 8367c51 71f45ee
-Author: Junio C Hamano <gitster@pobox.com>
-Date:   Mon Oct 31 20:06:58 2011 -0700
-
-    Merge branch 'jc/stream-to-pack' into pu
-    
-    * jc/stream-to-pack:
-      Bulk check-in
-      finish_tmp_packfile(): a helper function
-      create_tmp_packfile(): a helper function
-      write_pack_header(): a helper function
-------------------------------------------------
-$ git cat-file commit pu
-tree 9add290d468800c3c51ff68fedfb3d16427872ff
-parent 8367c51becc5a225b9a192348b7d7c615fb6d250
-parent 71f45eeb8278670257bea83620f7d3eac174eee7
-author Junio C Hamano <gitster@pobox.com> 1320116818 -0700
-committer Junio C Hamano <gitster@pobox.com> 1320116824 -0700
-gpgsig -----BEGIN PGP SIGNATURE-----
-gpgsig Version: GnuPG v1.4.10 (GNU/Linux)
-gpgsig 
-gpgsig ...
-gpgsig =c62U
-gpgsig -----END PGP SIGNATURE-----
-
-Merge branch 'jc/stream-to-pack' into pu
-
-* jc/stream-to-pack:
-  Bulk check-in
-  finish_tmp_packfile(): a helper function
-  create_tmp_packfile(): a helper function
-  write_pack_header(): a helper function
-------------------------------------------------
+						- Ted
