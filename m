@@ -1,76 +1,42 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RFC] ata port runtime pm
-Date: Tue, 01 Nov 2011 16:12:25 +0800
-Message-ID: <1320135145.3489.19.camel@minggr>
-References: <Pine.LNX.4.44L0.1110281444170.2175-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Tue, 01 Nov 2011 16:35:36 +0400
+Message-ID: <1320150936.17402.10.camel@dabdike>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
+	 <1320126812.7701.17.camel@dabdike>
+	 <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1110281444170.2175-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Zhang, Rui" <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>, Linux PM list <linux-pm@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: JiSheng Zhang <jszhang3@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, 2011-10-29 at 02:51 +0800, Alan Stern wrote:
-> On Fri, 28 Oct 2011, Rafael J. Wysocki wrote:
+On Tue, 2011-11-01 at 14:35 +0800, JiSheng Zhang wrote:
+> 2011/11/1 James Bottomley <James.Bottomley@hansenpartnership.com>:
+> > On Tue, 2011-11-01 at 13:31 +0800, JiSheng Zhang wrote:
+> >> Currently, there's no start/stop management in scsi cdrom driver to
+> >> spin up/down the motor do we need to implement it?
+> >
+> > Say more ... like what you think it buys.  The auto spin down of a CD
+> > tends to be the best power control we have and it's not even clear that
+> > manufacturers have implemented any other useful power states.
 > 
-> > On Friday, October 28, 2011, Lin Ming wrote:
-> > > On Fri, 2011-10-28 at 11:37 +0800, Jeff Garzik wrote:
-> > > > On 10/27/2011 11:21 PM, Lin Ming wrote:
-> > > > > @@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-> > > > >
-> > > > >   	ap = ata_shost_to_port(shost);
-> > > > >
-> > > > > +	if (pm_runtime_suspended(&ap->tdev))
-> > > > > +		pm_runtime_resume(&ap->tdev);
-> > > > > +	pm_runtime_mark_last_busy(&ap->tdev);
-> > > > > +	pm_request_autosuspend(&ap->tdev);
-> > > > > +
-> > > > >   	spin_lock_irqsave(ap->lock, irq_flags);
-> > > > >
-> > > > 
-> > > > 
-> > > > Putting this into the core command dispatch fast-path is rather 
-> > > > disappointing.  That's at least one additional lock, plus some atomic 
-> > > > instructions and tests.
-> 
-> And it calls pm_runtime_resume(), which requires process context, from 
-> within a SCSI queuecmd routine, which runs in interrupt context.
+> Does it mean the behavior depends on manufacturers? Some cd will spin
+> down automatically?
 
-Hi, 
+All CDs spin down when not reading (or burning) since the motor power is
+pretty high.  Most also do speed adjustments on the fly as well to try
+to match platter speed and read or burn rate.
 
-Thanks to point this out. I change the code to do ata port runtime
-suspend/resume through scsi layer.
+>  Even so, how about during shutdown just after reading
+> something from cdrom?
 
-scsi host runtime suspend/resume framework is already there(scsi_pm.c).
-So I only need to insert hooks for ata port in
-scsi_runtime_suspend/resume(...).
+What's the use case?  For internal CDs, shutdown removes power anyway.
 
-But I found a live lock when testing my patch.
+James
 
-<scsi host runtime suspend>
-  scsi_autopm_put_host
-    pm_runtime_put_sync
-      <scsi_host runtime pm status updated to RPM_SUSPENDING>
-      ......
-        <call libata hook to do suspend>
-          <wake up scsi EH to handle suspend>
-          <wait for scsi EH ...>
 
-<scsi EH wake up>
-  scsi_error_handler
-    <resume scsi host>
-    scsi_autopm_get_host
-      pm_runtime_get_sync
-      .....
-        <sleep to wait for the ongoing scsi host suspend> 
-
-libata schedules scsi EH to handle suspend, then dead lock happens
-because scsi EH in turn waits for the ongoing suspend.
-
-Any idea how to resolve this dead lock?
-
-Thanks,
-Lin Ming
