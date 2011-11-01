@@ -1,53 +1,37 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH 3/3] drivers: ata: libata-scsi.c: Add function parameter
- documentation
-Date: Tue, 01 Nov 2011 11:13:01 -0700
-Message-ID: <4EB036AD.8030707@xenotime.net>
-References: <1320112216-23810-1-git-send-email-marcos.mage@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Is there any elegant way to re-identify and re-configure xfer mode
+Date: Tue, 1 Nov 2011 11:19:57 -0700
+Message-ID: <CAOS58YPxZSdGWT+3Wgo7mvrL0xzJE-F7WGKC7LryVUFuUe9xSQ@mail.gmail.com>
+References: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oproxy9.bluehost.com ([69.89.24.6]:45309 "HELO
-	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751921Ab1KASNb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 14:13:31 -0400
-In-Reply-To: <1320112216-23810-1-git-send-email-marcos.mage@gmail.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:48259 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718Ab1KASUt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 14:20:49 -0400
+In-Reply-To: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.mage@gmail.com>
-Cc: jgarzik@pobox.com, linux-doc@vger.kernel.org, linux-ide@vger.kernel.org
+To: JiSheng Zhang <jszhang3@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 10/31/2011 06:50 PM, Marcos Paulo de Souza wrote:
-> Add the documentation of parameters of ata_change_queue_depth to silence the warning of make xmldocs
-> 
-> Signed-off-by: Marcos paulo de Souza <marcos.mage@gmail.com>
+On Mon, Oct 31, 2011 at 11:27 PM, JiSheng Zhang <jszhang3@gmail.com> wrote:
+> The problem is the model, vendor and xfer mode etc is changed also, I
+> need to re-identify and re-configure it.
+> I did these by manually call
+> ata_scsi_find_dev()=>ata_dev_read_id()=>ata_dev_configure()=>ata_set_mode()
 
-Acked-by: Randy Dunlap <rdunlap@xenotime.net>
+>From userland,
 
-Thanks.
+# echo - - - > /sys/class/scsi_host/hostX/rescan
 
-> ---
->  drivers/ata/libata-scsi.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 19ba770..5eceb23 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1216,6 +1216,10 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
->  
->  /**
->   *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
-> + *	@ap: ATA port to which the device change the queue depth
-> + *	@sdev: SCSI device to configure queue depth for
-> + *	@queue_depth: new queue depth
-> + *	@reason: calling context
->   *
->   *	libsas and libata have different approaches for associating a sdev to
->   *	its ata_port.
+>From kernel,
 
+    spin_lock_irqsave(ap->lock, flags);
+    dev->link.eh_info.dev_action[dev->devno] |= ATA_EH_REVALIDATE;
+    ata_port_schedule_eh(ap);
+    spin_unlock_irqrestore(ap->lock, flags);
 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+tejun
