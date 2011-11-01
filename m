@@ -1,93 +1,113 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC] ata port runtime pm
-Date: Tue, 1 Nov 2011 15:34:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1111011528561.1983-100000@iolanthe.rowland.org>
-References: <1320135145.3489.19.camel@minggr>
+From: Junio C Hamano <gitster@pobox.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Tue, 01 Nov 2011 12:47:12 -0700
+Message-ID: <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+References: <20111026202235.GA20928@havoc.gtf.org>
+ <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57054 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750839Ab1KATex (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 15:34:53 -0400
-In-Reply-To: <1320135145.3489.19.camel@minggr>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com> (Linus
+ Torvalds's message of "Mon, 31 Oct 2011 15:18:28 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Priyanka Gupta <ankaguptaca@gmail.com>, "Zhang, Rui" <rui.zhang@intel.com>, "Huang, Ying" <ying.huang@intel.com>, Linux PM list <linux-pm@vger.kernel.org>
 
-On Tue, 1 Nov 2011, Lin Ming wrote:
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-> On Sat, 2011-10-29 at 02:51 +0800, Alan Stern wrote:
-> > On Fri, 28 Oct 2011, Rafael J. Wysocki wrote:
-> > 
-> > > On Friday, October 28, 2011, Lin Ming wrote:
-> > > > On Fri, 2011-10-28 at 11:37 +0800, Jeff Garzik wrote:
-> > > > > On 10/27/2011 11:21 PM, Lin Ming wrote:
-> > > > > > @@ -3208,6 +3209,11 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-> > > > > >
-> > > > > >   	ap = ata_shost_to_port(shost);
-> > > > > >
-> > > > > > +	if (pm_runtime_suspended(&ap->tdev))
-> > > > > > +		pm_runtime_resume(&ap->tdev);
-> > > > > > +	pm_runtime_mark_last_busy(&ap->tdev);
-> > > > > > +	pm_request_autosuspend(&ap->tdev);
-> > > > > > +
-> > > > > >   	spin_lock_irqsave(ap->lock, irq_flags);
-> > > > > >
-> > > > > 
-> > > > > 
-> > > > > Putting this into the core command dispatch fast-path is rather 
-> > > > > disappointing.  That's at least one additional lock, plus some atomic 
-> > > > > instructions and tests.
-> > 
-> > And it calls pm_runtime_resume(), which requires process context, from 
-> > within a SCSI queuecmd routine, which runs in interrupt context.
-> 
-> Hi, 
-> 
-> Thanks to point this out. I change the code to do ata port runtime
-> suspend/resume through scsi layer.
-> 
-> scsi host runtime suspend/resume framework is already there(scsi_pm.c).
-> So I only need to insert hooks for ata port in
-> scsi_runtime_suspend/resume(...).
-> 
-> But I found a live lock when testing my patch.
-> 
-> <scsi host runtime suspend>
->   scsi_autopm_put_host
->     pm_runtime_put_sync
->       <scsi_host runtime pm status updated to RPM_SUSPENDING>
->       ......
->         <call libata hook to do suspend>
->           <wake up scsi EH to handle suspend>
->           <wait for scsi EH ...>
-> 
-> <scsi EH wake up>
->   scsi_error_handler
->     <resume scsi host>
->     scsi_autopm_get_host
->       pm_runtime_get_sync
->       .....
->         <sleep to wait for the ongoing scsi host suspend> 
-> 
-> libata schedules scsi EH to handle suspend, then dead lock happens
-> because scsi EH in turn waits for the ongoing suspend.
-> 
-> Any idea how to resolve this dead lock?
+> But what would be nice is that "git pull" would fetch the tag (based on
+> name) *automatically*, and not actually create a tag in my repository at
+> all. Instead, if would use the tag to check the signature, and - if we
+> do this right - also use the tag contents to populate the merge commit
+> message.
+>
+> In other words, no actual tag would ever be left around as a turd, it
+> would simply be used as an automatic communication channel between the
+> "git push -s" of the submitter and my subsequent "git pull". Neither
+> side would have to do anything special, and the tag would never show
+> up in any relevant tree (it could even be in a totally separate
+> namespace like "refs/pullmarker/<branchname>" or something).
 
-This is a nasty problem.  I've known for a long time that the 
-scsi_autopm_get_host() call in the error handler was going to lead to 
-problems.
+While I like the "an ephemeral tag is used only for hop-to-hop
+communication to carry information to be recorded in the resulting
+history" approach, I see a few downsides.
 
-For now, it seems best to assume that when the error handler starts, 
-the device will still be active.  Therefore the scsi_autopm_get_host() 
-should be replaced by something that calls pm_runtime_get_noresume() 
-instead of pm_runtime_get_sync().
+ * The ephemeral tag needs to stay somewhere under refs/ hierarchy of the
+   lieutenant's tree until you pick it up, even if they are out of the way
+   in refs/pullmarker/$branchname. The next time the same lieutenant makes
+   a pull request, either it will be overwritten or multiple versions of
+   them refs/pullmarker/$branchname/$serial need to be kept.
 
-You can try replacing one function call with the other, or you can 
-define a new scsi_autopm_get_host_noresume() routine.
+   - If the former, this makes forking of the project harder. Suppose a
+     pull request is made, you fetch and reject it. The lieutenant reworks
+     and makes another pull request. At this point the earlier signature
+     is gone. If somebody disagreed with your rejection and wanted to run
+     his tree with the initial version you rejected, his tree will not
+     carry the signature from the lieutenant.
 
-Alan Stern
+   - If the latter, then there needs to be a way to expire these pull
+     markers when they no longer are useful (i.e. the signature in it is
+     transcribed to a merge commit you create) [*1*]. But the party who
+     has power to clean them (i.e. the lieutenant who owns the repository)
+     is different from the party whose action determines when they no
+     longer are necessary (i.e. you). In practice this would lead to these
+     pull markers not cleaned at all [*2*].
 
+ * To verify the commit C that was taken from the tip of lieutenant's tree
+   some time ago, one has to find the merge commit that has C as a parent,
+   and look at the merge commit.  For example "git log --show-signature"
+   would either show or not show the authenticity of C depending on where
+   the traversal comes from. You certainly can implement it that way, but
+   "some child describes an aspect of its parent, but not necessarily all
+   children do so" feels philosophically less correct than "the commit has
+   data to describe itself".
+
+In your "ephemeral tag", the workflow for a developer (D) and his
+integrator (U) would look like this, I think.
+
+ D$ until have something worth sending; do work; done
+ D$ git push -s
+ Enter passphrase: ...
+	- "push" internally creates a pull marker that signs the commit
+          object name this is pushing, among other things, and sends it
+          along the primary payload
+ D$ git pull-request; mail linus
+
+ U$ git pull
+ 	- "pull" notices the pull marker and fetches it as well;
+        - "pull" GPG validates the pull marker;
+        - When preparing a merge commit message, the contents of the
+          pull marker is included in .git/MERGE_MSG
+
+The "in-commit signature" would give you 100% and your contributors 98% of
+that, I think.
+
+ D$ until have something worth sending; do work; done
+        - The final round of reworking is concluded with "commit -S",
+          which would GPG sign the tip commit itself
+ D$ git push
+	- Nothing needs to change in the protocol nor "push" itself
+ D$ git pull-request; mail linus
+
+ U$ git pull
+ 	- "pull" GPG validates the tip commit
+	- Nothing unusual needs to happen to the resulting "merge" commit
+
+And as a bonus, the code is already there ;-).
+
+
+[Footnote]
+
+*1* The common ancestor discovery in fetch uses as many refs as it can to
+reduce the amount of data that needs to be transferred, and it is known to
+hurt performance of the initial advertisement exchange when there are too
+many useless refs.
+
+*2* Do casual git users even know how to remove refs in a
+remote/publishing repository?
