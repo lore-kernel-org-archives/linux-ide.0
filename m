@@ -1,46 +1,47 @@
 From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 20:31:08 -0700
-Message-ID: <CA+55aFy=Wz4zxjoPJer=OfA2Jsh1FA_ahUpa8sw=5UJuAyEsFQ@mail.gmail.com>
+Date: Mon, 31 Oct 2011 20:42:57 -0700
+Message-ID: <CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
 References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
  <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
  <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
- <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
+ <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm> <4EAF66C7.6080909@zytor.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41710 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511Ab1KADba (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 23:31:30 -0400
-In-Reply-To: <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EAF66C7.6080909@zytor.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "H. Peter Anvin" <hpa@zytor.com>
+Cc: david@lang.hm, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: david@lang.hm
-Cc: "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 31, 2011 at 7:17 PM,  <david@lang.hm> wrote:
+On Mon, Oct 31, 2011 at 8:25 PM, H. Peter Anvin <hpa@zytor.com> wrote:
 >
-> what IMAP servers have you used? I find that with a good IMAP server I can
-> get away with _very_ little processing power in the client and get good
-> performance (I still am using pine, but with a cyrus IMAP server)
+> I use IMAP on my phone, and with Thunderpants... I mean Thunderbird...
+> and it works quite nicely.
 
-I've used pine (and then alpine) to cyrus servers too. That was what
-LF used to have on the server side. It absolutely sucked.
+Including things like searching lkml etc?
 
-That combination is supposed to do server-side searching etc, but you
-couldn't tell from the performance. It was disgusting.
+I've been successful in using IMAP for just reading my inbox (even
+over a cell network). Then IMAP is reasonably fine, at least if you do
+client-side caching.
 
-I'm sure it works much better with a fast local network, but quite
-frankly, that obviates the need for IMAP in the first place. If you
-have your mail locally, there are better models than IMAP for handling
-it.
+But not for actual real *work*, where I actually search for specific
+email authors and words in the body? Not so much.
 
-So the only situation I've found IMAP reasonable has been at corporate
-settings where you're not talking DSL or cable modem speeds, but use
-IMAP as a way to avoid NFS-mounting the mail spool, which is even
-worse. But actually working over slowish internet connections? No
-thank you.
+Maybe it's because I'm used to having all my mail locally, but
+searching all my emails is one of my most common operations. The gmail
+web interface does that fine. IMAP has never worked for me, despite
+some client/server combinations allegedly supporting server-side
+searches. Maybe I never hit the right combination, but I tested things
+that were *supposed* to do it.
+
+Actually, most of my attempts at using IMAP have been unacceptably
+slow even when I don't do searches. I used to do huge inboxes, which
+brought just about anything to a standstill. I only got rid of my
+habit of big inboxes thanks to another gmail feature - you don't have
+to save your non-inbox email in a folder, you can just "archive" it
+and it goes away but is still easily searchable.
 
                          Linus
