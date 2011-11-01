@@ -1,40 +1,32 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 17:42:57 -0700
-Message-ID: <4EAF4091.2010205@zytor.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com> <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com> <4EAF1F40.3030907@zytor.com> <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com> <4EAF2245.90308@zytor.com> <7vzkggok6u.fsf@alter.siamese.dyndns.org> <4EAF3556.3000001@garzik.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 02/15] ATA : vortex86 : fix vortex86dx/sx hardware CRC
+ bug.
+Date: Tue, 1 Nov 2011 01:02:42 +0000
+Message-ID: <20111101010242.003738e9@lxorguk.ukuu.org.uk>
+References: <1319602564-19162-1-git-send-email-paul.s.schilling@gmail.com>
+	<20111027084310.2b7da753@pyx>
+	<CAC=G6sz=PkDoODYh4beT_eRhkm+ZhUxtLnrBXPPuFJW3n+6Vcg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:41414 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755716Ab1KAAnR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 20:43:17 -0400
-In-Reply-To: <4EAF3556.3000001@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAC=G6sz=PkDoODYh4beT_eRhkm+ZhUxtLnrBXPPuFJW3n+6Vcg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Paul Schilling <paul.s.schilling@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "David S. Miller" <davem@davemloft.net>, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Junio C Hamano <gitster@pobox.com>, Linus Torvalds <torvalds@linux-foundation.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+On Mon, 31 Oct 2011 14:07:45 -0500
+Paul Schilling <paul.s.schilling@gmail.com> wrote:
+
+> Hi,
 > 
-> The main worry is Linus ($human_who_pulls) gets
-> cryptographically-verified data at the time he pulls.  Once Linus
-> republishes his tree (git push), there will be few, if any, wanting to
-> verify Jeff Garzik's signature.
-> 
-> So no, I don't see that as a _driving_ need in the kernel's case.
-> 
-> And IMO the kernel will be a mix of signed and unsigned content for a
-> while, possibly forever.
-> 
+> When I developed this patch for the Vortex86dx.  I recall trying many
+> combinations of udma and mwdma.  At the time I developed it, I came
+> to the conclusion that both udma and mwdma both failed with CRC
+> errors being reported.
 
-I think the desire is to be able to deconstruct things if things were to
-go wrong.
+MWDMA does not have a CRC so that seems unlikely. If you can re-test and
+we can figure out what is going on that would be useful.
 
-	-hpa
-
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
-
+Alan
