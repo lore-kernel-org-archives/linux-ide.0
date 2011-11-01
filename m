@@ -1,42 +1,46 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 31 Oct 2011 20:25:59 -0700
-Message-ID: <4EAF66C7.6080909@zytor.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike> <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com> <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com> <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com> <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
+Date: Mon, 31 Oct 2011 20:31:08 -0700
+Message-ID: <CA+55aFy=Wz4zxjoPJer=OfA2Jsh1FA_ahUpa8sw=5UJuAyEsFQ@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <4EAF1731.2070908@zytor.com> <CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
+ <4EAF1FF6.3000500@zytor.com> <CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+ <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([198.137.202.10]:42051 "EHLO mail.zytor.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753101Ab1KAD0P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 31 Oct 2011 23:26:15 -0400
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41710 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753511Ab1KADba (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2011 23:31:30 -0400
 In-Reply-To: <alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: david@lang.hm
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: "H. Peter Anvin" <hpa@zytor.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 10/31/2011 07:17 PM, david@lang.hm wrote:
-> 
-> what IMAP servers have you used? I find that with a good IMAP server I
-> can get away with _very_ little processing power in the client and get
-> good performance (I still am using pine, but with a cyrus IMAP server)
-> 
-> there are a bunch of IMAP servers out there that are horrible (and even
-> more IMAP clients that are really doing POP and storing everything
-> locally, just using the IMAP protocol)
-> 
+On Mon, Oct 31, 2011 at 7:17 PM,  <david@lang.hm> wrote:
+>
+> what IMAP servers have you used? I find that with a good IMAP server I can
+> get away with _very_ little processing power in the client and get good
+> performance (I still am using pine, but with a cyrus IMAP server)
 
-Last I checked if you used pine against an IMAP server it did absolutely
-no caching, in which case you're of course screwed.
+I've used pine (and then alpine) to cyrus servers too. That was what
+LF used to have on the server side. It absolutely sucked.
 
-I use IMAP on my phone, and with Thunderpants... I mean Thunderbird...
-and it works quite nicely.
+That combination is supposed to do server-side searching etc, but you
+couldn't tell from the performance. It was disgusting.
 
-	-hpa
+I'm sure it works much better with a fast local network, but quite
+frankly, that obviates the need for IMAP in the first place. If you
+have your mail locally, there are better models than IMAP for handling
+it.
 
--- 
-H. Peter Anvin, Intel Open Source Technology Center
-I work for Intel.  I don't speak on their behalf.
+So the only situation I've found IMAP reasonable has been at corporate
+settings where you're not talking DSL or cable modem speeds, but use
+IMAP as a way to avoid NFS-mounting the mail spool, which is even
+worse. But actually working over slowish internet connections? No
+thank you.
 
+                         Linus
