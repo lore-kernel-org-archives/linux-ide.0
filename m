@@ -1,30 +1,43 @@
-From: Huang Changming-R66093 <r66093@freescale.com>
-Subject: have we the patchwork to view the patch status?
-Date: Wed, 2 Nov 2011 08:05:31 +0000
-Message-ID: <8A2FC72B45BB5A4C9F801431E06AE48F1160AB89@039-SN1MPN1-006.039d.mgd.msft.net>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Wed, 2 Nov 2011 10:11:26 +0100
+Message-ID: <20111102091126.GG18903@elte.hu>
+References: <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <4EAF1F40.3030907@zytor.com>
+ <CA+55aFxprv9JR4gtt_UDXheHR5G8PrUA3-Mj0CPsU6E5EzNYeg@mail.gmail.com>
+ <4EAF2245.90308@zytor.com>
+ <CA+55aFzedaAzzWfzhqVf8y8ZW0jeb56hZwdV3UodSp8Q_Qhc2A@mail.gmail.com>
+ <7vvcr4ojvp.fsf@alter.siamese.dyndns.org>
+ <CA+55aFyKWLUMQFfaeKJKGFPV_7kfOGjf+pSZ1Y8afzkT4OYQ9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:1313 "EHLO
-	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752504Ab1KBIFe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Nov 2011 04:05:34 -0400
-Received: from mail73-tx2 (localhost.localdomain [127.0.0.1])	by
- mail73-tx2-R.bigfish.com (Postfix) with ESMTP id 21AEF2F834C	for
- <linux-ide@vger.kernel.org>; Wed,  2 Nov 2011 08:05:31 +0000 (UTC)
-Received: from TX2EHSMHS031.bigfish.com (unknown [10.9.14.252])	by
- mail73-tx2.bigfish.com (Postfix) with ESMTP id 05A1A620050	for
- <linux-ide@vger.kernel.org>; Wed,  2 Nov 2011 08:05:31 +0000 (UTC)
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyKWLUMQFfaeKJKGFPV_7kfOGjf+pSZ1Y8afzkT4OYQ9Q@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Junio C Hamano <gitster@pobox.com>, "H. Peter Anvin" <hpa@zytor.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-have we the patchwork to view the patch status?
-
-Thanks and Best Regards
-Jerry Huang
 
 
+* Linus Torvalds <torvalds@linux-foundation.org> wrote:
 
+> And the receiving side would just do the "git pull" and 
+> automatically just get notified that "Yes, this push has been 
+> signed by key Xyz Abcdef"
+
+If this approach is used then it would be nice to have a .gitconfig 
+switch to require trusted pulls by default: to not allow doing 
+non-signed or untrusted pulls accidentally, or for Git to warn in a 
+visible, hard to miss way if there's a non-signed pull.
+
+This adds social uncertainty (and an element of a silent alarm) to a 
+realistic attack: the attacker wouldnt know exactly how the puller 
+checks signed pull requests, it's kept private.
+
+Thanks,
+
+	Ingo
