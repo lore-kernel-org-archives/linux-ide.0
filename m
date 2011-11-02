@@ -1,7 +1,7 @@
 From: Junio C Hamano <gitster@pobox.com>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Wed, 02 Nov 2011 14:13:26 -0700
-Message-ID: <7vipn2i5xl.fsf@alter.siamese.dyndns.org>
+Date: Wed, 02 Nov 2011 16:34:53 -0700
+Message-ID: <7vsjm6gkte.fsf@alter.siamese.dyndns.org>
 References: <20111026202235.GA20928@havoc.gtf.org>
  <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
@@ -11,26 +11,63 @@ References: <20111026202235.GA20928@havoc.gtf.org>
  <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
  <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
  <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org>
- <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com> (Linus
- Torvalds's message of "Wed, 2 Nov 2011 13:04:30 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <git-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com> (Linus
+ Torvalds's message of "Tue, 1 Nov 2011 14:21:59 -0700")
+Sender: git-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
 Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-> And "add a fake empty commit just for the signature" is not the answer
-> either - because that is clearly inferior to the tags we already had.
+> I hate how anonymous our branches are. Sure, we can use good names for
+> them, but it was a mistake to think we should describe the repository
+> (for gitweb), rather than the branch.
 >
-> I dunno. Did I miss something? As far as I can tell, the signed tags
-> that we've had since day one are *clearly* much better in very
-> fundamental ways.
+> Ok, "hate" is a strong word. I don't "hate" it. I don't even think
+> it's a major design issue. But I do think that it would have been
+> nicer if we had had some branch description model.
+> ...
+> Maybe just verifying the email message (with the suggested kind of
+> change to "git request-pull") is actually the right approach. And what
+> I should do is to just wrap my "git pull" in some script that I can
+> just cut-and-paste the gpg-signed thing into, and which just does the
+> "gpg --verify" on it, and then does the "git pull" after that.
+>
+> Because in many ways, "git request-pull" is when you do want to sign
+> stuff. A developer might well want to push out his stuff for some
+> random internal testing (linux-next, for example), and then only later
+> decide "Ok, it was all good, now I want to make it 'official' and ask
+> Linus to pull it", and sign it at *that* time, rather than when
+> actually pushing it out.
 
-Ok, back to the drawing board (which is not a loss as I wasn't expecting
-this to be in the official release in upcoming 1.7.8 anyway).
+You keep saying cut-and-paste, but do you mind feeding the e-mail text
+itself to a tool, instead of cut-and-paste?
+
+The reason I am wondering about this is because in another topic (also in
+'next') cooking there is an extended support for topic description for the
+branch that states what the purpose of the topic is why the requestor
+wants you to have it (this information can be set and updated with "git
+branch --edit-description").
+
+A respond-to-request-pull wrapper you would use could be:
+
+ - Get the e-mail from the standard input;
+ - Pick up the signed bits and validate the signature;
+ - Perform the requested fetch; and
+ - Record the merge (or prepare .git/MERGE_MSG) with both the signed bits.
+
+and the "signed bits" could include:
+
+   - the repository and the branch you were expected to pull;
+   - the topic description.
+
+among other things the requestor can edit when request-pull message is
+prepared.
+
+That would get us back to your "the lieutenant tip is not so special, but
+the merge commit the integrator makes using that tip has the signature for
+this particular pull" model.
