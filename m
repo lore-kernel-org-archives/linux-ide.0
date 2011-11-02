@@ -1,29 +1,43 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: linux-next: Tree for Nov 1 (ata/libata-sff.c)
-Date: Tue, 01 Nov 2011 16:48:29 -0700
-Message-ID: <4EB0854D.5090002@xenotime.net>
-References: <20111101205323.c12f2f940f23febba8ab8989@canb.auug.org.au>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Tue, 01 Nov 2011 19:13:16 -0600
+Message-ID: <4EB0992C.5070309@gmail.com>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com> <1320126812.7701.17.camel@dabdike> <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111101205323.c12f2f940f23febba8ab8989@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linus <torvalds@linux-foundation.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:65011 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753542Ab1KBBNT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2011 21:13:19 -0400
+In-Reply-To: <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: JiSheng Zhang <jszhang3@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 11/01/2011 02:53 AM, Stephen Rothwell wrote:
-> Hi all,
+On 11/01/2011 12:35 AM, JiSheng Zhang wrote:
+> Hi James,
+>
+> 2011/11/1 James Bottomley<James.Bottomley@hansenpartnership.com>:
+>> On Tue, 2011-11-01 at 13:31 +0800, JiSheng Zhang wrote:
+>>> Currently, there's no start/stop management in scsi cdrom driver to
+>>> spin up/down the motor do we need to implement it?
+>>
+>> Say more ... like what you think it buys.  The auto spin down of a CD
+>> tends to be the best power control we have and it's not even clear that
+>> manufacturers have implemented any other useful power states.
+>
+> Does it mean the behavior depends on manufacturers? Some cd will spin
+> down automatically? Even so, how about during shutdown just after reading
+> something from cdrom?
+>
+> Thanks,
+> Jisheng
 
-
-When ATA_SFF is enabled but ATA_BMDMA is not enabled:
-
-
-drivers/ata/libata-sff.c: In function 'ata_pci_init_one':
-drivers/ata/libata-sff.c:2538:3: error: implicit declaration of function 'ata_pci_bmdma_prepare_host'
-drivers/ata/libata-sff.c:2549:40: error: 'ata_bmdma_interrupt' undeclared (first use in this function)
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+I believe the main reason disks are stopped during shutdown is that for 
+many hard drives that use head unloading, it's much better for the 
+lifespan of the drive to do a powered head unload on software command 
+before powering off than an emergency unload caused by a loss of power. 
+I don't believe that optical drives have such an issue.
