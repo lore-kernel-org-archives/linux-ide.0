@@ -1,51 +1,49 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 3 Nov 2011 12:09:55 -0700
-Message-ID: <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Thu, 3 Nov 2011 14:04:33 -0700
+Message-ID: <20111103210433.GL4417@google.com>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
+ <1320126812.7701.17.camel@dabdike>
+ <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+ <4EB0992C.5070309@gmail.com>
+ <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
+ <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
+ <4EB2B468.9010001@interlog.com>
+ <CAOS58YM2rwwaqEBDEHdBy_Mo_3FJsJUsHmdBM=T4hyApmKuOuA@mail.gmail.com>
+ <4EB2CBAC.70003@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:37408 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934290Ab1KCTKR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2011 15:10:17 -0400
-In-Reply-To: <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37979 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751480Ab1KCVMk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2011 17:12:40 -0400
+Content-Disposition: inline
+In-Reply-To: <4EB2CBAC.70003@interlog.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Junio C Hamano <gitster@pobox.com>
-Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: JiSheng Zhang <jszhang3@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Nov 3, 2011 at 11:52 AM, Junio C Hamano <gitster@pobox.com> wrote:
->
-> Ahh, sorry for the noise. I realize that we already have a winner, namely,
-> the proposal outlined in your message I was responding to.
+Hello,
 
-No, no, don't consider my "put in the merge message" a winner at all.
+On Thu, Nov 03, 2011 at 01:13:16PM -0400, Douglas Gilbert wrote:
+> Do you mean the GET EVENT STATUS NOTIFICATION command (as there is
+> no CHECK MEDIA EVENT STATUS command in SCSI or ATA)? If so it is
+> one of the "good guys" along with the REQUEST SENSE command. And
+> as I said TUR is not recommended. So looking at MS usage _and_
+> the standards is a useful guide.
 
-I personally dislike it, and don't really think it's a wonderful thing
-at all. I really does have real downsides:
+Yes, that's the one.  Sorry, I always get confused about its name.
+IIRC, it's a relatively new command, right?  Anyways, I'm not arguing
+standards are useless but that actual usages have to take precedence.
 
- - internal signatures really *are* a disaster for maintenance. You
-can never fix them if they need fixing (and "need fixing" may well be
-"you want to re-sign things after a repository format change")
+> I agree. SCSI and ATA define idle states (with some fuzziness in
+> the naming) that have timers associated with them. Those
+> mechanisms seem to work pretty well without the intervention of
+> commands like START STOP UNIT.
 
- - they are ugly as heck, and you really don't want to see them in
-99.999% of all cases.
+Cool, thanks.
 
-So putting those things iin the merge commit message may have some
-upsides, but it has tons of downsides too.
-
-I think your refs/audit/ idea should be given real thought, because
-maybe that's the right idea.
-
-                           Linus
+-- 
+tejun
