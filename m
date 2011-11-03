@@ -1,37 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/3] ata port runtime power management support
-Date: Thu, 3 Nov 2011 07:59:24 -0700
-Message-ID: <CAOS58YM_cNXe5ZSMu-N2K02EjwyVheO2x80SoBYdrr6WgWv=dQ@mail.gmail.com>
-References: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
-	<20111102151711.GB12543@dhcp-172-17-108-109.mtv.corp.google.com>
-	<1320330107.2813.73.camel@hp6530s>
-	<CAOS58YMSwnp=Vm81+0_ZO9OYB4=NMnfETBen0QNCQwuDW0TjUA@mail.gmail.com>
-	<1320331637.2813.84.camel@hp6530s>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Thu, 03 Nov 2011 11:34:00 -0400
+Message-ID: <4EB2B468.9010001@interlog.com>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com> <1320126812.7701.17.camel@dabdike> <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com> <4EB0992C.5070309@gmail.com> <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com> <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:56100 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932765Ab1KCO70 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Nov 2011 10:59:26 -0400
-In-Reply-To: <1320331637.2813.84.camel@hp6530s>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: JiSheng Zhang <jszhang3@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-Hello,
-
-On Thu, Nov 3, 2011 at 7:47 AM, Lin Ming <ming.m.lin@intel.com> wrote:
->> > There will be ACPI firmware which supports ata port runtime D3Cold.
->> > To enable ata port runtime PM is the first step.
->>
->> libata can already turn off unused ports although it wouldn't go as
->> far as putting the whole controller into D3.
+On 11-11-03 10:38 AM, Tejun Heo wrote:
+> Hello,
 >
-> At runtime?
+> On Wed, Nov 2, 2011 at 11:38 PM, JiSheng Zhang<jszhang3@gmail.com>  wrote:
+>> I have talked with one cdrom firmware engineer, cdrom also need to put
+>> the head at
+>> "park" position. So we also need to let cdrom spin down when poweroff,
+>> suspend etc for lifespan?
+>
+> I'm pretty skeptical that's necessary, and here's what we should do
+> regarding ATAPI devices.
+>
+>    Do what Windows does.
+>
+> In many cases, manufacturers are verifying only against windows and
+> deviation from windows behavior usually means trouble regardless of
+> the standard. Even sending TURs repeatedly can send devices into
+> complete lockup. So, I don't really care what the standard says. If
 
-Nope, I meant unoccupied (no device attached). IIRC it's part of the LPM code.
+That's a pretty poor attitude. I suspect Microsoft care. If so they
+would be transitioning away from TEST UNIT READY to REQUEST SENSE
+to monitor power conditions and the progress indication.
 
--- 
-tejun
+In the latest MMC draft (mmc6r02g.pdf 20091211), monitoring based on
+the TEST UNIT READY command is typically followed by this rider:
+"This behavior is not recommended"!
+
+Doug Gilbert
+
+
+
