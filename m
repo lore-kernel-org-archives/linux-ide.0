@@ -1,62 +1,215 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Thu, 03 Nov 2011 13:13:16 -0400
-Message-ID: <4EB2CBAC.70003@interlog.com>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com> <1320126812.7701.17.camel@dabdike> <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com> <4EB0992C.5070309@gmail.com> <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com> <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com> <4EB2B468.9010001@interlog.com> <CAOS58YM2rwwaqEBDEHdBy_Mo_3FJsJUsHmdBM=T4hyApmKuOuA@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Junio C Hamano <gitster@pobox.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Thu, 03 Nov 2011 11:16:37 -0700
+Message-ID: <7v62j1gitn.fsf@alter.siamese.dyndns.org>
+References: <20111026202235.GA20928@havoc.gtf.org>
+ <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+ <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+ <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+ <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+ <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+ <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49597 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232Ab1KCRNY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 Nov 2011 13:13:24 -0400
-In-Reply-To: <CAOS58YM2rwwaqEBDEHdBy_Mo_3FJsJUsHmdBM=T4hyApmKuOuA@mail.gmail.com>
+Received: from b-pb-sasl-quonix.pobox.com ([208.72.237.35]:35502 "EHLO
+	smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933752Ab1KCSaS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 Nov 2011 14:30:18 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: JiSheng Zhang <jszhang3@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 11-11-03 11:46 AM, Tejun Heo wrote:
-> On Thu, Nov 3, 2011 at 8:34 AM, Douglas Gilbert<dgilbert@interlog.com>  wrote:
->> That's a pretty poor attitude. I suspect Microsoft care. If so they
->> would be transitioning away from TEST UNIT READY to REQUEST SENSE
->> to monitor power conditions and the progress indication.
+Linus Torvalds <torvalds@linux-foundation.org> writes:
+
+>   [torvalds@i5 linux]$ git fetch
+> git://github.com/rustyrussell/linux.git
+> rusty@rustcorp.com.au-v3.1-8068-g5087a50
+>   fatal: Couldn't find remote ref rusty@rustcorp.com.au-v3.1-8068-g5087a50
 >
-> I was talking about media presence polling.  We used to include TUR in
-> the sequence and there have been some number of devices which worked
-> fine for a while but lock up eventually.  Windows only issues
-> CHECK_MEDIA_EVENT_STATUS so nobody has tested extended TUR cycles and
+> oops. Ok, so his tag naming is *really* akward. Whatever.
 
-Do you mean the GET EVENT STATUS NOTIFICATION command (as there is
-no CHECK MEDIA EVENT STATUS command in SCSI or ATA)? If so it is
-one of the "good guys" along with the REQUEST SENSE command. And
-as I said TUR is not recommended. So looking at MS usage _and_
-the standards is a useful guide.
+It is not "Whatever".
 
+ $ git fetch git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git v3.0
+ fatal: Couldn't find remote ref v3.0
 
-BTW The REQUEST SENSE implemented in the libata's SAT layer is
-completely broken (and has been since day one). Is anyone planning
-to fix it? An LSI SAS HBA with recent firmware and accessing a
-SATA disk is a pretty good example of what a compliant SAT layer
-looks like.
+I do not think we ever DWIMmed fetch refspecs to prefix refs/tags/, so it
+is not the naming but fetching tags without saying "git fetch tag v3.0"
+(which IIRC was your invention long time ago). 
 
-> nobody is fixing an optical drive EOL'd six months ago either, so what
-> I or you think or feel doesn't matter in the end.  The most important
-> thing is we provide drivers which allow proper operation and, sadly,
-> at this point, the best way to get there is following what windows
-> does.  It's not like we lose any functionality that way anyway.
+If we changed this "git fetch $there v3.0" to fetch tag, it would help the
+final step in your illustration, and I do not think it would be a huge
+regression---the only case it becomes fuzzy is when they have v3.0 branch
+at the same time, but the owner of such a repository is already playing
+with fire.
+
+>    [torvalds@i5 linux]$ git fetch
+> git://github.com/rustyrussell/linux.git
+> refs/tags/rusty@rustcorp.com.au-v3.1-8068-g5087a50
+>    From git://github.com/rustyrussell/linux
+>     * tag
+> rusty@rustcorp.com.au-v3.1-8068-g5087a50 -> FETCH_HEAD
 >
-> If windows isn't spinning down the drive, it is highly unlikely that
-> missing that harms anything and it's highly like there are a bunch of
-> devices which would go "uh... what the hell is this? I don't know
-> this. osidfjalekjalkgjs".  So, there simply is no point at all.
+> Ahh, success!
+>
+> Oops. Nope. It turns out that git will *peel* the tag when you fetch
+> it, so FETCH_HEAD actually doesn't contain the tag object at all, but
+> the commit object that the tag pointed to. MAJOR FAIL.
+>
+> Quite frankly, I think that's a git bug, but it's a git bug because
+> "git fetch" was designed to get the commit to merge. Fair enough.
 
-I agree. SCSI and ATA define idle states (with some fuzziness in
-the naming) that have timers associated with them. Those
-mechanisms seem to work pretty well without the intervention of
-commands like START STOP UNIT.
+And because FETCH_HEAD started as (and probably still is) an internal
+implementation detail of communication between fetch and merge inside
+pull. So I do not have any issue in changing it to store tags unpeeled
+there.
+>    [torvalds@i5 linux]$ git fetch
+> git://github.com/rustyrussell/linux.git
+> refs/tags/rusty@rustcorp.com.au-v3.1-8068-g5087a50:refs/tags/rusty
+>    From git://github.com/rustyrussell/linux
+>     * [new tag]
+> rusty@rustcorp.com.au-v3.1-8068-g5087a50 -> rusty
+>     * [new tag]
+> rusty@rustcorp.com.au-v3.1-2-gb1e4d20 ->
+> rusty@rustcorp.com.au-v3.1-2-gb1e4d20
+>     * [new tag]
+> rusty@rustcorp.com.au-v3.1-4896-g0acf000 ->
+> rusty@rustcorp.com.au-v3.1-4896-g0acf000
+>     * [new tag]
+> rusty@rustcorp.com.au-v3.1-8068-g5087a50 ->
+> rusty@rustcorp.com.au-v3.1-8068-g5087a50
+>
+> WTF?
 
-Doug Gilbert
+This is not WTF but "fetching a history to store the tip of it in your
+refs/ namespace causes tags pointing into the history line followed
+automatically", and it exactly is what you want to happen if rusty asked
+you to fetch his for-linus branch (which the tag may point at) instead.
 
+> We got three other
+> tags too that we didn't even ask for!
+
+We could change the rule to read "fetching a history to store the tip of it
+in your refs/heads namespace causes autofollow". I am not sure if that is
+what we really want, though.
+
+> Again - not a fundamental design mistake in the data structures, and
+> it actually made sense from a "signed tags are important release
+> points" standpoint, but it makes it *really* inconvenient to use
+> signed tags for signature verification.
+
+We could update three things:
+
+ - DWIM $name in "git fetch $there $name" to refs/tags/$name when it makes
+   sense;
+ - FETCH_HEAD stores unpeeled object names; and
+ - "git pull" learns --verify option.
+
+Then
+
+ $ git pull --verify rusty rusty@rustcorp.com.au-v3.1-8068-g5087a50
+
+could integrate the history leading to that tag to your current branch
+while running verify-tag on it.
+
+For this, disabling the tag-auto-following is not necessary, as you are
+not storing the retrieved tag anywhere.
+
+That is a longwinded way to say I agree what you said below.
+
+> So signed tags are not mis-designed from a conceptual standpoint -
+> they just work really really awkwardly right now for what the kernel
+> would like to do with them.
+>
+> With a few UI fixes, I think the signed tag thing would "just work".
+>
+> That said, I do think that the "signature in the pull request" should
+> also "just work", and I'm not entirely sure which one is better.
+
+I do not think it is necessarily either/or choice.
+
+Either way does not solve anything other than validating the last hop
+between the last lieutenant to the integrator without having a way to give
+the verification material to third parties.
+
+Your earlier "pull request signature could be copied into the message of
+the merge that integrates the pulled history" solves 90% of the "third
+party validation" issue.
+
+With the signed tags approach, you could push out these signed tags you
+get from lieutenants, but there are quite a few things that need to happen
+for it to be usable:
+
+ - You or your lieutenants do not want to keep these tags in your working
+   repository, to be listed in "git tag -l". They are ephemeral to you and
+   your lieutenant, even though they have to be permanent for third
+   party auditors.
+
+ - Normal users of your project do not want to see them in "git tag -l"
+   either.
+
+ - Responses to "git fetch" and "git ls-remote" produced by "git
+   upload-pack" do need to (optionally) include them to allow third party
+   auditors to ask for them.
+
+I wonder if an approach like the following, in addition to the three
+things I listed above, may give us a workable solution:
+
+ * "git fetch linus v3.0" called by "git pull --verify linus v3.0" fetches
+   the v3.0 unpeeled into FETCH_HEAD, GPG verifies it, creates
+   refs/audit/$u, before running "git merge". $u is derived from v3.0
+   (given tag), the identity of the GPG signer, and perhaps timestamp to
+   make it both identifiable and unique under refs/audit/ hierarchy.
+
+ * You "git push origin". This causes refs/audit/* refs that point at
+   commits in the transferred history to auto-follow, just like the
+   current "git fetch $there $src:$dst" causes refs/tags/* auto-follow.
+   The refs/audit/* hierarchy in your public repository will be populated
+   by lieutenant signatures.
+
+ * (Optional) You may have signed "git tag -s 'Linux v3.2' v3.2 master"
+   before you push origin out, or you may have not. Currently, you do have
+   to "git push origin v3.2" separately if you did. The above auto-follow
+   could be extended to push refs/tags/* hierarchy to eliminate this step
+   as well.
+
+Note that because of the way "upload-pack" protocol is structured, the
+first response from "upload-pack" after it gets connection is the
+advertisement of refs, and there is no way for "fetch-pack" to ask for
+customized refs advertisement to it. So for this to work without incurring
+undue overhead for normal users, we would need to exclude refs/audit/*
+from the normal ref advertisement (i.e. "ls-remote" does not see it) so
+that "git fetch" by casual users will not have to wait for megabytes of
+ref advertisements before issuing its first "want" request. Probably we
+can change "upload-pack" to advertise only refs/heads/*, refs/tags/*, and
+HEAD by default, and a protocol extension could be added to ask for other
+hierarchies for specialized needs like third party auditors.
+
+BUT.
+
+This does not allow third party auditors to audit how sub-subsystem
+histories came into your lieutenants' history unless you also fetch from
+your lieutenants in "auditor" mode to retrieve their refs/audit/* refs to
+be propagated to your public repository, which all of us involved in this
+thread know you wouldn't bother if it is an additional manual step (and I
+personally do not think I would bother if I were you).
+
+So the audit trail will end at one level unless we have even more complex
+arrangements. The auditors know the history up to some point in the past
+came from you (your last signed tag at release time, which some people may
+feel a bit too sparse for auditing purposes when a security incident like
+that one happens in between releases), and they know subhistories of what
+you merged came from your direct lieutenants (the refs/audit/* tags the
+above change allowed you to forward automatically when you published), but
+they have to take the word of your direct lieutenants at face value.
+
+I do not know if that is acceptable for $DAYJOB types, though.
