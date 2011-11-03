@@ -1,53 +1,76 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: Jeff King <peff@peff.net>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Wed, 2 Nov 2011 19:31:00 -0700
-Message-ID: <CA+55aFzbNxTn83DdQd9cVpDujNYEdEP0Aimv5k1hCD0ebTDzcQ@mail.gmail.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+Date: Wed, 2 Nov 2011 22:55:32 -0400
+Message-ID: <20111103025532.GB9492@sigill.intra.peff.net>
+References: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+ <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+ <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
  <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com> <CAJo=hJsXvSyB65KBp8sfciT=h5uZSqSUdxkpWtZJRtr4hXAh5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJo=hJsXvSyB65KBp8sfciT=h5uZSqSUdxkpWtZJRtr4hXAh5A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <git-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+Sender: git-owner@vger.kernel.org
 To: Shawn Pearce <spearce@spearce.org>
-Cc: Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Nov 2, 2011 at 7:14 PM, Shawn Pearce <spearce@spearce.org> wrote:
->
-> <rant>
+On Wed, Nov 02, 2011 at 06:02:37PM -0700, Shawn O. Pearce wrote:
 
-I'm answering this separately, because it's a separate rant.
+> > So I really think that signing the top commit itself is fundamentally wrong.
+> 
+> I really disagree. I like the signed commit approach. It allows for a
+> lot more workflows than just providing a way for you to validate a
+> pull from a trusted lieutenant. Debian/Gentoo folks want a way to sign
+> every commit in their workflow. Just because you don't want that and
+> think its crazy doesn't mean its not a valid workflow for that
+> community and is something Git shouldn't support. I never use `git
+> stash`. I hate the damn command. Yet its still there. I just choose
+> not to use it. Junio's gpgsig header on each commit is also optional,
+> and communities/contributors can choose to use (or ignore) the feature
+> as they need to.
 
-It's also totally bogus, but whatever.
+Stop for a minute and think about what it _means_ to sign a commit. Is
+it saying "I wrote this commit?" Or "I think this commit is good?" Or "I
+think all of the history leading to this is good?" It's obviously going
+to be a per-project thing, but it's very constricting.  Leaving aside
+all of the workflow issues Linus brought up (but which I do agree with),
+think about what it would mean for Linus to fetch a commit from a
+lieutenant and then sign it. Whatever it means, it can really only be
+_one_ thing.
 
-> Get over it. Add the fucking empty commit to show the flow of a
-> change. Stop forcing every fucking contributor to rebase/rewrite his
-> commits just so someone higher up in the food chain can wank with
-> their SOB line.
+But big projects that are interested in signatures probably want to say
+more. They want to say "this developer really wrote this commit". They
+want to say "QA passed this commit". They want to say "the history up to
+here looks good". And so on.
 
-Shawn, stop using whatever drugs you are using.
+But they can't say those things without binding some data to the commit
+(i.e., making a certificate saying "this commit passed QA").  Data which
+might only make sense to assert much later than the commit is written.
 
-NOBODY EVER REBASES ANYTHING FOR SIGNED-OFF-BY.
+So you're going to need to support detached commit signatures in some
+form anyway to make everybody happy. Which isn't to say in-commit
+signatures are wrong, but they are just one tool in a toolbox.
 
-If they do, they are doing things very very wrong.
+Personally, I think the only thing that makes sense to assert inside a
+commit itself is that you are the author, and the author line of the key
+should match the email UID of the signing key. And then anything you
+want to say about _other_ people's commits (or even your own commits,
+but later) should come in the form of detached signatures with some
+content.
 
-Signed-off-by: is *purely* for sending patches by email. No git
-operations involved. None. Nada. Zilch. No rebasing involved, because
-there's not even a git repository involved, for chissake!
+That's how signed tags work. It's not just Linus signing a commit. It's
+Linus signing a binding between a commit and the statement "this is
+v2.6.28". The only thing wrong with the signed tag model for more
+general use is that you need some way of naming and organizing large
+numbers of tags (e.g., several per commit if you have things like QA
+signatures).
 
-Once something is in git, it's not signed off on - there should be a
-sign-off-chain from the author to the committer, and that's it.
-Anything else would be crazy.
-
-So stop the crazy rants. Stop with the bad drugs. Seriously. You're
-acting crazy.
-
-                          Linus
+-Peff
