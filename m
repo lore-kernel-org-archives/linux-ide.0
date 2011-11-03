@@ -1,9 +1,8 @@
-From: Jeff King <peff@peff.net>
+From: "Robin H. Johnson" <robbat2@gentoo.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Wed, 2 Nov 2011 22:55:32 -0400
-Message-ID: <20111103025532.GB9492@sigill.intra.peff.net>
-References: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
+Date: Thu, 3 Nov 2011 03:16:49 +0000
+Message-ID: <robbat2-20111103T030225-511273733Z@orbis-terrarum.net>
+References: <1320049150.8283.19.camel@dabdike>
  <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
  <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
  <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
@@ -12,65 +11,63 @@ References: <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
  <7vk47jld5s.fsf@alter.siamese.dyndns.org>
  <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
  <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+ <20111103025532.GB9492@sigill.intra.peff.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <git-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
-Sender: git-owner@vger.kernel.org
-To: Shawn Pearce <spearce@spearce.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <20111103025532.GB9492@sigill.intra.peff.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff King <peff@peff.net>, Git Mailing List <git@vger.kernel.org>
+Cc: Shawn Pearce <spearce@spearce.org>, Linus Torvalds <torvalds@linux-foundation.org>, Junio C Hamano <gitster@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Nov 02, 2011 at 06:02:37PM -0700, Shawn O. Pearce wrote:
+On Wed, Nov 02, 2011 at 10:55:32PM -0400,  Jeff King wrote:
+> But big projects that are interested in signatures probably want to say
+> more. They want to say "this developer really wrote this commit". They
+> want to say "QA passed this commit". They want to say "the history up to
+> here looks good". And so on.
+On the Gentoo side, we've also pondered the question of:
+author != committer != pusher
+And how to preserve many signatures from sources.
 
-> > So I really think that signing the top commit itself is fundamentally wrong.
+We're on a central repo model, with some ~250 committers.
+
+I was originally primarily after the push certificates/signed-push, and
+recording that data in the notes, but that still has the problems of
+third-party verification as mentioned in the thread.
+
+If we require that the tip of every push is a signed commit via a hook,
+we get knowledge of the pushers. Either your real commit itself is
+signed, or you have a signed merge commit on top, or you have a signed
+empty commit. In all of the cases, I can verify your signature at the
+recv hook. Having signed push in this case has a benefit that you could
+ship the data as a bundle, or async from the signing.
+
+The QA value of multiple signatures per commit is also valuable, to
+assert SOB WITHOUT altering the commit. I see spearce's rant and the
+retort, and really think there needs to be a middle ground - some of
+commits that are coming from pulls, and not getting additional SOB,
+could really benefit from them being recorded (I see them on mailing
+lists, but not introduced since that would break 'stable' IDs).
+
+> But they can't say those things without binding some data to the commit
+> (i.e., making a certificate saying "this commit passed QA").  Data which
+> might only make sense to assert much later than the commit is written.
 > 
-> I really disagree. I like the signed commit approach. It allows for a
-> lot more workflows than just providing a way for you to validate a
-> pull from a trusted lieutenant. Debian/Gentoo folks want a way to sign
-> every commit in their workflow. Just because you don't want that and
-> think its crazy doesn't mean its not a valid workflow for that
-> community and is something Git shouldn't support. I never use `git
-> stash`. I hate the damn command. Yet its still there. I just choose
-> not to use it. Junio's gpgsig header on each commit is also optional,
-> and communities/contributors can choose to use (or ignore) the feature
-> as they need to.
+> So you're going to need to support detached commit signatures in some
+> form anyway to make everybody happy. Which isn't to say in-commit
+> signatures are wrong, but they are just one tool in a toolbox.
+I was proposing that Git supports _all_ of these models:
+- signed commits
+- signed pushes (via certs)
+- whatever signed lightweight tag idea happens
+- existing annotated tags
 
-Stop for a minute and think about what it _means_ to sign a commit. Is
-it saying "I wrote this commit?" Or "I think this commit is good?" Or "I
-think all of the history leading to this is good?" It's obviously going
-to be a per-project thing, but it's very constricting.  Leaving aside
-all of the workflow issues Linus brought up (but which I do agree with),
-think about what it would mean for Linus to fetch a commit from a
-lieutenant and then sign it. Whatever it means, it can really only be
-_one_ thing.
+Choices. Each with their own costs and advantages.
 
-But big projects that are interested in signatures probably want to say
-more. They want to say "this developer really wrote this commit". They
-want to say "QA passed this commit". They want to say "the history up to
-here looks good". And so on.
-
-But they can't say those things without binding some data to the commit
-(i.e., making a certificate saying "this commit passed QA").  Data which
-might only make sense to assert much later than the commit is written.
-
-So you're going to need to support detached commit signatures in some
-form anyway to make everybody happy. Which isn't to say in-commit
-signatures are wrong, but they are just one tool in a toolbox.
-
-Personally, I think the only thing that makes sense to assert inside a
-commit itself is that you are the author, and the author line of the key
-should match the email UID of the signing key. And then anything you
-want to say about _other_ people's commits (or even your own commits,
-but later) should come in the form of detached signatures with some
-content.
-
-That's how signed tags work. It's not just Linus signing a commit. It's
-Linus signing a binding between a commit and the statement "this is
-v2.6.28". The only thing wrong with the signed tag model for more
-general use is that you need some way of naming and organizing large
-numbers of tags (e.g., several per commit if you have things like QA
-signatures).
-
--Peff
+-- 
+Robin Hugh Johnson
+Gentoo Linux: Developer, Trustee & Infrastructure Lead
+E-Mail     : robbat2@gentoo.org
+GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
