@@ -1,7 +1,7 @@
 From: Junio C Hamano <gitster@pobox.com>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Fri, 04 Nov 2011 13:16:08 -0700
-Message-ID: <7vlirvbq47.fsf@alter.siamese.dyndns.org>
+Date: Fri, 04 Nov 2011 14:12:36 -0700
+Message-ID: <7vaa8bbni3.fsf@alter.siamese.dyndns.org>
 References: <20111026202235.GA20928@havoc.gtf.org>
  <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
@@ -16,45 +16,87 @@ References: <20111026202235.GA20928@havoc.gtf.org>
  <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
  <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
  <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <CA+55aFzstE-+NzfSAWMEokB7-rYsZOcZe9Ez-LxPNOKnciJ3UQ@mail.gmail.com>
+ <7v62j1gitn.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFzstE-+NzfSAWMEokB7-rYsZOcZe9Ez-LxPNOKnciJ3UQ@mail.gmail.com> (Linus
- Torvalds's message of "Wed, 2 Nov 2011 19:19:34 -0700")
+In-Reply-To: <7v62j1gitn.fsf@alter.siamese.dyndns.org> (Junio C. Hamano's
+ message of "Thu, 03 Nov 2011 11:16:37 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
+Junio C Hamano <gitster@pobox.com> writes:
 
-> So I suspect we should just apply this patch, but I didn't check
-> exacty what the failed tests are - except for the first one, that just
-> compares against a canned response (and the canned response should
-> just be changed).
+> Linus Torvalds <torvalds@linux-foundation.org> writes:
+>
+>>   [torvalds@i5 linux]$ git fetch
+>> git://github.com/rustyrussell/linux.git
+>> rusty@rustcorp.com.au-v3.1-8068-g5087a50
+>>   fatal: Couldn't find remote ref rusty@rustcorp.com.au-v3.1-8068-g5087a50
+>>
+>> oops. Ok, so his tag naming is *really* akward. Whatever.
+>
+> It is not "Whatever".
+>
+>  $ git fetch git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git v3.0
+>  fatal: Couldn't find remote ref v3.0
+>
+> I do not think we ever DWIMmed fetch refspecs to prefix refs/tags/, so it
+> is not the naming but fetching tags without saying "git fetch tag v3.0"
+> (which IIRC was your invention long time ago). 
 
-After applying your patch and running
+If we really wanted to go this route, the attached single-liner should be
+sufficient for the DWIMmery.
 
-$ perl -pi -e 'if (/\ttag /) {
-    s/754b754407bf032e9a2f9d5a9ad05ca79a6b228f/6c9dec2b923228c9ff994c6cfe4ae16c12408dc5/;
-    s/0567da4d5edd2ff4bb292a465ba9e64dcad9536b/c61a82b60967180544e3c19f819ddbd0c9f89899/;
-    s/6134ee8f857693b96ff1cc98d3e2fd62b199e5a8/525b7fb068d59950d185a8779dc957c77eed73ba/;
-}' t/t5515/fetch.*
+Note that the DWIMmery rules for "git fetch" and local "git rev-parse" are
+still different even after this patch.
 
-to unpeel the three tags used in the test 5515 that used to expect
-FETCH_HEAD to have peeled tags to expect tag objects themselves instead,
-all tests passes.
+"git log frotz" can DWIM to "refs/remotes/frotz/HEAD", but in the remote
+access context, "git fetch frotz" to fetch what the other side happened to
+have fetched from what it calls 'frotz' (which may not have any relation
+to what we consider is 'frotz') the last time would not make much sense,
+so the fetch rules table does not include "refs/remotes/%.*s/HEAD".
 
-> although I suspect it was just a fairly mindless case of "make it a
-> commit, because the merge needs the commit" - never mind that the
-> merge would peel it anyway.
+When the user really wants to, "git fetch $there remotes/frotz/HEAD" would
+let her do so anyway, so this is not about safety or security; it merely
+is about confusion avoidance and discouraging meaningless usage.
 
-I am 100% sure the machinery that comes up with the tree (or half-merged
-conflicted state) does not mind being fed tags. After all they need to
-peel them down to commits for common ancestor discovery, and they need to
-further peel them down to trees to perform three-way merges.
+Specifically, it is _not_ about ambiguity avoidance. A name that would
+become ambiguous if we use the same rules table for both fetch and local
+rev-parse would be ambiguous locally at the remote side.
 
-However we would need to audit so that we do not accidentally record the
-tag object names in the "parent" headers in the merge commits, which is
-what I'll be doing next.
+If we really wanted to, we could 
+
+	#define ref_fetch_rules ref_rev_parse_rules
+ 
+in cache.h and remove the array's declaration from cache.h and its
+definition from refs.c to really unify the two, but I haven't thought
+things through.
+
+-- >8 --
+Subject: [PATCH] fetch: allow "git fetch $there v1.0" to fetch a tag
+
+You can already do so with "git fetch $there tags/v1.0" but if it is not
+ambiguous there is no reason to force users to type more.
+
+Signed-off-by: Junio C Hamano <gitster@pobox.com>
+---
+ refs.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/refs.c b/refs.c
+index e69ba26..670a7b3 100644
+--- a/refs.c
++++ b/refs.c
+@@ -1001,6 +1001,7 @@ const char *ref_rev_parse_rules[] = {
+ const char *ref_fetch_rules[] = {
+ 	"%.*s",
+ 	"refs/%.*s",
++	"refs/tags/%.*s",
+ 	"refs/heads/%.*s",
+ 	NULL
+ };
+-- 
+1.7.8.rc0.108.g71b5ec
