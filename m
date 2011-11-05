@@ -1,110 +1,62 @@
-From: Junio C Hamano <gitster@pobox.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Fri, 04 Nov 2011 23:36:51 -0700
-Message-ID: <7v1utn9it8.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
+Date: Sat, 5 Nov 2011 09:41:25 -0700
+Message-ID: <CA+55aFy0gA0ROSyE03h6Lw0zn4B4j-oEFBmffOcWs6NfyYy8JA@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
  <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
- <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
- <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org>
- <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
  <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
  <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
  <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org>
- <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
+ <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+ <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com> <7v1utn9it8.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com> (Linus
- Torvalds's message of "Thu, 3 Nov 2011 12:09:55 -0700")
-Sender: git-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:47118 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253Ab1KEQlr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Nov 2011 12:41:47 -0400
+In-Reply-To: <7v1utn9it8.fsf@alter.siamese.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Junio C Hamano <gitster@pobox.com>
+Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
-
-> On Thu, Nov 3, 2011 at 11:52 AM, Junio C Hamano <gitster@pobox.com> wrote:
->>
->> Ahh, sorry for the noise. I realize that we already have a winner, namely,
->> the proposal outlined in your message I was responding to.
+On Fri, Nov 4, 2011 at 11:36 PM, Junio C Hamano <gitster@pobox.com> wrote:
 >
-> No, no, don't consider my "put in the merge message" a winner at all.
->
-> I personally dislike it, and don't really think it's a wonderful thing
-> at all. I really does have real downsides:
->
->  - internal signatures really *are* a disaster for maintenance. You
-> can never fix them if they need fixing (and "need fixing" may well be
-> "you want to re-sign things after a repository format change")
->
->  - they are ugly as heck, and you really don't want to see them in
-> 99.999% of all cases.
->
-> So putting those things iin the merge commit message may have some
-> upsides, but it has tons of downsides too.
->
-> I think your refs/audit/ idea should be given real thought, because
-> maybe that's the right idea.
+> About the ugliness of the merge commit log messages, you have already
+> learned to ignore them with "log --no-merges" ;-)
 
-While I agree that re-signing is a problem, I do not see it as a huge
-issue. In your "SHA-1 to SHA-256 transtion" scenario, the conversion is a
-flag day event in the hopefully fairly distant (in the git timescale)
-future, and I am reasonably sure that by that time we would already have
-infrastructure updates necessary to support huge number of refs, including
-the "lazily scan only the refs necessary" and the "some refs are optional
-in advertisement" topics that are useful for other purposes.
+Absolutely not. I look at merges all the time. I never use
+"--no-merges" except when I'm doing certain statistics (ie "How many
+real changes do we have") or when I do release files.
 
-In the worst case, even if we used your "merge commit records the merged
-tag as the record of requested pull" design today, we could choose not to
-rewrite these in-merge-commit signatures when the conversion becomes
-necessary. Instead, the conversion procedure can prepare a mapping table
-between the old SHA-1 and the rewritten SHA-256, and contributors can
-prepare detached signature for the mappings of their own commits after
-verifying that the conversion produced what they are happy with. And then
-we store concatenation of these detached signatures in a blob to help
-future third party auditors to audit these (by-then) historical commits.
+But I actually think it's important that people write *good* merge
+messages. I've berated some people for it when they just have
 
-About the ugliness of the merge commit log messages, you have already
-learned to ignore them with "log --no-merges" ;-) and the material the
-patch series I sent out adds are at the end, so "/^commit.*$" in less
-would hopefully work well enough in "log --no-merges" as well.
+    Merge branch 'origin'
 
-Because the refs/audit/ approach requires too much infrastructure we still
-do not have today, and workflow elements are not fully worked out
-(e.g. propagating audit trails fully from sub-sub-sub-...-lieutenants
-upwards is tricky as I outlined in the other message), I think we should
-start from a design that we can see how it would work now.
+in their commit message, because I think a merge commit should say why
+it happened or what it brought in.
 
-With the posted series, the workflow would become something like this:
+> and the material the
+> patch series I sent out adds are at the end, so "/^commit.*$" in less
+> would hopefully work well enough in "log --no-merges" as well.
 
-  contributor$ work work work
+I agree that being at the end helps, but I do a lot of "git log
+ORIG_HEAD.." etc, and I don't do a lot of "/^commit" searching.
 
-  contributor$ git tag -s -m 'Signed pull
+The "/commit" thing I do tends to be because I do "git log -p" to see
+patches, but at the same time am not going to read through
+everything..
 
-  This series is to allow the integrator to pull from contributors
-  by specifying a signed tag, not the tip of the branch, and verify
-  the authenticity of the series while merging' for-linus
+So I'd really like some way to not see it.
 
-  contributor$ git push public for-linus
+Ted suggested a NUL character in the commit message in front of the
+"hidden content". What do you think?
 
-  contributor$ git request-pull origin \
-          $(git config remote.public.url) for-linus >msg
-  contributor$ edit msg
-  contributor$ mail torvalds@...
-
-  integrator$ mail ;# read the pull request
-  integrator$ git pull git://github.com/contributor/linux.git for-linus
-   ... editor opens with the usual merge message, but with
-   ... the contents of the tag and the "GPG verify" result at
-   ... the end.
-
-It might make sense to also teach the "git tag" part somehow use branch
-description of the tip of branch being tagged to prime the tag message.
+                Linus
