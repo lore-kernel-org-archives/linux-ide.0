@@ -1,46 +1,63 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: Valdis.Kletnieks@vt.edu
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Sat, 5 Nov 2011 17:53:30 -0700
-Message-ID: <CA+55aFzxmDC407EDcm8MV55R7BnRhuxuTOyhZ-jyg2q39=NKfw@mail.gmail.com>
-References: <20111026202235.GA20928@havoc.gtf.org> <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike> <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org> <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
- <7v1utn9it8.fsf@alter.siamese.dyndns.org> <CA+55aFy0gA0ROSyE03h6Lw0zn4B4j-oEFBmffOcWs6NfyYy8JA@mail.gmail.com>
- <7vsjm2870k.fsf@alter.siamese.dyndns.org>
+Date: Mon, 07 Nov 2011 02:52:17 -0500
+Message-ID: <22879.1320652337@turing-police.cc.vt.edu>
+References: <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com> <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com> <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com> <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com> <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com> <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org> <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com> <20111104145908.GA3903@thunk.org>
+            <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43641 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397Ab1KFAxx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Nov 2011 20:53:53 -0400
-In-Reply-To: <7vsjm2870k.fsf@alter.siamese.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="==_Exmh_1320652337_7081P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: Your message of "Fri, 04 Nov 2011 08:14:52 PDT."
+             <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Ted Ts'o <tytso@mit.edu>, Junio C Hamano <gitster@pobox.com>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Junio C Hamano <junio@pobox.com>
-Cc: Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Sat, Nov 5, 2011 at 4:49 PM, Junio C Hamano <junio@pobox.com> wrote:
->
-> You do not have to resort to NUL; we could just stuff whatever you do not
-> need to see but needs to be left *intact* in the new header fields just
-> like the embedded GPG signatures are stored in signed commits.
+--==_Exmh_1320652337_7081P
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Agreed, [ details removed ] that sounds perfect. And makes it easy to
-get at if you want to with just "git cat-file commit" - without ever
-really being visible to people who don't care. And having it visible
-in the editor with '#' means that the user who does the merge gets to
-see what actually ended up being put in there, along with the fact
-that yes, it verified correctly.
+On Fri, 04 Nov 2011 08:14:52 PDT, Linus Torvalds said:
+> On Fri, Nov 4, 2011 at 7:59 AM, Ted Ts'o <tytso=40mit.edu> wrote:
+> > Note that a repository format change will break a bunch of other
+> > things as well, including references in commit descriptions (=22This
+> > fixes a regression introduced in commit 42DEADBEEF=22)
 
-So I think I really like that approach - it seems to solve all problems.
+> No they won't. Not if you do it right. It's easy enough to
+> automatically replace the SHA1's in the description, the same way we
+> replace everything else.
 
-               Linus
+OK.. I'll bite.  How do you disambiguate a '42deadbeef' in the changelog =
+part
+of a commit as being a commit ID, as opposed to being an address in a tra=
+ceback
+or something similar? Yes, I know you only change the ones that actually =
+map to
+a commit ID, but I'd not be surprised if by now we've got enough commits =
+and
+stack tracebacks in the git history that we'll birthday-paradox ourselves=
+ into
+a false-positive in an automatic replacement.
+
+(And it's OK to say =22the 3 stack tracebacks in changelogs we just mangl=
+ed can
+just go jump=22, but it does need at least a few seconds consideration..)=
+
+
+
+--==_Exmh_1320652337_7081P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFOt44xcC3lWbTT17ARAqdSAKD8BKeDESG5NM0dZXjFR9OMibTRYgCfZP8A
+6Xk6cPcaVy+tbJOahk+ING8=
+=/1pP
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1320652337_7081P--
