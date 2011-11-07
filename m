@@ -1,63 +1,58 @@
-From: Valdis.Kletnieks@vt.edu
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 07 Nov 2011 02:52:17 -0500
-Message-ID: <22879.1320652337@turing-police.cc.vt.edu>
-References: <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com> <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com> <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com> <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com> <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com> <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org> <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com> <20111104145908.GA3903@thunk.org>
-            <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
+Date: Mon, 7 Nov 2011 08:24:34 -0800
+Message-ID: <CA+55aFyKocxDUD2YhhBhfDzp+WHOddOZ_3mfqwADri86aUOUFQ@mail.gmail.com>
+References: <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+ <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+ <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+ <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
+ <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+ <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
+ <20111104145908.GA3903@thunk.org> <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
+ <22879.1320652337@turing-police.cc.vt.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1320652337_7081P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: Your message of "Fri, 04 Nov 2011 08:14:52 PDT."
-             <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
+In-Reply-To: <22879.1320652337@turing-police.cc.vt.edu>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
+To: Valdis.Kletnieks@vt.edu
 Cc: Ted Ts'o <tytso@mit.edu>, Junio C Hamano <gitster@pobox.com>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
---==_Exmh_1320652337_7081P
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Sun, Nov 6, 2011 at 11:52 PM,  <Valdis.Kletnieks@vt.edu> wrote:
+>
+> OK.. I'll bite. =A0How do you disambiguate a '42deadbeef' in the chan=
+gelog part
+> of a commit as being a commit ID, as opposed to being an address in a=
+ traceback
+> or something similar? Yes, I know you only change the ones that actua=
+lly map to
+> a commit ID, but I'd not be surprised if by now we've got enough comm=
+its and
+> stack tracebacks in the git history that we'll birthday-paradox ourse=
+lves into
+> a false-positive in an automatic replacement.
 
-On Fri, 04 Nov 2011 08:14:52 PDT, Linus Torvalds said:
-> On Fri, Nov 4, 2011 at 7:59 AM, Ted Ts'o <tytso=40mit.edu> wrote:
-> > Note that a repository format change will break a bunch of other
-> > things as well, including references in commit descriptions (=22This
-> > fixes a regression introduced in commit 42DEADBEEF=22)
+I don't think we are quite there yet. And (sadly) most of the commit
+ID's in the history are 7 hex characters, because that used to be the
+default git abbreviation. So there is unlikely to be any real
+conflicts.
 
-> No they won't. Not if you do it right. It's easy enough to
-> automatically replace the SHA1's in the description, the same way we
-> replace everything else.
+If we do miss one or two, that will be sad and embarrassing, but is
+not a real problem in practice.
 
-OK.. I'll bite.  How do you disambiguate a '42deadbeef' in the changelog =
-part
-of a commit as being a commit ID, as opposed to being an address in a tra=
-ceback
-or something similar? Yes, I know you only change the ones that actually =
-map to
-a commit ID, but I'd not be surprised if by now we've got enough commits =
-and
-stack tracebacks in the git history that we'll birthday-paradox ourselves=
- into
-a false-positive in an automatic replacement.
+We probably could add various heuristics (the SHA1 values are *often*
+preceded by the string "commit"), and a really good import would also
+have somebody at least visually inspecting ones that other heuristics
+say might be debatable (for example - because they have 8 hex digits
+and there are other numbers around them that were *not* converted),
+but in the end perfection is the enemy of good. It's not really worth
+the headache to worry about *all* the cases, if you can cheaply and
+simply get 99+% right.
 
-(And it's OK to say =22the 3 stack tracebacks in changelogs we just mangl=
-ed can
-just go jump=22, but it does need at least a few seconds consideration..)=
+And I think the 99% is almost trivial. While the last 1% may or may
+not be worth worrying about.
 
-
-
---==_Exmh_1320652337_7081P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFOt44xcC3lWbTT17ARAqdSAKD8BKeDESG5NM0dZXjFR9OMibTRYgCfZP8A
-6Xk6cPcaVy+tbJOahk+ING8=
-=/1pP
------END PGP SIGNATURE-----
-
---==_Exmh_1320652337_7081P--
+               Linus
