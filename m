@@ -1,58 +1,70 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Mon, 7 Nov 2011 08:24:34 -0800
-Message-ID: <CA+55aFyKocxDUD2YhhBhfDzp+WHOddOZ_3mfqwADri86aUOUFQ@mail.gmail.com>
-References: <7vwrbjlj5r.fsf@alter.siamese.dyndns.org> <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org> <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org> <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
- <20111104145908.GA3903@thunk.org> <CA+55aFw6JJDkkSJnp=X4cQuibXMHVBgbQ99iPqEbd7p_7J=VfQ@mail.gmail.com>
- <22879.1320652337@turing-police.cc.vt.edu>
+From: Marcos Souza <marcos.mage@gmail.com>
+Subject: Re: [PATCH 3/3] drivers: ata: libata-scsi.c: Add function parameter documentation
+Date: Tue, 8 Nov 2011 12:31:55 -0300
+Message-ID: <CAGkUK2sbgPuetQnb+GCLK5JjL8CTe+b19tDMv7ECMuP2sjsUDw@mail.gmail.com>
+References: <1320112216-23810-1-git-send-email-marcos.mage@gmail.com>
+	<4EB036AD.8030707@xenotime.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <22879.1320652337@turing-police.cc.vt.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Ted Ts'o <tytso@mit.edu>, Junio C Hamano <gitster@pobox.com>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:49432 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab1KHPb5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2011 10:31:57 -0500
+In-Reply-To: <4EB036AD.8030707@xenotime.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: jgarzik@pobox.com, linux-doc@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Nov 6, 2011 at 11:52 PM,  <Valdis.Kletnieks@vt.edu> wrote:
+ping?
+
+2011/11/1, Randy Dunlap <rdunlap@xenotime.net>:
+> On 10/31/2011 06:50 PM, Marcos Paulo de Souza wrote:
+>> Add the documentation of parameters of ata_change_queue_depth to sil=
+ence
+>> the warning of make xmldocs
+>>
+>> Signed-off-by: Marcos paulo de Souza <marcos.mage@gmail.com>
 >
-> OK.. I'll bite. =A0How do you disambiguate a '42deadbeef' in the chan=
-gelog part
-> of a commit as being a commit ID, as opposed to being an address in a=
- traceback
-> or something similar? Yes, I know you only change the ones that actua=
-lly map to
-> a commit ID, but I'd not be surprised if by now we've got enough comm=
-its and
-> stack tracebacks in the git history that we'll birthday-paradox ourse=
-lves into
-> a false-positive in an automatic replacement.
+> Acked-by: Randy Dunlap <rdunlap@xenotime.net>
+>
+> Thanks.
+>
+>> ---
+>>  drivers/ata/libata-scsi.c |    4 ++++
+>>  1 files changed, 4 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 19ba770..5eceb23 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1216,6 +1216,10 @@ void ata_scsi_slave_destroy(struct scsi_devic=
+e
+>> *sdev)
+>>
+>>  /**
+>>   *	__ata_change_queue_depth - helper for ata_scsi_change_queue_dept=
+h
+>> + *	@ap: ATA port to which the device change the queue depth
+>> + *	@sdev: SCSI device to configure queue depth for
+>> + *	@queue_depth: new queue depth
+>> + *	@reason: calling context
+>>   *
+>>   *	libsas and libata have different approaches for associating a sd=
+ev to
+>>   *	its ata_port.
+>
+>
+> --
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your c=
+ode ***
+>
 
-I don't think we are quite there yet. And (sadly) most of the commit
-ID's in the history are 7 hex characters, because that used to be the
-default git abbreviation. So there is unlikely to be any real
-conflicts.
 
-If we do miss one or two, that will be sad and embarrassing, but is
-not a real problem in practice.
+--=20
+Marcos Paulo de Souza
 
-We probably could add various heuristics (the SHA1 values are *often*
-preceded by the string "commit"), and a really good import would also
-have somebody at least visually inspecting ones that other heuristics
-say might be debatable (for example - because they have 8 hex digits
-and there are other numbers around them that were *not* converted),
-but in the end perfection is the enemy of good. It's not really worth
-the headache to worry about *all* the cases, if you can cheaply and
-simply get 99+% right.
-
-And I think the 99% is almost trivial. While the last 1% may or may
-not be worth worrying about.
-
-               Linus
+*Porque uma vida sem desafios =E9 uma vida sem raz=E3o.*
