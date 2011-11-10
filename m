@@ -1,60 +1,56 @@
-From: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
-Subject: [PATCH] libata: fix compile error when CONFIG_ATA_BMDMA is not defined
-Date: Thu, 10 Nov 2011 16:10:26 +0000
-Message-ID: <1320941426-1100-1-git-send-email-asbjorn@asbjorn.biz>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.asbjorn.biz ([217.195.185.3]:47465 "EHLO mail.asbjorn.biz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757633Ab1KJQM0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2011 11:12:26 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
+Date: Thu, 10 Nov 2011 20:28:59 +0400
+Message-ID: <20111110162859.GA7088@oksana.dev.rtsoft.ru>
+References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
+ <20111110152606.GB3207@oksana.dev.rtsoft.ru>
+ <20111110153816.239af1d7@lxorguk.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111110153816.239af1d7@lxorguk.ukuu.org.uk>
+Sender: linux-next-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>, Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-3.2-rc1 and Linus' tree at 5e442a49, fails to compile,
-with CONFIG_SFF defined without CONFIG_ATA_BMDMA.
+Drivers should not use NO_IRQ; moreover, some architectures don't
+have it nowadays. '0' is the 'no irq' case.
 
-The error was introduced by:
-  [ c2036033 ] libata: reduce ata_pci_[sff,bmdma]_init_one() size
-
-Note this patch have only been compile tested.
-
-Signed-off-by: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
+Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+Acked-by: Alan Cox <alan@linux.intel.com>
 ---
- drivers/ata/libata-sff.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 63d5327..82b1237 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2533,10 +2533,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
- 	if (rc)
- 		goto out;
+On Thu, Nov 10, 2011 at 03:38:16PM +0000, Alan Cox wrote:
+> On Thu, 10 Nov 2011 19:26:06 +0400
+> Anton Vorontsov <cbouatmailru@gmail.com> wrote:
+> 
+> > Drivers should not use NO_IRQ; moreover, some architectures don't
+> > have it nowadays. '0' is the 'no irq' case.
+> > 
+> > Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+> 
+> Acked-by: Alan Cox <alan@linux.intel.com>
+
+In case if we don't want a "band-aid fix" for 3.2, here is the patch
+that just does the proper fix (w/ a risk to break minor architectures).
+
+ drivers/ata/pata_of_platform.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index a72ab0d..2a472c5 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -52,7 +52,7 @@ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
+ 	}
  
-+	#ifdef CONFIG_ATA_BMDMA
- 	if (bmdma)
- 		/* prepare and activate BMDMA host */
- 		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+ 	ret = of_irq_to_resource(dn, 0, &irq_res);
+-	if (ret == NO_IRQ)
++	if (!ret)
+ 		irq_res.start = irq_res.end = 0;
  	else
-+	#endif /* CONFIG_ATA_BMDMA */
- 		/* prepare and activate SFF host */
- 		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
- 	if (rc)
-@@ -2544,10 +2546,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
- 	host->private_data = host_priv;
- 	host->flags |= hflags;
- 
-+	#ifdef CONFIG_ATA_BMDMA
- 	if (bmdma) {
- 		pci_set_master(pdev);
- 		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
- 	} else
-+	#endif /* CONFIG_ATA_BMDMA */
- 		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
- out:
- 	if (rc == 0)
+ 		irq_res.flags = 0;
 -- 
-1.7.7.1
-
+1.7.5.3
