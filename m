@@ -1,72 +1,101 @@
-From: Marc Branchaud <marcnarc@xiplink.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 10:23:05 -0500
-Message-ID: <4EBBEC59.3020502@xiplink.com>
-References: <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>  <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>  <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>  <7vk47jld5s.fsf@alter.siamese.dyndns.org>  <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>  <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>  <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>  <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>  <CAJo=hJsXvSyB65KBp8sfciT=h5uZSqSUdxkpWtZJRtr4hXAh5A@mail.gmail.com>  <CA+55aFyXg32mko8TOGCfGHpr3jHBEgcKiK7HdVwq0Wez0fAs9A@mail.gmail.com>  <20111103032205.GA25888@pompeji.miese-zwerge.org>  <CA+55aFyG4VuiRN3kcyDVF4sw7b89m-2bOBeQLOGWTcd9o3akzQ@mail.gmail.com> <1320933118.17392.23.c
- amel@i7.infradead.org>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: [PATCH 1/2] of/irq: Get rid of NO_IRQ usage
+Date: Thu, 10 Nov 2011 19:25:41 +0400
+Message-ID: <20111110152541.GA3207@oksana.dev.rtsoft.ru>
+References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <1320933118.17392.23.camel@i7.infradead.org>
-Sender: git-owner@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jochen Striepe <jochen@tolot.escape.de>, Shawn Pearce <spearce@spearce.org>, Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
+Sender: linux-next-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-ide@vger.kernel.org
 
-On 11-11-10 08:51 AM, David Woodhouse wrote:
-> On Wed, 2011-11-02 at 21:13 -0700, Linus Torvalds wrote:
->> No, my main objection to saving the data is that it's ugly and it's
->> redundant. Sure, in practice you can check the signatures later fine
->> (with the rare exceptions you mention), but even when you can do it,
->> what's the big upside? 
-> 
-> Another objection (although it may not be insurmountable) is that it's
-> not necessarily *entirely* clear what's being signed.
+PPC32/64 defines NO_IRQ to zero, so no problems expected.
+ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
+which returns correct ('0') value in 'no irq' case. So everything
+should be fine.
 
-I think this is a non-issue as far as the implementation is concerned.  That
-is, the question exists regardless of what actual bits get (hashed and)
-encrypted by a private key.  Furthermore, the answer will depend on who's
-using the signatures and in what context, and it's not appropriate for the
-git tool to make assumptions about those things.
+Other arches might break if some of their OF drivers rely on NO_IRQ
+being not 0. If so, the drivers must be fixed, finally.
 
-> In the simple case where I clone your tree, make a few commits with my
-> Signed-off-by:, sign a tag and then ask you to pull, that's easy enough.
-> I'm vouching for what I committed, and not for everything that was in
-> your tree beforehand.
-> 
-> But what if I'm working on top of someone else's published git tree?
-> Does a signed tag at the top of *my* work imply that I'm vouching for
-> all of theirs too?
+Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+---
+ drivers/of/irq.c |   30 ++++++++++++++++++------------
+ 1 files changed, 18 insertions(+), 12 deletions(-)
 
-<philosophy>
-
-It all depends on what you mean by "vouch for".
-
-You obviously thought that the 3rd-party repo was good for something,
-otherwise why did you base your work on it in the first place?  So maybe
-you're just vouching for the 3rd-party repo being good enough for what you're
-trying to do.
-
-Or, maybe you've done a thorough analysis of the 3rd-party code and are ready
-to certify it as completely memory-leak-free or something.
-
-Or or, maybe you're only making a statement about the commits that you've
-authored yourself.  (You probably want to individually sign each of those
-commits in this case.)
-
-These sorts of issues have been debated on PKI mailing lists ad nauseum.  I
-think the best approach is that if you want your signature to have a
-particular meaning, then put that into some text that's part of what's being
-signed.  Let other humans read that text and make their own decisions.
-
-</philosophy>
-
-And whatever the case, the software that makes and validates the signatures
-shouldn't make any assertions about how to interpret good or bad signatures.
- (Yes, other software could interpret meanings according to some criteria,
-and that software could exist alongside or be incorporated into the basic
-digital signature software, but the interpretation software is doing a
-different job.)
-
-		M.
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 6d3dd39..2dd4937 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -26,11 +26,6 @@
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ 
+-/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
+-#ifndef NO_IRQ
+-#define NO_IRQ 0
+-#endif
+-
+ /**
+  * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
+  * @device: Device node of the device whose interrupt is to be mapped
+@@ -42,12 +37,23 @@
+ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
+ {
+ 	struct of_irq oirq;
++	int ret = 0;
+ 
+ 	if (of_irq_map_one(dev, index, &oirq))
+-		return NO_IRQ;
+-
+-	return irq_create_of_mapping(oirq.controller, oirq.specifier,
+-				     oirq.size);
++		goto no_irq;
++
++	ret = irq_create_of_mapping(oirq.controller, oirq.specifier,
++				    oirq.size);
++no_irq:
++#ifdef NO_IRQ
++#if NO_IRQ != 0
++	if (ret == NO_IRQ)
++		pr_warn("Hit NO_IRQ case for your arch. Drivers might expect "
++			"NO_IRQ, but we return 0. If anything breaks, driver "
++			"have to be fixed.\n");
++#endif
++#endif
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
+ 
+@@ -345,7 +351,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
+ 
+ 	/* Only dereference the resource if both the
+ 	 * resource and the irq are valid. */
+-	if (r && irq != NO_IRQ) {
++	if (r && irq) {
+ 		r->start = r->end = irq;
+ 		r->flags = IORESOURCE_IRQ;
+ 		r->name = dev->full_name;
+@@ -363,7 +369,7 @@ int of_irq_count(struct device_node *dev)
+ {
+ 	int nr = 0;
+ 
+-	while (of_irq_to_resource(dev, nr, NULL) != NO_IRQ)
++	while (of_irq_to_resource(dev, nr, NULL))
+ 		nr++;
+ 
+ 	return nr;
+@@ -383,7 +389,7 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
+ 	int i;
+ 
+ 	for (i = 0; i < nr_irqs; i++, res++)
+-		if (of_irq_to_resource(dev, i, res) == NO_IRQ)
++		if (!of_irq_to_resource(dev, i, res))
+ 			break;
+ 
+ 	return i;
+-- 
+1.7.5.3
