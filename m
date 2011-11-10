@@ -1,63 +1,86 @@
-From: Junio C Hamano <junio@pobox.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 07:15:15 -0800
-Message-ID: <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
- <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
- <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org>
- <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org>
- <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
- <7v4nydurzh.fsf@alter.siamese.dyndns.org>
- <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
+From: Anton Vorontsov <cbouatmailru@gmail.com>
+Subject: [PATCH] ata: Fix build error in pata_of_platform (NO_IRQ usage)
+Date: Thu, 10 Nov 2011 19:18:52 +0400
+Message-ID: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
+References: <20111011201127.455df266dcbffb1d621f8576@canb.auug.org.au>
+ <4E94A920.40503@xenotime.net>
+ <4E987829.3080104@xenotime.net>
+ <20111110135703.GA23609@elte.hu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com> (Johan
- Herland's message of "Thu, 10 Nov 2011 09:02:53 +0100")
-Sender: git-owner@vger.kernel.org
-To: Johan Herland <johan@herland.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111110135703.GA23609@elte.hu>
+Sender: linux-next-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
-Johan Herland <johan@herland.net> writes:
+This patch makes a band-aid fix the following build failure:
 
-> On Wed, Nov 9, 2011 at 18:26, Junio C Hamano <gitster@pobox.com> wrot=
-e:
->> =C2=A0- "git notes" is represented as a commit that records a tree t=
-hat holds
->> =C2=A0 the entire mapping from commit to its annotations, and the on=
-ly way to
->> =C2=A0 transferr it is to send it together with its history as a who=
-le. It
->> =C2=A0 does not have the nice auto-following property that transfers=
- only the
->> =C2=A0 relevant annotations.
->
-> True. However, consider these mitigating factors:
-> ...
->
-> My point is that although "notes" might end up transferring more
-> annotations than strictly necessary, I believe that in practice all t=
-he
-> notes being transferred are already (or will soon become) relevant.
+  CC      drivers/ata/pata_of_platform.o
+drivers/ata/pata_of_platform.c: In function 'pata_of_platform_probe':
+drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
+drivers/ata/pata_of_platform.c:55:13: note: each undeclared identifier is reported only once for each function it appears in
 
-Sorry, but I do not think you are considering what would happen when yo=
-u
-have many branches with different purposes, whose commits near tips wil=
-l
-never get merged with each other. "automatic following" semantics like
-what "git fetch" does for signed tags is absolutely necessary in such a
-case, and the above are not mitigating factors at all in that context.
+The proper fix (stop OF code from returning NO_IRQ values) is pending.
+
+Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+---
+
+On Thu, Nov 10, 2011 at 02:57:03PM +0100, Ingo Molnar wrote:
+[...]
+> > > drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
+> > 
+> > [adding Author: Anton]
+> > 
+> > Build error still present in linux-next of 20111014.
+> 
+> This build failure regression report was ignored twice and then 
+> pushed upstream and is still unfixed a month after the initial 
+> report. Upstream now fails to build on like 25% of x86 configs.
+> 
+> What's going on with this bug guys?
+
+Here is the story:
+
+- NO_IRQ is evil[1], AFAIR the trend is to remove its usage completely;
+- Sane arches (x86) don't use it at all, or have it defined to 0
+  (PPC32/64).
+- On another arches it is either -1 or whatever random value;
+- The NO_IRQ disease spreads despite our willingness, even within
+  the new OF code.
+
+The new irq domain stuff (that is used on ARM) always returns 0
+in 'no irq' case, so we may easily remove it.
+
+So the proper fix would be two-fold: for OF and for that driver.
+But this is for 3.3 kernels. I'll send the two patches as follow-ups.
+
+In the meantime, the band-aid (for 3.2) is down below.
+
+[1]
+http://lkml.org/lkml/2005/11/22/159
+http://lkml.org/lkml/2005/11/22/227
+
+ drivers/ata/pata_of_platform.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index a72ab0d..f99e17b 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -16,6 +16,11 @@
+ #include <linux/of_platform.h>
+ #include <linux/ata_platform.h>
+ 
++/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
++#ifndef NO_IRQ
++#define NO_IRQ 0
++#endif
++
+ static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
+ {
+ 	int ret;
+-- 
+1.7.5.3
