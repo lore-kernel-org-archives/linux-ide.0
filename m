@@ -1,86 +1,49 @@
-From: Anton Vorontsov <cbouatmailru@gmail.com>
-Subject: [PATCH] ata: Fix build error in pata_of_platform (NO_IRQ usage)
-Date: Thu, 10 Nov 2011 19:18:52 +0400
-Message-ID: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
-References: <20111011201127.455df266dcbffb1d621f8576@canb.auug.org.au>
- <4E94A920.40503@xenotime.net>
- <4E987829.3080104@xenotime.net>
- <20111110135703.GA23609@elte.hu>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata-pmp: add schedule timeout to support some PMP
+ cards
+Date: Thu, 10 Nov 2011 07:20:36 -0800
+Message-ID: <20111110152036.GB27258@google.com>
+References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
+ <20111103160759.GI4417@google.com>
+ <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-next-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63380 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751136Ab1KJPUm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 10:20:42 -0500
+Received: by ggnb2 with SMTP id b2so3065264ggn.19
+        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2011 07:20:41 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20111110135703.GA23609@elte.hu>
-Sender: linux-next-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org
+In-Reply-To: <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Huang Changming-R66093 <r66093@freescale.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This patch makes a band-aid fix the following build failure:
+Hello,
 
-  CC      drivers/ata/pata_of_platform.o
-drivers/ata/pata_of_platform.c: In function 'pata_of_platform_probe':
-drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
-drivers/ata/pata_of_platform.c:55:13: note: each undeclared identifier is reported only once for each function it appears in
-
-The proper fix (stop OF code from returning NO_IRQ values) is pending.
-
-Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
----
-
-On Thu, Nov 10, 2011 at 02:57:03PM +0100, Ingo Molnar wrote:
-[...]
-> > > drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
+On Thu, Nov 10, 2011 at 08:07:47AM +0000, Huang Changming-R66093 wrote:
+> > Ummm... We can't really issue commands after failure without going
+> > through recovery.  For ahci, it probably works.  For other controllers,
+> > it may not.  Where does this delay come from?  Is there any other way
+> > to wait for device readiness?
 > > 
-> > [adding Author: Anton]
-> > 
-> > Build error still present in linux-next of 20111014.
+> It is very bad.  I have two PMP cards, one (5 ports) can work well
+> without the delay time before reading PMP SCR, but the other (15
+> ports) must delay enough time before reading the PMP SCR.  It seems
+> there is no other way to detect the device readiness.
 > 
-> This build failure regression report was ignored twice and then 
-> pushed upstream and is still unfixed a month after the initial 
-> report. Upstream now fails to build on like 25% of x86 configs.
-> 
-> What's going on with this bug guys?
+> Maybe I will just delay some time before send SCR command, if it
+> failed, then we will report this error to driver?
 
-Here is the story:
+Hmmm... I'm curious what's causing the problem.  Which port multiplier
+are we talking about?  If it's specific to that PMP, we can add quirk
+to support it.  Does the problem also happen when the PMP is connected
+to a different controller?
 
-- NO_IRQ is evil[1], AFAIR the trend is to remove its usage completely;
-- Sane arches (x86) don't use it at all, or have it defined to 0
-  (PPC32/64).
-- On another arches it is either -1 or whatever random value;
-- The NO_IRQ disease spreads despite our willingness, even within
-  the new OF code.
+Thanks.
 
-The new irq domain stuff (that is used on ARM) always returns 0
-in 'no irq' case, so we may easily remove it.
-
-So the proper fix would be two-fold: for OF and for that driver.
-But this is for 3.3 kernels. I'll send the two patches as follow-ups.
-
-In the meantime, the band-aid (for 3.2) is down below.
-
-[1]
-http://lkml.org/lkml/2005/11/22/159
-http://lkml.org/lkml/2005/11/22/227
-
- drivers/ata/pata_of_platform.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index a72ab0d..f99e17b 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -16,6 +16,11 @@
- #include <linux/of_platform.h>
- #include <linux/ata_platform.h>
- 
-+/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
-+#ifndef NO_IRQ
-+#define NO_IRQ 0
-+#endif
-+
- static int __devinit pata_of_platform_probe(struct platform_device *ofdev)
- {
- 	int ret;
 -- 
-1.7.5.3
+tejun
