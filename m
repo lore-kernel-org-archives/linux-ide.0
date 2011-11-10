@@ -1,191 +1,61 @@
-From: Johan Herland <johan@herland.net>
+From: David Woodhouse <dwmw2@infradead.org>
 Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 09:02:53 +0100
-Message-ID: <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
-References: <20111026202235.GA20928@havoc.gtf.org>
-	<1319969101.5215.20.camel@dabdike>
-	<CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
-	<1320049150.8283.19.camel@dabdike>
-	<CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
-	<7vy5w1ow90.fsf@alter.siamese.dyndns.org>
-	<CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
-	<7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
-	<CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
-	<7vk47jld5s.fsf@alter.siamese.dyndns.org>
-	<CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
-	<CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
-	<CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
-	<CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
-	<7v62j1gitn.fsf@alter.siamese.dyndns.org>
-	<7vvcr1f38j.fsf@alter.siamese.dyndns.org>
-	<CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
-	<7v4nydurzh.fsf@alter.siamese.dyndns.org>
+Date: Thu, 10 Nov 2011 13:51:58 +0000
+Message-ID: <1320933118.17392.23.camel@i7.infradead.org>
+References: <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+	 <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+	 <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+	 <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+	 <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+	 <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+	 <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+	 <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
+	 <CAJo=hJsXvSyB65KBp8sfciT=h5uZSqSUdxkpWtZJRtr4hXAh5A@mail.gmail.com>
+	 <CA+55aFyXg32mko8TOGCfGHpr3jHBEgcKiK7HdVwq0Wez0fAs9A@mail.gmail.com>
+	 <20111103032205.GA25888@pompeji.miese-zwerge.org>
+	 <CA+55aFyG4VuiRN3kcyDVF4sw7b89m-2bOBeQLOGWTcd9o3akzQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7v4nydurzh.fsf@alter.siamese.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Junio C Hamano <gitster@pobox.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:48674 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932574Ab1KJNwO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 08:52:14 -0500
+In-Reply-To: <CA+55aFyG4VuiRN3kcyDVF4sw7b89m-2bOBeQLOGWTcd9o3akzQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jochen Striepe <jochen@tolot.escape.de>, Shawn Pearce <spearce@spearce.org>, Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Nov 9, 2011 at 18:26, Junio C Hamano <gitster@pobox.com> wrote:
-> =C2=A0- "git notes" is represented as a commit that records a tree th=
-at holds
-> =C2=A0 the entire mapping from commit to its annotations, and the onl=
-y way to
-> =C2=A0 transferr it is to send it together with its history as a whol=
-e. It
-> =C2=A0 does not have the nice auto-following property that transfers =
-only the
-> =C2=A0 relevant annotations.
+On Wed, 2011-11-02 at 21:13 -0700, Linus Torvalds wrote:
+> No, my main objection to saving the data is that it's ugly and it's
+> redundant. Sure, in practice you can check the signatures later fine
+> (with the rare exceptions you mention), but even when you can do it,
+> what's the big upside? 
 
-True. However, consider these mitigating factors:
+Another objection (although it may not be insurmountable) is that it's
+not necessarily *entirely* clear what's being signed.
 
- - The annotations in question (the "signing" of commits) are all inten=
-ded to
-   be merged eventually (i.e. there is no reason for a developer to (af=
-ter the
-   fact) sign a commit that will never end up in the public record). Th=
-erefore,
-   most or all of the notes in the notes tree are already relevant, or
-will become
-   relevant in the near future (when the associated commits are merged)=
-=2E
+In the simple case where I clone your tree, make a few commits with my
+Signed-off-by:, sign a tag and then ask you to pull, that's easy enough.
+I'm vouching for what I committed, and not for everything that was in
+your tree beforehand.
 
- - Additionally, you could organize these notes into two (or more) note=
-s trees,
-   one for merged/official annotations, and one for unmerged/pending
-annotations.
-   Then make the relevant tools (e.g. "git merge") transfer notes from =
-one tree
-   to the other, thereby making sure that the "official" record only co=
-ntains
-   notes that are relevant to the merged history.
+But what if I'm working on top of someone else's published git tree?
+Does a signed tag at the top of *my* work imply that I'm vouching for
+all of theirs too?
 
- - Finally, there's always "git notes prune" to purge annotations for c=
-ommits
-   that ended up never being merged.
+In the case where the signature is ephemeral and only used for you to
+trust my pull request, the answer is simple: If that other work wasn't
+in your tree yet at the time I send my pull request, I'd damn well
+better be vouching for it when I ask you to pull it. Nothing new there.
 
-My point is that although "notes" might end up transferring more annota=
-tions
-than strictly necessary, I believe that in practice all the notes
-being transferred
-are already (or will soon become) relevant.
+But if we're keeping signatures around for auditing purposes, we'd
+better have a coherent answer to that question. One that isn't "a
+signature cover everything since the last commit with torvalds@ as the
+committer", if we want it to be useful for the general case.
 
-> =C2=A0+ "git notes" maps the commits to its annotations in the right =
-direction;
-> =C2=A0 the object name of an annotated object to its annotation.
->
-> In the longer term, I think we would need to extend the system in the
-> following way:
->
-> =C2=A0- Introduce a mapping machanism that can be locally used to map=
- names of
-> =C2=A0 the objects being annotated to names of other objects (most li=
-kely
-> =C2=A0 blobs but there is nothing that fundamentally prevents you fro=
-m
-> =C2=A0 annotating a commit with a tree). The current "git notes" migh=
-t be a
-> =C2=A0 perfectly suitable representation of this, or it may turn out =
-to be
-> =C2=A0 lacking (I haven't thought things through), but the important =
-point is
-> =C2=A0 that this "mapping store" is _local_. fsck, repack and prune n=
-eed to be
-> =C2=A0 told that objects that store the annotation are reachable from=
- the
-> =C2=A0 annotated objects.
+-- 
+dwmw2
 
-IMHO this is precisely what "git notes" does today.
-
-> =C2=A0- Introduce a protocol extension to transfer this mapping infor=
-mation for
-> =C2=A0 objects being transferred in an efficient way. When "rev-list =
---objects
-> =C2=A0 have..want" tells us that the receiving end (in either fetch/p=
-ush
-> =C2=A0 direction) would have an object at the end of the primary tran=
-sfer
-> =C2=A0 (note that I did not say "an object will be sent in this trans=
-fer
-> =C2=A0 transaction"; "have" does not come into the picture), we make =
-sure that
-> =C2=A0 missing annotations attached to the object is also transferred=
-, and new
-> =C2=A0 mapping is registered at the receiving end.
->
-> The detailed design for the latter needs more thought. The auto-follo=
-wing
-> of tags works even if nothing is being fetched in the primary transfe=
-r
-> (i.e. "git fetch" && "git fetch" back to back to update our origin/ma=
-ster
-> with the master at the origin) when a new tag is added to ancient par=
-t of
-> the history that leads to the master at the origin, but this is exact=
-ly
-> because the sending end advertises all the available tags and the obj=
-ects
-> they point at so that we can tell what new tags added to an old objec=
-t is
-> missing from the receiving end. This obviously would not scale well w=
-hen
-> we have tens of thousands of objects to annotate. Perhaps an entry in=
- the
-> "mapping store" would record:
->
-> =C2=A0- The object name of the object being annotated;
->
-> =C2=A0- The object name of the annotation;
->
-> =C2=A0- The "timestamp", i.e. when the association between the above =
-two was
-> =C2=A0 made--this can be local to the repository and a simple counter=
- would
-> =C2=A0 do.
->
-> and also maintain the last "timestamp" this repository sent annotatio=
-ns to
-> the remote (one timestamp per remote repository). When we push, we wo=
-uld
-> send annotations pertaining to the object reachable from what we are
-> pushing (not limited by what they already have, as the whole point of=
- this
-> exercise is to allow us to transfer annotations added to an object lo=
-ng
-> after the object was created and sent to the remote) that is newer th=
-an
-> that "timestamp". Similarly, when fetching, we would send the "timest=
-amp"
-> this repository last fetched annotations from the other end (which me=
-ans
-> we would need one such "timestamp" per remote repository) and let the
-> remote side decide the set of new annotations they added since we las=
-t
-> synched that are on objects reachable from what we "want".
->
-> Or something like that.
-
-You would also have to keep track of deleted annotations, to enable the=
- local
-side to delete an annotation corresponding to an already-deleted annota=
-tion
-on the remote side.
-
-Pretty soon, you end up having to record something similar to a DAG,
-describing the history of manipulating these annotations. At that point=
-, your
-"timestamp" calculation starts to look very similar to the "have..want"
-calculation already done when transferring "regular" refs. At which poi=
-nt you
-have a system that is very similar to what "git notes" does today...
-
-
-=2E..Johan
-
---=20
-Johan Herland, <johan@herland.net>
-www.herland.net
