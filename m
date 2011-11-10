@@ -1,38 +1,63 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: linux-next: Tree for Oct 11 (ata/pata_of_platform.c)
-Date: Thu, 10 Nov 2011 14:25:39 +0000
-Message-ID: <20111110142539.2d49a62e@lxorguk.ukuu.org.uk>
-References: <20111011201127.455df266dcbffb1d621f8576@canb.auug.org.au>
-	<4E94A920.40503@xenotime.net>
-	<4E987829.3080104@xenotime.net>
-	<20111110135703.GA23609@elte.hu>
+From: Junio C Hamano <junio@pobox.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Thu, 10 Nov 2011 07:15:15 -0800
+Message-ID: <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
+References: <20111026202235.GA20928@havoc.gtf.org>
+ <1319969101.5215.20.camel@dabdike>
+ <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+ <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+ <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+ <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+ <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+ <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+ <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
+ <7v62j1gitn.fsf@alter.siamese.dyndns.org>
+ <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+ <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
+ <7v4nydurzh.fsf@alter.siamese.dyndns.org>
+ <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from earthlight.etchedpixels.co.uk ([81.2.110.250]:60055 "EHLO
-	earthlight.etchedpixels.co.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752220Ab1KJOZl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 09:25:41 -0500
-In-Reply-To: <20111110135703.GA23609@elte.hu>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <git-owner@vger.kernel.org>
+In-Reply-To: <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com> (Johan
+ Herland's message of "Thu, 10 Nov 2011 09:02:53 +0100")
+Sender: git-owner@vger.kernel.org
+To: Johan Herland <johan@herland.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
 
-O> > > drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
-> > 
-> > 
-> > [adding Author: Anton]
-> > 
-> > Build error still present in linux-next of 20111014.
-> 
-> This build failure regression report was ignored twice and then 
-> pushed upstream and is still unfixed a month after the initial 
-> report. Upstream now fails to build on like 25% of x86 configs.
-> 
-> What's going on with this bug guys?
+Johan Herland <johan@herland.net> writes:
 
-As I've said before the driver shouldn't be trying to use "NO_IRQ", Not
-having an irq is 0 as in if (!dev->irq)
+> On Wed, Nov 9, 2011 at 18:26, Junio C Hamano <gitster@pobox.com> wrot=
+e:
+>> =C2=A0- "git notes" is represented as a commit that records a tree t=
+hat holds
+>> =C2=A0 the entire mapping from commit to its annotations, and the on=
+ly way to
+>> =C2=A0 transferr it is to send it together with its history as a who=
+le. It
+>> =C2=A0 does not have the nice auto-following property that transfers=
+ only the
+>> =C2=A0 relevant annotations.
+>
+> True. However, consider these mitigating factors:
+> ...
+>
+> My point is that although "notes" might end up transferring more
+> annotations than strictly necessary, I believe that in practice all t=
+he
+> notes being transferred are already (or will soon become) relevant.
 
+Sorry, but I do not think you are considering what would happen when yo=
+u
+have many branches with different purposes, whose commits near tips wil=
+l
+never get merged with each other. "automatic following" semantics like
+what "git fetch" does for signed tags is absolutely necessary in such a
+case, and the above are not mitigating factors at all in that context.
