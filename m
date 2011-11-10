@@ -1,41 +1,70 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: linux-next: Tree for Nov 9 (build errors summary)
-Date: Wed, 09 Nov 2011 12:55:24 -0800
-Message-ID: <4EBAE8BC.3040902@xenotime.net>
-References: <20111109135826.7f8270fb7151cf7939998942@canb.auug.org.au> <4EBAD329.1020309@xenotime.net> <20111109201136.GA5760@phenom.dumpdata.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111109201136.GA5760@phenom.dumpdata.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, x86 maintainers <x86@kernel.org>, Greg KH <gregkh@suse.de>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2 0/4] ata port runtime power management support
+Date: Thu, 10 Nov 2011 14:22:42 +0800
+Message-ID: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:30670 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753977Ab1KJGXA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Nov 2011 01:23:00 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-On 11/09/2011 12:11 PM, Konrad Rzeszutek Wilk wrote:
-> On Wed, Nov 09, 2011 at 11:23:21AM -0800, Randy Dunlap wrote:
->> On 11/08/2011 06:58 PM, Stephen Rothwell wrote:
->>> Hi all,
->>
->>
->> 1.  on i386, when CONFIG_SMP is not enabled:
->>
->> arch/x86/built-in.o: In function `hpet_setup_msi_irq':
->> hpet.c:(.text+0x12114): undefined reference to `arch_setup_hpet_msi'
->> hpet.c:(.text+0x12123): undefined reference to `destroy_irq'
->> arch/x86/built-in.o: In function `hpet_msi_capability_lookup':
->> hpet.c:(.text+0x121fb): undefined reference to `create_irq_nr'
->> arch/x86/built-in.o:(.data+0x314): undefined reference to `native_setup_msi_irqs'
->> arch/x86/built-in.o:(.data+0x318): undefined reference to `native_teardown_msi_irq'
-> 
-> This looks new. When did it start happening? err, Any idea which patch
-> might have caused this?
+Hi, all
 
-I first reported it on the Nov. 7 linux-next tree.
+These 4 patches add ata port runtime pm support.
 
-No idea what patch might be causing it, sorry.
+v1:
+https://lkml.org/lkml/2011/11/2/23
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+v2 is totally different than v1.
+
+v1 performed ata port runtime pm through scsi layer.
+Added hook to scsi host runtime suspend/resume code.
+
+I realized that this is not the natural way to do ata port runtime pm.
+It does not deal with the races with ata port system suspend/resume.
+
+With v2, ata port is made to be parent device of scsi host.
+
+Currently, the device tree of ata port and scsi host looks as below,
+
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+        |-- host0                               (scsi host)
+           |-- target0:0:0                      (scsi target)
+               |-- 0:0:0:0                      (disk)
+
+v2 changes it to:
+
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+            |-- host0                           (scsi host)
+                |-- target0:0:0                 (scsi target)
+                    |-- 0:0:0:0                 (disk)
+
+So ata port runtime PM will happen as:
+
+disk suspend --> scsi target suspend --> scsi host suspend --> ata port
+suspend.
+
+This is much cleaner and natural.
+
+Lin Ming (4):
+      ata: make ata port as parent device of scsi host
+      scsi: add flag to skip the runtime PM calls on host in EH
+      ata: add ata port system PM callbacks
+      ata: add ata port runtime PM callbacks
+
+ drivers/ata/libata-core.c      |  158 ++++++++++++++++++++++------------------
+ drivers/ata/libata-scsi.c      |    3 +-
+ drivers/ata/libata-transport.c |    5 +
+ drivers/ata/libata.h           |    1 +
+ drivers/scsi/scsi_error.c      |    5 +-
+ include/scsi/scsi_host.h       |    3 +
+ 6 files changed, 102 insertions(+), 73 deletions(-)
+
+Thanks for any comment.
+Lin Min
