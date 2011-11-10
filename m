@@ -1,75 +1,54 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH] libata: fix compile error when CONFIG_ATA_BMDMA is not
- defined
-Date: Thu, 10 Nov 2011 09:44:23 -0800
-Message-ID: <4EBC0D77.1000406@xenotime.net>
-References: <1320941426-1100-1-git-send-email-asbjorn@asbjorn.biz>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: linux-next: Tree for Oct 11 (ata/pata_of_platform.c)
+Date: Thu, 10 Nov 2011 13:18:58 -0500
+Message-ID: <4EBC1592.2060307@garzik.org>
+References: <20111011201127.455df266dcbffb1d621f8576@canb.auug.org.au> <4E94A920.40503@xenotime.net> <4E987829.3080104@xenotime.net> <20111110135703.GA23609@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:33070 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751960Ab1KJRpn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 12:45:43 -0500
-In-Reply-To: <1320941426-1100-1-git-send-email-asbjorn@asbjorn.biz>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20111110135703.GA23609@elte.hu>
+Sender: linux-next-owner@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/10/2011 08:10 AM, Asbjoern Sloth Toennesen wrote:
-> 3.2-rc1 and Linus' tree at 5e442a49, fails to compile,
-> with CONFIG_SFF defined without CONFIG_ATA_BMDMA.
-> 
-> The error was introduced by:
->   [ c2036033 ] libata: reduce ata_pci_[sff,bmdma]_init_one() size
-> 
-> Note this patch have only been compile tested.
-> 
-> Signed-off-by: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
-
-Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-Acked-by: Randy Dunlap <rdunlap@xenotime.net>
-
-Thanks.
-
-> ---
->  drivers/ata/libata-sff.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 63d5327..82b1237 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -2533,10 +2533,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
->  	if (rc)
->  		goto out;
->  
-> +	#ifdef CONFIG_ATA_BMDMA
->  	if (bmdma)
->  		/* prepare and activate BMDMA host */
->  		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
->  	else
-> +	#endif /* CONFIG_ATA_BMDMA */
->  		/* prepare and activate SFF host */
->  		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
->  	if (rc)
-> @@ -2544,10 +2546,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
->  	host->private_data = host_priv;
->  	host->flags |= hflags;
->  
-> +	#ifdef CONFIG_ATA_BMDMA
->  	if (bmdma) {
->  		pci_set_master(pdev);
->  		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
->  	} else
-> +	#endif /* CONFIG_ATA_BMDMA */
->  		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
->  out:
->  	if (rc == 0)
+On 11/10/2011 08:57 AM, Ingo Molnar wrote:
+>
+> * Randy Dunlap<rdunlap@xenotime.net>  wrote:
+>
+>> On 10/11/2011 01:37 PM, Randy Dunlap wrote:
+>>> On 10/11/11 02:11, Stephen Rothwell wrote:
+>>>> Hi all,
+>>>>
+>>>> The linux-next tree is now available from
+>>>> git://github.com/sfrothwell/linux-next.git as a temporary measure while
+>>>> the kernel.org servers are unavailable.
+>>>>
+>>>> It may also turn up on git.kernel.org (depending on the mirroring).  The
+>>>> patch set is still absent, however.
+>>>>
+>>>> Changes since 20111007:
+>>>>
+>>>> Removed tree: ide (at the maintainer's request)
+>>>
+>>>
+>>> drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
+>>
+>>
+>> [adding Author: Anton]
+>>
+>> Build error still present in linux-next of 20111014.
+>
+> This build failure regression report was ignored twice and then
+> pushed upstream and is still unfixed a month after the initial
+> report. Upstream now fails to build on like 25% of x86 configs.
+>
+> What's going on with this bug guys?
 
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Hum, I missed it in my LKML scans, and never got a CC.
+
+Will merge Anton's patch immediately...
+
+	Jeff
