@@ -1,51 +1,86 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH v2 0/4] ata port runtime power management support
-Date: Thu, 10 Nov 2011 17:02:41 +0100
-Message-ID: <CAPXgP12-CxDBa0cHtM+ejczR4131tnvq3N0WKQ5egt4hb31kPg@mail.gmail.com>
-References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com> <20111110153036.GC27258@google.com>
+From: Johan Herland <johan@herland.net>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Thu, 10 Nov 2011 17:03:17 +0100
+Message-ID: <CALKQrgdxEXQGKQ3t9Sh82=U933ypHNg8duyVmG9uJbg2iST5fw@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org>
+	<1319969101.5215.20.camel@dabdike>
+	<CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+	<1320049150.8283.19.camel@dabdike>
+	<CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+	<7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+	<CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+	<7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+	<CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+	<7vk47jld5s.fsf@alter.siamese.dyndns.org>
+	<CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+	<CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+	<CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+	<CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
+	<7v62j1gitn.fsf@alter.siamese.dyndns.org>
+	<7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+	<CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
+	<7v4nydurzh.fsf@alter.siamese.dyndns.org>
+	<CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
+	<7vaa84t3ek.fsf@alter.siamese.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:44396 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932857Ab1KJQDH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 11:03:07 -0500
-In-Reply-To: <20111110153036.GC27258@google.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Junio C Hamano <junio@pobox.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Lin Ming <ming.m.lin@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-On Thu, Nov 10, 2011 at 16:30, Tejun Heo <tj@kernel.org> wrote:
-> On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
-
->> v2 changes it to:
+On Thu, Nov 10, 2011 at 16:15, Junio C Hamano <junio@pobox.com> wrote:
+> Johan Herland <johan@herland.net> writes:
+>> On Wed, Nov 9, 2011 at 18:26, Junio C Hamano <gitster@pobox.com> wro=
+te:
+>>> =C2=A0- "git notes" is represented as a commit that records a tree =
+that holds
+>>> =C2=A0 the entire mapping from commit to its annotations, and the o=
+nly way to
+>>> =C2=A0 transferr it is to send it together with its history as a wh=
+ole. It
+>>> =C2=A0 does not have the nice auto-following property that transfer=
+s only the
+>>> =C2=A0 relevant annotations.
 >>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 /sys/devices/pci0000:00/0000:00:1f.2 =C2=
-=A0 =C2=A0(ahci controller)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- ata1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0(ata port)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- host0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- (scsi host)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- target0:=
-0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (scsi targe=
-t)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- |-- 0:0:0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (d=
-isk)
+>> True. However, consider these mitigating factors:
+>> ...
 >>
->> So ata port runtime PM will happen as:
-
->> This is much cleaner and natural.
+>> My point is that although "notes" might end up transferring more
+>> annotations than strictly necessary, I believe that in practice all =
+the
+>> notes being transferred are already (or will soon become) relevant.
 >
-> Yeah, I really like this approach. =C2=A0Nicely done. =C2=A0I *think*=
- the
-> hierarchy change should be okay but cc'ing Kay just in case.
+> Sorry, but I do not think you are considering what would happen when =
+you
+> have many branches with different purposes, whose commits near tips w=
+ill
+> never get merged with each other. "automatic following" semantics lik=
+e
+> what "git fetch" does for signed tags is absolutely necessary in such=
+ a
+> case, and the above are not mitigating factors at all in that context=
+=2E
 
-Looks good to me. All non-broken users of sysfs should be fine and
-cope with changes like this without any problem.
+What about having one notes ref per branch? If/when the branch is merge=
+d,
+the associated notes ref containing the annotations for the commits on =
+that
+branch would be merged as well (using "git notes merge").
 
-Kay
+Sure, using one notes ref per branch is more expensive than a single no=
+tes
+ref, but it's still cheaper than one ref per signed commit (which is wh=
+at we
+get when using annotated tags). And it prevents the added code and
+complexity of the timestamped mapping approach.
+
+
+=2E..Johan
+
+--=20
+Johan Herland, <johan@herland.net>
+www.herland.net
