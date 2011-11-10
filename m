@@ -1,54 +1,84 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v2 1/4] ata: make ata port as parent device of scsi host
-Date: Thu, 10 Nov 2011 14:22:43 +0800
-Message-ID: <1320906166-15459-2-git-send-email-ming.m.lin@intel.com>
-References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+From: Huang Changming-R66093 <r66093@freescale.com>
+Subject: RE: [PATCH] libata-pmp: add schedule timeout to support some PMP
+ cards
+Date: Thu, 10 Nov 2011 08:07:47 +0000
+Message-ID: <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
+References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
+ <20111103160759.GI4417@google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:34918 "EHLO
+	TX2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933957Ab1KJIHx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 03:07:53 -0500
+In-Reply-To: <20111103160759.GI4417@google.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Currently, the device tree of ata port and scsi host looks as below,
 
-        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
-        |-- ata1                                (ata port)
-        |-- host0                               (scsi host)
-           |-- target0:0:0                      (scsi target)
-               |-- 0:0:0:0                      (disk)
 
-This patch makes ata port as parent device of scsi host, then it becomes
+> -----Original Message-----
+> From: linux-ide-owner@vger.kernel.org [mailto:linux-ide-
+> owner@vger.kernel.org] On Behalf Of Tejun Heo
+> Sent: Friday, November 04, 2011 12:08 AM
+> To: Huang Changming-R66093
+> Cc: linux-ide@vger.kernel.org
+> Subject: Re: [PATCH] libata-pmp: add schedule timeout to support some
+> PMP cards
+> 
+> Hello,
+> 
+> On Mon, Oct 31, 2011 at 11:57:20AM +0800, r66093@freescale.com wrote:
+> > From: Jerry Huang <r66093freescale.com>
+> >
+> > With Freescale SATA controller, some PMP cards(e.g JMB393 PMP card)
+> > can't work on some platforms (e.g mpc837x, p1022):
+> > During PMP initialize, when reading the PMP SCR, we will observe the
+> > TIMEOUT error because PMP card SCR is not ready.
+> > Therefore, we need enough time to wait for the PMP card ready for SCR
+> read:
+> > 1. read the SCR after 1ms sleep,
+> > 2. if failed, looping until read success or timeout (count = 0)
+> ...
+> > diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+> index
+> > 224faab..18d5f8e 100644
+> > --- a/drivers/ata/libata-pmp.c
+> > +++ b/drivers/ata/libata-pmp.c
+> > @@ -140,11 +140,19 @@ int sata_pmp_qc_defer_cmd_switch(struct
+> > ata_queued_cmd *qc)  int sata_pmp_scr_read(struct ata_link *link, int
+> > reg, u32 *r_val)  {
+> >  	unsigned int err_mask;
+> > +	int count = 20;	/* try 20 times */
+> >
+> >  	if (reg > SATA_PMP_PSCR_CONTROL)
+> >  		return -EINVAL;
+> >
+> > -	err_mask = sata_pmp_read(link, reg, r_val);
+> > +	do {
+> > +		set_current_state(TASK_INTERRUPTIBLE);
+> > +		schedule_timeout(1 * HZ / 1000); /* sleep 1 msecond */
+> > +		set_current_state(TASK_RUNNING);
+> > +
+> > +		err_mask = sata_pmp_read(link, reg, r_val);
+> > +	} while ((count--) && err_mask);
+> 
+> Ummm... We can't really issue commands after failure without going
+> through recovery.  For ahci, it probably works.  For other controllers,
+> it may not.  Where does this delay come from?  Is there any other way
+> to wait for device readiness?
+> 
+It is very bad. 
+I have two PMP cards, one (5 ports) can work well without the delay time before reading PMP SCR, but the other (15 ports) must delay enough time before reading the PMP SCR.
+It seems there is no other way to detect the device readiness.
 
-        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
-        |-- ata1                                (ata port)
-            |-- host0                           (scsi host)
-                |-- target0:0:0                 (scsi target)
-                    |-- 0:0:0:0                 (disk)
+Maybe I will just delay some time before send SCR command, if it failed, then we will report this error to driver?
 
-With this change, the ata port runtime PM is easier.
-For example, the ata port runtime suspend will happen as,
+Thanks and Best Regards
+Jerry Huang
 
-disk suspend --> scsi target suspend --> scsi host suspend --> ata port
-suspend.
-
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 72a9770..4c2a524 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3394,7 +3394,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		 */
- 		shost->max_host_blocked = 1;
- 
--		rc = scsi_add_host(ap->scsi_host, ap->host->dev);
-+		rc = scsi_add_host(ap->scsi_host, &ap->tdev);
- 		if (rc)
- 			goto err_add;
- 	}
--- 
-1.7.2.5
