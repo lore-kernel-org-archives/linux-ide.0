@@ -1,54 +1,75 @@
-From: Junio C Hamano <junio@pobox.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 09:18:11 -0800
-Message-ID: <7v39dvuca4.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1319969101.5215.20.camel@dabdike>
- <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
- <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
- <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org>
- <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org>
- <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
- <7v4nydurzh.fsf@alter.siamese.dyndns.org>
- <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
- <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
- <CALKQrgdxEXQGKQ3t9Sh82=U933ypHNg8duyVmG9uJbg2iST5fw@mail.gmail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH] libata: fix compile error when CONFIG_ATA_BMDMA is not
+ defined
+Date: Thu, 10 Nov 2011 09:44:23 -0800
+Message-ID: <4EBC0D77.1000406@xenotime.net>
+References: <1320941426-1100-1-git-send-email-asbjorn@asbjorn.biz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <git-owner@vger.kernel.org>
-In-Reply-To: <CALKQrgdxEXQGKQ3t9Sh82=U933ypHNg8duyVmG9uJbg2iST5fw@mail.gmail.com> (Johan
- Herland's message of "Thu, 10 Nov 2011 17:03:17 +0100")
-Sender: git-owner@vger.kernel.org
-To: Johan Herland <johan@herland.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:33070 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751960Ab1KJRpn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 12:45:43 -0500
+In-Reply-To: <1320941426-1100-1-git-send-email-asbjorn@asbjorn.biz>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Johan Herland <johan@herland.net> writes:
+On 11/10/2011 08:10 AM, Asbjoern Sloth Toennesen wrote:
+> 3.2-rc1 and Linus' tree at 5e442a49, fails to compile,
+> with CONFIG_SFF defined without CONFIG_ATA_BMDMA.
+> 
+> The error was introduced by:
+>   [ c2036033 ] libata: reduce ata_pci_[sff,bmdma]_init_one() size
+> 
+> Note this patch have only been compile tested.
+> 
+> Signed-off-by: Asbjoern Sloth Toennesen <asbjorn@asbjorn.biz>
 
-> What about having one notes ref per branch? If/when the branch is merged,
-> the associated notes ref containing the annotations for the commits on that
-> branch would be merged as well (using "git notes merge").
+Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+Acked-by: Randy Dunlap <rdunlap@xenotime.net>
 
-That is a crude workaround that you could (with help from users) make it
-work, but it does not change the fact that the current mechanism to
-transfer and integrate notes across repositories is a bad match for what
-the "signed commit" type annotations wants to achieve. In fact, the need
-for such a workaround is an illustration of how bad a match the mechanism
-is.
+Thanks.
 
-When you merge a history that has commit A into another history that did
-not have that commit, the act of creating a merge commit itself should be
-enough to make the resulting history to contain that commit. The commit
-DAG already expresses it, and if a parallel "notes" mechanism needs to be
-futzed with to match that DAG, and command like "merge" needs to be told
-to help that process, that is a shortcoming of the "notes" mechanism.
+> ---
+>  drivers/ata/libata-sff.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 63d5327..82b1237 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -2533,10 +2533,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
+>  	if (rc)
+>  		goto out;
+>  
+> +	#ifdef CONFIG_ATA_BMDMA
+>  	if (bmdma)
+>  		/* prepare and activate BMDMA host */
+>  		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+>  	else
+> +	#endif /* CONFIG_ATA_BMDMA */
+>  		/* prepare and activate SFF host */
+>  		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
+>  	if (rc)
+> @@ -2544,10 +2546,12 @@ static int ata_pci_init_one(struct pci_dev *pdev,
+>  	host->private_data = host_priv;
+>  	host->flags |= hflags;
+>  
+> +	#ifdef CONFIG_ATA_BMDMA
+>  	if (bmdma) {
+>  		pci_set_master(pdev);
+>  		rc = ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
+>  	} else
+> +	#endif /* CONFIG_ATA_BMDMA */
+>  		rc = ata_pci_sff_activate_host(host, ata_sff_interrupt, sht);
+>  out:
+>  	if (rc == 0)
+
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
