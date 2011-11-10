@@ -1,32 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Thu, 10 Nov 2011 07:45:50 -0800
-Message-ID: <20111110154550.GF27258@google.com>
-References: <1320906166-15459-5-git-send-email-ming.m.lin@intel.com>
- <Pine.LNX.4.44L0.1111101036160.2338-100000@iolanthe.rowland.org>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [PATCH v2 0/4] ata port runtime power management support
+Date: Thu, 10 Nov 2011 17:02:41 +0100
+Message-ID: <CAPXgP12-CxDBa0cHtM+ejczR4131tnvq3N0WKQ5egt4hb31kPg@mail.gmail.com>
+References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com> <20111110153036.GC27258@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1111101036160.2338-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Lin Ming <ming.m.lin@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:44396 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932857Ab1KJQDH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 11:03:07 -0500
+In-Reply-To: <20111110153036.GC27258@google.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Lin Ming <ming.m.lin@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-On Thu, Nov 10, 2011 at 10:40:21AM -0500, Alan Stern wrote:
-> Are you really sure you want to keep this flag set throughout the 
-> lifetime of the port?
-> 
-> What happens if a command fails, then the port suspends, and then the 
-> error handler is invoked to take care of the failed command?
+On Thu, Nov 10, 2011 at 16:30, Tejun Heo <tj@kernel.org> wrote:
+> On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
 
-Runtime PM doesn't happen if the device is in use in any way, so
-there's no request flying in from upper layers.  While the port is
-suspended, qc's which which requested EH are short-circuited.  AFAICS,
-nothing is really wrong.
+>> v2 changes it to:
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 /sys/devices/pci0000:00/0000:00:1f.2 =C2=
+=A0 =C2=A0(ahci controller)
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- ata1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0(ata port)
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- host0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ (scsi host)
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- target0:=
+0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (scsi targe=
+t)
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ |-- 0:0:0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (d=
+isk)
+>>
+>> So ata port runtime PM will happen as:
 
-Thanks.
+>> This is much cleaner and natural.
+>
+> Yeah, I really like this approach. =C2=A0Nicely done. =C2=A0I *think*=
+ the
+> hierarchy change should be okay but cc'ing Kay just in case.
 
--- 
-tejun
+Looks good to me. All non-broken users of sysfs should be fine and
+cope with changes like this without any problem.
+
+Kay
