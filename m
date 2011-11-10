@@ -1,44 +1,52 @@
-From: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 13:52:45 +0000
-Message-ID: <1320933165.17392.24.camel@i7.infradead.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
-	 <1319969101.5215.20.camel@dabdike>
-	 <CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
-	 <1320049150.8283.19.camel@dabdike>
-	 <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
-	 <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
-	 <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
-	 <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
-	 <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: linux-next: Tree for Oct 11 (ata/pata_of_platform.c)
+Date: Thu, 10 Nov 2011 14:57:03 +0100
+Message-ID: <20111110135703.GA23609@elte.hu>
+References: <20111011201127.455df266dcbffb1d621f8576@canb.auug.org.au>
+ <4E94A920.40503@xenotime.net>
+ <4E987829.3080104@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48696 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932574Ab1KJNwu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2011 08:52:50 -0500
-In-Reply-To: <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4E987829.3080104@xenotime.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Junio C Hamano <gitster@pobox.com>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, 2011-11-01 at 14:21 -0700, Linus Torvalds wrote:
-> I hate how anonymous our branches are. Sure, we can use good names for
-> them, but it was a mistake to think we should describe the repository
-> (for gitweb), rather than the branch.
+
+* Randy Dunlap <rdunlap@xenotime.net> wrote:
+
+> On 10/11/2011 01:37 PM, Randy Dunlap wrote:
+> > On 10/11/11 02:11, Stephen Rothwell wrote:
+> >> Hi all,
+> >>
+> >> The linux-next tree is now available from
+> >> git://github.com/sfrothwell/linux-next.git as a temporary measure while
+> >> the kernel.org servers are unavailable.
+> >>
+> >> It may also turn up on git.kernel.org (depending on the mirroring).  The
+> >> patch set is still absent, however.
+> >>
+> >> Changes since 20111007:
+> >>
+> >> Removed tree: ide (at the maintainer's request)
+> > 
+> > 
+> > drivers/ata/pata_of_platform.c:55:13: error: 'NO_IRQ' undeclared (first use in this function)
 > 
-> Ok, "hate" is a strong word. I don't "hate" it. I don't even think
-> it's a major design issue. But I do think that it would have been
-> nicer if we had had some branch description model. 
+> 
+> [adding Author: Anton]
+> 
+> Build error still present in linux-next of 20111014.
 
-I actually quite like it. I take it as a hint: if the contents of a
-branch are *so* wildly different from the main repository that they need
-a different description, perhaps I should be using a separate repository
-instead of just a branch.
+This build failure regression report was ignored twice and then 
+pushed upstream and is still unfixed a month after the initial 
+report. Upstream now fails to build on like 25% of x86 configs.
 
--- 
-dwmw2
+What's going on with this bug guys?
 
+Thanks,
+
+	Ingo
