@@ -1,102 +1,102 @@
-From: Junio C Hamano <gitster@pobox.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Thu, 10 Nov 2011 21:26:35 -0800
-Message-ID: <7vd3czrzzo.fsf@alter.siamese.dyndns.org>
-References: <20111026202235.GA20928@havoc.gtf.org>
- <1320049150.8283.19.camel@dabdike>
- <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
- <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
- <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
- <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
- <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
- <7vk47jld5s.fsf@alter.siamese.dyndns.org>
- <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
- <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
- <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
- <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
- <7v62j1gitn.fsf@alter.siamese.dyndns.org>
- <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
- <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
- <7v4nydurzh.fsf@alter.siamese.dyndns.org>
- <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
- <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
- <CALKQrgdxEXQGKQ3t9Sh82=U933ypHNg8duyVmG9uJbg2iST5fw@mail.gmail.com>
- <7v39dvuca4.fsf@alter.siamese.dyndns.org>
- <CALKQrgcJmPHZG0bbgwoH6_htQODYVJtXYyHgSb_7qRKkJkb2Yw@mail.gmail.com>
+From: Romain DEGEZ <romain.degez@smartjog.com>
+Subject: Support for Promise FastTrack TX8660 SAS HBA via AHCI
+Date: Fri, 11 Nov 2011 16:43:20 +0100
+Message-ID: <4EBD4298.6080604@smartjog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CALKQrgcJmPHZG0bbgwoH6_htQODYVJtXYyHgSb_7qRKkJkb2Yw@mail.gmail.com> (Johan
- Herland's message of "Fri, 11 Nov 2011 02:17:58 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johan Herland <johan@herland.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp5-g21.free.fr ([212.27.42.5]:44458 "EHLO smtp5-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753540Ab1KKPnb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 Nov 2011 10:43:31 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Johan Herland <johan@herland.net> writes:
+Hi Jeff,
 
-> Given that we need an alternative way to transfer annotations between
-> repos (using auto-follow to select the relevant set of annotations, and
-> then transferring only those annotations): Can we leverage existing
-> functionality in "notes" where useful (e.g. using existing notes merge
-> strategies to deal with colliding annotations), while at the same time
-> extending the current "notes" feature with this alternative transfer
-> mechanism? FWIW, I expect there are other "notes" use cases that
-> would also prefer the auto-follow only-relevant transfer behavior.
->
-> So, how can we use "notes" to better support the transfer semantics you
-> suggest? The mapping from the object being annotated to the annotation
-> object is already contained in the notes tree, but the "timestamp" you
-> describe (needed to efficiently calculate the set of annotations to
-> auto-follow) is not [1].
+(Contacting you because you seem to be the maintainer of drivers/ata/ahci.c )
 
-Please do not take the "timestamp" part too seriously.
+I recently bought a Promise FastTrack TX8660 (8xSAS PCIe-x4 SAS HBA).
 
-I am starting to think that what we want in this context actually is very
-close to annotated tags. I said we want a mapping from an annotated object
-to "a set of other objects" that annotate it, but it was an unnecessary
-and premature generalization. There is no reason that these annotations
-have to be structured "Git" objects such as blobs and trees.
+The board can be switched either in RAID or in pure SAS JBOD mode by entering 
+into the firmware menu at boot time.
 
-A set of annotated tags that have the same value on their "object" field
-is a perfect match for "a set of annotations attached to a given object".
+I don't care about the RAID mode (I am using software raid) but sadly even the 
+direct SAS mode is not working out of the box using a vanilla kernel.
 
-We already know that using the real tags has its own problems coming from
-having to give each and every one of them unique names somewhere in the
-refs hierarchy (be it refs/tags/ or refs/audit/), but imagine if we
-somehow had a way to:
+I did a few googling and found this : 
+http://ubuntuforums.org/showpost.php?p=10379020&postcount=29
 
- - keep these annotated tags in the object store;
+Basically a guy saying that adding { PCI_VDEVICE(PROMISE, 0x3781), board_ahci } 
+in the ahci_pci_tbl[] in drivers/ata/ahci.c do the trick with this board.
 
- - keep them from getting pruned even if they are not referenced from
-   anywhere in refs/ hierarchy;
+I gave it a try and ... it just works.
 
- - given an object, efficiently enumerate such annotate tags that refer to
-   the object.
+Here is an lspci output of the card
+04:00.0 RAID bus controller: Promise Technology, Inc. Device 3781
+         Subsystem: Promise Technology, Inc. Device 3781
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 32 bytes
+         Interrupt: pin A routed to IRQ 16
+         Region 0: I/O ports at ac00 [size=128]
+         Region 2: I/O ports at a800 [size=256]
+         Region 3: Memory at efaff000 (32-bit, non-prefetchable) [size=4K]
+         Region 4: Memory at efac0000 (32-bit, non-prefetchable) [size=128K]
+         Region 5: Memory at efafc000 (32-bit, non-prefetchable) [size=8K]
+         Expansion ROM at efa80000 [disabled] [size=256K]
+         Capabilities: [50] Power Management version 2
+                 Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+         Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
+                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, 
+L1 <1us
+                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+                 DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
+                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency 
+L0 <128ns, L1 <2us
+                         ClockPM- Surprise- LLActRep- BwNot-
+                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk- 
+DLActive- BWMgmt- ABWMgmt-
+         Capabilities: [94] SATA HBA v1.0 BAR2 Offset=00000024
+         Capabilities: [100 v1] Advanced Error Reporting
+                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                 AERCap: First Error Pointer: 14, GenCap- CGenEn- ChkCap- ChkEn-
+         Capabilities: [140 v1] Virtual Channel
+                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                 Arb:    Fixed- WRR32- WRR64- WRR128-
+                 Ctrl:   ArbSelect=Fixed
+                 Status: InProgress-
+                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                         Status: NegoPending- InProgress-
+         Capabilities: [160 v1] Device Serial Number 00-00-00-02-00-00-00-01
+         Capabilities: [170 v1] Power Budgeting <?>
+         Kernel driver in use: ahci
 
-And then imagine that we are pushing history leading to a commit from one
-repository to another. Both repositories store these "anonymous" (that is
-what they are---they do not have a name in the refs/ hierarchy) tags.
 
-The two repositories can individually enumerate all these "anonymous" tags
-that annotate commits in the history that is being exchanged, and run a
-set reconciliation algorithm (e.g. [*1*]) to find out the anonymous tags
-that are missing from the recipient repository.
+Would it be possible to patch have this single line ?
 
-Such an approach does not require any timestamp.
+Thanks,
 
-My point is _not_ that the alternative in this message is superiour to the
-handwaving in my other message, but is that I think it may not be the best
-approach to think what needs to be added to "notes" to make it applicable
-for the problem we are solving.
-
-Rather, I think we should design how the overall system should look like
-(i.e. what property the resulting system should have) and then find out
-what is necessary in each part of the resulting solution (i.e. the list of
-"somehow had a way to..." above, plus "efficient set reconciliation").
-
-
-[Footnote]
-
-*1* What's the Difference? Efficient Set Reconciliation without Prior
-Context http://cseweb.ucsd.edu/~fuyeda/papers/sigcomm2011.pdf
+-- 
+RD
