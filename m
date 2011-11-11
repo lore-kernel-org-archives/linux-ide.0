@@ -1,34 +1,102 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v2 0/4] ata port runtime power management support
-Date: Fri, 11 Nov 2011 10:33:44 +0800
-Message-ID: <1320978824.32515.12.camel@minggr>
-References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
-	 <20111110153036.GC27258@google.com>
+From: Junio C Hamano <gitster@pobox.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Thu, 10 Nov 2011 21:26:35 -0800
+Message-ID: <7vd3czrzzo.fsf@alter.siamese.dyndns.org>
+References: <20111026202235.GA20928@havoc.gtf.org>
+ <1320049150.8283.19.camel@dabdike>
+ <CA+55aFz3=cbciRfTYodNhdEetXYxTARGTfpP9GL9RZK222XmKQ@mail.gmail.com>
+ <7vy5w1ow90.fsf@alter.siamese.dyndns.org>
+ <CA+55aFwL_s=DcT46dprcYVWEAm_=WkuTV6K9dAn3wc_bDQU8vA@mail.gmail.com>
+ <7vwrbjlj5r.fsf@alter.siamese.dyndns.org>
+ <CA+55aFx_rAA6TJkZn1Zvu6u9UjxnmTVt0HpMnvaE_q9Sx-jzPg@mail.gmail.com>
+ <7vk47jld5s.fsf@alter.siamese.dyndns.org>
+ <CA+55aFz7TeQQH3D4Tpp31cZYZoQKeK37jouo+2Kh61Wa07knfw@mail.gmail.com>
+ <CAJo=hJv5nAKH_ptYSWfMvFQv0Dj+naPXK35wSzKYkfPOYsWkxg@mail.gmail.com>
+ <CA+55aFx0oCd6-sh0psYxho-s=sHAK0RHXJHfLewRuUcdXzxZbg@mail.gmail.com>
+ <CA+55aFwXu=+HdQ5nW11Ts5p-V=KgpxjyagKqB+Xv+qBOEEWXvQ@mail.gmail.com>
+ <7v62j1gitn.fsf@alter.siamese.dyndns.org>
+ <7vvcr1f38j.fsf@alter.siamese.dyndns.org>
+ <CA+55aFyRawm9CoJMiEXDFCX4YTidPOiV4oqSS2d7nNv7Ecw8BQ@mail.gmail.com>
+ <7v4nydurzh.fsf@alter.siamese.dyndns.org>
+ <CALKQrgfZtELcK3H5ZYvmcW8RrtKMVRACFTvw3s5SidFvmFWkGw@mail.gmail.com>
+ <7vaa84t3ek.fsf@alter.siamese.dyndns.org>
+ <CALKQrgdxEXQGKQ3t9Sh82=U933ypHNg8duyVmG9uJbg2iST5fw@mail.gmail.com>
+ <7v39dvuca4.fsf@alter.siamese.dyndns.org>
+ <CALKQrgcJmPHZG0bbgwoH6_htQODYVJtXYyHgSb_7qRKkJkb2Yw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:16145 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751679Ab1KKCds (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Nov 2011 21:33:48 -0500
-In-Reply-To: <20111110153036.GC27258@google.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CALKQrgcJmPHZG0bbgwoH6_htQODYVJtXYyHgSb_7qRKkJkb2Yw@mail.gmail.com> (Johan
+ Herland's message of "Fri, 11 Nov 2011 02:17:58 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johan Herland <johan@herland.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Ted Ts'o <tytso@mit.edu>, Shawn Pearce <spearce@spearce.org>, git@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Thu, 2011-11-10 at 23:30 +0800, Tejun Heo wrote:
-> 
-> Yeah, I really like this approach.  Nicely done.  I *think* the
-> hierarchy change should be okay but cc'ing Kay just in case.
-> 
->  Acked-by: Tejun Heo <tj@kernel.org>
+Johan Herland <johan@herland.net> writes:
 
-Thanks!
+> Given that we need an alternative way to transfer annotations between
+> repos (using auto-follow to select the relevant set of annotations, and
+> then transferring only those annotations): Can we leverage existing
+> functionality in "notes" where useful (e.g. using existing notes merge
+> strategies to deal with colliding annotations), while at the same time
+> extending the current "notes" feature with this alternative transfer
+> mechanism? FWIW, I expect there are other "notes" use cases that
+> would also prefer the auto-follow only-relevant transfer behavior.
+>
+> So, how can we use "notes" to better support the transfer semantics you
+> suggest? The mapping from the object being annotated to the annotation
+> object is already contained in the notes tree, but the "timestamp" you
+> describe (needed to efficiently calculate the set of annotations to
+> auto-follow) is not [1].
 
-> 
-> Thanks.
-> 
+Please do not take the "timestamp" part too seriously.
+
+I am starting to think that what we want in this context actually is very
+close to annotated tags. I said we want a mapping from an annotated object
+to "a set of other objects" that annotate it, but it was an unnecessary
+and premature generalization. There is no reason that these annotations
+have to be structured "Git" objects such as blobs and trees.
+
+A set of annotated tags that have the same value on their "object" field
+is a perfect match for "a set of annotations attached to a given object".
+
+We already know that using the real tags has its own problems coming from
+having to give each and every one of them unique names somewhere in the
+refs hierarchy (be it refs/tags/ or refs/audit/), but imagine if we
+somehow had a way to:
+
+ - keep these annotated tags in the object store;
+
+ - keep them from getting pruned even if they are not referenced from
+   anywhere in refs/ hierarchy;
+
+ - given an object, efficiently enumerate such annotate tags that refer to
+   the object.
+
+And then imagine that we are pushing history leading to a commit from one
+repository to another. Both repositories store these "anonymous" (that is
+what they are---they do not have a name in the refs/ hierarchy) tags.
+
+The two repositories can individually enumerate all these "anonymous" tags
+that annotate commits in the history that is being exchanged, and run a
+set reconciliation algorithm (e.g. [*1*]) to find out the anonymous tags
+that are missing from the recipient repository.
+
+Such an approach does not require any timestamp.
+
+My point is _not_ that the alternative in this message is superiour to the
+handwaving in my other message, but is that I think it may not be the best
+approach to think what needs to be added to "notes" to make it applicable
+for the problem we are solving.
+
+Rather, I think we should design how the overall system should look like
+(i.e. what property the resulting system should have) and then find out
+what is necessary in each part of the resulting solution (i.e. the list of
+"somehow had a way to..." above, plus "efficient set reconciliation").
 
 
+[Footnote]
+
+*1* What's the Difference? Efficient Set Reconciliation without Prior
+Context http://cseweb.ucsd.edu/~fuyeda/papers/sigcomm2011.pdf
