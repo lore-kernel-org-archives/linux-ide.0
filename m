@@ -1,102 +1,62 @@
-From: Romain DEGEZ <romain.degez@smartjog.com>
-Subject: Support for Promise FastTrack TX8660 SAS HBA via AHCI
-Date: Fri, 11 Nov 2011 16:43:20 +0100
-Message-ID: <4EBD4298.6080604@smartjog.com>
+From: Felipe Contreras <felipe.contreras@gmail.com>
+Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
+Date: Sat, 12 Nov 2011 21:31:10 +0200
+Message-ID: <CAMP44s1PCcFwtUge-CFaxBPnpRZyzOBGxgE0xFG_imiiFtwkzw@mail.gmail.com>
+References: <20111026202235.GA20928@havoc.gtf.org>
+	<1319969101.5215.20.camel@dabdike>
+	<CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
+	<4EAF1731.2070908@zytor.com>
+	<CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
+	<4EAF1FF6.3000500@zytor.com>
+	<CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
+	<alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
+	<4EAF66C7.6080909@zytor.com>
+	<CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
+	<CA+8MBbLQm3OP5t8diSznURHtiRprqJEz1WerhddnUhqExLj_5w@mail.gmail.com>
+	<CA+55aFz4xcD-+9pTyXgPwoCGEffL1ydcdxdTCEB8hRKzZfqVwA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:44458 "EHLO smtp5-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753540Ab1KKPnb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 11 Nov 2011 10:43:31 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFz4xcD-+9pTyXgPwoCGEffL1ydcdxdTCEB8hRKzZfqVwA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Tony Luck <tony.luck@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, david@lang.hm, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-Hi Jeff,
+On Tue, Nov 1, 2011 at 7:15 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> The LKML thing is why I really love how gmail works. LKML just goes
+> into the black hole that is the gmail thing, and I never see it. But
+> then, when I get cc'd about something in the middle of a thread when a
+> question comes up - I just magically see the whole thread without
+> having to look around in other folders or anything like that.
+>
+> I'm sure 'notmuch' etc does that too, but pine sure never did. If I
+> made my filters automatically move lkml posts to my lkml folder, by
+> the time I got cc'd, I had to go back to that folder to see the
+> history of the thread.
 
-(Contacting you because you seem to be the maintainer of drivers/ata/ahci.c )
+'notmuch' is the only mail client that I know does that (because it
+has tags). So I do exactly the same in Gmail than in notmuch; "mark as
+archived", and then I don't see the messages in my inbox, but the
+actual mail never really moves, it just doesn't have the 'inbox' tag
+any more.
 
-I recently bought a Promise FastTrack TX8660 (8xSAS PCIe-x4 SAS HBA).
+Moreover, searching all your mail is very fast, just like in Gmail.
 
-The board can be switched either in RAID or in pure SAS JBOD mode by entering 
-into the firmware menu at boot time.
+One benefit is that it's open source, so you add your own key
+bindings, or whatever you like, and unlike projects like GNOME, they
+have similar development practices as in git; you send patches to the
+mailing list, no bugzilla crap.
 
-I don't care about the RAID mode (I am using software raid) but sadly even the 
-direct SAS mode is not working out of the box using a vanilla kernel.
+Of course, it only works with local mail (maildir), but you could use
+mbsync (as Theodore Tso suggested). That's what I do in my mail setup;
+I use mbsync to synchronize ~/onlinemail with the IMAP server, and
+after I archive mail, I run a script that moves that mail to ~/mail,
+so it's removed from the server on the next sync.
 
-I did a few googling and found this : 
-http://ubuntuforums.org/showpost.php?p=10379020&postcount=29
-
-Basically a guy saying that adding { PCI_VDEVICE(PROMISE, 0x3781), board_ahci } 
-in the ahci_pci_tbl[] in drivers/ata/ahci.c do the trick with this board.
-
-I gave it a try and ... it just works.
-
-Here is an lspci output of the card
-04:00.0 RAID bus controller: Promise Technology, Inc. Device 3781
-         Subsystem: Promise Technology, Inc. Device 3781
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 32 bytes
-         Interrupt: pin A routed to IRQ 16
-         Region 0: I/O ports at ac00 [size=128]
-         Region 2: I/O ports at a800 [size=256]
-         Region 3: Memory at efaff000 (32-bit, non-prefetchable) [size=4K]
-         Region 4: Memory at efac0000 (32-bit, non-prefetchable) [size=128K]
-         Region 5: Memory at efafc000 (32-bit, non-prefetchable) [size=8K]
-         Expansion ROM at efa80000 [disabled] [size=256K]
-         Capabilities: [50] Power Management version 2
-                 Flags: PMEClk- DSI+ D1+ D2- AuxCurrent=0mA 
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-         Capabilities: [70] Express (v1) Legacy Endpoint, MSI 00
-                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, 
-L1 <1us
-                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
-                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                         MaxPayload 128 bytes, MaxReadReq 512 bytes
-                 DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- TransPend-
-                 LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency 
-L0 <128ns, L1 <2us
-                         ClockPM- Surprise- LLActRep- BwNot-
-                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
-                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                 LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk- 
-DLActive- BWMgmt- ABWMgmt-
-         Capabilities: [94] SATA HBA v1.0 BAR2 Offset=00000024
-         Capabilities: [100 v1] Advanced Error Reporting
-                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
-                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-                 AERCap: First Error Pointer: 14, GenCap- CGenEn- ChkCap- ChkEn-
-         Capabilities: [140 v1] Virtual Channel
-                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                 Arb:    Fixed- WRR32- WRR64- WRR128-
-                 Ctrl:   ArbSelect=Fixed
-                 Status: InProgress-
-                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
-                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                         Status: NegoPending- InProgress-
-         Capabilities: [160 v1] Device Serial Number 00-00-00-02-00-00-00-01
-         Capabilities: [170 v1] Power Budgeting <?>
-         Kernel driver in use: ahci
-
-
-Would it be possible to patch have this single line ?
-
-Thanks,
+Cheers.
 
 -- 
-RD
+Felipe Contreras
