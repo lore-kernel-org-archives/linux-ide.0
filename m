@@ -1,62 +1,148 @@
-From: Felipe Contreras <felipe.contreras@gmail.com>
-Subject: Re: [git patches] libata updates, GPG signed (but see admin notes)
-Date: Sat, 12 Nov 2011 21:31:10 +0200
-Message-ID: <CAMP44s1PCcFwtUge-CFaxBPnpRZyzOBGxgE0xFG_imiiFtwkzw@mail.gmail.com>
-References: <20111026202235.GA20928@havoc.gtf.org>
-	<1319969101.5215.20.camel@dabdike>
-	<CA+55aFx1NGWfNJAKDTvZfsHDDKiEtS4t4RydSgHurBeyGPyhXg@mail.gmail.com>
-	<4EAF1731.2070908@zytor.com>
-	<CA+55aFy-qDrzi21EWWV1yxDoRzh5xzLR6ai6Cq1b+hMrNTk6Sw@mail.gmail.com>
-	<4EAF1FF6.3000500@zytor.com>
-	<CA+55aFw-kvshWmAVFVSa11cNU0AbAu3R5djboR8ysj0tYp1p-A@mail.gmail.com>
-	<alpine.DEB.2.02.1110311915160.31794@asgard.lang.hm>
-	<4EAF66C7.6080909@zytor.com>
-	<CA+55aFwycceEN7itYama6H4gwAK-OQdqZ5uo9Pdg9ATqPTPtWQ@mail.gmail.com>
-	<CA+8MBbLQm3OP5t8diSznURHtiRprqJEz1WerhddnUhqExLj_5w@mail.gmail.com>
-	<CA+55aFz4xcD-+9pTyXgPwoCGEffL1ydcdxdTCEB8hRKzZfqVwA@mail.gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
+Date: Mon, 14 Nov 2011 13:14:21 +0800
+Message-ID: <1321247661.6599.110.camel@minggr>
+References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+	 <1320906166-15459-5-git-send-email-ming.m.lin@intel.com>
+	 <CAF1ivSZ3rnb90u6LHXfWCBW-6mtfmWYjj1xXfABmm=uNVbomRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFz4xcD-+9pTyXgPwoCGEffL1ydcdxdTCEB8hRKzZfqVwA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Tony Luck <tony.luck@gmail.com>, "H. Peter Anvin" <hpa@zytor.com>, david@lang.hm, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSZ3rnb90u6LHXfWCBW-6mtfmWYjj1xXfABmm=uNVbomRw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Nov 1, 2011 at 7:15 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> The LKML thing is why I really love how gmail works. LKML just goes
-> into the black hole that is the gmail thing, and I never see it. But
-> then, when I get cc'd about something in the middle of a thread when a
-> question comes up - I just magically see the whole thread without
-> having to look around in other folders or anything like that.
->
-> I'm sure 'notmuch' etc does that too, but pine sure never did. If I
-> made my filters automatically move lkml posts to my lkml folder, by
-> the time I got cc'd, I had to go back to that folder to see the
-> history of the thread.
+On Mon, 2011-11-14 at 11:22 +0800, Lin Ming wrote:
+> 
+> Add ata port runtime suspend/resume/idle callbacks.
+> Set ->eh_noresume to skip the runtime PM calls on scsi host
+> in the error handler to avoid dead lock.
+> 
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+>  drivers/ata/libata-core.c      |   19 +++++++++++++++++++
+>  drivers/ata/libata-scsi.c      |    1 +
+>  drivers/ata/libata-transport.c |    3 +++
+>  3 files changed, 23 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index b77c40c..719d23c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -66,6 +66,7 @@
+>  #include <asm/byteorder.h>
+>  #include <linux/cdrom.h>
+>  #include <linux/ratelimit.h>
+> +#include <linux/pm_runtime.h>
+> 
+>  #include "libata.h"
+>  #include "libata-transport.h"
+> @@ -5302,9 +5303,27 @@ static int ata_port_resume(struct device *dev)
+>        return rc;
+>  }
+> 
+> +static int ata_port_runtime_suspend(struct device *dev)
+> +{
+> +       struct ata_port *ap = to_ata_port(dev);
+> +       int rc;
+> +
+> +       rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
+> +       return rc;
+> +}
+> +
+> +static int ata_port_runtime_idle(struct device *dev)
+> +{
+> +       return pm_runtime_suspend(dev);
+> +}
+> +
+>  static const struct dev_pm_ops ata_port_pm_ops = {
+>        .suspend = ata_port_suspend,
+>        .resume = ata_port_resume,
+> +
+> +       .runtime_suspend = ata_port_runtime_suspend,
+> +       .runtime_resume = ata_port_resume,
+> +       .runtime_idle = ata_port_runtime_idle,
+>  };
+> 
+>  /**
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 4c2a524..f7afdd5 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3377,6 +3377,7 @@ int ata_scsi_add_hosts(struct ata_host *host,
+> struct scsi_host_template *sht)
+>                if (!shost)
+>                        goto err_alloc;
+> 
+> +               shost->eh_noresume = 1;
+>                *(struct ata_port **)&shost->hostdata[0] = ap;
+>                ap->scsi_host = shost;
+> 
+> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+> index a979bd76..9a7f0ea 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -291,6 +291,9 @@ int ata_tport_add(struct device *parent,
+>                goto tport_err;
+>        }
+> 
+> +       pm_runtime_set_active(dev);
+> +       pm_runtime_enable(dev);
+> +
+>        transport_add_device(dev);
+>        transport_configure_device(dev);
+> 
+> --
+> 1.7.2.5
 
-'notmuch' is the only mail client that I know does that (because it
-has tags). So I do exactly the same in Gmail than in notmuch; "mark as
-archived", and then I don't see the messages in my inbox, but the
-actual mail never really moves, it just doesn't have the 'inbox' tag
-any more.
+Current patches has a bug that system suspend fails if ata port was
+runtime suspended.
 
-Moreover, searching all your mail is very fast, just like in Gmail.
+disk suspend issues sync cache and stop device commands that obviously
+need ata port to be active. So we need to runtime resume ata port first.
 
-One benefit is that it's open source, so you add your own key
-bindings, or whatever you like, and unlike projects like GNOME, they
-have similar development practices as in git; you send patches to the
-mailing list, no bugzilla crap.
+Alan, Tejun
 
-Of course, it only works with local mail (maildir), but you could use
-mbsync (as Theodore Tso suggested). That's what I do in my mail setup;
-I use mbsync to synchronize ~/onlinemail with the IMAP server, and
-after I archive mail, I run a script that moves that mail to ~/mail,
-so it's removed from the server on the next sync.
+How about below fix?
 
-Cheers.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fa3a591..ebb87fbf 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,7 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+ 
+@@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	if (!sdkp)
+ 		return 0;	/* this can happen */
+ 
++	/*
++	 * Resume parent device to handle sync cache and
++	 * stop device commands
++	 */
++	ret = pm_runtime_get_sync(dev->parent);
++	if (ret)
++		goto exit;
++
+ 	if (sdkp->WCE) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+@@ -2775,6 +2784,8 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	}
+ 
+ done:
++	pm_runtime_put_sync(dev->parent);
++exit:
+ 	scsi_disk_put(sdkp);
+ 	return ret;
+ }
 
--- 
-Felipe Contreras
+
