@@ -1,94 +1,43 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Tue, 15 Nov 2011 16:51:29 +0800
-Message-ID: <1321347089.26084.2.camel@minggr>
-References: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata-pmp: add schedule timeout to support some PMP
+ cards
+Date: Tue, 15 Nov 2011 06:51:11 -0800
+Message-ID: <20111115145111.GK30922@google.com>
+References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
+ <20111103160759.GI4417@google.com>
+ <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
+ <20111110152036.GB27258@google.com>
+ <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12066 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753997Ab1KOIvc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2011 03:51:32 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:41991 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755712Ab1KOOvS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2011 09:51:18 -0500
+Received: by ywt32 with SMTP id 32so3520219ywt.19
+        for <linux-ide@vger.kernel.org>; Tue, 15 Nov 2011 06:51:17 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+To: Huang Changming-R66093 <r66093@freescale.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, 2011-11-14 at 23:31 +0800, Alan Stern wrote:
-> On Mon, 14 Nov 2011, Lin Ming wrote:
+Hello,
+
+On Tue, Nov 15, 2011 at 08:43:02AM +0000, Huang Changming-R66093 wrote:
+> The PMP card we are talking about is JMB393:
+> Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf.
 > 
-> > Current patches has a bug that system suspend fails if ata port was
-> > runtime suspended.
-> > 
-> > disk suspend issues sync cache and stop device commands that obviously
-> > need ata port to be active. So we need to runtime resume ata port first.
-> 
-> This is wrong.  If the port is already suspended then so are all the 
-> drives below the port.  Hence there is no need to sync the cache or 
-> stop the device.
+> This issue is observed on Freescale's Sata controller, including p1020e and mpc837xe.
 
-Ah, got it now!
+Can you please try different combinations?  ie. freescale sata + other
+PMP and jmb393 + other sata controllers.  We need to know more before
+adding workarounds to upstream.  Also, would you mind if I cc jmicron
+ppl?
 
-> 
-> > Alan, Tejun
-> > 
-> > How about below fix?
-> > 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index fa3a591..ebb87fbf 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -50,6 +50,7 @@
-> >  #include <linux/string_helpers.h>
-> >  #include <linux/async.h>
-> >  #include <linux/slab.h>
-> > +#include <linux/pm_runtime.h>
-> >  #include <asm/uaccess.h>
-> >  #include <asm/unaligned.h>
-> >  
-> > @@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
-> >  	if (!sdkp)
-> >  		return 0;	/* this can happen */
-> >  
-> > +	/*
-> > +	 * Resume parent device to handle sync cache and
-> > +	 * stop device commands
-> > +	 */
-> > +	ret = pm_runtime_get_sync(dev->parent);
-> > +	if (ret)
-> > +		goto exit;
-> > +
-> >  	if (sdkp->WCE) {
-> >  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-> >  		ret = sd_sync_cache(sdkp);
-> 
-> This is not the right approach.  You should look instead at 
-> scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
-> suspended then the routine should return immediately.
+Thank you.
 
-How about below?
-
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d329f8b..94b60bd 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	struct device_driver *drv;
- 	int err;
- 
-+	if (pm_runtime_suspended(dev))
-+		return 0;
-+
- 	err = scsi_device_quiesce(to_scsi_device(dev));
- 	if (err == 0) {
- 		drv = dev->driver;
-
-
-> 
-> Alan Stern
-> 
-
-
+-- 
+tejun
