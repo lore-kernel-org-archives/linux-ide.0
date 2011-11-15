@@ -1,66 +1,94 @@
-From: Huang Changming-R66093 <r66093@freescale.com>
-Subject: RE: [PATCH] libata-pmp: add schedule timeout to support some PMP
- cards
-Date: Tue, 15 Nov 2011 08:43:02 +0000
-Message-ID: <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net>
-References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
- <20111103160759.GI4417@google.com>
- <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
- <20111110152036.GB27258@google.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
+Date: Tue, 15 Nov 2011 16:51:29 +0800
+Message-ID: <1321347089.26084.2.camel@minggr>
+References: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:7382 "EHLO
-	TX2EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753677Ab1KOInE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Nov 2011 03:43:04 -0500
-In-Reply-To: <20111110152036.GB27258@google.com>
-Content-Language: en-US
+Received: from mga02.intel.com ([134.134.136.20]:12066 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753997Ab1KOIvc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Nov 2011 03:51:32 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-
-
-Thanks and Best Regards
-Jerry Huang
-
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-> Sent: Thursday, November 10, 2011 11:21 PM
-> To: Huang Changming-R66093
-> Cc: linux-ide@vger.kernel.org
-> Subject: Re: [PATCH] libata-pmp: add schedule timeout to support some
-> PMP cards
+On Mon, 2011-11-14 at 23:31 +0800, Alan Stern wrote:
+> On Mon, 14 Nov 2011, Lin Ming wrote:
 > 
-> Hello,
+> > Current patches has a bug that system suspend fails if ata port was
+> > runtime suspended.
+> > 
+> > disk suspend issues sync cache and stop device commands that obviously
+> > need ata port to be active. So we need to runtime resume ata port first.
 > 
-> On Thu, Nov 10, 2011 at 08:07:47AM +0000, Huang Changming-R66093 wrote:
-> > > Ummm... We can't really issue commands after failure without going
-> > > through recovery.  For ahci, it probably works.  For other
-> > > controllers, it may not.  Where does this delay come from?  Is
-> there
-> > > any other way to wait for device readiness?
-> > >
-> > It is very bad.  I have two PMP cards, one (5 ports) can work well
-> > without the delay time before reading PMP SCR, but the other (15
-> > ports) must delay enough time before reading the PMP SCR.  It seems
-> > there is no other way to detect the device readiness.
-> >
-> > Maybe I will just delay some time before send SCR command, if it
-> > failed, then we will report this error to driver?
-> 
-> Hmmm... I'm curious what's causing the problem.  Which port multiplier
-> are we talking about?  If it's specific to that PMP, we can add quirk
-> to support it.  Does the problem also happen when the PMP is connected
-> to a different controller?
-> 
-Hi,
-The PMP card we are talking about is JMB393:
-Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf.
+> This is wrong.  If the port is already suspended then so are all the 
+> drives below the port.  Hence there is no need to sync the cache or 
+> stop the device.
 
-This issue is observed on Freescale's Sata controller, including p1020e and mpc837xe.
+Ah, got it now!
+
+> 
+> > Alan, Tejun
+> > 
+> > How about below fix?
+> > 
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index fa3a591..ebb87fbf 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -50,6 +50,7 @@
+> >  #include <linux/string_helpers.h>
+> >  #include <linux/async.h>
+> >  #include <linux/slab.h>
+> > +#include <linux/pm_runtime.h>
+> >  #include <asm/uaccess.h>
+> >  #include <asm/unaligned.h>
+> >  
+> > @@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+> >  	if (!sdkp)
+> >  		return 0;	/* this can happen */
+> >  
+> > +	/*
+> > +	 * Resume parent device to handle sync cache and
+> > +	 * stop device commands
+> > +	 */
+> > +	ret = pm_runtime_get_sync(dev->parent);
+> > +	if (ret)
+> > +		goto exit;
+> > +
+> >  	if (sdkp->WCE) {
+> >  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> >  		ret = sd_sync_cache(sdkp);
+> 
+> This is not the right approach.  You should look instead at 
+> scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
+> suspended then the routine should return immediately.
+
+How about below?
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d329f8b..94b60bd 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ 	struct device_driver *drv;
+ 	int err;
+ 
++	if (pm_runtime_suspended(dev))
++		return 0;
++
+ 	err = scsi_device_quiesce(to_scsi_device(dev));
+ 	if (err == 0) {
+ 		drv = dev->driver;
+
+
+> 
+> Alan Stern
+> 
+
 
