@@ -1,46 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Tue, 15 Nov 2011 06:54:25 -0800
-Message-ID: <20111115145425.GL30922@google.com>
-References: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
- <1321347089.26084.2.camel@minggr>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: [PATCH] libata-pmp: add schedule timeout to support some PMP
+ cards
+Date: Tue, 15 Nov 2011 10:24:59 -0500
+Message-ID: <4EC2844B.9050904@teksavvy.com>
+References: <1320033440-1106-1-git-send-email-r66093@freescale.com> <20111103160759.GI4417@google.com> <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net> <20111110152036.GB27258@google.com> <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net> <20111115145111.GK30922@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1321347089.26084.2.camel@minggr>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.181]:11723 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753710Ab1KOPZA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2011 10:25:00 -0500
+In-Reply-To: <20111115145111.GK30922@google.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Huang Changming-R66093 <r66093@freescale.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Tue, Nov 15, 2011 at 04:51:29PM +0800, Lin Ming wrote:
-> > This is not the right approach.  You should look instead at 
-> > scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
-> > suspended then the routine should return immediately.
+On 11-11-15 09:51 AM, Tejun Heo wrote:
+> Hello,
 > 
-> How about below?
+> On Tue, Nov 15, 2011 at 08:43:02AM +0000, Huang Changming-R66093 wrote:
+>> The PMP card we are talking about is JMB393:
+>> Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf.
+>>
+>> This issue is observed on Freescale's Sata controller, including p1020e and mpc837xe.
 > 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index d329f8b..94b60bd 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
->  	struct device_driver *drv;
->  	int err;
->  
-> +	if (pm_runtime_suspended(dev))
-> +		return 0;
-> +
+> Can you please try different combinations?  ie. freescale sata + other
+> PMP and jmb393 + other sata controllers.  We need to know more before
+> adding workarounds to upstream.  Also, would you mind if I cc jmicron
+> ppl?
 
-Something to be careful about is there are different types of suspend
-states (PMSG_*).  IIUC, runtime PM is using PMSG_SUSPEND.  Other
-states may or may not be compatible with PMSG_SUSPEND expectations, so
-you can skip suspend operation if the newly requested state is
-PMSG_SUSPEND but otherwise the controller needs to be woken up and
-told to comply to the new state.
 
-Thanks.
+I'm late tuning in here, but I have a JMB393 doorstop here
+and would love to have it actually work with Linux.
+It fails with all of my sata_sil, sata_sil24 and AHCI (including JMB) controllers.
 
--- 
-tejun
+What's the patch that I need to test ?
+-ml
