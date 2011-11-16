@@ -1,54 +1,131 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Wed, 16 Nov 2011 10:42:11 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1111161038360.2086-100000@iolanthe.rowland.org>
-References: <1321449252.2565.2.camel@hp6530s>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:35199 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753809Ab1KPPmM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2011 10:42:12 -0500
-In-Reply-To: <1321449252.2565.2.camel@hp6530s>
-Sender: linux-ide-owner@vger.kernel.org
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: [PATCH] ahci: platform support for suspend/resume
+Date: Wed, 16 Nov 2011 12:27:59 -0800
+Message-ID: <1321475279-29930-1-git-send-email-computersforpeace@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-On Wed, 16 Nov 2011, Lin Ming wrote:
+Add platform hooks for custom suspend() and resume() functions. The
+generic suspend/resume code in drivers/ata/ahci_platform.c is adapted
+from the PCI version in drivers/ata/ahci.c.
 
-> > > Something to be careful about is there are different types of suspend
-> > > states (PMSG_*).  IIUC, runtime PM is using PMSG_SUSPEND.  Other
-> > > states may or may not be compatible with PMSG_SUSPEND expectations, so
-> > > you can skip suspend operation if the newly requested state is
-> > > PMSG_SUSPEND but otherwise the controller needs to be woken up and
-> > > told to comply to the new state.
-> > 
-> > That's right.  Surprisingly enough (and contrary to what I wrote
-> > earlier), the sd_suspend() routine doesn't spin down a drive for
-> > runtime suspend.  This probably should be considered a bug.
-> > 
-> > Anyway, it looks like the correct approach would be more like this:
-> 
-> Thanks.
-> 
-> I think ata_port_suspend also needs to call pm_runtime_resume, as below.
-> 
-> static int ata_port_suspend(struct device *dev)
-> {
->         struct ata_port *ap = to_ata_port(dev);
->         int rc;
-> 
->         pm_runtime_resume(dev);
->         rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
->         return rc;
-> }
+Note that in order to suspend, we require that both suspend() and
+resume() functions be supplied.
 
-Maybe not.  You know a lot more about the state of the ATA ports than
-you do about the state of the SCSI devices.  If there's no difference
-in the port states for runtime suspend and system sleep then you don't
-have to power up the port just in order to power it down again.
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+Based on:
+    git://github.com/jgarzik/libata-dev.git ALL
 
-Alan Stern
+ drivers/ata/ahci_platform.c   |   72 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/ahci_platform.h |    2 +
+ 2 files changed, 74 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ec55595..98bf5e9 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -202,6 +202,75 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_PM
++static int ahci_suspend(struct device *dev)
++{
++	struct ahci_platform_data *pdata = dev_get_platdata(dev);
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	void __iomem *mmio = hpriv->mmio;
++	u32 ctl;
++	int rc;
++
++	/* Does platform support suspend/resume? */
++	if (!pdata->suspend || !pdata->resume)
++		return -EINVAL;
++
++	if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
++		dev_err(dev, "firmware update required for suspend/resume\n");
++		return -EIO;
++	}
++
++	/*
++	 * AHCI spec rev1.1 section 8.3.3:
++	 * Software must disable interrupts prior to requesting a
++	 * transition of the HBA to D3 state.
++	 */
++	ctl = readl(mmio + HOST_CTL);
++	ctl &= ~HOST_IRQ_EN;
++	writel(ctl, mmio + HOST_CTL);
++	readl(mmio + HOST_CTL); /* flush */
++
++	rc = ata_host_suspend(host, PMSG_SUSPEND);
++	if (rc)
++		return rc;
++
++	return pdata->suspend(dev);
++}
++
++static int ahci_resume(struct device *dev)
++{
++	struct ahci_platform_data *pdata = dev->platform_data;
++	struct ata_host *host = dev_get_drvdata(dev);
++	int rc;
++
++	/* Does platform support suspend/resume? */
++	if (!pdata->resume)
++		return -EINVAL;
++
++	rc = pdata->resume(dev);
++	if (rc)
++		return rc;
++
++	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
++		rc = ahci_reset_controller(host);
++		if (rc)
++			return rc;
++
++		ahci_init_controller(host);
++	}
++
++	ata_host_resume(host);
++
++	return 0;
++}
++
++static struct dev_pm_ops ahci_pm_ops = {
++	.suspend		= &ahci_suspend,
++	.resume			= &ahci_resume,
++};
++#endif
++
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "calxeda,hb-ahci", },
+ 	{},
+@@ -214,6 +283,9 @@ static struct platform_driver ahci_driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 		.of_match_table = ahci_of_match,
++#ifdef CONFIG_PM
++		.pm = &ahci_pm_ops,
++#endif
+ 	},
+ 	.id_table	= ahci_devtype,
+ };
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index be3d9a7..73a2500 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -23,6 +23,8 @@ struct ata_port_info;
+ struct ahci_platform_data {
+ 	int (*init)(struct device *dev, void __iomem *addr);
+ 	void (*exit)(struct device *dev);
++	int (*suspend)(struct device *dev);
++	int (*resume)(struct device *dev);
+ 	const struct ata_port_info *ata_port_info;
+ 	unsigned int force_port_map;
+ 	unsigned int mask_port_map;
+-- 
+1.7.5.4
