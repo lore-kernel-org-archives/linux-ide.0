@@ -1,46 +1,57 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: [PATCH] ata: ahci_platform: fix DT probing
-Date: Tue, 15 Nov 2011 21:00:56 -0600
-Message-ID: <1321412456-31107-1-git-send-email-robherring2@gmail.com>
+From: Huang Changming-R66093 <r66093@freescale.com>
+Subject: RE: [PATCH] libata-pmp: add schedule timeout to support some PMP
+ cards
+Date: Wed, 16 Nov 2011 09:00:56 +0000
+Message-ID: <8A2FC72B45BB5A4C9F801431E06AE48F1161DF3C@039-SN1MPN1-005.039d.mgd.msft.net>
+References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
+ <20111103160759.GI4417@google.com>
+ <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
+ <20111110152036.GB27258@google.com>
+ <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net>
+ <20111115145111.GK30922@google.com> <4EC2844B.9050904@teksavvy.com>
+ <4EC28D7E.7010703@teksavvy.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:50775 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934Ab1KPDBN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2011 22:01:13 -0500
+Received: from mail-va3.bigfish.com ([216.32.180.10]:43098 "EHLO
+	VA3EHSOBE010.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752591Ab1KPJA7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2011 04:00:59 -0500
+In-Reply-To: <4EC28D7E.7010703@teksavvy.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Rob Herring <rob.herring@calxeda.com>, Richard Zhu <richard.zhu@linaro.org>, Anton Vorontsov <avorontsov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>, Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Rob Herring <rob.herring@calxeda.com>
-
-The change in commit 904c04feaf13ed "ahci_platform: Add the board_ids..."
-doesn't work for the DT probing case as platform_get_device_id returns
-NULL. Pick the default ahci_port_info in this case.
-
-Signed-off-by: Rob Herring <rob.herring@calxeda.com>
-Cc: Richard Zhu <richard.zhu@linaro.org>
-Cc: Anton Vorontsov <avorontsov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/ata/ahci_platform.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index ec55595..43b8758 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -67,7 +67,7 @@ static int __init ahci_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
- 	const struct platform_device_id *id = platform_get_device_id(pdev);
--	struct ata_port_info pi = ahci_port_info[id->driver_data];
-+	struct ata_port_info pi = ahci_port_info[id ? id->driver_data : 0];
- 	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	struct ahci_host_priv *hpriv;
- 	struct ata_host *host;
--- 
-1.7.5.4
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNYXJrIExvcmQgW21haWx0bzpr
+ZXJuZWxAdGVrc2F2dnkuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE5vdmVtYmVyIDE2LCAyMDEx
+IDEyOjA0IEFNDQo+IFRvOiBUZWp1biBIZW8NCj4gQ2M6IEh1YW5nIENoYW5nbWluZy1SNjYwOTM7
+IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gbGliYXRh
+LXBtcDogYWRkIHNjaGVkdWxlIHRpbWVvdXQgdG8gc3VwcG9ydCBzb21lDQo+IFBNUCBjYXJkcw0K
+PiANCj4gT24gMTEtMTEtMTUgMTA6MjQgQU0sIE1hcmsgTG9yZCB3cm90ZToNCj4gPiBPbiAxMS0x
+MS0xNSAwOTo1MSBBTSwgVGVqdW4gSGVvIHdyb3RlOg0KPiA+PiBIZWxsbywNCj4gPj4NCj4gPj4g
+T24gVHVlLCBOb3YgMTUsIDIwMTEgYXQgMDg6NDM6MDJBTSArMDAwMCwgSHVhbmcgQ2hhbmdtaW5n
+LVI2NjA5Mw0KPiB3cm90ZToNCj4gPj4+IFRoZSBQTVAgY2FyZCB3ZSBhcmUgdGFsa2luZyBhYm91
+dCBpcyBKTUIzOTM6DQo+ID4+PiBQb3J0IE11bHRpcGxpZXIgMS4yLCAweDE5N2I6MHgwMzI1IHIw
+LCAxNSBwb3J0cywgZmVhdCAweDUvMHhmLg0KPiA+Pj4NCj4gPj4+IFRoaXMgaXNzdWUgaXMgb2Jz
+ZXJ2ZWQgb24gRnJlZXNjYWxlJ3MgU2F0YSBjb250cm9sbGVyLCBpbmNsdWRpbmcNCj4gcDEwMjBl
+IGFuZCBtcGM4Mzd4ZS4NCj4gPj4NCj4gPj4gQ2FuIHlvdSBwbGVhc2UgdHJ5IGRpZmZlcmVudCBj
+b21iaW5hdGlvbnM/ICBpZS4gZnJlZXNjYWxlIHNhdGEgKw0KPiA+PiBvdGhlciBQTVAgYW5kIGpt
+YjM5MyArIG90aGVyIHNhdGEgY29udHJvbGxlcnMuICBXZSBuZWVkIHRvIGtub3cgbW9yZQ0KPiA+
+PiBiZWZvcmUgYWRkaW5nIHdvcmthcm91bmRzIHRvIHVwc3RyZWFtLiAgQWxzbywgd291bGQgeW91
+IG1pbmQgaWYgSSBjYw0KPiA+PiBqbWljcm9uIHBwbD8NCj4gPg0KPiA+DQo+ID4gSSdtIGxhdGUg
+dHVuaW5nIGluIGhlcmUsIGJ1dCBJIGhhdmUgYSBKTUIzOTMgZG9vcnN0b3AgaGVyZSBhbmQgd291
+bGQNCj4gPiBsb3ZlIHRvIGhhdmUgaXQgYWN0dWFsbHkgd29yayB3aXRoIExpbnV4Lg0KPiA+IEl0
+IGZhaWxzIHdpdGggYWxsIG9mIG15IHNhdGFfc2lsLCBzYXRhX3NpbDI0IGFuZCBBSENJIChpbmNs
+dWRpbmcgSk1CKQ0KPiBjb250cm9sbGVycy4NCj4gPg0KPiA+IFdoYXQncyB0aGUgcGF0Y2ggdGhh
+dCBJIG5lZWQgdG8gdGVzdCA/DQo+IA0KPiBGb3VuZCBpdCwgdHJpZWQgaXQsIHN0aWxsIGhhdmUg
+YSBMaW51eCBkb29yc3RvcC4NCj4gV29ya3MgZmluZSB1bmRlciB0aGF0IG90aGVyIE8vUyB0aG91
+Z2guDQo+IA0KVGhhdOKAmXMgYSBiYWQgbmV3cy4gSSB0aGluayB3ZSBuZWVkIG9uZSB3b3JrYXJv
+dW5kIHRvIGZpeCBpdC4NCkkgdGVzdGVkIHRoZSBvdGhlciB0d28gUE1QIGNhcmRzLCB0aGV5IHdv
+cmsgd2VsbCBvbiBGcmVlc2NhbGUncyBib2FyZDoNClBvcnQgTXVsdGlwbGllciAxLjEsIDB4MTA5
+NToweDQ3MjYgcjMxLCA3IHBvcnRzLCBmZWF0IDB4MS8weDkgKFNpbGljb24gSW1hZ2UpDQpQb3J0
+IE11bHRpcGxpZXIgMS4yLCAweDE5N2I6MHgwMzIxIHIwLCA1IHBvcnRzLCBmZWF0IDB4NS8weGYg
+KEpNQjM5MSkNCg==
 
