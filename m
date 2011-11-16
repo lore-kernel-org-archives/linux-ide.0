@@ -1,131 +1,102 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH] ahci: platform support for suspend/resume
-Date: Wed, 16 Nov 2011 12:27:59 -0800
-Message-ID: <1321475279-29930-1-git-send-email-computersforpeace@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>
+From: Felipe Balbi <balbi@ti.com>
+Subject: Re: [PATCH] ahci: platform support for suspend/resume
+Date: Wed, 16 Nov 2011 22:34:24 +0200
+Message-ID: <20111116203422.GA29581@legolas.emea.dhcp.ti.com>
+References: <1321475279-29930-1-git-send-email-computersforpeace@gmail.com>
+Reply-To: balbi@ti.com
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:48615 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751953Ab1KPUe3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Nov 2011 15:34:29 -0500
+Content-Disposition: inline
+In-Reply-To: <1321475279-29930-1-git-send-email-computersforpeace@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>
 
-Add platform hooks for custom suspend() and resume() functions. The
-generic suspend/resume code in drivers/ata/ahci_platform.c is adapted
-from the PCI version in drivers/ata/ahci.c.
 
-Note that in order to suspend, we require that both suspend() and
-resume() functions be supplied.
+--UugvWAfsgieZRqgk
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
----
-Based on:
-    git://github.com/jgarzik/libata-dev.git ALL
+On Wed, Nov 16, 2011 at 12:27:59PM -0800, Brian Norris wrote:
+> Add platform hooks for custom suspend() and resume() functions. The
+> generic suspend/resume code in drivers/ata/ahci_platform.c is adapted
+> from the PCI version in drivers/ata/ahci.c.
+>=20
+> Note that in order to suspend, we require that both suspend() and
+> resume() functions be supplied.
+>=20
+> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+> ---
+> Based on:
+>     git://github.com/jgarzik/libata-dev.git ALL
+>=20
+>  drivers/ata/ahci_platform.c   |   72 +++++++++++++++++++++++++++++++++++=
+++++++
+>  include/linux/ahci_platform.h |    2 +
+>  2 files changed, 74 insertions(+), 0 deletions(-)
+>=20
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index ec55595..98bf5e9 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -202,6 +202,75 @@ static int __devexit ahci_remove(struct platform_dev=
+ice *pdev)
+>  	return 0;
+>  }
+> =20
+> +#ifdef CONFIG_PM
+> +static int ahci_suspend(struct device *dev)
+> +{
+> +	struct ahci_platform_data *pdata =3D dev_get_platdata(dev);
+> +	struct ata_host *host =3D dev_get_drvdata(dev);
+> +	struct ahci_host_priv *hpriv =3D host->private_data;
+> +	void __iomem *mmio =3D hpriv->mmio;
+> +	u32 ctl;
+> +	int rc;
+> +
+> +	/* Does platform support suspend/resume? */
+> +	if (!pdata->suspend || !pdata->resume)
+> +		return -EINVAL;
 
- drivers/ata/ahci_platform.c   |   72 +++++++++++++++++++++++++++++++++++++++++
- include/linux/ahci_platform.h |    2 +
- 2 files changed, 74 insertions(+), 0 deletions(-)
+should you really prevent suspend is platform doesn't provide
+->suspend() ?
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index ec55595..98bf5e9 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -202,6 +202,75 @@ static int __devexit ahci_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM
-+static int ahci_suspend(struct device *dev)
-+{
-+	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->mmio;
-+	u32 ctl;
-+	int rc;
-+
-+	/* Does platform support suspend/resume? */
-+	if (!pdata->suspend || !pdata->resume)
-+		return -EINVAL;
-+
-+	if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
-+		dev_err(dev, "firmware update required for suspend/resume\n");
-+		return -EIO;
-+	}
-+
-+	/*
-+	 * AHCI spec rev1.1 section 8.3.3:
-+	 * Software must disable interrupts prior to requesting a
-+	 * transition of the HBA to D3 state.
-+	 */
-+	ctl = readl(mmio + HOST_CTL);
-+	ctl &= ~HOST_IRQ_EN;
-+	writel(ctl, mmio + HOST_CTL);
-+	readl(mmio + HOST_CTL); /* flush */
-+
-+	rc = ata_host_suspend(host, PMSG_SUSPEND);
-+	if (rc)
-+		return rc;
-+
-+	return pdata->suspend(dev);
-+}
-+
-+static int ahci_resume(struct device *dev)
-+{
-+	struct ahci_platform_data *pdata = dev->platform_data;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	int rc;
-+
-+	/* Does platform support suspend/resume? */
-+	if (!pdata->resume)
-+		return -EINVAL;
-+
-+	rc = pdata->resume(dev);
-+	if (rc)
-+		return rc;
-+
-+	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
-+		rc = ahci_reset_controller(host);
-+		if (rc)
-+			return rc;
-+
-+		ahci_init_controller(host);
-+	}
-+
-+	ata_host_resume(host);
-+
-+	return 0;
-+}
-+
-+static struct dev_pm_ops ahci_pm_ops = {
-+	.suspend		= &ahci_suspend,
-+	.resume			= &ahci_resume,
-+};
-+#endif
-+
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "calxeda,hb-ahci", },
- 	{},
-@@ -214,6 +283,9 @@ static struct platform_driver ahci_driver = {
- 		.name = "ahci",
- 		.owner = THIS_MODULE,
- 		.of_match_table = ahci_of_match,
-+#ifdef CONFIG_PM
-+		.pm = &ahci_pm_ops,
-+#endif
- 	},
- 	.id_table	= ahci_devtype,
- };
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index be3d9a7..73a2500 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -23,6 +23,8 @@ struct ata_port_info;
- struct ahci_platform_data {
- 	int (*init)(struct device *dev, void __iomem *addr);
- 	void (*exit)(struct device *dev);
-+	int (*suspend)(struct device *dev);
-+	int (*resume)(struct device *dev);
- 	const struct ata_port_info *ata_port_info;
- 	unsigned int force_port_map;
- 	unsigned int mask_port_map;
--- 
-1.7.5.4
+I mean, we could some platform where all clocks are autogated and
+there's no need for platform to do anything. Would it be better to only
+call pdata->suspend if it exists but still let the AHCI-specific part go
+through ?
+
+--=20
+balbi
+
+--UugvWAfsgieZRqgk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOxB5OAAoJEIaOsuA1yqREJFcP/0FA7HAzplQZet1EPeBipT6d
+NghtI9OjnIjWw6viyaS4f7xPAsvkgtluO+oZivrrRW4g3kbaUBQOabxXEY149fs1
+U3ezR1j4vqSOI3e8Vt2mhGtO/vW3zoPLVDgLpkgc/kdLis4rXyD1IDCrmy4+seLL
+WkS1e5yT7p34KZWP8J106Bj9OUCSeCTwR2IaqTwwMSeRmGF9NAz7NmU1G8WmBS3n
+lzyiGgraoD3LAikEVYijl/U4wX5dRKKPUcoEeFrQFP3GLESZJyR2eWN/OH561BCy
+wz03NTTPHUl5TL5UYcVI9jEsC9h2cOOqKF0HzFTfTTJkJFvfx3C3xZgImG4koSxU
+Rh7GAIEsQNG/pGsr1FB+l2JqCJf2+VbRqM1fWKwgqBxVyjDCqxEzIjOKejn30yv8
+HbRw87+JNqotnwIK8HN8xDmx/ZXPOn1Y1A+kDDUPuIAjjh5ZkSN/AtgeOkqwpvJg
+kn/tSIuLMVRBGbq4EWKnOShDZikHWQ2JHSa8K7GyvnIG+1IwiSr7y8IMOpe9bItt
+cHyhmtrDlhQiAiqP0QSwJxebZwraWqIcVLwjii8JoPfndXEn1TvX3wdM5GpiNjTo
+0eyi3qFGyy6jDPxI4DZ/Sp//6gcDCfiiadUM0MgCOm+BzzXlYgqVNJi7hZjSykGJ
+CNezvrYpRmwf7/Knww1q
+=wRro
+-----END PGP SIGNATURE-----
+
+--UugvWAfsgieZRqgk--
