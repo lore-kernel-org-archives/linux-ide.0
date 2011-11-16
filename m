@@ -1,66 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Tue, 15 Nov 2011 11:08:52 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1111151052160.2345-100000@iolanthe.rowland.org>
-References: <20111115145425.GL30922@google.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Rob Herring <robherring2@gmail.com>
+Subject: [PATCH] ata: ahci_platform: fix DT probing
+Date: Tue, 15 Nov 2011 21:00:56 -0600
+Message-ID: <1321412456-31107-1-git-send-email-robherring2@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:48229 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756467Ab1KOQIx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2011 11:08:53 -0500
-In-Reply-To: <20111115145425.GL30922@google.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50775 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750934Ab1KPDBN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2011 22:01:13 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Lin Ming <ming.m.lin@intel.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Rob Herring <rob.herring@calxeda.com>, Richard Zhu <richard.zhu@linaro.org>, Anton Vorontsov <avorontsov@mvista.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 15 Nov 2011, Tejun Heo wrote:
+From: Rob Herring <rob.herring@calxeda.com>
 
-> On Tue, Nov 15, 2011 at 04:51:29PM +0800, Lin Ming wrote:
-> > > This is not the right approach.  You should look instead at 
-> > > scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
-> > > suspended then the routine should return immediately.
-> > 
-> > How about below?
-> > 
-> > diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> > index d329f8b..94b60bd 100644
-> > --- a/drivers/scsi/scsi_pm.c
-> > +++ b/drivers/scsi/scsi_pm.c
-> > @@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
-> >  	struct device_driver *drv;
-> >  	int err;
-> >  
-> > +	if (pm_runtime_suspended(dev))
-> > +		return 0;
-> > +
-> 
-> Something to be careful about is there are different types of suspend
-> states (PMSG_*).  IIUC, runtime PM is using PMSG_SUSPEND.  Other
-> states may or may not be compatible with PMSG_SUSPEND expectations, so
-> you can skip suspend operation if the newly requested state is
-> PMSG_SUSPEND but otherwise the controller needs to be woken up and
-> told to comply to the new state.
+The change in commit 904c04feaf13ed "ahci_platform: Add the board_ids..."
+doesn't work for the DT probing case as platform_get_device_id returns
+NULL. Pick the default ahci_port_info in this case.
 
-That's right.  Surprisingly enough (and contrary to what I wrote
-earlier), the sd_suspend() routine doesn't spin down a drive for
-runtime suspend.  This probably should be considered a bug.
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Richard Zhu <richard.zhu@linaro.org>
+Cc: Anton Vorontsov <avorontsov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/ata/ahci_platform.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Anyway, it looks like the correct approach would be more like this:
-
- static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
- {
- 	int err = 0;
- 
--	if (scsi_is_sdev_device(dev))
-+	if (scsi_is_sdev_device(dev)) {
- 		pm_runtime_resume(dev);
- 		err = scsi_dev_type_suspend(dev, msg);
-+	}
- 	return err;
- }
-
-Alan Stern
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ec55595..43b8758 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -67,7 +67,7 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	const struct platform_device_id *id = platform_get_device_id(pdev);
+-	struct ata_port_info pi = ahci_port_info[id->driver_data];
++	struct ata_port_info pi = ahci_port_info[id ? id->driver_data : 0];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+-- 
+1.7.5.4
 
