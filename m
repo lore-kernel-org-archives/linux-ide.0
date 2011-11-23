@@ -1,110 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Crash with sata_sil24 driver
-Date: Wed, 23 Nov 2011 08:29:37 -0800
-Message-ID: <20111123162937.GF25780@google.com>
-References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
- <CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
- <20111122150613.GA322@google.com>
- <CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v3 3/6] [SCSI] runtime resume device before system suspend
+Date: Wed, 23 Nov 2011 12:02:39 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1111231149300.2111-100000@iolanthe.rowland.org>
+References: <1322031686-28233-4-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:51975 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434Ab1KWQ3o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2011 11:29:44 -0500
-Content-Disposition: inline
-In-Reply-To: <CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47032 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754349Ab1KWRCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2011 12:02:40 -0500
+In-Reply-To: <1322031686-28233-4-git-send-email-ming.m.lin@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>, Russell King <linux@arm.linux.org.uk>
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-(cc'ing Russell, hello)
+On Wed, 23 Nov 2011, Lin Ming wrote:
 
-The original thread can be read from
+> From: Alan Stern <stern@rowland.harvard.edu>
+> 
+> scsi device runtime PM is using PMSG_SUSPEND. System PM may use other state
+> that may not be compatiable with PMSG_SUSPEND.
 
-  http://thread.gmane.org/gmane.linux.usb.general/54878/
+Actually SCSI runtime PM uses PMSG_AUTO_AUTOSUSPEND, which is the same
+as PMSG_SUSPEND except that the PM_EVENT_AUTO bit is also set in the
+pm_message.event field.  Currently they _are_ compatible.
 
-On Wed, Nov 23, 2011 at 10:49:00AM +0530, Pratyush Anand wrote:
-> Hello Tejun,
->=20
->=20
-> On Tue, Nov 22, 2011 at 8:36 PM, Tejun Heo <tj@kernel.org> wrote:
-> > Hello,
-> >
-> > (cc'ing Jesse)
-> >
-> > On Tue, Nov 22, 2011 at 04:40:40PM +0530, Pratyush Anand wrote:
-> >> > I am using various PCIe card based on Silicon Image 3124/3132 to
-> >> > test my PCIe host. This card is working with most of my host con=
-troler.
-> >> > I use sata_sil24 driver to enable the card, with one modificatio=
-n of
-> >> > commenting line [pcie_set_readrq(pdev, 4096);]
-> >> >
-> >> > I had sent a patch for it , which is still unanswered.
-> >> > http://comments.gmane.org/gmane.linux.kernel.pci/10300
-> >
-> > Yeah, that's something lifted from proprietary driver and it's
-> > likely to be wrong. =A0Jesse, is there a way to find out the safe
-> > maximum value for readrq? =A0I'm a bit reluctant to drop it as pcie
-> > variants of these chips are bottlenecked on the host bus pretty bad=
-ly.
-> >
-> >> > Anyway, this mail is regarding another issue.
-> >> >
-> >> > I am still having problem when I use above driver (with above pa=
-tch),
-> >> > in following
-> >> > situation.
-> >> >
-> >> > My SOC is having cortex-a9 dual core. When I work with CPU freq =
-500
-> >> > MHz, it works
-> >> > well. But with 600 MHz it crashes. Crash log is at the end of ma=
-il.
-> >> >
-> >> > I did further debugging. I found that if I put some delay after
-> >> > calling of sil24_init_controller(host); in function sil24_init_o=
-ne, it
-> >> > works well.
-> >> >
-> >> > My question is.
-> >> > does sil24_init_controller insure perfact initilization?
-> >> > or we missing to check some status register which might be neede=
-d
-> >> > before ata_host_activate.
-> >> > ----------------------------------------------------------------=
------
-> >> > Modules linked in:
-> >> > CPU: 0 =A0 =A0Not tainted =A0(2.6.37-lsp-3.2.2-rc-dirty #7)
-> >> > PC is at sil24_scr_read+0x38/0x50
-> >> > LR is at sil24_port_base+0x14/0x2c
-> >> > pc : [<80255e10>] =A0 =A0lr : [<80255d44>] =A0 =A0psr: 80000013
-> >
-> > Hmm... this is weird. =A0All init happens in the same thread. =A0Th=
-ere's
-> > no race condition involved here. =A0I'm not too familiar with arm. =
-=A0Can
-> > you please track down what is causing the crash? =A0ie. is it memor=
-y
-> > access to kernel data structure or io region?
->=20
-> It  is accessing SATA Controller registers rather kerenl data struct
-> at the time of crash.
-> It crashes when it tries to read SCR_CONTROL register.
-> Its really strage that same register become accesible if a delay of 1=
-0us is
-> put after sil24_init_controller.
+> So we need to runtime resume the device before system suspend.
+> 
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+> 
+> Alan,
+> 
+> Could you add your Signed-off-by?
+> Free free to change the commit logs.
 
-Weird, that basically means that somehow pci_iomap() isn't
-synchronous.  ie. you need to way some time after pci_iomap() before
-being able to access the mapped address.  Seems like arch / pci
-weirdness.  Jesse, Russell, any ideas?
+I don't know; this is a little questionable.
 
-Thank you.
+The point of this patch is to handle drivers that do different things
+for runtime suspend and system sleep.  The only SCSI driver that
+currently supports runtime suspend is sd, and it treats runtime suspend
+the same as system sleep.  (Earlier I said it doesn't spin down disks
+for runtime suspend -- that was wrong, it does.  It skips the spin-down
+step only for PM_EVENT_FREEZE, which is part of the hibernation
+procedure.)
 
---=20
-tejun
+Until other SCSI drivers support runtime suspend, this patch shouldn't 
+be needed.  And spinning up runtime-suspended disks could add a lengthy 
+delay to the system sleep transition, so it's better not to do this if 
+at all possible.
+
+Alan Stern
+
+>  drivers/scsi/scsi_pm.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index d329f8b..549ea72 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -49,8 +49,10 @@ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
+>  {
+>  	int err = 0;
+>  
+> -	if (scsi_is_sdev_device(dev))
+> +	if (scsi_is_sdev_device(dev)) {
+> +		pm_runtime_resume(dev);
+>  		err = scsi_dev_type_suspend(dev, msg);
+> +	}
+>  	return err;
+>  }
+
