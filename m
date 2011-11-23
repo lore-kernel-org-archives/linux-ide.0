@@ -1,75 +1,46 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v3 3/6] [SCSI] runtime resume device before system suspend
-Date: Wed, 23 Nov 2011 12:02:39 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1111231149300.2111-100000@iolanthe.rowland.org>
-References: <1322031686-28233-4-git-send-email-ming.m.lin@intel.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: Crash with sata_sil24 driver
+Date: Wed, 23 Nov 2011 18:01:34 +0000
+Message-ID: <20111123180134.GJ9581@n2100.arm.linux.org.uk>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com> <CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com> <20111122150613.GA322@google.com> <CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com> <20111123162937.GF25780@google.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47032 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754349Ab1KWRCk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2011 12:02:40 -0500
-In-Reply-To: <1322031686-28233-4-git-send-email-ming.m.lin@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111123162937.GF25780@google.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-On Wed, 23 Nov 2011, Lin Ming wrote:
+On Wed, Nov 23, 2011 at 08:29:37AM -0800, Tejun Heo wrote:
+> On Wed, Nov 23, 2011 at 10:49:00AM +0530, Pratyush Anand wrote:
+> > On Tue, Nov 22, 2011 at 8:36 PM, Tejun Heo <tj@kernel.org> wrote:
+> > > On Tue, Nov 22, 2011 at 04:40:40PM +0530, Pratyush Anand wrote:
+> > >> > My question is.
+> > >> > does sil24_init_controller insure perfact initilization?
+> > >> > or we missing to check some status register which might be nee=
+ded
+> > >> > before ata_host_activate.
+> > >> > --------------------------------------------------------------=
+-------
+> > >> > Modules linked in:
+> > >> > CPU: 0 =A0 =A0Not tainted =A0(2.6.37-lsp-3.2.2-rc-dirty #7)
+> > >> > PC is at sil24_scr_read+0x38/0x50
+> > >> > LR is at sil24_port_base+0x14/0x2c
+> > >> > pc : [<80255e10>] =A0 =A0lr : [<80255d44>] =A0 =A0psr: 8000001=
+3
 
-> From: Alan Stern <stern@rowland.harvard.edu>
-> 
-> scsi device runtime PM is using PMSG_SUSPEND. System PM may use other state
-> that may not be compatiable with PMSG_SUSPEND.
+It would help if the _full_ set of kernel crash messages were included.
+This one has the top chopped off it which normally says _why_ it happen=
+ed.
+I'm not about to waste my time by guessing...
 
-Actually SCSI runtime PM uses PMSG_AUTO_AUTOSUSPEND, which is the same
-as PMSG_SUSPEND except that the PM_EVENT_AUTO bit is also set in the
-pm_message.event field.  Currently they _are_ compatible.
+Please provide the _full_ crash log, including the lines which come bef=
+ore
+"Modules linked in:"
 
-> So we need to runtime resume the device before system suspend.
-> 
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> ---
-> 
-> Alan,
-> 
-> Could you add your Signed-off-by?
-> Free free to change the commit logs.
-
-I don't know; this is a little questionable.
-
-The point of this patch is to handle drivers that do different things
-for runtime suspend and system sleep.  The only SCSI driver that
-currently supports runtime suspend is sd, and it treats runtime suspend
-the same as system sleep.  (Earlier I said it doesn't spin down disks
-for runtime suspend -- that was wrong, it does.  It skips the spin-down
-step only for PM_EVENT_FREEZE, which is part of the hibernation
-procedure.)
-
-Until other SCSI drivers support runtime suspend, this patch shouldn't 
-be needed.  And spinning up runtime-suspended disks could add a lengthy 
-delay to the system sleep transition, so it's better not to do this if 
-at all possible.
-
-Alan Stern
-
->  drivers/scsi/scsi_pm.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index d329f8b..549ea72 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -49,8 +49,10 @@ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
->  {
->  	int err = 0;
->  
-> -	if (scsi_is_sdev_device(dev))
-> +	if (scsi_is_sdev_device(dev)) {
-> +		pm_runtime_resume(dev);
->  		err = scsi_dev_type_suspend(dev, msg);
-> +	}
->  	return err;
->  }
-
+And no, pci_iomap is not asynchronous.  That'd just be damned stupid an=
+d
+would break virtually all drivers.
