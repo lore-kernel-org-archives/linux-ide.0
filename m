@@ -1,34 +1,109 @@
-From: aisha yousif <nasser@bettergold.net>
-Subject: gold for sale 550
-Date: Wed, 23 Nov 2011 21:20:54 -1100
-Message-ID: <CAHfRuBoap=BZMvJUZoWNJYZ1Z=SHPom3G9=cchMNSRPqt_f-Vg@mail.gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v3 3/6] [SCSI] runtime resume device before system
+ suspend
+Date: Thu, 24 Nov 2011 20:21:27 +0800
+Message-ID: <1322137287.2597.10.camel@hp6530s>
+References: <Pine.LNX.4.44L0.1111231149300.2111-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1256
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f194.google.com ([209.85.216.194]:39335 "EHLO
-	mail-qy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403Ab1KXIVE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2011 03:21:04 -0500
-Received: by qyd20 with SMTP id 20so230192qyd.1
-        for <linux-ide@vger.kernel.org>; Thu, 24 Nov 2011 00:21:03 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:49497 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751118Ab1KXMWp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 Nov 2011 07:22:45 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1111231149300.2111-100000@iolanthe.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-ys3tySDY7cjJIObI2s86CuTa0d3f4yDIw+TkxyAg1NHfySDhyszj7dogIObI7dogx+HQ5cgg4+Qg
-z+bhINvRyCDD3dHt3u3HICjI5O3kIOYg28fkxykgIC4uCsXQxyDf5MrjIMrR28jm5CDd7SDU0cfB
-IMfh0OXIINPm3SDk3s/jIOHf4yDD09rH0SDhxyDK5Mfd0y4KxeHt3+Mgyt3H1eEgx+HQ5cg6LQrk
-5trtySDH4dDlyDog08jHxt8K49XP0SDH4cPV4Trb0cggw93R7d7txwogx+HT2tE6IDMzLjAwMCAk
-ICjL4cfLySDmy+HH5uQgw+HdICDP5uHH0Skg4eHf7eHm29HH4yDH4ebHzc8Kx+Ha7cfRIDogMjIr
-IN7t0cfYCs/RzMkgx+Hk3sfBIDogOTYuNwrH4d/j7ck6IDU1MCDf7eHmxyDM0cfjCsfh1M3kOiDa
-5CDY0e3eIMfhzOYK2NHt3skgx+HP3do6IO3P3dog48jh2yA1JSDO49PJIMjH4ePHxskg4+QgzOPh
-ySDH4ePI4dsg5sfhyMfe7SDtyuMgz93a5QrI2s8g5tXm4SDH4cjWx9rJIMjmx9PYySDH4cjk3yDD
-5iDI0d3eySDUztUg4+Qgx+HU0d/JLgrm4d/jIMzS7eEgx+HU39EKCldpdGggbXVjaCBncmVldGlu
-Z3MgYW5kIGR1ZSByZXNwZWN0IHRvIHdyaXRlIHlvdS4KV2UgYXJlIGEgZ29sZCB0cmFkaW5nIGNv
-bXBhbnkgaW4gdGhlIHJlcHVibGljIG9mIEdIQU5BIGluIHdlc3QgQWZyaWNhLgpJZiB5b3UgYXJl
-IHdpbGxpbmcgdG8gYnV5IGdvbGQgd2Ugd2lsbCBnaXZlIHlvdSBhIHZlcnkgIGNvbXBldGl0aXZl
-CnByaWNlLgpCZWxvdyBpcyB0aGUgc3BlY2lmaWNhdGlvbiBvZiBvdXIgcHJvZHVjdDoKQ29tbW9k
-aXR5IEFVIEdvbGQgQmFyCk9yaWdpbjogV2VzdC4gQWZyaWNhCiBQcmljZTogJDMzLjAwMHBlciBr
-ZwpRdWFsaXR5OiAyMisgQ2FyYXQKUHVyaXR5OiA5Ni43JQpXZSBsb29rIGZvcndhcmQgdG8gaGVh
-cmluZyBmcm9tIHlvdSBzb29uLiBUaGFuayB5b3UgZm9yIHlvdXIKYW50aWNpcGF0ZWQgY29vcGVy
-YXRpb24uCg==
+On Thu, 2011-11-24 at 01:02 +0800, Alan Stern wrote:
+> On Wed, 23 Nov 2011, Lin Ming wrote:
+> 
+> > From: Alan Stern <stern@rowland.harvard.edu>
+> > 
+> > scsi device runtime PM is using PMSG_SUSPEND. System PM may use other state
+> > that may not be compatiable with PMSG_SUSPEND.
+> 
+> Actually SCSI runtime PM uses PMSG_AUTO_AUTOSUSPEND, which is the same
+> as PMSG_SUSPEND except that the PM_EVENT_AUTO bit is also set in the
+> pm_message.event field.  Currently they _are_ compatible.
+> 
+> > So we need to runtime resume the device before system suspend.
+> > 
+> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> > ---
+> > 
+> > Alan,
+> > 
+> > Could you add your Signed-off-by?
+> > Free free to change the commit logs.
+> 
+> I don't know; this is a little questionable.
+> 
+> The point of this patch is to handle drivers that do different things
+> for runtime suspend and system sleep.  The only SCSI driver that
+> currently supports runtime suspend is sd, and it treats runtime suspend
+> the same as system sleep.  (Earlier I said it doesn't spin down disks
+> for runtime suspend -- that was wrong, it does.  It skips the spin-down
+> step only for PM_EVENT_FREEZE, which is part of the hibernation
+> procedure.)
+> 
+> Until other SCSI drivers support runtime suspend, this patch shouldn't 
+> be needed.  And spinning up runtime-suspended disks could add a lengthy 
+> delay to the system sleep transition, so it's better not to do this if 
+> at all possible.
+
+For sd driver, PMSG_SUSPEND and PMSG_HIBERNATE are compatible with
+PMSG_AUTO_SUSPEND. PMSG_FREEZE is not compatible.
+
+So we only need to runtime resume sd for PMSG_FREEZE case.
+How about below?
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index 549ea72..e2759d9 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -50,7 +50,13 @@ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
+ 	int err = 0;
+ 
+ 	if (scsi_is_sdev_device(dev)) {
+-		pm_runtime_resume(dev);
++		if (pm_runtime_suspended(dev)) {
++			if (msg.event == PM_EVENT_FREEZE)
++				pm_runtime_resume(dev);
++			else
++				return 0;
++		}
++
+ 		err = scsi_dev_type_suspend(dev, msg);
+ 	}
+ 	return err;
+
+Lin Ming
+
+> 
+> Alan Stern
+> 
+> >  drivers/scsi/scsi_pm.c |    4 +++-
+> >  1 files changed, 3 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> > index d329f8b..549ea72 100644
+> > --- a/drivers/scsi/scsi_pm.c
+> > +++ b/drivers/scsi/scsi_pm.c
+> > @@ -49,8 +49,10 @@ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
+> >  {
+> >  	int err = 0;
+> >  
+> > -	if (scsi_is_sdev_device(dev))
+> > +	if (scsi_is_sdev_device(dev)) {
+> > +		pm_runtime_resume(dev);
+> >  		err = scsi_dev_type_suspend(dev, msg);
+> > +	}
+> >  	return err;
+> >  }
+> 
+
+
