@@ -1,30 +1,44 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 23 Nov 2011 17:32:38 -0800
-Message-ID: <CA+55aFwOF4XzRqms_q5FozXdnqKtVHg-3hbEuFj_uL+-e4wZLQ@mail.gmail.com>
-References: <20111124012344.GA2235@havoc.gtf.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Crash with sata_sil24 driver
+Date: Wed, 23 Nov 2011 17:48:47 -0800
+Message-ID: <CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
+	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
+	<20111122150613.GA322@google.com>
+	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+	<20111123162937.GF25780@google.com>
+	<20111123144735.64dc9f05@jbarnes-desktop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:52058 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752297Ab1KXBdA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2011 20:33:00 -0500
-In-Reply-To: <20111124012344.GA2235@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20111123144735.64dc9f05@jbarnes-desktop>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jesse Barnes <jbarnes@virtuousgeek.org>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, Nov 23, 2011 at 5:23 PM, Jeff Garzik <jeff@garzik.org> wrote:
+Hello,
+
+On Wed, Nov 23, 2011 at 2:47 PM, Jesse Barnes <jbarnes@virtuousgeek.org=
+> wrote:
+>> Weird, that basically means that somehow pci_iomap() isn't
+>> synchronous. =A0ie. you need to way some time after pci_iomap() befo=
+re
+>> being able to access the mapped address. =A0Seems like arch / pci
+>> weirdness. =A0Jesse, Russell, any ideas?
 >
-> -----BEGIN PGP SIGNED MESSAGE-----
+> As Russel said, pci_iomap shouldn't be async. =A0But maybe something =
+else
+> in the init function is doing a chip reset or causing the chip to go
+> off into the weeds for a short time? =A0That's generally the cause of
+> target timeouts for PCI devices.
 
-You *still* haven't found anybody but Hedrick to sign your key? And he
-hasn't found anybody but you?
+Yeah, that's much more plausible. Weird that it doesn't happen on x86
+tho. Maybe different timeouts? Pratyush, can you look at bus trace and
+see what's going on?
 
-It kind of makes that whole notion of "pgp network of trust" a bit pointless...
+Thanks.
 
-Anyway, pulled,.
-
-                 Linus
+--=20
+tejun
