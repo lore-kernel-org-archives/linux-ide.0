@@ -1,70 +1,61 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 6/6] ata: add ata port runtime PM callbacks
-Date: Mon, 28 Nov 2011 21:50:12 +0800
-Message-ID: <1322488212.3744.10.camel@hp6530s>
-References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
-	 <1322442950-16268-7-git-send-email-ming.m.lin@intel.com>
-	 <4ED35EBF.6030602@mvista.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 10/62] ata: remove the second argument of
+ k[un]map_atomic()
+Date: Mon, 28 Nov 2011 13:00:12 -0600
+Message-ID: <1322506812.5071.37.camel@dabdike.int.hansenpartnership.com>
+References: <1322371662-26166-1-git-send-email-amwang@redhat.com>
+	 <1322371662-26166-11-git-send-email-amwang@redhat.com>
+	 <4ED35BFE.6080900@mvista.com> <4ED373C3.4050903@redhat.com>
+	 <4ED37541.4040701@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4293 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751774Ab1K1Nvg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Nov 2011 08:51:36 -0500
-In-Reply-To: <4ED35EBF.6030602@mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4ED37541.4040701@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Cong Wang <amwang@redhat.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-On Mon, 2011-11-28 at 18:13 +0800, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 28-11-2011 5:15, Lin Ming wrote:
-> 
-> > Add ata port runtime suspend/resume/idle callbacks.
-> > Set ->eh_noresume to skip the runtime PM calls on scsi host
-> > in the error handler to avoid dead lock.
-> 
-> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> > ---
-> >   drivers/ata/libata-core.c      |   10 ++++++++++
-> >   drivers/ata/libata-scsi.c      |    1 +
-> >   drivers/ata/libata-transport.c |    4 ++++
-> >   3 files changed, 15 insertions(+), 0 deletions(-)
-> 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 04c208e..15a3d4d 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> [...]
-> > @@ -5307,9 +5308,18 @@ static int ata_port_resume(struct device *dev)
-> >   	return rc;
-> >   }
+On Mon, 2011-11-28 at 19:49 +0800, Cong Wang wrote:
+> =E4=BA=8E 2011=E5=B9=B411=E6=9C=8828=E6=97=A5 19:42, Cong Wang =E5=86=
+=99=E9=81=93:
+> > =E4=BA=8E 2011=E5=B9=B411=E6=9C=8828=E6=97=A5 18:01, Sergei Shtylyo=
+v =E5=86=99=E9=81=93:
+> >> Hello.
+> >>
+> >> On 27-11-2011 9:26, Cong Wang wrote:
+> >>
+> >>> Signed-off-by: Cong Wang<amwang@redhat.com>
+> >>> ---
+> >>> drivers/ata/libata-sff.c | 8 ++++----
+> >>> 1 files changed, 4 insertions(+), 4 deletions(-)
+> >>
+> >> IMO, you should do this in a single patch, not piecemeal to keep t=
+he kernel bisectable.
+> >>
 > >
-> > +static int ata_port_runtime_idle(struct device *dev)
-> > +{
-> > +	return pm_runtime_suspend(dev);
-> > +}
-> > +
-> >   static const struct dev_pm_ops ata_port_pm_ops = {
-> >   	.suspend = ata_port_suspend,
-> >   	.resume = ata_port_resume,
-> > +
-> > +	.runtime_suspend = ata_port_suspend_common,
-> > +	.runtime_resume = ata_port_resume,
-> > +	.runtime_idle = ata_port_runtime_idle,
-> 
->     Can't use set this to pm_runtime_suspend directly?
+> > Hi,
+> >
+> > Please see patch 01/62,
+> >
+> > https://lkml.org/lkml/2011/11/28/35
+> >
+> > So even without it, the kernel can still compile, just with some wa=
+rnings.
+> >
+>=20
+> Ah, no, sorry that I replied too quickly. We have to have at least 01=
+/62
+> to compile.
+>=20
+> Actually I did make the patches as a whole, but Andrew Morton prefers=
+ to
+> split them, so I make V2 of them.
 
-No.
+I'd vote for as a whole as well, but if there's some legitimate reason
+why not, then take them through Jiri's trivial tree; it's pretty trivia=
+l
+anyway and at least going that way would keep them bisectable.
 
-pm_runtime_suspend is a runtime PM core helper function,
-It will call driver's .runtime_suspend callback.
-
-> 
-> MBR, Sergei
-
-
+James
