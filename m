@@ -1,33 +1,32 @@
-From: Viresh Kumar <viresh.kumar@st.com>
-Subject: Re: [PATCH] SATA/PATA: convert drivers/ata/* to use module_platform_driver()
-Date: Mon, 28 Nov 2011 09:14:24 +0530
-Message-ID: <4ED30398.6030505@st.com>
-References: <1322376266.2226.3.camel@phoenix> <4ED30351.7090809@st.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 10/62] ata: remove the second argument of k[un]map_atomic()
+Date: Mon, 28 Nov 2011 14:01:34 +0400
+Message-ID: <4ED35BFE.6080900@mvista.com>
+References: <1322371662-26166-1-git-send-email-amwang@redhat.com> <1322371662-26166-11-git-send-email-amwang@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog116.obsmtp.com ([207.126.144.141]:60757 "EHLO
-	eu1sys200aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753521Ab1K1DsO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Nov 2011 22:48:14 -0500
-In-Reply-To: <4ED30351.7090809@st.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:33772 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752796Ab1K1KCc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Nov 2011 05:02:32 -0500
+In-Reply-To: <1322371662-26166-11-git-send-email-amwang@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Axel Lin <axel.lin@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Arnaud Patard <arnaud.patard@rtp-net.org>, Alessandro Zummo <a.zummo@towertech.it>, Sylvain Munaut <tnt@246tNt.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, Marek Vasut <marek.vasut@gmail.com>, Florian Fainelli <florian@openwrt.org>, Mark Miesfeld <mmiesfeld@amcc.com>, Ashish Kalra <ashish.kalra@freescale.com>, Paul Mundt <lethal@linux-sh.org>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shiraz HASHIM <shiraz.hashim@st.com>, Armando VISCONTI <armando.visconti@st.com>
+To: Cong Wang <amwang@redhat.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 11/28/2011 9:13 AM, Viresh Kumar wrote:
-> diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
->> index e8574bb..048589f 100644
->> --- a/drivers/ata/pata_arasan_cf.c
->> +++ b/drivers/ata/pata_arasan_cf.c
-> 
-> For SPEAr:
-> 
-> Acked-by: Viresh Kumar <viresh.kumar@st.com>
+Hello.
 
-Oops!! I meant pata_arasan_cf, not SPEAr.
+On 27-11-2011 9:26, Cong Wang wrote:
 
--- 
-viresh
+> Signed-off-by: Cong Wang<amwang@redhat.com>
+> ---
+>   drivers/ata/libata-sff.c |    8 ++++----
+>   1 files changed, 4 insertions(+), 4 deletions(-)
+
+    IMO, you should do this in a single patch, not piecemeal to keep the 
+kernel bisectable.
+
+WBR, Sergei
