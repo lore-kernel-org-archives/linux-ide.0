@@ -1,37 +1,78 @@
-From: Cong Wang <amwang@redhat.com>
-Subject: Re: [PATCH 10/62] ata: remove the second argument of k[un]map_atomic()
-Date: Tue, 29 Nov 2011 11:25:01 +0800
-Message-ID: <4ED4508D.3020502@redhat.com>
-References: <1322371662-26166-1-git-send-email-amwang@redhat.com>	 <1322371662-26166-11-git-send-email-amwang@redhat.com>	 <4ED35BFE.6080900@mvista.com> <4ED373C3.4050903@redhat.com>	 <4ED37541.4040701@redhat.com> <1322506812.5071.37.camel@dabdike.int.hansenpartnership.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v4 0/6] ata port runtime power management support
+Date: Thu, 1 Dec 2011 22:09:49 +0800
+Message-ID: <CAF1ivSa8d-VNbOmO9UyG-J3TKDmfuuX9pWEtT_7a7OcCC-0Uow@mail.gmail.com>
+References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17632 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752499Ab1K2DZS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 28 Nov 2011 22:25:18 -0500
-In-Reply-To: <1322506812.5071.37.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-=E4=BA=8E 2011=E5=B9=B411=E6=9C=8829=E6=97=A5 03:00, James Bottomley =E5=
-=86=99=E9=81=93:
+On Mon, Nov 28, 2011 at 9:15 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+> Hi all,
 >
-> I'd vote for as a whole as well, but if there's some legitimate reaso=
-n
-> why not, then take them through Jiri's trivial tree; it's pretty triv=
-ial
-> anyway and at least going that way would keep them bisectable.
+> This is the v4 patches to add ata port runtime pm support.
+> Applied on top of v3.2-rc2.
 >
+> Jeff, any comment on the ata patches?
+> James, any comment on the scsi patches?
 
-Ok, I just made a branch which keeps these patches as a single one,
+Ping ...
 
-git://github.com/congwang/linux.git #kmap_atomic-single
+Which git tree should these patches go into? ATA or SCSI?
 
-As the single patch is 233K, so I don't send it to mailing list.
+Lin Ming (6):
+    ata: make ata port as parent device of scsi host
+    [SCSI] add flag to skip the runtime PM calls on the host
+    [SCSI] check runtime PM status in system PM
+    [SCSI] sd: check runtime PM status in sd_shutdown
+    ata: add ata port system PM callbacks
+    ata: add ata port runtime PM callbacks
 
-Thanks.
+ drivers/ata/libata-core.c      |  154 ++++++++++++++++++++++----------=
+--------
+ drivers/ata/libata-scsi.c      |    3 +-
+ drivers/ata/libata-transport.c |    5 ++
+ drivers/ata/libata.h           |    1 +
+ drivers/scsi/scsi_error.c      |    5 +-
+ drivers/scsi/scsi_pm.c         |   16 ++++-
+ drivers/scsi/sd.c              |    5 ++
+ include/scsi/scsi_host.h       |    3 +
+ 8 files changed, 118 insertions(+), 74 deletions(-)
+
+Thanks,
+Lin Ming
+
+>
+> v1:
+> https://lkml.org/lkml/2011/11/2/23
+>
+> v2:
+> https://lkml.org/lkml/2011/11/10/71
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Kay Sievers reviewed sysfs change
+>
+> v3:
+> https://lkml.org/lkml/2011/11/23/37
+>
+> Changes in v4:
+> - check SCSI device runtime PM status in system PM (Alan Stern, Tejun=
+ Heo)
+>
+> Changes in v3:
+> - runtime resume scsi device before system suspend (Alan Stern)
+> - check runtime status in sd_shutdown
+>
+> Thanks for any comment,
+> Lin Ming
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
