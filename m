@@ -1,71 +1,47 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 0/6] ata port runtime power management support
-Date: Thu, 1 Dec 2011 22:28:02 +0800
-Message-ID: <CAF1ivSZb6dLHa_QkF10GuqHFaeuWVPAzZJCbq03La9jVB1xs-A@mail.gmail.com>
-References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
-	<CAF1ivSa8d-VNbOmO9UyG-J3TKDmfuuX9pWEtT_7a7OcCC-0Uow@mail.gmail.com>
-	<4ED78D15.1000306@pobox.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] libata-sff: use ATAPI_{COD|IO}
+Date: Thu, 1 Dec 2011 18:53:28 +0300
+Message-ID: <201112011853.28829.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4ED78D15.1000306@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:42742 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754707Ab1LAOya (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2011 09:54:30 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-On Thu, Dec 1, 2011 at 10:20 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 12/01/2011 09:09 AM, Lin Ming wrote:
->>
->> On Mon, Nov 28, 2011 at 9:15 AM, Lin Ming<ming.m.lin@intel.com> =A0w=
-rote:
->>>
->>> Hi all,
->>>
->>> This is the v4 patches to add ata port runtime pm support.
->>> Applied on top of v3.2-rc2.
->>>
->>> Jeff, any comment on the ata patches?
->>> James, any comment on the scsi patches?
->>
->>
->> Ping ...
->>
->> Which git tree should these patches go into? ATA or SCSI?
->>
->> Lin Ming (6):
->> =A0 =A0 ata: make ata port as parent device of scsi host
->> =A0 =A0 [SCSI] add flag to skip the runtime PM calls on the host
->> =A0 =A0 [SCSI] check runtime PM status in system PM
->> =A0 =A0 [SCSI] sd: check runtime PM status in sd_shutdown
->> =A0 =A0 ata: add ata port system PM callbacks
->> =A0 =A0 ata: add ata port runtime PM callbacks
->>
->> =A0drivers/ata/libata-core.c =A0 =A0 =A0| =A0154
->> ++++++++++++++++++++++------------------
->> =A0drivers/ata/libata-scsi.c =A0 =A0 =A0| =A0 =A03 +-
->> =A0drivers/ata/libata-transport.c | =A0 =A05 ++
->> =A0drivers/ata/libata.h =A0 =A0 =A0 =A0 =A0 | =A0 =A01 +
->> =A0drivers/scsi/scsi_error.c =A0 =A0 =A0| =A0 =A05 +-
->> =A0drivers/scsi/scsi_pm.c =A0 =A0 =A0 =A0 | =A0 16 ++++-
->> =A0drivers/scsi/sd.c =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A05 ++
->> =A0include/scsi/scsi_host.h =A0 =A0 =A0 | =A0 =A03 +
->> =A08 files changed, 118 insertions(+), 74 deletions(-)
->
->
-> I think ATA, with SCSI acks...
+atapi_pio_bytes() uses bare numbers for the ATAPI interrupt reason bits despite
+these are #define'd in <linux/aha.h>.
 
-OK.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Could you help to review the ATA patches?
+---
+This patch is against the recent Linus' tree.
 
-Thanks.
+ drivers/ata/libata-sff.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->
-> =A0 =A0 =A0 =A0Jeff
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux-2.6/drivers/ata/libata-sff.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/libata-sff.c
++++ linux-2.6/drivers/ata/libata-sff.c
+@@ -929,11 +929,11 @@ static void atapi_pio_bytes(struct ata_q
+ 	bytes = (bc_hi << 8) | bc_lo;
+ 
+ 	/* shall be cleared to zero, indicating xfer of data */
+-	if (unlikely(ireason & (1 << 0)))
++	if (unlikely(ireason & ATAPI_COD))
+ 		goto atapi_check;
+ 
+ 	/* make sure transfer direction matches expected */
+-	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
++	i_write = ((ireason & ATAPI_IO) == 0) ? 1 : 0;
+ 	if (unlikely(do_write != i_write))
+ 		goto atapi_check;
+ 
