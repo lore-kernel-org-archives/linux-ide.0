@@ -1,65 +1,47 @@
-From: Anton Vorontsov <anton.vorontsov@linaro.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Sat, 3 Dec 2011 02:46:36 +0400
-Message-ID: <20111202224636.GA10432@oksana.dev.rtsoft.ru>
-References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
- <20111110152606.GB3207@oksana.dev.rtsoft.ru>
- <20111110153816.239af1d7@lxorguk.ukuu.org.uk>
- <20111110162859.GA7088@oksana.dev.rtsoft.ru>
- <20111202191917.GB3037@localhost.localdomain>
- <20111202223402.GA7780@oksana.dev.rtsoft.ru>
- <20111202224018.GB7780@oksana.dev.rtsoft.ru>
+Date: Sat, 03 Dec 2011 10:12:53 +1100
+Message-ID: <1322867573.11728.22.camel@pasglop>
+References: <20111110162859.GA7088@oksana.dev.rtsoft.ru>
+	 <20111202192618.GC3037@localhost.localdomain>
+	 <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:45269 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865Ab1LBWql (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2011 17:46:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20111202224018.GB7780@oksana.dev.rtsoft.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Martin <dave.martin@linaro.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Martin <dave.martin@linaro.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>
 
-On Sat, Dec 03, 2011 at 02:40:18AM +0400, Anton Vorontsov wrote:
-> On Sat, Dec 03, 2011 at 02:34:02AM +0400, Anton Vorontsov wrote:
-> > On Fri, Dec 02, 2011 at 07:19:17PM +0000, Dave Martin wrote:
-> > [...]
-> > > > > > Drivers should not use NO_IRQ; moreover, some architectures don't
-> > > > > > have it nowadays. '0' is the 'no irq' case.
-> > > > > > 
-> > > > > > Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
-> > > > > 
-> > > > > Acked-by: Alan Cox <alan@linux.intel.com>
-> > > > 
-> > > > In case if we don't want a "band-aid fix" for 3.2, here is the patch
-> > > > that just does the proper fix (w/ a risk to break minor architectures).
-> > > 
-> > > This is now broken on ARM where, for good or bad, NO_IRQ currently is
-> > > used and is -1.
-> > > 
-> > > How do we resolve it?
-> > 
-> > One option is to test this patch on a board that is now broken:
-> > 
-> > http://lkml.org/lkml/2011/11/10/290
+On Fri, 2011-12-02 at 11:28 -0800, Linus Torvalds wrote:
+> On Fri, Dec 2, 2011 at 11:26 AM, Dave Martin <dave.martin@linaro.org> wrote:
+> >
+> > This is now broken on ARM where, for good or bad, NO_IRQ currently is
+> > used and is -1.
+> >
+> > How do we resolve it?  If we are ready to eliminate NO_IRQ from
+> > drivers/of/irq.c (or indeed, all code that uses it) and just use 0 for
+> > that case, we should surely just do it... but I'm not confident I can
+> > judge on that.
 > 
-> Oh, actually, reading my own patch:
+> Just stop using NO_IRQ. First in drivers/of/irq.c, then in any drivers
+> as you notice breakage.
+
+Agreed. In fact the whole hack in drivers/of/irq.c was to accomodate ARM
+which still uses -1, powerpc changed to 0 a long time ago.
+
+Now that we have a generic remapper between HW and "linux" IRQ numbers,
+there is no reason to stick to -1 even on ARM.
+
+> Don't *change* NO_IRQ to zero (that whole #define is broken - leave it
+> around as a marker of brokenness), just start removing it from all the
+> ARM drivers that use the OF infrastructure. Which is presumably not
+> all that many yet.
 > 
-> "ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
->  which returns correct ('0') value in 'no irq' case. So everything
->  should be fine."
+> So whenever you find breakage, the fix now is to just remove NO_IRQ
+> tests, and replace them with "!irq".
 
-Ahh. Forget it, the remark was for the of/irq.c fix itself.
-
-So, we need the http://lkml.org/lkml/2011/11/10/290 fix. Otherwise
-the driver is indeed broken for ARM. Would be great if somebody could
-test it.
-
-Thanks,
-
--- 
-Anton Vorontsov
-Email: cbouatmailru@gmail.com
+Cheers,
+Ben.
