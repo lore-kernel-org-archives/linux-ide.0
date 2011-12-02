@@ -1,51 +1,35 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v2] libata-sff: use ATAPI_{COD|IO}
-Date: Fri, 2 Dec 2011 18:39:53 +0300
-Message-ID: <201112021839.53516.sshtylyov@ru.mvista.com>
-References: <201112011853.28829.sshtylyov@ru.mvista.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v4 0/6] ata port runtime power management support
+Date: Fri, 2 Dec 2011 10:29:32 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1112021028540.1420-100000@iolanthe.rowland.org>
+References: <1322804150.344.3.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:47314 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756761Ab1LBOky (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2011 09:40:54 -0500
-In-Reply-To: <201112011853.28829.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:60437 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756831Ab1LBP3d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2011 10:29:33 -0500
+In-Reply-To: <1322804150.344.3.camel@minggr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-atapi_pio_bytes() uses bare numbers for the ATAPI interrupt reason bits despite
-these are #define'd in <linux/ata.h>.
+On Fri, 2 Dec 2011, Lin Ming wrote:
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> Hi Alan,
+> 
+> You have signed Patch 3: [SCSI] check runtime PM status in system PM.
+> 
+> How about the other two SCSI patches?
+> 
+> Patch 2: [SCSI] add flag to skip the runtime PM calls on the host
+> Patch 4: [SCSI] sd: check runtime PM status in sd_shutdown
 
----
-This patch is against the recent Linus' tree.
+For both patch 2 and patch 4:
 
-Changes in v2: corrected typo in the patch description.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
- drivers/ata/libata-sff.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Alan Stern
 
-Index: linux-2.6/drivers/ata/libata-sff.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-sff.c
-+++ linux-2.6/drivers/ata/libata-sff.c
-@@ -929,11 +929,11 @@ static void atapi_pio_bytes(struct ata_q
- 	bytes = (bc_hi << 8) | bc_lo;
- 
- 	/* shall be cleared to zero, indicating xfer of data */
--	if (unlikely(ireason & (1 << 0)))
-+	if (unlikely(ireason & ATAPI_COD))
- 		goto atapi_check;
- 
- 	/* make sure transfer direction matches expected */
--	i_write = ((ireason & (1 << 1)) == 0) ? 1 : 0;
-+	i_write = ((ireason & ATAPI_IO) == 0) ? 1 : 0;
- 	if (unlikely(do_write != i_write))
- 		goto atapi_check;
- 
