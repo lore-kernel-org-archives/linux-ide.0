@@ -1,43 +1,56 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: Anton Vorontsov <anton.vorontsov@linaro.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Fri, 2 Dec 2011 11:28:14 -0800
-Message-ID: <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
-References: <20111110162859.GA7088@oksana.dev.rtsoft.ru> <20111202192618.GC3037@localhost.localdomain>
+Date: Sat, 3 Dec 2011 02:34:02 +0400
+Message-ID: <20111202223402.GA7780@oksana.dev.rtsoft.ru>
+References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
+ <20111110152606.GB3207@oksana.dev.rtsoft.ru>
+ <20111110153816.239af1d7@lxorguk.ukuu.org.uk>
+ <20111110162859.GA7088@oksana.dev.rtsoft.ru>
+ <20111202191917.GB3037@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49934 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244Ab1LBT2f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2011 14:28:35 -0500
-In-Reply-To: <20111202192618.GC3037@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111202191917.GB3037@localhost.localdomain>
+Sender: linux-next-owner@vger.kernel.org
 To: Dave Martin <dave.martin@linaro.org>
-Cc: Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Fri, Dec 2, 2011 at 11:26 AM, Dave Martin <dave.martin@linaro.org> w=
-rote:
->
+On Fri, Dec 02, 2011 at 07:19:17PM +0000, Dave Martin wrote:
+[...]
+> > > > Drivers should not use NO_IRQ; moreover, some architectures don't
+> > > > have it nowadays. '0' is the 'no irq' case.
+> > > > 
+> > > > Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+> > > 
+> > > Acked-by: Alan Cox <alan@linux.intel.com>
+> > 
+> > In case if we don't want a "band-aid fix" for 3.2, here is the patch
+> > that just does the proper fix (w/ a risk to break minor architectures).
+> 
 > This is now broken on ARM where, for good or bad, NO_IRQ currently is
 > used and is -1.
->
-> How do we resolve it? =A0If we are ready to eliminate NO_IRQ from
-> drivers/of/irq.c (or indeed, all code that uses it) and just use 0 fo=
-r
-> that case, we should surely just do it... but I'm not confident I can
-> judge on that.
+> 
+> How do we resolve it?
 
-Just stop using NO_IRQ. First in drivers/of/irq.c, then in any drivers
-as you notice breakage.
+One option is to test this patch on a board that is now broken:
 
-Don't *change* NO_IRQ to zero (that whole #define is broken - leave it
-around as a marker of brokenness), just start removing it from all the
-ARM drivers that use the OF infrastructure. Which is presumably not
-all that many yet.
+http://lkml.org/lkml/2011/11/10/290
 
-So whenever you find breakage, the fix now is to just remove NO_IRQ
-tests, and replace them with "!irq".
+So that someone provide Tested-by tag. With the tag we probably can
+push the patch for 3.2, and thus fix the issue once and forever.
 
-                       Linus
+
+The other option is to revert the correct fix, and push the bogus
+one, i.e. this:
+
+http://lkml.org/lkml/2011/11/10/287
+
+But that last option is less likely, as this was NAKed by Alan Cox.
+
+Thanks,
+
+-- 
+Anton Vorontsov
+Email: cbouatmailru@gmail.com
