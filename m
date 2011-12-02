@@ -1,47 +1,162 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Sat, 03 Dec 2011 10:12:53 +1100
-Message-ID: <1322867573.11728.22.camel@pasglop>
-References: <20111110162859.GA7088@oksana.dev.rtsoft.ru>
-	 <20111202192618.GC3037@localhost.localdomain>
-	 <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+From: Anton Vorontsov <anton.vorontsov@linaro.org>
+Subject: [PATCH v2] of/irq: Get rid of NO_IRQ usage
+Date: Sat, 3 Dec 2011 03:18:33 +0400
+Message-ID: <20111202231833.GA11588@oksana.dev.rtsoft.ru>
+References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
+ <20111110152606.GB3207@oksana.dev.rtsoft.ru>
+ <20111110153816.239af1d7@lxorguk.ukuu.org.uk>
+ <20111110162859.GA7088@oksana.dev.rtsoft.ru>
+ <20111202191917.GB3037@localhost.localdomain>
+ <20111202223402.GA7780@oksana.dev.rtsoft.ru>
+ <CA+55aFzUy2C26GbTqapEgh0wh5Z1wuH_-Kdm7yCdp6cnu46afQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFzUy2C26GbTqapEgh0wh5Z1wuH_-Kdm7yCdp6cnu46afQ@mail.gmail.com>
 Sender: linux-next-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dave Martin <dave.martin@linaro.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
+Cc: Dave Martin <dave.martin@linaro.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, 2011-12-02 at 11:28 -0800, Linus Torvalds wrote:
-> On Fri, Dec 2, 2011 at 11:26 AM, Dave Martin <dave.martin@linaro.org> wrote:
+PPC32/64 defines NO_IRQ to zero, so no problems expected.
+ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
+which returns correct ('0') value in 'no irq' case. So everything
+should be fine.
+
+Other arches might break if some of their OF drivers rely on NO_IRQ
+being not 0. If so, the drivers must be fixed, finally.
+
+Signed-off-by: Anton Vorontsov <anton.vorontsov@linaro.org>
+---
+
+On Fri, Dec 02, 2011 at 02:40:37PM -0800, Linus Torvalds wrote:
+> On Fri, Dec 2, 2011 at 2:34 PM, Anton Vorontsov
+> <anton.vorontsov@linaro.org> wrote:
 > >
-> > This is now broken on ARM where, for good or bad, NO_IRQ currently is
-> > used and is -1.
+> > One option is to test this patch on a board that is now broken:
 > >
-> > How do we resolve it?  If we are ready to eliminate NO_IRQ from
-> > drivers/of/irq.c (or indeed, all code that uses it) and just use 0 for
-> > that case, we should surely just do it... but I'm not confident I can
-> > judge on that.
+> > http://lkml.org/lkml/2011/11/10/290
 > 
-> Just stop using NO_IRQ. First in drivers/of/irq.c, then in any drivers
-> as you notice breakage.
-
-Agreed. In fact the whole hack in drivers/of/irq.c was to accomodate ARM
-which still uses -1, powerpc changed to 0 a long time ago.
-
-Now that we have a generic remapper between HW and "linux" IRQ numbers,
-there is no reason to stick to -1 even on ARM.
-
-> Don't *change* NO_IRQ to zero (that whole #define is broken - leave it
-> around as a marker of brokenness), just start removing it from all the
-> ARM drivers that use the OF infrastructure. Which is presumably not
-> all that many yet.
+> That seems broken.
 > 
-> So whenever you find breakage, the fix now is to just remove NO_IRQ
-> tests, and replace them with "!irq".
+> Spot the trouble:
+> 
+>   +	ret = irq_create_of_mapping(oirq.controller, oirq.specifier,
+>   +				    oirq.size);
+>   +no_irq:
+>   +#ifdef NO_IRQ
+>   +#if NO_IRQ != 0
+>   +	if (ret == NO_IRQ)
+>   +		pr_warn("Hit NO_IRQ case for your arch. Drivers might expect "
+>   +			"NO_IRQ, but we return 0. If anything breaks, driver "
+>   +			"have to be fixed.\n");
+>   +#endif
+>   +#endif
+>   +	return ret;
+> 
+> It claims "we return 0", but then doesn't return zero.. Hmm?
+> 
+>                   Linus
 
-Cheers,
-Ben.
+Hehe, I never claimed that I tested the patch on any OF platform. :-D
+
+But, the patch would work for ARM anyway. irq_create_of_mapping()
+always return 0 in case of 'no irq'. So, in ARM case the problem was
+in the hunk that you snipped:
+
+         if (of_irq_map_one(dev, index, &oirq))
+ -               return NO_IRQ;
+ -
+
+For the arches that don't use IRQ domains and have NO_IRQ != 0 (e.g.
+microblaze), you spot the real trouble indeed. Thanks.
+
+Here is the amended fix. I hope it works, and somebody could test it.
+
+p.s.
+
+Initially I proposed a very simple band-aid fix for 3.2, and wanted
+the real fix postponed for 3.3 (since nowadays I don't have any OF
+machines to test, but this will change soon).
+
+I hope it's a good excuse. ;-)
+
+ drivers/of/irq.c |   32 ++++++++++++++++++++------------
+ 1 files changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+index 791270b..97ee3bd 100644
+--- a/drivers/of/irq.c
++++ b/drivers/of/irq.c
+@@ -26,11 +26,6 @@
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ 
+-/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
+-#ifndef NO_IRQ
+-#define NO_IRQ 0
+-#endif
+-
+ /**
+  * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
+  * @device: Device node of the device whose interrupt is to be mapped
+@@ -42,12 +37,25 @@
+ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
+ {
+ 	struct of_irq oirq;
++	int ret = 0;
+ 
+ 	if (of_irq_map_one(dev, index, &oirq))
+-		return NO_IRQ;
+-
+-	return irq_create_of_mapping(oirq.controller, oirq.specifier,
+-				     oirq.size);
++		goto no_irq;
++
++	ret = irq_create_of_mapping(oirq.controller, oirq.specifier,
++				    oirq.size);
++no_irq:
++#ifdef NO_IRQ
++#if NO_IRQ != 0
++	if (ret == NO_IRQ) {
++		pr_warn("Hit NO_IRQ case for your arch. Drivers might expect "
++			"NO_IRQ, but we return 0. If anything breaks, driver "
++			"have to be fixed.\n");
++		ret = 0;
++	}
++#endif
++#endif
++	return ret;
+ }
+ EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
+ 
+@@ -345,7 +353,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
+ 
+ 	/* Only dereference the resource if both the
+ 	 * resource and the irq are valid. */
+-	if (r && irq != NO_IRQ) {
++	if (r && irq) {
+ 		r->start = r->end = irq;
+ 		r->flags = IORESOURCE_IRQ;
+ 		r->name = dev->full_name;
+@@ -363,7 +371,7 @@ int of_irq_count(struct device_node *dev)
+ {
+ 	int nr = 0;
+ 
+-	while (of_irq_to_resource(dev, nr, NULL) != NO_IRQ)
++	while (of_irq_to_resource(dev, nr, NULL))
+ 		nr++;
+ 
+ 	return nr;
+@@ -383,7 +391,7 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
+ 	int i;
+ 
+ 	for (i = 0; i < nr_irqs; i++, res++)
+-		if (of_irq_to_resource(dev, i, res) == NO_IRQ)
++		if (!of_irq_to_resource(dev, i, res))
+ 			break;
+ 
+ 	return i;
+-- 
+1.7.5.3
