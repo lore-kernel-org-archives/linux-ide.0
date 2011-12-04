@@ -1,126 +1,32 @@
-From: David Krider <david@davidkrider.com>
-Subject: Fwd: Various problems with MCP55 since 2.6.37
-Date: Sun, 04 Dec 2011 06:56:14 -0500
-Message-ID: <4EDB5FDE.8030709@davidkrider.com>
-References: <4EDA163E.2030501@davidkrider.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide: convert drivers/ide/* to use
+ module_platform_driver()
+Date: Sun, 04 Dec 2011 14:03:44 -0500 (EST)
+Message-ID: <20111204.140344.632699547937708075.davem@davemloft.net>
+References: <1322376711.2226.5.camel@phoenix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51631 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018Ab1LDL4Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Dec 2011 06:56:16 -0500
-Received: by iakc1 with SMTP id c1so457745iak.19
-        for <linux-ide@vger.kernel.org>; Sun, 04 Dec 2011 03:56:15 -0800 (PST)
-In-Reply-To: <4EDA163E.2030501@davidkrider.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:38418 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754965Ab1LDTDw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Dec 2011 14:03:52 -0500
+In-Reply-To: <1322376711.2226.5.camel@phoenix>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: axel.lin@gmail.com
+Cc: linux-kernel@vger.kernel.org, ralf@linux-mips.org, galak@kernel.crashing.org, linux-ide@vger.kernel.org
 
-I apologize. I see that I'm conflating issues. I reinstalled Ubuntu
-10.10, again, which has a 2.6.35 kernel. This fixes the rebooting
-problem, but I still have the ata errors.
+From: Axel Lin <axel.lin@gmail.com>
+Date: Sun, 27 Nov 2011 14:51:51 +0800
 
-I've noticed a couple things.
+> This patch converts the drivers in drivers/ide/* to use the
+> module_platform_driver() macro which makes the code smaller and a bit
+> simpler.
+> 
+> Cc: Ralf Baechle <ralf@linux-mips.org>
+> Cc: Kumar Gala <galak@kernel.crashing.org>
+> Signed-off-by: Axel Lin <axel.lin@gmail.com>
 
-First, I've never gotten scrambled filesystems since getting rid of
-fakeraid. I'm going to blame that scrambling on that, and forget about it.
-
-Second, I finally notice, in the ata error below, that ata3 can't be my
-SSD. From a message to this list that I just found, I see that it would
-be strongly suspected that I have power problems. I have an 800W power
-supply, so I don't think it's not giving ENOUGH power, but the quality
-might be bad? (I did a lot of damage to an old dual Athlon computer by
-having an underspec'ed PS; I didn't make that mistake on this one.) I've
-installed lm-sensors and will try to track this.
-
-So I just want to dial into the reboot problem, as I reboot into Windows
-(to play games) a lot. That one's pretty clear. If I upgrade to a
-post-2.6.35 kernel, I get the problem, whether I'm using an SSD or a
-regular HDD. Is there anything that can be done?
-
--------- Original Message --------
-Subject: Various problems with MCP55 since 2.6.37
-Date: Sat, 03 Dec 2011 07:29:50 -0500
-From: David Krider <david@davidkrider.com>
-To: linux-ide@vger.kernel.org
-
-I'm getting lots of different problems with the MCP55 controller since
-kernel 2.6.37. I have an Asus-built Nvidia 780i-based motherboard. I
-have both Ubuntu and Windows 7 installed. Windows 7 doesn't seem to be
-giving me any trouble at all, so I don't think it's my hardware. I have
-spent many hours working on this to no avail. If I stay on Ubuntu 10.10,
-which has a 2.6.35-based kernel, I don't have these problems, but that
-version of Ubuntu will be rolling off support soon (and I want Gnome 3).
-
-First, the computer won't reboot correctly. If I let it just reboot,
-then, when either Windows or Linux is starting, it will just
-spontaneously reboot again. This doesn't happen when rebooting from
-Windows. If I simply shut down from Linux, then manually power the
-computer back on, the BIOS screen will just barely pop up, then the BIOS
-itself will restart, and come back up to an error screen saying that the
-BIOS "crashed."
-
-I've gotten scrambled file systems twice because of this.
-
-I was hoping the problem was my fakeraid setup, so I bought an SSD and
-replaced it. That has brought on a new set of problems. I get lots of
-"interesting" messages in dmesg, but I can't figure out if they're just
-informational, or if there's a serious, data-losing situation occuring.
-
-[  922.848302] ata3.00: failed command: WRITE FPDMA QUEUED
-[  922.848305] ata3.00: cmd 61/10:f0:a0:a3:f0/00:00:10:00:00/40 tag 30
-ncq 8192 out
-[  922.848306]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[  922.848308] ata3.00: status: { DRDY }
-[  922.848311] ata3: hard resetting link
-[  922.848312] ata3: nv: skipping hardreset on occupied port
-[  928.360008] ata3: link is slow to respond, please be patient (ready=0)
-[  932.896009] ata3: SRST failed (errno=-16)
-[  932.896014] ata3: hard resetting link
-[  932.896016] ata3: nv: skipping hardreset on occupied port
-[  933.364026] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  933.380198] ata3.00: configured for UDMA/133
-[  933.380203] ata3.00: device reported invalid CHS sector 0
-
-Also, I occasionally get "pauses." Every once in awhile, the drive light
-will come on solid, and the whole machine will simply pause for about 60
-seconds, and then I get messages like this:
-
-[ 1040.361005] sd 2:0:0:0: [sda]  Result: hostbyte=DID_OK
-driverbyte=DRIVER_SENSE
-[ 1040.361007] sd 2:0:0:0: [sda]  Sense Key : Aborted Command [current]
-[descriptor]
-[ 1040.361009] Descriptor sense data with sense descriptors (in hex):
-[ 1040.361011]         72 0b 47 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-[ 1040.361016]         12 30 d4 48
-[ 1040.361019] sd 2:0:0:0: [sda]  Add. Sense: Scsi parity error
-[ 1040.361021] sd 2:0:0:0: [sda] CDB: Read(10): 28 00 12 30 d4 f8 00 00
-08 00
-[ 1040.361026] end_request: I/O error, dev sda, sector 305190136
-
-I've created an Ubuntu bug on the reboot problem that is confirmed, but
-I can't get any more information on there.
-(https://bugs.launchpad.net/ubuntu/+source/linux/+bug/829413)
-
-I also made a bug report on the kernel bugzilla, but -- obviously --
-it's down.
-
-I've tried half a dozen kernel boot flags.
-
-I've tried a dozen different kernels.
-
-I tried to switch to btrfs, but Ubuntu's kernel package has a bug that
-prevents it from being installed on there.
-
-In other words, I'm trying to say that I'm doing the work that an
-end-user can be expected to do. I don't know what else to try. I'm
-really desperate to get this fixed; it really bothers me. At this point,
-I'm considering buying a PCIe SATA RAID card, or going back to Gentoo,
-where I can really play with kernel versions and patches more
-effectively, and I'm not really looking forward to that...
-
-ANY help would be GREATLY appreciated,
-dk
+Applied.
