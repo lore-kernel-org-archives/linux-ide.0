@@ -1,116 +1,126 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Sat, 3 Dec 2011 19:56:08 +0100
-Message-ID: <CAMuHMdXvwJ4f6a5Y2+TXn1X3CAg2Ok51f2+n4ye0uTfAVgBC1Q@mail.gmail.com>
-References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
-	<20111110152606.GB3207@oksana.dev.rtsoft.ru>
-	<20111110153816.239af1d7@lxorguk.ukuu.org.uk>
-	<20111110162859.GA7088@oksana.dev.rtsoft.ru>
-	<20111202191917.GB3037@localhost.localdomain>
-	<20111202232243.6af6f1e2@lxorguk.ukuu.org.uk>
+From: David Krider <david@davidkrider.com>
+Subject: Fwd: Various problems with MCP55 since 2.6.37
+Date: Sun, 04 Dec 2011 06:56:14 -0500
+Message-ID: <4EDB5FDE.8030709@davidkrider.com>
+References: <4EDA163E.2030501@davidkrider.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:59008 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753894Ab1LCS4K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Dec 2011 13:56:10 -0500
-In-Reply-To: <20111202232243.6af6f1e2@lxorguk.ukuu.org.uk>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51631 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018Ab1LDL4Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Dec 2011 06:56:16 -0500
+Received: by iakc1 with SMTP id c1so457745iak.19
+        for <linux-ide@vger.kernel.org>; Sun, 04 Dec 2011 03:56:15 -0800 (PST)
+In-Reply-To: <4EDA163E.2030501@davidkrider.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Dave Martin <dave.martin@linaro.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Linus Torvalds <torvalds@linux-foundation.org>, Jeff Garzik <jgarzik@redhat.com>, linux-arch@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sat, Dec 3, 2011 at 00:22, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote=
-:
->> This is now broken on ARM where, for good or bad, NO_IRQ currently i=
-s
->> used and is -1.
->
-> Good.
->
-> ARM developers have been told to change this for several years. The n=
-ice
-> approach hasn't worked, the patient approach hasn't worked so now fin=
-ally
-> ARM is going to be dragged kicking and screaming into doing the work
-> everyone else did several years ago.
->
-> I have so little sympathy over this that you'll need a quantum physic=
-ist
-> to measure it.
->
->> Half-removing NO_IRQ is going to be problematic, though...
->> I really don't care whether the "no irq" value is 0 or -1, but it is
->> abundantly clear that choosing different values to mean the same thi=
-ng
->> on opposite sides of an interface does not work.
->
-> You've had years to fix it. If I were you I'd delete NO_IRQ from your
-> tree, type make and get it done. It's not even a big job to clean it =
-out.
->
-> At that point various other drivers will also start working properly =
-on
-> ARM because they use 0 for polled mode.
+I apologize. I see that I'm conflating issues. I reinstalled Ubuntu
+10.10, again, which has a 2.6.35 kernel. This fixes the rebooting
+problem, but I still have the ata errors.
 
-Not just ARM:
+I've noticed a couple things.
 
-arch/arm/include/asm/irq.h:#ifndef
-NO_IRQarch/arm/include/asm/irq.h:#define NO_IRQ =C2=A0 =C2=A0 =C2=A0 ((=
-unsigned
-int)(-1))arch/microblaze/include/asm/irq.h:#define NO_IRQ
-(-1)arch/mn10300/include/asm/irq.h:#define NO_IRQ
-INT_MAXarch/openrisc/include/asm/irq.h:#define NO_IRQ
-(-1)arch/parisc/include/asm/irq.h:#define NO_IRQ
-(-1)arch/powerpc/include/asm/irq.h:#define NO_IRQ
-(0)arch/powerpc/include/asm/machdep.h: =C2=A0 =C2=A0 /* Return an irq, =
-or NO_IRQ
-to indicate=C2=A0arch/powerpc/include/asm/parport.h: =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 if (virq
-=3D=3D NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if=
- (cascade_irq !=3D
-NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if (casca=
-de_irq !=3D
-NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if (casca=
-de_irq !=3D
-NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if (casca=
-de_irq !=3D
-NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if (casca=
-de_irq =3D=3D
-NO_IRQ)arch/powerpc/include/asm/qe_ic.h: =C2=A0 =C2=A0 =C2=A0 if (casca=
-de_irq !=3D
-NO_IRQ)arch/sparc/include/asm/irq_32.h:#define NO_IRQ
-0xffffffffarch/sparc/include/asm/irq_64.h:#define NO_IRQ
-0xffffffff
+First, I've never gotten scrambled filesystems since getting rid of
+fakeraid. I'm going to blame that scrambling on that, and forget about it.
 
-And it's not just definitions of NO_IRQ. These are easy to find.
-On some archs (notably ARM) zero still seems to be a valid IRQ number,
-e.g. IRQ_LOCOMO_KEY and IRQ_DMA0C0.
+Second, I finally notice, in the ata error below, that ata3 can't be my
+SSD. From a message to this list that I just found, I see that it would
+be strongly suspected that I have power problems. I have an 800W power
+supply, so I don't think it's not giving ENOUGH power, but the quality
+might be bad? (I did a lot of damage to an old dual Athlon computer by
+having an underspec'ed PS; I didn't make that mistake on this one.) I've
+installed lm-sensors and will try to track this.
 
-Also, UML has TIMER_IRQ being zero.
+So I just want to dial into the reboot problem, as I reboot into Windows
+(to play games) a lot. That one's pretty clear. If I upgrade to a
+post-2.6.35 kernel, I get the problem, whether I'm using an SSD or a
+regular HDD. Is there anything that can be done?
 
-A quick grep found many more IRQ definitions being zero, but
-surprisingly the few
-I looked into were definitions without users (e.g. SE7343_FPGA_IRQ_MRSH=
-PC0,
-ROUTE_VIA_IRQ0 aka IRQ_MB93493_VDC_ROUTE).
+-------- Original Message --------
+Subject: Various problems with MCP55 since 2.6.37
+Date: Sat, 03 Dec 2011 07:29:50 -0500
+From: David Krider <david@davidkrider.com>
+To: linux-ide@vger.kernel.org
 
-Perhaps request_irq() should just reject zero to find all of them?
+I'm getting lots of different problems with the MCP55 controller since
+kernel 2.6.37. I have an Asus-built Nvidia 780i-based motherboard. I
+have both Ubuntu and Windows 7 installed. Windows 7 doesn't seem to be
+giving me any trouble at all, so I don't think it's my hardware. I have
+spent many hours working on this to no avail. If I stay on Ubuntu 10.10,
+which has a 2.6.35-based kernel, I don't have these problems, but that
+version of Ubuntu will be rolling off support soon (and I want Gnome 3).
 
-Gr{oetje,eeting}s,
+First, the computer won't reboot correctly. If I let it just reboot,
+then, when either Windows or Linux is starting, it will just
+spontaneously reboot again. This doesn't happen when rebooting from
+Windows. If I simply shut down from Linux, then manually power the
+computer back on, the BIOS screen will just barely pop up, then the BIOS
+itself will restart, and come back up to an error screen saying that the
+BIOS "crashed."
 
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
+I've gotten scrambled file systems twice because of this.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
+I was hoping the problem was my fakeraid setup, so I bought an SSD and
+replaced it. That has brought on a new set of problems. I get lots of
+"interesting" messages in dmesg, but I can't figure out if they're just
+informational, or if there's a serious, data-losing situation occuring.
 
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+[  922.848302] ata3.00: failed command: WRITE FPDMA QUEUED
+[  922.848305] ata3.00: cmd 61/10:f0:a0:a3:f0/00:00:10:00:00/40 tag 30
+ncq 8192 out
+[  922.848306]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[  922.848308] ata3.00: status: { DRDY }
+[  922.848311] ata3: hard resetting link
+[  922.848312] ata3: nv: skipping hardreset on occupied port
+[  928.360008] ata3: link is slow to respond, please be patient (ready=0)
+[  932.896009] ata3: SRST failed (errno=-16)
+[  932.896014] ata3: hard resetting link
+[  932.896016] ata3: nv: skipping hardreset on occupied port
+[  933.364026] ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  933.380198] ata3.00: configured for UDMA/133
+[  933.380203] ata3.00: device reported invalid CHS sector 0
+
+Also, I occasionally get "pauses." Every once in awhile, the drive light
+will come on solid, and the whole machine will simply pause for about 60
+seconds, and then I get messages like this:
+
+[ 1040.361005] sd 2:0:0:0: [sda]  Result: hostbyte=DID_OK
+driverbyte=DRIVER_SENSE
+[ 1040.361007] sd 2:0:0:0: [sda]  Sense Key : Aborted Command [current]
+[descriptor]
+[ 1040.361009] Descriptor sense data with sense descriptors (in hex):
+[ 1040.361011]         72 0b 47 00 00 00 00 0c 00 0a 80 00 00 00 00 00
+[ 1040.361016]         12 30 d4 48
+[ 1040.361019] sd 2:0:0:0: [sda]  Add. Sense: Scsi parity error
+[ 1040.361021] sd 2:0:0:0: [sda] CDB: Read(10): 28 00 12 30 d4 f8 00 00
+08 00
+[ 1040.361026] end_request: I/O error, dev sda, sector 305190136
+
+I've created an Ubuntu bug on the reboot problem that is confirmed, but
+I can't get any more information on there.
+(https://bugs.launchpad.net/ubuntu/+source/linux/+bug/829413)
+
+I also made a bug report on the kernel bugzilla, but -- obviously --
+it's down.
+
+I've tried half a dozen kernel boot flags.
+
+I've tried a dozen different kernels.
+
+I tried to switch to btrfs, but Ubuntu's kernel package has a bug that
+prevents it from being installed on there.
+
+In other words, I'm trying to say that I'm doing the work that an
+end-user can be expected to do. I don't know what else to try. I'm
+really desperate to get this fixed; it really bothers me. At this point,
+I'm considering buying a PCIe SATA RAID card, or going back to Gentoo,
+where I can really play with kernel versions and patches more
+effectively, and I'm not really looking forward to that...
+
+ANY help would be GREATLY appreciated,
+dk
