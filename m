@@ -1,50 +1,65 @@
-From: Rob Herring <robherring2@gmail.com>
+From: Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Mon, 05 Dec 2011 14:47:29 -0600
-Message-ID: <4EDD2DE1.1050606@gmail.com>
-References: <20111110162859.GA7088@oksana.dev.rtsoft.ru> <20111202192618.GC3037@localhost.localdomain> <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com> <1322867573.11728.22.camel@pasglop> <20111205161157.GA27550@localhost.localdomain> <alpine.LFD.2.02.1112051236350.2357@xanadu.home> <20111205180253.GB29812@localhost.localdomain> <alpine.LFD.2.02.1112051310150.2357@xanadu.home> <4EDD1897.4030208@gmail.com> <20111205202125.GA32592@oksana.dev.rtsoft.ru>
+Date: Mon, 5 Dec 2011 20:53:44 +0000
+Message-ID: <20111205205344.3c0c0894@lxorguk.ukuu.org.uk>
+References: <20111110162859.GA7088@oksana.dev.rtsoft.ru>
+ <20111202192618.GC3037@localhost.localdomain>
+ <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+ <1322867573.11728.22.camel@pasglop>
+ <20111205161157.GA27550@localhost.localdomain>
+ <alpine.LFD.2.02.1112051236350.2357@xanadu.home>
+ <20111205180253.GB29812@localhost.localdomain>
+ <alpine.LFD.2.02.1112051310150.2357@xanadu.home>
+ <4EDD1897.4030208@gmail.com>
+ <20111205202125.GA32592@oksana.dev.rtsoft.ru>
+ <4EDD2DE1.1050606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111205202125.GA32592@oksana.dev.rtsoft.ru>
-Sender: linux-next-owner@vger.kernel.org
-To: Anton Vorontsov <cbouatmailru@gmail.com>
-Cc: Nicolas Pitre <nicolas.pitre@linaro.org>, Dave Martin <dave.martin@linaro.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Russell King - ARM Linux <linux@arm.linux.org.uk>, Pawel Moll <pawel.moll@arm.com>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jonas Bonn <jonas@southpole.se>, Michal Simek <monstr@monstr.eu>, Grant Likely <grant.likely@secretlab.ca>
+Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+In-Reply-To: <4EDD2DE1.1050606-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
+ <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
+List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
+ <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
+Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+To: Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Nicolas Pitre <nicolas.pitre-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Anton Vorontsov <cbouatmailru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Garzik <jgarzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On 12/05/2011 02:21 PM, Anton Vorontsov wrote:
-> On Mon, Dec 05, 2011 at 01:16:39PM -0600, Rob Herring wrote:
-> [...]
->> At least for DT enabled platforms, we could force "no irq" to be 0 in
->> the DT irq code. Searching the dts files, I found 2 occurrences of IRQ0.
-> 
-> Please note that there are HW IRQ numbers and "Virtual" IRQ numbers.
-> dev->irq and thus the thing that we pass into request_irq() is a
-> virtual IRQ thing, a "cookie".
-> 
-> While in device tree you see real HW IRQ numbers.
-> 
-> Legal VIRQ is always > 0, while HW IRQ could be >= 0.
-> 
+On Mon, 05 Dec 2011 14:47:29 -0600
+Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-If this was all true, then there would be no discussion.
-
-This is what we are working towards, but irq_chips all over the arm tree
-do not support any translation or have base fixed at compile time. Only
-a few have been converted. And some ARM platforms may never get
-converted to DT.
-
->> Prima2 has timer on IRQ0, and VersatileAB has watchdog on IRQ0. Prima2
->> should be fine currently as it doesn't use the of_irq_* functions to get
->> the timer irq, but that is an issue as it skips any translation.
->> VersatileAB should be okay with the VIC irqdomain support.
+> On 12/05/2011 02:21 PM, Anton Vorontsov wrote:
+> > On Mon, Dec 05, 2011 at 01:16:39PM -0600, Rob Herring wrote:
+> > [...]
+> >> At least for DT enabled platforms, we could force "no irq" to be 0 in
+> >> the DT irq code. Searching the dts files, I found 2 occurrences of IRQ0.
+> > 
+> > Please note that there are HW IRQ numbers and "Virtual" IRQ numbers.
+> > dev->irq and thus the thing that we pass into request_irq() is a
+> > virtual IRQ thing, a "cookie".
+> > 
+> > While in device tree you see real HW IRQ numbers.
+> > 
+> > Legal VIRQ is always > 0, while HW IRQ could be >= 0.
+> > 
 > 
-> It shouldn't be an issue to use of_irq_*() functions for these IRQs.
-> of_irq_*() will remap HW IRQ 0 to some other VIRQ. If it does not do
-> this currently, then it's a bug and should be fixed.
+> If this was all true, then there would be no discussion.
 
-I think that's what I'm saying. It's either a bug or incomplete DT
-conversion for the platform. Either way, those should get fixed first.
+Or more to the point. If the ARM people concerned had listened in 2005,
+2006 or 2008 there would be no discussion.
 
-Rob
+> This is what we are working towards, but irq_chips all over the arm tree
+> do not support any translation or have base fixed at compile time. Only
+> a few have been converted. And some ARM platforms may never get
+> converted to DT.
+
+You've had six years. Let them break, it'll motivate any users to fix
+them.
+
+Alan
