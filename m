@@ -1,95 +1,117 @@
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
-Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Tue, 6 Dec 2011 21:59:55 +0100
-Message-ID: <20111206205955.GH4585@pengutronix.de>
-References: <1322867573.11728.22.camel@pasglop>
- <20111205161157.GA27550@localhost.localdomain>
- <alpine.LFD.2.02.1112051236350.2357@xanadu.home>
- <20111205180253.GB29812@localhost.localdomain>
- <alpine.LFD.2.02.1112051310150.2357@xanadu.home>
- <20111205192605.GD29812@localhost.localdomain>
- <alpine.LFD.2.02.1112051443190.2357@xanadu.home>
- <20111206093709.GB2274@linaro.org>
- <20111206104654.GN14542@n2100.arm.linux.org.uk>
- <CA+55aFwZBr+3_S9kU-+m8zN8iwOvn2miuuAy-zt7sUjW_+abBg@mail.gmail.com>
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: [PATCH 1/2] of/irq: Get rid of NO_IRQ usage
+Date: Tue, 06 Dec 2011 15:22:02 -0600
+Message-ID: <4EDE877A.4080708@gmail.com>
+References: <20111110151852.GA7465@oksana.dev.rtsoft.ru> <20111110152541.GA3207@oksana.dev.rtsoft.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFwZBr+3_S9kU-+m8zN8iwOvn2miuuAy-zt7sUjW_+abBg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Nicolas Pitre <nicolas.pitre-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, Anton Vorontsov <cbouatmailru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Garzik <jgarzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63305 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896Ab1LFVWG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2011 16:22:06 -0500
+In-Reply-To: <20111110152541.GA3207@oksana.dev.rtsoft.ru>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Anton Vorontsov <cbouatmailru@gmail.com>
+Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>, Stephen Rothwell <sfr@canb.auug.org.au>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello Linus,
+On 11/10/2011 09:25 AM, Anton Vorontsov wrote:
+> PPC32/64 defines NO_IRQ to zero, so no problems expected.
+> ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
+> which returns correct ('0') value in 'no irq' case. So everything
+> should be fine.
+> 
+> Other arches might break if some of their OF drivers rely on NO_IRQ
+> being not 0. If so, the drivers must be fixed, finally.
+> 
+> Signed-off-by: Anton Vorontsov <cbouatmailru@gmail.com>
+> ---
+>  drivers/of/irq.c |   30 ++++++++++++++++++------------
+>  1 files changed, 18 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
+> index 6d3dd39..2dd4937 100644
+> --- a/drivers/of/irq.c
+> +++ b/drivers/of/irq.c
+> @@ -26,11 +26,6 @@
+>  #include <linux/string.h>
+>  #include <linux/slab.h>
+>  
+> -/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
+> -#ifndef NO_IRQ
+> -#define NO_IRQ 0
+> -#endif
+> -
+>  /**
+>   * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
+>   * @device: Device node of the device whose interrupt is to be mapped
+> @@ -42,12 +37,23 @@
+>  unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
+>  {
+>  	struct of_irq oirq;
+> +	int ret = 0;
+>  
+>  	if (of_irq_map_one(dev, index, &oirq))
+> -		return NO_IRQ;
+> -
+> -	return irq_create_of_mapping(oirq.controller, oirq.specifier,
+> -				     oirq.size);
+> +		goto no_irq;
+> +
+> +	ret = irq_create_of_mapping(oirq.controller, oirq.specifier,
+> +				    oirq.size);
+> +no_irq:
+> +#ifdef NO_IRQ
+> +#if NO_IRQ != 0
+> +	if (ret == NO_IRQ)
+> +		pr_warn("Hit NO_IRQ case for your arch. Drivers might expect "
+> +			"NO_IRQ, but we return 0. If anything breaks, driver "
+> +			"have to be fixed.\n");
+> +#endif
+> +#endif
 
-On Tue, Dec 06, 2011 at 11:20:49AM -0800, Linus Torvalds wrote:
-> On Tue, Dec 6, 2011 at 2:46 AM, Russell King - ARM Linux
-> <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org> wrote:
-> >
-> > But.. let's make one thing clear: Alan Cox and Linus have been going on
-> > about how IRQ0 should not be used. =A0Let's be crystal clear: even x86
-> > uses IRQ0.
-> =
+This warning code is really ugly. Can we just drop it? In my searching
+of in kernel dts files, there's only 1 instance I have found (Versatile
+AB watchdog) that would hit this.
 
-> Not for any device driver, though.
-> =
+If not, you don't need to handle irq_create_of_mapping return as that is
+already always 0 for no irq or error.
 
-> It's used entirely internally, and it doesn't even use
-> "request_irq()". It uses the magic internal "setup_irq()" and never
-> *ever* exposes irq0 as anything that a driver can see.
-> =
+Otherwise, looks fine.
 
-> That's what matters. You can use irq0 in ARM land all you like, AS
-> LONG AS IT'S SOME HIDDEN INTERNAL USE. No drivers. No *nothing* that
-> ever uses that absolutely *idiotic* NO_IRQ crap.
-> =
+Rob
 
-> In fact, you may be *forced* to use what is "physically" irq0 - it's
-> just that you should never expose it as such to drivers. And x86
-> doesn't.
-> =
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
+>  
+> @@ -345,7 +351,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
+>  
+>  	/* Only dereference the resource if both the
+>  	 * resource and the irq are valid. */
+> -	if (r && irq != NO_IRQ) {
+> +	if (r && irq) {
+>  		r->start = r->end = irq;
+>  		r->flags = IORESOURCE_IRQ;
+>  		r->name = dev->full_name;
+> @@ -363,7 +369,7 @@ int of_irq_count(struct device_node *dev)
+>  {
+>  	int nr = 0;
+>  
+> -	while (of_irq_to_resource(dev, nr, NULL) != NO_IRQ)
+> +	while (of_irq_to_resource(dev, nr, NULL))
+>  		nr++;
+>  
+>  	return nr;
+> @@ -383,7 +389,7 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
+>  	int i;
+>  
+>  	for (i = 0; i < nr_irqs; i++, res++)
+> -		if (of_irq_to_resource(dev, i, res) == NO_IRQ)
+> +		if (!of_irq_to_resource(dev, i, res))
+>  			break;
+>  
+>  	return i;
 
-> So Russell, if you think this has anything to do with NO_IRQ, and how
-> x86 isn't doing things right, you're wrong. It's just like the
-> internal exception thing, or the magical "cascade interrupt", or the
-> "x87 exception mapped through the PIC". They are magic hidden
-> interrupts that are set up in one place (well, one place *each*), and
-> are never exposed anywhere else.
-Well there is try_misrouted_irq in kernel/irq/spurious.c that assumes
-irq0 to be something that it never is on ARM (and maybe all other
-platforms apart from x86). So at least it's not internal to a single
-(x86 specific) place.
-
-I tried to patch that two years ago, but that only ended in people
-saying "don't use irq0". I don't know if try_misrouted_irq sees hardware
-irqs, but if it does it's a bug even on archs !=3D X86 that use virtual
-irqs.
-
-(Note that this doesn't oppose to your statement that using NO_IRQ is
-crap.)
-
-> The problem with NO_IRQ is that stupid "we expose our mind-numbingly
-> stupid interfaces across the whole kernel".
-> =
-
-> x86 never did that.  ARM still does. x86 doesn't have to fix anything. AR=
-M does.
-
-Best regards
-Uwe
-
--- =
-
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
