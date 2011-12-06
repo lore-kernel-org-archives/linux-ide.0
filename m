@@ -1,60 +1,57 @@
-From: Nicolas Pitre <nicolas.pitre@linaro.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Tue, 6 Dec 2011 14:11:42 -0500 (EST)
-Message-ID: <alpine.LFD.2.02.1112061408000.2357@xanadu.home>
-References: <20111110162859.GA7088@oksana.dev.rtsoft.ru> <20111202192618.GC3037@localhost.localdomain> <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com> <1322867573.11728.22.camel@pasglop> <20111205161157.GA27550@localhost.localdomain>
- <alpine.LFD.2.02.1112051236350.2357@xanadu.home> <20111205180253.GB29812@localhost.localdomain> <alpine.LFD.2.02.1112051310150.2357@xanadu.home> <20111205192605.GD29812@localhost.localdomain> <alpine.LFD.2.02.1112051443190.2357@xanadu.home>
- <20111206093709.GB2274@linaro.org>
+Date: Tue, 6 Dec 2011 11:20:49 -0800
+Message-ID: <CA+55aFwZBr+3_S9kU-+m8zN8iwOvn2miuuAy-zt7sUjW_+abBg@mail.gmail.com>
+References: <20111202192618.GC3037@localhost.localdomain> <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+ <1322867573.11728.22.camel@pasglop> <20111205161157.GA27550@localhost.localdomain>
+ <alpine.LFD.2.02.1112051236350.2357@xanadu.home> <20111205180253.GB29812@localhost.localdomain>
+ <alpine.LFD.2.02.1112051310150.2357@xanadu.home> <20111205192605.GD29812@localhost.localdomain>
+ <alpine.LFD.2.02.1112051443190.2357@xanadu.home> <20111206093709.GB2274@linaro.org>
+ <20111206104654.GN14542@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:57274 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289Ab1LFTLr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2011 14:11:47 -0500
-In-Reply-To: <20111206093709.GB2274@linaro.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20111206104654.GN14542@n2100.arm.linux.org.uk>
+Sender: linux-next-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Dave Martin <dave.martin@linaro.org>, Nicolas Pitre <nicolas.pitre@linaro.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Martin <dave.martin@linaro.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
 
-On Tue, 6 Dec 2011, Dave Martin wrote:
+On Tue, Dec 6, 2011 at 2:46 AM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+>
+> But.. let's make one thing clear: Alan Cox and Linus have been going =
+on
+> about how IRQ0 should not be used. =A0Let's be crystal clear: even x8=
+6
+> uses IRQ0.
 
-> On Mon, Dec 05, 2011 at 02:49:01PM -0500, Nicolas Pitre wrote:
-> 
-> > No need to convert everything.
-> > 
-> > First move is to make irq=0 meaning no IRQ.  That means making things 
-> > like:
-> > 
-> > 	if (irq < 0)
-> > 	if (irq >= 0)
-> > 
-> > into
-> > 
-> > 	if (irq <= 0)
-> > 	if (irq > 0)
-> > 
-> > And replace NO_IRQ with 0.
-> >
-> > That change shouldn't break anything, except those drivers which are 1) 
-> > being passed an actual IRQ #0 and 2) testing for no IRQ.  I suspect that 
-> > those conditions aren't very common together.
-> 
-> To clarify, you're suggesting that the meanings of all other IRQ values
-> would not change initially?
+Not for any device driver, though.
 
-Initially, or even ever.
+It's used entirely internally, and it doesn't even use
+"request_irq()". It uses the magic internal "setup_irq()" and never
+*ever* exposes irq0 as anything that a driver can see.
 
-> (i.e., we remap HW irq 0, if there is one,
-> to some other random number but have a 1:1 mapping for everything else).
+That's what matters. You can use irq0 in ARM land all you like, AS
+LONG AS IT'S SOME HIDDEN INTERNAL USE. No drivers. No *nothing* that
+ever uses that absolutely *idiotic* NO_IRQ crap.
 
-Exact.
+In fact, you may be *forced* to use what is "physically" irq0 - it's
+just that you should never expose it as such to drivers. And x86
+doesn't.
 
-> That could make sense as an approach.
+So Russell, if you think this has anything to do with NO_IRQ, and how
+x86 isn't doing things right, you're wrong. It's just like the
+internal exception thing, or the magical "cascade interrupt", or the
+"x87 exception mapped through the PIC". They are magic hidden
+interrupts that are set up in one place (well, one place *each*), and
+are never exposed anywhere else.
 
-You might notice that a true IRQ #0 passed to generic drivers is not 
-really frequent.
+The problem with NO_IRQ is that stupid "we expose our mind-numbingly
+stupid interfaces across the whole kernel".
 
+x86 never did that.  ARM still does. x86 doesn't have to fix anything. =
+ARM does.
 
-Nicolas
+                Linus
