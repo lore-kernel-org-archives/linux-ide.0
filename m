@@ -1,68 +1,86 @@
-From: Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Tue, 6 Dec 2011 10:55:03 +0000
-Message-ID: <20111206105503.GO14542@n2100.arm.linux.org.uk>
-References: <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
- <1322867573.11728.22.camel@pasglop>
- <20111205161157.GA27550@localhost.localdomain>
- <alpine.LFD.2.02.1112051236350.2357@xanadu.home>
- <20111205180253.GB29812@localhost.localdomain>
- <alpine.LFD.2.02.1112051310150.2357@xanadu.home> <4EDD1897.4030208@gmail.com>
- <20111205202125.GA32592@oksana.dev.rtsoft.ru> <4EDD2DE1.1050606@gmail.com>
- <20111206093000.GA2274@linaro.org>
+Date: Tue, 6 Dec 2011 12:00:12 +0100
+Message-ID: <CAMuHMdXvuwXps7j2jz18aB1VueLh5Vn0m94jLvBEO-CmsG1JxQ@mail.gmail.com>
+References: <20111202192618.GC3037@localhost.localdomain>
+	<CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
+	<1322867573.11728.22.camel@pasglop>
+	<20111205161157.GA27550@localhost.localdomain>
+	<alpine.LFD.2.02.1112051236350.2357@xanadu.home>
+	<20111205180253.GB29812@localhost.localdomain>
+	<alpine.LFD.2.02.1112051310150.2357@xanadu.home>
+	<20111205192605.GD29812@localhost.localdomain>
+	<alpine.LFD.2.02.1112051443190.2357@xanadu.home>
+	<20111206093709.GB2274@linaro.org>
+	<20111206104654.GN14542@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111206093000.GA2274-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-To: Dave Martin <dave.martin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Nicolas Pitre <nicolas.pitre-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>, Anton Vorontsov <cbouatmailru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Garzik <jgarzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20111206104654.GN14542@n2100.arm.linux.org.uk>
+Sender: linux-next-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Dave Martin <dave.martin@linaro.org>, Nicolas Pitre <nicolas.pitre@linaro.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Dec 06, 2011 at 09:30:00AM +0000, Dave Martin wrote:
-> Do we expect there to be any platform drivers which are shared between
-> legacy platforms and newer DT-ised platforms?
-> 
-> Those drivers would be pain points since they would need to understand
-> both conventions.
-> 
-> So far as I can see, only boards which are not DT-ised, which do not use
-> DT-ised drivers and which do not use drivers which use interrupts and
-> are either used by DT-ised boards or by arches with a non-zero NO_IRQ
-> could safely carry on using a non-zero NO_IRQ.  Tracking down exactly
-> which boards and drivers this applies to could be hard.  We could have a
-> CONFIG_NO_IRQ and make them depend on it, but we still have to find that
-> list of boards and drivers in the first place.
+On Tue, Dec 6, 2011 at 11:46, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> But.. let's make one thing clear: Alan Cox and Linus have been going =
+on
+> about how IRQ0 should not be used. =C2=A0Let's be crystal clear: even=
+ x86
+> uses IRQ0. =C2=A0It happens to be the PIC timer, and that gets claime=
+d early
+> on during the x86 boot. =C2=A0So please don't tell me that x86 avoids=
+ IRQ0.
+> It doesn't. =C2=A0It just happens that x86 never shows IRQ0 to anythi=
+ng but
+> the i8253 PIC driver.
 
-You're digging too deeply into this.
+It's shown in /proc/interrupts due to a "bug" in show_interrupts().
+The (gmail damaged) patch below fixes this bug.
 
-Drivers which need to know whether an IRQ is valid need to know this if
-they wish to do something different for 'this device doesn't have an IRQ
-wired'.  These are the drivers which have problems because of the -1 vs
-0 thing.
+=46rom 46f51a2d42548358868a34df00c2a4e47bbdf691 Mon Sep 17 00:00:00 200=
+1
+=46rom: Geert Uytterhoeven <Geert.Uytterhoeven@eu.sony.com>
+Date: Tue, 6 Dec 2011 11:55:05 +0100
+Subject: [PATCH] /proc/interrupts: irq zero is invalid
 
-That is different from 'this is an invalid IRQ number', which is what
-you find out when you call request_irq().
+As zero is an invalid irq number, show_interrupts() should not try to
+print it. Just return after printing the header for i =3D=3D 0.
 
-So please, stop thinking 'we need to convert drivers to check for <= 0'.
-We don't.  We just need to make sure that we're not passing a zero IRQ
-number to any driver.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ kernel/irq/proc.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-On platforms where IRQ0 is special like x86, request_irq() will fail
-with -EBUSY on drivers which don't care (or other kind of refusal to
-initialize), and will cause 'polling mode' with the 8250 driver.
+diff --git a/kernel/irq/proc.c b/kernel/irq/proc.c
+index 4bd4faa..5b8bbf0 100644
+--- a/kernel/irq/proc.c
++++ b/kernel/irq/proc.c
+@@ -439,6 +439,7 @@ int show_interrupts(struct seq_file *p, void *v)
+ 		for_each_online_cpu(j)
+ 			seq_printf(p, "CPU%-8d", j);
+ 		seq_putc(p, '\n');
++		return 0;
+ 	}
 
-So, all that we need to do is to ensure that all the IRQ chip stuff is
-fixed up so that IRQ0 is only used for the same purpose as x86 - the
-PIC timer on systems with an ISA 8253 timer.  Everything else should
-not pass IRQ0 outside core platform code.
+ 	desc =3D irq_to_desc(i);
+--=20
+1.7.0.4
+
+Gr{oetje,eeting}s,
+
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
+
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
