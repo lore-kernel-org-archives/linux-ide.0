@@ -1,85 +1,43 @@
-From: Dave Martin <dave.martin@linaro.org>
+From: Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>
 Subject: Re: [PATCH] ata: Don't use NO_IRQ in pata_of_platform driver
-Date: Tue, 6 Dec 2011 09:37:09 +0000
-Message-ID: <20111206093709.GB2274@linaro.org>
-References: <20111110162859.GA7088@oksana.dev.rtsoft.ru>
- <20111202192618.GC3037@localhost.localdomain>
+Date: Tue, 6 Dec 2011 10:34:57 +0000
+Message-ID: <20111206103457.1c662b6d@lxorguk.ukuu.org.uk>
+References: <20111202192618.GC3037@localhost.localdomain>
  <CA+55aFwekNWz+V4440f=2iu_BfOxSg0NjVogv4cZZDFbJBNoAQ@mail.gmail.com>
  <1322867573.11728.22.camel@pasglop>
  <20111205161157.GA27550@localhost.localdomain>
  <alpine.LFD.2.02.1112051236350.2357@xanadu.home>
  <20111205180253.GB29812@localhost.localdomain>
  <alpine.LFD.2.02.1112051310150.2357@xanadu.home>
- <20111205192605.GD29812@localhost.localdomain>
- <alpine.LFD.2.02.1112051443190.2357@xanadu.home>
+ <4EDD1897.4030208@gmail.com>
+ <20111205202125.GA32592@oksana.dev.rtsoft.ru>
+ <4EDD2DE1.1050606@gmail.com> <20111206093000.GA2274@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.02.1112051443190.2357@xanadu.home>
-Sender: linux-next-owner@vger.kernel.org
-To: Nicolas Pitre <nicolas.pitre@linaro.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>, Anton Vorontsov <cbouatmailru@gmail.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Pawel Moll <pawel.moll@arm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+In-Reply-To: <20111206093000.GA2274-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
+ <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
+List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
+ <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
+Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+To: Dave Martin <dave.martin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: Nicolas Pitre <nicolas.pitre-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Russell King - ARM Linux <linux-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Anton Vorontsov <cbouatmailru-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Garzik <jgarzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Dec 05, 2011 at 02:49:01PM -0500, Nicolas Pitre wrote:
+> Otherwise, it feels like we might need a strategy for migrating pretty
+> much everything if we don't want to end up in a mess.
 
-[...]
+You really do anyway - lots of generic driver code knows !dev->irq is a
+valid test. That covers things like 8250 based UART hardware, network phy
+layer code and vast amounts more.
 
-> > > > Unfortunately, NO_IRQ is often not spelled "NO_IRQ".  It looks like the assumption
-> > > > "irq < 0 === no irq" may be quite a lot more widespread than "NO_IRQ === no irq".
-> > > > Since there's no specific thing we can grep for (and simply due to volume)
-> > > > finding all such instances may be quite a bit harder.
-> > > [...]
-> > > 
-> > > ARgh.
-> > > 
-> > > My point was about current actual usage of the IRQ numbered 0 which 
-> > > probably prompted the introduction of NO_IRQ in the first place.  What I 
-> > > was saying is that the number of occurrences where IRQ #0 is currently 
-> > > used into drivers that would get confused if 0 would mean no IRQ is 
-> > > probably quite small.
-> > 
-> > Ah, I misunderstood -- that's a separate issue, but also an important one.
-> > I guess this applies to a fair number of older boards.  One way of fixing
-> > this would be to migrate those boards to use irq domains -- but those boards
-> > may be sporadically maintained.
-> >  
-> > > But as you illustrated, there is a large number of drivers that already 
-> > > assume no IRQ is < 0, even if they don't use any IRQ #0 themselves.  
-> > > That is a much bigger problem to fix.
-> > 
-> > My concern is that as soon as we start to change this in significant
-> > volume, a _lot_ of stuff is going to break.  Everywhere that an irq value
-> > is passed from one piece of code to another, there is a potential
-> > interface mismatch -- there seems to be no single place where we can
-> > apply a conversion and fix everything.
-> 
-> No need to convert everything.
-> 
-> First move is to make irq=0 meaning no IRQ.  That means making things 
-> like:
-> 
-> 	if (irq < 0)
-> 	if (irq >= 0)
-> 
-> into
-> 
-> 	if (irq <= 0)
-> 	if (irq > 0)
-> 
-> And replace NO_IRQ with 0.
->
-> That change shouldn't break anything, except those drivers which are 1) 
-> being passed an actual IRQ #0 and 2) testing for no IRQ.  I suspect that 
-> those conditions aren't very common together.
+The bugs will already be there because ARM isn't using 0, they just
+aren't getting seen or aren't getting hit.
 
-To clarify, you're suggesting that the meanings of all other IRQ values
-would not change initially?  (i.e., we remap HW irq 0, if there is one,
-to some other random number but have a 1:1 mapping for everything else).
-
-
-That could make sense as an approach.
-
-Cheers
----Dave
+Alan
