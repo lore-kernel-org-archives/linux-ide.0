@@ -1,105 +1,165 @@
-From: Anton Vorontsov <anton.vorontsov@linaro.org>
-Subject: [PATCH v3] of/irq: Get rid of NO_IRQ usage
-Date: Wed, 7 Dec 2011 03:16:26 +0400
-Message-ID: <20111206231626.GA31683@oksana.dev.rtsoft.ru>
-References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
- <20111110152541.GA3207@oksana.dev.rtsoft.ru>
- <4EDE877A.4080708@gmail.com>
- <CA+55aFwGFogD4ROCH9m=c2jqB2axvrH-dnKPtA8kxXL9b3CVBw@mail.gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: pata_sl82c105 is unable to properly handle dma (indeed it try
+ to use mwdma2)
+Date: Wed, 07 Dec 2011 13:21:28 +1100
+Message-ID: <1323224488.660.33.camel@pasglop>
+References: <28546010.491181323220500482.JavaMail.defaultUser@defaultHost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFwGFogD4ROCH9m=c2jqB2axvrH-dnKPtA8kxXL9b3CVBw@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Rob Herring <robherring2@gmail.com>, Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>, Stephen Rothwell <sfr@canb.auug.org.au>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:49175 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751901Ab1LGCVm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 6 Dec 2011 21:21:42 -0500
+In-Reply-To: <28546010.491181323220500482.JavaMail.defaultUser@defaultHost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "acrux_it@libero.it" <acrux_it@libero.it>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
 
-PPC32/64 defines NO_IRQ to zero, so no problems expected.
-ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
-which returns correct ('0') value in 'no irq' case. So everything
-should be fine.
-
-Other arches might break if some of their OF drivers rely on NO_IRQ
-being not 0. If so, the drivers must be fixed, finally.
-
-Signed-off-by: Anton Vorontsov <anton.vorontsov@linaro.org>
----
-
-On Tue, Dec 06, 2011 at 01:25:07PM -0800, Linus Torvalds wrote:
-> On Tue, Dec 6, 2011 at 1:22 PM, Rob Herring <robherring2@gmail.com> wrote:
-> >
-> > This warning code is really ugly. Can we just drop it? In my searching
-> > of in kernel dts files, there's only 1 instance I have found (Versatile
-> > AB watchdog) that would hit this.
+On Wed, 2011-12-07 at 02:15 +0100, acrux_it@libero.it wrote:
+> New pata_sl82c105 is unable to properly handle dma (indeed it try to use 
+> mwdma2).
+> Old ide driver instead worked fine.
 > 
-> I do agree. Especially since we never got any input on whether it works or not.
+> Tested on IBM 9114-275 where to use it i must boot with dma disabled i.e. with 
+> libata.dma=0
+
+Adding the linux-ide list on CC. Can you also send a dmesg with the old
+IDE driver ? It might be useful to compare the values programmed by the
+2 versions of the driver in the timing registers.
+
+Cheers,
+Ben.
+
+> [...]
+> pata_sl82c105 0000:00:03.1: enabling device (0144 -> 0145)
+> scsi1 : pata_sl82c105
+> scsi2 : pata_sl82c105
+> ata1: PATA max MWDMA2 cmd 0x1f000 ctl 0x1f010 bmdma 0x1f040 irq 165
+> ata2: PATA max MWDMA2 cmd 0x1f020 ctl 0x1f030 bmdma 0x1f048 irq 165
+> ata1.00: ATAPI: IBM     DROM00205, NR38, max UDMA/33
+> ata1.00: configured for MWDMA2
+> [...]
+> scsi 1:0:0:0: CD-ROM            IBM      DROM00205        NR38 PQ: 0 ANSI: 2
+> sr0: scsi3-mmc drive: 24x/24x cd/rw xa/form2 cdda tray
+> cdrom: Uniform CD-ROM driver Revision: 3.20
+> sr 1:0:0:0: Attached scsi generic sg3 type 5
+> [...]
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA2
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Xdread, Read track info: 52 01 00 00 00 01 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA2
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Xdread, Read track info 52 01 00 00 00 01 
+> 00 000
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA2
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: limiting speed to MWDMA1:PIO4
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA1
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA1
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA1
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA1
+> ata1: EH complete
+> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
+> 20 00
+> sr: Sense Key : Aborted Command [current] [descriptor]
+> sr: Add. Sense: No additional sense information
+> ata1: lost interrupt (Status 0x50)
+> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
+> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
+>          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
+> ata1.00: status: { DRDY }
+> ata1: soft resetting link
+> ata1.00: configured for MWDMA1
+> ata1: EH complete
 > 
-> > If not, you don't need to handle irq_create_of_mapping return as that is
-> > already always 0 for no irq or error.
 > 
-> Yeah, I'd like to just remove NO_IRQ from the OF paths. Afaik, it
-> hasn't worked as NO_IRQ before anyway, so even if the rest of the
-> drivers end up continuing using NO_IRQ, the OF-enabled ones on ARM
-> should just stop. There can't be many of those yet.
+> 
+> 
+> 
+> 
+> 
+> cheers,
+> --nico
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
-Okay, here it goes.
 
- drivers/of/irq.c |   13 ++++---------
- 1 files changed, 4 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-index 791270b..ac6da0d 100644
---- a/drivers/of/irq.c
-+++ b/drivers/of/irq.c
-@@ -26,11 +26,6 @@
- #include <linux/string.h>
- #include <linux/slab.h>
- 
--/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
--#ifndef NO_IRQ
--#define NO_IRQ 0
--#endif
--
- /**
-  * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
-  * @device: Device node of the device whose interrupt is to be mapped
-@@ -44,7 +39,7 @@ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
- 	struct of_irq oirq;
- 
- 	if (of_irq_map_one(dev, index, &oirq))
--		return NO_IRQ;
-+		return 0;
- 
- 	return irq_create_of_mapping(oirq.controller, oirq.specifier,
- 				     oirq.size);
-@@ -345,7 +340,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
- 
- 	/* Only dereference the resource if both the
- 	 * resource and the irq are valid. */
--	if (r && irq != NO_IRQ) {
-+	if (r && irq) {
- 		r->start = r->end = irq;
- 		r->flags = IORESOURCE_IRQ;
- 		r->name = dev->full_name;
-@@ -363,7 +358,7 @@ int of_irq_count(struct device_node *dev)
- {
- 	int nr = 0;
- 
--	while (of_irq_to_resource(dev, nr, NULL) != NO_IRQ)
-+	while (of_irq_to_resource(dev, nr, NULL))
- 		nr++;
- 
- 	return nr;
-@@ -383,7 +378,7 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
- 	int i;
- 
- 	for (i = 0; i < nr_irqs; i++, res++)
--		if (of_irq_to_resource(dev, i, res) == NO_IRQ)
-+		if (!of_irq_to_resource(dev, i, res))
- 			break;
- 
- 	return i;
--- 
-1.7.5.3
