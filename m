@@ -1,116 +1,294 @@
-From: Rob Herring <robherring2@gmail.com>
-Subject: Re: [PATCH v3] of/irq: Get rid of NO_IRQ usage
-Date: Tue, 06 Dec 2011 21:51:14 -0600
-Message-ID: <4EDEE2B2.7080606@gmail.com>
-References: <20111110151852.GA7465@oksana.dev.rtsoft.ru> <20111110152541.GA3207@oksana.dev.rtsoft.ru> <4EDE877A.4080708@gmail.com> <CA+55aFwGFogD4ROCH9m=c2jqB2axvrH-dnKPtA8kxXL9b3CVBw@mail.gmail.com> <20111206231626.GA31683@oksana.dev.rtsoft.ru>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v5 5/6] ata: add ata port system PM callbacks
+Date: Wed, 7 Dec 2011 16:38:38 +0800
+Message-ID: <CAF1ivSbhL0-46rnKjHdTBOrJG+9n_cKYF4=fL+HR8YFtmDVZOg@mail.gmail.com>
+References: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
+	<1323048028-10421-6-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:57523 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753459Ab1LGDvT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2011 22:51:19 -0500
-In-Reply-To: <20111206231626.GA31683@oksana.dev.rtsoft.ru>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:63366 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265Ab1LGIij convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2011 03:38:39 -0500
+In-Reply-To: <1323048028-10421-6-git-send-email-ming.m.lin@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Anton Vorontsov <anton.vorontsov@linaro.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Ingo Molnar <mingo@elte.hu>, Jeff Garzik <jgarzik@redhat.com>, Grant Likely <grant.likely@secretlab.ca>, Stephen Rothwell <sfr@canb.auug.org.au>, devicetree-discuss@lists.ozlabs.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Randy Dunlap <rdunlap@xenotime.net>, linux-next@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Michal Simek <monstr@monstr.eu>, John Linn <John.Linn@xilinx.com>
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-On 12/06/2011 05:16 PM, Anton Vorontsov wrote:
-> PPC32/64 defines NO_IRQ to zero, so no problems expected.
-> ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
-> which returns correct ('0') value in 'no irq' case. So everything
-> should be fine.
-> 
-> Other arches might break if some of their OF drivers rely on NO_IRQ
-> being not 0. If so, the drivers must be fixed, finally.
-> 
-> Signed-off-by: Anton Vorontsov <anton.vorontsov@linaro.org>
+On Mon, Dec 5, 2011 at 9:20 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+> Change ata_host_request_pm to ata_port_request_pm which performs
+> port suspend/resume.
+>
+> Add ata port type driver which implements port PM callbacks.
+
+Hi Tejun & Alan,
+
+How about this patch?
+
+Lin Ming
+
+>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 > ---
-
-Looks fine, but I think we have to wait for microblaze to be fixed or
-some confirmation from microblaze folks that no driver would use IRQ0.
-There was a patch posted by Grant in back in Feb, but nothing has
-happened since:
-
-http://article.gmane.org/gmane.linux.uclinux.microblaze/10121/
-
-Rob
-
-> 
-> On Tue, Dec 06, 2011 at 01:25:07PM -0800, Linus Torvalds wrote:
->> On Tue, Dec 6, 2011 at 1:22 PM, Rob Herring <robherring2@gmail.com> wrote:
->>>
->>> This warning code is really ugly. Can we just drop it? In my searching
->>> of in kernel dts files, there's only 1 instance I have found (Versatile
->>> AB watchdog) that would hit this.
->>
->> I do agree. Especially since we never got any input on whether it works or not.
->>
->>> If not, you don't need to handle irq_create_of_mapping return as that is
->>> already always 0 for no irq or error.
->>
->> Yeah, I'd like to just remove NO_IRQ from the OF paths. Afaik, it
->> hasn't worked as NO_IRQ before anyway, so even if the rest of the
->> drivers end up continuing using NO_IRQ, the OF-enabled ones on ARM
->> should just stop. There can't be many of those yet.
-> 
-> Okay, here it goes.
-> 
->  drivers/of/irq.c |   13 ++++---------
->  1 files changed, 4 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/of/irq.c b/drivers/of/irq.c
-> index 791270b..ac6da0d 100644
-> --- a/drivers/of/irq.c
-> +++ b/drivers/of/irq.c
-> @@ -26,11 +26,6 @@
->  #include <linux/string.h>
->  #include <linux/slab.h>
->  
-> -/* For archs that don't support NO_IRQ (such as x86), provide a dummy value */
-> -#ifndef NO_IRQ
-> -#define NO_IRQ 0
-> -#endif
+> =A0drivers/ata/libata-core.c =A0 =A0 =A0| =A0144 ++++++++++++++++++++=
+-------------------
+> =A0drivers/ata/libata-transport.c | =A0 =A01 +
+> =A0drivers/ata/libata.h =A0 =A0 =A0 =A0 =A0 | =A0 =A01 +
+> =A03 files changed, 76 insertions(+), 70 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index c04ad68..04c208e 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5234,112 +5234,116 @@ bool ata_link_offline(struct ata_link *link=
+)
+> =A0}
+>
+> =A0#ifdef CONFIG_PM
+> -static int ata_host_request_pm(struct ata_host *host, pm_message_t m=
+esg,
+> +static int ata_port_request_pm(struct ata_port *ap, pm_message_t mes=
+g,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned =
+int action, unsigned int ehi_flags,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 int wait)
+> =A0{
+> + =A0 =A0 =A0 struct ata_link *link;
+> =A0 =A0 =A0 =A0unsigned long flags;
+> - =A0 =A0 =A0 int i, rc;
 > -
->  /**
->   * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
->   * @device: Device node of the device whose interrupt is to be mapped
-> @@ -44,7 +39,7 @@ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
->  	struct of_irq oirq;
->  
->  	if (of_irq_map_one(dev, index, &oirq))
-> -		return NO_IRQ;
-> +		return 0;
->  
->  	return irq_create_of_mapping(oirq.controller, oirq.specifier,
->  				     oirq.size);
-> @@ -345,7 +340,7 @@ int of_irq_to_resource(struct device_node *dev, int index, struct resource *r)
->  
->  	/* Only dereference the resource if both the
->  	 * resource and the irq are valid. */
-> -	if (r && irq != NO_IRQ) {
-> +	if (r && irq) {
->  		r->start = r->end = irq;
->  		r->flags = IORESOURCE_IRQ;
->  		r->name = dev->full_name;
-> @@ -363,7 +358,7 @@ int of_irq_count(struct device_node *dev)
->  {
->  	int nr = 0;
->  
-> -	while (of_irq_to_resource(dev, nr, NULL) != NO_IRQ)
-> +	while (of_irq_to_resource(dev, nr, NULL))
->  		nr++;
->  
->  	return nr;
-> @@ -383,7 +378,7 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
->  	int i;
->  
->  	for (i = 0; i < nr_irqs; i++, res++)
-> -		if (of_irq_to_resource(dev, i, res) == NO_IRQ)
-> +		if (!of_irq_to_resource(dev, i, res))
->  			break;
->  
->  	return i;
-
+> - =A0 =A0 =A0 for (i =3D 0; i < host->n_ports; i++) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct ata_port *ap =3D host->ports[i];
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct ata_link *link;
+> + =A0 =A0 =A0 int rc;
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Previous resume operation might stil=
+l be in
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* progress. =A0Wait for PM_PENDING t=
+o clear.
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (ap->pflags & ATA_PFLAG_PM_PENDING) =
+{
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_port_wait_eh(ap);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON(ap->pflags & AT=
+A_PFLAG_PM_PENDING);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> + =A0 =A0 =A0 /* Previous resume operation might still be in
+> + =A0 =A0 =A0 =A0* progress. =A0Wait for PM_PENDING to clear.
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (ap->pflags & ATA_PFLAG_PM_PENDING) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_port_wait_eh(ap);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDI=
+NG);
+> + =A0 =A0 =A0 }
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* request PM ops to EH */
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irqsave(ap->lock, flags);
+> + =A0 =A0 =A0 /* request PM ops to EH */
+> + =A0 =A0 =A0 spin_lock_irqsave(ap->lock, flags);
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->pm_mesg =3D mesg;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (wait) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 rc =3D 0;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->pm_result =3D &rc;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> + =A0 =A0 =A0 ap->pm_mesg =3D mesg;
+> + =A0 =A0 =A0 if (wait) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 rc =3D 0;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->pm_result =3D &rc;
+> + =A0 =A0 =A0 }
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ap->pflags |=3D ATA_PFLAG_PM_PENDING;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_for_each_link(link, ap, HOST_FIRST)=
+ {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 link->eh_info.action |=3D=
+ action;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 link->eh_info.flags |=3D=
+ ehi_flags;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> + =A0 =A0 =A0 ap->pflags |=3D ATA_PFLAG_PM_PENDING;
+> + =A0 =A0 =A0 ata_for_each_link(link, ap, HOST_FIRST) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 link->eh_info.action |=3D action;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 link->eh_info.flags |=3D ehi_flags;
+> + =A0 =A0 =A0 }
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_port_schedule_eh(ap);
+> + =A0 =A0 =A0 ata_port_schedule_eh(ap);
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(ap->lock, flags)=
+;
+> + =A0 =A0 =A0 spin_unlock_irqrestore(ap->lock, flags);
+>
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* wait and check result */
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (wait) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_port_wait_eh(ap);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON(ap->pflags & AT=
+A_PFLAG_PM_PENDING);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (rc)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return =
+rc;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+> + =A0 =A0 =A0 /* wait and check result */
+> + =A0 =A0 =A0 if (wait) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ata_port_wait_eh(ap);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDI=
+NG);
+> =A0 =A0 =A0 =A0}
+>
+> - =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 return rc;
+> =A0}
+>
+> +#define to_ata_port(d) container_of(d, struct ata_port, tdev)
+> +
+> +static int ata_port_suspend_common(struct device *dev)
+> +{
+> + =A0 =A0 =A0 struct ata_port *ap =3D to_ata_port(dev);
+> + =A0 =A0 =A0 int rc;
+> +
+> + =A0 =A0 =A0 rc =3D ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI=
+_QUIET, 1);
+> + =A0 =A0 =A0 return rc;
+> +}
+> +
+> +static int ata_port_suspend(struct device *dev)
+> +{
+> + =A0 =A0 =A0 if (pm_runtime_suspended(dev))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> +
+> + =A0 =A0 =A0 return ata_port_suspend_common(dev);
+> +}
+> +
+> +static int ata_port_resume(struct device *dev)
+> +{
+> + =A0 =A0 =A0 struct ata_port *ap =3D to_ata_port(dev);
+> + =A0 =A0 =A0 int rc;
+> +
+> + =A0 =A0 =A0 rc =3D ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
+> + =A0 =A0 =A0 return rc;
+> +}
+> +
+> +static const struct dev_pm_ops ata_port_pm_ops =3D {
+> + =A0 =A0 =A0 .suspend =3D ata_port_suspend,
+> + =A0 =A0 =A0 .resume =3D ata_port_resume,
+> +};
+> +
+> =A0/**
+> =A0* =A0 =A0 ata_host_suspend - suspend host
+> =A0* =A0 =A0 @host: host to suspend
+> =A0* =A0 =A0 @mesg: PM message
+> =A0*
+> - * =A0 =A0 Suspend @host. =A0Actual operation is performed by EH. =A0=
+This
+> - * =A0 =A0 function requests EH to perform PM operations and waits f=
+or EH
+> - * =A0 =A0 to finish.
+> - *
+> - * =A0 =A0 LOCKING:
+> - * =A0 =A0 Kernel thread context (may sleep).
+> - *
+> - * =A0 =A0 RETURNS:
+> - * =A0 =A0 0 on success, -errno on failure.
+> + * =A0 =A0 Suspend @host. =A0Actual operation is performed by port s=
+uspend.
+> =A0*/
+> =A0int ata_host_suspend(struct ata_host *host, pm_message_t mesg)
+> =A0{
+> - =A0 =A0 =A0 unsigned int ehi_flags =3D ATA_EHI_QUIET;
+> - =A0 =A0 =A0 int rc;
+> -
+> - =A0 =A0 =A0 /*
+> - =A0 =A0 =A0 =A0* On some hardware, device fails to respond after sp=
+un down
+> - =A0 =A0 =A0 =A0* for suspend. =A0As the device won't be used before=
+ being
+> - =A0 =A0 =A0 =A0* resumed, we don't need to touch the device. =A0Ask=
+ EH to skip
+> - =A0 =A0 =A0 =A0* the usual stuff and proceed directly to suspend.
+> - =A0 =A0 =A0 =A0*
+> - =A0 =A0 =A0 =A0* http://thread.gmane.org/gmane.linux.ide/46764
+> - =A0 =A0 =A0 =A0*/
+> - =A0 =A0 =A0 if (mesg.event =3D=3D PM_EVENT_SUSPEND)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ehi_flags |=3D ATA_EHI_NO_AUTOPSY | ATA=
+_EHI_NO_RECOVERY;
+> -
+> - =A0 =A0 =A0 rc =3D ata_host_request_pm(host, mesg, 0, ehi_flags, 1)=
+;
+> - =A0 =A0 =A0 if (rc =3D=3D 0)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 host->dev->power.power_state =3D mesg;
+> - =A0 =A0 =A0 return rc;
+> + =A0 =A0 =A0 host->dev->power.power_state =3D mesg;
+> + =A0 =A0 =A0 return 0;
+> =A0}
+>
+> =A0/**
+> =A0* =A0 =A0 ata_host_resume - resume host
+> =A0* =A0 =A0 @host: host to resume
+> =A0*
+> - * =A0 =A0 Resume @host. =A0Actual operation is performed by EH. =A0=
+This
+> - * =A0 =A0 function requests EH to perform PM operations and returns=
+=2E
+> - * =A0 =A0 Note that all resume operations are performed parallelly.
+> - *
+> - * =A0 =A0 LOCKING:
+> - * =A0 =A0 Kernel thread context (may sleep).
+> + * =A0 =A0 Resume @host. =A0Actual operation is performed by port re=
+sume.
+> =A0*/
+> =A0void ata_host_resume(struct ata_host *host)
+> =A0{
+> - =A0 =A0 =A0 ata_host_request_pm(host, PMSG_ON, ATA_EH_RESET,
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATA_EHI_NO_AUTO=
+PSY | ATA_EHI_QUIET, 0);
+> =A0 =A0 =A0 =A0host->dev->power.power_state =3D PMSG_ON;
+> =A0}
+> =A0#endif
+>
+> +struct device_type ata_port_type =3D {
+> + =A0 =A0 =A0 .name =3D "ata_port",
+> +#ifdef CONFIG_PM
+> + =A0 =A0 =A0 .pm =3D &ata_port_pm_ops,
+> +#endif
+> +};
+> +
+> =A0/**
+> =A0* =A0 =A0 ata_dev_init - Initialize an ata_device structure
+> =A0* =A0 =A0 @dev: Device structure to initialize
+> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-tran=
+sport.c
+> index ce9dc62..3ceb3d9 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -279,6 +279,7 @@ int ata_tport_add(struct device *parent,
+> =A0 =A0 =A0 =A0struct device *dev =3D &ap->tdev;
+>
+> =A0 =A0 =A0 =A0device_initialize(dev);
+> + =A0 =A0 =A0 dev->type =3D &ata_port_type;
+>
+> =A0 =A0 =A0 =A0dev->parent =3D get_device(parent);
+> =A0 =A0 =A0 =A0dev->release =3D ata_tport_release;
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index 773de97..814486d 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -58,6 +58,7 @@ extern int atapi_passthru16;
+> =A0extern int libata_fua;
+> =A0extern int libata_noacpi;
+> =A0extern int libata_allow_tpm;
+> +extern struct device_type ata_port_type;
+> =A0extern struct ata_link *ata_dev_phys_link(struct ata_device *dev);
+> =A0extern void ata_force_cbl(struct ata_port *ap);
+> =A0extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+> --
+> 1.7.2.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
