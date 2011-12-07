@@ -1,85 +1,127 @@
-From: Wolfram Sang <w.sang-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
-Subject: Re: [PATCH v3] of/irq: Get rid of NO_IRQ usage
-Date: Wed, 7 Dec 2011 10:52:54 +0100
-Message-ID: <20111207095254.GA6436@pengutronix.de>
-References: <20111110151852.GA7465@oksana.dev.rtsoft.ru>
- <20111110152541.GA3207@oksana.dev.rtsoft.ru>
- <4EDE877A.4080708@gmail.com>
- <CA+55aFwGFogD4ROCH9m=c2jqB2axvrH-dnKPtA8kxXL9b3CVBw@mail.gmail.com>
- <20111206231626.GA31683@oksana.dev.rtsoft.ru>
+From: Ben Whitten <benwhitten@gmail.com>
+Subject: Re: DMA bug with ata_piix on ICH7-M
+Date: Wed, 07 Dec 2011 10:57:27 +0000
+Message-ID: <1323255447.2972.7.camel@Sparkler>
+References: <1323176998.2687.35.camel@Sparkler> <4EDED921.6030207@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============3120857983286479471=="
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-In-Reply-To: <20111206231626.GA31683-wnGakbxT3iijyJ0x5qLZdcN33GVbZNy3@public.gmane.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-To: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: Stephen Rothwell <sfr-3FnU+UHB4dNDw9hX6IcOSA@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Randy Dunlap <rdunlap-/UHa2rfvQTnk1uMJSBkQmQ@public.gmane.org>, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ingo Molnar <mingo-X9Un+BFzKDI@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Jeff Garzik <jgarzik-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Alan Cox <alan-qBU/x9rampVanCEyBjwyrvXRex20P6io@public.gmane.org>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-VWHcPz4uhPvc8ka5C4LB"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34825 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754960Ab1LGK5b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2011 05:57:31 -0500
+Received: by eaak14 with SMTP id k14so327724eaa.19
+        for <linux-ide@vger.kernel.org>; Wed, 07 Dec 2011 02:57:30 -0800 (PST)
+In-Reply-To: <4EDED921.6030207@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
 
---===============3120857983286479471==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-Content-Disposition: inline
-
-
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--=-VWHcPz4uhPvc8ka5C4LB
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Dec 07, 2011 at 03:16:26AM +0400, Anton Vorontsov wrote:
-> PPC32/64 defines NO_IRQ to zero, so no problems expected.
-> ARM defines NO_IRQ to -1, but OF code relies on IRQ domains support,
-> which returns correct ('0') value in 'no irq' case. So everything
-> should be fine.
+On Tue, 2011-12-06 at 21:10 -0600, Robert Hancock wrote:
+> On 12/06/2011 07:09 AM, Ben Whitten wrote:
+> > Hi,
+> > I seem to have found a problem with DMA on a motherboard using an ICH7-=
+M
+> > chipset, this bug prevents me from installing to the harddrive and I
+> > have been unable to find a workaround.
+> > The motherboard is a Unicorn computers ENDAT-2794A motherboard[1]
+> > When I try to run the Ubuntu 11.10 USB install image which is using
+> > kernel 3.0 the system jams for a good few minutes at a stage in boot
+> > then eventually comes up. In the dmesg I see the following;
+> >
+> > [  332.656551] ata1.01: configured for UDMA/33
+> > [  332.656590] ata1: EH complete
+> > [  332.716560] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x=
+6
+> > frozen
+> > [  332.716776] ata1.01: BMDMA stat 0x44
+> > [  332.716887] ata1.01: failed command: READ DMA
+> > [  332.717029] ata1.01: cmd c8/00:08:78:03:00/00:00:00:00:00/f0 tag 0
+> > dma 4096 in
+> > [  332.717034]          res 50/00:00:7f:03:00/00:00:12:00:00/f0 Emask
+> > 0x2 (HSM violation)
+> > [  332.717435] ata1.01: status: { DRDY }
+> > [  332.717564] ata1: soft resetting link
+> > [  332.900593] ata1.01: configured for UDMA/33
+> > [  332.900631] ata1: EH complete
+> > [  332.949133] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x=
+6
+> > frozen
+> > [  332.949344] ata1.01: BMDMA stat 0x44
+> > [  332.949454] ata1.01: failed command: READ DMA
+> > [  332.949593] ata1.01: cmd c8/00:08:90:03:00/00:00:00:00:00/f0 tag 0
+> > dma 4096 in
+> > [  332.949598]          res 50/00:00:97:03:00/00:00:12:00:00/f0 Emask
+> > 0x2 (HSM violation)
+> > [  332.950006] ata1.01: status: { DRDY }
+> > [  332.950130] ata1: soft resetting link
+> >
+> > Prior to this it gets configured for UDMA/133 which I believe is out of
+> > spec for the ICH7 following information on a previous fixed bug[2]. It
+> > eventually backs it down to 33, which is probably where the system
+> > unlocks and can continue to boot.
 >=20
-> Other arches might break if some of their OF drivers rely on NO_IRQ
-> being not 0. If so, the drivers must be fixed, finally.
+> That speed limitation only applies to PATA ports. The UDMA speed=20
+> selection doesn't really do much or anything with SATA devices. It=20
+> doesn't look like it has any effect on this issue since from the dmesg=
+=20
+> on the Launchpad report, the problems continue after we speed down to=20
+> UDMA33.
+
+Ahh ok, I saw an option in the BIOS regarding UDMA and got mixed up,
+thanks for clearing that up.
+
+> >
+> > I have also tried this with a development snapshot of Ubuntu 12.04 usin=
+g
+> > kernel 3.2 with the same result.
+> > I have attached a screen shot of the IDE BIOS options in case a default
+> > is wrong or there is a workaround until the bug is fixed. Further syste=
+m
+> > information and logs can be found on the generated ubuntu launchpad bug
+> > report [3].
 >=20
-> Signed-off-by: Anton Vorontsov <anton.vorontsov-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> ---
+> Is this hardware setup known to be working? Is there a previous kernel=
+=20
+> or other OS that worked?
+>=20
+I have verified that the motherboard works with windows XP, I have also
+been in contact with Unicorn who state this example list works. However,
+I have not verified them.
 
-/me likes NO_IRQ removal very much
+NAME KERNEL
+Debian 4.0 2.6.18-6-686
+FreeBSD 6.4
+FreeBSD 7.1
+Fedora Core 8 2.6.23.1-42.fc8
+Fedora Core 9 2.6.25-14.fc9.i686
+OpenSUSE 10.3 2.6.22.5-31-default
+OpenSUSE 11.0
+Arch Linux 0.72
+Mandrake 10.0
+Ubuntu 8.04 2.6.24-16-genernic
 
-Acked-by: Wolfram Sang <w.sang-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
-
---=20
-Pengutronix e.K.                           | Wolfram Sang                |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-
---+QahgC5+KEYLbs62
+--=-VWHcPz4uhPvc8ka5C4LB
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+Content-Description: This is a digitally signed message part
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEARECAAYFAk7fN3YACgkQD27XaX1/VRvt0ACfbx636k1V5VHHUwOKbikRv0zJ
-xx0AoKZLY57vMXqZK6xFgXEUyKOWrIjU
-=P6F1
+iQEcBAABAgAGBQJO30aQAAoJEEWVEtw/oNCgSGMIAKPFS8Rzo2O5+YN1QKRqvmUF
+p+bd7oyQc0O90BVqpqE6REmSoMshpSzv0CkU4rBeIFKlW04LstjIz6RrOOanTt2/
+hpQH5SiBRLtxm46K2INcd+CZWQppbsVANJr5a34wMP1cyiAzxMY6Hgr8p7TZOaoR
+iudyZd9PrSlRvsLIe3HFN7SXdG8ojrmkWlUryF8o7zSBFbZvNwx+UguLBYCwtxwQ
+r/+Wq2HKcUVcv8ey7degtGhe68/mx9OY4E1aAw1M9+DtVdszs7R7387jY9G6i6Wu
+Mm49e82UdiZq7j50gmwHfShR8pAxWxl240KWWhlTdV5NqgYPezlKqbTI3hCLlYk=
+=iMeE
 -----END PGP SIGNATURE-----
 
---+QahgC5+KEYLbs62--
+--=-VWHcPz4uhPvc8ka5C4LB--
 
---===============3120857983286479471==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-devicetree-discuss mailing list
-devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-https://lists.ozlabs.org/listinfo/devicetree-discuss
-
---===============3120857983286479471==--
