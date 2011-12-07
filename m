@@ -1,165 +1,78 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: pata_sl82c105 is unable to properly handle dma (indeed it try
- to use mwdma2)
-Date: Wed, 07 Dec 2011 13:21:28 +1100
-Message-ID: <1323224488.660.33.camel@pasglop>
-References: <28546010.491181323220500482.JavaMail.defaultUser@defaultHost>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: DMA bug with ata_piix on ICH7-M
+Date: Tue, 06 Dec 2011 21:10:25 -0600
+Message-ID: <4EDED921.6030207@gmail.com>
+References: <1323176998.2687.35.camel@Sparkler>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:49175 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751901Ab1LGCVm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 6 Dec 2011 21:21:42 -0500
-In-Reply-To: <28546010.491181323220500482.JavaMail.defaultUser@defaultHost>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:45559 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744Ab1LGDK2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2011 22:10:28 -0500
+Received: by ghbz2 with SMTP id z2so98050ghb.19
+        for <linux-ide@vger.kernel.org>; Tue, 06 Dec 2011 19:10:27 -0800 (PST)
+In-Reply-To: <1323176998.2687.35.camel@Sparkler>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "acrux_it@libero.it" <acrux_it@libero.it>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
+To: Ben Whitten <benwhitten@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, 2011-12-07 at 02:15 +0100, acrux_it@libero.it wrote:
-> New pata_sl82c105 is unable to properly handle dma (indeed it try to use 
-> mwdma2).
-> Old ide driver instead worked fine.
-> 
-> Tested on IBM 9114-275 where to use it i must boot with dma disabled i.e. with 
-> libata.dma=0
+On 12/06/2011 07:09 AM, Ben Whitten wrote:
+> Hi,
+> I seem to have found a problem with DMA on a motherboard using an ICH7-M
+> chipset, this bug prevents me from installing to the harddrive and I
+> have been unable to find a workaround.
+> The motherboard is a Unicorn computers ENDAT-2794A motherboard[1]
+> When I try to run the Ubuntu 11.10 USB install image which is using
+> kernel 3.0 the system jams for a good few minutes at a stage in boot
+> then eventually comes up. In the dmesg I see the following;
+>
+> [  332.656551] ata1.01: configured for UDMA/33
+> [  332.656590] ata1: EH complete
+> [  332.716560] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+> frozen
+> [  332.716776] ata1.01: BMDMA stat 0x44
+> [  332.716887] ata1.01: failed command: READ DMA
+> [  332.717029] ata1.01: cmd c8/00:08:78:03:00/00:00:00:00:00/f0 tag 0
+> dma 4096 in
+> [  332.717034]          res 50/00:00:7f:03:00/00:00:12:00:00/f0 Emask
+> 0x2 (HSM violation)
+> [  332.717435] ata1.01: status: { DRDY }
+> [  332.717564] ata1: soft resetting link
+> [  332.900593] ata1.01: configured for UDMA/33
+> [  332.900631] ata1: EH complete
+> [  332.949133] ata1.01: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+> frozen
+> [  332.949344] ata1.01: BMDMA stat 0x44
+> [  332.949454] ata1.01: failed command: READ DMA
+> [  332.949593] ata1.01: cmd c8/00:08:90:03:00/00:00:00:00:00/f0 tag 0
+> dma 4096 in
+> [  332.949598]          res 50/00:00:97:03:00/00:00:12:00:00/f0 Emask
+> 0x2 (HSM violation)
+> [  332.950006] ata1.01: status: { DRDY }
+> [  332.950130] ata1: soft resetting link
+>
+> Prior to this it gets configured for UDMA/133 which I believe is out of
+> spec for the ICH7 following information on a previous fixed bug[2]. It
+> eventually backs it down to 33, which is probably where the system
+> unlocks and can continue to boot.
 
-Adding the linux-ide list on CC. Can you also send a dmesg with the old
-IDE driver ? It might be useful to compare the values programmed by the
-2 versions of the driver in the timing registers.
+That speed limitation only applies to PATA ports. The UDMA speed 
+selection doesn't really do much or anything with SATA devices. It 
+doesn't look like it has any effect on this issue since from the dmesg 
+on the Launchpad report, the problems continue after we speed down to 
+UDMA33.
 
-Cheers,
-Ben.
+>
+> I have also tried this with a development snapshot of Ubuntu 12.04 using
+> kernel 3.2 with the same result.
+> I have attached a screen shot of the IDE BIOS options in case a default
+> is wrong or there is a workaround until the bug is fixed. Further system
+> information and logs can be found on the generated ubuntu launchpad bug
+> report [3].
 
-> [...]
-> pata_sl82c105 0000:00:03.1: enabling device (0144 -> 0145)
-> scsi1 : pata_sl82c105
-> scsi2 : pata_sl82c105
-> ata1: PATA max MWDMA2 cmd 0x1f000 ctl 0x1f010 bmdma 0x1f040 irq 165
-> ata2: PATA max MWDMA2 cmd 0x1f020 ctl 0x1f030 bmdma 0x1f048 irq 165
-> ata1.00: ATAPI: IBM     DROM00205, NR38, max UDMA/33
-> ata1.00: configured for MWDMA2
-> [...]
-> scsi 1:0:0:0: CD-ROM            IBM      DROM00205        NR38 PQ: 0 ANSI: 2
-> sr0: scsi3-mmc drive: 24x/24x cd/rw xa/form2 cdda tray
-> cdrom: Uniform CD-ROM driver Revision: 3.20
-> sr 1:0:0:0: Attached scsi generic sg3 type 5
-> [...]
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA2
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Xdread, Read track info: 52 01 00 00 00 01 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:08:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA2
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Xdread, Read track info 52 01 00 00 00 01 
-> 00 000
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA2
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: limiting speed to MWDMA1:PIO4
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA1
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA1
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA1
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA1
-> ata1: EH complete
-> sr0: CDROM (ioctl) error, command: Get configuration 46 00 00 00 00 00 00 00 
-> 20 00
-> sr: Sense Key : Aborted Command [current] [descriptor]
-> sr: Add. Sense: No additional sense information
-> ata1: lost interrupt (Status 0x50)
-> ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> sr 1:0:0:0: CDB: Get configuration: 46 00 00 00 00 00 00 00 20 00
-> ata1.00: cmd a0/01:00:00:20:00/00:00:00:00:00/a0 tag 0 dma 16416 in
->          res 40/00:02:00:0c:00/00:00:00:00:00/a0 Emask 0x4 (timeout)
-> ata1.00: status: { DRDY }
-> ata1: soft resetting link
-> ata1.00: configured for MWDMA1
-> ata1: EH complete
-> 
-> 
-> 
-> 
-> 
-> 
-> 
-> cheers,
-> --nico
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
-
+Is this hardware setup known to be working? Is there a previous kernel 
+or other OS that worked?
 
