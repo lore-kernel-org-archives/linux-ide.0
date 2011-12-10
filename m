@@ -1,90 +1,179 @@
-From: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
-Subject: Re: [PATCH 2/3] pata/at91: use new introduce smc accessor
-Date: Fri, 9 Dec 2011 19:42:39 +0100
-Message-ID: <20111209184239.GR23884@game.jcrosoft.org>
-References: <20111208150348.GD23884@game.jcrosoft.org>
- <1323357784-17555-2-git-send-email-plagnioj@jcrosoft.com>
- <4EE1EA25.3010002@mvista.com>
+From: "Berck E. Nash" <flyboy@gmail.com>
+Subject: x2apic boot failure on recent sandy bridge system
+Date: Fri, 09 Dec 2011 18:46:33 -0700
+Message-ID: <4EE2B9F9.5050608@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------030803030504060105000600"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 6.mo4.mail-out.ovh.net ([188.165.36.253]:50652 "EHLO
-	mo4.mail-out.ovh.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751942Ab1LISqi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2011 13:46:38 -0500
-Received: from mail192.ha.ovh.net (b6.ovh.net [213.186.33.56])
-	by mo4.mail-out.ovh.net (Postfix) with SMTP id 91C1D1050343
-	for <linux-ide@vger.kernel.org>; Fri,  9 Dec 2011 19:46:51 +0100 (CET)
-Content-Disposition: inline
-In-Reply-To: <4EE1EA25.3010002@mvista.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33962 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751128Ab1LJBqg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2011 20:46:36 -0500
+Received: by ghbz2 with SMTP id z2so3032106ghb.19
+        for <linux-ide@vger.kernel.org>; Fri, 09 Dec 2011 17:46:36 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-arm-kernel@lists.infradead.org, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On 14:59 Fri 09 Dec     , Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 08-12-2011 19:23, Jean-Christophe PLAGNIOL-VILLARD wrote:
-> 
->    Your subject doesn't parse. Maybe you meant "use newly introduced
-> smc accessor"?
-yeap
-> 
-> >this will allow to use the pata_at91 on a single zImage
-> 
-> >Signed-off-by: Jean-Christophe PLAGNIOL-VILLARD<plagnioj@jcrosoft.com>
-> >Cc: Nicolas Ferre<nicolas.ferre@atmel.com>
-> >Cc: linux-ide@vger.kernel.org
-> >---
-> >Hi,
-> 
-> >	it's depends on other patch for AT91 can we apply via at91
-> 
-> >Best Regards,
-> >J.
-> >  drivers/ata/pata_at91.c |   43 +++++++++++++++++++++----------------------
-> >  1 files changed, 21 insertions(+), 22 deletions(-)
-> 
-> >diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-> >index 5249e6d..c8d1154 100644
-> >--- a/drivers/ata/pata_at91.c
-> >+++ b/drivers/ata/pata_at91.c
-> >@@ -207,11 +207,11 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
-> >  {
-> >  	int ret = 0;
-> >  	int use_iordy;
-> >+	struct sam9_smc_config smc;
-> >  	unsigned int t6z;         /* data tristate time in ns */
-> >  	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
-> >  	unsigned int setup;       /* SMC Setup width in MCK ticks */
-> >  	unsigned int pulse;       /* CFIOR and CFIOW pulse width in MCK ticks */
-> >-	unsigned int cs_setup = 0;/* CS4 or CS5 setup width in MCK ticks */
-> >  	unsigned int cs_pulse;    /* CS4 or CS5 pulse width in MCK ticks*/
-> >  	unsigned int tdf_cycles;  /* SMC TDF MCK ticks */
-> >  	unsigned long mck_hz;     /* MCK frequency in Hz */
-> >@@ -244,26 +244,25 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
-> >  	}
-> >
-> >  	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
-> >-	info->mode |= AT91_SMC_TDF_(tdf_cycles);
-> >
-> >  	/* write SMC Setup Register */
-> >-	at91_sys_write(AT91_SMC_SETUP(info->cs),
-> >-			AT91_SMC_NWESETUP_(setup) |
-> >-			AT91_SMC_NRDSETUP_(setup) |
-> >-			AT91_SMC_NCS_WRSETUP_(cs_setup) |
-> >-			AT91_SMC_NCS_RDSETUP_(cs_setup));
-> >+	smc.nrd_setup = setup;
-> >+	smc.nwe_setup = smc.nrd_setup;
-> >+	smc.ncs_read_setup = 0;
-> >+	smc.ncs_write_setup = smc.ncs_read_setup;
-> 
->    Why not:
-> 
-> 	smc.nrd_setup = smc.nwe_setup = setup;
-> 	smc.ncs_read_setup = smc.ncs_write_setup = 0;
-why not
+This is a multi-part message in MIME format.
+--------------030803030504060105000600
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Best Regards,
-J.
+X2APIC has never worked on this system, and continues to not work
+3.2.0-rc5.  Simply hangs on boot with an error message that helpfully
+indicates that x2apic is the problem.  The system is an ASRock P67
+Extreme 6.  Log attached, let me know if I can do anything to help.
+Please cc as I'm not subscribed.
+
+Berck Nash
+
+--------------030803030504060105000600
+Content-Type: text/plain;
+ name="x2apic.log"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="x2apic.log"
+
+WyAgICAwLjAwMDAwMF0gTGludXggdmVyc2lvbiAzLjIuMC1yYzUgKGJlcmNrQGx1bmEpIChn
+Y2MgdmVyc2lvbiA0LjYuMiAoRGViaWFuIDQuNi4yLTYpICkgIzIgU01QIEZyaSBEZWMgOSAx
+ODoxNjoyOCBNU1QgMjAxMQpbICAgIDAuMDAwMDAwXSBDb21tYW5kIGxpbmU6IEJPT1RfSU1B
+R0U9KGhkMCwxKS92bWxpbnV6IHJvb3Q9L2Rldi9zZGIxIHJvIHZpZGVvPWVmaWZiIGNvbnNv
+bGU9dHR5UzAsMTE1MjAwbjggY29uc29sZT10dHkwClsgICAgMC4wMDAwMDBdIEJJT1MtcHJv
+dmlkZWQgcGh5c2ljYWwgUkFNIG1hcDoKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAw
+MDAwMDAwMDAwMDAwMCAtIDAwMDAwMDAwMDAwOWQ0MDAgKHVzYWJsZSkKWyAgICAwLjAwMDAw
+MF0gIEJJT1MtZTgyMDogMDAwMDAwMDAwMDA5ZDQwMCAtIDAwMDAwMDAwMDAwYTAwMDAgKHJl
+c2VydmVkKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMDAwMGUwMDAwIC0g
+MDAwMDAwMDAwMDEwMDAwMCAocmVzZXJ2ZWQpClsgICAgMC4wMDAwMDBdICBCSU9TLWU4MjA6
+IDAwMDAwMDAwMDAxMDAwMDAgLSAwMDAwMDAwMGJlZWUyMDAwICh1c2FibGUpClsgICAgMC4w
+MDAwMDBdICBCSU9TLWU4MjA6IDAwMDAwMDAwYmVlZTIwMDAgLSAwMDAwMDAwMGJlZjNhMDAw
+IChBQ1BJIE5WUykKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAwMDAwMDBiZWYzYTAw
+MCAtIDAwMDAwMDAwYmY2MDcwMDAgKHJlc2VydmVkKQpbICAgIDAuMDAwMDAwXSAgQklPUy1l
+ODIwOiAwMDAwMDAwMGJmNjA3MDAwIC0gMDAwMDAwMDBiZjYwODAwMCAodXNhYmxlKQpbICAg
+IDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMGJmNjA4MDAwIC0gMDAwMDAwMDBiZjYw
+OTAwMCAoQUNQSSBkYXRhKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMGJm
+NjA5MDAwIC0gMDAwMDAwMDBiZjYxMzAwMCAoQUNQSSBOVlMpClsgICAgMC4wMDAwMDBdICBC
+SU9TLWU4MjA6IDAwMDAwMDAwYmY2MTMwMDAgLSAwMDAwMDAwMGJmNjM4MDAwIChyZXNlcnZl
+ZCkKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAwMDAwMDBiZjYzODAwMCAtIDAwMDAw
+MDAwYmY2N2IwMDAgKEFDUEkgTlZTKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAw
+MDAwMGJmNjdiMDAwIC0gMDAwMDAwMDBiZjgwMDAwMCAodXNhYmxlKQpbICAgIDAuMDAwMDAw
+XSAgQklPUy1lODIwOiAwMDAwMDAwMGZlZDFjMDAwIC0gMDAwMDAwMDBmZWQ0MDAwMCAocmVz
+ZXJ2ZWQpClsgICAgMC4wMDAwMDBdICBCSU9TLWU4MjA6IDAwMDAwMDAwZmYwMDAwMDAgLSAw
+MDAwMDAwMTAwMDAwMDAwIChyZXNlcnZlZCkKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDog
+MDAwMDAwMDEwMDAwMDAwMCAtIDAwMDAwMDAyM2Y4MDAwMDAgKHVzYWJsZSkKWyAgICAwLjAw
+MDAwMF0gTlggKEV4ZWN1dGUgRGlzYWJsZSkgcHJvdGVjdGlvbjogYWN0aXZlClsgICAgMC4w
+MDAwMDBdIERNSSAyLjYgcHJlc2VudC4KWyAgICAwLjAwMDAwMF0gTm8gQUdQIGJyaWRnZSBm
+b3VuZApbICAgIDAuMDAwMDAwXSBsYXN0X3BmbiA9IDB4MjNmODAwIG1heF9hcmNoX3BmbiA9
+IDB4NDAwMDAwMDAwClsgICAgMC4wMDAwMDBdIHg4NiBQQVQgZW5hYmxlZDogY3B1IDAsIG9s
+ZCAweDcwNDA2MDAwNzA0MDYsIG5ldyAweDcwMTA2MDAwNzAxMDYKWyAgICAwLjAwMDAwMF0g
+eDJhcGljIGVuYWJsZWQgYnkgQklPUywgc3dpdGNoaW5nIHRvIHgyYXBpYyBvcHMKWyAgICAw
+LjAwMDAwMF0gbGFzdF9wZm4gPSAweGJmODAwIG1heF9hcmNoX3BmbiA9IDB4NDAwMDAwMDAw
+ClsgICAgMC4wMDAwMDBdIGluaXRfbWVtb3J5X21hcHBpbmc6IDAwMDAwMDAwMDAwMDAwMDAt
+MDAwMDAwMDBiZjgwMDAwMApbICAgIDAuMDAwMDAwXSBpbml0X21lbW9yeV9tYXBwaW5nOiAw
+MDAwMDAwMTAwMDAwMDAwLTAwMDAwMDAyM2Y4MDAwMDAKWyAgICAwLjAwMDAwMF0gQUNQSTog
+UlNEUCAwMDAwMDAwMDAwMGYwNDUwIDAwMDI0ICh2MDIgQUxBU0tBKQpbICAgIDAuMDAwMDAw
+XSBBQ1BJOiBYU0RUIDAwMDAwMDAwYmVmMzIwNjggMDAwNTQgKHYwMSBBTEFTS0EgICAgQSBN
+IEkgMDEwNzIwMDkgQU1JICAwMDAxMDAxMykKWyAgICAwLjAwMDAwMF0gQUNQSTogRkFDUCAw
+MDAwMDAwMGJlZjM5OGY4IDAwMEY0ICh2MDQgQUxBU0tBICAgIEEgTSBJIDAxMDcyMDA5IEFN
+SSAgMDAwMTAwMTMpClsgICAgMC4wMDAwMDBdIEFDUEk6IERTRFQgMDAwMDAwMDBiZWYzMjE1
+MCAwNzdBNiAodjAyIEFMQVNLQSAgICBBIE0gSSAwMDAwMDAwMCBJTlRMIDIwMDUxMTE3KQpb
+ICAgIDAuMDAwMDAwXSBBQ1BJOiBGQUNTIDAwMDAwMDAwYmY2MGFmODAgMDAwNDAKWyAgICAw
+LjAwMDAwMF0gQUNQSTogQVBJQyAwMDAwMDAwMGJlZjM5OWYwIDAwMEQ4ICh2MDMgQUxBU0tB
+ICAgIEEgTSBJIDAxMDcyMDA5IEFNSSAgMDAwMTAwMTMpClsgICAgMC4wMDAwMDBdIEFDUEk6
+IFNTRFQgMDAwMDAwMDBiZWYzOWFjOCAwMDFERSAodjAxIEFNSUNQVSAgICAgUFJPQyAwMDAw
+MDAwMSBNU0ZUIDAzMDAwMDAxKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBNQ0ZHIDAwMDAwMDAw
+YmVmMzljYTggMDAwM0MgKHYwMSBBTEFTS0EgICAgQSBNIEkgMDEwNzIwMDkgTVNGVCAwMDAw
+MDA5NykKWyAgICAwLjAwMDAwMF0gQUNQSTogQUFGVCAwMDAwMDAwMGJlZjM5Y2U4IDAwMDZG
+ICh2MDEgQUxBU0tBIE9FTUFBRlQgIDAxMDcyMDA5IE1TRlQgMDAwMDAwOTcpClsgICAgMC4w
+MDAwMDBdIEFDUEk6IEhQRVQgMDAwMDAwMDBiZWYzOWQ1OCAwMDAzOCAodjAxIEFMQVNLQSAg
+ICBBIE0gSSAwMTA3MjAwOSBBTUkuIDAwMDAwMDA0KQpbICAgIDAuMDAwMDAwXSBTZXR0aW5n
+IEFQSUMgcm91dGluZyB0byBjbHVzdGVyIHgyYXBpYy4KWyAgICAwLjAwMDAwMF0gTm8gTlVN
+QSBjb25maWd1cmF0aW9uIGZvdW5kClsgICAgMC4wMDAwMDBdIEZha2luZyBhIG5vZGUgYXQg
+MDAwMDAwMDAwMDAwMDAwMC0wMDAwMDAwMjNmODAwMDAwClsgICAgMC4wMDAwMDBdIEluaXRt
+ZW0gc2V0dXAgbm9kZSAwIDAwMDAwMDAwMDAwMDAwMDAtMDAwMDAwMDIzZjgwMDAwMApbICAg
+IDAuMDAwMDAwXSAgIE5PREVfREFUQSBbMDAwMDAwMDIzZjdmYjAwMCAtIDAwMDAwMDAyM2Y3
+ZmZmZmZdClsgICAgMC4wMDAwMDBdIFpvbmUgUEZOIHJhbmdlczoKWyAgICAwLjAwMDAwMF0g
+ICBETUEgICAgICAweDAwMDAwMDEwIC0+IDB4MDAwMDEwMDAKWyAgICAwLjAwMDAwMF0gICBE
+TUEzMiAgICAweDAwMDAxMDAwIC0+IDB4MDAxMDAwMDAKWyAgICAwLjAwMDAwMF0gICBOb3Jt
+YWwgICAweDAwMTAwMDAwIC0+IDB4MDAyM2Y4MDAKWyAgICAwLjAwMDAwMF0gTW92YWJsZSB6
+b25lIHN0YXJ0IFBGTiBmb3IgZWFjaCBub2RlClsgICAgMC4wMDAwMDBdIGVhcmx5X25vZGVf
+bWFwWzVdIGFjdGl2ZSBQRk4gcmFuZ2VzClsgICAgMC4wMDAwMDBdICAgICAwOiAweDAwMDAw
+MDEwIC0+IDB4MDAwMDAwOWQKWyAgICAwLjAwMDAwMF0gICAgIDA6IDB4MDAwMDAxMDAgLT4g
+MHgwMDBiZWVlMgpbICAgIDAuMDAwMDAwXSAgICAgMDogMHgwMDBiZjYwNyAtPiAweDAwMGJm
+NjA4ClsgICAgMC4wMDAwMDBdICAgICAwOiAweDAwMGJmNjdiIC0+IDB4MDAwYmY4MDAKWyAg
+ICAwLjAwMDAwMF0gICAgIDA6IDB4MDAxMDAwMDAgLT4gMHgwMDIzZjgwMApbICAgIDAuMDAw
+MDAwXSBBQ1BJOiBQTS1UaW1lciBJTyBQb3J0OiAweDQwOApbICAgIDAuMDAwMDAwXSBBQ1BJ
+OiBYMkFQSUMgKGFwaWNfaWRbMHgwMF0gdWlkWzB4MDFdIGVuYWJsZWQpClsgICAgMC4wMDAw
+MDBdIEFDUEk6IFgyQVBJQyAoYXBpY19pZFsweDAyXSB1aWRbMHgwMl0gZW5hYmxlZCkKWyAg
+ICAwLjAwMDAwMF0gQUNQSTogWDJBUElDIChhcGljX2lkWzB4MDRdIHVpZFsweDAzXSBlbmFi
+bGVkKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBYMkFQSUMgKGFwaWNfaWRbMHgwNl0gdWlkWzB4
+MDRdIGVuYWJsZWQpClsgICAgMC4wMDAwMDBdIEFDUEk6IFgyQVBJQyAoYXBpY19pZFsweDAx
+XSB1aWRbMHgwNV0gZW5hYmxlZCkKWyAgICAwLjAwMDAwMF0gQUNQSTogWDJBUElDIChhcGlj
+X2lkWzB4MDNdIHVpZFsweDA2XSBlbmFibGVkKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBYMkFQ
+SUMgKGFwaWNfaWRbMHgwNV0gdWlkWzB4MDddIGVuYWJsZWQpClsgICAgMC4wMDAwMDBdIEFD
+UEk6IFgyQVBJQyAoYXBpY19pZFsweDA3XSB1aWRbMHgwOF0gZW5hYmxlZCkKWyAgICAwLjAw
+MDAwMF0gQUNQSTogWDJBUElDX05NSSAodWlkWzB4ZmZmZmZmZmZdIGhpZ2ggZWRnZSBsaW50
+WzB4MV0pClsgICAgMC4wMDAwMDBdIEFDUEk6IElPQVBJQyAoaWRbMHgwMF0gYWRkcmVzc1sw
+eGZlYzAwMDAwXSBnc2lfYmFzZVswXSkKWyAgICAwLjAwMDAwMF0gSU9BUElDWzBdOiBhcGlj
+X2lkIDAsIHZlcnNpb24gMzIsIGFkZHJlc3MgMHhmZWMwMDAwMCwgR1NJIDAtMjMKWyAgICAw
+LjAwMDAwMF0gQUNQSTogSU5UX1NSQ19PVlIgKGJ1cyAwIGJ1c19pcnEgMCBnbG9iYWxfaXJx
+IDIgZGZsIGRmbCkKWyAgICAwLjAwMDAwMF0gQUNQSTogSU5UX1NSQ19PVlIgKGJ1cyAwIGJ1
+c19pcnEgOSBnbG9iYWxfaXJxIDkgaGlnaCBsZXZlbCkKWyAgICAwLjAwMDAwMF0gVXNpbmcg
+QUNQSSAoTUFEVCkgZm9yIFNNUCBjb25maWd1cmF0aW9uIGluZm9ybWF0aW9uClsgICAgMC4w
+MDAwMDBdIEFDUEk6IEhQRVQgaWQ6IDB4ODA4NmE3MDEgYmFzZTogMHhmZWQwMDAwMApbICAg
+IDAuMDAwMDAwXSBTTVA6IEFsbG93aW5nIDggQ1BVcywgMCBob3RwbHVnIENQVXMKWyAgICAw
+LjAwMDAwMF0gQWxsb2NhdGluZyBQQ0kgcmVzb3VyY2VzIHN0YXJ0aW5nIGF0IGJmODAwMDAw
+IChnYXA6IGJmODAwMDAwOjNmNTFjMDAwKQpbICAgIDAuMDAwMDAwXSBzZXR1cF9wZXJjcHU6
+IE5SX0NQVVM6OCBucl9jcHVtYXNrX2JpdHM6OCBucl9jcHVfaWRzOjggbnJfbm9kZV9pZHM6
+MQpbICAgIDAuMDAwMDAwXSBQRVJDUFU6IEVtYmVkZGVkIDI1IHBhZ2VzL2NwdSBAZmZmZjg4
+MDIzZjQwMDAwMCBzNzA5NzYgcjgxOTIgZDIzMjMyIHUyNjIxNDQKWyAgICAwLjAwMDAwMF0g
+QnVpbHQgMSB6b25lbGlzdHMgaW4gWm9uZSBvcmRlciwgbW9iaWxpdHkgZ3JvdXBpbmcgb24u
+ICBUb3RhbCBwYWdlczogMjA1ODc2NwpbICAgIDAuMDAwMDAwXSBQb2xpY3kgem9uZTogTm9y
+bWFsClsgICAgMC4wMDAwMDBdIEtlcm5lbCBjb21tYW5kIGxpbmU6IEJPT1RfSU1BR0U9KGhk
+MCwxKS92bWxpbnV6IHJvb3Q9L2Rldi9zZGIxIHJvIHZpZGVvPWVmaWZiIGNvbnNvbGU9dHR5
+UzAsMTE1MjAwbjggY29uc29sZT10dHkwClsgICAgMC4wMDAwMDBdIFBJRCBoYXNoIHRhYmxl
+IGVudHJpZXM6IDQwOTYgKG9yZGVyOiAzLCAzMjc2OCBieXRlcykKWyAgICAwLjAwMDAwMF0g
+eHNhdmUveHJzdG9yOiBlbmFibGVkIHhzdGF0ZV9idiAweDcsIGNudHh0IHNpemUgMHgzNDAK
+WyAgICAwLjAwMDAwMF0gQ2hlY2tpbmcgYXBlcnR1cmUuLi4KWyAgICAwLjAwMDAwMF0gTm8g
+QUdQIGJyaWRnZSBmb3VuZApbICAgIDAuMDAwMDAwXSBNZW1vcnk6IDgxNzU5MDhrLzk0Mjg5
+OTJrIGF2YWlsYWJsZSAoMzYxMGsga2VybmVsIGNvZGUsIDEwNjUwMDRrIGFic2VudCwgMTg4
+MDgwayByZXNlcnZlZCwgMTU2N2sgZGF0YSwgNjcyayBpbml0KQpbICAgIDAuMDAwMDAwXSBI
+aWVyYXJjaGljYWwgUkNVIGltcGxlbWVudGF0aW9uLgpbICAgIDAuMDAwMDAwXSBOUl9JUlFT
+OjQzNTIgbnJfaXJxczo3NDQgMTYKWyAgICAwLjAwMDAwMF0gRXh0ZW5kZWQgQ01PUyB5ZWFy
+OiAyMDAwClsgICAgMC4wMDAwMDBdIENvbnNvbGU6IGNvbG91ciBkdW1teSBkZXZpY2UgODB4
+MjUKWyAgICAwLjAwMDAwMF0gY29uc29sZSBbdHR5MF0gZW5hYmxlZApbICAgIDAuMDAwMDAw
+XSBjb25zb2xlIFt0dHlTMF0gZW5hYmxlZApbICAgIDAuMDAwMDAwXSBGYXN0IFRTQyBjYWxp
+YnJhdGlvbiB1c2luZyBQSVQKWyAgICAwLjAwMTAwMF0gRGV0ZWN0ZWQgMzM5Mi41MTQgTUh6
+IHByb2Nlc3Nvci4KWyAgICAwLjAwMDAwMV0gQ2FsaWJyYXRpbmcgZGVsYXkgbG9vcCAoc2tp
+cHBlZCksIHZhbHVlIGNhbGN1bGF0ZWQgdXNpbmcgdGltZXIgZnJlcXVlbmN5Li4gNjc4NS4w
+MiBCb2dvTUlQUyAobHBqPTMzOTI1MTQpClsgICAgMC4wMTA1OTRdIHBpZF9tYXg6IGRlZmF1
+bHQ6IDMyNzY4IG1pbmltdW06IDMwMQpbICAgIDAuMDE1NDcwXSBEZW50cnkgY2FjaGUgaGFz
+aCB0YWJsZSBlbnRyaWVzOiAxMDQ4NTc2IChvcmRlcjogMTEsIDgzODg2MDggYnl0ZXMpClsg
+ICAgMC4wMjM3NTNdIElub2RlLWNhY2hlIGhhc2ggdGFibGUgZW50cmllczogNTI0Mjg4IChv
+cmRlcjogMTAsIDQxOTQzMDQgYnl0ZXMpClsgICAgMC4wMzEyOThdIE1vdW50LWNhY2hlIGhh
+c2ggdGFibGUgZW50cmllczogMjU2ClsgICAgMC4wMzU4OTNdIENQVTogUGh5c2ljYWwgUHJv
+Y2Vzc29yIElEOiAwClsgICAgMC4wMzk5MDBdIENQVTogUHJvY2Vzc29yIENvcmUgSUQ6IDAK
+WyAgICAwLjA0MzU1N10gRU5FUkdZX1BFUkZfQklBUzogU2V0IHRvICdub3JtYWwnLCB3YXMg
+J3BlcmZvcm1hbmNlJwpbICAgIDAuMDQzNTU4XSBFTkVSR1lfUEVSRl9CSUFTOiBWaWV3IGFu
+ZCB1cGRhdGUgd2l0aCB4ODZfZW5lcmd5X3BlcmZfcG9saWN5KDgpClsgICAgMC4wNTY1NzBd
+IG1jZTogQ1BVIHN1cHBvcnRzIDkgTUNFIGJhbmtzClsgICAgMC4wNjA1NzddIENQVTA6IFRo
+ZXJtYWwgbW9uaXRvcmluZyBlbmFibGVkIChUTTEpClsgICAgMC4wNjUzNjBdIHVzaW5nIG13
+YWl0IGluIGlkbGUgdGhyZWFkcy4KWyAgICAwLjA2OTMzMl0gRnJlZWluZyBTTVAgYWx0ZXJu
+YXRpdmVzOiAyMGsgZnJlZWQKWyAgICAwLjA3Mzg1N10gQUNQSTogQ29yZSByZXZpc2lvbiAy
+MDExMDYyMwpbICAgIDAuMDg1NzE3XSBLZXJuZWwgcGFuaWMgLSBub3Qgc3luY2luZzogeDJh
+cGljOiBlbmFibGVkIGJ5IEJJT1MgYnV0IGtlcm5lbCBpbml0IGZhaWxlZC4KWyAgICAwLjA5
+MzY5N10gUGlkOiAxLCBjb21tOiBzd2FwcGVyLzAgTm90IHRhaW50ZWQgMy4yLjAtcmM1ICMy
+ClsgICAgMC4wOTkzMzddIENhbGwgVHJhY2U6ClsgICAgMC4xMDE3ODhdICBbPGZmZmZmZmZm
+ODEzN2I3Y2U+XSA/IHBhbmljKzB4OTUvMHgxOGUKWyAgICAwLjEwNjc1NV0gIFs8ZmZmZmZm
+ZmY4MTAxNjI1OT5dID8gX19pb2FwaWNfd3JpdGVfZW50cnkrMHgxNi8weDMyClsgICAgMC4x
+MTI5MjVdICBbPGZmZmZmZmZmODE1MmQ1YmY+XSA/IGVuYWJsZV9JUl94MmFwaWMrMHgxOWEv
+MHgxZDcKWyAgICAwLjExODkxM10gIFs8ZmZmZmZmZmY4MTUyZjI4MT5dID8gZGVmYXVsdF9z
+ZXR1cF9hcGljX3JvdXRpbmcrMHhkLzB4NzEKWyAgICAwLjEyNTUwNl0gIFs8ZmZmZmZmZmY4
+MTUyYzUzNj5dID8gbmF0aXZlX3NtcF9wcmVwYXJlX2NwdXMrMHgyZjEvMHgzMjUKWyAgICAw
+LjEzMjEwMl0gIFs8ZmZmZmZmZmY4MTUyMmFiZj5dID8ga2VybmVsX2luaXQrMHg0Ni8weDEw
+ZgpbICAgIDAuMTM3NTcxXSAgWzxmZmZmZmZmZjgxMzg0MWY0Pl0gPyBrZXJuZWxfdGhyZWFk
+X2hlbHBlcisweDQvMHgxMApbICAgIDAuMTQzNjUwXSAgWzxmZmZmZmZmZjgxNTIyYTc5Pl0g
+PyBzdGFydF9rZXJuZWwrMHgzNDEvMHgzNDEKWyAgICAwLjE0OTI5N10gIFs8ZmZmZmZmZmY4
+MTM4NDFmMD5dID8gZ3NfY2hhbmdlKzB4Yi8weGIK
+--------------030803030504060105000600--
