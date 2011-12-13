@@ -1,179 +1,109 @@
-From: "Berck E. Nash" <flyboy@gmail.com>
-Subject: x2apic boot failure on recent sandy bridge system
-Date: Fri, 09 Dec 2011 18:46:33 -0700
-Message-ID: <4EE2B9F9.5050608@gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v5 5/6] ata: add ata port system PM callbacks
+Date: Tue, 13 Dec 2011 22:20:40 +0800
+Message-ID: <1323786040.3769.24.camel@hp6530s>
+References: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
+	 <1323048028-10421-6-git-send-email-ming.m.lin@intel.com>
+	 <CAF1ivSbRejpSEVfHAhOUxaqAedkCQVHWOgsJGFLM2yt2QaxtuQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030803030504060105000600"
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33962 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128Ab1LJBqg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Dec 2011 20:46:36 -0500
-Received: by ghbz2 with SMTP id z2so3032106ghb.19
-        for <linux-ide@vger.kernel.org>; Fri, 09 Dec 2011 17:46:36 -0800 (PST)
+Received: from mga01.intel.com ([192.55.52.88]:40057 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751346Ab1LMOWf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 13 Dec 2011 09:22:35 -0500
+In-Reply-To: <CAF1ivSbRejpSEVfHAhOUxaqAedkCQVHWOgsJGFLM2yt2QaxtuQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-This is a multi-part message in MIME format.
---------------030803030504060105000600
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On Tue, 2011-12-13 at 21:56 +0800, Lin Ming wrote:
+> +
+> +static int ata_port_resume(struct device *dev)
+> +{
+> +       struct ata_port *ap = to_ata_port(dev);
+> +       int rc;
+> +
+> +       rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+> +               ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
+> +       return rc;
+> +}
 
-X2APIC has never worked on this system, and continues to not work
-3.2.0-rc5.  Simply hangs on boot with an error message that helpfully
-indicates that x2apic is the problem.  The system is an ASRock P67
-Extreme 6.  Log attached, let me know if I can do anything to help.
-Please cc as I'm not subscribed.
+I just realized that the ata port runtime PM status need to be updated
+after system resume.
 
-Berck Nash
+I tried below patch.
+Unfortunately, it causes a problem that sd can't resume correctly.
 
---------------030803030504060105000600
-Content-Type: text/plain;
- name="x2apic.log"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="x2apic.log"
+During system resume, ata port is resumed first and then sd resumed.
 
-WyAgICAwLjAwMDAwMF0gTGludXggdmVyc2lvbiAzLjIuMC1yYzUgKGJlcmNrQGx1bmEpIChn
-Y2MgdmVyc2lvbiA0LjYuMiAoRGViaWFuIDQuNi4yLTYpICkgIzIgU01QIEZyaSBEZWMgOSAx
-ODoxNjoyOCBNU1QgMjAxMQpbICAgIDAuMDAwMDAwXSBDb21tYW5kIGxpbmU6IEJPT1RfSU1B
-R0U9KGhkMCwxKS92bWxpbnV6IHJvb3Q9L2Rldi9zZGIxIHJvIHZpZGVvPWVmaWZiIGNvbnNv
-bGU9dHR5UzAsMTE1MjAwbjggY29uc29sZT10dHkwClsgICAgMC4wMDAwMDBdIEJJT1MtcHJv
-dmlkZWQgcGh5c2ljYWwgUkFNIG1hcDoKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAw
-MDAwMDAwMDAwMDAwMCAtIDAwMDAwMDAwMDAwOWQ0MDAgKHVzYWJsZSkKWyAgICAwLjAwMDAw
-MF0gIEJJT1MtZTgyMDogMDAwMDAwMDAwMDA5ZDQwMCAtIDAwMDAwMDAwMDAwYTAwMDAgKHJl
-c2VydmVkKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMDAwMGUwMDAwIC0g
-MDAwMDAwMDAwMDEwMDAwMCAocmVzZXJ2ZWQpClsgICAgMC4wMDAwMDBdICBCSU9TLWU4MjA6
-IDAwMDAwMDAwMDAxMDAwMDAgLSAwMDAwMDAwMGJlZWUyMDAwICh1c2FibGUpClsgICAgMC4w
-MDAwMDBdICBCSU9TLWU4MjA6IDAwMDAwMDAwYmVlZTIwMDAgLSAwMDAwMDAwMGJlZjNhMDAw
-IChBQ1BJIE5WUykKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAwMDAwMDBiZWYzYTAw
-MCAtIDAwMDAwMDAwYmY2MDcwMDAgKHJlc2VydmVkKQpbICAgIDAuMDAwMDAwXSAgQklPUy1l
-ODIwOiAwMDAwMDAwMGJmNjA3MDAwIC0gMDAwMDAwMDBiZjYwODAwMCAodXNhYmxlKQpbICAg
-IDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMGJmNjA4MDAwIC0gMDAwMDAwMDBiZjYw
-OTAwMCAoQUNQSSBkYXRhKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAwMDAwMGJm
-NjA5MDAwIC0gMDAwMDAwMDBiZjYxMzAwMCAoQUNQSSBOVlMpClsgICAgMC4wMDAwMDBdICBC
-SU9TLWU4MjA6IDAwMDAwMDAwYmY2MTMwMDAgLSAwMDAwMDAwMGJmNjM4MDAwIChyZXNlcnZl
-ZCkKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDogMDAwMDAwMDBiZjYzODAwMCAtIDAwMDAw
-MDAwYmY2N2IwMDAgKEFDUEkgTlZTKQpbICAgIDAuMDAwMDAwXSAgQklPUy1lODIwOiAwMDAw
-MDAwMGJmNjdiMDAwIC0gMDAwMDAwMDBiZjgwMDAwMCAodXNhYmxlKQpbICAgIDAuMDAwMDAw
-XSAgQklPUy1lODIwOiAwMDAwMDAwMGZlZDFjMDAwIC0gMDAwMDAwMDBmZWQ0MDAwMCAocmVz
-ZXJ2ZWQpClsgICAgMC4wMDAwMDBdICBCSU9TLWU4MjA6IDAwMDAwMDAwZmYwMDAwMDAgLSAw
-MDAwMDAwMTAwMDAwMDAwIChyZXNlcnZlZCkKWyAgICAwLjAwMDAwMF0gIEJJT1MtZTgyMDog
-MDAwMDAwMDEwMDAwMDAwMCAtIDAwMDAwMDAyM2Y4MDAwMDAgKHVzYWJsZSkKWyAgICAwLjAw
-MDAwMF0gTlggKEV4ZWN1dGUgRGlzYWJsZSkgcHJvdGVjdGlvbjogYWN0aXZlClsgICAgMC4w
-MDAwMDBdIERNSSAyLjYgcHJlc2VudC4KWyAgICAwLjAwMDAwMF0gTm8gQUdQIGJyaWRnZSBm
-b3VuZApbICAgIDAuMDAwMDAwXSBsYXN0X3BmbiA9IDB4MjNmODAwIG1heF9hcmNoX3BmbiA9
-IDB4NDAwMDAwMDAwClsgICAgMC4wMDAwMDBdIHg4NiBQQVQgZW5hYmxlZDogY3B1IDAsIG9s
-ZCAweDcwNDA2MDAwNzA0MDYsIG5ldyAweDcwMTA2MDAwNzAxMDYKWyAgICAwLjAwMDAwMF0g
-eDJhcGljIGVuYWJsZWQgYnkgQklPUywgc3dpdGNoaW5nIHRvIHgyYXBpYyBvcHMKWyAgICAw
-LjAwMDAwMF0gbGFzdF9wZm4gPSAweGJmODAwIG1heF9hcmNoX3BmbiA9IDB4NDAwMDAwMDAw
-ClsgICAgMC4wMDAwMDBdIGluaXRfbWVtb3J5X21hcHBpbmc6IDAwMDAwMDAwMDAwMDAwMDAt
-MDAwMDAwMDBiZjgwMDAwMApbICAgIDAuMDAwMDAwXSBpbml0X21lbW9yeV9tYXBwaW5nOiAw
-MDAwMDAwMTAwMDAwMDAwLTAwMDAwMDAyM2Y4MDAwMDAKWyAgICAwLjAwMDAwMF0gQUNQSTog
-UlNEUCAwMDAwMDAwMDAwMGYwNDUwIDAwMDI0ICh2MDIgQUxBU0tBKQpbICAgIDAuMDAwMDAw
-XSBBQ1BJOiBYU0RUIDAwMDAwMDAwYmVmMzIwNjggMDAwNTQgKHYwMSBBTEFTS0EgICAgQSBN
-IEkgMDEwNzIwMDkgQU1JICAwMDAxMDAxMykKWyAgICAwLjAwMDAwMF0gQUNQSTogRkFDUCAw
-MDAwMDAwMGJlZjM5OGY4IDAwMEY0ICh2MDQgQUxBU0tBICAgIEEgTSBJIDAxMDcyMDA5IEFN
-SSAgMDAwMTAwMTMpClsgICAgMC4wMDAwMDBdIEFDUEk6IERTRFQgMDAwMDAwMDBiZWYzMjE1
-MCAwNzdBNiAodjAyIEFMQVNLQSAgICBBIE0gSSAwMDAwMDAwMCBJTlRMIDIwMDUxMTE3KQpb
-ICAgIDAuMDAwMDAwXSBBQ1BJOiBGQUNTIDAwMDAwMDAwYmY2MGFmODAgMDAwNDAKWyAgICAw
-LjAwMDAwMF0gQUNQSTogQVBJQyAwMDAwMDAwMGJlZjM5OWYwIDAwMEQ4ICh2MDMgQUxBU0tB
-ICAgIEEgTSBJIDAxMDcyMDA5IEFNSSAgMDAwMTAwMTMpClsgICAgMC4wMDAwMDBdIEFDUEk6
-IFNTRFQgMDAwMDAwMDBiZWYzOWFjOCAwMDFERSAodjAxIEFNSUNQVSAgICAgUFJPQyAwMDAw
-MDAwMSBNU0ZUIDAzMDAwMDAxKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBNQ0ZHIDAwMDAwMDAw
-YmVmMzljYTggMDAwM0MgKHYwMSBBTEFTS0EgICAgQSBNIEkgMDEwNzIwMDkgTVNGVCAwMDAw
-MDA5NykKWyAgICAwLjAwMDAwMF0gQUNQSTogQUFGVCAwMDAwMDAwMGJlZjM5Y2U4IDAwMDZG
-ICh2MDEgQUxBU0tBIE9FTUFBRlQgIDAxMDcyMDA5IE1TRlQgMDAwMDAwOTcpClsgICAgMC4w
-MDAwMDBdIEFDUEk6IEhQRVQgMDAwMDAwMDBiZWYzOWQ1OCAwMDAzOCAodjAxIEFMQVNLQSAg
-ICBBIE0gSSAwMTA3MjAwOSBBTUkuIDAwMDAwMDA0KQpbICAgIDAuMDAwMDAwXSBTZXR0aW5n
-IEFQSUMgcm91dGluZyB0byBjbHVzdGVyIHgyYXBpYy4KWyAgICAwLjAwMDAwMF0gTm8gTlVN
-QSBjb25maWd1cmF0aW9uIGZvdW5kClsgICAgMC4wMDAwMDBdIEZha2luZyBhIG5vZGUgYXQg
-MDAwMDAwMDAwMDAwMDAwMC0wMDAwMDAwMjNmODAwMDAwClsgICAgMC4wMDAwMDBdIEluaXRt
-ZW0gc2V0dXAgbm9kZSAwIDAwMDAwMDAwMDAwMDAwMDAtMDAwMDAwMDIzZjgwMDAwMApbICAg
-IDAuMDAwMDAwXSAgIE5PREVfREFUQSBbMDAwMDAwMDIzZjdmYjAwMCAtIDAwMDAwMDAyM2Y3
-ZmZmZmZdClsgICAgMC4wMDAwMDBdIFpvbmUgUEZOIHJhbmdlczoKWyAgICAwLjAwMDAwMF0g
-ICBETUEgICAgICAweDAwMDAwMDEwIC0+IDB4MDAwMDEwMDAKWyAgICAwLjAwMDAwMF0gICBE
-TUEzMiAgICAweDAwMDAxMDAwIC0+IDB4MDAxMDAwMDAKWyAgICAwLjAwMDAwMF0gICBOb3Jt
-YWwgICAweDAwMTAwMDAwIC0+IDB4MDAyM2Y4MDAKWyAgICAwLjAwMDAwMF0gTW92YWJsZSB6
-b25lIHN0YXJ0IFBGTiBmb3IgZWFjaCBub2RlClsgICAgMC4wMDAwMDBdIGVhcmx5X25vZGVf
-bWFwWzVdIGFjdGl2ZSBQRk4gcmFuZ2VzClsgICAgMC4wMDAwMDBdICAgICAwOiAweDAwMDAw
-MDEwIC0+IDB4MDAwMDAwOWQKWyAgICAwLjAwMDAwMF0gICAgIDA6IDB4MDAwMDAxMDAgLT4g
-MHgwMDBiZWVlMgpbICAgIDAuMDAwMDAwXSAgICAgMDogMHgwMDBiZjYwNyAtPiAweDAwMGJm
-NjA4ClsgICAgMC4wMDAwMDBdICAgICAwOiAweDAwMGJmNjdiIC0+IDB4MDAwYmY4MDAKWyAg
-ICAwLjAwMDAwMF0gICAgIDA6IDB4MDAxMDAwMDAgLT4gMHgwMDIzZjgwMApbICAgIDAuMDAw
-MDAwXSBBQ1BJOiBQTS1UaW1lciBJTyBQb3J0OiAweDQwOApbICAgIDAuMDAwMDAwXSBBQ1BJ
-OiBYMkFQSUMgKGFwaWNfaWRbMHgwMF0gdWlkWzB4MDFdIGVuYWJsZWQpClsgICAgMC4wMDAw
-MDBdIEFDUEk6IFgyQVBJQyAoYXBpY19pZFsweDAyXSB1aWRbMHgwMl0gZW5hYmxlZCkKWyAg
-ICAwLjAwMDAwMF0gQUNQSTogWDJBUElDIChhcGljX2lkWzB4MDRdIHVpZFsweDAzXSBlbmFi
-bGVkKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBYMkFQSUMgKGFwaWNfaWRbMHgwNl0gdWlkWzB4
-MDRdIGVuYWJsZWQpClsgICAgMC4wMDAwMDBdIEFDUEk6IFgyQVBJQyAoYXBpY19pZFsweDAx
-XSB1aWRbMHgwNV0gZW5hYmxlZCkKWyAgICAwLjAwMDAwMF0gQUNQSTogWDJBUElDIChhcGlj
-X2lkWzB4MDNdIHVpZFsweDA2XSBlbmFibGVkKQpbICAgIDAuMDAwMDAwXSBBQ1BJOiBYMkFQ
-SUMgKGFwaWNfaWRbMHgwNV0gdWlkWzB4MDddIGVuYWJsZWQpClsgICAgMC4wMDAwMDBdIEFD
-UEk6IFgyQVBJQyAoYXBpY19pZFsweDA3XSB1aWRbMHgwOF0gZW5hYmxlZCkKWyAgICAwLjAw
-MDAwMF0gQUNQSTogWDJBUElDX05NSSAodWlkWzB4ZmZmZmZmZmZdIGhpZ2ggZWRnZSBsaW50
-WzB4MV0pClsgICAgMC4wMDAwMDBdIEFDUEk6IElPQVBJQyAoaWRbMHgwMF0gYWRkcmVzc1sw
-eGZlYzAwMDAwXSBnc2lfYmFzZVswXSkKWyAgICAwLjAwMDAwMF0gSU9BUElDWzBdOiBhcGlj
-X2lkIDAsIHZlcnNpb24gMzIsIGFkZHJlc3MgMHhmZWMwMDAwMCwgR1NJIDAtMjMKWyAgICAw
-LjAwMDAwMF0gQUNQSTogSU5UX1NSQ19PVlIgKGJ1cyAwIGJ1c19pcnEgMCBnbG9iYWxfaXJx
-IDIgZGZsIGRmbCkKWyAgICAwLjAwMDAwMF0gQUNQSTogSU5UX1NSQ19PVlIgKGJ1cyAwIGJ1
-c19pcnEgOSBnbG9iYWxfaXJxIDkgaGlnaCBsZXZlbCkKWyAgICAwLjAwMDAwMF0gVXNpbmcg
-QUNQSSAoTUFEVCkgZm9yIFNNUCBjb25maWd1cmF0aW9uIGluZm9ybWF0aW9uClsgICAgMC4w
-MDAwMDBdIEFDUEk6IEhQRVQgaWQ6IDB4ODA4NmE3MDEgYmFzZTogMHhmZWQwMDAwMApbICAg
-IDAuMDAwMDAwXSBTTVA6IEFsbG93aW5nIDggQ1BVcywgMCBob3RwbHVnIENQVXMKWyAgICAw
-LjAwMDAwMF0gQWxsb2NhdGluZyBQQ0kgcmVzb3VyY2VzIHN0YXJ0aW5nIGF0IGJmODAwMDAw
-IChnYXA6IGJmODAwMDAwOjNmNTFjMDAwKQpbICAgIDAuMDAwMDAwXSBzZXR1cF9wZXJjcHU6
-IE5SX0NQVVM6OCBucl9jcHVtYXNrX2JpdHM6OCBucl9jcHVfaWRzOjggbnJfbm9kZV9pZHM6
-MQpbICAgIDAuMDAwMDAwXSBQRVJDUFU6IEVtYmVkZGVkIDI1IHBhZ2VzL2NwdSBAZmZmZjg4
-MDIzZjQwMDAwMCBzNzA5NzYgcjgxOTIgZDIzMjMyIHUyNjIxNDQKWyAgICAwLjAwMDAwMF0g
-QnVpbHQgMSB6b25lbGlzdHMgaW4gWm9uZSBvcmRlciwgbW9iaWxpdHkgZ3JvdXBpbmcgb24u
-ICBUb3RhbCBwYWdlczogMjA1ODc2NwpbICAgIDAuMDAwMDAwXSBQb2xpY3kgem9uZTogTm9y
-bWFsClsgICAgMC4wMDAwMDBdIEtlcm5lbCBjb21tYW5kIGxpbmU6IEJPT1RfSU1BR0U9KGhk
-MCwxKS92bWxpbnV6IHJvb3Q9L2Rldi9zZGIxIHJvIHZpZGVvPWVmaWZiIGNvbnNvbGU9dHR5
-UzAsMTE1MjAwbjggY29uc29sZT10dHkwClsgICAgMC4wMDAwMDBdIFBJRCBoYXNoIHRhYmxl
-IGVudHJpZXM6IDQwOTYgKG9yZGVyOiAzLCAzMjc2OCBieXRlcykKWyAgICAwLjAwMDAwMF0g
-eHNhdmUveHJzdG9yOiBlbmFibGVkIHhzdGF0ZV9idiAweDcsIGNudHh0IHNpemUgMHgzNDAK
-WyAgICAwLjAwMDAwMF0gQ2hlY2tpbmcgYXBlcnR1cmUuLi4KWyAgICAwLjAwMDAwMF0gTm8g
-QUdQIGJyaWRnZSBmb3VuZApbICAgIDAuMDAwMDAwXSBNZW1vcnk6IDgxNzU5MDhrLzk0Mjg5
-OTJrIGF2YWlsYWJsZSAoMzYxMGsga2VybmVsIGNvZGUsIDEwNjUwMDRrIGFic2VudCwgMTg4
-MDgwayByZXNlcnZlZCwgMTU2N2sgZGF0YSwgNjcyayBpbml0KQpbICAgIDAuMDAwMDAwXSBI
-aWVyYXJjaGljYWwgUkNVIGltcGxlbWVudGF0aW9uLgpbICAgIDAuMDAwMDAwXSBOUl9JUlFT
-OjQzNTIgbnJfaXJxczo3NDQgMTYKWyAgICAwLjAwMDAwMF0gRXh0ZW5kZWQgQ01PUyB5ZWFy
-OiAyMDAwClsgICAgMC4wMDAwMDBdIENvbnNvbGU6IGNvbG91ciBkdW1teSBkZXZpY2UgODB4
-MjUKWyAgICAwLjAwMDAwMF0gY29uc29sZSBbdHR5MF0gZW5hYmxlZApbICAgIDAuMDAwMDAw
-XSBjb25zb2xlIFt0dHlTMF0gZW5hYmxlZApbICAgIDAuMDAwMDAwXSBGYXN0IFRTQyBjYWxp
-YnJhdGlvbiB1c2luZyBQSVQKWyAgICAwLjAwMTAwMF0gRGV0ZWN0ZWQgMzM5Mi41MTQgTUh6
-IHByb2Nlc3Nvci4KWyAgICAwLjAwMDAwMV0gQ2FsaWJyYXRpbmcgZGVsYXkgbG9vcCAoc2tp
-cHBlZCksIHZhbHVlIGNhbGN1bGF0ZWQgdXNpbmcgdGltZXIgZnJlcXVlbmN5Li4gNjc4NS4w
-MiBCb2dvTUlQUyAobHBqPTMzOTI1MTQpClsgICAgMC4wMTA1OTRdIHBpZF9tYXg6IGRlZmF1
-bHQ6IDMyNzY4IG1pbmltdW06IDMwMQpbICAgIDAuMDE1NDcwXSBEZW50cnkgY2FjaGUgaGFz
-aCB0YWJsZSBlbnRyaWVzOiAxMDQ4NTc2IChvcmRlcjogMTEsIDgzODg2MDggYnl0ZXMpClsg
-ICAgMC4wMjM3NTNdIElub2RlLWNhY2hlIGhhc2ggdGFibGUgZW50cmllczogNTI0Mjg4IChv
-cmRlcjogMTAsIDQxOTQzMDQgYnl0ZXMpClsgICAgMC4wMzEyOThdIE1vdW50LWNhY2hlIGhh
-c2ggdGFibGUgZW50cmllczogMjU2ClsgICAgMC4wMzU4OTNdIENQVTogUGh5c2ljYWwgUHJv
-Y2Vzc29yIElEOiAwClsgICAgMC4wMzk5MDBdIENQVTogUHJvY2Vzc29yIENvcmUgSUQ6IDAK
-WyAgICAwLjA0MzU1N10gRU5FUkdZX1BFUkZfQklBUzogU2V0IHRvICdub3JtYWwnLCB3YXMg
-J3BlcmZvcm1hbmNlJwpbICAgIDAuMDQzNTU4XSBFTkVSR1lfUEVSRl9CSUFTOiBWaWV3IGFu
-ZCB1cGRhdGUgd2l0aCB4ODZfZW5lcmd5X3BlcmZfcG9saWN5KDgpClsgICAgMC4wNTY1NzBd
-IG1jZTogQ1BVIHN1cHBvcnRzIDkgTUNFIGJhbmtzClsgICAgMC4wNjA1NzddIENQVTA6IFRo
-ZXJtYWwgbW9uaXRvcmluZyBlbmFibGVkIChUTTEpClsgICAgMC4wNjUzNjBdIHVzaW5nIG13
-YWl0IGluIGlkbGUgdGhyZWFkcy4KWyAgICAwLjA2OTMzMl0gRnJlZWluZyBTTVAgYWx0ZXJu
-YXRpdmVzOiAyMGsgZnJlZWQKWyAgICAwLjA3Mzg1N10gQUNQSTogQ29yZSByZXZpc2lvbiAy
-MDExMDYyMwpbICAgIDAuMDg1NzE3XSBLZXJuZWwgcGFuaWMgLSBub3Qgc3luY2luZzogeDJh
-cGljOiBlbmFibGVkIGJ5IEJJT1MgYnV0IGtlcm5lbCBpbml0IGZhaWxlZC4KWyAgICAwLjA5
-MzY5N10gUGlkOiAxLCBjb21tOiBzd2FwcGVyLzAgTm90IHRhaW50ZWQgMy4yLjAtcmM1ICMy
-ClsgICAgMC4wOTkzMzddIENhbGwgVHJhY2U6ClsgICAgMC4xMDE3ODhdICBbPGZmZmZmZmZm
-ODEzN2I3Y2U+XSA/IHBhbmljKzB4OTUvMHgxOGUKWyAgICAwLjEwNjc1NV0gIFs8ZmZmZmZm
-ZmY4MTAxNjI1OT5dID8gX19pb2FwaWNfd3JpdGVfZW50cnkrMHgxNi8weDMyClsgICAgMC4x
-MTI5MjVdICBbPGZmZmZmZmZmODE1MmQ1YmY+XSA/IGVuYWJsZV9JUl94MmFwaWMrMHgxOWEv
-MHgxZDcKWyAgICAwLjExODkxM10gIFs8ZmZmZmZmZmY4MTUyZjI4MT5dID8gZGVmYXVsdF9z
-ZXR1cF9hcGljX3JvdXRpbmcrMHhkLzB4NzEKWyAgICAwLjEyNTUwNl0gIFs8ZmZmZmZmZmY4
-MTUyYzUzNj5dID8gbmF0aXZlX3NtcF9wcmVwYXJlX2NwdXMrMHgyZjEvMHgzMjUKWyAgICAw
-LjEzMjEwMl0gIFs8ZmZmZmZmZmY4MTUyMmFiZj5dID8ga2VybmVsX2luaXQrMHg0Ni8weDEw
-ZgpbICAgIDAuMTM3NTcxXSAgWzxmZmZmZmZmZjgxMzg0MWY0Pl0gPyBrZXJuZWxfdGhyZWFk
-X2hlbHBlcisweDQvMHgxMApbICAgIDAuMTQzNjUwXSAgWzxmZmZmZmZmZjgxNTIyYTc5Pl0g
-PyBzdGFydF9rZXJuZWwrMHgzNDEvMHgzNDEKWyAgICAwLjE0OTI5N10gIFs8ZmZmZmZmZmY4
-MTM4NDFmMD5dID8gZ3NfY2hhbmdlKzB4Yi8weGIK
---------------030803030504060105000600--
+When ata port resumed, device_resume(...) calls pm_runtime_put_sync(..),
+which causes ata port to be runtime suspended immediately.
+
+So sd resume fails because it requires ata port to be active to handle
+start device command.
+
+This seems a PM core's bug.
+
+device_resume(...) should not runtime suspend the parent device, because
+its children have not resumed yet.
+
+Alan, 
+
+What do you think?
+
+---
+ drivers/ata/libata-core.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 15a3d4d..8996758 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5298,7 +5298,7 @@ static int ata_port_suspend(struct device *dev)
+ 	return ata_port_suspend_common(dev);
+ }
+ 
+-static int ata_port_resume(struct device *dev)
++static int ata_port_resume_common(struct device *dev)
+ {
+ 	struct ata_port *ap = to_ata_port(dev);
+ 	int rc;
+@@ -5308,6 +5308,20 @@ static int ata_port_resume(struct device *dev)
+ 	return rc;
+ }
+ 
++static int ata_port_resume(struct device *dev)
++{
++	int rc;
++
++	rc = ata_port_resume_common(dev);
++	if (!rc) {
++		pm_runtime_disable(dev);
++		pm_runtime_set_active(dev);
++		pm_runtime_enable(dev);
++	}
++
++	return rc;
++}
++
+ static int ata_port_runtime_idle(struct device *dev)
+ {
+ 	return pm_runtime_suspend(dev);
+@@ -5318,7 +5332,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.resume = ata_port_resume,
+ 
+ 	.runtime_suspend = ata_port_suspend_common,
+-	.runtime_resume = ata_port_resume,
++	.runtime_resume = ata_port_resume_common,
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
+ 
+
+
+
+
+
+
