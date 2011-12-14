@@ -1,51 +1,88 @@
-From: =?ISO-8859-1?Q?Sebastian_Mu=F1iz?= <sjmuniz@gmail.com>
-Subject: Re: PCIe SiI 3132 2xeSATA vs JMB393 6 PM
-Date: Wed, 14 Dec 2011 08:34:17 -0300
-Message-ID: <CAMBB+ZyOh-bHaxRff1nMDAezb1+uh_=HuPpCSnLjC+Qr061NKw@mail.gmail.com>
-References: <CAMBB+Zxb3CHrv3JMJBvpq4nE5ZyrJbH0SviE2JPM=ADENaaifQ@mail.gmail.com>
+From: "Gail Kelly" <gjabaay771@aol.com>
+Subject: Did you instruct Mrs. Jenny Maria Moore?
+Date: Wed, 14 Dec 2011 12:03:55 -0800
+Message-ID: <201112141305.pBED4tOQ006113__40382.1238004186$1323868194$gmane$org@ims-d11.mx.aol.com>
+Reply-To: <s.barristerdavid@yahoo.com.ph>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0113_01C2A9A6.645EF424"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:36185 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754462Ab1LNLem convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2011 06:34:42 -0500
-Received: by eekc4 with SMTP id c4so658854eek.19
-        for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2011 03:34:40 -0800 (PST)
-In-Reply-To: <CAMBB+Zxb3CHrv3JMJBvpq4nE5ZyrJbH0SviE2JPM=ADENaaifQ@mail.gmail.com>
+Received: from ims-d11.mx.aol.com ([205.188.249.148]:52252 "EHLO
+	ims-d11.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139Ab1LNNJZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Dec 2011 08:09:25 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hello.
-I have followed this up with Addonics. They sell the CPR5SA,
-essentially the same as Lian Li EX-503 but with Addonics nice support.
-(not sure about firmware differences though).
-Addonics confirms NCQ should be available when configured as JBOD or
-pass through, but no NCQ for RAID5
+This is a multi-part message in MIME format.
 
-Regards,
-Sebastian.
+------=_NextPart_000_0113_01C2A9A6.645EF424
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 
+Did you instruct one Mrs. Jenny Maria Moore, whose information's is below, to claim and receive the payment on your behalf?
+Read the below attached document for complete details and respond promptly
 
-On Wed, Dec 7, 2011 at 6:47 PM, Sebastian Mu=F1iz <sjmuniz@gmail.com> w=
-rote:
-> Hello
-> I am have connected a 5 disk box ultracheap Lian Li EX-503B to a
-> server running XenServer 5.5.
-> The box is configured as raid0 with two disks and the server has a
-> PCIe Sil 3132.
-> In this circumstances the server is unable to use NCQ.
->
-> Is this expected, like a known issue between JMB393 against sil3132 ?
-> I was hoping to put 5 x 2Tbytes disks on this box, configure raid5 an=
-d
-> be happy for once.
+------=_NextPart_000_0113_01C2A9A6.645EF424
+Content-Type: application/octet-stream;
+	name="Message From Gail Kelly.rtf"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="Message From Gail Kelly.rtf"
 
+e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzEwMzN7XGZv
+bnR0Ymx7XGYwXGZzd2lzc1xmY2hhcnNldDAgQXJpYWw7fX0NCntcKlxnZW5l
+cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTA5O31cdmlld2tpbmQ0XHVjMVxw
+YXJkXGYwXGZzMjAgV2VsY29tZSB0byBXZXN0cGFjLCBUaGUgQXVzdHJhbGlh
+J3MgRmlyc3QgQmFuay5ccGFyDQoyODMtMjg1IEtlbnQgU3RyZWV0XHBhcg0K
+U3lkbmV5IE5TVyAyMDAwLCBBdXN0cmFsaWFccGFyDQoxMzAwIDM2OSA4NzZc
+cGFyDQpXZWJzaXRlOiBodHRwOi8vd3d3Lndlc3RwYWMuY29tLmF1L1xwYXIN
+ClxwYXINClxwYXINClVQREFURSBZT1VSIE9OTElORSBBQ0NPVU5UIEZPUiBT
+RUNVUklUWSBSRUFTT05TIElOIFJFR0FSRFMgVE8gVEhFIFRSQU5TRkVSIE9G
+IFlPVVIgRlVORC4gXHBhcg0KXHBhcg0KQXR0ZW50aW9uIEZyb20gTXJzLiBH
+YWlsIEtlbGx5IHRoZSAoQ0VPKSBvZiBXZXN0cGFjLCB0aGUgZmlyc3QgZmVt
+YWxlIENFTyBvZiBhIG1ham9yIEF1c3RyYWxpYW4gYmFuay5ccGFyDQpccGFy
+DQpEaWQgeW91IGluc3RydWN0IG9uZSBNcnMuIEplbm55IE1hcmlhIE1vb3Jl
+LCB3aG9zZSBpbmZvcm1hdGlvbidzIGlzIGJlbG93LCB0byBjbGFpbSBhbmQg
+cmVjZWl2ZSB0aGUgcGF5bWVudCBvbiB5b3VyIGJlaGFsZj9ccGFyDQogXHBh
+cg0KVGhpcyBtb3JuaW5nIE1ycy4gSmVubnkgTWFyaWEgTW9vcmUgY2FtZSB0
+byB0aGUgb2ZmaWNlIGNsYWltaW5nIHRoYXQgeW91IGhhdmUgaW5zdHJ1Y3Rl
+ZCBoaW0gdG8gY29tZSByZWNlaXZlIHlvdXIgcGF5bWVudCBvbiB5b3VyIGJl
+aGFsZiwgSSBoYXZlIGFzayBoaW0gdG8gY29tZSBiYWNrIHRvbW9ycm93IGFz
+IHRoZXkgZGlkIG5vdCBwcm92aWRlIGFueSBwb3dlciBvZiBhbiBhdHRvcm5l
+eSBmcm9tIHlvdSB3aGljaCB3aWxsIHByb29mIHRoYXQgeW91IHRob3JvdWdo
+bHkgc2VuZCBoaW0sIFRoaXMgd2FzIHRvIGVuYWJsZSBtZSBjb250YWN0IHlv
+dSB0byB2ZXJpZnkgaG93IGdlbnVpbmUgdGhpcyBwZW9wbGUgYXJlIHRvIHlv
+dS5ccGFyDQpccGFyDQpJIGhlcmVieSBzZW5kIHRvIHlvdSB0aGUgaW5mb3Jt
+YXRpb24gc3VibWl0dGVkIGJ5IE1ycy4gSmVubnkgTWFyaWEgTW9vcmUsIHdp
+dGggYW4gYXBwbGljYXRpb24gdG8gcGF5IHRoZSBhY2Nlc3MgY2hhcmdlIGlu
+IG90aGVyIHRvIGhhdmUgYWNjZXNzIHRvIHRyYW5zZmVyIG1vbmV5IGZyb20g
+eW91ciBvbmxpbmUgYWNjb3VudCB0byBoaXMgYmFuayBhY2NvdW50LCBQbGVh
+c2UgYXMgYSBtYXR0ZXIgb2YgdXJnZW5jeSwgeW91IGFyZSByZXF1aXJlZCB0
+byB2ZXJpZnkgdGhlIGZvbGxvd2luZyBpbmZvcm1hdGlvbiBhbmQgaW5mb3Jt
+IHVzIGlmIHlvdSBhcmUgYXdhcmUgb3Iga25vdyBhbnl0aGluZyBhYm91dCB0
+aGlzLlxwYXINCjIuIERpZCB5b3Ugc2lnbiBhbnkgJ0RlZWQgb2YgQXNzaWdu
+bWVudCcgaW4gaGlzIGZhdm9yIHRoZXJlYnkgbWFraW5nIGhpbSB0aGUgY3Vy
+cmVudCBiZW5lZmljaWFyeSB3aXRoIHRoZSBmb2xsb3dpbmcgYWNjb3VudCBk
+ZXRhaWxzOiBccGFyDQpccGFyDQpBY2NvdW50IE5hbWU6IE1ycy4gSmVubnkg
+TWFyaWEgTW9vcmUgXHBhcg0KQS9DICM6IDExNC0xMDI1NTY3LTgsIFxwYXIN
+CkJhbmsgTmFtZTogQ2l0eSBCYW5rIG9mIENhbmFkYSBccGFyDQpTd2lmdCBD
+b2RlOiBTQkNMIDExSzMzMy5ccGFyDQpccGFyDQpGaW5hbGx5LCB5b3UgYXJl
+IGhlcmVieSBhZHZpc2VkIHRvIGluZGljYXRlIHRvIHRoaXMgaG9ub3JhYmxl
+IG9mZmljZSB3aXRoIGltbWVkaWF0ZSBlZmZlY3QsIGlmIHlvdSBhcmUgdGhl
+IHBlcnNvbiB0aGF0IGluc3RydWN0ZWQgTXJzLiBKZW5ueSBNYXJpYSBNb29y
+ZSB0byBjb21lIGZvciB0aGUgY2xhaW0gb2YgeW91ciBmdW5kIHdvcnRoIG9m
+ICQxMCw1MDAuMDAwLjAwIChUZW4gTWlsbGlvbiwgRml2ZSBIdW5kcmVkIFRo
+b3VzYW5kIFVuaXRlZCBTdGF0ZXMgRG9sbGFycyksIHRvIGVuYWJsZSB1cyBl
+bmRvcnNlIGZvciB0aGUgZmluYWwgcGF5bWVudCBhcHByb3ZhbCBvcmRlciBv
+biBoaXMgYmVoYWxmLCBBcyBoZSBpcyByZWFkeSB0byBwYXkgdGhlIGFjY2Vz
+cyBjaGFyZ2UgdG8gaGF2ZSB0aGUgb25saW5lIGFjY291bnQgZGV0YWlscy4g
+U2hvdWxkIEluIGNhc2UgeW91IG5lZWQgYW55IG1vcmUgaW5mb3JtYXRpb24s
+IEtpbmRseSBsZXQgbWUga25vdy5ccGFyDQpccGFyDQpccGFyDQpFbmRlYXZv
+ciB0byBzZW5kIHlvdXIgcmVwbHkgZm9yIHVyZ2VudCBhdHRlbnRpb24gV2Ug
+c2hhbGwgYmUgd2FpdGluZyBmb3IgeW91ciB1cmdlbnQgYW5kIHByb21wdCBy
+ZXNwb25zZS5ccGFyDQogXHBhcg0KQmVzdCBSZWdhcmRzLFxwYXINCkdhaWwg
+S2VsbHlccGFyDQpDRU8gV2VzdHBhYyBBdXN0cmFsaWEgXHBhcg0KfQ0KAA==
 
-
---=20
-
-I've decided that the stuff falling through the cracks
-is confetti and I'm having a party!=94
+------=_NextPart_000_0113_01C2A9A6.645EF424--
