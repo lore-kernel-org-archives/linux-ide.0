@@ -1,40 +1,51 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2] ahci: platform support for suspend/resume
-Date: Thu, 15 Dec 2011 14:18:21 -0500
-Message-ID: <4EEA47FD.4050407@pobox.com>
-References: <1321643410-16102-1-git-send-email-computersforpeace@gmail.com> <20111118192809.GF11736@legolas.emea.dhcp.ti.com> <CAN8TOE-yZyHC3n+dSu9wZ=UBmenD67OHbAyrF2K_sgf0O7oUJA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC][PATCH 4/4] ahci: support hot plug when port/controller
+ is runtime suspended
+Date: Thu, 15 Dec 2011 11:21:31 -0800
+Message-ID: <20111215192131.GE32002@google.com>
+References: <1323954769-3918-1-git-send-email-ming.m.lin@intel.com>
+ <1323954769-3918-5-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:54296 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756439Ab1LOTSZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 14:18:25 -0500
-In-Reply-To: <CAN8TOE-yZyHC3n+dSu9wZ=UBmenD67OHbAyrF2K_sgf0O7oUJA@mail.gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34185 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759366Ab1LOTVh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 14:21:37 -0500
+Content-Disposition: inline
+In-Reply-To: <1323954769-3918-5-git-send-email-ming.m.lin@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: balbi@ti.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-pm@lists.linux-foundation.org, Tejun Heo <tj@kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>, Kevin Cernekee <cernekee@gmail.com>, Lin Ming <ming.m.lin@intel.com>
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, kay.sievers@vrfy.org
 
-On 12/15/2011 01:13 PM, Brian Norris wrote:
-> On Fri, Nov 18, 2011 at 11:28 AM, Felipe Balbi<balbi@ti.com>  wrote:
->> On Fri, Nov 18, 2011 at 11:10:10AM -0800, Brian Norris wrote:
->>> Add platform hooks for custom suspend() and resume() functions. The
->>> generic suspend/resume code in drivers/ata/ahci_platform.c is adapted
->>> from the PCI version in drivers/ata/ahci.c.
->>>
->>> Signed-off-by: Brian Norris<computersforpeace@gmail.com>
->>
->> Reviewed-by: Felipe Balbi<balbi@ti.com>
->
-> Thanks for the review, Felipe.
->
-> What's the status on this? There have been no comments for almost a
-> month. Can it be merged?
+Hello,
 
-The previous version was queued, but did not apply to upstream (I 
-emailed a comment at the time).  Hopefully this one works...
+On Thu, Dec 15, 2011 at 09:12:49PM +0800, Lin Ming wrote:
+> I use eSATA to test disk hot plug.
+> With previous 3 patches applied, disk hot plug does not wok
+> when ahci port/controller is runtime suspended.
+> 
+> There are 2 cases we need to handle for hot plug:
+> 
+> 1. port suspended, controller active
+>    Is IRQ need to be enabled for port to detect hot plug? 
+> 
+> 2. port suspended, controller suspended
+>    Will controller get a PME when hot plug happens?
+> 
+> I'm still investigating hot plug support.
+> 
+> Anyone has comment?
 
+SATA link detection requires hot wire and keeping wire hot takes
+power.  I think it's fair tradeoff to not support hotplug while
+powersaving is on.  We have warm plug mechanism (the SCSI rescan
+trigger via sysfs) after all.  It would be nice if things like that is
+somehow exported to userland in easy way tho (cc'ing Kay), but I
+frankly don't have much idea where that would fit.
 
+Thanks.
 
+-- 
+tejun
