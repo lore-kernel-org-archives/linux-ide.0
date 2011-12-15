@@ -1,58 +1,54 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2] ahci: platform support for suspend/resume
-Date: Thu, 15 Dec 2011 11:53:27 -0800
-Message-ID: <CAN8TOE-GZEFKKVKiR_oAumj3BhcCrO66mCUyiPBPVUUPFX2YBQ@mail.gmail.com>
-References: <1321643410-16102-1-git-send-email-computersforpeace@gmail.com>
-	<20111118192809.GF11736@legolas.emea.dhcp.ti.com>
-	<CAN8TOE-yZyHC3n+dSu9wZ=UBmenD67OHbAyrF2K_sgf0O7oUJA@mail.gmail.com>
-	<4EEA47FD.4050407@pobox.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [RFC][PATCH 4/4] ahci: support hot plug when port/controller is
+ runtime suspended
+Date: Fri, 16 Dec 2011 00:29:44 +0100
+Message-ID: <CAPXgP12mEC_p_7Xi-pzKwUCNV1=WTj7rW+upXK6gUbGwg3S2NA@mail.gmail.com>
+References: <1323954769-3918-1-git-send-email-ming.m.lin@intel.com>
+ <1323954769-3918-5-git-send-email-ming.m.lin@intel.com> <20111215192131.GE32002@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:41016 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759350Ab1LOTx3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 14:53:29 -0500
-In-Reply-To: <4EEA47FD.4050407@pobox.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:47489 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756395Ab1LOXaF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 18:30:05 -0500
+In-Reply-To: <20111215192131.GE32002@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: balbi@ti.com, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, linux-pm@lists.linux-foundation.org, Tejun Heo <tj@kernel.org>, Anton Vorontsov <avorontsov@ru.mvista.com>, Kevin Cernekee <cernekee@gmail.com>, Lin Ming <ming.m.lin@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, David Zeuthen <zeuthen@gmail.com>
 
-On Thu, Dec 15, 2011 at 11:18 AM, Jeff Garzik <jgarzik@pobox.com> wrote=
-:
-> On 12/15/2011 01:13 PM, Brian Norris wrote:
+On Thu, Dec 15, 2011 at 20:21, Tejun Heo <tj@kernel.org> wrote:
+> On Thu, Dec 15, 2011 at 09:12:49PM +0800, Lin Ming wrote:
+>> I use eSATA to test disk hot plug.
+>> With previous 3 patches applied, disk hot plug does not wok
+>> when ahci port/controller is runtime suspended.
 >>
->> On Fri, Nov 18, 2011 at 11:28 AM, Felipe Balbi<balbi@ti.com> =A0wrot=
-e:
->>>
->>> On Fri, Nov 18, 2011 at 11:10:10AM -0800, Brian Norris wrote:
->>>>
->>>> Add platform hooks for custom suspend() and resume() functions. Th=
-e
->>>> generic suspend/resume code in drivers/ata/ahci_platform.c is adap=
-ted
->>>> from the PCI version in drivers/ata/ahci.c.
->>>>
->>>> Signed-off-by: Brian Norris<computersforpeace@gmail.com>
->>>
->>>
->>> Reviewed-by: Felipe Balbi<balbi@ti.com>
+>> There are 2 cases we need to handle for hot plug:
 >>
+>> 1. port suspended, controller active
+>> =C2=A0 =C2=A0Is IRQ need to be enabled for port to detect hot plug?
 >>
->> Thanks for the review, Felipe.
+>> 2. port suspended, controller suspended
+>> =C2=A0 =C2=A0Will controller get a PME when hot plug happens?
 >>
->> What's the status on this? There have been no comments for almost a
->> month. Can it be merged?
+>> I'm still investigating hot plug support.
+>>
+>> Anyone has comment?
 >
->
-> The previous version was queued, but did not apply to upstream (I ema=
-iled a
-> comment at the time). =A0Hopefully this one works...
+> SATA link detection requires hot wire and keeping wire hot takes
+> power.
 
-I never saw a comment that it did not apply. Anyway, by my own tests,
-this version applies safely to either Linus' repository or your
-libata-dev/NEXT branch.
+Oh, hardware in general just sucks. :)
 
-Brian
+> I think it's fair tradeoff to not support hotplug while
+> powersaving is on. =C2=A0We have warm plug mechanism (the SCSI rescan
+> trigger via sysfs) after all. =C2=A0It would be nice if things like t=
+hat is
+> somehow exported to userland in easy way tho (cc'ing Kay), but I
+> frankly don't have much idea where that would fit.
+
+Getting David in the loop. He might have an idea.
+
+Kay
