@@ -1,73 +1,76 @@
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: Crash with sata_sil24 driver
-Date: Thu, 15 Dec 2011 09:14:15 +0530
-Message-ID: <CAHM4w1kvz5BXf=7+QgibV3gY5wqOpJXSgd0_X+2_0DGhkSGgKg@mail.gmail.com>
-References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
-	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
-	<20111122150613.GA322@google.com>
-	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
-	<20111123162937.GF25780@google.com>
-	<20111123144735.64dc9f05@jbarnes-desktop>
-	<CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
-	<CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: How does libata handles an 'ATA_ABORTED' error?
+Date: Wed, 14 Dec 2011 23:51:48 -0600
+Message-ID: <4EE98AF4.7090509@gmail.com>
+References: <201112140948.03859.jbe@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:57969 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab1LOFvv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 00:51:51 -0500
+Received: by qadb15 with SMTP id b15so1070850qad.19
+        for <linux-ide@vger.kernel.org>; Wed, 14 Dec 2011 21:51:50 -0800 (PST)
+In-Reply-To: <201112140948.03859.jbe@pengutronix.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Juergen Beisert <jbe@pengutronix.de>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Tejun,
-
-Any suugestion to resolve this issue?
-
-Regards
-Pratyush
-
-On Thu, Nov 24, 2011 at 10:06 AM, Pratyush Anand
-<pratyush.anand@gmail.com> wrote:
-> On Thu, Nov 24, 2011 at 7:18 AM, Tejun Heo <tj@kernel.org> wrote:
->> Hello,
->>
->> On Wed, Nov 23, 2011 at 2:47 PM, Jesse Barnes <jbarnes@virtuousgeek.=
-org> wrote:
->>>> Weird, that basically means that somehow pci_iomap() isn't
->>>> synchronous. =A0ie. you need to way some time after pci_iomap() be=
-fore
->>>> being able to access the mapped address. =A0Seems like arch / pci
->>>> weirdness. =A0Jesse, Russell, any ideas?
->>>
->>> As Russel said, pci_iomap shouldn't be async. =A0But maybe somethin=
-g else
->>> in the init function is doing a chip reset or causing the chip to g=
-o
->>> off into the weeds for a short time? =A0That's generally the cause =
-of
->>> target timeouts for PCI devices.
->>
->> Yeah, that's much more plausible. Weird that it doesn't happen on x8=
-6
->> tho. Maybe different timeouts? Pratyush, can you look at bus trace a=
-nd
->> see what's going on?
+On 12/14/2011 02:48 AM, Juergen Beisert wrote:
+> Hi list,
 >
-> It also does not happen always with ARM too. =A0As said earlier only
-> when I run the system at increased CPU frequency.
-> Do you suggest to trace PCIe bus using PCIe bus analyser. I can arang=
-e
-> analyser to do that. But I do not see any kind of abort (like PCIe
-> host/target abort) in this case. So will it really help?
-> Is it possible to share datasheet of SIL3531?
+> I have a CF card running in true-ide mode connected to regular PC. This CF
+> card does wear leveling of its flash memory internally like every other CF
+> card. With one exception: When the CF's firmware detects a broken NAND page
+> while writing a sector, it moves around the remaining (good) data to other
+> pages. To do this job it must discard the already transmitted sector data in
+> its SRAM, because it needs this SRAM to move around the other flash memory
+> data.
 >
-> Regards
-> Pratyush
+> After the movement the firmware signals an 'ATA_ERR' in the status register
+> and an 'ATA_ABORTED' in the error register to force the host to repeat to
+> write the same data again (next time it will be successfull due to internal
+> wear leveling is already done).
 >
->>
->> Thanks.
->>
->> --
->> tejun
->>
+> As we see data lost when the systems are running in production, I'm now trying
+> to find out if the libata/SCSI layer really repeats the sector write for this
+> case and does the expected (or required) things. But I'm lost in these
+> software layers and their error path.
+>
+> I found (in Documentation/DocBook/libata.tmpl):
+>
+> "This is indicated by UNC bit in the ERROR register.  ATA
+> devices reports UNC error only after certain number of
+> retries cannot recover the data, so there's nothing much
+> else to do other than notifying upper layer."
+>
+> which sounds to me as no repeat will happen for write errors, but
+> the 'ATA_UNC' bit is not used to signal the "wear leveling case" shown above.
+
+That seems like incorrect behavior by the device, ABRT is normally used 
+to indicate an invalid or unsupported command. UNC would likely be more 
+appropriate. But I don't think it ultimately makes a difference in this 
+case.
+
+>
+> As far as I understand the ATA errors are transformed to SCSI errors and then
+> handled in the SCSI layer. But the documentation tells me it is not easy to
+> always find an adequate SCSI error for an ATA error. So, I'm not sure if for
+> the "wear leveling case" the SCSI layer receives a "valuable" error message.
+
+ From what I can see the SCSI error that gets returned in this case is 
+just an "aborted command" error.
+
+>
+> Does anybody can give me a hint, what really happens when the attached drive
+> signals an 'ATA_ABORTED'? Does the libata/SCSI give up in this case, or will
+> it repeat the command?
+
+I don't know that the SCSI or block layers really pay much attention to 
+the error code in this case - I think it would always attempt some retries.
+
+Certainly any of these errors would result in error messages showing up 
+in dmesg. Are you seeing any of this?
