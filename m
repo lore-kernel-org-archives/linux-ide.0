@@ -1,73 +1,73 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v2 2/2] ata: update ata port's runtime status during system resume
-Date: Thu, 15 Dec 2011 09:36:03 +0800
-Message-ID: <1323912963-26146-3-git-send-email-ming.m.lin@intel.com>
-References: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+From: Pratyush Anand <pratyush.anand@gmail.com>
+Subject: Re: Crash with sata_sil24 driver
+Date: Thu, 15 Dec 2011 09:14:15 +0530
+Message-ID: <CAHM4w1kvz5BXf=7+QgibV3gY5wqOpJXSgd0_X+2_0DGhkSGgKg@mail.gmail.com>
+References: <CAHM4w1kc+5aYWH-09BPTXZdo8+iguFjORKs7mMhG7hea2UU8yQ@mail.gmail.com>
+	<CAHM4w1nZ7GgutiuDiTCKu9wUuphn8qOiWgmCYVXXvwW1q8CgoA@mail.gmail.com>
+	<20111122150613.GA322@google.com>
+	<CAHM4w1nsNTQmAL-0d76O9cYXjNbiq-0f60Y3emWO2yf7HyFWDg@mail.gmail.com>
+	<20111123162937.GF25780@google.com>
+	<20111123144735.64dc9f05@jbarnes-desktop>
+	<CAOS58YPM29xi4Jq5L16fjDQDRzv-yc67tp_yqSwoiFBBbtCZkw@mail.gmail.com>
+	<CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAHM4w1k-uA1CpbvDAz4ZhETf9_RN1kxf6btXNbxEAvNw6M57rw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Russell King <linux@arm.linux.org.uk>
 List-Id: linux-ide@vger.kernel.org
 
-The ata port is brought back to full power state during system resume.
-So its runtime PM status will have to be updated to reflect
-the actual post-system sleep status.
+Hi Tejun,
 
-This also fixes below warning during system suspend/resume.
+Any suugestion to resolve this issue?
 
-WARNING: at /work/linux/drivers/ata/libata-eh.c:4034
-ata_scsi_port_error_handler+0x89/0x557()
+Regards
+Pratyush
 
-4034         WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
-
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-core.c |   18 ++++++++++++++++--
- 1 files changed, 16 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 15a3d4d..8996758 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5298,7 +5298,7 @@ static int ata_port_suspend(struct device *dev)
- 	return ata_port_suspend_common(dev);
- }
- 
--static int ata_port_resume(struct device *dev)
-+static int ata_port_resume_common(struct device *dev)
- {
- 	struct ata_port *ap = to_ata_port(dev);
- 	int rc;
-@@ -5308,6 +5308,20 @@ static int ata_port_resume(struct device *dev)
- 	return rc;
- }
- 
-+static int ata_port_resume(struct device *dev)
-+{
-+	int rc;
-+
-+	rc = ata_port_resume_common(dev);
-+	if (!rc) {
-+		pm_runtime_disable(dev);
-+		pm_runtime_set_active(dev);
-+		pm_runtime_enable(dev);
-+	}
-+
-+	return rc;
-+}
-+
- static int ata_port_runtime_idle(struct device *dev)
- {
- 	return pm_runtime_suspend(dev);
-@@ -5318,7 +5332,7 @@ static const struct dev_pm_ops ata_port_pm_ops = {
- 	.resume = ata_port_resume,
- 
- 	.runtime_suspend = ata_port_suspend_common,
--	.runtime_resume = ata_port_resume,
-+	.runtime_resume = ata_port_resume_common,
- 	.runtime_idle = ata_port_runtime_idle,
- };
- 
--- 
-1.7.2.5
+On Thu, Nov 24, 2011 at 10:06 AM, Pratyush Anand
+<pratyush.anand@gmail.com> wrote:
+> On Thu, Nov 24, 2011 at 7:18 AM, Tejun Heo <tj@kernel.org> wrote:
+>> Hello,
+>>
+>> On Wed, Nov 23, 2011 at 2:47 PM, Jesse Barnes <jbarnes@virtuousgeek.=
+org> wrote:
+>>>> Weird, that basically means that somehow pci_iomap() isn't
+>>>> synchronous. =A0ie. you need to way some time after pci_iomap() be=
+fore
+>>>> being able to access the mapped address. =A0Seems like arch / pci
+>>>> weirdness. =A0Jesse, Russell, any ideas?
+>>>
+>>> As Russel said, pci_iomap shouldn't be async. =A0But maybe somethin=
+g else
+>>> in the init function is doing a chip reset or causing the chip to g=
+o
+>>> off into the weeds for a short time? =A0That's generally the cause =
+of
+>>> target timeouts for PCI devices.
+>>
+>> Yeah, that's much more plausible. Weird that it doesn't happen on x8=
+6
+>> tho. Maybe different timeouts? Pratyush, can you look at bus trace a=
+nd
+>> see what's going on?
+>
+> It also does not happen always with ARM too. =A0As said earlier only
+> when I run the system at increased CPU frequency.
+> Do you suggest to trace PCIe bus using PCIe bus analyser. I can arang=
+e
+> analyser to do that. But I do not see any kind of abort (like PCIe
+> host/target abort) in this case. So will it really help?
+> Is it possible to share datasheet of SIL3531?
+>
+> Regards
+> Pratyush
+>
+>>
+>> Thanks.
+>>
+>> --
+>> tejun
+>>
