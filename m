@@ -1,22 +1,42 @@
-From: "Steven Chen" <stevenchen@jmicron.com>
+From: "Show lu" <showlu@jmicron.com>
 Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch } ExpressCard, sometimes fails to boot
-Date: Fri, 16 Dec 2011 10:52:02 +0800
-Message-ID: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
-References: <20111030211240.GE7696@google.com> <201110310300.p9V3021e019006@jmr105.jmicron.com> <20111213224432.GA3619@elie.hsd1.il.comcast.net>
+Date: Fri, 16 Dec 2011 10:55:51 +0800
+Message-ID: <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
+References: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from spamfilter.jmicron.com ([220.130.51.235]:8380 "EHLO
+Received: from spamfilter.jmicron.com ([220.130.51.235]:26972 "EHLO
 	jmsspam.jmicron.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756436Ab1LPDDn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 22:03:43 -0500
-In-Reply-To: <20111213224432.GA3619@elie.hsd1.il.comcast.net>
+	with ESMTP id S1756456Ab1LPDFi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 22:05:38 -0500
+In-Reply-To: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Jonathan Nieder' <jrnieder@gmail.com>, linux-ide@vger.kernel.org, 'Show lu' <showlu@jmicron.com>
+To: 'Steven Chen' <stevenchen@jmicron.com>, 'Jonathan Nieder' <jrnieder@gmail.com>, linux-ide@vger.kernel.org
 Cc: 'Tejun Heo' <tj@kernel.org>, 'Orson' <orson.wellies@gmail.com>, 'Aries Lee' <arieslee@jmicron.com>
+
+Dear Sirs,
+Good day,
+I am JMicron/Show and take over JMB36X FAE activity
+Please help to shows the PCIE CFG registers(of JMB36X) at first.
+
+
+Thanks
+Sincerely
+Show
+
+
+
+-----Original Message-----
+From: Steven Chen [mailto:stevenchen@jmicron.com] 
+Sent: Friday, December 16, 2011 10:52 AM
+To: 'Jonathan Nieder'; linux-ide@vger.kernel.org; 'Show lu'
+Cc: 'Tejun Heo'; 'Orson'; 'Aries Lee'
+Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch }
+ExpressCard, sometimes fails to boot
 
 Add Show in this mail loop.
 
