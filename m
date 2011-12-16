@@ -1,77 +1,83 @@
-From: Huang Changming-R66093 <r66093@freescale.com>
-Subject: RE: [PATCH] libata-pmp: add schedule timeout to support some PMP
- cards
-Date: Fri, 16 Dec 2011 11:10:13 +0000
-Message-ID: <8A2FC72B45BB5A4C9F801431E06AE48F11652BAD@039-SN1MPN1-005.039d.mgd.msft.net>
-References: <1320033440-1106-1-git-send-email-r66093@freescale.com>
- <20111103160759.GI4417@google.com>
- <8A2FC72B45BB5A4C9F801431E06AE48F11617501@039-SN1MPN1-005.039d.mgd.msft.net>
- <20111110152036.GB27258@google.com>
- <8A2FC72B45BB5A4C9F801431E06AE48F1161C24D@039-SN1MPN1-005.039d.mgd.msft.net>
- <20111115145111.GK30922@google.com> <4EC2844B.9050904@teksavvy.com>
- <4EC28D7E.7010703@teksavvy.com>
- <8A2FC72B45BB5A4C9F801431E06AE48F1161DF3C@039-SN1MPN1-005.039d.mgd.msft.net>
- <4EC3C6AD.9070706@teksavvy.com>
- <8A2FC72B45BB5A4C9F801431E06AE48F11652B7B@039-SN1MPN1-005.039d.mgd.msft.net>
- <8A2FC72B45BB5A4C9F801431E06AE48F11652B92@039-SN1MPN1-005.039d.mgd.msft.net>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC][PATCH 1/4] ahci: port legacy pm interface to struct dev_pm_ops
+Date: Fri, 16 Dec 2011 21:07:23 +0800
+Message-ID: <CAF1ivSYcvw0jpERewg=5+hW2aMrf-QzgASX-_1+GGK66o1Giww@mail.gmail.com>
+References: <1323954769-3918-1-git-send-email-ming.m.lin@intel.com>
+	<1323954769-3918-2-git-send-email-ming.m.lin@intel.com>
+	<201112152053.10535.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:44312
-	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759153Ab1LPLKR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Dec 2011 06:10:17 -0500
-In-Reply-To: <8A2FC72B45BB5A4C9F801431E06AE48F11652B92@039-SN1MPN1-005.039d.mgd.msft.net>
-Content-Language: en-US
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:49998 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053Ab1LPNHY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Dec 2011 08:07:24 -0500
+In-Reply-To: <201112152053.10535.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Huang Changming-R66093 <r66093@freescale.com>, Mark Lord <kernel@teksavvy.com>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
 
-T3IgbWF5YmUgSSBjYW4gYWRkIHRoaXMgUElEL1ZJRCB0byB0aGUgc2F0YV9wbXBfcXVpcmNrcywN
-CkJlZm9yZSBzYXRhX3BtcF9yZWFkLCBkcml2ZXIgd2lsbCBjaGVjayB0aGlzIGZsYWcgdG8gZGVj
-aWRlIGlmIGRlbGF5IHRoZSB0aW1lLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+
-IEZyb206IEh1YW5nIENoYW5nbWluZy1SNjYwOTMNCj4gU2VudDogRnJpZGF5LCBEZWNlbWJlciAx
-NiwgMjAxMSA3OjAxIFBNDQo+IFRvOiBIdWFuZyBDaGFuZ21pbmctUjY2MDkzOyBNYXJrIExvcmQN
-Cj4gQ2M6IFRlanVuIEhlbzsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBS
-RTogW1BBVENIXSBsaWJhdGEtcG1wOiBhZGQgc2NoZWR1bGUgdGltZW91dCB0byBzdXBwb3J0IHNv
-bWUgUE1QDQo+IGNhcmRzDQo+IA0KPiBGb3IgSk1QMzkzIFBNUCBjYXJkLCB0aGUgVklEOiAweDE5
-N2IsIFBJRDogMHgwMzI1DQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4g
-RnJvbTogbGludXgtaWRlLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWlkZS0N
-Cj4gPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBIdWFuZyBDaGFuZ21pbmct
-UjY2MDkzDQo+ID4gU2VudDogRnJpZGF5LCBEZWNlbWJlciAxNiwgMjAxMSA2OjU4IFBNDQo+ID4g
-VG86IE1hcmsgTG9yZA0KPiA+IENjOiBUZWp1biBIZW87IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5v
-cmcNCj4gPiBTdWJqZWN0OiBSRTogW1BBVENIXSBsaWJhdGEtcG1wOiBhZGQgc2NoZWR1bGUgdGlt
-ZW91dCB0byBzdXBwb3J0IHNvbWUNCj4gPiBQTVAgY2FyZHMNCj4gPg0KPiA+IEhpLCBoYXZlIHlv
-dSBhbnkgZmVlZGJhY2sgYWJvdXQgeW91ciBQTVAgY2FyZHM/DQo+ID4NCj4gPiBOb3cgSSBtdXN0
-IHNlbmQgb3V0IHRoZSBwYXRjaCB0byBzdXBwb3J0IHRoZSBKTVAzOTMgUE1QIGNhcmQuDQo+ID4g
-TWF5YmUgSSB3aWxsIHNpbXBseSB0byBkZWxheSB0aGUgZW5vdWdoIHRpbWUgZm9yIFBNUCBTQ1Ig
-YXMgdGhlIGJlbG93Og0KPiA+DQo+ID4gc2V0X2N1cnJlbnRfc3RhdGUoVEFTS19JTlRFUlJVUFRJ
-QkxFKTsNCj4gPiBzY2hlZHVsZV90aW1lb3V0KG1zZWNzX3RvX2ppZmZpZXMoNTApKTsgLyogc2xl
-ZXAgNTAgbXNlY29uZCAqLw0KPiA+DQo+ID4gZXJyX21hc2sgPSBzYXRhX3BtcF9yZWFkKGxpbmss
-IHJlZywgcl92YWwpOw0KPiA+DQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+ID4gPiBGcm9tOiBNYXJrIExvcmQgW21haWx0bzprZXJuZWxAdGVrc2F2dnkuY29tXQ0KPiA+
-ID4gU2VudDogV2VkbmVzZGF5LCBOb3ZlbWJlciAxNiwgMjAxMSAxMDoyMCBQTQ0KPiA+ID4gVG86
-IEh1YW5nIENoYW5nbWluZy1SNjYwOTMNCj4gPiA+IENjOiBUZWp1biBIZW87IGxpbnV4LWlkZUB2
-Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIGxpYmF0YS1wbXA6IGFk
-ZCBzY2hlZHVsZSB0aW1lb3V0IHRvIHN1cHBvcnQNCj4gPiA+IHNvbWUgUE1QIGNhcmRzDQo+ID4g
-Pg0KPiA+ID4gT24gMTEtMTEtMTYgMDQ6MDAgQU0sIEh1YW5nIENoYW5nbWluZy1SNjYwOTMgd3Jv
-dGU6DQo+ID4gPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+ID4gPj4gRnJvbTog
-TWFyayBMb3JkIFttYWlsdG86a2VybmVsQHRla3NhdnZ5LmNvbV0NCj4gPiA+IC4uDQo+ID4gPiA+
-Pj4gV2hhdCdzIHRoZSBwYXRjaCB0aGF0IEkgbmVlZCB0byB0ZXN0ID8NCj4gPiA+ID4+DQo+ID4g
-PiA+PiBGb3VuZCBpdCwgdHJpZWQgaXQsIHN0aWxsIGhhdmUgYSBMaW51eCBkb29yc3RvcC4NCj4g
-PiA+ID4+IFdvcmtzIGZpbmUgdW5kZXIgdGhhdCBvdGhlciBPL1MgdGhvdWdoLg0KPiA+ID4gPj4N
-Cj4gPiA+ID4gVGhhdOKAmXMgYSBiYWQgbmV3cy4gSSB0aGluayB3ZSBuZWVkIG9uZSB3b3JrYXJv
-dW5kIHRvIGZpeCBpdC4NCj4gPiA+ID4gSSB0ZXN0ZWQgdGhlIG90aGVyIHR3byBQTVAgY2FyZHMs
-IHRoZXkgd29yayB3ZWxsIG9uIEZyZWVzY2FsZSdzDQo+IGJvYXJkOg0KPiA+ID4gPiBQb3J0IE11
-bHRpcGxpZXIgMS4xLCAweDEwOTU6MHg0NzI2IHIzMSwgNyBwb3J0cywgZmVhdCAweDEvMHg5DQo+
-ID4gPiA+IChTaWxpY29uDQo+ID4gPiBJbWFnZSkNCj4gPiA+ID4gUG9ydCBNdWx0aXBsaWVyIDEu
-MiwgMHgxOTdiOjB4MDMyMSByMCwgNSBwb3J0cywgZmVhdCAweDUvMHhmDQo+ID4gPiA+IChKTUIz
-OTEpDQo+ID4gPg0KPiA+ID4NCj4gPiA+IE5vIHdvcnJpZXMgLS0gSSdtIGp1c3QgdHJ5aW5nIHRv
-IGdldCBteSBKTUIgUE1QIHRvIHdvcmsgb24geDg2Lg0KPiA+ID4gWW91ciBwYXRjaCBtYXkgc3Rp
-bGwgYmUgZ29vZCBhbmQgbmVjZXNzYXJ5IGZvciBGcmVlc2NhbGU7IGR1bm5vLg0KPiA+ID4NCj4g
-PiA+IENoZWVycw0KPiA+DQo+ID4gEyAg7Lm7HCAmIH4gJiAYICArLSAg3bYXICB3ICDLmyAgIG0g
-YiAgYnXop7YXICDcqH0gICDGoHogJmo6K3YgICAgICAgIHpaKw0KPiAremYNCj4gPiBoICAgfiAg
-ICBpICAgeiAeIHcgICA/ICAgICYgKd+iG2YNCg==
+2011/12/16 Rafael J. Wysocki <rjw@sisk.pl>:
+> On Thursday, December 15, 2011, Lin Ming wrote:
+>> So we can add runtime pm callbacks later.
+>>
+>> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+>> ---
+>> =A0drivers/ata/ahci.c | =A0 61 +++++++++++++++++++++++++++++++++++--=
+---------------
+>> =A01 files changed, 41 insertions(+), 20 deletions(-)
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index cf26222..c745603 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -84,8 +84,9 @@ static int ahci_vt8251_hardreset(struct ata_link *=
+link, unsigned int *class,
+>> =A0static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned i=
+nt *class,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned=
+ long deadline);
+>> =A0#ifdef CONFIG_PM
+>> -static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message=
+_t mesg);
+>> -static int ahci_pci_device_resume(struct pci_dev *pdev);
+>> +static int ahci_pci_device_suspend(struct device *dev);
+>> +static int ahci_pci_device_hibernate(struct device *dev);
+>> +static int ahci_pci_device_resume(struct device *dev);
+>> =A0#endif
+>>
+>> =A0static struct scsi_host_template ahci_sht =3D {
+>> @@ -400,6 +401,11 @@ static const struct pci_device_id ahci_pci_tbl[=
+] =3D {
+>> =A0 =A0 =A0 { } =A0 =A0 /* terminate list */
+>> =A0};
+>>
+>> +static struct dev_pm_ops ahci_pci_pm_ops =3D {
+>> + =A0 =A0 .suspend =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D ahci_pci_devic=
+e_suspend,
+>> + =A0 =A0 .resume =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D ahci_pci_devic=
+e_resume,
+>> + =A0 =A0 .poweroff =A0 =A0 =A0 =A0 =A0 =A0 =A0 =3D ahci_pci_device_=
+hibernate,
+>> +};
+>
+> So seem to have forgotten about .restore(). =A0Please define it at le=
+ast or
+> resume from hibernation will be broken.
 
+Will add it.
+
+>
+> Also, are .freeze() and .thaw() callbacks really unnecessary?
+
+I'm not sure for now.
+Will test hibernation.
+
+Thanks for the comments.
+
+Lin Ming
+
+>
+> Rafael
