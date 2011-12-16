@@ -1,123 +1,37 @@
-From: "Show lu" <showlu@jmicron.com>
-Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch } ExpressCard, sometimes fails to boot
-Date: Fri, 16 Dec 2011 10:55:51 +0800
-Message-ID: <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
-References: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: How does libata handles an 'ATA_ABORTED' error?
+Date: Thu, 15 Dec 2011 23:26:04 -0500
+Message-ID: <4EEAC85C.1080501@teksavvy.com>
+References: <201112140948.03859.jbe@pengutronix.de> <4EE98AF4.7090509@gmail.com> <201112151201.15044.jbe@pengutronix.de> <CADLC3L2MbPsoDuEMHeOiitU_NvARasKgaBCxdijgX=F744XyGA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from spamfilter.jmicron.com ([220.130.51.235]:26972 "EHLO
-	jmsspam.jmicron.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756456Ab1LPDFi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 22:05:38 -0500
-In-Reply-To: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:36424 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754042Ab1LPE0G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 23:26:06 -0500
+In-Reply-To: <CADLC3L2MbPsoDuEMHeOiitU_NvARasKgaBCxdijgX=F744XyGA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Steven Chen' <stevenchen@jmicron.com>, 'Jonathan Nieder' <jrnieder@gmail.com>, linux-ide@vger.kernel.org
-Cc: 'Tejun Heo' <tj@kernel.org>, 'Orson' <orson.wellies@gmail.com>, 'Aries Lee' <arieslee@jmicron.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Juergen Beisert <jbe@pengutronix.de>, linux-ide@vger.kernel.org
 
-Dear Sirs,
-Good day,
-I am JMicron/Show and take over JMB36X FAE activity
-Please help to shows the PCIE CFG registers(of JMB36X) at first.
+On 11-12-15 01:38 PM, Robert Hancock wrote:
+> On Thu, Dec 15, 2011 at 5:01 AM, Juergen Beisert <jbe@pengutronix.de> wrote:
+..
+>> As far as I understand the problem of this kind of errors is for the multi
+>> sector write case. The framework does not know what sectors fails, so the
+>> question is: does it repeat the whole multi sector sequence or what else it
+>> does?
+> 
+> The entire request should get retried.
 
+I'm not so sure that is correct.
 
-Thanks
-Sincerely
-Show
+The Linux IDE stack will not retry the completed sectors
+(those which were successfully transfered in multiple-sector blocks).
 
+Not sure what libata does here.
 
-
------Original Message-----
-From: Steven Chen [mailto:stevenchen@jmicron.com] 
-Sent: Friday, December 16, 2011 10:52 AM
-To: 'Jonathan Nieder'; linux-ide@vger.kernel.org; 'Show lu'
-Cc: 'Tejun Heo'; 'Orson'; 'Aries Lee'
-Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch }
-ExpressCard, sometimes fails to boot
-
-Add Show in this mail loop.
-
------Original Message-----
-From: Jonathan Nieder [mailto:jrnieder@gmail.com] 
-Sent: Wednesday, December 14, 2011 6:45 AM
-To: linux-ide@vger.kernel.org
-Cc: 'Tejun Heo'; 'Orson'; Aries Lee
-Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
-ExpressCard, sometimes fails to boot
-
-(Aries: sorry for the duplicate message)
-Hi,
-
-Aries Lee wrote:
-
-> Is it possible to install windows OS on the same hardware,
-> If it still get the same error, that we can conclude it as a hardware
-issue.
-
-Orson wrote:
-
-> I installed WinXP SP3 as a dual boot option onto my HP NX6325.
-> I booted into windows and my dual port express card was found immediately,
-I
-> installed the latest driver from J Micron and everything seemed to be OK.
-> I looked through the winxp system messages and all was OK, I looked
-through
-> device manager and it said everything was OK, all resources were OK.
-> I attached an external esata drive and it was detected instantly and was
-> available in my list of drives, I copied some files over, all went OK, I
-ran
-> scandisk to check the drive and all went OK, the drive did not seem to
-> re-attach itself or give any errors.  So it seems to work fine in windows.
-
-All right; looks like the hardware works.
-
-> I then shut down my laptop and removed the esata drive and booted into
-Debian
-> wheezy, same error appeared during boot (without any drive attached)
-> irq_stat 0x00000040, connection status changed
-> ata1: SError: { PHYInt CommWake DevExch }
-> ata1: hard resetting link
-> ata1: COMRESET failed (errno=-32)
-> ata1: reset failed (errno=-32), retrying in 8 secs
-> ata1: limiting SATA link speed to 1.5 Gbps
-> ata1: hard resetting link
-> ata1: SATA link down (SStatus 0 SControl 310)
-> ata1: EH complete
->
-> etc, etc.
-
-Right.
-
-> I booted back to windows and all was OK, but, here is what I have found,
-if I
-> boot into Linux from windows without shutting down (warm boot) then the
-> express card is initialised in Debian without problems and works as
-normal, if
-> I shut down and cold boot straight to Debian, the error appears again.
-
-Interesting.  So it sounds like Windows is doing some initialization
-that Linux does not.
-
-> Perhaps the card is faulty or (I suspect) there is a problem with the bios
-on
-> the NX6325, the latest bios is dated 2007 and HP seem to have stopped
-> supporting this model, even though mine was purchased new in 2007.
-
-Please send "acpidump" output as an attachment for reference.
-
-> Anyway, because the express card is so cheap I have just ordered a
-replacement
-> of the same type, so this will tell me if it's the card that is at fault.
-
-Ok.  Thanks for your work.
-
-linux-ide folks: any ideas for debugging this further?  For example,
-is there a way to find the difference between the state after a cold
-boot and a warm boot from windows?
-
-Ciao,
-Jonathan
-
+Cheers
