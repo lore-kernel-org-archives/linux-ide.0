@@ -1,37 +1,30 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: How does libata handles an 'ATA_ABORTED' error?
-Date: Thu, 15 Dec 2011 23:26:04 -0500
-Message-ID: <4EEAC85C.1080501@teksavvy.com>
-References: <201112140948.03859.jbe@pengutronix.de> <4EE98AF4.7090509@gmail.com> <201112151201.15044.jbe@pengutronix.de> <CADLC3L2MbPsoDuEMHeOiitU_NvARasKgaBCxdijgX=F744XyGA@mail.gmail.com>
+From: Jonathan Nieder <jrnieder@gmail.com>
+Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
+ ExpressCard, sometimes fails to boot
+Date: Fri, 16 Dec 2011 03:58:53 -0600
+Message-ID: <20111216095853.GC5974@elie.hsd1.il.comcast.net>
+References: <26E173AF030F44F8817F60B0D882E440@jmicron.com>
+ <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:36424 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754042Ab1LPE0G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Dec 2011 23:26:06 -0500
-In-Reply-To: <CADLC3L2MbPsoDuEMHeOiitU_NvARasKgaBCxdijgX=F744XyGA@mail.gmail.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:46490 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053Ab1LPJ66 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Dec 2011 04:58:58 -0500
+Received: by yenm11 with SMTP id m11so2070476yen.19
+        for <linux-ide@vger.kernel.org>; Fri, 16 Dec 2011 01:58:57 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Juergen Beisert <jbe@pengutronix.de>, linux-ide@vger.kernel.org
+To: 'Orson' <orson.wellies@gmail.com>
+Cc: Show lu <showlu@jmicron.com>, 'Steven Chen' <stevenchen@jmicron.com>, linux-ide@vger.kernel.org, 'Tejun Heo' <tj@kernel.org>, 'Aries Lee' <arieslee@jmicron.com>
 
-On 11-12-15 01:38 PM, Robert Hancock wrote:
-> On Thu, Dec 15, 2011 at 5:01 AM, Juergen Beisert <jbe@pengutronix.de> wrote:
-..
->> As far as I understand the problem of this kind of errors is for the multi
->> sector write case. The framework does not know what sectors fails, so the
->> question is: does it repeat the whole multi sector sequence or what else it
->> does?
-> 
-> The entire request should get retried.
+Show lu wrote:
 
-I'm not so sure that is correct.
+> Please help to shows the PCIE CFG registers(of JMB36X) at first.
 
-The Linux IDE stack will not retry the completed sectors
-(those which were successfully transfered in multiple-sector blocks).
+Thanks, Show.
 
-Not sure what libata does here.
-
-Cheers
+Orson, running "lspci -vvnn -d 197b:2363" as root should do the trick.
