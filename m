@@ -1,66 +1,31 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 14/24] libsas: prevent double completion of scmds from
- eh
-Date: Sat, 17 Dec 2011 17:13:14 +0400
-Message-ID: <4EEC956A.2080308@mvista.com>
-References: <20111217022912.15036.85808.stgit@localhost6.localdomain6> <20111217023420.15036.51486.stgit@localhost6.localdomain6>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 14/24] libsas: prevent double completion of scmds from eh
+Date: Sun, 18 Dec 2011 11:19:27 -0800
+Message-ID: <CAA9_cmc4KdbVzr-sccxmF_pRQA++NB0ZK68J2HRo9jHeMgO0fQ@mail.gmail.com>
+References: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
+	<20111217023420.15036.51486.stgit@localhost6.localdomain6>
+	<4EEC9442.8090300@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43259 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794Ab1LQNOP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Dec 2011 08:14:15 -0500
-In-Reply-To: <20111217023420.15036.51486.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4EEC9442.8090300@mvista.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On 17-12-2011 6:34, Dan Williams wrote:
-
-> We invoke task->task_done() to free the task in the eh case, but at t=
-his
-> point we are prepared for scsi_eh_flush_done_q() to finish off the sc=
-md.
-
-> Introduce sas_end_task() to capture the final response status from th=
-e
-> lldd and free the task.
-
-> Also take the opportunity to kill this warning.
-> drivers/scsi/libsas/sas_scsi_host.c: In function =E2=80=98sas_end_tas=
-k=E2=80=99:
-> drivers/scsi/libsas/sas_scsi_host.c:102:3: warning: case value =E2=80=
-=982=E2=80=99 not in enumerated type =E2=80=98enum exec_status=E2=80=99=
- [-Wswitch]
-
-    Perhaps this a material for a separate patch...
-
-> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
-> ---
->   drivers/scsi/libsas/sas_scsi_host.c |   61 +++++++++++++++++++-----=
------------
->   include/scsi/libsas.h               |    5 ++-
->   2 files changed, 37 insertions(+), 29 deletions(-)
-
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 6064f82..b6b0b99 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -443,7 +443,10 @@ enum service_response {
->   };
+On Sat, Dec 17, 2011 at 5:08 AM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+>> + =A0 =A0 =A0 ASSIGN_SAS_TASK(sc, NULL);
 >
->   enum exec_status {
-> -	/* The SAM_STAT_.. codes fit in the lower 6 bits */
-> +	/* The SAM_STAT_.. codes fit in the lower 6 bits, alias some of
-> +	 * them here to silence 'case value not in enumerated type' warning=
-s
-> +	 */
-> +	__SAM_STAT_CHECK_CONDITION =3D SAM_STAT_CHECK_CONDITION,
+>
+> =A0 Why do it twice -- once here and then in sas_end_task()?
 
-    Looks like you forgot to change the problematic *case* itself...
-
-MBR, Sergei
+=2E..for the sas_eh_finish_cmd() case where eh has taken responsibility
+for cleanup and the sas_scsi_task_done() path has been disabled.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
