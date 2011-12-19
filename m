@@ -1,79 +1,148 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH 07/24] libsas: fix leak of dev->sata_dev.identify_[packet_]device
-Date: Mon, 19 Dec 2011 10:38:28 +0800
-Message-ID: <334C9030B49B4E9F9A0E62261B585988@usish.com.cn>
-References: <20111217022912.15036.85808.stgit@localhost6.localdomain6> <20111217023344.15036.5618.stgit@localhost6.localdomain6>
+From: <r66093@freescale.com>
+Subject: [PATCH 1/2 v3] libata-pmp: add schedule timeout to support some PMP cards
+Date: Mon, 19 Dec 2011 10:35:56 +0800
+Message-ID: <1324262157-13385-1-git-send-email-r66093@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:37841 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752182Ab1LSCjL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2011 21:39:11 -0500
-In-Reply-To: <20111217023344.15036.5618.stgit@localhost6.localdomain6>
+Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:46164
+	"EHLO DB3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752271Ab1LSDW5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Dec 2011 22:22:57 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jerry Huang <Chang-Ming.Huang@freescale.com>, Jeff Garzik <jgarzik@pobox.com>
 
-Thanks for fix.
-Reviewed-by: Jack Wang <jack_wang@usish.com>
-> 
-> These are never freed in the nominal path.  A domain_device has a
-> different lifetime than a sas_rphy we need a dev->rphy independent way
-> of identifying sata devices.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_discover.c |    6 ++++++
->  include/scsi/sas_ata.h             |    3 ++-
->  2 files changed, 8 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c
-> b/drivers/scsi/libsas/sas_discover.c
-> index 4e64930..dc52b1f 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -30,6 +30,7 @@
-> 
->  #include <scsi/scsi_transport.h>
->  #include <scsi/scsi_transport_sas.h>
-> +#include <scsi/sas_ata.h>
->  #include "../scsi_sas_internal.h"
-> 
->  /* ---------- Basic task processing for discovery purposes ---------- */
-> @@ -231,6 +232,11 @@ void sas_free_device(struct kref *kref)
->  	if (dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV)
->  		kfree(dev->ex_dev.ex_phy);
-> 
-> +	if (dev_is_sata(dev)) {
-> +		kfree(dev->sata_dev.identify_device);
-> +		kfree(dev->sata_dev.identify_packet_device);
-> +	}
-> +
->  	kfree(dev);
->  }
-> 
-> diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-> index 9c159f7..7d5013f 100644
-> --- a/include/scsi/sas_ata.h
-> +++ b/include/scsi/sas_ata.h
-> @@ -32,7 +32,8 @@
-> 
->  static inline int dev_is_sata(struct domain_device *dev)
->  {
-> -	return (dev->rphy->identify.target_port_protocols &
-> SAS_PROTOCOL_SATA);
-> +	return dev->dev_type == SATA_DEV || dev->dev_type == SATA_PM ||
-> +	       dev->dev_type == SATA_PM_PORT;
->  }
-> 
->  int sas_ata_init_host_and_port(struct domain_device *found_dev,
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Jerry Huang <Chang-Ming.Huang@freescale.com>
+
+With Freescale SATA controller, some PMP cards(e.g JMB393 PMP card)
+can't work on some platforms (e.g mpc837x, p1022):
+During PMP initialize, when reading the PMP SCR, we will observe the TIMEOUT
+error because PMP card SCR is not ready.
+Therefore, we need enough time to wait for the PMP card ready for SCR read.
+
+below is the error log:
+fsl-sata e0018000.sata: Sata FSL Platform/CSB Driver init
+scsi0 : sata_fsl
+ata1: SATA max UDMA/133 irq 44
+ata1: Signature Update detected @ 504 msecs
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 15 ports, feat 0x5/0xf
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: hard resetting link
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2: ATA_SRST issue failed
+ata2.00: failed to read SCR 0 (Emask=0x40)
+ata2.00: reset failed, giving up
+ata2.00: failed to recover link after 3 tries, disabling
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.15: qc timeout (cmd 0xe4)
+ata2.00: failed to read SCR 0 (Emask=0x4)
+ata2.00: failed to write SCR 1 (Emask=0x40)
+ata2.00: failed to clear SError.N (errno=-5)
+ata2.15: hard resetting link
+ata2: Hardreset failed, not off-lined 0
+ata2: No Signature Update
+ata2.15: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.01: hard resetting link
+ata2.01: failed to resume link (SControl 0)
+ata2.01: SATA link down (SStatus 0 SControl 0)
+ata2.02: hard resetting link
+ata2.02: failed to resume link (SControl 0)
+ata2.02: SATA link down (SStatus 0 SControl 0)
+......
+ata2.14: hard resetting link
+ata2.14: failed to resume link (SControl 0)
+ata2.14: SATA link down (SStatus 0 SControl 0)
+ata2: EH complete
+
+Signed-off-by: Jerry Huang <Chang-Ming.Huang@freescale.com>
+CC: Jeff Garzik <jgarzik@pobox.com>
+---
+changes for v2:
+	- use function msecs_to_jiffies to calculate the jiffies for 1ms
+	- cleanup the code
+changes for v3:
+	- add the quirks to support pmp card
+	- add the CC
+
+ drivers/ata/libata-pmp.c |   12 ++++++++++++
+ include/linux/libata.h   |    1 +
+ 2 files changed, 13 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 21b80c5..d7d4bb5 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -146,6 +146,13 @@ int sata_pmp_scr_read(struct ata_link *link, int reg, u32 *r_val)
+ 	if (reg > SATA_PMP_PSCR_CONTROL)
+ 		return -EINVAL;
+ 
++	/* For some PMP card, we need delay some time */
++	if (link->flags & ATA_LFLAG_DELAY) {
++		set_current_state(TASK_INTERRUPTIBLE);
++		/* sleep 50 msecond */
++		schedule_timeout(msecs_to_jiffies(50));
++	}
++
+ 	err_mask = sata_pmp_read(link, reg, r_val);
+ 	if (err_mask) {
+ 		ata_link_warn(link, "failed to read SCR %d (Emask=0x%x)\n",
+@@ -456,6 +463,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 				       ATA_LFLAG_NO_SRST |
+ 				       ATA_LFLAG_ASSUME_ATA;
+ 		}
++	} else if (vendor == 0x197b && devid == 0x0325) {
++		/* For jmicron JMB393 card, need some time to ready the PMP */
++		ata_for_each_link(link, ap, EDGE) {
++			link->flags |= ATA_LFLAG_DELAY;
++		}
+ 	}
+ }
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index cafc09a..c23ddf9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -182,6 +182,7 @@ enum {
+ 	ATA_LFLAG_DISABLED	= (1 << 6), /* link is disabled */
+ 	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
+ 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
++	ATA_LFLAG_DELAY		= (1 << 9), /* delay some time */
+ 
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+-- 
+1.7.5.4
+
 
