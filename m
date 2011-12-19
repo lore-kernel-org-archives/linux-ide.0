@@ -1,64 +1,53 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 2/2] FSL SATA: fix the controller operating mode
-Date: Mon, 19 Dec 2011 16:15:17 +0400
-Message-ID: <4EEF2AD5.4050807@mvista.com>
-References: <1324262157-13385-1-git-send-email-r66093@freescale.com> <1324262157-13385-2-git-send-email-r66093@freescale.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 02/24] workqueue: defer work to a draining queue
+Date: Mon, 19 Dec 2011 13:49:24 -0800
+Message-ID: <20111219214924.GA6256@google.com>
+References: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
+ <20111217023318.15036.77389.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:65133 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751858Ab1LSMQS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Dec 2011 07:16:18 -0500
-Received: by wibhm6 with SMTP id hm6so915689wib.19
-        for <linux-ide@vger.kernel.org>; Mon, 19 Dec 2011 04:16:17 -0800 (PST)
-In-Reply-To: <1324262157-13385-2-git-send-email-r66093@freescale.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51539 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115Ab1LSVta (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Dec 2011 16:49:30 -0500
+Content-Disposition: inline
+In-Reply-To: <20111217023318.15036.77389.stgit@localhost6.localdomain6>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: r66093@freescale.com
-Cc: linux-ide@vger.kernel.org, Jerry Huang <Chang-Ming.Huang@freescale.com>, Yutaka Ando <r46913@freescale.com>, Jeff Garzik <jgarzik@pobox.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello.
+Hello,
 
-On 19-12-2011 6:35, r66093@freescale.com wrote:
+On Fri, Dec 16, 2011 at 06:33:18PM -0800, Dan Williams wrote:
+> commit 9c5a2ba7 "workqueue: separate out drain_workqueue() from
+> destroy_workqueue()" provided drain_workqueue() for users like libsas to
+> use for flushing events.
+> 
+> When libsas drains it wants currently queued and chained events to be
+> flushed, but it fully expects to continue issuing unchained events with
+> the expectation that they are serviced sometime after the drain.
+> 
+> For external users of drain_workqueue() arrange for unchained work to be
+> queued after the drain completes, if the caller cares if unchained work
+> was queued as a result of the drain it can check for a non-zero return
+> value.  Deferred work is guaranteed to be at least queued when
+> drain_workqueue() returns, and visible to flush_workqueue() users as
+> well.
+> 
+> Unfortunately this causes the promotion of workqueue_lock to hard-irq
+> safe and does not guarantee that work submitted via queue_work_on() runs
+> on the specified cpu if it gets deferred.
+> 
+> Cc: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-> From: Jerry Huang<Chang-Ming.Huang@freescale.com>
+Dan, as I replied before, I'm not a big fan of this approach.  For
+now, I think it would be best to add private wrapper in libsas to
+support deferring unchained work items while draining.
 
-> Configure the FSL SATA controller to the enterprise mode
+Thanks.
 
-> Signed-off-by: Yutaka Ando<r46913@freescale.com>
-> Signed-off-by: Jerry Huang<Chang-Ming.Huang@freescale.com>
-> CC: Jeff Garzik<jgarzik@pobox.com>
-> ---
->   drivers/ata/sata_fsl.c |   11 +++++++++++
->   1 files changed, 11 insertions(+), 0 deletions(-)
-
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 78ae7b6..48c9978 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-[...]
-> @@ -1223,6 +1224,10 @@ static int sata_fsl_init_controller(struct ata_host *host)
->   	 * part of the port_start() callback
->   	 */
->
-> +	/* sata controller to operate in enterprise mode */
-> +	temp = ioread32(hcr_base + HCONTROL);
-> +	iowrite32((temp & ~HCONTROL_LEGACY), hcr_base + HCONTROL);
-
-    Parens around & not needed.
-
-> @@ -1421,6 +1426,12 @@ static int sata_fsl_resume(struct platform_device *op)
->   	/* Recovery the CHBA register in host controller cmd register set */
->   	iowrite32(pp->cmdslot_paddr&  0xffffffff, hcr_base + CHBA);
->
-> +	iowrite32((ioread32(hcr_base + HCONTROL)
-> +				| HCONTROL_ONLINE_PHY_RST
-> +				| HCONTROL_SNOOP_ENABLE
-> +				| HCONTROL_PMP_ATTACHED),
-> +			hcr_base+HCONTROL);
-
-    Spaces around +, please.
-
-MBR, Sergei
+-- 
+tejun
