@@ -1,50 +1,77 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 14/24] libsas: prevent double completion of scmds from eh
-Date: Sun, 18 Dec 2011 11:24:02 -0800
-Message-ID: <CAA9_cmcvScFf9nxAmne3SC8w-55AAjyckPb85Sk=PM53_+GUNA@mail.gmail.com>
-References: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
-	<20111217023420.15036.51486.stgit@localhost6.localdomain6>
-	<4EEC956A.2080308@mvista.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH 04/24] libsas: remove unused ata_task_resp fields
+Date: Mon, 19 Dec 2011 09:38:27 +0800
+Message-ID: <B5A3BAC491294D0192E63F91DA163B8B@usish.com.cn>
+References: <20111217022912.15036.85808.stgit@localhost6.localdomain6> <20111217023328.15036.65227.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4EEC956A.2080308@mvista.com>
+In-Reply-To: <20111217023328.15036.65227.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, Dec 17, 2011 at 5:13 AM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> =A0 Perhaps this a material for a separate patch...
+> 
 
-If it changed behavior maybe we'd want it as a separate bisection
-point, or if this approach for silencing this type of warnings gets
-nak'd.
+[Jack Wang] 
+Thanks for looking for this, looks OK for me.
+Acked-by: Jack Wang <jack_wang@usish.com>
+> Commit 1e34c838 removed the routines to fake the presence of the sata
+> control registers, now remove the unused data structure fields to kill
+> any remaining confusion.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/libsas/sas_ata.c |    4 ----
+>  include/scsi/libsas.h         |    7 -------
+>  2 files changed, 0 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index db9238f..83118d0 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -121,10 +121,6 @@ static void sas_ata_task_done(struct sas_task *task)
+>  			if (unlikely(link->eh_info.err_mask))
+>  				qc->flags |= ATA_QCFLAG_FAILED;
+>  		}
+> -
+> -		dev->sata_dev.sstatus = resp->sstatus;
+> -		dev->sata_dev.serror = resp->serror;
+> -		dev->sata_dev.scontrol = resp->scontrol;
+>  	} else {
+>  		ac = sas_to_ata_err(stat);
+>  		if (ac) {
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 6a308d4..6e64b03 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -171,9 +171,6 @@ struct sata_device {
+>  	struct ata_port *ap;
+>  	struct ata_host ata_host;
+>  	struct ata_taskfile tf;
+> -	u32 sstatus;
+> -	u32 serror;
+> -	u32 scontrol;
+>  };
+> 
+>  /* ---------- Domain device ---------- */
+> @@ -487,10 +484,6 @@ enum exec_status {
+>  struct ata_task_resp {
+>  	u16  frame_len;
+>  	u8   ending_fis[24];	  /* dev to host or data-in */
+> -	u32  sstatus;
+> -	u32  serror;
+> -	u32  scontrol;
+> -	u32  sactive;
+>  };
+> 
+>  #define SAS_STATUS_BUF_SIZE 96
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-[..]
->> =A0enum exec_status {
->> - =A0 =A0 =A0 /* The SAM_STAT_.. codes fit in the lower 6 bits */
->> + =A0 =A0 =A0 /* The SAM_STAT_.. codes fit in the lower 6 bits, alia=
-s some of
->> + =A0 =A0 =A0 =A0* them here to silence 'case value not in enumerate=
-d type'
->> warnings
->> + =A0 =A0 =A0 =A0*/
->> + =A0 =A0 =A0 __SAM_STAT_CHECK_CONDITION =3D SAM_STAT_CHECK_CONDITIO=
-N,
->
->
-> =A0 Looks like you forgot to change the problematic *case* itself...
-
-It was deliberate.  This is just an alias to get the 'value' in the
-enum, but I think the real definition should be used in all cases.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
