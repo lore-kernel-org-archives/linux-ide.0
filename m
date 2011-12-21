@@ -1,115 +1,55 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012 (April
- 1-2)
-Date: Wed, 21 Dec 2011 19:23:39 +0100
-Message-ID: <4EF2242B.4060706@fusionio.com>
+From: David Miller <davem@davemloft.net>
+Subject: pata_of_platform.c cannot build on sparc
+Date: Wed, 21 Dec 2011 17:38:10 -0500 (EST)
+Message-ID: <20111221.173810.971054965060472866.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([66.114.96.31]:36490 "EHLO mx2.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751525Ab1LUSk5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Dec 2011 13:40:57 -0500
-Received: from mail1.int.fusionio.com (mail1.int.fusionio.com [10.101.1.21]) by mx2.fusionio.com with ESMTP id 8Ziw2uWjDAHo6EWr for <linux-ide@vger.kernel.org>; Wed, 21 Dec 2011 11:23:38 -0700 (MST)
+Received: from shards.monkeyblade.net ([198.137.202.13]:56268 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764Ab1LUWk0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Dec 2011 17:40:26 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: pawel.moll@arm.com
+Cc: jgarzik@redhat.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org
 
-Hi,
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2012 will be held on the 2 days preceding the Linux Foundation
-Collaboration Summit at Hotel Nikko in San Francisco, CA:
+It depends upon CONFIG_OF_IRQ which not all CONFIG_OF platforms support,
+in particular sparc does not support CONFIG_OF_PLATFORM because it
+precomputes all IRQs at boot time when it scans the device tree so all
+of the CONFIG_OF_IRQ infrastructure to probe and resolve IRQs at driver
+probe time is wrong and completely unnecessary.
 
-	https://events.linuxfoundation.org/events/lsfmm-summit
-	https://events.linuxfoundation.org/events/collaboration-summit/
+Add the proper dependencies so that pata_of_platform.c doesn't get
+built on sparc.
 
-We'd therefore like to issue a call for agenda proposals that are
-suitable for cross-track discussion as well as more technical subjects
-for discussion in the breakout sessions.
+CONFIG_OF_IRQ was severely misdesigned, it should just NOP out on
+platforms where the architecture has the final IRQ values already like
+sparc does.  But that's not how it was implemented at all, and now
+we're starting to have all of these drivers get hard dependencies on
+this mechanism and it's datastructures, and the resulting sparc build
+failures from time to time.
 
-1) Suggestions for agenda topics should be sent before February 5th
-2012 to:
+Jeff, please push something like the following to Linus so that
+sparc's allmodconfig builds again.  Thanks.
 
-lsf-pc@lists.linux-foundation.org
+--------------------
+pata_of_platform: Add missing CONFIG_OF_IRQ dependency.
 
-and optionally cc the Linux list which would be most interested in it:
+Signed-off-by: David S. Miller <davem@davemloft.net>
 
-SCSI: linux-scsi@vger.kernel.org
-FS: linux-fsdevel@vger.kernel.org
-MM: linux-mm@kvack.org
-
-Please remember to tag your subject with [LSF/MM TOPIC] to make it
-easier to track. Agenda topics and attendees will be selected by the
-programme committee, but the final agenda will be formed by consensus
-of the attendees on the day.
-
-We'll try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend should be sent to:
-
-lsf-pc@lists.linux-foundation.org
-
-please summarize what expertise you will bring to the meeting, and what
-you'd like to discuss.  please also tag your email with [ATTEND] so
-there's less chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged.  There will be no recording or audio bridge, however
-written minutes will be published as in previous years:
-
-2011:
-
-http://lwn.net/Articles/436871/
-http://lwn.net/Articles/437066/
-
-2010:
-http://lwn.net/Articles/399148/
-http://lwn.net/Articles/399313/
-http://lwn.net/Articles/400589/
-
-2009:
-http://lwn.net/Articles/327601/
-http://lwn.net/Articles/327740/
-http://lwn.net/Articles/328347/
-
-Prior years:
-http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the Program Committee:
-
-Storage
-
-Jens Axboe
-James Bottomley
-Vivek Goyal
-Dan Williams
-
-Filesystems
-
-Trond Myklebust
-Chris Mason
-Christoph Hellwig
-Theodore Ts'o
-Mingming Cao
-Jan Kara
-Joel Becker
-
-MM
-
-Andrea Arcangeli
-Hugh Dickins
-Mel Gorman
-
--- 
-Jens Axboe
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 6bdedd7..cf047c4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -820,7 +820,7 @@ config PATA_PLATFORM
+ 
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+-	depends on PATA_PLATFORM && OF
++	depends on PATA_PLATFORM && OF && OF_IRQ
+ 	help
+ 	  This option enables support for generic directly connected ATA
+ 	  devices commonly found on embedded systems with OpenFirmware
