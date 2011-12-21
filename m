@@ -1,70 +1,115 @@
-From: <r66093@freescale.com>
-Subject: [PATCH 2/2 v2] FSL SATA: fix the controller operating mode
-Date: Tue, 20 Dec 2011 14:50:27 +0800
-Message-ID: <1324363827-16985-1-git-send-email-r66093@freescale.com>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012 (April
+ 1-2)
+Date: Wed, 21 Dec 2011 19:23:39 +0100
+Message-ID: <4EF2242B.4060706@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:49832
-	"EHLO DB3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752047Ab1LTHhp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 Dec 2011 02:37:45 -0500
+Received: from mx2.fusionio.com ([66.114.96.31]:36490 "EHLO mx2.fusionio.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751525Ab1LUSk5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 21 Dec 2011 13:40:57 -0500
+Received: from mail1.int.fusionio.com (mail1.int.fusionio.com [10.101.1.21]) by mx2.fusionio.com with ESMTP id 8Ziw2uWjDAHo6EWr for <linux-ide@vger.kernel.org>; Wed, 21 Dec 2011 11:23:38 -0700 (MST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jerry Huang <Chang-Ming.Huang@freescale.com>, Yutaka Ando <r46913@freescale.com>, Jeff Garzik <jgarzik@pobox.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Jerry Huang <Chang-Ming.Huang@freescale.com>
+Hi,
 
-Configure the FSL SATA controller to the enterprise mode
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2012 will be held on the 2 days preceding the Linux Foundation
+Collaboration Summit at Hotel Nikko in San Francisco, CA:
 
-Signed-off-by: Yutaka Ando <r46913@freescale.com>
-Signed-off-by: Jerry Huang <Chang-Ming.Huang@freescale.com>
-CC: Jeff Garzik <jgarzik@pobox.com>
----
-changes for v2:
-	- change the code style
+	https://events.linuxfoundation.org/events/lsfmm-summit
+	https://events.linuxfoundation.org/events/collaboration-summit/
 
- drivers/ata/sata_fsl.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 78ae7b6..48c9978 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -140,6 +140,7 @@ enum {
- 	 */
- 	HCONTROL_ONLINE_PHY_RST = (1 << 31),
- 	HCONTROL_FORCE_OFFLINE = (1 << 30),
-+	HCONTROL_LEGACY = (1 << 28),
- 	HCONTROL_PARITY_PROT_MOD = (1 << 14),
- 	HCONTROL_DPATH_PARITY = (1 << 12),
- 	HCONTROL_SNOOP_ENABLE = (1 << 10),
-@@ -1223,6 +1224,10 @@ static int sata_fsl_init_controller(struct ata_host *host)
- 	 * part of the port_start() callback
- 	 */
- 
-+	/* sata controller to operate in enterprise mode */
-+	temp = ioread32(hcr_base + HCONTROL);
-+	iowrite32(temp & ~HCONTROL_LEGACY, hcr_base + HCONTROL);
-+
- 	/* ack. any pending IRQs for this controller/port */
- 	temp = ioread32(hcr_base + HSTATUS);
- 	if (temp & 0x3F)
-@@ -1421,6 +1426,12 @@ static int sata_fsl_resume(struct platform_device *op)
- 	/* Recovery the CHBA register in host controller cmd register set */
- 	iowrite32(pp->cmdslot_paddr & 0xffffffff, hcr_base + CHBA);
- 
-+	iowrite32((ioread32(hcr_base + HCONTROL)
-+				| HCONTROL_ONLINE_PHY_RST
-+				| HCONTROL_SNOOP_ENABLE
-+				| HCONTROL_PMP_ATTACHED),
-+			hcr_base + HCONTROL);
-+
- 	ata_host_resume(host);
- 	return 0;
- }
+1) Suggestions for agenda topics should be sent before February 5th
+2012 to:
+
+lsf-pc@lists.linux-foundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+SCSI: linux-scsi@vger.kernel.org
+FS: linux-fsdevel@vger.kernel.org
+MM: linux-mm@kvack.org
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+programme committee, but the final agenda will be formed by consensus
+of the attendees on the day.
+
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend should be sent to:
+
+lsf-pc@lists.linux-foundation.org
+
+please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged.  There will be no recording or audio bridge, however
+written minutes will be published as in previous years:
+
+2011:
+
+http://lwn.net/Articles/436871/
+http://lwn.net/Articles/437066/
+
+2010:
+http://lwn.net/Articles/399148/
+http://lwn.net/Articles/399313/
+http://lwn.net/Articles/400589/
+
+2009:
+http://lwn.net/Articles/327601/
+http://lwn.net/Articles/327740/
+http://lwn.net/Articles/328347/
+
+Prior years:
+http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the Program Committee:
+
+Storage
+
+Jens Axboe
+James Bottomley
+Vivek Goyal
+Dan Williams
+
+Filesystems
+
+Trond Myklebust
+Chris Mason
+Christoph Hellwig
+Theodore Ts'o
+Mingming Cao
+Jan Kara
+Joel Becker
+
+MM
+
+Andrea Arcangeli
+Hugh Dickins
+Mel Gorman
+
 -- 
-1.7.5.4
-
+Jens Axboe
 
