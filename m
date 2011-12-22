@@ -1,73 +1,66 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: pata_of_platform.c cannot build on sparc
-Date: Thu, 22 Dec 2011 14:38:17 -0500
-Message-ID: <4EF38729.8070804@garzik.org>
-References: <20111221.173810.971054965060472866.davem@davemloft.net> <4EF26ADB.2040504@gmail.com> <20111221.191459.1775781797635505733.davem@davemloft.net> <4EF28A8A.5070600@garzik.org> <4EF332ED.1050200@gmail.com> <4EF38C64.4030801@mvista.com>
+Subject: [git patch] libata build fix for 3.2-rc
+Date: Thu, 22 Dec 2011 15:20:17 -0500
+Message-ID: <20111222202017.GA13208@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:54981 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753299Ab1LVTiV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2011 14:38:21 -0500
-Received: by qcqz2 with SMTP id z2so5198803qcq.19
-        for <linux-ide@vger.kernel.org>; Thu, 22 Dec 2011 11:38:20 -0800 (PST)
-In-Reply-To: <4EF38C64.4030801@mvista.com>
+Received: from havoc.gtf.org ([69.61.125.42]:34894 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755583Ab1LVUUT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Dec 2011 15:20:19 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Rob Herring <robherring2@gmail.com>, David Miller <davem@davemloft.net>, pawel.moll@arm.com, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, jgarzik@redhat.com
-
-On 12/22/2011 03:00 PM, Sergei Shtylyov wrote:
-> Hello.
->
-> On 12/22/2011 04:38 PM, Rob Herring wrote:
->
->>>>>> It depends upon CONFIG_OF_IRQ which not all CONFIG_OF platforms
->>>>>> support,
->>>>>> in particular sparc does not support CONFIG_OF_PLATFORM because it
->>>>>> precomputes all IRQs at boot time when it scans the device tree so
->>>>>> all
->>>>>> of the CONFIG_OF_IRQ infrastructure to probe and resolve IRQs at
->>>>>> driver
->>>>>> probe time is wrong and completely unnecessary.
->
->>>>>> Add the proper dependencies so that pata_of_platform.c doesn't get
->>>>>> built on sparc.
->
->>>>>> CONFIG_OF_IRQ was severely misdesigned, it should just NOP out on
->>>>>> platforms where the architecture has the final IRQ values already
->>>>>> like
->>>>>> sparc does. But that's not how it was implemented at all, and now
->>>>>> we're starting to have all of these drivers get hard dependencies on
->>>>>> this mechanism and it's datastructures, and the resulting sparc build
->>>>>> failures from time to time.
->
->>>>>> Jeff, please push something like the following to Linus so that
->>>>>> sparc's allmodconfig builds again. Thanks.
->
->>>>> Really, drivers should no longer use of_irq_to_resource (or
->>>>> of_address_to_resource for that matter). The resources are setup by
->>>>> the
->>>>> core OF code. The patch I sent does this.
->
->>>> Thanks for taking care of this.
->
->>> Being so late in 3.2-rc, it would be preferred to apply&push David's
->>> patch for 3.2, and then get Rob's into libata-dev#upstream (linux-next).
->
->>> That OK?
->
->> Fine by me.
->
-> But then it should be extended to undo David's patch, right? Or that
-> patch just be reverted afterwards...
-
-Correct.
-
-	Jeff
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+A sparc build fix...
 
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Please pull 19d40dcabf1cdf84e1a76c147b7177b5a6c21943 from
+git://github.com/jgarzik/libata-dev.git upstream-linus
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUBTvOQqCWzCDIBeCsvAQJRiw//bqZDQFOcfpwPpY3P1Frimer5UbZALGDd
+8sIYctAKDz1OfgH1e1Sm7lvoJKcmBl0U4QNgp7SkiT9QfOZCg81Cw9ZyJCUQE2F7
+sqGBBP1Pg+3qsCTYZY4aqcd2skfrKvX3KX+fapW7+C8WriAgwvyYzyLqyCcYu7hf
+g3J6tmTMPdGyppUj/1yRJbGqrIorc+jtKHQoO7ASYGAe0eLWCFMA4o6ml25af1OF
+z62AuKpY0RzNTYcBtzYdipHUBX4ZNyhKkGK68x+m2vnbIIDYTlAsqW/9tiLEfSdt
+sKBknSx3O3z6zb+EZpO5xXax6ED2YnGsHlj9k49sZ/hCuhOErUUGvU8b9nJW/xkM
+j2meZBWQSu5ceJuZCbq94Qe5VKY4YCmmge6xpHsoEuwXDPbZfGjpM93ePwlSyKtr
+wtxLkIKuZQIqGYieY5+sVSXyp2/H76p6Pyp4XSCrEAxKW0IlaPQNr5VrroF+i2bE
+uua/41WHoIBFdlS0rU5hkXo6nSSCVFUXZa5nT2xFoxsBYr/iP10WmuHQz4A77ocp
+cTUDC5dB4n4zy0TLbOm7MKHQ5YPh68cqySwM8FLlj4uaea2aKAZqFq2Lfuw/acLA
+ngsffDOTpSyKc8lp/fwUIQ9no3pCvsHOwaDDKEsV6LT8RQ1GHfEjF1RHPMgpi35A
+bKhObdycgnU=
+=flSW
+-----END PGP SIGNATURE-----
+
+to receive the following updates:
+
+ drivers/ata/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+David Miller (1):
+      pata_of_platform: Add missing CONFIG_OF_IRQ dependency.
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 6bdedd7..cf047c4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -820,7 +820,7 @@ config PATA_PLATFORM
+ 
+ config PATA_OF_PLATFORM
+ 	tristate "OpenFirmware platform device PATA support"
+-	depends on PATA_PLATFORM && OF
++	depends on PATA_PLATFORM && OF && OF_IRQ
+ 	help
+ 	  This option enables support for generic directly connected ATA
+ 	  devices commonly found on embedded systems with OpenFirmware
