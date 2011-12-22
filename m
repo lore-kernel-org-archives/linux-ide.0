@@ -1,94 +1,64 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v3 3/3] ata: add ata port hibernate callbacks
-Date: Thu, 22 Dec 2011 14:50:49 +0800
-Message-ID: <1324536649-5796-4-git-send-email-ming.m.lin@intel.com>
-References: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: pata_of_platform.c cannot build on sparc
+Date: Thu, 22 Dec 2011 07:38:53 -0600
+Message-ID: <4EF332ED.1050200@gmail.com>
+References: <20111221.173810.971054965060472866.davem@davemloft.net> <4EF26ADB.2040504@gmail.com> <20111221.191459.1775781797635505733.davem@davemloft.net> <4EF28A8A.5070600@garzik.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:37668 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753818Ab1LVGvJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Dec 2011 01:51:09 -0500
-In-Reply-To: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:50859 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752616Ab1LVNi5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2011 08:38:57 -0500
+Received: by ghbz12 with SMTP id z12so5425476ghb.19
+        for <linux-ide@vger.kernel.org>; Thu, 22 Dec 2011 05:38:56 -0800 (PST)
+In-Reply-To: <4EF28A8A.5070600@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: David Miller <davem@davemloft.net>, pawel.moll@arm.com, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, jgarzik@redhat.com
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-core.c |   40 ++++++++++++++++++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 4 deletions(-)
+On 12/21/2011 07:40 PM, Jeff Garzik wrote:
+> On 12/21/2011 07:14 PM, David Miller wrote:
+>> From: Rob Herring<robherring2@gmail.com>
+>> Date: Wed, 21 Dec 2011 17:25:15 -0600
+>>
+>>> On 12/21/2011 04:38 PM, David Miller wrote:
+>>>>
+>>>> It depends upon CONFIG_OF_IRQ which not all CONFIG_OF platforms
+>>>> support,
+>>>> in particular sparc does not support CONFIG_OF_PLATFORM because it
+>>>> precomputes all IRQs at boot time when it scans the device tree so all
+>>>> of the CONFIG_OF_IRQ infrastructure to probe and resolve IRQs at driver
+>>>> probe time is wrong and completely unnecessary.
+>>>>
+>>>> Add the proper dependencies so that pata_of_platform.c doesn't get
+>>>> built on sparc.
+>>>>
+>>>> CONFIG_OF_IRQ was severely misdesigned, it should just NOP out on
+>>>> platforms where the architecture has the final IRQ values already like
+>>>> sparc does.  But that's not how it was implemented at all, and now
+>>>> we're starting to have all of these drivers get hard dependencies on
+>>>> this mechanism and it's datastructures, and the resulting sparc build
+>>>> failures from time to time.
+>>>>
+>>>> Jeff, please push something like the following to Linus so that
+>>>> sparc's allmodconfig builds again.  Thanks.
+>>>>
+>>>
+>>> Really, drivers should no longer use of_irq_to_resource (or
+>>> of_address_to_resource for that matter). The resources are setup by the
+>>> core OF code. The patch I sent does this.
+>>
+>> Thanks for taking care of this.
+> 
+> Being so late in 3.2-rc, it would be preferred to apply&push David's
+> patch for 3.2, and then get Rob's into libata-dev#upstream (linux-next).
+> 
+> That OK?
+> 
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 84aa741..8fbcad2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5281,12 +5281,24 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
--static int ata_port_suspend_common(struct device *dev)
-+static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
-+	unsigned int ehi_flags = ATA_EHI_QUIET;
- 	int rc;
- 
--	rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
-+	/*
-+	 * On some hardware, device fails to respond after spun down
-+	 * for suspend.  As the device won't be used before being
-+	 * resumed, we don't need to touch the device.  Ask EH to skip
-+	 * the usual stuff and proceed directly to suspend.
-+	 *
-+	 * http://thread.gmane.org/gmane.linux.ide/46764
-+	 */
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
-+
-+	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
- 	return rc;
- }
- 
-@@ -5295,7 +5307,23 @@ static int ata_port_suspend(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return 0;
- 
--	return ata_port_suspend_common(dev);
-+	return ata_port_suspend_common(dev, PMSG_SUSPEND);
-+}
-+
-+static int ata_port_do_freeze(struct device *dev)
-+{
-+	if (pm_runtime_suspended(dev))
-+		pm_runtime_resume(dev);
-+
-+	return ata_port_suspend_common(dev, PMSG_FREEZE);
-+}
-+
-+static int ata_port_poweroff(struct device *dev)
-+{
-+	if (pm_runtime_suspended(dev))
-+		return 0;
-+
-+	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
- }
- 
- static int ata_port_resume_common(struct device *dev)
-@@ -5330,8 +5358,12 @@ static int ata_port_runtime_idle(struct device *dev)
- static const struct dev_pm_ops ata_port_pm_ops = {
- 	.suspend = ata_port_suspend,
- 	.resume = ata_port_resume,
-+	.freeze = ata_port_do_freeze,
-+	.thaw = ata_port_resume,
-+	.poweroff = ata_port_poweroff,
-+	.restore = ata_port_resume,
- 
--	.runtime_suspend = ata_port_suspend_common,
-+	.runtime_suspend = ata_port_suspend,
- 	.runtime_resume = ata_port_resume_common,
- 	.runtime_idle = ata_port_runtime_idle,
- };
--- 
-1.7.2.5
+Fine by me.
 
+Rob
