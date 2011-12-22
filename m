@@ -1,48 +1,62 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] libata-core: kill duplicate statement in ata_do_set_mode()
-Date: Thu, 22 Dec 2011 22:41:32 +0300
-Message-ID: <201112222241.32287.sshtylyov@ru.mvista.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: pata_of_platform.c cannot build on sparc
+Date: Thu, 22 Dec 2011 23:00:36 +0300
+Message-ID: <4EF38C64.4030801@mvista.com>
+References: <20111221.173810.971054965060472866.davem@davemloft.net> <4EF26ADB.2040504@gmail.com> <20111221.191459.1775781797635505733.davem@davemloft.net> <4EF28A8A.5070600@garzik.org> <4EF332ED.1050200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:60664 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751651Ab1LVSmi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2011 13:42:38 -0500
-Content-Disposition: inline
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33584 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751998Ab1LVTBp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2011 14:01:45 -0500
+Received: by wgbdr13 with SMTP id dr13so16367431wgb.1
+        for <linux-ide@vger.kernel.org>; Thu, 22 Dec 2011 11:01:44 -0800 (PST)
+In-Reply-To: <4EF332ED.1050200@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Rob Herring <robherring2@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, David Miller <davem@davemloft.net>, pawel.moll@arm.com, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, jgarzik@redhat.com
 
-Commit b3a706014e56b1356e7b275fd25b833c63175bf0 (libata: Add a drivers/ide style
-DMA disable) neglected to remove the line in ata_do_set_mode() it has obviously
-made useless/duplicated.  Do this now, and make a line added back then wrapped
-properly...
+Hello.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+On 12/22/2011 04:38 PM, Rob Herring wrote:
 
----
-This patch is against the recent Linus' tree.
+>>>>> It depends upon CONFIG_OF_IRQ which not all CONFIG_OF platforms
+>>>>> support,
+>>>>> in particular sparc does not support CONFIG_OF_PLATFORM because it
+>>>>> precomputes all IRQs at boot time when it scans the device tree so all
+>>>>> of the CONFIG_OF_IRQ infrastructure to probe and resolve IRQs at driver
+>>>>> probe time is wrong and completely unnecessary.
 
- drivers/ata/libata-core.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>> Add the proper dependencies so that pata_of_platform.c doesn't get
+>>>>> built on sparc.
 
-Index: linux-2.6/drivers/ata/libata-core.c
-===================================================================
---- linux-2.6.orig/drivers/ata/libata-core.c
-+++ linux-2.6/drivers/ata/libata-core.c
-@@ -3248,10 +3248,10 @@ int ata_do_set_mode(struct ata_link *lin
- 		ata_force_xfermask(dev);
- 
- 		pio_mask = ata_pack_xfermask(dev->pio_mask, 0, 0);
--		dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
- 
- 		if (libata_dma_mask & mode_mask)
--			dma_mask = ata_pack_xfermask(0, dev->mwdma_mask, dev->udma_mask);
-+			dma_mask = ata_pack_xfermask(0, dev->mwdma_mask,
-+						     dev->udma_mask);
- 		else
- 			dma_mask = 0;
- 
+>>>>> CONFIG_OF_IRQ was severely misdesigned, it should just NOP out on
+>>>>> platforms where the architecture has the final IRQ values already like
+>>>>> sparc does.  But that's not how it was implemented at all, and now
+>>>>> we're starting to have all of these drivers get hard dependencies on
+>>>>> this mechanism and it's datastructures, and the resulting sparc build
+>>>>> failures from time to time.
+
+>>>>> Jeff, please push something like the following to Linus so that
+>>>>> sparc's allmodconfig builds again.  Thanks.
+
+>>>> Really, drivers should no longer use of_irq_to_resource (or
+>>>> of_address_to_resource for that matter). The resources are setup by the
+>>>> core OF code. The patch I sent does this.
+
+>>> Thanks for taking care of this.
+
+>> Being so late in 3.2-rc, it would be preferred to apply&push David's
+>> patch for 3.2, and then get Rob's into libata-dev#upstream (linux-next).
+
+>> That OK?
+
+> Fine by me.
+
+    But then it should be extended to undo David's patch, right? Or that patch 
+just be reverted afterwards...
+
+WBR, Sergei
