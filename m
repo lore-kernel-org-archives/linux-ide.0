@@ -1,66 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patch] libata build fix for 3.2-rc
-Date: Thu, 22 Dec 2011 15:20:17 -0500
-Message-ID: <20111222202017.GA13208@havoc.gtf.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patch] libata build fix for 3.2-rc
+Date: Thu, 22 Dec 2011 12:59:14 -0800
+Message-ID: <CA+55aFycz+kScx671vQaLyHz6jyQUJ_ZB6MYx1scdHjX29R_0Q@mail.gmail.com>
+References: <20111222202017.GA13208@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:34894 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755583Ab1LVUUT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Dec 2011 15:20:19 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111222202017.GA13208@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
+On Thu, Dec 22, 2011 at 12:20 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>
+> A sparc build fix...
 
-A sparc build fix...
+Pulled..
 
+> -----BEGIN PGP SIGNED MESSAGE-----
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+And these days it would actually be better if you just use git signed
+tags instead, and ask me to pull them. You don't need to do anything
+special per se (just "git tag -s" to create the signature, and then
+"git push -tags" to push it out), it's only the merger who has to then
+have a recent enough git version that pulling the tag will DTRT. And I
+do.
 
-Please pull 19d40dcabf1cdf84e1a76c147b7177b5a6c21943 from
-git://github.com/jgarzik/libata-dev.git upstream-linus
+So then you don't need to do this send-time PGP signature, and git
+will now verify (and save) the signature automatically.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+See
+  https://lkml.org/lkml/2011/12/14/543
 
-iQIVAwUBTvOQqCWzCDIBeCsvAQJRiw//bqZDQFOcfpwPpY3P1Frimer5UbZALGDd
-8sIYctAKDz1OfgH1e1Sm7lvoJKcmBl0U4QNgp7SkiT9QfOZCg81Cw9ZyJCUQE2F7
-sqGBBP1Pg+3qsCTYZY4aqcd2skfrKvX3KX+fapW7+C8WriAgwvyYzyLqyCcYu7hf
-g3J6tmTMPdGyppUj/1yRJbGqrIorc+jtKHQoO7ASYGAe0eLWCFMA4o6ml25af1OF
-z62AuKpY0RzNTYcBtzYdipHUBX4ZNyhKkGK68x+m2vnbIIDYTlAsqW/9tiLEfSdt
-sKBknSx3O3z6zb+EZpO5xXax6ED2YnGsHlj9k49sZ/hCuhOErUUGvU8b9nJW/xkM
-j2meZBWQSu5ceJuZCbq94Qe5VKY4YCmmge6xpHsoEuwXDPbZfGjpM93ePwlSyKtr
-wtxLkIKuZQIqGYieY5+sVSXyp2/H76p6Pyp4XSCrEAxKW0IlaPQNr5VrroF+i2bE
-uua/41WHoIBFdlS0rU5hkXo6nSSCVFUXZa5nT2xFoxsBYr/iP10WmuHQz4A77ocp
-cTUDC5dB4n4zy0TLbOm7MKHQ5YPh68cqySwM8FLlj4uaea2aKAZqFq2Lfuw/acLA
-ngsffDOTpSyKc8lp/fwUIQ9no3pCvsHOwaDDKEsV6LT8RQ1GHfEjF1RHPMgpi35A
-bKhObdycgnU=
-=flSW
------END PGP SIGNATURE-----
+that I sent to Ted about how it ends up looking - you can check out
+that commit 2240a7bb479c with "git show" and "git cat-file commit" to
+see how your signature would be archived and saved without actually
+being bothersome when just looking at the history.
 
-to receive the following updates:
-
- drivers/ata/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-David Miller (1):
-      pata_of_platform: Add missing CONFIG_OF_IRQ dependency.
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 6bdedd7..cf047c4 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -820,7 +820,7 @@ config PATA_PLATFORM
- 
- config PATA_OF_PLATFORM
- 	tristate "OpenFirmware platform device PATA support"
--	depends on PATA_PLATFORM && OF
-+	depends on PATA_PLATFORM && OF && OF_IRQ
- 	help
- 	  This option enables support for generic directly connected ATA
- 	  devices commonly found on embedded systems with OpenFirmware
+                  Linus
