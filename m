@@ -1,46 +1,68 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 28/28] libsas: don't recover 'gone' devices in
- sas_ata_hard_reset()
-Date: Thu, 22 Dec 2011 19:00:54 -0800
-Message-ID: <20111223030054.21827.18482.stgit@localhost6.localdomain6>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: linux-next: Tree for Dec 21
+Date: Fri, 23 Dec 2011 21:13:34 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au> <20111221151503.4d78f94f.akpm@linux-foundation.org> <20111222150836.af172886.akpm@linux-foundation.org> <20111222232036.GP17084@google.com> <20111222152427.c944c747.akpm@linux-foundation.org>
+ <20111222233843.GR17084@google.com> <20111222154427.89b245c7.akpm@linux-foundation.org> <20111222234639.GS17084@google.com> <20111223004244.GU17084@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+In-Reply-To: <20111223004244.GU17084@google.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The commands that timeout when a disk is forcibly removed may trigger
-libata to attempt recovery of the device.  If libsas has decided to
-remove the device don't permit ata to continue to issue resets to its
-last known phy.
+On Thu, 22 Dec 2011, Tejun Heo wrote:
+> On Thu, Dec 22, 2011 at 03:46:39PM -0800, Tejun Heo wrote:
+> > On Thu, Dec 22, 2011 at 03:44:27PM -0800, Andrew Morton wrote:
+> > > > Weird, I can't reproduce the problem on block/for-3.3/core.  Trying
+> > > > linux-next... hmmm, it works there too.
+> > > 
+> > > This machine is next to my desk, about 50 yards from your cube ;)
+> > 
+> > Heh, physical access feels like such distant concept.  :)
+> > 
+> > I'll test with the config and if I still can't reproduce it, play with
+> > your machine.
+> 
+> Couldn't reproduce it on block/for-3.3 or next & you were already
+> gone.  Is anyone else seeing this?
 
-The primary motivation for this patch is hotplug testing by writing 0 to
-/sys/class/sas_phy/phyX/enable.  Without this check this test leads to
-libata issuing a reset and re-enabling the device that wants to be torn
-down.
+Twice today, on ThinkPad T420s running 3.2.0-rc6-next-20111222.
+I haven't seen it at all under heavy load, but twice when simply
+rebuilding the kernel - I think both times it hung with
+"LD whatever/built-in.o" the last line on screen.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+I had (a variant of) kdb in, here's the stack it gave me, but I think
+I've got a bug in there which has missed out a number of stackframes:
+so don't waste time puzzling over any anomalies in it, but there's
+enough to suggest it's the same as Andrew was seeing.
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 96f316f..2814731 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -321,6 +321,9 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
- 	struct domain_device *dev = ap->private_data;
- 	struct sas_internal *i = dev_to_sas_internal(dev);
- 
-+	if (dev->gone)
-+		return -ENODEV;
-+
- 	res = i->dft->lldd_I_T_nexus_reset(dev);
- 
- 	if (res != TMF_RESP_FUNC_COMPLETE)
+ffff880013ac2100    28524    28522   1*  D  ffff880013ac2538  sh
+RSP              RIP              Function (args)
+ffff88004165f820 ffffffff814e559a _raw_spin_unlock_irq+0x31
+ffff88004165f858 ffffffff811d2867 get_request_wait+0xab
+ffff88004165f8b8 ffffffff811cfb75 elv_merge+0xa0
+ffff88004165fd18 ffffffff810ca90c do_writepages+0x1f
+ffff88004165fd28 ffffffff810c2671 __filemap_fdatawrite_range+0x4e
+ffff88004165fd68 ffffffff810c2e92 filemap_flush+0x17
+ffff88004165fd78 ffffffff8116533e ext4_alloc_da_blocks+0x28
+ffff88004165fd88 ffffffff81160f6a ext4_release_file+0x2e
+ffff88004165fdb8 ffffffff811077d4 __fput+0x107
+ffff88004165fe08 ffffffff81107899 fput+0x15
+ffff88004165fe18 ffffffff81104037 filp_close+0x6b
+ffff88004165fe48 ffffffff81056b47 close_files+0x16a
+ffff88004165fea8 ffffffff81057f31 put_files_struct+0x21
+ffff88004165fed8 ffffffff81058107 exit_files+0x46
+ffff88004165ff08 ffffffff81058648 do_exit+0x20e
+ffff88004165ff48 ffffffff810588d1 do_group_exit+0x7d
+ffff88004165ff78 ffffffff8105890e sys_exit_group+0x12
 
+I interrupted a few more times, yes, once or twice I caught it
+in some cfq io_context business: didn't take much notice because
+I thought I'd saved the stack to log, but it hasn't appeared in my
+/var/log/messages after reboot.  Once or twice there was another
+sh running on another cpu, showing a very similar stack.
+
+Hugh
