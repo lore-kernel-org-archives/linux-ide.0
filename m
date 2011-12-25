@@ -1,68 +1,80 @@
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: linux-next: Tree for Dec 21
-Date: Fri, 23 Dec 2011 21:13:34 -0800 (PST)
-Message-ID: <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
-References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au> <20111221151503.4d78f94f.akpm@linux-foundation.org> <20111222150836.af172886.akpm@linux-foundation.org> <20111222232036.GP17084@google.com> <20111222152427.c944c747.akpm@linux-foundation.org>
- <20111222233843.GR17084@google.com> <20111222154427.89b245c7.akpm@linux-foundation.org> <20111222234639.GS17084@google.com> <20111223004244.GU17084@google.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH block/for-3.3/core] block: an exiting task should be allowed
+ to create io_context
+Date: Sat, 24 Dec 2011 17:02:38 -0800
+Message-ID: <20111225010238.GA6013@htj.dyndns.org>
+References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au>
+ <20111221151503.4d78f94f.akpm@linux-foundation.org>
+ <20111222150836.af172886.akpm@linux-foundation.org>
+ <20111222232036.GP17084@google.com>
+ <20111222152427.c944c747.akpm@linux-foundation.org>
+ <20111222233843.GR17084@google.com>
+ <20111222154427.89b245c7.akpm@linux-foundation.org>
+ <20111222234639.GS17084@google.com>
+ <20111223004244.GU17084@google.com>
+ <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20111223004244.GU17084@google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+Sender: linux-next-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hugh Dickins <hughd@google.com>, x86@kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 22 Dec 2011, Tejun Heo wrote:
-> On Thu, Dec 22, 2011 at 03:46:39PM -0800, Tejun Heo wrote:
-> > On Thu, Dec 22, 2011 at 03:44:27PM -0800, Andrew Morton wrote:
-> > > > Weird, I can't reproduce the problem on block/for-3.3/core.  Trying
-> > > > linux-next... hmmm, it works there too.
-> > > 
-> > > This machine is next to my desk, about 50 yards from your cube ;)
-> > 
-> > Heh, physical access feels like such distant concept.  :)
-> > 
-> > I'll test with the config and if I still can't reproduce it, play with
-> > your machine.
-> 
-> Couldn't reproduce it on block/for-3.3 or next & you were already
-> gone.  Is anyone else seeing this?
+While fixing io_context creation / task exit race condition,
+6e736be7f2 "block: make ioc get/put interface more conventional and
+fix race on alloction" also prevented an exiting (%PF_EXITING) task
+from creating its own io_context.  This is incorrect as exit path may
+issue IOs, e.g. from exit_files(), and if those IOs are the first ones
+issued by the task, io_context needs to be created to process the IOs.
 
-Twice today, on ThinkPad T420s running 3.2.0-rc6-next-20111222.
-I haven't seen it at all under heavy load, but twice when simply
-rebuilding the kernel - I think both times it hung with
-"LD whatever/built-in.o" the last line on screen.
+Combined with the existing problem of io_context / io_cq creation
+failure having the possibility of stalling IO, this problem results in
+deterministic full IO lockup with certain workloads.
 
-I had (a variant of) kdb in, here's the stack it gave me, but I think
-I've got a bug in there which has missed out a number of stackframes:
-so don't waste time puzzling over any anomalies in it, but there's
-enough to suggest it's the same as Andrew was seeing.
+Fix it by allowing io_context creation regardless of %PF_EXITING for
+%current.
 
-ffff880013ac2100    28524    28522   1*  D  ffff880013ac2538  sh
-RSP              RIP              Function (args)
-ffff88004165f820 ffffffff814e559a _raw_spin_unlock_irq+0x31
-ffff88004165f858 ffffffff811d2867 get_request_wait+0xab
-ffff88004165f8b8 ffffffff811cfb75 elv_merge+0xa0
-ffff88004165fd18 ffffffff810ca90c do_writepages+0x1f
-ffff88004165fd28 ffffffff810c2671 __filemap_fdatawrite_range+0x4e
-ffff88004165fd68 ffffffff810c2e92 filemap_flush+0x17
-ffff88004165fd78 ffffffff8116533e ext4_alloc_da_blocks+0x28
-ffff88004165fd88 ffffffff81160f6a ext4_release_file+0x2e
-ffff88004165fdb8 ffffffff811077d4 __fput+0x107
-ffff88004165fe08 ffffffff81107899 fput+0x15
-ffff88004165fe18 ffffffff81104037 filp_close+0x6b
-ffff88004165fe48 ffffffff81056b47 close_files+0x16a
-ffff88004165fea8 ffffffff81057f31 put_files_struct+0x21
-ffff88004165fed8 ffffffff81058107 exit_files+0x46
-ffff88004165ff08 ffffffff81058648 do_exit+0x20e
-ffff88004165ff48 ffffffff810588d1 do_group_exit+0x7d
-ffff88004165ff78 ffffffff8105890e sys_exit_group+0x12
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Andrew Morton <akpm@linux-foundation.org>
+Reported-by: Hugh Dickins <hughd@google.com>
+---
+Thanks a lot for the hint, Hugh.  My testing stuff (fio, dd and some
+adhoc rawio testing programs) was issuing IOs before exiting, so I
+didn't hit the problem and I suspect the reason why I didn't see the
+boot failure Andrew was seeing was because of systemd - boot process
+used to be dominated by lots of short-lived programs, many of which
+touching/modifying files, and thus it triggered the first IO on exit
+paths with Andrew's old userland.  With systemd, most of those are
+gone, so...
 
-I interrupted a few more times, yes, once or twice I caught it
-in some cfq io_context business: didn't take much notice because
-I thought I'd saved the stack to log, but it hasn't appeared in my
-/var/log/messages after reboot.  Once or twice there was another
-sh running on another cpu, showing a very similar stack.
+Thanks.
 
-Hugh
+ block/blk-ioc.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/block/blk-ioc.c b/block/blk-ioc.c
+index ce9b35a..33fae7d 100644
+--- a/block/blk-ioc.c
++++ b/block/blk-ioc.c
+@@ -281,9 +281,16 @@ void create_io_context_slowpath(struct task_struct *task, gfp_t gfp_flags,
+ 	INIT_HLIST_HEAD(&ioc->icq_list);
+ 	INIT_WORK(&ioc->release_work, ioc_release_fn);
+ 
+-	/* try to install, somebody might already have beaten us to it */
++	/*
++	 * Try to install.  ioc shouldn't be installed if someone else
++	 * already did or @task, which isn't %current, is exiting.  Note
++	 * that we need to allow ioc creation on exiting %current as exit
++	 * path may issue IOs from e.g. exit_files().  The exit path is
++	 * responsible for not issuing IO after exit_io_context().
++	 */
+ 	task_lock(task);
+-	if (!task->io_context && !(task->flags & PF_EXITING))
++	if (!task->io_context &&
++	    (task == current || !(task->flags & PF_EXITING)))
+ 		task->io_context = ioc;
+ 	else
+ 		kmem_cache_free(iocontext_cachep, ioc);
