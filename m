@@ -1,35 +1,36 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be allowed
- to create io_context
-Date: Sun, 25 Dec 2011 14:29:34 +0100
-Message-ID: <4EF7253E.3070606@kernel.dk>
-References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au> <20111221151503.4d78f94f.akpm@linux-foundation.org> <20111222150836.af172886.akpm@linux-foundation.org> <20111222232036.GP17084@google.com> <20111222152427.c944c747.akpm@linux-foundation.org> <20111222233843.GR17084@google.com> <20111222154427.89b245c7.akpm@linux-foundation.org> <20111222234639.GS17084@google.com> <20111223004244.GU17084@google.com> <alpine.LSU.2.00.1112232058550.3225@eggly.anvils> <20111225010238.GA6013@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111225010238.GA6013@htj.dyndns.org>
-Sender: linux-next-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hugh Dickins <hughd@google.com>, x86@kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2 0/3] ahci controller runtime PM support
+Date: Tue, 27 Dec 2011 13:42:31 +0800
+Message-ID: <1324964554-9719-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:14992 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811Ab1L0Fmu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Dec 2011 00:42:50 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
 
-On 2011-12-25 02:02, Tejun Heo wrote:
-> While fixing io_context creation / task exit race condition,
-> 6e736be7f2 "block: make ioc get/put interface more conventional and
-> fix race on alloction" also prevented an exiting (%PF_EXITING) task
-> from creating its own io_context.  This is incorrect as exit path may
-> issue IOs, e.g. from exit_files(), and if those IOs are the first ones
-> issued by the task, io_context needs to be created to process the IOs.
-> 
-> Combined with the existing problem of io_context / io_cq creation
-> failure having the possibility of stalling IO, this problem results in
-> deterministic full IO lockup with certain workloads.
-> 
-> Fix it by allowing io_context creation regardless of %PF_EXITING for
-> %current.
+Hi all,
 
-Thanks, applied.
+Here is the v2 patches to add ahci controller runtime PM support.
+Applied on top of linux-next tree.
 
--- 
-Jens Axboe
+Thanks for any comments.
+
+v2:
+- add ahci hibernate callbacks
+
+v1:
+https://lkml.org/lkml/2011/12/15/198
+
+Lin Ming (3):
+      ahci: port legacy pm interface to struct dev_pm_ops
+      ahci: add runtime PM callbacks
+      ata: runtime suspend port if no device attached
+
+ drivers/ata/ahci.c        |   71 +++++++++++++++++++++++++++++++++++++++-----
+ drivers/ata/libata-core.c |   21 ++++++++++++-
+ 2 files changed, 83 insertions(+), 9 deletions(-)
+
