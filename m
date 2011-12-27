@@ -1,103 +1,64 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v2 2/3] ahci: add runtime PM callbacks
-Date: Tue, 27 Dec 2011 13:42:33 +0800
-Message-ID: <1324964554-9719-3-git-send-email-ming.m.lin@intel.com>
-References: <1324964554-9719-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1324964554-9719-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v2 28/28] libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+Date: Tue, 27 Dec 2011 17:23:13 +0800
+Message-ID: <3550CA95F3F349D48E2D8D3BB26CA6EC@usish.com.cn>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6> <20111223030054.21827.18482.stgit@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:59988 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751307Ab1L0JYJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Dec 2011 04:24:09 -0500
+In-Reply-To: <20111223030054.21827.18482.stgit@localhost6.localdomain6>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Add ahci controller runtime PM callbacks.
+I pull the new V2 patchset, it works fine.
+I found another bug in libsas, will send out later.
 
-Call pm_runtime_put_noidle() in its probe routine and
-pm_runtime_get_noresume() in its remove routine.
+Jack
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/ahci.c |   23 ++++++++++++++++++++++-
- 1 files changed, 22 insertions(+), 1 deletions(-)
+[PATCH v2 28/28] libsas: don't recover 'gone' devices in
+> sas_ata_hard_reset()
+> 
+> The commands that timeout when a disk is forcibly removed may trigger
+> libata to attempt recovery of the device.  If libsas has decided to
+> remove the device don't permit ata to continue to issue resets to its
+> last known phy.
+> 
+> The primary motivation for this patch is hotplug testing by writing 0 to
+> /sys/class/sas_phy/phyX/enable.  Without this check this test leads to
+> libata issuing a reset and re-enabling the device that wants to be torn
+> down.
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/libsas/sas_ata.c |    3 +++
+>  1 files changed, 3 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 96f316f..2814731 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -321,6 +321,9 @@ static int sas_ata_hard_reset(struct ata_link *link,
+> unsigned int *class,
+>  	struct domain_device *dev = ap->private_data;
+>  	struct sas_internal *i = dev_to_sas_internal(dev);
+> 
+> +	if (dev->gone)
+> +		return -ENODEV;
+> +
+>  	res = i->dft->lldd_I_T_nexus_reset(dev);
+> 
+>  	if (res != TMF_RESP_FUNC_COMPLETE)
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 183c8b2..f70f030 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -46,6 +46,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-+#include <linux/pm_runtime.h>
- #include "ahci.h"
- 
- #define DRV_NAME	"ahci"
-@@ -79,6 +80,7 @@ enum board_ids {
- };
- 
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
-+static void ahci_remove_one(struct pci_dev *pdev);
- static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- 				 unsigned long deadline);
- static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
-@@ -88,6 +90,7 @@ static int ahci_pci_device_suspend(struct device *dev);
- static int ahci_pci_device_resume(struct device *dev);
- static int ahci_pci_device_freeze(struct device *dev);
- static int ahci_pci_device_poweroff(struct device *dev);
-+static int ahci_pci_device_runtime_idle(struct device *dev);
- #endif
- 
- static struct scsi_host_template ahci_sht = {
-@@ -409,13 +412,16 @@ static const struct dev_pm_ops ahci_pci_pm_ops = {
- 	.thaw			= ahci_pci_device_resume,
- 	.poweroff		= ahci_pci_device_poweroff,
- 	.restore		= ahci_pci_device_resume,
-+	.runtime_suspend	= ahci_pci_device_suspend,
-+	.runtime_resume		= ahci_pci_device_resume,
-+	.runtime_idle		= ahci_pci_device_runtime_idle
- };
- 
- static struct pci_driver ahci_pci_driver = {
- 	.name			= DRV_NAME,
- 	.id_table		= ahci_pci_tbl,
- 	.probe			= ahci_init_one,
--	.remove			= ata_pci_remove_one,
-+	.remove			= ahci_remove_one,
- #ifdef CONFIG_PM
- 	.driver			= {
- 		.pm = &ahci_pci_pm_ops
-@@ -650,6 +656,11 @@ static int ahci_pci_device_resume(struct device *dev)
- 
- 	return 0;
- }
-+
-+static int ahci_pci_device_runtime_idle(struct device *dev)
-+{
-+	return pm_runtime_suspend(dev);
-+}
- #endif
- 
- static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
-@@ -1239,10 +1250,20 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	ahci_pci_print_info(host);
- 
- 	pci_set_master(pdev);
-+	pm_runtime_put_noidle(dev);
-+	pm_runtime_allow(dev);
- 	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
- 				 &ahci_sht);
- }
- 
-+static void ahci_remove_one(struct pci_dev *pdev)
-+{
-+	pm_runtime_forbid(&pdev->dev);
-+	pm_runtime_get_noresume(&pdev->dev);
-+
-+	ata_pci_remove_one(pdev);
-+}
-+
- static int __init ahci_init(void)
- {
- 	return pci_register_driver(&ahci_pci_driver);
--- 
-1.7.2.5
