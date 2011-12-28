@@ -1,106 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Wed, 28 Dec 2011 08:48:36 -0800
-Message-ID: <20111228164836.GP17712@google.com>
-References: <20111222150836.af172886.akpm@linux-foundation.org>
- <20111222232036.GP17084@google.com>
- <20111222152427.c944c747.akpm@linux-foundation.org>
- <20111222233843.GR17084@google.com>
- <20111222154427.89b245c7.akpm@linux-foundation.org>
- <20111222234639.GS17084@google.com>
- <20111223004244.GU17084@google.com>
- <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
- <20111225010238.GA6013@htj.dyndns.org>
- <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Wed, 28 Dec 2011 20:56:13 +0300
+Message-ID: <4EFB583D.1000306@mvista.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46091 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab1L1Qsm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Dec 2011 11:48:42 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:59338 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754160Ab1L1Q5U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Dec 2011 11:57:20 -0500
+Received: by wibhm6 with SMTP id hm6so5718433wib.19
+        for <linux-ide@vger.kernel.org>; Wed, 28 Dec 2011 08:57:19 -0800 (PST)
+In-Reply-To: <201112281836.45834.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hugh Dickins <hughd@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com, sonic.zhang@analog.com
 
-Hello, Hugh.
+Hello.
 
-On Wed, Dec 28, 2011 at 12:33:01AM -0800, Hugh Dickins wrote:
-> Thanks, I think I've now built enough kernels on -next plus your patch
-> to say that it does indeed solve that problem.
+On 12/28/2011 06:36 PM, Sergei Shtylyov wrote:
 
-Awesome, thanks for verifying the fix.
+> The author of this driver clearly wasn't familiar with the BMIDE specification
+> (also known as SFF-8038i) when he implemented the bmdma_status() method: first,
+> the interrupt bit of the BMIDE status register corresponds to nothing else but
+> INTRQ signal (ATAPI_DEV_INT here); second, the error bit is only set if the
+> controller encounters issue doing the bus master transfers, not on the DMA burst
+> termination interrupts like here
 
-> However, there are a couple of other unhealthy symptoms I've noticed
-> under load in -next's block/cfq layer, both with and without your patch.
-> 
-> One is kernel BUG at block/cfq-iosched.c:2585!
-> 	BUG_ON(RB_EMPTY_ROOT(&cfqq->sort_list));
-> 
-> cfq_dispatch_request+0x1a
-> cfq_dispatch_requests+0x5c
-> blk_peek_request+0x195
-> scsi_request_fn+0x6a
-> __blk_run_queue+0x16
-> scsi_run_queue+0x18a
-> scsi_next_command+0x36
-> scsi_io_completion+0x426
-> scsi_finish_command+0xaf
-> scsi_softirq_done+0xdd
-> blk_done_softirq+0x6c
-> __do_softirq+0x80
-> call_softirq+0x1c
-> do_softirq+0x33
-> irq_exit+0x3f
-> do_IRQ+0x97
-> ret_from_intr
-> 
-> I've had that one four times now on different machines; but quicker
-> to reproduce are these warnings from CONFIG_DEBUG_LIST=y:
-> 
-> ------------[ cut here ]------------
-> WARNING: at lib/list_debug.c:53 __list_del_entry+0x8d/0x98()
-> Hardware name: 4174AY9
-> list_del corruption. prev->next should be ffff880005aa1380, but was 6b6b6b6b6b6b6b6b
-> Modules linked in: snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device
-> Pid: 29241, comm: cc1 Tainted: G        W    3.2.0-rc6-next-20111222 #18
-> Call Trace:
->  <IRQ>  [<ffffffff810544b4>] warn_slowpath_common+0x80/0x98
->  [<ffffffff81054560>] warn_slowpath_fmt+0x41/0x43
->  [<ffffffff811fc1a1>] __list_del_entry+0x8d/0x98
->  [<ffffffff811df8ab>] cfq_remove_request+0x3b/0xdf
->  [<ffffffff811df989>] cfq_dispatch_insert+0x3a/0x87
->  [<ffffffff811dfb3b>] cfq_dispatch_request+0x65/0x92
->  [<ffffffff811dfbc4>] cfq_dispatch_requests+0x5c/0x133
->  [<ffffffff812e103e>] ? scsi_request_fn+0x3b6/0x3d3
->  [<ffffffff811d3069>] blk_peek_request+0x195/0x1a6
->  [<ffffffff812e103e>] ? scsi_request_fn+0x3b6/0x3d3
->  [<ffffffff812e0cf5>] scsi_request_fn+0x6d/0x3d3
->  [<ffffffff811d0730>] __blk_run_queue+0x19/0x1b
->  [<ffffffff811d0bfd>] blk_run_queue+0x21/0x35
->  [<ffffffff812e08c4>] scsi_run_queue+0x11f/0x1b9
->  [<ffffffff812e205c>] scsi_next_command+0x36/0x46
->  [<ffffffff812e24dc>] scsi_io_completion+0x426/0x4a9
->  [<ffffffff812dc0b2>] scsi_finish_command+0xaf/0xb8
->  [<ffffffff812e200c>] scsi_softirq_done+0xdd/0xe5
->  [<ffffffff811d79c6>] blk_done_softirq+0x76/0x8a
->  [<ffffffff8105a28d>] __do_softirq+0x98/0x136
->  [<ffffffff814e649c>] call_softirq+0x1c/0x30
->  [<ffffffff8102f187>] do_softirq+0x38/0x81
->  [<ffffffff8105a596>] irq_exit+0x4e/0xb6
->  [<ffffffff8102ee9e>] do_IRQ+0x97/0xae
->  [<ffffffff814e49f0>] common_interrupt+0x70/0x70
->  <EOI>  [<ffffffff814e4a8e>] ? retint_swapgs+0xe/0x13
-> ---[ end trace 61fdaa1b260613d1 ]---
+    Forgot to say that burst terminations are happening on the IDE side.
 
-Hmm... that looks like cfqq being freed before unlinked.  I'll try to
-reproduce it.  Is there any particular workload you were running?
+> (moreover, setting the error bit doesn't cause an interrupt).
 
-Thanks.
+> (The only thing I couldn't figure out is how to flush the FIFO to memory once
+> the interrupt happens as required by the mentioned spec.)
 
--- 
-tejun
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+
+WBR, Sergei
