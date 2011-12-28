@@ -1,76 +1,66 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 27/28] libsas: fix sas_find_local_phy(), take phy references
-Date: Wed, 28 Dec 2011 10:45:46 -0800
-Message-ID: <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-	<20111223030049.21827.90091.stgit@localhost6.localdomain6>
-	<47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Wed, 28 Dec 2011 13:19:18 -0800
+Message-ID: <20111228211918.GA3516@google.com>
+References: <20111222233843.GR17084@google.com>
+ <20111222154427.89b245c7.akpm@linux-foundation.org>
+ <20111222234639.GS17084@google.com>
+ <20111223004244.GU17084@google.com>
+ <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+ <20111225010238.GA6013@htj.dyndns.org>
+ <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+ <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:63496 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754207Ab1L1Spr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Dec 2011 13:45:47 -0500
-In-Reply-To: <47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hugh Dickins <hughd@google.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>
 
-On Tue, Dec 27, 2011 at 1:21 AM, Jack Wang <jack_wang@usish.com> wrote:
->>
->> In the direct-attached case this routine returns the phy on which th=
-is
->> device was first discovered. =A0Which is broken if we want to suppor=
-t
->> wide-targets, as this phy reference can become stale even though the
->> port is still active.
->>
->> In the expander-attached case this routine tries to lookup the phy b=
-y
->> scanning the attached sas addresses of the parent expander, and BUG_=
-ONs
->> if it can't find it. =A0However since eh and the libsas workqueue ru=
-n
->> independently we can still be attempting device recovery via eh afte=
-r
->> libsas has recorded the device as detached. =A0This is even easier t=
-o hit
->> now that eh is blocked while device domain rediscovery takes place, =
-and
->> that libata is fed more timed out commands increasing the chances th=
-at
->> it will try to recover the ata device.
->>
->> Arrange for dev->phy to always point to a last known good phy, it ma=
-y be
->> stale after the port is torn down, but it will catch up for wide por=
-t
->> reconfigurations, and never be NULL.
->>
->> Q: How is pm8001_I_T_nexus_reset getting away with not performing re=
-set
->> =A0 =A0on direct attached sata devices?
->>
-> [Jack Wang]
-> We found reset may lead to some SATA disks can not be found sometime,=
- in
-> fact no only for direct attached sata devices.
->
-> I wonder why we always reset the sata device when probe, for pm8001 d=
-irect
-> attached sata firmware will report Initial SATA FIS when phy ready.
->
+On Wed, Dec 28, 2011 at 09:55:12AM -0800, Tejun Heo wrote:
+> Hello,
+>=20
+> On Wed, Dec 28, 2011 at 9:50 AM, Hugh Dickins <hughd@google.com> wrot=
+e:
+> > "It's the tmpfs swapping test that I've been running, with variatio=
+ns,
+> > for years. =A0System booted with mem=3D700M and 1.5G swap, two repe=
+titious
+> > make -j20 kernel builds (of a 2.6.24 kernel: I stuck with that beca=
+use
+> > the balance of built to unbuilt source grows smaller with later ker=
+nels),
+> > one directly in a tmpfs, the other in a 1k-block ext2 (that I drive=
+ with
+> > ext4's CONFIG_EXT4_USE_FOR_EXT23) on /dev/loop0 on a 450MB tmpfs fi=
+le."
+> >
+> > I doubt much of that (quoted from an older mail to someone else abo=
+ut
+> > one of the many other bugs it's found) is relevant: maybe just plen=
+ty
+> > of file I/O and swapping.
+>=20
+> Plain -j4 build isn't triggering anything.  I'll try to replicate the=
+ condition.
 
-We need to get the drive to a known state.  Do these problems still
-happen in your tests with the "wait for ready" checking?  That's
-supposed to allow enough time for the signature fis to be transmitted.
+It's not too reliable but I can reproduce it with -j 22 allmodconfig
+build inside qemu w/ 512M of memory.  I'll try to find out what's
+going on.
 
-I'll take a closer look at your libsas fix, because I believe we are
-still seeing failures to rediscover all attached devices even with
-these patches.
+Thanks.
 
+--=20
+tejun
 --
-Dan
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
