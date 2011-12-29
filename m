@@ -1,86 +1,90 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v2 27/28] libsas: fix sas_find_local_phy(), take phy references
-Date: Thu, 29 Dec 2011 14:18:59 +0800
-Message-ID: <B0C89E887B4642239ECCC0B2A7F4E52A@usish.com.cn>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6><20111223030049.21827.90091.stgit@localhost6.localdomain6><47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn> <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
+From: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+Subject: RE: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Thu, 29 Dec 2011 06:31:04 -0500
+Message-ID: <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:47481 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751163Ab1L2GT4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2011 01:19:56 -0500
-In-Reply-To: <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:8304
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753422Ab1L2La7 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 29 Dec 2011 06:30:59 -0500
+In-Reply-To: <201112281836.45834.sshtylyov@ru.mvista.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, 'Xiangliang Yu' <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, 'Luben Tuikov' <ltuikov@yahoo.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
 
->=20
-> On Tue, Dec 27, 2011 at 1:21 AM, Jack Wang <jack_wang@usish.com> wrot=
-e:
-> >>
-> >> In the direct-attached case this routine returns the phy on which =
-this
-> >> device was first discovered. =A0Which is broken if we want to supp=
-ort
-> >> wide-targets, as this phy reference can become stale even though t=
-he
-> >> port is still active.
-> >>
-> >> In the expander-attached case this routine tries to lookup the phy=
- by
-> >> scanning the attached sas addresses of the parent expander, and BU=
-G_ONs
-> >> if it can't find it. =A0However since eh and the libsas workqueue =
-run
-> >> independently we can still be attempting device recovery via eh af=
-ter
-> >> libsas has recorded the device as detached. =A0This is even easier=
- to hit
-> >> now that eh is blocked while device domain rediscovery takes place=
-, and
-> >> that libata is fed more timed out commands increasing the chances =
-that
-> >> it will try to recover the ata device.
-> >>
-> >> Arrange for dev->phy to always point to a last known good phy, it =
-may
-be
-> >> stale after the port is torn down, but it will catch up for wide p=
-ort
-> >> reconfigurations, and never be NULL.
-> >>
-> >> Q: How is pm8001_I_T_nexus_reset getting away with not performing =
-reset
-> >> =A0 =A0on direct attached sata devices?
-> >>
-> > [Jack Wang]
-> > We found reset may lead to some SATA disks can not be found sometim=
-e, in
-> > fact no only for direct attached sata devices.
-> >
-> > I wonder why we always reset the sata device when probe, for pm8001
-direct
-> > attached sata firmware will report Initial SATA FIS when phy ready.
-> >
->=20
-> We need to get the drive to a known state.  Do these problems still
-> happen in your tests with the "wait for ready" checking?  That's
-> supposed to allow enough time for the signature fis to be transmitted=
-=2E
->=20
-> I'll take a closer look at your libsas fix, because I believe we are
-> still seeing failures to rediscover all attached devices even with
-> these patches.
->=20
-> --
-> Dan
-[Jack Wang]=20
-I only test sata behind expander, will add lldd_ata_check_ready to have=
- a
-test later.
+Acked-by: Sonic Zhang <sonic.zhang@analog.com>
+
+
+SG list was not implemented in pata_bf54x driver from the beginning, because ATAPI controller on BF54x support maximum 131070 bytes in one BMDMA transfer. The size in sg list buffers may exceeds this limitation easily. Do you know a way to set the maximum total buffer size in a sg list?
+
+
+Static struct scsi_host_template bfin_sht = {
+        ATA_BASE_SHT(DRV_NAME),
+        .sg_tablesize                   = SG_NONE,
+        .dma_boundary           = ATA_DMA_BOUNDARY,
+};
+
+
+Sonic
+
+-----Original Message-----
+From: Sergei Shtylyov [mailto:sshtylyov@ru.mvista.com]
+Sent: Wednesday, December 28, 2011 11:37 PM
+To: linux-ide@vger.kernel.org; jgarzik@pobox.com; Zhang, Sonic
+Subject: [PATCH] pata_bf54x: fix BMIDE status register emulation
+
+The author of this driver clearly wasn't familiar with the BMIDE specification
+(also known as SFF-8038i) when he implemented the bmdma_status() method: first,
+the interrupt bit of the BMIDE status register corresponds to nothing else but
+INTRQ signal (ATAPI_DEV_INT here); second, the error bit is only set if the
+controller encounters issue doing the bus master transfers, not on the DMA burst
+termination interrupts like here (moreover, setting the error bit doesn't cause
+an interrupt).
+
+(The only thing I couldn't figure out is how to flush the FIFO to memory once
+the interrupt happens as required by the mentioned spec.)
+
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+---
+The patch is against the current Linus' tree.
+Sonic, if you still work in Analog Devices, please give this a try.
+
+I looked over the driver, and it left pretty bad impression. In particular,
+I highly doubt that the transfers with more than one S/G item can work. And
+this is after the driver has been in the kernel for 4 years already...
+Unfortunately, I have neither hardware nor much time to work on improving it...
+
+ drivers/ata/pata_bf54x.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+Index: linux-2.6/drivers/ata/pata_bf54x.c
+===================================================================
+--- linux-2.6.orig/drivers/ata/pata_bf54x.c
++++ linux-2.6/drivers/ata/pata_bf54x.c
+@@ -1153,15 +1153,11 @@ static unsigned char bfin_bmdma_status(s
+ {
+        unsigned char host_stat = 0;
+        void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+-       unsigned short int_status = ATAPI_GET_INT_STATUS(base);
+
+-       if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON|ULTRA_XFER_ON))
++       if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON | ULTRA_XFER_ON))
+                host_stat |= ATA_DMA_ACTIVE;
+-       if (int_status & (MULTI_DONE_INT|UDMAIN_DONE_INT|UDMAOUT_DONE_INT|
+-               ATAPI_DEV_INT))
++       if (ATAPI_GET_INT_STATUS(base) & ATAPI_DEV_INT)
+                host_stat |= ATA_DMA_INTR;
+-       if (int_status & (MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
+-               host_stat |= ATA_DMA_ERR|ATA_DMA_INTR;
+
+        dev_dbg(ap->dev, "ATAPI: host_stat=0x%x\n", host_stat);
 
 
 
