@@ -1,23 +1,34 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
-Date: Thu, 29 Dec 2011 17:10:08 +0300
-Message-ID: <4EFC74C0.5030802@mvista.com>
-References: <201112281836.45834.sshtylyov@ru.mvista.com> <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com>
+From: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+Subject: RE: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Fri, 30 Dec 2011 01:07:03 -0500
+Message-ID: <DB904C5425BA6F4E8424B3B51A1414D16D76860ACB@NWD2CMBX1.ad.analog.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
+ <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com>
+ <4EFC74C0.5030802@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:39190 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754021Ab1L2NLP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Dec 2011 08:11:15 -0500
-Received: by wgbdr13 with SMTP id dr13so23225138wgb.1
-        for <linux-ide@vger.kernel.org>; Thu, 29 Dec 2011 05:11:14 -0800 (PST)
-In-Reply-To: <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com>
+Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:56381
+	"EHLO DB3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750916Ab1L3GG6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Dec 2011 01:06:58 -0500
+In-Reply-To: <4EFC74C0.5030802@mvista.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
+
+Hi,
+
+-----Original Message-----
+From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+Sent: Thursday, December 29, 2011 10:10 PM
+To: Zhang, Sonic
+Cc: Sergei Shtylyov; linux-ide@vger.kernel.org; jgarzik@pobox.com
+Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
 
 Hello.
 
@@ -30,10 +41,14 @@ On 12/29/2011 02:31 PM, Zhang, Sonic wrote:
 
     So what? You can chain transfers in software, using "done" interrupts I think...
 
+Sonic> I just figure out that this can be solved by setting the max sg_tablesize to 4.
+
 > The size in sg list buffers may exceeds this limitation easily. Do you know a way to set the maximum total buffer size in a sg list?
 
-    Maybe thru 'max_sectors' field in scsi_host_template? Though sectors can be 
+    Maybe thru 'max_sectors' field in scsi_host_template? Though sectors can be
 of different size...
+
+Sonic> max_sectors doesn't affect the max size of a sg list.
 
 > Static struct scsi_host_template bfin_sht = {
 >          ATA_BASE_SHT(DRV_NAME),
@@ -41,8 +56,10 @@ of different size...
 >          .dma_boundary           = ATA_DMA_BOUNDARY,
 > };
 
-    Ah, I have overlooked this. Anyway 'dma_boundary' should be twice more than 
+    Ah, I have overlooked this. Anyway 'dma_boundary' should be twice more than
 ATA_DMA_BOUNDARY.
+
+Sonic> I don't find this boundary limit in the spec of the DMA controller for BF54x ATAPI device. So, it can be removed.
 
 > Sonic
 
@@ -75,3 +92,5 @@ ATA_DMA_BOUNDARY.
 > Unfortunately, I have neither hardware nor much time to work on improving it...
 
 WBR, Sergei
+
+
