@@ -1,23 +1,36 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
-Date: Fri, 30 Dec 2011 13:59:47 +0400
-Message-ID: <4EFD8B93.1020405@mvista.com>
-References: <201112281836.45834.sshtylyov@ru.mvista.com> <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com> <4EFC74C0.5030802@mvista.com> <DB904C5425BA6F4E8424B3B51A1414D16D76860ACB@NWD2CMBX1.ad.analog.com>
+From: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+Subject: RE: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Fri, 30 Dec 2011 05:27:17 -0500
+Message-ID: <DB904C5425BA6F4E8424B3B51A1414D16D76860B48@NWD2CMBX1.ad.analog.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
+ <DB904C5425BA6F4E8424B3B51A1414D16D768609F8@NWD2CMBX1.ad.analog.com>
+ <4EFC74C0.5030802@mvista.com>
+ <DB904C5425BA6F4E8424B3B51A1414D16D76860ACB@NWD2CMBX1.ad.analog.com>
+ <4EFD8B93.1020405@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:52317 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751934Ab1L3KAw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Dec 2011 05:00:52 -0500
-Received: by wgbds13 with SMTP id ds13so19472248wgb.1
-        for <linux-ide@vger.kernel.org>; Fri, 30 Dec 2011 02:00:50 -0800 (PST)
-In-Reply-To: <DB904C5425BA6F4E8424B3B51A1414D16D76860ACB@NWD2CMBX1.ad.analog.com>
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:15262
+	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751851Ab1L3K1L convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Dec 2011 05:27:11 -0500
+In-Reply-To: <4EFD8B93.1020405@mvista.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
+
+Hi,
+
+-----Original Message-----
+From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+Sent: Friday, December 30, 2011 6:00 PM
+To: Zhang, Sonic
+Cc: Sergei Shtylyov; linux-ide@vger.kernel.org; jgarzik@pobox.com
+Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
 
 Hello.
 
@@ -30,6 +43,8 @@ On 30-12-2011 10:07, Zhang, Sonic wrote:
 > Sonic>  I just figure out that this can be solved by setting the max sg_tablesize to 4.
 
     Why to 4?
+
+Sonic> The test result shows max size of all sg list buffers may exceed 13170 if sg_tablesize is bigger than 4.
 
 >> The size in sg list buffers may exceeds this limitation easily. Do you know a way to set the maximum total buffer size in a sg list?
 
@@ -50,6 +65,9 @@ On 30-12-2011 10:07, Zhang, Sonic wrote:
 > Sonic>  I don't find this boundary limit in the spec of the DMA controller for BF54x ATAPI device.
 
     You just mentioned that ATAPI controller can transfer only 128KB in one go.
+
+Sonic> OK. I think I miss understand the meaning of dma_boundary. It should be the max length of one DMA buffer. That means ATA_DMA_BOUNDARY(0xFFFF) is correct for bf54x DMA controller. While 128KB limit is the max length of one data transfer of the ATAPI controller. In bf54x, the DMA controller is not part of the ATAPI controller. And bf54x ATAPI DMA doesn't comply with INF-8038i.
+
 
 > So, it can be removed.
 
@@ -84,3 +102,5 @@ On 30-12-2011 10:07, Zhang, Sonic wrote:
 >> Unfortunately, I have neither hardware nor much time to work on improving it...
 
 WBR, Sergei
+
+
