@@ -1,44 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Tue, 3 Jan 2012 14:35:05 -0800
-Message-ID: <20120103223505.GI31746@google.com>
-References: <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
- <20111228164836.GP17712@google.com>
- <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
- <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
- <20111228211918.GA3516@google.com>
- <20120103173500.GB31746@google.com>
- <20120103175922.GC31746@google.com>
- <20120103200906.GG31746@google.com>
- <4F03631C.8080501@kernel.dk>
- <20120103221301.GH31746@google.com>
+From: Mathias Anselmann <mathias.anselmann@googlemail.com>
+Subject: Failed to set xfermode DVR-215
+Date: Wed, 4 Jan 2012 00:30:50 +0100
+Message-ID: <20120103233050.GA30476@junkynutte>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:47411 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312Ab2ACXda (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2012 18:33:30 -0500
+Received: by eekc4 with SMTP id c4so16285494eek.19
+        for <linux-ide@vger.kernel.org>; Tue, 03 Jan 2012 15:33:29 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20120103221301.GH31746@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Hugh Dickins <hughd@google.com>, Shaohua Li <shaohua.li@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, Jan 03, 2012 at 02:13:01PM -0800, Tejun Heo wrote:
-> > That's pretty odd. Given Hughs report as well, it sure does sound like
-> > we now have some life time issues with cfqq's.
-> 
-> Hmmm... I disabled cfqq merge logic (commented out
-> cfq_close_cooperator() and the following cfq_setup_merge() calls) in
-> cfq_select_queue() and neither is triggering for quite a while now.
-> Maybe cfqq refcnt is getting borked over cfqq merging / splitting?  It
-> would also explain the low frequency of the issue too.  I'll try to
-> further isolate it but It would be awesome if someone more familiar
-> with the logic can go over that part.
+Hello,
+Since month I have an issue with my dvd writer: when I boot I (just
+sometimes) get up to three times this message (currently using kernel
+3.1.7):
 
-Scrap that.  It triggered and yeah cfq_get_next_queue() is retrieving
-empty cfqq from the service tree.
+ata4.00: failed to set xfermode (err_mask=0x4)
 
-Thanks.
+Here
+https://bugs.archlinux.org/task/21606
+I was told that this is a common problem with some Pioneer dvd writers
+and can be fixed by you, here are my device Informations from dmesg:
 
--- 
-tejun
+ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+ata4.00: ATAPI: PIONEER DVD-RW  DVR-215, 1.22, max UDMA/66
+ata4.00: configured for UDMA/6
+
+So it would be great if you could add my device to this patch,
+greetings
+ Mathias Anselmann
