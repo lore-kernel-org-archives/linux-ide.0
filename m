@@ -1,77 +1,56 @@
-From: "D. Stussy" <replies+newsgroups@kd6lvw.ampr.org>
-Subject: Recurring error with SATA driver.
-Date: Tue, 3 Jan 2012 19:33:21 +0000 (UTC)
-Message-ID: <alpine.LNX.2.00.1201031929290.1620@snarked.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Tue, 3 Jan 2012 12:09:06 -0800
+Message-ID: <20120103200906.GG31746@google.com>
+References: <20111223004244.GU17084@google.com>
+ <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+ <20111225010238.GA6013@htj.dyndns.org>
+ <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+ <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+ <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.snarked.org ([67.43.172.250]:2168 "EHLO mail.snarked.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754438Ab2ACTta (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Jan 2012 14:49:30 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120103175922.GC31746@google.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Hugh Dickins <hughd@google.com>, Jens Axboe <axboe@kernel.dk>, Shaohua Li <shaohua.li@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
 
-ata1: illegal qc_active transition (3fffffff->fffffffe)
+On Tue, Jan 03, 2012 at 09:59:22AM -0800, Tejun Heo wrote:
+> That should have been service tree.  I couldn't find more missing
+> removals other than the one Shaohua's patch already fixed.  Close
+> cooperator selection in cfq_select_queue() seems suspicious tho.  I
+> can't see what prevents it from returning an empty coopeator cfqq.
+> I'm trying to verify whether that's the case.  Will update when I know
+> more.
 
-I'm getting this about once every 3 days.  When this happens, the affected 
-partition is remounted read-only (per my file system error options).
+While testing, found another bug.
 
-I am not certain if this is telling me I have a hardware error, 
-incompatibility, or if there's a design problem with the driver.
+ Redzone: 0x9f911029d74e35b/0x9f911029d74e35b.
+ Last user: [<ffffffff813a82ee>](cfq_put_queue+0x7e/0xd0)
+ 070: e8 32 ab 1d 00 88 ff ff e8 32 ab 1d 00 88 ff ff  .2.......2......
+ Prev obj: start=ffff88001dab3178, len=232
+ Redzone: 0x9f911029d74e35b/0x9f911029d74e35b.
+ Last user: [<ffffffff813a82ee>](cfq_put_queue+0x7e/0xd0)
+ 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+ 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+ Next obj: start=ffff88001dab3378, len=232
+ Redzone: 0xd84156c5635688c0/0xd84156c5635688c0.
+ Last user: [<ffffffff813a8e53>](cfq_get_queue+0x153/0x670)
+ 000: 02 00 00 00 21 01 00 00 e0 c9 b1 1d 00 88 ff ff  ....!...........
+ 010: 89 96 ae 18 00 88 ff ff 00 00 00 00 00 00 00 00  ................
 
-Seen with kernels: 3.0.14, 3.1.4, 3.1.5, and  3.1.6
+The field at 0x70 which is being updated after being freed is
+cfqq->fifo.  Interestingly, it didn't lead to any visible failure.
 
-Motherboard:  Supermicro H8SCM-F
-Disk Drives:  Seagate 1.8TB drives
+Thanks.
 
-Kernel log messages:
-pci 0000:00:11.0: set SATA to AHCI mode
-libata version 3.00 loaded.
-ahci 0000:00:11.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SATA mode
-ata1: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa500 irq 22
-ata2: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa580 irq 22
-ata3: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa600 irq 22
-ata4: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa680 irq 22
-ata3: SATA link down (SStatus 0 SControl 300)
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: ATA-8: ST32000644NS, SN11, max UDMA/133
-ata1.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata2.00: ATA-8: ST32000644NS, SN11, max UDMA/133
-ata2.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-ata4.00: ATAPI: Optiarc DVD RW AD-7700S, 1.03, max UDMA/100
-ata1.00: configured for UDMA/133
-ata2.00: configured for UDMA/133
-scsi 0:0:0:0: Direct-Access     ATA      ST32000644NS     SN11 PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 3907029168 512-byte logical blocks: (2.00 TB/1.81 TiB)
-scsi 1:0:0:0: Direct-Access     ATA      ST32000644NS     SN11 PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 1:0:0:0: [sdb] 3907029168 512-byte logical blocks: (2.00 TB/1.81 TiB)
-sd 1:0:0:0: [sdb] Write Protect is off
-sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-ata4.00: configured for UDMA/100
-  sda: sda1
-sd 0:0:0:0: [sda] Attached SCSI disk
-  sdb: sdb1
-sd 1:0:0:0: [sdb] Attached SCSI disk
-scsi 3:0:0:0: CD-ROM            Optiarc  DVD RW AD-7700S  1.03 PQ: 0 ANSI: 5
-
-Kernel options:
-CONFIG_SCSI_SAS_ATA=y
-CONFIG_ATA=y
-CONFIG_ATA_VERBOSE_ERROR=y
-CONFIG_ATA_ACPI=y
-CONFIG_SATA_PMP=y
-CONFIG_SATA_AHCI=y
-CONFIG_ATA_SFF=y
-CONFIG_ATA_BMDMA=y
-CONFIG_PATA_AMD=y
-CONFIG_ATA_GENERIC=y
-
+-- 
+tejun
