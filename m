@@ -1,36 +1,49 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2] ata: pata_bf54x: Support sg list in bmdma transfer.
-Date: Wed, 04 Jan 2012 17:23:04 +0400
-Message-ID: <4F0452B8.4090101@mvista.com>
-References: <1325657211-21904-1-git-send-email-sonic.adi@gmail.com>
+From: Peter Silva <Peter.A.Silva@gmail.com>
+Subject: (unknown)
+Date: Wed, 4 Jan 2012 16:23:07 -0500
+Message-ID: <CADL7PvhxSsxwNo=EapLiXzry1Pn79b_Tr+fqz0nZuPWZTtAgeA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:37558 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234Ab2ADNYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 08:24:08 -0500
-Received: by eaad14 with SMTP id d14so9364758eaa.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 05:24:07 -0800 (PST)
-In-Reply-To: <1325657211-21904-1-git-send-email-sonic.adi@gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50998 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753000Ab2ADVXI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 16:23:08 -0500
+Received: by wgbdr13 with SMTP id dr13so29467727wgb.1
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 13:23:07 -0800 (PST)
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sonic Zhang <sonic.adi@gmail.com>
-Cc: David Miller <davem@davemloft.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, uclinux-dist-devel@blackfin.uclinux.org, Sonic Zhang <sonic.zhang@analog.com>
+To: linux-ide@vger.kernel.org
 
-Hello.
+Hi
 
-On 04-01-2012 10:06, Sonic Zhang wrote:
+This was originally submitted as=C2=A0bugzilla.kernel.org=C2=A0# 37642.=
+ =C2=A0I don't
+know where to continue followup since that server's demise.  to recap
+previous report:
 
-> From: Sonic Zhang<sonic.zhang@analog.com>
+am using the device on a system that was running ubuntu 2.6.38 kernel.
+=C2=A0where all six drives in this external RAID unit were presented to=
+ the
+operating system without issue. (standard ubuntu 11.04 kernel.) I am
+not interested in the software raid part, just want to use the
+external enclosure as JBOD, and use an os based technology for ganging
+the disks.=C2=A0When upgraded to 11.10, with 3.0.0 kernel, the disks un=
+its
+are no longer recognized.  Tejun Heo asked me to try various bios
+options. =C2=A0they were tried and had no effect.  was asked to add a
+little code to ahci.c to recognize 91a4. =C2=A0It had no effect.
 
-> BF54x on-chip ATAPI controller allows maximum 0x1fffe bytes to be transfered
-> in one ATAPI transfer. So, set the max sg_tablesize to 4.
+kernel version is pinned to old one for now.
 
-> Signed-off-by: Sonic Zhang<sonic.zhang@analog.com>
-> ---
+lspci:
+02:00.0 RAID bus controller: HighPoint Technologies, Inc. Device 0622 (=
+rev 01)
+02:00.1 IDE interface: Marvell Technology Group Ltd. 88SE91A4 SATA
+6Gb/s Controller (rev 11)
 
-    What are the changes since v1?
-
-MBR, Sergei
+lspci -n:
+02:00.0 0104: 1103:0622 (rev 01)
+02:00.1 0101: 1b4b:91a4 (rev 11)
