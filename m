@@ -1,37 +1,194 @@
-From: Mathias Anselmann <mathias.anselmann@googlemail.com>
-Subject: Failed to set xfermode DVR-215
-Date: Wed, 4 Jan 2012 00:30:50 +0100
-Message-ID: <20120103233050.GA30476@junkynutte>
+From: "Zhang, Sonic" <Sonic.Zhang@analog.com>
+Subject: RE: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Wed, 4 Jan 2012 01:04:50 -0500
+Message-ID: <DB904C5425BA6F4E8424B3B51A1414D16D76860EA1@NWD2CMBX1.ad.analog.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
+ <DB904C5425BA6F4E8424B3B51A1414D16D76860B88@NWD2CMBX1.ad.analog.com>
+ <4EFF24BF.20905@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47411 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312Ab2ACXda (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2012 18:33:30 -0500
-Received: by eekc4 with SMTP id c4so16285494eek.19
-        for <linux-ide@vger.kernel.org>; Tue, 03 Jan 2012 15:33:29 -0800 (PST)
-Content-Disposition: inline
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:57020
+	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752604Ab2ADGEl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Jan 2012 01:04:41 -0500
+In-Reply-To: <4EFF24BF.20905@mvista.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
 
-Hello,
-Since month I have an issue with my dvd writer: when I boot I (just
-sometimes) get up to three times this message (currently using kernel
-3.1.7):
+Hi Serge,
 
-ata4.00: failed to set xfermode (err_mask=0x4)
+The MULTI_DONE_INT, UDMAIN_DONE_INT and UDMAOUT_DONE_INT are triggered independent of the ATAPI_DEV_INT, although they bind to the same IRQ on bf548. With your patch, these interrupts are ignored and results in kernel error "unhandled IRQ".
 
-Here
-https://bugs.archlinux.org/task/21606
-I was told that this is a common problem with some Pioneer dvd writers
-and can be fixed by you, here are my device Informations from dmesg:
+If you insist the BMDMA emulation on bf548 should comply with INF-8038i. I would propose the following patch to disable all BF548 ATAPI specific interrupts.
 
-ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata4.00: ATAPI: PIONEER DVD-RW  DVR-215, 1.22, max UDMA/66
-ata4.00: configured for UDMA/6
 
-So it would be great if you could add my device to this patch,
-greetings
- Mathias Anselmann
+Sonic
+
+
+---
+ drivers/ata/pata_bf54x.c |   19 ++-----------------
+ 1 files changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+index bd987bb..9711c2a 100644
+--- a/drivers/ata/pata_bf54x.c
++++ b/drivers/ata/pata_bf54x.c
+@@ -418,14 +418,6 @@ static void bfin_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+                                        (tcyc_tdvs<<8 | tdvs));
+                                ATAPI_SET_ULTRA_TIM_2(base, (tmli<<8 | tss));
+                                ATAPI_SET_ULTRA_TIM_3(base, (trp<<8 | tzah));
+-
+-                               /* Enable host ATAPI Untra DMA interrupts */
+-                               ATAPI_SET_INT_MASK(base,
+-                                       ATAPI_GET_INT_MASK(base)
+-                                       | UDMAIN_DONE_MASK
+-                                       | UDMAOUT_DONE_MASK
+-                                       | UDMAIN_TERM_MASK
+-                                       | UDMAOUT_TERM_MASK);
+                        }
+                }
+        }
+@@ -470,10 +462,6 @@ static void bfin_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+                        ATAPI_SET_MULTI_TIM_0(base, (tm<<8 | td));
+                        ATAPI_SET_MULTI_TIM_1(base, (tkr<<8 | tkw));
+                        ATAPI_SET_MULTI_TIM_2(base, (teoc<<8 | th));
+-
+-                       /* Enable host ATAPI Multi DMA interrupts */
+-                       ATAPI_SET_INT_MASK(base, ATAPI_GET_INT_MASK(base)
+-                               | MULTI_DONE_MASK | MULTI_TERM_MASK);
+                        SSYNC();
+                }
+        }
+@@ -1155,13 +1143,10 @@ static unsigned char bfin_bmdma_status(struct ata_port *ap)
+        void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+        unsigned short int_status = ATAPI_GET_INT_STATUS(base);
+
+-       if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON|ULTRA_XFER_ON))
++       if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON | ULTRA_XFER_ON))
+                host_stat |= ATA_DMA_ACTIVE;
+-       if (int_status & (MULTI_DONE_INT|UDMAIN_DONE_INT|UDMAOUT_DONE_INT|
+-               ATAPI_DEV_INT))
++       if (ATAPI_GET_INT_STATUS(base) & ATAPI_DEV_INT)
+                host_stat |= ATA_DMA_INTR;
+-       if (int_status & (MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
+-               host_stat |= ATA_DMA_ERR|ATA_DMA_INTR;
+
+        dev_dbg(ap->dev, "ATAPI: host_stat=0x%x\n", host_stat);
+
+--
+1.7.0.4
+
+
+
+-----Original Message-----
+From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+Sent: Saturday, December 31, 2011 11:06 PM
+To: Zhang, Sonic
+Cc: Sergei Shtylyov; linux-ide@vger.kernel.org; jgarzik@pobox.com
+Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
+
+Hello.
+
+On 31-12-2011 7:22, Zhang, Sonic wrote:
+
+> Hi Shtylyov,
+
+    I prefer Sergei.
+    And please wrap your messages at 80 characters or less.
+
+> After I review the BF54x ATAPI and DMA spec again, I have to NAK your following patch.
+> The BF54x ATAPI DMA controller doesn't comply with INF-8038i.
+
+    If you are emulating SFF-8038i register interface (which you are doing by
+implementing "bmdma" set of libata methods -- and bmdma_status() method in
+perticular), you *have to comply*. Either comply, or don't do it at all.
+
+> Interrupts MULTI_DONE_INT, UDMAIN_DONE_INT and UDMAOUT_DONE_INT are generated by BF54x ATAPI host controller. They also indicate the completion of various types of ATAPI transfers.  So do interrupts MULTI_TERM_INT, UDMAIN_TERM_INT and UDMAOUT_TERM_INT, which indicate the device termination of the ATAPI DMA transfer.
+
+    Device can only terminate DMA burst at which point it's up to the host
+controller to decide whether it was the last burst or not. This can only be
+done with the help of the signals external to DMA interfacem, i.e. INTRQ.
+
+> In BF54x hardware reference manual:
+
+> After servicing the interrupt source associated with a bit, the user must
+> clear that interrupt source bit. ATA_DEV_INT is the interrupt generated by
+> the device. The rest of the interrupts are generated by the host. Either the
+> device or the host interrupt can be used by the firmware.
+
+> The PIO_DONE_INT, MULTI_DONE_INT, ULTRA_IN_DONE_INT, and
+> ULTRA_OUT_DONE_INT (W1C) bits indicate that interrupts have been
+> asserted on completion of various types of transfers.
+
+> The MULTI_TERM_INT (W1C) bit indicates that the interrupt has been
+> asserted on device terminate of the multiword DMA transfer.
+
+> The ULTRA_IN_TERM_INT and ULTRA_OUT_TERM_INT (W1C) bits indicate
+> that interrupts have been asserted on device termination of ultra DMA in
+> or out transfers.
+
+    I have read all that... it doesn't justify your NAK in any way. Just test
+the patch and report the result.
+
+> Sonic
+
+> -----Original Message-----
+> From: Sergei Shtylyov [mailto:sshtylyov@ru.mvista.com]
+> Sent: Wednesday, December 28, 2011 11:37 PM
+> To: linux-ide@vger.kernel.org; jgarzik@pobox.com; Zhang, Sonic
+> Subject: [PATCH] pata_bf54x: fix BMIDE status register emulation
+>
+> The author of this driver clearly wasn't familiar with the BMIDE specification
+> (also known as SFF-8038i) when he implemented the bmdma_status() method: first,
+> the interrupt bit of the BMIDE status register corresponds to nothing else but
+> INTRQ signal (ATAPI_DEV_INT here); second, the error bit is only set if the
+> controller encounters issue doing the bus master transfers, not on the DMA burst
+> termination interrupts like here (moreover, setting the error bit doesn't cause
+> an interrupt).
+>
+> (The only thing I couldn't figure out is how to flush the FIFO to memory once
+> the interrupt happens as required by the mentioned spec.)
+>
+> Signed-off-by: Sergei Shtylyov<sshtylyov@ru.mvista.com>
+>
+> ---
+> The patch is against the current Linus' tree.
+> Sonic, if you still work in Analog Devices, please give this a try.
+>
+> I looked over the driver, and it left pretty bad impression. In particular,
+> I highly doubt that the transfers with more than one S/G item can work. And
+> this is after the driver has been in the kernel for 4 years already...
+> Unfortunately, I have neither hardware nor much time to work on improving it...
+>
+>   drivers/ata/pata_bf54x.c |    8 ++------
+>   1 file changed, 2 insertions(+), 6 deletions(-)
+>
+> Index: linux-2.6/drivers/ata/pata_bf54x.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/pata_bf54x.c
+> +++ linux-2.6/drivers/ata/pata_bf54x.c
+> @@ -1153,15 +1153,11 @@ static unsigned char bfin_bmdma_status(s
+>   {
+>          unsigned char host_stat = 0;
+>          void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
+> -       unsigned short int_status = ATAPI_GET_INT_STATUS(base);
+>
+> -       if (ATAPI_GET_STATUS(base)&  (MULTI_XFER_ON|ULTRA_XFER_ON))
+> +       if (ATAPI_GET_STATUS(base)&  (MULTI_XFER_ON | ULTRA_XFER_ON))
+>                  host_stat |= ATA_DMA_ACTIVE;
+> -       if (int_status&  (MULTI_DONE_INT|UDMAIN_DONE_INT|UDMAOUT_DONE_INT|
+> -               ATAPI_DEV_INT))
+> +       if (ATAPI_GET_INT_STATUS(base)&  ATAPI_DEV_INT)
+>                  host_stat |= ATA_DMA_INTR;
+> -       if (int_status&  (MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
+> -               host_stat |= ATA_DMA_ERR|ATA_DMA_INTR;
+>
+>          dev_dbg(ap->dev, "ATAPI: host_stat=0x%x\n", host_stat);
+
+
