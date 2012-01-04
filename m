@@ -1,99 +1,36 @@
 From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
-Date: Wed, 04 Jan 2012 17:21:59 +0400
-Message-ID: <4F045277.1080009@mvista.com>
-References: <201112281836.45834.sshtylyov@ru.mvista.com> <DB904C5425BA6F4E8424B3B51A1414D16D76860B88@NWD2CMBX1.ad.analog.com> <4EFF24BF.20905@mvista.com> <DB904C5425BA6F4E8424B3B51A1414D16D76860EA1@NWD2CMBX1.ad.analog.com>
+Subject: Re: [PATCH v2] ata: pata_bf54x: Support sg list in bmdma transfer.
+Date: Wed, 04 Jan 2012 17:23:04 +0400
+Message-ID: <4F0452B8.4090101@mvista.com>
+References: <1325657211-21904-1-git-send-email-sonic.adi@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:64368 "EHLO
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:37558 "EHLO
 	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755377Ab2ADNXD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 08:23:03 -0500
-Received: by eaad14 with SMTP id d14so9364055eaa.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 05:23:02 -0800 (PST)
-In-Reply-To: <DB904C5425BA6F4E8424B3B51A1414D16D76860EA1@NWD2CMBX1.ad.analog.com>
+	with ESMTP id S1755234Ab2ADNYI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 08:24:08 -0500
+Received: by eaad14 with SMTP id d14so9364758eaa.19
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 05:24:07 -0800 (PST)
+In-Reply-To: <1325657211-21904-1-git-send-email-sonic.adi@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Zhang, Sonic" <Sonic.Zhang@analog.com>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
+To: Sonic Zhang <sonic.adi@gmail.com>
+Cc: David Miller <davem@davemloft.net>, jgarzik@pobox.com, linux-ide@vger.kernel.org, uclinux-dist-devel@blackfin.uclinux.org, Sonic Zhang <sonic.zhang@analog.com>
 
 Hello.
 
-On 04-01-2012 10:04, Zhang, Sonic wrote:
+On 04-01-2012 10:06, Sonic Zhang wrote:
 
-> Hi Serge,
+> From: Sonic Zhang<sonic.zhang@analog.com>
 
-> The MULTI_DONE_INT, UDMAIN_DONE_INT and UDMAOUT_DONE_INT are triggered independent
-> of the ATAPI_DEV_INT, although they bind to the same IRQ on bf548. With your patch,
- > these interrupts are ignored and results in kernel error "unhandled IRQ".
+> BF54x on-chip ATAPI controller allows maximum 0x1fffe bytes to be transfered
+> in one ATAPI transfer. So, set the max sg_tablesize to 4.
 
-    Ah, indeed...
-
-> If you insist the BMDMA emulation on bf548 should comply with INF-8038i.
-
-    It's not that I insist. It clearly follows from libata implemeting 
-bmdma_status() method.
-
-> I would propose the following patch to disable all BF548 ATAPI specific interrupts.
-
-    Yes, I agree -- they don't seem needed. And that will simplify the driver 
-too. I'll recast the patch and add your signoff if you agree.
-
-> Sonic
-
+> Signed-off-by: Sonic Zhang<sonic.zhang@analog.com>
 > ---
->   drivers/ata/pata_bf54x.c |   19 ++-----------------
->   1 files changed, 2 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
-> index bd987bb..9711c2a 100644
-> --- a/drivers/ata/pata_bf54x.c
-> +++ b/drivers/ata/pata_bf54x.c
-> @@ -418,14 +418,6 @@ static void bfin_set_dmamode(struct ata_port *ap, struct ata_device *adev)
->                                          (tcyc_tdvs<<8 | tdvs));
->                                  ATAPI_SET_ULTRA_TIM_2(base, (tmli<<8 | tss));
->                                  ATAPI_SET_ULTRA_TIM_3(base, (trp<<8 | tzah));
-> -
-> -                               /* Enable host ATAPI Untra DMA interrupts */
-> -                               ATAPI_SET_INT_MASK(base,
-> -                                       ATAPI_GET_INT_MASK(base)
-> -                                       | UDMAIN_DONE_MASK
-> -                                       | UDMAOUT_DONE_MASK
-> -                                       | UDMAIN_TERM_MASK
-> -                                       | UDMAOUT_TERM_MASK);
->                          }
->                  }
->          }
-> @@ -470,10 +462,6 @@ static void bfin_set_dmamode(struct ata_port *ap, struct ata_device *adev)
->                          ATAPI_SET_MULTI_TIM_0(base, (tm<<8 | td));
->                          ATAPI_SET_MULTI_TIM_1(base, (tkr<<8 | tkw));
->                          ATAPI_SET_MULTI_TIM_2(base, (teoc<<8 | th));
-> -
-> -                       /* Enable host ATAPI Multi DMA interrupts */
-> -                       ATAPI_SET_INT_MASK(base, ATAPI_GET_INT_MASK(base)
-> -                               | MULTI_DONE_MASK | MULTI_TERM_MASK);
->                          SSYNC();
->                  }
->          }
-> @@ -1155,13 +1143,10 @@ static unsigned char bfin_bmdma_status(struct ata_port *ap)
->          void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
->          unsigned short int_status = ATAPI_GET_INT_STATUS(base);
->
-> -       if (ATAPI_GET_STATUS(base)&  (MULTI_XFER_ON|ULTRA_XFER_ON))
-> +       if (ATAPI_GET_STATUS(base)&  (MULTI_XFER_ON | ULTRA_XFER_ON))
->                  host_stat |= ATA_DMA_ACTIVE;
-> -       if (int_status&  (MULTI_DONE_INT|UDMAIN_DONE_INT|UDMAOUT_DONE_INT|
-> -               ATAPI_DEV_INT))
-> +       if (ATAPI_GET_INT_STATUS(base)&  ATAPI_DEV_INT)
->                  host_stat |= ATA_DMA_INTR;
-> -       if (int_status&  (MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
-> -               host_stat |= ATA_DMA_ERR|ATA_DMA_INTR;
->
->          dev_dbg(ap->dev, "ATAPI: host_stat=0x%x\n", host_stat);
->
-> --
-> 1.7.0.4
 
-WBR, Sergei
+    What are the changes since v1?
+
+MBR, Sergei
