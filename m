@@ -1,110 +1,165 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: Recurring error with SATA driver.
-Date: Wed, 4 Jan 2012 18:10:25 -0800
-Message-ID: <CAMHSBOW+6cb1BHRsKkB3C=g6eFhVDfkeV5X69Ek4cU+0Srv7AQ@mail.gmail.com>
-References: <alpine.LNX.2.00.1201031929290.1620@snarked.org>
+From: Sonic Zhang <sonic.adi@gmail.com>
+Subject: Re: [PATCH] pata_bf54x: fix BMIDE status register emulation
+Date: Thu, 5 Jan 2012 10:45:03 +0800
+Message-ID: <CAJxxZ0Mtt4iMH9TJp=2rwB5buGXFofLt+4H2Tbns=hGZg9Gk5w@mail.gmail.com>
+References: <201112281836.45834.sshtylyov@ru.mvista.com>
+	<DB904C5425BA6F4E8424B3B51A1414D16D76860B88@NWD2CMBX1.ad.analog.com>
+	<4EFF24BF.20905@mvista.com>
+	<DB904C5425BA6F4E8424B3B51A1414D16D76860EA1@NWD2CMBX1.ad.analog.com>
+	<4F045277.1080009@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:48665 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756496Ab2AECK0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Jan 2012 21:10:26 -0500
-Received: by obcwo16 with SMTP id wo16so68629obc.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 18:10:25 -0800 (PST)
-In-Reply-To: <alpine.LNX.2.00.1201031929290.1620@snarked.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:55195 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754014Ab2AECpG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 21:45:06 -0500
+Received: by bkcjm19 with SMTP id jm19so12261bkc.19
+        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 18:45:04 -0800 (PST)
+In-Reply-To: <4F045277.1080009@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "D. Stussy" <replies+newsgroups@kd6lvw.ampr.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: "Zhang, Sonic" <Sonic.Zhang@analog.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>
 
-Can you give more details?
+On Wed, Jan 4, 2012 at 9:21 PM, Sergei Shtylyov <sshtylyov@mvista.com> =
+wrote:
+> Hello.
+>
+>
+> On 04-01-2012 10:04, Zhang, Sonic wrote:
+>
+>> Hi Serge,
+>
+>
+>> The MULTI_DONE_INT, UDMAIN_DONE_INT and UDMAOUT_DONE_INT are trigger=
+ed
+>> independent
+>> of the ATAPI_DEV_INT, although they bind to the same IRQ on bf548. W=
+ith
+>> your patch,
+>
+>> these interrupts are ignored and results in kernel error "unhandled =
+IRQ".
+>
+> =A0 Ah, indeed...
+>
+>
+>> If you insist the BMDMA emulation on bf548 should comply with INF-80=
+38i.
+>
+>
+> =A0 It's not that I insist. It clearly follows from libata implemetin=
+g
+> bmdma_status() method.
+>
+>
+>> I would propose the following patch to disable all BF548 ATAPI speci=
+fic
+>> interrupts.
+>
+>
+> =A0 Yes, I agree -- they don't seem needed. And that will simplify th=
+e driver
+> too. I'll recast the patch and add your signoff if you agree.
 
-- output of
-lspci -vv -s 0000:00:11.0
+No problem.
 
-- output of
-hdparm -I /dev/sda
+Sonic
 
-- 40 lines below and above the error line you reported 'ata1: illegal
-qc_active transition (3fffffff->fffffffe)' from /var/log/messages
-
-Gwendal.
-
-On Tue, Jan 3, 2012 at 11:33 AM, D. Stussy
-<replies+newsgroups@kd6lvw.ampr.org> wrote:
 >
-> ata1: illegal qc_active transition (3fffffff->fffffffe)
+>> Sonic
 >
-> I'm getting this about once every 3 days. =A0When this happens, the a=
-ffected partition is remounted read-only (per my file system error opti=
-ons).
 >
-> I am not certain if this is telling me I have a hardware error, incom=
-patibility, or if there's a design problem with the driver.
+>> ---
+>> =A0drivers/ata/pata_bf54x.c | =A0 19 ++-----------------
+>> =A01 files changed, 2 insertions(+), 17 deletions(-)
+>>
+>> diff --git a/drivers/ata/pata_bf54x.c b/drivers/ata/pata_bf54x.c
+>> index bd987bb..9711c2a 100644
+>> --- a/drivers/ata/pata_bf54x.c
+>> +++ b/drivers/ata/pata_bf54x.c
+>> @@ -418,14 +418,6 @@ static void bfin_set_dmamode(struct ata_port *a=
+p,
+>> struct ata_device *adev)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+=A0 =A0 =A0 (tcyc_tdvs<<8 | tdvs));
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAP=
+I_SET_ULTRA_TIM_2(base, (tmli<<8 |
+>> tss));
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAP=
+I_SET_ULTRA_TIM_3(base, (trp<<8 |
+>> tzah));
+>> -
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Ena=
+ble host ATAPI Untra DMA interrupts
+>> */
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_=
+SET_INT_MASK(base,
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 ATAPI_GET_INT_MASK(base)
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 | UDMAIN_DONE_MASK
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 | UDMAOUT_DONE_MASK
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 | UDMAIN_TERM_MASK
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+ =A0 =A0 | UDMAOUT_TERM_MASK);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>> =A0 =A0 =A0 =A0 }
+>> @@ -470,10 +462,6 @@ static void bfin_set_dmamode(struct ata_port *a=
+p,
+>> struct ata_device *adev)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_SET_MULTI_TIM_=
+0(base, (tm<<8 | td));
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_SET_MULTI_TIM_=
+1(base, (tkr<<8 | tkw));
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_SET_MULTI_TIM_=
+2(base, (teoc<<8 | th));
+>> -
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Enable host ATAPI M=
+ulti DMA interrupts */
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_SET_INT_MASK(bas=
+e, ATAPI_GET_INT_MASK(base)
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 | MULT=
+I_DONE_MASK | MULTI_TERM_MASK);
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 SSYNC();
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 }
+>> =A0 =A0 =A0 =A0 }
+>> @@ -1155,13 +1143,10 @@ static unsigned char bfin_bmdma_status(struc=
+t
+>> ata_port *ap)
+>> =A0 =A0 =A0 =A0 void __iomem *base =3D (void __iomem *)ap->ioaddr.ct=
+l_addr;
+>> =A0 =A0 =A0 =A0 unsigned short int_status =3D ATAPI_GET_INT_STATUS(b=
+ase);
+>>
+>> - =A0 =A0 =A0 if (ATAPI_GET_STATUS(base)& =A0(MULTI_XFER_ON|ULTRA_XF=
+ER_ON))
+>> + =A0 =A0 =A0 if (ATAPI_GET_STATUS(base)& =A0(MULTI_XFER_ON | ULTRA_=
+XFER_ON))
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 host_stat |=3D ATA_DMA_ACTIVE;
+>> - =A0 =A0 =A0 if (int_status& =A0(MULTI_DONE_INT|UDMAIN_DONE_INT|UDM=
+AOUT_DONE_INT|
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 ATAPI_DEV_INT))
+>> + =A0 =A0 =A0 if (ATAPI_GET_INT_STATUS(base)& =A0ATAPI_DEV_INT)
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 host_stat |=3D ATA_DMA_INTR;
+>> - =A0 =A0 =A0 if (int_status&
+>> =A0(MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
+>> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 host_stat |=3D ATA_DMA_ERR|ATA_DMA_INT=
+R;
+>>
+>> =A0 =A0 =A0 =A0 dev_dbg(ap->dev, "ATAPI: host_stat=3D0x%x\n", host_s=
+tat);
+>>
+>> --
+>> 1.7.0.4
 >
-> Seen with kernels: 3.0.14, 3.1.4, 3.1.5, and =A03.1.6
 >
-> Motherboard: =A0Supermicro H8SCM-F
-> Disk Drives: =A0Seagate 1.8TB drives
->
-> Kernel log messages:
-> pci 0000:00:11.0: set SATA to AHCI mode
-> libata version 3.00 loaded.
-> ahci 0000:00:11.0: AHCI 0001.0100 32 slots 4 ports 3 Gbps 0xf impl SA=
-TA mode
-> ata1: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa500 irq 22
-> ata2: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa580 irq 22
-> ata3: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa600 irq 22
-> ata4: SATA max UDMA/133 abar m1024@0xfe9fa400 port 0xfe9fa680 irq 22
-> ata3: SATA link down (SStatus 0 SControl 300)
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> ata1.00: ATA-8: ST32000644NS, SN11, max UDMA/133
-> ata1.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> ata2.00: ATA-8: ST32000644NS, SN11, max UDMA/133
-> ata2.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> ata4.00: ATAPI: Optiarc DVD RW AD-7700S, 1.03, max UDMA/100
-> ata1.00: configured for UDMA/133
-> ata2.00: configured for UDMA/133
-> scsi 0:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0ST32000644NS =A0 =A0=
- SN11 PQ: 0 ANSI: 5
-> sd 0:0:0:0: [sda] 3907029168 512-byte logical blocks: (2.00 TB/1.81 T=
-iB)
-> scsi 1:0:0:0: Direct-Access =A0 =A0 ATA =A0 =A0 =A0ST32000644NS =A0 =A0=
- SN11 PQ: 0 ANSI: 5
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't =
-support DPO or FUA
-> sd 1:0:0:0: [sdb] 3907029168 512-byte logical blocks: (2.00 TB/1.81 T=
-iB)
-> sd 1:0:0:0: [sdb] Write Protect is off
-> sd 1:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-> sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't =
-support DPO or FUA
-> ata4.00: configured for UDMA/100
-> =A0sda: sda1
-> sd 0:0:0:0: [sda] Attached SCSI disk
-> =A0sdb: sdb1
-> sd 1:0:0:0: [sdb] Attached SCSI disk
-> scsi 3:0:0:0: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0Optiarc =A0DVD RW AD-7700=
-S =A01.03 PQ: 0 ANSI: 5
->
-> Kernel options:
-> CONFIG_SCSI_SAS_ATA=3Dy
-> CONFIG_ATA=3Dy
-> CONFIG_ATA_VERBOSE_ERROR=3Dy
-> CONFIG_ATA_ACPI=3Dy
-> CONFIG_SATA_PMP=3Dy
-> CONFIG_SATA_AHCI=3Dy
-> CONFIG_ATA_SFF=3Dy
-> CONFIG_ATA_BMDMA=3Dy
-> CONFIG_PATA_AMD=3Dy
-> CONFIG_ATA_GENERIC=3Dy
+> WBR, Sergei
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-ide" =
