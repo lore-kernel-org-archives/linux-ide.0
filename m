@@ -1,43 +1,66 @@
-From: Peter Silva <Peter.A.Silva@gmail.com>
-Subject: highpoint rocketraid 622 regression, no longer recognized post 3.0 kernel.
-Date: Wed, 4 Jan 2012 16:24:13 -0500
-Message-ID: <CADL7PvjzZaADGGPO6J1yRtSPjTzcbMOPu-oerkrtQrW0UVWRRw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Wed, 4 Jan 2012 17:24:45 -0800
+Message-ID: <20120105012445.GP31746@google.com>
+References: <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+ <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
+ <20120103200906.GG31746@google.com>
+ <4F03631C.8080501@kernel.dk>
+ <20120103221301.GH31746@google.com>
+ <20120103223505.GI31746@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:45467 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756935Ab2ADVYO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 16:24:14 -0500
-Received: by wibhm6 with SMTP id hm6so10236518wib.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jan 2012 13:24:13 -0800 (PST)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62717 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757506Ab2AEBYv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jan 2012 20:24:51 -0500
+Content-Disposition: inline
+In-Reply-To: <20120103223505.GI31746@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Hugh Dickins <hughd@google.com>, Shaohua Li <shaohua.li@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 
-Hi
+Hello, again.
 
-This was originally submitted as bugzilla.kernel.org # 37642.  I don't
-know where to continue followup since that server's demise.  to recap
-previous report:
+On Tue, Jan 03, 2012 at 02:35:05PM -0800, Tejun Heo wrote:
+> > Hmmm... I disabled cfqq merge logic (commented out
+> > cfq_close_cooperator() and the following cfq_setup_merge() calls) in
+> > cfq_select_queue() and neither is triggering for quite a while now.
+> > Maybe cfqq refcnt is getting borked over cfqq merging / splitting?  It
+> > would also explain the low frequency of the issue too.  I'll try to
+> > further isolate it but It would be awesome if someone more familiar
+> > with the logic can go over that part.
+> 
+> Scrap that.  It triggered and yeah cfq_get_next_queue() is retrieving
+> empty cfqq from the service tree.
 
-am using the device on a system that was running ubuntu 2.6.38 kernel.
- where all six drives in this external RAID unit were presented to the
-operating system without issue. (standard ubuntu 11.04 kernel.) I am
-not interested in the software raid part, just want to use the
-external enclosure as JBOD, and use an os based technology for ganging
-the disks. When upgraded to 11.10, with 3.0.0 kernel, the disks units
-are no longer recognized.  Tejun Heo asked me to try various bios
-options.  they were tried and had no effect.  was asked to add a
-little code to ahci.c to recognize 91a4.  It had no effect.
+Update: I've been running with ELEVATOR_INSERT_SORT_MERGE disabled and
+none of the issues triggered for about three hours now.  It usually
+triggers under an hour.
 
-kernel version is pinned to old one for now.
+Hugh, can you please verify whether the patch appended at the end
+makes the problem go away?
 
-lspci:
-02:00.0 RAID bus controller: HighPoint Technologies, Inc. Device 0622 (rev 01)
-02:00.1 IDE interface: Marvell Technology Group Ltd. 88SE91A4 SATA
-6Gb/s Controller (rev 11)
+Thanks.
 
-lspci -n:
-02:00.0 0104: 1103:0622 (rev 01)
-02:00.1 0101: 1b4b:91a4 (rev 11)
+diff --git a/block/elevator.c b/block/elevator.c
+index 99838f4..2e172d2 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -644,6 +644,9 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ 
+ 	rq->q = q;
+ 
++	if (where == ELEVATOR_INSERT_SORT_MERGE)
++		where = ELEVATOR_INSERT_SORT;
++
+ 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+ 		/* barriers are scheduling boundary, update end_sector */
+ 		if (rq->cmd_type == REQ_TYPE_FS ||
