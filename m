@@ -1,119 +1,85 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT PATCH v3 00/14] libsas: eh reworks (ata-eh vs discovery,
- races, ...)
-Date: Thu, 05 Jan 2012 17:46:40 -0800
-Message-ID: <1325814402.17049.5.camel@ultramagnus.opencreations.com>
-References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH block:for-3.3/core] cfq: merged request shouldn't jump to a
+ different cfqq
+Date: Thu, 5 Jan 2012 18:17:07 -0800
+Message-ID: <20120106021707.GA6276@google.com>
+References: <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
+ <20120103200906.GG31746@google.com>
+ <4F03631C.8080501@kernel.dk>
+ <20120103221301.GH31746@google.com>
+ <20120103223505.GI31746@google.com>
+ <20120105012445.GP31746@google.com>
+ <alpine.LSU.2.00.1201051026090.2009@eggly.anvils>
+ <20120105183842.GF18486@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga12.intel.com ([143.182.124.36]:12100 "EHLO
-	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754602Ab2AFBqo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jan 2012 20:46:44 -0500
-In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120105183842.GF18486@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Shaohua Li <shaohua.li@intel.com>, Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
 
-On Thu, 2012-01-05 at 16:59 -0800, Dan Williams wrote:
-> Note, the patches mailed with this update only include the libsas patches
-> that have been revised since v2, and the isci updates that were
-> dependent on these changes.
-> 
-> For the full set in proper order see the current state of the 'libsas'
-> branch in isci.git (commit c3766a3):
+When two requests are merged, if the absorbed request is older than
+the absorbing one, cfq_merged_requests() tries to reposition it in the
+cfqq->fifo list by list_move()'ing the absorbing request to the
+absorbed one before removing it.
 
-Just noticed that scsi-misc was rebased since last checked.   Patch kit
-re-flowed (none of the contents changed).  'libsas' is now at commit
-5c41dc3:
+This works if both requests are on the same cfqq but nothing
+guarantees that and the code ends up moving the merged request to a
+different cfqq's fifo list without adjusting the rest.  This leads to
+the following failures.
 
-The following changes since commit 5c41dc3a79150e93e5d050871a10b761be8281a1:
+* A request may be on the fifo list of a cfqq without holding
+  reference to it and the cfqq can be freed before requst is finished.
+  Among other things, this triggers list debug warning and slab debug
+  use-after-free warning.
 
-  [SCSI] lpfc 8.3.28: Update driver version to 8.3.28 (2011-12-15 10:57:45 +0400)
+* As a request can be on the wrong fifo queue, it may be issued and
+  completed before its cfqq is scheduled.  If the cfqq didn't have
+  other requests on it, it would be empty by the time it's dispatched
+  triggering BUG_ON() in cfq_dispatch_request().
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas
+Fix it by making cfq_merged_requests() scan the absorbing request's
+fifo list for the correct slot and move there instead.
 
-Dan Williams (33):
-      libsas: remove unused ata_task_resp fields
-      libsas: kill sas_slave_destroy
-      libsas: fix domain_device leak
-      libsas: fix leak of dev->sata_dev.identify_[packet_]device
-      libsas: replace event locks with atomic bitops
-      libsas: convert ha->state to flags
-      libsas: introduce sas_drain_work()
-      libsas: remove ata_port.lock management duties from lldds
-      libsas: prevent domain rediscovery competing with ata error handling
-      libsas: use ->set_dmamode to notify lldds of NCQ parameters
-      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
-      libsas: close error handling vs sas_ata_task_done() race
-      libsas: prevent double completion of scmds from eh
-      libsas: fix timeout vs completion race
-      libsas: let libata handle command timeouts
-      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
-      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
-      libsas: perform sas-transport resets in shost->workq context
-      libsas: execute transport link resets with libata-eh via host workqueue
-      libsas: sas_phy_enable via transport_sas_phy_reset
-      libsas: async ata-eh
-      libsas: poll for ata device readiness after reset
-      libsas: don't mark expanders as gone when a child device is removed
-      libsas: check for 'gone' expanders in smp_execute_task()
-      libsas: fix sas_find_local_phy(), take phy references
-      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
-      isci: kill iphy->isci_port lookups
-      isci: kill isci_port->status
-      isci: fix interpretation of "hard" reset
-      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
-      isci: ->lldd_ata_check_ready handler
-      isci: remove bus and reset handlers
-      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Hugh Dickins <hughd@google.com>
+Cc: stable@vger.kernel.org
+---
+It survived my testing long enough and I'm relatively confident this
+should fix the crash but I might have gotten the scanning wrong, so
+please pay extra attention there.
 
-Jeff Skirvin (2):
-      libsas: Remove redundant phy state notification calls.
-      libsas: add mutex for SMP task execution
+I suspect we just didn't have enough backward request-request merges
+before the recent plug merge updates to trigger this bug.
 
- Documentation/scsi/libsas.txt       |   15 -
- drivers/ata/libata-eh.c             |    1 +
- drivers/ata/libata.h                |    1 -
- drivers/scsi/aic94xx/aic94xx.h      |    2 +
- drivers/scsi/aic94xx/aic94xx_dev.c  |   38 ++-
- drivers/scsi/aic94xx/aic94xx_init.c |    5 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 +-
- drivers/scsi/isci/host.c            |    8 +-
- drivers/scsi/isci/host.h            |   19 +-
- drivers/scsi/isci/init.c            |   13 +-
- drivers/scsi/isci/phy.c             |   18 +-
- drivers/scsi/isci/phy.h             |    1 -
- drivers/scsi/isci/port.c            |  220 ++++++------
- drivers/scsi/isci/port.h            |   11 +-
- drivers/scsi/isci/remote_device.c   |   32 +--
- drivers/scsi/isci/remote_device.h   |    7 +-
- drivers/scsi/isci/request.c         |  198 +----------
- drivers/scsi/isci/request.h         |    9 +-
- drivers/scsi/isci/task.c            |  158 ++-------
- drivers/scsi/isci/task.h            |   40 --
- drivers/scsi/libsas/sas_ata.c       |  685 +++++++++++++++--------------------
- drivers/scsi/libsas/sas_discover.c  |  151 +++++++--
- drivers/scsi/libsas/sas_event.c     |   89 +++++-
- drivers/scsi/libsas/sas_expander.c  |  107 ++++--
- drivers/scsi/libsas/sas_init.c      |  192 +++++++++-
- drivers/scsi/libsas/sas_internal.h  |   73 ++--
- drivers/scsi/libsas/sas_phy.c       |   12 +-
- drivers/scsi/libsas/sas_port.c      |   24 +-
- drivers/scsi/libsas/sas_scsi_host.c |  299 +++++++---------
- drivers/scsi/mvsas/mv_init.c        |    1 -
- drivers/scsi/mvsas/mv_sas.c         |   11 +-
- drivers/scsi/pm8001/pm8001_init.c   |    1 -
- drivers/scsi/pm8001/pm8001_sas.c    |   29 +-
- drivers/scsi/scsi_transport_sas.c   |   59 +++-
- include/linux/libata.h              |    1 +
- include/scsi/libsas.h               |   59 ++--
- include/scsi/sas_ata.h              |   26 +-
- include/scsi/scsi_transport_sas.h   |   12 +-
- 38 files changed, 1292 insertions(+), 1344 deletions(-)
+Thanks.
 
+ block/cfq-iosched.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 163263d..a235cf3 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1663,8 +1663,15 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
+ 	 */
+ 	if (!list_empty(&rq->queuelist) && !list_empty(&next->queuelist) &&
+ 	    time_before(rq_fifo_time(next), rq_fifo_time(rq))) {
+-		list_move(&rq->queuelist, &next->queuelist);
++		struct request *pos = rq;
++
+ 		rq_set_fifo_time(rq, rq_fifo_time(next));
++
++		list_for_each_entry_continue_reverse(pos, &cfqq->fifo, queuelist)
++			if (time_before_eq(rq_fifo_time(pos), rq_fifo_time(rq)))
++				break;
++		if (rq != pos)
++			list_move(&rq->queuelist, &pos->queuelist);
+ 	}
+ 
+ 	if (cfqq->next_rq == next)
