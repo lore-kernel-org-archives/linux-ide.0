@@ -1,86 +1,138 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v2] pata_bf54x: fix BMIDE status register emulation
-Date: Fri, 6 Jan 2012 20:45:45 +0300
-Message-ID: <201201062045.45250.sshtylyov@ru.mvista.com>
-References: <201112281836.45834.sshtylyov@ru.mvista.com>
+From: Orson <orson.wellies@gmail.com>
+Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch } ExpressCard,
+ sometimes fails to boot
+Date: Sat, 07 Jan 2012 12:21:55 +0200
+Message-ID: <4F081CC3.90506@gmail.com>
+References: <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:54473 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751022Ab2AFQqw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2012 11:46:52 -0500
-In-Reply-To: <201112281836.45834.sshtylyov@ru.mvista.com>
-Content-Disposition: inline
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:57987 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab2AGKWA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 7 Jan 2012 05:22:00 -0500
+Received: by eekc4 with SMTP id c4so1499909eek.19
+        for <linux-ide@vger.kernel.org>; Sat, 07 Jan 2012 02:21:59 -0800 (PST)
+In-Reply-To: <201112160255.pBG2tqEd003330@jmr105.jmicron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
-Cc: sonic.zhang@analog.com
+To: Show lu <showlu@jmicron.com>
+Cc: 'Steven Chen' <stevenchen@jmicron.com>, 'Jonathan Nieder' <jrnieder@gmail.com>, linux-ide@vger.kernel.org, 'Tejun Heo' <tj@kernel.org>, 'Aries Lee' <arieslee@jmicron.com>
 
-The author of this driver clearly wasn't familiar with the BMIDE specification
-(also known as SFF-8038i) when he implemented the bmdma_status() method: first,
-the interrupt bit of the BMIDE status register corresponds to nothing else but
-INTRQ signal (ATAPI_DEV_INT here); second, the error bit is only set if the
-controller encounters issue doing the bus master transfers, not on the IDE DMA
-burst termination interrupts like here (moreover, setting the error bit doesn't
-cause an interrupt).  We now need to disable all those unused interrupts...
+Hi,
 
-(The only thing I couldn't figure out is how to flush the FIFO to memory once
-the interrupt happens as required by the mentioned spec.)
+Having received the replacement express card (197b:2363) I can confirm 
+that the card in question appears to have been faulty.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Signed-off-by: Sonic Zhang <sonic.zhang@analog.com>
+The new express card performs flawlessly, I can cold boot / warm boot to 
+Linux or windows without receiving any error message, and after several 
+days of testing external disks I can honestly say that everything went 
+without a hitch.
 
- drivers/ata/pata_bf54x.c |   20 ++------------------
- 1 file changed, 2 insertions(+), 18 deletions(-)
+So, I would be happy if the bug report was closed with reason being due 
+to faulty hardware.
 
-Index: linux-2.6/drivers/ata/pata_bf54x.c
-===================================================================
---- linux-2.6.orig/drivers/ata/pata_bf54x.c
-+++ linux-2.6/drivers/ata/pata_bf54x.c
-@@ -418,14 +418,6 @@ static void bfin_set_dmamode(struct ata_
- 					(tcyc_tdvs<<8 | tdvs));
- 				ATAPI_SET_ULTRA_TIM_2(base, (tmli<<8 | tss));
- 				ATAPI_SET_ULTRA_TIM_3(base, (trp<<8 | tzah));
--
--				/* Enable host ATAPI Untra DMA interrupts */
--				ATAPI_SET_INT_MASK(base,
--					ATAPI_GET_INT_MASK(base)
--					| UDMAIN_DONE_MASK
--					| UDMAOUT_DONE_MASK
--					| UDMAIN_TERM_MASK
--					| UDMAOUT_TERM_MASK);
- 			}
- 		}
- 	}
-@@ -470,10 +462,6 @@ static void bfin_set_dmamode(struct ata_
- 			ATAPI_SET_MULTI_TIM_0(base, (tm<<8 | td));
- 			ATAPI_SET_MULTI_TIM_1(base, (tkr<<8 | tkw));
- 			ATAPI_SET_MULTI_TIM_2(base, (teoc<<8 | th));
--
--			/* Enable host ATAPI Multi DMA interrupts */
--			ATAPI_SET_INT_MASK(base, ATAPI_GET_INT_MASK(base)
--				| MULTI_DONE_MASK | MULTI_TERM_MASK);
- 			SSYNC();
- 		}
- 	}
-@@ -1153,15 +1141,11 @@ static unsigned char bfin_bmdma_status(s
- {
- 	unsigned char host_stat = 0;
- 	void __iomem *base = (void __iomem *)ap->ioaddr.ctl_addr;
--	unsigned short int_status = ATAPI_GET_INT_STATUS(base);
- 
--	if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON|ULTRA_XFER_ON))
-+	if (ATAPI_GET_STATUS(base) & (MULTI_XFER_ON | ULTRA_XFER_ON))
- 		host_stat |= ATA_DMA_ACTIVE;
--	if (int_status & (MULTI_DONE_INT|UDMAIN_DONE_INT|UDMAOUT_DONE_INT|
--		ATAPI_DEV_INT))
-+	if (ATAPI_GET_INT_STATUS(base) & ATAPI_DEV_INT)
- 		host_stat |= ATA_DMA_INTR;
--	if (int_status & (MULTI_TERM_INT|UDMAIN_TERM_INT|UDMAOUT_TERM_INT))
--		host_stat |= ATA_DMA_ERR|ATA_DMA_INTR;
- 
- 	dev_dbg(ap->dev, "ATAPI: host_stat=0x%x\n", host_stat);
- 
+regards
+
+Orson
+
+On 16/12/11 04:55, Show lu wrote:
+> Dear Sirs,
+> Good day,
+> I am JMicron/Show and take over JMB36X FAE activity
+> Please help to shows the PCIE CFG registers(of JMB36X) at first.
+>
+>
+> Thanks
+> Sincerely
+> Show
+>
+>
+>
+> -----Original Message-----
+> From: Steven Chen [mailto:stevenchen@jmicron.com]
+> Sent: Friday, December 16, 2011 10:52 AM
+> To: 'Jonathan Nieder'; linux-ide@vger.kernel.org; 'Show lu'
+> Cc: 'Tejun Heo'; 'Orson'; 'Aries Lee'
+> Subject: RE: JMicron Technology JMB362 JMB363 SError: { DevExch }
+> ExpressCard, sometimes fails to boot
+>
+> Add Show in this mail loop.
+>
+> -----Original Message-----
+> From: Jonathan Nieder [mailto:jrnieder@gmail.com]
+> Sent: Wednesday, December 14, 2011 6:45 AM
+> To: linux-ide@vger.kernel.org
+> Cc: 'Tejun Heo'; 'Orson'; Aries Lee
+> Subject: Re: JMicron Technology JMB362 JMB363 SError: { DevExch }
+> ExpressCard, sometimes fails to boot
+>
+> (Aries: sorry for the duplicate message)
+> Hi,
+>
+> Aries Lee wrote:
+>
+>> Is it possible to install windows OS on the same hardware,
+>> If it still get the same error, that we can conclude it as a hardware
+> issue.
+>
+> Orson wrote:
+>
+>> I installed WinXP SP3 as a dual boot option onto my HP NX6325.
+>> I booted into windows and my dual port express card was found immediately,
+> I
+>> installed the latest driver from J Micron and everything seemed to be OK.
+>> I looked through the winxp system messages and all was OK, I looked
+> through
+>> device manager and it said everything was OK, all resources were OK.
+>> I attached an external esata drive and it was detected instantly and was
+>> available in my list of drives, I copied some files over, all went OK, I
+> ran
+>> scandisk to check the drive and all went OK, the drive did not seem to
+>> re-attach itself or give any errors.  So it seems to work fine in windows.
+> All right; looks like the hardware works.
+>
+>> I then shut down my laptop and removed the esata drive and booted into
+> Debian
+>> wheezy, same error appeared during boot (without any drive attached)
+>> irq_stat 0x00000040, connection status changed
+>> ata1: SError: { PHYInt CommWake DevExch }
+>> ata1: hard resetting link
+>> ata1: COMRESET failed (errno=-32)
+>> ata1: reset failed (errno=-32), retrying in 8 secs
+>> ata1: limiting SATA link speed to 1.5 Gbps
+>> ata1: hard resetting link
+>> ata1: SATA link down (SStatus 0 SControl 310)
+>> ata1: EH complete
+>>
+>> etc, etc.
+> Right.
+>
+>> I booted back to windows and all was OK, but, here is what I have found,
+> if I
+>> boot into Linux from windows without shutting down (warm boot) then the
+>> express card is initialised in Debian without problems and works as
+> normal, if
+>> I shut down and cold boot straight to Debian, the error appears again.
+> Interesting.  So it sounds like Windows is doing some initialization
+> that Linux does not.
+>
+>> Perhaps the card is faulty or (I suspect) there is a problem with the bios
+> on
+>> the NX6325, the latest bios is dated 2007 and HP seem to have stopped
+>> supporting this model, even though mine was purchased new in 2007.
+> Please send "acpidump" output as an attachment for reference.
+>
+>> Anyway, because the express card is so cheap I have just ordered a
+> replacement
+>> of the same type, so this will tell me if it's the card that is at fault.
+> Ok.  Thanks for your work.
+>
+> linux-ide folks: any ideas for debugging this further?  For example,
+> is there a way to find the difference between the state after a cold
+> boot and a warm boot from windows?
+>
+> Ciao,
+> Jonathan
+>
