@@ -1,47 +1,43 @@
-From: Perry Wagle <wagle@mac.com>
-Subject: Addonics 5-Port HPM-XU (USB/ESATA) port multiplier
-Date: Tue, 10 Jan 2012 20:11:37 -0800
-Message-ID: <6BDC5BD2-F838-49B9-A8AE-69DB0F121087@mac.com>
+From: Alessandro Rubini <rubini@gnudd.com>
+Subject: Re: [PATCH 6/6] ahci: support the STA2X11 I/O Hub
+Date: Thu, 12 Jan 2012 00:26:36 +0100
+Message-ID: <20120111232636.GA19503@mail.gnudd.com>
+References: <20120111225748.3e80a52d@bob.linux.org.uk>
+  <3bffc0889fba822f58b5f8607fa5247c6f50649c.1325852059.git.rubini@gnudd.com>
+  <78cef636f264afa64de043be2018b5d66290240e.1325852059.git.rubini@gnudd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nk11p03mm-asmtp993.mac.com ([17.158.233.224]:46745 "EHLO
-	nk11p99mm-asmtpout003.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750747Ab2AKFLl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2012 00:11:41 -0500
-Received: from tuple.ftrdhcpuser.net
- (static-50-43-56-158.bvtn.or.frontiernet.net [50.43.56.158])
- by nk11p03mm-asmtp993.mac.com
- (Oracle Communications Messaging Exchange Server 7u4-22.01 64bit (built Apr 21
- 2011)) with ESMTPSA id <0LXM00LO38ZDTU50@nk11p03mm-asmtp993.mac.com> for
- linux-ide@vger.kernel.org; Tue, 10 Jan 2012 20:11:39 -0800 (PST)
+Received: from mail2.gnudd.com ([213.203.150.91]:63906 "EHLO mail.gnudd.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab2AKX1I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jan 2012 18:27:08 -0500
+Content-Disposition: inline
+In-Reply-To: <20120111225748.3e80a52d@bob.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: alan@linux.intel.com
+Cc: linux-kernel@vger.kernel.org, giancarlo.asnaghi@st.com, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-I'm trying to get a Addronics 5-Port HPM-XU (USB/ESATA) port multiplier to 
-work on Fedora 16, and it will see only one disk on the up-to-five SATA disk 
-device while in non-RAID mode.
+[I miscopied linux-ide to inux-ide in the original submission. I'm
+now fixing the typo. This is the original patch and I quote Alan
+without removing anything: https://lkml.org/lkml/2012/1/6/124 ]
 
-Since my crashbox is a notebook without SATA, I tried to get USB to work 
-first.  The thread on that is at:
+>> The AHCI controller found in the STA2X11 chip uses BAR number 0
+>> instead of 5. Also, the chip's fixup code sets a special DMA mask
+>> for all of its PCI functions, and the mask must be preserved here.
+> 
+> The more I look at this aspect of it the more convinced I grow that you
+> should handle this in the DMA ops.
+> 
+> dma_supported will call ops->dma_supported which can in turn make its
+> own decisions and avoid driver hackery.
 
-    http://marc.info/?l=linux-usb&w=2&r=1&s=addronics&q=b
+The problem is that there's dma_capable() somewhere. Currently I have
+very bad feeling about dma_capable and I'll try to turn that to
+dma_supported as soon as possible (the code I got changed the
+behaviour of dma_capable, which is a global change impacting on
+others).
 
-(note the misspelling of addonics).
-
-My interpretation of what was going on there is that the second disk is
-assigned a SCSI LUN of 1, but that's not handled properly.
-
-Now I'm trying to get it to work via ESATA, and I'm having a similar experience
-(before I got errors, but now nothing).  I'm assuming a similar thing is going on 
-here, except that my (weak) reading  of the source has it not sending LUN's 
-at all.  So the second disk isn't seen at all.
-
-What information do you need to help me out?
-
-Thanks!
-
--- Perry Wagle
-
+thanks
+/alessandro
