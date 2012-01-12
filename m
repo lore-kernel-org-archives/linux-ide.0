@@ -1,56 +1,54 @@
-From: Liu Qiang-B32616 <B32616@freescale.com>
-Subject: RE: [PATCH][SDK v1.2] sata: I/O load balancing
-Date: Fri, 13 Jan 2012 09:57:35 +0000
-Message-ID: <BCB48C05FCE8BC4D9E61E841ECBE6DB701320C@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1326443147-26645-1-git-send-email-qiang.liu@freescale.com>,<CADRPPNQsVB-2jR0UaX6RB_4PCf9kt4UXvAXnxaVk=LsBcwGowg@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Thu, 12 Jan 2012 00:58:31 GMT
+Message-ID: <201201120058.q0C0wVHQ006147@bugzilla.kernel.org>
+References: <bug-12874-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:5337
-	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752627Ab2AMJ5j convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jan 2012 04:57:39 -0500
-In-Reply-To: <CADRPPNQsVB-2jR0UaX6RB_4PCf9kt4UXvAXnxaVk=LsBcwGowg@mail.gmail.com>
-Content-Language: en-US
+Received: from bugzilla.kernel.org ([198.145.19.204]:41295 "EHLO
+	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756145Ab2AMXN0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2012 18:13:26 -0500
+Received: from bugzilla.kernel.org (localhost [127.0.0.1])
+	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q0C0wVgV006148
+	for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2012 00:58:31 GMT
+In-Reply-To: <bug-12874-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Li Yang-R58472 <r58472@freescale.com>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+To: linux-ide@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=12874
 
 
-________________________________________
-> From: linux-ide-owner@vger.kernel.org [linux-ide-owner@vger.kernel.org] on behalf of Li Yang [leoli@freescale.com]
-> Sent: Friday, January 13, 2012 3:36 AM
-> To: Liu Qiang-B32616
-> Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; Liu Qiang-B32616
-> Subject: Re: [PATCH][SDK v1.2] sata: I/O load balancing
+Jonathan Nieder <jrnieder@gmail.com> changed:
 
-> On Fri, Jan 13, 2012 at 4:25 PM, Qiang Liu <qiang.liu@freescale.com> wrote:
-> > From: Qiang Liu <b32616@freescale.com>
-> >
-> > Reduce interrupt singnals through reset Interrupt Coalescing Control Reg.
-> > Increase the threshold value of interrupt and timer will reduce the number
-> > of complete interrupt sharply. Improve the system performance effectively.
-
-> There is always a trade off of throughput and latency by using
-> interrupt coalescing.  It's not reasonable to assume that the
-> throughput is the only factor to be considered and set the coalescing
-> threshold and timeout to the max value by default.  Have you carried
-> out other benchmark like copying many small files?
-No, I didn't test small file. I think this won't affect system load. I can have a test
-and describe the result in next patch.
-
-> It will be safer to make the coalescing runtime configurable like the
-> sata_mv driver, IMO.
-Ok, I will do it like this in next patch.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |jrnieder@gmail.com
 
 
-- Leo
---
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+--- Comment #39 from Jonathan Nieder <jrnieder@gmail.com>  2012-01-12 00:58:28 ---
+Hi Mark,
+
+I am curious just for completeness of the record about how recent kernels
+behave here. (I don't expect they'll be any different since there haven't been
+any real fixes since v2.6.32-rc1 as far as I can tell.)  In particular, can you
+still use the tape streamer without crashing or lockups, and does it still
+truncate files when you try to copy them with dd?
+
+Also, can you bisect[1] to find the particular change that introduced the bug?
+(That would make it easier to find a fix, for example by backing that change
+out.)
+
+Thanks,
+Jonathan
+
+[1] http://git-htmldocs.googlecode.com/git/git-bisect-lk2009.html
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
