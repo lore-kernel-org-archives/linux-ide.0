@@ -1,48 +1,94 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Addonics 5-Port HPM-XU (USB/ESATA) port multiplier
-Date: Thu, 12 Jan 2012 21:20:51 -0600
-Message-ID: <4F0FA313.2040904@gmail.com>
-References: <6BDC5BD2-F838-49B9-A8AE-69DB0F121087@mac.com>
+From: Qiang Liu <qiang.liu@freescale.com>
+Subject: [PATCH][SDK v1.2] sata: I/O load balancing
+Date: Fri, 13 Jan 2012 16:21:57 +0800
+Message-ID: <1326442917-26562-1-git-send-email-qiang.liu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:49247 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab2AMDUy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2012 22:20:54 -0500
-Received: by vcbfk1 with SMTP id fk1so48943vcb.19
-        for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2012 19:20:53 -0800 (PST)
-In-Reply-To: <6BDC5BD2-F838-49B9-A8AE-69DB0F121087@mac.com>
+Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:44094
+	"EHLO AM1EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752049Ab2AMJDP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2012 04:03:15 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Perry Wagle <wagle@mac.com>
-Cc: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Qiang Liu <b32616@freescale.com>, Qiang Liu <qiang.liu@freescale.net>
 
-On 01/10/2012 10:11 PM, Perry Wagle wrote:
-> I'm trying to get a Addronics 5-Port HPM-XU (USB/ESATA) port multiplier to
-> work on Fedora 16, and it will see only one disk on the up-to-five SATA disk
-> device while in non-RAID mode.
->
-> Since my crashbox is a notebook without SATA, I tried to get USB to work
-> first.  The thread on that is at:
->
->      http://marc.info/?l=linux-usb&w=2&r=1&s=addronics&q=b
->
-> (note the misspelling of addonics).
->
-> My interpretation of what was going on there is that the second disk is
-> assigned a SCSI LUN of 1, but that's not handled properly.
->
-> Now I'm trying to get it to work via ESATA, and I'm having a similar experience
-> (before I got errors, but now nothing).  I'm assuming a similar thing is going on
-> here, except that my (weak) reading  of the source has it not sending LUN's
-> at all.  So the second disk isn't seen at all.
->
-> What information do you need to help me out?
+From: Qiang Liu <b32616@freescale.com>
 
-Well, there's not really such a thing as LUNs with SATA - for it to show 
-up as multiple drives it would have be identified as a port multiplier 
-instead of a single drive. What shows up in dmesg when the device is 
-connected?
+Reduce interrupt singnals through reset Interrupt Coalescing Control Reg.
+Increase the threshold value of interrupt and timer will reduce the number
+of complete interrupt sharply. Improve the system performance effectively.
+
+Signed-off-by: Qiang Liu <qiang.liu@freescale.net>
+---
+Description:
+  1. sata-fsl interrupt will be raised 130 thousand times when write 8G file
+(dd if=/dev/zero of=/dev/sda2 bs=128K count=65536);
+  2. most of interrupts raised because of only 1-4 commands completed;
+  3. only 30 thousand times will be raised after set max interrupt threshold,
+more interrupts are coalesced as the description of ICC;
+
+Performance Improvement:
+  use top command,
+  [root@p2020ds root]# dd if=/dev/zero of=/dev/sda2 bs=128K count=65536 &
+  [root@p2020ds root]# top
+
+   CPU %  |  dd   |  flush-8:0 | softirq
+  ---------------------------------------
+   before | 20-22 |    17-19   |    7
+  ---------------------------------------
+   after  | 18-21 |    15-16   |    5
+  ---------------------------------------
+
+ drivers/ata/sata_fsl.c |   19 ++++++++++++++++++-
+ 1 files changed, 18 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 3547000..93f8b00 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -6,7 +6,7 @@
+  * Author: Ashish Kalra <ashish.kalra@freescale.com>
+  * Li Yang <leoli@freescale.com>
+  *
+- * Copyright (c) 2006-2007, 2011 Freescale Semiconductor, Inc.
++ * Copyright (c) 2006-2007, 2011-2012 Freescale Semiconductor, Inc.
+  *
+  * This program is free software; you can redistribute  it and/or modify it
+  * under  the terms of  the GNU General  Public License as published by the
+@@ -162,6 +162,16 @@ enum {
+ };
+
+ /*
++ * Interrupt Coalescing Control Register bitdefs
++ */
++enum {
++	ICC_MIN_INT_THRESHOLD_COUNT = (1 << 24),
++	ICC_MAX_INT_THRESHOLD_COUNT = (((1 << 4) - 1) << 24),
++	ICC_MIN_INT_THRESHOLD_TIMER = 1,
++	ICC_MAX_INT_THRESHOLD_TIMER = ((1 << 18) - 1),
++};
++
++/*
+  * SATA Superset Registers
+  */
+ enum {
+@@ -460,6 +470,13 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
+ 	/* Simply queue command to the controller/device */
+ 	iowrite32(1 << tag, CQ + hcr_base);
+
++	/*
++	 * reset the number of command complete bits which will cause the
++	 * interrupt to be signaled
++	 */
++	iowrite32(ICC_MAX_INT_THRESHOLD_COUNT | ICC_MAX_INT_THRESHOLD_TIMER,
++			ICC + hcr_base);
++
+ 	VPRINTK("xx_qc_issue called, tag=%d, CQ=0x%x, CA=0x%x\n",
+ 		tag, ioread32(CQ + hcr_base), ioread32(CA + hcr_base));
+
+--
+1.6.4
+
 
