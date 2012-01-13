@@ -1,18 +1,18 @@
 From: Qiang Liu <qiang.liu@freescale.com>
 Subject: [PATCH][SDK v1.2] sata: I/O load balancing
-Date: Fri, 13 Jan 2012 16:21:57 +0800
-Message-ID: <1326442917-26562-1-git-send-email-qiang.liu@freescale.com>
+Date: Fri, 13 Jan 2012 16:25:47 +0800
+Message-ID: <1326443147-26645-1-git-send-email-qiang.liu@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from am1ehsobe006.messaging.microsoft.com ([213.199.154.209]:44094
-	"EHLO AM1EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752049Ab2AMJDP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2012 04:03:15 -0500
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:12587
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752049Ab2AMJHJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2012 04:07:09 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
-Cc: Qiang Liu <b32616@freescale.com>, Qiang Liu <qiang.liu@freescale.net>
+Cc: Qiang Liu <b32616@freescale.com>, Qiang Liu <qiang.liu@freescale.com>
 
 From: Qiang Liu <b32616@freescale.com>
 
@@ -20,7 +20,7 @@ Reduce interrupt singnals through reset Interrupt Coalescing Control Reg.
 Increase the threshold value of interrupt and timer will reduce the number
 of complete interrupt sharply. Improve the system performance effectively.
 
-Signed-off-by: Qiang Liu <qiang.liu@freescale.net>
+Signed-off-by: Qiang Liu <qiang.liu@freescale.com>
 ---
 Description:
   1. sata-fsl interrupt will be raised 130 thousand times when write 8G file
