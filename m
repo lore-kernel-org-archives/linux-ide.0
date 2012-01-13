@@ -1,49 +1,48 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v2 0/3] ahci controller runtime PM support
-Date: Fri, 13 Jan 2012 10:17:23 +0800
-Message-ID: <CAF1ivSbwO+D1Z4A=A7wPunDOOkZxthRAn_TEX_osyJozdZNFcg@mail.gmail.com>
-References: <1324964554-9719-1-git-send-email-ming.m.lin@intel.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Addonics 5-Port HPM-XU (USB/ESATA) port multiplier
+Date: Thu, 12 Jan 2012 21:20:51 -0600
+Message-ID: <4F0FA313.2040904@gmail.com>
+References: <6BDC5BD2-F838-49B9-A8AE-69DB0F121087@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54220 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757101Ab2AMCRY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2012 21:17:24 -0500
-In-Reply-To: <1324964554-9719-1-git-send-email-ming.m.lin@intel.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:49247 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab2AMDUy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2012 22:20:54 -0500
+Received: by vcbfk1 with SMTP id fk1so48943vcb.19
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2012 19:20:53 -0800 (PST)
+In-Reply-To: <6BDC5BD2-F838-49B9-A8AE-69DB0F121087@mac.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
+To: Perry Wagle <wagle@mac.com>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, Dec 27, 2011 at 1:42 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi all,
+On 01/10/2012 10:11 PM, Perry Wagle wrote:
+> I'm trying to get a Addronics 5-Port HPM-XU (USB/ESATA) port multiplier to
+> work on Fedora 16, and it will see only one disk on the up-to-five SATA disk
+> device while in non-RAID mode.
 >
-> Here is the v2 patches to add ahci controller runtime PM support.
-> Applied on top of linux-next tree.
+> Since my crashbox is a notebook without SATA, I tried to get USB to work
+> first.  The thread on that is at:
 >
-> Thanks for any comments.
+>      http://marc.info/?l=linux-usb&w=2&r=1&s=addronics&q=b
+>
+> (note the misspelling of addonics).
+>
+> My interpretation of what was going on there is that the second disk is
+> assigned a SCSI LUN of 1, but that's not handled properly.
+>
+> Now I'm trying to get it to work via ESATA, and I'm having a similar experience
+> (before I got errors, but now nothing).  I'm assuming a similar thing is going on
+> here, except that my (weak) reading  of the source has it not sending LUN's
+> at all.  So the second disk isn't seen at all.
+>
+> What information do you need to help me out?
 
-Any comment?
+Well, there's not really such a thing as LUNs with SATA - for it to show 
+up as multiple drives it would have be identified as a port multiplier 
+instead of a single drive. What shows up in dmesg when the device is 
+connected?
 
-Thanks,
-Lin Ming
-
->
-> v2:
-> - add ahci hibernate callbacks
->
-> v1:
-> https://lkml.org/lkml/2011/12/15/198
->
-> Lin Ming (3):
-> =A0 =A0 =A0ahci: port legacy pm interface to struct dev_pm_ops
-> =A0 =A0 =A0ahci: add runtime PM callbacks
-> =A0 =A0 =A0ata: runtime suspend port if no device attached
->
-> =A0drivers/ata/ahci.c =A0 =A0 =A0 =A0| =A0 71 +++++++++++++++++++++++=
-++++++++++++++++-----
-> =A0drivers/ata/libata-core.c | =A0 21 ++++++++++++-
-> =A02 files changed, 83 insertions(+), 9 deletions(-)
->
