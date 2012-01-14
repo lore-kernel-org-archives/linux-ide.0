@@ -1,54 +1,72 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 12874] Seagate STT20000A no longer works
-Date: Thu, 12 Jan 2012 00:58:31 GMT
-Message-ID: <201201120058.q0C0wVHQ006147@bugzilla.kernel.org>
-References: <bug-12874-11633@https.bugzilla.kernel.org/>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates for 3.3
+Date: Fri, 13 Jan 2012 21:21:01 -0800
+Message-ID: <CA+55aFwcBQSoWfqdT9CxV=GAr5ex0=RnqtBDFty+=_Lua2VXGw@mail.gmail.com>
+References: <20120109003255.GA6598@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bugzilla.kernel.org ([198.145.19.204]:41295 "EHLO
-	bugzilla.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756145Ab2AMXN0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2012 18:13:26 -0500
-Received: from bugzilla.kernel.org (localhost [127.0.0.1])
-	by bugzilla.kernel.org (8.14.5/8.14.5) with ESMTP id q0C0wVgV006148
-	for <linux-ide@vger.kernel.org>; Thu, 12 Jan 2012 00:58:31 GMT
-In-Reply-To: <bug-12874-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120109003255.GA6598@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=12874
+On Sun, Jan 8, 2012 at 4:32 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>
+> Summary (very little excitement at all this time):
+>
+> 0) Will play around with git signed tags with the next update.
+>
+> 1) PM improvements, including runtime suspend/resume work
 
+Hmm. I don't know if this comes from the PM improvements or even this
+particular pull, but links that aren't connected are *really* slow.
 
-Jonathan Nieder <jrnieder@gmail.com> changed:
+Annoyingly so.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |jrnieder@gmail.com
+My Macbook Air that I finally can resume reliably again used to come
+back almost immediately from resume. No longer. And the reason seems
+to be this:
 
+ [  243.306149] ata_piix 0000:00:1f.2: setting latency timer to 64
+ [  243.306180] bcma: Found rev 6 PMU (capabilities 0x108C2606)
+ [  246.579648] ata1.01: failed to resume link (SControl 0)
+ [  246.735472] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ [  246.735485] ata1.01: SATA link down (SStatus 0 SControl 0)
+ [  246.743632] ata1.00: ACPI cmd ef/03:46:00:00:00:a0 (SET FEATURES)
+filtered out
+ [  246.744353] ata1.00: configured for UDMA/100
+ [  246.744537] sd 0:0:0:0: [sda] Starting disk
+ [  247.769806] ata2.00: failed to resume link (SControl 0)
+ [  248.796207] ata2.01: failed to resume link (SControl 0)
+ [  248.807665] ata2.00: SATA link down (SStatus 4 SControl 0)
+ [  248.807681] ata2.01: SATA link down (SStatus 0 SControl 0)
+ [  248.808338] PM: resume of devices complete after 5511.027 msecs
+ [  248.882074] PM: Finishing wakeup.
 
+Notice the basically five-second timeout all basically for "failed to
+resume link: for things that didn't have anything connected to them
+anyway.
 
+This is a bog-standard Intel controller, there's nothing odd there.
 
---- Comment #39 from Jonathan Nieder <jrnieder@gmail.com>  2012-01-12 00:58:28 ---
-Hi Mark,
+I'm pretty sure this used to be much faster, but I haven't bisected
+any of it (and with all the problems I had with resume both due to
+wireless and MCE, I really wouldn't want to even try).
 
-I am curious just for completeness of the record about how recent kernels
-behave here. (I don't expect they'll be any different since there haven't been
-any real fixes since v2.6.32-rc1 as far as I can tell.)  In particular, can you
-still use the tape streamer without crashing or lockups, and does it still
-truncate files when you try to copy them with dd?
+Taking 5.5 seconds to come back from suspend-to-ram really is too
+long. Not *all* of it is the SATA part, but a lot of it is.
 
-Also, can you bisect[1] to find the particular change that introduced the bug?
-(That would make it easier to find a fix, for example by backing that change
-out.)
+For ATA suspend/resume, could we perhaps only resume the ports that
+*used* to have something on them? And then, if somebody has plugged
+something into the others, not consider that a resume thing at all,
+but a hotplug thing that happens *after* the resume?
 
-Thanks,
-Jonathan
+If it takes five seconds to notice new hardware after a resume, nobody
+cares. But the disk we had before obviously needs to get resumed.. But
+it does seem like it's the "no link" part that takes long.
 
-[1] http://git-htmldocs.googlecode.com/git/git-bisect-lk2009.html
+Hmm? Or any other ideas?
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+         Linus
