@@ -1,60 +1,46 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Subject: Re: [git patches] libata updates for 3.3
-Date: Mon, 16 Jan 2012 11:29:10 -0800
-Message-ID: <CA+55aFy+1DWUaOMormPHy7hCJxNfdxmiAnj8W0gqNTbeogNN4w@mail.gmail.com>
-References: <20120109003255.GA6598@havoc.gtf.org> <CA+55aFwcBQSoWfqdT9CxV=GAr5ex0=RnqtBDFty+=_Lua2VXGw@mail.gmail.com>
- <4F12E57E.3090805@garzik.org> <1326676534.13517.3.camel@minggr>
- <1326691403.13517.21.camel@minggr> <CA+55aFzqECJjbtgyOXy_H1smh09SsfgrAuVY7hK2sC-xj1GZHg@mail.gmail.com>
+Date: Mon, 16 Jan 2012 19:42:11 +0000
+Message-ID: <20120116194211.2cd09fb3@pyramind.ukuu.org.uk>
+References: <20120109003255.GA6598@havoc.gtf.org>
+	<CA+55aFwcBQSoWfqdT9CxV=GAr5ex0=RnqtBDFty+=_Lua2VXGw@mail.gmail.com>
+	<4F12E57E.3090805@garzik.org>
+	<1326676534.13517.3.camel@minggr>
+	<1326691403.13517.21.camel@minggr>
+	<CA+55aFzqECJjbtgyOXy_H1smh09SsfgrAuVY7hK2sC-xj1GZHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45983 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755630Ab2APT3c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2012 14:29:32 -0500
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:44616 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755565Ab2APTlL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2012 14:41:11 -0500
 In-Reply-To: <CA+55aFzqECJjbtgyOXy_H1smh09SsfgrAuVY7hK2sC-xj1GZHg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Jan 16, 2012 at 11:25 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> But why don't we fix the silly legacy mode thing? Yeah, Apple's
-> firmware is crap and doesn't tend to initialize things, but still - we
-> should have at least an option to not use the legacy PIIX mode just
-> because the chipset wasn't programmed for AHCI by the bootup.
+> The IO ports are all there, the *only* reason we don't use AHCI seems
+> to be that the firmware didn't turn off the legacy bit, so it doesn't
+> show as an AHCI interface. That's kind of sad.
 
-Here's the lspci output for that device, in case anybody cares:
+There are two sets of problems with that
 
+The first is that quite a few machines crap themselves if you do this
+because nobody has ever tested things like the IRQ routing or the
+firmware on suspend/resume when they find the hardwared controller has
+gone for a walk.
 
-  00:1f.2 IDE interface [0101]: Intel Corporation 6 Series/C200 Series
-Chipset Family 4 port SATA IDE Controller [8086:1c01] (rev 05)
-(prog-if 8f [Master SecP SecO PriP PriO])
-        Subsystem: Intel Corporation Device [8086:7270]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin B routed to IRQ 19
-        Region 0: I/O ports at 2168 [size=8]
-        Region 1: I/O ports at 217c [size=4]
-        Region 2: I/O ports at 2160 [size=8]
-        Region 3: I/O ports at 2178 [size=4]
-        Region 4: I/O ports at 2060 [size=16]
-        Region 5: I/O ports at ffe0 [size=16]
-        Capabilities: <access denied>
-        Kernel driver in use: ata_piix
-  00: 86 80 01 1c 07 00 b0 02 05 8f 01 01 00 00 00 00
-  10: 69 21 00 00 7d 21 00 00 61 21 00 00 79 21 00 00
-  20: 61 20 00 00 e1 ff 00 00 00 00 00 00 86 80 70 72
-  30: 00 00 00 00 70 00 00 00 00 00 00 00 0b 02 00 00
+Putting it back on suspend might help in some cases but then you get to
+pick your way through the documentation minefield, deal with device
+changes while in non AHCI mode, figure out how to set up registers the
+BIOS didn't etc.
 
-and I do think that resume used to be faster in v3.2 than it is even
-with your patch. But maybe that's some rose-colored glasses.
+Would be a good project for someone with a lot of patience anyway as the
+AHCI mode is also 64bit capable and *much* faster overall as it doesn't
+keep stalling the CPU poking imaginary registers and turning them into
+messages on the SATA bus.
 
-I'll recompile an old kernel to check.
-
-               Linus
+Alan
