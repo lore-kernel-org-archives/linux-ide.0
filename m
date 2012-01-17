@@ -1,64 +1,71 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [git patches] libata updates for 3.3
-Date: Tue, 17 Jan 2012 00:18:12 +0000
-Message-ID: <20120117001812.GA9588@srcf.ucam.org>
-References: <1326691403.13517.21.camel@minggr>
- <CA+55aFzqECJjbtgyOXy_H1smh09SsfgrAuVY7hK2sC-xj1GZHg@mail.gmail.com>
- <20120116194211.2cd09fb3@pyramind.ukuu.org.uk>
- <CA+55aFxNcAtCmzEejS=3+_L_rp-MOBS0yLS061YgiCsFw_Mt5Q@mail.gmail.com>
- <20120116195427.64edd96f@pyramind.ukuu.org.uk>
- <CA+55aFzXFyHTUv=8NtSmXA2UY_qO5P=HXdGnhUmF9YoA5vpX1g@mail.gmail.com>
- <CA+55aFxUyBvkAhQZFKDuiJrMx9sR2Nb3s5F3P8wDLa4eNspJ1Q@mail.gmail.com>
- <4F14881C.8040601@garzik.org>
- <20120116235427.168e13f2@pyramind.ukuu.org.uk>
- <CA+55aFyafh6cCiV=mMA6Z7qtWqBrJ_pGPev09PP14nJ8Hc=vmg@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [resend PATCH v4 00/10] libsas: eh reworks (ata-eh vs discovery, races,
+ ...)
+Date: Mon, 16 Jan 2012 21:11:01 -0800
+Message-ID: <20120117050847.22344.4961.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:60860 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258Ab2AQASX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2012 19:18:23 -0500
-Content-Disposition: inline
-In-Reply-To: <CA+55aFyafh6cCiV=mMA6Z7qtWqBrJ_pGPev09PP14nJ8Hc=vmg@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:40887 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750702Ab2AQFLD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Jan 2012 00:11:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jeff@garzik.org>, Lin Ming <ming.m.lin@intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 16, 2012 at 04:02:31PM -0800, Linus Torvalds wrote:
-> On Mon, Jan 16, 2012 at 3:54 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> =
-wrote:
-> >> Part of the problem with force-enable is that the MMIO BAR may nee=
-d a
-> >> value, and not have it. =A0That, and an expectations mismatch betw=
-een BIOS
-> >
-> > That's fine - we can happily assign one at boot time.
->=20
-> Actually, I think the reason that Matthews patch doesn't work for me
-> is that on my device, BAR #5 really is a _port_ BAR.
->=20
-> I didn't play with it much - busy merging and looking at various othe=
-r
-> issues - but I'm starting to wonder whether maybe that 8086:1c01 chip
-> doesn't support AHCI at all. Or maybe it does something differently.
->=20
-> Other reports of this have BAR#5 either clear, or an MMIO BAR.   That
->=20
->    Region 5: I/O ports at ffe0 [size=3D16]
->=20
-> looks really odd. Matthew's patch uses
->=20
->   pci_assign_resource(pdev, 5);
->=20
-> but if it is a PIO region, that won't help anything..
+A resend of v4: http://marc.info/?l=linux-scsi&m=132618126007864&w=1
 
-More recent ICHs may need different setup here. The datasheet should=20
-have enough to figure it out, but I can take a look once I get back fro=
-m=20
-LCA.
+These are all the patches that were modified between v3 and v4.  Previously
+only an incremental diff was provided.
 
---=20
-Matthew Garrett | mjg59@srcf.ucam.org
+---
+
+Dan Williams (10):
+      libsas: convert dev->gone to flags
+      libsas: prevent domain rediscovery competing with ata error handling
+      libsas: fix timeout vs completion race
+      libsas: don't mark expanders as gone when a child device is removed
+      libsas: check for 'gone' expanders in smp_execute_task()
+      libsas: fix sas_find_local_phy(), take phy references
+      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+      isci: ->lldd_ata_check_ready handler
+      libsas: pre-clean commands that won the eh vs completion race
+      libsas: feed the scsi_block_when_processing_errors() meter
+
+ drivers/ata/libata-eh.c             |    1 
+ drivers/ata/libata.h                |    1 
+ drivers/scsi/aic94xx/aic94xx.h      |    2 
+ drivers/scsi/aic94xx/aic94xx_dev.c  |   38 +-
+ drivers/scsi/aic94xx/aic94xx_init.c |    2 
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 
+ drivers/scsi/isci/host.h            |   19 -
+ drivers/scsi/isci/init.c            |   12 -
+ drivers/scsi/isci/phy.c             |   18 +
+ drivers/scsi/isci/phy.h             |    1 
+ drivers/scsi/isci/port.c            |  217 ++++++------
+ drivers/scsi/isci/port.h            |   11 -
+ drivers/scsi/isci/remote_device.c   |   32 --
+ drivers/scsi/isci/remote_device.h   |    7 
+ drivers/scsi/isci/request.c         |  195 ----------
+ drivers/scsi/isci/request.h         |    9 
+ drivers/scsi/isci/task.c            |  152 ++------
+ drivers/scsi/isci/task.h            |    4 
+ drivers/scsi/libsas/sas_ata.c       |  652 +++++++++++++++--------------------
+ drivers/scsi/libsas/sas_discover.c  |   93 ++++-
+ drivers/scsi/libsas/sas_event.c     |   28 +-
+ drivers/scsi/libsas/sas_expander.c  |  103 ++++--
+ drivers/scsi/libsas/sas_init.c      |  176 +++++++++
+ drivers/scsi/libsas/sas_internal.h  |   22 +
+ drivers/scsi/libsas/sas_port.c      |   11 -
+ drivers/scsi/libsas/sas_scsi_host.c |  289 +++++++---------
+ drivers/scsi/mvsas/mv_sas.c         |    3 
+ drivers/scsi/pm8001/pm8001_sas.c    |   19 +
+ drivers/scsi/scsi_transport_sas.c   |   59 +++
+ include/linux/libata.h              |    1 
+ include/scsi/libsas.h               |   48 ++-
+ include/scsi/sas_ata.h              |   23 +
+ include/scsi/scsi_transport_sas.h   |   12 +
+ 33 files changed, 1124 insertions(+), 1145 deletions(-)
