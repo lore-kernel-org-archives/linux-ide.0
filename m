@@ -1,79 +1,94 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 0/7] libsas error handling + discovery v6
-Date: Mon, 23 Jan 2012 12:57:13 -0800
-Message-ID: <CAA9_cmd6FVVjm-wMAGRrUH-i-dC3ZtiYLsO5K-0F4dm=064JHA@mail.gmail.com>
-References: <20120121014910.24930.54011.stgit@localhost6.localdomain6>
-	<491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
+Subject: Re: [PATCH v3 08/14] isci: kill iphy->isci_port lookups
+Date: Mon, 23 Jan 2012 15:45:12 -0800
+Message-ID: <CAA9_cmc-pJ5x7C-v8DwHqn6WvdZNECS4rTAKBAmGhTMDLGvP1Q@mail.gmail.com>
+References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
+	<20120106005941.11464.12937.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37375 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751909Ab2AWU5P convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2012 15:57:15 -0500
-In-Reply-To: <491F29790D474988ACF0C10BF277BC3B@usish.com.cn>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20120106005941.11464.12937.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, David Milburn <dmilburn@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Jan 20, 2012 at 10:12 PM, Jack Wang <jack_wang@usish.com> wrote=
-:
->> Changes since v5: http://marc.info/?l=3Dlinux-scsi&m=3D1326564758296=
-37&w=3D2
->>
->> 1/ Reworked "libsas: let libata recover links that fail to transmit
-> initial
->> =A0 =A0sig-fis" to better handle problematic expanders and slow to a=
-ttach ata
->> =A0 =A0devices. =A0libsas will now validate linkrate and take 'devic=
-e-type' into
->> =A0 =A0account when determining if a new device is attached.
->>
->> 2/ Added support for asynchronously scanning ata devices.
->>
->> 3/ Reworked "libsas: fix sas_unregister_ports vs sas_drain_work" as
-> lockdep
->> =A0 =A0complained about the original.
->>
->> 4/ New patch "libsas: fix sas port naming" makes direct-attached dev=
-ice
-> naming
->> =A0 =A0more predictable and consistent with expander attached device=
- naming.
->>
->> 5/ Made scan order more predictable by ensuring that regardless of d=
-evice
-> type
->> =A0 =A0we always attach in discovery order. =A0Slow to link devices =
-will still
-> be
->> =A0 =A0scanned out of order, link needs to be in at least the 'stp p=
-ending'
-> state
->> =A0 =A0before the device will be considered attached.
->>
-> [Jack Wang]
-> Asynchronously scan really make the discovery far more quickly, with =
-v4
-> reset expander will need more than 3 minites to get discovered, with =
-this v6
-> patchset it takes less than 5 seconds.
-
-Great!
-
-> Dear Dan,
+On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.com>=
+ wrote:
+> This field is a holdover from the OS abstraction conversion. =A0The s=
+table
+> phy to port lookups are done via iphy->ownining_port under scic_lock.
+> After this conversion to use port->lldd_port the only volatile lookup=
+ is
+> the initial lookup in isci_port_formed(). =A0After that point any loo=
+kup
+> via a successfully notified domain_device is guaranteed to be valid
+> until the domain_device is destroyed.
 >
-> Could you share how you test procedure to find out these bugs?
+> Delete ->start_complete as it is only set once and is set as a
+> consequence of the port going link up, by definition of getting a por=
+t
+> formed event the port is "ready".
 >
+> While we are correcting port lookups also move the asd_sas_port table
+> out from under the isci_port. =A0This is to preclude any temptation t=
+o use
+> container_of() to convert an asd_sas_port to an isci_port, the
+> association is dynamic and under libsas control.
+>
+> Tested-by: Maciej Trela <maciej.trela@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+[..]
+> @@ -1714,24 +1721,55 @@ int isci_port_perform_hard_reset(struct isci_=
+host *ihost, struct isci_port *ipor
+> =A0 =A0 =A0 =A0return ret;
+> =A0}
+>
+> -/**
+> - * isci_port_deformed() - This function is called by libsas when a p=
+ort becomes
+> - * =A0 =A0inactive.
+> - * @phy: This parameter specifies the libsas phy with the inactive p=
+ort.
+> - *
+> - */
+> =A0void isci_port_deformed(struct asd_sas_phy *phy)
+> =A0{
+> - =A0 =A0 =A0 pr_debug("%s: sas_phy =3D %p\n", __func__, phy);
+> + =A0 =A0 =A0 struct isci_host *ihost =3D phy->ha->lldd_ha;
+> + =A0 =A0 =A0 struct isci_port *iport =3D phy->port->lldd_port;
+> + =A0 =A0 =A0 unsigned long flags;
+> + =A0 =A0 =A0 int i;
+> +
+> + =A0 =A0 =A0 /* we got a port notification on a port that was subseq=
+uently
+> + =A0 =A0 =A0 =A0* torn down and libsas is just now catching up
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (!iport)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> +
+> + =A0 =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
+> + =A0 =A0 =A0 for (i =3D 0; i < SCI_MAX_PHYS; i++) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (iport->active_phy_mask & 1 << i)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 }
+> + =A0 =A0 =A0 spin_unlock_irqrestore(&ihost->scic_lock, flags);
+> +
+> + =A0 =A0 =A0 if (i >=3D SCI_MAX_PHYS)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev_dbg(&ihost->pdev->dev, "%s: port: %=
+ld\n",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __func__, iport - &ihos=
+t->ports[0]);
+> =A0}
 
-These fixes have primarily been driven by libsas ata error handling as
-robust as libata, and teaching libsas that ata links need more care
-and handling than it was giving before.
-
-In the case of async probing, this is something that libata has had
-since 2.6.29, but was never added to libsas.
+As spotted by David this causes 32-bit build breakage.  I'll fold in
+the fix, rebase, and re-post for the next round of libsas fixups.
 
 --
 Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
