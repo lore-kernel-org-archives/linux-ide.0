@@ -1,56 +1,35 @@
-From: Lin Ming <ming.m.lin@intel.com>
+From: Norbert Preining <preining@logic.at>
 Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
- COMRESET failed
-Date: Fri, 03 Feb 2012 12:21:24 +0800
-Message-ID: <1328242884.15079.22.camel@minggr>
-References: <20120202051258.GA15550@gamma.logic.tuwien.ac.at>
-	 <4F2A4B7E.2090503@linux.vnet.ibm.com>  <1328231716.15079.15.camel@minggr>
+	COMRESET failed
+Date: Fri, 3 Feb 2012 13:29:01 +0900
+Message-ID: <20120203042900.GA21988@gamma.logic.tuwien.ac.at>
+References: <20120202051258.GA15550@gamma.logic.tuwien.ac.at> <4F2A4B7E.2090503@linux.vnet.ibm.com> <1328231716.15079.15.camel@minggr> <1328242884.15079.22.camel@minggr> <20120202051258.GA15550@gamma.logic.tuwien.ac.at> <4F2A4B7E.2090503@linux.vnet.ibm.com> <1328231716.15079.15.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24175 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753015Ab2BCEVf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Feb 2012 23:21:35 -0500
-In-Reply-To: <1328231716.15079.15.camel@minggr>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1328242884.15079.22.camel@minggr> <1328231716.15079.15.camel@minggr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 List-Id: linux-ide@vger.kernel.org
-To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
-Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Fri, 2012-02-03 at 09:15 +0800, Lin Ming wrote:
-> On Thu, 2012-02-02 at 14:08 +0530, Srivatsa S. Bhat wrote:
-> > Adding some Cc's.
-> > 
-> > On 02/02/2012 10:42 AM, Norbert Preining wrote:
-> > 
-> > > Dear all,
-> > > 
-> > > (please Cc)
-> > > 
-> > > since going from 3.2 to 3.3-rc1 I see a kind of regression wrt booting
-> > > time, namely the detection of the CD drive hangs for 10sec (both
-> > > dmesg were taken on the same hardware on the same day):
-> > > 
-> > > with 3.3-rc1 and rc2:
-> > > [    3.694012] sd 0:0:0:0: [sda] Attached SCSI disk
-> > > [    9.004013] ata2: link is slow to respond, please be patient (ready=0)
-> > > [   13.652013] ata2: COMRESET failed (errno=-16)
-> > > [   13.972022] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> 
-> I'm looking into this problem.
-> But I can't reproduce this regression.
-> 
+On Fr, 03 Feb 2012, Lin Ming wrote:
 > Could you attach the full 3.3-rc2 dmesg?
 
-And could you do a bisect?
+Attached.
 
-First, you can check if commit 318893e is good or bad.
+> First, you can check if commit 318893e is good or bad.
 
-If it's bad, then you only need to do a bisect between v3.2 and 318893e.
-Otherwise, you need to do a bisect between v3.2 and v3.3-rc1.
+Will try.
 
-Thanks,
-Lin Ming
+Best wishes
 
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+Another world, another day, another dawn.
+                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
