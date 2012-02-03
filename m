@@ -1,18 +1,16 @@
 From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal routine fails
-Date: Fri, 3 Feb 2012 17:56:34 +0530
-Message-ID: <CADDb1s0kq0ukQstCc-eNKB6+TPuFxLdguhC1U0YHs4k7L_QVUA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal routine fails
+Date: Fri,  3 Feb 2012 18:29:14 +0530
+Message-ID: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:61000 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751392Ab2BCM0g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Feb 2012 07:26:36 -0500
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:51151 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753276Ab2BCMzX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Feb 2012 07:55:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, JBottomley@parallels.com, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, a.sahrawat@samsung.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Amit Sahrawat <amit.sahrawat83@gmail.com>
 
 It has been observed that a number of USB HDD's do not respond correctly
 to SCSI mode sense command(retrieve caching pages) which results in their
@@ -39,7 +37,7 @@ index 508a60b..d5b00e6 100644
 +++ b/drivers/ata/libata-scsi.c
 @@ -562,6 +562,57 @@ error:
  }
-
+ 
  /**
 + *      ata_get_cachestatus - Handler for to get WriteCache Status
 + *                      using ATA_16 scsi command
@@ -111,8 +109,7 @@ index c691fb5..a6b887d 100644
  #include <linux/pm_runtime.h>
  #include <asm/uaccess.h>
  #include <asm/unaligned.h>
-@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp,
-unsigned char *buffer)
+@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
  		if (modepage == 0x3F) {
  			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
  				  "present\n");
@@ -124,8 +121,7 @@ unsigned char *buffer)
  		} else if ((buffer[offset] & 0x3f) != modepage) {
  			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
  			goto defaults;
-@@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp,
-unsigned char *buffer)
+@@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
  				  "Uses READ/WRITE(6), disabling FUA\n");
  			sdkp->DPOFUA = 0;
  		}
@@ -137,7 +133,7 @@ unsigned char *buffer)
 +			sdkp->WCE = ata_get_cachestatus(sdp);
 +		}
 +#endif
-
+ 
  		if (sdkp->first_scan || old_wce != sdkp->WCE ||
  		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
 diff --git a/include/linux/libata.h b/include/linux/libata.h
@@ -147,14 +143,13 @@ index cafc09a..33fc73f 100644
 @@ -84,6 +84,8 @@
  	}							\
  })
-
+ 
 +#define ATA_IDENTIFY_DEV	0xEC
 +
  /* NEW: debug levels */
  #define HAVE_LIBATA_MSG 1
-
-@@ -990,6 +992,7 @@ extern void ata_host_init(struct ata_host *,
-struct device *,
+ 
+@@ -990,6 +992,7 @@ extern void ata_host_init(struct ata_host *, struct device *,
  			  unsigned long, struct ata_port_operations *);
  extern int ata_scsi_detect(struct scsi_host_template *sht);
  extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
@@ -164,3 +159,4 @@ struct device *,
  			    int cmd, void __user *arg);
 -- 
 1.7.2.3
+
