@@ -1,81 +1,56 @@
 From: Lin Ming <ming.m.lin@intel.com>
 Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
  COMRESET failed
-Date: Fri, 03 Feb 2012 09:15:16 +0800
-Message-ID: <1328231716.15079.15.camel@minggr>
+Date: Fri, 03 Feb 2012 12:21:24 +0800
+Message-ID: <1328242884.15079.22.camel@minggr>
 References: <20120202051258.GA15550@gamma.logic.tuwien.ac.at>
-	 <4F2A4B7E.2090503@linux.vnet.ibm.com>
+	 <4F2A4B7E.2090503@linux.vnet.ibm.com>  <1328231716.15079.15.camel@minggr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:5244 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:24175 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620Ab2BCBPU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 2 Feb 2012 20:15:20 -0500
-In-Reply-To: <4F2A4B7E.2090503@linux.vnet.ibm.com>
+	id S1753015Ab2BCEVf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 2 Feb 2012 23:21:35 -0500
+In-Reply-To: <1328231716.15079.15.camel@minggr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Thu, 2012-02-02 at 14:08 +0530, Srivatsa S. Bhat wrote:
-> Adding some Cc's.
+On Fri, 2012-02-03 at 09:15 +0800, Lin Ming wrote:
+> On Thu, 2012-02-02 at 14:08 +0530, Srivatsa S. Bhat wrote:
+> > Adding some Cc's.
+> > 
+> > On 02/02/2012 10:42 AM, Norbert Preining wrote:
+> > 
+> > > Dear all,
+> > > 
+> > > (please Cc)
+> > > 
+> > > since going from 3.2 to 3.3-rc1 I see a kind of regression wrt booting
+> > > time, namely the detection of the CD drive hangs for 10sec (both
+> > > dmesg were taken on the same hardware on the same day):
+> > > 
+> > > with 3.3-rc1 and rc2:
+> > > [    3.694012] sd 0:0:0:0: [sda] Attached SCSI disk
+> > > [    9.004013] ata2: link is slow to respond, please be patient (ready=0)
+> > > [   13.652013] ata2: COMRESET failed (errno=-16)
+> > > [   13.972022] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
 > 
-> On 02/02/2012 10:42 AM, Norbert Preining wrote:
+> I'm looking into this problem.
+> But I can't reproduce this regression.
 > 
-> > Dear all,
-> > 
-> > (please Cc)
-> > 
-> > since going from 3.2 to 3.3-rc1 I see a kind of regression wrt booting
-> > time, namely the detection of the CD drive hangs for 10sec (both
-> > dmesg were taken on the same hardware on the same day):
-> > 
-> > with 3.3-rc1 and rc2:
-> > [    3.694012] sd 0:0:0:0: [sda] Attached SCSI disk
-> > [    9.004013] ata2: link is slow to respond, please be patient (ready=0)
-> > [   13.652013] ata2: COMRESET failed (errno=-16)
-> > [   13.972022] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> Could you attach the full 3.3-rc2 dmesg?
 
-I'm looking into this problem.
-But I can't reproduce this regression.
+And could you do a bisect?
 
-Could you attach the full 3.3-rc2 dmesg?
+First, you can check if commit 318893e is good or bad.
+
+If it's bad, then you only need to do a bisect between v3.2 and 318893e.
+Otherwise, you need to do a bisect between v3.2 and v3.3-rc1.
 
 Thanks,
 Lin Ming
-
-> > [   13.975721] ata2.00: ACPI cmd 00/00:00:00:00:00:a0 (NOP) rejected by device (Stat=0x51 Err=0x04)
-> > [   13.977166] ata2.00: ATAPI: MATSHITADVD-RAM UJ862AS, 1.21, max UDMA/33
-> > [   13.981294] ata2.00: ACPI cmd 00/00:00:00:00:00:a0 (NOP) rejected by device (Stat=0x51 Err=0x04)
-> > [   13.982734] ata2.00: configured for UDMA/33
-> > [   13.987964] scsi 1:0:0:0: CD-ROM            MATSHITA DVD-RAM UJ862AS  1.21 PQ: 0 ANSI: 5
-> > [   13.991482] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-> > [   13.992971] cdrom: Uniform CD-ROM driver Revision: 3.20
-> > [   13.994574] sr 1:0:0:0: Attached scsi CD-ROM sr0
-> > [   13.994672] sr 1:0:0:0: Attached scsi generic sg1 type 5
-> > [   14.316021] ata5: SATA link down (SStatus 0 SControl 300)
-> > [   14.636019] ata6: SATA link down (SStatus 0 SControl 300)
-> > 
-> > with 3.2:
-> > [    3.218156] sd 0:0:0:0: [sda] Attached SCSI disk
-> > [    3.484023] ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> > [    3.487708] ata2.00: ACPI cmd 00/00:00:00:00:00:a0 (NOP) rejected by device (Stat=0x51 Err=0x04)
-> > [    3.489156] ata2.00: ATAPI: MATSHITADVD-RAM UJ862AS, 1.21, max UDMA/33
-> > [    3.494321] ata2.00: ACPI cmd 00/00:00:00:00:00:a0 (NOP) rejected by device (Stat=0x51 Err=0x04)
-> > [    3.495761] ata2.00: configured for UDMA/33
-> > [    3.501057] scsi 1:0:0:0: CD-ROM            MATSHITA DVD-RAM UJ862AS  1.21 PQ: 0 ANSI: 5
-> > [    3.504515] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda tray
-> > [    3.505995] cdrom: Uniform CD-ROM driver Revision: 3.20
-> > [    3.507611] sr 1:0:0:0: Attached scsi CD-ROM sr0
-> > [    3.507715] sr 1:0:0:0: Attached scsi generic sg1 type 5
-> > [    3.828025] ata5: SATA link down (SStatus 0 SControl 300)
-> > [    4.148020] ata6: SATA link down (SStatus 0 SControl 300)
-> > 
-> > 
-> > Is there anything I can do here?
-> > 
-> 
-
 
