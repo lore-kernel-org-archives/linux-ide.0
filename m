@@ -1,71 +1,166 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
- COMRESET failed
-Date: Fri, 03 Feb 2012 16:27:40 +0800
-Message-ID: <1328257660.15079.30.camel@minggr>
-References: <20120202051258.GA15550@gamma.logic.tuwien.ac.at>
-	 <4F2A4B7E.2090503@linux.vnet.ibm.com> <1328231716.15079.15.camel@minggr>
-	 <1328242884.15079.22.camel@minggr>
-	 <20120203052452.GC24563@gamma.logic.tuwien.ac.at>
-	 <1328247269.15079.26.camel@minggr>
-	 <20120203054319.GA25510@gamma.logic.tuwien.ac.at>
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal routine fails
+Date: Fri, 3 Feb 2012 17:56:34 +0530
+Message-ID: <CADDb1s0kq0ukQstCc-eNKB6+TPuFxLdguhC1U0YHs4k7L_QVUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1979 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754658Ab2BCI1m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 3 Feb 2012 03:27:42 -0500
-In-Reply-To: <20120203054319.GA25510@gamma.logic.tuwien.ac.at>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:61000 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392Ab2BCM0g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Feb 2012 07:26:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Norbert Preining <preining@logic.at>
-Cc: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, jeff@garzik.org, Tejun Heo <tj@kernel.org>, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: jgarzik@pobox.com, JBottomley@parallels.com, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Nam-Jae Jeon <namjae.jeon@samsung.com>, a.sahrawat@samsung.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, 2012-02-03 at 14:43 +0900, Norbert Preining wrote:
-> On Fr, 03 Feb 2012, Lin Ming wrote:
-> > > I didn't try to revert that commit on top of HEAD.
-> > 
-> > Please revert that commit to test.
-> > That helps us to make sure we find the exact bad commit.
-> 
-> Confirmed. Reverted 7faa33da9b7 on top of 6c073a7ee250 made
-> the boot delay go away. dmesg from this boot attached.
+It has been observed that a number of USB HDD's do not respond correctly
+to SCSI mode sense command(retrieve caching pages) which results in their
+Write Cache being discarded by queue requests i.e., WCE if left set to
+'0'(disabled).
+This results in a number of Filesystem corruptions, when the device
+is unplugged abruptly.
 
-Dig into the code, but I can't find where the problem is.
+So, in order to identify the devices correctly - give it
+a last try using ATA_16 after failure from normal routine.
 
-Anyway, does below DEBUG patch help?
-Let's always stop the engine during hard reset.
+Signed-off-by: Amit Sahrawat <a.sahrawat@samsung.com>
+Signed-off-by: Namjae Jeon <namjae.jeon@samsung.com>
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index a72bfd0..8fef702 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -578,10 +578,6 @@ int ahci_stop_engine(struct ata_port *ap)
- 
- 	tmp = readl(port_mmio + PORT_CMD);
- 
--	/* check if the HBA is idle */
--	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
--		return 0;
--
- 	/* setting HBA to idle */
- 	tmp &= ~PORT_CMD_START;
- 	writel(tmp, port_mmio + PORT_CMD);
+---
+ drivers/ata/libata-scsi.c |   51 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c         |   17 +++++++++++++++
+ include/linux/libata.h    |    3 ++
+ 3 files changed, 71 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 508a60b..d5b00e6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -562,6 +562,57 @@ error:
+ }
 
-> 
-> Best wishes
-> 
-> Norbert
-> ------------------------------------------------------------------------
-> Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-> JAIST, Japan                                 TeX Live & Debian Developer
-> DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-> ------------------------------------------------------------------------
-> PELUTHO (n.) A South American ball game. The balls are whacked against
-> a brick wall with a stout wooden bat until the prisoner confesses.
-> 			--- Douglas Adams, The Meaning of Liff
+ /**
++ *      ata_get_cachestatus - Handler for to get WriteCache Status
++ *                      using ATA_16 scsi command
++ *      @scsidev: Device to which we are issuing command
++ *
++ *      LOCKING:
++ *      Defined by the SCSI layer.  We don't really care.
++ *
++ *      RETURNS:
++ *      '0' for Write Cache Disabled and on any error.
++ *      '1' for Write Cache enabled
++ */
++int ata_get_cachestatus(struct scsi_device *scsidev)
++{
++	int rc = 0;
++	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
++	u8 *sensebuf = NULL, *argbuf = NULL;
++	enum dma_data_direction data_dir;
++
++	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
++	if (!sensebuf)
++		return rc;
++
++	argbuf = kmalloc(ATA_SECT_SIZE, GFP_KERNEL);
++	if (argbuf == NULL)
++		goto error;
++
++	scsi_cmd[0] = ATA_16;
++	scsi_cmd[1]  = (4 << 1); /* PIO Data-in */
++	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
++				block count in sector count field */
++	data_dir = DMA_FROM_DEVICE;
++	scsi_cmd[14] = ATA_IDENTIFY_DEV;
++
++	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
++				sensebuf, (10*HZ), 5, 0, NULL)) {
++		/*
++		 * '6th' Bit in Word 85 Corresponds to Write Cache
++		 * being Enabled/disabled, Word 85 represnets the
++		 * features supported
++		 */
++		if (le16_to_cpu(((unsigned short *)argbuf)[85]) & 0x20)
++			rc = 1;
++	}
++
++error:
++	kfree(sensebuf);
++	kfree(argbuf);
++	return rc;
++}
++
++/**
+  *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
+  *	@scsidev: Device to which we are issuing command
+  *	@arg: User provided data for issuing command
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index c691fb5..a6b887d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,11 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
++
++#ifdef CONFIG_ATA
++#include <linux/libata.h>
++#endif
++
+ #include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+@@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp,
+unsigned char *buffer)
+ 		if (modepage == 0x3F) {
+ 			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
+ 				  "present\n");
++#ifdef CONFIG_ATA
++			goto WCE_USING_ATA;
++#else
+ 			goto defaults;
++#endif
+ 		} else if ((buffer[offset] & 0x3f) != modepage) {
+ 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+ 			goto defaults;
+@@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp,
+unsigned char *buffer)
+ 				  "Uses READ/WRITE(6), disabling FUA\n");
+ 			sdkp->DPOFUA = 0;
+ 		}
++#ifdef CONFIG_ATA
++WCE_USING_ATA:
++		if (!sdp->removable && !sdkp->WCE) {
++			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache "
++				"enable/disable using ATA command\n");
++			sdkp->WCE = ata_get_cachestatus(sdp);
++		}
++#endif
 
+ 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
+ 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index cafc09a..33fc73f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -84,6 +84,8 @@
+ 	}							\
+ })
 
++#define ATA_IDENTIFY_DEV	0xEC
++
+ /* NEW: debug levels */
+ #define HAVE_LIBATA_MSG 1
+
+@@ -990,6 +992,7 @@ extern void ata_host_init(struct ata_host *,
+struct device *,
+ 			  unsigned long, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+ extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++extern int ata_get_cachestatus(struct scsi_device *scsidev);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ 			    int cmd, void __user *arg);
+-- 
+1.7.2.3
