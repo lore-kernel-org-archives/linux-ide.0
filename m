@@ -1,178 +1,126 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
- routine fails
-Date: Sun, 05 Feb 2012 16:05:48 +0400
-Message-ID: <4F2E709C.5060000@mvista.com>
-References: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
+From: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
+Subject: [FOR 3.3 PATCH 2/2] pata/at91: use newly introduce smc accessor
+Date: Sun,  5 Feb 2012 19:22:54 +0100
+Message-ID: <1328466174-27946-2-git-send-email-plagnioj@jcrosoft.com>
+References: <1328466174-27946-1-git-send-email-plagnioj@jcrosoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34799 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840Ab2BEMHE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Feb 2012 07:07:04 -0500
-In-Reply-To: <1328273954-5010-1-git-send-email-amit.sahrawat83@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1328466174-27946-1-git-send-email-plagnioj@jcrosoft.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Nicolas Ferre <nicolas.ferre@atmel.com>, Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, Amit Sahrawat <a.sahrawat@samsung.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+this will allow to use the pata_at91 on a single zImage
 
-On 03-02-2012 16:59, Amit Sahrawat wrote:
+and fix the pata since the cleanup of SMC in commit faee0cc33c3df3
 
-> It has been observed that a number of USB HDD's do not respond correctly
+Signed-off-by: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
+Cc: Nicolas Ferre <nicolas.ferre@atmel.com>
+Cc: linux-ide@vger.kernel.org
+---
+Hi,
 
-    Why are you working around this in libata-scsi.c then if it's USB HDD?
+	it's depends on other patch for AT91 can we apply via at91
 
-> to SCSI mode sense command(retrieve caching pages) which results in their
-> Write Cache being discarded by queue requests i.e., WCE if left set to
-> '0'(disabled).
-> This results in a number of Filesystem corruptions, when the device
-> is unplugged abruptly.
+Best Regards,
+J.
+ drivers/ata/pata_at91.c |   46 ++++++++++++++++++++--------------------------
+ 1 files changed, 20 insertions(+), 26 deletions(-)
 
-> So, in order to identify the devices correctly - give it
-> a last try using ATA_16 after failure from normal routine.
-
-    Shouldn't this be done in drivers/usb/storage somewhere?
-
-> Signed-off-by: Amit Sahrawat<a.sahrawat@samsung.com>
-> Signed-off-by: Namjae Jeon<namjae.jeon@samsung.com>
-
-[...]
-
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 508a60b..d5b00e6 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -562,6 +562,57 @@ error:
->   }
->
->   /**
-> + *      ata_get_cachestatus - Handler for to get WriteCache Status
-> + *                      using ATA_16 scsi command
-> + *      @scsidev: Device to which we are issuing command
-> + *
-> + *      LOCKING:
-> + *      Defined by the SCSI layer.  We don't really care.
-> + *
-> + *      RETURNS:
-> + *      '0' for Write Cache Disabled and on any error.
-> + *      '1' for Write Cache enabled
-> + */
-> +int ata_get_cachestatus(struct scsi_device *scsidev)
-> +{
-> +	int rc = 0;
-> +	u8 scsi_cmd[MAX_COMMAND_SIZE] = {0};
-> +	u8 *sensebuf = NULL, *argbuf = NULL;
-
-    No need to initialize them.
-
-> +	enum dma_data_direction data_dir;
-> +
-> +	sensebuf = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-> +	if (!sensebuf)
-> +		return rc;
-> +
-> +	argbuf = kmalloc(ATA_SECT_SIZE, GFP_KERNEL);
-> +	if (argbuf == NULL)
-
-    Could you use an uniform NULL-check, either '!x' or 'x == NULL'?
-
-> +		goto error;
-> +
-> +	scsi_cmd[0] = ATA_16;
-> +	scsi_cmd[1]  = (4<<  1); /* PIO Data-in */
-> +	scsi_cmd[2]  = 0x0e;     /* no off.line or cc, read from dev,
-> +				block count in sector count field */
-> +	data_dir = DMA_FROM_DEVICE;
-> +	scsi_cmd[14] = ATA_IDENTIFY_DEV;
-> +
-> +	if (!scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, ATA_SECT_SIZE,
-> +				sensebuf, (10*HZ), 5, 0, NULL)) {
-> +		/*
-> +		 * '6th' Bit in Word 85 Corresponds to Write Cache
-
-    No need for apostrophes here.
-
-> +		 * being Enabled/disabled, Word 85 represnets the
-> +		 * features supported
-> +		 */
-> +		if (le16_to_cpu(((unsigned short *)argbuf)[85])&  0x20)
-> +			rc = 1;
-> +	}
-> +
-> +error:
-> +	kfree(sensebuf);
-> +	kfree(argbuf);
-> +	return rc;
-> +}
-> +
-> +/**
->    *	ata_task_ioctl - Handler for HDIO_DRIVE_TASK ioctl
->    *	@scsidev: Device to which we are issuing command
->    *	@arg: User provided data for issuing command
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index c691fb5..a6b887d 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -50,6 +50,11 @@
->   #include<linux/string_helpers.h>
->   #include<linux/async.h>
->   #include<linux/slab.h>
-> +
-> +#ifdef CONFIG_ATA
-
-    #ifdef not necessary here.
-
-> +#include<linux/libata.h>
-> +#endif
-> +
->   #include<linux/pm_runtime.h>
->   #include<asm/uaccess.h>
->   #include<asm/unaligned.h>
-> @@ -2129,7 +2134,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
->   		if (modepage == 0x3F) {
->   			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
->   				  "present\n");
-> +#ifdef CONFIG_ATA
-> +			goto WCE_USING_ATA;
-
-    Yikes.
-
-> +#else
->   			goto defaults;
-> +#endif
->   		} else if ((buffer[offset]&  0x3f) != modepage) {
->   			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
->   			goto defaults;
-> @@ -2149,6 +2158,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
->   				  "Uses READ/WRITE(6), disabling FUA\n");
->   			sdkp->DPOFUA = 0;
->   		}
-> +#ifdef CONFIG_ATA
-> +WCE_USING_ATA:
-> +		if (!sdp->removable && !sdkp->WCE) {
-> +			sd_printk(KERN_NOTICE, sdkp, "Try to check write cache "
-> +				"enable/disable using ATA command\n");
-> +			sdkp->WCE = ata_get_cachestatus(sdp);
-> +		}
-> +#endif
->
->   		if (sdkp->first_scan || old_wce != sdkp->WCE ||
->   		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index cafc09a..33fc73f 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -84,6 +84,8 @@
->   	}							\
->   })
->
-> +#define ATA_IDENTIFY_DEV	0xEC
-> +
-
-    This is alerady #defined in <linux/ata.h> as ATA_CMD_ID_ATA.
-
-MBR, Sergei
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index a7d91a7..53d3770 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -207,11 +207,11 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+ {
+ 	int ret = 0;
+ 	int use_iordy;
++	struct sam9_smc_config smc;
+ 	unsigned int t6z;         /* data tristate time in ns */
+ 	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
+ 	unsigned int setup;       /* SMC Setup width in MCK ticks */
+ 	unsigned int pulse;       /* CFIOR and CFIOW pulse width in MCK ticks */
+-	unsigned int cs_setup = 0;/* CS4 or CS5 setup width in MCK ticks */
+ 	unsigned int cs_pulse;    /* CS4 or CS5 pulse width in MCK ticks*/
+ 	unsigned int tdf_cycles;  /* SMC TDF MCK ticks */
+ 	unsigned long mck_hz;     /* MCK frequency in Hz */
+@@ -244,26 +244,20 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+ 	}
+ 
+ 	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
+-	info->mode |= AT91_SMC_TDF_(tdf_cycles);
+ 
+-	/* write SMC Setup Register */
+-	at91_sys_write(AT91_SMC_SETUP(info->cs),
+-			AT91_SMC_NWESETUP_(setup) |
+-			AT91_SMC_NRDSETUP_(setup) |
+-			AT91_SMC_NCS_WRSETUP_(cs_setup) |
+-			AT91_SMC_NCS_RDSETUP_(cs_setup));
+-	/* write SMC Pulse Register */
+-	at91_sys_write(AT91_SMC_PULSE(info->cs),
+-			AT91_SMC_NWEPULSE_(pulse) |
+-			AT91_SMC_NRDPULSE_(pulse) |
+-			AT91_SMC_NCS_WRPULSE_(cs_pulse) |
+-			AT91_SMC_NCS_RDPULSE_(cs_pulse));
+-	/* write SMC Cycle Register */
+-	at91_sys_write(AT91_SMC_CYCLE(info->cs),
+-			AT91_SMC_NWECYCLE_(cycle) |
+-			AT91_SMC_NRDCYCLE_(cycle));
+-	/* write SMC Mode Register*/
+-	at91_sys_write(AT91_SMC_MODE(info->cs), info->mode);
++	/* SMC Setup Register */
++	smc.nwe_setup = smc.nrd_setup = setup;
++	smc.ncs_write_setup = smc.ncs_read_setup = 0;
++	/* SMC Pulse Register */
++	smc.nwe_pulse = smc.nrd_pulse = pulse;
++	smc.ncs_write_pulse = smc.ncs_read_pulse = cs_pulse;
++	/* SMC Cycle Register */
++	smc.write_cycle = smc.read_cycle = cycle;
++	/* SMC Mode Register*/
++	smc.tdf_cycles = tdf_cycles;
++	smc.mode = info->mode;
++
++	sam9_smc_configure(0, info->cs, &smc);
+ }
+ 
+ static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
+@@ -288,20 +282,20 @@ static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev,
+ 	struct at91_ide_info *info = dev->link->ap->host->private_data;
+ 	unsigned int consumed;
+ 	unsigned long flags;
+-	unsigned int mode;
++	struct sam9_smc_config smc;
+ 
+ 	local_irq_save(flags);
+-	mode = at91_sys_read(AT91_SMC_MODE(info->cs));
++	sam9_smc_read_mode(0, info->cs, &smc);
+ 
+ 	/* set 16bit mode before writing data */
+-	at91_sys_write(AT91_SMC_MODE(info->cs),
+-			(mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16);
++	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16;
++	sam9_smc_write_mode(0, info->cs, &smc);
+ 
+ 	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
+ 
+ 	/* restore 8bit mode after data is written */
+-	at91_sys_write(AT91_SMC_MODE(info->cs),
+-			(mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8);
++	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8;
++	sam9_smc_write_mode(0, info->cs, &smc);
+ 
+ 	local_irq_restore(flags);
+ 	return consumed;
+-- 
+1.7.7
