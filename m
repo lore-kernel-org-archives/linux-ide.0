@@ -1,80 +1,46 @@
 From: Matt Sealey <matt@genesi-usa.com>
-Subject: Braindead newbie questions, DMA-backed PIO
-Date: Thu, 9 Feb 2012 13:43:01 -0600
-Message-ID: <CAKGA1b=XvOS_dk3HV8H7-S1Ppc76FoW51xgnvKX2XWzCpfH4xA@mail.gmail.com>
+Subject: Timing computation, values missing from table (in spec though)
+Date: Thu, 9 Feb 2012 14:19:06 -0600
+Message-ID: <CAKGA1bmiocDOg0Li8bA+v8MUuze1Z6yOfWx2kTh76OdJwDVg4A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod7og114.obsmtp.com ([64.18.2.215]:46894 "EHLO
-	exprod7og114.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758496Ab2BITtD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2012 14:49:03 -0500
-Received: by mail-tul01m020-f174.google.com with SMTP id va7so3807459obc.33
-        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2012 11:49:01 -0800 (PST)
+Received: from exprod7og121.obsmtp.com ([64.18.2.20]:58130 "EHLO
+	exprod7og121.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757900Ab2BIUT1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Feb 2012 15:19:27 -0500
+Received: by mail-tul01m020-f170.google.com with SMTP id up3so3047243obb.29
+        for <linux-ide@vger.kernel.org>; Thu, 09 Feb 2012 12:19:26 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Hi guys,
+A question so I can see if I can use ata_timing_compute or possibly improve it..
 
-I have some probably quite simple questions which I am having a hard
-time figuring out.
+The current mode timings list seems to be missing a few timings we
+need that cannot possibly (and don't seem to be attempted) to be
+resolved from the ata_timings table in libata-core.c.
 
-I am working on improving DMA support for the pata_imx driver. While
-supporting normal MWDMA and UDMA modes is fairly easy (the SoC
-DMA controller handles it almost transparently), for PIO mode I intend
-to enhance it by replacing ata_sff_data_xfer with something that is
-backed with a little more involved on DMA (basically using the DMA
-unit to transfer data to the 16-bit drive data register).
+We have a bank of registers in our ATA controller where these values
+need setting; is it that the timings table is missing the values (and
+the same true of the one in ide-timings.c) no
+other drive controller actually needed such fine timings and would
+implement them as per the spec minimums by itself? We need to actually
+set the specific time in ATA clocks in those
+registers, and there is a register for every timing reference in the
+ATA spec tables and diagrams.. specifically t4 and t9 are missing for
+PIO (and tA would be derived for iordy by the current code, right? But
+we also need to set tRD which seems not to be) and for DMA, several
+others (tM for MWDMA) and I am really confused where the values for
+UDMA are meant to be derived for the controller since none of them are
+listed in the comments for struct ata_timing.
 
-However, I can't figure out (because there are no solid examples) if I
-can act on the buffer data in the same way as I would in a DMA
-function
-by mapping sg's and doing a standard dmaengine slave transfer then
-waiting for it to complete (thus relieving us of having to do
-expensive
-16-bit CPU I/O to a device register, and hopefully allowing the kernel
-or userspace to do something else like play audio or whatever while we
-wait for the slave transfer to complete). I assume it should all be
-fine, but I just want to be super sure before I start scratching my
-head over
-something fundamentally impossible.
-
-The other question semi-related is whether I really need to, as in the
-current implementation, use the ata_sff_data_xfer_noirq (or a
-derivative of
-it) variant as this causes some incredible stuttering in the system
-and impacts things like audio. What exactly are we protecting against
-here,
-an occurance of any system IRQ that might steal from the transfer, or
-just the occurance of the ATA IRQ? With the drive interrupt enabled
-(the manual just states that when it happens the drive is looking for
-attention) is this going to cause some insanity with the transfer with
-libata
-servicing the interrupt behind my back and doing something odd? The
-default interrupt handler in libata seems to be fairly safe and checks
-if
-the controller is busy or not, but since there are a lot of drivers
-that use _noirq variant for PIO I am just curious what they are
-looking to avoid
-happening, perhaps if this is a legacy behavior nobody bothered to
-change since libata got more advanced?
-
-I also have another small question, is there any benefit to having
-set_piomode, set_dmamode and set_mode all implemented? What's the
-precise reason to implement set_mode, I assume just to handle any odd
-tweaks like dma mask registers that are not ATA standard before
-(or after?) the set_???mode functions are called? The pata_platform.c
-driver which pata_imx.c was derived from implements it but does not
-implement any other pio/dma mode setting. pata_imx sets up iordy
-behavior for higher transfer rates (for some reason, it doesn't
-actually have
-any support for the timings) in this function. What is the recommended
-way to do this these days? My current internal implementation removes
-this and uses set_piomode and set_dmamode to implement drive timings
-and set iordy, and I just want to check that this is correct.
-
-Thanks for any answers..
+Is it a good or bad idea to expand the table to include the extra
+timings, or should we just include a custom table of timings and
+manage the situation ourselves? Part of my reason for wanting to use
+the libata core timings is because of all the safety checks which I
+don't get with a custom blob of numbers pulled from some older source
+code that I have no idea how they were derived..
 
 -- 
 Matt Sealey <matt@genesi-usa.com>
