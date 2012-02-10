@@ -1,338 +1,282 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v8 13/13] libsas: trim sas_task of slow path infrastructure
-Date: Fri, 10 Feb 2012 00:45:46 -0800
-Message-ID: <20120210084545.25701.4897.stgit@dwillia2-linux.jf.intel.com>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+From: Liu Qiang-B32616 <B32616@freescale.com>
+Subject: RE: [PATCH V2] fsl-sata: I/O load balancing
+Date: Fri, 10 Feb 2012 08:51:17 +0000
+Message-ID: <BCB48C05FCE8BC4D9E61E841ECBE6DB701E91A@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1327025958-10605-1-git-send-email-qiang.liu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from am1ehsobe001.messaging.microsoft.com ([213.199.154.204]:23431
+	"EHLO AM1EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753419Ab2BJIvX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Feb 2012 03:51:23 -0500
+In-Reply-To: <1327025958-10605-1-git-send-email-qiang.liu@freescale.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Liu Qiang-B32616 <B32616@freescale.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
 
-The timer and the completion are only used for slow path tasks (smp, and
-lldd tmfs), yet we incur the allocation space and cpu setup time for
-every fast path task.
+Hi Jeff,
 
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_expander.c  |   20 ++++++++++----------
- drivers/scsi/libsas/sas_init.c      |   23 +++++++++++++++++++++--
- drivers/scsi/libsas/sas_scsi_host.c |    8 ++++++--
- drivers/scsi/mvsas/mv_sas.c         |   20 ++++++++++----------
- drivers/scsi/pm8001/pm8001_sas.c    |   30 +++++++++++++++---------------
- include/scsi/libsas.h               |   14 +++++++++-----
- 6 files changed, 71 insertions(+), 44 deletions(-)
+Do you have any suggestion about this patch :)
 
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 05acd9e..0ab3796 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -51,14 +51,14 @@ static void smp_task_timedout(unsigned long _task)
- 		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- static void smp_task_done(struct sas_task *task)
- {
--	if (!del_timer(&task->timer))
-+	if (!del_timer(&task->slow_task->timer))
- 		return;
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- /* Give it some long enough timeout. In seconds. */
-@@ -79,7 +79,7 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 			break;
- 		}
- 
--		task = sas_alloc_task(GFP_KERNEL);
-+		task = sas_alloc_slow_task(GFP_KERNEL);
- 		if (!task) {
- 			res = -ENOMEM;
- 			break;
-@@ -91,20 +91,20 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 
- 		task->task_done = smp_task_done;
- 
--		task->timer.data = (unsigned long) task;
--		task->timer.function = smp_task_timedout;
--		task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
--		add_timer(&task->timer);
-+		task->slow_task->timer.data = (unsigned long) task;
-+		task->slow_task->timer.function = smp_task_timedout;
-+		task->slow_task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
-+		add_timer(&task->slow_task->timer);
- 
- 		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
- 
- 		if (res) {
--			del_timer(&task->timer);
-+			del_timer(&task->slow_task->timer);
- 			SAS_DPRINTK("executing SMP task failed:%d\n", res);
- 			break;
- 		}
- 
--		wait_for_completion(&task->completion);
-+		wait_for_completion(&task->slow_task->completion);
- 		res = -ECOMM;
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
- 			SAS_DPRINTK("smp task timed out or aborted\n");
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 2fc23d3..57e7ac9 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -48,18 +48,37 @@ struct sas_task *sas_alloc_task(gfp_t flags)
- 		INIT_LIST_HEAD(&task->list);
- 		spin_lock_init(&task->task_state_lock);
- 		task->task_state_flags = SAS_TASK_STATE_PENDING;
--		init_timer(&task->timer);
--		init_completion(&task->completion);
- 	}
- 
- 	return task;
- }
- EXPORT_SYMBOL_GPL(sas_alloc_task);
- 
-+struct sas_task *sas_alloc_slow_task(gfp_t flags)
-+{
-+	struct sas_task *task = sas_alloc_task(flags);
-+	struct sas_task_slow *slow = kmalloc(sizeof(*slow), flags);
-+
-+	if (!task || !slow) {
-+		if (task)
-+			kmem_cache_free(sas_task_cache, task);
-+		kfree(slow);
-+		return NULL;
-+	}
-+
-+	task->slow_task = slow;
-+	init_timer(&slow->timer);
-+	init_completion(&slow->completion);
-+
-+	return task;
-+}
-+EXPORT_SYMBOL_GPL(sas_alloc_slow_task);
-+
- void sas_free_task(struct sas_task *task)
- {
- 	if (task) {
- 		BUG_ON(!list_empty(&task->list));
-+		kfree(task->slow_task);
- 		kmem_cache_free(sas_task_cache, task);
- 	}
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 86ffd8f..9716f2e 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -1013,9 +1013,13 @@ void sas_task_abort(struct sas_task *task)
- 
- 	/* Escape for libsas internal commands */
- 	if (!sc) {
--		if (!del_timer(&task->timer))
-+		struct sas_task_slow *slow = task->slow_task;
-+
-+		if (!slow)
-+			return;
-+		if (!del_timer(&slow->timer))
- 			return;
--		task->timer.function(task->timer.data);
-+		slow->timer.function(slow->timer.data);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index b68a653..d0462b8 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1365,9 +1365,9 @@ void mvs_dev_gone(struct domain_device *dev)
- 
- static void mvs_task_done(struct sas_task *task)
- {
--	if (!del_timer(&task->timer))
-+	if (!del_timer(&task->slow_task->timer))
- 		return;
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- static void mvs_tmf_timedout(unsigned long data)
-@@ -1375,7 +1375,7 @@ static void mvs_tmf_timedout(unsigned long data)
- 	struct sas_task *task = (struct sas_task *)data;
- 
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- #define MVS_TASK_TIMEOUT 20
-@@ -1386,7 +1386,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 	struct sas_task *task = NULL;
- 
- 	for (retry = 0; retry < 3; retry++) {
--		task = sas_alloc_task(GFP_KERNEL);
-+		task = sas_alloc_slow_task(GFP_KERNEL);
- 		if (!task)
- 			return -ENOMEM;
- 
-@@ -1396,20 +1396,20 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 		memcpy(&task->ssp_task, parameter, para_len);
- 		task->task_done = mvs_task_done;
- 
--		task->timer.data = (unsigned long) task;
--		task->timer.function = mvs_tmf_timedout;
--		task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
--		add_timer(&task->timer);
-+		task->slow_task->timer.data = (unsigned long) task;
-+		task->slow_task->timer.function = mvs_tmf_timedout;
-+		task->slow_task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
-+		add_timer(&task->slow_task->timer);
- 
- 		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 1, tmf);
- 
- 		if (res) {
--			del_timer(&task->timer);
-+			del_timer(&task->slow_task->timer);
- 			mv_printk("executing internel task failed:%d\n", res);
- 			goto ex_err;
- 		}
- 
--		wait_for_completion(&task->completion);
-+		wait_for_completion(&task->slow_task->completion);
- 		res = TMF_RESP_FUNC_FAILED;
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index b111018..ad36f1a 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -627,9 +627,9 @@ int pm8001_dev_found(struct domain_device *dev)
- 
- static void pm8001_task_done(struct sas_task *task)
- {
--	if (!del_timer(&task->timer))
-+	if (!del_timer(&task->slow_task->timer))
- 		return;
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- static void pm8001_tmf_timedout(unsigned long data)
-@@ -637,7 +637,7 @@ static void pm8001_tmf_timedout(unsigned long data)
- 	struct sas_task *task = (struct sas_task *)data;
- 
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
--	complete(&task->completion);
-+	complete(&task->slow_task->completion);
- }
- 
- #define PM8001_TASK_TIMEOUT 20
-@@ -668,21 +668,21 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
- 		task->task_proto = dev->tproto;
- 		memcpy(&task->ssp_task, parameter, para_len);
- 		task->task_done = pm8001_task_done;
--		task->timer.data = (unsigned long)task;
--		task->timer.function = pm8001_tmf_timedout;
--		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
--		add_timer(&task->timer);
-+		task->slow_task->timer.data = (unsigned long)task;
-+		task->slow_task->timer.function = pm8001_tmf_timedout;
-+		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
-+		add_timer(&task->slow_task->timer);
- 
- 		res = pm8001_task_exec(task, 1, GFP_KERNEL, 1, tmf);
- 
- 		if (res) {
--			del_timer(&task->timer);
-+			del_timer(&task->slow_task->timer);
- 			PM8001_FAIL_DBG(pm8001_ha,
- 				pm8001_printk("Executing internal task "
- 				"failed\n"));
- 			goto ex_err;
- 		}
--		wait_for_completion(&task->completion);
-+		wait_for_completion(&task->slow_task->completion);
- 		res = -TMF_RESP_FUNC_FAILED;
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-@@ -749,10 +749,10 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
- 		task->dev = dev;
- 		task->task_proto = dev->tproto;
- 		task->task_done = pm8001_task_done;
--		task->timer.data = (unsigned long)task;
--		task->timer.function = pm8001_tmf_timedout;
--		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT * HZ;
--		add_timer(&task->timer);
-+		task->slow_task->timer.data = (unsigned long)task;
-+		task->slow_task->timer.function = pm8001_tmf_timedout;
-+		task->slow_task->timer.expires = jiffies + PM8001_TASK_TIMEOUT * HZ;
-+		add_timer(&task->slow_task->timer);
- 
- 		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
- 		if (res)
-@@ -766,13 +766,13 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev, flag, task_tag, ccb_tag);
- 
- 		if (res) {
--			del_timer(&task->timer);
-+			del_timer(&task->slow_task->timer);
- 			PM8001_FAIL_DBG(pm8001_ha,
- 				pm8001_printk("Executing internal task "
- 				"failed\n"));
- 			goto ex_err;
- 		}
--		wait_for_completion(&task->completion);
-+		wait_for_completion(&task->slow_task->completion);
- 		res = TMF_RESP_FUNC_FAILED;
- 		/* Even TMF timed out, return direct. */
- 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 484bc52..4e84ef3 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -568,10 +568,6 @@ struct sas_task {
- 
- 	enum   sas_protocol      task_proto;
- 
--	/* Used by the discovery code. */
--	struct timer_list     timer;
--	struct completion     completion;
--
- 	union {
- 		struct sas_ata_task ata_task;
- 		struct sas_smp_task smp_task;
-@@ -588,8 +584,15 @@ struct sas_task {
- 
- 	void   *lldd_task;	  /* for use by LLDDs */
- 	void   *uldd_task;
-+	struct sas_task_slow *slow_task;
-+};
- 
--	struct work_struct abort_work;
-+struct sas_task_slow {
-+	/* standard/extra infrastructure for slow path commands (SMP and
-+	 * internal lldd commands
-+	 */
-+	struct timer_list     timer;
-+	struct completion     completion;
- };
- 
- #define SAS_TASK_STATE_PENDING      1
-@@ -599,6 +602,7 @@ struct sas_task {
- #define SAS_TASK_AT_INITIATOR       16
- 
- extern struct sas_task *sas_alloc_task(gfp_t flags);
-+extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
- extern void sas_free_task(struct sas_task *task);
- 
- struct sas_domain_function_template {
+
+> -----Original Message-----
+> From: Liu Qiang-B32616
+> Sent: Friday, January 20, 2012 10:19 AM
+> To: jgarzik@pobox.com; linux-ide@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; Liu
+> Qiang-B32616
+> Subject: [PATCH V2] fsl-sata: I/O load balancing
+> 
+> From: Qiang Liu <qiang.liu@freescale.com>
+> 
+> Reduce interrupt signals through reset Interrupt Coalescing Control Reg.
+> Provide dynamic method to adjust interrupt signals and timer ticks by
+> sysfs.
+> It is a tradeoff for different applications.
+> 
+> Signed-off-by: Qiang Liu <qiang.liu@freescale.com>
+> ---
+> 
+> change for V2
+> 	support dynamic config interrupt coalescing register by /sysfs
+> 	test random small file with iometer
+> Description:
+>   1. fsl-sata interrupt will be raised 130 thousand times when write 8G
+> file
+>     (dd if=/dev/zero of=/dev/sda2 bs=128K count=65536);
+>   2. most of interrupts raised because of only 1-4 commands completed;
+>   3. only 30 thousand times will be raised after set max interrupt
+> threshold,
+>     more interrupts are coalesced as the description of ICC;
+> 
+> Test methods and results:
+>   1. test sequential large file performance,
+>   [root@p2020ds root]# echo 31 524287 > \
+>   	/sys/devices/soc.0/ffe18000.sata/intr_coalescing
+>   [root@p2020ds root]# dd if=/dev/zero of=/dev/sda2 bs=128K count=65536 &
+>   [root@p2020ds root]# top
+> 
+>   CPU %  |  dd   |  flush-8:0 | softirq
+>   ---------------------------------------
+>   before | 20-22 |    17-19   |    7
+>   ---------------------------------------
+>   after  | 18-21 |    15-16   |    5
+>   ---------------------------------------
+>   2. test random small file with iometer,  iometer paramters:
+>    4 I/Os burst length, 1MB transfer request size, 100% write, 2MB file
+> size
+>    as default configuration of interrupt coalescing register, 1
+> interrupts and  no timeout config, total write performance is 119MB per
+> second,
+>    after config with the maximum value, write performance is 110MB per
+> second.
+> 
+>   After compare the test results, a configuable interrupt coalescing
+> should be
+>   better when cope with flexible context.
+> 
+>  drivers/ata/sata_fsl.c |  111
+> ++++++++++++++++++++++++++++++++++++++++++++++--
+>  1 files changed, 107 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c index
+> 3547000..41ca495 100644
+> --- a/drivers/ata/sata_fsl.c
+> +++ b/drivers/ata/sata_fsl.c
+> @@ -6,7 +6,7 @@
+>   * Author: Ashish Kalra <ashish.kalra@freescale.com>
+>   * Li Yang <leoli@freescale.com>
+>   *
+> - * Copyright (c) 2006-2007, 2011 Freescale Semiconductor, Inc.
+> + * Copyright (c) 2006-2007, 2011-2012 Freescale Semiconductor, Inc.
+>   *
+>   * This program is free software; you can redistribute  it and/or modify
+> it
+>   * under  the terms of  the GNU General  Public License as published by
+> the @@ -26,6 +26,15 @@  #include <asm/io.h>  #include
+> <linux/of_platform.h>
+> 
+> +static unsigned int intr_coalescing_count;
+> +module_param(intr_coalescing_count, int, S_IRUGO);
+> +MODULE_PARM_DESC(intr_coalescing_count,
+> +				 "INT coalescing count threshold (1..31)");
+> +
+> +static unsigned int intr_coalescing_ticks;
+> +module_param(intr_coalescing_ticks, int, S_IRUGO);
+> +MODULE_PARM_DESC(intr_coalescing_ticks,
+> +				 "INT coalescing timer threshold in AHB ticks");
+>  /* Controller information */
+>  enum {
+>  	SATA_FSL_QUEUE_DEPTH	= 16,
+> @@ -83,6 +92,16 @@ enum {
+>  };
+> 
+>  /*
+> + * Interrupt Coalescing Control Register bitdefs  */ enum {
+> +	ICC_MIN_INT_COUNT_THRESHOLD	= 1,
+> +	ICC_MAX_INT_COUNT_THRESHOLD	= ((1 << 5) - 1),
+> +	ICC_MIN_INT_TICKS_THRESHOLD	= 0,
+> +	ICC_MAX_INT_TICKS_THRESHOLD	= ((1 << 19) - 1),
+> +	ICC_SAFE_INT_TICKS		= 1,
+> +};
+> +
+> +/*
+>  * Host Controller command register set - per port  */  enum { @@ -263,9
+> +282,66 @@ struct sata_fsl_host_priv {
+>  	int irq;
+>  	int data_snoop;
+>  	u32 quirks;
+> +	struct device_attribute intr_coalescing;
+>  #define SATA_FSL_QUIRK_P3P5_ERRATA	(1 << 0)
+>  };
+> 
+> +static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+> +		unsigned int count, unsigned int ticks) {
+> +	struct sata_fsl_host_priv *host_priv = host->private_data;
+> +	void __iomem *hcr_base = host_priv->hcr_base;
+> +
+> +	if (count > ICC_MAX_INT_COUNT_THRESHOLD)
+> +		count = ICC_MAX_INT_COUNT_THRESHOLD;
+> +	else if (count < ICC_MIN_INT_COUNT_THRESHOLD)
+> +		count = ICC_MIN_INT_COUNT_THRESHOLD;
+> +
+> +	if (ticks > ICC_MAX_INT_TICKS_THRESHOLD)
+> +		ticks = ICC_MAX_INT_TICKS_THRESHOLD;
+> +	else if ((ICC_MIN_INT_TICKS_THRESHOLD == ticks) &&
+> +			(count > ICC_MIN_INT_COUNT_THRESHOLD))
+> +		ticks = ICC_SAFE_INT_TICKS;
+> +
+> +	spin_lock(&host->lock);
+> +	iowrite32((count << 24 | ticks), hcr_base + ICC);
+> +
+> +	intr_coalescing_count = count;
+> +	intr_coalescing_ticks = ticks;
+> +	spin_unlock(&host->lock);
+> +
+> +	DPRINTK("intrrupt coalescing, count = 0x%x, ticks = %x\n",
+> +			intr_coalescing_count, intr_coalescing_ticks);
+> +	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
+> +			hcr_base, ioread32(hcr_base + ICC)); }
+> +
+> +static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf) {
+> +	return sprintf(buf, "%d	%d\n",
+> +			intr_coalescing_count, intr_coalescing_ticks); }
+> +
+> +static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
+> +		struct device_attribute *attr,
+> +		const char *buf, size_t count)
+> +{
+> +	unsigned int coalescing_count,	coalescing_ticks;
+> +
+> +	if (sscanf(buf, "%d%d",
+> +				&coalescing_count,
+> +				&coalescing_ticks) != 2) {
+> +		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	fsl_sata_set_irq_coalescing(dev_get_drvdata(dev),
+> +			coalescing_count, coalescing_ticks);
+> +
+> +	return strlen(buf);
+> +}
+> +
+>  static void sata_fsl_dev_config(struct ata_device *dev)  {
+>  		dev->max_sectors = 16;
+> @@ -352,11 +428,11 @@ static unsigned int sata_fsl_fill_sg(struct
+> ata_queued_cmd *qc, void *cmd_desc,
+>  			(unsigned long long)sg_addr, sg_len);
+> 
+>  		/* warn if each s/g element is not dword aligned */
+> -		if (sg_addr & 0x03)
+> +		if (unlikely(sg_addr & 0x03))
+>  			ata_port_printk(qc->ap, KERN_ERR,
+>  					"s/g addr unaligned : 0x%llx\n",
+>  					(unsigned long long)sg_addr);
+> -		if (sg_len & 0x03)
+> +		if (unlikely(sg_len & 0x03))
+>  			ata_port_printk(qc->ap, KERN_ERR,
+>  					"s/g len unaligned : 0x%x\n", sg_len);
+> 
+> @@ -1305,6 +1381,13 @@ static int sata_fsl_init_controller(struct
+> ata_host *host)
+>  	iowrite32(0x00000FFFF, hcr_base + DE);
+> 
+>  	/*
+> +	 * reset the number of command complete bits which will cause the
+> +	 * interrupt to be signaled
+> +	 */
+> +	fsl_sata_set_irq_coalescing(host, intr_coalescing_count,
+> +			intr_coalescing_ticks);
+> +
+> +	/*
+>  	 * host controller will be brought on-line, during xx_port_start()
+>  	 * callback, that should also initiate the OOB, COMINIT sequence
+>  	 */
+> @@ -1368,7 +1451,7 @@ static int sata_fsl_probe(struct platform_device
+> *ofdev)
+>  	void __iomem *csr_base = NULL;
+>  	struct sata_fsl_host_priv *host_priv = NULL;
+>  	int irq;
+> -	struct ata_host *host;
+> +	struct ata_host *host = NULL;
+>  	u32 temp;
+> 
+>  	struct ata_port_info pi = sata_fsl_port_info[0]; @@ -1430,6
+> +1513,10 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+> 
+>  	/* allocate host structure */
+>  	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_FSL_MAX_PORTS);
+> +	if (!host) {
+> +		retval = -ENOMEM;
+> +		goto error_exit_with_cleanup;
+> +	}
+> 
+>  	/* host->iomap is not used currently */
+>  	host->private_data = host_priv;
+> @@ -1447,10 +1534,24 @@ static int sata_fsl_probe(struct platform_device
+> *ofdev)
+> 
+>  	dev_set_drvdata(&ofdev->dev, host);
+> 
+> +	host_priv->intr_coalescing.show = fsl_sata_intr_coalescing_show;
+> +	host_priv->intr_coalescing.store = fsl_sata_intr_coalescing_store;
+> +	sysfs_attr_init(&host_priv->intr_coalescing.attr);
+> +	host_priv->intr_coalescing.attr.name = "intr_coalescing";
+> +	host_priv->intr_coalescing.attr.mode = S_IRUGO | S_IWUSR;
+> +	retval = device_create_file(host->dev, &host_priv->intr_coalescing);
+> +	if (retval)
+> +		goto error_exit_with_cleanup;
+> +
+>  	return 0;
+> 
+>  error_exit_with_cleanup:
+> 
+> +	if (host) {
+> +		dev_set_drvdata(&ofdev->dev, NULL);
+> +		ata_host_detach(host);
+> +	}
+> +
+>  	if (hcr_base)
+>  		iounmap(hcr_base);
+>  	if (host_priv)
+> @@ -1464,6 +1565,8 @@ static int sata_fsl_remove(struct platform_device
+> *ofdev)
+>  	struct ata_host *host = dev_get_drvdata(&ofdev->dev);
+>  	struct sata_fsl_host_priv *host_priv = host->private_data;
+> 
+> +	device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
+> +
+>  	ata_host_detach(host);
+> 
+>  	dev_set_drvdata(&ofdev->dev, NULL);
+> --
+> 1.7.5.1
+
 
