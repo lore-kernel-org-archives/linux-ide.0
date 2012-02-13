@@ -1,74 +1,94 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Mon, 13 Feb 2012 20:38:12 +0100
-Message-ID: <201202132038.12927.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
+Subject: Re: [RFC PATCH 1/6] ACPI: Introduce ACPI D3_COLD state support
+Date: Mon, 13 Feb 2012 21:25:15 +0100
+Message-ID: <201202132125.15537.rjw@sisk.pl>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com> <1329124271-29464-2-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="iso-8859-1"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1329124271-29464-2-git-send-email-ming.m.lin@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Monday, February 13, 2012, Alan Stern wrote:
-> On Mon, 13 Feb 2012, Lin Ming wrote:
+On Monday, February 13, 2012, Lin Ming wrote:
+> From: Zhang Rui <rui.zhang@intel.com>
 > 
-> > From: Zhang Rui <rui.zhang@intel.com>
-> > 
-> > Introduce flag can_power_off in device structure to support runtime
-> > power off/on.
-> > 
-> > Note that, for a specific device driver,
-> > "support runtime power off/on" means that the driver .runtime_suspend
-> > callback needs to
-> > 1) save all the context so that it can restore the device back to the previous
-> >    working state after powered on.
-> > 2) set can_power_off flag to tell the driver model that it's ready for power off.
-> > 
-> > The following example shows how this works.
-> > 
-> > device A
-> >  |---------|
-> >  v         v
-> > device B  device C
-> > 
-> > A is the parent of device B and device C, and device A/B/C shares the
-> > same power logic
-> > (Only device A knows how to turn on/off the power).
-> > 
-> > In order to power off A, B, C at runtime,
-> > 1) device B and device C should support runtime power off
-> >    (runtime suspended with can_power_off flag set)
-> > 2) pm idle request for device A is fired by runtime PM core.
-> > 3) in device A .runtime_suspend callback, it tries to set can_power_off flag.
-> > 4) if succeed, it means all its children have been ready for power off
-> >    and it can turn off the power at any time.
-> > 5) if failed, it means at least one of its children does not support runtime
-> >    power off, thus the power can not be turned off.
+> If a device has _PR3._ON, it means the device supports D3_HOT.
+> If a device has _PR3._OFF, it means the device supports D3_COLD.
+> Add the ability to validate and enter D3_COLD state in ACPI.
 > 
-> I'm not sure if this is really the right approach.  What you're trying 
-> to do is implement two different low-power states, basically D3hot and 
-> D3cold.  Currently the runtime PM core doesn't support such things; all 
-> it knows about is low power and full power.
+> Signed-off-by: Zhang Rui <rui.zhang@intel.com>
 
-I'd rather say all it knows about is "suspended" and "active", which mean
-"the device is not processing I/O" and "the device may be processing I/O",
-respectively.  A "suspended" device may or may not be in a low-power state,
-but the runtime PM core doesn't care about that.
+This is supposed to be ACPI 5.0 support, right?
 
-> Before doing an ad-hoc implementation, it would be best to step back
-> and think about other subsystems.  Other sorts of devices may well have
-> multiple low-power states.  What's the best way for this to be
-> supported by the PM core?
+So can anyone please tell me what part of the ACPI 5.0 spec is the
+basis of this patch, because I can't see that immediately?
 
-Well, I honestly don't think there's any way they all can be covered at the
-same time and that's why we chose to support only "suspended" and "active"
-as defined above.  The handling of multiple low-power states must be
-implemented outside of the runtime PM core (like in the PCI core, for example).
+The only places where D3Cold is _mentioned_ are Section 7.2.12 (_PRE, which
+appears to be new in 5.0), Section 7.2.20 (_S0W), Section 7.2.21 (_S1W),
+Section 7.2.22 (_S2W), Section 7.2.23 (_S3W) and Section 7.2.24 (_S4W).
+None of them mentions those _PR3._ON and _PR3._OFF things above.
 
-Thanks,
+Moreover, my understanding of the spec is that D3Cold means all of the
+power resources returned by _PR3 are "off" (whereas some of them will be
+"on" in D3hot).
+
+> ---
+>  drivers/acpi/power.c |    4 ++--
+>  drivers/acpi/scan.c  |   10 +++++++++-
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+> index 9ac2a9f..0d681fb 100644
+> --- a/drivers/acpi/power.c
+> +++ b/drivers/acpi/power.c
+> @@ -500,14 +500,14 @@ int acpi_power_transition(struct acpi_device *device, int state)
+>  {
+>  	int result;
+>  
+> -	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3))
+> +	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+>  		return -EINVAL;
+>  
+>  	if (device->power.state == state)
+>  		return 0;
+>  
+>  	if ((device->power.state < ACPI_STATE_D0)
+> -	    || (device->power.state > ACPI_STATE_D3))
+> +	    || (device->power.state > ACPI_STATE_D3_COLD))
+>  		return -ENODEV;
+>  
+>  	/* TBD: Resources must be ordered. */
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index 8ab80ba..a9d4391 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -881,8 +881,16 @@ static int acpi_bus_get_power_flags(struct acpi_device *device)
+>  
+>  			device->power.flags.power_resources = 1;
+>  			ps->flags.valid = 1;
+> -			for (j = 0; j < ps->resources.count; j++)
+> +			for (j = 0; j < ps->resources.count; j++) {
+>  				acpi_bus_add_power_resource(ps->resources.handles[j]);
+> +				/* Check for D3_COLD support. _PR3._OFF equals D3_COLD ? */
+> +				if (i == ACPI_STATE_D3) {
+> +					if (j == 0)
+> +						device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
+> +					status = acpi_get_handle(ps->resources.handles[j], "_OFF",  &handle);
+> +					device->power.states[ACPI_STATE_D3_COLD].flags.valid &= ACPI_SUCCESS(status);
+> +				}
+> +			}
+
+Sorry, but this doesn't make sense to me.  Power resources always have
+the _OFF method, right?
+
+>  		}
+>  
+>  		/* Evaluate "_PSx" to see if we can do explicit sets */
+> 
+
 Rafael
