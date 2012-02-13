@@ -1,68 +1,44 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH 2/2] [trivial] Documentation: broken URL in libata
-Date: Mon, 13 Feb 2012 09:22:36 -0800
-Message-ID: <4F3946DC.3090102@xenotime.net>
-References: <1329124192-27461-1-git-send-email-michael.opdenacker@free-electrons.com> <1329124192-27461-3-git-send-email-michael.opdenacker@free-electrons.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
+ COMRESET failed
+Date: Mon, 13 Feb 2012 09:44:45 -0800
+Message-ID: <20120213174445.GD12117@google.com>
+References: <20120203054319.GA25510@gamma.logic.tuwien.ac.at>
+ <1328257660.15079.30.camel@minggr>
+ <20120206004608.GA9413@gamma.logic.tuwien.ac.at>
+ <1328492218.15079.38.camel@minggr>
+ <20120206024052.GI9413@gamma.logic.tuwien.ac.at>
+ <1328496591.15079.40.camel@minggr>
+ <20120206031528.GA16093@gamma.logic.tuwien.ac.at>
+ <1328503376.15079.55.camel@minggr>
+ <20120206161943.GA3926@google.com>
+ <CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:50035 "HELO
-	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755496Ab2BMRXL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2012 12:23:11 -0500
-In-Reply-To: <1329124192-27461-3-git-send-email-michael.opdenacker@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, jeff@garzik.org, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-Cc: trivial@kernel.org, lucas.demarchi@profusion.mobi, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On 02/13/2012 01:09 AM, Michael Opdenacker wrote:
-> Fix broken link to license text:
-> http://www.opensource.org/licenses/osl-1.1.txt
-> The text for version 1.1 of the Open Sofware license doesn't seem
-> to be available anywhere on http://www.opensource.org/ any more.
-> Replace it with a snapshot from the Internet Wayback Machine.
+Hello,
 
-That's one option.
-Too bad opensource.org doesn't provide archives.
+On Mon, Feb 06, 2012 at 11:20:45AM -0800, Brian Norris wrote:
+> I see the following options:
+> (1) implement a flag that can be passed through ahci_platform; this
+> would not be very useful, as we would still have to tweak the driver
+> out of tree.
 
-OSL v1.1 is also available here:
-http://fedoraproject.org/wiki/Licensing:OSL1.1
+Yeah, please add module param to make this behavior conditional.
 
-and here:
-http://www.samurajdata.se/opensource/mirror/licenses/osl.php
+> (2) Drop the fix entirely. This is a spec. violation, but we can
+> simply try to maintain the fix out-of-tree.
 
-Jeff, I don't suppose there is any chance of changing this file's license?
-(since the Debian people found it to be a problem .. long ago)
+Nothing is perfect and real hardware should come before spec.
 
-
-> I first thought about hosting a copy of this file on my
-> own website, but my website has less authority than
-> an explicit backup of the original location.
-> 
-> Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
-> ---
->  Documentation/DocBook/libata.tmpl |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/DocBook/libata.tmpl b/Documentation/DocBook/libata.tmpl
-> index cdd1bb9..bda33c1 100644
-> --- a/Documentation/DocBook/libata.tmpl
-> +++ b/Documentation/DocBook/libata.tmpl
-> @@ -22,8 +22,8 @@
->     <para>
->     The contents of this file are subject to the Open
->     Software License version 1.1 that can be found at
-> -   <ulink url="http://www.opensource.org/licenses/osl-1.1.txt">http://www.opensource.org/licenses/osl-1.1.txt</ulink> and is included herein
-> -   by reference.
-> +   <ulink url="http://web.archive.org/web/20060924133258/http://www.opensource.org/licenses/osl-1.1.txt">http://web.archive.org/web/20060924133258/http://www.opensource.org/licenses/osl-1.1.txt</ulink>
-> +   and is included herein by reference.
->     </para>
->  
->     <para>
-
+Thanks.
 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+tejun
