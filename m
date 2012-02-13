@@ -1,65 +1,68 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Mon, 13 Feb 2012 10:01:54 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
-References: <1329124271-29464-5-git-send-email-ming.m.lin@intel.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH 2/2] [trivial] Documentation: broken URL in libata
+Date: Mon, 13 Feb 2012 09:22:36 -0800
+Message-ID: <4F3946DC.3090102@xenotime.net>
+References: <1329124192-27461-1-git-send-email-michael.opdenacker@free-electrons.com> <1329124192-27461-3-git-send-email-michael.opdenacker@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41604 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752425Ab2BMPBz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2012 10:01:55 -0500
-In-Reply-To: <1329124271-29464-5-git-send-email-ming.m.lin@intel.com>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:50035 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755496Ab2BMRXL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2012 12:23:11 -0500
+In-Reply-To: <1329124192-27461-3-git-send-email-michael.opdenacker@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+To: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Cc: trivial@kernel.org, lucas.demarchi@profusion.mobi, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Mon, 13 Feb 2012, Lin Ming wrote:
+On 02/13/2012 01:09 AM, Michael Opdenacker wrote:
+> Fix broken link to license text:
+> http://www.opensource.org/licenses/osl-1.1.txt
+> The text for version 1.1 of the Open Sofware license doesn't seem
+> to be available anywhere on http://www.opensource.org/ any more.
+> Replace it with a snapshot from the Internet Wayback Machine.
 
-> From: Zhang Rui <rui.zhang@intel.com>
-> 
-> Introduce flag can_power_off in device structure to support runtime
-> power off/on.
-> 
-> Note that, for a specific device driver,
-> "support runtime power off/on" means that the driver .runtime_suspend
-> callback needs to
-> 1) save all the context so that it can restore the device back to the previous
->    working state after powered on.
-> 2) set can_power_off flag to tell the driver model that it's ready for power off.
-> 
-> The following example shows how this works.
-> 
-> device A
->  |---------|
->  v         v
-> device B  device C
-> 
-> A is the parent of device B and device C, and device A/B/C shares the
-> same power logic
-> (Only device A knows how to turn on/off the power).
-> 
-> In order to power off A, B, C at runtime,
-> 1) device B and device C should support runtime power off
->    (runtime suspended with can_power_off flag set)
-> 2) pm idle request for device A is fired by runtime PM core.
-> 3) in device A .runtime_suspend callback, it tries to set can_power_off flag.
-> 4) if succeed, it means all its children have been ready for power off
->    and it can turn off the power at any time.
-> 5) if failed, it means at least one of its children does not support runtime
->    power off, thus the power can not be turned off.
+That's one option.
+Too bad opensource.org doesn't provide archives.
 
-I'm not sure if this is really the right approach.  What you're trying 
-to do is implement two different low-power states, basically D3hot and 
-D3cold.  Currently the runtime PM core doesn't support such things; all 
-it knows about is low power and full power.
+OSL v1.1 is also available here:
+http://fedoraproject.org/wiki/Licensing:OSL1.1
 
-Before doing an ad-hoc implementation, it would be best to step back
-and think about other subsystems.  Other sorts of devices may well have
-multiple low-power states.  What's the best way for this to be
-supported by the PM core?
+and here:
+http://www.samurajdata.se/opensource/mirror/licenses/osl.php
 
-Alan Stern
+Jeff, I don't suppose there is any chance of changing this file's license?
+(since the Debian people found it to be a problem .. long ago)
 
+
+> I first thought about hosting a copy of this file on my
+> own website, but my website has less authority than
+> an explicit backup of the original location.
+> 
+> Signed-off-by: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+> ---
+>  Documentation/DocBook/libata.tmpl |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/DocBook/libata.tmpl b/Documentation/DocBook/libata.tmpl
+> index cdd1bb9..bda33c1 100644
+> --- a/Documentation/DocBook/libata.tmpl
+> +++ b/Documentation/DocBook/libata.tmpl
+> @@ -22,8 +22,8 @@
+>     <para>
+>     The contents of this file are subject to the Open
+>     Software License version 1.1 that can be found at
+> -   <ulink url="http://www.opensource.org/licenses/osl-1.1.txt">http://www.opensource.org/licenses/osl-1.1.txt</ulink> and is included herein
+> -   by reference.
+> +   <ulink url="http://web.archive.org/web/20060924133258/http://www.opensource.org/licenses/osl-1.1.txt">http://web.archive.org/web/20060924133258/http://www.opensource.org/licenses/osl-1.1.txt</ulink>
+> +   and is included herein by reference.
+>     </para>
+>  
+>     <para>
+
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
