@@ -1,259 +1,82 @@
-From: Qiang Liu <qiang.liu@freescale.com>
-Subject: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-Date: Wed, 15 Feb 2012 13:49:04 +0800
-Message-ID: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: Re: [RFC PATCH 6/6] libata: add ZPODD support
+Date: Wed, 15 Feb 2012 14:06:23 +0800
+Message-ID: <CAOzJMDQHbM9Hyx_W=0nhzK+FTk5i5Hvvn00TerYH54-yH1so2A@mail.gmail.com>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com>
+	<1329124271-29464-7-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: Qiang Liu <qiang.liu@freescale.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1329124271-29464-7-git-send-email-ming.m.lin@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Reduce interrupt signals through reset Interrupt Coalescing Control Reg.
-Provide dynamic method to adjust interrupt signals and timer ticks by sysfs.
-It is a tradeoff for different applications.
+Hi,
 
-Signed-off-by: Qiang Liu <qiang.liu@freescale.com>
----
-change for V2
-	support dynamic config interrupt coalescing register by /sysfs
-	test random small file with iometer
-	adjust kernel source baseline for apply upstream
-Description:
-  1. fsl-sata interrupt will be raised 130 thousand times when write 8G file
-    (dd if=/dev/zero of=/dev/sda2 bs=128K count=65536);
-  2. most of interrupts raised because of only 1-4 commands completed;
-  3. only 30 thousand times will be raised after set max interrupt threshold,
-    more interrupts are coalesced as the description of ICC;
-Test methods and results:
-  1. test sequential large file performance,
-  [root@p2020ds root]# echo 31 524287 > \
-	/sys/devices/soc.0/ffe18000.sata/intr_coalescing
-  [root@p2020ds root]# dd if=/dev/zero of=/dev/sda2 bs=128K count=65536 &
-  [root@p2020ds root]# top
+Good work, I'm also working on ZPODD for AMD platforms, some comments b=
+elow.
 
-   CPU %  |  dd   |  flush-8:0 | softirq
-   ---------------------------------------
-   before | 20-22 |    17-19   |    7
-   ---------------------------------------
-   after  | 18-21 |    15-16   |    5
-   ---------------------------------------
-   2. test random small file with iometer,
-   iometer paramters:
-   4 I/Os burst length, 1MB transfer request size, 100% write, 2MB file size
-     as default configuration of interrupt coalescing register, 1 interrupts and
-   no timeout config, total write performance is 119MB per second,
-     after config with the maximum value, write performance is 110MB per second.
+On Mon, Feb 13, 2012 at 5:11 PM, Lin Ming <ming.m.lin@intel.com> wrote:
+> ZPODD(Zero Power Optical Disk Drive) is a new feature in
+> SATA 3.1 specification. It provides a way to power off unused CDROM.
 
-   After compare the test results, a configuable interrupt coalescing should be
-   better when cope with flexible context.
+I don't see anywhere in the sata 3.1 spec mentioned how to power off th=
+e
+cdrom, the only relevant content is the newly defined device attention =
+pin,
+which is used to notify the host that this powered off device needs att=
+ention.
+Or do I miss something?
 
+>
+> CDROM is powered off by executing ACPI power resource's _OFF method.
+>
 
- drivers/ata/sata_fsl.c |  111 ++++++++++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 107 insertions(+), 4 deletions(-)
+AMD has a different implementation to power off the CDROM, I'll need to
+prepare another patch based on yours.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 0120b0d..d6577b9 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -6,7 +6,7 @@
-  * Author: Ashish Kalra <ashish.kalra@freescale.com>
-  * Li Yang <leoli@freescale.com>
-  *
-- * Copyright (c) 2006-2007, 2011 Freescale Semiconductor, Inc.
-+ * Copyright (c) 2006-2007, 2011-2012 Freescale Semiconductor, Inc.
-  *
-  * This program is free software; you can redistribute  it and/or modify it
-  * under  the terms of  the GNU General  Public License as published by the
-@@ -26,6 +26,15 @@
- #include <asm/io.h>
- #include <linux/of_platform.h>
+> When CDROM is powered off(D3Cold state), inserting disk will trigger =
+a
+> wakeup event(GPE). GPE AML handler notifies the associated device. Th=
+en
+> CDROM is resumed in the notify handler.
+>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+> =A0drivers/ata/libata-acpi.c | =A0 64 +++++++++++++++++++++++++++++++=
+++++++-------
+> =A0drivers/scsi/sr.c =A0 =A0 =A0 =A0 | =A0 39 +++++++++++++++++++++++=
+++++
+> =A0drivers/scsi/sr.h =A0 =A0 =A0 =A0 | =A0 =A03 ++
+> =A03 files changed, 95 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index 5fc97d2..bf4eace 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -716,6 +752,9 @@ static int sr_probe(struct device *dev)
+> =A0 =A0 =A0 =A0disk->flags |=3D GENHD_FL_REMOVABLE;
+> =A0 =A0 =A0 =A0add_disk(disk);
+>
+> + =A0 =A0 =A0 if (device_run_wake(dev))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 cd->zpodd =3D 1;
+> +
 
-+static unsigned int intr_coalescing_count;
-+module_param(intr_coalescing_count, int, S_IRUGO);
-+MODULE_PARM_DESC(intr_coalescing_count,
-+				 "INT coalescing count threshold (1..31)");
-+
-+static unsigned int intr_coalescing_ticks;
-+module_param(intr_coalescing_ticks, int, S_IRUGO);
-+MODULE_PARM_DESC(intr_coalescing_ticks,
-+				 "INT coalescing timer threshold in AHB ticks");
- /* Controller information */
- enum {
- 	SATA_FSL_QUEUE_DEPTH	= 16,
-@@ -83,6 +92,16 @@ enum {
- };
+=46or a cd to support zero power, it has to support device attention pi=
+n.
+If it does not support that, once it is powered off, it can't be power =
+up
+back. So I don't think device_run_wake is enough to set the zpodd flag,
+unless your firmware has done the check and created the acpi table
+according to the result. Is it the case?
 
- /*
-+ * Interrupt Coalescing Control Register bitdefs  */
-+enum {
-+	ICC_MIN_INT_COUNT_THRESHOLD	= 1,
-+	ICC_MAX_INT_COUNT_THRESHOLD	= ((1 << 5) - 1),
-+	ICC_MIN_INT_TICKS_THRESHOLD	= 0,
-+	ICC_MAX_INT_TICKS_THRESHOLD	= ((1 << 19) - 1),
-+	ICC_SAFE_INT_TICKS		= 1,
-+};
-+
-+/*
- * Host Controller command register set - per port
- */
- enum {
-@@ -263,8 +282,65 @@ struct sata_fsl_host_priv {
- 	void __iomem *csr_base;
- 	int irq;
- 	int data_snoop;
-+	struct device_attribute intr_coalescing;
- };
-
-+static void fsl_sata_set_irq_coalescing(struct ata_host *host,
-+		unsigned int count, unsigned int ticks)
-+{
-+	struct sata_fsl_host_priv *host_priv = host->private_data;
-+	void __iomem *hcr_base = host_priv->hcr_base;
-+
-+	if (count > ICC_MAX_INT_COUNT_THRESHOLD)
-+		count = ICC_MAX_INT_COUNT_THRESHOLD;
-+	else if (count < ICC_MIN_INT_COUNT_THRESHOLD)
-+		count = ICC_MIN_INT_COUNT_THRESHOLD;
-+
-+	if (ticks > ICC_MAX_INT_TICKS_THRESHOLD)
-+		ticks = ICC_MAX_INT_TICKS_THRESHOLD;
-+	else if ((ICC_MIN_INT_TICKS_THRESHOLD == ticks) &&
-+			(count > ICC_MIN_INT_COUNT_THRESHOLD))
-+		ticks = ICC_SAFE_INT_TICKS;
-+
-+	spin_lock(&host->lock);
-+	iowrite32((count << 24 | ticks), hcr_base + ICC);
-+
-+	intr_coalescing_count = count;
-+	intr_coalescing_ticks = ticks;
-+	spin_unlock(&host->lock);
-+
-+	DPRINTK("intrrupt coalescing, count = 0x%x, ticks = %x\n",
-+			intr_coalescing_count, intr_coalescing_ticks);
-+	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
-+			hcr_base, ioread32(hcr_base + ICC));
-+}
-+
-+static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	return sprintf(buf, "%d	%d\n",
-+			intr_coalescing_count, intr_coalescing_ticks);
-+}
-+
-+static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
-+		struct device_attribute *attr,
-+		const char *buf, size_t count)
-+{
-+	unsigned int coalescing_count,	coalescing_ticks;
-+
-+	if (sscanf(buf, "%d%d",
-+				&coalescing_count,
-+				&coalescing_ticks) != 2) {
-+		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
-+		return -EINVAL;
-+	}
-+
-+	fsl_sata_set_irq_coalescing(dev_get_drvdata(dev),
-+			coalescing_count, coalescing_ticks);
-+
-+	return strlen(buf);
-+}
-+
- static inline unsigned int sata_fsl_tag(unsigned int tag,
- 					void __iomem *hcr_base)
- {
-@@ -346,10 +422,10 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
- 			(unsigned long long)sg_addr, sg_len);
-
- 		/* warn if each s/g element is not dword aligned */
--		if (sg_addr & 0x03)
-+		if (unlikely(sg_addr & 0x03))
- 			ata_port_err(qc->ap, "s/g addr unaligned : 0x%llx\n",
- 				     (unsigned long long)sg_addr);
--		if (sg_len & 0x03)
-+		if (unlikely(sg_len & 0x03))
- 			ata_port_err(qc->ap, "s/g len unaligned : 0x%x\n",
- 				     sg_len);
-
-@@ -1245,6 +1321,13 @@ static int sata_fsl_init_controller(struct ata_host *host)
- 	iowrite32(0x00000FFFF, hcr_base + CE);
- 	iowrite32(0x00000FFFF, hcr_base + DE);
-
-+ 	/*
-+	 * reset the number of command complete bits which will cause the
-+	 * interrupt to be signaled
-+	 */
-+	fsl_sata_set_irq_coalescing(host, intr_coalescing_count,
-+			intr_coalescing_ticks);
-+
- 	/*
- 	 * host controller will be brought on-line, during xx_port_start()
- 	 * callback, that should also initiate the OOB, COMINIT sequence
-@@ -1309,7 +1392,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 	void __iomem *csr_base = NULL;
- 	struct sata_fsl_host_priv *host_priv = NULL;
- 	int irq;
--	struct ata_host *host;
-+	struct ata_host *host = NULL;
- 	u32 temp;
-
- 	struct ata_port_info pi = sata_fsl_port_info[0];
-@@ -1356,6 +1439,10 @@ static int sata_fsl_probe(struct platform_device *ofdev)
-
- 	/* allocate host structure */
- 	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_FSL_MAX_PORTS);
-+	if (!host) {
-+		retval = -ENOMEM;
-+		goto error_exit_with_cleanup;
-+	}
-
- 	/* host->iomap is not used currently */
- 	host->private_data = host_priv;
-@@ -1373,10 +1460,24 @@ static int sata_fsl_probe(struct platform_device *ofdev)
-
- 	dev_set_drvdata(&ofdev->dev, host);
-
-+	host_priv->intr_coalescing.show = fsl_sata_intr_coalescing_show;
-+	host_priv->intr_coalescing.store = fsl_sata_intr_coalescing_store;
-+	sysfs_attr_init(&host_priv->intr_coalescing.attr);
-+	host_priv->intr_coalescing.attr.name = "intr_coalescing";
-+	host_priv->intr_coalescing.attr.mode = S_IRUGO | S_IWUSR;
-+	retval = device_create_file(host->dev, &host_priv->intr_coalescing);
-+	if (retval)
-+		goto error_exit_with_cleanup;
-+
- 	return 0;
-
- error_exit_with_cleanup:
-
-+	if (host) {
-+		dev_set_drvdata(&ofdev->dev, NULL);
-+		ata_host_detach(host);
-+	}
-+
- 	if (hcr_base)
- 		iounmap(hcr_base);
- 	if (host_priv)
-@@ -1390,6 +1491,8 @@ static int sata_fsl_remove(struct platform_device *ofdev)
- 	struct ata_host *host = dev_get_drvdata(&ofdev->dev);
- 	struct sata_fsl_host_priv *host_priv = host->private_data;
-
-+	device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
-+
- 	ata_host_detach(host);
-
- 	dev_set_drvdata(&ofdev->dev, NULL);
+Thanks,
+Aaron
 --
-1.6.4
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
