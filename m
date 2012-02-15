@@ -1,118 +1,372 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Tue, 14 Feb 2012 23:39:59 +0100
-Message-ID: <201202142339.59423.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org> <201202132038.12927.rjw@sisk.pl> <1329200243.19384.16.camel@rui.sh.intel.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v8 13/13] libsas: trim sas_task of slow path infrastructure
+Date: Wed, 15 Feb 2012 09:09:52 +0800
+Message-ID: <148DC651B237489889F363B0D4EDD2D4@usish.com.cn>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com> <20120210084545.25701.4897.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:52496 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932081Ab2BNWgH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2012 17:36:07 -0500
-In-Reply-To: <1329200243.19384.16.camel@rui.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20120210084545.25701.4897.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, 'Christoph Hellwig' <hch@lst.de>
 List-Id: linux-ide@vger.kernel.org
-To: Zhang Rui <rui.zhang@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-On Tuesday, February 14, 2012, Zhang Rui wrote:
-> On =E4=B8=80, 2012-02-13 at 20:38 +0100, Rafael J. Wysocki wrote:
-> > On Monday, February 13, 2012, Alan Stern wrote:
-> > > On Mon, 13 Feb 2012, Lin Ming wrote:
-> > >=20
-> > > > From: Zhang Rui <rui.zhang@intel.com>
-> > > >=20
-> > > > Introduce flag can_power_off in device structure to support run=
-time
-> > > > power off/on.
-> > > >=20
-> > > > Note that, for a specific device driver,
-> > > > "support runtime power off/on" means that the driver .runtime_s=
-uspend
-> > > > callback needs to
-> > > > 1) save all the context so that it can restore the device back =
-to the previous
-> > > >    working state after powered on.
-> > > > 2) set can_power_off flag to tell the driver model that it's re=
-ady for power off.
-> > > >=20
-> > > > The following example shows how this works.
-> > > >=20
-> > > > device A
-> > > >  |---------|
-> > > >  v         v
-> > > > device B  device C
-> > > >=20
-> > > > A is the parent of device B and device C, and device A/B/C shar=
-es the
-> > > > same power logic
-> > > > (Only device A knows how to turn on/off the power).
-> > > >=20
-> > > > In order to power off A, B, C at runtime,
-> > > > 1) device B and device C should support runtime power off
-> > > >    (runtime suspended with can_power_off flag set)
-> > > > 2) pm idle request for device A is fired by runtime PM core.
-> > > > 3) in device A .runtime_suspend callback, it tries to set can_p=
-ower_off flag.
-> > > > 4) if succeed, it means all its children have been ready for po=
-wer off
-> > > >    and it can turn off the power at any time.
-> > > > 5) if failed, it means at least one of its children does not su=
-pport runtime
-> > > >    power off, thus the power can not be turned off.
-> > >=20
-> > > I'm not sure if this is really the right approach.  What you're t=
-rying=20
-> > > to do is implement two different low-power states, basically D3ho=
-t and=20
-> > > D3cold.  Currently the runtime PM core doesn't support such thing=
-s; all=20
-> > > it knows about is low power and full power.
-> >=20
-> > I'd rather say all it knows about is "suspended" and "active", whic=
-h mean
-> > "the device is not processing I/O" and "the device may be processin=
-g I/O",
-> > respectively.  A "suspended" device may or may not be in a low-powe=
-r state,
-> > but the runtime PM core doesn't care about that.
-> >=20
-> yes, I know that.
->=20
-> > > Before doing an ad-hoc implementation, it would be best to step b=
-ack
-> > > and think about other subsystems.  Other sorts of devices may wel=
-l have
-> > > multiple low-power states.  What's the best way for this to be
-> > > supported by the PM core?
-> >=20
-> > Well, I honestly don't think there's any way they all can be covere=
-d at the
-> > same time and that's why we chose to support only "suspended" and "=
-active"
-> > as defined above.
->=20
-> > The handling of multiple low-power states must be
-> > implemented outside of the runtime PM core (like in the PCI core, f=
-or example).
->=20
-> Surely I'd prefer to implement it in the bus code, :), but the proble=
-m
-> is that several buses maybe involved at the same time.
-> Let's take ZPODD for example,
-> ZPODD is attached to a SATA port. Only SATA port knows that it can be
-> runtime powered off, because its ACPI node has _PR3._OFF.
-> But when ATA layer code tries to put SATA port to D3_COLD at runtime,=
-it
-> must make sure all the devices/drivers in the same power domain are
-> ready for power off, and in this case, we need to get this info from
-> SCSI layer.
+Dear Dan,
 
-Then you need to get it from there.  I know that this is a difficult pr=
-oblem,
-have been working on a similar one for several months now. :-)
+You seems forget change sas_alloc_task to sas_alloc_slow_task in pm8001.
+I'll post a patch to fix this later.
+Thanks for your work.
 
-Thanks,
-Rafael
+Jack
+[PATCH v8 13/13] libsas: trim sas_task of slow path infrastructure
+> 
+> The timer and the completion are only used for slow path tasks (smp, and
+> lldd tmfs), yet we incur the allocation space and cpu setup time for
+> every fast path task.
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/libsas/sas_expander.c  |   20 ++++++++++----------
+>  drivers/scsi/libsas/sas_init.c      |   23 +++++++++++++++++++++--
+>  drivers/scsi/libsas/sas_scsi_host.c |    8 ++++++--
+>  drivers/scsi/mvsas/mv_sas.c         |   20 ++++++++++----------
+>  drivers/scsi/pm8001/pm8001_sas.c    |   30 +++++++++++++++---------------
+>  include/scsi/libsas.h               |   14 +++++++++-----
+>  6 files changed, 71 insertions(+), 44 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_expander.c
+> b/drivers/scsi/libsas/sas_expander.c
+> index 05acd9e..0ab3796 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -51,14 +51,14 @@ static void smp_task_timedout(unsigned long _task)
+>  		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+>  	spin_unlock_irqrestore(&task->task_state_lock, flags);
+> 
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  static void smp_task_done(struct sas_task *task)
+>  {
+> -	if (!del_timer(&task->timer))
+> +	if (!del_timer(&task->slow_task->timer))
+>  		return;
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  /* Give it some long enough timeout. In seconds. */
+> @@ -79,7 +79,7 @@ static int smp_execute_task(struct domain_device *dev,
+void
+> *req, int req_size,
+>  			break;
+>  		}
+> 
+> -		task = sas_alloc_task(GFP_KERNEL);
+> +		task = sas_alloc_slow_task(GFP_KERNEL);
+>  		if (!task) {
+>  			res = -ENOMEM;
+>  			break;
+> @@ -91,20 +91,20 @@ static int smp_execute_task(struct domain_device *dev,
+> void *req, int req_size,
+> 
+>  		task->task_done = smp_task_done;
+> 
+> -		task->timer.data = (unsigned long) task;
+> -		task->timer.function = smp_task_timedout;
+> -		task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
+> -		add_timer(&task->timer);
+> +		task->slow_task->timer.data = (unsigned long) task;
+> +		task->slow_task->timer.function = smp_task_timedout;
+> +		task->slow_task->timer.expires = jiffies + SMP_TIMEOUT*HZ;
+> +		add_timer(&task->slow_task->timer);
+> 
+>  		res = i->dft->lldd_execute_task(task, 1, GFP_KERNEL);
+> 
+>  		if (res) {
+> -			del_timer(&task->timer);
+> +			del_timer(&task->slow_task->timer);
+>  			SAS_DPRINTK("executing SMP task failed:%d\n", res);
+>  			break;
+>  		}
+> 
+> -		wait_for_completion(&task->completion);
+> +		wait_for_completion(&task->slow_task->completion);
+>  		res = -ECOMM;
+>  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+>  			SAS_DPRINTK("smp task timed out or aborted\n");
+> diff --git a/drivers/scsi/libsas/sas_init.c
+> b/drivers/scsi/libsas/sas_init.c
+> index 2fc23d3..57e7ac9 100644
+> --- a/drivers/scsi/libsas/sas_init.c
+> +++ b/drivers/scsi/libsas/sas_init.c
+> @@ -48,18 +48,37 @@ struct sas_task *sas_alloc_task(gfp_t flags)
+>  		INIT_LIST_HEAD(&task->list);
+>  		spin_lock_init(&task->task_state_lock);
+>  		task->task_state_flags = SAS_TASK_STATE_PENDING;
+> -		init_timer(&task->timer);
+> -		init_completion(&task->completion);
+>  	}
+> 
+>  	return task;
+>  }
+>  EXPORT_SYMBOL_GPL(sas_alloc_task);
+> 
+> +struct sas_task *sas_alloc_slow_task(gfp_t flags)
+> +{
+> +	struct sas_task *task = sas_alloc_task(flags);
+> +	struct sas_task_slow *slow = kmalloc(sizeof(*slow), flags);
+> +
+> +	if (!task || !slow) {
+> +		if (task)
+> +			kmem_cache_free(sas_task_cache, task);
+> +		kfree(slow);
+> +		return NULL;
+> +	}
+> +
+> +	task->slow_task = slow;
+> +	init_timer(&slow->timer);
+> +	init_completion(&slow->completion);
+> +
+> +	return task;
+> +}
+> +EXPORT_SYMBOL_GPL(sas_alloc_slow_task);
+> +
+>  void sas_free_task(struct sas_task *task)
+>  {
+>  	if (task) {
+>  		BUG_ON(!list_empty(&task->list));
+> +		kfree(task->slow_task);
+>  		kmem_cache_free(sas_task_cache, task);
+>  	}
+>  }
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+> b/drivers/scsi/libsas/sas_scsi_host.c
+> index 86ffd8f..9716f2e 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -1013,9 +1013,13 @@ void sas_task_abort(struct sas_task *task)
+> 
+>  	/* Escape for libsas internal commands */
+>  	if (!sc) {
+> -		if (!del_timer(&task->timer))
+> +		struct sas_task_slow *slow = task->slow_task;
+> +
+> +		if (!slow)
+> +			return;
+> +		if (!del_timer(&slow->timer))
+>  			return;
+> -		task->timer.function(task->timer.data);
+> +		slow->timer.function(slow->timer.data);
+>  		return;
+>  	}
+> 
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index b68a653..d0462b8 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -1365,9 +1365,9 @@ void mvs_dev_gone(struct domain_device *dev)
+> 
+>  static void mvs_task_done(struct sas_task *task)
+>  {
+> -	if (!del_timer(&task->timer))
+> +	if (!del_timer(&task->slow_task->timer))
+>  		return;
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  static void mvs_tmf_timedout(unsigned long data)
+> @@ -1375,7 +1375,7 @@ static void mvs_tmf_timedout(unsigned long data)
+>  	struct sas_task *task = (struct sas_task *)data;
+> 
+>  	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  #define MVS_TASK_TIMEOUT 20
+> @@ -1386,7 +1386,7 @@ static int mvs_exec_internal_tmf_task(struct
+> domain_device *dev,
+>  	struct sas_task *task = NULL;
+> 
+>  	for (retry = 0; retry < 3; retry++) {
+> -		task = sas_alloc_task(GFP_KERNEL);
+> +		task = sas_alloc_slow_task(GFP_KERNEL);
+>  		if (!task)
+>  			return -ENOMEM;
+> 
+> @@ -1396,20 +1396,20 @@ static int mvs_exec_internal_tmf_task(struct
+> domain_device *dev,
+>  		memcpy(&task->ssp_task, parameter, para_len);
+>  		task->task_done = mvs_task_done;
+> 
+> -		task->timer.data = (unsigned long) task;
+> -		task->timer.function = mvs_tmf_timedout;
+> -		task->timer.expires = jiffies + MVS_TASK_TIMEOUT*HZ;
+> -		add_timer(&task->timer);
+> +		task->slow_task->timer.data = (unsigned long) task;
+> +		task->slow_task->timer.function = mvs_tmf_timedout;
+> +		task->slow_task->timer.expires = jiffies +
+MVS_TASK_TIMEOUT*HZ;
+> +		add_timer(&task->slow_task->timer);
+> 
+>  		res = mvs_task_exec(task, 1, GFP_KERNEL, NULL, 1, tmf);
+> 
+>  		if (res) {
+> -			del_timer(&task->timer);
+> +			del_timer(&task->slow_task->timer);
+>  			mv_printk("executing internel task failed:%d\n",
+res);
+>  			goto ex_err;
+>  		}
+> 
+> -		wait_for_completion(&task->completion);
+> +		wait_for_completion(&task->slow_task->completion);
+>  		res = TMF_RESP_FUNC_FAILED;
+>  		/* Even TMF timed out, return direct. */
+>  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
+> b/drivers/scsi/pm8001/pm8001_sas.c
+> index b111018..ad36f1a 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -627,9 +627,9 @@ int pm8001_dev_found(struct domain_device *dev)
+> 
+>  static void pm8001_task_done(struct sas_task *task)
+>  {
+> -	if (!del_timer(&task->timer))
+> +	if (!del_timer(&task->slow_task->timer))
+>  		return;
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  static void pm8001_tmf_timedout(unsigned long data)
+> @@ -637,7 +637,7 @@ static void pm8001_tmf_timedout(unsigned long data)
+>  	struct sas_task *task = (struct sas_task *)data;
+> 
+>  	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+> -	complete(&task->completion);
+> +	complete(&task->slow_task->completion);
+>  }
+> 
+>  #define PM8001_TASK_TIMEOUT 20
+> @@ -668,21 +668,21 @@ static int pm8001_exec_internal_tmf_task(struct
+> domain_device *dev,
+>  		task->task_proto = dev->tproto;
+>  		memcpy(&task->ssp_task, parameter, para_len);
+>  		task->task_done = pm8001_task_done;
+> -		task->timer.data = (unsigned long)task;
+> -		task->timer.function = pm8001_tmf_timedout;
+> -		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT*HZ;
+> -		add_timer(&task->timer);
+> +		task->slow_task->timer.data = (unsigned long)task;
+> +		task->slow_task->timer.function = pm8001_tmf_timedout;
+> +		task->slow_task->timer.expires = jiffies +
+PM8001_TASK_TIMEOUT*HZ;
+> +		add_timer(&task->slow_task->timer);
+> 
+>  		res = pm8001_task_exec(task, 1, GFP_KERNEL, 1, tmf);
+> 
+>  		if (res) {
+> -			del_timer(&task->timer);
+> +			del_timer(&task->slow_task->timer);
+>  			PM8001_FAIL_DBG(pm8001_ha,
+>  				pm8001_printk("Executing internal task "
+>  				"failed\n"));
+>  			goto ex_err;
+>  		}
+> -		wait_for_completion(&task->completion);
+> +		wait_for_completion(&task->slow_task->completion);
+>  		res = -TMF_RESP_FUNC_FAILED;
+>  		/* Even TMF timed out, return direct. */
+>  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+> @@ -749,10 +749,10 @@ pm8001_exec_internal_task_abort(struct
+pm8001_hba_info
+> *pm8001_ha,
+>  		task->dev = dev;
+>  		task->task_proto = dev->tproto;
+>  		task->task_done = pm8001_task_done;
+> -		task->timer.data = (unsigned long)task;
+> -		task->timer.function = pm8001_tmf_timedout;
+> -		task->timer.expires = jiffies + PM8001_TASK_TIMEOUT * HZ;
+> -		add_timer(&task->timer);
+> +		task->slow_task->timer.data = (unsigned long)task;
+> +		task->slow_task->timer.function = pm8001_tmf_timedout;
+> +		task->slow_task->timer.expires = jiffies +
+PM8001_TASK_TIMEOUT *
+> HZ;
+> +		add_timer(&task->slow_task->timer);
+> 
+>  		res = pm8001_tag_alloc(pm8001_ha, &ccb_tag);
+>  		if (res)
+> @@ -766,13 +766,13 @@ pm8001_exec_internal_task_abort(struct
+pm8001_hba_info
+> *pm8001_ha,
+>  			pm8001_dev, flag, task_tag, ccb_tag);
+> 
+>  		if (res) {
+> -			del_timer(&task->timer);
+> +			del_timer(&task->slow_task->timer);
+>  			PM8001_FAIL_DBG(pm8001_ha,
+>  				pm8001_printk("Executing internal task "
+>  				"failed\n"));
+>  			goto ex_err;
+>  		}
+> -		wait_for_completion(&task->completion);
+> +		wait_for_completion(&task->slow_task->completion);
+>  		res = TMF_RESP_FUNC_FAILED;
+>  		/* Even TMF timed out, return direct. */
+>  		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 484bc52..4e84ef3 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -568,10 +568,6 @@ struct sas_task {
+> 
+>  	enum   sas_protocol      task_proto;
+> 
+> -	/* Used by the discovery code. */
+> -	struct timer_list     timer;
+> -	struct completion     completion;
+> -
+>  	union {
+>  		struct sas_ata_task ata_task;
+>  		struct sas_smp_task smp_task;
+> @@ -588,8 +584,15 @@ struct sas_task {
+> 
+>  	void   *lldd_task;	  /* for use by LLDDs */
+>  	void   *uldd_task;
+> +	struct sas_task_slow *slow_task;
+> +};
+> 
+> -	struct work_struct abort_work;
+> +struct sas_task_slow {
+> +	/* standard/extra infrastructure for slow path commands (SMP and
+> +	 * internal lldd commands
+> +	 */
+> +	struct timer_list     timer;
+> +	struct completion     completion;
+>  };
+> 
+>  #define SAS_TASK_STATE_PENDING      1
+> @@ -599,6 +602,7 @@ struct sas_task {
+>  #define SAS_TASK_AT_INITIATOR       16
+> 
+>  extern struct sas_task *sas_alloc_task(gfp_t flags);
+> +extern struct sas_task *sas_alloc_slow_task(gfp_t flags);
+>  extern void sas_free_task(struct sas_task *task);
+> 
+>  struct sas_domain_function_template {
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
