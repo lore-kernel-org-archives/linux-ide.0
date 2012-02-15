@@ -1,109 +1,55 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RESEND PATCH v2 1/3] ahci: port legacy pm interface to struct dev_pm_ops
-Date: Wed, 15 Feb 2012 18:18:50 +0800
-Message-ID: <1329301132-3687-2-git-send-email-ming.m.lin@intel.com>
-References: <1329301132-3687-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1329301132-3687-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
+ COMRESET failed
+Date: Wed, 15 Feb 2012 08:57:06 -0800
+Message-ID: <20120215165706.GA24986@google.com>
+References: <20120206004608.GA9413@gamma.logic.tuwien.ac.at>
+ <1328492218.15079.38.camel@minggr>
+ <20120206024052.GI9413@gamma.logic.tuwien.ac.at>
+ <1328496591.15079.40.camel@minggr>
+ <20120206031528.GA16093@gamma.logic.tuwien.ac.at>
+ <1328503376.15079.55.camel@minggr>
+ <20120206161943.GA3926@google.com>
+ <CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com>
+ <20120213174445.GD12117@google.com>
+ <CAN8TOE-hFvDs4mGeYVRBDyfbyg8t_7YXDintLeG1QHvMXhVh+A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:58824 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924Ab2BOQ5N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2012 11:57:13 -0500
+Content-Disposition: inline
+In-Reply-To: <CAN8TOE-hFvDs4mGeYVRBDyfbyg8t_7YXDintLeG1QHvMXhVh+A@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, jeff@garzik.org, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, valdis.kletnieks@vt.edu, Mark Lord <kernel@teksavvy.com>
 
-Also add hibernate callbacks.
+Hello,
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/ahci.c |   48 +++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 41 insertions(+), 7 deletions(-)
+On Tue, Feb 14, 2012 at 09:15:32PM -0800, Brian Norris wrote:
+> Perhaps a module param (for ahci_platform) that sets a flag in
+> ata_port_info? I'm not sure if/how I'm allowed to introduce new ATA
+> flags...
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index cf26222..183c8b2 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -84,8 +84,10 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 				unsigned long deadline);
- #ifdef CONFIG_PM
--static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
--static int ahci_pci_device_resume(struct pci_dev *pdev);
-+static int ahci_pci_device_suspend(struct device *dev);
-+static int ahci_pci_device_resume(struct device *dev);
-+static int ahci_pci_device_freeze(struct device *dev);
-+static int ahci_pci_device_poweroff(struct device *dev);
- #endif
- 
- static struct scsi_host_template ahci_sht = {
-@@ -400,6 +402,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ }	/* terminate list */
- };
- 
-+static const struct dev_pm_ops ahci_pci_pm_ops = {
-+	.suspend		= ahci_pci_device_suspend,
-+	.resume			= ahci_pci_device_resume,
-+	.freeze			= ahci_pci_device_freeze,
-+	.thaw			= ahci_pci_device_resume,
-+	.poweroff		= ahci_pci_device_poweroff,
-+	.restore		= ahci_pci_device_resume,
-+};
- 
- static struct pci_driver ahci_pci_driver = {
- 	.name			= DRV_NAME,
-@@ -407,8 +417,9 @@ static struct pci_driver ahci_pci_driver = {
- 	.probe			= ahci_init_one,
- 	.remove			= ata_pci_remove_one,
- #ifdef CONFIG_PM
--	.suspend		= ahci_pci_device_suspend,
--	.resume			= ahci_pci_device_resume,
-+	.driver			= {
-+		.pm = &ahci_pci_pm_ops
-+	},
- #endif
- };
- 
-@@ -567,7 +578,8 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- }
- 
- #ifdef CONFIG_PM
--static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
-+static int ahci_pci_device_suspend_common(struct pci_dev *pdev,
-+					  pm_message_t mesg)
- {
- 	struct ata_host *host = dev_get_drvdata(&pdev->dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
-@@ -595,9 +607,31 @@ static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- 	return ata_pci_device_suspend(pdev, mesg);
- }
- 
--static int ahci_pci_device_resume(struct pci_dev *pdev)
-+static int ahci_pci_device_suspend(struct device *dev)
- {
--	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return ahci_pci_device_suspend_common(pdev, PMSG_SUSPEND);
-+}
-+
-+static int ahci_pci_device_freeze(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return ahci_pci_device_suspend_common(pdev, PMSG_FREEZE);
-+}
-+
-+static int ahci_pci_device_poweroff(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return ahci_pci_device_suspend_common(pdev, PMSG_HIBERNATE);
-+}
-+
-+static int ahci_pci_device_resume(struct device *dev)
-+{
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct pci_dev *pdev = to_pci_dev(dev);
- 	int rc;
- 
- 	rc = ata_pci_device_do_resume(pdev);
+I think adding a module param directly to libahci.c should do.  Just
+add it after ignore_sss and apply it to all ahci's on the host.
+
+> So it appears that we are weighing the MATSHITA DVD issues against the
+> issues seen by me and possibly Mark Lord. If the decision really
+> stands that finding a unified solution is impossible, then I can just
+> drop the issue and make conditional behavior.
+
+My memory is already fuzzy but strict adherence to the spec didn't
+make whole lot of sense to me.  I think I wrote several times on the
+issue already.  Plus, we're talking about introducing regressions to
+generic x86 setups against few specific platforms.  If somebody can
+come up with generic solution, fine, but for now, let's just revert to
+the original behavior, please.
+
+Thanks.
+
 -- 
-1.7.2.5
+tejun
