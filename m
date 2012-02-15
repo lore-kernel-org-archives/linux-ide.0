@@ -1,38 +1,48 @@
-From: Li Yang <leoli@freescale.com>
-Subject: Re: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-Date: Wed, 15 Feb 2012 15:22:22 +0800
-Message-ID: <CADRPPNQ8LUr13J4k8fsBYSSxXVuxFdEvKyL4abxZpY32Meh=uQ@mail.gmail.com>
+From: Liu Qiang-B32616 <B32616@freescale.com>
+Subject: RE: [PATCH V2 RESEND] fsl-sata: I/O load balancing
+Date: Wed, 15 Feb 2012 07:29:36 +0000
+Message-ID: <BCB48C05FCE8BC4D9E61E841ECBE6DB702B124@039-SN2MPN1-013.039d.mgd.msft.net>
 References: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
+ <CADRPPNQ8LUr13J4k8fsBYSSxXVuxFdEvKyL4abxZpY32Meh=uQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57986 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756719Ab2BOHWY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2012 02:22:24 -0500
-In-Reply-To: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:34161
+	"EHLO DB3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751295Ab2BOH3p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2012 02:29:45 -0500
+In-Reply-To: <CADRPPNQ8LUr13J4k8fsBYSSxXVuxFdEvKyL4abxZpY32Meh=uQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Qiang Liu <qiang.liu@freescale.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+To: Li Yang-R58472 <r58472@freescale.com>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Feb 15, 2012 at 1:49 PM, Qiang Liu <qiang.liu@freescale.com> wrote:
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1pZGUtb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtaWRlLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
+IE9uIEJlaGFsZiBPZiBMaSBZYW5nDQo+IFNlbnQ6IFdlZG5lc2RheSwgRmVicnVhcnkgMTUsIDIw
+MTIgMzoyMiBQTQ0KPiBUbzogTGl1IFFpYW5nLUIzMjYxNg0KPiBDYzogamdhcnppa0Bwb2JveC5j
+b207IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4cHBjLQ0KPiBkZXZAbGlzdHMub3ps
+YWJzLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIIFYyIFJFU0VORF0gZnNsLXNhdGE6IEkvTyBsb2FkIGJhbGFuY2luZw0KPiANCj4gT24gV2Vk
+LCBGZWIgMTUsIDIwMTIgYXQgMTo0OSBQTSwgUWlhbmcgTGl1IDxxaWFuZy5saXVAZnJlZXNjYWxl
+LmNvbT4NCj4gd3JvdGU6DQo+IA0KPiBIaSBMaXUgUWlhbmcsDQo+IA0KPiBUaGUgcGF0Y2ggaXMg
+ZmluZSBleGNlcHQgZm9yIHRoZSB0aXRsZSBhbmQgY29tbWVudC4gIEl0J3MgdG9vIHZhZ3VlIHRv
+DQo+IHNheSBJL08gbG9hZCBiYWxhbmNpbmcuICBZb3UgbmVlZCBleHBsaWNpdCBkZXNjcmlwdGlv
+biBsaWtlICJhZGQNCj4gaW50ZXJydXB0IGNvYWxlc2Npbmcgc3VwcG9ydCIgYXMgdGl0bGUuDQo+
+IA0KPiA+IFJlZHVjZSBpbnRlcnJ1cHQgc2lnbmFscyB0aHJvdWdoIHJlc2V0IEludGVycnVwdCBD
+b2FsZXNjaW5nIENvbnRyb2wgUmVnLg0KPiA+IFByb3ZpZGUgZHluYW1pYyBtZXRob2QgdG8gYWRq
+dXN0IGludGVycnVwdCBzaWduYWxzIGFuZCB0aW1lciB0aWNrcyBieQ0KPiBzeXNmcy4NCj4gPiBJ
+dCBpcyBhIHRyYWRlb2ZmIGZvciBkaWZmZXJlbnQgYXBwbGljYXRpb25zLg0KPiANCj4gSG93IGFi
+b3V0Og0KPiANCj4gQWRkcyBzdXBwb3J0IGZvciBpbnRlcnJ1cHQgY29hbGVzY2luZyBmZWF0dXJl
+IHRvIHJlZHVjZSBpbnRlcnJ1cHQgZXZlbnRzLg0KPiBQcm92aWRlcyBtZWNoYW5pc20gb2YgYWRq
+dXN0aW5nIGNvYWxlc2NpbmcgY291bnQgYW5kIHRpbWVvdXQgdGljayBieQ0KPiBzeXNmcyBvbiBy
+dW50aW1lLCBzbyB0aGF0IHRyYWRlb2ZmIG9mIGxhdGVuY3kgYW5kIENQVSBsb2FkIGNhbiBiZSBt
+YWRlDQo+IGRlcGVuZGluZyBvbiBhcHBsaWNhdGlvbnMuDQo+IA0KT2ssIEkgd2lsbCBjaGFuZ2Ug
+dGhlIHRpdGxlIGFuZCBjb21tZW50cyBtb3JlIHNwZWNpZmljYWxseS4NCg0KPiAtIExlbw0KPiAt
+LQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJz
+Y3JpYmUgbGludXgtaWRlIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21v
+QHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92Z2VyLmtl
+cm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
 
-Hi Liu Qiang,
-
-The patch is fine except for the title and comment.  It's too vague to
-say I/O load balancing.  You need explicit description like "add
-interrupt coalescing support" as title.
-
-> Reduce interrupt signals through reset Interrupt Coalescing Control Reg.
-> Provide dynamic method to adjust interrupt signals and timer ticks by sysfs.
-> It is a tradeoff for different applications.
-
-How about:
-
-Adds support for interrupt coalescing feature to reduce interrupt
-events.  Provides mechanism of adjusting coalescing count and timeout
-tick by sysfs on runtime, so that tradeoff of latency and CPU load can
-be made depending on applications.
-
-- Leo
