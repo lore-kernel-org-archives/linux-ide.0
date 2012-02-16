@@ -1,35 +1,35 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume, COMRESET
- failed
-Date: Thu, 16 Feb 2012 09:20:22 -0500
-Message-ID: <4F3D10A6.8090608@teksavvy.com>
-References: <20120206024052.GI9413@gamma.logic.tuwien.ac.at> <1328496591.15079.40.camel@minggr> <20120206031528.GA16093@gamma.logic.tuwien.ac.at> <1328503376.15079.55.camel@minggr> <20120206161943.GA3926@google.com> <CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com> <20120213174445.GD12117@google.com> <CAN8TOE-hFvDs4mGeYVRBDyfbyg8t_7YXDintLeG1QHvMXhVh+A@mail.gmail.com> <20120215165706.GA24986@google.com> <4F3BF989.8060607@garzik.org> <20120215183139.GC24986@google.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
+Date: Thu, 16 Feb 2012 10:13:30 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
+References: <1329376686.28581.15.camel@rui.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120215183139.GC24986@google.com>
+In-Reply-To: <1329376686.28581.15.camel@rui.sh.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Brian Norris <computersforpeace@gmail.com>, Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, valdis.kletnieks@vt.edu
+To: Zhang Rui <rui.zhang@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 12-02-15 01:31 PM, Tejun Heo wrote:
-> Hey, Jeff.
-> 
-> On Wed, Feb 15, 2012 at 01:29:29PM -0500, Jeff Garzik wrote:
->> A module parameter is not necessarily the best/only option.
->> ahci_platform already has infrastructure set up to deal with
->> platform-specific quirks.  An internal flag seems more appropriate
->> to enable automatic handling of this on the specific platforms where
->> it applies (plus the revert Tejun has already mentioned).
-> 
-> The problem is that there's no way to identify the controller in
-> question, so we can't do this automatically, so might just as well do
-> it in the simplest way for now.  :(
+On Thu, 16 Feb 2012, Zhang Rui wrote:
 
-Well, a module parameter is no good,
-because that method would affect all attached controllers
-rather than just the one(s) with the issue.
+> > I'm not exactly sure what you're trying to achieve and what you mean by
+> > "resume a device directly"?  Do you want to run the device's resume
+> > callback at the time when another device is being resumed?
+> > 
+> I mean, wakeup event is sent to ATA port, but our goal is to resume
+> ZPODD after receiving this wakeup event.
+> Ideally, it is ACPI that resumes ATA port. And then, the ATA port
+> runtime resumes ZPODD. But this does not look good to runtime resume a
+> child device in the parent's .runtime_resume callback.
+> So I introduced these two APIs so that an runtime_resume request can be
+> sent to ZPODD directly and the runtime PM core can resume all the
+> parents of ZPODD automatically.
 
-Something in sysfs perhaps.
+It's not clear what you're trying to achieve.  Do you basically want
+the ZPODD always to be suspended and resumed along with the ATA port,
+or should it be possible to suspend the ZPODD while the port remains
+running?
+
+Alan Stern
