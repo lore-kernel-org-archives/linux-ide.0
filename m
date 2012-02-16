@@ -1,53 +1,158 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume,
- COMRESET failed
-Date: Wed, 15 Feb 2012 15:39:08 -0800
-Message-ID: <CAN8TOE8cuUU_Gh5gPKNWQGvunMdzDf9nLNq3GqoQuwvdnD1p8g@mail.gmail.com>
-References: <20120206024052.GI9413@gamma.logic.tuwien.ac.at>
-	<1328496591.15079.40.camel@minggr>
-	<20120206031528.GA16093@gamma.logic.tuwien.ac.at>
-	<1328503376.15079.55.camel@minggr>
-	<20120206161943.GA3926@google.com>
-	<CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com>
-	<20120213174445.GD12117@google.com>
-	<CAN8TOE-hFvDs4mGeYVRBDyfbyg8t_7YXDintLeG1QHvMXhVh+A@mail.gmail.com>
-	<20120215165706.GA24986@google.com>
-	<4F3BF989.8060607@garzik.org>
-	<20120215183139.GC24986@google.com>
-	<4F3C04EF.7070404@garzik.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sil3132 eSATA problem
+Date: Wed, 15 Feb 2012 22:45:23 -0600
+Message-ID: <4F3C89E3.1000407@gmail.com>
+References: <4F3B5885.4070203@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:60840 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753680Ab2BOXjJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2012 18:39:09 -0500
-In-Reply-To: <4F3C04EF.7070404@garzik.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50329 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423Ab2BPEp0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2012 23:45:26 -0500
+Received: by iacb35 with SMTP id b35so2403497iac.19
+        for <linux-ide@vger.kernel.org>; Wed, 15 Feb 2012 20:45:25 -0800 (PST)
+In-Reply-To: <4F3B5885.4070203@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <tj@kernel.org>, Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, valdis.kletnieks@vt.edu, Mark Lord <kernel@teksavvy.com>
+To: Sebastian Muniz <basurerosebita@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Wed, Feb 15, 2012 at 11:18 AM, Jeff Garzik <jeff@garzik.org> wrote:
-> On 02/15/2012 01:31 PM, Tejun Heo wrote:
->> The problem is that there's no way to identify the controller in
->> question, so we can't do this automatically, so might just as well d=
-o
->> it in the simplest way for now. =A0:(
+On 02/15/2012 01:02 AM, Sebastian Muniz wrote:
+> Hello
+> Hello!
+> I am running
+> Linux ante 2.6.32.55sebita4-reiserfs4 #5 SMP Wed Feb 1 06:24:50 ART 2012
+> x86_64 GNU/Linux
+> custom compiled with reiserfs4 patches on an IBM X3200 M3
 >
 >
-> See ahci_devtype[] and ahci_port_info[] in ahci_platform.c for how to=
- do
-> this. =A0Brian would not have to tweak the driver out of tree as clai=
-med; we
-> put all changes in tree, and the platform calls itself "spec-strict-a=
-hci" or
-> whatever string you prefer.
+> I have a two port eSATA SIL3132:
+> 10:00.0 RAID bus controller: Silicon Image, Inc. SiI 3132 Serial ATA
+> Raid II Controller (rev 01)
+> Subsystem: Silicon Image, Inc. Device 7132
+> Flags: bus master, fast devsel, latency 0, IRQ 18
+> Memory at 91b04000 (64-bit, non-prefetchable) [size=128]
+> Memory at 91b00000 (64-bit, non-prefetchable) [size=16K]
+> I/O ports at 3000 [size=128]
+> Expansion ROM at 80600000 [disabled] [size=512K]
+> Capabilities: [54] Power Management version 2
+> Capabilities: [5c] MSI: Enable- Count=1/1 Maskable- 64bit+
+> Capabilities: [70] Express Legacy Endpoint, MSI 00
+> Kernel driver in use: sata_sil24
+>
+> This gives me this two ports:
+> [6] sata_sil24
+> cmd_per_lun=1 host_busy=0 sg_tablesize=253 unchecked_isa_dma=0
+> dir: /sys/class/scsi_host//host6
+> device dir: /sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6
+> [7] sata_sil24
+> cmd_per_lun=1 host_busy=0 sg_tablesize=253 unchecked_isa_dma=0
+> dir: /sys/class/scsi_host//host7
+> device dir: /sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host7
+>
+> On ata6 I have a Lian Li box with JM393PM with 5 disks:
+> [6:0:0:0] disk ATA WDC WD20EARS-00S 0957 /dev/sdb
+> state=running queue_depth=1 scsi_level=6 type=0 device_blocked=0 timeout=30
+> dir: /sys/bus/scsi/devices/6:0:0:0
+> [/sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6/target6:0:0/6:0:0:0]
+>
+> [6:1:0:0] disk ATA WDC WD20EARS-00S 80.0 /dev/sdc
+> state=running queue_depth=31 scsi_level=6 type=0 device_blocked=0
+> timeout=30
+> dir: /sys/bus/scsi/devices/6:1:0:0
+> [/sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6/target6:1:0/6:1:0:0]
+>
+> [6:2:0:0] disk ATA WDC WD20EARS-00S 80.0 /dev/sdd
+> state=running queue_depth=31 scsi_level=6 type=0 device_blocked=0
+> timeout=30
+> dir: /sys/bus/scsi/devices/6:2:0:0
+> [/sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6/target6:2:0/6:2:0:0]
+>
+> [6:3:0:0] disk ATA WDC WD20EARS-00M 51.0 /dev/sde
+> state=running queue_depth=31 scsi_level=6 type=0 device_blocked=0
+> timeout=30
+> dir: /sys/bus/scsi/devices/6:3:0:0
+> [/sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6/target6:3:0/6:3:0:0]
+>
+> [6:4:0:0] disk ATA WDC WD20EARS-00M 51.0 /dev/sdf
+> state=running queue_depth=31 scsi_level=6 type=0 device_blocked=0
+> timeout=30
+> dir: /sys/bus/scsi/devices/6:4:0:0
+> [/sys/devices/pci0000:00/0000:00:1c.6/0000:10:00.0/host6/target6:4:0/6:4:0:0]
+>
+>
+> And ata7 is _unused_, nothing is connected to it.
+>
+> However from time to time I see on the logs:
+> [904916.169177] ata7.00: failed to read SCR 1 (Emask=0x40)
+> [904916.169210] ata7.01: failed to read SCR 1 (Emask=0x40)
+> [904916.169239] ata7.02: failed to read SCR 1 (Emask=0x40)
+> [904916.169268] ata7.03: failed to read SCR 1 (Emask=0x40)
+> [904916.169293] ata7.04: failed to read SCR 1 (Emask=0x40)
+> [904916.169322] ata7.00: exception Emask 0x100 SAct 0x0 SErr 0x0 action
+> 0x6 frozen
+> [904916.169367] ata7.01: exception Emask 0x100 SAct 0x1 SErr 0x0 action
+> 0x6 frozen
+> [904916.169411] ata7.01: failed command: WRITE FPDMA QUEUED
+> [904916.169440] ata7.01: cmd 61/88:00:b7:e4:2e/03:00:4e:00:00/40 tag 0
+> ncq 462848 out
+> [904916.169440] res 90/7c:00:00:00:00/00:00:00:00:90/00 Emask 0x2 (HSM
+> violation)
+> [904916.169530] ata7.01: status: { Busy }
+> [904916.169554] ata7.01: error: { UNC IDNF ABRT }
+> [904916.169579] ata7.02: exception Emask 0x100 SAct 0x0 SErr 0x0 action
+> 0x6 frozen
+> [904916.169623] ata7.03: exception Emask 0x10 SAct 0x4 SErr 0x0 action
+> 0x6 frozen
+> [904916.169667] ata7.03: irq_stat 0x01060002, failed to transmit command
+> FIS
+> [904916.169696] ata7.03: failed command: WRITE FPDMA QUEUED
+> [904916.169724] ata7.03: cmd 61/88:10:b7:e4:2e/03:00:4e:00:00/40 tag 2
+> ncq 462848 out
+> [904916.169725] res 90/7c:00:00:00:00/00:00:c0:21:90/00 Emask 0x12 (ATA
+> bus error)
+> [904916.169811] ata7.03: status: { Busy }
+> [904916.169834] ata7.03: error: { UNC IDNF ABRT }
+> [904916.169859] ata7.04: exception Emask 0x100 SAct 0x0 SErr 0x0 action
+> 0x6 frozen
+> [904916.169904] ata7.15: hard resetting link
+> [904916.169927] ata7: controller in dubious state, performing PORT_RST
+> [904918.396264] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [904918.396666] ata7.00: hard resetting link
+> [904918.731825] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [904918.731902] ata7.01: hard resetting link
+> [904919.067090] ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [904919.067170] ata7.02: hard resetting link
+> [904919.402343] ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [904919.402420] ata7.03: hard resetting link
+> [904919.753567] ata7.03: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [904919.753649] ata7.04: hard resetting link
+> [904920.104789] ata7.04: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [904920.105952] ata7.00: configured for UDMA/100
+> [904920.118162] ata7.01: configured for UDMA/100
+> [904920.130177] ata7.02: configured for UDMA/100
+> [904920.138029] ata7.03: configured for UDMA/100
+> [904920.145862] ata7.04: configured for UDMA/100
+> [904920.145997] ata7: EH complete
+>
+> This is the frequency:
+> root@ante:~# dmesg|grep "ata7: EH complete"
+> [409984.923590] ata7: EH complete
+> [415032.569957] ata7: EH complete
+> [420312.071009] ata7: EH complete
+> [421192.345587] ata7: EH complete
+> [875586.406464] ata7: EH complete
+> [904920.145997] ata7: EH complete
+>
+>
+> Questions:
+> - Is this a problem? Nothing looks wrong at the server, everything works
+> as expected, but I receive a page from time time because of this error.
+> - Is there a way to keep the ata7 port down? Kind of disable it.
+> - Is this the way to deal with this problem?
 
-OK, so can it seems I would add a flag in include/linux/libata.h that
-can be added to a new entry in ahci_port_info[]? It seems a little
-awkward to put in "libata.h", plus I'm not sure if all the flags have
-direct meaning to ATA or if they can be AHCI-specific.
-
-Brian
+Are you sure ata7 is an unused port? I'm pretty sure there must be a 
+drive on that port and it's throwing errors on writes. Can you post the 
+full dmesg log?
