@@ -1,236 +1,89 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-Date: Fri, 17 Feb 2012 11:40:16 +1100
-Message-ID: <1329439216.2892.36.camel@pasglop>
-References: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
+Date: Fri, 17 Feb 2012 09:12:06 +0800
+Message-ID: <1329441126.3376.30.camel@minggr>
+References: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:52952 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756297Ab2BQAkc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Feb 2012 19:40:32 -0500
-In-Reply-To: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Zhang Rui <rui.zhang@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Qiang Liu <qiang.liu@freescale.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
-On Wed, 2012-02-15 at 13:49 +0800, Qiang Liu wrote:
-]
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 0120b0d..d6577b9 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -6,7 +6,7 @@
->   * Author: Ashish Kalra <ashish.kalra@freescale.com>
->   * Li Yang <leoli@freescale.com>
->   *
-> - * Copyright (c) 2006-2007, 2011 Freescale Semiconductor, Inc.
-> + * Copyright (c) 2006-2007, 2011-2012 Freescale Semiconductor, Inc.
->   *
->   * This program is free software; you can redistribute  it and/or modify it
->   * under  the terms of  the GNU General  Public License as published by the
-> @@ -26,6 +26,15 @@
->  #include <asm/io.h>
->  #include <linux/of_platform.h>
+On Thu, 2012-02-16 at 10:13 -0500, Alan Stern wrote:
+> On Thu, 16 Feb 2012, Zhang Rui wrote:
 > 
-> +static unsigned int intr_coalescing_count;
-> +module_param(intr_coalescing_count, int, S_IRUGO);
-> +MODULE_PARM_DESC(intr_coalescing_count,
-> +				 "INT coalescing count threshold (1..31)");
-> +
-> +static unsigned int intr_coalescing_ticks;
-> +module_param(intr_coalescing_ticks, int, S_IRUGO);
-> +MODULE_PARM_DESC(intr_coalescing_ticks,
-> +				 "INT coalescing timer threshold in AHB ticks");
+> > > I'm not exactly sure what you're trying to achieve and what you mean by
+> > > "resume a device directly"?  Do you want to run the device's resume
+> > > callback at the time when another device is being resumed?
+> > > 
+> > I mean, wakeup event is sent to ATA port, but our goal is to resume
+> > ZPODD after receiving this wakeup event.
+> > Ideally, it is ACPI that resumes ATA port. And then, the ATA port
+> > runtime resumes ZPODD. But this does not look good to runtime resume a
+> > child device in the parent's .runtime_resume callback.
+> > So I introduced these two APIs so that an runtime_resume request can be
+> > sent to ZPODD directly and the runtime PM core can resume all the
+> > parents of ZPODD automatically.
+> 
+> It's not clear what you're trying to achieve.  Do you basically want
+> the ZPODD always to be suspended and resumed along with the ATA port,
+> or should it be possible to suspend the ZPODD while the port remains
+> running?
 
-You don't seem to provide very useful defaults... for example,
-intr_coalescing_count starts at 0 which isn't even in range
-(the code fixes that up but still...).
+We want to ZPODD always to be suspended and resumed along with the ATA
+port.
 
-I tried a debian install on the p5020ds here and I find SATA to be
-extremely slow, generating millions of interrupts. I think the defaults
-should be a lot more aggressive at coalescing.
+Below is part of the GPE handler for ZPODD device attention event.
 
-Cheers,
-Ben.
+        Scope (\_GPE)
+        {
+            Method (_L13, 0, NotSerialized)
+            {
+                ADBG ("ZPODD DA Event")
+                ....
 
->  /* Controller information */
->  enum {
->  	SATA_FSL_QUEUE_DEPTH	= 16,
-> @@ -83,6 +92,16 @@ enum {
->  };
-> 
->  /*
-> + * Interrupt Coalescing Control Register bitdefs  */
-> +enum {
-> +	ICC_MIN_INT_COUNT_THRESHOLD	= 1,
-> +	ICC_MAX_INT_COUNT_THRESHOLD	= ((1 << 5) - 1),
-> +	ICC_MIN_INT_TICKS_THRESHOLD	= 0,
-> +	ICC_MAX_INT_TICKS_THRESHOLD	= ((1 << 19) - 1),
-> +	ICC_SAFE_INT_TICKS		= 1,
-> +};
-> +
-> +/*
->  * Host Controller command register set - per port
->  */
->  enum {
-> @@ -263,8 +282,65 @@ struct sata_fsl_host_priv {
->  	void __iomem *csr_base;
->  	int irq;
->  	int data_snoop;
-> +	struct device_attribute intr_coalescing;
->  };
-> 
-> +static void fsl_sata_set_irq_coalescing(struct ata_host *host,
-> +		unsigned int count, unsigned int ticks)
-> +{
-> +	struct sata_fsl_host_priv *host_priv = host->private_data;
-> +	void __iomem *hcr_base = host_priv->hcr_base;
-> +
-> +	if (count > ICC_MAX_INT_COUNT_THRESHOLD)
-> +		count = ICC_MAX_INT_COUNT_THRESHOLD;
-> +	else if (count < ICC_MIN_INT_COUNT_THRESHOLD)
-> +		count = ICC_MIN_INT_COUNT_THRESHOLD;
-> +
-> +	if (ticks > ICC_MAX_INT_TICKS_THRESHOLD)
-> +		ticks = ICC_MAX_INT_TICKS_THRESHOLD;
-> +	else if ((ICC_MIN_INT_TICKS_THRESHOLD == ticks) &&
-> +			(count > ICC_MIN_INT_COUNT_THRESHOLD))
-> +		ticks = ICC_SAFE_INT_TICKS;
-> +
-> +	spin_lock(&host->lock);
-> +	iowrite32((count << 24 | ticks), hcr_base + ICC);
-> +
-> +	intr_coalescing_count = count;
-> +	intr_coalescing_ticks = ticks;
-> +	spin_unlock(&host->lock);
-> +
-> +	DPRINTK("intrrupt coalescing, count = 0x%x, ticks = %x\n",
-> +			intr_coalescing_count, intr_coalescing_ticks);
-> +	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
-> +			hcr_base, ioread32(hcr_base + ICC));
-> +}
-> +
-> +static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
-> +		struct device_attribute *attr, char *buf)
-> +{
-> +	return sprintf(buf, "%d	%d\n",
-> +			intr_coalescing_count, intr_coalescing_ticks);
-> +}
-> +
-> +static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
-> +		struct device_attribute *attr,
-> +		const char *buf, size_t count)
-> +{
-> +	unsigned int coalescing_count,	coalescing_ticks;
-> +
-> +	if (sscanf(buf, "%d%d",
-> +				&coalescing_count,
-> +				&coalescing_ticks) != 2) {
-> +		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	fsl_sata_set_irq_coalescing(dev_get_drvdata(dev),
-> +			coalescing_count, coalescing_ticks);
-> +
-> +	return strlen(buf);
-> +}
-> +
->  static inline unsigned int sata_fsl_tag(unsigned int tag,
->  					void __iomem *hcr_base)
->  {
-> @@ -346,10 +422,10 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
->  			(unsigned long long)sg_addr, sg_len);
-> 
->  		/* warn if each s/g element is not dword aligned */
-> -		if (sg_addr & 0x03)
-> +		if (unlikely(sg_addr & 0x03))
->  			ata_port_err(qc->ap, "s/g addr unaligned : 0x%llx\n",
->  				     (unsigned long long)sg_addr);
-> -		if (sg_len & 0x03)
-> +		if (unlikely(sg_len & 0x03))
->  			ata_port_err(qc->ap, "s/g len unaligned : 0x%x\n",
->  				     sg_len);
-> 
-> @@ -1245,6 +1321,13 @@ static int sata_fsl_init_controller(struct ata_host *host)
->  	iowrite32(0x00000FFFF, hcr_base + CE);
->  	iowrite32(0x00000FFFF, hcr_base + DE);
-> 
-> + 	/*
-> +	 * reset the number of command complete bits which will cause the
-> +	 * interrupt to be signaled
-> +	 */
-> +	fsl_sata_set_irq_coalescing(host, intr_coalescing_count,
-> +			intr_coalescing_ticks);
-> +
->  	/*
->  	 * host controller will be brought on-line, during xx_port_start()
->  	 * callback, that should also initiate the OOB, COMINIT sequence
-> @@ -1309,7 +1392,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
->  	void __iomem *csr_base = NULL;
->  	struct sata_fsl_host_priv *host_priv = NULL;
->  	int irq;
-> -	struct ata_host *host;
-> +	struct ata_host *host = NULL;
->  	u32 temp;
-> 
->  	struct ata_port_info pi = sata_fsl_port_info[0];
-> @@ -1356,6 +1439,10 @@ static int sata_fsl_probe(struct platform_device *ofdev)
-> 
->  	/* allocate host structure */
->  	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_FSL_MAX_PORTS);
-> +	if (!host) {
-> +		retval = -ENOMEM;
-> +		goto error_exit_with_cleanup;
-> +	}
-> 
->  	/* host->iomap is not used currently */
->  	host->private_data = host_priv;
-> @@ -1373,10 +1460,24 @@ static int sata_fsl_probe(struct platform_device *ofdev)
-> 
->  	dev_set_drvdata(&ofdev->dev, host);
-> 
-> +	host_priv->intr_coalescing.show = fsl_sata_intr_coalescing_show;
-> +	host_priv->intr_coalescing.store = fsl_sata_intr_coalescing_store;
-> +	sysfs_attr_init(&host_priv->intr_coalescing.attr);
-> +	host_priv->intr_coalescing.attr.name = "intr_coalescing";
-> +	host_priv->intr_coalescing.attr.mode = S_IRUGO | S_IWUSR;
-> +	retval = device_create_file(host->dev, &host_priv->intr_coalescing);
-> +	if (retval)
-> +		goto error_exit_with_cleanup;
-> +
->  	return 0;
-> 
->  error_exit_with_cleanup:
-> 
-> +	if (host) {
-> +		dev_set_drvdata(&ofdev->dev, NULL);
-> +		ata_host_detach(host);
-> +	}
-> +
->  	if (hcr_base)
->  		iounmap(hcr_base);
->  	if (host_priv)
-> @@ -1390,6 +1491,8 @@ static int sata_fsl_remove(struct platform_device *ofdev)
->  	struct ata_host *host = dev_get_drvdata(&ofdev->dev);
->  	struct sata_fsl_host_priv *host_priv = host->private_data;
-> 
-> +	device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
-> +
->  	ata_host_detach(host);
-> 
->  	dev_set_drvdata(&ofdev->dev, NULL);
-> --
-> 1.6.4
-> 
-> 
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
+                Notify (\_SB.PCI0.SAT0.PRT2, 0x02)
+                ....
+            }
+        }
 
+It maybe a bit confused, but actually, \_SB.PCI0.SAT0.PRT2 is bind to
+the attached device, not the ata port itself.
 
+See below commit in linux-next tree.
+75d22c(libata: Bind the Linux device tree to the ACPI device tree)
+
+And below notify handler(PATCH 6) will resume the attached device(CDROM
+in ZPODD case).
+
++static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
++{
++       struct ata_device *ata_dev = context;
++
++       if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev)
++               scsi_autopm_get_device(ata_dev->sdev);
++}
++
+
+But the code to power on/power off the device is in ata_acpi_set_state,
+which is called when ata port is resumed/suspended.
+
+ata_eh_handle_port_resume/suspend
+    ata_acpi_set_state
+        ata_for_each_dev {
+            acpi_bus_set_power(<the acpi handle of the device>, acpi_state)
+        }
+
+Could you take a look at PATCH 6?
+It's more clear over there.
+
+Thanks,
+Lin Ming
+
+> 
+> Alan Stern
+> 
