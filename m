@@ -1,72 +1,45 @@
-From: "Zhang, Rui" <rui.zhang@intel.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: RE: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
-Date: Fri, 17 Feb 2012 07:05:55 +0000
-Message-ID: <744357E9AAD1214791ACBA4B0B90926305BFDC@SHSMSX101.ccr.corp.intel.com>
-References: <1329376686.28581.15.camel@rui.sh.intel.com>
- <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
+Date: Fri, 17 Feb 2012 10:07:42 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1202171003060.1350-100000@iolanthe.rowland.org>
+References: <744357E9AAD1214791ACBA4B0B90926305BFDC@SHSMSX101.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:5108 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814Ab2BQHHY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2012 02:07:24 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1202161010500.1268-100000@iolanthe.rowland.org>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:58594 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752909Ab2BQPHo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2012 10:07:44 -0500
+In-Reply-To: <744357E9AAD1214791ACBA4B0B90926305BFDC@SHSMSX101.ccr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: "Zhang, Rui" <rui.zhang@intel.com>
 Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, "Lin, Ming M" <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
 
-Hi, alan,
+On Fri, 17 Feb 2012, Zhang, Rui wrote:
 
-> -----Original Message-----
-> From: Alan Stern [mailto:stern@rowland.harvard.edu]
-> Sent: Thursday, February 16, 2012 11:14 PM
-> To: Zhang, Rui
-> Cc: Rafael J. Wysocki; Lin, Ming M; Jeff Garzik; Tejun Heo; Len Brown;
-> linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org; linux-
-> scsi@vger.kernel.org; linux-pm@vger.kernel.org
-> Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power
-> Resource
-> Importance: High
+> > Do you basically want
+> > the ZPODD always to be suspended and resumed along with the ATA port,
 > 
-> On Thu, 16 Feb 2012, Zhang Rui wrote:
+> No. ZPODD suspends itself, which put ZPODD to a SCSI low power state (NOT power off/D3_COLD).
+> And then it is the "Runtime PM core" that suspends ATA port after ZPODD being suspended.
+> And the .runtime_suspend callback for ATA port actually turns off the ZPODD power.
 > 
-> > > I'm not exactly sure what you're trying to achieve and what you
-> mean by
-> > > "resume a device directly"?  Do you want to run the device's resume
-> > > callback at the time when another device is being resumed?
-> > >
-> > I mean, wakeup event is sent to ATA port, but our goal is to resume
-> > ZPODD after receiving this wakeup event.
-> > Ideally, it is ACPI that resumes ATA port. And then, the ATA port
-> > runtime resumes ZPODD. But this does not look good to runtime resume
-> a
-> > child device in the parent's .runtime_resume callback.
-> > So I introduced these two APIs so that an runtime_resume request can
-> be
-> > sent to ZPODD directly and the runtime PM core can resume all the
-> > parents of ZPODD automatically.
+> During resume, ATA port is resumed first because of the ACPI wakeup event. 
+> But in fact, this wakeup event should be read as "ZPODD remote wakeup signal", thus runtime resume request is sent to ZPODD, done by Patch 3/6.
 > 
-> It's not clear what you're trying to achieve.
+> > or should it be possible to suspend the ZPODD while the port remains
+> > running?
+> > 
+> Sure, but the power is still on at this time.
 
+Then maybe you can use pm_runtime_no_callbacks() for the ZPODD device.  
+It's explained in Documentation/power/runtime_pm.txt, and I use it for 
+USB interfaces.
 
-> Do you basically want
-> the ZPODD always to be suspended and resumed along with the ATA port,
+The idea is that the ZPODD will never receive any runtime PM callbacks 
+from the PM core.  Instead the ATA port callback routines will be 
+responsible for power management of the ZPODD device.
 
-No. ZPODD suspends itself, which put ZPODD to a SCSI low power state (NOT power off/D3_COLD).
-And then it is the "Runtime PM core" that suspends ATA port after ZPODD being suspended.
-And the .runtime_suspend callback for ATA port actually turns off the ZPODD power.
+Alan Stern
 
-During resume, ATA port is resumed first because of the ACPI wakeup event. 
-But in fact, this wakeup event should be read as "ZPODD remote wakeup signal", thus runtime resume request is sent to ZPODD, done by Patch 3/6.
-
-> or should it be possible to suspend the ZPODD while the port remains
-> running?
-> 
-Sure, but the power is still on at this time.
-
-Thanks,
-rui
