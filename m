@@ -1,30 +1,41 @@
-From: Li Yang-R58472 <r58472@freescale.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: RE: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-Date: Fri, 17 Feb 2012 03:09:54 +0000
-Message-ID: <94F013E7935FF44C83EBE7784D62AD3F0574273C@039-SN2MPN1-023.039d.mgd.msft.net>
+Date: Fri, 17 Feb 2012 14:17:40 +1100
+Message-ID: <1329448660.2892.42.camel@pasglop>
 References: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
- <1329439216.2892.36.camel@pasglop>
+	 <1329439216.2892.36.camel@pasglop>
+	 <BCB48C05FCE8BC4D9E61E841ECBE6DB702B97D@039-SN2MPN1-013.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:50092
-	"EHLO DB3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751484Ab2BQDKR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 16 Feb 2012 22:10:17 -0500
-In-Reply-To: <1329439216.2892.36.camel@pasglop>
-Content-Language: en-US
+Received: from gate.crashing.org ([63.228.1.57]:49023 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356Ab2BQDRx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Feb 2012 22:17:53 -0500
+In-Reply-To: <BCB48C05FCE8BC4D9E61E841ECBE6DB702B97D@039-SN2MPN1-013.039d.mgd.msft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Liu Qiang-B32616 <B32616@freescale.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Liu Qiang-B32616 <B32616@freescale.com>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->I tried a debian install on the p5020ds here and I find SATA to be
->extremely slow, generating millions of interrupts. I think the defaults
->should be a lot more aggressive at coalescing.
+On Fri, 2012-02-17 at 01:54 +0000, Liu Qiang-B32616 wrote:
+> The default will be set in a common interface fsl_sata_set_irq_coalescing when
+> initialize the controller. This interface will check the range of intr count
+> and ticks and make sure the values are reasonably.
 
-The P5020 has a hardware problem with SATA, making it generate more interrupts than it should.  A new revision of the silicon will fix it.
+Allright, but the current defaults are basically no coalescing right ?
 
-- Leo
+> It's hard to find a aggressive value to adapt all scenarios, so I use echo to adjust
+> the value. I remember P5020 have some performance issue, I will check it.
+> BTW, which filesystem do you use? Ext2 is lower than ext4 because metadata is 
+> continuously wrote to disk. You can try ext4 or xfs. 
+
+ext3 at the moment, I plan to switch to ext4 when I finish that fsck
+pass which is taking hours... I am not aware of the 5020 performance
+issues, is this something documented and/or fixable ?
+
+Cheers,
+Ben.
+
 
