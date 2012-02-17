@@ -1,50 +1,236 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Regression 3.2 -> 3.3-rc1 10 sec hang at boot and resume, COMRESET
- failed
-Date: Thu, 16 Feb 2012 11:22:45 -0500
-Message-ID: <4F3D2D55.8000104@garzik.org>
-References: <20120206024052.GI9413@gamma.logic.tuwien.ac.at> <1328496591.15079.40.camel@minggr> <20120206031528.GA16093@gamma.logic.tuwien.ac.at> <1328503376.15079.55.camel@minggr> <20120206161943.GA3926@google.com> <CAN8TOE9SM1X_rQCScE8hCZYrWVY9K-B_TM+Vvzx3tZQ2LoGxXw@mail.gmail.com> <20120213174445.GD12117@google.com> <CAN8TOE-hFvDs4mGeYVRBDyfbyg8t_7YXDintLeG1QHvMXhVh+A@mail.gmail.com> <20120215165706.GA24986@google.com> <4F3BF989.8060607@garzik.org> <20120215183139.GC24986@google.com> <4F3C04EF.7070404@garzik.org> <CAN8TOE8cuUU_Gh5gPKNWQGvunMdzDf9nLNq3GqoQuwvdnD1p8g@mail.gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH V2 RESEND] fsl-sata: I/O load balancing
+Date: Fri, 17 Feb 2012 11:40:16 +1100
+Message-ID: <1329439216.2892.36.camel@pasglop>
+References: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:57751 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab2BPQWt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Feb 2012 11:22:49 -0500
-In-Reply-To: <CAN8TOE8cuUU_Gh5gPKNWQGvunMdzDf9nLNq3GqoQuwvdnD1p8g@mail.gmail.com>
+Received: from gate.crashing.org ([63.228.1.57]:52952 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756297Ab2BQAkc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 16 Feb 2012 19:40:32 -0500
+In-Reply-To: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, "stern@rowland.harvard.edu >> Alan Stern" <stern@rowland.harvard.edu>, linux-ide@vger.kernel.org, Linux PM mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jian Peng <jipeng2005@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, valdis.kletnieks@vt.edu, Mark Lord <kernel@teksavvy.com>
+To: Qiang Liu <qiang.liu@freescale.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
 
-On 02/15/2012 06:39 PM, Brian Norris wrote:
-> On Wed, Feb 15, 2012 at 11:18 AM, Jeff Garzik<jeff@garzik.org>  wrote:
->> On 02/15/2012 01:31 PM, Tejun Heo wrote:
->>> The problem is that there's no way to identify the controller in
->>> question, so we can't do this automatically, so might just as well do
->>> it in the simplest way for now.  :(
->>
->>
->> See ahci_devtype[] and ahci_port_info[] in ahci_platform.c for how to do
->> this.  Brian would not have to tweak the driver out of tree as claimed; we
->> put all changes in tree, and the platform calls itself "spec-strict-ahci" or
->> whatever string you prefer.
->
-> OK, so can it seems I would add a flag in include/linux/libata.h that
-> can be added to a new entry in ahci_port_info[]? It seems a little
-> awkward to put in "libata.h", plus I'm not sure if all the flags have
-> direct meaning to ATA or if they can be AHCI-specific.
+On Wed, 2012-02-15 at 13:49 +0800, Qiang Liu wrote:
+]
+> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+> index 0120b0d..d6577b9 100644
+> --- a/drivers/ata/sata_fsl.c
+> +++ b/drivers/ata/sata_fsl.c
+> @@ -6,7 +6,7 @@
+>   * Author: Ashish Kalra <ashish.kalra@freescale.com>
+>   * Li Yang <leoli@freescale.com>
+>   *
+> - * Copyright (c) 2006-2007, 2011 Freescale Semiconductor, Inc.
+> + * Copyright (c) 2006-2007, 2011-2012 Freescale Semiconductor, Inc.
+>   *
+>   * This program is free software; you can redistribute  it and/or modify it
+>   * under  the terms of  the GNU General  Public License as published by the
+> @@ -26,6 +26,15 @@
+>  #include <asm/io.h>
+>  #include <linux/of_platform.h>
+> 
+> +static unsigned int intr_coalescing_count;
+> +module_param(intr_coalescing_count, int, S_IRUGO);
+> +MODULE_PARM_DESC(intr_coalescing_count,
+> +				 "INT coalescing count threshold (1..31)");
+> +
+> +static unsigned int intr_coalescing_ticks;
+> +module_param(intr_coalescing_ticks, int, S_IRUGO);
+> +MODULE_PARM_DESC(intr_coalescing_ticks,
+> +				 "INT coalescing timer threshold in AHB ticks");
 
-Nothing needs to go into libata.h.  grep for IMX53_AHCI, and see how 
-that differentiates ata_port_info information.  There you may vary 
-AHCI-specific flags (defined in ahci.h), port operations, or anything 
-else specific to the controller.
+You don't seem to provide very useful defaults... for example,
+intr_coalescing_count starts at 0 which isn't even in range
+(the code fixes that up but still...).
 
-Create a flag, add it to ahci.h, guard the spec-strict behavior creating 
-problems with said flag, and apply said flag to your controller in 
-ahci_platform.
+I tried a debian install on the p5020ds here and I find SATA to be
+extremely slow, generating millions of interrupts. I think the defaults
+should be a lot more aggressive at coalescing.
 
-	Jeff
+Cheers,
+Ben.
+
+>  /* Controller information */
+>  enum {
+>  	SATA_FSL_QUEUE_DEPTH	= 16,
+> @@ -83,6 +92,16 @@ enum {
+>  };
+> 
+>  /*
+> + * Interrupt Coalescing Control Register bitdefs  */
+> +enum {
+> +	ICC_MIN_INT_COUNT_THRESHOLD	= 1,
+> +	ICC_MAX_INT_COUNT_THRESHOLD	= ((1 << 5) - 1),
+> +	ICC_MIN_INT_TICKS_THRESHOLD	= 0,
+> +	ICC_MAX_INT_TICKS_THRESHOLD	= ((1 << 19) - 1),
+> +	ICC_SAFE_INT_TICKS		= 1,
+> +};
+> +
+> +/*
+>  * Host Controller command register set - per port
+>  */
+>  enum {
+> @@ -263,8 +282,65 @@ struct sata_fsl_host_priv {
+>  	void __iomem *csr_base;
+>  	int irq;
+>  	int data_snoop;
+> +	struct device_attribute intr_coalescing;
+>  };
+> 
+> +static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+> +		unsigned int count, unsigned int ticks)
+> +{
+> +	struct sata_fsl_host_priv *host_priv = host->private_data;
+> +	void __iomem *hcr_base = host_priv->hcr_base;
+> +
+> +	if (count > ICC_MAX_INT_COUNT_THRESHOLD)
+> +		count = ICC_MAX_INT_COUNT_THRESHOLD;
+> +	else if (count < ICC_MIN_INT_COUNT_THRESHOLD)
+> +		count = ICC_MIN_INT_COUNT_THRESHOLD;
+> +
+> +	if (ticks > ICC_MAX_INT_TICKS_THRESHOLD)
+> +		ticks = ICC_MAX_INT_TICKS_THRESHOLD;
+> +	else if ((ICC_MIN_INT_TICKS_THRESHOLD == ticks) &&
+> +			(count > ICC_MIN_INT_COUNT_THRESHOLD))
+> +		ticks = ICC_SAFE_INT_TICKS;
+> +
+> +	spin_lock(&host->lock);
+> +	iowrite32((count << 24 | ticks), hcr_base + ICC);
+> +
+> +	intr_coalescing_count = count;
+> +	intr_coalescing_ticks = ticks;
+> +	spin_unlock(&host->lock);
+> +
+> +	DPRINTK("intrrupt coalescing, count = 0x%x, ticks = %x\n",
+> +			intr_coalescing_count, intr_coalescing_ticks);
+> +	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
+> +			hcr_base, ioread32(hcr_base + ICC));
+> +}
+> +
+> +static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
+> +		struct device_attribute *attr, char *buf)
+> +{
+> +	return sprintf(buf, "%d	%d\n",
+> +			intr_coalescing_count, intr_coalescing_ticks);
+> +}
+> +
+> +static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
+> +		struct device_attribute *attr,
+> +		const char *buf, size_t count)
+> +{
+> +	unsigned int coalescing_count,	coalescing_ticks;
+> +
+> +	if (sscanf(buf, "%d%d",
+> +				&coalescing_count,
+> +				&coalescing_ticks) != 2) {
+> +		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	fsl_sata_set_irq_coalescing(dev_get_drvdata(dev),
+> +			coalescing_count, coalescing_ticks);
+> +
+> +	return strlen(buf);
+> +}
+> +
+>  static inline unsigned int sata_fsl_tag(unsigned int tag,
+>  					void __iomem *hcr_base)
+>  {
+> @@ -346,10 +422,10 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+>  			(unsigned long long)sg_addr, sg_len);
+> 
+>  		/* warn if each s/g element is not dword aligned */
+> -		if (sg_addr & 0x03)
+> +		if (unlikely(sg_addr & 0x03))
+>  			ata_port_err(qc->ap, "s/g addr unaligned : 0x%llx\n",
+>  				     (unsigned long long)sg_addr);
+> -		if (sg_len & 0x03)
+> +		if (unlikely(sg_len & 0x03))
+>  			ata_port_err(qc->ap, "s/g len unaligned : 0x%x\n",
+>  				     sg_len);
+> 
+> @@ -1245,6 +1321,13 @@ static int sata_fsl_init_controller(struct ata_host *host)
+>  	iowrite32(0x00000FFFF, hcr_base + CE);
+>  	iowrite32(0x00000FFFF, hcr_base + DE);
+> 
+> + 	/*
+> +	 * reset the number of command complete bits which will cause the
+> +	 * interrupt to be signaled
+> +	 */
+> +	fsl_sata_set_irq_coalescing(host, intr_coalescing_count,
+> +			intr_coalescing_ticks);
+> +
+>  	/*
+>  	 * host controller will be brought on-line, during xx_port_start()
+>  	 * callback, that should also initiate the OOB, COMINIT sequence
+> @@ -1309,7 +1392,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+>  	void __iomem *csr_base = NULL;
+>  	struct sata_fsl_host_priv *host_priv = NULL;
+>  	int irq;
+> -	struct ata_host *host;
+> +	struct ata_host *host = NULL;
+>  	u32 temp;
+> 
+>  	struct ata_port_info pi = sata_fsl_port_info[0];
+> @@ -1356,6 +1439,10 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+> 
+>  	/* allocate host structure */
+>  	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_FSL_MAX_PORTS);
+> +	if (!host) {
+> +		retval = -ENOMEM;
+> +		goto error_exit_with_cleanup;
+> +	}
+> 
+>  	/* host->iomap is not used currently */
+>  	host->private_data = host_priv;
+> @@ -1373,10 +1460,24 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+> 
+>  	dev_set_drvdata(&ofdev->dev, host);
+> 
+> +	host_priv->intr_coalescing.show = fsl_sata_intr_coalescing_show;
+> +	host_priv->intr_coalescing.store = fsl_sata_intr_coalescing_store;
+> +	sysfs_attr_init(&host_priv->intr_coalescing.attr);
+> +	host_priv->intr_coalescing.attr.name = "intr_coalescing";
+> +	host_priv->intr_coalescing.attr.mode = S_IRUGO | S_IWUSR;
+> +	retval = device_create_file(host->dev, &host_priv->intr_coalescing);
+> +	if (retval)
+> +		goto error_exit_with_cleanup;
+> +
+>  	return 0;
+> 
+>  error_exit_with_cleanup:
+> 
+> +	if (host) {
+> +		dev_set_drvdata(&ofdev->dev, NULL);
+> +		ata_host_detach(host);
+> +	}
+> +
+>  	if (hcr_base)
+>  		iounmap(hcr_base);
+>  	if (host_priv)
+> @@ -1390,6 +1491,8 @@ static int sata_fsl_remove(struct platform_device *ofdev)
+>  	struct ata_host *host = dev_get_drvdata(&ofdev->dev);
+>  	struct sata_fsl_host_priv *host_priv = host->private_data;
+> 
+> +	device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
+> +
+>  	ata_host_detach(host);
+> 
+>  	dev_set_drvdata(&ofdev->dev, NULL);
+> --
+> 1.6.4
+> 
+> 
+> _______________________________________________
+> Linuxppc-dev mailing list
+> Linuxppc-dev@lists.ozlabs.org
+> https://lists.ozlabs.org/listinfo/linuxppc-dev
 
 
