@@ -1,95 +1,82 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Sat, 18 Feb 2012 21:35:06 +0100
-Message-ID: <201202182135.06868.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org> <201202180054.49284.rjw@sisk.pl> <CAC=cRTOCpH8haMGDEDDG8k0k2DpaVM7DoU5AayrcscR1rZKXgQ@mail.gmail.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: ahci: sata hotplug doesn't work after suspend
+Date: Sun, 19 Feb 2012 21:11:33 +0100
+Message-ID: <4F415775.7060003@suse.cz>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:59484 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752728Ab2BRUbL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Feb 2012 15:31:11 -0500
-In-Reply-To: <CAC=cRTOCpH8haMGDEDDG8k0k2DpaVM7DoU5AayrcscR1rZKXgQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: huang ying <huang.ying.caritas@gmail.com>
-Cc: Zhang Rui <rui.zhang@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-On Saturday, February 18, 2012, huang ying wrote:
-> On Sat, Feb 18, 2012 at 7:54 AM, Rafael J. Wysocki <rjw@sisk.pl> wrot=
-e:
-> > On Thursday, February 16, 2012, Zhang Rui wrote:
-> >> On =E4=BA=8C, 2012-02-14 at 23:39 +0100, Rafael J. Wysocki wrote:
-> >> > On Tuesday, February 14, 2012, Zhang Rui wrote:
-> >> > > On =E4=B8=80, 2012-02-13 at 20:38 +0100, Rafael J. Wysocki wro=
-te:
-> >> > > > On Monday, February 13, 2012, Alan Stern wrote:
-> >> > > > > On Mon, 13 Feb 2012, Lin Ming wrote:
-> [snip]
-> >> Yeah, I have thought about this for quite a while before, there AR=
-E
-> >> several ways to do this, but these need a lot of changes in bus co=
-de, at
-> >> least for the buses that support device runtime D3 (off) by ACPI.
-> >>
-> >> Lets also take SATA port and ZPODD for example,
-> >> proposal one,
-> >> 1) introduce scsi_can_power_off and ata_can_power_off.
-> >> 2) sr driver set scsi_can_power_off bit and scsi layer is aware of=
- this,
-> >> thus the scsi host can set this bit as well.
-> >> 3) in the .runtime_suspend callback of ata port, it knows that its=
- scsi
-> >> host interface can be powered off, thus it invokes ata_can_power_o=
-ff to
-> >> tell the ata layer.
-> >
-> > Hmm.  I'm not sure why you want to introduce this special "power of=
-f"
-> > condition.  In fact, it's nothing special, it only means that the d=
-evice
-> > in question shouldn't be accessed by software, which pretty much is=
- equivalent
-> > to the "suspended" condition (as defined in the runtime PM docs).
->=20
-> I think some reasons to introduce can_poweroff can be:
->=20
-> 1) To indicate the implementation of .runtime_suspend/.runtime_resume
-> is compatible with power off.  That is, .runtime_suspend will save al=
-l
-> needed information and .runtime_resume can work on the uninitialized
-> device.
->=20
-> If this is already the requirement of
-> .runtime_suspend/.runtime_resume.
+Hi,
 
-Yes, it is.
+ahci hotplug stopped working here. It always worked (-next-20111206 is
+the last known working for sure). I'm using -next and after plugging a
+sata disk in, nothing happens. I don't *think* (in the traffic, it's
+hard to tell for sure) an interrupt is generated either. I also *think*
+that it works before suspend/resume, but not after. (Or maybe uptime
+matters?)
 
-> Then this is not needed.   Maybe we
-> can make that explicitly for these callbacks via some kind of
-> documentation.
+This happens before suspend on plug-in:
+ata3: exception Emask 0x50 SAct 0x0 SErr 0x40d0800 action 0xe frozen
+ata3: irq_stat 0x00000040, connection status changed
+ata3: SError: { HostInt PHYRdyChg CommWake 10B8B DevExch }
+ata3: hard resetting link
+ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata3.00: ATA-8: ST31000528AS, CC38, max UDMA/133
+ata3.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata3.00: configured for UDMA/133
+ata3: EH complete
+scsi 2:0:0:0: Direct-Access     ATA      ST31000528AS     CC38 PQ: 0 ANSI: 5
+sd 2:0:0:0: [sdc] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
+sd 2:0:0:0: [sdc] Write Protect is off
+sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+ sdc: sdc1 sdc2
+sd 2:0:0:0: [sdc] Attached SCSI disk
 
-I thought it was documented.
+After suspend/resume and plug-in, nothing appears in dmesg. Storing "- -
+-" to /sys/class/scsi_host/host*/scan doesn't help. It looks like the
+line is completely dead, because only ata1 and ata2 say "hard resetting
+link" after this (and another two disks are connected there).
 
-> 2) To support something like pm-qos.  power off device may have more
-> exit.latency than normal low power state (such as D3Hot).  Some devic=
-e
-> may disable can_power_off based on that.
+I tried 'echo adapter >host_reset', but I get 'write error: Invalid
+argument'.
 
-No, please.  There would be totally _no_ _meaning_ of that flag at the =
-core
-level.  Please use subsys_data in struct dev_pm_info for subsystem-spec=
-ific
-data (which is this one).
+00:1f.2 SATA controller [0106]: Intel Corporation 82801IR/IO/IH
+(ICH9R/DO/DH) 6 port SATA Controller [AHCI mode] [8086:2922] (rev 02)
+(prog-if 01 [AHCI 1.0])
+        Subsystem: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port
+SATA Controller [AHCI mode] [8086:2922]
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin B routed to IRQ 43
+        Region 0: I/O ports at cc00 [size=8]
+        Region 1: I/O ports at c880 [size=4]
+        Region 2: I/O ports at c800 [size=8]
+        Region 3: I/O ports at c480 [size=4]
+        Region 4: I/O ports at c400 [size=32]
+        Region 5: Memory at feb7c800 (32-bit, non-prefetchable) [size=2K]
+        Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
+                Address: fee0100c  Data: 4171
+        Capabilities: [70] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+PME(D0-,D1-,D2-,D3hot+,D3cold-)
+                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
+        Capabilities: [b0] Vendor Specific Information: Len=06 <?>
+        Kernel driver in use: ahci
 
-> 3) Whether to go to power off should be determined by leaf device
-> (such as SATA disk), but that may be done by its parent device (such
-> as SATA port).  It's a way for leaf device to tell its parent device
-> whether it want to go to power off.
+Any ideas what that could be?
 
-Well, please see above.
-
-Thanks,
-Rafael
+thanks,
+-- 
+js
+suse labs
