@@ -1,23 +1,23 @@
-From: Jiri Slaby <jslaby@suse.cz>
+From: Holger Macht <holger@homac.de>
 Subject: Re: ahci: sata hotplug doesn't work after suspend
-Date: Sun, 19 Feb 2012 21:17:05 +0100
-Message-ID: <4F4158C1.9040601@suse.cz>
+Date: Sun, 19 Feb 2012 22:17:09 +0100
+Message-ID: <20120219211709.GA30809@homac.suse.de>
 References: <4F415775.7060003@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37417 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754794Ab2BSURL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Feb 2012 15:17:11 -0500
+Received: from cantor2.suse.de ([195.135.220.15]:60566 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755157Ab2BSVRT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Feb 2012 16:17:19 -0500
+Content-Disposition: inline
 In-Reply-To: <4F415775.7060003@suse.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>, Lin Ming <ming.m.lin@intel.com>
 
-On 02/19/2012 09:11 PM, Jiri Slaby wrote:
+On So 19. Feb - 21:11:33, Jiri Slaby wrote:
 > Hi,
 > 
 > ahci hotplug stopped working here. It always worked (-next-20111206 is
@@ -83,36 +83,10 @@ On 02/19/2012 09:11 PM, Jiri Slaby wrote:
 > 
 > Any ideas what that could be?
 
-Maybe this will help (dmesg|grep -C 2 ata3)?
+I suspect this is caused by commit
+9ee4f3933930abf5cc34f8e9d69fe0e08c18f602. Maybe you could verify? I
+bisected this a couple of days ago but didn't have time to look into it
+further. Maybe Lin can help here if this is the problematic commit.
 
-parport_pc 00:07: activated
-ata4: SATA link down (SStatus 0 SControl 300)
-ata3: SATA link down (SStatus 0 SControl 300)
-firewire_core: rediscovered device fw0
-usb 5-1: reset low-speed USB device number 2 using uhci_hcd
---
-ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata2.00: configured for UDMA/133
-ata3: SATA link down (SStatus 0 SControl 300)
-ata3: limiting SATA link speed to 1.5 Gbps
-sd 1:0:0:0: [sdb] Starting disk
-ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-ata1.00: configured for UDMA/133
-sd 0:0:0:0: [sda] Starting disk
-ata3: SATA link down (SStatus 0 SControl 310)
-ata3.00: disabled
-ata3.00: detaching (SCSI 2:0:0:0)
-Extended CMOS year: 2000
-PM: resume of devices complete after 11061.816 msecs
---
-ata1.00: configured for UDMA/133
-sd 0:0:0:0: [sda] Starting disk
-ata3: softreset failed (1st FIS failed)
-ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-PM: resume of devices complete after 10620.205 msecs
-pl2303 7-1:1.0: pl2303 converter detected
-
-> thanks,
--- 
-js
-suse labs
+Regards,
+ Holger
