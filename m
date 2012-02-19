@@ -1,92 +1,66 @@
-From: Holger Macht <holger@homac.de>
-Subject: Re: ahci: sata hotplug doesn't work after suspend
-Date: Sun, 19 Feb 2012 22:17:09 +0100
-Message-ID: <20120219211709.GA30809@homac.suse.de>
-References: <4F415775.7060003@suse.cz>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH v2 24/28] libsas: poll for ata device readiness after
+ reset
+Date: Sun, 19 Feb 2012 16:06:36 -0600
+Message-ID: <1329689195.2806.10.camel@dabdike.int.hansenpartnership.com>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+	 <20111223030033.21827.46127.stgit@localhost6.localdomain6>
+	 <FD5571266F8C4E5ABC22D51C90F90A79@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60566 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755157Ab2BSVRT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Feb 2012 16:17:19 -0500
-Content-Disposition: inline
-In-Reply-To: <4F415775.7060003@suse.cz>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <FD5571266F8C4E5ABC22D51C90F90A79@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, 'Tejun Heo' <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>, Lin Ming <ming.m.lin@intel.com>
 
-On So 19. Feb - 21:11:33, Jiri Slaby wrote:
-> Hi,
-> 
-> ahci hotplug stopped working here. It always worked (-next-20111206 is
-> the last known working for sure). I'm using -next and after plugging a
-> sata disk in, nothing happens. I don't *think* (in the traffic, it's
-> hard to tell for sure) an interrupt is generated either. I also *think*
-> that it works before suspend/resume, but not after. (Or maybe uptime
-> matters?)
-> 
-> This happens before suspend on plug-in:
-> ata3: exception Emask 0x50 SAct 0x0 SErr 0x40d0800 action 0xe frozen
-> ata3: irq_stat 0x00000040, connection status changed
-> ata3: SError: { HostInt PHYRdyChg CommWake 10B8B DevExch }
-> ata3: hard resetting link
-> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata3.00: ATA-8: ST31000528AS, CC38, max UDMA/133
-> ata3.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> ata3.00: configured for UDMA/133
-> ata3: EH complete
-> scsi 2:0:0:0: Direct-Access     ATA      ST31000528AS     CC38 PQ: 0 ANSI: 5
-> sd 2:0:0:0: [sdc] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
-> sd 2:0:0:0: [sdc] Write Protect is off
-> sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
-> support DPO or FUA
->  sdc: sdc1 sdc2
-> sd 2:0:0:0: [sdc] Attached SCSI disk
-> 
-> After suspend/resume and plug-in, nothing appears in dmesg. Storing "- -
-> -" to /sys/class/scsi_host/host*/scan doesn't help. It looks like the
-> line is completely dead, because only ata1 and ata2 say "hard resetting
-> link" after this (and another two disks are connected there).
-> 
-> I tried 'echo adapter >host_reset', but I get 'write error: Invalid
-> argument'.
-> 
-> 00:1f.2 SATA controller [0106]: Intel Corporation 82801IR/IO/IH
-> (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode] [8086:2922] (rev 02)
-> (prog-if 01 [AHCI 1.0])
->         Subsystem: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port
-> SATA Controller [AHCI mode] [8086:2922]
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx+
->         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0
->         Interrupt: pin B routed to IRQ 43
->         Region 0: I/O ports at cc00 [size=8]
->         Region 1: I/O ports at c880 [size=4]
->         Region 2: I/O ports at c800 [size=8]
->         Region 3: I/O ports at c480 [size=4]
->         Region 4: I/O ports at c400 [size=32]
->         Region 5: Memory at feb7c800 (32-bit, non-prefetchable) [size=2K]
->         Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
->                 Address: fee0100c  Data: 4171
->         Capabilities: [70] Power Management version 3
->                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-> PME(D0-,D1-,D2-,D3hot+,D3cold-)
->                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->         Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
->         Capabilities: [b0] Vendor Specific Information: Len=06 <?>
->         Kernel driver in use: ahci
-> 
-> Any ideas what that could be?
+On Thu, 2011-12-29 at 14:18 +0800, Jack Wang wrote:
+> > @@ -267,39 +267,84 @@ static bool sas_ata_qc_fill_rtf(struct
+> ata_queued_cmd
+> > *qc)
+> >  	return true;
+> >  }
+> > 
+> > -static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
+> > -			       unsigned long deadline)
+> > +static struct sas_internal *dev_to_sas_internal(struct domain_device
+> *dev)
+> > +{
+> > +	return to_sas_internal(dev->port->ha->core.shost->transportt);
+> > +}
+> > +
+> > +static int smp_ata_check_ready(struct ata_link *link)
+> >  {
+> > +	int res;
+> > +	u8 addr[8];
+> >  	struct ata_port *ap = link->ap;
+> >  	struct domain_device *dev = ap->private_data;
+> > -	struct sas_internal *i
+> > -		to_sas_internal(dev->port->ha->core.shost->transportt);
+> > -	int res = TMF_RESP_FUNC_FAILED;
+> > -	int ret = 0;
+> > +	struct domain_device *ex_dev = dev->parent;
+> > +	struct sas_phy *phy = sas_find_local_phy(dev);
+> > 
+> > -	if (i->dft->lldd_I_T_nexus_reset)
+> > -		res = i->dft->lldd_I_T_nexus_reset(dev);
+> > +	res = sas_get_phy_attached_sas_addr(ex_dev, phy->number, addr);
+> > +	/* break the wait early if the expander is unreachable,
+> > +	 * otherwise keep polling
+> > +	 */
+> > +	if (res == -ECOMM)
+> > +		return res;
+> > +	if (res != SMP_RESP_FUNC_ACC || SAS_ADDR(addr) == 0)
+> [Jack Wang] 
+> This check may not guarantee the FIS have received by the expander, should
+> we
+>  Use sas_ex_phy_discover instead, we still need to teach
+> sas_ex_phy_discover_helper to return right code.
 
-I suspect this is caused by commit
-9ee4f3933930abf5cc34f8e9d69fe0e08c18f602. Maybe you could verify? I
-bisected this a couple of days ago but didn't have time to look into it
-further. Maybe Lin can help here if this is the problematic commit.
+So the concern seems valid, do we have a fix yet?
 
-Regards,
- Holger
+James
+
+
