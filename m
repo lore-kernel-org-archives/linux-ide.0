@@ -1,58 +1,52 @@
-From: Zang Roy-R61911 <r61911@freescale.com>
-Subject: RE: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-Date: Mon, 20 Feb 2012 04:40:21 +0000
-Message-ID: <3E027F8168735B46AC006B1D0C7BB002065A30@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1329284944-17943-1-git-send-email-qiang.liu@freescale.com>
- <1329439216.2892.36.camel@pasglop>
- <94F013E7935FF44C83EBE7784D62AD3F0574273C@039-SN2MPN1-023.039d.mgd.msft.net>
- <1329448724.2892.43.camel@pasglop>
+From: Zhang Rui <rui.zhang@intel.com>
+Subject: Re: [RFC PATCH 1/6] ACPI: Introduce ACPI D3_COLD state support
+Date: Mon, 20 Feb 2012 13:39:13 +0800
+Message-ID: <1329716353.1511.19.camel@rui.sh.intel.com>
+References: <1329124271-29464-1-git-send-email-ming.m.lin@intel.com>
+	 <201202142329.16516.rjw@sisk.pl>
+	 <1329376106.28581.5.camel@rui.sh.intel.com>
+	 <201202172323.18022.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from am1ehsobe005.messaging.microsoft.com ([213.199.154.208]:56257
-	"EHLO AM1EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751893Ab2BTEk1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 19 Feb 2012 23:40:27 -0500
-In-Reply-To: <1329448724.2892.43.camel@pasglop>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <201202172323.18022.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, ACPI Devel Mailing List <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Li Yang-R58472 <r58472@freescale.com>
-Cc: Liu Qiang-B32616 <B32616@freescale.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+On =E4=BA=94, 2012-02-17 at 23:23 +0100, Rafael J. Wysocki wrote:
+> > Okay, agreed.
+> > so how about this? _PR3 equals D3_HOT support.
+>=20
+> Yes, I can agree with that. :-)
+>=20
+> > > > Hmm, how about set D3_COLD support if _PR3 exists, but leave a =
+warning
+> > > > message if _OFF doesn't exist, for now?
+> > >=20
+> > > I don't think we need to set D3_COLD support at all.  In fact, it=
+ is always
+> > > supported (as I said, if all power resources used by a device are=
+ off, the
+> > > device is in D3_COLD pretty much by definition).
+> > >=20
+> > Yeah, but it seems that Linux uses ACPI_D3 for both ACPICA D3_HOT a=
+nd D3
+> > (off). I'm generating a patch to remove ACPI_D3_COLD and introduce
+> > D3_HOT support in Linux kernel.
+>=20
+> That's a good idea in my opinion.
 
+Great.
+Patch will be sent out later.
 
-> -----Original Message-----
-> From: linuxppc-dev-bounces+tie-fei.zang=freescale.com@lists.ozlabs.org
-> [mailto:linuxppc-dev-bounces+tie-fei.zang=freescale.com@lists.ozlabs.org]
-> On Behalf Of Benjamin Herrenschmidt
-> Sent: Friday, February 17, 2012 11:19 AM
-> To: Li Yang-R58472
-> Cc: Liu Qiang-B32616; jgarzik@pobox.com; linuxppc-dev@lists.ozlabs.org;
-> linux-kernel@vger.kernel.org; linux-ide@vger.kernel.org
-> Subject: RE: [PATCH V2 RESEND] fsl-sata: I/O load balancing
-> 
-> On Fri, 2012-02-17 at 03:09 +0000, Li Yang-R58472 wrote:
-> > >I tried a debian install on the p5020ds here and I find SATA to be
-> > >extremely slow, generating millions of interrupts. I think the
-> > defaults
-> > >should be a lot more aggressive at coalescing.
-> >
-> > The P5020 has a hardware problem with SATA, making it generate more
-> > interrupts than it should.  A new revision of the silicon will fix it.
-> 
-> Ok cool. With a bit of luck you guys can send me a new silicon when it's
-> available then :-) (The one in the board you got me seems to be in a
-> socket).
-Ben,
-We still do not have the a P5020 sample to fix the problem.
-One workaround is to use the patch ( I think you have noticed the patch):
-http://git.freescale.com/git/cgit.cgi/ppc/sdk/linux.git/commit/?id=92c0ce1e599e788ffc0908739db9bd5e0dbdad69
+thanks,
+rui
 
-and  use a SSD hard drive.
-It will have a usable performance.
-Thanks.
-Roy
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
