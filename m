@@ -1,102 +1,44 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: ahci: sata hotplug doesn't work after suspend
-Date: Mon, 20 Feb 2012 16:30:46 +0800
-Message-ID: <1329726646.3368.2.camel@minggr>
-References: <4F415775.7060003@suse.cz>
-	 <20120219211709.GA30809@homac.suse.de>
+From: "Western Union Outlet" <westernunion@wu.com>
+Subject: Transfer Notice!!
+Date: Mon, 20 Feb 2012 09:27:28 +0100
+Message-ID: <20120220082746.2647A5C8F8A3@mail.kpoly.edu.gh>
+Reply-To: westernunionpaycenter@fastservice.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:15486 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751481Ab2BTIat (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Feb 2012 03:30:49 -0500
-In-Reply-To: <20120219211709.GA30809@homac.suse.de>
+Received: from 41-204-38-3-dedicated.4u.com.gh ([41.204.38.3]:54004 "EHLO
+	mail.kpoly.edu.gh" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850Ab2BTJv4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Feb 2012 04:51:56 -0500
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Holger Macht <holger@homac.de>
-Cc: Jiri Slaby <jslaby@suse.cz>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
+To: Recipients <westernunion@wu.com>
 
-On Sun, 2012-02-19 at 22:17 +0100, Holger Macht wrote:
-> On So 19. Feb - 21:11:33, Jiri Slaby wrote:
-> > Hi,
-> > 
-> > ahci hotplug stopped working here. It always worked (-next-20111206 is
-> > the last known working for sure). I'm using -next and after plugging a
-> > sata disk in, nothing happens. I don't *think* (in the traffic, it's
-> > hard to tell for sure) an interrupt is generated either. I also *think*
-> > that it works before suspend/resume, but not after. (Or maybe uptime
-> > matters?)
-> > 
-> > This happens before suspend on plug-in:
-> > ata3: exception Emask 0x50 SAct 0x0 SErr 0x40d0800 action 0xe frozen
-> > ata3: irq_stat 0x00000040, connection status changed
-> > ata3: SError: { HostInt PHYRdyChg CommWake 10B8B DevExch }
-> > ata3: hard resetting link
-> > ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata3.00: ATA-8: ST31000528AS, CC38, max UDMA/133
-> > ata3.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> > ata3.00: configured for UDMA/133
-> > ata3: EH complete
-> > scsi 2:0:0:0: Direct-Access     ATA      ST31000528AS     CC38 PQ: 0 ANSI: 5
-> > sd 2:0:0:0: [sdc] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
-> > sd 2:0:0:0: [sdc] Write Protect is off
-> > sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-> > sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
-> > support DPO or FUA
-> >  sdc: sdc1 sdc2
-> > sd 2:0:0:0: [sdc] Attached SCSI disk
-> > 
-> > After suspend/resume and plug-in, nothing appears in dmesg. Storing "- -
-> > -" to /sys/class/scsi_host/host*/scan doesn't help. It looks like the
-> > line is completely dead, because only ata1 and ata2 say "hard resetting
-> > link" after this (and another two disks are connected there).
-> > 
-> > I tried 'echo adapter >host_reset', but I get 'write error: Invalid
-> > argument'.
-> > 
-> > 00:1f.2 SATA controller [0106]: Intel Corporation 82801IR/IO/IH
-> > (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode] [8086:2922] (rev 02)
-> > (prog-if 01 [AHCI 1.0])
-> >         Subsystem: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port
-> > SATA Controller [AHCI mode] [8086:2922]
-> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> > ParErr- Stepping- SERR- FastB2B- DisINTx+
-> >         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
-> > <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >         Latency: 0
-> >         Interrupt: pin B routed to IRQ 43
-> >         Region 0: I/O ports at cc00 [size=8]
-> >         Region 1: I/O ports at c880 [size=4]
-> >         Region 2: I/O ports at c800 [size=8]
-> >         Region 3: I/O ports at c480 [size=4]
-> >         Region 4: I/O ports at c400 [size=32]
-> >         Region 5: Memory at feb7c800 (32-bit, non-prefetchable) [size=2K]
-> >         Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
-> >                 Address: fee0100c  Data: 4171
-> >         Capabilities: [70] Power Management version 3
-> >                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
-> > PME(D0-,D1-,D2-,D3hot+,D3cold-)
-> >                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> >         Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
-> >         Capabilities: [b0] Vendor Specific Information: Len=06 <?>
-> >         Kernel driver in use: ahci
-> > 
-> > Any ideas what that could be?
-> 
-> I suspect this is caused by commit
-> 9ee4f3933930abf5cc34f8e9d69fe0e08c18f602. Maybe you could verify? I
-> bisected this a couple of days ago but didn't have time to look into it
-> further. Maybe Lin can help here if this is the problematic commit.
+Dear Beneficiary.
 
-I'll try to re-produce this issue first.
+We write to inform you that we have transferred USD$400,000.00 dollars, I could have called you via phone to give you the MTCN information but we lost your contact phone number. So, I decided to email you the information so that you can start cashing your money in USD5000.00 daily installment with the same MTCN and sender's name which will be valid for 20 days until you cash the full $400,000.00usd as it automatically activates for use for 20 days after the first reactivation.
 
-Regards,
-Lin Ming
+The money is available for pick up which was deposited for transfer to you by MR Bernard Harry from United Nation Trust Funds.  The money is available for pick up by receiver (you) but when you track it, it will display PICKED UP due to the fact that it has been deactivated from our head office for security reason because it has stayed too long in the air as we have been trying to reach you on the phone for some days now but it was not reachable,so it was blocked.
 
-> 
-> Regards,
->  Holger
+Therefore you can not cash it out in any western union office due to its restriction from our head office,which was a security measure because the money has been in the air for three days now and maybe in danger, hence the mtcn has to be reactivated to enable you cash out the money in any western union office in your area, the reactivation of the MTCN will cost you a token of $155, once this is paid, our head office will release the fund on hold to enable you cash it.To be sure of this please log on to www.westernunion.com and click on track to and enter the sender's info and mtcn below.
+
+Sender's Fist name: Abraham
+Sender's Last Name: Elizabeth
+MTCN: 5801913322
+Question: Who Is Great
+Answer: God
+Amount: $5000.00USD
+Total Amount To be Cashed: $400,000.00Usd
+
+Please also send to us the following details..
+1,Re-Comfirm Your Contact Phone Number.................
+
+With due respect please get back to me urgently after tracking the money on-line so i can instruct you on how to send the $155 to us for the reactivation of the MTCN.
 
 
+Best Regards
+Mr.Smith Mcferrin.
+Outlet Manager,
+Western Union Money Transfer.
