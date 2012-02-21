@@ -1,78 +1,162 @@
-From: Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Tue, 21 Feb 2012 09:13:26 +0800
-Message-ID: <1329786806.1511.54.camel@rui.sh.intel.com>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
-	 <201202180054.49284.rjw@sisk.pl>
-	 <1329708181.1511.18.camel@rui.sh.intel.com>
-	 <201202210013.02397.rjw@sisk.pl>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: ahci: sata hotplug doesn't work after suspend
+Date: Tue, 21 Feb 2012 16:12:52 +0800
+Message-ID: <1329811972.3368.11.camel@minggr>
+References: <4F415775.7060003@suse.cz>
+	 <20120219211709.GA30809@homac.suse.de> <1329726646.3368.2.camel@minggr>
+	 <4F42420E.2010301@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26122 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:25107 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754984Ab2BUBNP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Feb 2012 20:13:15 -0500
-In-Reply-To: <201202210013.02397.rjw@sisk.pl>
+	id S1751307Ab2BUIMz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Feb 2012 03:12:55 -0500
+In-Reply-To: <4F42420E.2010301@suse.cz>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Holger Macht <holger@homac.de>, Jiri Slaby <jirislaby@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On =E4=BA=8C, 2012-02-21 at 00:13 +0100, Rafael J. Wysocki wrote:
-> > So how to handle this case, say, for a device in the generic PM dom=
-ain
-> > that supports 2 different low power state, D1 and D2.
-> > D2 is deeper than D1, and it is kind of cold power off with remote
-> > wakeup disabled. If the driver needs to runtime suspend the device =
-with
-> > remote wakeup enabled, it should set the device to D1, but it can n=
-ot
-> > set the RPM_SUSPEND?
->=20
-> The device is regarded as "suspended" if its bus type's (or PM domain=
-'s)
-> .runtime_suspend() callback has been executed and has returned 0 (suc=
-cess).
-> What the callback has actually done is not of any interest to the cor=
-e.
->=20
-right.
+On Mon, 2012-02-20 at 13:52 +0100, Jiri Slaby wrote:
+> On 02/20/2012 09:30 AM, Lin Ming wrote:
+> > On Sun, 2012-02-19 at 22:17 +0100, Holger Macht wrote:
+> >> On So 19. Feb - 21:11:33, Jiri Slaby wrote:
+> >>> Hi,
+> >>>
+> >>> ahci hotplug stopped working here. It always worked (-next-20111206 is
+> >>> the last known working for sure). I'm using -next and after plugging a
+> >>> sata disk in, nothing happens. I don't *think* (in the traffic, it's
+> >>> hard to tell for sure) an interrupt is generated either. I also *think*
+> >>> that it works before suspend/resume, but not after. (Or maybe uptime
+> >>> matters?)
+> >>>
+> >>> This happens before suspend on plug-in:
+> >>> ata3: exception Emask 0x50 SAct 0x0 SErr 0x40d0800 action 0xe frozen
+> >>> ata3: irq_stat 0x00000040, connection status changed
+> >>> ata3: SError: { HostInt PHYRdyChg CommWake 10B8B DevExch }
+> >>> ata3: hard resetting link
+> >>> ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> >>> ata3.00: ATA-8: ST31000528AS, CC38, max UDMA/133
+> >>> ata3.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> >>> ata3.00: configured for UDMA/133
+> >>> ata3: EH complete
+> >>> scsi 2:0:0:0: Direct-Access     ATA      ST31000528AS     CC38 PQ: 0 ANSI: 5
+> >>> sd 2:0:0:0: [sdc] 1953525168 512-byte logical blocks: (1.00 TB/931 GiB)
+> >>> sd 2:0:0:0: [sdc] Write Protect is off
+> >>> sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+> >>> sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't
+> >>> support DPO or FUA
+> >>>  sdc: sdc1 sdc2
+> >>> sd 2:0:0:0: [sdc] Attached SCSI disk
+> >>>
+> >>> After suspend/resume and plug-in, nothing appears in dmesg. Storing "- -
+> >>> -" to /sys/class/scsi_host/host*/scan doesn't help. It looks like the
+> >>> line is completely dead, because only ata1 and ata2 say "hard resetting
+> >>> link" after this (and another two disks are connected there).
+> >>>
+> >>> I tried 'echo adapter >host_reset', but I get 'write error: Invalid
+> >>> argument'.
+> >>>
+> >>> 00:1f.2 SATA controller [0106]: Intel Corporation 82801IR/IO/IH
+> >>> (ICH9R/DO/DH) 6 port SATA Controller [AHCI mode] [8086:2922] (rev 02)
+> >>> (prog-if 01 [AHCI 1.0])
+> >>>         Subsystem: Intel Corporation 82801IR/IO/IH (ICH9R/DO/DH) 6 port
+> >>> SATA Controller [AHCI mode] [8086:2922]
+> >>>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> >>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+> >>>         Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort-
+> >>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> >>>         Latency: 0
+> >>>         Interrupt: pin B routed to IRQ 43
+> >>>         Region 0: I/O ports at cc00 [size=8]
+> >>>         Region 1: I/O ports at c880 [size=4]
+> >>>         Region 2: I/O ports at c800 [size=8]
+> >>>         Region 3: I/O ports at c480 [size=4]
+> >>>         Region 4: I/O ports at c400 [size=32]
+> >>>         Region 5: Memory at feb7c800 (32-bit, non-prefetchable) [size=2K]
+> >>>         Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
+> >>>                 Address: fee0100c  Data: 4171
+> >>>         Capabilities: [70] Power Management version 3
+> >>>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA
+> >>> PME(D0-,D1-,D2-,D3hot+,D3cold-)
+> >>>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> >>>         Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
+> >>>         Capabilities: [b0] Vendor Specific Information: Len=06 <?>
+> >>>         Kernel driver in use: ahci
+> >>>
+> >>> Any ideas what that could be?
+> >>
+> >> I suspect this is caused by commit
+> >> 9ee4f3933930abf5cc34f8e9d69fe0e08c18f602. Maybe you could verify? I
+> >> bisected this a couple of days ago but didn't have time to look into it
+> >> further. Maybe Lin can help here if this is the problematic commit.
+> > 
+> > I'll try to re-produce this issue first.
+> 
+> Ok, just a few more information. Suspend/resume cycle is needed to see
+> the issue. Reverting of 9ee4f3933930 helps when this is applied too (I
+> haven't tried one or the other alone):
 
-> Now, the D1 and D2 case has to be handled by the bus (PM domain) and
-> driver.  In both cases the device will be regarded as "suspended" and=
- the
-> core doesn't track the actual device state.
->=20
+I saw the issue after suspend/resume.
+Hotplug doesn't work because the port is runtime suspended.
 
+I'll fix it.
 
-> I think the problem here is that the PCI bus type's runtime PM callba=
-cks
-> aren't very sophisticated (they just choose the lowest possible low-p=
-ower
-> state and attempt to put the device into it) and I can see two possib=
-le
-> ways to address that.
->=20
-> First, you can modify pci_pm_runtime_suspend/_resume() to handle mult=
-iple
-> states (for example, to choose the target low-power state more intell=
-igently
-> than they do right now).  Second, you can add a PM domain that will d=
-o what
-> you want from pci_pm_runtime_suspend/_resume() for a specific set of =
-devices.
->=20
-But RPM_SUSPENDED is set by PM core after .runtime_suspend() being
-invoked, even if device is in D1 instead of D2, right?
+Thanks,
+Lin Ming
 
-So the problem is that, if a device in a generic power domain supports
-two low power state, one is compatible with generic power domain power
-off and another is not, how can the device driver pass this information
-to the generic power domain, i.e. how to runtime suspend a device while
-keep the generic power domain always on?
+> 
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5305,25 +5305,16 @@ static int ata_port_suspend_common(struct device
+> *dev, pm_message_t mesg)
+> 
+>  static int ata_port_suspend(struct device *dev)
+>  {
+> -       if (pm_runtime_suspended(dev))
+> -               return 0;
+> -
+>         return ata_port_suspend_common(dev, PMSG_SUSPEND);
+>  }
+> 
+>  static int ata_port_do_freeze(struct device *dev)
+>  {
+> -       if (pm_runtime_suspended(dev))
+> -               pm_runtime_resume(dev);
+> -
+>         return ata_port_suspend_common(dev, PMSG_FREEZE);
+>  }
+> 
+>  static int ata_port_poweroff(struct device *dev)
+>  {
+> -       if (pm_runtime_suspended(dev))
+> -               return 0;
+> -
+>         return ata_port_suspend_common(dev, PMSG_HIBERNATE);
+>  }
+> 
+> @@ -5339,16 +5330,7 @@ static int ata_port_resume_common(struct device *dev)
+> 
+>  static int ata_port_resume(struct device *dev)
+>  {
+> -       int rc;
+> -
+> -       rc = ata_port_resume_common(dev);
+> -       if (!rc) {
+> -               pm_runtime_disable(dev);
+> -               pm_runtime_set_active(dev);
+> -               pm_runtime_enable(dev);
+> -       }
+> -
+> -       return rc;
+> +       return ata_port_resume_common(dev);
+>  }
+> 
+>  static const struct dev_pm_ops ata_port_pm_ops = {
+> 
+> 
+> 
 
-thanks,
-rui
 
