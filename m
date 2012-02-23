@@ -1,66 +1,83 @@
-From: Viresh Kumar <viresh.kumar@st.com>
-Subject: [PATCH] ata/pata_arasan_cf: Add Hibernation support
-Date: Thu, 23 Feb 2012 15:03:53 +0530
-Message-ID: <788f006c530a7577380d75a60ba9ab23e8d975c9.1329989550.git.viresh.kumar@st.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [RFC PATCH 2/6] ACPI: Reference devices in ACPI Power Resource
+Date: Thu, 23 Feb 2012 21:41:36 +0800
+Message-ID: <1330004496.2469.3.camel@hp6530s>
+References: <Pine.LNX.4.44L0.1202211059180.1366-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog114.obsmtp.com ([207.126.144.137]:54285 "EHLO
-	eu1sys200aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754079Ab2BWJpP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Feb 2012 04:45:15 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1202211059180.1366-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Zhang, Rui" <rui.zhang@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, armando.visconti@st.com, shiraz.hashim@st.com, vipin.kumar@st.com, rajeev-dlh.kumar@st.com, deepak.sikri@st.com, vipulkumar.samar@st.com, amit.virdi@st.com, viresh.kumar@st.com, pratyush.anand@st.com, bhupesh.sharma@st.com, viresh.linux@gmail.com, bhavna.yadav@st.com, vincenzo.frascino@st.com, mirko.gardi@st.com
 
-This patch adds in Hibernation related callbacks. Also we don't really need to
-free DMA channel on suspend.
+On Tue, 2012-02-21 at 11:06 -0500, Alan Stern wrote:
+> On Tue, 21 Feb 2012, Lin Ming wrote:
+>=20
+> > > Then maybe you can use pm_runtime_no_callbacks() for the ZPODD de=
+vice.
+> > > It's explained in Documentation/power/runtime_pm.txt, and I use i=
+t for
+> > > USB interfaces.
+> >=20
+> > If pm_runtime_no_callbacks() is used, runtime PM sysfs attributes
+> > won't be created.
+> > Then how to disable ZPODD feature in userspace?
+> >=20
+> > Currently, I use "control" file of scsi device to enable/disable
+> > ZPODD, for example
+> > echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1=
+:0:0/1:0:0:0/power/control
+> > echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0=
+:0/1:0:0:0/power/control
+>=20
+> You could get the same result by using the "control" file for the ATA
+> port.
+>=20
+> > > The idea is that the ZPODD will never receive any runtime PM call=
+backs
+> > > from the PM core. =EF=BF=BDInstead the ATA port callback routines=
+ will be
+> > > responsible for power management of the ZPODD device.
+> >=20
+> > Does the ATA port callback also responsible to resume its child?
+> >=20
+> > For example,
+> > /sys/devices/pci0000:00/0000:00:1f.2/ata0/host1/target1:0:0/1:0:0:0=
+/
+> >=20
+> > ata0 is resumed.
+> >=20
+> > Then who will be responsible to resume host1, target1:0:0 and 1:0:0=
+:0?
+> >=20
+> > Or do you mean that we don't need to resume these devices at all?
+> > host1 and target1:0:0 are logical devices, but I think 1:0:0:0 is n=
+ot.
+>=20
+> That's right.  It makes no difference whether the host and target=20
+> are resumed or suspended.  In fact, you could also call=20
+> pm_runtime_no_callbacks() for them.
 
-Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
----
- drivers/ata/pata_arasan_cf.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+But host and target are added in scsi layer. How do we know if they are
+"logical device"?
 
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index 048589f..fc2db2a 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -925,11 +925,10 @@ static int arasan_cf_suspend(struct device *dev)
- 	struct ata_host *host = dev_get_drvdata(dev);
- 	struct arasan_cf_dev *acdev = host->ports[0]->private_data;
- 
--	if (acdev->dma_chan) {
-+	if (acdev->dma_chan)
- 		acdev->dma_chan->device->device_control(acdev->dma_chan,
- 				DMA_TERMINATE_ALL, 0);
--		dma_release_channel(acdev->dma_chan);
--	}
-+
- 	cf_exit(acdev);
- 	return ata_host_suspend(host, PMSG_SUSPEND);
- }
-@@ -945,10 +944,7 @@ static int arasan_cf_resume(struct device *dev)
- 	return 0;
- }
- 
--static const struct dev_pm_ops arasan_cf_pm_ops = {
--	.suspend	= arasan_cf_suspend,
--	.resume		= arasan_cf_resume,
--};
-+static SIMPLE_DEV_PM_OPS(arasan_cf_pm_ops, arasan_cf_suspend, arasan_cf_resume);
- #endif
- 
- static struct platform_driver arasan_cf_driver = {
-@@ -958,7 +954,7 @@ static struct platform_driver arasan_cf_driver = {
- 		.name	= DRIVER_NAME,
- 		.owner	= THIS_MODULE,
- #ifdef CONFIG_PM
--		.pm		= &arasan_cf_pm_ops,
-+		.pm	= &arasan_cf_pm_ops,
- #endif
- 	},
- };
--- 
-1.7.8.110.g4cb5d
+Or do you mean that we can call pm_runtime_no_callbacks() for them
+because scsi layer(scsi_pm.c) only implements runtime pm for scsi
+device.
 
+Thanks,
+Lin Ming=20
+
+>=20
+> Alan Stern
+>=20
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
