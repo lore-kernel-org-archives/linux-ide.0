@@ -1,116 +1,40 @@
-From: Zhang Rui <rui.zhang@intel.com>
-Subject: Re: [RFC PATCH 4/6] PM / Runtime: Introduce flag can_power_off
-Date: Wed, 22 Feb 2012 08:57:47 +0800
-Message-ID: <1329872267.1511.76.camel@rui.sh.intel.com>
-References: <Pine.LNX.4.44L0.1202130958440.1434-100000@iolanthe.rowland.org>
-	 <201202210013.02397.rjw@sisk.pl>
-	 <1329786806.1511.54.camel@rui.sh.intel.com>
-	 <201202212243.52788.rjw@sisk.pl>
+From: Norbert Preining <preining@logic.at>
+Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
+Date: Thu, 23 Feb 2012 09:02:40 +0900
+Message-ID: <20120223000240.GA1931@gamma.logic.tuwien.ac.at>
+References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29237 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751178Ab2BVA5i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Feb 2012 19:57:38 -0500
-In-Reply-To: <201202212243.52788.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Lin Ming <ming.m.lin@intel.com>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Valdis Kletnieks <valdis.kletnieks@vt.edu>, "Rafael J . Wysocki" <rjw@sisk.pl>
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Lin Ming <ming.m.lin@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Len Brown <lenb@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-On =E4=BA=8C, 2012-02-21 at 22:43 +0100, Rafael J. Wysocki wrote:
-> On Tuesday, February 21, 2012, Zhang Rui wrote:
-> > On =E4=BA=8C, 2012-02-21 at 00:13 +0100, Rafael J. Wysocki wrote:
-> > > > So how to handle this case, say, for a device in the generic PM=
- domain
-> > > > that supports 2 different low power state, D1 and D2.
-> > > > D2 is deeper than D1, and it is kind of cold power off with rem=
-ote
-> > > > wakeup disabled. If the driver needs to runtime suspend the dev=
-ice with
-> > > > remote wakeup enabled, it should set the device to D1, but it c=
-an not
-> > > > set the RPM_SUSPEND?
-> > >=20
-> > > The device is regarded as "suspended" if its bus type's (or PM do=
-main's)
-> > > .runtime_suspend() callback has been executed and has returned 0 =
-(success).
-> > > What the callback has actually done is not of any interest to the=
- core.
-> > >=20
-> > right.
-> >=20
-> > > Now, the D1 and D2 case has to be handled by the bus (PM domain) =
-and
-> > > driver.  In both cases the device will be regarded as "suspended"=
- and the
-> > > core doesn't track the actual device state.
-> > >=20
-> >=20
-> >=20
-> > > I think the problem here is that the PCI bus type's runtime PM ca=
-llbacks
-> > > aren't very sophisticated (they just choose the lowest possible l=
-ow-power
-> > > state and attempt to put the device into it) and I can see two po=
-ssible
-> > > ways to address that.
-> > >=20
-> > > First, you can modify pci_pm_runtime_suspend/_resume() to handle =
-multiple
-> > > states (for example, to choose the target low-power state more in=
-telligently
-> > > than they do right now).  Second, you can add a PM domain that wi=
-ll do what
-> > > you want from pci_pm_runtime_suspend/_resume() for a specific set=
- of devices.
-> > >=20
-> > But RPM_SUSPENDED is set by PM core after .runtime_suspend() being
-> > invoked, even if device is in D1 instead of D2, right?
-> >=20
-> > So the problem is that, if a device in a generic power domain suppo=
-rts
-> > two low power state, one is compatible with generic power domain po=
-wer
-> > off and another is not, how can the device driver pass this informa=
-tion
-> > to the generic power domain, i.e. how to runtime suspend a device w=
-hile
-> > keep the generic power domain always on?
->=20
-> There are two "low-power" levels in the generic PM domains framework.=
-  The
-> first one is the per-device low-power in which devices are put into t=
-heir
-> individual (programmable) low-power states by the domain .dev_ops->st=
-op()
-> callback.  The second one is when .stop() has been called for all dev=
-ices,
-> so presumably all of them are in programmable low-power states and it=
-'s
-> possible to switch the entire domain off.  This is done by the domain
-> .power_off() callback.
->=20
-> It seems that the trick might be to make .dev_ops->stop() avoid turni=
-ng off
-> power resources for the last suspending device in the domain and leav=
-e that
-> to domain .power_off().
->=20
-Yeah, that's a good idea.
-so how about this proposal for ZPODD.
-1. create an ACPI generic power domain for every device that has an _PR=
-3
-   method, the SATA port in this case.
-2. add sr device to the generic power domain via genpd APIs.
-   this can be done either in ATA port driver or in sr driver.
-3. the .power_off callback of the generic power domain
-   a) checks if all the devices allows power off (for the trick above)
-   b) turns off the power resources in _PR3.
+On Di, 21 Feb 2012, Brian Norris wrote:
+> This series addresses regression problems with
+> 
+>     commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
+>     ahci: start engine only during soft/hard resets
+> 
+> Because the fix provided by the above commit caused COMRESET failures and
+> 10 second boot-time/resume-time hangs for certain DVD drives, we need to
+> make the fix conditional to certain devices/platforms. Add a flag for this.
 
-thanks,
-rui
+I confirm that these patches without the previous fix also 
+fixes the regression I have seen. Thanks.
 
+Best wishes
+
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+SHIRMERS (pl.n.)
+Tall young men who stand around smiling at weddings as if to suggest
+that they know they bride reather well.
+			--- Douglas Adams, The Meaning of Liff
