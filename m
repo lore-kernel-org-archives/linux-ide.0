@@ -1,49 +1,36 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: Re: ahci: sata hotplug doesn't work after suspend
-Date: Mon, 27 Feb 2012 09:48:42 +0100
-Message-ID: <4F4B436A.4050702@suse.cz>
-References: <4F415775.7060003@suse.cz> <20120219211709.GA30809@homac.suse.de> <1329726646.3368.2.camel@minggr> <4F42420E.2010301@suse.cz> <1329964013.18070.3.camel@minggr> <CAF1ivSaQU1MXbExbtRkXy5YcbymCM_9DdR9d4BqMbti2rbvehg@mail.gmail.com>
+From: "Mr. Choi Cheng" <info@iqm.unicamp.br>
+Subject: Business Proposal of USD $22,500,000.00
+Date: Tue, 28 Feb 2012 08:12:20 -0300
+Message-ID: <20120228081220.23994l9zbfg4d3f8@webmail.iqm.unicamp.br>
+Reply-To: choi_chu15@yahoo.co.jp
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:37895 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995Ab2B0Iss (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2012 03:48:48 -0500
-In-Reply-To: <CAF1ivSaQU1MXbExbtRkXy5YcbymCM_9DdR9d4BqMbti2rbvehg@mail.gmail.com>
+Received: from power.iqm.unicamp.br ([143.106.51.18]:52404 "EHLO
+	webmail.iqm.unicamp.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218Ab2B1LbQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2012 06:31:16 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Holger Macht <holger@homac.de>, Jiri Slaby <jirislaby@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 02/27/2012 02:05 AM, Lin Ming wrote:
->> Could you please try below patch?
->>
->> And please also show the debug info.
->> dmesg |grep "DEBUG: port"
->
-> Hi Jiri,
->
-> Will you get a chance to test this patch?
+Good Day,
 
-Yes, yesterday I booted a kernel with that patch, today I resumed from 
-suspend. It works fine.
+I have a business proposal of USD $22,500,000.00 only for you to  
+transact with me from my bank to your country. All confirmable  
+documents to back up the claims will be made available to you prior to  
+your acceptance.Reply to address:choi_chu15@yahoo.co.jp and I will let  
+you know what is required of you.
 
-[    3.544423] DEBUG: port 0, PORT_CMD=0x40006
-[    3.544445] DEBUG: port 1, PORT_CMD=0x40006
-[    3.544467] DEBUG: port 2, PORT_CMD=0x40006
-[    3.544489] DEBUG: port 3, PORT_CMD=0x40006
-[    3.544511] DEBUG: port 4, PORT_CMD=0x6
-[    3.544532] DEBUG: port 5, PORT_CMD=0x6
-[ 1724.132173] DEBUG: port 0, PORT_CMD=0x40006
-[ 1724.132184] DEBUG: port 1, PORT_CMD=0x40006
-[ 1724.132194] DEBUG: port 2, PORT_CMD=0x40006
-[ 1724.132204] DEBUG: port 3, PORT_CMD=0x40006
-[ 1724.132214] DEBUG: port 4, PORT_CMD=0x6
-[ 1724.132222] DEBUG: port 5, PORT_CMD=0x6
+Best Regards,
+Mr. Vincent Cheng
 
-thanks,
--- 
-js
-suse labs
+
+
+
+
+
