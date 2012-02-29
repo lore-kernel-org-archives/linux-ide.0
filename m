@@ -1,39 +1,47 @@
-From: Liu Qiang-B32616 <B32616@freescale.com>
-Subject: RE: [PATCH V3] fsl-sata: add support for interrupt coalsecing
- feature
-Date: Wed, 29 Feb 2012 02:54:58 +0000
-Message-ID: <BCB48C05FCE8BC4D9E61E841ECBE6DB70424A8@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1329291634-883-1-git-send-email-qiang.liu@freescale.com>
- <CADRPPNTmRvPVymJmW4vagU+2M4DmqeDSEj=4=R_=YDJekOTccQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v8 08/13] libsas: libsas.force_hard_reset module
+ parameter
+Date: Wed, 29 Feb 2012 15:55:51 -0600
+Message-ID: <1330552551.8846.24.camel@dabdike>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+	 <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADRPPNTmRvPVymJmW4vagU+2M4DmqeDSEj=4=R_=YDJekOTccQ@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "jgarzik@pobox.com" <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, Li Yang-R58472 <r58472@freescale.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47831 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756453Ab2B2Vzy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Feb 2012 16:55:54 -0500
+In-Reply-To: <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
 
-SGkgSmVmZiwNCg0KRG8geW91IHBsYW4gdG8gYXBwbHkgaXQgdG8gdXBzdHJlYW0sIG9yIGFueSBz
-dWdnZXN0aW9ucz8gVGhhbmtzLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZy
-b206IGxpbnV4LWlkZS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1pZGUtDQo+
-IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIExpIFlhbmcNCj4gU2VudDogV2Vk
-bmVzZGF5LCBGZWJydWFyeSAxNSwgMjAxMiAzOjUxIFBNDQo+IFRvOiBMaXUgUWlhbmctQjMyNjE2
-DQo+IENjOiBqZ2FyemlrQHBvYm94LmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgbGlu
-dXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMu
-b3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggVjNdIGZzbC1zYXRhOiBhZGQgc3VwcG9ydCBmb3Ig
-aW50ZXJydXB0IGNvYWxzZWNpbmcNCj4gZmVhdHVyZQ0KPiANCj4gT24gV2VkLCBGZWIgMTUsIDIw
-MTIgYXQgMzo0MCBQTSwgUWlhbmcgTGl1IDxxaWFuZy5saXVAZnJlZXNjYWxlLmNvbT4NCj4gd3Jv
-dGU6DQo+ID4gQWRkcyBzdXBwb3J0IGZvciBpbnRlcnJ1cHQgY29hbGVzY2luZyBmZWF0dXJlIHRv
-IHJlZHVjZSBpbnRlcnJ1cHQNCj4gZXZlbnRzLg0KPiA+IFByb3ZpZGVzIGEgbWVjaGFuaXNtIG9m
-IGFkanVzdGluZyBjb2FsZXNjaW5nIGNvdW50IGFuZCB0aW1lb3V0IHRpY2sgYnkNCj4gPiBzeXNm
-cyBhdCBydW50aW1lLCBzbyB0aGF0IHRyYWRlb2ZmIG9mIGxhdGVuY3kgYW5kIENQVSBsb2FkIGNh
-biBiZSBtYWRlDQo+ID4gZGVwZW5kaW5nIG9uIGRpZmZlcmVudCBhcHBsaWNhdGlvbnMuDQo+ID4N
-Cj4gPiBTaWduZWQtb2ZmLWJ5OiBRaWFuZyBMaXUgPHFpYW5nLmxpdUBmcmVlc2NhbGUuY29tPg0K
-PiANCj4gQWNrZWQtYnk6IExpIFlhbmcgPGxlb2xpQGZyZWVzY2FsZS5jb20+DQo+IA0KPiAtIExl
-bw0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAi
-dW5zdWJzY3JpYmUgbGludXgtaWRlIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFq
-b3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92
-Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
+On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
+> It is possible for a host to get "locked out" from talking to sata
+> devices in the domain if, for example, its sas address changes but the
+> expander topology has existing affiliations with the old address.  If
+> the system is booted userspace can write to
+> /sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, however
+> if this condition exists for the root device the module parameter can be
+> used to promote all ata resets to hard resets.
+
+I don't quite understand this.  Are you saying we can't (or shouldn't)
+execute 
+
+/sys/class/sas_phy/<phy-X>/hard_reset
+
+on the root device for some reason?
+
+> After the system is booted this state can be cleared via
+> /sys/module/libsas/parameters/force_hard_reset
+
+I really don't think a module parameter for this is such a good idea ...
+it effectively promotes all soft resets to being hard ones, which can
+have a lot of unintended consequences.
+
+James
+
+
