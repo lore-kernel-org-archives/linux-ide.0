@@ -1,59 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v8 09/13] libsas: enforce eh strategy handlers only in
- eh context
-Date: Wed, 29 Feb 2012 16:05:51 -0600
-Message-ID: <1330553151.8846.26.camel@dabdike>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
-	 <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v8 08/13] libsas: libsas.force_hard_reset module parameter
+Date: Wed, 29 Feb 2012 17:40:54 -0500
+Message-ID: <4F4EA976.4010607@interlog.com>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>  <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com> <1330552551.8846.24.camel@dabdike>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:35968 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756590Ab2B2WlD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Feb 2012 17:41:03 -0500
+In-Reply-To: <1330552551.8846.24.camel@dabdike>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
 
-On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
-> The strategy handlers may be called in places that are problematic for
-> libsas (i.e. sata resets outside of domain revalidation filtering /
-> libata link recovery), or problematic for userspace (non-blocking ioctl
-> to sleeping reset functions).  However, these routines are also called
-> for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
-> as long as we are running in the host's error handler.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_scsi_host.c |   15 +++++++++++----
->  1 files changed, 11 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index f0b9b7b..1cabedc 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -463,11 +463,14 @@ EXPORT_SYMBOL_GPL(sas_get_local_phy);
->  /* Attempt to send a LUN reset message to a device */
->  int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
->  {
-> -	struct domain_device *dev = cmd_to_domain_dev(cmd);
-> -	struct sas_internal *i =
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> -	struct scsi_lun lun;
->  	int res;
-> +	struct scsi_lun lun;
-> +	struct Scsi_Host *host = cmd->device->host;
-> +	struct domain_device *dev = cmd_to_domain_dev(cmd);
-> +	struct sas_internal *i = to_sas_internal(host->transportt);
-> +
-> +	if (current != host->ehandler)
-> +		return FAILED;
+On 12-02-29 04:55 PM, James Bottomley wrote:
+> On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
+>> It is possible for a host to get "locked out" from talking to sata
+>> devices in the domain if, for example, its sas address changes but the
+>> expander topology has existing affiliations with the old address.  If
+>> the system is booted userspace can write to
+>> /sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, however
+>> if this condition exists for the root device the module parameter can be
+>> used to promote all ata resets to hard resets.
 
-Doing this will ensure that SG_SCSI_RESET now fails.
+A point of order: SAS has link resets and hard resets. The
+hard reset is a superset of link reset. A "link reset sequence
+serves as a hard reset for SATA devices" and hence is
+sufficient to reset a SATA device. To reset a SAS device
+(e.g. a SAS disk) you need a SAS hard reset. Therefore a link
+reset is the appropriately sized "gun" to reset a SATA device.
 
-I don't mind checking for O_NONBLOCK in the sg handler and failing if it
-is, but disallowing everything looks a trifle drastic.
+I have a SAS-2 expander that annoyingly powers up with the
+programmed maximum physical link rate of its phys at 3 Gbps
+even though its hardware maximum rate is 6 Gbps. For expander
+phys connected to SAS-2 disks I can up the programmed maximum
+value to 6 Gbps on the expander phy then do a link reset on
+that phy. So without upsetting Linux (or any other OS) I can
+switch that path from 3 Gbps to 6 Gbps. Can't do that with a
+SATA disk without the OS finding out.
 
-James
+Also to clear a SATA affiliation you should be using a SMP
+PHY CONTROL (phy_op=6) function.
 
-
+Doug Gilbert
