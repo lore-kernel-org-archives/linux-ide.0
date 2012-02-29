@@ -1,66 +1,39 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: ahci: sata hotplug doesn't work after suspend
-Date: Tue, 28 Feb 2012 19:36:01 +0800
-Message-ID: <CAF1ivSYsFnYN=H8es2tXfb6R91rJsynkr4+Sf4tCmY78pbyakQ@mail.gmail.com>
-References: <4F415775.7060003@suse.cz>
-	<20120219211709.GA30809@homac.suse.de>
-	<1329726646.3368.2.camel@minggr>
-	<4F42420E.2010301@suse.cz>
-	<1329964013.18070.3.camel@minggr>
-	<CAF1ivSaQU1MXbExbtRkXy5YcbymCM_9DdR9d4BqMbti2rbvehg@mail.gmail.com>
-	<4F4B436A.4050702@suse.cz>
+From: Liu Qiang-B32616 <B32616@freescale.com>
+Subject: RE: [PATCH V3] fsl-sata: add support for interrupt coalsecing
+ feature
+Date: Wed, 29 Feb 2012 02:54:58 +0000
+Message-ID: <BCB48C05FCE8BC4D9E61E841ECBE6DB70424A8@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1329291634-883-1-git-send-email-qiang.liu@freescale.com>
+ <CADRPPNTmRvPVymJmW4vagU+2M4DmqeDSEj=4=R_=YDJekOTccQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F4B436A.4050702@suse.cz>
+In-Reply-To: <CADRPPNTmRvPVymJmW4vagU+2M4DmqeDSEj=4=R_=YDJekOTccQ@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Holger Macht <holger@homac.de>, Jiri Slaby <jirislaby@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "jgarzik@pobox.com" <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, Li Yang-R58472 <r58472@freescale.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Feb 27, 2012 at 4:48 PM, Jiri Slaby <jslaby@suse.cz> wrote:
-> On 02/27/2012 02:05 AM, Lin Ming wrote:
->>>
->>> Could you please try below patch?
->>>
->>> And please also show the debug info.
->>> dmesg |grep "DEBUG: port"
->>
->>
->> Hi Jiri,
->>
->> Will you get a chance to test this patch?
->
->
-> Yes, yesterday I booted a kernel with that patch, today I resumed fro=
-m
-> suspend. It works fine.
-
-Jeff,
-
-What do you think about this patch?
-Need to add similar hotplugable port check for other controllers too.
-
-Regards,
-Lin Ming
-
->
-> [ =A0 =A03.544423] DEBUG: port 0, PORT_CMD=3D0x40006
-> [ =A0 =A03.544445] DEBUG: port 1, PORT_CMD=3D0x40006
-> [ =A0 =A03.544467] DEBUG: port 2, PORT_CMD=3D0x40006
-> [ =A0 =A03.544489] DEBUG: port 3, PORT_CMD=3D0x40006
-> [ =A0 =A03.544511] DEBUG: port 4, PORT_CMD=3D0x6
-> [ =A0 =A03.544532] DEBUG: port 5, PORT_CMD=3D0x6
-> [ 1724.132173] DEBUG: port 0, PORT_CMD=3D0x40006
-> [ 1724.132184] DEBUG: port 1, PORT_CMD=3D0x40006
-> [ 1724.132194] DEBUG: port 2, PORT_CMD=3D0x40006
-> [ 1724.132204] DEBUG: port 3, PORT_CMD=3D0x40006
-> [ 1724.132214] DEBUG: port 4, PORT_CMD=3D0x6
-> [ 1724.132222] DEBUG: port 5, PORT_CMD=3D0x6
->
->
-> thanks,
-> --
-> js
-> suse labs
+SGkgSmVmZiwNCg0KRG8geW91IHBsYW4gdG8gYXBwbHkgaXQgdG8gdXBzdHJlYW0sIG9yIGFueSBz
+dWdnZXN0aW9ucz8gVGhhbmtzLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZy
+b206IGxpbnV4LWlkZS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1pZGUtDQo+
+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIExpIFlhbmcNCj4gU2VudDogV2Vk
+bmVzZGF5LCBGZWJydWFyeSAxNSwgMjAxMiAzOjUxIFBNDQo+IFRvOiBMaXUgUWlhbmctQjMyNjE2
+DQo+IENjOiBqZ2FyemlrQHBvYm94LmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgbGlu
+dXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMu
+b3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggVjNdIGZzbC1zYXRhOiBhZGQgc3VwcG9ydCBmb3Ig
+aW50ZXJydXB0IGNvYWxzZWNpbmcNCj4gZmVhdHVyZQ0KPiANCj4gT24gV2VkLCBGZWIgMTUsIDIw
+MTIgYXQgMzo0MCBQTSwgUWlhbmcgTGl1IDxxaWFuZy5saXVAZnJlZXNjYWxlLmNvbT4NCj4gd3Jv
+dGU6DQo+ID4gQWRkcyBzdXBwb3J0IGZvciBpbnRlcnJ1cHQgY29hbGVzY2luZyBmZWF0dXJlIHRv
+IHJlZHVjZSBpbnRlcnJ1cHQNCj4gZXZlbnRzLg0KPiA+IFByb3ZpZGVzIGEgbWVjaGFuaXNtIG9m
+IGFkanVzdGluZyBjb2FsZXNjaW5nIGNvdW50IGFuZCB0aW1lb3V0IHRpY2sgYnkNCj4gPiBzeXNm
+cyBhdCBydW50aW1lLCBzbyB0aGF0IHRyYWRlb2ZmIG9mIGxhdGVuY3kgYW5kIENQVSBsb2FkIGNh
+biBiZSBtYWRlDQo+ID4gZGVwZW5kaW5nIG9uIGRpZmZlcmVudCBhcHBsaWNhdGlvbnMuDQo+ID4N
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBRaWFuZyBMaXUgPHFpYW5nLmxpdUBmcmVlc2NhbGUuY29tPg0K
+PiANCj4gQWNrZWQtYnk6IExpIFlhbmcgPGxlb2xpQGZyZWVzY2FsZS5jb20+DQo+IA0KPiAtIExl
+bw0KPiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAi
+dW5zdWJzY3JpYmUgbGludXgtaWRlIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFq
+b3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0DQo+IGh0dHA6Ly92
+Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KDQo=
