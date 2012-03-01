@@ -1,90 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v8 09/13] libsas: enforce eh strategy handlers only in
- eh context
-Date: Thu, 01 Mar 2012 08:29:11 -0600
-Message-ID: <1330612151.2888.10.camel@dabdike.int.hansenpartnership.com>
-References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
-	 <20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
-	 <1330553151.8846.26.camel@dabdike>
-	 <CABE8wwuM1Hd9jTh+i63cZ=Fsf=c5Uwa6w0Rk+REsraxwEdZdYg@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC PATCH v2 8/8] [SCSI] sr: check and enable Zero-power ODD
+ support
+Date: Thu, 1 Mar 2012 11:02:20 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1203011059230.9392-100000@netrider.rowland.org>
+References: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50249 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751165Ab2CAO3M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2012 09:29:12 -0500
-In-Reply-To: <CABE8wwuM1Hd9jTh+i63cZ=Fsf=c5Uwa6w0Rk+REsraxwEdZdYg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1330592577-16546-9-git-send-email-ming.m.lin@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, 2012-02-29 at 16:28 -0800, Dan Williams wrote:
-> On Wed, Feb 29, 2012 at 2:05 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
-> >> The strategy handlers may be called in places that are problematic for
-> >> libsas (i.e. sata resets outside of domain revalidation filtering /
-> >> libata link recovery), or problematic for userspace (non-blocking ioctl
-> >> to sleeping reset functions).  However, these routines are also called
-> >> for eh escalations and recovery of scsi_eh_prep_cmnd(), so permit them
-> >> as long as we are running in the host's error handler.
-> >>
-> >> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> >> ---
-> >>  drivers/scsi/libsas/sas_scsi_host.c |   15 +++++++++++----
-> >>  1 files changed, 11 insertions(+), 4 deletions(-)
-> >>
-> >> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> >> index f0b9b7b..1cabedc 100644
-> >> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> >> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> >> @@ -463,11 +463,14 @@ EXPORT_SYMBOL_GPL(sas_get_local_phy);
-> >>  /* Attempt to send a LUN reset message to a device */
-> >>  int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
-> >>  {
-> >> -     struct domain_device *dev = cmd_to_domain_dev(cmd);
-> >> -     struct sas_internal *i =
-> >> -             to_sas_internal(dev->port->ha->core.shost->transportt);
-> >> -     struct scsi_lun lun;
-> >>       int res;
-> >> +     struct scsi_lun lun;
-> >> +     struct Scsi_Host *host = cmd->device->host;
-> >> +     struct domain_device *dev = cmd_to_domain_dev(cmd);
-> >> +     struct sas_internal *i = to_sas_internal(host->transportt);
-> >> +
-> >> +     if (current != host->ehandler)
-> >> +             return FAILED;
-> >
-> > Doing this will ensure that SG_SCSI_RESET now fails.
-> >
-> > I don't mind checking for O_NONBLOCK in the sg handler and failing if it
-> > is, but disallowing everything looks a trifle drastic.
-> >
-> 
-> The thought process here was following the lead of libata which does
-> not specify eh_reset handlers.  We can't permit "unmanaged" (outside
-> of eh) resets to hit ata devices otherwise we run the risk of a reset
-> turning into a link bounce / hotplug.
-> 
-> ...and I can't take the same route as I did for the scsi_transport_sas
-> initiated reset since these handlers are called from both ioctl and eh
-> context, or can I?
-> 
-> Hmm, what about something like:
-> 
->   if (current != host->ehandler) {
->     schedule_reset_to_run_in_eh_context():
->     wait_for_eh();
->   } else
->     do_reset();
+On Thu, 1 Mar 2012, Lin Ming wrote:
 
-I think that would work for me ... as long as the wait doesn't cause
-entangled deadlocks (I can't think of any at the moment, but I'll think
-a bit more deeply about it).
+> ZPODD(Zero Power Optical Disk Drive) is a new feature in
+> SATA 3.1 specification. It provides a way to power off unused ODD.
+> 
+> ZPODD support is checked in in sr_probe().
+> can_power_off flag is set during suspend if ZPODD is supported.
+> 
+> ATA port's runtime suspend callback will actually power off the ODD
+> and its runtime resume callback will actually power on the ODD.
+> 
+> When ODD is powered off(D3Cold state), inserting disk will trigger a
+> wakeup event(GPE). GPE AML handler notifies the associated device. Then
+> ODD is resumed in the notify handler.
 
-James
+I have one stylistic comment on this patch...
 
+> diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+> index 37c8f6b..39b3d8c 100644
+> --- a/drivers/scsi/sr.h
+> +++ b/drivers/scsi/sr.h
+> @@ -42,6 +42,9 @@ typedef struct scsi_cd {
+>  	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+>  	unsigned media_present:1;	/* media is present */
+>  
+> +	unsigned zpodd:1;	/* is ZPODD supported */
+> +	unsigned zpodd_event:1;
+> +
+
+You should not expect your readers to understand what "ZPODD" means.  
+drivers/scsi/sr.h is used by lots of different people, many of whom 
+will have no idea what it refers to, especially since it is part of 
+the SATA spec and not the SCSI spec.  You should provide a brief 
+explanation.
+
+Alan Stern
 
