@@ -1,49 +1,64 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RFC PATCH v2 0/8] ACPI D3Cold state and SATA ZPODD support
-Date: Thu,  1 Mar 2012 17:02:49 +0800
-Message-ID: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v8 08/13] libsas: libsas.force_hard_reset module
+ parameter
+Date: Thu, 01 Mar 2012 08:27:45 -0600
+Message-ID: <1330612065.2888.8.camel@dabdike.int.hansenpartnership.com>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+	 <20120210084520.25701.83280.stgit@dwillia2-linux.jf.intel.com>
+	 <1330552551.8846.24.camel@dabdike>
+	 <CABE8wwt3tMT7wmSG=k_z6FOvBaStwuG1NF68Cjqi0qacaQVA0Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50227 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751165Ab2CAO1s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2012 09:27:48 -0500
+In-Reply-To: <CABE8wwt3tMT7wmSG=k_z6FOvBaStwuG1NF68Cjqi0qacaQVA0Q@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
 
-Hi all,
+On Wed, 2012-02-29 at 15:22 -0800, Dan Williams wrote:
+> On Wed, Feb 29, 2012 at 1:55 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Fri, 2012-02-10 at 00:45 -0800, Dan Williams wrote:
+> >> It is possible for a host to get "locked out" from talking to sata
+> >> devices in the domain if, for example, its sas address changes but the
+> >> expander topology has existing affiliations with the old address.  If
+> >> the system is booted userspace can write to
+> >> /sys/class/sas_phy/<phy-X>/hard_reset to clear the affiliation, however
+> >> if this condition exists for the root device the module parameter can be
+> >> used to promote all ata resets to hard resets.
+> >
+> > I don't quite understand this.  Are you saying we can't (or shouldn't)
+> > execute
+> >
+> > /sys/class/sas_phy/<phy-X>/hard_reset
+> >
+> > on the root device for some reason?
+> 
+> The case I ran into was accidentally changing the host sas address
+> between reboots.  If the sata device had been a root device then I
+> would not have been able boot the system.  But now that I think about
+> it, if Linux could not boot then neither could the pre-os
+> option-rom/efi driver.
+> 
+> >> After the system is booted this state can be cleared via
+> >> /sys/module/libsas/parameters/force_hard_reset
+> >
+> > I really don't think a module parameter for this is such a good idea ...
+> > it effectively promotes all soft resets to being hard ones, which can
+> > have a lot of unintended consequences.
+> 
+> Yes, it was only meant as a temporary "get out of a sticky situation"
+> option, but given the above pre-os-driver realization it is not even
+> useful for that case.  So I'm fine killing this patch.
 
-This is the v2 RFC patches to add ACPI D3Cold state and SATA ZPODD support.
+Great, I'll drop it, thanks.
 
-v2:
-- _PR3 indicates D3Cold support
-- move can_power_off flag to pm_subsys_data
-- allow all combinations of power resource and device
-- split patches into smaller ones to make review easy
+James
 
-v1:
-https://lkml.org/lkml/2012/2/13/86
 
-[PATCH 1/8] ACPI: Introduce ACPI D3_COLD state support
-[PATCH 2/8] ACPI: Add interface to register/unregister device to/from power resources
-[PATCH 3/8] PCI: Move acpi_dev_run_wake to acpi core
-[PATCH 4/8] libata-acpi: set acpi state for SATA port
-[PATCH 5/8] libata-acpi: add ata port runtime D3Cold support
-[PATCH 6/8] libata-acpi: register/unregister device to/from power resource
-[PATCH 7/8] PM / Runtime: Add can_power_off flag to subsys data
-[PATCH 8/8] [SCSI] sr: check and enable Zero-power ODD support
-
- drivers/acpi/power.c       |  166 +++++++++++++++++++++++++++++++++++++++++++-
- drivers/acpi/scan.c        |    7 ++
- drivers/acpi/sleep.c       |   35 +++++++++
- drivers/ata/libata-acpi.c  |  137 +++++++++++++++++++++++++++++++++----
- drivers/ata/libata-scsi.c  |    6 +-
- drivers/ata/libata.h       |    8 +-
- drivers/pci/pci-acpi.c     |   40 +----------
- drivers/scsi/scsi_pm.c     |    8 ++
- drivers/scsi/sr.c          |   46 ++++++++++++
- drivers/scsi/sr.h          |    3 +
- include/acpi/acpi_bus.h    |    7 ++
- include/linux/pm.h         |    1 +
- include/scsi/scsi_device.h |    2 +
- 13 files changed, 407 insertions(+), 59 deletions(-)
-
-Thanks for any comment.
-Lin Ming
