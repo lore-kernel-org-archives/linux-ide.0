@@ -1,52 +1,66 @@
-From: Viresh Kumar <viresh.kumar@st.com>
-Subject: [PATCH] ata/pata_arasan_cf: Move arasan_cf_pm_ops out of #ifdef, #endif macros
-Date: Thu, 1 Mar 2012 13:34:39 +0530
-Message-ID: <427196876874fef7e956b10d035d06eed5895743.1330588911.git.viresh.kumar@st.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog118.obsmtp.com ([207.126.144.145]:40193 "EHLO
-	eu1sys200aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757581Ab2CAIO5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Mar 2012 03:14:57 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [RFC PATCH v2 1/8] ACPI: Introduce ACPI D3_COLD state support
+Date: Thu,  1 Mar 2012 17:02:50 +0800
+Message-ID: <1330592577-16546-2-git-send-email-ming.m.lin@intel.com>
+References: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1330592577-16546-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lu@amd.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@st.com>
 
-#ifdef, #endif is not required in definition/usage of arasan_cf_pm_ops. So, move
-this definition and its usage outside of them.
+From: Zhang Rui <rui.zhang@intel.com>
 
-Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+If a device has _PR3, it means the device supports D3_COLD.
+Add the ability to validate and enter D3_COLD state in ACPI.
+
+Signed-off-by: Zhang Rui <rui.zhang@intel.com>
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/pata_arasan_cf.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/acpi/power.c |    4 ++--
+ drivers/acpi/scan.c  |    7 +++++++
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index fc2db2a..3239517 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -943,9 +943,9 @@ static int arasan_cf_resume(struct device *dev)
+diff --git a/drivers/acpi/power.c b/drivers/acpi/power.c
+index 9ac2a9f..0d681fb 100644
+--- a/drivers/acpi/power.c
++++ b/drivers/acpi/power.c
+@@ -500,14 +500,14 @@ int acpi_power_transition(struct acpi_device *device, int state)
+ {
+ 	int result;
  
- 	return 0;
- }
-+#endif
+-	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3))
++	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+ 		return -EINVAL;
  
- static SIMPLE_DEV_PM_OPS(arasan_cf_pm_ops, arasan_cf_suspend, arasan_cf_resume);
--#endif
+ 	if (device->power.state == state)
+ 		return 0;
  
- static struct platform_driver arasan_cf_driver = {
- 	.probe		= arasan_cf_probe,
-@@ -953,9 +953,7 @@ static struct platform_driver arasan_cf_driver = {
- 	.driver		= {
- 		.name	= DRIVER_NAME,
- 		.owner	= THIS_MODULE,
--#ifdef CONFIG_PM
- 		.pm	= &arasan_cf_pm_ops,
--#endif
- 	},
- };
+ 	if ((device->power.state < ACPI_STATE_D0)
+-	    || (device->power.state > ACPI_STATE_D3))
++	    || (device->power.state > ACPI_STATE_D3_COLD))
+ 		return -ENODEV;
  
+ 	/* TBD: Resources must be ordered. */
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 8ab80ba..571396c 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -885,6 +885,13 @@ static int acpi_bus_get_power_flags(struct acpi_device *device)
+ 				acpi_bus_add_power_resource(ps->resources.handles[j]);
+ 		}
+ 
++		/* The exist of _PR3 indicates D3Cold support */
++		if (i == ACPI_STATE_D3) {
++			status = acpi_get_handle(device->handle, object_name, &handle);
++			if (ACPI_SUCCESS(status))
++				device->power.states[ACPI_STATE_D3_COLD].flags.valid = 1;
++		}
++
+ 		/* Evaluate "_PSx" to see if we can do explicit sets */
+ 		object_name[2] = 'S';
+ 		status = acpi_get_handle(device->handle, object_name, &handle);
 -- 
-1.7.8.110.g4cb5d
+1.7.2.5
 
