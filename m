@@ -1,93 +1,28 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: Re: [RFC PATCH v2 8/8] [SCSI] sr: check and enable Zero-power ODD support
-Date: Fri, 2 Mar 2012 23:08:10 +0800
-Message-ID: <CAOzJMDRTbq5o+jCyTtaAW_RPysfY3LhQ9gFC-tsvM8bsnh=rxQ@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1203011059230.9392-100000@netrider.rowland.org>
-	<1330671765.3412.7.camel@minggr>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH V3] fsl-sata: add support for interrupt coalsecing feature
+Date: Fri, 02 Mar 2012 15:46:49 -0500
+Message-ID: <4F5131B9.6010803@pobox.com>
+References: <1329291634-883-1-git-send-email-qiang.liu@freescale.com> <CADRPPNTmRvPVymJmW4vagU+2M4DmqeDSEj=4=R_=YDJekOTccQ@mail.gmail.com> <BCB48C05FCE8BC4D9E61E841ECBE6DB70424A8@039-SN2MPN1-012.039d.mgd.msft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42260 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:50885 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725Ab2CBPIL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2012 10:08:11 -0500
-In-Reply-To: <1330671765.3412.7.camel@minggr>
+	with ESMTP id S1030608Ab2CBUqx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Mar 2012 15:46:53 -0500
+In-Reply-To: <BCB48C05FCE8BC4D9E61E841ECBE6DB70424A8@039-SN2MPN1-012.039d.mgd.msft.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>
+To: Liu Qiang-B32616 <B32616@freescale.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, Li Yang-R58472 <r58472@freescale.com>
 
-Hi,
-
-On Fri, Mar 2, 2012 at 3:02 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> On Thu, 2012-03-01 at 11:02 -0500, Alan Stern wrote:
->> On Thu, 1 Mar 2012, Lin Ming wrote:
->>
->> > ZPODD(Zero Power Optical Disk Drive) is a new feature in
->> > SATA 3.1 specification. It provides a way to power off unused ODD.
->> >
->> > ZPODD support is checked in in sr_probe().
->> > can_power_off flag is set during suspend if ZPODD is supported.
->> >
->> > ATA port's runtime suspend callback will actually power off the OD=
-D
->> > and its runtime resume callback will actually power on the ODD.
->> >
->> > When ODD is powered off(D3Cold state), inserting disk will trigger=
- a
->> > wakeup event(GPE). GPE AML handler notifies the associated device.=
- Then
->> > ODD is resumed in the notify handler.
->>
->> I have one stylistic comment on this patch...
->>
->> > diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
->> > index 37c8f6b..39b3d8c 100644
->> > --- a/drivers/scsi/sr.h
->> > +++ b/drivers/scsi/sr.h
->> > @@ -42,6 +42,9 @@ typedef struct scsi_cd {
->> > =A0 =A0 unsigned readcd_cdda:1; /* reading audio data using READ_C=
-D */
->> > =A0 =A0 unsigned media_present:1; =A0 =A0 =A0 /* media is present =
-*/
->> >
->> > + =A0 unsigned zpodd:1; =A0 =A0 =A0 /* is ZPODD supported */
->> > + =A0 unsigned zpodd_event:1;
->> > +
->>
->> You should not expect your readers to understand what "ZPODD" means.
->> drivers/scsi/sr.h is used by lots of different people, many of whom
->> will have no idea what it refers to, especially since it is part of
->> the SATA spec and not the SCSI spec. =A0You should provide a brief
->> explanation.
+On 02/28/2012 09:54 PM, Liu Qiang-B32616 wrote:
+> Hi Jeff,
 >
-> I'll add some explanation.
->
-> But I'm thinking maybe it's better to move this flag to ata layer, fo=
-r
+> Do you plan to apply it to upstream, or any suggestions? Thanks.
 
-Agree.
+This patch has been in libata-dev (and thus linux-next) for about 2 weeks...
 
-> example, adding a flag to libata.h
->
-> ATA_DFLAG_ZPODD
->
 
-How about ATA_DFLAG_DA(device attention)?
-It follows the name used in the sata spec and this feature might have
-other uses in the future in addition to zero power odd(just my wild gue=
-ss).
 
-> sr runtime pm is only enabled when ZPODD(or more general, power off) =
-is
-> supported.
-> So the problem is how will sr driver know this flag?
->
-
-What about adding a new field to scsi_device to reflect this capability=
- of
-the underlying sata device? We can then set this field in ata_scsi_scan=
-_host.
-
--Aaron
