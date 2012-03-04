@@ -1,60 +1,55 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Single host/multiple hwifs vs. multiple hosts?
-Date: Sun, 4 Mar 2012 13:15:12 +0100
-Message-ID: <CAMuHMdX1iwCwH+NXF7wP+pTMZzkUiR+DOrjjrVFWmtQUsktC=w@mail.gmail.com>
+From: Jean Delvare <khali@linux-fr.org>
+Subject: ATA standard vs. speed
+Date: Sun, 4 Mar 2012 14:48:06 +0100
+Message-ID: <20120304144806.4bef0256@endymion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40065 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284Ab2CDMPN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2012 07:15:13 -0500
-Received: by wgbdr13 with SMTP id dr13so2737808wgb.1
-        for <linux-ide@vger.kernel.org>; Sun, 04 Mar 2012 04:15:12 -0800 (PST)
+Received: from zoneX.GCU-Squad.org ([194.213.125.0]:33877 "EHLO
+	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398Ab2CDOIn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Mar 2012 09:08:43 -0500
+Received: from jdelvare.pck.nerim.net ([62.212.121.182] helo=endymion.delvare)
+	by services.gcu-squad.org (GCU Mailer Daemon) with esmtpsa id 1S4BnH-0001oX-Kl
+	(TLSv1:AES128-SHA:128)
+	(envelope-from <khali@linux-fr.org>)
+	for linux-ide@vger.kernel.org; Sun, 04 Mar 2012 14:48:11 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: linux-m68k <linux-m68k@lists.linux-m68k.org>
 
 Hi all,
 
-I'm wondering what are the differences between adding a single IDE host=
- with
-multiple hwifs vs. adding a separate IDE host for each hwif?
-Do both ways work?
+After reading
+http://en.wikipedia.org/wiki/Parallel_ATA#Features_introduced_with_each_ATA_revision
+it seemed clear to me that there was a direct relation between the
+operating speed of a (P)ATA hard disk drive and the version of the ATA
+standard it implemented. However I see the following in my kernel logs
+on an old machine (kernel 2.6.34, Intel ICH5 controller):
 
-I'm asking because I want to convert the Amiga Buddha IDE driver to the=
- new
-driver model, using Multi Function Devices (many Zorro expansion cards =
-contain
-multiple devices):
-  - A Catweasel expansion card would have:
-      * 2 Buddha IDE MFD cells,
-      * 1 Catweasel floppy MFD cell.
-  - A Buddha expansion card would have:
-      * 3 Buddha IDE MFD cells.
-  - An X-Surf expansion card would have:
-      * 2 Buddha IDE MFD cells,
-      * 1 8390 Ethernet cell.
-Registering a separate IDE host/hwif for each IDE MFD cell would be eas=
-ier to
-handle than a single IDE host with multiple IDE hwifs.
+ata1: PATA max UDMA/100 cmd 0xeff0 ctl 0xefe4 bmdma 0xef90 irq 18
+ata2: PATA max UDMA/100 cmd 0xefa8 ctl 0xefe0 bmdma 0xef98 irq 18
+ata2.00: HPA unlocked: 40018511 -> 40020624, native 40020624
+ata2.00: ATA-6: Maxtor 52049H4, DAC10SC0, max UDMA/100
+ata2.00: 40020624 sectors, multi 16: LBA 
+ata1.00: HPA unlocked: 78175679 -> 78177792, native 78177792
+ata1.00: ATA-5: MAXTOR 6L040J2, A93.0300, max UDMA/133
+ata1.00: 78177792 sectors, multi 16: LBA 
 
-Thanks in advance!
+While the second disk matches the wikipedia table (ATA-6 introduced
+UDMA/100), the first one doesn't: UDMA/133 wasn't supposed to exist in
+standard ATA-5.
 
-Gr{oetje,eeting}s,
+Digging old logs, I also found this (same machine, same kernel,
+different drive):
 
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
+ata2.00: ATA-4: WDC WD102AA, 05.05B05, max UDMA/66
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
+Here again, UDMA/66 wasn't supposed to exist in standard ATA-4.
 
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+Can anyone explain this mystery to me?
+
+Thanks,
+-- 
+Jean Delvare
