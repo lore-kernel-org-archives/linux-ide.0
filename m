@@ -1,39 +1,59 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
-Date: Tue, 6 Mar 2012 10:24:14 -0800
-Message-ID: <CAN8TOE-OgUC+W12D1KkS2rpziYP1bgaF7CfP6fnYHJWsFZ=Hfg@mail.gmail.com>
-References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
-	<20120223000240.GA1931@gamma.logic.tuwien.ac.at>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v8 09/13] libsas: enforce eh strategy handlers only in eh context
+Date: Tue, 6 Mar 2012 11:17:05 -0800
+Message-ID: <CAA9_cmdM=mHBzXYNYvHPS4KCzvZrymjAemS+RgstyiKONeaYEg@mail.gmail.com>
+References: <20120210084411.25701.94502.stgit@dwillia2-linux.jf.intel.com>
+	<20120210084525.25701.51128.stgit@dwillia2-linux.jf.intel.com>
+	<1330553151.8846.26.camel@dabdike>
+	<CABE8wwuM1Hd9jTh+i63cZ=Fsf=c5Uwa6w0Rk+REsraxwEdZdYg@mail.gmail.com>
+	<1330612151.2888.10.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120223000240.GA1931@gamma.logic.tuwien.ac.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Norbert Preining <preining@logic.at>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Lin Ming <ming.m.lin@intel.com>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Valdis Kletnieks <valdis.kletnieks@vt.edu>, "Rafael J . Wysocki" <rjw@sisk.pl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1330612151.2888.10.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Jeff,
-
-On Wed, Feb 22, 2012 at 4:02 PM, Norbert Preining <preining@logic.at> w=
-rote:
-> On Di, 21 Feb 2012, Brian Norris wrote:
->> This series addresses regression problems with
+On Thu, Mar 1, 2012 at 6:29 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>> Hmm, what about something like:
 >>
->> =A0 =A0 commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
->> =A0 =A0 ahci: start engine only during soft/hard resets
->>
->> Because the fix provided by the above commit caused COMRESET failure=
-s and
->> 10 second boot-time/resume-time hangs for certain DVD drives, we nee=
-d to
->> make the fix conditional to certain devices/platforms. Add a flag fo=
-r this.
+>> =A0 if (current !=3D host->ehandler) {
+>> =A0 =A0 schedule_reset_to_run_in_eh_context():
+>> =A0 =A0 wait_for_eh();
+>> =A0 } else
+>> =A0 =A0 do_reset();
 >
-> I confirm that these patches without the previous fix also
-> fixes the regression I have seen. Thanks.
+> I think that would work for me ... as long as the wait doesn't cause
+> entangled deadlocks (I can't think of any at the moment, but I'll thi=
+nk
+> a bit more deeply about it).
 
-Shouldn't this patch series be sent mainline during the 3.3 cycle?
+So there is a deadlock due to:
 
-Brian
+commit d7a1bb0a04ca835bffc0a91e64ab827dfba7d8f5
+Author: James Smart <James.Smart@Emulex.Com>
+Date:   Wed Mar 8 14:50:12 2006 -0500
+
+    [SCSI] Block I/O while SG reset operation in progress - the midlaye=
+r patch
+
+    The scsi midlayer portion of the patch
+
+    Signed-off-by: James Smart <James.Smart@emulex.com>
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+=2E..this adds shost->tmf_in_progress to scsi_host_in_recovery(), so I
+can't "wait for eh" because the exit condition for that wait is
+"!scsi_host_in_recovery()".  But since sg_reset is opened O_NONBLOCK
+by default and that is likely the only non-eh reason for calling the
+eh_{bus|device}_reset_handler routines I'll just make this routine
+asynchronously queue a reset and return.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
