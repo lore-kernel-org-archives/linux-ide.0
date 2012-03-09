@@ -1,34 +1,103 @@
-From: "RICHARD TANG" <tagnrichard@yahoo.com.hk>
-Subject: MAIL
-Date: Wed, 07 Mar 2012 17:46:54 +0200
-Message-ID: <20120307174654.10753aya0pmgq1ny__19146.1499468007$1331144113$gmane$org@82.137.248.25>
-Reply-To: trichad@yahoo.cn
+From: cwillu <cwillu@cwillu.com>
+Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
+Date: Fri, 9 Mar 2012 10:07:41 -0600
+Message-ID: <CAE5mzviyg1L3HhSy4gYeLv673GN3M6JU68wwhzNBTKp6dtxTBg@mail.gmail.com>
+References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
+	<CAE5mzvgfsHD1Ku5saw+Cu7+vJAayx20=HfHfab1MrAwz3AtqJg@mail.gmail.com>
+	<CAF1ivSZcGHQ-bnGasKghJ-_beDqgyZ_ug=m-7Ykr4xUphZeLqw@mail.gmail.com>
+	<CAE5mzvgc60+_HOve+5wMsL7fo6jmM_sOB=_pTR1j23=RbP+uPw@mail.gmail.com>
+	<CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw06.190.sy ([82.137.248.25]:42485 "EHLO smtp6.190.sy"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932246Ab2CGSOt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 7 Mar 2012 13:14:49 -0500
-Content-Disposition: inline
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:64499 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932325Ab2CIQHm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2012 11:07:42 -0500
+In-Reply-To: <CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Brian Norris <computersforpeace@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Matt <jackdachef@gmail.com>
 
+>>>> I just spent the better part of last night tracking down the speci=
+fic
+>>>> sources of the log entry I get when I disconnect my e-sata drive; =
+once
+>>>> it disconnects, the port is dead until I reboot; no combination of
+>>>> anything I've been able to poke at in /sys or elsewhere gets it li=
+ve
+>>>> again. =C2=A0This starts with 3.3rc1, and turns out to still work =
+fine in
+>>>> 3.2.1. Any chance it's related?
+>>>>
+>>>> 3.3rc5, immediately after the unplug:
+>>>
+>>> I tested on my machine and it's fixed by below patch.
+>>> http://marc.info/?l=3Dlinux-kernel&m=3D132996405028746&w=3D2
+>>>
+>>> Would you please also try it?
+>>
+>> Building it now, and will be able to test in about 5 hours.
+>
+> Hi,
+>
+> How about the test result?
 
+Sorry about the delay.
 
-Mail From Tang.
+Just verified, that patch does fix the problem:
 
-I work with the hang seng Bank Hong Kong.I have a business proposition  
-for you involving a trade in my bank which I know we will be of mutual  
-benefit to both of us, If interested mail me at:trichad@yahoo.cn
+*disconnect drive*
+[   80.474026] ata5: exception Emask 0x50 SAct 0x0 SErr 0x4090800
+action 0xe frozen
+[   80.474041] ata5: irq_stat 0x00400040, connection status changed
+[   80.474057] ata5: SError: { HostInt PHYRdyChg 10B8B DevExch }
+[   80.474064] ata5: hard resetting link
+[   81.197080] ata5: SATA link down (SStatus 0 SControl 300)
+[   86.197028] ata5: hard resetting link
+[   86.502021] ata5: SATA link down (SStatus 0 SControl 300)
+[   86.502039] ata5: limiting SATA link speed to 1.5 Gbps
+[   91.502018] ata5: hard resetting link
+[   91.807032] ata5: SATA link down (SStatus 0 SControl 310)
+[   91.807050] ata5.00: disabled
+[   91.807069] ata5: EH complete
+[   91.807095] ata5.00: detaching (SCSI 4:0:0:0)
+[   91.808988] sd 4:0:0:0: [sde] Synchronizing SCSI cache
+[   91.810288] sd 4:0:0:0: [sde]  Result: hostbyte=3DDID_BAD_TARGET
+driverbyte=3DDRIVER_OK
+[   91.810305] sd 4:0:0:0: [sde] Stopping disk
+[   91.810318] sd 4:0:0:0: [sde] START_STOP FAILED
+[   91.810333] sd 4:0:0:0: [sde]  Result: hostbyte=3DDID_BAD_TARGET
+driverbyte=3DDRIVER_OK
+[  106.507666] ata5: exception Emask 0x10 SAct 0x0 SErr 0x4040000
+action 0xe frozen
+[  106.507683] ata5: irq_stat 0x00000040, connection status changed
+[  106.507703] ata5: SError: { CommWake DevExch }
+[  106.507710] ata5: limiting SATA link speed to 1.5 Gbps
+[  106.507715] ata5: hard resetting link
+*reconnect drive*
+[  107.386022] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[  107.387979] ata5.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/=
+133
+[  107.387985] ata5.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth
+31/32), AA
+[  107.389253] ata5.00: configured for UDMA/133
+[  107.389264] ata5: EH complete
+[  107.389375] scsi 4:0:0:0: Direct-Access     ATA      WDC
+WD10EARS-00Y 80.0 PQ: 0 ANSI: 5
+[  107.389551] sd 4:0:0:0: [sde] 1953525168 512-byte logical blocks:
+(1.00 TB/931 GiB)
+[  107.389613] sd 4:0:0:0: [sde] Write Protect is off
+[  107.389619] sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
+[  107.389651] sd 4:0:0:0: [sde] Write cache: enabled, read cache:
+enabled, doesn't support DPO or FUA
+[  107.389667] sd 4:0:0:0: Attached scsi generic sg4 type 0
+[  107.803230]  sde: unknown partition table
+[  107.803550] sd 4:0:0:0: [sde] Attached SCSI disk
+*rejoicing*
 
-Regards,
-Richard Tang.
+Thanks.
 
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
+--Carey
