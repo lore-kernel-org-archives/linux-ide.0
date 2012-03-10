@@ -1,61 +1,58 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH] drivers/ata/pata_mpc52xx.c: add missing kfree
-Date: Sat, 10 Mar 2012 18:56:39 +0100
-Message-ID: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr>
+From: Wolfram Sang <w.sang@pengutronix.de>
+Subject: Re: [PATCH] drivers/ata/pata_mpc52xx.c: add missing kfree
+Date: Sat, 10 Mar 2012 19:13:15 +0100
+Message-ID: <20120310181315.GA4139@pengutronix.de>
+References: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="mP3DRpeJDSE+ciuQ"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:59829 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751172Ab2CJR4q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Mar 2012 12:56:46 -0500
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:48805 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1749667Ab2CJSN1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2012 13:13:27 -0500
+Content-Disposition: inline
+In-Reply-To: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Jeff Garzik <jgarzik@pobox.com>, kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-There is no need to call the devm cleanup functions on failure of a probe
-or remove function.
+--mP3DRpeJDSE+ciuQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+On Sat, Mar 10, 2012 at 06:56:39PM +0100, Julia Lawall wrote:
+> From: Julia Lawall <Julia.Lawall@lip6.fr>
+>=20
+> There is no need to call the devm cleanup functions on failure of a probe
+> or remove function.
+>=20
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
----
- drivers/ata/pata_mpc52xx.c |   11 -----------
- 1 file changed, 11 deletions(-)
+Right. Only the subject is bogus and the maintainer for MPC5xxx is Anatolij
+meanwhile :)
 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 00748ae..1f02008 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -806,17 +806,12 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	return 0;
- 
-  err:
--	devm_release_mem_region(&op->dev, res_mem.start, sizeof(*ata_regs));
- 	if (ata_irq)
- 		irq_dispose_mapping(ata_irq);
- 	if (task_irq)
- 		irq_dispose_mapping(task_irq);
- 	if (dmatsk)
- 		bcom_ata_release(dmatsk);
--	if (ata_regs)
--		devm_iounmap(&op->dev, ata_regs);
--	if (priv)
--		devm_kfree(&op->dev, priv);
- 	return rv;
- }
- 
-@@ -835,12 +830,6 @@ mpc52xx_ata_remove(struct platform_device *op)
- 	bcom_ata_release(priv->dmatsk);
- 	irq_dispose_mapping(priv->ata_irq);
- 
--	/* Clear up IO allocations */
--	devm_iounmap(&op->dev, priv->ata_regs);
--	devm_release_mem_region(&op->dev, priv->ata_regs_pa,
--				sizeof(*priv->ata_regs));
--	devm_kfree(&op->dev, priv);
--
- 	return 0;
- }
- 
+Other than that:
 
+Acked-by: Wolfram Sang <w.sang@pengutronix.de>
+
+--=20
+Pengutronix e.K.                           | Wolfram Sang                |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+
+--mP3DRpeJDSE+ciuQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iEYEARECAAYFAk9bmbsACgkQD27XaX1/VRufugCfUO9je0DnU1nSAfF+PY5LsvwG
+4R0An2Aqo4Kuj3RH0it4yKh6syKdlDn9
+=B1sM
+-----END PGP SIGNATURE-----
+
+--mP3DRpeJDSE+ciuQ--
