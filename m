@@ -1,26 +1,38 @@
-From: cwillu <cwillu@cwillu.com>
+From: Matt <jackdachef@gmail.com>
 Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
-Date: Fri, 9 Mar 2012 10:07:41 -0600
-Message-ID: <CAE5mzviyg1L3HhSy4gYeLv673GN3M6JU68wwhzNBTKp6dtxTBg@mail.gmail.com>
+Date: Sat, 10 Mar 2012 01:07:07 +0100
+Message-ID: <CAG-aW04JJ=v4odC0TVoARijx-9eTCfwYAfUNwtAeLaODYcf06g@mail.gmail.com>
 References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
 	<CAE5mzvgfsHD1Ku5saw+Cu7+vJAayx20=HfHfab1MrAwz3AtqJg@mail.gmail.com>
 	<CAF1ivSZcGHQ-bnGasKghJ-_beDqgyZ_ug=m-7Ykr4xUphZeLqw@mail.gmail.com>
 	<CAE5mzvgc60+_HOve+5wMsL7fo6jmM_sOB=_pTR1j23=RbP+uPw@mail.gmail.com>
 	<CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:64499 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932325Ab2CIQHm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2012 11:07:42 -0500
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:59037 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753246Ab2CJAHS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2012 19:07:18 -0500
 In-Reply-To: <CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Lin Ming <ming.m.lin@intel.com>
-Cc: Brian Norris <computersforpeace@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Matt <jackdachef@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, viro@zeniv.linux.org.uk, jeff@garzik.org, Brian Norris <computersforpeace@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
 
+On Wed, Mar 7, 2012 at 6:28 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+> On Mon, Mar 5, 2012 at 1:12 PM, cwillu <cwillu@cwillu.com> wrote:
+>> On Sun, Mar 4, 2012 at 6:58 PM, Lin Ming <ming.m.lin@intel.com> wrot=
+e:
+>>> On Fri, Mar 2, 2012 at 9:16 PM, cwillu <cwillu@cwillu.com> wrote:
+>>>> On Tue, Feb 21, 2012 at 12:38 PM, Brian Norris
+>>>> <computersforpeace@gmail.com> wrote:
+>>>>> This series addresses regression problems with
+>>>>>
+>>>>> =A0 =A0commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
+>>>>> =A0 =A0ahci: start engine only during soft/hard resets
+>>>>
 >>>> I just spent the better part of last night tracking down the speci=
 fic
 >>>> sources of the log entry I get when I disconnect my e-sata drive; =
@@ -28,11 +40,13 @@ once
 >>>> it disconnects, the port is dead until I reboot; no combination of
 >>>> anything I've been able to poke at in /sys or elsewhere gets it li=
 ve
->>>> again. =C2=A0This starts with 3.3rc1, and turns out to still work =
-fine in
+>>>> again. =A0This starts with 3.3rc1, and turns out to still work fin=
+e in
 >>>> 3.2.1. Any chance it's related?
 >>>>
 >>>> 3.3rc5, immediately after the unplug:
+>>>
+>>> Hi,
 >>>
 >>> I tested on my machine and it's fixed by below patch.
 >>> http://marc.info/?l=3Dlinux-kernel&m=3D132996405028746&w=3D2
@@ -44,60 +58,62 @@ fine in
 > Hi,
 >
 > How about the test result?
+>
+> Regards,
+> Lin Ming
+>
+>>
+>> After looking at the thread, I spent another couple hours on poking
+>> /sys, and did get the port to come back up and find the drive with t=
+he
+>> following:
+>>
+>> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/power/control
+>> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/power/cont=
+rol
+>> echo '- - -' > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/scsi_=
+host/host4/scan
+>> --
 
-Sorry about the delay.
+@Carey:
 
-Just verified, that patch does fix the problem:
+thanks for the commands !
 
-*disconnect drive*
-[   80.474026] ata5: exception Emask 0x50 SAct 0x0 SErr 0x4090800
-action 0xe frozen
-[   80.474041] ata5: irq_stat 0x00400040, connection status changed
-[   80.474057] ata5: SError: { HostInt PHYRdyChg 10B8B DevExch }
-[   80.474064] ata5: hard resetting link
-[   81.197080] ata5: SATA link down (SStatus 0 SControl 300)
-[   86.197028] ata5: hard resetting link
-[   86.502021] ata5: SATA link down (SStatus 0 SControl 300)
-[   86.502039] ata5: limiting SATA link speed to 1.5 Gbps
-[   91.502018] ata5: hard resetting link
-[   91.807032] ata5: SATA link down (SStatus 0 SControl 310)
-[   91.807050] ata5.00: disabled
-[   91.807069] ata5: EH complete
-[   91.807095] ata5.00: detaching (SCSI 4:0:0:0)
-[   91.808988] sd 4:0:0:0: [sde] Synchronizing SCSI cache
-[   91.810288] sd 4:0:0:0: [sde]  Result: hostbyte=3DDID_BAD_TARGET
-driverbyte=3DDRIVER_OK
-[   91.810305] sd 4:0:0:0: [sde] Stopping disk
-[   91.810318] sd 4:0:0:0: [sde] START_STOP FAILED
-[   91.810333] sd 4:0:0:0: [sde]  Result: hostbyte=3DDID_BAD_TARGET
-driverbyte=3DDRIVER_OK
-[  106.507666] ata5: exception Emask 0x10 SAct 0x0 SErr 0x4040000
-action 0xe frozen
-[  106.507683] ata5: irq_stat 0x00000040, connection status changed
-[  106.507703] ata5: SError: { CommWake DevExch }
-[  106.507710] ata5: limiting SATA link speed to 1.5 Gbps
-[  106.507715] ata5: hard resetting link
-*reconnect drive*
-[  107.386022] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  107.387979] ata5.00: ATA-8: WDC WD10EARS-00Y5B1, 80.00A80, max UDMA/=
-133
-[  107.387985] ata5.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth
-31/32), AA
-[  107.389253] ata5.00: configured for UDMA/133
-[  107.389264] ata5: EH complete
-[  107.389375] scsi 4:0:0:0: Direct-Access     ATA      WDC
-WD10EARS-00Y 80.0 PQ: 0 ANSI: 5
-[  107.389551] sd 4:0:0:0: [sde] 1953525168 512-byte logical blocks:
-(1.00 TB/931 GiB)
-[  107.389613] sd 4:0:0:0: [sde] Write Protect is off
-[  107.389619] sd 4:0:0:0: [sde] Mode Sense: 00 3a 00 00
-[  107.389651] sd 4:0:0:0: [sde] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[  107.389667] sd 4:0:0:0: Attached scsi generic sg4 type 0
-[  107.803230]  sde: unknown partition table
-[  107.803550] sd 4:0:0:0: [sde] Attached SCSI disk
-*rejoicing*
 
-Thanks.
+@Lin Ming:
 
---Carey
+I also have to apologize for the delay, I had much stuff to
+repartition, reformat and re-sync during the week and finally
+yesterday & today - after finishing that - I could do some testing
+
+that patch works wonderfully - thanks a lot !
+
+
+the system with 3.3 is significantly more responsive :)
+
+so if there are no reservations against the patch please include it
+for final and/or .1 kernel-release of 3.3
+
+
+
+on a related note: I had one observation though (non-related to the
+mentioned issue)
+
+with or without the patch my computer doesn't turn itself off anymore,
+if I remember correctly that didn't happen with rc3 (I could be wrong
+though)
+
+anyone else had the same issue ?
+
+to not further delay the final release by this "minor" issue - I'll
+test again once final is out and see whether there it's the same
+
+and if that's the case I'll write again & provide you with further
+information that you'll need
+
+
+Awesome work as always, thanks !
+
+Kind Regards
+
+Matt
