@@ -1,119 +1,37 @@
-From: Matt <jackdachef@gmail.com>
-Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
-Date: Sat, 10 Mar 2012 01:07:07 +0100
-Message-ID: <CAG-aW04JJ=v4odC0TVoARijx-9eTCfwYAfUNwtAeLaODYcf06g@mail.gmail.com>
-References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
-	<CAE5mzvgfsHD1Ku5saw+Cu7+vJAayx20=HfHfab1MrAwz3AtqJg@mail.gmail.com>
-	<CAF1ivSZcGHQ-bnGasKghJ-_beDqgyZ_ug=m-7Ykr4xUphZeLqw@mail.gmail.com>
-	<CAE5mzvgc60+_HOve+5wMsL7fo6jmM_sOB=_pTR1j23=RbP+uPw@mail.gmail.com>
-	<CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] sata_mv: silence an uninitialized variable warning
+Date: Sat, 10 Mar 2012 12:00:05 +0300
+Message-ID: <20120310090005.GE4647@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:59037 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753246Ab2CJAHS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Mar 2012 19:07:18 -0500
-In-Reply-To: <CAF1ivSaDEfDFgF0hz3myjSc0BXhig1XGRa_uMOi=gtf2HTEMHg@mail.gmail.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:44908 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753637Ab2CJJAY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2012 04:00:24 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel <linux-kernel@vger.kernel.org>, viro@zeniv.linux.org.uk, jeff@garzik.org, Brian Norris <computersforpeace@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>
+To: Jeff Garzik <jgarzik@pobox.com>, Michael Walle <michael@walle.cc>
+Cc: Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, kernel-janitors@vger.kernel.org
 
-On Wed, Mar 7, 2012 at 6:28 AM, Lin Ming <ming.m.lin@intel.com> wrote:
-> On Mon, Mar 5, 2012 at 1:12 PM, cwillu <cwillu@cwillu.com> wrote:
->> On Sun, Mar 4, 2012 at 6:58 PM, Lin Ming <ming.m.lin@intel.com> wrot=
-e:
->>> On Fri, Mar 2, 2012 at 9:16 PM, cwillu <cwillu@cwillu.com> wrote:
->>>> On Tue, Feb 21, 2012 at 12:38 PM, Brian Norris
->>>> <computersforpeace@gmail.com> wrote:
->>>>> This series addresses regression problems with
->>>>>
->>>>> =A0 =A0commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
->>>>> =A0 =A0ahci: start engine only during soft/hard resets
->>>>
->>>> I just spent the better part of last night tracking down the speci=
-fic
->>>> sources of the log entry I get when I disconnect my e-sata drive; =
-once
->>>> it disconnects, the port is dead until I reboot; no combination of
->>>> anything I've been able to poke at in /sys or elsewhere gets it li=
-ve
->>>> again. =A0This starts with 3.3rc1, and turns out to still work fin=
-e in
->>>> 3.2.1. Any chance it's related?
->>>>
->>>> 3.3rc5, immediately after the unplug:
->>>
->>> Hi,
->>>
->>> I tested on my machine and it's fixed by below patch.
->>> http://marc.info/?l=3Dlinux-kernel&m=3D132996405028746&w=3D2
->>>
->>> Would you please also try it?
->>
->> Building it now, and will be able to test in about 5 hours.
->
-> Hi,
->
-> How about the test result?
->
-> Regards,
-> Lin Ming
->
->>
->> After looking at the thread, I spent another couple hours on poking
->> /sys, and did get the port to come back up and find the drive with t=
-he
->> following:
->>
->> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/power/control
->> echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/power/cont=
-rol
->> echo '- - -' > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/scsi_=
-host/host4/scan
->> --
+Gcc version 4.6.2-12 complains that if we can't find the "nr-ports"
+property in of_property_read_u32_array() then "n_ports" is used
+uninitialized.  Let's set it to zero in that case.
 
-@Carey:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-thanks for the commands !
-
-
-@Lin Ming:
-
-I also have to apologize for the delay, I had much stuff to
-repartition, reformat and re-sync during the week and finally
-yesterday & today - after finishing that - I could do some testing
-
-that patch works wonderfully - thanks a lot !
-
-
-the system with 3.3 is significantly more responsive :)
-
-so if there are no reservations against the patch please include it
-for final and/or .1 kernel-release of 3.3
-
-
-
-on a related note: I had one observation though (non-related to the
-mentioned issue)
-
-with or without the patch my computer doesn't turn itself off anymore,
-if I remember correctly that didn't happen with rc3 (I could be wrong
-though)
-
-anyone else had the same issue ?
-
-to not further delay the final release by this "minor" issue - I'll
-test again once final is out and see whether there it's the same
-
-and if that's the case I'll write again & provide you with further
-information that you'll need
-
-
-Awesome work as always, thanks !
-
-Kind Regards
-
-Matt
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index ebd0d24..3d8d5c6 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4026,7 +4026,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	struct ata_host *host;
+ 	struct mv_host_priv *hpriv;
+ 	struct resource *res;
+-	int n_ports, rc;
++	int n_ports = 0;
++	int rc;
+ 
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+ 
