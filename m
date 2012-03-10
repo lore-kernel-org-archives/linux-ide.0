@@ -1,48 +1,59 @@
-From: Ben Dooks <ben-linux@fluff.org>
-Subject: Re: [PATCH 1/1] ata: AT91 ata driver requires specific platforms
-Date: Sat, 10 Mar 2012 19:56:50 +0000
-Message-ID: <20120310195650.GD32060@trinity.fluff.org>
-References: <1331405617-4053-1-git-send-email-alan@signal11.us> <1331405652-4100-1-git-send-email-alan@signal11.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH] drivers/ata/pata_mpc52xx.c: drop unneeded devm cleanup functions
+Date: Sat, 10 Mar 2012 22:35:52 +0100
+Message-ID: <1331415352-10260-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1331405652-4100-1-git-send-email-alan@signal11.us>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Ott <alan@signal11.us>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, w.sang@pengutronix.de
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, Mar 10, 2012 at 01:54:12PM -0500, Alan Ott wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> This driver uses registers defined in a per-soc header file.
-> Since not every soc in the at91 platform defines those, make
-> the Kconfig option dependent on specifically the socs that
-> do.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Alan Ott <alan@signal11.us>
-> ---
->  drivers/ata/Kconfig |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 6bdedd7..16c6b78 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -731,6 +731,7 @@ config PATA_AT32
->  config PATA_AT91
->  	tristate "PATA support for AT91SAM9260"
->  	depends on ARM && ARCH_AT91
-> +	depends on ARCH_AT91SAM9260 || ARCH_AT91SAM9G20 || ARCH_AT91SAM9261 ||  ARCH_AT91SAM9G10 || ARCH_AT91SAM9263 || ARCH_AT91SAM9RL || ARCH_AT91SAM9G45 || ARCH_AT91CAP9
->  	help
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-How about adding an AT91_HAS_PATA kconfig and having the arch/arm/... Kconfig
-select it as necessary. It will avoid future fun when another device comes
-out.
+There is no need to call the devm cleanup functions on failure of a probe
+or remove function.
 
--- 
-Ben Dooks, ben@fluff.org, http://www.fluff.org/ben/
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Acked-by: Wolfram Sang <w.sang@pengutronix.de>
 
-Large Hadron Colada: A large Pina Colada that makes the universe disappear.
+---
+Changed subject.  Included Wolfram's ACK.
+
+ drivers/ata/pata_mpc52xx.c |   11 -----------
+ 1 file changed, 11 deletions(-)
+
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index 00748ae..1f02008 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -806,17 +806,12 @@ mpc52xx_ata_probe(struct platform_device *op)
+ 	return 0;
+ 
+  err:
+-	devm_release_mem_region(&op->dev, res_mem.start, sizeof(*ata_regs));
+ 	if (ata_irq)
+ 		irq_dispose_mapping(ata_irq);
+ 	if (task_irq)
+ 		irq_dispose_mapping(task_irq);
+ 	if (dmatsk)
+ 		bcom_ata_release(dmatsk);
+-	if (ata_regs)
+-		devm_iounmap(&op->dev, ata_regs);
+-	if (priv)
+-		devm_kfree(&op->dev, priv);
+ 	return rv;
+ }
+ 
+@@ -835,12 +830,6 @@ mpc52xx_ata_remove(struct platform_device *op)
+ 	bcom_ata_release(priv->dmatsk);
+ 	irq_dispose_mapping(priv->ata_irq);
+ 
+-	/* Clear up IO allocations */
+-	devm_iounmap(&op->dev, priv->ata_regs);
+-	devm_release_mem_region(&op->dev, priv->ata_regs_pa,
+-				sizeof(*priv->ata_regs));
+-	devm_kfree(&op->dev, priv);
+-
+ 	return 0;
+ }
+ 
