@@ -1,59 +1,33 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH] drivers/ata/pata_mpc52xx.c: drop unneeded devm cleanup functions
-Date: Sat, 10 Mar 2012 22:35:52 +0100
-Message-ID: <1331415352-10260-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, w.sang@pengutronix.de
+From: Alan Ott <alan@signal11.us>
+Subject: [PATCH v2 0/2] ata: AT91 ata driver requires specific platforms
+Date: Sat, 10 Mar 2012 16:36:20 -0500
+Message-ID: <1331415380-10928-1-git-send-email-alan@signal11.us>
+References: <1331405617-4053-1-git-send-email-alan@signal11.us>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:37099 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014Ab2CJVgb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2012 16:36:31 -0500
+Received: by yenl12 with SMTP id l12so1682739yen.19
+        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2012 13:36:30 -0800 (PST)
+In-Reply-To: <1331405617-4053-1-git-send-email-alan@signal11.us>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Russell King <linux@arm.linux.org.uk>, Jeff Garzik <jgarzik@pobox.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Ben Dooks <ben-linux@fluff.org>
+Cc: Alan Ott <alan@signal11.us>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Based on suggestions from Ben Dooks, This patch now adds an AT91_HAS_PATA
+kconfig item and the AT91 CPUs which have PATA now select it. The
+AT91 PATA driver how depends on this kconfig item.
 
-There is no need to call the devm cleanup functions on failure of a probe
-or remove function.
+Ben, let me know if this is what you had in mind.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-Acked-by: Wolfram Sang <w.sang@pengutronix.de>
 
----
-Changed subject.  Included Wolfram's ACK.
+Alan Ott (2):
+  ARM: AT91: Add parameter for AT91_HAS_PATA
+  ata: AT91 ata driver requires AT91_HAS_PATA
 
- drivers/ata/pata_mpc52xx.c |   11 -----------
- 1 file changed, 11 deletions(-)
+ arch/arm/mach-at91/Kconfig |   11 +++++++++++
+ drivers/ata/Kconfig        |    1 +
+ 2 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 00748ae..1f02008 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -806,17 +806,12 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	return 0;
- 
-  err:
--	devm_release_mem_region(&op->dev, res_mem.start, sizeof(*ata_regs));
- 	if (ata_irq)
- 		irq_dispose_mapping(ata_irq);
- 	if (task_irq)
- 		irq_dispose_mapping(task_irq);
- 	if (dmatsk)
- 		bcom_ata_release(dmatsk);
--	if (ata_regs)
--		devm_iounmap(&op->dev, ata_regs);
--	if (priv)
--		devm_kfree(&op->dev, priv);
- 	return rv;
- }
- 
-@@ -835,12 +830,6 @@ mpc52xx_ata_remove(struct platform_device *op)
- 	bcom_ata_release(priv->dmatsk);
- 	irq_dispose_mapping(priv->ata_irq);
- 
--	/* Clear up IO allocations */
--	devm_iounmap(&op->dev, priv->ata_regs);
--	devm_release_mem_region(&op->dev, priv->ata_regs_pa,
--				sizeof(*priv->ata_regs));
--	devm_kfree(&op->dev, priv);
--
- 	return 0;
- }
- 
