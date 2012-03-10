@@ -1,46 +1,44 @@
-From: Alan Ott <alan@signal11.us>
-Subject: [PATCH 1/1] ata: AT91 ata driver requires specific platforms
-Date: Sat, 10 Mar 2012 13:54:12 -0500
-Message-ID: <1331405652-4100-1-git-send-email-alan@signal11.us>
-References: <1331405617-4053-1-git-send-email-alan@signal11.us>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] drivers/ata/pata_mpc52xx.c: add missing kfree
+Date: Sat, 10 Mar 2012 11:22:40 -0800
+Message-ID: <1331407360.1762.8.camel@joe2Laptop>
+References: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr>
+	 <20120310181315.GA4139@pengutronix.de>
+	 <1331404377.14442.19.camel@joe2Laptop>
+	 <20120310184407.GB4139@pengutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:62025 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918Ab2CJSyS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2012 13:54:18 -0500
-Received: by mail-yx0-f174.google.com with SMTP id l12so1638579yen.19
-        for <linux-ide@vger.kernel.org>; Sat, 10 Mar 2012 10:54:18 -0800 (PST)
-In-Reply-To: <1331405617-4053-1-git-send-email-alan@signal11.us>
+Received: from perches-mx.perches.com ([206.117.179.246]:43566 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751840Ab2CJTWl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2012 14:22:41 -0500
+In-Reply-To: <20120310184407.GB4139@pengutronix.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Alan Ott <alan@signal11.us>
+To: Wolfram Sang <w.sang@pengutronix.de>
+Cc: Anatolij Gustschin <agust@denx.de>, Julia Lawall <Julia.Lawall@lip6.fr>, Jeff Garzik <jgarzik@pobox.com>, kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+On Sat, 2012-03-10 at 19:44 +0100, Wolfram Sang wrote:
+> > Anatolij is not listed as a maintainer for this file
+> > nor has he ever written or signed a patch for it.
+> I noticed that Grant was in CC, assumed that it was because of his previous MPC
+> maintainership and mentioned that Anatolij took over. Nothing more, just wanted
+> to help.
 
-This driver uses registers defined in a per-soc header file.
-Since not every soc in the at91 platform defines those, make
-the Kconfig option dependent on specifically the socs that
-do.
+Actually, it's because there's a K: of_get_property
+line in OPEN FIRMWARE and the file has one.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Alan Ott <alan@signal11.us>
----
- drivers/ata/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I suppose that get_maintainers could be told to
+ignore K: entries when using -f <file>.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 6bdedd7..16c6b78 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -731,6 +731,7 @@ config PATA_AT32
- config PATA_AT91
- 	tristate "PATA support for AT91SAM9260"
- 	depends on ARM && ARCH_AT91
-+	depends on ARCH_AT91SAM9260 || ARCH_AT91SAM9G20 || ARCH_AT91SAM9261 ||  ARCH_AT91SAM9G10 || ARCH_AT91SAM9263 || ARCH_AT91SAM9RL || ARCH_AT91SAM9G45 || ARCH_AT91CAP9
- 	help
- 	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
- 
--- 
-1.7.0.4
+> > It'd be possible to add patterns to MAINTAINERS
+> > if Anatolij really wants to see changes to drivers.
+> It seems a bit too much for my taste (hardly readable? false positives?),
+
+There are no false positives as far as I can tell.
+Just using *mpc5* doesn't give any either today.
+It's perlish so the whole thing is gibberish anyway.
+
 
