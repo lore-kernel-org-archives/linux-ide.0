@@ -1,37 +1,55 @@
-From: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] drivers/ata/pata_mpc52xx.c: add missing kfree
-Date: Sun, 11 Mar 2012 14:04:51 +0400
-Message-ID: <4F5C78C3.1070208@mvista.com>
-References: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v2 2/2] ata: AT91 ata driver requires AT91_HAS_PATA
+Date: Sun, 11 Mar 2012 14:10:37 +0400
+Message-ID: <4F5C7A1D.60208@mvista.com>
+References: <1331415380-10928-1-git-send-email-alan@signal11.us> <1331415562-10994-1-git-send-email-alan@signal11.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-In-Reply-To: <1331402199-8000-1-git-send-email-Julia.Lawall-L2FTfq7BK8M@public.gmane.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
- <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-To: Julia Lawall <Julia.Lawall-L2FTfq7BK8M@public.gmane.org>
-Cc: devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rob Herring <rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jeff Garzik <jgarzik-e+AXbWqSrlAAvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49813 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226Ab2CKKMC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Mar 2012 06:12:02 -0400
+Received: by bkcik5 with SMTP id ik5so1982370bkc.19
+        for <linux-ide@vger.kernel.org>; Sun, 11 Mar 2012 03:12:01 -0700 (PDT)
+In-Reply-To: <1331415562-10994-1-git-send-email-alan@signal11.us>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Ott <alan@signal11.us>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Ben Dooks <ben-linux@fluff.org>
 
 Hello.
 
-On 10-03-2012 21:56, Julia Lawall wrote:
+On 11-03-2012 1:39, Alan Ott wrote:
 
-> From: Julia Lawall<Julia.Lawall-L2FTfq7BK8M@public.gmane.org>
+> This driver uses registers defined in a per-soc header file.
+> Since not every soc in the at91 platform defines those, make
+> the Kconfig option dependent on those which define
+> AT91_HAS_PATA.
 
-> There is no need to call the devm cleanup functions on failure of a probe
-> or remove function.
+> This is based on a patch by Arnd Bergmann.
 
-    This doesn't correlate with the subject.
+> Signed-off-by: Arnd Bergmann<arnd@arndb.de>
+> Signed-off-by: Alan Ott<alan@signal11.us>
+> CC: Ben Dooks<ben-linux@fluff.org>
+> ---
+>   drivers/ata/Kconfig |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
 
-> Signed-off-by: Julia Lawall<Julia.Lawall-L2FTfq7BK8M@public.gmane.org>
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 6bdedd7..fdb8c90 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -731,6 +731,7 @@ config PATA_AT32
+>   config PATA_AT91
+>   	tristate "PATA support for AT91SAM9260"
+>   	depends on ARM && ARCH_AT91
+
+    Is this line still needed?
+
+> +	depends on AT91_HAS_PATA
+>   	help
+>   	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
 
 WBR, Sergei
