@@ -1,114 +1,76 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH] drivers/ata/pata_mpc52xx.c: add missing kfree
-Date: Sat, 10 Mar 2012 22:50:42 +0100 (CET)
-Message-ID: <alpine.DEB.2.02.1203102243070.1971@localhost6.localdomain6>
-References: <1331402199-8000-1-git-send-email-Julia.Lawall@lip6.fr> <4F5B9E32.9080809@bfs.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [libsas PATCH v10 0/9] libsas error handling + discovery v10
+Date: Sat, 10 Mar 2012 20:38:56 -0800
+Message-ID: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:14777 "EHLO
-	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752377Ab2CJVuq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 Mar 2012 16:50:46 -0500
-In-Reply-To: <4F5B9E32.9080809@bfs.de>
+Received: from mga09.intel.com ([134.134.136.24]:15881 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752321Ab2CKEXk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Mar 2012 23:23:40 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: walter harms <wharms@bfs.de>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>, Jeff Garzik <jgarzik@pobox.com>, kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
+Changes since v9: http://marc.info/?l=linux-scsi&m=132890988918965&w=2
 
+1/ PATCH 1: fix drain_workqueue implementation.  v9 was corrupting the
+   ->entry list_head of in-flight works when it attempted to place them on
+   the defer_q to wait for the last drain to complete.  'sas_work' provides
+   a local list_head for this purpose.
 
-On Sat, 10 Mar 2012, walter harms wrote:
+2/ PATCH 2,3: cleanup host_eh_scheduled handling conflicts between
+   libata and libsas.
 
->
->
-> Am 10.03.2012 18:56, schrieb Julia Lawall:
->> From: Julia Lawall <Julia.Lawall@lip6.fr>
->>
->> There is no need to call the devm cleanup functions on failure of a probe
->> or remove function.
->>
->> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
->>
->> ---
->>  drivers/ata/pata_mpc52xx.c |   11 -----------
->>  1 file changed, 11 deletions(-)
->>
->> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
->> index 00748ae..1f02008 100644
->> --- a/drivers/ata/pata_mpc52xx.c
->> +++ b/drivers/ata/pata_mpc52xx.c
->> @@ -806,17 +806,12 @@ mpc52xx_ata_probe(struct platform_device *op)
->>  	return 0;
->>
->>   err:
->> -	devm_release_mem_region(&op->dev, res_mem.start, sizeof(*ata_regs));
->>  	if (ata_irq)
->>  		irq_dispose_mapping(ata_irq);
->>  	if (task_irq)
->>  		irq_dispose_mapping(task_irq);
->
-> hi julia,
-> i did a quick look at lxr and it showed that irq_dispose_mapping()
-> is only used with powerpc, and here is it checking for
-> 	if (virq == NO_IRQ)
->            return;
->
-> I do not know how current the lxt on free-electrons.com is but perhaps
-> it is possible to dump the if (ata_irq) stuff.
->
-> can you double check it ?
+3/ dropped "libsas: libsas.force_hard_reset module parameter"
 
-The definition in v3.2.9/kernel/irq/irqdomain.c does nothing but says:
+4/ PATCH 4: replaced "libsas: enforce eh strategy handlers only in eh
+   context" with a new version that achieves the same goal (prevent the
+   ->eh_{bus|device}_reset handlers from triggering resets outside of eh
+   context) while still allowing sg_reset.
 
-nothing yet; will be filled when support for dynamic allocation of
-irq_descs is added to irq_domain
+5/ PATCH 6: fixed up "libsas: use ->lldd_I_T_nexus_reset for
+   ->eh_bus_reset_handler" due to internal feedback from Jacek.
 
-So it would seem better to keep the call.  On the other hand, the error 
-handling code of this function seems to be a mess.  When the 
-initialization of ata_irq fails, it just returns instead of cleaning up. 
-Prior code goes to err.  On ther other hand, now that the devm cleanups 
-are gone, it is the goto err, which is unnecessary.  I'll look at the code 
-some more.
+6/ PATCH 7: fixed up "libsas: trim sas_task of slow path infrastructure"
+   due to feedback from Jack.
 
-julia
+7/ PATCH 8,9: two new fixes from Jeff and Tom: "libsas: fix
+   sas_find_bcast_phy() in the presence of 'vacant' phys" and "libsas:
+   sas_rediscover_dev did not look at the SMP exec status."
 
->
-> re,
-> wh
->
->
->>  	if (dmatsk)
->>  		bcom_ata_release(dmatsk);
->> -	if (ata_regs)
->> -		devm_iounmap(&op->dev, ata_regs);
->> -	if (priv)
->> -		devm_kfree(&op->dev, priv);
->>  	return rv;
->>  }
->>
->> @@ -835,12 +830,6 @@ mpc52xx_ata_remove(struct platform_device *op)
->>  	bcom_ata_release(priv->dmatsk);
->>  	irq_dispose_mapping(priv->ata_irq);
->>
->> -	/* Clear up IO allocations */
->> -	devm_iounmap(&op->dev, priv->ata_regs);
->> -	devm_release_mem_region(&op->dev, priv->ata_regs_pa,
->> -				sizeof(*priv->ata_regs));
->> -	devm_kfree(&op->dev, priv);
->> -
->>  	return 0;
->>  }
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+8/ Picked up [SCSI] mvsas: remove unused variable in mvs_task_exec()
+   (http://marc.info/?l=linux-scsi&m=133119166619140&w=2)
+
+[libsas PATCH v10 1/9] libsas: introduce sas_work to fix sas_drain_work vs sas_queue_work
+[libsas PATCH v10 2/9] libsas: cleanup spurious calls to scsi_schedule_eh
+[libsas PATCH v10 3/9] libata, libsas: introduce sched_eh and end_eh port ops
+[libsas PATCH v10 4/9] libsas: enforce eh strategy handlers only in eh context
+[libsas PATCH v10 5/9] libsas: add sas_eh_abort_handler
+[libsas PATCH v10 6/9] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
+[libsas PATCH v10 7/9] libsas: trim sas_task of slow path infrastructure
+[libsas PATCH v10 8/9] libsas: fix sas_find_bcast_phy() in the presence of 'vacant' phys
+[libsas PATCH v10 9/9] libsas: sas_rediscover_dev did not look at the SMP exec status.
+
+diffstat since v9:
+ Documentation/kernel-parameters.txt |    6 --
+ drivers/ata/libata-core.c           |    4 +
+ drivers/ata/libata-eh.c             |   57 +++++++++++---
+ drivers/scsi/libsas/sas_ata.c       |   63 ++++++++-------
+ drivers/scsi/libsas/sas_discover.c  |   45 +++++++----
+ drivers/scsi/libsas/sas_event.c     |   36 +++++----
+ drivers/scsi/libsas/sas_expander.c  |   24 +++++--
+ drivers/scsi/libsas/sas_init.c      |   33 ++++-----
+ drivers/scsi/libsas/sas_internal.h  |    6 +-
+ drivers/scsi/libsas/sas_phy.c       |   21 ++----
+ drivers/scsi/libsas/sas_port.c      |   15 +---
+ drivers/scsi/libsas/sas_scsi_host.c |  142 +++++++++++++++++++++++++++++++---
+ drivers/scsi/mvsas/mv_sas.c         |    1 -
+ drivers/scsi/pm8001/pm8001_sas.c    |    7 +-
+ include/linux/libata.h              |    4 +
+ include/scsi/libsas.h               |   54 ++++++++++++-
+ include/scsi/sas_ata.h              |    9 +-
+ 17 files changed, 371 insertions(+), 156 deletions(-)
