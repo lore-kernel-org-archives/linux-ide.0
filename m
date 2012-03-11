@@ -1,77 +1,90 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: [libsas PATCH v10 6/9] libsas: use ->lldd_I_T_nexus_reset for ->eh_bus_reset_handler
-Date: Sun, 11 Mar 2012 13:37:10 +0800
-Message-ID: <201203111336235783450@usish.com>
-References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>,
-	<20120311043927.27797.43676.stgit@dwillia2-linux.jf.intel.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [isci PATCH v2 00/18] isci: suspend/resume support + general updates
+Date: Sat, 10 Mar 2012 23:27:44 -0800
+Message-ID: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:56253 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788Ab2CKFhJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Mar 2012 00:37:09 -0500
+Received: from mga01.intel.com ([192.55.52.88]:3878 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751084Ab2CKHM2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 Mar 2012 03:12:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>, Jacek Danecki <jacek.danecki@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, Xiangliang Yu <yuxiangl@marvell.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-TG9va3MgT0sgdG8gbWUuDQpUaGFua3MuDQpBY2tlZC1ieTogSmFjayBXYW5nIDxqYWNrX3dhbmdA
-dXNpc2guY29tPg0KDQoNCi0tLS0tLS0tLS0tLS0tDQpqYWNrX3dhbmcNCj5zYXNfZWhfYnVzX3Jl
-c2V0X2hhbmRsZXIoKSBhbW91bnRzIHRvIHNhc19waHlfcmVzZXQoKSB3aXRob3V0DQo+bm90aWZp
-Y2F0aW9uIG9mIHRoZSByZXNldCB0byB0aGUgbGxkZC4gIElmIHRoaXMgaXMgdHJpZ2dlcmVkIGZy
-b20NCj5laC1jbW5kIHJlY292ZXJ5IHRoZXJlIG1heSBiZSBzYXNfdGFza3MgZm9yIHRoZSBsbGRk
-IHRvIHRlcm1pbmF0ZSwgc28NCj4tPmxsZGRfSV9UX25leHVzX3Jlc2V0IGlzIHdhcnJhbnRlZC4N
-Cj4NCj5DYzogWGlhbmdsaWFuZyBZdSA8eXV4aWFuZ2xAbWFydmVsbC5jb20+DQo+Q2M6IEx1YmVu
-IFR1aWtvdiA8bHR1aWtvdkB5YWhvby5jb20+DQo+Q2M6IEphY2sgV2FuZyA8amFja193YW5nQHVz
-aXNoLmNvbT4NCj5SZXZpZXdlZC1ieTogSmFjZWsgRGFuZWNraSA8amFjZWsuZGFuZWNraUBpbnRl
-bC5jb20+DQo+W2phY2VrOiBtb2RpZnkgcG04MDAxX0lfVF9uZXh1c19yZXNldCB0byByZXR1cm4g
-LUVOT0RFVl0NCj5TaWduZWQtb2ZmLWJ5OiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGlu
-dGVsLmNvbT4NCj4tLS0NCj4gZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfc2NzaV9ob3N0LmMgfCAg
-IDE5ICsrKysrKysrLS0tLS0tLS0tLS0NCj4gZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfc2Fz
-LmMgICAgfCAgICAzICsrLQ0KPiAyIGZpbGVzIGNoYW5nZWQsIDEwIGluc2VydGlvbnMoKyksIDEy
-IGRlbGV0aW9ucygtKQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19z
-Y3NpX2hvc3QuYyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jDQo+aW5kZXgg
-ZGVjOTkyYi4uYTVjNGNlNCAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19z
-Y3NpX2hvc3QuYw0KPisrKyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jDQo+
-QEAgLTU3NiwyNSArNTc2LDIyIEBAIGludCBzYXNfZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc3Ry
-dWN0IHNjc2lfY21uZCAqY21kKQ0KPiAJcmV0dXJuIEZBSUxFRDsNCj4gfQ0KPiANCj4tLyogQXR0
-ZW1wdCB0byBzZW5kIGEgcGh5IChidXMpIHJlc2V0ICovDQo+IGludCBzYXNfZWhfYnVzX3Jlc2V0
-X2hhbmRsZXIoc3RydWN0IHNjc2lfY21uZCAqY21kKQ0KPiB7DQo+LQlzdHJ1Y3QgZG9tYWluX2Rl
-dmljZSAqZGV2ID0gY21kX3RvX2RvbWFpbl9kZXYoY21kKTsNCj4tCXN0cnVjdCBzYXNfcGh5ICpw
-aHkgPSBzYXNfZ2V0X2xvY2FsX3BoeShkZXYpOw0KPi0Jc3RydWN0IFNjc2lfSG9zdCAqaG9zdCA9
-IGNtZC0+ZGV2aWNlLT5ob3N0Ow0KPiAJaW50IHJlczsNCj4rCXN0cnVjdCBTY3NpX0hvc3QgKmhv
-c3QgPSBjbWQtPmRldmljZS0+aG9zdDsNCj4rCXN0cnVjdCBkb21haW5fZGV2aWNlICpkZXYgPSBj
-bWRfdG9fZG9tYWluX2RldihjbWQpOw0KPisJc3RydWN0IHNhc19pbnRlcm5hbCAqaSA9IHRvX3Nh
-c19pbnRlcm5hbChob3N0LT50cmFuc3BvcnR0KTsNCj4gDQo+IAlpZiAoY3VycmVudCAhPSBob3N0
-LT5laGFuZGxlcikNCj4gCQlyZXR1cm4gc2FzX3F1ZXVlX3Jlc2V0KGRldiwgU0FTX0RFVl9SRVNF
-VCwgMCwgMCk7DQo+IA0KPi0JcmVzID0gc2FzX3BoeV9yZXNldChwaHksIDEpOw0KPi0JaWYgKHJl
-cykNCj4tCQlTQVNfRFBSSU5USygiQnVzIHJlc2V0IG9mICVzIGZhaWxlZCAweCV4XG4iLA0KPi0J
-CQkgICAga29iamVjdF9uYW1lKCZwaHktPmRldi5rb2JqKSwNCj4tCQkJICAgIHJlcyk7DQo+LQlz
-YXNfcHV0X2xvY2FsX3BoeShwaHkpOw0KPisJaWYgKCFpLT5kZnQtPmxsZGRfSV9UX25leHVzX3Jl
-c2V0KQ0KPisJCXJldHVybiBGQUlMRUQ7DQo+IA0KPi0JaWYgKHJlcyA9PSBUTUZfUkVTUF9GVU5D
-X1NVQ0MgfHwgcmVzID09IFRNRl9SRVNQX0ZVTkNfQ09NUExFVEUpDQo+KwlyZXMgPSBpLT5kZnQt
-PmxsZGRfSV9UX25leHVzX3Jlc2V0KGRldik7DQo+KwlpZiAocmVzID09IFRNRl9SRVNQX0ZVTkNf
-U1VDQyB8fCByZXMgPT0gVE1GX1JFU1BfRlVOQ19DT01QTEVURSB8fA0KPisJICAgIHJlcyA9PSAt
-RU5PREVWKQ0KPiAJCXJldHVybiBTVUNDRVNTOw0KPiANCj4gCXJldHVybiBGQUlMRUQ7DQo+ZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jIGIvZHJpdmVycy9zY3Np
-L3BtODAwMS9wbTgwMDFfc2FzLmMNCj5pbmRleCBiMTExMDE4Li4zYTAzYjQwIDEwMDY0NA0KPi0t
-LSBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX3Nhcy5jDQo+KysrIGIvZHJpdmVycy9zY3Np
-L3BtODAwMS9wbTgwMDFfc2FzLmMNCj5AQCAtODY4LDggKzg2OCw5IEBAIGludCBwbTgwMDFfSV9U
-X25leHVzX3Jlc2V0KHN0cnVjdCBkb21haW5fZGV2aWNlICpkZXYpDQo+IAlzdHJ1Y3QgcG04MDAx
-X2RldmljZSAqcG04MDAxX2RldjsNCj4gCXN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9o
-YTsNCj4gCXN0cnVjdCBzYXNfcGh5ICpwaHk7DQo+Kw0KPiAJaWYgKCFkZXYgfHwgIWRldi0+bGxk
-ZF9kZXYpDQo+LQkJcmV0dXJuIC0xOw0KPisJCXJldHVybiAtRU5PREVWOw0KPiANCj4gCXBtODAw
-MV9kZXYgPSBkZXYtPmxsZGRfZGV2Ow0KPiAJcG04MDAxX2hhID0gcG04MDAxX2ZpbmRfaGFfYnlf
-ZGV2KGRldik7DQo+DQo+LS0NCj5UbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0
-aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3Nh
-Z2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPl9fX19fX19f
-X18gSW5mb3JtYXRpb24gZnJvbSBFU0VUIE5PRDMyIEFudGl2aXJ1cywgdmVyc2lvbiBvZiB2aXJ1
-cyBzaWduYXR1cmUgZGF0YWJhc2UgNTY1OSAoMjAxMDExMjkpIF9fX19fX19fX18NCj4NCj5UaGUg
-bWVzc2FnZSB3YXMgY2hlY2tlZCBieSBFU0VUIE5PRDMyIEFudGl2aXJ1cy4NCj4NCj5odHRwOi8v
-d3d3LmVzZXQuY29tDQo+DQo+DQo+
+Changes since v1: http://marc.info/?l=linux-scsi&m=132886463201718&w=2
 
+This series has been rebased on top of v10 of the libsas reworks, merged
+with a recent scsi-rc-fixes (commit fea6d60).
+
+1/ PATCH 1 - 3, 6, 11, 15: Cleanups identified along the way towards
+   implementing the below fixes and features.
+
+2/ PATCH 4, 9, 13, 18: Fixes to discovery in both the driver and libsas.
+
+3/ PATCH 7 - 8, 12, 14, 16 - 17:  Suspend support.  The approach taken
+   with suspend/resume support is to put the bulk of the responsibility on
+   libsas.  The lldd is free to tear down its links and domain_device info
+   with the knowledge that libsas will handle recovering those connections
+   and devices at resume time.
+  
+---
+
+[isci PATCH v2 01/18] isci: improve 'invalid state' warnings
+[isci PATCH v2 02/18] isci: kill ->is_direct_attached
+[isci PATCH v2 03/18] isci: kill sci_phy_protocol and sci_request_protocol
+[isci PATCH v2 04/18] isci: Don't filter BROADCAST CHANGE primitives
+[isci PATCH v2 05/18] isci: kill ->status, and ->state_lock in isci_host
+[isci PATCH v2 06/18] isci: kill isci_port.domain_dev_list
+[isci PATCH v2 07/18] isci: refactor initialization for S3/S4
+[isci PATCH v2 08/18] isci: fix controller stop
+[isci PATCH v2 09/18] isci: fix 'link-up' events occur after 'start-complete'
+[isci PATCH v2 10/18] isci: fix interrupt disable
+[isci PATCH v2 11/18] isci: kill isci_host.shost
+[isci PATCH v2 12/18] libata: make ata_print_id atomic
+[isci PATCH v2 13/18] libsas: continue revalidation
+[isci PATCH v2 14/18] libata: export ata_port suspend/resume infrastructure for sas
+[isci PATCH v2 15/18] libsas: drop sata port multiplier infrastructure
+[isci PATCH v2 16/18] libsas: suspend / resume support
+[isci PATCH v2 17/18] isci: implement suspend/resume support
+[isci PATCH v2 18/18] isci: Changes in COMSAS timings enabling ISCI to detect buggy disc drives.
+
+ drivers/ata/libata-core.c                     |   62 ++-
+ drivers/ata/libata-scsi.c                     |    4 
+ drivers/ata/libata.h                          |    2 
+ drivers/scsi/isci/host.c                      |  564 +++++++++----------------
+ drivers/scsi/isci/host.h                      |  118 +----
+ drivers/scsi/isci/init.c                      |  271 +++++++++++-
+ drivers/scsi/isci/phy.c                       |   74 +++
+ drivers/scsi/isci/phy.h                       |    9 
+ drivers/scsi/isci/port.c                      |   21 -
+ drivers/scsi/isci/port.h                      |    6 
+ drivers/scsi/isci/port_config.c               |   18 -
+ drivers/scsi/isci/probe_roms.c                |   12 -
+ drivers/scsi/isci/probe_roms.h                |    2 
+ drivers/scsi/isci/registers.h                 |    8 
+ drivers/scsi/isci/remote_device.c             |   29 -
+ drivers/scsi/isci/remote_device.h             |    1 
+ drivers/scsi/isci/remote_node_context.c       |   60 +--
+ drivers/scsi/isci/request.c                   |   19 -
+ drivers/scsi/isci/request.h                   |    9 
+ drivers/scsi/isci/unsolicited_frame_control.c |   30 -
+ drivers/scsi/isci/unsolicited_frame_control.h |    6 
+ drivers/scsi/libsas/sas_ata.c                 |   86 ++++
+ drivers/scsi/libsas/sas_discover.c            |   74 +++
+ drivers/scsi/libsas/sas_dump.c                |    1 
+ drivers/scsi/libsas/sas_event.c               |    4 
+ drivers/scsi/libsas/sas_expander.c            |    8 
+ drivers/scsi/libsas/sas_init.c                |   90 ++++
+ drivers/scsi/libsas/sas_internal.h            |    2 
+ drivers/scsi/libsas/sas_phy.c                 |   21 +
+ drivers/scsi/libsas/sas_port.c                |   52 ++
+ drivers/scsi/libsas/sas_scsi_host.c           |    2 
+ include/linux/libata.h                        |    2 
+ include/scsi/libsas.h                         |   21 +
+ include/scsi/sas.h                            |    1 
+ include/scsi/sas_ata.h                        |   10 
+ 35 files changed, 1017 insertions(+), 682 deletions(-)
