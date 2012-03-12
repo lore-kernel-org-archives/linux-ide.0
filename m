@@ -1,76 +1,45 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH] libata: disable runtime pm for hotpluggable port
-Date: Mon, 12 Mar 2012 19:59:08 +0800
-Message-ID: <1331553548.3102.1.camel@hp6530s>
-References: <1331515012.3412.37.camel@minggr>  <4F5DD01D.3010609@mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
+Date: Mon, 12 Mar 2012 15:12:09 -0700
+Message-ID: <20120312221209.GH23255@google.com>
+References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:25143 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752393Ab2CLL7Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 12 Mar 2012 07:59:25 -0400
-In-Reply-To: <4F5DD01D.3010609@mvista.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33482 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757574Ab2CLWMP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2012 18:12:15 -0400
+Content-Disposition: inline
+In-Reply-To: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, jslaby@suse.cz, cwillu@cwillu.com, jackdachef@gmail.com
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Valdis Kletnieks <valdis.kletnieks@vt.edu>, "Rafael J . Wysocki" <rjw@sisk.pl>
 
-On Mon, 2012-03-12 at 14:29 +0400, Sergei Shtylyov wrote:
-> Hello.
+On Tue, Feb 21, 2012 at 10:38:41AM -0800, Brian Norris wrote:
+> This series addresses regression problems with
 > 
-> On 12-03-2012 5:16, Lin Ming wrote:
+>     commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
+>     ahci: start engine only during soft/hard resets
 > 
-> > Currently, hotplug doesn't work if port is already runtime suspended.
-> > For now, we simply disable runtime pm for hotpluggable port.
-> > Later, we should add runtime pm support for hotpluggable port too.
+> Because the fix provided by the above commit caused COMRESET failures and
+> 10 second boot-time/resume-time hangs for certain DVD drives, we need to
+> make the fix conditional to certain devices/platforms. Add a flag for this.
 > 
-> > https://lkml.org/lkml/2012/2/19/70
+> Brian
 > 
-> > TODO: add similar hotpluggable port check for controllers other than AHCI.
+> v2: change flag name to AHCI_HFLAG_DELAY_ENGINE, write more detailed
+>     comments
 > 
-> > Reported-and-tested-by: Jiri Slaby<jslaby@suse.cz>
-> > Reported-and-tested-by: cwillu@cwillu.com
-> > Reported-and-tested-by: jackdachef@gmail.com
-> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> [...]
+> v1: flag named AHCI_HFLAG_STRICT_SPEC
 > 
-> > diff --git a/include/linux/libata.h b/include/linux/libata.h
-> > index 3085bdc..ccf0282 100644
-> > --- a/include/linux/libata.h
-> > +++ b/include/linux/libata.h
-> > @@ -209,8 +209,10 @@ enum {
-> >   	ATA_FLAG_SW_ACTIVITY	= (1<<  22), /* driver supports sw activity
-> >   					      * led */
-> >   	ATA_FLAG_NO_DIPM	= (1<<  23), /* host not happy with DIPM */
-> > +	ATA_FLAG_EXTERNAL	= (1<<  24), /* controller supports external SATA */
-> > +	ATA_FLAG_PLUGGABLE	= (1<<  25), /* port is hotpluggable */
-> >
-> > -	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
-> > +	/* bits 26:31 of ap->flags are reserved for LLD specific flags */
-> 
->     There's no need to use bits 24..25, I've freed up some lower order bits 
-> last year, removing unused values.
+> Brian Norris (3):
+>   ahci: add AHCI_HFLAG_DELAY_ENGINE host flag
+>   ahci: move AHCI_HFLAGS() macro to ahci.h
+>   ahci_platform: add STRICT_AHCI platform type
 
-OK. I'll use bit 2 and 3, as below
+This looks good to me.  Jeff?
 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index cafc09a..f46961d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -187,6 +187,8 @@ enum {
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
- 					    /* (doesn't imply presence) */
- 	ATA_FLAG_SATA		= (1 << 1),
-+	ATA_FLAG_EXTERNAL	= (1 << 2), /* Controller supports external SATA */
-+	ATA_FLAG_PLUGGABLE	= (1 << 3), /* Port is hotpluggable */
- 	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
- 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
- 	ATA_FLAG_PIO_LBA48	= (1 << 8), /* Host DMA engine is LBA28 only */
-
-
-> 
-> WBR, Sergei
-
-
+-- 
+tejun
