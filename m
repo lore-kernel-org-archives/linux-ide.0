@@ -1,159 +1,141 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH v3] drivers/ata/pata_mpc52xx.c: clean up error handling code
-Date: Sun, 11 Mar 2012 21:12:09 +0100
-Message-ID: <1331496729-12850-1-git-send-email-Julia.Lawall@lip6.fr>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH] libata: disable runtime pm for hotpluggable port
+Date: Mon, 12 Mar 2012 09:16:52 +0800
+Message-ID: <1331515012.3412.37.camel@minggr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:34027 "EHLO mgw2.diku.dk"
+Received: from mga03.intel.com ([143.182.124.21]:45038 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750951Ab2CKUMQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 11 Mar 2012 16:12:16 -0400
+	id S1753670Ab2CLBQy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 Mar 2012 21:16:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: kernel-janitors@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, wharms@bfs.de, w.sang@pengutronix.de, agust@denx.de
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, jslaby@suse.cz, cwillu@cwillu.com, jackdachef@gmail.com
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+Currently, hotplug doesn't work if port is already runtime suspended.
+For now, we simply disable runtime pm for hotpluggable port.
+Later, we should add runtime pm support for hotpluggable port too.
 
-This patch makes a number of changes with respect to the error-handling
-code:
+https://lkml.org/lkml/2012/2/19/70
 
-* Remove cleanup calls for the devm functions in both the error handling
-  code and the remove function.  This cleanup is done automatically.
+TODO: add similar hotpluggable port check for controllers other than AHCI.
 
-* The previous change simplifies the cleanup code at the end of the
-  function such that there is nothing to do on the failure of the call to
-  devm_ioremap.  So it is changed to just return directly.
-
-* There is no need for the ifs in the cleanup code at the end of the
-  function, because in each case the cleanup needed is statically
-  known.  Drop the ifs, add new err labels, and drop the initializations of
-  the tested variables to NULL.
-
-* Change the call to request_irq to a call to devm_request_irq, so that it
-  is cleaned up on exit.
-
-* Cause the return value of devm_request_irq to go into the returned
-  variable rv rather than the unused variable ret.  Drop ret.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Reported-and-tested-by: Jiri Slaby <jslaby@suse.cz>
+Reported-and-tested-by: cwillu@cwillu.com
+Reported-and-tested-by: jackdachef@gmail.com
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
-This subsumes the previous patch that only removed the calls to the devm
-cleanup functions.  It is not tested.  I am not sure about the correctness
-of the use of devm_request_irq, since there were no calls to free_irq
-before.  I also don't know if there was a reason for not returning the
-return value of request_irq previously.
+ drivers/ata/ahci.c             |    3 +++
+ drivers/ata/ahci.h             |    3 +++
+ drivers/ata/libahci.c          |   20 ++++++++++++++++++++
+ drivers/ata/libata-transport.c |    6 ++++--
+ include/linux/libata.h         |    4 +++-
+ 5 files changed, 33 insertions(+), 3 deletions(-)
 
- drivers/ata/pata_mpc52xx.c |   44 +++++++++++++++-----------------------------
- 1 file changed, 15 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 00748ae..d2c102f 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -687,11 +687,11 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	int ata_irq = 0;
- 	struct mpc52xx_ata __iomem *ata_regs;
- 	struct mpc52xx_ata_priv *priv = NULL;
--	int rv, ret, task_irq = 0;
-+	int rv, task_irq;
- 	int mwdma_mask = 0, udma_mask = 0;
- 	const __be32 *prop;
- 	int proplen;
--	struct bcom_task *dmatsk = NULL;
-+	struct bcom_task *dmatsk;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index fb659c8..fb7de91 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1153,6 +1153,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (hpriv->cap & HOST_CAP_PMP)
+ 		pi.flags |= ATA_FLAG_PMP;
  
- 	/* Get ipb frequency */
- 	ipb_freq = mpc5xxx_get_bus_frequency(op->dev.of_node);
-@@ -717,8 +717,7 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	ata_regs = devm_ioremap(&op->dev, res_mem.start, sizeof(*ata_regs));
- 	if (!ata_regs) {
- 		dev_err(&op->dev, "error mapping device registers\n");
--		rv = -ENOMEM;
--		goto err;
-+		return -ENOMEM;
- 	}
++	if (hpriv->cap & HOST_CAP_SXS)
++		pi.flags |= ATA_FLAG_EXTERNAL;
++
+ 	ahci_set_em_messages(hpriv, &pi);
  
- 	/*
-@@ -753,7 +752,7 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	if (!priv) {
- 		dev_err(&op->dev, "error allocating private structure\n");
- 		rv = -ENOMEM;
--		goto err;
-+		goto err1;
- 	}
- 
- 	priv->ipb_period = 1000000000 / (ipb_freq / 1000);
-@@ -776,15 +775,15 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	if (!dmatsk) {
- 		dev_err(&op->dev, "bestcomm initialization failed\n");
- 		rv = -ENOMEM;
--		goto err;
-+		goto err1;
- 	}
- 
- 	task_irq = bcom_get_task_irq(dmatsk);
--	ret = request_irq(task_irq, &mpc52xx_ata_task_irq, 0,
-+	rv = devm_request_irq(&op->dev, task_irq, &mpc52xx_ata_task_irq, 0,
- 				"ATA task", priv);
--	if (ret) {
-+	if (rv) {
- 		dev_err(&op->dev, "error requesting DMA IRQ\n");
--		goto err;
-+		goto err2;
- 	}
- 	priv->dmatsk = dmatsk;
- 
-@@ -792,7 +791,7 @@ mpc52xx_ata_probe(struct platform_device *op)
- 	rv = mpc52xx_ata_hw_init(priv);
- 	if (rv) {
- 		dev_err(&op->dev, "error initializing hardware\n");
--		goto err;
-+		goto err2;
- 	}
- 
- 	/* Register ourselves to libata */
-@@ -800,23 +799,16 @@ mpc52xx_ata_probe(struct platform_device *op)
- 				  mwdma_mask, udma_mask);
- 	if (rv) {
- 		dev_err(&op->dev, "error registering with ATA layer\n");
--		goto err;
-+		goto err2;
- 	}
- 
- 	return 0;
- 
-- err:
--	devm_release_mem_region(&op->dev, res_mem.start, sizeof(*ata_regs));
--	if (ata_irq)
--		irq_dispose_mapping(ata_irq);
--	if (task_irq)
--		irq_dispose_mapping(task_irq);
--	if (dmatsk)
--		bcom_ata_release(dmatsk);
--	if (ata_regs)
--		devm_iounmap(&op->dev, ata_regs);
--	if (priv)
--		devm_kfree(&op->dev, priv);
-+ err2:
-+	irq_dispose_mapping(task_irq);
-+	bcom_ata_release(dmatsk);
-+ err1:
-+	irq_dispose_mapping(ata_irq);
- 	return rv;
+ 	if (ahci_broken_system_poweroff(pdev)) {
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index b175000..92f7172 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -172,6 +172,9 @@ enum {
+ 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+ 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
++	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
++	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch Attached to Port */
++	PORT_CMD_HPCP		= (1 << 18), /* Hot Plug Capable Port */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index a72bfd0..7d72d3c 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1097,6 +1097,23 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 	writel(1 << port_no, mmio + HOST_IRQ_STAT);
  }
  
-@@ -835,12 +827,6 @@ mpc52xx_ata_remove(struct platform_device *op)
- 	bcom_ata_release(priv->dmatsk);
- 	irq_dispose_mapping(priv->ata_irq);
++static bool ahci_port_pluggable(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u32 cmd;
++
++	cmd = readl(port_mmio + PORT_CMD);
++
++	if ((ap->flags & ATA_FLAG_EXTERNAL) &&
++	    (cmd & PORT_CMD_ESP))
++		return true;
++
++	if (cmd & (PORT_CMD_MPSP | PORT_CMD_HPCP))
++		return true;
++
++	return false;
++}
++
+ void ahci_init_controller(struct ata_host *host)
+ {
+ 	struct ahci_host_priv *hpriv = host->private_data;
+@@ -1112,6 +1129,9 @@ void ahci_init_controller(struct ata_host *host)
+ 		if (ata_port_is_dummy(ap))
+ 			continue;
  
--	/* Clear up IO allocations */
--	devm_iounmap(&op->dev, priv->ata_regs);
--	devm_release_mem_region(&op->dev, priv->ata_regs_pa,
--				sizeof(*priv->ata_regs));
--	devm_kfree(&op->dev, priv);
--
- 	return 0;
- }
++		if (ahci_port_pluggable(ap))
++			ap->flags |= ATA_FLAG_PLUGGABLE;
++
+ 		ahci_port_init(host->dev, ap, i, mmio, port_mmio);
+ 	}
  
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 74aaee3..a7166b9 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -292,8 +292,10 @@ int ata_tport_add(struct device *parent,
+ 	}
+ 
+ 	device_enable_async_suspend(dev);
+-	pm_runtime_set_active(dev);
+-	pm_runtime_enable(dev);
++	if (!(ap->flags & ATA_FLAG_PLUGGABLE)) {
++		pm_runtime_set_active(dev);
++		pm_runtime_enable(dev);
++	}
+ 
+ 	transport_add_device(dev);
+ 	transport_configure_device(dev);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3085bdc..ccf0282 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -209,8 +209,10 @@ enum {
+ 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
+ 					      * led */
+ 	ATA_FLAG_NO_DIPM	= (1 << 23), /* host not happy with DIPM */
++	ATA_FLAG_EXTERNAL	= (1 << 24), /* controller supports external SATA */
++	ATA_FLAG_PLUGGABLE	= (1 << 25), /* port is hotpluggable */
+ 
+-	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
++	/* bits 26:31 of ap->flags are reserved for LLD specific flags */
+ 
+ 
+ 	/* struct ata_port pflags */
+-- 
+1.7.2.5
+
+
 
