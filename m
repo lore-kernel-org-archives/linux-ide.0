@@ -1,45 +1,143 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 0/3] ahci: fix boot/resume COMRESET failures
-Date: Mon, 12 Mar 2012 15:12:09 -0700
-Message-ID: <20120312221209.GH23255@google.com>
-References: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2] libata: disable runtime pm for hotpluggable port
+Date: Tue, 13 Mar 2012 09:57:37 +0800
+Message-ID: <1331603857.3436.24.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33482 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757574Ab2CLWMP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Mar 2012 18:12:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1329849524-23758-1-git-send-email-computersforpeace@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:15186 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754582Ab2CMB5k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Mar 2012 21:57:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux Kernel <linux-kernel@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>, Norbert Preining <preining@logic.at>, "Srivatsa S . Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, Valdis Kletnieks <valdis.kletnieks@vt.edu>, "Rafael J . Wysocki" <rjw@sisk.pl>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, jslaby@suse.cz, cwillu@cwillu.com, jackdachef@gmail.com, Sergei Shtylyov <sshtylyov@mvista.com>
 
-On Tue, Feb 21, 2012 at 10:38:41AM -0800, Brian Norris wrote:
-> This series addresses regression problems with
-> 
->     commit 7faa33da9b7add01db9f1ad92c6a5d9145e940a7
->     ahci: start engine only during soft/hard resets
-> 
-> Because the fix provided by the above commit caused COMRESET failures and
-> 10 second boot-time/resume-time hangs for certain DVD drives, we need to
-> make the fix conditional to certain devices/platforms. Add a flag for this.
-> 
-> Brian
-> 
-> v2: change flag name to AHCI_HFLAG_DELAY_ENGINE, write more detailed
->     comments
-> 
-> v1: flag named AHCI_HFLAG_STRICT_SPEC
-> 
-> Brian Norris (3):
->   ahci: add AHCI_HFLAG_DELAY_ENGINE host flag
->   ahci: move AHCI_HFLAGS() macro to ahci.h
->   ahci_platform: add STRICT_AHCI platform type
+Currently, hotplug doesn't work if port is already runtime suspended.
+For now, we simply disable runtime pm for hotpluggable port.
+Later, we should add runtime pm support for hotpluggable port too.
 
-This looks good to me.  Jeff?
+Bug report:
+https://lkml.org/lkml/2012/2/19/70
 
+v2:
+- Use bit 2 and 3 for flags ATA_FLAG_EXTERNAL and ATA_FLAG_PLUGGABLE.
+
+TODO: add similar hotpluggable port check for controllers other than
+AHCI.
+
+Reported-and-tested-by: Jiri Slaby <jslaby@suse.cz>
+Reported-and-tested-by: cwillu@cwillu.com
+Reported-and-tested-by: jackdachef@gmail.com
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/ata/ahci.c             |    3 +++
+ drivers/ata/ahci.h             |    3 +++
+ drivers/ata/libahci.c          |   20 ++++++++++++++++++++
+ drivers/ata/libata-transport.c |    6 ++++--
+ include/linux/libata.h         |    2 ++
+ 5 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index d07bf03..02e93ff 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1145,6 +1145,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (hpriv->cap & HOST_CAP_PMP)
+ 		pi.flags |= ATA_FLAG_PMP;
+ 
++	if (hpriv->cap & HOST_CAP_SXS)
++		pi.flags |= ATA_FLAG_EXTERNAL;
++
+ 	ahci_set_em_messages(hpriv, &pi);
+ 
+ 	if (ahci_broken_system_poweroff(pdev)) {
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index b175000..92f7172 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -172,6 +172,9 @@ enum {
+ 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+ 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
++	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
++	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch Attached to Port */
++	PORT_CMD_HPCP		= (1 << 18), /* Hot Plug Capable Port */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+ 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index a72bfd0..7d72d3c 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1097,6 +1097,23 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 	writel(1 << port_no, mmio + HOST_IRQ_STAT);
+ }
+ 
++static bool ahci_port_pluggable(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u32 cmd;
++
++	cmd = readl(port_mmio + PORT_CMD);
++
++	if ((ap->flags & ATA_FLAG_EXTERNAL) &&
++	    (cmd & PORT_CMD_ESP))
++		return true;
++
++	if (cmd & (PORT_CMD_MPSP | PORT_CMD_HPCP))
++		return true;
++
++	return false;
++}
++
+ void ahci_init_controller(struct ata_host *host)
+ {
+ 	struct ahci_host_priv *hpriv = host->private_data;
+@@ -1112,6 +1129,9 @@ void ahci_init_controller(struct ata_host *host)
+ 		if (ata_port_is_dummy(ap))
+ 			continue;
+ 
++		if (ahci_port_pluggable(ap))
++			ap->flags |= ATA_FLAG_PLUGGABLE;
++
+ 		ahci_port_init(host->dev, ap, i, mmio, port_mmio);
+ 	}
+ 
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 74aaee3..a7166b9 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -292,8 +292,10 @@ int ata_tport_add(struct device *parent,
+ 	}
+ 
+ 	device_enable_async_suspend(dev);
+-	pm_runtime_set_active(dev);
+-	pm_runtime_enable(dev);
++	if (!(ap->flags & ATA_FLAG_PLUGGABLE)) {
++		pm_runtime_set_active(dev);
++		pm_runtime_enable(dev);
++	}
+ 
+ 	transport_add_device(dev);
+ 	transport_configure_device(dev);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index cafc09a..f46961d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -187,6 +187,8 @@ enum {
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+ 					    /* (doesn't imply presence) */
+ 	ATA_FLAG_SATA		= (1 << 1),
++	ATA_FLAG_EXTERNAL	= (1 << 2), /* Controller supports external SATA */
++	ATA_FLAG_PLUGGABLE	= (1 << 3), /* Port is hotpluggable */
+ 	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
+ 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
+ 	ATA_FLAG_PIO_LBA48	= (1 << 8), /* Host DMA engine is LBA28 only */
 -- 
-tejun
+1.7.2.5
+
+
+
