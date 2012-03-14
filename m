@@ -1,65 +1,195 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v11 2/2] libsas: fix sas_get_port_device regression
-Date: Tue, 13 Mar 2012 23:30:23 -0700
-Message-ID: <20120314063023.6772.67780.stgit@dwillia2-linux.jf.intel.com>
-References: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
+Subject: [isci PATCH v3 1/4] libata: export ata_port suspend/resume
+ infrastructure for sas
+Date: Wed, 14 Mar 2012 00:13:53 -0700
+Message-ID: <20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
+References: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:33919 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:33591 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964994Ab2CNGPF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Mar 2012 02:15:05 -0400
-In-Reply-To: <20120314062643.6772.79462.stgit@dwillia2-linux.jf.intel.com>
+	id S1751149Ab2CNG6f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 14 Mar 2012 02:58:35 -0400
+In-Reply-To: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Tom Jackson <thomas.p.jackson@intel.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-Commit 899fcf4 "[SCSI] libsas: set attached device type and target
-protocols for local phys" setup 'phy' to be dereferenced after
-list_for_each_entry(phy, &port->phy_list, port_phy_el) (i.e. phy ==
-&port->phy_list) resulting in reports like:
+Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
+over adding coordination between ata-tranport and sas-transport because
+libsas wants to revalidate the domain at resume-time at the host level.
+It can not validate links have resumed properly until libata has had a
+chance to perform its revalidation, and any sane placing of an ata_port
+in the sas-transport model would delay it's resumption until after the
+host.
 
-  BUG: unable to handle kernel NULL pointer dereference at 00000000000002b0
-  IP: [<ffffffffa00ce948>] sas_discover_domain+0x29e/0x4fb [libsas]
+Export the common portion of port suspend/resume (bypass pm_runtime),
+and allow sas to perform these operations asynchronously (similar to the
+libsas async-ata probe implmentation).  Async operation is determined by
+having an external, rather than stack based, location for storing the
+result of the operation.
 
-...fix by deferring sas_phy_set_target() to the end of
-sas_get_port_device().
-
-Reported-by: Tom Jackson <thomas.p.jackson@intel.com>
-Tested-by: Tom Jackson <thomas.p.jackson@intel.com>
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++---------
+ include/linux/libata.h    |   11 +++++++++
+ 2 files changed, 57 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index c140355..8ab1de6 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -135,10 +135,6 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 		return -ENODEV;
- 	}
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index bd79c8b..a13c36d 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5241,16 +5241,20 @@ bool ata_link_offline(struct ata_link *link)
+ #ifdef CONFIG_PM
+ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 			       unsigned int action, unsigned int ehi_flags,
+-			       int wait)
++			       int *async)
+ {
+ 	struct ata_link *link;
+ 	unsigned long flags;
+-	int rc;
++	int rc = 0;
  
--	spin_lock_irq(&port->phy_list_lock);
--	list_for_each_entry(phy, &port->phy_list, port_phy_el)
--		sas_phy_set_target(phy, dev);
--	spin_unlock_irq(&port->phy_list_lock);
- 	rphy->identify.phy_identifier = phy->phy->identify.phy_identifier;
- 	memcpy(dev->sas_addr, port->attached_sas_addr, SAS_ADDR_SIZE);
- 	sas_fill_in_rphy(dev, rphy);
-@@ -165,6 +161,11 @@ static int sas_get_port_device(struct asd_sas_port *port)
- 		spin_unlock_irq(&port->dev_list_lock);
+ 	/* Previous resume operation might still be in
+ 	 * progress.  Wait for PM_PENDING to clear.
+ 	 */
+ 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		if (async) {
++			*async = -EAGAIN;
++			return 0;
++		}
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
  	}
+@@ -5259,10 +5263,10 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_lock_irqsave(ap->lock, flags);
  
-+	spin_lock_irq(&port->phy_list_lock);
-+	list_for_each_entry(phy, &port->phy_list, port_phy_el)
-+		sas_phy_set_target(phy, dev);
-+	spin_unlock_irq(&port->phy_list_lock);
-+
- 	return 0;
+ 	ap->pm_mesg = mesg;
+-	if (wait) {
+-		rc = 0;
++	if (async)
++		ap->pm_result = async;
++	else
+ 		ap->pm_result = &rc;
+-	}
+ 
+ 	ap->pflags |= ATA_PFLAG_PM_PENDING;
+ 	ata_for_each_link(link, ap, HOST_FIRST) {
+@@ -5275,7 +5279,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	/* wait and check result */
+-	if (wait) {
++	if (!async) {
+ 		ata_port_wait_eh(ap);
+ 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
+ 	}
+@@ -5285,9 +5289,8 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
+-static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	unsigned int ehi_flags = ATA_EHI_QUIET;
+ 	int rc;
+ 
+@@ -5302,10 +5305,17 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
+ 	if (mesg.event == PM_EVENT_SUSPEND)
+ 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
+ 
+-	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
++	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
+ 	return rc;
  }
  
++static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_suspend_common(ap, mesg, NULL);
++}
++
+ static int ata_port_suspend(struct device *dev)
+ {
+ 	if (pm_runtime_suspended(dev))
+@@ -5330,16 +5340,22 @@ static int ata_port_poweroff(struct device *dev)
+ 	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
+ }
+ 
+-static int ata_port_resume_common(struct device *dev)
++static int __ata_port_resume_common(struct ata_port *ap, int *async)
+ {
+-	struct ata_port *ap = to_ata_port(dev);
+ 	int rc;
+ 
+ 	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
+-		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
++		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
+ 	return rc;
+ }
+ 
++static int ata_port_resume_common(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++
++	return __ata_port_resume_common(ap, NULL);
++}
++
+ static int ata_port_resume(struct device *dev)
+ {
+ 	int rc;
+@@ -5372,6 +5388,24 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
+ 
++/* sas ports don't participate in pm runtime management of ata_ports,
++ * and need to resume ata devices at the domain level, not the per-port
++ * level. sas suspend/resume is async to allow parallel port recovery
++ * since sas has multiple ata_port instances per Scsi_Host.
++ */
++int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return __ata_port_suspend_common(ap, PMSG_SUSPEND, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_suspend);
++
++int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return __ata_port_resume_common(ap, async);
++}
++EXPORT_SYMBOL_GPL(ata_sas_port_async_resume);
++
++
+ /**
+  *	ata_host_suspend - suspend host
+  *	@host: host to suspend
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 83ff256..e2da9c0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1013,6 +1013,17 @@ extern bool ata_link_offline(struct ata_link *link);
+ #ifdef CONFIG_PM
+ extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
+ extern void ata_host_resume(struct ata_host *host);
++extern int ata_sas_port_async_suspend(struct ata_port *ap, int *async);
++extern int ata_sas_port_async_resume(struct ata_port *ap, int *async);
++#else
++static inline int ata_sas_port_async_suspend(struct ata_port *ap, int *async)
++{
++	return 0;
++}
++static inline int ata_sas_port_async_resume(struct ata_port *ap, int *async)
++{
++	return 0;
++}
+ #endif
+ extern int ata_ratelimit(void);
+ extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
 
