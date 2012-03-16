@@ -1,65 +1,71 @@
-From: Shiraz Hashim <shiraz.hashim@st.com>
-Subject: [PATCH resend] ata/ahci_platform: add hibernation callbacks
-Date: Fri, 16 Mar 2012 15:49:55 +0530
-Message-ID: <1331893195-27078-1-git-send-email-shiraz.hashim@st.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [libsas PATCH v10 2/9] libsas: cleanup spurious calls to scsi_schedule_eh
+Date: Fri, 16 Mar 2012 08:25:56 -0700
+Message-ID: <CAA9_cmfL2=Z4Wmoq-GNYr9wSyvvbCFXoP4p6oF1_OJ01UO+UUQ@mail.gmail.com>
+References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
+	<20120311043906.27797.28938.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:38852 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1031028Ab2CPKV0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2012 06:21:26 -0400
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:56138 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1032861Ab2CPPeM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Mar 2012 11:34:12 -0400
+In-Reply-To: <20120311043906.27797.28938.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, spear-devel@list.st.com, Shiraz Hashim <shiraz.hashim@st.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Use existing suspend, resume implementation for hibernation callbacks.
+On Sat, Mar 10, 2012 at 8:39 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> eh is woken up automatically by the presence of failed commands,
+> scsi_schedule_eh is reserved for cases where there are no failed
+> commands. =A0This guarantees that host_eh_sceduled is only incremente=
+d
+> when an explicit eh request is made.
+>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> =A0drivers/scsi/libsas/sas_ata.c =A0 =A0 =A0 | =A0 25 ---------------=
+----------
+> =A0drivers/scsi/libsas/sas_scsi_host.c | =A0 =A05 -----
+> =A0include/scsi/sas_ata.h =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A04 ----
+> =A03 files changed, 0 insertions(+), 34 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_=
+ata.c
+> index bc0cecc..729a7b6 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -574,31 +574,6 @@ int sas_ata_init_host_and_port(struct domain_dev=
+ice *found_dev)
+> =A0 =A0 =A0 =A0return 0;
+> =A0}
+>
+> -void sas_ata_task_abort(struct sas_task *task)
+> -{
+> - =A0 =A0 =A0 struct ata_queued_cmd *qc =3D task->uldd_task;
+> - =A0 =A0 =A0 struct completion *waiting;
+> -
+> - =A0 =A0 =A0 /* Bounce SCSI-initiated commands to the SCSI EH */
+> - =A0 =A0 =A0 if (qc->scsicmd) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 struct request_queue *q =3D qc->scsicmd=
+->device->request_queue;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 unsigned long flags;
+> -
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irqsave(q->queue_lock, flags)=
+;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 blk_abort_request(qc->scsicmd->request)=
+;
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irqrestore(q->queue_lock, f=
+lags);
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 scsi_schedule_eh(qc->scsicmd->device->h=
+ost);
 
-Signed-off-by: Shiraz Hashim <shiraz.hashim@st.com>
----
- drivers/ata/ahci_platform.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
+Although we don't need this call to scsi_schedule_eh, we certainly
+need to handle task->uldd_task differently for ata tasks, will resend.
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 2bbcbbe..4431c60 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -16,6 +16,7 @@
- #include <linux/kernel.h>
- #include <linux/gfp.h>
- #include <linux/module.h>
-+#include <linux/pm.h>
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/device.h>
-@@ -286,13 +287,10 @@ static int ahci_resume(struct device *dev)
- 
- 	return 0;
- }
--
--static struct dev_pm_ops ahci_pm_ops = {
--	.suspend		= &ahci_suspend,
--	.resume			= &ahci_resume,
--};
- #endif
- 
-+SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
-+
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "calxeda,hb-ahci", },
- 	{},
-@@ -305,9 +303,7 @@ static struct platform_driver ahci_driver = {
- 		.name = "ahci",
- 		.owner = THIS_MODULE,
- 		.of_match_table = ahci_of_match,
--#ifdef CONFIG_PM
- 		.pm = &ahci_pm_ops,
--#endif
- 	},
- 	.id_table	= ahci_devtype,
- };
--- 
-1.7.9.rc0
-
+--
+Dan
