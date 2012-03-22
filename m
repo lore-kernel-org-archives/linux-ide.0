@@ -1,37 +1,70 @@
-From: black@fire.name
-Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port Multiplier
- Sil3726
-Date: Thu, 22 Mar 2012 17:14:22 +0900
-Message-ID: <4F6ADF5E.1010106@fire.name>
-References: <4F5ECD06.3000608@yahoo.co.jp> <4F5F7C4C.7080800@teksavvy.com> <4F662AFB.9050106@yahoo.co.jp> <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com> <4F6AAC37.7040907@yahoo.co.jp>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue
+Date: Thu, 22 Mar 2012 15:24:23 +0400
+Message-ID: <4F6B0BE7.8050707@mvista.com>
+References: <1332395550.3793.58.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta117.odn.ne.jp ([143.90.14.187]:43321 "EHLO cmta117.odn.ne.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755732Ab2CVIT2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Mar 2012 04:19:28 -0400
-Received: from smta103.odn.ne.jp by cmta103.odn.ne.jp with ESMTP
-          id <20120322081424000.IWNF.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
-          for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2012 17:14:24 +0900
-In-Reply-To: <4F6AAC37.7040907@yahoo.co.jp>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:37767 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752823Ab2CVLZt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2012 07:25:49 -0400
+Received: by bkcik5 with SMTP id ik5so1644686bkc.19
+        for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2012 04:25:47 -0700 (PDT)
+In-Reply-To: <1332395550.3793.58.camel@minggr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, =?UTF-8?B?SsO2cmcg?= =?UTF-8?B?U29tbWVy?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Sorry for my poor English.
+Hello.
 
-(2012/03/22 13:36), ANEZAKI, Akira wrote:
-> 3.2.x kernel sometimes breaks metadata and I have to fix them. I feel it
-> strange and cannot understand that the kernel sometimes breaks
-> metadatas/superblocks of RAIDs/file systems those don't include any HDDs
-> those don't connected to any PMP.
-... the kernel sometimes breaks metadata/superblock of RAID/file system.
-The kernel may break them even if those don't include a HDD that is
-connected to a PMP.
+On 22-03-2012 9:52, Lin Ming wrote:
 
-is correct.
+> Currently, __scsi_alloc_queue uses SCSI host's parent device
+> as DMA device to set segment boundary. But the parent device may not
+> refer to the DMA device. For example, for ATA disk, SCSI host's paren=
+t
+> device now refers to ATA port.
 
-Akira
+> Since commit d139b9b([SCSI] scsi_lib_dma: fix bug with dma maps on
+> nested scsi objects), a new field Scsi_Host->dma_device was introduce=
+d
+
+    Only the field is named 'dma_dev', isn't it?
+
+> to refer to the real DMA device.
+
+> Use ->dma_device in __scsi_alloc_queue to correctly set segment
+> boundary.
+
+> And use scsi_add_host_with_dma in ata_scsi_add_hosts to pass in the
+> correct DMA device.
+
+    Perhaps this should be split into two patches.
+
+> Bug report: http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D2
+
+> Reported-and-tested-by: J=C3=B6rg Sommer<joerg@alea.gnuu.de>
+> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+[...]
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index f85cfa6..486088b 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1642,7 +1642,7 @@ struct request_queue *__scsi_alloc_queue(struct=
+ Scsi_Host *shost,
+>   					 request_fn_proc *request_fn)
+>   {
+>   	struct request_queue *q;
+> -	struct device *dev =3D shost->shost_gendev.parent;
+> +	struct device *dev =3D shost->dma_dev;
+>
+>   	q =3D blk_init_queue(request_fn, NULL);
+>   	if (!q)
+
+WBR, Sergei
