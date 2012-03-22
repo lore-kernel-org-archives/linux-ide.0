@@ -1,178 +1,338 @@
-From: =?iso-8859-1?Q?J=F6rg?= Sommer <joerg@alea.gnuu.de>
-Subject: Re: DMA doesn't work since "make ata port as parent device of scsi
- host"
-Date: Wed, 21 Mar 2012 20:40:43 +0100
-Message-ID: <20120321194042.GA16112@alea.gnuu.de>
-References: <20120315014807.GA3051@alea.gnuu.de>
- <1331776741.3436.33.camel@minggr>
- <1331781968.3436.43.camel@minggr>
- <20120315074835.GA18295@alea.gnuu.de>
- <1331799598.3436.46.camel@minggr>
- <20120315155924.GA6738@alea.gnuu.de>
- <1332293133.17160.12.camel@minggr>
+From: "ANEZAKI, Akira" <fireblade1230@yahoo.co.jp>
+Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port Multiplier
+ Sil3726
+Date: Thu, 22 Mar 2012 13:36:07 +0900
+Message-ID: <4F6AAC37.7040907@yahoo.co.jp>
+References: <4F5ECD06.3000608@yahoo.co.jp> <4F5F7C4C.7080800@teksavvy.com> <4F662AFB.9050106@yahoo.co.jp> <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from uucp.gnuu.de ([83.246.114.63]:1034 "EHLO uucp.gnuu.de"
+Received: from mta103.odn.ne.jp ([143.90.14.143]:50980 "EHLO cmta103.odn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964924Ab2CUVyN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Mar 2012 17:54:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1332293133.17160.12.camel@minggr>
+	id S1751860Ab2CVEgL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Mar 2012 00:36:11 -0400
+Received: from smta103.odn.ne.jp by cmta103.odn.ne.jp with ESMTP
+          id <20120322043608751.IBIR.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
+          for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2012 13:36:08 +0900
+In-Reply-To: <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
+Hello Gwendal,
 
---SUOF0GtieIMvvwua
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+(2012/03/21 18:09), Gwendal Grignou wrote:
 
-Lin Ming hat am Wed 21. Mar, 09:25 (+0800) geschrieben:
-> On Thu, 2012-03-15 at 16:59 +0100, J=F6rg Sommer wrote:
-> > Lin Ming hat am Thu 15. Mar, 16:19 (+0800) geschrieben:
-> > > On Thu, 2012-03-15 at 08:48 +0100, J=F6rg Sommer wrote:
-> > > > Lin Ming hat am Thu 15. Mar, 11:26 (+0800) geschrieben:
-> > > > > On Thu, 2012-03-15 at 09:59 +0800, Lin Ming wrote:
-> > > > > > On Thu, 2012-03-15 at 02:48 +0100, J=F6rg Sommer wrote:
-> > > > > > > Hi,
-> > > > > > >=20
-> > > > > > > I'm getting these messages in a KVM virtualized host and the =
-access to
-> > > > > > > the disks is very slow. Using libata.dma=3D0 suppresses the w=
-arnings, but
-> > > > > > > the disks are still slow.
-> > > > > >=20
-> > > > > > Hi J=F6rg,
-> > > > > >=20
-> > > > > > Let me try to reproduce this issue first.
-> > > > >=20
-> > > > > I tried below commands on x86_32, but can't reproduce it.
-> > > > >=20
-> > > > > qemu-system-i386 -kernel /root/vmlinuz-3.3.0-rc7 -append "root=3D=
-/dev/sda1
-> > > > > zcache" -hda /root/debian-32.img -hdb /root/data.img
-> > > > >=20
-> > > > > Maybe because i386 uses different ata controller than ppc(ata_pii=
-x vs
-> > > > > pata-macio).
-> > > > >=20
-> > > > > I'll try qemu-system-ppc.
-> > > > >=20
-> > > > > Did you need to run some workload to trigger these warings?
-> > > > > Or did you get these warnings right after booting the VM?
-> > > >=20
-> > > > These warnings come up before =BBINIT started=AB. I don't have to do
-> > > > anything, just wait and see.
-> > > >=20
-> > > > # truncate -s100M /mnt/data/new
-> > > > # mke2fs -Fq /mnt/data/new
-> > > > # mount -o loop /mnt/data/new /mnt/other
-> > > > # cp --parents /bin/zsh-static /mnt/other/zsh
-> > > > # umount /mnt/other
-> > > > # qemu-system-ppc -enable-kvm -M mac99 -cpu G4 -k de -kernel /boot/=
-vmlinuz-3.3.0-rc5-04520-g8d233c0 -append 'root=3D/dev/sda ro console=3DttyP=
-Z0 init=3D/zsh' -hda /mnt/data/new
-> > > >=20
-> > > > I've uploaded my config and the kernel:
-> > > > http://alioth.debian.org/~jo-guest/config-3.3.0-rc5-04520-g8d233c0
-> > > > http://alioth.debian.org/~jo-guest/vmlinuz-3.3.0-rc5-04520-g8d233c0
-> > > >=20
-> > > > You have to switch to the serial console (Ctrl-Alt-3 or with -nogra=
-phic
-> > > > Ctrl-a c). All kernel messages arrive there.
-> > > >=20
+> - When you do the test between 3.1 and 3.2, do you cold boot the
+> machine every time?
 
-> Hi,=20
->=20
-> Below patch should fix the problem.
->=20
-> Could you help to test it?
+Yes, I did. I switched off main switch ( AC power line side. PC,
+display, all HDD boxes, etc. ) and wait more than 10 sec.
 
-Yes, it does. The kernel doesn't hang at bootup. Thanks for you
-investigation.
+On the PC that has 6 PMPs with 38 HDDs ( and 2 non PMP HDDs ) :
+3.1 -- I can boot every time both of warm reboot and cold boot.
+3.2 -- I can't boot at all.
+3.2 with my patch -- I can boot every time both of warm reboot and cold
+boot.
 
-> >From a36022015c97c9a9f80e71b4283f0ff5f481ffc3 Mon Sep 17 00:00:00 2001
-> From: Lin Ming <ming.m.lin@intel.com>
-> Date: Tue, 20 Mar 2012 14:35:10 +0800
-> Subject: [PATCH] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_=
-queue
->=20
-> Currently, __scsi_alloc_queue uses SCSI host's parent device
-> as DMA device to set segment boundary. But the parent device may not
-> refer to the DMA device. For example, for ATA disk, SCSI host's parent
-> device now refers to ATA port.
->=20
-> Since commit d139b9b([SCSI] scsi_lib_dma: fix bug with dma maps on
-> nested scsi objects), a new field Scsi_Host->dma_device was introduced
-> to refer to the real DMA device.
->=20
-> Use ->dma_device in __scsi_alloc_queue to correctly set segment
-> boundary.
->=20
-> And use scsi_add_host_with_dma in ata_scsi_add_hosts to pass in the
-> correct DMA device.
->=20
-> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+On the PC that has 2 PMPs with 8 HDDs ( and 2 non PMP HDDs ) :
+3.1 -- I can boot smoothly both of warm reboot and cold boot.
+3.2 -- I can boot but slowly at the cold boot. Sometimes I cannot boot
+at the power cycle but I can't get log until now. And when boot for
+power cycle is succeeded, sometimes metadatas for RAIDs are broken.
+3.2 with my patch -- I can boot smoothly both of warm reboot and power
+cycle.
 
-Tested-by: J=F6rg Sommer <joerg@alea.gnuu.de>
+> - does the problem with 3.2 happens when you just reboot the machine
+> instead of cold booting?
+About the PC with 6 PMPs, I can't boot at all. But about the PC with 2
+PMPs, usually it looks no problems.
 
-> ---
->  drivers/ata/libata-scsi.c |    3 ++-
->  drivers/scsi/scsi_lib.c   |    2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 7ae1e77..e47f889 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3398,7 +3398,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struc=
-t scsi_host_template *sht)
->  		 */
->  		shost->max_host_blocked =3D 1;
-> =20
-> -		rc =3D scsi_add_host(ap->scsi_host, &ap->tdev);
-> +		rc =3D scsi_add_host_with_dma(ap->scsi_host,
-> +						&ap->tdev, ap->host->dev);
->  		if (rc)
->  			goto err_add;
->  	}
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index f85cfa6..486088b 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1642,7 +1642,7 @@ struct request_queue *__scsi_alloc_queue(struct Scs=
-i_Host *shost,
->  					 request_fn_proc *request_fn)
->  {
->  	struct request_queue *q;
-> -	struct device *dev =3D shost->shost_gendev.parent;
-> +	struct device *dev =3D shost->dma_dev;
-> =20
->  	q =3D blk_init_queue(request_fn, NULL);
->  	if (!q)
-> --=20
-> 1.7.2.5
->=20
->=20
+> Looking at your log, it seems you are using old drives that take a
+> long time to spinup.
 
-Regards, J=F6rg.
---=20
-Dein Gesicht wird dir geschenkt. L=E4cheln musst du selber! (Inga Hermann)
+Both logs are results of unpatched driver. Pathced or 3.1.x driver boots
+smoothly.
+The log I sent first is on the PC that has 6 PMPs with 38 HDDs. It can't
+boot.
+The log I sent second is on the PC that has 2 PMPs with 8 HDDs. Usually
+it can boot but takes longer time. 3.1.x or patched driver can boot
+smoothly.
 
---SUOF0GtieIMvvwua
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature http://en.wikipedia.org/wiki/OpenPGP
+> We can see there are progress between 3.2.3 and 3.2.9:
+> In 3.2.3, we fail with qc_timeout and some drives are disabled.
+> In 3.2.9, we take time to spinup the drives, but finally all are found.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
+The log I sent first is from 3.2.9 kernel with 6 PMPs and 38 HDDs.
+The log I sent second is from 3.2.10 kernel with 2 PMPs and 8 HDDs.
+I thought that it may be a sample for usual case so I sent it. I'm sorry
+because it made you confused.
 
-iEYEARECAAYFAk9qLroACgkQwe0mZwH1VICSVwCfZd66Qmj86U7SOtEGlPTJhLrP
-L24An2DOPF6ctF6i3vZ1LA7tAdImuC/V
-=oPZi
------END PGP SIGNATURE-----
+> The patch you proposed seems to only have been tested with warm
+> reboot, not power cycle.
 
---SUOF0GtieIMvvwua--
+I test power cycle first. I sent original kernel logs only to explain
+the problem. Logs of patched kernel are attached below.
+3.2.x kernel sometimes breaks metadata and I have to fix them. I feel it
+strange and cannot understand that the kernel sometimes breaks
+metadatas/superblocks of RAIDs/file systems those don't include any HDDs
+those don't connected to any PMP.
+On PC that has 6 PMPs with 38 HDDs, the original 3.2.x kernel usually
+breaks metadata and I have to fix the problems before next test. So each
+test takes very long time ( a few days ).
+
+> Please see http://www.spinics.net/lists/linux-ide/msg41699.html and
+> http://www.spinics.net/lists/linux-ide/msg41700.html for an
+> explanation why this patch is need.
+
+Because:
+1. kernel 3.1.x and before, the driver works fine.
+2. From 3.2.x, booting becomes slow in power cycle.
+3. From 3.2.x, the driver sometimes fails to boot. and the driver makes
+impossible to boot for some PCs.
+
+The logs below are from a PC that has 2 PMPs with 8 HDDs.
+
+--- 3.2.10 power cycle log ( not patched ) ---
+   :
+> [    0.000000] Linux version 3.2.10-3.fc16.i686.PAE (mockbuild@x86-02.phx2.fedoraproject.org) (gcc version 4.6.2 20111027 (Red Hat 4.6.2-1) (GCC) ) #1 SMP Thu Mar 15 20:37:01 UTC 2012
+   :
+> [    2.055030] ata9: SATA max UDMA/100 host m128@0xfe9ffc00 port 0xfe9f8000 irq 18
+   :
+> [    4.187038] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.187382] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.189167] ata9.00: hard resetting link
+> [    4.527250] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    4.527288] ata9.01: hard resetting link
+> [    4.953017] ata9.01: softreset failed (SRST command error)
+> [    5.063019] ata9.01: failed to read SCR 0 (Emask=0x1)
+> [    5.063024] ata9.01: reset failed (errno=-85), retrying in 10 secs
+> [   14.527034] ata9.01: reset failed, giving up
+> [   14.527039] ata9.15: hard resetting link
+> [   14.527042] ata9: controller in dubious state, performing PORT_RST
+> [   16.681042] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   16.681425] ata9.00: hard resetting link
+> [   17.019250] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [   17.019288] ata9.01: hard resetting link
+> [   17.357250] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   17.357288] ata9.02: hard resetting link
+> [   17.783013] ata9.02: softreset failed (SRST command error)
+> [   17.783032] ata9.02: failed to read SCR 0 (Emask=0x40)
+> [   17.783035] ata9.02: reset failed (errno=-85), retrying in 10 secs
+> [   27.357085] ata9.02: reset failed, giving up
+> [   27.357089] ata9.15: hard resetting link
+> [   27.357092] ata9: controller in dubious state, performing PORT_RST
+> [   29.511060] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   29.511428] ata9.00: hard resetting link
+> [   29.849253] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [   29.849289] ata9.01: hard resetting link
+> [   30.187252] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   30.187287] ata9.02: hard resetting link
+> [   30.525253] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   30.525288] ata9.03: hard resetting link
+> [   30.951013] ata9.03: softreset failed (SRST command error)
+> [   31.061019] ata9.03: failed to read SCR 0 (Emask=0x1)
+> [   31.061023] ata9.03: reset failed (errno=-85), retrying in 10 secs
+> [   40.525046] ata9.03: reset failed, giving up
+> [   40.525050] ata9.15: hard resetting link
+> [   40.525053] ata9: controller in dubious state, performing PORT_RST
+> [   42.679035] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   42.679419] ata9.00: hard resetting link
+> [   43.017251] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [   43.017289] ata9.01: hard resetting link
+> [   43.355251] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   43.355288] ata9.02: hard resetting link
+> [   43.693249] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   43.693286] ata9.03: hard resetting link
+> [   44.031249] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   44.031286] ata9.04: hard resetting link
+> [   44.336389] ata9.04: SATA link down (SStatus 0 SControl 320)
+> [   44.336456] ata9.05: hard resetting link
+> [   44.641358] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [   44.670114] ata9.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   44.670119] ata9.00: 2930277168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> [   44.712074] ata9.00: configured for UDMA/100
+> [   44.740733] ata9.01: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   44.740737] ata9.01: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   44.782660] ata9.01: configured for UDMA/100
+> [   44.811357] ata9.02: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   44.811361] ata9.02: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   44.853315] ata9.02: configured for UDMA/100
+> [   44.882014] ata9.03: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   44.882019] ata9.03: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   44.923982] ata9.03: configured for UDMA/100
+> [   44.924061] ata9: EH complete
+   :
+> [  109.607470] fedora-storage-init[1315]: [  OK  ]
+> [  109.781735] lvm[1322]: No volume groups found
+   :
+> [  124.179756] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [  124.268048] NFSD: starting 90-second grace period
+   :
+
+--- 3.2.10 warm reset log ( not patched ) ---
+   :
+> [    0.000000] Linux version 3.2.10-3.fc16.i686.PAE (mockbuild@x86-02.phx2.fedoraproject.org) (gcc version 4.6.2 20111027 (Red Hat 4.6.2-1) (GCC) ) #1 SMP Thu Mar 15 20:37:01 UTC 2012
+   :
+> [    2.048967] ata9: SATA max UDMA/100 host m128@0xfe9ffc00 port 0xfe9f8000 irq 18
+   :
+> [    4.181039] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.181374] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.184153] ata9.00: hard resetting link
+> [    4.522255] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    4.522292] ata9.01: hard resetting link
+> [    4.860255] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    4.860290] ata9.02: hard resetting link
+> [    5.198254] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.198290] ata9.03: hard resetting link
+> [    5.536254] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.536289] ata9.04: hard resetting link
+> [    5.841392] ata9.04: SATA link down (SStatus 0 SControl 320)
+> [    5.841459] ata9.05: hard resetting link
+> [    6.146363] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [    6.175178] ata9.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.175183] ata9.00: 2930277168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> [    6.217150] ata9.00: configured for UDMA/100
+> [    6.245808] ata9.01: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.245813] ata9.01: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.287734] ata9.01: configured for UDMA/100
+> [    6.316420] ata9.02: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.316424] ata9.02: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.358401] ata9.02: configured for UDMA/100
+> [    6.387135] ata9.03: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.387140] ata9.03: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.429104] ata9.03: configured for UDMA/100
+> [    6.429184] ata9: EH complete
+   :
+> [   18.318618] fedora-storage-init[1080]: [  OK  ]
+> [   18.509550] lvm[1087]: No volume groups found
+   :
+> [   27.093615] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [   27.327036] NFSD: starting 90-second grace period
+   :
+--------
+
+---- 3.2.10 power cycle log ( patched ) ----
+   :
+> [    0.000000] Linux version 3.2.10-3.aa.fc16.i686.PAE (anezaki@server4) (gcc version 4.6.2 20111027 (Red Hat 4.6.2-1) (GCC) ) #1 SMP Thu Mar 22 08:14:54 JST 2012
+   :
+> [    2.064607] ata9: SATA max UDMA/100 host m128@0xfe9ffc00 port 0xfe9f8000 irq 18
+   :
+> [    4.196041] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.196368] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.198669] ata9.00: hard resetting link
+> [    4.504366] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    4.504402] ata9.01: hard resetting link
+> [    4.809359] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    4.809398] ata9.02: hard resetting link
+> [    5.114363] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.114399] ata9.03: hard resetting link
+> [    5.419359] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.419397] ata9.04: hard resetting link
+> [    5.724362] ata9.04: SATA link down (SStatus 0 SControl 320)
+> [    5.724429] ata9.05: hard resetting link
+> [    6.029365] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [    6.059901] ata9.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.059906] ata9.00: 2930277168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> [    6.101867] ata9.00: configured for UDMA/100
+> [    6.211019] ata9.01: failed to IDENTIFY (I/O error, err_mask=0x11)
+> [    6.211024] ata9.15: hard resetting link
+> [    6.211027] ata9: controller in dubious state, performing PORT_RST
+> [    8.365040] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    8.365383] ata9.00: hard resetting link
+> [    8.670359] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    9.809089] ata9.01: hard resetting link
+> [   10.114362] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   10.114400] ata9.02: hard resetting link
+> [   10.419408] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   10.419453] ata9.03: hard resetting link
+> [   10.724360] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   11.029024] ata9.05: hard resetting link
+> [   11.334363] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [   11.405154] ata9.00: configured for UDMA/100
+> [   11.515017] ata9.01: failed to IDENTIFY (I/O error, err_mask=0x11)
+> [   11.515022] ata9.15: hard resetting link
+> [   11.515025] ata9: controller in dubious state, performing PORT_RST
+> [   13.669034] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   13.669416] ata9.00: hard resetting link
+> [   13.974361] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [   15.114068] ata9.01: hard resetting link
+> [   15.419359] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   15.419397] ata9.02: hard resetting link
+> [   15.724362] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   15.724397] ata9.03: hard resetting link
+> [   16.029360] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [   16.029398] ata9.04: hard resetting link
+> [   16.334360] ata9.04: SATA link down (SStatus 0 SControl 320)
+> [   16.334427] ata9.05: hard resetting link
+> [   16.639364] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [   16.710155] ata9.00: configured for UDMA/100
+> [   16.738845] ata9.01: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   16.738850] ata9.01: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   16.780714] ata9.01: configured for UDMA/100
+> [   16.809457] ata9.02: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   16.809462] ata9.02: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   16.851386] ata9.02: configured for UDMA/100
+> [   16.880135] ata9.03: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [   16.880139] ata9.03: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [   16.922064] ata9.03: configured for UDMA/100
+> [   16.922144] ata9: EH complete
+   :
+> [   38.783294] fedora-storage-init[1085]: [  OK  ]
+> [   38.924664] lvm[1092]: No volume groups found
+   :
+> [   47.241280] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [   47.331673] NFSD: starting 90-second grace period
+   :
+
+--- 3.2.10 warm reboot log ( patched ) ---
+   :
+> [    0.000000] Linux version 3.2.10-3.aa.fc16.i686.PAE (anezaki@server4) (gcc version 4.6.2 20111027 (Red Hat 4.6.2-1) (GCC) ) #1 SMP Thu Mar 22 08:14:54 JST 2012
+   :
+> [    2.053718] ata9: SATA max UDMA/100 host m128@0xfe9ffc00 port 0xfe9f8000 irq 18
+   :
+> [    4.185038] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.185391] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.188529] ata9.00: hard resetting link
+> [    4.493361] ata9.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    4.493400] ata9.01: hard resetting link
+> [    4.798359] ata9.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    4.798395] ata9.02: hard resetting link
+> [    5.103358] ata9.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.103396] ata9.03: hard resetting link
+> [    5.408359] ata9.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.408395] ata9.04: hard resetting link
+> [    5.713358] ata9.04: SATA link down (SStatus 0 SControl 320)
+> [    5.713425] ata9.05: hard resetting link
+> [    6.018361] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [    6.048989] ata9.00: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.048994] ata9.00: 2930277168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> [    6.091016] ata9.00: configured for UDMA/100
+> [    6.119634] ata9.01: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.119638] ata9.01: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.161506] ata9.01: configured for UDMA/100
+> [    6.190229] ata9.02: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.190233] ata9.02: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.232186] ata9.02: configured for UDMA/100
+> [    6.260887] ata9.03: ATA-8: ST31500341AS, CC1H, max UDMA/133
+> [    6.260892] ata9.03: 2930277168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    6.302885] ata9.03: configured for UDMA/100
+> [    6.302963] ata9: EH complete
+   :
+> [   17.439980] fedora-storage-init[1099]: [  OK  ]
+> [   17.615373] lvm[1106]: No volume groups found
+   :
+> [   25.864708] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [   26.006311] NFSD: starting 90-second grace period
+   :
+
+---------
+
+On the PC that has 6 PMPs and 38HDDs, the situation is terrible. But I
+have been fixing the broken RAID metadata and it will take long time.
+I'll send it later.
+
+Regards,
+Akira
