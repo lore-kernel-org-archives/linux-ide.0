@@ -1,55 +1,38 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [isci PATCH v3 3/4] libsas: suspend / resume support
-Date: Thu, 22 Mar 2012 15:44:33 +0800
-Message-ID: <A9DB323E20454953A88CC43F4AE6CC68@usish.com.cn>
-References: <CABE8wwvmCnVEhW8yKVua9Zt+jPCK6kzyjm7poE_7D4ihDhZrHg@mail.gmail.com><Pine.LNX.4.44L0.1203151544450.1366-100000@iolanthe.rowland.org><CABE8wwuuM8XoTUy_+1nXMt9WvieWgmt-NHS=ybN_ndOdwk+gjQ@mail.gmail.com><F0261F814D3E413599630A3442934059@usish.com.cn> <CABE8wwu=6Hco6kg_VGP0mtpgfHdF9Uxw1wMXLX5mcJ0J=i6u5g@mail.gmail.com>
+From: "ANEZAKI, Akira" <fireblade1230@yahoo.co.jp>
+Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port Multiplier
+ Sil3726
+Date: Thu, 22 Mar 2012 17:16:56 +0900
+Message-ID: <4F6ADFF8.5000106@yahoo.co.jp>
+References: <4F5ECD06.3000608@yahoo.co.jp> <4F5F7C4C.7080800@teksavvy.com> <4F662AFB.9050106@yahoo.co.jp> <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com> <4F6AAC37.7040907@yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:33716 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363Ab2CVHoy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Mar 2012 03:44:54 -0400
-In-Reply-To: <CABE8wwu=6Hco6kg_VGP0mtpgfHdF9Uxw1wMXLX5mcJ0J=i6u5g@mail.gmail.com>
+Received: from mta103.odn.ne.jp ([143.90.14.143]:34735 "EHLO cmta103.odn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755398Ab2CVIQ6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 22 Mar 2012 04:16:58 -0400
+Received: from smta103.odn.ne.jp by cmta103.odn.ne.jp with ESMTP
+          id <20120322081657395.IWWC.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
+          for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2012 17:16:57 +0900
+In-Reply-To: <4F6AAC37.7040907@yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "'Williams, Dan J'" <dan.j.williams@intel.com>
-Cc: 'Alan Stern' <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, 'Jacek Danecki' <jacek.danecki@intel.com>, 'lindar_liu' <lindar_liu@usish.com>, =?UTF-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
+Sorry for my poor English.
+And I used wrong mail address.
 
+(2012/03/22 13:36), ANEZAKI, Akira wrote:
+> 3.2.x kernel sometimes breaks metadata and I have to fix them. I feel it
+> strange and cannot understand that the kernel sometimes breaks
+> metadatas/superblocks of RAIDs/file systems those don't include any HDDs
+> those don't connected to any PMP.
+... the kernel sometimes breaks metadata/superblock of RAID/file system.
+The kernel may break them even if those don't include a HDD that is
+connected to a PMP.
 
-> 
-> 2012/3/16 Jack Wang <jack_wang@usish.com>:
-> > Dan,
-> >
-> > I found problem about SATA error handle and this also led to panic when run
-> suspend/resume test. Thanks again for your share debug method and patch of
-> testing suspend/resume problem.
-> >
-> > The problem is:
-> >
-> > When probe libata probe sata will try to reset device and send IDENTIFY DEVICE..
-> commands when 3 times fail will give up but never tell libsas and lldd to clean
-> up the resource. And if some time later the device came up report BROADCAST
-> CHANGE and libsas found device try to  tell lldd, but lldd is not forget the
-> original one will reject this.
-> > Should we export sas_unregister_devs_sas_addr let ata call this when give
-> up.
-> 
-> Have a look at "libsas: fix ata_eh clobbering ex_phys via
-> smp_ata_check_ready" [1], this fixed up cases where libsas failed to
-> handle ata device unplug in our environment.
-> 
-> --
-> Dan
-> 
-> [1]: http://marc.info/?l=linux-scsi&m=133239709603452&w=2
-[Jack Wang] 
-Thanks Dan, we are testing your new patchset in our test environment, will report back result.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+is correct.
 
+Akira
