@@ -1,178 +1,72 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [libsas PATCH v13] scsi,
- sd: limit the scope of the async probe domain
-Date: Thu, 22 Mar 2012 17:05:11 -0700
-Message-ID: <20120323000201.17750.18754.stgit@dwillia2-linux.jf.intel.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port
+ Multiplier Sil3726
+Date: Fri, 23 Mar 2012 13:14:33 +0800
+Message-ID: <CAMHSBOWDYyLRREZNGqhBtvF_gSrvB-b=PVx3qULCqpc7yeJCcQ@mail.gmail.com>
+References: <4F5ECD06.3000608@yahoo.co.jp>
+	<4F5F7C4C.7080800@teksavvy.com>
+	<4F662AFB.9050106@yahoo.co.jp>
+	<CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com>
+	<4F6AAC37.7040907@yahoo.co.jp>
+	<4F6B30D9.2070805@yahoo.co.jp>
+	<CAMHSBOVD4wAtwAravVkDjyWV+Nwtuybt=yae=26PcGxxirw=Lg@mail.gmail.com>
+	<4F6B679C.60004@yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43594 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756242Ab2CVXtn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Mar 2012 19:49:43 -0400
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:63828 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753501Ab2CWFOe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2012 01:14:34 -0400
+Received: by qcqw6 with SMTP id w6so1794425qcq.19
+        for <linux-ide@vger.kernel.org>; Thu, 22 Mar 2012 22:14:33 -0700 (PDT)
+In-Reply-To: <4F6B679C.60004@yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+To: "ANEZAKI, Akira" <fireblade1230@yahoo.co.jp>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-sd injects and synchronizes probe work on the global kernel-wide domain.
-This runs into conflict with PM that wants to perform resume actions in
-async context:
+On Fri, Mar 23, 2012 at 1:55 AM, ANEZAKI, Akira
+<fireblade1230@yahoo.co.jp> wrote:
+> Hello Gwendal,
+>
+> Thank you for your information.
+> I think ata8 might different from other 3 PMPs. I'll try to update al=
+l
+> firmware but it is running resync on broken RAID now. So I can't do i=
+t soon.
+> By the way, both of ata8 and ata9 loses some HDDs also. Are those
+> affected by PMPs on ata7 and ata10? Why 3.1.x driver can work?
+>
+> Best Regards,
+> Akira
+>
+>> Now I see your problem. Indeed on ata7, ata10, we have a problem.
+I should have said ata7-ata10. The PMP on these 4 enclosures do not
+like SRST at all.
+It works with 3.1.x because it does not send SRST with this PMP; but
+as I said before, that is not a good behavior [no staggered spin-up,
+problem with drives slow to spin-up]
 
-[  494.237079] INFO: task kworker/u:3:554 blocked for more than 120 seconds.
-[  494.294396] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  494.360809] kworker/u:3     D 0000000000000000     0   554      2 0x00000000
-[  494.420739]  ffff88012e4d3af0 0000000000000046 ffff88013200c160 ffff88012e4d3fd8
-[  494.484392]  ffff88012e4d3fd8 0000000000012500 ffff8801394ea0b0 ffff88013200c160
-[  494.548038]  ffff88012e4d3ae0 00000000000001e3 ffffffff81a249e0 ffff8801321c5398
-[  494.611685] Call Trace:
-[  494.632649]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  494.674687]  [<ffffffff8104b968>] async_synchronize_cookie_domain+0xb6/0x112
-[  494.734177]  [<ffffffff810461ff>] ? __init_waitqueue_head+0x50/0x50
-[  494.787134]  [<ffffffff8131a224>] ? scsi_remove_target+0x48/0x48
-[  494.837900]  [<ffffffff8104b9d9>] async_synchronize_cookie+0x15/0x17
-[  494.891567]  [<ffffffff8104ba49>] async_synchronize_full+0x54/0x70  <-- here we wait for async contexts to complete
-[  494.943783]  [<ffffffff8104b9f5>] ? async_synchronize_full_domain+0x1a/0x1a
-[  495.002547]  [<ffffffffa00114b1>] sd_remove+0x2c/0xa2 [sd_mod]
-[  495.051861]  [<ffffffff812fe94f>] __device_release_driver+0x86/0xcf
-[  495.104807]  [<ffffffff812fe9bd>] device_release_driver+0x25/0x32  <-- here we take device_lock()
-
-[  853.511341] INFO: task kworker/u:4:549 blocked for more than 120 seconds.
-[  853.568693] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[  853.635119] kworker/u:4     D ffff88013097b5d0     0   549      2 0x00000000
-[  853.695129]  ffff880132773c40 0000000000000046 ffff880130790000 ffff880132773fd8
-[  853.758990]  ffff880132773fd8 0000000000012500 ffff88013288a0b0 ffff880130790000
-[  853.822796]  0000000000000246 0000000000000040 ffff88013097b5c8 ffff880130790000
-[  853.886633] Call Trace:
-[  853.907631]  [<ffffffff8149dd25>] schedule+0x5a/0x5c
-[  853.949670]  [<ffffffff8149cc44>] __mutex_lock_common+0x220/0x351
-[  854.001225]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.049082]  [<ffffffff81304bd7>] ? device_resume+0x58/0x1c4
-[  854.097011]  [<ffffffff8149ce48>] mutex_lock_nested+0x2f/0x36   <-- here we wait for device_lock()
-[  854.145591]  [<ffffffff81304bd7>] device_resume+0x58/0x1c4
-[  854.192066]  [<ffffffff81304d61>] async_resume+0x1e/0x45
-[  854.237019]  [<ffffffff8104bc93>] async_run_entry_fn+0xc6/0x173  <-- ...while running in async context
-
-Provide a 'scsi_sd_probe_domain' so that async probe actions actions can
-be flushed without regard for the state of PM, and allow for the resume
-path to handle devices that have transitioned from SDEV_QUIESCE to
-SDEV_DEL prior to resume.
-
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-[alan: uplevel scsi_sd_probe_domain, clarify scsi_device_resume]
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
-Changes since v12: http://marc.info/?l=linux-scsi&m=133239705303419&w=2
-
-Just update this one patch with Alan's feedback to move the declaration
-scsi_sd_probe_domain into scsi_priv.h.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v13
-
- drivers/scsi/scsi.c      |    6 ++++++
- drivers/scsi/scsi_lib.c  |   10 +++++++---
- drivers/scsi/scsi_pm.c   |    2 +-
- drivers/scsi/scsi_priv.h |    4 ++++
- drivers/scsi/sd.c        |    5 +++--
- 5 files changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 07322ec..61c82a3 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -90,6 +90,12 @@ unsigned int scsi_logging_level;
- EXPORT_SYMBOL(scsi_logging_level);
- #endif
- 
-+#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
-+/* sd and scsi_pm need to coordinate flushing async actions */
-+LIST_HEAD(scsi_sd_probe_domain);
-+EXPORT_SYMBOL(scsi_sd_probe_domain);
-+#endif
-+
- /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
-  * You may not alter any existing entry (although adding new ones is
-  * encouraged once assigned by ANSI/INCITS T10
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index b4833de..992ff63 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2348,10 +2348,14 @@ EXPORT_SYMBOL(scsi_device_quiesce);
-  *
-  *	Must be called with user context, may sleep.
-  */
--void
--scsi_device_resume(struct scsi_device *sdev)
-+void scsi_device_resume(struct scsi_device *sdev)
- {
--	if(scsi_device_set_state(sdev, SDEV_RUNNING))
-+	/* check if the device state was mutated prior to resume, and if
-+	 * so assume the state is being managed elsewhere (for example
-+	 * device deleted during suspend)
-+	 */
-+	if (sdev->sdev_state != SDEV_QUIESCE ||
-+	    scsi_device_set_state(sdev, SDEV_RUNNING))
- 		return;
- 	scsi_run_queue(sdev->request_queue);
- }
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index c467064..f661a41 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -97,7 +97,7 @@ static int scsi_bus_prepare(struct device *dev)
- {
- 	if (scsi_is_sdev_device(dev)) {
- 		/* sd probing uses async_schedule.  Wait until it finishes. */
--		async_synchronize_full();
-+		async_synchronize_full_domain(&scsi_sd_probe_domain);
- 
- 	} else if (scsi_is_host_device(dev)) {
- 		/* Wait until async scanning is finished */
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index be4fa6d..bec061d 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -163,6 +163,10 @@ static inline int scsi_autopm_get_host(struct Scsi_Host *h) { return 0; }
- static inline void scsi_autopm_put_host(struct Scsi_Host *h) {}
- #endif /* CONFIG_PM_RUNTIME */
- 
-+#if IS_ENABLED(CONFIG_PM) || IS_ENABLED(CONFIG_BLK_DEV_SD)
-+extern struct list_head scsi_sd_probe_domain;
-+#endif
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index bd17cf8..19e27d8 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -65,6 +65,7 @@
- #include <scsi/scsicam.h>
- 
- #include "sd.h"
-+#include "scsi_priv.h"
- #include "scsi_logging.h"
- 
- MODULE_AUTHOR("Eric Youngdale");
-@@ -2717,7 +2718,7 @@ static int sd_probe(struct device *dev)
- 	dev_set_drvdata(dev, sdkp);
- 
- 	get_device(&sdkp->dev);	/* prevent release before async_schedule */
--	async_schedule(sd_probe_async, sdkp);
-+	async_schedule_domain(sd_probe_async, sdkp, &scsi_sd_probe_domain);
- 
- 	return 0;
- 
-@@ -2751,7 +2752,7 @@ static int sd_remove(struct device *dev)
- 	sdkp = dev_get_drvdata(dev);
- 	scsi_autopm_get_device(sdkp->device);
- 
--	async_synchronize_full();
-+	async_synchronize_full_domain(&scsi_sd_probe_domain);
- 	blk_queue_prep_rq(sdkp->device->request_queue, scsi_prep_fn);
- 	blk_queue_unprep_rq(sdkp->device->request_queue, NULL);
- 	device_del(&sdkp->dev);
-
+Gwendal.
+>> I notice however some messages I did not see before:
+>>>> [ =A0 =A04.856382] ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23=
+, 6 ports, feat 0x1/0x9
+>>>> [ =A0 =A04.858742] ata7.00: hard resetting link
+>>>> [ =A0 14.843039] ata7.00: softreset failed (timeout)
+>>>> [ =A0 17.836402] ata7.15: qc timeout (cmd 0xe4)
+>> The later indicates that the PMP is stuck and the host can not read
+>> its internal register.
+>> Is it possible that the PMP in these 4 enclosures you are using have=
+ a
+>> different firmware than the other ones?
+>> Firmware 1.0114 is available at:
+>> http://www.siliconimage.com/support/searchresults.aspx?pid=3D26&cat=3D=
+23
+>>
+>> From the release notes:
+>> """- Fix SRST and initial two RegFIS Problem."""
+>>
+>> Gwendal.
+>
