@@ -1,95 +1,61 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [libsas PATCH v12 04/11] sysfs: handle 'parent deleted before
- child added'
-Date: Fri, 23 Mar 2012 14:15:24 -0700
-Message-ID: <CABE8wwsjmtOhb8QTQwE4TkiVr9RduWON81qQsX=qKh8UhSU4gQ@mail.gmail.com>
-References: <20120322063127.22036.23206.stgit@dwillia2-linux.jf.intel.com>
-	<20120322063214.22036.77957.stgit@dwillia2-linux.jf.intel.com>
-	<20120322143959.GF19835@kroah.com>
-	<1332528209.23830.4.camel@ultramagnus.opencreations.com>
-	<20120323205424.GA31689@kroah.com>
+From: "ANEZAKI, Akira" <fireblade1230@yahoo.co.jp>
+Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port Multiplier
+ Sil3726
+Date: Sun, 25 Mar 2012 10:19:06 +0900
+Message-ID: <4F6E728A.3090203@yahoo.co.jp>
+References: <4F5ECD06.3000608@yahoo.co.jp> <4F5F7C4C.7080800@teksavvy.com> <4F662AFB.9050106@yahoo.co.jp> <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com> <4F6AAC37.7040907@yahoo.co.jp> <4F6B30D9.2070805@yahoo.co.jp> <CAMHSBOVD4wAtwAravVkDjyWV+Nwtuybt=yae=26PcGxxirw=Lg@mail.gmail.com> <4F6B679C.60004@yahoo.co.jp> <CAMHSBOWDYyLRREZNGqhBtvF_gSrvB-b=PVx3qULCqpc7yeJCcQ@mail.gmail.com> <4F6C1AE5.5060405@yahoo.co.jp> <CAMHSBOXuX1U8uPyN136AQ_LRW85Ex8EUu1-_hdBqnSMtdmg+0Q@mail.gmail.com> <4F6C4967.80309@yahoo.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:54674 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753046Ab2CWVP0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Mar 2012 17:15:26 -0400
-Received: by iage36 with SMTP id e36so6459717iag.25
-        for <linux-ide@vger.kernel.org>; Fri, 23 Mar 2012 14:15:25 -0700 (PDT)
-In-Reply-To: <20120323205424.GA31689@kroah.com>
+Received: from mta103.odn.ne.jp ([143.90.14.143]:48072 "EHLO cmta103.odn.ne.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753206Ab2CYBTI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 24 Mar 2012 21:19:08 -0400
+Received: from smta103.odn.ne.jp by cmta103.odn.ne.jp with ESMTP
+          id <20120325011906976.UXLK.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
+          for <linux-ide@vger.kernel.org>; Sun, 25 Mar 2012 10:19:06 +0900
+In-Reply-To: <4F6C4967.80309@yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-On Fri, Mar 23, 2012 at 1:54 PM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
-> On Fri, Mar 23, 2012 at 11:43:28AM -0700, Dan Williams wrote:
->> On Thu, 2012-03-22 at 07:39 -0700, Greg Kroah-Hartman wrote:
->> > And note, I hate pr_err(), what's wrong with printk() in this inst=
-ance?
->>
->> So how about an end run around the conversion to pr_err() and just m=
-ake
->> these proper WARN()s since we end up calling dump_stack in both case=
-s?
->>
->> Something like:
->>
->> diff --git a/lib/kobject.c b/lib/kobject.c
->> index e5f86c0..1bd0893 100644
->> --- a/lib/kobject.c
->> +++ b/lib/kobject.c
->> @@ -192,15 +192,14 @@ static int kobject_add_internal(struct kobject=
- *kobj)
->>
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* be noisy on error issues */
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (error =3D=3D -EEXIST)
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_err("%s failed for %s w=
-ith "
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"-EEXIST, d=
-on't try to register things with "
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"the same n=
-ame in the same directory.\n",
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, k=
-object_name(kobj));
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN(1, "%s failed for %s =
-with "
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"-EEXIST, don't=
- try to register things with "
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0"the same name =
-in the same directory.\n",
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, kobje=
-ct_name(kobj));
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 else
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pr_err("%s failed for %s (=
-error: %d parent: %s)\n",
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, k=
-object_name(kobj), error,
->> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0parent ? ko=
-bject_name(parent) : "'none'");
->> - =A0 =A0 =A0 =A0 =A0 =A0 dump_stack();
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 WARN(1, "%s failed for %s =
-(error: %d parent: %s)\n",
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0__func__, kobje=
-ct_name(kobj), error,
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0parent ? kobjec=
-t_name(parent) : "'none'");
->
-> I'm missing why this isn't the exact same thing that is currently
-> happening...
->
-> confused,
+Hello Gwendal,
 
-WARN does wrap the printk and backtrace in "------------[ cut here
-]------------\n" and "---[ end trace %016llx ]---\n" so automated
-tools can pick it up, maybe that's useful in a core routine like this?
+I want to confirm one thing.
+The kernel 3.1.x driver still works?
 
-It's still modifying the else case to add the faulting child and
-parent kobject names, and does so without setting a pr_ conversion
-precedent in sysfs.
+It seems to take long time to solve the problem. Of course I understand
+staggered spin-up is better solution. But I can't wait it so long. And
+it affects only SiI3726 only.
 
---
-Dan
+Best Regards,
+Akira
+
+(2012/03/23 18:59), ANEZAKI, Akira wrote:
+> Hello Gwendal,
+> 
+> (2012/03/23 17:31), Gwendal Grignou wrote:
+>>>>>> I notice however some messages I did not see before:
+>>>>>>>> [    4.856382] ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+>>>>>>>> [    4.858742] ata7.00: hard resetting link
+>>>>>>>> [   14.843039] ata7.00: softreset failed (timeout)
+>>>>>>>> [   17.836402] ata7.15: qc timeout (cmd 0xe4)
+>>>>>> The later indicates that the PMP is stuck and the host can not read
+>>>>>> its internal register.
+>>>>>> Is it possible that the PMP in these 4 enclosures you are using have a
+>>>>>> different firmware than the other ones?
+>>>>>> Firmware 1.0114 is available at:
+>>>>>> http://www.siliconimage.com/support/searchresults.aspx?pid=26&cat=23
+>>>>>>
+>>>>>> From the release notes:
+>>>>>> """- Fix SRST and initial two RegFIS Problem."""
+>>>
+>>> I'm still fixing broken RAID. Sorry for my slow response.
+> 
+> I checked those firmware version. All of them use version 1.0114.
+> 
+> Best Regards,
+> Akira
+
