@@ -1,20 +1,20 @@
 From: "ANEZAKI, Akira" <fireblade1230@yahoo.co.jp>
 Subject: Re: Fwd: libata-pmp patch for 3.2.x and later for eSATA Port Multiplier
  Sil3726
-Date: Mon, 26 Mar 2012 10:46:49 +0900
-Message-ID: <4F6FCA89.9060807@yahoo.co.jp>
+Date: Mon, 26 Mar 2012 11:30:37 +0900
+Message-ID: <4F6FD4CD.5040608@yahoo.co.jp>
 References: <4F5ECD06.3000608@yahoo.co.jp> <4F5F7C4C.7080800@teksavvy.com> <4F662AFB.9050106@yahoo.co.jp> <CAMHSBOWg+rxxrVjf05r1tYDpW1S75XzdrLQ+U8TrjC9okRYtuA@mail.gmail.com> <4F6AAC37.7040907@yahoo.co.jp> <4F6B30D9.2070805@yahoo.co.jp> <CAMHSBOVD4wAtwAravVkDjyWV+Nwtuybt=yae=26PcGxxirw=Lg@mail.gmail.com> <4F6B679C.60004@yahoo.co.jp> <CAMHSBOWDYyLRREZNGqhBtvF_gSrvB-b=PVx3qULCqpc7yeJCcQ@mail.gmail.com> <4F6C1AE5.5060405@yahoo.co.jp> <CAMHSBOXuX1U8uPyN136AQ_LRW85Ex8EUu1-_hdBqnSMtdmg+0Q@mail.gmail.com> <4F6C4967.80309@yahoo.co.jp> <4F6E728A.3090203@yahoo.co.jp> <CAMHSBOVtj8pXVtSK7qUmzSzXTCJWTK6-m7ZY6TB3gj-dT70ptw@mail.gmail.com> <4F6FBB3E.8060409@yahoo.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mta103.odn.ne.jp ([143.90.14.143]:58702 "EHLO cmta103.odn.ne.jp"
+Received: from mta103.odn.ne.jp ([143.90.14.143]:36749 "EHLO cmta103.odn.ne.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754824Ab2CZBqw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 25 Mar 2012 21:46:52 -0400
+	id S1755571Ab2CZCal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 25 Mar 2012 22:30:41 -0400
 Received: from smta103.odn.ne.jp by cmta103.odn.ne.jp with ESMTP
-          id <20120326014650535.CCDP.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
-          for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2012 10:46:50 +0900
+          id <20120326023038750.CGQG.1690.cmta103.odn.ne.jp@mta103.odn.ne.jp>
+          for <linux-ide@vger.kernel.org>; Mon, 26 Mar 2012 11:30:38 +0900
 In-Reply-To: <4F6FBB3E.8060409@yahoo.co.jp>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -23,9 +23,8 @@ Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Mark Lord <kernel@teks
 
 Hello Gwendal,
 
-I'm sorry for using the wrong e-mail address.
-
 (2012/03/26 09:41), ANEZAKI, Akira wrote:
+
 >> If possible, could you switch 2 of the 4 enclosures [with their disks]
 >> that fails to the port controlled by the Sil3132 controller, reboot
 >> the machine with all its 30 drives and see if the failures follow the
@@ -33,16 +32,8 @@ I'm sorry for using the wrong e-mail address.
 > 
 > Yes, I will do it as soon as possible. (Sorry, resyncing is runnning now.)
 
-I'm trying it but it isn't stable. Boot fails frequently in warm reboot.
-When boot fails, I can only see a swap partition. So, I can get no logs.
-I'll try little more.
-
-I have attached the log of power cycle. Boot was successful. This log
-contains all ata1 -- ata10 information.
-
-I think that I have switched like this:
-ata5 <--> ata7
-ata6 <--> ata8
+This is a log when warm reboot is successful. I will try warm reboot
+more but I'm fixing RAIDs again.
 
 ata7,ata8 : 4+4=8 HDDs.
 ata5,ata6,ata9,ata10 : 5+5+5+5=20 HDDs.
@@ -60,511 +51,452 @@ Thank you for your help.
 Best Regards,
 Akira
 
---- 3.2.10 power cycle log ( unpatched ) ---
+--- 3.2.10 warm reboot log ( unpatched ) ---
    :
 > [    0.000000] Linux version 3.2.10-3.fc16.i686.PAE (mockbuild@x86-02.phx2.fedoraproject.org) (gcc version 4.6.2 20111027 (Red Hat 4.6.2-1) (GCC) ) #1 SMP Thu Mar 15 20:37:01 UTC 2012
    :
-> [    1.587669] ata1: SATA max UDMA/133 cmd 0xac00 ctl 0xa880 bmdma 0xa400 irq 19
-> [    1.587674] ata2: SATA max UDMA/133 cmd 0xa800 ctl 0xa480 bmdma 0xa408 irq 19
-> [    1.588676] ata3: SATA max UDMA/133 cmd 0x9c00 ctl 0x9880 bmdma 0x9400 irq 19
-> [    1.588679] ata4: SATA max UDMA/133 cmd 0x9800 ctl 0x9480 bmdma 0x9408 irq 19
-> [    1.905936] ata4: SATA link down (SStatus 0 SControl 300)
-> [    2.056494] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [    2.075617] ata3.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL02, max UDMA/100
-> [    2.097614] ata3.00: configured for UDMA/100
-> [    2.210257] ata2.00: SATA link down (SStatus 0 SControl 300)
-> [    2.210274] ata2.01: SATA link down (SStatus 0 SControl 300)
-> [    2.349849] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.349866] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [    2.356076] ata1.00: ATA-8: WDC WD10EADS-00M2B0, 01.00A01, max UDMA/133
-> [    2.356083] ata1.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> [    2.356364] ata1.01: ATA-8: Hitachi HDS721010CLA332, JP4OA39C, max UDMA/133
-> [    2.356370] ata1.01: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-> [    2.360095] ata1.00: configured for UDMA/133
-> [    2.366164] ata1.01: configured for UDMA/133
-> [    2.704858] ata5: SATA max UDMA/100 host m128@0xfbeffc00 port 0xfbef8000 irq 18
-> [    2.704863] ata6: SATA max UDMA/100 host m128@0xfbeffc00 port 0xfbefa000 irq 18
-> [    2.707166] ata7: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff0000 irq 17
-> [    2.707169] ata8: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff2000 irq 17
-> [    2.707172] ata9: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff4000 irq 17
-> [    2.707175] ata10: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff6000 irq 17
-> [    4.832327] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [    4.832797] ata5.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [    4.834150] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [    4.834575] ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [    4.835395] ata5.00: hard resetting link
-> [    4.837802] ata7.00: hard resetting link
-> [    5.152555] ata7.00: softreset failed (SRST command error)
-> [    5.262339] ata7.00: failed to read SCR 0 (Emask=0x1)
-> [    5.262344] ata7.00: reset failed (errno=-85), retrying in 10 secs
-> [   14.815165] ata7.00: reset failed, giving up
-> [   14.815171] ata7.15: hard resetting link
-> [   14.815175] ata7: controller in dubious state, performing PORT_RST
-> [   14.820175] ata5.00: softreset failed (timeout)
-> [   16.964600] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   16.965001] ata7.00: hard resetting link
-> [   17.367759] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   17.367814] ata7.01: hard resetting link
-> [   17.682822] ata7.01: softreset failed (SRST command error)
-> [   17.792567] ata7.01: failed to read SCR 0 (Emask=0x1)
-> [   17.792573] ata7.01: reset failed (errno=-85), retrying in 10 secs
-> [   17.813530] ata5.15: qc timeout (cmd 0xe4)
-> [   17.813559] ata5.00: failed to read SCR 0 (Emask=0x5)
-> [   17.813563] ata5.00: reset failed, giving up
-> [   17.813568] ata5.15: hard resetting link
-> [   19.940831] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   19.941484] ata5.00: hard resetting link
-> [   27.345384] ata7.01: reset failed, giving up
-> [   27.345390] ata7.15: hard resetting link
-> [   27.345394] ata7: controller in dubious state, performing PORT_RST
-> [   29.494623] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   29.495062] ata7.00: hard resetting link
-> [   29.897955] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   29.897988] ata7.01: hard resetting link
-> [   29.926685] ata5.00: softreset failed (timeout)
-> [   30.301043] ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   30.301100] ata7.02: hard resetting link
-> [   30.616151] ata7.02: softreset failed (SRST command error)
-> [   30.616227] ata7.02: failed to read SCR 0 (Emask=0x1)
-> [   30.616233] ata7.02: reset failed (errno=-85), retrying in 10 secs
-> [   32.920112] ata5.15: qc timeout (cmd 0xe4)
-> [   32.920141] ata5.00: failed to read SCR 0 (Emask=0x5)
-> [   32.920145] ata5.00: reset failed, giving up
-> [   32.920150] ata5.15: hard resetting link
-> [   35.047384] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   35.047933] ata5.00: hard resetting link
-> [   40.278817] ata7.02: reset failed, giving up
-> [   40.278823] ata7.15: hard resetting link
-> [   42.395047] ata7.15: softreset failed (SRST command error)
-> [   42.395052] ata7.15: reset failed (errno=-5), retrying in 8 secs
-> [   45.033200] ata5.00: softreset failed (timeout)
-> [   48.026551] ata5.15: qc timeout (cmd 0xe4)
-> [   48.026580] ata5.00: failed to read SCR 0 (Emask=0x5)
-> [   48.026584] ata5.00: reset failed, giving up
-> [   48.026588] ata5.00: failed to recover link after 3 tries, disabling
-> [   48.026593] ata5.15: hard resetting link
-> [   50.153760] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   50.256590] ata7.15: hard resetting link
-> [   50.458340] ata5.01: hard resetting link
-> [   50.861391] ata5.01: link resume succeeded after 1 retries
-> [   50.974034] ata5.01: softreset failed (SRST command error)
-> [   50.974148] ata5.01: failed to read SCR 0 (Emask=0x1)
-> [   50.974154] ata5.01: reset failed (errno=-85), retrying in 10 secs
-> [   52.372952] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   52.372960] ata7.15: PMP revalidation failed (errno=-19)
-> [   57.361873] ata7.15: hard resetting link
-> [   59.489164] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   59.489750] ata7.00: hard resetting link
-> [   59.892441] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   59.892475] ata7.01: hard resetting link
-> [   60.295568] ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   60.295601] ata7.02: hard resetting link
-> [   60.436071] ata5.01: reset failed, giving up
-> [   60.436077] ata5.15: hard resetting link
-> [   60.698722] ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   60.698778] ata7.03: hard resetting link
-> [   61.123499] ata7.03: softreset failed (SRST command error)
-> [   61.233263] ata7.03: failed to read SCR 0 (Emask=0x1)
-> [   61.233269] ata7.03: reset failed (errno=-85), retrying in 10 secs
-> [   62.552395] ata5.15: softreset failed (SRST command error)
-> [   62.552400] ata5.15: reset failed (errno=-5), retrying in 8 secs
-> [   70.414115] ata5.15: hard resetting link
-> [   70.676320] ata7.03: reset failed, giving up
-> [   70.676326] ata7.15: hard resetting link
-> [   70.676330] ata7: controller in dubious state, performing PORT_RST
-> [   72.530270] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   72.530278] ata5.15: PMP revalidation failed (errno=-19)
-> [   72.825581] ata7.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   72.825989] ata7.00: hard resetting link
-> [   73.228918] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   73.228973] ata7.01: hard resetting link
-> [   73.632025] ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   73.632059] ata7.02: hard resetting link
-> [   74.035109] ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   74.035164] ata7.03: hard resetting link
-> [   74.438209] ata7.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [   74.438265] ata7.04: hard resetting link
-> [   74.742670] ata7.04: SATA link down (SStatus 0 SControl 320)
-> [   74.742724] ata7.05: hard resetting link
-> [   75.046967] ata7.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [   75.072685] ata7.00: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
-> [   75.072692] ata7.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [   75.073746] ata7.00: configured for UDMA/100
-> [   75.092679] ata7.01: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
-> [   75.092686] ata7.01: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [   75.093818] ata7.01: configured for UDMA/100
-> [   75.110657] ata7.02: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
-> [   75.110663] ata7.02: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [   75.111760] ata7.02: configured for UDMA/100
-> [   75.121174] ata7.03: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
-> [   75.121180] ata7.03: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
-> [   75.122307] ata7.03: configured for UDMA/100
-> [   75.122376] ata7: EH complete
-> [   77.519188] ata5.15: hard resetting link
-> [   79.646506] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   79.951897] ata5.01: hard resetting link
-> [   80.354972] ata5.01: link resume succeeded after 1 retries
-> [   80.577379] ata5.01: softreset failed (SRST command error)
-> [   80.577503] ata5.01: failed to read SCR 0 (Emask=0x1)
-> [   80.577509] ata5.01: reset failed (errno=-85), retrying in 10 secs
-> [   89.929712] ata5.01: reset failed, giving up
-> [   89.929720] ata5.15: hard resetting link
-> [   89.929723] ata5: controller in dubious state, performing PORT_RST
-> [   92.078919] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [   92.384345] ata5.01: hard resetting link
-> [   92.787407] ata5.01: link resume succeeded after 1 retries
-> [   93.009813] ata5.01: softreset failed (SRST command error)
-> [   93.009946] ata5.01: failed to read SCR 0 (Emask=0x1)
-> [   93.009951] ata5.01: reset failed (errno=-85), retrying in 10 secs
-> [  102.362090] ata5.01: reset failed, giving up
-> [  102.362095] ata5.01: failed to recover link after 3 tries, disabling
-> [  102.362101] ata5.15: hard resetting link
-> [  102.362105] ata5: controller in dubious state, performing PORT_RST
-> [  104.511301] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  105.218826] ata5.01: link resume succeeded after 1 retries
-> [  105.320733] ata5.02: hard resetting link
-> [  105.723707] ata5.02: link resume succeeded after 1 retries
-> [  105.858731] ata5.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  105.858773] ata5.03: hard resetting link
-> [  106.261505] ata5.03: link resume succeeded after 1 retries
-> [  106.396525] ata5.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  106.396584] ata5.04: hard resetting link
-> [  106.799348] ata5.04: link resume succeeded after 1 retries
-> [  106.934211] ata5.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  106.934270] ata5.05: hard resetting link
-> [  107.238655] ata5.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [  107.279217] ata5.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  107.279223] ata5.02: 625142448 sectors, multi 0: LBA48 
-> [  107.279229] ata5.02: applying bridge limits
-> [  107.337301] ata5.02: configured for UDMA/100
-> [  107.374742] ata5.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  107.374748] ata5.03: 625142448 sectors, multi 0: LBA48 
-> [  107.432823] ata5.03: configured for UDMA/100
-> [  107.472369] ata5.04: ATA-7: ST3320620A, 3.AAC, max UDMA/100
-> [  107.472375] ata5.04: 625142448 sectors, multi 0: LBA48 
-> [  107.530476] ata5.04: configured for UDMA/100
-> [  107.530550] ata5: EH complete
-> [  109.659967] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  109.660428] ata6.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [  109.662404] ata6.00: hard resetting link
-> [  119.646792] ata6.00: softreset failed (timeout)
-> [  122.640137] ata6.15: qc timeout (cmd 0xe4)
-> [  122.640166] ata6.00: failed to read SCR 0 (Emask=0x5)
-> [  122.640170] ata6.00: reset failed, giving up
-> [  122.640175] ata6.15: hard resetting link
-> [  124.767465] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  124.767953] ata6.00: hard resetting link
-> [  134.753239] ata6.00: softreset failed (timeout)
-> [  137.746585] ata6.15: qc timeout (cmd 0xe4)
-> [  137.746614] ata6.00: failed to read SCR 0 (Emask=0x5)
-> [  137.746618] ata6.00: reset failed, giving up
-> [  137.746623] ata6.15: hard resetting link
-> [  139.873980] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  139.874664] ata6.00: hard resetting link
-> [  149.859880] ata6.00: softreset failed (timeout)
-> [  152.853256] ata6.15: qc timeout (cmd 0xe4)
-> [  152.853285] ata6.00: failed to read SCR 0 (Emask=0x5)
-> [  152.853289] ata6.00: reset failed, giving up
-> [  152.853293] ata6.00: failed to recover link after 3 tries, disabling
-> [  152.853298] ata6.15: hard resetting link
-> [  154.980470] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  155.284894] ata6.01: hard resetting link
-> [  155.687942] ata6.01: link resume succeeded after 1 retries
-> [  155.822938] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  155.822997] ata6.02: hard resetting link
-> [  156.225772] ata6.02: link resume succeeded after 1 retries
-> [  156.448182] ata6.02: softreset failed (SRST command error)
-> [  156.557938] ata6.02: failed to read SCR 0 (Emask=0x1)
-> [  156.557944] ata6.02: reset failed (errno=-85), retrying in 10 secs
-> [  165.800793] ata6.02: reset failed, giving up
-> [  165.800800] ata6.15: hard resetting link
-> [  165.800803] ata6: controller in dubious state, performing PORT_RST
-> [  167.949758] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  168.255149] ata6.01: hard resetting link
-> [  168.658188] ata6.01: link resume succeeded after 1 retries
-> [  168.793185] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  168.793244] ata6.02: hard resetting link
-> [  169.196018] ata6.02: link resume succeeded after 1 retries
-> [  169.418428] ata6.02: softreset failed (SRST command error)
-> [  169.528182] ata6.02: failed to read SCR 0 (Emask=0x1)
-> [  169.528188] ata6.02: reset failed (errno=-85), retrying in 10 secs
-> [  178.770689] ata6.02: reset failed, giving up
-> [  178.770696] ata6.15: hard resetting link
-> [  178.770699] ata6: controller in dubious state, performing PORT_RST
-> [  180.919978] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  181.224464] ata6.01: hard resetting link
-> [  181.627416] ata6.01: link resume succeeded after 1 retries
-> [  181.762409] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  181.762468] ata6.02: hard resetting link
-> [  182.165272] ata6.02: link resume succeeded after 1 retries
-> [  182.387677] ata6.02: softreset failed (SRST command error)
-> [  182.497428] ata6.02: failed to read SCR 0 (Emask=0x1)
-> [  182.497434] ata6.02: reset failed (errno=-85), retrying in 10 secs
-> [  191.739821] ata6.02: reset failed, giving up
-> [  191.739826] ata6.02: failed to recover link after 3 tries, disabling
-> [  191.739832] ata6.15: hard resetting link
-> [  191.739836] ata6: controller in dubious state, performing PORT_RST
-> [  193.889226] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  194.596707] ata6.02: link resume succeeded after 1 retries
-> [  194.698516] ata6.01: hard resetting link
-> [  195.101567] ata6.01: link resume succeeded after 1 retries
-> [  195.236530] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  195.236590] ata6.03: hard resetting link
-> [  195.639396] ata6.03: link resume succeeded after 1 retries
-> [  195.818236] ata6.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  195.818295] ata6.04: hard resetting link
-> [  196.221084] ata6.04: link resume succeeded after 1 retries
-> [  196.356102] ata6.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  196.356161] ata6.05: hard resetting link
-> [  196.660379] ata6.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [  196.696157] ata6.01: ATA-7: ST3320620A, 3.AAC, max UDMA/100
-> [  196.696163] ata6.01: 625142448 sectors, multi 0: LBA48 
-> [  196.754273] ata6.01: configured for UDMA/100
-> [  196.795365] ata6.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  196.795371] ata6.03: 625142448 sectors, multi 0: LBA48 
-> [  196.853523] ata6.03: configured for UDMA/100
-> [  196.899696] ata6.04: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  196.899703] ata6.04: 625142448 sectors, multi 0: LBA48 
-> [  196.957871] ata6.04: configured for UDMA/100
-> [  196.957946] ata6: EH complete
-> [  199.090700] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  199.091128] ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [  199.093812] ata8.00: hard resetting link
-> [  199.431193] ata8.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [  199.431226] ata8.01: hard resetting link
-> [  199.855996] ata8.01: softreset failed (SRST command error)
-> [  199.856109] ata8.01: failed to read SCR 0 (Emask=0x1)
-> [  199.856115] ata8.01: reset failed (errno=-85), retrying in 10 secs
-> [  209.408935] ata8.01: reset failed, giving up
-> [  209.408941] ata8.15: hard resetting link
-> [  209.408945] ata8: controller in dubious state, performing PORT_RST
-> [  211.558047] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  211.558450] ata8.00: hard resetting link
-> [  211.895535] ata8.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [  211.895590] ata8.01: hard resetting link
-> [  212.232771] ata8.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  212.232805] ata8.02: hard resetting link
-> [  212.547832] ata8.02: softreset failed (SRST command error)
-> [  212.547909] ata8.02: failed to read SCR 0 (Emask=0x1)
-> [  212.547915] ata8.02: reset failed (errno=-85), retrying in 10 secs
-> [  222.210538] ata8.02: reset failed, giving up
-> [  222.210544] ata8.15: hard resetting link
-> [  224.326768] ata8.15: softreset failed (SRST command error)
-> [  224.326774] ata8.15: reset failed (errno=-5), retrying in 8 secs
-> [  232.188262] ata8.15: hard resetting link
-> [  234.304631] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  234.304639] ata8.15: PMP revalidation failed (errno=-19)
-> [  239.293528] ata8.15: hard resetting link
-> [  241.420828] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  241.421222] ata8.00: hard resetting link
-> [  241.758372] ata8.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [  241.758428] ata8.01: hard resetting link
-> [  242.095611] ata8.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  242.095666] ata8.02: hard resetting link
-> [  242.432765] ata8.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  242.432799] ata8.03: hard resetting link
-> [  242.747884] ata8.03: softreset failed (SRST command error)
-> [  242.747943] ata8.03: failed to read SCR 0 (Emask=0x1)
-> [  242.747948] ata8.03: reset failed (errno=-85), retrying in 10 secs
-> [  252.410561] ata8.03: reset failed, giving up
-> [  252.410567] ata8.15: hard resetting link
-> [  254.526811] ata8.15: softreset failed (SRST command error)
-> [  254.526817] ata8.15: reset failed (errno=-5), retrying in 8 secs
-> [  262.388616] ata8.15: hard resetting link
-> [  264.504672] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  264.504680] ata8.15: PMP revalidation failed (errno=-19)
-> [  269.493568] ata8.15: hard resetting link
-> [  271.620869] ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  271.621541] ata8.00: hard resetting link
-> [  271.959402] ata8.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [  271.959435] ata8.01: hard resetting link
-> [  272.296658] ata8.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  272.296691] ata8.02: hard resetting link
-> [  272.633838] ata8.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  272.633893] ata8.03: hard resetting link
-> [  272.971197] ata8.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> [  272.971230] ata8.04: hard resetting link
-> [  273.275495] ata8.04: SATA link down (SStatus 0 SControl 320)
-> [  273.275549] ata8.05: hard resetting link
-> [  273.579798] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [  273.608607] ata8.00: ATA-8: ST31000333AS, SD15, max UDMA/133
-> [  273.608613] ata8.00: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
-> [  273.608619] ata8.00: WARNING: device requires firmware update to be fully functional
-> [  273.608623] ata8.00:          contact the vendor or visit http://ata.wiki.kernel.org
-> [  273.650662] ata8.00: configured for UDMA/100
-> [  273.679546] ata8.01: ATA-8: ST31000333AS, SD15, max UDMA/133
-> [  273.679552] ata8.01: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
-> [  273.679559] ata8.01: WARNING: device requires firmware update to be fully functional
-> [  273.679563] ata8.01:          contact the vendor or visit http://ata.wiki.kernel.org
-> [  273.721651] ata8.01: configured for UDMA/100
-> [  273.750504] ata8.02: ATA-8: ST31000333AS, SD15, max UDMA/133
-> [  273.750510] ata8.02: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
-> [  273.750516] ata8.02: WARNING: device requires firmware update to be fully functional
-> [  273.750520] ata8.02:          contact the vendor or visit http://ata.wiki.kernel.org
-> [  273.792594] ata8.02: configured for UDMA/100
-> [  273.821356] ata8.03: ATA-8: ST31000333AS, SD15, max UDMA/133
-> [  273.821362] ata8.03: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
-> [  273.821368] ata8.03: WARNING: device requires firmware update to be fully functional
-> [  273.821372] ata8.03:          contact the vendor or visit http://ata.wiki.kernel.org
-> [  273.863400] ata8.03: configured for UDMA/100
-> [  273.863467] ata8: EH complete
-> [  275.994193] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  275.994784] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [  275.997485] ata9.00: hard resetting link
-> [  285.984026] ata9.00: softreset failed (timeout)
-> [  288.977472] ata9.15: qc timeout (cmd 0xe4)
-> [  288.977488] ata9.00: failed to read SCR 0 (Emask=0x5)
-> [  288.977492] ata9.00: reset failed, giving up
-> [  288.977497] ata9.15: hard resetting link
-> [  291.104604] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  291.105202] ata9.00: hard resetting link
-> [  301.089450] ata9.00: softreset failed (timeout)
-> [  304.082908] ata9.15: qc timeout (cmd 0xe4)
-> [  304.082925] ata9.00: failed to read SCR 0 (Emask=0x5)
-> [  304.082932] ata9.00: reset failed, giving up
-> [  304.082938] ata9.15: hard resetting link
-> [  306.210218] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  306.210717] ata9.00: hard resetting link
-> [  316.194987] ata9.00: softreset failed (timeout)
-> [  319.188348] ata9.15: qc timeout (cmd 0xe4)
-> [  319.188365] ata9.00: failed to read SCR 0 (Emask=0x5)
-> [  319.188369] ata9.00: reset failed, giving up
-> [  319.188372] ata9.00: failed to recover link after 3 tries, disabling
-> [  319.188378] ata9.15: hard resetting link
-> [  321.315756] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  321.620191] ata9.01: hard resetting link
-> [  322.023178] ata9.01: link resume succeeded after 1 retries
-> [  322.158126] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  322.158160] ata9.02: hard resetting link
-> [  322.560976] ata9.02: link resume succeeded after 1 retries
-> [  322.695900] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  322.695934] ata9.03: hard resetting link
-> [  323.098788] ata9.03: link resume succeeded after 1 retries
-> [  323.233757] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  323.233790] ata9.04: hard resetting link
-> [  323.636557] ata9.04: link resume succeeded after 1 retries
-> [  323.749309] ata9.04: softreset failed (SRST command error)
-> [  323.859049] ata9.04: failed to read SCR 0 (Emask=0x1)
-> [  323.859055] ata9.04: reset failed (errno=-85), retrying in 10 secs
-> [  333.211390] ata9.04: reset failed, giving up
-> [  333.211397] ata9.15: hard resetting link
-> [  333.211400] ata9: controller in dubious state, performing PORT_RST
-> [  335.360620] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  335.666238] ata9.01: hard resetting link
-> [  336.069058] ata9.01: link resume succeeded after 1 retries
-> [  336.204019] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  336.204053] ata9.02: hard resetting link
-> [  336.606854] ata9.02: link resume succeeded after 1 retries
-> [  336.741795] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  336.741850] ata9.03: hard resetting link
-> [  337.144658] ata9.03: link resume succeeded after 1 retries
-> [  337.279528] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  337.279562] ata9.04: hard resetting link
-> [  337.682467] ata9.04: link resume succeeded after 1 retries
-> [  337.904854] ata9.04: softreset failed (SRST command error)
-> [  337.904966] ata9.04: failed to read SCR 0 (Emask=0x1)
-> [  337.904971] ata9.04: reset failed (errno=-85), retrying in 10 secs
-> [  347.257313] ata9.04: reset failed, giving up
-> [  347.257320] ata9.15: hard resetting link
-> [  347.257323] ata9: controller in dubious state, performing PORT_RST
-> [  349.406456] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  349.710905] ata9.01: hard resetting link
-> [  350.113925] ata9.01: link resume succeeded after 1 retries
-> [  350.248876] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  350.248909] ata9.02: hard resetting link
-> [  350.651713] ata9.02: link resume succeeded after 1 retries
-> [  350.786654] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  350.786709] ata9.03: hard resetting link
-> [  351.189524] ata9.03: link resume succeeded after 1 retries
-> [  351.324514] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  351.324547] ata9.04: hard resetting link
-> [  351.727346] ata9.04: link resume succeeded after 1 retries
-> [  351.840017] ata9.04: softreset failed (SRST command error)
-> [  351.949778] ata9.04: failed to read SCR 0 (Emask=0x1)
-> [  351.949784] ata9.04: reset failed (errno=-85), retrying in 10 secs
-> [  361.302128] ata9.04: reset failed, giving up
-> [  361.302133] ata9.04: failed to recover link after 3 tries, disabling
-> [  361.302139] ata9.15: hard resetting link
-> [  361.302142] ata9: controller in dubious state, performing PORT_RST
-> [  363.451296] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  364.159770] ata9.04: link resume succeeded after 1 retries
-> [  364.261578] ata9.01: hard resetting link
-> [  364.664650] ata9.01: link resume succeeded after 1 retries
-> [  364.799521] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  364.799576] ata9.02: hard resetting link
-> [  365.202441] ata9.02: link resume succeeded after 1 retries
-> [  365.337463] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  365.337497] ata9.03: hard resetting link
-> [  365.740246] ata9.03: link resume succeeded after 1 retries
-> [  365.875039] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  365.875072] ata9.05: hard resetting link
-> [  366.179543] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [  366.230992] ata9.01: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  366.230998] ata9.01: 625142448 sectors, multi 0: LBA48 
-> [  366.231004] ata9.01: applying bridge limits
-> [  366.289145] ata9.01: configured for UDMA/100
-> [  366.330307] ata9.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  366.330313] ata9.02: 625142448 sectors, multi 0: LBA48 
-> [  366.330319] ata9.02: applying bridge limits
-> [  366.388360] ata9.02: configured for UDMA/100
-> [  366.432420] ata9.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  366.432426] ata9.03: 625142448 sectors, multi 0: LBA48 
-> [  366.432432] ata9.03: applying bridge limits
-> [  366.490740] ata9.03: configured for UDMA/100
-> [  366.490803] ata9: EH complete
-> [  368.619861] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  368.620301] ata10.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
-> [  368.624045] ata10.00: hard resetting link
-> [  378.608665] ata10.00: softreset failed (timeout)
-> [  381.602109] ata10.15: qc timeout (cmd 0xe4)
-> [  381.602125] ata10.00: failed to read SCR 0 (Emask=0x5)
-> [  381.602130] ata10.00: reset failed, giving up
-> [  381.602135] ata10.15: hard resetting link
-> [  383.729362] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  383.730054] ata10.00: hard resetting link
-> [  393.715134] ata10.00: softreset failed (timeout)
-> [  396.708497] ata10.15: qc timeout (cmd 0xe4)
-> [  396.708513] ata10.00: failed to read SCR 0 (Emask=0x5)
-> [  396.708517] ata10.00: reset failed, giving up
-> [  396.708522] ata10.15: hard resetting link
-> [  398.835857] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  398.836649] ata10.00: hard resetting link
-> [  408.821709] ata10.00: softreset failed (timeout)
-> [  411.815072] ata10.15: qc timeout (cmd 0xe4)
-> [  411.815088] ata10.00: failed to read SCR 0 (Emask=0x5)
-> [  411.815093] ata10.00: reset failed, giving up
-> [  411.815096] ata10.00: failed to recover link after 3 tries, disabling
-> [  411.815101] ata10.15: hard resetting link
-> [  413.942387] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
-> [  414.246825] ata10.01: hard resetting link
-> [  414.649800] ata10.01: link resume succeeded after 1 retries
-> [  414.784764] ata10.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  414.784797] ata10.02: hard resetting link
-> [  415.187643] ata10.02: link resume succeeded after 1 retries
-> [  415.322566] ata10.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  415.322621] ata10.03: hard resetting link
-> [  415.725449] ata10.03: link resume succeeded after 1 retries
-> [  415.860370] ata10.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  415.860403] ata10.04: hard resetting link
-> [  416.263259] ata10.04: link resume succeeded after 1 retries
-> [  416.398200] ata10.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-> [  416.398258] ata10.05: hard resetting link
-> [  416.702573] ata10.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
-> [  416.748206] ata10.01: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  416.748212] ata10.01: 625142448 sectors, multi 0: LBA48 
-> [  416.806352] ata10.01: configured for UDMA/100
-> [  416.845697] ata10.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  416.845703] ata10.02: 625142448 sectors, multi 0: LBA48 
-> [  416.903833] ata10.02: configured for UDMA/100
-> [  416.949334] ata10.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  416.949340] ata10.03: 625142448 sectors, multi 0: LBA48 
-> [  417.007519] ata10.03: configured for UDMA/100
-> [  417.058495] ata10.04: ATA-7: ST3320620A, 3.AAD, max UDMA/100
-> [  417.058503] ata10.04: 625142448 sectors, multi 0: LBA48 
-> [  417.116501] ata10.04: configured for UDMA/100
-> [  417.116568] ata10: EH complete
+> [    1.589480] ata1: SATA max UDMA/133 cmd 0xac00 ctl 0xa880 bmdma 0xa400 irq 19
+> [    1.589484] ata2: SATA max UDMA/133 cmd 0xa800 ctl 0xa480 bmdma 0xa408 irq 19
+> [    1.590487] ata3: SATA max UDMA/133 cmd 0x9c00 ctl 0x9880 bmdma 0x9400 irq 19
+> [    1.590491] ata4: SATA max UDMA/133 cmd 0x9800 ctl 0x9480 bmdma 0x9408 irq 19
+> [    1.907600] ata4: SATA link down (SStatus 0 SControl 300)
+> [    2.058210] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [    2.077498] ata3.00: ATAPI: HL-DT-ST DVDRAM GH22NS40, NL02, max UDMA/100
+> [    2.099331] ata3.00: configured for UDMA/100
+> [    2.211895] ata2.00: SATA link down (SStatus 0 SControl 300)
+> [    2.211912] ata2.01: SATA link down (SStatus 0 SControl 300)
+> [    2.362481] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.362499] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.368859] ata1.00: ATA-8: WDC WD10EADS-00M2B0, 01.00A01, max UDMA/133
+> [    2.368866] ata1.00: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> [    2.369140] ata1.01: ATA-8: Hitachi HDS721010CLA332, JP4OA39C, max UDMA/133
+> [    2.369147] ata1.01: 1953525168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> [    2.374886] ata1.00: configured for UDMA/133
+> [    2.380989] ata1.01: configured for UDMA/133
+> [    2.729560] ata5: SATA max UDMA/100 host m128@0xfbeffc00 port 0xfbef8000 irq 18
+> [    2.729564] ata6: SATA max UDMA/100 host m128@0xfbeffc00 port 0xfbefa000 irq 18
+> [    2.732356] ata7: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff0000 irq 17
+> [    2.732360] ata8: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff2000 irq 17
+> [    2.732364] ata9: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff4000 irq 17
+> [    2.732367] ata10: SATA max UDMA/100 host m128@0xfbfff400 port 0xfbff6000 irq 17
+> [    4.857966] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.858355] ata5.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.859795] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [    4.860189] ata5.00: hard resetting link
+> [    4.860287] ata7.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [    4.862439] ata7.00: hard resetting link
+> [    5.265296] ata7.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    5.265352] ata7.01: hard resetting link
+> [    5.668362] ata7.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    5.668417] ata7.02: hard resetting link
+> [    6.071495] ata7.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    6.071529] ata7.03: hard resetting link
+> [    6.474581] ata7.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    6.474613] ata7.04: hard resetting link
+> [    6.779060] ata7.04: SATA link down (SStatus 0 SControl 320)
+> [    6.779114] ata7.05: hard resetting link
+> [    7.083360] ata7.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [    7.084277] ata7.00: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+> [    7.084286] ata7.00: 976773168 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> [    7.085547] ata7.00: configured for UDMA/100
+> [    7.086553] ata7.01: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+> [    7.086559] ata7.01: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    7.087660] ata7.01: configured for UDMA/100
+> [    7.088553] ata7.02: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+> [    7.088558] ata7.02: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    7.089654] ata7.02: configured for UDMA/100
+> [    7.090546] ata7.03: ATA-8: Hitachi HDP725050GLA360, GM4OA50E, max UDMA/133
+> [    7.090551] ata7.03: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+> [    7.091650] ata7.03: configured for UDMA/100
+> [    7.091733] ata7: EH complete
+> [   14.844826] ata5.00: softreset failed (timeout)
+> [   17.838181] ata5.15: qc timeout (cmd 0xe4)
+> [   17.838210] ata5.00: failed to read SCR 0 (Emask=0x4)
+> [   17.838214] ata5.00: reset failed, giving up
+> [   17.838219] ata5.15: hard resetting link
+> [   19.965502] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   19.966145] ata5.00: hard resetting link
+> [   29.951336] ata5.00: softreset failed (timeout)
+> [   32.944766] ata5.15: qc timeout (cmd 0xe4)
+> [   32.944795] ata5.00: failed to read SCR 0 (Emask=0x4)
+> [   32.944799] ata5.00: reset failed, giving up
+> [   32.944804] ata5.15: hard resetting link
+> [   35.072012] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   35.072530] ata5.00: hard resetting link
+> [   45.056855] ata5.00: softreset failed (timeout)
+> [   48.050254] ata5.15: qc timeout (cmd 0xe4)
+> [   48.050283] ata5.00: failed to read SCR 0 (Emask=0x4)
+> [   48.050287] ata5.00: reset failed, giving up
+> [   48.050290] ata5.00: failed to recover link after 3 tries, disabling
+> [   48.050295] ata5.15: hard resetting link
+> [   50.177517] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   50.482010] ata5.01: hard resetting link
+> [   50.884985] ata5.01: link resume succeeded after 1 retries
+> [   51.107352] ata5.01: softreset failed (SRST command error)
+> [   51.107487] ata5.01: failed to read SCR 0 (Emask=0x1)
+> [   51.107492] ata5.01: reset failed (errno=-85), retrying in 10 secs
+> [   60.459742] ata5.01: reset failed, giving up
+> [   60.459749] ata5.15: hard resetting link
+> [   60.459752] ata5: controller in dubious state, performing PORT_RST
+> [   62.608949] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   62.914448] ata5.01: hard resetting link
+> [   63.317427] ata5.01: link resume succeeded after 1 retries
+> [   63.539790] ata5.01: softreset failed (SRST command error)
+> [   63.539919] ata5.01: failed to read SCR 0 (Emask=0x1)
+> [   63.539925] ata5.01: reset failed (errno=-85), retrying in 10 secs
+> [   72.892173] ata5.01: reset failed, giving up
+> [   72.892180] ata5.15: hard resetting link
+> [   72.892184] ata5: controller in dubious state, performing PORT_RST
+> [   75.041389] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   75.345889] ata5.01: hard resetting link
+> [   75.748866] ata5.01: link resume succeeded after 1 retries
+> [   75.971297] ata5.01: softreset failed (SRST command error)
+> [   75.971431] ata5.01: failed to read SCR 0 (Emask=0x1)
+> [   75.971437] ata5.01: reset failed (errno=-85), retrying in 10 secs
+> [   85.323630] ata5.01: reset failed, giving up
+> [   85.323637] ata5.01: failed to recover link after 3 tries, disabling
+> [   85.323645] ata5.15: hard resetting link
+> [   85.323650] ata5: controller in dubious state, performing PORT_RST
+> [   87.472842] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [   88.181286] ata5.01: link resume succeeded after 1 retries
+> [   88.283133] ata5.02: hard resetting link
+> [   88.686176] ata5.02: link resume succeeded after 1 retries
+> [   88.821104] ata5.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [   88.821164] ata5.03: hard resetting link
+> [   89.223975] ata5.03: link resume succeeded after 1 retries
+> [   89.358829] ata5.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [   89.358888] ata5.04: hard resetting link
+> [   89.783557] ata5.04: softreset failed (SRST command error)
+> [   89.893432] ata5.04: failed to read SCR 0 (Emask=0x1)
+> [   89.893438] ata5.04: reset failed (errno=-85), retrying in 10 secs
+> [   99.336365] ata5.04: reset failed, giving up
+> [   99.336372] ata5.15: hard resetting link
+> [   99.336376] ata5: controller in dubious state, performing PORT_RST
+> [  101.485757] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  102.193240] ata5.01: link resume succeeded after 1 retries
+> [  102.295073] ata5.02: hard resetting link
+> [  102.698122] ata5.02: link resume succeeded after 1 retries
+> [  102.833073] ata5.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  102.833133] ata5.03: hard resetting link
+> [  103.235928] ata5.03: link resume succeeded after 1 retries
+> [  103.370761] ata5.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  103.370820] ata5.04: hard resetting link
+> [  103.795611] ata5.04: softreset failed (SRST command error)
+> [  103.905366] ata5.04: failed to read SCR 0 (Emask=0x1)
+> [  103.905371] ata5.04: reset failed (errno=-85), retrying in 10 secs
+> [  113.348314] ata5.04: reset failed, giving up
+> [  113.348320] ata5.15: hard resetting link
+> [  113.348324] ata5: controller in dubious state, performing PORT_RST
+> [  115.497700] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  116.205181] ata5.01: link resume succeeded after 1 retries
+> [  116.307080] ata5.02: hard resetting link
+> [  116.710044] ata5.02: link resume succeeded after 1 retries
+> [  116.845018] ata5.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  116.845077] ata5.03: hard resetting link
+> [  117.247869] ata5.03: link resume succeeded after 1 retries
+> [  117.382765] ata5.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  117.382824] ata5.04: hard resetting link
+> [  117.807545] ata5.04: softreset failed (SRST command error)
+> [  117.917306] ata5.04: failed to read SCR 0 (Emask=0x1)
+> [  117.917312] ata5.04: reset failed (errno=-85), retrying in 10 secs
+> [  127.360526] ata5.04: reset failed, giving up
+> [  127.360531] ata5.04: failed to recover link after 3 tries, disabling
+> [  127.360537] ata5.15: hard resetting link
+> [  127.360540] ata5: controller in dubious state, performing PORT_RST
+> [  129.509655] ata5.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  130.217118] ata5.01: link resume succeeded after 1 retries
+> [  130.722001] ata5.04: link resume succeeded after 1 retries
+> [  130.823901] ata5.02: hard resetting link
+> [  131.226876] ata5.02: link resume succeeded after 1 retries
+> [  131.361766] ata5.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  131.361825] ata5.03: hard resetting link
+> [  131.764660] ata5.03: link resume succeeded after 1 retries
+> [  131.899662] ata5.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  131.899721] ata5.05: hard resetting link
+> [  132.205038] ata5.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [  132.244958] ata5.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  132.244964] ata5.02: 625142448 sectors, multi 0: LBA48 
+> [  132.244970] ata5.02: applying bridge limits
+> [  132.303046] ata5.02: configured for UDMA/100
+> [  132.342980] ata5.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  132.342986] ata5.03: 625142448 sectors, multi 0: LBA48 
+> [  132.401061] ata5.03: configured for UDMA/100
+> [  132.401136] ata5: EH complete
+> [  134.530494] ata6: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  134.531008] ata6.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [  134.532983] ata6.00: hard resetting link
+> [  144.517362] ata6.00: softreset failed (timeout)
+> [  147.510713] ata6.15: qc timeout (cmd 0xe4)
+> [  147.510742] ata6.00: failed to read SCR 0 (Emask=0x5)
+> [  147.510746] ata6.00: reset failed, giving up
+> [  147.510751] ata6.15: hard resetting link
+> [  149.638015] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  149.638490] ata6.00: hard resetting link
+> [  159.623868] ata6.00: softreset failed (timeout)
+> [  162.617261] ata6.15: qc timeout (cmd 0xe4)
+> [  162.617290] ata6.00: failed to read SCR 0 (Emask=0x5)
+> [  162.617294] ata6.00: reset failed, giving up
+> [  162.617298] ata6.15: hard resetting link
+> [  164.744527] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  164.745175] ata6.00: hard resetting link
+> [  174.730383] ata6.00: softreset failed (timeout)
+> [  177.723774] ata6.15: qc timeout (cmd 0xe4)
+> [  177.723803] ata6.00: failed to read SCR 0 (Emask=0x5)
+> [  177.723807] ata6.00: reset failed, giving up
+> [  177.723811] ata6.00: failed to recover link after 3 tries, disabling
+> [  177.723816] ata6.15: hard resetting link
+> [  179.851035] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  180.156552] ata6.01: hard resetting link
+> [  180.559477] ata6.01: link resume succeeded after 1 retries
+> [  180.694563] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  180.694606] ata6.02: hard resetting link
+> [  181.097289] ata6.02: link resume succeeded after 1 retries
+> [  181.319751] ata6.02: softreset failed (SRST command error)
+> [  181.429509] ata6.02: failed to read SCR 0 (Emask=0x1)
+> [  181.429515] ata6.02: reset failed (errno=-85), retrying in 10 secs
+> [  190.672324] ata6.02: reset failed, giving up
+> [  190.672330] ata6.15: hard resetting link
+> [  190.672334] ata6: controller in dubious state, performing PORT_RST
+> [  192.821300] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  193.125786] ata6.01: hard resetting link
+> [  193.528727] ata6.01: link resume succeeded after 1 retries
+> [  193.663686] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  193.663812] ata6.02: hard resetting link
+> [  194.066567] ata6.02: link resume succeeded after 1 retries
+> [  194.288962] ata6.02: softreset failed (SRST command error)
+> [  194.398756] ata6.02: failed to read SCR 0 (Emask=0x1)
+> [  194.398762] ata6.02: reset failed (errno=-85), retrying in 10 secs
+> [  203.641295] ata6.02: reset failed, giving up
+> [  203.641303] ata6.15: hard resetting link
+> [  203.641309] ata6: controller in dubious state, performing PORT_RST
+> [  205.790546] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  206.094966] ata6.01: hard resetting link
+> [  206.498015] ata6.01: link resume succeeded after 1 retries
+> [  206.633061] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  206.633120] ata6.02: hard resetting link
+> [  207.035819] ata6.02: link resume succeeded after 1 retries
+> [  207.258245] ata6.02: softreset failed (SRST command error)
+> [  207.368006] ata6.02: failed to read SCR 0 (Emask=0x1)
+> [  207.368012] ata6.02: reset failed (errno=-85), retrying in 10 secs
+> [  216.610620] ata6.02: reset failed, giving up
+> [  216.610626] ata6.02: failed to recover link after 3 tries, disabling
+> [  216.610632] ata6.15: hard resetting link
+> [  216.610635] ata6: controller in dubious state, performing PORT_RST
+> [  218.759779] ata6.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  219.467254] ata6.02: link resume succeeded after 1 retries
+> [  219.569163] ata6.01: hard resetting link
+> [  219.972113] ata6.01: link resume succeeded after 1 retries
+> [  220.107129] ata6.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  220.107188] ata6.03: hard resetting link
+> [  220.509917] ata6.03: link resume succeeded after 1 retries
+> [  220.644966] ata6.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  220.645026] ata6.04: hard resetting link
+> [  221.047757] ata6.04: link resume succeeded after 1 retries
+> [  221.182778] ata6.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  221.182837] ata6.05: hard resetting link
+> [  221.487112] ata6.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [  221.526612] ata6.01: ATA-7: ST3320620A, 3.AAC, max UDMA/100
+> [  221.526618] ata6.01: 625142448 sectors, multi 0: LBA48 
+> [  221.584762] ata6.01: configured for UDMA/100
+> [  221.631071] ata6.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  221.631077] ata6.03: 625142448 sectors, multi 0: LBA48 
+> [  221.689230] ata6.03: configured for UDMA/100
+> [  221.727356] ata6.04: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  221.727362] ata6.04: 625142448 sectors, multi 0: LBA48 
+> [  221.785541] ata6.04: configured for UDMA/100
+> [  221.785615] ata6: EH complete
+> [  223.918343] ata8: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  223.918775] ata8.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [  223.921937] ata8.00: hard resetting link
+> [  224.259862] ata8.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [  224.259917] ata8.01: hard resetting link
+> [  224.597085] ata8.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [  224.597141] ata8.02: hard resetting link
+> [  224.934516] ata8.02: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [  224.934572] ata8.03: hard resetting link
+> [  225.271591] ata8.03: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [  225.271624] ata8.04: hard resetting link
+> [  225.575989] ata8.04: SATA link down (SStatus 0 SControl 320)
+> [  225.576042] ata8.05: hard resetting link
+> [  225.880279] ata8.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [  225.909034] ata8.00: ATA-8: ST31000333AS, SD15, max UDMA/133
+> [  225.909041] ata8.00: 1953525168 sectors, multi 16: LBA48 NCQ (not used)
+> [  225.909047] ata8.00: WARNING: device requires firmware update to be fully functional
+> [  225.909051] ata8.00:          contact the vendor or visit http://ata.wiki.kernel.org
+> [  225.950939] ata8.00: configured for UDMA/100
+> [  225.979588] ata8.01: ATA-8: ST31000333AS, SD15, max UDMA/133
+> [  225.979594] ata8.01: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
+> [  225.979600] ata8.01: WARNING: device requires firmware update to be fully functional
+> [  225.979604] ata8.01:          contact the vendor or visit http://ata.wiki.kernel.org
+> [  226.021473] ata8.01: configured for UDMA/100
+> [  226.050141] ata8.02: ATA-8: ST31000333AS, SD15, max UDMA/133
+> [  226.050147] ata8.02: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
+> [  226.050154] ata8.02: WARNING: device requires firmware update to be fully functional
+> [  226.050158] ata8.02:          contact the vendor or visit http://ata.wiki.kernel.org
+> [  226.091995] ata8.02: configured for UDMA/100
+> [  226.120548] ata8.03: ATA-8: ST31000333AS, SD15, max UDMA/133
+> [  226.120554] ata8.03: 1953525168 sectors, multi 0: LBA48 NCQ (not used)
+> [  226.120561] ata8.03: WARNING: device requires firmware update to be fully functional
+> [  226.120565] ata8.03:          contact the vendor or visit http://ata.wiki.kernel.org
+> [  226.162385] ata8.03: configured for UDMA/100
+> [  226.162453] ata8: EH complete
+> [  228.292632] ata9: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  228.293002] ata9.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [  228.296050] ata9.00: hard resetting link
+> [  238.280486] ata9.00: softreset failed (timeout)
+> [  241.274023] ata9.15: qc timeout (cmd 0xe4)
+> [  241.274040] ata9.00: failed to read SCR 0 (Emask=0x5)
+> [  241.274044] ata9.00: reset failed, giving up
+> [  241.274049] ata9.15: hard resetting link
+> [  243.401137] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  243.401599] ata9.00: hard resetting link
+> [  253.387991] ata9.00: softreset failed (timeout)
+> [  256.381414] ata9.15: qc timeout (cmd 0xe4)
+> [  256.381430] ata9.00: failed to read SCR 0 (Emask=0x5)
+> [  256.381434] ata9.00: reset failed, giving up
+> [  256.381439] ata9.15: hard resetting link
+> [  258.508673] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  258.509048] ata9.00: hard resetting link
+> [  268.494505] ata9.00: softreset failed (timeout)
+> [  271.487878] ata9.15: qc timeout (cmd 0xe4)
+> [  271.487895] ata9.00: failed to read SCR 0 (Emask=0x5)
+> [  271.487899] ata9.00: reset failed, giving up
+> [  271.487903] ata9.00: failed to recover link after 3 tries, disabling
+> [  271.487908] ata9.15: hard resetting link
+> [  273.615201] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  273.919608] ata9.01: hard resetting link
+> [  274.322603] ata9.01: link resume succeeded after 1 retries
+> [  274.457553] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  274.457586] ata9.02: hard resetting link
+> [  274.860444] ata9.02: link resume succeeded after 1 retries
+> [  274.995367] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  274.995400] ata9.03: hard resetting link
+> [  275.398299] ata9.03: link resume succeeded after 1 retries
+> [  275.533164] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  275.533197] ata9.04: hard resetting link
+> [  275.936074] ata9.04: link resume succeeded after 1 retries
+> [  276.158501] ata9.04: softreset failed (SRST command error)
+> [  276.268262] ata9.04: failed to read SCR 0 (Emask=0x1)
+> [  276.268268] ata9.04: reset failed (errno=-85), retrying in 10 secs
+> [  285.510770] ata9.04: reset failed, giving up
+> [  285.510776] ata9.15: hard resetting link
+> [  285.510780] ata9: controller in dubious state, performing PORT_RST
+> [  287.660034] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  287.964508] ata9.01: hard resetting link
+> [  288.367491] ata9.01: link resume succeeded after 1 retries
+> [  288.502430] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  288.502463] ata9.02: hard resetting link
+> [  288.905305] ata9.02: link resume succeeded after 1 retries
+> [  289.040255] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  289.040288] ata9.03: hard resetting link
+> [  289.443108] ata9.03: link resume succeeded after 1 retries
+> [  289.578057] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  289.578090] ata9.04: hard resetting link
+> [  289.980918] ata9.04: link resume succeeded after 1 retries
+> [  290.203369] ata9.04: softreset failed (SRST command error)
+> [  290.203485] ata9.04: failed to read SCR 0 (Emask=0x1)
+> [  290.203491] ata9.04: reset failed (errno=-85), retrying in 10 secs
+> [  299.555660] ata9.04: reset failed, giving up
+> [  299.555666] ata9.15: hard resetting link
+> [  299.555670] ata9: controller in dubious state, performing PORT_RST
+> [  301.704918] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  302.009409] ata9.01: hard resetting link
+> [  302.412365] ata9.01: link resume succeeded after 1 retries
+> [  302.547281] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  302.547314] ata9.02: hard resetting link
+> [  302.950171] ata9.02: link resume succeeded after 1 retries
+> [  303.085117] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  303.085150] ata9.03: hard resetting link
+> [  303.487982] ata9.03: link resume succeeded after 1 retries
+> [  303.622902] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  303.622958] ata9.04: hard resetting link
+> [  304.025789] ata9.04: link resume succeeded after 1 retries
+> [  304.138473] ata9.04: softreset failed (SRST command error)
+> [  304.248235] ata9.04: failed to read SCR 0 (Emask=0x1)
+> [  304.248241] ata9.04: reset failed (errno=-85), retrying in 10 secs
+> [  313.600501] ata9.04: reset failed, giving up
+> [  313.600507] ata9.04: failed to recover link after 3 tries, disabling
+> [  313.600513] ata9.15: hard resetting link
+> [  313.600516] ata9: controller in dubious state, performing PORT_RST
+> [  315.749752] ata9.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  316.457271] ata9.04: link resume succeeded after 1 retries
+> [  316.559076] ata9.01: hard resetting link
+> [  316.962068] ata9.01: link resume succeeded after 1 retries
+> [  317.097054] ata9.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  317.097088] ata9.02: hard resetting link
+> [  317.499918] ata9.02: link resume succeeded after 1 retries
+> [  317.634858] ata9.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  317.634914] ata9.03: hard resetting link
+> [  318.037724] ata9.03: link resume succeeded after 1 retries
+> [  318.172660] ata9.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  318.172693] ata9.05: hard resetting link
+> [  318.477013] ata9.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [  318.516456] ata9.01: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  318.516462] ata9.01: 625142448 sectors, multi 0: LBA48 
+> [  318.516468] ata9.01: applying bridge limits
+> [  318.574613] ata9.01: configured for UDMA/100
+> [  318.619314] ata9.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  318.619320] ata9.02: 625142448 sectors, multi 0: LBA48 
+> [  318.619326] ata9.02: applying bridge limits
+> [  318.677370] ata9.02: configured for UDMA/100
+> [  318.722829] ata9.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  318.722835] ata9.03: 625142448 sectors, multi 0: LBA48 
+> [  318.722841] ata9.03: applying bridge limits
+> [  318.780997] ata9.03: configured for UDMA/100
+> [  318.781065] ata9: EH complete
+> [  320.910331] ata10: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  320.910716] ata10.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+> [  320.914444] ata10.00: hard resetting link
+> [  330.899026] ata10.00: softreset failed (timeout)
+> [  333.892559] ata10.15: qc timeout (cmd 0xe4)
+> [  333.892575] ata10.00: failed to read SCR 0 (Emask=0x5)
+> [  333.892579] ata10.00: reset failed, giving up
+> [  333.892584] ata10.15: hard resetting link
+> [  336.019804] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  336.020217] ata10.00: hard resetting link
+> [  346.005672] ata10.00: softreset failed (timeout)
+> [  348.999080] ata10.15: qc timeout (cmd 0xe4)
+> [  348.999097] ata10.00: failed to read SCR 0 (Emask=0x5)
+> [  348.999101] ata10.00: reset failed, giving up
+> [  348.999106] ata10.15: hard resetting link
+> [  351.126351] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  351.126798] ata10.00: hard resetting link
+> [  361.111185] ata10.00: softreset failed (timeout)
+> [  364.104592] ata10.15: qc timeout (cmd 0xe4)
+> [  364.104608] ata10.00: failed to read SCR 0 (Emask=0x5)
+> [  364.104613] ata10.00: reset failed, giving up
+> [  364.104616] ata10.00: failed to recover link after 3 tries, disabling
+> [  364.104621] ata10.15: hard resetting link
+> [  366.231861] ata10.15: SATA link up 3.0 Gbps (SStatus 123 SControl 0)
+> [  366.536337] ata10.01: hard resetting link
+> [  366.939336] ata10.01: link resume succeeded after 1 retries
+> [  367.074226] ata10.01: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  367.074260] ata10.02: hard resetting link
+> [  367.477128] ata10.02: link resume succeeded after 1 retries
+> [  367.612045] ata10.02: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  367.612079] ata10.03: hard resetting link
+> [  368.014946] ata10.03: link resume succeeded after 1 retries
+> [  368.149882] ata10.03: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  368.149916] ata10.04: hard resetting link
+> [  368.552715] ata10.04: link resume succeeded after 1 retries
+> [  368.687685] ata10.04: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [  368.687740] ata10.05: hard resetting link
+> [  368.992079] ata10.05: SATA link up 1.5 Gbps (SStatus 113 SControl 320)
+> [  369.039408] ata10.01: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  369.039414] ata10.01: 625142448 sectors, multi 0: LBA48 
+> [  369.097549] ata10.01: configured for UDMA/100
+> [  369.134364] ata10.02: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  369.134370] ata10.02: 625142448 sectors, multi 0: LBA48 
+> [  369.192501] ata10.02: configured for UDMA/100
+> [  369.231060] ata10.03: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  369.231066] ata10.03: 625142448 sectors, multi 0: LBA48 
+> [  369.289253] ata10.03: configured for UDMA/100
+> [  369.328511] ata10.04: ATA-7: ST3320620A, 3.AAD, max UDMA/100
+> [  369.328517] ata10.04: 625142448 sectors, multi 0: LBA48 
+> [  369.386487] ata10.04: configured for UDMA/100
+> [  369.386557] ata10: EH complete
    :
-> [  509.264886] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
-> [  509.322433] NFSD: starting 90-second grace period
+> [  394.946096] NFSD: Using /var/lib/nfs/v4recovery as the NFSv4 state recovery directory
+> [  395.043631] NFSD: starting 90-second grace period
    :
--------
+------
