@@ -1,147 +1,126 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
-Date: Thu, 29 Mar 2012 11:00:18 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1203291050580.1417-100000@iolanthe.rowland.org>
-References: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
+From: H Hartley Sweeten <hartleys@visionengravers.com>
+Subject: RE: [PATCH 2/3] ep93xx: IDE driver platform support code
+Date: Thu, 29 Mar 2012 11:26:41 -0500
+Message-ID: <ADE657CA350FB648AAC2C43247A983F00206970255B6@AUSP01VMBX24.collaborationhost.net>
+References: <4F7418E7.4060500@metasoft.pl> <4F741B07.7040107@metasoft.pl>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <CAOzJMDRajsjHwCC66XB6Mv-Deuy-wD4GiZbeuEqCQePSLw-Xxw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail127.messagelabs.com ([216.82.250.115]:50905 "EHLO
+	mail127.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443Ab2C2Q0y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Mar 2012 12:26:54 -0400
+In-Reply-To: <4F741B07.7040107@metasoft.pl>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Rafal Prylowski <prylowski@metasoft.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "bzolnier@gmail.com" <bzolnier@gmail.com>, "ryan@bluewatersys.com" <ryan@bluewatersys.com>, "sshtylyov@ru.montavista.com" <sshtylyov@ru.montavista.com>, "joao.ramos@inov.pt" <joao.ramos@inov.pt>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-On Thu, 29 Mar 2012, Aaron Lu wrote:
+On Thursday, March 29, 2012 1:19 AM, Rafal Prylowski wrote:
+> Signed-off-by: Rafal Prylowski <prylowski@metasoft.pl>
+> Cc: H Hartley Sweeten <hsweeten@visionengravers.com>
+> Cc: Ryan Mallon <ryan@bluewatersys.com>
+>
+> ---
+>  arch/arm/mach-ep93xx/core.c                  |   36 +++++++++++++++++
+>  arch/arm/mach-ep93xx/include/mach/platform.h |    1
+>  arch/arm/mach-ep93xx/soc.h                   |    1
+>  3 files changed, 38 insertions(+)
+>
+> Index: linux-2.6/arch/arm/mach-ep93xx/soc.h
+> ===================================================================
+> --- linux-2.6.orig/arch/arm/mach-ep93xx/soc.h
+> +++ linux-2.6/arch/arm/mach-ep93xx/soc.h
+> @@ -69,6 +69,7 @@
+>  
+>  #define EP93XX_BOOT_ROM_BASE		EP93XX_AHB_IOMEM(0x00090000)
+>  
+> +#define EP93XX_IDE_PHYS_BASE		EP93XX_AHB_PHYS(0x000a0000)
+>  #define EP93XX_IDE_BASE			EP93XX_AHB_IOMEM(0x000a0000)
+>  
+>  #define EP93XX_VIC1_BASE		EP93XX_AHB_IOMEM(0x000b0000)
+> Index: linux-2.6/arch/arm/mach-ep93xx/core.c
+> ===================================================================
+> --- linux-2.6.orig/arch/arm/mach-ep93xx/core.c
+> +++ linux-2.6/arch/arm/mach-ep93xx/core.c
+> @@ -868,6 +868,42 @@ static struct platform_device ep93xx_wdt
+>  	.resource	= ep93xx_wdt_resources,
+>  };
+>  
+> +/*************************************************************************
+> + * EP93xx IDE
+> + *************************************************************************/
+> +static struct resource ep93xx_ide_resources[] = {
+> +	[0] = {
+> +		.start	= EP93XX_IDE_PHYS_BASE,
+> +		.end	= EP93XX_IDE_PHYS_BASE + 0xffff,
+> +		.flags	= IORESOURCE_MEM,
+> +	},
+> +	[1] = {
+> +		.start	= IRQ_EP93XX_EXT3,
+> +		.end	= IRQ_EP93XX_EXT3,
+> +		.flags	= IORESOURCE_IRQ,
+> +	},
+> +};
 
-> >>> @@ -216,6 +244,11 @@ static unsigned int sr_check_events(struct c=
-drom_device_info *cdi,
-> >>> =A0 =A0 =A0 unsigned int events;
-> >>> =A0 =A0 =A0 int ret;
-> >>>
-> >>> + =A0 =A0 /* Not necessary to check events if enter ZPODD state *=
-/
-> >>> + =A0 =A0 if (cd->device->power_off &&
-> >>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_runtime_suspended(&c=
-d->device->sdev_gendev))
-> >>> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >>
-> >> The comment is wrong and the new code does the wrong thing. =A0You=
- _do_
-> >> have to check for events even in the ZPODD state, which means
-> >> sr_check_events must power-up the device if necessary.
-> >> sd_check_events in James Bottomley's scsi-misc tree now does the r=
-ight
-> >> thing; see commit 4e2247b2bd289f079349d6c69755f8cff4e31f2b.
-> >
-> > The problem is userspace(GNOME, for example) will check for events
-> > every seconds.
-> > If sr is power up so frequently then we lost the expected power
-> > savings from ZPODD.
+Please use the DEFINE_RES_* macros.
+Also, the last register in the IDE interface is at offset 0x34, so something like this:
 
-That's true.  There's nothing you can do about it in the kernel; it's=20
-up to userspace to change the frequency of event polling.
+static struct resource ep93xx_ide_resources[] = {
+	DEFINE_RES_MEM(EP93XX_IDE_PHYS_BASE, 0x38),
+	DEFINE_RES_IRQ(IRQ_EP93XX_EXT3),
+};
 
-> Agreed.
-> BTW, it's udevd on my Linux box that changed the default poll msecs k=
-ernel param
-> which caused sr_check_events being called every 2 seconds.
+> +static struct platform_device ep93xx_ide_device = {
+> +	.name		= "ep93xx-ide",
+> +	.id		= -1,
+> +	.dev		= {
+> +		.dma_mask		= &ep93xx_ide_device.dev.coherent_dma_mask,
+> +		.coherent_dma_mask	= DMA_BIT_MASK(32),
+> +	},
+> +	.num_resources	= ARRAY_SIZE(ep93xx_ide_resources),
+> +	.resource	= ep93xx_ide_resources,
+> +};
+> +
+> +void __init ep93xx_register_ide(void)
+> +{
+> +	/* GPIO ports E, G and H used by IDE */
+> +	ep93xx_devcfg_clear_bits(EP93XX_SYSCON_DEVCFG_EONIDE |
+> +				 EP93XX_SYSCON_DEVCFG_GONIDE |
+> +				 EP93XX_SYSCON_DEVCFG_HONIDE);
+> +	platform_device_register(&ep93xx_ide_device);
+> +}
 
-Indeed.
+Please create ep93xx_ide_acquire_gpio and ep93xx_ide_acquire_gpio functions
+to set/clear the necessary SYSCON bits during the probe/remove of the ide driver.
 
-> > There are 2 events:
-> >
-> > DISK_EVENT_MEDIA_CHANGE
-> > DISK_EVENT_EJECT_REQUEST
-> >
-> > In current implementation, if sr is in ZPODD state, then it means
-> > there is no disk in the CDROM.
-> > So if sr is in ZPODD state, MEDIA_CHANGE would never happen.
+This should also address your concern mentioned in PATCH 0/3 about making sure
+the pin muxing is correct when the driver is loaded.
 
-Sure it will: when the user inserts a disc.
+The *_acquire_gpio function should also gpio_request  the pins before setting the
+SYSCON bits. That way if any of the pins are unavailable the driver will not load. Make
+sure to gpio_free the pins in the *_release_gpio function.  Look at how the keypad
+is handled for an example.
 
-> > EJECT_REQUEST seems can be ignored, since there is no disk in the C=
-DROM at all.
-> >
->=20
-> For the ODD to be put into suspend state, the conditions should be:
-> 1 tray closed
-> 2 no media inside
-> I think we missed the condition 1 check now.
->=20
-> And if we follow the two conditions, the events can be safely ignored=
-=2E
+> +
+>  void __init ep93xx_init_devices(void)
+>  {
+>  	/* Disallow access to MaverickCrunch initially */
+> Index: linux-2.6/arch/arm/mach-ep93xx/include/mach/platform.h
+> ===================================================================
+> --- linux-2.6.orig/arch/arm/mach-ep93xx/include/mach/platform.h
+> +++ linux-2.6/arch/arm/mach-ep93xx/include/mach/platform.h
+> @@ -48,6 +48,7 @@ void ep93xx_register_i2s(void);
+>  int ep93xx_i2s_acquire(void);
+>  void ep93xx_i2s_release(void);
+>  void ep93xx_register_ac97(void);
+> +void ep93xx_register_ide(void);
+>  
+>  void ep93xx_init_devices(void);
+>  extern struct sys_timer ep93xx_timer;
 
-No, they can't.  Otherwise the device won't power back up when the user=
-=20
-inserts a new disc.
+Regards,
+Hartley
 
-> What do you think of blocking events for it when going to suspend and=
- unblocking
-> when resume? This could erase the unnecessary calls of the check even=
-ts function
-> when ODD is suspended.
-> But disk_(un)block_events are not exported and can't be used in sr
-> module. So I'm
-> not sure how to do this.
->=20
-> Another thing to consider is, user might want to eject the tray by
-> software like the
-> eject /dev/sr0 command or some UI mouse clicks against the cdrom icon=
-=2E I'm still
-> thinking how to do this correctly.
-
-What's the problem?  Can't the user already eject the tray via=20
-software?
-
-> >>> @@ -260,6 +293,11 @@ static unsigned int sr_check_events(struct c=
-drom_device_info *cdi,
-> >>> =A0 =A0 =A0 cd->media_present =3D scsi_status_is_good(ret) ||
-> >>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 (scsi_sense_valid(&sshdr) && sshdr.as=
-c !=3D 0x3a);
-> >>>
-> >>> + =A0 =A0 if (!cd->media_present && cd->device->power_off && !cd-=
->poweroff_event) {
-> >>> + =A0 =A0 =A0 =A0 =A0 =A0 scsi_autopm_put_device(cd->device);
-> >>
-> >> You can see your mistake here. =A0You call scsi_autopm_put_device =
-here
-> >> without calling scsi_autopm_get_device earlier.
-> >
-> > Let me check this.
->=20
-> I guess the earlier call of get device is this?
->=20
->  869 int scsi_sysfs_add_sdev(struct scsi_device *sdev)
-> ... ...
->  891
->  892        /* The following call will keep sdev active indefinitely,=
- until
->  893         * its driver does a corresponding scsi_autopm_pm_device(=
-).  Only
->  894         * drivers supporting autosuspend will do this.
->  895         */
->  896        scsi_autopm_get_device(sdev);
->  897
-
-You have to do this correctly.  Currently sr doesn't support runtime PM=
-=20
-at all.  If you do want to support it, then the driver should call=20
-scsi_autopm_put_device at the end of the probe routine (or whenever it=20
-is ready to allow runtime suspends) and scsi_autopm_get_device at the=20
-start of the remove routine (or whenever it wants to prevent runtime=20
-suspends).
-
-The idea is that the driver is probed with the PM usage counter set to
-1, so a runtime suspend won't occur until you do a put.  Similarly, in
-the remove routine, you must make sure that your gets and puts balance
-out.
-
-Alan Stern
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
