@@ -1,114 +1,50 @@
-From: Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers by default
-Date: Thu, 29 Mar 2012 18:28:50 +0100
-Message-ID: <1333042130-9634-1-git-send-email-apw@canonical.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57065 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759808Ab2C2R2x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 29 Mar 2012 13:28:53 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
+Subject: [PATCH 00/17] mark const init data with __initconst instead of
+ __initdata
+Date: Thu, 29 Mar 2012 23:11:31 +0200
+Message-ID: <20120329211131.GA31250@pengutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
+Content-Disposition: inline
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
+List-Post: <mailto:linux-mtd@lists.infradead.org>
+List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
+Sender: linux-mtd-bounces@lists.infradead.org
+Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: Andrew Lunn <andrew@lunn.ch>, Christoph Lameter <cl@linux-foundation.org>, linux-mips@linux-mips.org, Tony Lindgren <tony@atomide.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Walleij <linus.walleij@linaro.org>, Matt Porter <mporter@kernel.crashing.org>, Nicolas Ferre <nicolas.ferre@atmel.com>, Matthew Garrett <mjg59@srcf.ucam.org>, platform-driver-x86@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, ibm-acpi-devel@lists.sourceforge.net, Randy Dunlap <rdunlap@xenotime.net>, linux-mtd@lists.infradead.org, Sekhar Nori <nsekhar@ti.com>, Daniel Walker <dwalker@fifo99.com>, lm-sensors@lm-sensors.org, Klaus Kudielka <klaus.kudielka@ieee.org>, Guenter Roeck <guenter.roeck@ericsson.com>, Kevin Hilman <khilman@ti.com>, linux-ia64@vger.kernel.org, Kukjin Kim <kgene.kim@samsung.com>, Russell King <linux@arm.linux.org.uk>, Samuel Ortiz <sameo@linux.intel.c>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: Andy Whitcroft <apw@canonical.com>, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>
 
-When we are hosted on a Hyper-V hypervisor the guest disks are exposed
-both via the Hyper-V paravirtualised drivers and via an emulated SATA disk
-controller.  We want to use the paravirtualised drivers where possible as
-they are much more performant.  The Hyper-V paravirtualised drivers only
-expose the virtual hard disk devices, the CDROM/DVD devices must still
-be enumerated on the virtualised SATA controller.  As we have no control
-over kernel probe order for these two drivers especially when one driver
-is builtin to the kernel and the other a module, we need to prevent the
-ata_piix driver from claiming the disks devices by default when running
-on a Hyper-V hypervisor.
+Hello,
 
-When enumerating the drives look at the aquired device ID and if it
-appears to be a disk device then report it as disconnected.  Limit this
-behaviour to when we have detected a Hyper-V hypervisor.  Finally allow
-this behaviour to be overriden via a new module parameter.
+this series fixes a common error to use __initdata to mark const
+variables. Most of the time this works well enough to go unnoticed
+(though I wonder why the linker doesn't warn about that).
+Just try adding something like
 
-BugLink: http://bugs.launchpad.net/bugs/929545
-BugLink: http://bugs.launchpad.net/bugs/942316
-Signed-off-by: Andy Whitcroft <apw@canonical.com>
----
- drivers/ata/ata_piix.c |   29 +++++++++++++++++++++++++++++
- 1 files changed, 29 insertions(+), 0 deletions(-)
+	int something __initdata;
 
-    This was discovered when doing some boot testing on a Hyper-V
-    host.  Performance was found to be bad as out builtin ata_piix
-    driver was grabbing the disks.  I am Cc:ing a couple of the
-    Microsoft people who worked on the HV driver set as well.
+to one of the patched files and compile to see the error.
 
-    Note that the device id data is converted from device to host
-    order in the caller which makes examining the data problematic.
-    As this code only make sense on X86 and we know we are in
-    matching order we can access the data without first fixing it.
-    Alternativly we could add a new callback from the ata core
-    after the code has been fixed for validation.
+While touching these annotations I also corrected the position where it
+was wrong to go between the variable name and the =3D.
 
-    Comments?
+Note this series is not compile tested.
 
-    -apw
+Best regards
+Uwe
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 68013f9..64895f8 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -94,6 +94,9 @@
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
- #include <linux/dmi.h>
-+#ifdef CONFIG_X86
-+#include <asm/hypervisor.h>
-+#endif
- 
- #define DRV_NAME	"ata_piix"
- #define DRV_VERSION	"2.13"
-@@ -188,6 +191,29 @@ static int piix_pci_device_resume(struct pci_dev *pdev);
- 
- static unsigned int in_module_init = 1;
- 
-+static int prefer_ms_hyperv = 1;
-+
-+unsigned int ata_piix_read_id(struct ata_device *dev,
-+					struct ata_taskfile *tf, u16 *id)
-+{
-+	int ret = ata_do_dev_read_id(dev, tf, id);
-+
-+#ifdef CONFIG_X86
-+	/* XXX: note that the device id is in little-endian order, the caller
-+	 * will shift it to host order, but we are working with little-endian.
-+	 * As this is _only_ used on x86 we can actually directly access it
-+	 * as host is also little-endian.
-+	 */
-+	if (!ret && prefer_ms_hyperv && x86_hyper == &x86_hyper_ms_hyperv &&
-+							ata_id_is_ata(id)) {
-+		ata_dev_printk(dev, KERN_WARNING, "ATA disk ignored deferring to Hyper-V paravirt driver\n");
-+
-+		return AC_ERR_DEV|AC_ERR_NODEV_HINT;
-+	}
-+#endif
-+	return ret;
-+}
-+
- static const struct pci_device_id piix_pci_tbl[] = {
- 	/* Intel PIIX3 for the 430HX etc */
- 	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
-@@ -359,6 +385,7 @@ static struct ata_port_operations piix_pata_ops = {
- 	.set_piomode		= piix_set_piomode,
- 	.set_dmamode		= piix_set_dmamode,
- 	.prereset		= piix_pata_prereset,
-+	.read_id		= ata_piix_read_id,
- };
- 
- static struct ata_port_operations piix_vmw_ops = {
-@@ -1703,3 +1730,5 @@ static void __exit piix_exit(void)
- 
- module_init(piix_init);
- module_exit(piix_exit);
-+
-+module_param(prefer_ms_hyperv, int, 0);
--- 
-1.7.9.1
+-- =
 
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+
+______________________________________________________
+Linux MTD discussion mailing list
+http://lists.infradead.org/mailman/listinfo/linux-mtd/
