@@ -1,183 +1,67 @@
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
-	<u.kleine-koenig@pengutronix.de>
-Subject: [PATCH v2 12/15] ide: mark const init data with __initconst instead of __initdata
-Date: Fri, 30 Mar 2012 22:05:02 +0200
-Message-ID: <1333137905-13809-12-git-send-email-u.kleine-koenig@pengutronix.de>
-References: <20120330200358.GV15647@pengutronix.de>
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
+Subject: [PATCH v2 00/15] mark const init data with __initconst instead of
+ __initdata
+Date: Fri, 30 Mar 2012 22:03:58 +0200
+Message-ID: <20120330200358.GV15647@pengutronix.de>
+References: <20120329211131.GA31250@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53426 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934615Ab2C3UFa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2012 16:05:30 -0400
-In-Reply-To: <20120330200358.GV15647@pengutronix.de>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20120329211131.GA31250@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
+List-Post: <mailto:linux-mtd@lists.infradead.org>
+List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
+ <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
+Sender: linux-mtd-bounces@lists.infradead.org
+Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
 To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Cc: kernel@pengutronix.de, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+Cc: Andrew Lunn <andrew@lunn.ch>, Christoph Lameter <cl@linux-foundation.org>, linux-mips@linux-mips.org, Tony Lindgren <tony@atomide.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Walleij <linus.walleij@linaro.org>, Matt Porter <mporter@kernel.crashing.org>, Nicolas Ferre <nicolas.ferre@atmel.com>, Matthew Garrett <mjg59@srcf.ucam.org>, platform-driver-x86@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, ibm-acpi-devel@lists.sourceforge.net, Randy Dunlap <rdunlap@xenotime.net>, linux-mtd@lists.infradead.org, Sekhar Nori <nsekhar@ti.com>, Daniel Walker <dwalker@fifo99.com>, lm-sensors@lm-sensors.org, Klaus Kudielka <klaus.kudielka@ieee.org>, Guenter Roeck <guenter.roeck@ericsson.com>, Kevin Hilman <khilman@ti.com>, linux-ia64@vger.kernel.org, Kukjin Kim <kgene.kim@samsung.com>, Russell King <linux@arm.linux.org.uk>, Samuel Ortiz <sameo@linux.intel.c>
+List-Id: linux-ide@vger.kernel.org
 
-As long as there is no other non-const variable marked __initdata in th=
-e
-same compilation unit it doesn't hurt. If there were one however
-compilation would fail with
+Hello,
 
-	error: $variablename causes a section type conflict
+On Thu, Mar 29, 2012 at 11:11:31PM +0200, Uwe Kleine-K=F6nig wrote:
+> this series fixes a common error to use __initdata to mark const
+> variables. Most of the time this works well enough to go unnoticed
+> (though I wonder why the linker doesn't warn about that).
+> Just try adding something like
+> =
 
-because a section containing const variables is marked read only and so
-cannot contain non-const variables.
+> 	int something __initdata;
+> =
 
-Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org
----
-no changes since (implicit) v1
+> to one of the patched files and compile to see the error.
+> =
 
- drivers/ide/ali14xx.c   |    4 ++--
- drivers/ide/cmd640.c    |    2 +-
- drivers/ide/dtc2278.c   |    2 +-
- drivers/ide/ht6560b.c   |    2 +-
- drivers/ide/icside.c    |    2 +-
- drivers/ide/qd65xx.c    |    2 +-
- drivers/ide/tx4938ide.c |    2 +-
- drivers/ide/tx4939ide.c |    2 +-
- drivers/ide/umc8672.c   |    2 +-
- 9 files changed, 10 insertions(+), 10 deletions(-)
+> While touching these annotations I also corrected the position where it
+> was wrong to go between the variable name and the =3D.
+> =
 
-diff --git a/drivers/ide/ali14xx.c b/drivers/ide/ali14xx.c
-index d3be99f..8f3570e 100644
---- a/drivers/ide/ali14xx.c
-+++ b/drivers/ide/ali14xx.c
-@@ -52,13 +52,13 @@
-=20
- /* port addresses for auto-detection */
- #define ALI_NUM_PORTS 4
--static const int ports[ALI_NUM_PORTS] __initdata =3D
-+static const int ports[ALI_NUM_PORTS] __initconst =3D
- 	{ 0x074, 0x0f4, 0x034, 0x0e4 };
-=20
- /* register initialization data */
- typedef struct { u8 reg, data; } RegInitializer;
-=20
--static const RegInitializer initData[] __initdata =3D {
-+static const RegInitializer initData[] __initconst =3D {
- 	{0x01, 0x0f}, {0x02, 0x00}, {0x03, 0x00}, {0x04, 0x00},
- 	{0x05, 0x00}, {0x06, 0x00}, {0x07, 0x2b}, {0x0a, 0x0f},
- 	{0x25, 0x00}, {0x26, 0x00}, {0x27, 0x00}, {0x28, 0x00},
-diff --git a/drivers/ide/cmd640.c b/drivers/ide/cmd640.c
-index 1471730..70f0a27 100644
---- a/drivers/ide/cmd640.c
-+++ b/drivers/ide/cmd640.c
-@@ -685,7 +685,7 @@ static int pci_conf2(void)
- 	return 0;
- }
-=20
--static const struct ide_port_info cmd640_port_info __initdata =3D {
-+static const struct ide_port_info cmd640_port_info __initconst =3D {
- 	.chipset		=3D ide_cmd640,
- 	.host_flags		=3D IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA |
-diff --git a/drivers/ide/dtc2278.c b/drivers/ide/dtc2278.c
-index 46af474..8722df3 100644
---- a/drivers/ide/dtc2278.c
-+++ b/drivers/ide/dtc2278.c
-@@ -91,7 +91,7 @@ static const struct ide_port_ops dtc2278_port_ops =3D=
- {
- 	.set_pio_mode		=3D dtc2278_set_pio_mode,
- };
-=20
--static const struct ide_port_info dtc2278_port_info __initdata =3D {
-+static const struct ide_port_info dtc2278_port_info __initconst =3D {
- 	.name			=3D DRV_NAME,
- 	.chipset		=3D ide_dtc2278,
- 	.port_ops		=3D &dtc2278_port_ops,
-diff --git a/drivers/ide/ht6560b.c b/drivers/ide/ht6560b.c
-index 986f251..1e0fd3a 100644
---- a/drivers/ide/ht6560b.c
-+++ b/drivers/ide/ht6560b.c
-@@ -341,7 +341,7 @@ static const struct ide_port_ops ht6560b_port_ops =3D=
- {
- 	.set_pio_mode		=3D ht6560b_set_pio_mode,
- };
-=20
--static const struct ide_port_info ht6560b_port_info __initdata =3D {
-+static const struct ide_port_info ht6560b_port_info __initconst =3D {
- 	.name			=3D DRV_NAME,
- 	.chipset		=3D ide_ht6560b,
- 	.tp_ops 		=3D &ht6560b_tp_ops,
-diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
-index 8716066..7e9e1c1 100644
---- a/drivers/ide/icside.c
-+++ b/drivers/ide/icside.c
-@@ -453,7 +453,7 @@ err_free:
- 	return ret;
- }
-=20
--static const struct ide_port_info icside_v6_port_info __initdata =3D {
-+static const struct ide_port_info icside_v6_port_info __initconst =3D =
-{
- 	.init_dma		=3D icside_dma_off_init,
- 	.port_ops		=3D &icside_v6_no_dma_port_ops,
- 	.dma_ops		=3D &icside_v6_dma_ops,
-diff --git a/drivers/ide/qd65xx.c b/drivers/ide/qd65xx.c
-index e03f4f1..a6fb6a8 100644
---- a/drivers/ide/qd65xx.c
-+++ b/drivers/ide/qd65xx.c
-@@ -335,7 +335,7 @@ static const struct ide_port_ops qd6580_port_ops =3D=
- {
- 	.set_pio_mode		=3D qd6580_set_pio_mode,
- };
-=20
--static const struct ide_port_info qd65xx_port_info __initdata =3D {
-+static const struct ide_port_info qd65xx_port_info __initconst =3D {
- 	.name			=3D DRV_NAME,
- 	.tp_ops 		=3D &qd65xx_tp_ops,
- 	.chipset		=3D ide_qd65xx,
-diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
-index 7002765..91d49dd 100644
---- a/drivers/ide/tx4938ide.c
-+++ b/drivers/ide/tx4938ide.c
-@@ -117,7 +117,7 @@ static const struct ide_port_ops tx4938ide_port_ops=
- =3D {
- 	.set_pio_mode		=3D tx4938ide_set_pio_mode,
- };
-=20
--static const struct ide_port_info tx4938ide_port_info __initdata =3D {
-+static const struct ide_port_info tx4938ide_port_info __initconst =3D =
-{
- 	.port_ops		=3D &tx4938ide_port_ops,
- #ifdef __BIG_ENDIAN
- 	.tp_ops			=3D &tx4938ide_tp_ops,
-diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-index 71c2319..c0ab800 100644
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -522,7 +522,7 @@ static const struct ide_dma_ops tx4939ide_dma_ops =3D=
- {
- 	.dma_sff_read_status	=3D tx4939ide_dma_sff_read_status,
- };
-=20
--static const struct ide_port_info tx4939ide_port_info __initdata =3D {
-+static const struct ide_port_info tx4939ide_port_info __initconst =3D =
-{
- 	.init_hwif		=3D tx4939ide_init_hwif,
- 	.init_dma		=3D tx4939ide_init_dma,
- 	.port_ops		=3D &tx4939ide_port_ops,
-diff --git a/drivers/ide/umc8672.c b/drivers/ide/umc8672.c
-index 5cfb781..3aa0fea 100644
---- a/drivers/ide/umc8672.c
-+++ b/drivers/ide/umc8672.c
-@@ -128,7 +128,7 @@ static const struct ide_port_ops umc8672_port_ops =3D=
- {
- 	.set_pio_mode		=3D umc_set_pio_mode,
- };
-=20
--static const struct ide_port_info umc8672_port_info __initdata =3D {
-+static const struct ide_port_info umc8672_port_info __initconst =3D {
- 	.name			=3D DRV_NAME,
- 	.chipset		=3D ide_umc8672,
- 	.port_ops		=3D &umc8672_port_ops,
---=20
-1.7.9.5
+> Note this series is not compile tested.
+I now dropped the wrong annotations. So two patches became obsolete
+(mtd and percpu). Note that I also dropped fixing the position of
+__initdata if changing it to __initconst was wrong. (I think if
+__initdata is placed before the variable name it doesn't have any
+effect.)
 
+I didn't promote the Acks I got because all acked changes changed in v2.
+
+For the details changed in each patch see the changelogs in the
+respective patch mails that I follow up to this mail.
+
+Thanks
+Uwe
+
+-- =
+
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+
+______________________________________________________
+Linux MTD discussion mailing list
+http://lists.infradead.org/mailman/listinfo/linux-mtd/
