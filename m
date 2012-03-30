@@ -1,51 +1,183 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v3 7/7] [SCSI] sr: adds Zero-power ODD support
-Date: Fri, 30 Mar 2012 10:28:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1203301021140.1280-100000@iolanthe.rowland.org>
-References: <20120330010730.GA27346@ladygaga>
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
+	<u.kleine-koenig@pengutronix.de>
+Subject: [PATCH v2 12/15] ide: mark const init data with __initconst instead of __initdata
+Date: Fri, 30 Mar 2012 22:05:02 +0200
+Message-ID: <1333137905-13809-12-git-send-email-u.kleine-koenig@pengutronix.de>
+References: <20120330200358.GV15647@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120330010730.GA27346@ladygaga>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Lin Ming <ming.m.lin@intel.com>, Zhang Rui <rui.zhang@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:53426 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934615Ab2C3UFa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2012 16:05:30 -0400
+In-Reply-To: <20120330200358.GV15647@pengutronix.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: kernel@pengutronix.de, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Fri, 30 Mar 2012, Aaron Lu wrote:
+As long as there is no other non-const variable marked __initdata in th=
+e
+same compilation unit it doesn't hurt. If there were one however
+compilation would fail with
 
-> > > For the ODD to be put into suspend state, the conditions should be:
-> > > 1 tray closed
-> > > 2 no media inside
-> > > I think we missed the condition 1 check now.
-> > > 
-> > > And if we follow the two conditions, the events can be safely ignored.
-> > 
-> > No, they can't.  Otherwise the device won't power back up when the user 
-> > inserts a new disc.
-> > 
-> 
-> The ODD is put to zero power state, so it can't react to the eject
-> button without being powered up back first ;-)
-> On current implementation, ACPI is used to power back up the ODD like this:
-> 1 User press the eject button;
-> 2 A gpe event fired, and ACPI interrupt, and the corresponding gpe
-> handler runs and the ODD's ACPI handle is notified about DEVICE_WAKE_UP;
-> 3 In ODD's acpi notify handler, we power back up it by scsi_autopm_get_device.
-> This is handled in the following Lin Ming's patch:
-> [PATCH v3 2/7] libata-acpi: add ata port runtime D3Cold support
+	error: $variablename causes a section type conflict
 
-I see.  Then you are right; it's not necessary to check for events 
-while the drive is at zero power.
+because a section containing const variables is marked read only and so
+cannot contain non-const variables.
 
-> When the ODD is put to zero power state, it will not be able to handle
-> commands like CDROMEJECT. We have to power it up first and then handle
-> the ioctl request. Currently, we only power back up the ODD when user
-> press the eject button as explained above.
+Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
+---
+no changes since (implicit) v1
 
-Then you may want to avoid going to zero-power while a program is
-holding the device file open.  After all, the program might issue a
-CDROMEJECT ioctl.
+ drivers/ide/ali14xx.c   |    4 ++--
+ drivers/ide/cmd640.c    |    2 +-
+ drivers/ide/dtc2278.c   |    2 +-
+ drivers/ide/ht6560b.c   |    2 +-
+ drivers/ide/icside.c    |    2 +-
+ drivers/ide/qd65xx.c    |    2 +-
+ drivers/ide/tx4938ide.c |    2 +-
+ drivers/ide/tx4939ide.c |    2 +-
+ drivers/ide/umc8672.c   |    2 +-
+ 9 files changed, 10 insertions(+), 10 deletions(-)
 
-Alan Stern
+diff --git a/drivers/ide/ali14xx.c b/drivers/ide/ali14xx.c
+index d3be99f..8f3570e 100644
+--- a/drivers/ide/ali14xx.c
++++ b/drivers/ide/ali14xx.c
+@@ -52,13 +52,13 @@
+=20
+ /* port addresses for auto-detection */
+ #define ALI_NUM_PORTS 4
+-static const int ports[ALI_NUM_PORTS] __initdata =3D
++static const int ports[ALI_NUM_PORTS] __initconst =3D
+ 	{ 0x074, 0x0f4, 0x034, 0x0e4 };
+=20
+ /* register initialization data */
+ typedef struct { u8 reg, data; } RegInitializer;
+=20
+-static const RegInitializer initData[] __initdata =3D {
++static const RegInitializer initData[] __initconst =3D {
+ 	{0x01, 0x0f}, {0x02, 0x00}, {0x03, 0x00}, {0x04, 0x00},
+ 	{0x05, 0x00}, {0x06, 0x00}, {0x07, 0x2b}, {0x0a, 0x0f},
+ 	{0x25, 0x00}, {0x26, 0x00}, {0x27, 0x00}, {0x28, 0x00},
+diff --git a/drivers/ide/cmd640.c b/drivers/ide/cmd640.c
+index 1471730..70f0a27 100644
+--- a/drivers/ide/cmd640.c
++++ b/drivers/ide/cmd640.c
+@@ -685,7 +685,7 @@ static int pci_conf2(void)
+ 	return 0;
+ }
+=20
+-static const struct ide_port_info cmd640_port_info __initdata =3D {
++static const struct ide_port_info cmd640_port_info __initconst =3D {
+ 	.chipset		=3D ide_cmd640,
+ 	.host_flags		=3D IDE_HFLAG_SERIALIZE |
+ 				  IDE_HFLAG_NO_DMA |
+diff --git a/drivers/ide/dtc2278.c b/drivers/ide/dtc2278.c
+index 46af474..8722df3 100644
+--- a/drivers/ide/dtc2278.c
++++ b/drivers/ide/dtc2278.c
+@@ -91,7 +91,7 @@ static const struct ide_port_ops dtc2278_port_ops =3D=
+ {
+ 	.set_pio_mode		=3D dtc2278_set_pio_mode,
+ };
+=20
+-static const struct ide_port_info dtc2278_port_info __initdata =3D {
++static const struct ide_port_info dtc2278_port_info __initconst =3D {
+ 	.name			=3D DRV_NAME,
+ 	.chipset		=3D ide_dtc2278,
+ 	.port_ops		=3D &dtc2278_port_ops,
+diff --git a/drivers/ide/ht6560b.c b/drivers/ide/ht6560b.c
+index 986f251..1e0fd3a 100644
+--- a/drivers/ide/ht6560b.c
++++ b/drivers/ide/ht6560b.c
+@@ -341,7 +341,7 @@ static const struct ide_port_ops ht6560b_port_ops =3D=
+ {
+ 	.set_pio_mode		=3D ht6560b_set_pio_mode,
+ };
+=20
+-static const struct ide_port_info ht6560b_port_info __initdata =3D {
++static const struct ide_port_info ht6560b_port_info __initconst =3D {
+ 	.name			=3D DRV_NAME,
+ 	.chipset		=3D ide_ht6560b,
+ 	.tp_ops 		=3D &ht6560b_tp_ops,
+diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+index 8716066..7e9e1c1 100644
+--- a/drivers/ide/icside.c
++++ b/drivers/ide/icside.c
+@@ -453,7 +453,7 @@ err_free:
+ 	return ret;
+ }
+=20
+-static const struct ide_port_info icside_v6_port_info __initdata =3D {
++static const struct ide_port_info icside_v6_port_info __initconst =3D =
+{
+ 	.init_dma		=3D icside_dma_off_init,
+ 	.port_ops		=3D &icside_v6_no_dma_port_ops,
+ 	.dma_ops		=3D &icside_v6_dma_ops,
+diff --git a/drivers/ide/qd65xx.c b/drivers/ide/qd65xx.c
+index e03f4f1..a6fb6a8 100644
+--- a/drivers/ide/qd65xx.c
++++ b/drivers/ide/qd65xx.c
+@@ -335,7 +335,7 @@ static const struct ide_port_ops qd6580_port_ops =3D=
+ {
+ 	.set_pio_mode		=3D qd6580_set_pio_mode,
+ };
+=20
+-static const struct ide_port_info qd65xx_port_info __initdata =3D {
++static const struct ide_port_info qd65xx_port_info __initconst =3D {
+ 	.name			=3D DRV_NAME,
+ 	.tp_ops 		=3D &qd65xx_tp_ops,
+ 	.chipset		=3D ide_qd65xx,
+diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+index 7002765..91d49dd 100644
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -117,7 +117,7 @@ static const struct ide_port_ops tx4938ide_port_ops=
+ =3D {
+ 	.set_pio_mode		=3D tx4938ide_set_pio_mode,
+ };
+=20
+-static const struct ide_port_info tx4938ide_port_info __initdata =3D {
++static const struct ide_port_info tx4938ide_port_info __initconst =3D =
+{
+ 	.port_ops		=3D &tx4938ide_port_ops,
+ #ifdef __BIG_ENDIAN
+ 	.tp_ops			=3D &tx4938ide_tp_ops,
+diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
+index 71c2319..c0ab800 100644
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -522,7 +522,7 @@ static const struct ide_dma_ops tx4939ide_dma_ops =3D=
+ {
+ 	.dma_sff_read_status	=3D tx4939ide_dma_sff_read_status,
+ };
+=20
+-static const struct ide_port_info tx4939ide_port_info __initdata =3D {
++static const struct ide_port_info tx4939ide_port_info __initconst =3D =
+{
+ 	.init_hwif		=3D tx4939ide_init_hwif,
+ 	.init_dma		=3D tx4939ide_init_dma,
+ 	.port_ops		=3D &tx4939ide_port_ops,
+diff --git a/drivers/ide/umc8672.c b/drivers/ide/umc8672.c
+index 5cfb781..3aa0fea 100644
+--- a/drivers/ide/umc8672.c
++++ b/drivers/ide/umc8672.c
+@@ -128,7 +128,7 @@ static const struct ide_port_ops umc8672_port_ops =3D=
+ {
+ 	.set_pio_mode		=3D umc_set_pio_mode,
+ };
+=20
+-static const struct ide_port_info umc8672_port_info __initdata =3D {
++static const struct ide_port_info umc8672_port_info __initconst =3D {
+ 	.name			=3D DRV_NAME,
+ 	.chipset		=3D ide_umc8672,
+ 	.port_ops		=3D &umc8672_port_ops,
+--=20
+1.7.9.5
 
