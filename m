@@ -1,67 +1,112 @@
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
-Subject: [PATCH v2 00/15] mark const init data with __initconst instead of
- __initdata
-Date: Fri, 30 Mar 2012 22:03:58 +0200
-Message-ID: <20120330200358.GV15647@pengutronix.de>
-References: <20120329211131.GA31250@pengutronix.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 1/3] PATA host controller driver for ep93xx
+Date: Fri, 30 Mar 2012 20:18:43 +0000
+Message-ID: <201203302018.43681.arnd@arndb.de>
+References: <4F7418E7.4060500@metasoft.pl> <4F741AB1.4000107@metasoft.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <20120329211131.GA31250@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-mtd/>
-List-Post: <mailto:linux-mtd@lists.infradead.org>
-List-Help: <mailto:linux-mtd-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mtd>,
- <mailto:linux-mtd-request@lists.infradead.org?subject=subscribe>
-Sender: linux-mtd-bounces@lists.infradead.org
-Errors-To: linux-mtd-bounces+gldm-linux-mtd-36=gmane.org@lists.infradead.org
-To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, Christoph Lameter <cl@linux-foundation.org>, linux-mips@linux-mips.org, Tony Lindgren <tony@atomide.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Walleij <linus.walleij@linaro.org>, Matt Porter <mporter@kernel.crashing.org>, Nicolas Ferre <nicolas.ferre@atmel.com>, Matthew Garrett <mjg59@srcf.ucam.org>, platform-driver-x86@vger.kernel.org, Grant Likely <grant.likely@secretlab.ca>, ibm-acpi-devel@lists.sourceforge.net, Randy Dunlap <rdunlap@xenotime.net>, linux-mtd@lists.infradead.org, Sekhar Nori <nsekhar@ti.com>, Daniel Walker <dwalker@fifo99.com>, lm-sensors@lm-sensors.org, Klaus Kudielka <klaus.kudielka@ieee.org>, Guenter Roeck <guenter.roeck@ericsson.com>, Kevin Hilman <khilman@ti.com>, linux-ia64@vger.kernel.org, Kukjin Kim <kgene.kim@samsung.com>, Russell King <linux@arm.linux.org.uk>, Samuel Ortiz <sameo@linux.intel.c>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.186]:60925 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759210Ab2C3USs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2012 16:18:48 -0400
+In-Reply-To: <4F741AB1.4000107@metasoft.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Rafal Prylowski <prylowski@metasoft.pl>, linux-ide@vger.kernel.org, bzolnier@gmail.com, hsweeten@visionengravers.com, ryan@bluewatersys.com, sshtylyov@ru.montavista.com, joao.ramos@inov.pt
 
-Hello,
+On Thursday 29 March 2012, Rafal Prylowski wrote:
 
-On Thu, Mar 29, 2012 at 11:11:31PM +0200, Uwe Kleine-K=F6nig wrote:
-> this series fixes a common error to use __initdata to mark const
-> variables. Most of the time this works well enough to go unnoticed
-> (though I wonder why the linker doesn't warn about that).
-> Just try adding something like
-> =
+> +static u16 ep93xx_pata_read(struct ep93xx_pata_data *drv_data,
+> +			    void *addr_io,
+> +			    const struct ata_timing *t)
+> +{
+> +	unsigned long addr = (unsigned long) addr_io & 0x1f;
+> +	void __iomem *base = drv_data->ide_base;
+> +	u16 ret;
+> +
+> +	writel(IDECtrl_DIOWn | IDECtrl_DIORn | addr, base + IDECtrl);
+> +	ndelay(t->setup);
+> +	writel(IDECtrl_DIOWn | addr, base + IDECtrl);
 
-> 	int something __initdata;
-> =
+The pointer arithmetic that you do here on addr_io looks really evil.
+Basically your registers are indirect and cannot be accessed through
+pointer dereference. Maybe you should not be trying to do that then
+and not use the ata_port->ioaddr structure.
 
-> to one of the patched files and compile to see the error.
-> =
+> +	ndelay(t->act8b);
 
-> While touching these annotations I also corrected the position where it
-> was wrong to go between the variable name and the =3D.
-> =
+I'm not too familar with ata drivers, but I don't think you're supposed
+to have delays in the code for the timings, rather than programming
+the timings into the controller registers. Are you sure this is the
+right thing here?
 
-> Note this series is not compile tested.
-I now dropped the wrong annotations. So two patches became obsolete
-(mtd and percpu). Note that I also dropped fixing the position of
-__initdata if changing it to __initconst was wrong. (I think if
-__initdata is placed before the variable name it doesn't have any
-effect.)
+> +	if (drv_data->iordy) {
+> +		/* min. 1s timeout (at cpu cycle = 5ns) */
+> +		unsigned int timeout = 200000;
+> +		while (!ep93xx_pata_check_iordy(base) && --timeout)
+> +			cpu_relax();
+> +	}
 
-I didn't promote the Acks I got because all acked changes changed in v2.
+This is not a reliable way to implement a timeout. Instead, you should
+use time_before() to check if hte timeout has expired.
 
-For the details changed in each patch see the changelogs in the
-respective patch mails that I follow up to this mail.
 
-Thanks
-Uwe
+> +static void ep93xx_pata_setup_port(struct ata_ioports *ioaddr)
+> +{
+> +	/*
+> +	 * the device IDE register to be accessed is selected through
+> +	 * IDECTRL register's specific bitfields 'DA', 'CS1n' and 'CS0n':
+> +	 *   b4   b3   b2    b1     b0
+> +	 *   A2   A1   A0   CS1n   CS0n
+> +	 * the values filled in this structure allows the value to be directly
+> +	 * ORed to the IDECTRL register, hence giving directly the A[2:0] and
+> +	 * CS1n/CS0n values for each IDE register.
+> +	 * The values correspond to the transformation:
+> +	 *   ((real IDE address) << 2) | CS1n value << 1 | CS0n value
+> +	 */
+> +	ioaddr->cmd_addr	= (void __iomem *) 0 + 2; /* CS1 */
+> +
+> +	ioaddr->data_addr	= (void __iomem *) (ATA_REG_DATA << 2) + 2;
+> +	ioaddr->error_addr	= (void __iomem *) (ATA_REG_ERR << 2) + 2;
+> +	ioaddr->feature_addr	= (void __iomem *) (ATA_REG_FEATURE << 2) + 2;
+> +	ioaddr->nsect_addr	= (void __iomem *) (ATA_REG_NSECT << 2) + 2;
+> +	ioaddr->lbal_addr	= (void __iomem *) (ATA_REG_LBAL << 2) + 2;
+> +	ioaddr->lbam_addr	= (void __iomem *) (ATA_REG_LBAM << 2) + 2;
+> +	ioaddr->lbah_addr	= (void __iomem *) (ATA_REG_LBAH << 2) + 2;
+> +	ioaddr->device_addr	= (void __iomem *) (ATA_REG_DEVICE << 2) + 2;
+> +	ioaddr->status_addr	= (void __iomem *) (ATA_REG_STATUS << 2) + 2;
+> +	ioaddr->command_addr	= (void __iomem *) (ATA_REG_CMD << 2) + 2;
+> +
+> +	ioaddr->altstatus_addr	= (void __iomem *) (0x06 << 2) + 1; /* CS0 */
+> +	ioaddr->ctl_addr	= (void __iomem *) (0x06 << 2) + 1; /* CS0 */
+> +}
 
--- =
+As mentioned above, this seems to make no sense.
 
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+> ===================================================================
+> --- linux-2.6.orig/drivers/ata/Kconfig
+> +++ linux-2.6/drivers/ata/Kconfig
+> @@ -416,6 +416,15 @@ config PATA_EFAR
+>  
+>  	  If unsure, say N.
+>  
+> +config PATA_EP93XX
+> +	tristate "Cirrus Logic EP93xx PATA support"
+> +	depends on ARCH_EP93XX
+> +	help
+> +	  This option enables support for the PATA controller in
+> +	  the Cirrus Logic EP9312 and EP9315 ARM CPU.
+> +
+> +	  If unsure, say N.
+> +
+>  config PATA_HPT366
+>  	tristate "HPT 366/368 PATA support"
+>  	depends on PCI
 
-______________________________________________________
-Linux MTD discussion mailing list
-http://lists.infradead.org/mailman/listinfo/linux-mtd/
+And I think this should be consequently be sorted below nonstandard ports, instead of the SFF list.
+
+	Arnd
