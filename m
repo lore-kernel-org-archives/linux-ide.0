@@ -1,74 +1,55 @@
-From: "Victor Miasnikov" <vvm@tut.by>
-Subject: Re: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers by default
-Date: Fri, 30 Mar 2012 12:14:20 +0300
-Message-ID: <6AF6153696DE4E7EB79B86077851A00E@local.st.by>
-References: <1333042130-9634-1-git-send-email-apw@canonical.com>
+From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
+        <u.kleine-koenig@pengutronix.de>
+Subject: Re: [PATCH 00/17] mark const init data with __initconst instead of
+ __initdata
+Date: Fri, 30 Mar 2012 11:59:00 +0200
+Message-ID: <20120330095859.GT15647@pengutronix.de>
+References: <20120329211131.GA31250@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="koi8-r";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34944 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759436Ab2C3JOY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Mar 2012 05:14:24 -0400
-Received: by bkcik5 with SMTP id ik5so336458bkc.19
-        for <linux-ide@vger.kernel.org>; Fri, 30 Mar 2012 02:14:23 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <20120329211131.GA31250@pengutronix.de>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Anatolij Gustschin <agust@denx.de>, Andreas Koensgen <ajk@comnets.uni-bremen.de>, Andrew Lunn <andrew@lunn.ch>, Andrew Victor <linux@maxim.org.za>, Arnd Bergmann <arnd@arndb.de>, Barry Song <baohua.song@csr.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bryan Huntsman <bryanh@codeaurora.org>, cbe-oss-dev@lists.ozlabs.org, Christoph Lameter <cl@linux-foundation.org>, Daniel Walker <dwalker@fifo99.com>, David Brown <davidb@codeaurora.org>, David Howells <dhowells@redhat.com>, "David S. Miller" <davem@davemloft.net>, David Woodhouse <dwmw2@infradead.org>, davinci-linux-open-source@linux.davincidsp.com, Eric Miao <eric.y.miao@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>, Grant Likely <gran>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Whitcroft <apw@canonical.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>
 
+On Thu, Mar 29, 2012 at 11:11:31PM +0200, Uwe Kleine-K=F6nig wrote:
+> Hello,
+>=20
+> this series fixes a common error to use __initdata to mark const
+> variables. Most of the time this works well enough to go unnoticed
+> (though I wonder why the linker doesn't warn about that).
+> Just try adding something like
+>=20
+> 	int something __initdata;
+>=20
+> to one of the patched files and compile to see the error.
+>=20
+> While touching these annotations I also corrected the position where =
+it
+> was wrong to go between the variable name and the =3D.
+>=20
+> Note this series is not compile tested.
+After a question by Shawn Guo I noticed that my command to do the chang=
+es
+was to lax and changed things that must not be changed (at least not
+with further care). Affected are lines like:
 
-Hi!
+	static const char *at91_dt_board_compat[] __initconst =3D {
 
------ Original Message ----- 
-From: "Andy Whitcroft" apw
-Sent: Thursday, March 29, 2012 8:28 PM
-Subject: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers by default
+While at91_dt_board_compat[0] is const, at91_dt_board_compat is not.
 
-> guest disks are exposed both via the Hyper-V paravirtualised drivers and via an emulated SATA disk
-> controller.   . . .  we need to prevent the
-> ata_piix driver from claiming the disks devices by default when running
-> on a Hyper-V hypervisor.
+I will send a fixed series later today.
 
- Yes
+Best regards
+Uwe
 
-Thanks for patch!
-
->    Comments?
-
- This patch is  "UBUNTU Way" Solution described in
-
-See
-http://vvm.blog.tut.by/2012/03/29/linux-on-hyper-v-use-hv_storvsc-instead-of-ata_piix-to-handle-the-ide-disks-devices-but-not-for-the-dvd-rom-cd-rom-device-handling/
-Or
-
-http://marc.info/?l=linux-kernel&m=133302969709312&w=2
-==
-List: linux-kernel
-Subject: Linux on Hyper-V -- use hv_storvsc instead of ata_piix to handle the IDE disks devices ( but not for the 
-DVD-ROM / CD-ROM device handling) Fw: [PATCH RFC] ata_piix: ignore disks in a hyper-v guest
-From: "Victor Miasnikov"
-Date: 2012-03-29 14:00:05
-
-. . .
-
-"UBUNTU Way" Solution -- tested with
-Ubuntu 12.04 LTS (Precise Pangolin) Daily Build 2012-03-13
-precise-desktop-amd64.iso
-, work Ok
-. . .
-==
-
-
-
-i.e. "[PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers by default"  is fully worked solution to 
-the described problem
-
-
-Best regards, Victor Miasnikov
-Blog:  http://vvm.blog.tut.by/ 
-
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig        =
+    |
+Industrial Linux Solutions                 | http://www.pengutronix.de/=
+  |
