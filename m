@@ -1,20 +1,41 @@
-From: TUSHAR DONGA <10dce091@nirmauni.ac.in>
-Subject: (unknown)
-Date: Wed, 4 Apr 2012 05:12:28 -0700
-Message-ID: <CAB1MJNeNQOQktq=fZJXnwBadgv1shSk1qJHHfZ__aLd6Mr2-Wg@mail.gmail.com>
-Reply-To: annmary32@yahoo.com.hk
+From: Rafal Prylowski <prylowski@metasoft.pl>
+Subject: Re: [PATCH v2 1/3] PATA host controller driver for ep93xx
+Date: Wed, 04 Apr 2012 14:40:34 +0200
+Message-ID: <4F7C4142.1010709@metasoft.pl>
+References: <4F7B0C54.8010804@metasoft.pl> <4F7B0CEF.2040307@metasoft.pl> <ADE657CA350FB648AAC2C43247A983F0020698409E29@AUSP01VMBX24.collaborationhost.net> <201204032008.00509.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f66.google.com ([209.85.214.66]:60406 "EHLO
-	mail-bk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756047Ab2DDMMj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Apr 2012 08:12:39 -0400
-Received: by bkcjm19 with SMTP id jm19so32084bkc.1
-        for <linux-ide@vger.kernel.org>; Wed, 04 Apr 2012 05:12:37 -0700 (PDT)
-Subject: 
+Received: from metasoft.pl ([195.149.224.191]:51247 "EHLO smtp.metasoft.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756106Ab2DDMlP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2012 08:41:15 -0400
+In-Reply-To: <201204032008.00509.arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, H Hartley Sweeten <hartleys@visionengravers.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Sergei Shtylyov <sshtylyov@mvista.com>, "bzolnier@gmail.com" <bzolnier@gmail.com>, "rmallon@gmail.com" <rmallon@gmail.com>, "joao.ramos@inov.pt" <joao.ramos@inov.pt>
 
-Am in urgent need of your assistance.Please contact me via email (
-annmary32@yahoo.com.hk ).
+On 2012-04-03 22:08, Arnd Bergmann wrote:
+>>> +static void ep93xx_pata_wait_for_iordy(void __iomem *base)
+>>> +{
+>>> +     unsigned long deadline = jiffies + msecs_to_jiffies(1000);
+>>> +     while (!ep93xx_pata_check_iordy(base) &&
+>>> +             time_is_before_jiffies(deadline))
+>>> +             cpu_relax();
+>>> +}
+> 
+> Much better for a delay than the previous version. However, it's
+> still a busy wait, which is bad for realtime behavior, especially
+> since this can potentially take many milliseconds. If possible,
+> it should have an msleep() or at least cond_resched() instead of
+> the cpu_relax(). Obviously that will only work when no spinlocks
+> are held.
+> 
+
+Unfortunately, we can't use msleep() or cond_resched() here
+- ep93xx_pata_wait_for_iordy() is called from interrupt handler.
+
+Thanks,
+RP
