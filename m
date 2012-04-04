@@ -1,52 +1,52 @@
-From: H Hartley Sweeten <hartleys@visionengravers.com>
-Subject: RE: [PATCH v2 2/3] ep93xx: IDE driver platform support code
-Date: Tue, 3 Apr 2012 20:43:07 -0500
-Message-ID: <ADE657CA350FB648AAC2C43247A983F0020698409F59@AUSP01VMBX24.collaborationhost.net>
-References: <4F7B0C54.8010804@metasoft.pl> <4F7B0D6C.1010801@metasoft.pl>
+From: Rafal Prylowski <prylowski@metasoft.pl>
+Subject: Re: [PATCH v2 1/3] PATA host controller driver for ep93xx
+Date: Wed, 04 Apr 2012 09:39:24 +0200
+Message-ID: <4F7BFAAC.9060307@metasoft.pl>
+References: <4F7B0C54.8010804@metasoft.pl> <4F7B0CEF.2040307@metasoft.pl> <ADE657CA350FB648AAC2C43247A983F0020698409E29@AUSP01VMBX24.collaborationhost.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail127.messagelabs.com ([216.82.250.115]:18285 "EHLO
-	mail127.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755287Ab2DDBnJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Apr 2012 21:43:09 -0400
-In-Reply-To: <4F7B0D6C.1010801@metasoft.pl>
-Content-Language: en-US
+Received: from metasoft.pl ([195.149.224.191]:35034 "EHLO smtp.metasoft.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753834Ab2DDHje (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Apr 2012 03:39:34 -0400
+In-Reply-To: <ADE657CA350FB648AAC2C43247A983F0020698409E29@AUSP01VMBX24.collaborationhost.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rafal Prylowski <prylowski@metasoft.pl>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "joao.ramos@inov.pt" <joao.ramos@inov.pt>, "rmallon@gmail.com" <rmallon@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>, "bzolnier@gmail.com" <bzolnier@gmail.com>
+To: H Hartley Sweeten <hartleys@visionengravers.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "joao.ramos@inov.pt" <joao.ramos@inov.pt>, "rmallon@gmail.com" <rmallon@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>, "bzolnier@gmail.com" <bzolnier@gmail.com>
 
-On Tuesday, April 03, 2012 7:47 AM, Rafal Prylowski wrote:
+On 2012-04-03 20:25, H Hartley Sweeten wrote:
+>> +     /* allocate host */
+>> +     host = ata_host_alloc(&pdev->dev, 1);
+>> +     if (!host) {
+>> +             err = -ENXIO;
+>> +             goto err_rel_dma;
+>> +     }
+>> +
+>> +     ep93xx_pata_clear_regs(ide_base);
+>> +
+>> +     host->n_ports = 1;
+> 
+> Just a question. Does the single port handle both devices that the ep93xx ide
+> interface supports?
 
-<snip>
+Yes, single port should handle both master and slave devices on one cable,
+provided that ATA_FLAG_SLAVE_POSS is set in port flags:
 
-> +int ep93xx_ide_acquire_gpio(struct platform_device *pdev)
-> +{
-> +	int err;
-> +	int i;
-> +
-> +	for (i = 2; i < 8; i++) {
-> +		err = gpio_request(EP93XX_GPIO_LINE_E(i), dev_name(&pdev->dev));
-> +		if (err)
-> +			goto fail_gpio_e;
-> +	}
-> +	for (i = 4; i < 8; i++) {
-> +		err = gpio_request(EP93XX_GPIO_LINE_G(i), dev_name(&pdev->dev));
-> +		if (err)
-> +			goto fail_gpio_g;
-> +	}
-> +	for (i = 0; i < 8; i++) {
-> +		err = gpio_request(EP93XX_GPIO_LINE_H(i), dev_name(&pdev->dev));
-> +		if (err)
-> +			goto fail_gpio_h;
-> +	}
+>> +     host->private_data = drv_data;
+>> +
+>> +     ap = host->ports[0];
+>> +     ap->dev = &pdev->dev;
+>> +     ap->ops = &ep93xx_pata_port_ops;
+>> +     ap->flags |= ATA_FLAG_SLAVE_POSS;
 
-EP93XX_GPIO_LINE_EGPIO2 and EP93XX_GPIO_LINE_EGPIO15 are also used by the
-IDE interface as the DMARQ and DASPn signals. They should be requested to make sure
-nobody uses them when the IDE driver is loaded.
+Btw, I noticed that host->n_ports is already set in ata_host_alloc, so I'll
+remove unneeded line from the driver.
 
-Regards,
-Hartley
+I just tested two disks on one cable, and it works correctly (my previous tests
+were limited to only one disk or CF card).
 
+Thanks,
+RP
