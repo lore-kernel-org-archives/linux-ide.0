@@ -1,69 +1,66 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 1/1] [v3] Add support 2 SATA ports for Maui and change
- filename from sata_dwc_460ex.c to sata_dwc_4xx.c
-Date: Fri, 06 Apr 2012 16:10:29 +0400
-Message-ID: <4F7EDD35.3070203@mvista.com>
-References: <1333690265-27857-1-git-send-email-tqnguyen@apm.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: Single host/multiple hwifs vs. multiple hosts?
+Date: Sun, 8 Apr 2012 11:12:44 +0200
+Message-ID: <CAMuHMdXKUVU8WWVD_fd4XpB3-scsfrJjOVQ6D1D=jAMmi-qhsQ@mail.gmail.com>
+References: <CAMuHMdX1iwCwH+NXF7wP+pTMZzkUiR+DOrjjrVFWmtQUsktC=w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:51397 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756598Ab2DFMMC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Apr 2012 08:12:02 -0400
-Received: by bkcik5 with SMTP id ik5so2092815bkc.19
-        for <linux-ide@vger.kernel.org>; Fri, 06 Apr 2012 05:12:01 -0700 (PDT)
-In-Reply-To: <1333690265-27857-1-git-send-email-tqnguyen@apm.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:55859 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751869Ab2DHJMp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 8 Apr 2012 05:12:45 -0400
+Received: by wejx9 with SMTP id x9so2149473wej.19
+        for <linux-ide@vger.kernel.org>; Sun, 08 Apr 2012 02:12:44 -0700 (PDT)
+In-Reply-To: <CAMuHMdX1iwCwH+NXF7wP+pTMZzkUiR+DOrjjrVFWmtQUsktC=w@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Thang Q. Nguyen" <tqnguyen@apm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jeff Garzik <jgarzik@pobox.com>, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, Phong Vo <pvo@apm.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+To: linux-ide@vger.kernel.org
+Cc: linux-m68k <linux-m68k@lists.linux-m68k.org>
 
-Hello.
+On Sun, Mar 4, 2012 at 13:15, Geert Uytterhoeven <geert@linux-m68k.org>=
+ wrote:
+> I'm wondering what are the differences between adding a single IDE ho=
+st with
+> multiple hwifs vs. adding a separate IDE host for each hwif?
+> Do both ways work?
 
-On 06-04-2012 9:31, Thang Q. Nguyen wrote:
+Does no one know?
 
-> Signed-off-by: Thang Q. Nguyen<tqnguyen@apm.com>
-> ---
-> Changes for v2:
->         - Use git rename feature to change the driver to the newname and for
->           easier review.
+Thx again!
 
-> Changes for v3:
-> 	- Remove materials not related to 2 SATA ports support. They will
-> 	 be added in another patches.
+> I'm asking because I want to convert the Amiga Buddha IDE driver to t=
+he new
+> driver model, using Multi Function Devices (many Zorro expansion card=
+s contain
+> multiple devices):
+> =C2=A0- A Catweasel expansion card would have:
+> =C2=A0 =C2=A0 =C2=A0* 2 Buddha IDE MFD cells,
+> =C2=A0 =C2=A0 =C2=A0* 1 Catweasel floppy MFD cell.
+> =C2=A0- A Buddha expansion card would have:
+> =C2=A0 =C2=A0 =C2=A0* 3 Buddha IDE MFD cells.
+> =C2=A0- An X-Surf expansion card would have:
+> =C2=A0 =C2=A0 =C2=A0* 2 Buddha IDE MFD cells,
+> =C2=A0 =C2=A0 =C2=A0* 1 8390 Ethernet cell.
+> Registering a separate IDE host/hwif for each IDE MFD cell would be e=
+asier to
+> handle than a single IDE host with multiple IDE hwifs.
+>
+> Thanks in advance!
 
->   drivers/ata/Makefile                             |    2 +-
->   drivers/ata/{sata_dwc_460ex.c =>  sata_dwc_4xx.c} |  820 +++++++++++-----------
->   2 files changed, 430 insertions(+), 392 deletions(-)
->   rename drivers/ata/{sata_dwc_460ex.c =>  sata_dwc_4xx.c} (73%)
+Gr{oetje,eeting}s,
 
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_4xx.c
-> similarity index 73%
-> rename from drivers/ata/sata_dwc_460ex.c
-> rename to drivers/ata/sata_dwc_4xx.c
-> index 69f7cde..07e9b36 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_4xx.c
-[...]
-> @@ -16,6 +14,15 @@
->    * under  the terms of  the GNU General  Public License as published by the
->    * Free Software Foundation;  either version 2 of the  License, or (at your
->    * option) any later version.
-> + *
-> + * CHANGES:
-> + * - Version 1.4:
-> + *   + Change filename from sata_dwc_460ex.c to sata_dwc_4xx.c
-> + *   + This driver supports more than one SATA port. Each SATA port has its
-> + *     own private attribute. Move sata_dwc_host_priv structure to
-> + *     sata_dwc_device and sata_dwc_device_port structures.
-> + *   + Change to use ata_bmdma_qc_issue and ata_bmdma_error_handler because
-> + *     the ata_sff_qc_issue and ata_sff_error_handler no longer support DMA.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
 
-    This modification looks like a bug fix, and so should be separated and 
-posted before the dual-port patch.
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
 
-    I'll try to do more deltailed review on the weekend.
-
-MBR, Sergei
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
