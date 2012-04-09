@@ -1,63 +1,56 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 1/1] Add support 2 SATA ports for Maui and change filename
- from sata_dwc_460ex.c to sata_dwc_4xx.c
-Date: Mon, 09 Apr 2012 14:12:45 +0400
-Message-ID: <4F82B61D.8010502@mvista.com>
-References: <1333447938-16461-1-git-send-email-tqnguyen@apm.com>
+From: philby john <pjohn@mvista.com>
+Subject: [PATCH] sil3531: has no PM capability, remove support.
+Date: Mon, 09 Apr 2012 19:44:09 +0530
+Message-ID: <1333980849.11209.5.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:50745 "EHLO
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:40563 "EHLO
 	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756080Ab2DIKOU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2012 06:14:20 -0400
-Received: by bkcik5 with SMTP id ik5so3277275bkc.19
-        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2012 03:14:17 -0700 (PDT)
-In-Reply-To: <1333447938-16461-1-git-send-email-tqnguyen@apm.com>
+	with ESMTP id S1755403Ab2DIONT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Apr 2012 10:13:19 -0400
+Received: by bkcik5 with SMTP id ik5so3407809bkc.19
+        for <linux-ide@vger.kernel.org>; Mon, 09 Apr 2012 07:13:18 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Thang Q. Nguyen" <tqnguyen@apm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jeff Garzik <jgarzik@pobox.com>, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com
 
-Hello.
+From: Philby John <pjohn@mvista.com>
+Date: Mon, 9 Apr 2012 19:09:51 +0530
+Subject: [PATCH] sil3531: has no PM capability, remove support.
 
-On 03-04-2012 14:12, Thang Q. Nguyen wrote:
+SATA sil3531 does not support Power Management Capability and
+as per the manual Bit [31:27] is hardwired to 00h.
+Otherwise, when the device goes into suspend/resume the Power
+Management Control + Status registers are accessed and the
+arch specific readl()/__raw_readl() calls block indefinitely.
 
-> Signed-off-by: Thang Q. Nguyen<tqnguyen@apm.com>
-[...]
+This patch sets the PCI_DEV_FLAGS_NO_D3 flag by which the if
+condition in pci_set_power_state() evaluates to true and
+pci_raw_set_power_state() functions are not executed.
 
-> diff --git a/arch/powerpc/boot/dts/bluestone.dts b/arch/powerpc/boot/dts/bluestone.dts
-> index cfa23bf..803fda6 100644
-> --- a/arch/powerpc/boot/dts/bluestone.dts
-> +++ b/arch/powerpc/boot/dts/bluestone.dts
-> @@ -155,6 +155,27 @@
->   					/*RXDE*/  0x5 0x4>;
->   		};
->
-> +		/* SATA DWC devices */
-> +		SATA0: sata@bffd1000 {
-> +			compatible = "amcc,sata-apm821xx";
-> +			reg =<4 0xbffd1000 0x800   /* SATA0 */
-> +			       4 0xbffd0800 0x400>; /* AHBDMA */
-> +			dma-channel=<0>;
-> +			interrupt-parent =<&UIC0>;
-> +			interrupts =<26 4    /* SATA0 */
-> +			              25 4>;  /* AHBDMA */
-> +		};
-> +
-> +		SATA1: sata@bffd1800 {
-> +			compatible = "amcc,sata-apm821xx";
-> +			reg =<4 0xbffd1800 0x800   /* SATA1 */
-> +			       4 0xbffd0800 0x400>; /* AHBDMA */
-> +			dma-channel=<1>;
-> +			interrupt-parent =<&UIC0>;
-> +			interrupts =<27 4    /* SATA1 */
-> +			              25 4>;  /* AHBDMA */
-> +		};
-> +
+Signed-off-by: Philby John <pjohn@mvista.com>
+Signed-off-by: Johnny Chiang <Johnny.Chiang@caviumnetworks.com>
+---
+ drivers/pci/pci.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-    So, this is dual SATA controller, not dual port SATA controller?
-BTW, it's wrong to have the same AHBDMA resource in two device nodes I think.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 8156744..129120d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1863,6 +1863,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 		pci_pme_active(dev, false);
+ 	} else {
+ 		dev->pme_support = 0;
++		dev->dev_flags |= PCI_DEV_FLAGS_NO_D3;
+ 	}
+ }
+ 
+-- 
+1.6.3.3.340.g77d18
 
-MBR, Sergei
+
+
