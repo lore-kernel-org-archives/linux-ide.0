@@ -1,114 +1,148 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 1/1] Add support 2 SATA ports for Maui and change filename
- from sata_dwc_460ex.c to sata_dwc_4xx.c
-Date: Tue, 10 Apr 2012 15:22:03 +0400
-Message-ID: <4F8417DB.3040502@mvista.com>
-References: <1333447938-16461-1-git-send-email-tqnguyen@apm.com> <4F82B61D.8010502@mvista.com> <8a0ea5bd221ddeb9eded16e180aa8fbb@mail.gmail.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] ata_piix: defer disks to the Hyper-V
+ paravirtualised drivers by default
+Date: Tue, 10 Apr 2012 16:08:22 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF902511F@BY2PRD0310MB378.namprd03.prod.outlook.com>
+References: <1333042130-9634-1-git-send-email-apw@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:37862 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852Ab2DJLXn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2012 07:23:43 -0400
-Received: by bkcik5 with SMTP id ik5so4102208bkc.19
-        for <linux-ide@vger.kernel.org>; Tue, 10 Apr 2012 04:23:42 -0700 (PDT)
-In-Reply-To: <8a0ea5bd221ddeb9eded16e180aa8fbb@mail.gmail.com>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:19056
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751246Ab2DJQJR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Apr 2012 12:09:17 -0400
+In-Reply-To: <1333042130-9634-1-git-send-email-apw@canonical.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thang Nguyen <tqnguyen@apm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jeff Garzik <jgarzik@pobox.com>, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org
+To: Andy Whitcroft <apw@canonical.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
 
-Hello.
 
-On 10-04-2012 7:46, Thang Nguyen wrote:
 
-> Hi Sergei,
-> Thanks for your review.
-
-> On Maui, there are 2 separate SATA controllers but they share the same
-> AHBDMA controller. Each SATA controller is assigned a fixed DMA channel on
-> the AHBDMA (channel 0 is assigned to SATA controller 0 and channel 1 is
-> assigned to SATA controller 1).
-> For the 460EX, there is only 1 SATA controller and it uses channel 0 for
-> transferring data.
-
-> In my opinion, in the case of Maui, we can use the same DMA information in
-> 2 device nodes as they use the same DMA controller. And in another CPU, if
-> they use different DMA controller, the corresponding information will also
-> be different.
-
-    No, either the DMA controller should be a separate device node, or both 
-ports and DMA controller should be packed into the single device node. The way 
-you're doing it is incorrect because it creates memory resource conflict 
-between devices when they are instantiated as platfrom devices.
-
-> Regards,
-> Thang Nguyen -
 > -----Original Message-----
-> From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
-> Sent: Monday, April 09, 2012 5:13 PM
-> To: Thang Q. Nguyen
-> Cc: Benjamin Herrenschmidt; Paul Mackerras; Jeff Garzik; Grant Likely; Rob
-> Herring; linuxppc-dev@lists.ozlabs.org; linux-kernel@vger.kernel.org;
-> linux-ide@vger.kernel.org; devicetree-discuss@lists.ozlabs.org
-> Subject: Re: [PATCH 1/1] Add support 2 SATA ports for Maui and change
-> filename from sata_dwc_460ex.c to sata_dwc_4xx.c
+> From: Andy Whitcroft [mailto:apw@canonical.com]
+> Sent: Thursday, March 29, 2012 1:29 PM
+> To: Jeff Garzik; linux-ide@vger.kernel.org
+> Cc: Andy Whitcroft; linux-kernel@vger.kernel.org; KY Srinivasan; Mike Sterling
+> Subject: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers
+> by default
+> 
+> When we are hosted on a Hyper-V hypervisor the guest disks are exposed
+> both via the Hyper-V paravirtualised drivers and via an emulated SATA disk
+> controller.  We want to use the paravirtualised drivers where possible as
+> they are much more performant.  The Hyper-V paravirtualised drivers only
+> expose the virtual hard disk devices, the CDROM/DVD devices must still
+> be enumerated on the virtualised SATA controller.  As we have no control
+> over kernel probe order for these two drivers especially when one driver
+> is builtin to the kernel and the other a module, we need to prevent the
+> ata_piix driver from claiming the disks devices by default when running
+> on a Hyper-V hypervisor.
+> 
+> When enumerating the drives look at the aquired device ID and if it
+> appears to be a disk device then report it as disconnected.  Limit this
+> behaviour to when we have detected a Hyper-V hypervisor.  Finally allow
+> this behaviour to be overriden via a new module parameter.
 
-> Hello.
+Jeff,
 
-> On 03-04-2012 14:12, Thang Q. Nguyen wrote:
+Your feedback here would be greatly appreciated. If there are issues with this
+please, do let us know.
 
->> Signed-off-by: Thang Q. Nguyen<tqnguyen@apm.com>
-> [...]
+Regards,
 
->> diff --git a/arch/powerpc/boot/dts/bluestone.dts
-> b/arch/powerpc/boot/dts/bluestone.dts
->> index cfa23bf..803fda6 100644
->> --- a/arch/powerpc/boot/dts/bluestone.dts
->> +++ b/arch/powerpc/boot/dts/bluestone.dts
->> @@ -155,6 +155,27 @@
->>    					/*RXDE*/  0x5 0x4>;
->>    		};
->>
->> +		/* SATA DWC devices */
->> +		SATA0: sata@bffd1000 {
->> +			compatible = "amcc,sata-apm821xx";
->> +			reg =<4 0xbffd1000 0x800   /* SATA0 */
->> +			       4 0xbffd0800 0x400>; /* AHBDMA */
->> +			dma-channel=<0>;
->> +			interrupt-parent =<&UIC0>;
->> +			interrupts =<26 4    /* SATA0 */
->> +			              25 4>;  /* AHBDMA */
->> +		};
->> +
->> +		SATA1: sata@bffd1800 {
->> +			compatible = "amcc,sata-apm821xx";
->> +			reg =<4 0xbffd1800 0x800   /* SATA1 */
->> +			       4 0xbffd0800 0x400>; /* AHBDMA */
->> +			dma-channel=<1>;
->> +			interrupt-parent =<&UIC0>;
->> +			interrupts =<27 4    /* SATA1 */
->> +			              25 4>;  /* AHBDMA */
->> +		};
->> +
+K. Y 
+> 
+> BugLink: http://bugs.launchpad.net/bugs/929545
+> BugLink: http://bugs.launchpad.net/bugs/942316
+> Signed-off-by: Andy Whitcroft <apw@canonical.com>
+> ---
+>  drivers/ata/ata_piix.c |   29 +++++++++++++++++++++++++++++
+>  1 files changed, 29 insertions(+), 0 deletions(-)
+> 
+>     This was discovered when doing some boot testing on a Hyper-V
+>     host.  Performance was found to be bad as out builtin ata_piix
+>     driver was grabbing the disks.  I am Cc:ing a couple of the
+>     Microsoft people who worked on the HV driver set as well.
+> 
+>     Note that the device id data is converted from device to host
+>     order in the caller which makes examining the data problematic.
+>     As this code only make sense on X86 and we know we are in
+>     matching order we can access the data without first fixing it.
+>     Alternativly we could add a new callback from the ata core
+>     after the code has been fixed for validation.
+> 
+>     Comments?
+> 
+>     -apw
+> 
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 68013f9..64895f8 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -94,6 +94,9 @@
+>  #include <scsi/scsi_host.h>
+>  #include <linux/libata.h>
+>  #include <linux/dmi.h>
+> +#ifdef CONFIG_X86
+> +#include <asm/hypervisor.h>
+> +#endif
+> 
+>  #define DRV_NAME	"ata_piix"
+>  #define DRV_VERSION	"2.13"
+> @@ -188,6 +191,29 @@ static int piix_pci_device_resume(struct pci_dev *pdev);
+> 
+>  static unsigned int in_module_init = 1;
+> 
+> +static int prefer_ms_hyperv = 1;
+> +
+> +unsigned int ata_piix_read_id(struct ata_device *dev,
+> +					struct ata_taskfile *tf, u16 *id)
+> +{
+> +	int ret = ata_do_dev_read_id(dev, tf, id);
+> +
+> +#ifdef CONFIG_X86
+> +	/* XXX: note that the device id is in little-endian order, the caller
+> +	 * will shift it to host order, but we are working with little-endian.
+> +	 * As this is _only_ used on x86 we can actually directly access it
+> +	 * as host is also little-endian.
+> +	 */
+> +	if (!ret && prefer_ms_hyperv && x86_hyper == &x86_hyper_ms_hyperv
+> &&
+> +							ata_id_is_ata(id)) {
+> +		ata_dev_printk(dev, KERN_WARNING, "ATA disk ignored
+> deferring to Hyper-V paravirt driver\n");
+> +
+> +		return AC_ERR_DEV|AC_ERR_NODEV_HINT;
+> +	}
+> +#endif
+> +	return ret;
+> +}
+> +
+>  static const struct pci_device_id piix_pci_tbl[] = {
+>  	/* Intel PIIX3 for the 430HX etc */
+>  	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
+> @@ -359,6 +385,7 @@ static struct ata_port_operations piix_pata_ops = {
+>  	.set_piomode		= piix_set_piomode,
+>  	.set_dmamode		= piix_set_dmamode,
+>  	.prereset		= piix_pata_prereset,
+> +	.read_id		= ata_piix_read_id,
+>  };
+> 
+>  static struct ata_port_operations piix_vmw_ops = {
+> @@ -1703,3 +1730,5 @@ static void __exit piix_exit(void)
+> 
+>  module_init(piix_init);
+>  module_exit(piix_exit);
+> +
+> +module_param(prefer_ms_hyperv, int, 0);
+> --
+> 1.7.9.1
+> 
+> 
+> 
 
->      So, this is dual SATA controller, not dual port SATA controller?
-> BTW, it's wrong to have the same AHBDMA resource in two device nodes I
-> think.
 
-> MBR, Sergei
 
-    Can you get rid of the following? It looks stupid when you post to the 
-maliing list.
-
-> CONFIDENTIALITY NOTICE: This e-mail message, including any attachments,
-> is for the sole use of the intended recipient(s) and contains information
-> that is confidential and proprietary to AppliedMicro Corporation or its subsidiaries.
-> It is to be used solely for the purpose of furthering the parties' business relationship.
-> All unauthorized review, use, disclosure or distribution is prohibited.
-> If you are not the intended recipient, please contact the sender by reply e-mail
-> and destroy all copies of the original message.
-
-WBR, Sergei
