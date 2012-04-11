@@ -1,34 +1,38 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [isci PATCH v2 12/18] libata: make ata_print_id atomic
-Date: Wed, 11 Apr 2012 21:42:34 +0800
-Message-ID: <201204112142336876950@usish.com>
-References: <20120311072518.6320.61717.stgit@dwillia2-linux.jf.intel.com>	<20120311072845.6320.68461.stgit@dwillia2-linux.jf.intel.com> <CAA9_cmdc3kxJCqwiqpXXqWXUQHJ1SSpbK3u9bDSsgSc0p93Wuw@mail.gmail.com>,
-	<4F856E3C.5080902@intel.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [libsas PATCH v10 3/9] libata, libsas: introduce sched_eh and
+ end_eh port ops
+Date: Wed, 11 Apr 2012 11:04:59 -0700
+Message-ID: <CAA9_cmdoKM6www-08h8J6Npq=VCwYbE49vgTg3NpktPWEJSkUw@mail.gmail.com>
+References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
+	<20120311043912.27797.20898.stgit@dwillia2-linux.jf.intel.com>
+	<CAA9_cmc1j4Xs7P=eh+Y833o5uA3K4rCGc56cYZrB=xF8XO-p+A@mail.gmail.com>
+	<4F856D71.9080405@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:49645 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760151Ab2DKNmb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Apr 2012 09:42:31 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <4F856D71.9080405@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jacek Danecki <Jacek.Danecki@intel.com>
+Cc: linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jacek Danecki <Jacek.Danecki@intel.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
-QWNrZWQtYnk6IEphY2sgV2FuZyA8amFja193YW5nQHVzaXNoLmNvbT4NCg0KDQoNCi0tLS0tLS0t
-LS0tLS0tDQpqYWNrX3dhbmcNCj5PbiAwNC8xMS8xMiAwNDoyMSwgRGFuIFdpbGxpYW1zIHdyb3Rl
-Og0KPj4gUGluZz8gSSBhc3N1bWUgdGhpcyBmYWlybHkgdW5jb250cm92ZXJzaWFsIGFuZCBjYW4g
-YmUgMy40LXJjIG1hdGVyaWFsLg0KPj4NCj4NCj5BY2tlZC1ieTogSmFjZWsgRGFuZWNraSA8amFj
-ZWsuZGFuZWNraUBpbnRlbC5jb20+DQo+LS0gDQo+SmFjZWsNCj4tLQ0KPlRvIHVuc3Vic2NyaWJl
-IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBp
-bg0KPnRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+
-TW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8t
-aW5mby5odG1sDQo+DQo+X19fX19fX19fXyBJbmZvcm1hdGlvbiBmcm9tIEVTRVQgTk9EMzIgQW50
-aXZpcnVzLCB2ZXJzaW9uIG9mIHZpcnVzIHNpZ25hdHVyZSBkYXRhYmFzZSA1NjU5ICgyMDEwMTEy
-OSkgX19fX19fX19fXw0KPg0KPlRoZSBtZXNzYWdlIHdhcyBjaGVja2VkIGJ5IEVTRVQgTk9EMzIg
-QW50aXZpcnVzLg0KPg0KPmh0dHA6Ly93d3cuZXNldC5jb20NCj4NCj4NCj4=
+On Wed, Apr 11, 2012 at 4:39 AM, Jacek Danecki <Jacek.Danecki@intel.com=
+> wrote:
+> On 04/11/12 04:13, Dan Williams wrote:
+>>
+>> Ping? =A0Ack on the ata changes?
+>
+>
+> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
 
+Thanks Jacek, I was angling for Tejun or Jeff to weigh in with an ack
+so I can take this through James' tree.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
