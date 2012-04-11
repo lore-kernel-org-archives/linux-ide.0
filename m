@@ -1,148 +1,131 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] ata_piix: defer disks to the Hyper-V
- paravirtualised drivers by default
-Date: Tue, 10 Apr 2012 16:08:22 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF902511F@BY2PRD0310MB378.namprd03.prod.outlook.com>
-References: <1333042130-9634-1-git-send-email-apw@canonical.com>
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: Cannot detect SATA disk's FUA/DPO feature
+Date: Wed, 11 Apr 2012 10:08:57 +0800
+Message-ID: <20120411020857.GC18945@gmail.com>
+References: <20120409083412.GA4927@gmail.com>
+ <4F8486BB.2000701@stud.tu-ilmenau.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:19056
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751246Ab2DJQJR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Apr 2012 12:09:17 -0400
-In-Reply-To: <1333042130-9634-1-git-send-email-apw@canonical.com>
-Content-Language: en-US
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:32932 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967Ab2DKCCl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Apr 2012 22:02:41 -0400
+Content-Disposition: inline
+In-Reply-To: <4F8486BB.2000701@stud.tu-ilmenau.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Whitcroft <apw@canonical.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
+To: Stefan /*St0fF*/ =?utf-8?Q?H=C3=BCbner?= <stefan.huebner@stud.tu-ilmenau.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
+On Tue, Apr 10, 2012 at 09:15:07PM +0200, Stefan /*St0fF*/ H=C3=BCbner =
+wrote:
+> Am 09.04.2012 10:34, schrieb Zheng Liu:
+> > Hi list,
+> >=20
+> > Recently I meet a problem in upstream kernel, which the problem is =
+that
+> > disk driver can not detect FUA/DPO feature of SATA disk.  This mach=
+ine
+> > has two SATA disks, one is C400-MTFDDAK256M and another is WDC
+> > WD1002FAEX-0, both of them are plugged into mainboard.  I read the =
+data
+> > sheet and both of them support FUA feature.  I am not sure whether =
+this
+> > is a bug or not in kernel.  Meanwhile, I have tested in SAS disk an=
+d
+> > kernel displays that the disk supports FUA feature in dmesg.
+> >=20
+> > When we detect FUA feature for SAS disk in kernel, we will use SCSI
+> > command set to detect FUA feature.  Namely, in current kernel, we u=
+se
+> > FUA bit to check whether this SAS disk supports FUA feature or not.
+> > However, SATA disk uses ATA command set.  So in current kernel, thi=
+s
+> > method doesn't detect whether or not SATA disk supports FUA feature=
+=2E  Am
+> > I missing something?
+> >=20
+> > I put dmesg file in attachment.  Hopefully it is useful.
+> >=20
+> > Regards,
+> > Zheng
+>=20
+> Hi Zheng,
+>=20
+> as far as I read specs, libata should translate FUA stuff as describe=
+d
+> in the SAT spec:
+> --------snip-->
+> 9.17.2 WRITE commands with FUA
+> This subclause applies to the translation of the WRITE (10) command,
+> WRITE (12) command, and WRITE (16) command.
+> If the FUA bit is set to zero in the SCSI write command CDB, then the
+> SATL shall process this command as described in 9.17.1.
+> If the FUA bit is set to one in the SCSI write command CDB, then the
+> SATL shall send the following, in accordance with the constraints
+> described in 9.1:
+> a) the following ATA commands:
+> 1) an ATA write command (see 3.1.26) excluding WRITE DMA FUA EXT, WRI=
+TE
+> DMA QUEUED
+> FUA EXT, WRITE MULTIPLE FUA EXT, and WRITE FPDMA QUEUE; and
+> 2) an ATA verify command (see 3.1.24);
+> b) one of the following ATA commands (see ATA8-ACS):
+> A) WRITE DMA FUA EXT;
+> B) WRITE DMA QUEUED FUA EXT; or
+> C) WRITE MULTIPLE FUA EXT;
+> or
+> c) an ATA WRITE FPDMA QUEUED command (see SATA-2.6) with the FUA bit =
+in
+> the Device field set to
+> one.
+> <--snap-----------
+>=20
+> so if the disks supported FUA according to their ATA_IDENTIFY_DEVICE
+> data, I'd guess someone wanted to care about that part of the SATL in
+> the near future ;)
+>=20
+> Greets,
+> Stefan
 
+Hi Stefan,
 
-> -----Original Message-----
-> From: Andy Whitcroft [mailto:apw@canonical.com]
-> Sent: Thursday, March 29, 2012 1:29 PM
-> To: Jeff Garzik; linux-ide@vger.kernel.org
-> Cc: Andy Whitcroft; linux-kernel@vger.kernel.org; KY Srinivasan; Mike Sterling
-> Subject: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised drivers
-> by default
-> 
-> When we are hosted on a Hyper-V hypervisor the guest disks are exposed
-> both via the Hyper-V paravirtualised drivers and via an emulated SATA disk
-> controller.  We want to use the paravirtualised drivers where possible as
-> they are much more performant.  The Hyper-V paravirtualised drivers only
-> expose the virtual hard disk devices, the CDROM/DVD devices must still
-> be enumerated on the virtualised SATA controller.  As we have no control
-> over kernel probe order for these two drivers especially when one driver
-> is builtin to the kernel and the other a module, we need to prevent the
-> ata_piix driver from claiming the disks devices by default when running
-> on a Hyper-V hypervisor.
-> 
-> When enumerating the drives look at the aquired device ID and if it
-> appears to be a disk device then report it as disconnected.  Limit this
-> behaviour to when we have detected a Hyper-V hypervisor.  Finally allow
-> this behaviour to be overriden via a new module parameter.
+Cc to linux-ide mailing list for finding more suggestions.
 
-Jeff,
+Thank you for your reply.  I use sa_sat_identity command to read disk
+information.  The result shows that SATA disk supports WRITE DMA FUA
+EXT, WRITE DMA QUEUE FUA EXT, WRITE MULTIPLE FUA EXT and WRITE FPDMA
+QUEUE commands in my machine.  So, IMHO, maybe there is a defect in
+upstream kernel.  I read the stuff of scsi disk driver and the calling
+stack is as following:
 
-Your feedback here would be greatly appreciated. If there are issues with this
-please, do let us know.
+sd_probe()
+|
+->sd_probe_async()
+  |
+  ->sd_revalidate_disk()
+    |
+    ->sd_read_cache_type()
+      |
+      ->sd_do_mode_sense()
+        |
+        ->scsi_mode_sense()
+          |
+          ->scsi_execute_req()
+            |
+            ->blk_execute_rq()
+              |
+              ->blk_execute_rq_nowait()
+                |
+                ->ata_scsi_queuecmd()
+                  |
+                  ->ata_scsi_simulate()
+
+Until now, I don't have a conclusion about whether it is a defect in
+kernel.  I will go on tracing this problem.  Have you some suggestions?
+Please let me know.  Thank you.
 
 Regards,
-
-K. Y 
-> 
-> BugLink: http://bugs.launchpad.net/bugs/929545
-> BugLink: http://bugs.launchpad.net/bugs/942316
-> Signed-off-by: Andy Whitcroft <apw@canonical.com>
-> ---
->  drivers/ata/ata_piix.c |   29 +++++++++++++++++++++++++++++
->  1 files changed, 29 insertions(+), 0 deletions(-)
-> 
->     This was discovered when doing some boot testing on a Hyper-V
->     host.  Performance was found to be bad as out builtin ata_piix
->     driver was grabbing the disks.  I am Cc:ing a couple of the
->     Microsoft people who worked on the HV driver set as well.
-> 
->     Note that the device id data is converted from device to host
->     order in the caller which makes examining the data problematic.
->     As this code only make sense on X86 and we know we are in
->     matching order we can access the data without first fixing it.
->     Alternativly we could add a new callback from the ata core
->     after the code has been fixed for validation.
-> 
->     Comments?
-> 
->     -apw
-> 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 68013f9..64895f8 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -94,6 +94,9 @@
->  #include <scsi/scsi_host.h>
->  #include <linux/libata.h>
->  #include <linux/dmi.h>
-> +#ifdef CONFIG_X86
-> +#include <asm/hypervisor.h>
-> +#endif
-> 
->  #define DRV_NAME	"ata_piix"
->  #define DRV_VERSION	"2.13"
-> @@ -188,6 +191,29 @@ static int piix_pci_device_resume(struct pci_dev *pdev);
-> 
->  static unsigned int in_module_init = 1;
-> 
-> +static int prefer_ms_hyperv = 1;
-> +
-> +unsigned int ata_piix_read_id(struct ata_device *dev,
-> +					struct ata_taskfile *tf, u16 *id)
-> +{
-> +	int ret = ata_do_dev_read_id(dev, tf, id);
-> +
-> +#ifdef CONFIG_X86
-> +	/* XXX: note that the device id is in little-endian order, the caller
-> +	 * will shift it to host order, but we are working with little-endian.
-> +	 * As this is _only_ used on x86 we can actually directly access it
-> +	 * as host is also little-endian.
-> +	 */
-> +	if (!ret && prefer_ms_hyperv && x86_hyper == &x86_hyper_ms_hyperv
-> &&
-> +							ata_id_is_ata(id)) {
-> +		ata_dev_printk(dev, KERN_WARNING, "ATA disk ignored
-> deferring to Hyper-V paravirt driver\n");
-> +
-> +		return AC_ERR_DEV|AC_ERR_NODEV_HINT;
-> +	}
-> +#endif
-> +	return ret;
-> +}
-> +
->  static const struct pci_device_id piix_pci_tbl[] = {
->  	/* Intel PIIX3 for the 430HX etc */
->  	{ 0x8086, 0x7010, PCI_ANY_ID, PCI_ANY_ID, 0, 0, piix_pata_mwdma },
-> @@ -359,6 +385,7 @@ static struct ata_port_operations piix_pata_ops = {
->  	.set_piomode		= piix_set_piomode,
->  	.set_dmamode		= piix_set_dmamode,
->  	.prereset		= piix_pata_prereset,
-> +	.read_id		= ata_piix_read_id,
->  };
-> 
->  static struct ata_port_operations piix_vmw_ops = {
-> @@ -1703,3 +1730,5 @@ static void __exit piix_exit(void)
-> 
->  module_init(piix_init);
->  module_exit(piix_exit);
-> +
-> +module_param(prefer_ms_hyperv, int, 0);
-> --
-> 1.7.9.1
-> 
-> 
-> 
-
-
-
+Zheng
