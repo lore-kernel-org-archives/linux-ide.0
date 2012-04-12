@@ -1,38 +1,33 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [libsas PATCH v10 3/9] libata, libsas: introduce sched_eh and
- end_eh port ops
-Date: Wed, 11 Apr 2012 11:04:59 -0700
-Message-ID: <CAA9_cmdoKM6www-08h8J6Npq=VCwYbE49vgTg3NpktPWEJSkUw@mail.gmail.com>
-References: <20120311043722.27797.97791.stgit@dwillia2-linux.jf.intel.com>
-	<20120311043912.27797.20898.stgit@dwillia2-linux.jf.intel.com>
-	<CAA9_cmc1j4Xs7P=eh+Y833o5uA3K4rCGc56cYZrB=xF8XO-p+A@mail.gmail.com>
-	<4F856D71.9080405@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <4F856D71.9080405@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jacek Danecki <Jacek.Danecki@intel.com>
-Cc: linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [RESEND PATCH 0/2]: Use correct DMA device in SCSI/libata
+Date: Thu, 12 Apr 2012 13:50:37 +0800
+Message-ID: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:7955 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756761Ab2DLFu4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Apr 2012 01:50:56 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: =?UTF-8?q?J=C3=B6rg=20Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Apr 11, 2012 at 4:39 AM, Jacek Danecki <Jacek.Danecki@intel.com=
-> wrote:
-> On 04/11/12 04:13, Dan Williams wrote:
->>
->> Ping? =A0Ack on the ata changes?
->
->
-> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
+Hi,
 
-Thanks Jacek, I was angling for Tejun or Jeff to weigh in with an ack
-so I can take this through James' tree.
+RESEND: add Jeff's ACK.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These 2 patches fix bug report at:
+
+http://marc.info/?l=linux-ide&m=133177818318187&w=2
+
+Please see the patches for more detail.
+
+[PATCH 1/2] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue
+[PATCH 2/2] libata: Pass correct DMA device to scsi host
+
+ drivers/ata/libata-scsi.c |    3 ++-
+ drivers/scsi/scsi_lib.c   |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+Thanks,
+Lin Ming
