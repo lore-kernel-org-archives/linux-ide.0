@@ -1,143 +1,75 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [RESEND PATCH v2] libata: disable runtime pm for hotpluggable port
-Date: Thu, 12 Apr 2012 13:56:14 +0800
-Message-ID: <1334210174.11188.110.camel@minggr>
+From: Rafal Prylowski <prylowski@metasoft.pl>
+Subject: [PATCH v3 0/3] Add PATA host controller support for Cirrus Logic
+ EP93xx CPU
+Date: Thu, 12 Apr 2012 14:10:36 +0200
+Message-ID: <4F86C63C.6030908@metasoft.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:5183 "EHLO mga14.intel.com"
+Received: from metasoft.pl ([195.149.224.191]:55285 "EHLO smtp.metasoft.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756812Ab2DLF4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Apr 2012 01:56:16 -0400
+	id S1752380Ab2DLMLT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Apr 2012 08:11:19 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, jslaby@suse.cz, cwillu@cwillu.com, jackdachef@gmail.com, Sergei Shtylyov <sshtylyov@mvista.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "bzolnier@gmail.com" <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>, hsweeten@visionengravers.com, "joao.ramos@inov.pt" <joao.ramos@inov.pt>, "rmallon@gmail.com" <rmallon@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-Currently, hotplug doesn't work if port is already runtime suspended.
-For now, we simply disable runtime pm for hotpluggable port.
-Later, we should add runtime pm support for hotpluggable port too.
+Hi,
 
-Bug report:
-https://lkml.org/lkml/2012/2/19/70
+this is a third version of EP93xx PATA driver (PATCH v3 1/3),
+IDE platform code for ep93xx (PATCH v3 2/3) and IDE support
+for EDB93xx boards (PATCH v3 3/3).
+Patches apply to current mainline (v3.4rc2).
 
 v2:
-- Use bit 2 and 3 for flags ATA_FLAG_EXTERNAL and ATA_FLAG_PLUGGABLE.
+- don't BUG() in ep93xx_pata_dma_start(), ep93xx_pata_dma_setup(),
+- don't use ata_ioports structure for EP93xx IDECTRL register values,
+- IORDY timeout handling using jiffies (ep93xx_pata_wait_for_iordy),
+- IDE/GPIO pin muxing solved by adding ep93xx_ide_acquire/release_gpio,
+- register the driver also for EDB9312 and EDB9315 boards,
+- corrected many coding style issues,
+- dma initialization changed: request and configure channels in
+  ep93xx_pata_dma_init (was: request in ep93xx_pata_dma_init,
+  configuration in ep93xx_pata_dma_setup - channels were needlessly
+  configured to the same values before each transfer).
 
-TODO: add similar hotpluggable port check for controllers other than
-AHCI.
+v3:
+- use custom delay loop (ep93xx_pata_delay()) instead of ndelay(),
+- use ata_timing_compute() and ata_timing_merge() to properly calculate
+  timings for the delay loop,
+- use single ata_timing struct in ep93xx_pata_data for both IDE register
+  and PIO data transfers,
+- IORDY timeout handling using custom delay loop,
+- move common parts of code from ep93xx_pata_{read/write}() to
+  ep93xx_pata_rw_begin(), ep93xx_pata_rw_end(),
+- introduce ep93xx_pata_{read/write}_{reg/data}() - wrappers which call
+  ep93xx_pata_{read/write}() with proper timings selected,
+- corrected delays in ep93xx_pata_{read/write}: time waited for IORDY
+  is added to t2; wait (t0 - t2) or t2i (whichever is greater) after
+  deassertion of DIOW-/DIOR-,
+- removed DPRINTK, VPRINTK.
 
-Reported-and-tested-by: Jiri Slaby <jslaby@suse.cz>
-Reported-and-tested-by: cwillu@cwillu.com
-Reported-and-tested-by: jackdachef@gmail.com
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/ahci.c             |    3 +++
- drivers/ata/ahci.h             |    3 +++
- drivers/ata/libahci.c          |   20 ++++++++++++++++++++
- drivers/ata/libata-transport.c |    6 ++++--
- include/linux/libata.h         |    2 ++
- 5 files changed, 32 insertions(+), 2 deletions(-)
+The reason for using custom delay loop is that currently ndelay() has
+only 1us resolution on ep93xx. Using ndelay() gives us about 6 - 7us
+total execution time for each IDE register/PIO data transfer. This
+results in ~250kB/s transfers, no matter what PIO mode is selected.
+Using custom delay loop, this driver transfers data at ~2,1MB/s (PIO4).
+Is using such delay loop in the driver acceptable?
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d07bf03..02e93ff 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1145,6 +1145,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (hpriv->cap & HOST_CAP_PMP)
- 		pi.flags |= ATA_FLAG_PMP;
- 
-+	if (hpriv->cap & HOST_CAP_SXS)
-+		pi.flags |= ATA_FLAG_EXTERNAL;
-+
- 	ahci_set_em_messages(hpriv, &pi);
- 
- 	if (ahci_broken_system_poweroff(pdev)) {
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index b175000..92f7172 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -172,6 +172,9 @@ enum {
- 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
- 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
-+	PORT_CMD_ESP		= (1 << 21), /* External SATA Port */
-+	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch Attached to Port */
-+	PORT_CMD_HPCP		= (1 << 18), /* Hot Plug Capable Port */
- 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
- 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index a72bfd0..7d72d3c 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1097,6 +1097,23 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
- 	writel(1 << port_no, mmio + HOST_IRQ_STAT);
- }
- 
-+static bool ahci_port_pluggable(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	u32 cmd;
-+
-+	cmd = readl(port_mmio + PORT_CMD);
-+
-+	if ((ap->flags & ATA_FLAG_EXTERNAL) &&
-+	    (cmd & PORT_CMD_ESP))
-+		return true;
-+
-+	if (cmd & (PORT_CMD_MPSP | PORT_CMD_HPCP))
-+		return true;
-+
-+	return false;
-+}
-+
- void ahci_init_controller(struct ata_host *host)
- {
- 	struct ahci_host_priv *hpriv = host->private_data;
-@@ -1112,6 +1129,9 @@ void ahci_init_controller(struct ata_host *host)
- 		if (ata_port_is_dummy(ap))
- 			continue;
- 
-+		if (ahci_port_pluggable(ap))
-+			ap->flags |= ATA_FLAG_PLUGGABLE;
-+
- 		ahci_port_init(host->dev, ap, i, mmio, port_mmio);
- 	}
- 
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 74aaee3..a7166b9 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -292,8 +292,10 @@ int ata_tport_add(struct device *parent,
- 	}
- 
- 	device_enable_async_suspend(dev);
--	pm_runtime_set_active(dev);
--	pm_runtime_enable(dev);
-+	if (!(ap->flags & ATA_FLAG_PLUGGABLE)) {
-+		pm_runtime_set_active(dev);
-+		pm_runtime_enable(dev);
-+	}
- 
- 	transport_add_device(dev);
- 	transport_configure_device(dev);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index cafc09a..f46961d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -187,6 +187,8 @@ enum {
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
- 					    /* (doesn't imply presence) */
- 	ATA_FLAG_SATA		= (1 << 1),
-+	ATA_FLAG_EXTERNAL	= (1 << 2), /* Controller supports external SATA */
-+	ATA_FLAG_PLUGGABLE	= (1 << 3), /* Port is hotpluggable */
- 	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
- 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
- 	ATA_FLAG_PIO_LBA48	= (1 << 8), /* Host DMA engine is LBA28 only */
--- 
-1.7.2.5
+Thanks,
+RP
 
+[PATCH v3 1/3] PATA host controller driver for ep93xx
+[PATCH v3 2/3] ep93xx: IDE driver platform support code
+[PATCH v3 3/3] ep93xx: Add IDE support to edb93xx boards
 
-
+ arch/arm/mach-ep93xx/core.c                  |   96 +
+ arch/arm/mach-ep93xx/edb93xx.c               |   24
+ arch/arm/mach-ep93xx/include/mach/platform.h |    3
+ arch/arm/mach-ep93xx/soc.h                   |    1
+ drivers/ata/Kconfig                          |    9
+ drivers/ata/Makefile                         |    1
+ drivers/ata/pata_ep93xx.c                    | 1044 +++++++++++++++++
+ 7 files changed, 1178 insertions(+)
