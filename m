@@ -1,60 +1,51 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RESEND PATCH v2] libata: disable runtime pm for hotpluggable
- port
-Date: Fri, 13 Apr 2012 09:24:07 +0800
-Message-ID: <1334280247.11188.115.camel@minggr>
-References: <1334210174.11188.110.camel@minggr> <4F871916.9080705@pobox.com>
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: Re: [PATCH] ata/pata_arasan_cf: Move arasan_cf_pm_ops out of #ifdef,
+ #endif macros
+Date: Fri, 13 Apr 2012 09:13:20 +0530
+Message-ID: <4F87A0D8.70707@st.com>
+References: <427196876874fef7e956b10d035d06eed5895743.1330588911.git.viresh.kumar@st.com> <4F83FE48.8000607@st.com> <4F873609.20107@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:59443 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751789Ab2DMBYK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Apr 2012 21:24:10 -0400
-In-Reply-To: <4F871916.9080705@pobox.com>
+Received: from eu1sys200aog104.obsmtp.com ([207.126.144.117]:40750 "EHLO
+	eu1sys200aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757184Ab2DMDox (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Apr 2012 23:44:53 -0400
+In-Reply-To: <4F873609.20107@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, jslaby@suse.cz, cwillu@cwillu.com, jackdachef@gmail.com, Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, spear-devel <spear-devel@list.st.com>, "viresh.linux@gmail.com" <viresh.linux@gmail.com>
 
-On Thu, 2012-04-12 at 14:04 -0400, Jeff Garzik wrote:
-> On 04/12/2012 01:56 AM, Lin Ming wrote:
-> > Currently, hotplug doesn't work if port is already runtime suspended.
-> > For now, we simply disable runtime pm for hotpluggable port.
-> > Later, we should add runtime pm support for hotpluggable port too.
-> >
-> > Bug report:
-> > https://lkml.org/lkml/2012/2/19/70
-> >
-> > v2:
-> > - Use bit 2 and 3 for flags ATA_FLAG_EXTERNAL and ATA_FLAG_PLUGGABLE.
-> >
-> > TODO: add similar hotpluggable port check for controllers other than
-> > AHCI.
-> >
-> > Reported-and-tested-by: Jiri Slaby<jslaby@suse.cz>
-> > Reported-and-tested-by: cwillu@cwillu.com
-> > Reported-and-tested-by: jackdachef@gmail.com
-> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> > ---
-> >   drivers/ata/ahci.c             |    3 +++
-> >   drivers/ata/ahci.h             |    3 +++
-> >   drivers/ata/libahci.c          |   20 ++++++++++++++++++++
-> >   drivers/ata/libata-transport.c |    6 ++++--
-> >   include/linux/libata.h         |    2 ++
-> >   5 files changed, 32 insertions(+), 2 deletions(-)
+On 4/13/2012 1:37 AM, Jeff Garzik wrote:
+> On 04/10/2012 05:32 AM, Viresh Kumar wrote:
+>> On 3/1/2012 1:34 PM, Viresh KUMAR wrote:
+>>> #ifdef, #endif is not required in definition/usage of arasan_cf_pm_ops. So, move
+>>> this definition and its usage outside of them.
+>>>
+>>> Signed-off-by: Viresh Kumar<viresh.kumar@st.com>
+>>> ---
+>>>   drivers/ata/pata_arasan_cf.c |    4 +---
+>>>   1 files changed, 1 insertions(+), 3 deletions(-)
+>>
+>> Hi Jeff,
+>>
+>> Can you please apply this patch?
 > 
-> The fundamental problem with this patch is that all SATA ports are 
-> hotpluggable... even the ones the firmware/silicon failed to mark as 
-> hotpluggable via AHCI's PORT_CMD_MPSP | PORT_CMD_HPCP
+> This has been upstream for a while now.
 
-So the acceptable solution is to add runtime pm support for hotpluggable
-port.
+I couldn't see this in linux-next/master :(
 
-I'll send new patches.
+You pushed following patch earlier:
 
-Thanks,
-Lin Ming
+Author: Viresh Kumar <viresh.kumar@st.com>
+Date:   Thu Feb 23 15:03:53 2012 +0530
+
+    ata/pata_arasan_cf: Add Hibernation support
 
 
+And this one is a fix over it.
+
+-- 
+viresh
