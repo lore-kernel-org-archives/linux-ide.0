@@ -1,52 +1,57 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/1] Add support 2 SATA ports for Maui and change filename
- from sata_dwc_460ex.c to sata_dwc_4xx.c
-Date: Fri, 13 Apr 2012 10:20:48 -0400
-Message-ID: <4F883640.60103@pobox.com>
-References: <1333447938-16461-1-git-send-email-tqnguyen@apm.com> <4F7AE584.3050805@mvista.com> <4F873573.10406@pobox.com> <3445364d6d28c2b6ae19817fe6851452@mail.gmail.com>
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [RFC] enable FUA support in libata
+Date: Fri, 13 Apr 2012 23:25:25 +0800
+Message-ID: <CANWLp01_fUhc72XUBcORGwh0s7r7g8CE5S7aqC+e2Sj4vf_DJA@mail.gmail.com>
+References: <20120413081104.GA4953@gmail.com>
+	<4F8835B8.2060400@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:46933 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753464Ab2DMOUx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2012 10:20:53 -0400
-In-Reply-To: <3445364d6d28c2b6ae19817fe6851452@mail.gmail.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:54333 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751680Ab2DMPZ0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Apr 2012 11:25:26 -0400
+Received: by dake40 with SMTP id e40so4044829dak.11
+        for <linux-ide@vger.kernel.org>; Fri, 13 Apr 2012 08:25:25 -0700 (PDT)
+In-Reply-To: <4F8835B8.2060400@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thang Nguyen <tqnguyen@apm.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Grant Likely <grant.likely@secretlab.ca>, Rob Herring <rob.herring@calxeda.com>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, devicetree-discuss@lists.ozlabs.org, Phong Vo <pvo@apm.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 04/13/2012 03:18 AM, Thang Nguyen wrote:
-> Thanks Jeff and Sergei,
+On Fri, Apr 13, 2012 at 10:18 PM, Jeff Garzik <jeff@garzik.org> wrote:
+> On 04/13/2012 04:11 AM, Zheng Liu wrote:
+>>
+>> Hi Jeff and list,
+>>
+>> Recently I met a problem about FUA support of SATA disk. =A0In my ma=
+chine,
+>> it has a SATA disk that supports FUA feature. =A0But after system st=
+arts
+>> up, it displays that the disk cannot support FUA from dmesg.
+>>
+>> I notice this commit (c3c013a2). =A0It disables FUA support in all o=
+f SATA
+>> disk. =A0But the commit log is too simple to know why we should disa=
+ble
+>> FUA support in libata. =A0Could you please explain it? =A0Thank you.
 >
-> As your suggestion, I will separate the patch into smaller patches and
-> support more features on the SATA DWC driver. The patches I intend to do
-> on the SATA DWC are as below:
->   - Support hardreset: currently the hardreset is not supported. This
-> causes sometime the SATA driver does cause kernel crash because of
-> not-determined state.
->   - Let device tree specified DMA channel: currently only channel 0 is
-> supported (number of channel is set to 1). If device tree not specified
-> DMA channel, channel 0 will be used as default.
->   - Support ATAPI.
->   - Remove dma_interrupt_count. for each DMA transfer, we need 2 interrupts
-> for QC completion: transfer completion and DMA transfer completion
-> interrupt. The current code wait for both 2 interrupts occur before
-> calling qc_complete. This will make out-of-sync state when an interrupt
-> lost or when errors occur. The change will process DMA register when DMA
-> transfer complete interrupt occur and call qc_issue when command
-> completion interrupt occur.
->   - Fix NCQ issue and set .can_queue back to ATA_MAX_QUEUE.
->   - Support Port Multiplier.
->   - Support 2 SATA ports on Maui.
+>
+> FUA support in the block layer wanted speed and guarantees that early=
+ FUA
+> drives were simply not providing.
 
-Sounds good, thanks for splitting up the patch into smaller pieces.  The 
-main goal is that separate logical changes should go into separate patches.
+Hi Jeff,
 
-	Jeff
+Thank you for your reply.  I notice that this patch is merged in 2006.
+ I don't know whether we can enable it now by default or not.  I read
+some specifications of SATA disks.  They support FUA feature.
+Although libata_fua variable is a kernel module parameter and we can
+enable it when this module is loaded,  it is too complicated because
+it needs to be loaded before kernel is loaded.  Thus, we need to set
+libata_fua in initrd.  Maybe we can change it into a sysctl parameter.
+ Then we can enable it dynamically.  Do you have any suggestions?
+Thank you.
 
-
-
-
+Regards,
+Zheng
