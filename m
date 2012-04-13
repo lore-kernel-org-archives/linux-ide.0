@@ -1,100 +1,26 @@
-From: Thang Nguyen <tqnguyen@apm.com>
-Subject: RE: [PATCH 1/1] Add support 2 SATA ports for Maui and change filename
- from sata_dwc_460ex.c to sata_dwc_4xx.c
-Date: Fri, 13 Apr 2012 14:18:29 +0700
-Message-ID: <3445364d6d28c2b6ae19817fe6851452@mail.gmail.com>
-References: <1333447938-16461-1-git-send-email-tqnguyen@apm.com>
- <4F7AE584.3050805@mvista.com> <4F873573.10406@pobox.com>
+From: Andy Whitcroft <apw@canonical.com>
+Subject: Re: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised
+ drivers by default
+Date: Fri, 13 Apr 2012 08:37:45 +0100
+Message-ID: <20120413073745.GN3357@shadowen.org>
+References: <1333042130-9634-1-git-send-email-apw@canonical.com>
+ <4F87351E.9040905@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <4F873573.10406@pobox.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Jeff Garzik <jgarzik@pobox.com>, Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Phong Vo <pvo@apm.com>, devicetree-discuss@lists.ozlabs.org, linux-kernel@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4F87351E.9040905@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>
 List-Id: linux-ide@vger.kernel.org
 
-Thanks Jeff and Sergei,
+On Thu, Apr 12, 2012 at 04:03:42PM -0400, Jeff Garzik wrote:
 
-As your suggestion, I will separate the patch into smaller patches and
-support more features on the SATA DWC driver. The patches I intend to do
-on the SATA DWC are as below:
- - Support hardreset: currently the hardreset is not supported. This
-causes sometime the SATA driver does cause kernel crash because of
-not-determined state.
- - Let device tree specified DMA channel: currently only channel 0 is
-supported (number of channel is set to 1). If device tree not specified
-DMA channel, channel 0 will be used as default.
- - Support ATAPI.
- - Remove dma_interrupt_count. for each DMA transfer, we need 2 interrupts
-for QC completion: transfer completion and DMA transfer completion
-interrupt. The current code wait for both 2 interrupts occur before
-calling qc_complete. This will make out-of-sync state when an interrupt
-lost or when errors occur. The change will process DMA register when DMA
-transfer complete interrupt occur and call qc_issue when command
-completion interrupt occur.
- - Fix NCQ issue and set .can_queue back to ATA_MAX_QUEUE.
- - Support Port Multiplier.
- - Support 2 SATA ports on Maui.
+> Platform quirks should be handled in piix_init_one, not with this
+> haphazard read_id callback.  If prefer_ms_hyperv &&
+> hypervisor-detected, then set ATA_HOST_IGNORE_ATA flag or similar.
 
-Regards,
-Thang Nguyen-
+That does sound better.  I'll whip something up.
 
------Original Message-----
-From: Jeff Garzik [mailto:jgpobox@gmail.com] On Behalf Of Jeff Garzik
-Sent: Friday, April 13, 2012 3:05 AM
-To: Sergei Shtylyov
-Cc: Thang Q. Nguyen; Benjamin Herrenschmidt; Paul Mackerras; Grant Likely;
-Rob Herring; linuxppc-dev@lists.ozlabs.org; linux-kernel@vger.kernel.org;
-linux-ide@vger.kernel.org; devicetree-discuss@lists.ozlabs.org
-Subject: Re: [PATCH 1/1] Add support 2 SATA ports for Maui and change
-filename from sata_dwc_460ex.c to sata_dwc_4xx.c
-
-On 04/03/2012 07:56 AM, Sergei Shtylyov wrote:
-> Hello.
->
-> On 03-04-2012 14:12, Thang Q. Nguyen wrote:
->
->> Signed-off-by: Thang Q. Nguyen<tqnguyen@apm.com>
->> ---
->> Changes for v2:
->> - Use git rename feature to change the driver to the newname and for
->> easier review.
->
->> arch/powerpc/boot/dts/bluestone.dts | 21 +
->> drivers/ata/Makefile | 2 +-
->> drivers/ata/{sata_dwc_460ex.c =3D> sata_dwc_4xx.c} | 1371
->> ++++++++++++++--------
->> 3 files changed, 904 insertions(+), 490 deletions(-)
->> rename drivers/ata/{sata_dwc_460ex.c =3D> sata_dwc_4xx.c} (56%)
->
-> You submitted a magapatch doing several things at once (some even
-> needlessly) and even in two areas of the kernel. This needs proper
-> splitting/description.
-
-Agreed...
-CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, =
-
-is for the sole use of the intended recipient(s) and contains information=
-=A0
-that is confidential and proprietary to AppliedMicro Corporation or its sub=
-sidiaries. =
-
-It is to be used solely for the purpose of furthering the parties' business=
- relationship. =
-
-All unauthorized review, use, disclosure or distribution is prohibited. =
-
-If you are not the intended recipient, please contact the sender by reply e=
--mail =
-
-and destroy all copies of the original message.
+-apw
