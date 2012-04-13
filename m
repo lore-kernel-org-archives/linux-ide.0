@@ -1,26 +1,25 @@
-From: Andy Whitcroft <apw@canonical.com>
-Subject: Re: [PATCH 1/1] ata_piix: defer disks to the Hyper-V paravirtualised
- drivers by default
-Date: Fri, 13 Apr 2012 08:37:45 +0100
-Message-ID: <20120413073745.GN3357@shadowen.org>
-References: <1333042130-9634-1-git-send-email-apw@canonical.com>
- <4F87351E.9040905@pobox.com>
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: [RFC] enable FUA support in libata
+Date: Fri, 13 Apr 2012 16:11:05 +0800
+Message-ID: <20120413081104.GA4953@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4F87351E.9040905@pobox.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Apr 12, 2012 at 04:03:42PM -0400, Jeff Garzik wrote:
+Hi Jeff and list,
 
-> Platform quirks should be handled in piix_init_one, not with this
-> haphazard read_id callback.  If prefer_ms_hyperv &&
-> hypervisor-detected, then set ATA_HOST_IGNORE_ATA flag or similar.
+Recently I met a problem about FUA support of SATA disk.  In my machine,
+it has a SATA disk that supports FUA feature.  But after system starts
+up, it displays that the disk cannot support FUA from dmesg.
 
-That does sound better.  I'll whip something up.
+I notice this commit (c3c013a2).  It disables FUA support in all of SATA
+disk.  But the commit log is too simple to know why we should disable
+FUA support in libata.  Could you please explain it?  Thank you.
 
--apw
+Regards,
+Zheng
