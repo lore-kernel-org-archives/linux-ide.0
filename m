@@ -1,55 +1,82 @@
 From: Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH 1/2] libata: add a host flag to ignore detected ATA devices
-Date: Sat, 14 Apr 2012 16:53:15 +0100
-Message-ID: <1334418796-11473-2-git-send-email-apw@canonical.com>
+Subject: [PATCH 2/2] ata_piix: defer disks to the Hyper-V drivers by default
+Date: Sat, 14 Apr 2012 16:53:16 +0100
+Message-ID: <1334418796-11473-3-git-send-email-apw@canonical.com>
 References: <4F87351E.9040905@pobox.com>
  <1334418796-11473-1-git-send-email-apw@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:33566 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754262Ab2DNPxU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Apr 2012 11:53:20 -0400
 In-Reply-To: <1334418796-11473-1-git-send-email-apw@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 Cc: Andy Whitcroft <apw@canonical.com>, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>
-List-Id: linux-ide@vger.kernel.org
 
-Where devices are visible via more than one host we sometimes wish to
-indicate that cirtain devices should be ignored on a specific host.  Add a
-host flag indicating that this host wishes to ignore ATA specific devices.
+When we are hosted on a Microsoft Hyper-V hypervisor the guest disks
+are exposed both via the Hyper-V paravirtualised drivers and via an
+emulated SATA disk drive.  In this case we want to use the paravirtualised
+drivers if we can as they are much more efficient.  Note that the Hyper-V
+paravirtualised drivers only expose the virtual hard disk devices, the
+CDROM/DVD devices must still be enumerated.
 
+Mark the host controller ATA_HOST_IGNORE_ATA to prevent enumeration
+of disk devices.
+
+BugLink: http://bugs.launchpad.net/bugs/929545
+BugLink: http://bugs.launchpad.net/bugs/942316
 Signed-off-by: Andy Whitcroft <apw@canonical.com>
 ---
- drivers/ata/libata-core.c |    7 +++++++
- include/linux/libata.h    |    1 +
- 2 files changed, 8 insertions(+)
+ drivers/ata/ata_piix.c |   20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e0bda9f..a85e338 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1973,6 +1973,13 @@ retry:
- 	if (class == ATA_DEV_ATA) {
- 		if (!ata_id_is_ata(id) && !ata_id_is_cfa(id))
- 			goto err_out;
-+		if (ap->host->flags & ATA_HOST_IGNORE_ATA &&
-+							ata_id_is_ata(id)) {
-+			ata_dev_dbg(dev,
-+				"host indicates ignore ATA devices, ignored\n");
-+			return -ENOENT;
-+		}
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 68013f9..b52d8ab 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -94,6 +94,9 @@
+ #include <scsi/scsi_host.h>
+ #include <linux/libata.h>
+ #include <linux/dmi.h>
++#ifdef CONFIG_X86
++#include <asm/hypervisor.h>
++#endif
+ 
+ #define DRV_NAME	"ata_piix"
+ #define DRV_VERSION	"2.13"
+@@ -1567,6 +1570,11 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
+  *	Zero on success, or -ERRNO value.
+  */
+ 
++#ifdef CONFIG_X86
++static int prefer_ms_hyperv = 1;
++module_param(prefer_ms_hyperv, int, 0);
++#endif
 +
- 	} else {
- 		if (ata_id_is_ata(id))
- 			goto err_out;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 42378d6..198c8f1 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -247,6 +247,7 @@ enum {
- 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
- 	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
- 	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
-+	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
+ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 				   const struct pci_device_id *ent)
+ {
+@@ -1667,6 +1675,18 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
+ 	}
+ 	host->flags |= ATA_HOST_PARALLEL_SCAN;
  
- 	/* bits 24:31 of host->flags are reserved for LLD specific flags */
- 
++#ifdef CONFIG_X86
++	/* On Hyper-V hypervisors the disks are exposed on both the emulated
++	 * SATA controller and on the paravirtualised drivers.  The CD/DVD
++	 * devices are only exposed on the emulated controller.  Request we
++	 * ignore ATA devices on this host.
++	 */
++	if (prefer_ms_hyperv && x86_hyper == &x86_hyper_ms_hyperv) {
++		host->flags |= ATA_HOST_IGNORE_ATA;
++		dev_info(&pdev->dev, "Hyper-V hypervisor detected, ignoring ATA disks\n");
++	}
++#endif
++
+ 	pci_set_master(pdev);
+ 	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
+ }
 -- 
 1.7.9.5
+
