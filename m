@@ -1,66 +1,77 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 2/2] ata_piix: defer disks to the Hyper-V drivers by
- default
-Date: Sun, 15 Apr 2012 00:10:18 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF92CCDDA@CH1PRD0310MB381.namprd03.prod.outlook.com>
-References: <4F87351E.9040905@pobox.com>
-	<1334418796-11473-1-git-send-email-apw@canonical.com>
-	<1334418796-11473-3-git-send-email-apw@canonical.com>
- <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
+From: "=?gb2312?B?zO/WvtbZ?=" <tzz@bstar.com.cn>
+Subject: Seagate SATA disk flush cache timeout issue
+Date: Mon, 16 Apr 2012 10:31:45 +0800
+Message-ID: <201204161031454684853@bstar.com.cn>
+References: <201204131039173121876@rd.bstar.com.cn>,
+ <201204131039534213981@rd.bstar.com.cn>,
+ <201204131053446718483@bstar.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:58400
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755143Ab2DOAK1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 14 Apr 2012 20:10:27 -0400
-In-Reply-To: <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
-Content-Language: en-US
+Received: from smtpcom.263xmail.com ([211.150.64.24]:46734 "EHLO
+	smtpcom.263xmail.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752748Ab2DPCbC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Apr 2012 22:31:02 -0400
+Received: from smtpcom.263xmail.com (localhost.localdomain [127.0.0.1])
+	by smtpcom.263xmail.com (Postfix) with ESMTP id D9AAFC9F6D
+	for <linux-ide@vger.kernel.org>; Mon, 16 Apr 2012 10:30:54 +0800 (CST)
+Received: from TIANZHIZHONG (localhost.localdomain [127.0.0.1])
+	by smtpcom.263xmail.com (Postfix) with ESMTP id A7B514BF2
+	for <linux-ide@vger.kernel.org>; Mon, 16 Apr 2012 10:30:53 +0800 (CST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Andy Whitcroft <apw@canonical.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
+To: linux-ide <linux-ide@vger.kernel.org>
+
+Hi,
+
+I'm working on an embedded linux DVR product and its kernel is based on 2.6.24. During recent testing I found several SATA disk IO errors while read/write disks for long time, e.g. about 24 hours. 
+
+I find three kinds of Seagate SATA disk have such problem. They are 
+ST2000DL003 (Barracuda Green / 2TB   / 5900rpm / 64M cache  / 4KB per sector)
+ST500DM002  (Barracuda Green / 500G / 7200rpm / 16M cache  / 4KB per sector)
+ST1000526SV (SV35 series       / 1TB   / 7200rpm / 32M cache  / 512B per sector).
+
+The kernel output is alike below.
+ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x2 frozen
+ata4.00: cmd ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
+         res 40/00:01:09:4f:c2/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata4.00: status: { DRDY }
+ata4: port is slow to respond, please be patient (Status 0xd0)
+ata4: device not ready (errno=-16), forcing hardreset
+ata4: hard resetting link
+ata4: port is slow to respond, please be patient (Status 0xff)
+ata4: COMRESET failed (errno=-16)
+ata4: hard resetting link
+ata4: port is slow to respond, please be patient (Status 0xff)
+ata4: COMRESET failed (errno=-16)
+ata4: hard resetting link
+ata4: port is slow to respond, please be patient (Status 0xff)
+ata4: COMRESET failed (errno=-16)
+ata4: hard resetting link
+ata4: COMRESET failed (errno=-16)
+ata4: reset failed, giving up
+ata4.00: disabled
+ata4: EH complete
+
+I analyzed the kernel output and got its reason is ATA_CMD_FLUSH_EXT command timeout.
+I tried adding SCSI flush cache command timeout to 120 seconds and retrying 5 times when the command is timed out, the symptom was still happened.
+I tried adding ATA_CMD_FLUSH_EXT timeout to 120 seconds becuase of the specification of ATA8, the symptom was still happened. 
+
+There is a very strange symptom that is before the failed ATA_CMD_FLUSH_EXT(cmd ea) command, the last command must be ATA_CMD_VERIFY(cmd 40).
+In most kernel outputs, the sector LBAs that ATA_CMD_VERIFY accessed are in a very narrow range (from 0xC24F00 to 0xC24F09), even for different disk modles, such as ST2000DL003 and ST1000526SV.
+
+I also found same symptom in debian buglist http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=625922
+
+Can you give me some suggestion on this issue?
+
+Thanks.
+
+Tony Tian
+
+2012-04-16 
 
 
-
-> -----Original Message-----
-> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
-> Sent: Saturday, April 14, 2012 12:02 PM
-> To: Andy Whitcroft
-> Cc: Jeff Garzik; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; KY
-> Srinivasan; Mike Sterling
-> Subject: Re: [PATCH 2/2] ata_piix: defer disks to the Hyper-V drivers by default
-> 
-> O> +#ifdef CONFIG_X86
-> > +	/* On Hyper-V hypervisors the disks are exposed on both the emulated
-> > +	 * SATA controller and on the paravirtualised drivers.  The CD/DVD
-> > +	 * devices are only exposed on the emulated controller.  Request we
-> > +	 * ignore ATA devices on this host.
-> > +	 */
-> > +	if (prefer_ms_hyperv && x86_hyper == &x86_hyper_ms_hyperv) {
-> > +		host->flags |= ATA_HOST_IGNORE_ATA;
-> > +		dev_info(&pdev->dev, "Hyper-V hypervisor detected, ignoring
-> ATA disks\n");
-> > +	}
-> > +#endif
-> 
-> Does hyper-v not set its own unique and identifable pci
-> subvendor/subdevice ?
-
-Number of elements of the virtual BIOS we present the guest can be used
-to detect that we are running on Hyper-V. Additionally, we are exporting state based
-on CPU detection which is what Andy is using here. As far as I know these are the only
-ways to detect that we are running on Hyper-V. 
-
-Regards,
-
-K. Y
-> 
-> Alan
-> 
-> 
-
-
+tzz@bstar.com.cn
 
