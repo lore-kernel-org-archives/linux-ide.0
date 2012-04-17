@@ -1,89 +1,49 @@
-From: cwillu <cwillu@cwillu.com>
+From: Mark Lord <kernel@teksavvy.com>
 Subject: Re: Hotplug borked after suspend/resume in Linux-3.3 ?
-Date: Tue, 17 Apr 2012 15:05:09 -0600
-Message-ID: <CAE5mzvjsfX34fod0KURNQN8Rmn0xOPCdP2iY2xnSTnnRXPAaEQ@mail.gmail.com>
-References: <4F8DD4DC.4050503@teksavvy.com>
-	<4F8DD708.8050502@teksavvy.com>
-	<4F8DD834.5070000@teksavvy.com>
-	<4F8DDA53.206@teksavvy.com>
+Date: Tue, 17 Apr 2012 17:05:40 -0400
+Message-ID: <4F8DDB24.9080109@teksavvy.com>
+References: <4F8DD4DC.4050503@teksavvy.com> <4F8DD708.8050502@teksavvy.com> <4F8DD939.1050909@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:49555 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763Ab2DQVFK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2012 17:05:10 -0400
-Received: by yhmm54 with SMTP id m54so3361070yhm.19
-        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2012 14:05:09 -0700 (PDT)
-In-Reply-To: <4F8DDA53.206@teksavvy.com>
+Received: from ironport-out.teksavvy.com ([206.248.143.162]:57388 "EHLO
+	ironport-out.teksavvy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647Ab2DQVFl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2012 17:05:41 -0400
+In-Reply-To: <4F8DD939.1050909@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Tue, Apr 17, 2012 at 3:02 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 12-04-17 04:53 PM, Mark Lord wrote:
->> On 12-04-17 04:48 PM, Mark Lord wrote:
->>> On 12-04-17 04:38 PM, Mark Lord wrote:
->>>> Okay, so why isn't SATA hotplug working in linux-3.3.2 ?
->>>> I don't know when it stopped working, but it's a blooming pain in =
-the sysadmin.
->>>>
->>>> I need to hotplug a SATA drive into an AHCI port,
->>>> preferably without having to reboot first.
->>>>
->>>> Is there a patch available already for this regression?
+On 12-04-17 04:57 PM, Jeff Garzik wrote:
+> On 04/17/2012 04:48 PM, Mark Lord wrote:
+>> On 12-04-17 04:38 PM, Mark Lord wrote:
+>>> Okay, so why isn't SATA hotplug working in linux-3.3.2 ?
+>>> I don't know when it stopped working, but it's a blooming pain in the sysadmin.
 >>>
+>>> I need to hotplug a SATA drive into an AHCI port,
+>>> preferably without having to reboot first.
 >>>
->>> Answering my own question, this patch appears to address the issue.
->>> I'll test and report back again shortly:
->>>
->>> =C2=A0 =C2=A0 http://patchwork.ozlabs.org/patch/146326/
->>>
->>> Odd that it's been sitting in various people's inboxes since 3.3-rc=
-1
->>> and hasn't been pushed out yet.
+>>> Is there a patch available already for this regression?
 >>
->> Ahh.. perhaps because it doesn't fix the problem I'm seeing here.
 >>
->> Oh well, anyone else got a fix for this regression yet?
->> Even doing a rescan-scsi-bus doesn't work on the closed down ports.
+>> Answering my own question, this patch appears to address the issue.
+>> I'll test and report back again shortly:
 >>
->> Basically, any unoccupied AHCI port is dead to the world
->> after a simple suspend/resume (RAM) cycle. =C2=A0On one of my machin=
-es
->> I can hot unplug/replug the ExpressCard adapter to recover,
->> but that doesn't work so well for built-in SATA/eSATA ports.
->
->
-> Mmm.. on my little Atom ZBOX systems, the patch linked above
-> "Patchwork [v2] libata: disable runtime pm for hotpluggable port"
-> _does_ appear to fix the issue.
->
-> Maybe my notebook is suffering from the ExpressCard not being resumed=
- properly,
-> which would be a PCI issue most likely.
->
-> Anyway, one issue at a time: =C2=A0The "disable runtime pm" patch see=
-ms to
-> be the regression fix I'm looking for here so that I can use SATA hot=
-plug
-> after a suspend/resume.
->
-> Why isn't this upstream as a regression fix yet?
->
-> Thanks
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
-ml
+>>      http://patchwork.ozlabs.org/patch/146326/
+>>
+>> Odd that it's been sitting in various people's inboxes since 3.3-rc1
+>> and hasn't been pushed out yet.
+> 
+> The vast majority of "hotpluggable" ports are not necessarily covered by this patch.
 
-echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/power/control
-echo on > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/power/control
-echo '- - -' > /sys/devices/pci0000:00/0000:00:1f.2/ata5/host4/scsi_hos=
-t/host4/scan
 
-Substituting the appropriate values to poke the right devices
+And what majority of ports are currently broken by linux-3.3 ?
+Any idea of what the offending commit may have been,
+so I can test against that and perhaps get it reverted then?
+
+So far, my sample of three systems are all broken with this kernel.
+That's definitely "regression" territory.  :)
+
