@@ -1,37 +1,40 @@
-From: Mark Lord <kernel@teksavvy.com>
+From: Jeff Garzik <jgarzik@pobox.com>
 Subject: Re: Hotplug borked after suspend/resume in Linux-3.3 ?
-Date: Tue, 17 Apr 2012 16:48:08 -0400
-Message-ID: <4F8DD708.8050502@teksavvy.com>
+Date: Tue, 17 Apr 2012 16:50:51 -0400
+Message-ID: <4F8DD7AB.2050709@pobox.com>
 References: <4F8DD4DC.4050503@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport-out.teksavvy.com ([206.248.143.162]:51999 "EHLO
-	ironport-out.teksavvy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519Ab2DQUsL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2012 16:48:11 -0400
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:50197 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002Ab2DQUu4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Apr 2012 16:50:56 -0400
+Received: by qcro28 with SMTP id o28so4106979qcr.19
+        for <linux-ide@vger.kernel.org>; Tue, 17 Apr 2012 13:50:55 -0700 (PDT)
 In-Reply-To: <4F8DD4DC.4050503@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Lin Ming <ming.m.lin@intel.com>
 
-On 12-04-17 04:38 PM, Mark Lord wrote:
+On 04/17/2012 04:38 PM, Mark Lord wrote:
 > Okay, so why isn't SATA hotplug working in linux-3.3.2 ?
 > I don't know when it stopped working, but it's a blooming pain in the sysadmin.
-> 
+>
 > I need to hotplug a SATA drive into an AHCI port,
 > preferably without having to reboot first.
-> 
+>
 > Is there a patch available already for this regression?
 
+hrm...  smells like runtime PM stuff.
 
-Answering my own question, this patch appears to address the issue.
-I'll test and report back again shortly:
+Can you try "libata: disable runtime pm for hotpluggable port"?
 
-    http://patchwork.ozlabs.org/patch/146326/
+You probably have to edit ahci_port_pluggable() to make it 
+unconditionally return true.
 
-Odd that it's been sitting in various people's inboxes since 3.3-rc1
-and hasn't been pushed out yet.
+	Jeff
 
 
