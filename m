@@ -1,31 +1,64 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 0/2] Hyper-V disk support V3
-Date: Wed, 18 Apr 2012 21:12:35 +0100
-Message-ID: <20120418211235.55b9befc@pyramind.ukuu.org.uk>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 0/2] Hyper-V disk support V3
+Date: Wed, 18 Apr 2012 20:21:48 +0000
+Message-ID: <426367E2313C2449837CD2DE46E7EAF92CE8E2@CH1PRD0310MB381.namprd03.prod.outlook.com>
 References: <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
 	<1334575229-7493-1-git-send-email-apw@canonical.com>
-	<20120416122634.7d1357e1@ultron>
-	<20120416182927.GB3346@shadowen.org>
+	<20120416122634.7d1357e1@ultron>	<20120416182927.GB3346@shadowen.org>
 	<426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
+ <20120418211235.55b9befc@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:37588 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065Ab2DRUJ5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2012 16:09:57 -0400
-In-Reply-To: <426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:20102
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752032Ab2DRUXY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Apr 2012 16:23:24 -0400
+In-Reply-To: <20120418211235.55b9befc@pyramind.ukuu.org.uk>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
 Cc: Andy Whitcroft <apw@canonical.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
 
-> The notion of "pass through" in Hyper-V  is a little different. IDE devices can be configured
-> under either one of the supported controllers and these devices can either be virtual disks
-> (VHDs) or physical disks. In either case these will be presented to the guest as IDE devices.
 
-So what ensures that by skipping it at the ATA device level we will
-always find it as a VHD ?
 
-Alan
+> -----Original Message-----
+> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
+> Sent: Wednesday, April 18, 2012 4:13 PM
+> To: KY Srinivasan
+> Cc: Andy Whitcroft; Jeff Garzik; linux-ide@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Mike Sterling
+> Subject: Re: [PATCH 0/2] Hyper-V disk support V3
+> 
+> > The notion of "pass through" in Hyper-V  is a little different. IDE devices can be
+> configured
+> > under either one of the supported controllers and these devices can either be
+> virtual disks
+> > (VHDs) or physical disks. In either case these will be presented to the guest as
+> IDE devices.
+> 
+> So what ensures that by skipping it at the ATA device level we will
+> always find it as a VHD ?
+
+If the Hyper-V storage driver is  present, then the Hyper-V storage driver will
+manage the root device (and other devices skipped by the ata driver). 
+So, the check if we are running on Hyper-V is not enough
+to skip the device in the ata_piix driver; we need to also make sure that the Hyper-V
+block driver is available to handle the skipped devices. I think the correct approach here is to
+have a kernel (or an ata_piix module parameter) that can be set to override the skipping
+of the block device by the ata driver. Distros that are including the Hyper-V storage driver
+can set this parameter so that when running on Hyper-V, ata can skip the block device.
+
+Regards,
+
+K. Y
+> 
+> Alan
+> 
+> 
+
+
+
