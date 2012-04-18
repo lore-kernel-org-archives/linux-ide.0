@@ -1,61 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [git patches] libata fixes
-Date: Wed, 18 Apr 2012 15:45:48 -0400
-Message-ID: <4F8F19EC.8000305@garzik.org>
-References: <20120418184624.GA16313@havoc.gtf.org> <CA+5PVA7zv2H-CQU3Grouk3KH5xA3XLijuO7TPX9zrMdj-7z43Q@mail.gmail.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 0/2] Hyper-V disk support V3
+Date: Wed, 18 Apr 2012 21:12:35 +0100
+Message-ID: <20120418211235.55b9befc@pyramind.ukuu.org.uk>
+References: <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
+	<1334575229-7493-1-git-send-email-apw@canonical.com>
+	<20120416122634.7d1357e1@ultron>
+	<20120416182927.GB3346@shadowen.org>
+	<426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:42870 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123Ab2DRTpv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2012 15:45:51 -0400
-In-Reply-To: <CA+5PVA7zv2H-CQU3Grouk3KH5xA3XLijuO7TPX9zrMdj-7z43Q@mail.gmail.com>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:37588 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065Ab2DRUJ5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2012 16:09:57 -0400
+In-Reply-To: <426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Josh Boyer <jwboyer@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, stable <stable@kernel.org>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: Andy Whitcroft <apw@canonical.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
 
-On 04/18/2012 03:34 PM, Josh Boyer wrote:
-> On Wed, Apr 18, 2012 at 2:46 PM, Jeff Garzik<jeff@garzik.org>  wrote:
->>
->> NOTE: Includes important regression fix.  See signed tag message for more.
->>
->> Please pull 0c8d32c27f5cf6e14ca14b4758d1e994eebd50fd from
->> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tag/upstream-linus
->>
->>
->> to receive the following updates:
->>
->>   drivers/ata/ata_piix.c         |    2 ++
->>   drivers/ata/libata-core.c      |    4 ++--
->>   drivers/ata/libata-scsi.c      |    4 ++--
->>   drivers/ata/libata-transport.c |    1 +
->>   drivers/ata/libata.h           |    2 +-
->>   drivers/ata/sata_mv.c          |    3 ++-
->>   6 files changed, 10 insertions(+), 6 deletions(-)
->>
->> Dan Carpenter (1):
->>       sata_mv: silence an uninitialized variable warning
->>
->> Dan Williams (1):
->>       libata: make ata_print_id atomic
->>
->> Lin Ming (1):
->>       libata: forbid port runtime pm by default, fixing regression
->
-> I noticed that this regression fix doesn't have the
-> CC: stable@vger.kernel.org tag in it, but it's needed on the 3.3
-> trees.  Should it be sent to the stable list separately?
+> The notion of "pass through" in Hyper-V  is a little different. IDE devices can be configured
+> under either one of the supported controllers and these devices can either be virtual disks
+> (VHDs) or physical disks. In either case these will be presented to the guest as IDE devices.
 
+So what ensures that by skipping it at the ATA device level we will
+always find it as a VHD ?
 
-Good catch.
-
-Stable folks, commit 0c8d32c27f5cf6e14ca14b4758d1e994eebd50fd should be 
-merged into the 3.3 tree(s).
-
-	Jeff
-
-
-
+Alan
