@@ -1,48 +1,99 @@
-From: Andy Whitcroft <apw@canonical.com>
-Subject: Re: [PATCH 0/2] Hyper-V disk support V3
-Date: Thu, 19 Apr 2012 08:40:18 +0100
-Message-ID: <20120419074018.GA3342@shadowen.org>
-References: <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
- <1334575229-7493-1-git-send-email-apw@canonical.com>
- <20120416122634.7d1357e1@ultron>
- <20120416182927.GB3346@shadowen.org>
- <426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
- <20120418211235.55b9befc@pyramind.ukuu.org.uk>
+From: "Victor Miasnikov" <vvm@tut.by>
+Subject: 1) boot flag to disable the Hyper-V IDE drivers: ata_piix.prefer_ms_hyperv=0 2) PIIX_IGNORE_ATA_ON_HYPERV Re: [PATCH 0/2] Hyper-V disk support V3 RE: use hv_storvsc instead of ata_piix to handle the IDE disks devices ( but not for the CD-ROM)
+Date: Thu, 19 Apr 2012 11:15:01 +0300
+Message-ID: <A9828EBC1D1743A1BE8627A2400348DD@local.st.by>
+References: <20120414170223.24f6ea31@pyramind.ukuu.org.uk><1334575229-7493-1-git-send-email-apw@canonical.com><20120416122634.7d1357e1@ultron>	<20120416182927.GB3346@shadowen.org><426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com> <20120418211235.55b9befc@pyramind.ukuu.org.uk> <426367E2313C2449837CD2DE46E7EAF92CE8E2@CH1PRD0310MB381.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120418211235.55b9befc@pyramind.ukuu.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: KY Srinivasan <kys@microsoft.com>, Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
+Content-Type: text/plain;
+	format=flowed;
+	charset="iso-8859-1";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:63445 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261Ab2DSIPG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2012 04:15:06 -0400
+Received: by bkcik5 with SMTP id ik5so6100893bkc.19
+        for <linux-ide@vger.kernel.org>; Thu, 19 Apr 2012 01:15:04 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>, Andy Whitcroft <apw@canonical.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mike Sterling <mike.sterling@microsoft.com>
 
-On Wed, Apr 18, 2012 at 09:12:35PM +0100, Alan Cox wrote:
-> > The notion of "pass through" in Hyper-V  is a little different. IDE devices can be configured
-> > under either one of the supported controllers and these devices can either be virtual disks
-> > (VHDs) or physical disks. In either case these will be presented to the guest as IDE devices.
-> 
-> So what ensures that by skipping it at the ATA device level we will
-> always find it as a VHD ?
 
-My understanding of things is that the if you have disks assigned to the
-guest that they will always appear both on the virtualised SATA contoller
-and on the paravirtualised driver channel.  So that assuming a valid
-configuration in which both drivers initialise they will be picked up by
-one or the other.
+Hi!
 
-KY for clarity are we saying the only way a disk can appear in the guest
-is either on the emulated controller or paravirtualised, we will never
-expose real devices into the guest.
+ Shortly:
 
-Reading my own statement that ought to imply we really should only default
-preferring paravirtualised to 'on' when the hyperv paravirtualised drivers
-is enabled too; easy enough to do.  Howeever in a perfect world the
-override would also have the inverse effect even if the paravirtualised
-driver initialises first; not so easy but I assume we with some fiddling
-we could make both drivers handle the same parameter.
+1) 
+The flag to disable the Hyper-V IDE drivers is:
+ ata_piix.prefer_ms_hyperv=02)
 
-/me considers this further.
+#ifdef CONFIG_X86 
+#if defined(CONFIG_HYPERV_STORAGE) || defined(CONFIG_HYPERV_STORAGE_MODULE)
+#define ATA_PIIX_IGNORE_ATA_DISKS_ON_HYPERV 1
+#endif
+#endif
 
--apw
+
+---
+
+>>Alan Cox:
+>> So what ensures that by 
+>> skipping it at the ATA device level we will always find it as a VHD ?
+
+> KY Srinivasan:
+> So, the check if we are running on Hyper-V is not enough
+> to skip the device in the ata_piix driver; 
+> we need to also make sure that the Hyper-V block driver is available to handle the skipped devices. 
+
+>  I think the correct approach here is to have a kernel (or an ata_piix module parameter) 
+> that can be set to override the skipping of the block device by the ata driver. 
+
+ Already implemented, see:
+module_param(prefer_ms_hyperv, int, 0);
+
+ and work as need in real life:
+
+http://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg3482442.html
+==
+Tim Miller Dyck
+Wed, 14 Mar 2012 07:15:52 -0700
+ . . .
+The boot flags can be viewed by pressing F5? F6? (one of those) on the
+setup boot screen and then navigating to the boot line with cursor keys
+and adding the boot parameter below before the double dash at the end of
+the line.
+The flag to disable the Hyper-V IDE drivers is:
+
+ ata_piix.prefer_ms_hyperv=0  . . .
+==
+> Distros that are including the Hyper-V storage driver can set this parameter so 
+> that when running on Hyper-V, ata can skip the block device.
+
+
+ Best:
+Distros that are not-including the Hyper-V storage driver don't worry about "ata can skip" etc.:
+
+See re-incarnatin Olaf Hering idea:
+
+#ifdef CONFIG_X86 
+#if defined(CONFIG_HYPERV_STORAGE) || defined(CONFIG_HYPERV_STORAGE_MODULE)
+#define ATA_PIIX_IGNORE_ATA_DISKS_ON_HYPERV 1
+#endif
+#endif
+
+ and
+
+#ifdef CONFIG_X86 
+
+ replace to
+
+#ifdef ATA_PIIX_IGNORE_ATA_DISKS_ON_HYPERV 
+
+
+Best regards, Victor Miasnikov
+Blog:  http://vvm.blog.tut.by/
+
+
