@@ -1,77 +1,32 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: Hotplug borked after suspend/resume in Linux-3.3 ?
-Date: Thu, 19 Apr 2012 09:31:15 +0800
-Message-ID: <CAF1ivSaKp0yvPKop+z-PbE7UYGuwBFQ+0ohXmn5j+BwgGYusMQ@mail.gmail.com>
-References: <4F8DD4DC.4050503@teksavvy.com>
-	<4F8DD708.8050502@teksavvy.com>
-	<4F8DD834.5070000@teksavvy.com>
-	<4F8DDA53.206@teksavvy.com>
-	<CAE5mzvjsfX34fod0KURNQN8Rmn0xOPCdP2iY2xnSTnnRXPAaEQ@mail.gmail.com>
-	<4F8EF57E.4070603@fold.natur.cuni.cz>
-	<4F8EF9F7.5040202@pobox.com>
-	<4F8EFD89.2080603@fold.natur.cuni.cz>
-	<4F8F08D7.6050809@fold.natur.cuni.cz>
+From: Joe Ceklosky <jfceklosky@gmail.com>
+Subject: SSD slowdown with 3.3.X?
+Date: Wed, 18 Apr 2012 22:15:15 -0400
+Message-ID: <4F8F7533.6020300@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:50681 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943Ab2DSBbR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2012 21:31:17 -0400
-Received: by qafi31 with SMTP id i31so1327735qaf.1
-        for <linux-ide@vger.kernel.org>; Wed, 18 Apr 2012 18:31:16 -0700 (PDT)
-In-Reply-To: <4F8F08D7.6050809@fold.natur.cuni.cz>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:56270 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751180Ab2DSCPS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Apr 2012 22:15:18 -0400
+Received: by qcro28 with SMTP id o28so4930035qcr.19
+        for <linux-ide@vger.kernel.org>; Wed, 18 Apr 2012 19:15:16 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
-Cc: Jeff Garzik <jgarzik@pobox.com>, cwillu <cwillu@cwillu.com>, Mark Lord <kernel@teksavvy.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Thu, Apr 19, 2012 at 2:32 AM, Martin Mokrejs
-<mmokrejs@fold.natur.cuni.cz> wrote:
-> Martin Mokrejs wrote:
->>
->>
->> Jeff Garzik wrote:
->>> On 04/18/2012 01:10 PM, Martin Mokrejs wrote:
->>>> Fix: I got my 3TB disk detected by this single command:
->>>>
->>>> # echo on> =A0 /sys/devices/pci0000:00/0000:00:1f.2/ata6/power/con=
-trol
->>>> #
->>>>
->>>> This is a Dell Vostro 3550 with A09 BIOS. Same happend with 3.4-rc=
-3 kernel.
->>>>
->>>> I can do some more testing if you want me to.
->>>> Best,
->>>> Martin
->>>
->>>
->>> Can you test this one-line patch from Lin Ming? =A0Hopefully there =
-is zero sysfs twiddling required with this one...
->>>
->>> --- a/drivers/ata/libata-transport.c
->>> +++ b/drivers/ata/libata-transport.c
->>> @@ -294,6 +294,7 @@ int ata_tport_add(struct device *parent,
->>> =A0 =A0 =A0device_enable_async_suspend(dev);
->>> =A0 =A0 =A0pm_runtime_set_active(dev);
->>> =A0 =A0 =A0pm_runtime_enable(dev);
->>> + =A0 =A0pm_runtime_forbid(dev);
->>>
->>> =A0 =A0 =A0transport_add_device(dev);
->>> =A0 =A0 =A0transport_configure_device(dev);
->
->
-> There is one more minor issue. I cannot get my disk re-dectected at 3=
-Gbps. Here is when I plugged it in
-> for the very first time after bootup (plain 3.4-rc3 with the above on=
-e-line fix):
+All,
 
-Hi Martin,
+Has anyone reported slowness using SSD's on kernel 3.3.X compiled
+as 32-bit PAE with 16 Gigs of memory (I know I need to update to 64-bit
+already, will do with Fedora 17)?
 
-I'm looking at this issue now.
+I am see terrible r/w to an SSD using 3.3.2.  When I boot the same machine
+and SSD back in 3.2.15 all is fine.
 
-Thanks for test and report.
 
-Lin Ming
+
+
+
+Joe Ceklosky
