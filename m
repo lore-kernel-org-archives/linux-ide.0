@@ -1,69 +1,59 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 0/2] Hyper-V disk support V3
-Date: Thu, 19 Apr 2012 13:17:36 +0000
-Message-ID: <426367E2313C2449837CD2DE46E7EAF92CEBF6@CH1PRD0310MB381.namprd03.prod.outlook.com>
-References: <20120414170223.24f6ea31@pyramind.ukuu.org.uk>
- <1334575229-7493-1-git-send-email-apw@canonical.com>
- <20120416122634.7d1357e1@ultron> <20120416182927.GB3346@shadowen.org>
- <426367E2313C2449837CD2DE46E7EAF92CE0B5@CH1PRD0310MB381.namprd03.prod.outlook.com>
- <20120418211235.55b9befc@pyramind.ukuu.org.uk>
- <20120419074018.GA3342@shadowen.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Andy Whitcroft <apw@canonical.com>
+Subject: [PATCH 1/2] libata: add a host flag to ignore detected ATA devices
+Date: Thu, 19 Apr 2012 15:33:09 +0100
+Message-ID: <1334845990-13418-2-git-send-email-apw@canonical.com>
+References: <20120419074018.GA3342@shadowen.org>
+ <1334845990-13418-1-git-send-email-apw@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:34906
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751839Ab2DSNVo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Apr 2012 09:21:44 -0400
-In-Reply-To: <20120419074018.GA3342@shadowen.org>
-Content-Language: en-US
+Received: from youngberry.canonical.com ([91.189.89.112]:55353 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754198Ab2DSOdO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Apr 2012 10:33:14 -0400
+In-Reply-To: <1334845990-13418-1-git-send-email-apw@canonical.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Whitcroft <apw@canonical.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mike Sterling <mike.sterling@microsoft.com>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Andy Whitcroft <apw@canonical.com>, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
+Where devices are visible via more than one host we sometimes wish to
+indicate that cirtain devices should be ignored on a specific host.  Add a
+host flag indicating that this host wishes to ignore ATA specific devices.
 
+Signed-off-by: Andy Whitcroft <apw@canonical.com>
+---
+ drivers/ata/libata-core.c |    6 ++++++
+ include/linux/libata.h    |    1 +
+ 2 files changed, 7 insertions(+)
 
-> -----Original Message-----
-> From: Andy Whitcroft [mailto:apw@canonical.com]
-> Sent: Thursday, April 19, 2012 3:40 AM
-> To: Alan Cox
-> Cc: KY Srinivasan; Jeff Garzik; linux-ide@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Mike Sterling
-> Subject: Re: [PATCH 0/2] Hyper-V disk support V3
-> 
-> On Wed, Apr 18, 2012 at 09:12:35PM +0100, Alan Cox wrote:
-> > > The notion of "pass through" in Hyper-V  is a little different. IDE devices can
-> be configured
-> > > under either one of the supported controllers and these devices can either
-> be virtual disks
-> > > (VHDs) or physical disks. In either case these will be presented to the guest as
-> IDE devices.
-> >
-> > So what ensures that by skipping it at the ATA device level we will
-> > always find it as a VHD ?
-> 
-> My understanding of things is that the if you have disks assigned to the
-> guest that they will always appear both on the virtualised SATA contoller
-> and on the paravirtualised driver channel.  So that assuming a valid
-> configuration in which both drivers initialise they will be picked up by
-> one or the other.
-> 
-> KY for clarity are we saying the only way a disk can appear in the guest
-> is either on the emulated controller or paravirtualised, we will never
-> expose real devices into the guest.
-
-You are right. Depending on how the device is configured for the guest, even
-in the pass through case, the device will show up as either an emulated device
-(if configured under the IDE controllers) or as a device under the synthetic scsi
-controller (as seen by the guest). The storvsc driver can handle both these configurations
-while the native ata driver can only handle emulated devices. Since, presently we can 
-only boot off of a device configured under the IDE controller, we have the issue which your
-patch addresses.
-
-K. Y 
-
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e0bda9f..18e87bf 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1973,6 +1973,12 @@ retry:
+ 	if (class == ATA_DEV_ATA) {
+ 		if (!ata_id_is_ata(id) && !ata_id_is_cfa(id))
+ 			goto err_out;
++		if (ap->host->flags & ATA_HOST_IGNORE_ATA &&
++							ata_id_is_ata(id)) {
++			ata_dev_dbg(dev,
++				"host indicates ignore ATA devices, ignored\n");
++			return -ENOENT;
++		}
+ 	} else {
+ 		if (ata_id_is_ata(id))
+ 			goto err_out;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 42378d6..198c8f1 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -247,6 +247,7 @@ enum {
+ 	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
+ 	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
+ 	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
++	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
+ 
+ 	/* bits 24:31 of host->flags are reserved for LLD specific flags */
+ 
+-- 
+1.7.9.5
 
