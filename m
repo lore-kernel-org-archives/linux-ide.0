@@ -1,51 +1,25 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] libata: clear error mask of old error history
-Date: Fri, 20 Apr 2012 14:29:20 +0400
-Message-ID: <4F913A80.3030207@mvista.com>
-References: <1334885938.4927.11.camel@minggr>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: Support for 4 KiB disk sectors in Linux kernel
+Date: Fri, 20 Apr 2012 16:21:47 +0200
+Message-ID: <4F9170FB.7080208@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:59841 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503Ab2DTKa4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2012 06:30:56 -0400
-Received: by lbom4 with SMTP id m4so3826963lbo.19
-        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2012 03:30:54 -0700 (PDT)
-In-Reply-To: <1334885938.4927.11.camel@minggr>
+Received: from mga01.intel.com ([192.55.52.88]:31010 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754161Ab2DTOVt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 20 Apr 2012 10:21:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+To: linux-ide@vger.kernel.org
 
-Hello.
+Hi
 
-On 20-04-012 5:38, Lin Ming wrote:
+Where can I find information about current status of support for 4 KiB 
+disk sectors in Linux kernel?
+Is there a leader/maintainer of this issue in community?
 
-> The old error history was cleared in ata_ering_clear().
-> It only sets ATA_EFLAG_OLD_ER eflags, but the err_mask was not cleared.
-> So ata_ering_map() still iterates the old error history.
+Regards,
+Lukasz
 
-> This causes problem, for example, wrong probe trials count were returned in
-> ata_eh_schedule_probe(), which in turn causes SATA link speed to be slowed down
-> to 1.5Gbps.
-
-> Reported-and-tested-by: Martin Mokrejs<mmokrejs@fold.natur.cuni.cz>
-> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> ---
-
-> Hi Jeff,
-
-> This patch fixes an old regression introduced in 2.6.37-rc1
-> of commit d902747.
-
-> So it should be included into stable releases since 2.6.37.
-
-    You should have included:
-
-Cc: stable@vger.kernel.org # 2.6.37+
-
-after your signoff in this case.
-
-MBR, Sergei
