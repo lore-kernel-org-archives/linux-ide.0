@@ -1,42 +1,35 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: SSD slowdown with 3.3.X?
-Date: Fri, 20 Apr 2012 11:23:25 -0400
-Message-ID: <x49ehriwhoy.fsf@segfault.boston.devel.redhat.com>
-References: <4F8F7533.6020300@gmail.com> <4F8F82EC.1060708@teksavvy.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Support for 4 KiB disk sectors in Linux kernel
+Date: Fri, 20 Apr 2012 12:13:07 -0400
+Message-ID: <yq17gxa1iwc.fsf@sermon.lab.mkp.net>
+References: <4F9170FB.7080208@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36987 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932197Ab2DTPX2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Apr 2012 11:23:28 -0400
-In-Reply-To: <4F8F82EC.1060708@teksavvy.com> (Mark Lord's message of "Wed, 18
-	Apr 2012 23:13:48 -0400")
+Received: from acsinet15.oracle.com ([141.146.126.227]:50909 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752620Ab2DTQNL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2012 12:13:11 -0400
+In-Reply-To: <4F9170FB.7080208@intel.com> (Lukasz Dorau's message of "Fri, 20
+	Apr 2012 16:21:47 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Joe Ceklosky <jfceklosky@gmail.com>, linux-ide@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Mark Lord <kernel@teksavvy.com> writes:
+>>>>> "Lukasz" == Lukasz Dorau <lukasz.dorau@intel.com> writes:
 
-> On 12-04-18 10:15 PM, Joe Ceklosky wrote:
->> All,
->> 
->> Has anyone reported slowness using SSD's on kernel 3.3.X compiled
->> as 32-bit PAE with 16 Gigs of memory (I know I need to update to 64-bit
->> already, will do with Fedora 17)?
->> 
->> I am see terrible r/w to an SSD using 3.3.2.  When I boot the same machine
->> and SSD back in 3.2.15 all is fine.
->
->
-> Double check which IO-scheduler the kernel is choosing.
-> For SSDs, it is normally "noop", but I noticed "cfq"
-> being chosen instead for some reason.
+Lukasz> Where can I find information about current status of support for
+Lukasz> 4 KiB disk sectors in Linux kernel?  Is there a
+Lukasz> leader/maintainer of this issue in community?
 
-The default I/O scheduler is the default I/O scheduler.  Drivers may
-override this (some high-end PCIe SSD drivers do this, and I think s390
-block drivers do as well), but in general the default is left alone.
+We have supported 4Kn for a decade. 512e obviously works out of the
+box. However, filesystem/partition/DM tooling has been updated to align
+correctly on 512e devices.
 
-Cheers,
-Jeff
+See:
+
+	http://oss.oracle.com/~mkp/docs/linux-advanced-storage.pdf
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
