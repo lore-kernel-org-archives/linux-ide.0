@@ -1,46 +1,51 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [RESEND PATCH 0/2]: Use correct DMA device in SCSI/libata
-Date: Fri, 20 Apr 2012 13:17:47 +0800
-Message-ID: <CAF1ivSaCKUdp6cswhwG0qsWe=0Qo+7rtY07Ynr8VmC_gPmXdUA@mail.gmail.com>
-References: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] libata: clear error mask of old error history
+Date: Fri, 20 Apr 2012 14:29:20 +0400
+Message-ID: <4F913A80.3030207@mvista.com>
+References: <1334885938.4927.11.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59841 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754503Ab2DTKa4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2012 06:30:56 -0400
+Received: by lbom4 with SMTP id m4so3826963lbo.19
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2012 03:30:54 -0700 (PDT)
+In-Reply-To: <1334885938.4927.11.camel@minggr>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
 
-On Thu, Apr 12, 2012 at 1:50 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi,
->
-> RESEND: add Jeff's ACK.
+Hello.
 
-James, ping?
+On 20-04-012 5:38, Lin Ming wrote:
 
-Lin Ming
+> The old error history was cleared in ata_ering_clear().
+> It only sets ATA_EFLAG_OLD_ER eflags, but the err_mask was not cleared.
+> So ata_ering_map() still iterates the old error history.
 
->
-> These 2 patches fix bug report at:
->
-> http://marc.info/?l=3Dlinux-ide&m=3D133177818318187&w=3D2
->
-> Please see the patches for more detail.
->
-> [PATCH 1/2] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_q=
-ueue
-> [PATCH 2/2] libata: Pass correct DMA device to scsi host
->
-> =A0drivers/ata/libata-scsi.c | =A0 =A03 ++-
-> =A0drivers/scsi/scsi_lib.c =A0 | =A0 =A02 +-
-> =A02 files changed, 3 insertions(+), 2 deletions(-)
->
-> Thanks,
-> Lin Ming
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This causes problem, for example, wrong probe trials count were returned in
+> ata_eh_schedule_probe(), which in turn causes SATA link speed to be slowed down
+> to 1.5Gbps.
+
+> Reported-and-tested-by: Martin Mokrejs<mmokrejs@fold.natur.cuni.cz>
+> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+> ---
+
+> Hi Jeff,
+
+> This patch fixes an old regression introduced in 2.6.37-rc1
+> of commit d902747.
+
+> So it should be included into stable releases since 2.6.37.
+
+    You should have included:
+
+Cc: stable@vger.kernel.org # 2.6.37+
+
+after your signoff in this case.
+
+MBR, Sergei
