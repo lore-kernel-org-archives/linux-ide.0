@@ -1,15 +1,15 @@
 From: Viresh Kumar <viresh.linux@gmail.com>
-Subject: [PATCH 2/5] ata: pata_arasan: Add clk_{un}prepare() support
-Date: Fri, 20 Apr 2012 20:08:20 +0530
-Message-ID: <dd18da8082e0e87c0e214c0bcd4f54c05dc721d3.1334932338.git.viresh.kumar@st.com>
+Subject: [PATCH 3/5] ata: pata_arasan: add Device Tree probing capability
+Date: Fri, 20 Apr 2012 20:08:21 +0530
+Message-ID: <eaefebbe69ccad52909365c915e98224aef23aec.1334932338.git.viresh.kumar@st.com>
 References: <cover.1334932338.git.viresh.kumar@st.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:40428 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754768Ab2DTOjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2012 10:39:22 -0400
-Received: by mail-pz0-f52.google.com with SMTP id e40so13106310dak.11
-        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2012 07:39:22 -0700 (PDT)
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:48531 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754768Ab2DTOjp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Apr 2012 10:39:45 -0400
+Received: by pbcun15 with SMTP id un15so1138334pbc.19
+        for <linux-ide@vger.kernel.org>; Fri, 20 Apr 2012 07:39:44 -0700 (PDT)
 In-Reply-To: <cover.1334932338.git.viresh.kumar@st.com>
 In-Reply-To: <cover.1334932338.git.viresh.kumar@st.com>
 References: <cover.1334932338.git.viresh.kumar@st.com>
@@ -18,36 +18,74 @@ List-Id: linux-ide@vger.kernel.org
 To: jgarzik@redhat.com
 Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-ide@vger.kernel.org, Viresh Kumar <viresh.kumar@st.com>
 
-clk_{un}prepare is mandatory for platforms using common clock framework. Since
-this driver is used by SPEAr platform, which supports common clock framework,
-add clk_{un}prepare() support for it.
+SPEAr platforms now support DT and so must convert all drivers to support DT.
+This patch adds DT probing support for Arasan Compact Flash controller and
+updates its documentation too.
 
 Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
 ---
- drivers/ata/pata_arasan_cf.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/ata/pata-arasan.txt        |   17 +++++++++++++++++
+ drivers/ata/pata_arasan_cf.c                       |   10 ++++++++++
+ 2 files changed, 27 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/pata-arasan.txt
 
+diff --git a/Documentation/devicetree/bindings/ata/pata-arasan.txt b/Documentation/devicetree/bindings/ata/pata-arasan.txt
+new file mode 100644
+index 0000000..95ec7f8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/pata-arasan.txt
+@@ -0,0 +1,17 @@
++* ARASAN PATA COMPACT FLASH CONTROLLER
++
++Required properties:
++- compatible: "arasan,cf-spear1340"
++- reg: Address range of the CF registers
++- interrupt-parent: Should be the phandle for the interrupt controller
++  that services interrupts for this device
++- interrupt: Should contain the CF interrupt number
++
++Example:
++
++	cf@fc000000 {
++		compatible = "arasan,cf-spear1340";
++		reg = <0xfc000000 0x1000>;
++		interrupt-parent = <&vic1>;
++		interrupts = <12>;
++	};
 diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index 3239517..492db9c 100644
+index 492db9c..f583124 100644
 --- a/drivers/ata/pata_arasan_cf.c
 +++ b/drivers/ata/pata_arasan_cf.c
-@@ -313,7 +313,7 @@ static int cf_init(struct arasan_cf_dev *acdev)
- 	int ret = 0;
+@@ -31,6 +31,7 @@
+ #include <linux/kernel.h>
+ #include <linux/libata.h>
+ #include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/pata_arasan_cf_data.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm.h>
+@@ -947,6 +948,14 @@ static int arasan_cf_resume(struct device *dev)
  
- #ifdef CONFIG_HAVE_CLK
--	ret = clk_enable(acdev->clk);
-+	ret = clk_prepare_enable(acdev->clk);
- 	if (ret) {
- 		dev_dbg(acdev->host->dev, "clock enable failed");
- 		return ret;
-@@ -345,7 +345,7 @@ static void cf_exit(struct arasan_cf_dev *acdev)
- 			acdev->vbase + OP_MODE);
- 	spin_unlock_irqrestore(&acdev->host->lock, flags);
- #ifdef CONFIG_HAVE_CLK
--	clk_disable(acdev->clk);
-+	clk_disable_unprepare(acdev->clk);
- #endif
- }
+ static SIMPLE_DEV_PM_OPS(arasan_cf_pm_ops, arasan_cf_suspend, arasan_cf_resume);
+ 
++#ifdef CONFIG_OF
++static const struct of_device_id arasan_cf_id_table[] = {
++	{ .compatible = "arasan,cf-spear1340" },
++	{}
++};
++MODULE_DEVICE_TABLE(of, arasan_cf_id_table);
++#endif
++
+ static struct platform_driver arasan_cf_driver = {
+ 	.probe		= arasan_cf_probe,
+ 	.remove		= __devexit_p(arasan_cf_remove),
+@@ -954,6 +963,7 @@ static struct platform_driver arasan_cf_driver = {
+ 		.name	= DRIVER_NAME,
+ 		.owner	= THIS_MODULE,
+ 		.pm	= &arasan_cf_pm_ops,
++		.of_match_table = of_match_ptr(arasan_cf_id_table),
+ 	},
+ };
  
 -- 
 1.7.9
