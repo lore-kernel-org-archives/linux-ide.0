@@ -1,36 +1,116 @@
-From: cwillu <cwillu@cwillu.com>
-Subject: Re: SSD slowdown with 3.3.X?
-Date: Sat, 21 Apr 2012 05:45:58 -0600
-Message-ID: <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
-References: <4F8F7533.6020300@gmail.com>
-	<4F8F82EC.1060708@teksavvy.com>
-	<4F90C4CF.1010000@gmail.com>
-	<4F921E18.6000301@teksavvy.com>
-	<4F921ECF.2080303@teksavvy.com>
-	<4F922F43.4050809@hardwarefreak.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:57479 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751628Ab2DULp6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 07:45:58 -0400
-Received: by yenl12 with SMTP id l12so5594867yen.19
-        for <linux-ide@vger.kernel.org>; Sat, 21 Apr 2012 04:45:58 -0700 (PDT)
-In-Reply-To: <4F922F43.4050809@hardwarefreak.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Viresh Kumar <viresh.linux@gmail.com>
+Subject: [PATCH 04/13] ata/pata_arasan: Remove conditional compilation of clk code
+Date: Sat, 21 Apr 2012 17:17:31 +0530
+Message-ID: <b65ce56f5c346b5f8230636a0c5da72662631bcd.1335008617.git.viresh.kumar@st.com>
+References: <cover.1335008617.git.viresh.kumar@st.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1335008617.git.viresh.kumar@st.com>
+In-Reply-To: <cover.1335008617.git.viresh.kumar@st.com>
+References: <cover.1335008617.git.viresh.kumar@st.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, Viresh Kumar <viresh.kumar@st.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: Mark Lord <kernel@teksavvy.com>, Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
 
-> Probably not relevant in this case but maybe worth mentioning to get the
-> word out:
->
-> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
-> of the parallelization in XFS."
->
-> http://www.xfs.org/index.php/XFS_FAQ
+With addition of dummy clk_*() calls for non CONFIG_HAVE_CLK cases in clk.h,
+there is no need to have clk code enclosed in #ifdef CONFIG_HAVE_CLK, #endif
+macros.
 
-Not that it's terribly relevant to btrfs, but do you have a better
-citation for that than a very recent one-line wiki change that only
-cites the user's own anecdote?
+Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/pata_arasan_cf.c |   39 ++++++++++++++++-----------------------
+ 1 files changed, 16 insertions(+), 23 deletions(-)
+
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index fc2db2a..b370e35 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -184,10 +184,8 @@
+ struct arasan_cf_dev {
+ 	/* pointer to ata_host structure */
+ 	struct ata_host *host;
+-	/* clk structure, only if HAVE_CLK is defined */
+-#ifdef CONFIG_HAVE_CLK
++	/* clk structure */
+ 	struct clk *clk;
+-#endif
+ 
+ 	/* physical base address of controller */
+ 	dma_addr_t pbase;
+@@ -312,13 +310,13 @@ static int cf_init(struct arasan_cf_dev *acdev)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+-#ifdef CONFIG_HAVE_CLK
+-	ret = clk_enable(acdev->clk);
+-	if (ret) {
+-		dev_dbg(acdev->host->dev, "clock enable failed");
+-		return ret;
++	if (!IS_ERR(acdev->clk)) {
++		ret = clk_enable(acdev->clk);
++		if (ret) {
++			dev_dbg(acdev->host->dev, "clock enable failed");
++			return ret;
++		}
+ 	}
+-#endif
+ 
+ 	spin_lock_irqsave(&acdev->host->lock, flags);
+ 	/* configure CF interface clock */
+@@ -344,9 +342,9 @@ static void cf_exit(struct arasan_cf_dev *acdev)
+ 	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
+ 			acdev->vbase + OP_MODE);
+ 	spin_unlock_irqrestore(&acdev->host->lock, flags);
+-#ifdef CONFIG_HAVE_CLK
+-	clk_disable(acdev->clk);
+-#endif
++
++	if (!IS_ERR(acdev->clk))
++		clk_disable(acdev->clk);
+ }
+ 
+ static void dma_callback(void *dev)
+@@ -828,13 +826,9 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-#ifdef CONFIG_HAVE_CLK
+ 	acdev->clk = clk_get(&pdev->dev, NULL);
+-	if (IS_ERR(acdev->clk)) {
++	if (IS_ERR(acdev->clk))
+ 		dev_warn(&pdev->dev, "Clock not found\n");
+-		return PTR_ERR(acdev->clk);
+-	}
+-#endif
+ 
+ 	/* allocate host */
+ 	host = ata_host_alloc(&pdev->dev, 1);
+@@ -899,9 +893,8 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
+ 			&arasan_cf_sht);
+ 
+ free_clk:
+-#ifdef CONFIG_HAVE_CLK
+-	clk_put(acdev->clk);
+-#endif
++	if (!IS_ERR(acdev->clk))
++		clk_put(acdev->clk);
+ 	return ret;
+ }
+ 
+@@ -912,9 +905,9 @@ static int __devexit arasan_cf_remove(struct platform_device *pdev)
+ 
+ 	ata_host_detach(host);
+ 	cf_exit(acdev);
+-#ifdef CONFIG_HAVE_CLK
+-	clk_put(acdev->clk);
+-#endif
++
++	if (!IS_ERR(acdev->clk))
++		clk_put(acdev->clk);
+ 
+ 	return 0;
+ }
+-- 
+1.7.9
