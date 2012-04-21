@@ -1,43 +1,50 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SSD slowdown with 3.3.X?
-Date: Sat, 21 Apr 2012 13:30:01 -0500
-Message-ID: <4F92FCA9.8010502@hardwarefreak.com>
-References: <4F8F7533.6020300@gmail.com> <4F8F82EC.1060708@teksavvy.com> <4F90C4CF.1010000@gmail.com> <4F921E18.6000301@teksavvy.com> <4F921ECF.2080303@teksavvy.com> <4F922F43.4050809@hardwarefreak.com> <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RESEND PATCH 0/2]: Use correct DMA device in SCSI/libata
+Date: Sat, 21 Apr 2012 15:52:10 -0400
+Message-ID: <4F930FEA.4040804@garzik.org>
+References: <1334209839-21978-1-git-send-email-ming.m.lin@intel.com> <CAF1ivSaCKUdp6cswhwG0qsWe=0Qo+7rtY07Ynr8VmC_gPmXdUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53531 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475Ab2DUSaB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 14:30:01 -0400
-In-Reply-To: <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAF1ivSaCKUdp6cswhwG0qsWe=0Qo+7rtY07Ynr8VmC_gPmXdUA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Lin Ming <ming.m.lin@intel.com>, =?ISO-8859-1?Q?J=F6rg_Sommer?= <joerg@alea.gnuu.de>, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: cwillu <cwillu@cwillu.com>
-Cc: Mark Lord <kernel@teksavvy.com>, Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
 
-On 4/21/2012 6:45 AM, cwillu wrote:
->> Probably not relevant in this case but maybe worth mentioning to get the
->> word out:
+On 04/20/2012 01:17 AM, Lin Ming wrote:
+> On Thu, Apr 12, 2012 at 1:50 PM, Lin Ming<ming.m.lin@intel.com>  wrote:
+>> Hi,
 >>
->> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
->> of the parallelization in XFS."
+>> RESEND: add Jeff's ACK.
+>
+> James, ping?
+>
+> Lin Ming
+>
 >>
->> http://www.xfs.org/index.php/XFS_FAQ
-> 
-> Not that it's terribly relevant to btrfs, but do you have a better
-> citation for that than a very recent one-line wiki change that only
-> cites the user's own anecdote?
+>> These 2 patches fix bug report at:
+>>
+>> http://marc.info/?l=linux-ide&m=133177818318187&w=2
+>>
+>> Please see the patches for more detail.
+>>
+>> [PATCH 1/2] [SCSI] scsi_lib: use correct DMA device in __scsi_alloc_queue
+>> [PATCH 2/2] libata: Pass correct DMA device to scsi host
+>>
+>>   drivers/ata/libata-scsi.c |    3 ++-
+>>   drivers/scsi/scsi_lib.c   |    2 +-
+>>   2 files changed, 3 insertions(+), 2 deletions(-)
 
-Apologies for the rather weak citation.  It was simply easier to quote
-that wiki entry.
 
-How about something directly from Dave's fingers:
-http://www.spinics.net/lists/xfs/msg10824.html
+James, ping ping?
 
-The many issues with CFQ+XFS didn't start with 3.2.12, but long before that.
+These simple bug fixes have been sent to you and linux-scsi, and ACK'd 
+several times.
 
--- 
-Stan
+Should I send directly to Linus?
+
+	Jeff
+
+
