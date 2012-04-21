@@ -1,51 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] libsas fixes for 3.4-rc4
-Date: Sat, 21 Apr 2012 13:28:56 +0100
-Message-ID: <1335011336.3081.12.camel@dabdike.lan>
-References: <1334960945.21447.19.camel@ultramagnus.opencreations.com>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: SSD slowdown with 3.3.X?
+Date: Sat, 21 Apr 2012 13:30:01 -0500
+Message-ID: <4F92FCA9.8010502@hardwarefreak.com>
+References: <4F8F7533.6020300@gmail.com> <4F8F82EC.1060708@teksavvy.com> <4F90C4CF.1010000@gmail.com> <4F921E18.6000301@teksavvy.com> <4F921ECF.2080303@teksavvy.com> <4F922F43.4050809@hardwarefreak.com> <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48446 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751549Ab2DUM3C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 08:29:02 -0400
-In-Reply-To: <1334960945.21447.19.camel@ultramagnus.opencreations.com>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53531 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475Ab2DUSaB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 14:30:01 -0400
+In-Reply-To: <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, jack_wang <jack_wang@usish.com>
+To: cwillu <cwillu@cwillu.com>
+Cc: Mark Lord <kernel@teksavvy.com>, Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
 
-On Fri, 2012-04-20 at 15:29 -0700, Dan Williams wrote:
-> These patches, save for the new "scsi: fix eh wakeup (scsi_schedule_eh
-> vs scsi_restart_operations)" and "Revert "[SCSI] libsas: fix sas port
-> naming", were all originally posted before the merge
-> window opened, and have also appeared in -next for the same timeframe.
+On 4/21/2012 6:45 AM, cwillu wrote:
+>> Probably not relevant in this case but maybe worth mentioning to get the
+>> word out:
+>>
+>> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
+>> of the parallelization in XFS."
+>>
+>> http://www.xfs.org/index.php/XFS_FAQ
 > 
-> The commit dates are not that aged (9 days old) because they were
-> rebased out of larger set of updates that were pending for 3.4.
-> 
-> There is a mix of pure regression fixes and fixes for long-standing bugs
-> in libsas.  Some of the long-standing bug fixes are made worse / easier
-> to trigger by the new async error handling scheme.
-> 
-> The largest patch in the series is "libata, libsas: introduce sched_eh
-> and end_eh port ops" it has been on the list since March 10th.
-> 
-> Jack Wang has independently tested this set with pm8001 and reports
-> success. [1]
-> 
-> Apologies if scsi-rc-fixes was in the process of picking these up.  With
-> -rc4 looming I lost my nerve and pulled the trigger.
+> Not that it's terribly relevant to btrfs, but do you have a better
+> citation for that than a very recent one-line wiki change that only
+> cites the user's own anecdote?
 
-Right, so as a point of process, these are SCSI fixes and are supposed
-to be going through the SCSI tree.  The only urgent one is the revert; I
-still have outstanding questions about some of the others.
+Apologies for the rather weak citation.  It was simply easier to quote
+that wiki entry.
 
-We're at least 3 weeks away from 3.4 (and that's only if -rc6 is final),
-so there's time to address all of this via the usual process.
+How about something directly from Dave's fingers:
+http://www.spinics.net/lists/xfs/msg10824.html
 
-James
+The many issues with CFQ+XFS didn't start with 3.2.12, but long before that.
 
-
+-- 
+Stan
