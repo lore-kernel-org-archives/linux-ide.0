@@ -1,43 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [isci PATCH v3 1/4] libata: export ata_port suspend/resume infrastructure
- for sas
-Date: Sat, 21 Apr 2012 02:26:04 -0400
-Message-ID: <4F9252FC.9020706@garzik.org>
-References: <20120314071312.7223.10946.stgit@dwillia2-linux.jf.intel.com> <20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
+From: cwillu <cwillu@cwillu.com>
+Subject: Re: SSD slowdown with 3.3.X?
+Date: Sat, 21 Apr 2012 05:45:58 -0600
+Message-ID: <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com>
+References: <4F8F7533.6020300@gmail.com>
+	<4F8F82EC.1060708@teksavvy.com>
+	<4F90C4CF.1010000@gmail.com>
+	<4F921E18.6000301@teksavvy.com>
+	<4F921ECF.2080303@teksavvy.com>
+	<4F922F43.4050809@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20120314071353.7223.5361.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:57479 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628Ab2DULp6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 07:45:58 -0400
+Received: by yenl12 with SMTP id l12so5594867yen.19
+        for <linux-ide@vger.kernel.org>; Sat, 21 Apr 2012 04:45:58 -0700 (PDT)
+In-Reply-To: <4F922F43.4050809@hardwarefreak.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: stan@hardwarefreak.com
+Cc: Mark Lord <kernel@teksavvy.com>, Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
 
-On 03/14/2012 03:13 AM, Dan Williams wrote:
-> Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
-> over adding coordination between ata-tranport and sas-transport because
-> libsas wants to revalidate the domain at resume-time at the host level.
-> It can not validate links have resumed properly until libata has had a
-> chance to perform its revalidation, and any sane placing of an ata_port
-> in the sas-transport model would delay it's resumption until after the
-> host.
+> Probably not relevant in this case but maybe worth mentioning to get the
+> word out:
 >
-> Export the common portion of port suspend/resume (bypass pm_runtime),
-> and allow sas to perform these operations asynchronously (similar to the
-> libsas async-ata probe implmentation).  Async operation is determined by
-> having an external, rather than stack based, location for storing the
-> result of the operation.
+> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
+> of the parallelization in XFS."
 >
-> Reviewed-by: Jacek Danecki<jacek.danecki@intel.com>
-> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
-> ---
->   drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++---------
->   include/linux/libata.h    |   11 +++++++++
->   2 files changed, 57 insertions(+), 12 deletions(-)
+> http://www.xfs.org/index.php/XFS_FAQ
 
-Now that libata's runtime PM problems seem to be fixed for the moment, 
-we can revisit port PM here.  Just checking...  Is this patch still needed?
-
-
-
+Not that it's terribly relevant to btrfs, but do you have a better
+citation for that than a very recent one-line wiki change that only
+cites the user's own anecdote?
