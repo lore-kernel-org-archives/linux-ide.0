@@ -1,91 +1,57 @@
 From: Viresh Kumar <viresh.linux@gmail.com>
-Subject: [PATCH 05/13] ata/sata_mv: Remove conditional compilation of clk code
-Date: Sat, 21 Apr 2012 17:17:32 +0530
-Message-ID: <e8e15e1e8c17195778ab26a1f483076dfe9bb460.1335008617.git.viresh.kumar@st.com>
-References: <cover.1335008617.git.viresh.kumar@st.com>
+Subject: [PATCH V2 0/5] ata: pata_arasan and ahci_platform updates
+Date: Sat, 21 Apr 2012 17:40:08 +0530
+Message-ID: <cover.1335009631.git.viresh.kumar@st.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:35714 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab2DULvI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 07:51:08 -0400
-In-Reply-To: <cover.1335008617.git.viresh.kumar@st.com>
-In-Reply-To: <cover.1335008617.git.viresh.kumar@st.com>
-References: <cover.1335008617.git.viresh.kumar@st.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:52398 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab2DUMKh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 08:10:37 -0400
+Received: by dake40 with SMTP id e40so14092262dak.11
+        for <linux-ide@vger.kernel.org>; Sat, 21 Apr 2012 05:10:36 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, Viresh Kumar <viresh.kumar@st.com>, linux-ide@vger.kernel.org
+To: jgarzik@redhat.com
+Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-ide@vger.kernel.org, sshtylyov@mvista.com, Viresh Kumar <viresh.kumar@st.com>
 
-With addition of dummy clk_*() calls for non CONFIG_HAVE_CLK cases in clk.h,
-there is no need to have clk code enclosed in #ifdef CONFIG_HAVE_CLK, #endif
-macros.
+Jeff,
+ 
+This patchset contains updates for pata_arasan and ahci_platform drivers.
+- First patch was earlier sent alone, just included here.
+- Second one was sent earlier to you and following was the discussion there:
+  http://patchwork.ozlabs.org/patch/99677/
 
-Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
-Cc: Jeff Garzik <jgarzik@redhat.com>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/sata_mv.c |   10 ----------
- 1 files changed, 0 insertions(+), 10 deletions(-)
+It is used by SPEAr13xx V1 for which is:
+http://comments.gmane.org/gmane.linux.ports.arm.kernel/163042
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 38950ea..3bb9cb7 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -551,9 +551,7 @@ struct mv_host_priv {
- 	u32			irq_mask_offset;
- 	u32			unmask_all_irqs;
- 
--#if defined(CONFIG_HAVE_CLK)
- 	struct clk		*clk;
--#endif
- 	/*
- 	 * These consistent DMA memory pools give us guaranteed
- 	 * alignment for hardware-accessed data structures,
-@@ -4062,13 +4060,11 @@ static int mv_platform_probe(struct platform_device *pdev)
- 				   resource_size(res));
- 	hpriv->base -= SATAHC0_REG_BASE;
- 
--#if defined(CONFIG_HAVE_CLK)
- 	hpriv->clk = clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(hpriv->clk))
- 		dev_notice(&pdev->dev, "cannot get clkdev\n");
- 	else
- 		clk_enable(hpriv->clk);
--#endif
- 
- 	/*
- 	 * (Re-)program MBUS remapping windows if we are asked to.
-@@ -4095,12 +4091,10 @@ static int mv_platform_probe(struct platform_device *pdev)
- 		return 0;
- 
- err:
--#if defined(CONFIG_HAVE_CLK)
- 	if (!IS_ERR(hpriv->clk)) {
- 		clk_disable(hpriv->clk);
- 		clk_put(hpriv->clk);
- 	}
--#endif
- 
- 	return rc;
- }
-@@ -4116,17 +4110,13 @@ err:
- static int __devexit mv_platform_remove(struct platform_device *pdev)
- {
- 	struct ata_host *host = platform_get_drvdata(pdev);
--#if defined(CONFIG_HAVE_CLK)
- 	struct mv_host_priv *hpriv = host->private_data;
--#endif
- 	ata_host_detach(host);
- 
--#if defined(CONFIG_HAVE_CLK)
- 	if (!IS_ERR(hpriv->clk)) {
- 		clk_disable(hpriv->clk);
- 		clk_put(hpriv->clk);
- 	}
--#endif
- 	return 0;
- }
- 
+- Others add DT support for them.
+
+V1->V2:
+- Removed covering #ifdef CONFIG_HAVE_CLK, #endifs around clk code in
+  ahci_platform.
+  
+  Patch to create non CONFIG_HAVE_CLK clk_*() routines is already floated with
+  following subject line:
+  clk: Add non CONFIG_HAVE_CLK routines
+
+Viresh Kumar (5):
+  ata/pata_arasan_cf: Move arasan_cf_pm_ops out of #ifdef, #endif
+    macros
+  ata: pata_arasan: Add clk_{un}prepare() support
+  ata: pata_arasan: add Device Tree probing capability
+  ata: ahci_platform: Add synopsys ahci controller in DT's compatible
+    list
+  ata/ahci_platform: Add clock framework support
+
+ .../ata/{calxeda-sata.txt => ahci-platform.txt}    |    5 +-
+ .../devicetree/bindings/ata/pata-arasan.txt        |   17 ++++++
+ drivers/ata/ahci.h                                 |    2 +
+ drivers/ata/ahci_platform.c                        |   56 +++++++++++++++++---
+ drivers/ata/pata_arasan_cf.c                       |   16 ++++--
+ 5 files changed, 82 insertions(+), 14 deletions(-)
+ rename Documentation/devicetree/bindings/ata/{calxeda-sata.txt => ahci-platform.txt} (90%)
+ create mode 100644 Documentation/devicetree/bindings/ata/pata-arasan.txt
+
 -- 
 1.7.9
 
