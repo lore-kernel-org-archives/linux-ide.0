@@ -1,49 +1,54 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SSD slowdown with 3.3.X?
-Date: Fri, 20 Apr 2012 22:53:39 -0500
-Message-ID: <4F922F43.4050809@hardwarefreak.com>
-References: <4F8F7533.6020300@gmail.com> <4F8F82EC.1060708@teksavvy.com> <4F90C4CF.1010000@gmail.com> <4F921E18.6000301@teksavvy.com> <4F921ECF.2080303@teksavvy.com>
-Reply-To: stan@hardwarefreak.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port
+ ops
+Date: Sat, 21 Apr 2012 02:19:28 -0400
+Message-ID: <4F925170.3080705@garzik.org>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com> <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:53355 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751215Ab2DUEAN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 00:00:13 -0400
-In-Reply-To: <4F921ECF.2080303@teksavvy.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:35774 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab2DUGTd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Apr 2012 02:19:33 -0400
+In-Reply-To: <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: JBottomley@parallels.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-On 4/20/2012 9:43 PM, Mark Lord wrote:
-> On 12-04-20 10:40 PM, Mark Lord wrote:
->> On 12-04-19 10:07 PM, Joe Ceklosky wrote:
->>> Mark,
->>>
->>>
->>> Thanks for the info, but nothing like that shows up:
->>>
->>>
->>> [jceklosk@neptune tmp]$ cat c-3.2.15
->>> noop deadline [cfq]
->>> noop deadline [cfq]
->>>
->>>
->>> [jceklosk@neptune tmp]$ cat c-3.3.2
->>> noop deadline [cfq]
->>> noop deadline [cfq]
+On 04/13/2012 07:37 PM, Dan Williams wrote:
+> When managing shost->host_eh_scheduled libata assumes that there is a
+> 1:1 shost-to-ata_port relationship.  libsas creates a 1:N relationship
+> so it needs to manage host_eh_scheduled cumulatively at the host level.
+> The sched_eh and end_eh port port ops allow libsas to track when domain
+> devices enter/leave the "eh-pending" state under ha->lock (previously
+> named ha->state_lock, but it is no longer just a lock for ha->state
+> changes).
+>
+> Since host_eh_scheduled indicates eh without backing commands pinning
+> the device it can be deallocated at any time.  Move the taking of the
+> domain_device reference under the port_lock to guarantee that the
+> ata_port stays around for the duration of eh.
+>
+> Cc: Tejun Heo<tj@kernel.org>
+> Acked-by: Jacek Danecki<jacek.danecki@intel.com>
+> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
+> ---
+>   drivers/ata/libata-core.c           |    4 ++
+>   drivers/ata/libata-eh.c             |   57 ++++++++++++++++++++++++++++-------
+>   drivers/scsi/libsas/sas_ata.c       |   38 +++++++++++++++++++++--
+>   drivers/scsi/libsas/sas_discover.c  |    6 ++--
+>   drivers/scsi/libsas/sas_event.c     |   12 ++++---
+>   drivers/scsi/libsas/sas_init.c      |   14 ++++-----
+>   drivers/scsi/libsas/sas_scsi_host.c |   27 +++++++++++++----
+>   include/linux/libata.h              |    4 ++
+>   include/scsi/libsas.h               |    4 ++
+>   include/scsi/sas_ata.h              |    5 +++
+>   10 files changed, 134 insertions(+), 37 deletions(-)
 
-Probably not relevant in this case but maybe worth mentioning to get the
-word out:
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-"As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
-of the parallelization in XFS."
 
-http://www.xfs.org/index.php/XFS_FAQ
-
--- 
-Stan
 
