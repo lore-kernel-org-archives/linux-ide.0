@@ -1,58 +1,83 @@
-From: Tero Roponen <tero.roponen@gmail.com>
-Subject: libata: init ata_print_id to 0
-Date: Sun, 22 Apr 2012 11:38:00 +0300 (EEST)
-Message-ID: <alpine.LFD.2.02.1204221136450.1947@terrop>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 12/12] scsi_transport_sas: fix delete vs scan race
+Date: Sun, 22 Apr 2012 11:38:35 +0100
+Message-ID: <1335091115.13208.14.camel@dabdike.lan>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	 <20120413233752.8025.97983.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:48972 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809Ab2DVIiF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2012 04:38:05 -0400
-Received: by lbom4 with SMTP id m4so4920249lbo.19
-        for <linux-ide@vger.kernel.org>; Sun, 22 Apr 2012 01:38:04 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49905 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750997Ab2DVKil (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2012 06:38:41 -0400
+In-Reply-To: <20120413233752.8025.97983.stgit@dwillia2-linux.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Dan Williams <dan.j.williams@intel.com>, Jeff Garzik <jgarzik@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
+> The following crash results from cases where the end_device has been
+> removed before scsi_sysfs_add_sdev has had a chance to run.
+> 
+>  BUG: unable to handle kernel NULL pointer dereference at 0000000000000098
+>  IP: [<ffffffff8115e100>] sysfs_create_dir+0x32/0xb6
+>  ...
+>  Call Trace:
+>   [<ffffffff8125e4a8>] kobject_add_internal+0x120/0x1e3
+>   [<ffffffff81075149>] ? trace_hardirqs_on+0xd/0xf
+>   [<ffffffff8125e641>] kobject_add_varg+0x41/0x50
+>   [<ffffffff8125e70b>] kobject_add+0x64/0x66
+>   [<ffffffff8131122b>] device_add+0x12d/0x63a
+>   [<ffffffff814b65ea>] ? _raw_spin_unlock_irqrestore+0x47/0x56
+>   [<ffffffff8107de15>] ? module_refcount+0x89/0xa0
+>   [<ffffffff8132f348>] scsi_sysfs_add_sdev+0x4e/0x28a
+>   [<ffffffff8132dcbb>] do_scan_async+0x9c/0x145
+> 
+> ...teach sas_rphy_remove to wait for async scanning to quiesce before
+> removing the end_device.  It seems this is a more general problem [1],
+> but this patch only addresses sas transport.
+> 
+> [1]: 23edb6e [SCSI] mpt2sas: Do not set sas_device->starget to NULL from
+> the slave_destroy callback when all the LUNS have been deleted
+> 
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/scsi_transport_sas.c |    6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+> index f7565fc..47abb90 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -33,8 +33,9 @@
+>  #include <linux/bsg.h>
+>  
+>  #include <scsi/scsi.h>
+> -#include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h>
+> +#include <scsi/scsi_scan.h>
+> +#include <scsi/scsi_device.h>
+>  #include <scsi/scsi_transport.h>
+>  #include <scsi/scsi_transport_sas.h>
+>  
+> @@ -1667,6 +1668,9 @@ sas_rphy_remove(struct sas_rphy *rphy)
+>  {
+>  	struct device *dev = &rphy->dev;
+>  
+> +	/* prevent device_del() while child device_add() may be in-flight */
+> +	scsi_complete_async_scans();
+> +
+>  	switch (rphy->identify.device_type) {
+
+This doesn't really fix the problem, it merely narrows the window (we
+still crash in the much shorter window if another async scan starts
+after you check for completion).  Isn't the fix that will prevent all of
+this to hold the scan mutex across scsi_remove_device() ... in which
+case it should probably be part of scsi_remove_device()?
+
+James
 
 
-When comparing the dmesg between 3.4-rc3 and 3.4-rc4 I found the
-following differences:
-
- -ata1: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff100 irq 47
- -ata2: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff180 irq 47
- -ata3: DUMMY
- +ata2: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff100 irq 47
- +ata3: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff180 irq 47
-  ata4: DUMMY
-  ata5: DUMMY
- -ata6: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff380 irq 47
- +ata6: DUMMY
- +ata7: SATA max UDMA/133 abar m2048@0xf9fff000 port 0xf9fff380 irq 47
-
-The change of numbering comes from commit 85d6725b7c0d7e3f ("libata:
-make ata_print_id atomic") that changed lines like
-
-	ap->print_id = ata_print_id++;
-		to
-	ap->print_id = atomic_inc_return(&ata_print_id);
-
-As the latter behaves like ++ata_print_id, we must initialize
-it to zero to start the numbering from one.
-
-Signed-off-by: Tero Roponen <tero.roponen@gmail.com>
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28db50b..23763a1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -95,7 +95,7 @@ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
- static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
- 
--atomic_t ata_print_id = ATOMIC_INIT(1);
-+atomic_t ata_print_id = ATOMIC_INIT(0);
- 
- struct ata_force_param {
- 	const char	*name;
