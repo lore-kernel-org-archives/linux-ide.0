@@ -1,64 +1,59 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh
- port ops
-Date: Sun, 22 Apr 2012 18:30:28 +0100
-Message-ID: <1335115828.13208.31.camel@dabdike.lan>
-References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
-	 <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2] libata: clear error mask of old error history
+Date: Mon, 23 Apr 2012 09:09:25 +0800
+Message-ID: <1335143365.4927.49.camel@minggr>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50454 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751601Ab2DVRah (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Apr 2012 13:30:37 -0400
-In-Reply-To: <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
+Received: from mga02.intel.com ([134.134.136.20]:60686 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753062Ab2DWBJ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 22 Apr 2012 21:09:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, Grant Grundler <grundler@google.com>, sshtylyov@mvista.com
 
-On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
-> When managing shost->host_eh_scheduled libata assumes that there is a
-> 1:1 shost-to-ata_port relationship.  libsas creates a 1:N relationship
-> so it needs to manage host_eh_scheduled cumulatively at the host level.
-> The sched_eh and end_eh port port ops allow libsas to track when domain
-> devices enter/leave the "eh-pending" state under ha->lock (previously
-> named ha->state_lock, but it is no longer just a lock for ha->state
-> changes).
-> 
-> Since host_eh_scheduled indicates eh without backing commands pinning
-> the device it can be deallocated at any time.  Move the taking of the
-> domain_device reference under the port_lock to guarantee that the
-> ata_port stays around for the duration of eh.
+The old error history was cleared in ata_ering_clear().
+It only sets ATA_EFLAG_OLD_ER eflags, but the err_mask was not cleared.
+So ata_ering_map() still iterates the old error history.
 
-> Cc: Tejun Heo <tj@kernel.org>
-> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
+This causes problem, for example, wrong probe trials count were returned in
+ata_eh_schedule_probe(), which in turn causes SATA link speed to be slowed down
+to 1.5Gbps.
 
-Could we standardise on Acked-by, please.  In my book it means the
-maintainer of a piece of code agrees with the change and lets me take it
-through my tree.  I'm aware that not everyone uses this definition, so
-we can use a different standard from my current one, but what does it
-mean in this case?
+Reported-and-tested-by: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Reviewed-by: Grant Grundler <grundler@google.com>
+Cc: stable <stable@vger.kernel.org> # 2.6.37+
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/ata/libata-core.c           |    4 ++
->  drivers/ata/libata-eh.c             |   57 ++++++++++++++++++++++++++++-------
->  drivers/scsi/libsas/sas_ata.c       |   38 +++++++++++++++++++++--
->  drivers/scsi/libsas/sas_discover.c  |    6 ++--
->  drivers/scsi/libsas/sas_event.c     |   12 ++++---
->  drivers/scsi/libsas/sas_init.c      |   14 ++++-----
->  drivers/scsi/libsas/sas_scsi_host.c |   27 +++++++++++++----
->  include/linux/libata.h              |    4 ++
->  include/scsi/libsas.h               |    4 ++
->  include/scsi/sas_ata.h              |    5 +++
->  10 files changed, 134 insertions(+), 37 deletions(-)
+v2:
+- Add Grant's review
+- CC stable
 
-This is a pretty big change for rc fixes.  None of the other changes in
-the series seem to be dependent on it, what bug is it actually fixing?
+ drivers/ata/libata-eh.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-James
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index c61316e..4c6f49b 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -419,9 +419,10 @@ int ata_ering_map(struct ata_ering *ering,
+ 	return rc;
+ }
+ 
+-int ata_ering_clear_cb(struct ata_ering_entry *ent, void *void_arg)
++static int ata_ering_clear_cb(struct ata_ering_entry *ent, void *void_arg)
+ {
+ 	ent->eflags |= ATA_EFLAG_OLD_ER;
++	ent->err_mask = 0;
+ 	return 0;
+ }
+ 
+-- 
+1.7.2.5
+
 
 
