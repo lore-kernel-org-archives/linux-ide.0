@@ -1,37 +1,24 @@
-From: Viresh Kumar <viresh.kumar@st.com>
-Subject: Re: [PATCH V2 4/9] ata/sata_mv: Remove conditional compilation of
- clk code
-Date: Tue, 24 Apr 2012 14:00:43 +0530
-Message-ID: <4F9664B3.6040104@st.com>
-References: <20120424070426.GA24089@lunn.ch> <4F9650B3.9030406@st.com> <20120424072653.GB24089@lunn.ch> <20120424074202.GO24211@n2100.arm.linux.org.uk> <4F965D1C.2010203@st.com> <20120424082652.GQ24211@n2100.arm.linux.org.uk>
+From: Jacek Danecki <Jacek.Danecki@intel.com>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port
+ ops
+Date: Tue, 24 Apr 2012 12:11:28 +0200
+Message-ID: <4F967C50.8030305@intel.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com> <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com> <1335115828.13208.31.camel@dabdike.lan> <4F94BF90.4090001@garzik.org> <1335168621.3051.8.camel@dabdike.lan> <CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com> <1335219777.2749.11.camel@dabdike.lan> <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:60776 "EHLO
-	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755834Ab2DXIcm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2012 04:32:42 -0400
-In-Reply-To: <20120424082652.GQ24211@n2100.arm.linux.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "sshtylyov@mvista.com" <sshtylyov@mvista.com>, spear-devel <spear-devel@list.st.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "viresh.linux@gmail.com" <viresh.linux@gmail.com>, "mturquette@linaro.org" <mturquette@linaro.org>, "jgarzik@redhat.com" <jgarzik@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-On 4/24/2012 1:56 PM, Russell King - ARM Linux wrote:
-> Think about this case: if you don't have the means to control the clock
-> inputs to a device (for example, you don't support the clk API on your
-> CPU arch) then for the device to be functional, it must be supplied with
-> all its necessary clocks.  Therefore, the clock is already enabled.  It
-> makes sense for the clk API to stub-out to be completely transparent and
-> non-error inducing to the driver.
-> 
-> The problem comes with clk_get_rate().  I'd suggest merely returning zero
-> for that in this case.  If the clock rate is really required by a driver,
-> then the clk API would need to be enabled.
+On 04/24/12 00:49, Dan Williams wrote:
+> Ok, reviewed-by is what we'll aim to do for Intel-internal "acks" for
+> isci / libsas going forward.
 
-Ok. Will do as suggested. Will include the patches i dropped earlier, where
-i removed macros for clk_*().
+Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
 
 -- 
-viresh
+Jacek
