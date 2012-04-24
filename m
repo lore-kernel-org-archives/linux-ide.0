@@ -1,59 +1,51 @@
-From: =?utf-8?Q?Lothar_Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+From: viresh kumar <viresh.linux@gmail.com>
 Subject: Re: [PATCH V3 07/12] ata/sata_mv: Remove conditional compilation of
  clk code
-Date: Tue, 24 Apr 2012 14:51:00 +0200
-Message-ID: <20374.41396.280974.710188@ipc1.ka-ro>
+Date: Tue, 24 Apr 2012 19:12:10 +0530
+Message-ID: <CAOh2x==YaPxYxigyE=n2weoKHhu4ktGRHHGdzgs2+d1_Lo-D4Q@mail.gmail.com>
 References: <cover.1335266056.git.viresh.kumar@st.com>
 	<abbcf661dc58948794839eb0fba1d5a0950ec848.1335266056.git.viresh.kumar@st.com>
 	<20120424120019.GE24089@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:48278 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753008Ab2DXNmN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2012 09:42:13 -0400
 In-Reply-To: <20120424120019.GE24089@lunn.ch>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Viresh Kumar <viresh.kumar@st.com>, mturquette@linaro.org, sshtylyov@mvista.com, spear-devel@list.st.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, viresh.linux@gmail.com, linux@arm.linux.org.uk, akpm@linux-foundation.org, jgarzik@redhat.com, linux-arm-kernel@lists.infradead.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Viresh Kumar <viresh.kumar@st.com>, akpm@linux-foundation.org, spear-devel@list.st.com, viresh.linux@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, linux@arm.linux.org.uk, linux-ide@vger.kernel.org
 
-Hi,
-
-Andrew Lunn writes:
-> > -#if defined(CONFIG_HAVE_CLK)
-> >  	hpriv->clk =3D clk_get(&pdev->dev, NULL);
-> > -	if (IS_ERR(hpriv->clk))
-> > -		dev_notice(&pdev->dev, "cannot get clkdev\n");
-> > -	else
-> > -		clk_enable(hpriv->clk);
-> > -#endif
-> > +	if (IS_ERR(hpriv->clk)) {
-> > +		dev_err(&pdev->dev, "cannot get clkdev\n");
-> > +		return PTR_ERR(hpriv->clk);
-> > +	}
-> > +
-> > +	clk_enable(hpriv->clk);
->=20
+On 4/24/12, Andrew Lunn <andrew@lunn.ch> wrote:
 > Sorry, but still wrong.
->=20
+>
 > The clock is optional. If we can find a clock, turn it on. If not,
 > keep going....
->=20
+>
 > You patch causes the missing clock to become a fatal error.
->=20
-The clock API should accept NULL pointers as valid clocks and
-treat them as NOP.
-Thus drivers wouldn't have to worry about whether they actually got a
-clock to manage or if their clocks are just dummies.
+>
+> This sata_mv exists in multiple forms. It can be part of a SoC. It can
+> also be on a PCI bus. In the PCI form, it is unlikely to have a clk
+> which can be controlled. When built into a SoC, namely one of the
+> Orion family, dove, orion5x, mv78xx0 do not have a clock which can be
+> controlled. However kirkwood does have a clock.
+>
+> So, kirkwood will provide a clock and expects that sata_mv will turn
+> it on. All the other ways of using sata_mv will not provide a clock,
+> but still expect the driver to be happy.
 
+Hmm. What this code does now is:
+If HAVE_CLK is selected, then there must be a clock for the device. Otherwise
+it will always pass.
 
-Lothar Wa=C3=9Fmann
---=20
-___________________________________________________________
+You want not to return error if a platform does have HAVE_CLK, but doesn't
+have a clock for sata? That would be simple to fix, but want to confirm if this
+is actually required.
 
-Ka-Ro electronics GmbH | Pascalstra=C3=9Fe 22 | D - 52076 Aachen
-Phone: +49 2408 1402-0 | Fax: +49 2408 1402-10
-Gesch=C3=A4ftsf=C3=BChrer: Matthias Kaussen
-Handelsregistereintrag: Amtsgericht Aachen, HRB 4996
+@Russell: Can we have your view also?
 
-www.karo-electronics.de | info@karo-electronics.de
-___________________________________________________________
+--
+viresh
