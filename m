@@ -1,58 +1,126 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port ops
-Date: Mon, 23 Apr 2012 15:49:49 -0700
-Message-ID: <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
-References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
-	<20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
-	<1335115828.13208.31.camel@dabdike.lan>
-	<4F94BF90.4090001@garzik.org>
-	<1335168621.3051.8.camel@dabdike.lan>
-	<CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com>
-	<1335219777.2749.11.camel@dabdike.lan>
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: [PATCH V2 3/9] ata/pata_arasan: Remove conditional compilation of clk
+ code
+Date: Tue, 24 Apr 2012 11:26:11 +0530
+Message-ID: <4f7845b5e01002f6a3446f9828d1b6e42e6daff4.1335246730.git.viresh.kumar@st.com>
+References: <cover.1335246730.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1335219777.2749.11.camel@dabdike.lan>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <cover.1335246730.git.viresh.kumar@st.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: akpm@linux-foundation.org
+Cc: linux@arm.linux.org.uk, sshtylyov@mvista.com, spear-devel@list.st.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, viresh.linux@gmail.com, mturquette@linaro.org, jgarzik@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Apr 23, 2012 at 3:22 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->> No, it means:
->>
->> "If a person was not directly involved in the preparation or handlin=
-g of a
->> patch but wishes to signify and record their approval of it then the=
-y can
->> arrange to have an Acked-by: line added to the patch's changelog."
->
-> Isn't that tested-by or reviewed-by?
+With addition of dummy clk_*() calls for non CONFIG_HAVE_CLK cases in clk.h,
+there is no need to have clk code enclosed in #ifdef CONFIG_HAVE_CLK, #endif
+macros.
 
-Quoting from Documentation/SubmittingPatches was just a tongue in
-cheek way of pointing out that you have a local/narrower
-interpretation of Acked-by, and that Jacek's Acked-by is consistent
-with what's documented.
+Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/pata_arasan_cf.c |   39 ++++++++++++++++-----------------------
+ 1 files changed, 16 insertions(+), 23 deletions(-)
 
-[..]
-> We're just struggling to understand why it's there. =A0If it's read a=
-nd
-> approved the patch, then reviewed-by is the more appropriate. =A0If i=
-t's
-> actually booted and ran through a set of unit/QA tests, then it shoul=
-d
-> be tested-by.
->
-
-Ok, reviewed-by is what we'll aim to do for Intel-internal "acks" for
-isci / libsas going forward.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index fc2db2a..b370e35 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -184,10 +184,8 @@
+ struct arasan_cf_dev {
+ 	/* pointer to ata_host structure */
+ 	struct ata_host *host;
+-	/* clk structure, only if HAVE_CLK is defined */
+-#ifdef CONFIG_HAVE_CLK
++	/* clk structure */
+ 	struct clk *clk;
+-#endif
+ 
+ 	/* physical base address of controller */
+ 	dma_addr_t pbase;
+@@ -312,13 +310,13 @@ static int cf_init(struct arasan_cf_dev *acdev)
+ 	unsigned long flags;
+ 	int ret = 0;
+ 
+-#ifdef CONFIG_HAVE_CLK
+-	ret = clk_enable(acdev->clk);
+-	if (ret) {
+-		dev_dbg(acdev->host->dev, "clock enable failed");
+-		return ret;
++	if (!IS_ERR(acdev->clk)) {
++		ret = clk_enable(acdev->clk);
++		if (ret) {
++			dev_dbg(acdev->host->dev, "clock enable failed");
++			return ret;
++		}
+ 	}
+-#endif
+ 
+ 	spin_lock_irqsave(&acdev->host->lock, flags);
+ 	/* configure CF interface clock */
+@@ -344,9 +342,9 @@ static void cf_exit(struct arasan_cf_dev *acdev)
+ 	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
+ 			acdev->vbase + OP_MODE);
+ 	spin_unlock_irqrestore(&acdev->host->lock, flags);
+-#ifdef CONFIG_HAVE_CLK
+-	clk_disable(acdev->clk);
+-#endif
++
++	if (!IS_ERR(acdev->clk))
++		clk_disable(acdev->clk);
+ }
+ 
+ static void dma_callback(void *dev)
+@@ -828,13 +826,9 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-#ifdef CONFIG_HAVE_CLK
+ 	acdev->clk = clk_get(&pdev->dev, NULL);
+-	if (IS_ERR(acdev->clk)) {
++	if (IS_ERR(acdev->clk))
+ 		dev_warn(&pdev->dev, "Clock not found\n");
+-		return PTR_ERR(acdev->clk);
+-	}
+-#endif
+ 
+ 	/* allocate host */
+ 	host = ata_host_alloc(&pdev->dev, 1);
+@@ -899,9 +893,8 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
+ 			&arasan_cf_sht);
+ 
+ free_clk:
+-#ifdef CONFIG_HAVE_CLK
+-	clk_put(acdev->clk);
+-#endif
++	if (!IS_ERR(acdev->clk))
++		clk_put(acdev->clk);
+ 	return ret;
+ }
+ 
+@@ -912,9 +905,9 @@ static int __devexit arasan_cf_remove(struct platform_device *pdev)
+ 
+ 	ata_host_detach(host);
+ 	cf_exit(acdev);
+-#ifdef CONFIG_HAVE_CLK
+-	clk_put(acdev->clk);
+-#endif
++
++	if (!IS_ERR(acdev->clk))
++		clk_put(acdev->clk);
+ 
+ 	return 0;
+ }
+-- 
+1.7.9
