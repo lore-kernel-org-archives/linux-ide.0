@@ -1,44 +1,59 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH V2 4/9] ata/sata_mv: Remove conditional compilation of
+From: =?utf-8?Q?Lothar_Wa=C3=9Fmann?= <LW@KARO-electronics.de>
+Subject: Re: [PATCH V3 07/12] ata/sata_mv: Remove conditional compilation of
  clk code
-Date: Tue, 24 Apr 2012 16:04:22 +0400
-Message-ID: <4F9696C6.1080404@mvista.com>
-References: <20120424070426.GA24089@lunn.ch> <4F9650B3.9030406@st.com>
+Date: Tue, 24 Apr 2012 14:51:00 +0200
+Message-ID: <20374.41396.280974.710188@ipc1.ka-ro>
+References: <cover.1335266056.git.viresh.kumar@st.com>
+	<abbcf661dc58948794839eb0fba1d5a0950ec848.1335266056.git.viresh.kumar@st.com>
+	<20120424120019.GE24089@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F9650B3.9030406@st.com>
+In-Reply-To: <20120424120019.GE24089@lunn.ch>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Viresh Kumar <viresh.kumar@st.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux@arm.linux.org.uk" <linux@arm.linux.org.uk>, spear-devel <spear-devel@list.st.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "viresh.linux@gmail.com" <viresh.linux@gmail.com>, "mturquette@linaro.org" <mturquette@linaro.org>, "jgarzik@redhat.com" <jgarzik@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Viresh Kumar <viresh.kumar@st.com>, mturquette@linaro.org, sshtylyov@mvista.com, spear-devel@list.st.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, viresh.linux@gmail.com, linux@arm.linux.org.uk, akpm@linux-foundation.org, jgarzik@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
+Hi,
 
-On 24-04-2012 11:05, Viresh Kumar wrote:
+Andrew Lunn writes:
+> > -#if defined(CONFIG_HAVE_CLK)
+> >  	hpriv->clk =3D clk_get(&pdev->dev, NULL);
+> > -	if (IS_ERR(hpriv->clk))
+> > -		dev_notice(&pdev->dev, "cannot get clkdev\n");
+> > -	else
+> > -		clk_enable(hpriv->clk);
+> > -#endif
+> > +	if (IS_ERR(hpriv->clk)) {
+> > +		dev_err(&pdev->dev, "cannot get clkdev\n");
+> > +		return PTR_ERR(hpriv->clk);
+> > +	}
+> > +
+> > +	clk_enable(hpriv->clk);
+>=20
+> Sorry, but still wrong.
+>=20
+> The clock is optional. If we can find a clock, turn it on. If not,
+> keep going....
+>=20
+> You patch causes the missing clock to become a fatal error.
+>=20
+The clock API should accept NULL pointers as valid clocks and
+treat them as NOP.
+Thus drivers wouldn't have to worry about whether they actually got a
+clock to manage or if their clocks are just dummies.
 
->> I don't think this change is correct. With the old semantics, it was:
 
-> Sorry. :(
+Lothar Wa=C3=9Fmann
+--=20
+___________________________________________________________
 
->> If we have CLK support, we expect there to be a clock for sata_mv, and
->> if there is no such clock, output a notice message, something is
->> probably wrong, i expected there to be a clock.
+Ka-Ro electronics GmbH | Pascalstra=C3=9Fe 22 | D - 52076 Aachen
+Phone: +49 2408 1402-0 | Fax: +49 2408 1402-10
+Gesch=C3=A4ftsf=C3=BChrer: Matthias Kaussen
+Handelsregistereintrag: Amtsgericht Aachen, HRB 4996
 
->> The new semantics are:
-
->> We expect there to be a clock for sata_mv, and if there is no such
->> clock, output a notice message, something is probably wrong, i
->> expected there to be a clock.
-
->> We are going to see this notice message much more, when it is not
->> expected.
-
-> So, the only problem is this message?
-> How do you suggest to tackle this now. Have #ifdef,#endif around this print?
-
-    When there's no CONFIG_HAVE_CLK, if clk_get() returns NULL, not error, 
-there'll be no message.
-
-WBR, Sergei
+www.karo-electronics.de | info@karo-electronics.de
+___________________________________________________________
