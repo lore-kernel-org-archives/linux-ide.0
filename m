@@ -1,24 +1,97 @@
-From: Jacek Danecki <Jacek.Danecki@intel.com>
-Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port
- ops
-Date: Tue, 24 Apr 2012 12:11:28 +0200
-Message-ID: <4F967C50.8030305@intel.com>
-References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com> <20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com> <1335115828.13208.31.camel@dabdike.lan> <4F94BF90.4090001@garzik.org> <1335168621.3051.8.camel@dabdike.lan> <CABE8wwtd2c14dq8vWCtO_rEvk8i8Q8GzJ3NtS_YQVmpTUaF3=w@mail.gmail.com> <1335219777.2749.11.camel@dabdike.lan> <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: [PATCH V3 07/12] ata/sata_mv: Remove conditional compilation of clk code
+Date: Tue, 24 Apr 2012 16:51:29 +0530
+Message-ID: <abbcf661dc58948794839eb0fba1d5a0950ec848.1335266056.git.viresh.kumar@st.com>
+References: <cover.1335266056.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwsmuRqzW7yiR=jWriEnxsH+koxSooQ18cqDP2ver54mCg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1335266056.git.viresh.kumar@st.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, linux@arm.linux.org.uk, Viresh Kumar <viresh.kumar@st.com>, Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 04/24/12 00:49, Dan Williams wrote:
-> Ok, reviewed-by is what we'll aim to do for Intel-internal "acks" for
-> isci / libsas going forward.
+With addition of dummy clk_*() calls for non CONFIG_HAVE_CLK cases in clk.h,
+there is no need to have clk code enclosed in #ifdef CONFIG_HAVE_CLK, #endif
+macros.
 
-Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
+Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/sata_mv.c |   32 ++++++++++----------------------
+ 1 files changed, 10 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 7336d4a..2b37b93 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -551,9 +551,7 @@ struct mv_host_priv {
+ 	u32			irq_mask_offset;
+ 	u32			unmask_all_irqs;
+ 
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct clk		*clk;
+-#endif
+ 	/*
+ 	 * These consistent DMA memory pools give us guaranteed
+ 	 * alignment for hardware-accessed data structures,
+@@ -4063,13 +4061,13 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 				   resource_size(res));
+ 	hpriv->base -= SATAHC0_REG_BASE;
+ 
+-#if defined(CONFIG_HAVE_CLK)
+ 	hpriv->clk = clk_get(&pdev->dev, NULL);
+-	if (IS_ERR(hpriv->clk))
+-		dev_notice(&pdev->dev, "cannot get clkdev\n");
+-	else
+-		clk_enable(hpriv->clk);
+-#endif
++	if (IS_ERR(hpriv->clk)) {
++		dev_err(&pdev->dev, "cannot get clkdev\n");
++		return PTR_ERR(hpriv->clk);
++	}
++
++	clk_enable(hpriv->clk);
+ 
+ 	/*
+ 	 * (Re-)program MBUS remapping windows if we are asked to.
+@@ -4096,12 +4094,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 		return 0;
+ 
+ err:
+-#if defined(CONFIG_HAVE_CLK)
+-	if (!IS_ERR(hpriv->clk)) {
+-		clk_disable(hpriv->clk);
+-		clk_put(hpriv->clk);
+-	}
+-#endif
++	clk_disable(hpriv->clk);
++	clk_put(hpriv->clk);
+ 
+ 	return rc;
+ }
+@@ -4117,17 +4111,11 @@ err:
+ static int __devexit mv_platform_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *host = platform_get_drvdata(pdev);
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct mv_host_priv *hpriv = host->private_data;
+-#endif
+ 	ata_host_detach(host);
+ 
+-#if defined(CONFIG_HAVE_CLK)
+-	if (!IS_ERR(hpriv->clk)) {
+-		clk_disable(hpriv->clk);
+-		clk_put(hpriv->clk);
+-	}
+-#endif
++	clk_disable(hpriv->clk);
++	clk_put(hpriv->clk);
+ 	return 0;
+ }
+ 
 -- 
-Jacek
+1.7.9
