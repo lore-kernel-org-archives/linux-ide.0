@@ -1,8 +1,7 @@
 From: Viresh Kumar <viresh.kumar@st.com>
-Subject: [PATCH V2 3/9] ata/pata_arasan: Remove conditional compilation of clk
- code
-Date: Tue, 24 Apr 2012 11:26:11 +0530
-Message-ID: <4f7845b5e01002f6a3446f9828d1b6e42e6daff4.1335246730.git.viresh.kumar@st.com>
+Subject: [PATCH V2 4/9] ata/sata_mv: Remove conditional compilation of clk code
+Date: Tue, 24 Apr 2012 11:26:12 +0530
+Message-ID: <5c57f2a0eb759c864a88bb5cd2e98e397f05ca61.1335246730.git.viresh.kumar@st.com>
 References: <cover.1335246730.git.viresh.kumar@st.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -30,97 +29,67 @@ Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
 Cc: Jeff Garzik <jgarzik@redhat.com>
 Cc: linux-ide@vger.kernel.org
 ---
- drivers/ata/pata_arasan_cf.c |   39 ++++++++++++++++-----------------------
- 1 files changed, 16 insertions(+), 23 deletions(-)
+ drivers/ata/sata_mv.c |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index fc2db2a..b370e35 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -184,10 +184,8 @@
- struct arasan_cf_dev {
- 	/* pointer to ata_host structure */
- 	struct ata_host *host;
--	/* clk structure, only if HAVE_CLK is defined */
--#ifdef CONFIG_HAVE_CLK
-+	/* clk structure */
- 	struct clk *clk;
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 7336d4a..37503b8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -551,9 +551,7 @@ struct mv_host_priv {
+ 	u32			irq_mask_offset;
+ 	u32			unmask_all_irqs;
+ 
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct clk		*clk;
+-#endif
+ 	/*
+ 	 * These consistent DMA memory pools give us guaranteed
+ 	 * alignment for hardware-accessed data structures,
+@@ -4063,13 +4061,11 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 				   resource_size(res));
+ 	hpriv->base -= SATAHC0_REG_BASE;
+ 
+-#if defined(CONFIG_HAVE_CLK)
+ 	hpriv->clk = clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(hpriv->clk))
+ 		dev_notice(&pdev->dev, "cannot get clkdev\n");
+ 	else
+ 		clk_enable(hpriv->clk);
 -#endif
  
- 	/* physical base address of controller */
- 	dma_addr_t pbase;
-@@ -312,13 +310,13 @@ static int cf_init(struct arasan_cf_dev *acdev)
- 	unsigned long flags;
- 	int ret = 0;
+ 	/*
+ 	 * (Re-)program MBUS remapping windows if we are asked to.
+@@ -4096,12 +4092,10 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 		return 0;
  
--#ifdef CONFIG_HAVE_CLK
--	ret = clk_enable(acdev->clk);
--	if (ret) {
--		dev_dbg(acdev->host->dev, "clock enable failed");
--		return ret;
-+	if (!IS_ERR(acdev->clk)) {
-+		ret = clk_enable(acdev->clk);
-+		if (ret) {
-+			dev_dbg(acdev->host->dev, "clock enable failed");
-+			return ret;
-+		}
+ err:
+-#if defined(CONFIG_HAVE_CLK)
+ 	if (!IS_ERR(hpriv->clk)) {
+ 		clk_disable(hpriv->clk);
+ 		clk_put(hpriv->clk);
  	}
 -#endif
  
- 	spin_lock_irqsave(&acdev->host->lock, flags);
- 	/* configure CF interface clock */
-@@ -344,9 +342,9 @@ static void cf_exit(struct arasan_cf_dev *acdev)
- 	writel(readl(acdev->vbase + OP_MODE) & ~CFHOST_ENB,
- 			acdev->vbase + OP_MODE);
- 	spin_unlock_irqrestore(&acdev->host->lock, flags);
--#ifdef CONFIG_HAVE_CLK
--	clk_disable(acdev->clk);
--#endif
-+
-+	if (!IS_ERR(acdev->clk))
-+		clk_disable(acdev->clk);
+ 	return rc;
  }
- 
- static void dma_callback(void *dev)
-@@ -828,13 +826,9 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
--#ifdef CONFIG_HAVE_CLK
- 	acdev->clk = clk_get(&pdev->dev, NULL);
--	if (IS_ERR(acdev->clk)) {
-+	if (IS_ERR(acdev->clk))
- 		dev_warn(&pdev->dev, "Clock not found\n");
--		return PTR_ERR(acdev->clk);
--	}
+@@ -4117,17 +4111,13 @@ err:
+ static int __devexit mv_platform_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *host = platform_get_drvdata(pdev);
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct mv_host_priv *hpriv = host->private_data;
 -#endif
- 
- 	/* allocate host */
- 	host = ata_host_alloc(&pdev->dev, 1);
-@@ -899,9 +893,8 @@ static int __devinit arasan_cf_probe(struct platform_device *pdev)
- 			&arasan_cf_sht);
- 
- free_clk:
--#ifdef CONFIG_HAVE_CLK
--	clk_put(acdev->clk);
--#endif
-+	if (!IS_ERR(acdev->clk))
-+		clk_put(acdev->clk);
- 	return ret;
- }
- 
-@@ -912,9 +905,9 @@ static int __devexit arasan_cf_remove(struct platform_device *pdev)
- 
  	ata_host_detach(host);
- 	cf_exit(acdev);
--#ifdef CONFIG_HAVE_CLK
--	clk_put(acdev->clk);
--#endif
-+
-+	if (!IS_ERR(acdev->clk))
-+		clk_put(acdev->clk);
  
+-#if defined(CONFIG_HAVE_CLK)
+ 	if (!IS_ERR(hpriv->clk)) {
+ 		clk_disable(hpriv->clk);
+ 		clk_put(hpriv->clk);
+ 	}
+-#endif
  	return 0;
  }
+ 
 -- 
 1.7.9
