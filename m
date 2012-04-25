@@ -1,129 +1,29 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH V3 07/12] ata/sata_mv: Remove conditional compilation of
- clk code
-Date: Wed, 25 Apr 2012 13:24:38 +0200
-Message-ID: <20120425112438.GE2116@lunn.ch>
-References: <cover.1335266056.git.viresh.kumar@st.com>
- <abbcf661dc58948794839eb0fba1d5a0950ec848.1335266056.git.viresh.kumar@st.com>
- <20120424120019.GE24089@lunn.ch>
- <CAOh2x==YaPxYxigyE=n2weoKHhu4ktGRHHGdzgs2+d1_Lo-D4Q@mail.gmail.com>
- <20120424201802.GE3628@n2100.arm.linux.org.uk>
+From: Song Li <songlile222@aol.nl>
+Subject: Contact Me Asap
+Date: Wed, 25 Apr 2012 13:41:46 -0400
+Message-ID: <20120425134146.13381yqpaihyol7o__27059.8197509118$1335380007$gmane$org@politicapanama.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from londo.lunn.ch ([80.238.139.98]:51451 "EHLO londo.lunn.ch"
+Received: from host.litoany.com ([72.52.206.37]:60137 "EHLO host.litoany.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758556Ab2DYLWe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Apr 2012 07:22:34 -0400
+	id S1757671Ab2DYSxV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Apr 2012 14:53:21 -0400
 Content-Disposition: inline
-In-Reply-To: <20120424201802.GE3628@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: viresh kumar <viresh.linux@gmail.com>, Andrew Lunn <andrew@lunn.ch>, Viresh Kumar <viresh.kumar@st.com>, akpm@linux-foundation.org, spear-devel@list.st.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, linux-ide@vger.kernel.org
 
-On Tue, Apr 24, 2012 at 09:18:02PM +0100, Russell King - ARM Linux wrote:
-> On Tue, Apr 24, 2012 at 07:12:10PM +0530, viresh kumar wrote:
-> > On 4/24/12, Andrew Lunn <andrew@lunn.ch> wrote:
-> > > Sorry, but still wrong.
-> > >
-> > > The clock is optional. If we can find a clock, turn it on. If not,
-> > > keep going....
-> > >
-> > > You patch causes the missing clock to become a fatal error.
-> > >
-> > > This sata_mv exists in multiple forms. It can be part of a SoC. It can
-> > > also be on a PCI bus. In the PCI form, it is unlikely to have a clk
-> > > which can be controlled. When built into a SoC, namely one of the
-> > > Orion family, dove, orion5x, mv78xx0 do not have a clock which can be
-> > > controlled. However kirkwood does have a clock.
-> > >
-> > > So, kirkwood will provide a clock and expects that sata_mv will turn
-> > > it on. All the other ways of using sata_mv will not provide a clock,
-> > > but still expect the driver to be happy.
-> > 
-> > Hmm. What this code does now is:
-> > If HAVE_CLK is selected, then there must be a clock for the device. Otherwise
-> > it will always pass.
-> > 
-> > You want not to return error if a platform does have HAVE_CLK, but doesn't
-> > have a clock for sata? That would be simple to fix, but want to confirm if this
-> > is actually required.
-> > 
-> > @Russell: Can we have your view also?
-> 
-> Look, it's very very simple.
-> 
-> As far as drivers are concerned:
-> 
-> clk_get() returns an opaque cookie which _happens_ to be called 'struct clk'.
-> Drivers _must_ _not_ dereference or interpret this cookie in any way, apart
-> from the singular case where they use IS_ERR() to determine if clk_get()
-> failed, and PTR_ERR() to translate that into an error value.  As far as
-> drivers are concerned _everything_ _else_ is a valid cookie and must
-> never be treated specially.
-> 
-> That much I hope is (and has been) totally crystal clear for some time.
-> 
-> Now, for drivers which use the clk API, and are used on platforms which
-> have the clk API and those which do not have the CLK API.  Those which
-> do have the clk API define HAVE_CLK.  We know how to deal with those,
-> and that's through having a correct and valid clk API implementation.
-> 
-> For those which don't, as I've already suggested, we need clk_get() to
-> return a non-error value.  I really don't care what value it returns,
-> because as far as drivers using the clk API are concerned, they are not
-> allowed to interpret the value in _any_ _other_ _way_ other than whether
-> it is an error or not.  So NULL is a good value for this.  It's a
-> non-error cookie value, but (void *)1 is also good too.
-> 
-> Now, the question comes: do we want to provide a dummy API?  Yes.  How
-> do we want to enable the provision of the dummy API?  Through !HAVE_CLK?
-> I think that's a sane move, and any driver which _really_ _does_ have a
-> hard dependency on the clk API (eg, amba-clcd needing the clk API to
-> control the LCD pixel clock rate) should depend on this symbol.
-> 
-> As for drivers printing out crap if they don't have the clk API configured,
-> wtf?  What does it matter?  If the clk API is not configured, it means
-> the platform has no control over the clocking, and the clocking is fixed.
-> So why tell the user of each driver which could have clk API support that
-> same fact over and over again during the kernel boot process?  What do you
-> expect the user to do about it?  Scream at the manufacturer that they
-> didn't implement a feature found on embedded devices on their swankey
-> platform?  Maybe its not appropriate there?
-> 
+-- 
+Although, I am not comfortable discussing the content of my mail on  
+the Internet owing to lots of unsolicited/Spam mails on the internet  
+nowadays. May I ask if you would be eligible to pursue a Business  
+Proposal of USD19.5M with me if you don't mind? Let me know if you are  
+interested.
 
-Hi Russell
 
-No problems with what is above. The bit in contention is this
 
-> Finally, if a platform has clk API support enabled, and a driver requests
-> a clock, and clk_get() returns an error, it means the clock was not found.
-> That's a fatal error for the driver, because it means that something is
-> wrong in the lookup tables - moreover, it means that _potentially_ someone
-> screwed up the clk matching and this device has a clock which needs some
-> control, but wasn't found.  I don't think ignoring that kind of error,
-> even by printing a warning, is a particularly good approach - it seems
-> to me it makes things fragile.  What if this missing clock causes the
-> bus to your device to ultimately hang?
-
-You are correct about lockup. I made a typo, match failed, lateinit
-turned the clock off, and the device hung on the next access. Is that
-fragile? It should only happen to somebody porting to a new SoC
-playing with clks.
-
-Anyway, what you want, is that the MV_SATA driver knows if there
-should be a clock and only then call clk_get(). How do we reliably
-teach the MV_SATA driver this, so we don't cause an regressions?
-
-If this platform_device is for a PCI bus device, there probably won't
-be a clock. If this is a SoC platform_device is for a Dove, Orion5x,
-mv78xx0, there won't be a clock. If its a kirkwood SoC platform
-device, there should be a clock. If its a PowerPC platform_device,
-i've no idea.
-
-Have i missed something? It seems to come down to, a bit of fragile
-handling of clks, or possibly regressing some PowerPC machines.
-
-	 Andrew
 
