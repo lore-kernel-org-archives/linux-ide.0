@@ -1,63 +1,63 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SSD slowdown with 3.3.X?
-Date: Tue, 24 Apr 2012 19:22:58 -0500
-Message-ID: <4F9743E2.6040404@hardwarefreak.com>
-References: <4F8F7533.6020300@gmail.com> <4F8F82EC.1060708@teksavvy.com> <4F90C4CF.1010000@gmail.com> <4F921E18.6000301@teksavvy.com> <4F921ECF.2080303@teksavvy.com> <4F922F43.4050809@hardwarefreak.com> <CAE5mzvhsBq5nh=A6sMnzBKust8nLgDYg8tB7aykXxGV5CRV8fA@mail.gmail.com> <4F92FCA9.8010502@hardwarefreak.com> <4F954EBC.8060508@teksavvy.com>
-Reply-To: stan@hardwarefreak.com
+From: viresh kumar <viresh.linux@gmail.com>
+Subject: Re: [PATCH V3 07/12] ata/sata_mv: Remove conditional compilation of
+ clk code
+Date: Wed, 25 Apr 2012 08:32:14 +0530
+Message-ID: <CAOh2x==Se4ipK_jexOE_=82=S4p41W9Ek0Om6DrUwctSz-Wcyw@mail.gmail.com>
+References: <cover.1335266056.git.viresh.kumar@st.com>
+	<abbcf661dc58948794839eb0fba1d5a0950ec848.1335266056.git.viresh.kumar@st.com>
+	<20120424120019.GE24089@lunn.ch>
+	<CAOh2x==YaPxYxigyE=n2weoKHhu4ktGRHHGdzgs2+d1_Lo-D4Q@mail.gmail.com>
+	<20120424201802.GE3628@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:54485 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752744Ab2DYAW5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2012 20:22:57 -0400
-In-Reply-To: <4F954EBC.8060508@teksavvy.com>
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:56373 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754037Ab2DYDCP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Apr 2012 23:02:15 -0400
+In-Reply-To: <20120424201802.GE3628@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: cwillu <cwillu@cwillu.com>, Joe Ceklosky <jfceklosky@gmail.com>, "linux-ide@vger.kernel.org >> IDE/ATA development list" <linux-ide@vger.kernel.org>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Andrew Lunn <andrew@lunn.ch>, Viresh Kumar <viresh.kumar@st.com>, akpm@linux-foundation.org, spear-devel@list.st.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, linux-ide@vger.kernel.org
 
-On 4/23/2012 7:44 AM, Mark Lord wrote:
-> On 12-04-21 02:30 PM, Stan Hoeppner wrote:
->> On 4/21/2012 6:45 AM, cwillu wrote:
->>>> Probably not relevant in this case but maybe worth mentioning to get the
->>>> word out:
->>>>
->>>> "As of kernel 3.2.12, the default i/o scheduler, CFQ, will defeat much
->>>> of the parallelization in XFS."
->>>>
->>>> http://www.xfs.org/index.php/XFS_FAQ
->>>
->>> Not that it's terribly relevant to btrfs, but do you have a better
->>> citation for that than a very recent one-line wiki change that only
->>> cites the user's own anecdote?
->>
->> Apologies for the rather weak citation.  It was simply easier to quote
->> that wiki entry.
->>
->> How about something directly from Dave's fingers:
->> http://www.spinics.net/lists/xfs/msg10824.html
->>
->> The many issues with CFQ+XFS didn't start with 3.2.12, but long before that.
-> 
-> 
-> Thanks for the link.  That's handy to know.
-> 
-> The problems there are for XFS+RAID vs. CFQ, not XFS by itself.
-> Enterprise servers will normally have RAID under XFS,
-> but not all smaller systems.
+On Wed, Apr 25, 2012 at 1:48 AM, Russell King - ARM Linux
+<linux@arm.linux.org.uk> wrote:
+> Look, it's very very simple.
 
-While it's true there are single disk XFS filesystems in the wild--I
-have one--I'd have to make an educated guess that the vast majority of
-XFS filesystems reside atop SAN, HBA, or md based RAID.  For any
-hardware RAID solution with write cache, noop is recommended allowing
-the hardware scheduler to order the writes, since they're sitting in his
-cache.  For md based RAID I believe most are getting best results with
-deadline.
+Thanks for explaining.
 
-I can't quote any numbers as I don't believe anyone has done such a poll
-or research on this.  So it's best guess only.
+> Finally, if a platform has clk API support enabled, and a driver requ=
+ests
+> a clock, and clk_get() returns an error, it means the clock was not f=
+ound.
+> That's a fatal error for the driver, because it means that something =
+is
+> wrong in the lookup tables - moreover, it means that _potentially_ so=
+meone
+> screwed up the clk matching and this device has a clock which needs s=
+ome
+> control, but wasn't found. =A0I don't think ignoring that kind of err=
+or,
+> even by printing a warning, is a particularly good approach - it seem=
+s
+> to me it makes things fragile. =A0What if this missing clock causes t=
+he
+> bus to your device to ultimately hang?
 
--- 
-Stan
+This is what i was thinking too and thats why floated this version of p=
+atch.
+But as Andrew said, clk API support is enabled for them, but still they
+don't have a clk for sata. To get this working, there are two solutions=
+:
+- Create dummy clk for sata for that platform, so clk_get doesn't fail.
+- Check for error before every call to clk APIs after clk_get().
+
+Andrew favored the second one. Which means, even on platforms
+with clk API defined and clk enable required, if there are some issues
+with lookup table, and clk_get() fails, system may hang when registers
+are accessed. For this i favored first one.
+
+--
+viresh
