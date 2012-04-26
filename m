@@ -1,67 +1,109 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: Hotplug borked after suspend/resume in Linux-3.3 ?
-Date: Thu, 26 Apr 2012 09:50:15 -0700
-Message-ID: <CAMHSBOX6Scdt=Nbm0XicMj9nxRWhiVppxo509=UXiK+jGMZUyw@mail.gmail.com>
-References: <4F8DD4DC.4050503@teksavvy.com>
-	<4F8DD708.8050502@teksavvy.com>
-	<4F8DD834.5070000@teksavvy.com>
-	<4F8DDA53.206@teksavvy.com>
-	<CAE5mzvjsfX34fod0KURNQN8Rmn0xOPCdP2iY2xnSTnnRXPAaEQ@mail.gmail.com>
-	<4F8EF57E.4070603@fold.natur.cuni.cz>
-	<4F8EF9F7.5040202@pobox.com>
-	<4F8EFD89.2080603@fold.natur.cuni.cz>
-	<4F8F08D7.6050809@fold.natur.cuni.cz>
-	<CAF1ivSYqzjv10F+sdYkR_jdTZvzKP1=_ZwgNDj2njnmb6uaenA@mail.gmail.com>
-	<1334823362.11188.172.camel@minggr>
-	<CANEJEGuPG1yAwZ0xwQcbfnTghs7cnnJ2=NLpxMEVuFd0H7KStA@mail.gmail.com>
-	<CAMHSBOXFEEgL31K+OFOY9bXtbCvHBBeKN-VdznpA3UekaFqGdw@mail.gmail.com>
-	<CAF1ivSZuBrqX5iqVH3W+qRf_qoZXwAtO1iA8dHEqmTGkB-F_HA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 03/12] libata, libsas: introduce sched_eh and end_eh port ops
+Date: Thu, 26 Apr 2012 10:21:05 -0700
+Message-ID: <CABE8wwtVzpW6WtJqVgnCOm+XibGtr+hbkKvEKnpSaRsTSJvSKA@mail.gmail.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	<20120413233706.8025.56546.stgit@dwillia2-linux.jf.intel.com>
+	<1335115828.13208.31.camel@dabdike.lan>
+	<CABE8wwuCOmwsHkDH5RQTsKRh=JhUZ7oGR1eMeLrpO_sO=9Xpug@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35680 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757939Ab2DZQuQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Apr 2012 12:50:16 -0400
-Received: by iadi9 with SMTP id i9so1781923iad.19
-        for <linux-ide@vger.kernel.org>; Thu, 26 Apr 2012 09:50:15 -0700 (PDT)
-In-Reply-To: <CAF1ivSZuBrqX5iqVH3W+qRf_qoZXwAtO1iA8dHEqmTGkB-F_HA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CABE8wwuCOmwsHkDH5RQTsKRh=JhUZ7oGR1eMeLrpO_sO=9Xpug@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, Jeff Garzik <jgarzik@pobox.com>, cwillu <cwillu@cwillu.com>, Mark Lord <kernel@teksavvy.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Grant Grundler <grundler@google.com>
 
-On Thu, Apr 26, 2012 at 6:06 AM, Lin Ming <ming.m.lin@intel.com> wrote:
-> On Thu, Apr 26, 2012 at 5:29 PM, Gwendal Grignou <gwendal@google.com> wrote:
->> Lin,
->
-> Hi Gwendal,
->
+On Mon, Apr 23, 2012 at 12:41 PM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+> On Sun, Apr 22, 2012 at 10:30 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>> On Fri, 2012-04-13 at 16:37 -0700, Dan Williams wrote:
+>>> When managing shost->host_eh_scheduled libata assumes that there is=
+ a
+>>> 1:1 shost-to-ata_port relationship. =A0libsas creates a 1:N relatio=
+nship
+>>> so it needs to manage host_eh_scheduled cumulatively at the host le=
+vel.
+>>> The sched_eh and end_eh port port ops allow libsas to track when do=
+main
+>>> devices enter/leave the "eh-pending" state under ha->lock (previous=
+ly
+>>> named ha->state_lock, but it is no longer just a lock for ha->state
+>>> changes).
+>>>
+>>> Since host_eh_scheduled indicates eh without backing commands pinni=
+ng
+>>> the device it can be deallocated at any time. =A0Move the taking of=
+ the
+>>> domain_device reference under the port_lock to guarantee that the
+>>> ata_port stays around for the duration of eh.
 >>
->> In the patch d9027470b88631d0956ac37cdadfdeb9cdcf2c99, I did limit the
->> amount of data cleaning in some of the ata objects.
+>>> Cc: Tejun Heo <tj@kernel.org>
+>>> Acked-by: Jacek Danecki <jacek.danecki@intel.com>
 >>
->> If setting err_mask to 0 masks the regression I introduced in the
->> patch, I may have altered too much how ata_device object is
->> reinitialized when a device is found. I am digging deeper, I may have
->> change the code to try to preserve the ering as much as possible.
+>> Could we standardise on Acked-by, please. =A0In my book it means the
+>> maintainer of a piece of code agrees with the change and lets me tak=
+e it
+>> through my tree. =A0I'm aware that not everyone uses this definition=
+, so
+>> we can use a different standard from my current one, but what does i=
+t
+>> mean in this case?
 >>
->> Concerning your patch, isn't adding a test (ent->eflags &
->> ATA_EFLAG_OLD_ER) in ata_count_probe_trials_cb() more in line with
->> speed_down_verdict_cb() code?
+>>> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+>>> ---
+>>> =A0drivers/ata/libata-core.c =A0 =A0 =A0 =A0 =A0 | =A0 =A04 ++
+>>> =A0drivers/ata/libata-eh.c =A0 =A0 =A0 =A0 =A0 =A0 | =A0 57 +++++++=
++++++++++++++++++++++-------
+>>> =A0drivers/scsi/libsas/sas_ata.c =A0 =A0 =A0 | =A0 38 +++++++++++++=
+++++++++--
+>>> =A0drivers/scsi/libsas/sas_discover.c =A0| =A0 =A06 ++--
+>>> =A0drivers/scsi/libsas/sas_event.c =A0 =A0 | =A0 12 ++++---
+>>> =A0drivers/scsi/libsas/sas_init.c =A0 =A0 =A0| =A0 14 ++++-----
+>>> =A0drivers/scsi/libsas/sas_scsi_host.c | =A0 27 +++++++++++++----
+>>> =A0include/linux/libata.h =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A04 ++
+>>> =A0include/scsi/libsas.h =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 =A04 ++
+>>> =A0include/scsi/sas_ata.h =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 =A05 +++
+>>> =A010 files changed, 134 insertions(+), 37 deletions(-)
+>>
+>> This is a pretty big change for rc fixes. =A0None of the other chang=
+es in
+>> the series seem to be dependent on it, what bug is it actually fixin=
+g?
 >
-> This could also fix the regression.
+> It fixes two bugs (which in hindsight could potentially be split into
+> two patches). =A0The major one is guarantees about when
+> host_eh_scheduled is cleared. =A0Prior to this patch when at least on=
+e
+> ata_port in a domain has completed eh the flag for host is cleared.
+> This patch plus "scsi: fix eh wakeup (scsi_schedule_eh vs
+> scsi_restart_operations)" fixes up deadlocks (waiting indefinitely fo=
+r
+> eh to complete) and cases where eh terminates too early
+> (host_eh_scheduled cleared with work pending) in our hot plug tests.
 >
-> But the fundamental problem is should ata_ering_map still iterate the old
-> error history which were cleared already?
-ATA_EFLAG_OLD_ER marks the entry as irrelevant for the current error
-handler. It can still be interesting to be able to see the history of
-errors for a particular device without going through dmesg output.
-Especially if you want a script to do it.
+> The other bug this uncovered is the fact that libsas makes use of the
+> port and rphy object after libata has completed it's work, so this
+> patch also moved the taking of the domain_device reference to be unde=
+r
+> spin_lock_irq(&sas_ha->phy_port_lock) and
+> spin_lock(&port->dev_list_lock). =A0Otherwise, =A0if no commands are
+> pending for the device libsas can proceed directly to freeing the
+> domain_device before the requested eh runs.
+>
 
-Gwendal.
->
-> Lin Ming
->
->>
->> Gwendal.
+Ping, will this one be queued to scsi/fixes?  All our hotplug testing
+was done with this patch in place, and it's straightforward to see
+that libata is mismanaging host_eh_scheduled in the libsas ata_port
+case.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
