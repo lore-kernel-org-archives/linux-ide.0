@@ -1,45 +1,70 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: Support for 4 KiB disk sectors in Linux kernel
-Date: Fri, 27 Apr 2012 12:14:58 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1860718E@IRSMSX101.ger.corp.intel.com>
-References: <4F9170FB.7080208@intel.com>
- <yq17gxa1iwc.fsf@sermon.lab.mkp.net> <4F919B55.2020802@fold.natur.cuni.cz>
+From: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>
+Subject: Re: Support for 4 KiB disk sectors in Linux kernel
+Date: Fri, 27 Apr 2012 14:30:44 +0200
+Message-ID: <4F9A9174.3050204@fold.natur.cuni.cz>
+References: <4F9170FB.7080208@intel.com> <yq17gxa1iwc.fsf@sermon.lab.mkp.net> <4F919B55.2020802@fold.natur.cuni.cz> <D9FFE20C522965449E182ACE73889AEB1860718E@IRSMSX101.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4258 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751565Ab2D0MPH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 27 Apr 2012 08:15:07 -0400
-In-Reply-To: <4F919B55.2020802@fold.natur.cuni.cz>
-Content-Language: en-US
+Received: from fold.natur.cuni.cz ([195.113.57.32]:40008 "HELO
+	fold.natur.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753026Ab2D0Ma4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Apr 2012 08:30:56 -0400
+In-Reply-To: <D9FFE20C522965449E182ACE73889AEB1860718E@IRSMSX101.ger.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-T24gRnJpZGF5LCBBcHJpbCAyMCwgMjAxMiA3OjIyIFBNIE1hcnRpbiBNb2tyZWpzIHdyb3RlOg0K
-PiANCj4gTWFydGluIEsuIFBldGVyc2VuIHdyb3RlOg0KPiA+Pj4+Pj4gIkx1a2FzeiIgPT0gTHVr
-YXN6IERvcmF1IDxsdWthc3ouZG9yYXVAaW50ZWwuY29tPiB3cml0ZXM6DQo+ID4NCj4gPiBMdWth
-c3o+IFdoZXJlIGNhbiBJIGZpbmQgaW5mb3JtYXRpb24gYWJvdXQgY3VycmVudCBzdGF0dXMgb2Yg
-c3VwcG9ydCBmb3INCj4gPiBMdWthc3o+IDQgS2lCIGRpc2sgc2VjdG9ycyBpbiBMaW51eCBrZXJu
-ZWw/ICBJcyB0aGVyZSBhDQo+ID4gTHVrYXN6PiBsZWFkZXIvbWFpbnRhaW5lciBvZiB0aGlzIGlz
-c3VlIGluIGNvbW11bml0eT8NCj4gPg0KPiA+IFdlIGhhdmUgc3VwcG9ydGVkIDRLbiBmb3IgYSBk
-ZWNhZGUuIDUxMmUgb2J2aW91c2x5IHdvcmtzIG91dCBvZiB0aGUNCj4gPiBib3guIEhvd2V2ZXIs
-IGZpbGVzeXN0ZW0vcGFydGl0aW9uL0RNIHRvb2xpbmcgaGFzIGJlZW4gdXBkYXRlZCB0byBhbGln
-bg0KPiA+IGNvcnJlY3RseSBvbiA1MTJlIGRldmljZXMuDQo+ID4NCg0KRG9lcyBpdCBtZWFuIHRo
-YXQgSSBjYW4ganVzdCBwbHVnIHRoZSA0SyBIREQgaW4gYW5kIGl0IHdpbGwgd29yayB3aXRob3V0
-IG1ha2luZyBhbnkgY2hhbmdlcyBpbiBrZXJuZWw/DQoNCkx1a2Fzeg0KDQo+ID4gU2VlOg0KPiA+
-DQo+ID4gCWh0dHA6Ly9vc3Mub3JhY2xlLmNvbS9+bWtwL2RvY3MvbGludXgtYWR2YW5jZWQtc3Rv
-cmFnZS5wZGYNCj4gDQo+IEFsc286DQo+IA0KPiBodHRwczovL2F0YS53aWtpLmtlcm5lbC5vcmcv
-YXJ0aWNsZXMvYS90L2EvQVRBXzRfS2lCX3NlY3Rvcl9pc3N1ZXNfZDRiOC5odA0KPiBtbA0KPiBo
-dHRwOi8vc291cmNlZm9yZ2UubmV0L2FwcHMvbWVkaWF3aWtpL2Jvb3RpbmZvc2NyaXB0L2luZGV4
-LnBocD90aXRsZT1Cb290DQo+IF9Qcm9ibGVtczpXaW5kb3dzX1dyaXRlc19Ub19NQlINCj4gaHR0
-cHM6Ly9oZWxwLnVidW50dS5jb20vY29tbXVuaXR5L0dydWIyDQo+IA0KPiANCj4gSSBhZ3JlZSB0
-aGVyZSBpcyBub3RoaW5nIGFib3V0IHVuZGVyIERvY3VtZW50YXRpb24vIGluIGtlcm5lbCBzb3Vy
-Y2VzLCBhdA0KPiBsZWFzdA0KPiBmcm9tIHVzZXJzIHBvaW50IG9mIHZpZXcuDQo+IE1hcnRpbg0K
-PiAtLQ0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5z
-dWJzY3JpYmUgbGludXgtaWRlIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jk
-b21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdl
-ci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+Dorau, Lukasz wrote:
+> On Friday, April 20, 2012 7:22 PM Martin Mokrejs wrote:
+>>
+>> Martin K. Petersen wrote:
+>>>>>>>> "Lukasz" == Lukasz Dorau <lukasz.dorau@intel.com> writes:
+>>>
+>>> Lukasz> Where can I find information about current status of support for
+>>> Lukasz> 4 KiB disk sectors in Linux kernel?  Is there a
+>>> Lukasz> leader/maintainer of this issue in community?
+>>>
+>>> We have supported 4Kn for a decade. 512e obviously works out of the
+>>> box. However, filesystem/partition/DM tooling has been updated to align
+>>> correctly on 512e devices.
+>>>
+> 
+> Does it mean that I can just plug the 4K HDD in and it will work without making any changes in kernel?
+
+Yes, only make sure you have recent enough fdisk/gdisk or other partition
+manager and make first partition start at sector 2048 (instead of former
+default start sector 63) to be sure you will have no alignment issues.
+
+If you use EFI partition instead of the MS-DOS type which cannot span 2TB
+drives already, you will need CONFIG_EFI_PARTITION=y and gdisk installed
+and forget about fdisk.
+Martin
+
+
+> 
+> Lukasz
+> 
+>>> See:
+>>>
+>>> 	http://oss.oracle.com/~mkp/docs/linux-advanced-storage.pdf
+>>
+>> Also:
+>>
+>> https://ata.wiki.kernel.org/articles/a/t/a/ATA_4_KiB_sector_issues_d4b8.ht
+>> ml
+>> http://sourceforge.net/apps/mediawiki/bootinfoscript/index.php?title=Boot
+>> _Problems:Windows_Writes_To_MBR
+>> https://help.ubuntu.com/community/Grub2
+>>
+>>
+>> I agree there is nothing about under Documentation/ in kernel sources, at
+>> least
+>> from users point of view.
+>> Martin
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
