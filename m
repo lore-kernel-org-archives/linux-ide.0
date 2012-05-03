@@ -1,54 +1,35 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v2] libata: skip old error history when counting probe
- trials
-Date: Thu, 03 May 2012 22:15:07 +0800
-Message-ID: <1336054507.5722.6.camel@chief-river-32>
+Subject: Re: [PATCH] libata: skip old error history when counting probe trials
+Date: Thu, 3 May 2012 22:15:51 +0800
+Message-ID: <CAF1ivSb+5GGavikpBSiHHwQyqUTyJ9kn796hucJf2=R16ZTV2g@mail.gmail.com>
+References: <1336008189.5520.25.camel@minggr>
+	<4FA2679A.2040504@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:31222 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753807Ab2ECOPR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 May 2012 10:15:17 -0400
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:63393 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753807Ab2ECOPw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 3 May 2012 10:15:52 -0400
+Received: by vcqp1 with SMTP id p1so1276992vcq.19
+        for <linux-ide@vger.kernel.org>; Thu, 03 May 2012 07:15:51 -0700 (PDT)
+In-Reply-To: <4FA2679A.2040504@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Sergei Shtylyov <sshtylyov@mvista.com>, linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, Grant Grundler <grundler@google.com>, Gwendal Grignou <gwendal@google.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, Grant Grundler <grundler@google.com>, Gwendal Grignou <gwendal@google.com>
 
-Commit d902747("[libata] Add ATA transport class") introduced
-ATA_EFLAG_OLD_ER to mark entries in the error ring as cleared.
+On Thu, May 3, 2012 at 7:10 PM, Sergei Shtylyov <sshtylyov@mvista.com> =
+wrote:
+> Hello.
+>
+> On 03-05-2012 5:23, Lin Ming wrote:
+>
+>> Commit d902747
+>
+>
+> =A0 Please also specify the summary of that commit in parens.
 
-But ata_count_probe_trials_cb() didn't check this flag and it still
-counts the old error history. So wrong probe trials count is returned
-and it causes problem, for example, SATA link speed is slowed down from
-3.0Gbps to 1.5Gbps.
-
-Fix it by checking ATA_EFLAG_OLD_ER in ata_count_probe_trials_cb().
-
-Cc: stable <stable@vger.kernel.org> # 2.6.37+
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
-
-v2: update logs, specify the summary of commit d902747
-
- drivers/ata/libata-eh.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c61316e..d1fbd59 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3501,7 +3501,8 @@ static int ata_count_probe_trials_cb(struct ata_ering_entry *ent, void *void_arg
- 	u64 now = get_jiffies_64();
- 	int *trials = void_arg;
- 
--	if (ent->timestamp < now - min(now, interval))
-+	if ((ent->eflags & ATA_EFLAG_OLD_ER) ||
-+	    (ent->timestamp < now - min(now, interval)))
- 		return -1;
- 
- 	(*trials)++;
--- 
-1.7.9
-
+OK, just sent out the updated version.
