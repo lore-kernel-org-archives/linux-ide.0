@@ -1,35 +1,41 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH] libata: skip old error history when counting probe trials
-Date: Thu, 3 May 2012 22:15:51 +0800
-Message-ID: <CAF1ivSb+5GGavikpBSiHHwQyqUTyJ9kn796hucJf2=R16ZTV2g@mail.gmail.com>
-References: <1336008189.5520.25.camel@minggr>
-	<4FA2679A.2040504@mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Daniel J Blueman <daniel@quora.org>
+Subject: [PATCH] Prevent interface errors with Seagate FreeAgent GoFlex
+Date: Thu,  3 May 2012 23:21:00 +0800
+Message-ID: <1336058460-19924-1-git-send-email-daniel@quora.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:63393 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753807Ab2ECOPw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 3 May 2012 10:15:52 -0400
-Received: by vcqp1 with SMTP id p1so1276992vcq.19
-        for <linux-ide@vger.kernel.org>; Thu, 03 May 2012 07:15:51 -0700 (PDT)
-In-Reply-To: <4FA2679A.2040504@mvista.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:45443 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992Ab2ECPV2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2012 11:21:28 -0400
+Received: by pbbrp8 with SMTP id rp8so2613562pbb.19
+        for <linux-ide@vger.kernel.org>; Thu, 03 May 2012 08:21:28 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, Grant Grundler <grundler@google.com>, Gwendal Grignou <gwendal@google.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
 
-On Thu, May 3, 2012 at 7:10 PM, Sergei Shtylyov <sshtylyov@mvista.com> =
-wrote:
-> Hello.
->
-> On 03-05-2012 5:23, Lin Ming wrote:
->
->> Commit d902747
->
->
-> =A0 Please also specify the summary of that commit in parens.
+When connected by the optional eSATAp cable, various interface errors
+occur with my new external Seagate FreeAgent GoFlex (firmware 0110) until
+the interface is forced to 1.5Gbps mode. Blacklist 3.0Gbps mode with it
+to avoid the error messages, delays and dataloss potential.
 
-OK, just sent out the updated version.
+Signed-off-by: Daniel J Blueman <daniel@quora.org>
+---
+ drivers/ata/libata-core.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 28db50b..0781510 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4119,6 +4119,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 
+ 	/* Devices which aren't very happy with higher link speeds */
+ 	{ "WD My Book",			NULL,	ATA_HORKAGE_1_5_GBPS, },
++	{ "Seagate FreeAgent GoFlex",	NULL,	ATA_HORKAGE_1_5_GBPS, },
+ 
+ 	/*
+ 	 * Devices which choke on SETXFER.  Applies only if both the
+-- 
+1.7.9.5
+
