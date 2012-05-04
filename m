@@ -1,43 +1,24 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [git patches] libata fixes
-Date: Fri, 04 May 2012 15:04:26 +0400
-Message-ID: <4FA3B7BA.5090400@mvista.com>
-References: <20120503182735.GA24318@havoc.gtf.org> <4FA2CF02.7090708@mvista.com> <4FA2D09F.2000006@garzik.org>
+From: "Microsoft  Notification" <Atrida.Hadianti@ait.ac.th>
+Subject: Urgent Letter
+Date: Fri, 04 May 2012 19:08:12 +0800
+Message-ID: <201205041108.q44B808Q001117@mail.ucla.edu>
+Reply-To: claims_dept25@kimo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4FA2D09F.2000006@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out-56.smtp.ucla.edu ([169.232.46.165]:45945 "EHLO
+	out-56.smtp.ucla.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071Ab2EDLPF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2012 07:15:05 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <Atrida.Hadianti@ait.ac.th>
 
-Hello.
+We wish to inform you that you have won (One Million British Pound Sterlings) in the Microsoft Online Monthly Lottery held this month of April with Ticket Number (EKT/LTUK/3410) and the Lucky Numbers (BTUK5890BD) (01) For claim of Prize,please forward to us 1.Name: 2.Address 3.Age: 4.Sex: 5.Phone: 6.Country:7:Ticket Number and Lucky Number Contact: Mrs.Rita Hall. claims_dept25@kimo.com
 
-On 03-05-2012 22:38, Jeff Garzik wrote:
-
->>> Please pull 5f098a3ea72e73ad3733c3280fd5ee04816dc999 from
->>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>> tag/upstream-linus
-
->>> to receive the following updates:
-
->>> Documentation/devicetree/bindings/ata/ahci-platform.txt | 16
->>> +++++++++++++++
->>> Documentation/devicetree/bindings/ata/calxeda-sata.txt | 17
->>> ----------------
-
->> Originally it was a file rename -- did that get preserved?
-
-> You caught me: I manually generated the diffstat :)
-
-    And I didn't read the patch attentiuvely enough...
-
-> It is correct in git, as a file rename.
-
-    Sorry for the false alarm. :-)
-
-> Jeff
-
-MBR, Sergei
+Congratulations once again.
+Yours faithfully,
+Mrs.Rita Hall.
+On-line Coordinator
