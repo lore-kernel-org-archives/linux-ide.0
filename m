@@ -1,86 +1,44 @@
-From: =?GB2312?B?1cXPyMn6oe/TxbvdtPq/qreixrGh7zEzOTI4NDcyNDIx?=
-	<leroyzhlbaarge@yahoo.com>
-Subject: linux-ide@vger.kernel.orggxi
-Date: Sat, 5 May 2012 03:17:13 +0800
-Message-ID: <201205050317131092891@yahoo.com>
+From: Calvin Walton <calvin.walton@kepstin.ca>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 04 May 2012 17:04:47 -0400
+Message-ID: <1336165487.5496.6.camel@ayu>
+References: <20120503182735.GA24318@havoc.gtf.org>
+	 <4FA2CF02.7090708@mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="----=lsqjw102_8419_345466399.043341"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm6-vm1.bullet.mail.sg3.yahoo.com ([106.10.148.160]:38848 "HELO
-	nm6-vm1.bullet.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759399Ab2EDTYU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 May 2012 15:24:20 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FA2CF02.7090708@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Thu, 2012-05-03 at 22:31 +0400, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 05/03/2012 10:27 PM, Jeff Garzik wrote:
+> 
+> > Please pull 5f098a3ea72e73ad3733c3280fd5ee04816dc999 from
+> > git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tag/upstream-linus
+> 
+> 
+> > to receive the following updates:
+> 
+> >   Documentation/devicetree/bindings/ata/ahci-platform.txt |   16 +++++++++++++++
+> >   Documentation/devicetree/bindings/ata/calxeda-sata.txt  |   17 ----------------
+> 
+>     Originally it was a file rename -- did that get preserved?
+> 
+> WBR, Sergei
 
-------=lsqjw102_8419_345466399.043341
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Git actually doesn't do any internal tracking of renames, so there is
+nothing to be preserved. It detects renames on the fly on the client
+when displaying history. (This can be enabled/disabled in the git
+config, or using command line options.)
 
-bGludXgtaWRlQHZnZXIua2VybmVsLm9yZw0KzsS8/qOhDQo3NS4xMjAuMzguMjA1
+The issue here is apparently just that Jeff forgot to enable rename
+detection when generating the diffstat (using e.g. the -M option).
 
-------=lsqjw102_8419_345466399.043341
-Content-Type: image/gif;
-	name="Utehhm_8973.gif"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Utehhm_8973.gif"
-
-R0lGODdh4QFpAHcAACwAAAAA4QFpAIcAAAAAADMAAGYAAJkAAMwAAP8AMwAAMzMAM2YAM5kAM8wA
-M/8AZgAAZjMAZmYAZpkAZswAZv8AmQAAmTMAmWYAmZkAmcwAmf8AzAAAzDMAzGYAzJkAzMwAzP8A
-/wAA/zMA/2YA/5kA/8wA//8zAAAzADMzAGYzAJkzAMwzAP8zMwAzMzMzM2YzM5kzM8wzM/8zZgAz
-ZjMzZmYzZpkzZswzZv8zmQAzmTMzmWYzmZkzmcwzmf8zzAAzzDMzzGYzzJkzzMwzzP8z/wAz/zMz
-/2Yz/5kz/8wz//9mAABmADNmAGZmAJlmAMxmAP9mMwBmMzNmM2ZmM5lmM8xmM/9mZgBmZjNmZmZm
-ZplmZsxmZv9mmQBmmTNmmWZmmZlmmcxmmf9mzABmzDNmzGZmzJlmzMxmzP9m/wBm/zNm/2Zm/5lm
-/8xm//+ZAACZADOZAGaZAJmZAMyZAP+ZMwCZMzOZM2aZM5mZM8yZM/+ZZgCZZjOZZmaZZpmZZsyZ
-Zv+ZmQCZmTOZmWaZmZmZmcyZmf+ZzACZzDOZzGaZzJmZzMyZzP+Z/wCZ/zOZ/2aZ/5mZ/8yZ///M
-AADMADPMAGbMAJnMAMzMAP/MMwDMMzPMM2bMM5nMM8zMM//MZgDMZjPMZmbMZpnMZszMZv/MmQDM
-mTPMmWbMmZnMmczMmf/MzADMzDPMzGbMzJnMzMzMzP/M/wDM/zPM/2bM/5nM/8zM////AAD/ADP/
-AGb/AJn/AMz/AP//MwD/MzP/M2b/M5n/M8z/M///ZgD/ZjP/Zmb/Zpn/Zsz/Zv//mQD/mTP/mWb/
-mZn/mcz/mf//zAD/zDP/zGb/zJn/zMz/zP///wD//zP//2b//5n//8z///8AAAAAAAAAAAAAAAAA
-AAAAAAAAAAAAAAAAAAAAAAAz/wAz/zMz/2Yz/5kz/8wz//9mAABmADNmAGZmAJlmAMxmAP9mMwBm
-MzNmM2ZmM5lmM8xmM/9mZgBmZjNmZmZmZplmZsxmZv9mmQBmmTNmmWZmmZlmmcxmmf8I/wBpCBxI
-sKDBgwgTKlzIsKHDhxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
-mzhz6tzJs6fPn0CDCh1KtKjRo0iTKl3KtKnTp1CjSp1KtarVq1hBetrKtavXr2C5Zh1LtqxZjWHT
-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
-1KBZo549EFWa62APu9jHTvaym/3s3gwIADs=
-
-------=lsqjw102_8419_345466399.043341--
+-- 
+Calvin Walton <calvin.walton@kepstin.ca>
