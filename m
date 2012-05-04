@@ -1,38 +1,43 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH] libata-eh don't waste time retrying media errors (v3)
-Date: Thu, 03 May 2012 23:04:28 -0400
-Message-ID: <4FA3473C.6040406@teksavvy.com>
-References: <4FA043BE.2010009@teksavvy.com> <4FA04714.7050602@teksavvy.com> <20120501215854.GA21677@google.com> <4FA07655.6090506@teksavvy.com> <4FA07932.2090003@teksavvy.com> <4FA0A3F7.7000401@teksavvy.com> <20120502155414.GB21677@google.com> <4FA1898C.5070108@teksavvy.com> <20120502193343.GA6411@google.com> <4FA18E49.3040103@teksavvy.com> <20120502194603.GB6411@google.com> <4FA33E2D.1040204@garzik.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [git patches] libata fixes
+Date: Fri, 04 May 2012 15:04:26 +0400
+Message-ID: <4FA3B7BA.5090400@mvista.com>
+References: <20120503182735.GA24318@havoc.gtf.org> <4FA2CF02.7090708@mvista.com> <4FA2D09F.2000006@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport-out.teksavvy.com ([206.248.143.162]:5240 "EHLO
-	ironport-out.teksavvy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab2EDDEa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 May 2012 23:04:30 -0400
-In-Reply-To: <4FA33E2D.1040204@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FA2D09F.2000006@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On 12-05-03 10:25 PM, Jeff Garzik wrote:
-> On 05/02/2012 03:46 PM, Tejun Heo wrote:
->> On Wed, May 02, 2012 at 03:43:05PM -0400, Mark Lord wrote:
->>>>> +static inline int ata_eh_worth_retry(struct ata_queued_cmd *qc)
->>>>
->>>> Return bool?&&  maybe split the patch into two - the first separating
->>>> out the logic into a function, the latter changing emedia handling?
->>>
->>> I think the two-liner from v2 is better.
->>
->> Heh, I don't know.  It probably doesn't matter all that much either
->> way.  Let's let Jeff decide. ;)
-> 
-> Queued v3.  If anyone is motivated to make additional changes, base them on top of v3...
+Hello.
 
+On 03-05-2012 22:38, Jeff Garzik wrote:
 
-Peachy.  Thanks, Jeff!
+>>> Please pull 5f098a3ea72e73ad3733c3280fd5ee04816dc999 from
+>>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
+>>> tag/upstream-linus
 
+>>> to receive the following updates:
 
+>>> Documentation/devicetree/bindings/ata/ahci-platform.txt | 16
+>>> +++++++++++++++
+>>> Documentation/devicetree/bindings/ata/calxeda-sata.txt | 17
+>>> ----------------
+
+>> Originally it was a file rename -- did that get preserved?
+
+> You caught me: I manually generated the diffstat :)
+
+    And I didn't read the patch attentiuvely enough...
+
+> It is correct in git, as a file rename.
+
+    Sorry for the false alarm. :-)
+
+> Jeff
+
+MBR, Sergei
