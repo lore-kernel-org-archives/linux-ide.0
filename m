@@ -1,86 +1,59 @@
-From: Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH 2/2] ata_piix: defer disks to the Hyper-V drivers by default
-Date: Fri,  4 May 2012 22:15:11 +0100
-Message-ID: <1336166111-20483-3-git-send-email-apw@canonical.com>
-References: <4F903529.40800@mvista.com>
- <1336166111-20483-1-git-send-email-apw@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1336166111-20483-1-git-send-email-apw@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: Andy Whitcroft <apw@canonical.com>, linux-kernel@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 12/12] scsi_transport_sas: fix delete vs scan race
+Date: Sat, 5 May 2012 14:52:38 -0700
+Message-ID: <CAA9_cmcCQtyRBEt-c8EP6wuSukqZn0Mswxi3nDG7R-88L57BjA@mail.gmail.com>
+References: <20120413233343.8025.18101.stgit@dwillia2-linux.jf.intel.com>
+	<20120413233752.8025.97983.stgit@dwillia2-linux.jf.intel.com>
+	<1335091115.13208.14.camel@dabdike.lan>
+	<CABE8wwssa-_MsCTe0FJeCLY5KTk1sRcsmUjF8Sb-5sofc=zuFQ@mail.gmail.com>
+	<1335114924.13208.27.camel@dabdike.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:60844 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207Ab2EEVwj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 May 2012 17:52:39 -0400
+In-Reply-To: <1335114924.13208.27.camel@dabdike.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-When we are hosted on a Microsoft Hyper-V hypervisor the guest disks
-are exposed both via the Hyper-V paravirtualised drivers and via an
-emulated SATA disk drive.  In this case we want to use the paravirtualised
-drivers if we can as they are much more efficient.  Note that the Hyper-V
-paravirtualised drivers only expose the virtual hard disk devices, the
-CDROM/DVD devices must still be enumerated.
+On Sun, Apr 22, 2012 at 10:15 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> Async scan here means any scan in a different thread, right ... it ju=
+st
+> has to be asynchronous relative to us? =A0So that includes the manual=
+ly
+> initiated ones and hotplug ones, doesn't it?
 
-Mark the host controller ATA_HOST_IGNORE_ATA to prevent enumeration of
-disk devices.
+[ resend since I notice this never hit the lists ]
 
-BugLink: http://bugs.launchpad.net/bugs/929545
-BugLink: http://bugs.launchpad.net/bugs/942316
-Signed-off-by: Andy Whitcroft <apw@canonical.com>
----
- drivers/ata/ata_piix.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+Hmm, well no I don't think so.  This literally means the initial async
+scan, and the
+failure window is between when we skip the call to
+scsi_sysfs_add_sdev() (in scsi_add_lun() under the scan_mutex) and
+finally call scsi_sysfs_add_sdev() again via scsi_finish_async_scan().
+I don't see how that fixes it because when we fail the sequence goes:
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 68013f9..8fea06b 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1552,6 +1552,39 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
- 	return false;
- }
- 
-+static int prefer_ms_hyperv = 1;
-+module_param(prefer_ms_hyperv, int, 0);
-+
-+static void piix_ignore_devices_quirk(struct ata_host *host)
-+{
-+#if IS_ENABLED(CONFIG_HYPERV_STORAGE)
-+	static const struct dmi_system_id ignore_hyperv[] = {
-+		{
-+			/* On Hyper-V hypervisors the disks are exposed on
-+			 * both the emulated SATA controller and on the
-+			 * paravirtualised drivers.  The CD/DVD devices
-+			 * are only exposed on the emulated controller.
-+			 * Request we ignore ATA devices on this host.
-+			 */
-+			.ident = "Hyper-V Virtual Machine",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR,
-+						"Microsoft Corporation"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "Virtual Machine"),
-+			},
-+		},
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *dmi = dmi_first_match(ignore_hyperv);
-+
-+	if (dmi && prefer_ms_hyperv) {
-+		host->flags |= ATA_HOST_IGNORE_ATA;
-+		dev_info(host->dev, "%s detected, ATA device ignore set\n",
-+			dmi->ident);
-+	}
-+#endif
-+}
-+
- /**
-  *	piix_init_one - Register PIIX ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -1667,6 +1700,9 @@ static int __devinit piix_init_one(struct pci_dev *pdev,
- 	}
- 	host->flags |= ATA_HOST_PARALLEL_SCAN;
- 
-+	/* Allow hosts to specify device types to ignore when scanning. */
-+	piix_ignore_devices_quirk(host);
-+
- 	pci_set_master(pdev);
- 	return ata_pci_sff_activate_host(host, ata_bmdma_interrupt, sht);
- }
--- 
-1.7.9.5
+mutex_lock(scan_mutex)
+starget->parent =3D end_device;
+scsi_add_lun()
+mutex_unlock(scan_mutex)
+
+device_del(end_device)
+
+mutex_lock(scan_mutex)
+device_add(starget)
+<crash>
+
+As far as I can see taking the scan_mutex in sas_rphy_remove() does
+not change this failure window.  Unless I missed something?
+
+I am going to re-submit this patch as is with the proposed libsas batch=
+ for 3.5.
+
+--
+Dan
