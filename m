@@ -1,51 +1,87 @@
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: [RFC][PATCH] libata: enable SATA disk fua detection on default
-Date: Tue,  8 May 2012 11:24:03 +0800
-Message-ID: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59643 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846Ab2EHDRQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 May 2012 23:17:16 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Viresh Kumar <viresh.kumar@st.com>
+Subject: [PATCH V3 Resend 07/12] ata/sata_mv: Remove conditional compilation of clk code
+Date: Tue, 8 May 2012 09:22:34 +0530
+Message-ID: <ae865cae6b4961dea0e48d07da74b181c3958507.1336448639.git.viresh.kumar@st.com>
+References: <cover.1336448639.git.viresh.kumar@st.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1336448639.git.viresh.kumar@st.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: spear-devel@list.st.com, viresh.linux@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mturquette@linaro.org, sshtylyov@mvista.com, jgarzik@redhat.com, linux@arm.linux.org.uk, w.sang@pengutronix.de, LW@KARO-electronics.de, andrew@lunn.ch, Viresh Kumar <viresh.kumar@st.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Zheng Liu <wenqing.lz@taobao.com>
 
-From: Zheng Liu <wenqing.lz@taobao.com>
+With addition of dummy clk_*() calls for non CONFIG_HAVE_CLK cases in clk.h,
+there is no need to have clk code enclosed in #ifdef CONFIG_HAVE_CLK, #endif
+macros.
 
-Currently, SATA disk fua detection is disabled on default because most of
-devices don't support this feature at that time.  With the development of
-technology, more and more SATA disks support this feature.  So now we can enable
-this detection on default.
-
-Although fua detection is defined as a kernel module parameter, it is too hard
-to set its value because it must be loaded and set before system starts up.
-That needs to modify initrd file.  So it is inconvenient for administrator who
-needs to manage a huge number of servers.
-
-CC: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
+Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+Cc: linux-ide@vger.kernel.org
 ---
- drivers/ata/libata-core.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/sata_mv.c |   10 ----------
+ 1 files changed, 0 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 23763a1..3627251 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -133,9 +133,9 @@ int atapi_passthru16 = 1;
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 7336d4a..37503b8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -551,9 +551,7 @@ struct mv_host_priv {
+ 	u32			irq_mask_offset;
+ 	u32			unmask_all_irqs;
  
--int libata_fua = 0;
-+int libata_fua = 1;
- module_param_named(fua, libata_fua, int, 0444);
--MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-+MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct clk		*clk;
+-#endif
+ 	/*
+ 	 * These consistent DMA memory pools give us guaranteed
+ 	 * alignment for hardware-accessed data structures,
+@@ -4063,13 +4061,11 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 				   resource_size(res));
+ 	hpriv->base -= SATAHC0_REG_BASE;
  
- static int ata_ignore_hpa;
- module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
+-#if defined(CONFIG_HAVE_CLK)
+ 	hpriv->clk = clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(hpriv->clk))
+ 		dev_notice(&pdev->dev, "cannot get clkdev\n");
+ 	else
+ 		clk_enable(hpriv->clk);
+-#endif
+ 
+ 	/*
+ 	 * (Re-)program MBUS remapping windows if we are asked to.
+@@ -4096,12 +4092,10 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 		return 0;
+ 
+ err:
+-#if defined(CONFIG_HAVE_CLK)
+ 	if (!IS_ERR(hpriv->clk)) {
+ 		clk_disable(hpriv->clk);
+ 		clk_put(hpriv->clk);
+ 	}
+-#endif
+ 
+ 	return rc;
+ }
+@@ -4117,17 +4111,13 @@ err:
+ static int __devexit mv_platform_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *host = platform_get_drvdata(pdev);
+-#if defined(CONFIG_HAVE_CLK)
+ 	struct mv_host_priv *hpriv = host->private_data;
+-#endif
+ 	ata_host_detach(host);
+ 
+-#if defined(CONFIG_HAVE_CLK)
+ 	if (!IS_ERR(hpriv->clk)) {
+ 		clk_disable(hpriv->clk);
+ 		clk_put(hpriv->clk);
+ 	}
+-#endif
+ 	return 0;
+ }
+ 
 -- 
-1.7.4.1
-
+1.7.9
