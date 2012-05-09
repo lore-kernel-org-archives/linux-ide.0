@@ -1,90 +1,202 @@
 From: Viresh Kumar <viresh.kumar@st.com>
-Subject: [PATCH V3 2/3] ata: pata_arasan: add Device Tree probing capability
-Date: Wed, 9 May 2012 09:39:00 +0530
-Message-ID: <152161a1a77cf922b618e58671acc11f4398e31b.1336536285.git.viresh.kumar@st.com>
+Subject: [PATCH V3 3/3] ata/ahci_platform: Add clock framework support
+Date: Wed, 9 May 2012 09:39:01 +0530
+Message-ID: <0d73cf6a116a55356bdc42e8ec1e304b2777d15d.1336536285.git.viresh.kumar@st.com>
 References: <cover.1336536285.git.viresh.kumar@st.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog108.obsmtp.com ([207.126.144.125]:47744 "EHLO
-	eu1sys200aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751282Ab2EIEJ0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2012 00:09:26 -0400
+Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:46268 "EHLO
+	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751232Ab2EIEJa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2012 00:09:30 -0400
 In-Reply-To: <cover.1336536285.git.viresh.kumar@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: jgarzik@redhat.com
 Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@st.com>
 
-SPEAr platforms now support DT and so must convert all drivers to support DT.
-This patch adds DT probing support for Arasan Compact Flash controller and
-updates its documentation too.
+On many architectures, drivers are supposed to prepare/unprepare &
+enable/disable functional clock of device. This patch adds clock support for
+ahci_platform.
 
 Signed-off-by: Viresh Kumar <viresh.kumar@st.com>
 ---
- .../devicetree/bindings/ata/pata-arasan.txt        |   17 +++++++++++++++++
- drivers/ata/pata_arasan_cf.c                       |   10 ++++++++++
- 2 files changed, 27 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/pata-arasan.txt
+ drivers/ata/ahci.h          |    2 +
+ drivers/ata/ahci_platform.c |   57 +++++++++++++++++++++++++++++++++++++-----
+ 2 files changed, 52 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/pata-arasan.txt b/Documentation/devicetree/bindings/ata/pata-arasan.txt
-new file mode 100644
-index 0000000..95ec7f8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/pata-arasan.txt
-@@ -0,0 +1,17 @@
-+* ARASAN PATA COMPACT FLASH CONTROLLER
-+
-+Required properties:
-+- compatible: "arasan,cf-spear1340"
-+- reg: Address range of the CF registers
-+- interrupt-parent: Should be the phandle for the interrupt controller
-+  that services interrupts for this device
-+- interrupt: Should contain the CF interrupt number
-+
-+Example:
-+
-+	cf@fc000000 {
-+		compatible = "arasan,cf-spear1340";
-+		reg = <0xfc000000 0x1000>;
-+		interrupt-parent = <&vic1>;
-+		interrupts = <12>;
-+	};
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index febc914..e455c95 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index c2594dd..e36d7ae 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -35,6 +35,7 @@
+ #ifndef _AHCI_H
+ #define _AHCI_H
+ 
++#include <linux/clk.h>
  #include <linux/libata.h>
- #include <linux/module.h>
-+#include <linux/of.h>
- #include <linux/pata_arasan_cf_data.h>
- #include <linux/platform_device.h>
- #include <linux/pm.h>
-@@ -935,6 +936,14 @@ static int arasan_cf_resume(struct device *dev)
  
- static SIMPLE_DEV_PM_OPS(arasan_cf_pm_ops, arasan_cf_suspend, arasan_cf_resume);
- 
-+#ifdef CONFIG_OF
-+static const struct of_device_id arasan_cf_id_table[] = {
-+	{ .compatible = "arasan,cf-spear1340" },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, arasan_cf_id_table);
-+#endif
-+
- static struct platform_driver arasan_cf_driver = {
- 	.probe		= arasan_cf_probe,
- 	.remove		= __devexit_p(arasan_cf_remove),
-@@ -942,6 +951,7 @@ static struct platform_driver arasan_cf_driver = {
- 		.name	= DRIVER_NAME,
- 		.owner	= THIS_MODULE,
- 		.pm	= &arasan_cf_pm_ops,
-+		.of_match_table = of_match_ptr(arasan_cf_id_table),
- 	},
+ /* Enclosure Management Control */
+@@ -302,6 +303,7 @@ struct ahci_host_priv {
+ 	u32 			em_loc; /* enclosure management location */
+ 	u32			em_buf_sz;	/* EM buffer size in byte */
+ 	u32			em_msg_type;	/* EM message type */
++	struct clk		*clk;		/* Only for platforms supporting clk */
  };
  
+ extern int ahci_ignore_sss;
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 9e419e1..d0126e8 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -12,6 +12,7 @@
+  * any later version.
+  */
+ 
++#include <linux/clk.h>
+ #include <linux/kernel.h>
+ #include <linux/gfp.h>
+ #include <linux/module.h>
+@@ -117,6 +118,17 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
++	hpriv->clk = clk_get(dev, NULL);
++	if (IS_ERR(hpriv->clk)) {
++		dev_err(dev, "can't get clock\n");
++	} else {
++		rc = clk_prepare_enable(hpriv->clk);
++		if (rc) {
++			dev_err(dev, "clock prepare enable failed");
++			goto free_clk;
++		}
++	}
++
+ 	/*
+ 	 * Some platforms might need to prepare for mmio region access,
+ 	 * which could be done in the following init call. So, the mmio
+@@ -126,7 +138,7 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	if (pdata && pdata->init) {
+ 		rc = pdata->init(dev, hpriv->mmio);
+ 		if (rc)
+-			return rc;
++			goto disable_unprepare_clk;
+ 	}
+ 
+ 	ahci_save_initial_config(dev, hpriv,
+@@ -152,7 +164,7 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
+ 	if (!host) {
+ 		rc = -ENOMEM;
+-		goto err0;
++		goto pdata_exit;
+ 	}
+ 
+ 	host->private_data = hpriv;
+@@ -182,7 +194,7 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 
+ 	rc = ahci_reset_controller(host);
+ 	if (rc)
+-		goto err0;
++		goto pdata_exit;
+ 
+ 	ahci_init_controller(host);
+ 	ahci_print_info(host, "platform");
+@@ -190,12 +202,18 @@ static int __init ahci_probe(struct platform_device *pdev)
+ 	rc = ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
+ 			       &ahci_platform_sht);
+ 	if (rc)
+-		goto err0;
++		goto pdata_exit;
+ 
+ 	return 0;
+-err0:
++pdata_exit:
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
++disable_unprepare_clk:
++	if (!IS_ERR(hpriv->clk))
++		clk_disable_unprepare(hpriv->clk);
++free_clk:
++	if (!IS_ERR(hpriv->clk))
++		clk_put(hpriv->clk);
+ 	return rc;
+ }
+ 
+@@ -204,12 +222,18 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
+ 
+ 	ata_host_detach(host);
+ 
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
+ 
++	if (!IS_ERR(hpriv->clk)) {
++		clk_disable_unprepare(hpriv->clk);
++		clk_put(hpriv->clk);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -244,6 +268,10 @@ static int ahci_suspend(struct device *dev)
+ 
+ 	if (pdata && pdata->suspend)
+ 		return pdata->suspend(dev);
++
++	if (!IS_ERR(hpriv->clk))
++		clk_disable_unprepare(hpriv->clk);
++
+ 	return 0;
+ }
+ 
+@@ -251,18 +279,27 @@ static int ahci_resume(struct device *dev)
+ {
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
+ 	int rc;
+ 
++	if (!IS_ERR(hpriv->clk)) {
++		rc = clk_prepare_enable(hpriv->clk);
++		if (rc) {
++			dev_err(dev, "clock prepare enable failed");
++			return rc;
++		}
++	}
++
+ 	if (pdata && pdata->resume) {
+ 		rc = pdata->resume(dev);
+ 		if (rc)
+-			return rc;
++			goto disable_unprepare_clk;
+ 	}
+ 
+ 	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+ 		rc = ahci_reset_controller(host);
+ 		if (rc)
+-			return rc;
++			goto disable_unprepare_clk;
+ 
+ 		ahci_init_controller(host);
+ 	}
+@@ -270,6 +307,12 @@ static int ahci_resume(struct device *dev)
+ 	ata_host_resume(host);
+ 
+ 	return 0;
++
++disable_unprepare_clk:
++	if (!IS_ERR(hpriv->clk))
++		clk_disable_unprepare(hpriv->clk);
++
++	return rc;
+ }
+ 
+ static struct dev_pm_ops ahci_pm_ops = {
 -- 
 1.7.9
 
