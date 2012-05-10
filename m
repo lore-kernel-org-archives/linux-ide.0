@@ -1,185 +1,161 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata: Compact Flash/PCMCIA driver for XLR
-Date: Wed, 09 May 2012 19:48:12 +0400
-Message-ID: <4FAA91BC.8070502@mvista.com>
-References: <1336488150-19839-1-git-send-email-jayachandranc@netlogicmicro.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Thang Q. Nguyen" <tqnguyen@apm.com>
+Subject: [PATCH 2/5] sata_dwc: Add support device tree to specify dma_channel
+Date: Thu, 10 May 2012 11:17:10 +0700
+Message-ID: <1336623430-7652-1-git-send-email-tqnguyen@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:39659 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760022Ab2EIPso (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 May 2012 11:48:44 -0400
-Received: by lahd3 with SMTP id d3so315204lah.19
-        for <linux-ide@vger.kernel.org>; Wed, 09 May 2012 08:48:43 -0700 (PDT)
-In-Reply-To: <1336488150-19839-1-git-send-email-jayachandranc@netlogicmicro.com>
+Received: from exprod5og106.obsmtp.com ([64.18.0.182]:50696 "HELO
+	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750911Ab2EJETq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 May 2012 00:19:46 -0400
+Received: by pbbrq13 with SMTP id rq13so1623677pbb.22
+        for <linux-ide@vger.kernel.org>; Wed, 09 May 2012 21:19:45 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jayachandran C <jayachandranc@netlogicmicro.com>
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Kamlakant Patel <kamlakant.patel@broadcom.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Thang Q. Nguyen" <tqnguyen@apm.com>
 
-Hello.
+Only channel 0 is currently support and the driver code is fixed on channel 0. This patch lets device node specifying dma-channel in case it is not 0. If no dma-channel property is specified, channel 0 is used as default.
 
-On 08-05-2012 18:42, Jayachandran C wrote:
+Signed-off-by: Thang Q. Nguyen <tqnguyen@apm.com>
+---
+ drivers/ata/sata_dwc_460ex.c |   48 +++++++++++++++++++++++++++--------------
+ 1 files changed, 31 insertions(+), 17 deletions(-)
+ mode change 100644 => 100755 drivers/ata/sata_dwc_460ex.c
 
-> From: Kamlakant Patel<kamlakant.patel@broadcom.com>
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+old mode 100644
+new mode 100755
+index ae13ef1..937aeb3
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -158,6 +158,7 @@ enum {
+ /* Assign HW handshaking interface (x) to destination / source peripheral */
+ #define	DMA_CFG_HW_HS_DEST(int_num) (((int_num) & 0xF) << 11)
+ #define	DMA_CFG_HW_HS_SRC(int_num) (((int_num) & 0xF) << 7)
++#define	DMA_CFG_HW_CH_PRIOR(int_num) (((int_num) & 0xF) << 5)
+ #define	DMA_LLP_LMS(addr, master) (((addr) & 0xfffffffc) | (master))
+ 
+ /*
+@@ -318,6 +319,7 @@ struct sata_dwc_host_priv {
+ 	u32	dma_interrupt_count;
+ 	struct	ahb_dma_regs	*sata_dma_regs;
+ 	struct	device	*dwc_dev;
++	int	dma_channel;
+ };
+ struct sata_dwc_host_priv host_pvt;
+ /*
+@@ -437,15 +439,12 @@ static  void clear_chan_interrupts(int c)
+  */
+ static int dma_request_channel(void)
+ {
+-	int i;
+-
+-	for (i = 0; i < DMA_NUM_CHANS; i++) {
+-		if (!(in_le32(&(host_pvt.sata_dma_regs->dma_chan_en.low)) &\
+-			DMA_CHANNEL(i)))
+-			return i;
+-	}
+-	dev_err(host_pvt.dwc_dev, "%s NO channel chan_en: 0x%08x\n", __func__,
+-		in_le32(&(host_pvt.sata_dma_regs->dma_chan_en.low)));
++	/* Check if the channel is not currently in use */
++	if (!(in_le32(&(host_pvt.sata_dma_regs->dma_chan_en.low)) &
++		DMA_CHANNEL(host_pvt.dma_channel)))
++		return host_pvt.dma_channel;
++	dev_err(host_pvt.dwc_dev, "%s Channel %d is currently in use\n",
++		__func__, host_pvt.dma_channel);
+ 	return -1;
+ }
+ 
+@@ -481,7 +480,8 @@ static irqreturn_t dma_dwc_interrupt(int irq, void *hsdev_instance)
+ 	dev_dbg(ap->dev, "eot=0x%08x err=0x%08x pending=%d active port=%d\n",
+ 		tfr_reg, err_reg, hsdevp->dma_pending[tag], port);
+ 
+-	for (chan = 0; chan < DMA_NUM_CHANS; chan++) {
++	chan = host_pvt.dma_channel;
++	if (chan >= 0) {
+ 		/* Check for end-of-transfer interrupt. */
+ 		if (tfr_reg & DMA_CHANNEL(chan)) {
+ 			/*
+@@ -534,9 +534,9 @@ static irqreturn_t dma_dwc_interrupt(int irq, void *hsdev_instance)
+ static int dma_request_interrupts(struct sata_dwc_device *hsdev, int irq)
+ {
+ 	int retval = 0;
+-	int chan;
++	int chan = host_pvt.dma_channel;
+ 
+-	for (chan = 0; chan < DMA_NUM_CHANS; chan++) {
++	if (chan >= 0) {
+ 		/* Unmask error interrupt */
+ 		out_le32(&(host_pvt.sata_dma_regs)->interrupt_mask.error.low,
+ 			 DMA_ENABLE_CHAN(chan));
+@@ -575,7 +575,10 @@ static int map_sg_to_lli(struct scatterlist *sg, int num_elems,
+ 	int fis_len = 0;
+ 	dma_addr_t next_llp;
+ 	int bl;
++	int sms_val, dms_val;
+ 
++	sms_val = 0;
++	dms_val = 1 + host_pvt.dma_channel;
+ 	dev_dbg(host_pvt.dwc_dev, "%s: sg=%p nelem=%d lli=%p dma_lli=0x%08x"
+ 		" dmadr=0x%08x\n", __func__, sg, num_elems, lli, (u32)dma_lli,
+ 		(u32)dmadr_addr);
+@@ -635,8 +638,8 @@ static int map_sg_to_lli(struct scatterlist *sg, int num_elems,
+ 
+ 				lli[idx].ctl.low = cpu_to_le32(
+ 					DMA_CTL_TTFC(DMA_CTL_TTFC_P2M_DMAC) |
+-					DMA_CTL_SMS(0) |
+-					DMA_CTL_DMS(1) |
++					DMA_CTL_SMS(sms_val) |
++					DMA_CTL_DMS(dms_val) |
+ 					DMA_CTL_SRC_MSIZE(bl) |
+ 					DMA_CTL_DST_MSIZE(bl) |
+ 					DMA_CTL_SINC_NOCHANGE |
+@@ -651,8 +654,8 @@ static int map_sg_to_lli(struct scatterlist *sg, int num_elems,
+ 
+ 				lli[idx].ctl.low = cpu_to_le32(
+ 					DMA_CTL_TTFC(DMA_CTL_TTFC_M2P_PER) |
+-					DMA_CTL_SMS(1) |
+-					DMA_CTL_DMS(0) |
++					DMA_CTL_SMS(dms_val) |
++					DMA_CTL_DMS(sms_val) |
+ 					DMA_CTL_SRC_MSIZE(bl) |
+ 					DMA_CTL_DST_MSIZE(bl) |
+ 					DMA_CTL_DINC_NOCHANGE |
+@@ -744,8 +747,10 @@ static int dma_dwc_xfer_setup(struct scatterlist *sg, int num_elems,
+ 
+ 	/* Program the CFG register. */
+ 	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].cfg.high),
++		 DMA_CFG_HW_HS_SRC(dma_ch) | DMA_CFG_HW_HS_DEST(dma_ch) |
+ 		 DMA_CFG_PROTCTL | DMA_CFG_FCMOD_REQ);
+-	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].cfg.low), 0);
++	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].cfg.low),
++		 DMA_CFG_HW_CH_PRIOR(dma_ch));
+ 
+ 	/* Program the address of the linked list */
+ 	out_le32(&(host_pvt.sata_dma_regs->chan_regs[dma_ch].llp.low),
+@@ -1660,6 +1665,8 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	struct ata_host *host;
+ 	struct ata_port_info pi = sata_dwc_port_info[0];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
++	struct device_node *np = ofdev->dev.of_node;
++	u32 dma_chan;
+ 
+ 	/* Allocate DWC SATA device */
+ 	hsdev = kzalloc(sizeof(*hsdev), GFP_KERNEL);
+@@ -1669,6 +1676,13 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 		goto error;
+ 	}
+ 
++	if (of_property_read_u32(np, "dma-channel", &dma_chan)) {
++		dev_warn(&ofdev->dev, "no dma-channel property set."
++			 " Use channel 0\n");
++		dma_chan = 0;
++	}
++	host_pvt.dma_channel = dma_chan;
++
+ 	/* Ioremap SATA registers */
+ 	base = of_iomap(ofdev->dev.of_node, 0);
+ 	if (!base) {
+-- 
+1.7.3.4
 
-> Add driver for the compact flash interface on Netlogic MIPS SoCs.
-> The code is based on platform pcmcia driver, but adds interrupt
-> handling code to ACK interrupts.
-
-> Signed-off-by: Kamlakant Patel<kamlakant.patel@broadcom.com>
-> Signed-off-by: Jayachandran C<jayachandranc@netlogicmicro.com>
-[...]
-
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 6bdedd7..ba4a734 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -870,6 +870,15 @@ config PATA_WINBOND_VLB
->   	  Support for the Winbond W83759A controller on Vesa Local Bus
->   	  systems.
->
-> +config PATA_XLR_PCMCIA
-> +	tristate "Netlogic XLR PATA PCMCIA/CompactFlash support"
-
-    PCMCIA suppport doesn't belong in drivers/ata/. Leave only CompactFlash.
-
-> +	depends on CPU_XLR
-> +	help
-> +	  This option enables support for PCMCIA/CompactFlash driver for
-> +	  Netlogic XLR SoCs.
-> +
-> +	  If unsure, say N.
-> +
->   comment "Generic fallback / legacy drivers"
->
->   config PATA_ACPI
-> diff --git a/drivers/ata/pata_xlr_pcmcia.c b/drivers/ata/pata_xlr_pcmcia.c
-> new file mode 100644
-> index 0000000..84de6d8
-> --- /dev/null
-> +++ b/drivers/ata/pata_xlr_pcmcia.c
-
-    I suggest to name it pata_xlr_cf.c.
-
-> @@ -0,0 +1,194 @@
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/libata.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/ata_platform.h>
-
-    Why this one?
-
-> +
-> +#define DRV_NAME "pata_xlr_platform"
-
-    So, platform or pcmcia?
-
-+static struct scsi_host_template pata_platform_sht = {
-
-    Why 'pata_platform_sht' and not 'pata_xlr_sht'?
-
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-[...]
-> +static struct ata_port_operations pata_platform_port_ops = {
-
-    Why 'pata_platform_port_ops' and not 'pata_xlr_port_ops'?
-
-> +	.inherits		= &ata_sff_port_ops,
-> +	.sff_data_xfer		= ata_sff_data_xfer_noirq,
-> +	.cable_detect		= ata_cable_unknown,
-> +	.set_mode		= xlr_pata_platform_set_mode,
-> +	.sff_irq_check		= xlr_pata_irq_check,
-> +	.sff_check_status	= ata_sff_check_status,
-
-    No need to override it, as the implementation is standard.
-
-> +	.sff_irq_clear		= xlr_pata_irq_clear,
-> +};
-[...]
-> +static int __devinit xlr_pata_platform_probe(struct platform_device *pdev)
-> +{
-> +	struct ata_host *host;
-> +	struct ata_port *ap;
-> +	struct ata_ioports *ioaddr;
-> +
-> +	struct resource *io_res;
-> +	struct resource *irq_res;
-> +	struct resource *ack_res;
-> +
-> +	struct device *dev = &pdev->dev;
-> +	int irq = 0;
-> +	int irq_flags = 0;
-[...]
-> +	/*
-> +	 * And the IRQ
-> +	 */
-> +	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> +
-> +	if (irq_res && irq_res->start > 0) {
-> +		irq = irq_res->start;
-> +		irq_flags = irq_res->flags;
-> +	}
-[...]
-> +	ap = host->ports[0];
-> +	ap->ops = &pata_platform_port_ops;
-> +	ap->private_data = ioremap(ack_res->start, resource_size(ack_res));
-
-   Why not devm_ioremap()? ioremap() may fail and you don't handle it.
-
-[...]
-> +
-> +	/*
-> +	 * Handle the MMIO case
-> +	 */
-> +	ioaddr =&ap->ioaddr;
-> +	ioaddr->data_addr = devm_ioremap(dev, io_res->start,
-> +					resource_size(io_res));
-> +	ioaddr->cmd_addr = ioaddr->data_addr + PATA_PCMCIA_BASE;
-> +	ioaddr->altstatus_addr = ioaddr->data_addr + PATA_PCMCIA_STATUS;
-
-    Wrong, alt. status and status registers are not the same register. It 
-should be PATA_PCMCIA_CTL.
-
-> +	ioaddr->ctl_addr = ioaddr->data_addr + PATA_PCMCIA_CTL;
-> +
-> +	/* Fixup the port shift for platforms that need it */
-> +	ioaddr->data_addr	= ioaddr->cmd_addr + (ATA_REG_DATA);
-> +	ioaddr->error_addr	= ioaddr->cmd_addr + (ATA_REG_ERR);
-> +	ioaddr->feature_addr	= ioaddr->cmd_addr + (ATA_REG_FEATURE);
-> +	ioaddr->nsect_addr	= ioaddr->cmd_addr + (ATA_REG_NSECT);
-> +	ioaddr->lbal_addr	= ioaddr->cmd_addr + (ATA_REG_LBAL);
-> +	ioaddr->lbam_addr	= ioaddr->cmd_addr + (ATA_REG_LBAM);
-> +	ioaddr->lbah_addr	= ioaddr->cmd_addr + (ATA_REG_LBAH);
-> +	ioaddr->device_addr	= ioaddr->cmd_addr + (ATA_REG_DEVICE);
-> +	ioaddr->status_addr	= ioaddr->cmd_addr + (ATA_REG_STATUS);
-> +	ioaddr->command_addr	= ioaddr->cmd_addr + (ATA_REG_CMD);
-
-    Why not call ata_sff_std_ports() instead of all these assignments?
-
-> +
-> +	ata_port_desc(ap, "%s cmd 0x%x ctl 0x%x", "mmio",
-
-    Why not just "mmio cmd 0x%x ctl 0x%x"?
-
-> +			(unsigned int)ap->ioaddr.cmd_addr,
-> +			(unsigned int)ap->ioaddr.ctl_addr);
-> +
-> +	/* activate */
-> +	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
-> +				 irq_flags, &pata_platform_sht);
-
-    It's not the same IRQ flags that you can read from the resource, this 
-seems wrong.
-
-> +}
-> +
-> +static struct platform_driver pata_platform_driver = {
-
-    Why 'pata_platfrom_driver' and not 'pata_xlr_driver'?
-
-MBR, Sergei
