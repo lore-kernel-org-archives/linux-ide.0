@@ -1,44 +1,32 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 3/5] sata_dwc: Add support ATAPI transfer
-Date: Thu, 10 May 2012 14:52:44 +0400
-Message-ID: <4FAB9DFC.4040403@mvista.com>
-References: <1336623449-7697-1-git-send-email-tqnguyen@apm.com> <4FAB8F51.3010004@mvista.com> <CAKrQpSvqz-+w=Rvq_jtGwkEue0Tf6rh9Z5c9j4edbgeuWeMCVQ@mail.gmail.com>
+From: Bian Naimeng <biannm@cn.fujitsu.com>
+Subject: On AHCI CCC
+Date: Fri, 11 May 2012 14:54:05 +0800
+Message-ID: <4FACB78D.90100@cn.fujitsu.com>
+References: <4FA74F90.7070209@cn.fujitsu.com> <4FA7ABFC.2070505@cn.fujitsu.com> <4FA8E2BD.3010107@cn.fujitsu.com> <4FA8E98C.4070104@cn.fujitsu.com> <4FA9CA7F.4020802@cn.fujitsu.com> <4FAA329E.4090809@cn.fujitsu.com> <4FAB8F40.5020701@cn.fujitsu.com> <4FAB930D.2000204@cn.fujitsu.com> <4FAC7A62.7060704@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=Shift_JIS
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:38305 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758144Ab2EJKxV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 May 2012 06:53:21 -0400
-Received: by lahd3 with SMTP id d3so961803lah.19
-        for <linux-ide@vger.kernel.org>; Thu, 10 May 2012 03:53:17 -0700 (PDT)
-In-Reply-To: <CAKrQpSvqz-+w=Rvq_jtGwkEue0Tf6rh9Z5c9j4edbgeuWeMCVQ@mail.gmail.com>
+Received: from cn.fujitsu.com ([222.73.24.84]:35498 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1761663Ab2EKG4N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 May 2012 02:56:13 -0400
+In-Reply-To: <4FAC7A62.7060704@cn.fujitsu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Thang Q. Nguyen" <tqnguyen@apm.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, fnst-fslbsp@cn.fujitsu.com
 
-Hello.
+Hi, Jeff
+ 
+  I'm trying to do some work related to ahci module of linux kernel.
+  But I found that Command Completion Coalescing(CCC)
+  has not been supported until kernel version 3.0.
 
-On 10-05-2012 14:12, Thang Q. Nguyen wrote:
+  I just wonder why it be dropped?
+  What's your consideration about it?
+  And will you add this feature later?
+ 
+Regards
+  Bian
 
-> Thanks for quick response,
-> I do not mean user use fdisk command on CD/DVD. However, whenever using 'fdisk
-> -l' command, the system will access each first sector on each SCSI device
-> (including CD/DVD on it) and the DMA transfer on blank CD/DVD will not return
-> any data.
-
-    Shouldn't the drive return error status in this case?
-
-> The timeout is detected and error handler will be called.
-
-    But user may also run 'hdparm -t' or even 'dd' with offset on a drive. 
-Have you tried your workaround with those?
-
-> Using PIO on some first sectors will avoid the issue.
-
-> Regards,
-> Thang Nguyen -
-
-MBR, Sergei
