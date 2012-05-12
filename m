@@ -1,28 +1,48 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: Re: [PATCH] ata_generic: Skip is_intel_ider() check when
- ata_generic=1 is set
-Date: Fri, 11 May 2012 17:56:48 +0100
-Message-ID: <20120511175648.19f2eaa5@bob.linux.org.uk>
-References: <1336754003-31487-1-git-send-email-andi@firstfloor.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 43211] Pressing the DVD eject button renders the DVD-ROM
+ unusable
+Date: Sat, 12 May 2012 00:19:17 +0000 (UTC)
+Message-ID: <20120512001917.6F14E11FCE3@bugzilla.kernel.org>
+References: <bug-43211-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1336754003-31487-1-git-send-email-andi@firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:48884 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761481Ab2ELATU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 11 May 2012 20:19:20 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2021920278
+	for <linux-ide@vger.kernel.org>; Sat, 12 May 2012 00:19:19 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 0CFB220275
+	for <linux-ide@vger.kernel.org>; Sat, 12 May 2012 00:19:18 +0000 (UTC)
+In-Reply-To: <bug-43211-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Fri, 11 May 2012 09:33:23 -0700
-Andi Kleen <andi@firstfloor.org> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=43211
 
-> From: Andi Kleen <ak@linux.intel.com>
-> 
-> When ata_generic_ide=1 is set don't do the is_intel_ider() magic
-> check. We found at least one box who needed that.
-> 
-> Cc: alan@linux.intel.com
-> Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
-Acked-by: Alan Cox <alan@linux.intel.com>
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+          Component|IDE                         |Config-Hotplug
+         AssignedTo|io_ide@kernel-bugs.osdl.org |acpi_config-hotplug@kernel-
+                   |                            |bugs.osdl.org
+            Product|IO/Storage                  |ACPI
+
+
+
+
+--- Comment #3 from Alan <alan@lxorguk.ukuu.org.uk>  2012-05-12 00:19:17 ---
+The eject button appears to be set via ACPI to physically disconnect and power
+off the device. That's not usual behaviour and would explain this.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
