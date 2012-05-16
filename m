@@ -1,38 +1,137 @@
-From: =?utf-8?B?5bmz5rCR5YyW55qE5Ye65Zu955WZ5a2m5pyN5Yqh?=
-	<admin@simir.cn>
-Subject: =?utf-8?B?5YWN5LqkNDDkuIfnlZnlrabkv53or4Hph5HvvIzmiZPpgKDlubPmsJHljJbnmoTlh7rlm73nlZk=?=
-	=?utf-8?B?5a2m5pyN5Yqh77yM54ix5bCU5YWw5ZCN5qCh562J5oKo5p2l5rex6YCg?=
-Date: Wed, 16 May 2012 07:13:53 +0000 (UTC)
-Message-ID: <5A4AD666A22AE618CDD84682259C470B@jl>
-Reply-To: <2636882155@qq.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: CFA 4.0 patch
+Date: Wed, 16 May 2012 16:26:54 +0400
+Message-ID: <4FB39D0E.7040208@mvista.com>
+References: <4E75C4FECC27A44E9F7E0737D71946900F686C5B@xmb-sjc-21e.amer.cisco.com> <4FB23FDE.7020604@mvista.com> <4E75C4FECC27A44E9F7E0737D71946900F686DE1@xmb-sjc-21e.amer.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [61.147.68.13] ([61.147.68.13]:1396 "HELO simir.cn"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S932105Ab2EPHNn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 May 2012 03:13:43 -0400
-Date: Mon, 16 May 2016 11:28:14 +0800
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53560 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754835Ab2EPM1V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 May 2012 08:27:21 -0400
+Received: by lahd3 with SMTP id d3so449789lah.19
+        for <linux-ide@vger.kernel.org>; Wed, 16 May 2012 05:27:19 -0700 (PDT)
+In-Reply-To: <4E75C4FECC27A44E9F7E0737D71946900F686DE1@xmb-sjc-21e.amer.cisco.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lself@atu.edu, Sabrina@hkfts.com, yun@sina.cn, linux-ide@vger.kernel.org, xuemei1993@sina.com, _DISTRIBUTION@FREEWHOLE.COM, smithzy2002@yahoo.com, qixiaoboy@126.com, gwuqing@126.com, baoxingyi8@hotmail.com
+To: "Andre Hedrick (anhedric)" <anhedric@cisco.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-5oKo6L+Y5Zyo5Li65a625bqt5LiN5aSf5a+M6KOV77yM6ICM5LiN6IO96K6p5ZOB5a2m5YW85LyY
-55qE5a2p5a2Q5Ye65Zu95rex6YCg6ICM6Ium5oG85ZCX77yfDQrmgqjov5jlnKjkuLrlm73lhoXm
-lZnogrLotYTmupDliIbphY3kuKXph43kuI3lnYfvvIzogIzkuI3og73orqnoh6rlt7HnmoTlranl
-rZDojrflvpfnkIbmg7PnmoTmlZnogrLnjq/looPogIzlj5HmhIHlkJfvvJ8NCg0K5YWN5LqkNDDk
-uIfnlZnlrabkv53or4Hph5HvvIzmiZPpgKDlubPmsJHljJbnmoTlh7rlm73nlZnlrabmnI3liqHv
-vIENCuiuqeW3peiWquWutuW6reWtqeWtkOS5n+WPr+S7peS4gOWchuWHuuWbveeVmeWtpuaipu+8
-gQ0KDQrniLHlsJTlhbDlkI3moKHnrYnmgqjmnaXmt7HpgKDvvIENCuaDs+S6huino+ivpuaDheea
-hOivt+iBlOezu1FROiAyNjM2ODgyMTU1ICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAyNjM2
-ODgyMTU1QHFxLmNvbQ0K5oOz5LqG6Kej6K+m5oOF55qE6K+36IGU57O7UVE6IDI2MzY4ODIxNTUg
-ICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDI2MzY4ODIxNTVAcXEuY29tDQrmg7Pkuobop6Po
-r6bmg4XnmoTor7fogZTns7tRUTogMjYzNjg4MjE1NSAgIOaIluiAheeri+WNs+WbnuWkjemCrueu
-sTogMjYzNjg4MjE1NUBxcS5jb20NCiANCiANCueOsOivmuaLm+WFqOWbveWQhOWcsOWHuuWbveeV
-meWtpumhvumXruOAgg0K6Zu26aOO6Zmp77yB6auY5Zue5oql77yB5YWx5Lqr5pyd6Ziz6Iis55qE
-5pWZ6IKy5Lqn5Lia5aSn6JuL57OV77yBDQror7fogZTns7tRUTogMjYzNjg4MjE1NQ0K6K+36IGU
-57O7UVE6IDI2MzY4ODIxNTUNCuivt+iBlOezu1FROiAyNjM2ODgyMTU1
+Hello.
 
+On 15-05-2012 23:20, Andre Hedrick (anhedric) wrote:
 
+> Sergei,
+
+> Sorry wrong answer about broken devices, and if I had taken such short
+> cuts in the past, the strength of the cheap storage would not have been
+> there or present today in Linux.
+
+> Just because someone calls it broken, because they don't read "ALL" the
+> associated specification,
+
+    Name the part I didn't read please.
+
+> it means they don't understand what they don't know.
+
+    From your words so far it follows to me that you who don't understand.
+
+> So try again with all the information before the classic call if
+> "it is broken" because I can't or don't know how to fix.
+
+    Your fix is incorrect because it blindly assumes that device is CFA basing 
+on word 0 while these alternate values (044Ah and 0040h) also correspond to 
+hard disks. We can't make such decisions without consulting word 83 first 
+which clearly follows from CFA 4.0. And in second of the identify data dumps 
+you sent to me privately the device erroneously don't indicate CFA command set 
+support in word 83, that's why it's not detected as CF. I agree however, that 
+we shoiuld try and overcome this incompatibility by adding more heuristics but 
+not in this proposed simplistic form.
+
+> Cheers,
+> Andre
+
+> -----Original Message-----
+> From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+> Sent: Tuesday, May 15, 2012 4:37 AM
+> To: Andre Hedrick (anhedric)
+> Cc: jgarzik@pobox.com; linux-ide@vger.kernel.org; lkml@vger.kernel.org
+> Subject: Re: CFA 4.0 patch
+
+> Hello.
+
+> On 15-05-2012 8:57, Andre Hedrick (anhedric) wrote:
+
+>> This is a missing part of the CFA 4.0 and above support.
+
+>> 6.2.1.6.1 Word 0: General Configuration
+>> 	This field indicates the general characteristics of the device.
+>> When Word 0 of the Identify drive information is 848Ah then the device
+>> is a CompactFlash Storage Card and complies with the CFA specification
+>> and CFA command set. It is recommended that PC Card modes of operation
+>> report only the 848Ah value as they are always intended as removable
+>> devices.
+
+>> Bits 15-0: CF Standard Configuration Value
+>> Word 0 is 848Ah. This is the recommended value of Word 0.
+>> 	Some operating systems require Bit 6 of Word 0 to be set to 1
+>> (Non-removable device) to use the card as the root storage device. The
+>> Card must be the root storage device when a host completely replaces
+>> conventional disk storage with a CompactFlash Card in True IDE mode.
+> To
+>> support this requirement and provide capability for any future
+> removable
+>> media Cards, alternate handling of Word 0 is permitted.
+
+>> Bits 15-0: CF Preferred Alternate Configuration Values
+
+>> 044Ah: This is the alternate value of Word 0 turns on ATA device and
+>> turns off Removable Media and Removable Device while 	preserving all
+>> Retired bits in the word.
+
+>> 0040h: This is the alternate value of Word 0 turns on ATA device and
+>> turns off Removable Media and Removable Device while 	zeroing all
+>> Retired bits in the word
+
+>      If you did read a bit further, you'd have seen:
+
+> Bit 15-12: Configuration Flag
+> If bits 15:12 are set to 8h then Word 0 shall be 848Ah.
+> If bits 15:12 are set to 0h then Bits 11:0 are set using the definitions
+> below
+> and the Card is
+> required to support for the CFA command set and report that in bit 2 of
+> Word 83.
+> Bit 15:12 values other than 8h and 0h are prohibited.
+
+>      That's why our code does what it does, and not checks for the
+> alternate
+> values. If our check in word 83 fails, we therefore have a broken
+> device.
+
+>> Cheers,
+>> Andre
+>> --------------------
+>> The Linux X-ATA/SATA guy
+
+>> --- linux-2.6.32.orig/include/linux/ata.h	Mon May 14 15:48:24 2012
+>> +++ linux-2.6.32/include/linux/ata.h	Mon May 14 15:51:42 2012
+>> @@ -819,6 +819,10 @@
+>>    {
+>>    	if (id[ATA_ID_CONFIG] == 0x848A)	/* Traditional CF */
+>>    		return 1;
+>> +	if (id[ATA_ID_CONFIG] == 0x044A)	/* Alternative CF w/
+>> removable turned off, preserving retired bits */
+>> +		return 1;
+>> +	if (id[ATA_ID_CONFIG] == 0x0040)	/* Alternative CF w/
+>> removable turned off, zeroing retired bits*/
+>> +		return 1;
+>>    	/*
+>>    	 * CF specs don't require specific value in the word 0 anymore
+>> and yet
+>>    	 * they forbid to report the ATA version in the word 80 and
+>> require the
+
+MBR, Sergei
