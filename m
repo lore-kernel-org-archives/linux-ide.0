@@ -1,110 +1,103 @@
-From: Jonathan Nieder <jrnieder@gmail.com>
-Subject: [PATCH 3.3.y] libata: forbid port runtime pm by default, fixing
- regression
-Date: Sat, 19 May 2012 18:58:54 -0500
-Message-ID: <20120519235854.GA32208@burratino>
-References: <4F8DD4DC.4050503@teksavvy.com>
- <4F8DD708.8050502@teksavvy.com>
- <4F8DD834.5070000@teksavvy.com>
- <4F8DDA53.206@teksavvy.com>
- <CAE5mzvjsfX34fod0KURNQN8Rmn0xOPCdP2iY2xnSTnnRXPAaEQ@mail.gmail.com>
- <4F8EF57E.4070603@fold.natur.cuni.cz>
- <4F8EF9F7.5040202@pobox.com>
+From: Felix Miata <mrmazda@earthlink.net>
+Subject: Re: ATA errors corrupt other I/O & set / readonly
+Date: Sun, 20 May 2012 00:56:37 -0400
+Message-ID: <4FB87985.1080501@earthlink.net>
+References: <4FA0F76E.3050509@earthlink.net> <4FB82C9A.9020508@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45174 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936Ab2ESX7G (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 May 2012 19:59:06 -0400
-Content-Disposition: inline
-In-Reply-To: <4F8EF9F7.5040202@pobox.com>
+Received: from pop-savannah.atl.sa.earthlink.net ([207.69.195.69]:34279 "EHLO
+	pop-savannah.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750893Ab2ETE4f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 May 2012 00:56:35 -0400
+Received: from user-12hck1e.cable.mindspring.com ([69.22.80.46] helo=[192.168.0.51])
+	by pop-savannah.atl.sa.earthlink.net with esmtp (Exim 3.36 #1)
+	id 1SVyC3-00030s-00
+	for linux-ide@vger.kernel.org; Sun, 20 May 2012 00:56:35 -0400
+In-Reply-To: <4FB82C9A.9020508@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: Michael Schmitt <tcwardrobe@gmail.com>, Jeff Garzik <jgarzik@pobox.com>, Martin Mokrejs <mmokrejs@fold.natur.cuni.cz>, cwillu <cwillu@cwillu.com>, Mark Lord <kernel@teksavvy.com>, Tejun Heo <htejun@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-From: Lin Ming <ming.m.lin@intel.com>
-Date: Wed, 18 Apr 2012 09:29:47 +0800
+On 2012/05/19 17:28 (GMT-0600) Robert Hancock composed:
 
-commit 0c8d32c27f5cf6e14ca14b4758d1e994eebd50fd upstream.
+> On 2012/05/02 Felix Miata wrote:
 
-Forbid port runtime pm by default because it has known hotplug issue.
-User can allow it by, for example
+>>  https://bugzilla.kernel.org/show_bug.cgi?id=43128
+...
+>>  Please, what should I do?
 
-echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata2/power/control
+> It's hard to follow the discussion in the openSUSE bug report. I'm not
+> sure if there was any dmesg posted from the case where other IO was
+> being interfered with by the problems with the external device. In AHCI
+> mode that really shouldn't happen, but in IDE mode on Intel controllers
+> it may be more possible because of the PATA emulation that's effectively
+> being done by the controller.
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
----
-Hi Greg,
+The "other" I/O being done while I'm attempting to use these is usually 
+limited to tty I/O, either bash or MC running in bash running on tty[1-6] in 
+runlevel 3 to copy files between one HD and another, usually both source and 
+target in individual RX-358 units, often just from the NTFS partition to the 
+EXT2 partition in the same RX-358 unit. The STB[1] that I bought the V2 to 
+use with only writes to Windows partitions via USB connection, which 
+complicates life by forcing me to move files off the NTFS partition to free 
+up space.
 
-Please consider
+The V2 also produces trouble in USB mode, and when connected via SATA to 
+WinXP, for which the only workaround I know is rebooting until it gets 
+recognized. Connected via USB to the STB the NTFS partition would sometimes 
+become marked so as to become unavailable to the STB. The only way to 
+reenable access to it is to have WinXP run CHKDSK on it, which is how I would 
+discover the unreliability of its connectibility to WinXP.
 
-  0c8d32c27f5c libata: forbid port runtime pm by default, fixing
-               regression
+I use these devices with multiple machines, many of which are Dells whose 
+BIOS contain the string "AHCI" nowhere in setup. I never set any machine to 
+use a legacy mode except temporarily for troubleshooting purposes, but this 
+doesn't necessarily mean AHCI is used.
 
-for inclusion in the 3.3-stable tree.  (It should apply there cleanly.
-The copy in this message is just for easy reference.)
+IIRC, I was only ever asked for /var/log/messages, never dmesg. I can never 
+remember what distinguishes the content provided by the two.
 
-Michael Schmitt noticed[1] using a 3.3.4-based kernel that powering
-his esata enclosure on, off, and back on again would cause Linux to no
-longer recognize the disk.  By contrast, a 3.2.y-based kernel worked
-fine.  Examining logs reveals that on 3.3.y the second time the
-enclosure turns on, no PHYRdgyChg CommWake exception shows up:
+If you want a dmesg attached to either bug, I need to know when and how you 
+want me to try and get it. I say "try" because once corruption begins, 
+getting dmesg is unlikely via keyboard on a tty, and potential methods of 
+fetching it any other way are not known to me. It might be sitting on tty11 
+or elsewhere that I could copy manually from if I knew well enough what to 
+copy or omit.
 
-| dmesg logs directly pasted here. So first, booted with powered down 
-| esata enclosure and now, poweron:
-| 
-| [36997.268364] ata5: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xe frozen
-| [36997.268370] ata5: SError: { PHYRdyChg CommWake }
-| [36997.268383] ata5: hard resetting link
-[...]
-| Disk works.
-[...]
-| mounted.... and umount again, now powerdown.
-|
-| [37437.877977] ata5: exception Emask 0x10 SAct 0x0 SErr 0x10000 action 0xe frozen
-| [37437.877982] ata5: SError: { PHYRdyChg }
-| [37437.877995] ata5: hard resetting link
-[...]
-| Drive gone... now, power-up again.
-|
-| adrastea:~# dmesg
-| adrastea:~#
-|
-| Nothing. I did clear the kernel-message log in between...
+> It's not possible to put in a blacklist entry for a specific SATA
+> enclosure because they're essentially a passive device and there's no
+> way to identify them through software (unless they have a custom ID
+> string like the WD MyBook drives). If it only works properly at 1.5 Gbps
+> then a module/boot parameter may be the best solution.
 
-With this patch, Michael found hotplug to work again.
+It would be helpful if I knew a blanket cmdline parameter to use to cap 
+everything at 1.5 instead of for each machine having to discover all the bus 
+particulars and remember which go where on reboot to place them into effect 
+only for the port the V2 is or might be connected to. I can't picture myself 
+noticing on any of my machines whether I/O was capped at 1.5 or not. The 
+maximum number of HDs used at once in any of them would be two in most, and 
+three in two machines with RAID1 configured.
 
-See also [2] and [3].
+A couple of weeks after filing the kernel.org bug I contacted the 
+manufacturer again to provide the new information contained in the bugs. 
+Again it offered to replace. Only yesterday I finally answered the offer that 
+I'd probably prefer to keep it in lieu of wasting more money on shipping only 
+to be left with no opportunity for further testing and bug follow-up, and yet 
+another replacement no better than the original, or a store credit making me 
+shop for something else with equivalent functionality.
 
-Jeff seems to have acked it for stable already[4].
+If there was a kernel dev interested in pursuing this it might be possible to 
+get the manufacturer to provide a V2 device to test with. Considering the 
+current delivered price of the V2 is roughly half that of the V1 it appears 
+remaining stock is trying to be dumped.
 
-Hope that helps,
-Jonathan
-
-[1] http://bugs.debian.org/671689
-[2] http://thread.gmane.org/gmane.linux.ide/51860/focus=51882
-[3] https://bugzilla.redhat.com/show_bug.cgi?id=807632
-[4] http://thread.gmane.org/gmane.linux.ide/51885/focus=51887
-
- drivers/ata/libata-transport.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 74aaee30e264..c34190485377 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -294,6 +294,7 @@ int ata_tport_add(struct device *parent,
- 	device_enable_async_suspend(dev);
- 	pm_runtime_set_active(dev);
- 	pm_runtime_enable(dev);
-+	pm_runtime_forbid(dev);
- 
- 	transport_add_device(dev);
- 	transport_configure_device(dev);
+[1] http://www.manhattan-digital.net/rs1933.htm
 -- 
-1.7.10.2
+"The wise are known for their understanding, and pleasant
+words are persuasive." Proverbs 16:21 (New Living Translation)
 
+  Team OS/2 ** Reg. Linux User #211409 ** a11y rocks!
+
+Felix Miata  ***  http://fm.no-ip.com/
