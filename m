@@ -1,49 +1,79 @@
-From: <janderson@yahoo.com>
-Subject: Hi Friend Your $997 Website Is Ready. Recommends Advanced Sports to you
-Date: Mon, 21 May 2012 14:16:53 -0400
-Message-ID: <0137716879C54F52A5A4B081BA1E2BA7@g19.win.smewh.net>
+From: <ronrajan@yahoo.com>
+Subject: =?iso-8859-1?Q?SHOCKING_SYSTEM.=28and_one_weird_rule=29_Recommends_Advanc?=
+	=?iso-8859-1?Q?ed_Sports_to_you?=
+Date: Mon, 21 May 2012 15:18:31 -0400
+Message-ID: <7C5013BD70AA4415851D8AE53F05E4E6@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19i.g19.rapidsite.net ([204.202.242.121]:11494 "HELO
-	mail19i.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758074Ab2EUSXe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2012 14:23:34 -0400
-Received: from mx01.stngva01.us.mxservers.net (204.202.242.3)
-	by mail19i.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 3-0934954213
-	for <linux-ide@vger.kernel.org>; Mon, 21 May 2012 14:16:53 -0400 (EDT)
+Received: from mail19d.g19.rapidsite.net ([204.202.242.120]:44341 "EHLO
+	mail19d.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842Ab2EUTSc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2012 15:18:32 -0400
+Received: from mx99.stngva01.us.mxservers.net (198.173.112.36)
+	by mail19d.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0143287911
+	for <linux-ide@vger.kernel.org>; Mon, 21 May 2012 15:18:31 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
->From         :Hi Friend Your $997 Website Is Ready.
-Email        :janderson@yahoo.com
+>From         :SHOCKING SYSTEM.(and one weird rule)
+Email        :ronrajan@yahoo.com
 Friend Name  :Friend
 Friend Email :linux-ide@vger.kernel.org
 comment      :
 
+
 Hi Friend,
 
+Here's a controversial new system revealing
 
-Your $997 website is waiting for you!
+affiliate marketing's number one rule...
 
-----> http://bit.ly/KWaw4z
+=======>  http://bit.ly/LarThw
 
-Your website is paid for...
+During this revealing presentation, this crazy
+underground affiliate reveals the BRUTAL TRUTH why
+most beginner marketers DON'T make even one cent
+online.
 
-Your hosting is paid for...
+Ya, you might say it's a bit controversial...
 
-It's ready to take orders!
+.BUT if you want to discover the truth about
+driving insane amounts of traffic the way the top
+super affiliates do it, and find out the number
+one rule that's been kept from you all along, then
+you need to check out what this guy has to say:
 
-All you need to do is go here to get it!
+=======>  http://bit.ly/LarThw
 
-----> http://bit.ly/KWaw4z
+This WON'T be available forever so my best advice
+is to go check it out right now.
 
-Talk soon
+Ron Rajan
 
-John Anderson
+P.S. If you've been looking for a STEP BY STEP
+system for getting crazy amounts of laser targeted
+traffic, then you'll certainly want to check this
+out.
+
+Just make sure you pay close attention to the
+weird rule he outlines... it's different than most
+have been suggesting, but it works like crazy:
+
+=======>  http://bit.ly/LarThw
+
+
+
+
+
+
+
+
+
+
 
 
 
