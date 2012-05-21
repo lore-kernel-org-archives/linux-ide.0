@@ -1,27 +1,49 @@
-From: "Eric Chua" <julia@sproba.dp.ua>
-Subject: For your information
-Date: Mon, 21 May 2012 15:23:16 +0200
-Message-ID: <20120521131944.38CDDFE3F4F__20722.6373175674$1337624560$gmane$org@mail.sproba.dp.ua>
-Reply-To: <echuacn@ovi.com>
+From: <janderson@yahoo.com>
+Subject: Hi Friend Your $997 Website Is Ready. Recommends Advanced Sports to you
+Date: Mon, 21 May 2012 14:16:53 -0400
+Message-ID: <0137716879C54F52A5A4B081BA1E2BA7@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sproba5.sproba.dp.ua ([195.189.235.190]:51695 "EHLO
-	mail.sproba.dp.ua" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S932120Ab2EUSWG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2012 14:22:06 -0400
+Received: from mail19i.g19.rapidsite.net ([204.202.242.121]:11494 "HELO
+	mail19i.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758074Ab2EUSXe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 May 2012 14:23:34 -0400
+Received: from mx01.stngva01.us.mxservers.net (204.202.242.3)
+	by mail19i.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 3-0934954213
+	for <linux-ide@vger.kernel.org>; Mon, 21 May 2012 14:16:53 -0400 (EDT)
+Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Good day, 
+>From         :Hi Friend Your $997 Website Is Ready.
+Email        :janderson@yahoo.com
+Friend Name  :Friend
+Friend Email :linux-ide@vger.kernel.org
+comment      :
 
-My name is Eric Chua, Director at SWIFT Securities Markets, Asia Pacific China. This letter is written to you regarding a fixed investment account under our foreign investment policy.
+Hi Friend,
 
-Being mandatory that holder/beneficiary is periodically notified concerning financial status of account(s), I am writing to this effect since you share the same last name as this investment account. Upon your earliest reply, detail and necessary information will be made available for your reference.
 
-Kind regards,
-Eric Chua
-SWIFT Securities Markets, 
-Asia Pacific China
+Your $997 website is waiting for you!
+
+----> http://bit.ly/KWaw4z
+
+Your website is paid for...
+
+Your hosting is paid for...
+
+It's ready to take orders!
+
+All you need to do is go here to get it!
+
+----> http://bit.ly/KWaw4z
+
+Talk soon
+
+John Anderson
+
+
+
