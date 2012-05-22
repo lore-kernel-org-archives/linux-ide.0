@@ -1,40 +1,35 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [Bug 11133] PIIX4 DMA timeout issue
-Date: Tue, 22 May 2012 19:59:04 +0400
-Message-ID: <4FBBB7C8.1080606@mvista.com>
-References: <bug-11133-11633@https.bugzilla.kernel.org/> <20120522130109.85B9F11FD10@bugzilla.kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH V3 1/3] ata: pata_arasan: Add clk_{un}prepare() support
+Date: Tue, 22 May 2012 16:01:33 -0400
+Message-ID: <4FBBF09D.1010607@garzik.org>
+References: <cover.1336536285.git.viresh.kumar@st.com> <9848a1a6838c4f3a7e0cbd6cdc3bc6146fd2e2cc.1336536285.git.viresh.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:35770 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759795Ab2EVQAW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2012 12:00:22 -0400
-Received: by bkcji2 with SMTP id ji2so5133579bkc.19
-        for <linux-ide@vger.kernel.org>; Tue, 22 May 2012 09:00:21 -0700 (PDT)
-In-Reply-To: <20120522130109.85B9F11FD10@bugzilla.kernel.org>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:54735 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932215Ab2EVUBj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2012 16:01:39 -0400
+Received: by qadb17 with SMTP id b17so2624762qad.19
+        for <linux-ide@vger.kernel.org>; Tue, 22 May 2012 13:01:38 -0700 (PDT)
+In-Reply-To: <9848a1a6838c4f3a7e0cbd6cdc3bc6146fd2e2cc.1336536285.git.viresh.kumar@st.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Viresh Kumar <viresh.kumar@st.com>
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com
 
-Hello.
-
-On 05/22/2012 05:01 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> https://bugzilla.kernel.org/show_bug.cgi?id=11133
-
-> Alan<alan@lxorguk.ukuu.org.uk>  changed:
+On 05/09/2012 12:08 AM, Viresh Kumar wrote:
+> clk_{un}prepare is mandatory for platforms using common clock framework. Since
+> this driver is used by SPEAr platform, which supports common clock framework,
+> add clk_{un}prepare() support for it.
 >
->             What    |Removed                     |Added
-> ----------------------------------------------------------------------------
->               Status|RESOLVED                    |CLOSED
-[...]
+> Signed-off-by: Viresh Kumar<viresh.kumar@st.com>
+> ---
+>   drivers/ata/pata_arasan_cf.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
 
-> --- Comment #1 from Alan<alan@lxorguk.ukuu.org.uk>   2012-05-22 13:01:09 ---
-> drivers/ide is now obsolete
 
-    Which does not mean errors there should not be fixed.
 
-WBR, Sergei
+these do not apply to upstream, for me...
+
