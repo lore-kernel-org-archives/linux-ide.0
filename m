@@ -1,46 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata, Add " 2GB ATA Flash Disk"/"ADMA428M" to DMA blacklist
-Date: Tue, 22 May 2012 16:04:49 -0400
-Message-ID: <4FBBF161.70006@pobox.com>
-References: <1336482482-3200-1-git-send-email-prarit@redhat.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v3 1/3] PATA host controller driver for ep93xx
+Date: Tue, 22 May 2012 16:05:00 -0400
+Message-ID: <4FBBF16C.4090100@garzik.org>
+References: <4F86C63C.6030908@metasoft.pl> <4F86C6DC.8060101@metasoft.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:40580 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932337Ab2EVUEw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2012 16:04:52 -0400
-Received: by qadb17 with SMTP id b17so2627181qad.19
-        for <linux-ide@vger.kernel.org>; Tue, 22 May 2012 13:04:51 -0700 (PDT)
-In-Reply-To: <1336482482-3200-1-git-send-email-prarit@redhat.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:46653 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932320Ab2EVUFF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2012 16:05:05 -0400
+Received: by qcro28 with SMTP id o28so4286150qcr.19
+        for <linux-ide@vger.kernel.org>; Tue, 22 May 2012 13:05:02 -0700 (PDT)
+In-Reply-To: <4F86C6DC.8060101@metasoft.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Rafal Prylowski <prylowski@metasoft.pl>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "bzolnier@gmail.com" <bzolnier@gmail.com>, Sergei Shtylyov <sshtylyov@mvista.com>, hsweeten@visionengravers.com, "joao.ramos@inov.pt" <joao.ramos@inov.pt>, "rmallon@gmail.com" <rmallon@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-On 05/08/2012 09:08 AM, Prarit Bhargava wrote:
-> A user has several systems with a couple of models of flash disks with IDE
-> connectors.  These disks work fine in 2.6.18-ish kernels but corrupt data on
-> new kernels.
+On 04/12/2012 08:13 AM, Rafal Prylowski wrote:
 >
-> The difference appears to be with the default I/O method used by the IDE
-> controller driver between the kernels.  In the older kernels, the
-> configuration is very conservative and the driver stays in PIO mode.  With
-> new kernels, the ata driver (pata_serverworks) attempts to use UDMA/66
-> which the drive claims to support.  This mode, however, does not appear to
-> work in DMA mode.  The drive does work correctly and no corruption is
-> seen if the kernel parameter "libata.force=5:pio0,6:pio0" is used to force
-> the driver to use PIO instead of DMA mode.
+> Add PATA host controller driver for ep93xx.
 >
-> Blacklist these drives.  Unfortunately the model name of the drive is very
-> generic, " 2GB ATA Flash Disk", but the revision is specific, "ADMA428M".
+> Signed-off-by: Rafal Prylowski<prylowski@metasoft.pl>
+> Cc: Joao Ramos<joao.ramos@inov.pt>
+> Cc: H Hartley Sweeten<hsweeten@visionengravers.com>
+> Cc: Ryan Mallon<rmallon@gmail.com>
+> Cc: Sergei Shtylyov<sshtylyov@mvista.com>
+> Cc: Bartlomiej Zolnierkiewicz<bzolnier@gmail.com>
 >
-> Signed-off-by: Prarit Bhargava<prarit@redhat.com>
-> Cc: Jeff Garzik<jgarzik@pobox.com>
 > ---
->   drivers/ata/libata-core.c |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
+>   drivers/ata/Kconfig       |    9
+>   drivers/ata/Makefile      |    1
+>   drivers/ata/pata_ep93xx.c | 1044 ++++++++++++++++++++++++++++++++++++
 
 applied
 
