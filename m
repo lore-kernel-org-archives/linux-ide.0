@@ -1,35 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH V3 1/3] ata: pata_arasan: Add clk_{un}prepare() support
-Date: Tue, 22 May 2012 16:01:33 -0400
-Message-ID: <4FBBF09D.1010607@garzik.org>
-References: <cover.1336536285.git.viresh.kumar@st.com> <9848a1a6838c4f3a7e0cbd6cdc3bc6146fd2e2cc.1336536285.git.viresh.kumar@st.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata_generic: Skip is_intel_ider() check when ata_generic=1
+ is set
+Date: Tue, 22 May 2012 16:04:40 -0400
+Message-ID: <4FBBF158.2040001@pobox.com>
+References: <1336754003-31487-1-git-send-email-andi@firstfloor.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:54735 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932215Ab2EVUBj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 May 2012 16:01:39 -0400
-Received: by qadb17 with SMTP id b17so2624762qad.19
-        for <linux-ide@vger.kernel.org>; Tue, 22 May 2012 13:01:38 -0700 (PDT)
-In-Reply-To: <9848a1a6838c4f3a7e0cbd6cdc3bc6146fd2e2cc.1336536285.git.viresh.kumar@st.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1336754003-31487-1-git-send-email-andi@firstfloor.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>, alan@linux.intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Viresh Kumar <viresh.kumar@st.com>
-Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com
 
-On 05/09/2012 12:08 AM, Viresh Kumar wrote:
-> clk_{un}prepare is mandatory for platforms using common clock framework. Since
-> this driver is used by SPEAr platform, which supports common clock framework,
-> add clk_{un}prepare() support for it.
+On 05/11/2012 12:33 PM, Andi Kleen wrote:
+> From: Andi Kleen<ak@linux.intel.com>
 >
-> Signed-off-by: Viresh Kumar<viresh.kumar@st.com>
+> When ata_generic_ide=1 is set don't do the is_intel_ider() magic
+> check. We found at least one box who needed that.
+>
+> Cc: alan@linux.intel.com
+> Signed-off-by: Andi Kleen<ak@linux.intel.com>
 > ---
->   drivers/ata/pata_arasan_cf.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
+>   drivers/ata/ata_generic.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-
-these do not apply to upstream, for me...
-
+applied
