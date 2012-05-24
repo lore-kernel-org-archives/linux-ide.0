@@ -1,18 +1,18 @@
 From: <kimtan@gmail.com>
 Subject: Activate your free commission shop now Recommends Advanced Sports to you
-Date: Thu, 24 May 2012 02:02:26 -0400
-Message-ID: <9101ABDCCF9A417787FA35C21B6FB02C@g19.win.smewh.net>
+Date: Thu, 24 May 2012 07:58:49 -0400
+Message-ID: <768F6586F39E4FF38B1723907107305B@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19h.g19.rapidsite.net ([204.202.242.57]:58139 "EHLO
-	mail19h.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753012Ab2EXGCa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2012 02:02:30 -0400
-Received: from mx103.stngva01.us.mxservers.net (198.173.112.40)
-	by mail19h.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0237709346
-	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 02:02:26 -0400 (EDT)
+Received: from mail19e.g19.rapidsite.net ([204.202.242.20]:4084 "HELO
+	mail19e.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754662Ab2EXL6t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2012 07:58:49 -0400
+Received: from mx87.stngva01.us.mxservers.net (198.173.112.4)
+	by mail19e.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-071804729
+	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 07:58:49 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
