@@ -1,50 +1,42 @@
-From: <kimtan@gmail.com>
-Subject: Activate your free commission shop now Recommends Advanced Sports to you
-Date: Thu, 24 May 2012 07:58:49 -0400
-Message-ID: <768F6586F39E4FF38B1723907107305B@g19.win.smewh.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12290] hda: ide_cd_check_ireason: wrong transfer direction!
+Date: Thu, 24 May 2012 12:18:40 +0000 (UTC)
+Message-ID: <20120524121840.B19B211FD1A@bugzilla.kernel.org>
+References: <bug-12290-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19e.g19.rapidsite.net ([204.202.242.20]:4084 "HELO
-	mail19e.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754662Ab2EXL6t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2012 07:58:49 -0400
-Received: from mx87.stngva01.us.mxservers.net (198.173.112.4)
-	by mail19e.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-071804729
-	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 07:58:49 -0400 (EDT)
-Content-Class: urn:content-classes:message
+Received: from mail.kernel.org ([198.145.19.201]:48868 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753763Ab2EXMSn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 24 May 2012 08:18:43 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id B674A205A3
+	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 12:18:42 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id B4F002059B
+	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 12:18:40 +0000 (UTC)
+In-Reply-To: <bug-12290-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
->From         :Activate your free commission shop now
-Email        :kimtan@gmail.com
-Friend Name  :Friend
-Friend Email :linux-ide@vger.kernel.org
-comment      :
+https://bugzilla.kernel.org/show_bug.cgi?id=12290
 
-Hey,
 
-Your commission shop is ready.
-Activate your free commission shop now:
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-==> http://bit.ly/KUXNMS
-
-In a few minutes, your commission shop will be ready, 
-attracting buyers from all around the world.
-
-And each shop is designed to suck commissions and sales 
-for you automatically. 
-
-This is the first time this revolutionary technique is applied.
-
-So don't delay. Activate your commission shop now:
-
-==> http://bit.ly/KUXNMS
-
-Sincerely,
-Kim Tan
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |OBSOLETE
+         Regression|---                         |No
 
 
 
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
