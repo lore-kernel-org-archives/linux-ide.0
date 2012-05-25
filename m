@@ -1,18 +1,18 @@
 From: <danniel@gmail.com>
 Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
-Date: Fri, 25 May 2012 11:37:07 -0400
-Message-ID: <1ABDA73FF1524059AB7113CC9492AF55@g19.win.smewh.net>
+Date: Fri, 25 May 2012 14:56:59 -0400
+Message-ID: <53DD1952CBE545CB86E7D1E554675C5C@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19g.g19.rapidsite.net ([204.202.242.83]:4949 "HELO
-	mail19g.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755546Ab2EYPhI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 11:37:08 -0400
-Received: from mx101.stngva01.us.mxservers.net (198.173.112.38)
-	by mail19g.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 2-076818227
-	for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 11:37:07 -0400 (EDT)
+Received: from mail19a.g19.rapidsite.net ([204.202.242.24]:35557 "HELO
+	mail19a.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932100Ab2EYS47 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 14:56:59 -0400
+Received: from mx86.stngva01.us.mxservers.net (198.173.112.3)
+	by mail19a.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0426452219
+	for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 14:56:59 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
