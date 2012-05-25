@@ -1,64 +1,81 @@
-From: <danniel@gmail.com>
-Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
-Date: Fri, 25 May 2012 14:56:59 -0400
-Message-ID: <53DD1952CBE545CB86E7D1E554675C5C@g19.win.smewh.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH 02/15] ata: Use clk_prepare_enable/clk_disable_unprepare
+Date: Fri, 25 May 2012 20:14:43 -0300
+Message-ID: <1337987696-31728-2-git-send-email-festevam@gmail.com>
+References: <1337987696-31728-1-git-send-email-festevam@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19a.g19.rapidsite.net ([204.202.242.24]:35557 "HELO
-	mail19a.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932100Ab2EYS47 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 14:56:59 -0400
-Received: from mx86.stngva01.us.mxservers.net (198.173.112.3)
-	by mail19a.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0426452219
-	for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 14:56:59 -0400 (EDT)
-Content-Class: urn:content-classes:message
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:47450 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758387Ab2EYXPL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 19:15:11 -0400
+Received: by vcbf11 with SMTP id f11so727674vcb.19
+        for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 16:15:11 -0700 (PDT)
+In-Reply-To: <1337987696-31728-1-git-send-email-festevam@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: kernel@pengutronix.de
+Cc: shawn.guo@freescale.com, Fabio Estevam <fabio.estevam@freescale.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
->From         :Friend,Could you "build-up" your own energy?
-Email        :danniel@gmail.com
-Friend Name  :Friend
-Friend Email :linux-ide@vger.kernel.org
-comment      :
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
+Prepare the clock before enabling it.
 
-Hi Friend,
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: <linux-ide@vger.kernel.org>
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/ata/pata_imx.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-I'm sure you already found out the rumours that some
-people make their own energy.
-Some of them slash the energy bill by half.
-Some of them cut the bill completely.
-Some even make the electric company pay them(!).
-That's why I was ecstatic when I found this website:
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-I read every single word, and boy... this stuff really
-got me all curious. It seems it's actually very easy 
-and cheap to build and use a renewable energy system.
-
-Anyway, I went ahead and bought their package.
-I couldn't resisted... It sounds too good to be true,
-yet if this turns out to be "real", then this is BIG.
-
-I'm so enthusiasted about this, that I thought to just
-send you a link so you get to see it for yourself:
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-To a better life,
-
-Danniel Guedotte
-
-PS: Friend, they give a 60-day guarantee. 
-You risk nothing. 
-But if you snooze, you lose...
-
-http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
-
-
-
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index c5af97f..87bb05b 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -118,7 +118,7 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
+ 		return PTR_ERR(priv->clk);
+ 	}
+ 
+-	clk_enable(priv->clk);
++	clk_prepare_enable(priv->clk);
+ 
+ 	host = ata_host_alloc(&pdev->dev, 1);
+ 	if (!host)
+@@ -162,7 +162,7 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
+ 				&pata_imx_sht);
+ 
+ free_priv:
+-	clk_disable(priv->clk);
++	clk_disable_unprepare(priv->clk);
+ 	clk_put(priv->clk);
+ 	return -ENOMEM;
+ }
+@@ -176,7 +176,7 @@ static int __devexit pata_imx_remove(struct platform_device *pdev)
+ 
+ 	__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
+ 
+-	clk_disable(priv->clk);
++	clk_disable_unprepare(priv->clk);
+ 	clk_put(priv->clk);
+ 
+ 	return 0;
+@@ -194,7 +194,7 @@ static int pata_imx_suspend(struct device *dev)
+ 		__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
+ 		priv->ata_ctl =
+ 			__raw_readl(priv->host_regs + PATA_IMX_ATA_CONTROL);
+-		clk_disable(priv->clk);
++		clk_disable_unprepare(priv->clk);
+ 	}
+ 
+ 	return ret;
+@@ -205,7 +205,7 @@ static int pata_imx_resume(struct device *dev)
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct pata_imx_priv *priv = host->private_data;
+ 
+-	clk_enable(priv->clk);
++	clk_prepare_enable(priv->clk);
+ 
+ 	__raw_writel(priv->ata_ctl, priv->host_regs + PATA_IMX_ATA_CONTROL);
+ 
+-- 
+1.7.1
 
