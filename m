@@ -1,63 +1,63 @@
-From: <sniperxsystem@support.com>
-Subject: The $1,549 per day ZERO traffic system (UPDATE) Recommends Advanced Sports to you
-Date: Thu, 24 May 2012 21:31:55 -0400
-Message-ID: <A9641A6F27804502AC204F0BF29DA3FD@g19.win.smewh.net>
+From: <danniel@gmail.com>
+Subject: Friend,Could you "build-up" your own energy? Recommends Advanced Sports to you
+Date: Fri, 25 May 2012 11:37:07 -0400
+Message-ID: <1ABDA73FF1524059AB7113CC9492AF55@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19c.g19.rapidsite.net ([204.202.242.56]:33885 "EHLO
-	mail19c.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753679Ab2EYBb4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 May 2012 21:31:56 -0400
-Received: from mx66.stngva01.us.mxservers.net (204.202.242.136)
-	by mail19c.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 0-0214399515
-	for <linux-ide@vger.kernel.org>; Thu, 24 May 2012 21:31:55 -0400 (EDT)
+Received: from mail19g.g19.rapidsite.net ([204.202.242.83]:4949 "HELO
+	mail19g.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755546Ab2EYPhI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 11:37:08 -0400
+Received: from mx101.stngva01.us.mxservers.net (198.173.112.38)
+	by mail19g.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 2-076818227
+	for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 11:37:07 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
->From         :The $1,549 per day ZERO traffic system (UPDATE)
-Email        :sniperxsystem@support.com
+>From         :Friend,Could you "build-up" your own energy?
+Email        :danniel@gmail.com
 Friend Name  :Friend
 Friend Email :linux-ide@vger.kernel.org
 comment      :
 
-Listen to this... pretty crazy...
 
-So many people rushed to download this 
-$530k/year system yesterday...
+Hi Friend,
 
-That they crashed the ENTIRE server!
+I'm sure you already found out the rumours that some
+people make their own energy.
+Some of them slash the energy bill by half.
+Some of them cut the bill completely.
+Some even make the electric company pay them(!).
+That's why I was ecstatic when I found this website:
 
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
 
-(The site was down ALL day) Pretty crazy. 
+I read every single word, and boy... this stuff really
+got me all curious. It seems it's actually very easy 
+and cheap to build and use a renewable energy system.
 
-... The "ghetto" video alone has sent shockwaves 
-through the Clickbank community.
+Anyway, I went ahead and bought their package.
+I couldn't resisted... It sounds too good to be true,
+yet if this turns out to be "real", then this is BIG.
 
-Can you believe THIS guy's one of Clickbanks
-biggest super affiliates?
+I'm so enthusiasted about this, that I thought to just
+send you a link so you get to see it for yourself:
 
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
 
-Talk soon
+To a better life,
 
-P.S. This is **BRAND NEW**...
+Danniel Guedotte
 
-It works and it's made $1,549.87 a DAY for 
-the past 739 days in a ROW!
+PS: Friend, they give a 60-day guarantee. 
+You risk nothing. 
+But if you snooze, you lose...
 
-No PPC, no PPV, no CPA, no so-called 'push
-button softwares' scams, no 'loopholes'...
-
-Something TOTALLY different.
-
-Check it out (fast, while it's still open):
-
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+http://www.greenhomemade.com/?code=4fbd5d3bbfcd4 
 
 
 
