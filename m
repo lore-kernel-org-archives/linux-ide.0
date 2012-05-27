@@ -1,63 +1,66 @@
-From: <sniperxsystem@support.com>
-Subject: The $1,549 per day ZERO traffic system (UPDATE) Recommends Advanced Sports to you
-Date: Fri, 25 May 2012 21:16:58 -0400
-Message-ID: <7A148C604A4D438F83714CAF6D62B9DA@g19.win.smewh.net>
+From: <bongo@gmail.com>
+Subject: The truth about " autopilot income "... Recommends Advanced Sports to you
+Date: Sun, 27 May 2012 07:04:24 -0400
+Message-ID: <D1ABC66B3BE74D3B82EB16BE90F85F93@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19j.g19.rapidsite.net ([204.202.242.58]:40575 "HELO
+Received: from mail19j.g19.rapidsite.net ([204.202.242.58]:17169 "HELO
 	mail19j.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750792Ab2EZBQ7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 May 2012 21:16:59 -0400
-Received: from mx06.stngva01.us.mxservers.net (204.202.242.35)
-	by mail19j.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0291945019
-	for <linux-ide@vger.kernel.org>; Fri, 25 May 2012 21:16:59 -0400 (EDT)
+	with SMTP id S1751063Ab2E0LEZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 May 2012 07:04:25 -0400
+Received: from mx31.stngva01.us.mxservers.net (204.202.242.105)
+	by mail19j.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0755416664
+	for <linux-ide@vger.kernel.org>; Sun, 27 May 2012 07:04:24 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
->From         :The $1,549 per day ZERO traffic system (UPDATE)
-Email        :sniperxsystem@support.com
+>From         :The truth about " autopilot income "...
+Email        :bongo@gmail.com
 Friend Name  :Friend
 Friend Email :linux-ide@vger.kernel.org
 comment      :
 
-Listen to this... pretty crazy...
+Hi Friend,
 
-So many people rushed to download this 
-$530k/year system yesterday...
+"DISCOVER HOW YOU CAN EASILY MAKE OVER $4000/WEEK ONLINE WITHOUT SELLING, 
+ADVERTISING, REFERRING OR OWNING A WEBSITE"
 
-That they crashed the ENTIRE server!
+http://www.marketsforexsignals.com/?code=4fb2f0c23f2e9 
 
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+* No selling products - in any way shape or form
 
-(The site was down ALL day) Pretty crazy. 
+* No advertising
 
-... The "ghetto" video alone has sent shockwaves 
-through the Clickbank community.
+* No data entry
 
-Can you believe THIS guy's one of Clickbanks
-biggest super affiliates?
+* No Adsense
 
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+* No mailing lists
 
-Talk soon
+* No rebate processing
 
-P.S. This is **BRAND NEW**...
+* No recruiting new members - this is not MLM
 
-It works and it's made $1,549.87 a DAY for 
-the past 739 days in a ROW!
+* No uplines or downlines
 
-No PPC, no PPV, no CPA, no so-called 'push
-button softwares' scams, no 'loopholes'...
+* No gambling
 
-Something TOTALLY different.
+* No chain letters
 
-Check it out (fast, while it's still open):
+* No surveys or "paid to read" programs 
 
-=>>http://www.sniperxsystem.com/?code=4fbea9cb964f6<<=
+Feel FREE To Check This Out Here:)
+
+http://www.marketsforexsignals.com/?code=4fb2f0c23f2e9 
+
+God Bless Us,
+
+Christian Bongo
+
 
 
 
