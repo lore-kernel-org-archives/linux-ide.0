@@ -1,21 +1,59 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH v4 0/13] SATA ZPODD support
-Date: Mon, 28 May 2012 10:54:28 +0100
-Message-ID: <20120528105428.689d0102@pyramind.ukuu.org.uk>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
-	<20120528104438.044ae385@pyramind.ukuu.org.uk>
+From: <christian@ymail.com>
+Subject: Christian Recommends Advanced Sports to you
+Date: Mon, 28 May 2012 12:45:54 -0400
+Message-ID: <9406DF7366A746A89149A0B090F85E18@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120528104438.044ae385@pyramind.ukuu.org.uk>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail19b.g19.rapidsite.net ([204.202.242.88]:45028 "HELO
+	mail19b.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753785Ab2E1Qpz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 May 2012 12:45:55 -0400
+Received: from mx30.stngva01.us.mxservers.net (204.202.242.41)
+	by mail19b.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0969493554
+	for <linux-ide@vger.kernel.org>; Mon, 28 May 2012 12:45:54 -0400 (EDT)
+Content-Class: urn:content-classes:message
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-> Have you fixed the fact that Matthews patches broke things like pata_acpi
-> last time ? Until that is fixed properly I don't see that these patches
-> can make any progress.
+>From         :Christian
+Email        :christian@ymail.com
+Friend Name  :Friend
+Friend Email :linux-ide@vger.kernel.org
+comment      :
 
-https://lkml.org/lkml/2012/2/24/2
+Hey,
+
+I've got a treat for you today.
+
+You're about to receive INSTANT
+ACCESS to some free training on
+how you can profit up to $600 a day
+
+=> http://www.easy-profits-siege.com/?code=4fc2b062b859a 
+
+
+There is no cost. 
+
+Talk Soon,
+
+Christian
+
+
+
+=> http://www.easy-profits-siege.com/?code=4fc2b062b859a 
+
+
+P. S. Nothing lost in free training.
+
+
+
+=> http://www.easy-profits-siege.com/?code=4fc2b062b859a 
+
+
+
+
+
+
