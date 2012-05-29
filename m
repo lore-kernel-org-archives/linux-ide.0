@@ -1,47 +1,95 @@
-From: <christian@ymail.com>
-Subject: Your order is complete - Please save this email Recommends Advanced Sports to you
-Date: Tue, 29 May 2012 03:53:55 -0400
-Message-ID: <495E8A2B698B4CB9917730105C6F61BA@g19.win.smewh.net>
+From: Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [PATCH 02/15] ata: Use clk_prepare_enable/clk_disable_unprepare
+Date: Tue, 29 May 2012 11:17:21 +0200
+Message-ID: <20120529091721.GF30400@pengutronix.de>
+References: <1337987696-31728-1-git-send-email-festevam@gmail.com>
+ <1337987696-31728-2-git-send-email-festevam@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19d.g19.rapidsite.net ([204.202.242.120]:36709 "EHLO
-	mail19d.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab2E2Hx5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2012 03:53:57 -0400
-Received: from mx06.stngva01.us.mxservers.net (204.202.242.35)
-	by mail19d.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 0-076188035
-	for <linux-ide@vger.kernel.org>; Tue, 29 May 2012 03:53:55 -0400 (EDT)
-Content-Class: urn:content-classes:message
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:42313 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751267Ab2E2JR3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 May 2012 05:17:29 -0400
+Content-Disposition: inline
+In-Reply-To: <1337987696-31728-2-git-send-email-festevam@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Fabio Estevam <festevam@gmail.com>
+Cc: kernel@pengutronix.de, shawn.guo@freescale.com, Fabio Estevam <fabio.estevam@freescale.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
->From         :Your order is complete - Please save this email
-Email        :christian@ymail.com
-Friend Name  :Friend
-Friend Email :linux-ide@vger.kernel.org
-comment      :
+On Fri, May 25, 2012 at 08:14:43PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
+> 
+> Prepare the clock before enabling it.
+> 
+> Cc: Jeff Garzik <jgarzik@pobox.com>
+> Cc: <linux-ide@vger.kernel.org>
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-Hey Friend,
- 
-Click on the link below to access your download:
-
-==> http://www.mass-money-machine.com/?code=4fc415cc27d22 
-
-This expires in 48 hours.
-
-Have A Great Day!
-
-Christian
-
-PS: You have NOT been charged anything.
-
-I just hooked you up with an awesome
-product for ???!
+Acked-by: Sascha Hauer <s.hauer@pengutronix.de>
 
 
+> ---
+>  drivers/ata/pata_imx.c |   10 +++++-----
+>  1 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+> index c5af97f..87bb05b 100644
+> --- a/drivers/ata/pata_imx.c
+> +++ b/drivers/ata/pata_imx.c
+> @@ -118,7 +118,7 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
+>  		return PTR_ERR(priv->clk);
+>  	}
+>  
+> -	clk_enable(priv->clk);
+> +	clk_prepare_enable(priv->clk);
+>  
+>  	host = ata_host_alloc(&pdev->dev, 1);
+>  	if (!host)
+> @@ -162,7 +162,7 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
+>  				&pata_imx_sht);
+>  
+>  free_priv:
+> -	clk_disable(priv->clk);
+> +	clk_disable_unprepare(priv->clk);
+>  	clk_put(priv->clk);
+>  	return -ENOMEM;
+>  }
+> @@ -176,7 +176,7 @@ static int __devexit pata_imx_remove(struct platform_device *pdev)
+>  
+>  	__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
+>  
+> -	clk_disable(priv->clk);
+> +	clk_disable_unprepare(priv->clk);
+>  	clk_put(priv->clk);
+>  
+>  	return 0;
+> @@ -194,7 +194,7 @@ static int pata_imx_suspend(struct device *dev)
+>  		__raw_writel(0, priv->host_regs + PATA_IMX_ATA_INT_EN);
+>  		priv->ata_ctl =
+>  			__raw_readl(priv->host_regs + PATA_IMX_ATA_CONTROL);
+> -		clk_disable(priv->clk);
+> +		clk_disable_unprepare(priv->clk);
+>  	}
+>  
+>  	return ret;
+> @@ -205,7 +205,7 @@ static int pata_imx_resume(struct device *dev)
+>  	struct ata_host *host = dev_get_drvdata(dev);
+>  	struct pata_imx_priv *priv = host->private_data;
+>  
+> -	clk_enable(priv->clk);
+> +	clk_prepare_enable(priv->clk);
+>  
+>  	__raw_writel(priv->ata_ctl, priv->host_regs + PATA_IMX_ATA_CONTROL);
+>  
+> -- 
+> 1.7.1
+> 
+> 
 
-
-
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
