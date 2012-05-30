@@ -1,85 +1,40 @@
-From: Fuzhou Chen <fuzhouch@microsoft.com>
-Subject: RE: [PATCH v4 0/13] SATA ZPODD support
-Date: Wed, 30 May 2012 09:06:43 +0000
-Message-ID: <6689D53B948ACF469C8E9C8CCD48EBE1166CD91A@SINEX14MBXC403.southpacific.corp.microsoft.com>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
- <20120528104438.044ae385@pyramind.ukuu.org.uk>
- <20120528105428.689d0102@pyramind.ukuu.org.uk>
- <CAF1ivSaYo8bcYAJ0i1b44HTarz11gndUU_pG109sGPOaupDi3w@mail.gmail.com>
- <20120530054310.GA11672@ladygaga>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 12874] Seagate STT20000A no longer works
+Date: Wed, 30 May 2012 14:38:23 +0000 (UTC)
+Message-ID: <20120530143823.ADB3D11FD1E@bugzilla.kernel.org>
+References: <bug-12874-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120530054310.GA11672@ladygaga>
-Content-Language: en-US
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>, Lin Ming <ming.m.lin@intel.com>, Hashir Abdi <habdi@microsoft.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:33711 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752298Ab2E3Oi2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 May 2012 10:38:28 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 67D3F203F7
+	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 14:38:27 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 5F5C720404
+	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 14:38:24 +0000 (UTC)
+In-Reply-To: <bug-12874-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Sorry Aaron, but I have left Microsoft Open Source team for a while. Due to policy limitations, I can't touch Linux kernel source now. 
-
-Hi Hashir, could you help find current owner of our HDD driver to verify this fix? This is a ata-acpi module bug I reported last year. Our daily BVT in linux-next tree should be able to handle this verification
-
-Thanks,
-Fuzhou
-
------Original Message-----
-From: Aaron Lu [mailto:aaron.lu@amd.com] 
-Sent: Wednesday, May 30, 2012 1:43 PM
-To: Lin Ming; Fuzhou Chen
-Cc: Alan Cox; Jeff Garzik; David Woodhouse; Holger Macht; Matthew Garrett; linux-kernel@vger.kernel.org; linux-pm@vger.kernel.org; linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-acpi@vger.kernel.org
-Subject: Re: [PATCH v4 0/13] SATA ZPODD support
-
-On Tue, May 29, 2012 at 08:32:49PM +0800, Lin Ming wrote:
-> On Mon, May 28, 2012 at 5:54 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> >> Have you fixed the fact that Matthews patches broke things like 
-> >> pata_acpi last time ? Until that is fixed properly I don't see that 
-> >> these patches can make any progress.
-> >
-> > https://lkml.org/lkml/2012/2/24/2
-> 
-> Aaron has a fix.
-> We'll do more test.
-
-Here is the patch, apply on top of the ZPODD patch set.
-
-Hi Fuzhou,
-Can you please give it a test? Thanks.
-I tested on my system with a ATI IDE controller and it could work with pata_acpi module.
-
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c index 6de8f32..c53266a 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -59,7 +59,18 @@ acpi_handle ata_ap_acpi_handle(struct ata_port *ap)  {
- 	if (ap->flags & ATA_FLAG_ACPI_SATA)
- 		return NULL;
--	return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+
-+	/*
-+	 * If acpi bind operation has already happened, we can get the handle
-+	 * for the port by checking the corresponding scsi_host device's
-+	 * firmware node, otherwise we will need to find out the handle from
-+	 * its parent's acpi node.
-+	 */
-+	if (ap->scsi_host)
-+		return DEVICE_ACPI_HANDLE(&ap->scsi_host->shost_gendev);
-+	else
-+		return acpi_get_child(DEVICE_ACPI_HANDLE(ap->host->dev),
-+				ap->port_no);
- }
- EXPORT_SYMBOL(ata_ap_acpi_handle);
-
--Aaron
-
-> 
-> Thanks for the info.
-> Lin Ming
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=12874
 
 
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |INSUFFICIENT_DATA
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
