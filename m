@@ -1,42 +1,68 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13138] Legacy IDE SiS:CPU Stalls When Probing IDE Interfaces
-Date: Wed, 30 May 2012 16:19:42 +0000 (UTC)
-Message-ID: <20120530161942.481C111FD1A@bugzilla.kernel.org>
-References: <bug-13138-11633@https.bugzilla.kernel.org/>
+From: <christian@ymail.com>
+Subject: You have an unanswered message Recommends Advanced Sports to you
+Date: Wed, 30 May 2012 15:05:14 -0400
+Message-ID: <DDAED29742514EE58DA91E6448724C11@g19.win.smewh.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:41932 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128Ab2E3QTo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 May 2012 12:19:44 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id AE53F20430
-	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 16:19:43 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 4DB7120421
-	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 16:19:42 +0000 (UTC)
-In-Reply-To: <bug-13138-11633@https.bugzilla.kernel.org/>
+Received: from mail19j.g19.rapidsite.net ([204.202.242.58]:39206 "HELO
+	mail19j.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750967Ab2E3TFP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 May 2012 15:05:15 -0400
+Received: from mx42.stngva01.us.mxservers.net (204.202.242.44)
+	by mail19j.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0835284714
+	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 15:05:14 -0400 (EDT)
+Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13138
+>From         :You have an unanswered message
+Email        :christian@ymail.com
+Friend Name  :Friend
+Friend Email :linux-ide@vger.kernel.org
+comment      :
 
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Hi Friend,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+Mike IS still waiting for an
+answer...
+
+It's very rare that some will actually
+take you by the hand and flat-out
+give you their personal ClickBank 
+software
+
+Downloads are currently available
+at the time of writing this to you.
+
+What are you waiting for? The site
+to be closed down?
+
+Watch a live demo and see verified 
+proof of ClickBank income here... 
+
+==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
+
+Christian
 
 
 
 
---- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk>  2012-05-30 16:19:42 ---
-The old IDE drivers are now obsolete
+PS: Before you close the site wait
+    you have special $10 Discount!
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
+==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
+
+
+
+
+
+
+
+
+
+
