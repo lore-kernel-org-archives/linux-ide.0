@@ -1,68 +1,41 @@
-From: <christian@ymail.com>
-Subject: You have an unanswered message Recommends Advanced Sports to you
-Date: Wed, 30 May 2012 15:05:14 -0400
-Message-ID: <DDAED29742514EE58DA91E6448724C11@g19.win.smewh.net>
+From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+Subject: [PATCH] ide: icside.c: fix printk format string compile warning
+Date: Thu, 31 May 2012 12:08:09 +0200
+Message-ID: <86hauw7jee.fsf_-_@gandalf.zerties.org>
+References: <20120529103002.GA13283@faui49q.informatik.uni-erlangen.de>
+	<4FC4C391.50700@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19j.g19.rapidsite.net ([204.202.242.58]:39206 "HELO
-	mail19j.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750967Ab2E3TFP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 May 2012 15:05:15 -0400
-Received: from mx42.stngva01.us.mxservers.net (204.202.242.44)
-	by mail19j.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 4-0835284714
-	for <linux-ide@vger.kernel.org>; Wed, 30 May 2012 15:05:14 -0400 (EDT)
-Content-Class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FC4C391.50700@mvista.com> (Sergei Shtylyov's message of "Tue,
+	29 May 2012 16:39:45 +0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos-dev@lists.cs.fau.de
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
->From         :You have an unanswered message
-Email        :christian@ymail.com
-Friend Name  :Friend
-Friend Email :linux-ide@vger.kernel.org
-comment      :
+Peak datarate is never bigger than an integer, and can therefore, as
+suggested in the printk format string, casted to an integer.
+---
+ drivers/ide/icside.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-
-Hi Friend,
-
-Mike IS still waiting for an
-answer...
-
-It's very rare that some will actually
-take you by the hand and flat-out
-give you their personal ClickBank 
-software
-
-Downloads are currently available
-at the time of writing this to you.
-
-What are you waiting for? The site
-to be closed down?
-
-Watch a live demo and see verified 
-proof of ClickBank income here... 
-
-==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
-
-Christian
-
-
-
-
-PS: Before you close the site wait
-    you have special $10 Discount!
-
-
-==>http://www.mymillionaire-society.com/?code=4fc2ae6b6f40c 
-
-
-
-
-
-
-
-
-
-
+diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+index 83e5100..755ef6b 100644
+--- a/drivers/ide/icside.c
++++ b/drivers/ide/icside.c
+@@ -271,9 +271,9 @@ static void icside_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ 
+ 	ide_set_drivedata(drive, (void *)cycle_time);
+ 
+-	printk("%s: %s selected (peak %dMB/s)\n", drive->name,
+-		ide_xfer_verbose(xfer_mode),
+-		2000 / (unsigned long)ide_get_drivedata(drive));
++	printk(KERN_INFO "%s: %s selected (peak %dMB/s)\n", drive->name,
++	       ide_xfer_verbose(xfer_mode),
++	       (int) (2000 / (unsigned long)ide_get_drivedata(drive)));
+ }
+ 
+ static const struct ide_port_ops icside_v6_port_ops = {
+-- 
+1.7.5.4
