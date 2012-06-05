@@ -1,67 +1,60 @@
 From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
-Subject: Re: [PATCH] ide: icside.c: Fix compile with CONFIG_BLK_DEV_IDEDMA_ICS=n
-Date: Tue, 05 Jun 2012 14:23:20 +0200
-Message-ID: <864nqq3q2v.fsf@gandalf.zerties.org>
+Subject: Re: [PATCH] ide: icside.c: fix printk format string compile warning
+Date: Tue, 05 Jun 2012 14:28:59 +0200
+Message-ID: <86zk8i2b90.fsf@gandalf.zerties.org>
 References: <20120529103002.GA13283@faui49q.informatik.uni-erlangen.de>
-	<4FC4C391.50700@mvista.com> <86lik87jgw.fsf@gandalf.zerties.org>
-	<20120602.171210.1245211360510437081.davem@davemloft.net>
+	<4FC4C391.50700@mvista.com> <86hauw7jee.fsf_-_@gandalf.zerties.org>
+	<1338672377.24148.6.camel@joe2Laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120602.171210.1245211360510437081.davem@davemloft.net> (David
-	Miller's message of "Sat, 02 Jun 2012 17:12:10 -0400 (EDT)")
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: sshtylyov@mvista.com, christian.dietrich@informatik.uni-erlangen.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos-dev@lists.cs.fau.de
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailgate.zerties.org ([176.9.120.153]:33697 "EHLO
+	gandalf.zerties.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932671Ab2FEM3H (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2012 08:29:07 -0400
+In-Reply-To: <1338672377.24148.6.camel@joe2Laptop> (Joe Perches's message of
+	"Sat, 02 Jun 2012 14:26:17 -0700")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>, Sergei Shtylyov <sshtylyov@mvista.com>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos-dev@lists.cs.fau.de
 
-The icside driver can be configured without DMA support, but it
-doesn't compile then, because DMA operations are referenced.
+Use correct format string parameter for the peak datarate, and prevent
+uninitialized use of cycle_time.
 
-drivers/ide/icside.c:523: error: 'icside_v6_port_ops' undeclared
-drivers/ide/icside.c:522: error: 'icside_dma_init' undeclared
-
-Signed-off-by: Christian Dietrich<christian.dietrich@informatik.uni-erlangen.de>
+Signed-off-by: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
 ---
- drivers/ide/icside.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/ide/icside.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
-index 8716066..83e5100 100644
+index 83e5100..bcb507b 100644
 --- a/drivers/ide/icside.c
 +++ b/drivers/ide/icside.c
-@@ -375,8 +375,6 @@ static const struct ide_dma_ops icside_v6_dma_ops = {
- 	.dma_test_irq		= icside_dma_test_irq,
- 	.dma_lost_irq		= ide_dma_lost_irq,
- };
--#else
--#define icside_v6_dma_ops NULL
- #endif
+@@ -236,7 +236,7 @@ static const struct ide_port_ops icside_v6_no_dma_port_ops = {
+  */
+ static void icside_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ {
+-	unsigned long cycle_time;
++	unsigned long cycle_time = 0;
+ 	int use_dma_info = 0;
+ 	const u8 xfer_mode = drive->dma_mode;
  
- static int icside_dma_off_init(ide_hwif_t *hwif, const struct ide_port_info *d)
-@@ -456,7 +454,6 @@ err_free:
- static const struct ide_port_info icside_v6_port_info __initdata = {
- 	.init_dma		= icside_dma_off_init,
- 	.port_ops		= &icside_v6_no_dma_port_ops,
--	.dma_ops		= &icside_v6_dma_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
- 	.mwdma_mask		= ATA_MWDMA2,
- 	.swdma_mask		= ATA_SWDMA2,
-@@ -518,11 +515,13 @@ icside_register_v6(struct icside_state *state, struct expansion_card *ec)
+@@ -271,9 +271,9 @@ static void icside_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
  
- 	ecard_set_drvdata(ec, state);
+ 	ide_set_drivedata(drive, (void *)cycle_time);
  
-+#ifdef CONFIG_BLK_DEV_IDEDMA_ICS
- 	if (ec->dma != NO_DMA && !request_dma(ec->dma, DRV_NAME)) {
- 		d.init_dma = icside_dma_init;
- 		d.port_ops = &icside_v6_port_ops;
--	} else
--		d.dma_ops = NULL;
-+		d.dma_ops  = &icside_v6_dma_ops;
-+	}
-+#endif
+-	printk("%s: %s selected (peak %dMB/s)\n", drive->name,
+-		ide_xfer_verbose(xfer_mode),
+-		2000 / (unsigned long)ide_get_drivedata(drive));
++	printk(KERN_INFO "%s: %s selected (peak %luMB/s)\n",
++	       drive->name, ide_xfer_verbose(xfer_mode),
++	       2000 / (cycle_time ? cycle_time : (unsigned long) -1));
+ }
  
- 	ret = ide_host_register(host, &d, hws);
- 	if (ret)
+ static const struct ide_port_ops icside_v6_port_ops = {
 -- 
 1.7.5.4
+
+
+
