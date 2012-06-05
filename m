@@ -1,33 +1,67 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH]ata:fixed coding style issues related to braces
-Date: Tue, 05 Jun 2012 15:12:57 +0400
-Message-ID: <4FCDE9B9.80601@mvista.com>
-References: <1338840217-4027-1-git-send-email-ahiliation@yahoo.co.in>
+From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+Subject: Re: [PATCH] ide: icside.c: Fix compile with CONFIG_BLK_DEV_IDEDMA_ICS=n
+Date: Tue, 05 Jun 2012 14:23:20 +0200
+Message-ID: <864nqq3q2v.fsf@gandalf.zerties.org>
+References: <20120529103002.GA13283@faui49q.informatik.uni-erlangen.de>
+	<4FC4C391.50700@mvista.com> <86lik87jgw.fsf@gandalf.zerties.org>
+	<20120602.171210.1245211360510437081.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:57445 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752951Ab2FELNc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jun 2012 07:13:32 -0400
-Received: by lahd3 with SMTP id d3so3687582lah.19
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jun 2012 04:13:30 -0700 (PDT)
-In-Reply-To: <1338840217-4027-1-git-send-email-ahiliation@yahoo.co.in>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120602.171210.1245211360510437081.davem@davemloft.net> (David
+	Miller's message of "Sat, 02 Jun 2012 17:12:10 -0400 (EDT)")
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: sshtylyov@mvista.com, christian.dietrich@informatik.uni-erlangen.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos-dev@lists.cs.fau.de
 List-Id: linux-ide@vger.kernel.org
-To: Jeffrin Jose <ahiliation@yahoo.co.in>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+The icside driver can be configured without DMA support, but it
+doesn't compile then, because DMA operations are referenced.
 
-On 05-06-2012 0:03, Jeffrin Jose wrote:
+drivers/ide/icside.c:523: error: 'icside_v6_port_ops' undeclared
+drivers/ide/icside.c:522: error: 'icside_dma_init' undeclared
 
-> Fixed coding style issues related to braces found
-> by checkpatch.pl in drivers/ata/ahci.c
+Signed-off-by: Christian Dietrich<christian.dietrich@informatik.uni-erlangen.de>
+---
+ drivers/ide/icside.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-    Then subject prefix should be "ahci:" not "ata:".
-
-> Signed-off-by: Jeffrin Jose<ahiliation@yahoo.co.in>
-
-MBR, Sergei
+diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+index 8716066..83e5100 100644
+--- a/drivers/ide/icside.c
++++ b/drivers/ide/icside.c
+@@ -375,8 +375,6 @@ static const struct ide_dma_ops icside_v6_dma_ops = {
+ 	.dma_test_irq		= icside_dma_test_irq,
+ 	.dma_lost_irq		= ide_dma_lost_irq,
+ };
+-#else
+-#define icside_v6_dma_ops NULL
+ #endif
+ 
+ static int icside_dma_off_init(ide_hwif_t *hwif, const struct ide_port_info *d)
+@@ -456,7 +454,6 @@ err_free:
+ static const struct ide_port_info icside_v6_port_info __initdata = {
+ 	.init_dma		= icside_dma_off_init,
+ 	.port_ops		= &icside_v6_no_dma_port_ops,
+-	.dma_ops		= &icside_v6_dma_ops,
+ 	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
+ 	.mwdma_mask		= ATA_MWDMA2,
+ 	.swdma_mask		= ATA_SWDMA2,
+@@ -518,11 +515,13 @@ icside_register_v6(struct icside_state *state, struct expansion_card *ec)
+ 
+ 	ecard_set_drvdata(ec, state);
+ 
++#ifdef CONFIG_BLK_DEV_IDEDMA_ICS
+ 	if (ec->dma != NO_DMA && !request_dma(ec->dma, DRV_NAME)) {
+ 		d.init_dma = icside_dma_init;
+ 		d.port_ops = &icside_v6_port_ops;
+-	} else
+-		d.dma_ops = NULL;
++		d.dma_ops  = &icside_v6_dma_ops;
++	}
++#endif
+ 
+ 	ret = ide_host_register(host, &d, hws);
+ 	if (ret)
+-- 
+1.7.5.4
