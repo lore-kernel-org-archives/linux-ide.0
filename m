@@ -1,26 +1,40 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: icside.c: fix printk format string compile warning
-Date: Wed, 06 Jun 2012 10:37:47 -0700 (PDT)
-Message-ID: <20120606.103747.2047367637475518048.davem@davemloft.net>
-References: <86hauw7jee.fsf_-_@gandalf.zerties.org>
-	<1338672377.24148.6.camel@joe2Laptop>
-	<86zk8i2b90.fsf@gandalf.zerties.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 6/7] drivers/ata/pata_pcmcia.c: adjust suspicious bit operation
+Date: Wed,  6 Jun 2012 23:41:40 +0200
+Message-ID: <1339018901-28439-7-git-send-email-Julia.Lawall@lip6.fr>
+References: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <86zk8i2b90.fsf@gandalf.zerties.org>
+In-Reply-To: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-kernel-owner@vger.kernel.org
-To: christian.dietrich@informatik.uni-erlangen.de
-Cc: joe@perches.com, sshtylyov@mvista.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, vamos-dev@lists.cs.fau.de
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com, Julia Lawall <julia@diku.dk>
 List-Id: linux-ide@vger.kernel.org
 
-From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
-Date: Tue, 05 Jun 2012 14:28:59 +0200
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-> Use correct format string parameter for the peak datarate, and prevent
-> uninitialized use of cycle_time.
-> 
-> Signed-off-by: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+IO_DATA_PATH_WIDTH_8 is 0, so a bit-and with it is always false.  The
+value IO_DATA_PATH_WIDTH covers the bits of the IO_DATA_PATH constants, so
+first pick those bits and then make the test using !=.
 
-Applied.
+This problem was found using Coccinelle (http://coccinelle.lip6.fr/).
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/ata/pata_pcmcia.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_pcmcia.c b/drivers/ata/pata_pcmcia.c
+index a808ba0..776e749 100644
+--- a/drivers/ata/pata_pcmcia.c
++++ b/drivers/ata/pata_pcmcia.c
+@@ -170,7 +170,8 @@ static int pcmcia_check_one_config(struct pcmcia_device *pdev, void *priv_data)
+ {
+ 	int *is_kme = priv_data;
+ 
+-	if (!(pdev->resource[0]->flags & IO_DATA_PATH_WIDTH_8)) {
++	if ((pdev->resource[0]->flags & IO_DATA_PATH_WIDTH)
++	    != IO_DATA_PATH_WIDTH_8) {
+ 		pdev->resource[0]->flags &= ~IO_DATA_PATH_WIDTH;
+ 		pdev->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+ 	}
