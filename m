@@ -1,40 +1,74 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 1/7] drivers/ide/ide-cs.c: adjust suspicious bit operation
-Date: Wed,  6 Jun 2012 23:41:35 +0200
-Message-ID: <1339018901-28439-2-git-send-email-Julia.Lawall@lip6.fr>
-References: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com, Julia Lawall <julia@diku.dk>
+From: <christian@yahoo.com>
+Subject: HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE! Recommends Advanced Sports to you
+Date: Wed, 6 Jun 2012 19:02:52 -0400
+Message-ID: <5CBE7B7968EB4736A2F82A71723724FC@g19.win.smewh.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail19f.g19.rapidsite.net ([204.202.242.19]:17051 "HELO
+	mail19f.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758660Ab2FFXCw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jun 2012 19:02:52 -0400
+Received: from mx96.stngva01.us.mxservers.net (198.173.112.13)
+	by mail19f.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0935803771
+	for <linux-ide@vger.kernel.org>; Wed,  6 Jun 2012 19:02:52 -0400 (EDT)
+Content-Class: urn:content-classes:message
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
+>From         :HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE!
+Email        :christian@yahoo.com
+Friend Name  :Friend
+Friend Email :linux-ide@vger.kernel.org
+comment      :
 
-IO_DATA_PATH_WIDTH_8 is 0, so a bit-and with it is always false.  The
-value IO_DATA_PATH_WIDTH covers the bits of the IO_DATA_PATH constants, so
-first pick those bits and then make the test using !=.
+Dear Fellow Entrepreneur, 
 
-This problem was found using Coccinelle (http://coccinelle.lip6.fr/).
+OK, I'm going to keep this short and sweet - I'm not going to bore you with the usual "rags-to-riches" story because I'm pretty sure you don't want to hear it.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+What I will say though, is this...
 
----
- drivers/ide/ide-cs.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+If you're tired of all the so-called "systems" and business opportunities that require you to sell affiliate products, run pay per click advertising campaigns, operate websites or recruit new members then I have excellent news for you.
 
-diff --git a/drivers/ide/ide-cs.c b/drivers/ide/ide-cs.c
-index 28e344e..a5e57bf 100644
---- a/drivers/ide/ide-cs.c
-+++ b/drivers/ide/ide-cs.c
-@@ -167,7 +167,8 @@ static int pcmcia_check_one_config(struct pcmcia_device *pdev, void *priv_data)
- {
- 	int *is_kme = priv_data;
- 
--	if (!(pdev->resource[0]->flags & IO_DATA_PATH_WIDTH_8)) {
-+	if ((p1dev->resource[0]->flags & IO_DATA_PATH_WIDTH)
-+	    != IO_DATA_PATH_WIDTH_8) {
- 		pdev->resource[0]->flags &= ~IO_DATA_PATH_WIDTH;
- 		pdev->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
- 	}
+Keep reading because I guarantee that this will be the most important piece of information you will ever read about making money online... or in general for that matter.
+
+I have discovered an amazingly simple income system that will allow you and anyone else to earn an incredible income from home, just by using your computer and the Internet.
+
+This system is called "The Complete Cash System" and it does NOT involve any of the following:
+
+* No building websites
+
+* No selling products - in any way shape or form
+
+* No advertising
+
+* No data entry
+
+* No Adsense
+
+* No mailing lists
+
+* No rebate processing
+
+* No recruiting new members - this is not MLM
+
+* No uplines or downlines
+
+* No gambling
+
+* No chain letters
+
+* No surveys or "paid to read" programs
+
+If you want to make money online, 
+join to my system before it's too late.
+
+Feel FREE To Check This Out Here:) 
+===>> http://www.completecashsystem.com/?code=4fcd70cae2079   <<===
+
+
+
+
+
