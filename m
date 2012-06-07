@@ -1,72 +1,68 @@
-From: <christian@yahoo.com>
-Subject: HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE! Recommends Advanced Sports to you
-Date: Wed, 6 Jun 2012 19:02:52 -0400
-Message-ID: <5CBE7B7968EB4736A2F82A71723724FC@g19.win.smewh.net>
+From: <shane@gmail.com>
+Subject: Earn Over A 3856 Dollars A Week Without A Website! Recommends Advanced Sports to you
+Date: Thu, 7 Jun 2012 14:35:51 -0400
+Message-ID: <8A297D23EB854BAC8763F2F85EA263BA@g19.win.smewh.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19f.g19.rapidsite.net ([204.202.242.19]:17051 "HELO
-	mail19f.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758660Ab2FFXCw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jun 2012 19:02:52 -0400
-Received: from mx96.stngva01.us.mxservers.net (198.173.112.13)
-	by mail19f.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0935803771
-	for <linux-ide@vger.kernel.org>; Wed,  6 Jun 2012 19:02:52 -0400 (EDT)
+Received: from mail19e.g19.rapidsite.net ([204.202.242.20]:6569 "HELO
+	mail19e.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751626Ab2FGSfw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2012 14:35:52 -0400
+Received: from mx89.stngva01.us.mxservers.net (198.173.112.6)
+	by mail19e.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0127284151
+	for <linux-ide@vger.kernel.org>; Thu,  7 Jun 2012 14:35:51 -0400 (EDT)
 Content-Class: urn:content-classes:message
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
->From         :HOW TO TURN $12 INTO $4000 IN 7 DAYS ONLINE!
-Email        :christian@yahoo.com
+>From         :Earn Over A 3856 Dollars A Week Without A Website!
+Email        :shane@gmail.com
 Friend Name  :Friend
 Friend Email :linux-ide@vger.kernel.org
 comment      :
 
-Dear Fellow Entrepreneur, 
 
-OK, I'm going to keep this short and sweet - I'm not going to bore you with the usual "rags-to-riches" story because I'm pretty sure you don't want to hear it.
+Hi Friend,
+                        
+This is not the usual "rags-to-riches" story because 
+I'm pretty sure you don't want to hear it. 
 
-What I will say though, is this...
+If you're tired of all the so-called "systems" and business opportunities that 
+require you to sell affiliate products, run pay per click advertising campaigns, 
+operate websites or recruit new members then I have excellent news for you.
 
-If you're tired of all the so-called "systems" and business opportunities that require you to sell affiliate products, run pay per click advertising campaigns, operate websites or recruit new members then I have excellent news for you.
+http://www.make6easyfigure.com/?code=4fd098d1978d8 
 
-Keep reading because I guarantee that this will be the most important piece of information you will ever read about making money online... or in general for that matter.
+Keep reading because I guarantee that this will be the most important piece 
+of information you will ever read about making money online... 
+or in general for that matter.
 
-I have discovered an amazingly simple income system that will allow you and anyone else to earn an incredible income from home, just by using your computer and the Internet.
+I have discovered an amazingly simple income system that will allow you and 
+anyone else to earn an incredible income from home, just by using your computer and the 
+Internet. 
 
-This system is called "The Complete Cash System" and it does NOT involve any of the following:
+http://www.make6easyfigure.com/?code=4fd098d1978d8 
 
-* No building websites
+To Your Success,
 
-* No selling products - in any way shape or form
+Shane
 
-* No advertising
 
-* No data entry
 
-* No Adsense
 
-* No mailing lists
+PS: Grab it Now before the $114.97 Price is back for a last few spots.
+    its ONLY:$9.97
 
-* No rebate processing
 
-* No recruiting new members - this is not MLM
 
-* No uplines or downlines
 
-* No gambling
+http://www.make6easyfigure.com/?code=4fd098d1978d8
 
-* No chain letters
 
-* No surveys or "paid to read" programs
 
-If you want to make money online, 
-join to my system before it's too late.
-
-Feel FREE To Check This Out Here:) 
-===>> http://www.completecashsystem.com/?code=4fcd70cae2079   <<===
 
 
 
