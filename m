@@ -1,70 +1,30 @@
-From: <shane@gmail.com>
-Subject: Earn Over A 3856 Dollars A Week Without A Website! Recommends Advanced Sports to you
-Date: Thu, 7 Jun 2012 14:35:51 -0400
-Message-ID: <8A297D23EB854BAC8763F2F85EA263BA@g19.win.smewh.net>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 1/7] drivers/ide/ide-cs.c: adjust suspicious bit
+ operation
+Date: Thu, 07 Jun 2012 14:46:16 -0700 (PDT)
+Message-ID: <20120607.144616.2224976714259476349.davem@davemloft.net>
+References: <1339018901-28439-1-git-send-email-Julia.Lawall@lip6.fr>
+	<1339018901-28439-2-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail19e.g19.rapidsite.net ([204.202.242.20]:6569 "HELO
-	mail19e.g19.rapidsite.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751626Ab2FGSfw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jun 2012 14:35:52 -0400
-Received: from mx89.stngva01.us.mxservers.net (198.173.112.6)
-	by mail19e.g19.rapidsite.net (RS ver 1.0.95vs) with SMTP id 1-0127284151
-	for <linux-ide@vger.kernel.org>; Thu,  7 Jun 2012 14:35:51 -0400 (EDT)
-Content-Class: urn:content-classes:message
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1339018901-28439-2-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia.Lawall@lip6.fr
+Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com, julia@diku.dk
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
->From         :Earn Over A 3856 Dollars A Week Without A Website!
-Email        :shane@gmail.com
-Friend Name  :Friend
-Friend Email :linux-ide@vger.kernel.org
-comment      :
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Date: Wed,  6 Jun 2012 23:41:35 +0200
 
+> -	if (!(pdev->resource[0]->flags & IO_DATA_PATH_WIDTH_8)) {
+> +	if ((p1dev->resource[0]->flags & IO_DATA_PATH_WIDTH)
 
-Hi Friend,
-                        
-This is not the usual "rags-to-riches" story because 
-I'm pretty sure you don't want to hear it. 
+I'm really surprised someone as thorough as yourself did not
+compile test this.
 
-If you're tired of all the so-called "systems" and business opportunities that 
-require you to sell affiliate products, run pay per click advertising campaigns, 
-operate websites or recruit new members then I have excellent news for you.
-
-http://www.make6easyfigure.com/?code=4fd098d1978d8 
-
-Keep reading because I guarantee that this will be the most important piece 
-of information you will ever read about making money online... 
-or in general for that matter.
-
-I have discovered an amazingly simple income system that will allow you and 
-anyone else to earn an incredible income from home, just by using your computer and the 
-Internet. 
-
-http://www.make6easyfigure.com/?code=4fd098d1978d8 
-
-To Your Success,
-
-Shane
-
-
-
-
-PS: Grab it Now before the $114.97 Price is back for a last few spots.
-    its ONLY:$9.97
-
-
-
-
-http://www.make6easyfigure.com/?code=4fd098d1978d8
-
-
-
-
-
-
-
-
+This is just more proof that it's absolutely pointless to make any
+changes at all to the old IDE layer.  Nobody really cares, and the
+risk %99.999 of the time is purely to introduce regressions rather
+than make forward progress.
