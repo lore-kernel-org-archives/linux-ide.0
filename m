@@ -1,40 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13520] WARNING: at lib/dma-debug.c:576
- check_for_illegal_area+0xd3/0xfd()
-Date: Fri,  8 Jun 2012 11:55:07 +0000 (UTC)
-Message-ID: <20120608115507.CC72A1205D6@bugzilla.kernel.org>
-References: <bug-13520-11633@https.bugzilla.kernel.org/>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 02/15] ata: Use clk_prepare_enable/clk_disable_unprepare
+Date: Fri, 08 Jun 2012 11:49:52 -0400
+Message-ID: <4FD21F20.607@pobox.com>
+References: <1337987696-31728-1-git-send-email-festevam@gmail.com> <1337987696-31728-2-git-send-email-festevam@gmail.com> <20120529091721.GF30400@pengutronix.de> <CAOMZO5AuyYyxi9T3xUmWtGiaAoTzN3F07gppb4pzwSm8SAxaVQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:45524 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754133Ab2FHLzK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 Jun 2012 07:55:10 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 7B111203DF
-	for <linux-ide@vger.kernel.org>; Fri,  8 Jun 2012 11:55:09 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id CD571203D3
-	for <linux-ide@vger.kernel.org>; Fri,  8 Jun 2012 11:55:07 +0000 (UTC)
-In-Reply-To: <bug-13520-11633@https.bugzilla.kernel.org/>
+Received: from mail-gg0-f174.google.com ([209.85.161.174]:41552 "EHLO
+	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983Ab2FHPt4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jun 2012 11:49:56 -0400
+Received: by gglu4 with SMTP id u4so1367759ggl.19
+        for <linux-ide@vger.kernel.org>; Fri, 08 Jun 2012 08:49:55 -0700 (PDT)
+In-Reply-To: <CAOMZO5AuyYyxi9T3xUmWtGiaAoTzN3F07gppb4pzwSm8SAxaVQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>, kernel@pengutronix.de, shawn.guo@freescale.com, Fabio Estevam <fabio.estevam@freescale.com>, linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13520
+On 06/05/2012 11:40 PM, Fabio Estevam wrote:
+> Jeff,
+>
+> On Tue, May 29, 2012 at 6:17 AM, Sascha Hauer<s.hauer@pengutronix.de>  wrote:
+>> On Fri, May 25, 2012 at 08:14:43PM -0300, Fabio Estevam wrote:
+>>> From: Fabio Estevam<fabio.estevam@freescale.com>
+>>>
+>>> Prepare the clock before enabling it.
+>>>
+>>> Cc: Jeff Garzik<jgarzik@pobox.com>
+>>> Cc:<linux-ide@vger.kernel.org>
+>>> Signed-off-by: Fabio Estevam<fabio.estevam@freescale.com>
+>>
+>> Acked-by: Sascha Hauer<s.hauer@pengutronix.de>
+>
+> Can this be applied?
+
+Just got back from Europe, and will get this in ASAP...
 
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
