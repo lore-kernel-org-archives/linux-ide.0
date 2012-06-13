@@ -1,36 +1,44 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 1/7] drivers/ide/ide-cs.c: adjust suspicious bit
- operation
-Date: Tue, 12 Jun 2012 15:52:18 -0700 (PDT)
-Message-ID: <20120612.155218.1712141231523216893.davem@davemloft.net>
-References: <alpine.DEB.2.02.1206080712510.1793@hadrien>
-	<20120611.164316.2252454788889367611.davem@davemloft.net>
-	<alpine.DEB.2.02.1206121016090.1795@hadrien>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v4 02/13] libata: bind the Linux device tree to the ACPI
+ device tree
+Date: Wed, 13 Jun 2012 16:03:23 +0800
+Message-ID: <CAF1ivSYBjw+UP3vP8RHaftjR8NJZEaHA1rtJ5ujDjkj-djHLTQ@mail.gmail.com>
+References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
+	<1338181720-4149-3-git-send-email-ming.m.lin@intel.com>
+	<20120528105131.67d74d45@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:55281 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751445Ab2FLWwT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jun 2012 18:52:19 -0400
-In-Reply-To: <alpine.DEB.2.02.1206121016090.1795@hadrien>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20120528105131.67d74d45@pyramind.ukuu.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Julia.Lawall@lip6.fr
-Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, joe@perches.com
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Date: Tue, 12 Jun 2012 10:17:25 -0400 (EDT)
+On Mon, May 28, 2012 at 5:51 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
+ote:
+>> +static int is_pci_ata(struct device *dev)
+>> +{
+>> + =A0 =A0 struct pci_dev *pdev;
+>> +
+>> + =A0 =A0 if (!is_pci_dev(dev))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+>> +
+>> + =A0 =A0 pdev =3D to_pci_dev(dev);
+>> +
+>> + =A0 =A0 if ((pdev->class >> 8) !=3D PCI_CLASS_STORAGE_SATA &&
+>> + =A0 =A0 =A0 =A0 (pdev->class >> 8) !=3D PCI_CLASS_STORAGE_IDE)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+>
+> This needs a better name. It doesn't check if a device is PCI ATA or
+> anything of the sort, it checks if its probably a device in compatibi=
+lity
+> mode. A lot of controllers will in fact report RAID class or similar =
+in
+> native mode.
 
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> IO_DATA_PATH_WIDTH_8 is 0, so a bit-and with it is always false.  The
-> value IO_DATA_PATH_WIDTH covers the bits of the IO_DATA_PATH constants, so
-> first pick those bits and then make the test using !=.
-> 
-> This problem was found using Coccinelle (http://coccinelle.lip6.fr/).
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+How about compat_pci_ata?
 
-Applied, thanks.
+>
+> Alan
