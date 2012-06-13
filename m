@@ -1,57 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH v4 02/13] libata: bind the Linux device tree to the ACPI
- device tree
-Date: Wed, 13 Jun 2012 12:00:50 +0100
-Message-ID: <20120613120050.164c3f29@pyramind.ukuu.org.uk>
-References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
-	<1338181720-4149-3-git-send-email-ming.m.lin@intel.com>
-	<20120528105131.67d74d45@pyramind.ukuu.org.uk>
-	<CAF1ivSYBjw+UP3vP8RHaftjR8NJZEaHA1rtJ5ujDjkj-djHLTQ@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
+Date: Wed, 13 Jun 2012 14:31:17 +0000 (UTC)
+Message-ID: <20120613143117.1482012060C@bugzilla.kernel.org>
+References: <bug-13882-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <CAF1ivSYBjw+UP3vP8RHaftjR8NJZEaHA1rtJ5ujDjkj-djHLTQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:42452 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754175Ab2FMObU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jun 2012 10:31:20 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id EC1BC20386
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:18 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
+	by mail.kernel.org (Postfix) with ESMTP id 1B7312037A
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:17 +0000 (UTC)
+In-Reply-To: <bug-13882-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, 13 Jun 2012 16:03:23 +0800
-Lin Ming <ming.m.lin@intel.com> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=13882
 
-> On Mon, May 28, 2012 at 5:51 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> =
-wrote:
-> >> +static int is_pci_ata(struct device *dev)
-> >> +{
-> >> + =A0 =A0 struct pci_dev *pdev;
-> >> +
-> >> + =A0 =A0 if (!is_pci_dev(dev))
-> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >> +
-> >> + =A0 =A0 pdev =3D to_pci_dev(dev);
-> >> +
-> >> + =A0 =A0 if ((pdev->class >> 8) !=3D PCI_CLASS_STORAGE_SATA &&
-> >> + =A0 =A0 =A0 =A0 (pdev->class >> 8) !=3D PCI_CLASS_STORAGE_IDE)
-> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> >
-> > This needs a better name. It doesn't check if a device is PCI ATA o=
-r
-> > anything of the sort, it checks if its probably a device in compati=
-bility
-> > mode. A lot of controllers will in fact report RAID class or simila=
-r in
-> > native mode.
->=20
-> How about compat_pci_ata?
 
-Sounds reasonable. I'm not btw sure the test is entirely right, but I'm
-not sure quite what you are trying to figure out from it and how ACPI
-expects this mapping to work.
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Alan
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |WILL_NOT_FIX
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
