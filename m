@@ -1,21 +1,21 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 13882] Cannot read CD: "Logical unit communication CRC error"
-Date: Wed, 13 Jun 2012 14:31:17 +0000 (UTC)
-Message-ID: <20120613143117.1482012060C@bugzilla.kernel.org>
+Date: Wed, 13 Jun 2012 14:31:24 +0000 (UTC)
+Message-ID: <20120613143124.E2E0612060C@bugzilla.kernel.org>
 References: <bug-13882-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42452 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:42501 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754175Ab2FMObU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jun 2012 10:31:20 -0400
+	id S1754032Ab2FMOb1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jun 2012 10:31:27 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id EC1BC20386
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87B8B20383
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:26 +0000 (UTC)
 Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id 1B7312037A
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA3A02036E
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 14:31:24 +0000 (UTC)
 In-Reply-To: <bug-13882-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -28,8 +28,7 @@ Alan <alan@lxorguk.ukuu.org.uk> changed:
 
            What    |Removed                     |Added
 ----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |WILL_NOT_FIX
+             Status|RESOLVED                    |CLOSED
 
 
 
