@@ -1,39 +1,73 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14438] [PATCH] IDE Probe fails to find CD drive
-Date: Wed, 13 Jun 2012 20:27:15 +0000 (UTC)
-Message-ID: <20120613202715.3B84812060F@bugzilla.kernel.org>
-References: <bug-14438-11633@https.bugzilla.kernel.org/>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v4 02/13] libata: bind the Linux device tree to the ACPI
+ device tree
+Date: Thu, 14 Jun 2012 15:43:57 +0800
+Message-ID: <CAF1ivSZTtJ651p5WgwKde8gHvJX7KcsTDXMzhej+Chka9P5ozw@mail.gmail.com>
+References: <1338181720-4149-1-git-send-email-ming.m.lin@intel.com>
+	<1338181720-4149-3-git-send-email-ming.m.lin@intel.com>
+	<20120528105131.67d74d45@pyramind.ukuu.org.uk>
+	<CAF1ivSYBjw+UP3vP8RHaftjR8NJZEaHA1rtJ5ujDjkj-djHLTQ@mail.gmail.com>
+	<20120613120050.164c3f29@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:46103 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750910Ab2FMU1R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jun 2012 16:27:17 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D6F0E20489
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 20:27:16 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.204])
-	by mail.kernel.org (Postfix) with ESMTP id D782E20487
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jun 2012 20:27:15 +0000 (UTC)
-In-Reply-To: <bug-14438-11633@https.bugzilla.kernel.org/>
+Received: from mail-vb0-f46.google.com ([209.85.212.46]:34952 "EHLO
+	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910Ab2FNHn7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jun 2012 03:43:59 -0400
+In-Reply-To: <20120613120050.164c3f29@pyramind.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, David Woodhouse <David.Woodhouse@intel.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14438
+On Wed, Jun 13, 2012 at 7:00 PM, Alan Cox <alan@lxorguk.ukuu.org.uk> wr=
+ote:
+> On Wed, 13 Jun 2012 16:03:23 +0800
+> Lin Ming <ming.m.lin@intel.com> wrote:
+>
+>> On Mon, May 28, 2012 at 5:51 PM, Alan Cox <alan@lxorguk.ukuu.org.uk>=
+ wrote:
+>> >> +static int is_pci_ata(struct device *dev)
+>> >> +{
+>> >> + =A0 =A0 struct pci_dev *pdev;
+>> >> +
+>> >> + =A0 =A0 if (!is_pci_dev(dev))
+>> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+>> >> +
+>> >> + =A0 =A0 pdev =3D to_pci_dev(dev);
+>> >> +
+>> >> + =A0 =A0 if ((pdev->class >> 8) !=3D PCI_CLASS_STORAGE_SATA &&
+>> >> + =A0 =A0 =A0 =A0 (pdev->class >> 8) !=3D PCI_CLASS_STORAGE_IDE)
+>> >> + =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+>> >
+>> > This needs a better name. It doesn't check if a device is PCI ATA =
+or
+>> > anything of the sort, it checks if its probably a device in compat=
+ibility
+>> > mode. A lot of controllers will in fact report RAID class or simil=
+ar in
+>> > native mode.
+>>
+>> How about compat_pci_ata?
+>
+> Sounds reasonable. I'm not btw sure the test is entirely right, but I=
+'m
+> not sure quite what you are trying to figure out from it and how ACPI
+> expects this mapping to work.
 
+It's used to figure out if the dev passed in from scsi layer is a ata d=
+evice.
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+scsi_sysfs_add_sdev
+device_add
+acpi_platform_notify
+ata_acpi_find_device
+is_pci_ata
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+Thanks,
+Lin Ming
 
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+>
+> Alan
