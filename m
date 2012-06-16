@@ -1,22 +1,52 @@
-From: Yanira Eakes <heiden78vitek@yahoo.com>
-Subject: Hi!! My name is Yanira...
-Date: Sat, 16 Jun 2012 16:18:04 +0100 (BST)
-Message-ID: <1339859884.98492.YahooMailNeo@web132301.mail.ird.yahoo.com>
-Reply-To: Yanira Eakes <yanira.eakes@arcticmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Sat, 16 Jun 2012 20:10:08 +0200
+Message-ID: <20120616181008.GB20623@liondog.tnic>
+References: <87obojef7t.fsf@schwinge.name>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm3-vm0.bullet.mail.ird.yahoo.com ([77.238.189.213]:35506 "HELO
-	nm3-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750856Ab2FPPXm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 16 Jun 2012 11:23:42 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87obojef7t.fsf@schwinge.name>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Thomas Schwinge <thomas@codesourcery.com>
+Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "mguill2308@msn.com" <mguill2308@msn.com>
 
-Hi gorgeous! 
-Pictures in your profile look cute;)
-My name is Yanira. I am sure we'll become good friends)
-I am waiting ;)
+On Sat, Jun 16, 2012 at 12:14:14PM +0200, Thomas Schwinge wrote:
+> Hi!
+>=20
+> After many others that played with no problems, I just tried playing
+> Guano Apes' audio CD =C2=BBProud Like a God=C2=AB (1997) in Rhythmbox=
+, on my mostly
+> up-to-date Debian GNU/Linux testing system.
+>=20
+>     $ uname -a
+>     Linux boole 3.2.0-2-amd64 #1 SMP Mon May 21 17:45:41 UTC 2012 x86=
+_64 GNU/Linux
+>=20
+> ... which specifically is =C2=BBlinux-image-3.2.0-2-amd64 3.2.18-1=C2=
+=AB.
+>=20
+> While "loading" the CD in Rhythmbox, after a few seconds the kernel
+> crashed.  I rebooted, tried again, and it crashed again.  At
+> <http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg> yo=
+u
+> can find the panic message (low resolution, sorry), pointing to the
+> SCSI/ATA code.
+
+Let me guess: AMD K8?
+
+Also, can I get /proc/cpuinfo please?
+
+Thanks.
+
+--=20
+Regards/Gruss,
+    Boris.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
