@@ -1,50 +1,58 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Fri, 15 Jun 2012 15:42:55 -0700 (PDT)
-Message-ID: <20120615.154255.1670197217275981715.davem@davemloft.net>
+From: Thomas Schwinge <thomas@codesourcery.com>
+Subject: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Sat, 16 Jun 2012 12:14:14 +0200
+Message-ID: <87obojef7t.fsf@schwinge.name>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:51916 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754238Ab2FOWm4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jun 2012 18:42:56 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Hi!
+
+After many others that played with no problems, I just tried playing
+Guano Apes' audio CD =C2=BBProud Like a God=C2=AB (1997) in Rhythmbox, on m=
+y mostly
+up-to-date Debian GNU/Linux testing system.
+
+    $ uname -a
+    Linux boole 3.2.0-2-amd64 #1 SMP Mon May 21 17:45:41 UTC 2012 x86_64 GN=
+U/Linux
+
+... which specifically is =C2=BBlinux-image-3.2.0-2-amd64 3.2.18-1=C2=AB.
+
+While "loading" the CD in Rhythmbox, after a few seconds the kernel
+crashed.  I rebooted, tried again, and it crashed again.  At
+<http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg> you
+can find the panic message (low resolution, sorry), pointing to the
+SCSI/ATA code.
+
+Are there any such known issues?  Does the panic message give any clue
+already, or would you want me to reproduce that with debugging symbols,
+etc.?
 
 
-1) Two fixes to icside, one for a build failure and another for
-   a warning.  From Christian Dietrich.
+Gr=C3=BC=C3=9Fe,
+ Thomas
 
-2) Fix a bit operation that did erroneous masking, from Julia
-   Lawall.
+--=-=-=
+Content-Type: application/pgp-signature
 
-Please pull, thanks a lot!
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-The following changes since commit eea5b5510fc5545d15b69da8e485a7424ae388cf:
-
-  Merge tag 'please-pull-mce' of git://git.kernel.org/pub/scm/linux/kernel/git/ras/ras (2012-06-05 15:15:04 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
-
-for you to fetch changes up to e58c5de8f59d124907c993ea3126c69493b7eec7:
-
-  drivers/ide/ide-cs.c: adjust suspicious bit operation (2012-06-12 15:51:41 -0700)
-
-----------------------------------------------------------------
-Christian Dietrich (2):
-      ide: icside.c: Fix compile with CONFIG_BLK_DEV_IDEDMA_ICS=n
-      ide: icside.c: fix printk format string compile warning
-
-Julia Lawall (1):
-      drivers/ide/ide-cs.c: adjust suspicious bit operation
-
- drivers/ide/icside.c |   17 ++++++++---------
- drivers/ide/ide-cs.c |    3 ++-
- 2 files changed, 10 insertions(+), 10 deletions(-)
+iQEcBAEBAgAGBQJP3Fx2AAoJENuKOtuXzphJoCQH/RhfqvncKRtjyUuVnV2W1x28
+hBrsJ8DiDw6VswQlgo1XpkH49A2MqwVvumBC00xshTw6Gbs/SXhC4BKsNx/aiI2M
+yiTIaeR5Z0TSsrmGHTGUuc09XFlxH13sKp85Q0QBSw+A/2dfYLuqWSb4icdXT0Y0
+inD9gg20BA3ziO2CxkYXu6kFVJkEKYocf/1OESn0E6Xr1M1VuXvWKqeRk4lhkw8E
+ClIvxN+uamGQrMGHF0OWEd934s37dosP27swteL4QdRusDvnFSJmZhVYqhsNzRA8
+ZzXIiWN6BQEMd0bs1c+5+3kpydnAbTU5vYzjduBJKuTPxSbocbSTUwXM2XZ/Bjs=
+=zc66
+-----END PGP SIGNATURE-----
+--=-=-=--
