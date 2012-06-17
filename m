@@ -1,52 +1,73 @@
 From: Borislav Petkov <bp@alien8.de>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Sat, 16 Jun 2012 20:10:08 +0200
-Message-ID: <20120616181008.GB20623@liondog.tnic>
-References: <87obojef7t.fsf@schwinge.name>
+Subject: Re: [PATCH 09/14] ata: Use 32bit DMA in AHCI for Loongson 3.
+Date: Sun, 17 Jun 2012 14:05:57 +0200
+Message-ID: <20120617120557.GE31534@liondog.tnic>
+References: <1339747801-28691-1-git-send-email-chenhc@lemote.com>
+ <1339747801-28691-10-git-send-email-chenhc@lemote.com>
+ <4FDB08AC.8010208@mvista.com>
+ <CAAhV-H6AKp+aGUozOxQoLgGYQ+GtHMbKKC4MVkFA570zodjgDA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:33891 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757046Ab2FQMGC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Jun 2012 08:06:02 -0400
 Content-Disposition: inline
-In-Reply-To: <87obojef7t.fsf@schwinge.name>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Thomas Schwinge <thomas@codesourcery.com>
-Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <CAAhV-H6AKp+aGUozOxQoLgGYQ+GtHMbKKC4MVkFA570zodjgDA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: huacai chen <chenhuacai@gmail.com>
+Cc: Sergei Shtylyov <sshtylyov@mvista.com>, Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, Fuxin Zhang <zhangfx@lemote.com>, Zhangjin Wu <wuzhangjin@gmail.com>, Huacai Chen <chenhc@lemote.com>, Hongliang Tao <taohl@lemote.com>, Hua Yan <yanh@lemote.com>, linux-ide@vger.kernel.org
 
-On Sat, Jun 16, 2012 at 12:14:14PM +0200, Thomas Schwinge wrote:
-> Hi!
->=20
-> After many others that played with no problems, I just tried playing
-> Guano Apes' audio CD =C2=BBProud Like a God=C2=AB (1997) in Rhythmbox=
-, on my mostly
-> up-to-date Debian GNU/Linux testing system.
->=20
->     $ uname -a
->     Linux boole 3.2.0-2-amd64 #1 SMP Mon May 21 17:45:41 UTC 2012 x86=
-_64 GNU/Linux
->=20
-> ... which specifically is =C2=BBlinux-image-3.2.0-2-amd64 3.2.18-1=C2=
-=AB.
->=20
-> While "loading" the CD in Rhythmbox, after a few seconds the kernel
-> crashed.  I rebooted, tried again, and it crashed again.  At
-> <http://schwinge.homeip.net/~thomas/tmp/linux-crash-audio-cd.jpeg> yo=
-u
-> can find the panic message (low resolution, sorry), pointing to the
-> SCSI/ATA code.
+On Fri, Jun 15, 2012 at 08:42:47PM +0800, huacai chen wrote:
+> On Fri, Jun 15, 2012 at 6:04 PM, Sergei Shtylyov <sshtylyov@mvista.co=
+m> wrote:
+> > Hello.
+> >
+> >
+> > On 15-06-2012 12:09, Huacai Chen wrote:
+> >
+> >> Signed-off-by: Huacai Chen<chenhc@lemote.com>
+> >> Signed-off-by: Hongliang Tao<taohl@lemote.com>
+> >> Signed-off-by: Hua Yan<yanh@lemote.com>
+> >
+> >
+> > =C2=A0 You =C2=A0should have CCed the 'linux-ide' mailing list.
+> >
+> >
+> >> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> >> index ebaf67e..3e3cfd8 100644
+> >> --- a/drivers/ata/ahci.c
+> >> +++ b/drivers/ata/ahci.c
+> >> @@ -183,7 +183,12 @@ static const struct ata_port_info ahci_port_i=
+nfo[] =3D
+> >> {
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0},
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0[board_ahci_sb700] =3D =C2=A0 =C2=A0/* =
+for SB700 and SB800 */
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0{
+> >> +#ifndef CONFIG_CPU_LOONGSON3
+> >> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0AHCI_HFLAGS=
+ =C2=A0 =C2=A0 (AHCI_HFLAG_IGN_SERR_INTERNAL),
+> >> +#else
+> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 AHCI_HFLAGS =C2=
+=A0 =C2=A0 (AHCI_HFLAG_IGN_SERR_INTERNAL |
+> >> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 AHCI_HFLAG_32BIT_ONLY),
+> >> +#endif
+> >
+> >
+> > =C2=A0 No, this #ifdef'ery won't do. You should add a new board typ=
+e.
+> All Loongson-3 based machines use AMD SB700 chipsets, add a new board
+> type is better than #ifdef?
 
-Let me guess: AMD K8?
-
-Also, can I get /proc/cpuinfo please?
-
-Thanks.
+SB700/800 chipsets don't need to set a 32-bit only DMA flag; why do you
+need it when you use the same chipset?
 
 --=20
 Regards/Gruss,
     Boris.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
