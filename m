@@ -1,62 +1,31 @@
-From: Borislav Petkov <bp@amd64.org>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 18 Jun 2012 17:51:41 +0200
-Message-ID: <20120618155141.GF8378@aftab.osrc.amd.com>
-References: <87obojef7t.fsf@schwinge.name>
- <20120616181008.GB20623@liondog.tnic>
- <87ehpddw9k.fsf@schwinge.name>
- <20120618142900.GA9710@aftab.osrc.amd.com>
- <87sjdsd64r.fsf@schwinge.name>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: Re: Highpoint DC7280
+Date: Mon, 18 Jun 2012 14:58:38 -0400
+Message-ID: <4FDF7A5E.90409@teksavvy.com>
+References: <4FDEDE3A.7030507@psi5.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from s15943758.onlinehome-server.info ([217.160.130.188]:38128 "EHLO
-	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab2FRPvX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2012 11:51:23 -0400
-Content-Disposition: inline
-In-Reply-To: <87sjdsd64r.fsf@schwinge.name>
+Received: from ironport2-out.teksavvy.com ([206.248.154.182]:4080 "EHLO
+	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752249Ab2FRTIR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2012 15:08:17 -0400
+In-Reply-To: <4FDEDE3A.7030507@psi5.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Schwinge <thomas@codesourcery.com>
-Cc: Borislav Petkov <bp@amd64.org>, Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christian Brandt <brandtc@psi5.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Jun 18, 2012 at 04:52:36PM +0200, Thomas Schwinge wrote:
-> Hi Borislav!
+On 12-06-18 03:52 AM, Christian Brandt wrote:
+> My company got hold of a Highpoint DC7280 for evaluation purposes. As we
+> weren't that much impressed - mostly due abysmal propetiary drivers and
+> support - I got it as a toy gift to play at home.
 > 
-> First, thanks for helping!
+> Abstract in novella form: it is a dirt cheap 32 Port SATA-Controller. It
+> features eight Marvell Chips each with a four port SATA Port Multiplier.
 
-Sure, np! :-)
+It would be very interesting and useful to see the markings
+on the top of the chip that is buried under that heatsink.
 
-> > Ok, can you do the following:
-> > 
-> > $ setpci -s 18.0 0x68.l
-> 
->     $ sudo setpci -s 18.0 0x68.l
->     0f00cc0f
-> 
-> > $ rdmsr 0xc001001f
-> 
->     $ sudo modprobe msr
->     $ sudo rdmsr 0xc001001f
->     8
-
-Ok, this is a BIOS bug - we have a recommendation about what the BIOS
-should do but yours doesn't do it. Are you sure you're using the latest
-BIOS for your motherboard?
-
-Can you check for updates and if you get a newer version, can you update
-your BIOS and do the two commands above?
-
-If there's no newer BIOS, we can try applying the workaround at boot in
-an init script to fix your issue.
-
--- 
-Regards/Gruss,
-Boris.
-
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+Most Marvell SATA chips already work with Linux..
