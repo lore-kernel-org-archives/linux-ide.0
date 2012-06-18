@@ -1,106 +1,58 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v5 00/12] SATA ZPODD support
-Date: Mon, 18 Jun 2012 14:32:47 +0800
-Message-ID: <CAF1ivSa-6xwwASBLsCwv9YS=T1FRvu2+mH4z_=7cXzw=VhKQ1w@mail.gmail.com>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+From: Christian Brandt <brandtc@psi5.com>
+Subject: Highpoint DC7280
+Date: Mon, 18 Jun 2012 09:52:26 +0200
+Message-ID: <4FDEDE3A.7030507@psi5.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.9]:50593 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753038Ab2FRHwa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2012 03:52:30 -0400
+Received: from frontend1.mail.m-online.net (unknown [192.168.8.180])
+	by mail-out.m-online.net (Postfix) with ESMTP id 3WG4K966fqz4LDdc
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 09:52:29 +0200 (CEST)
+Received: from localhost (dynscan1.mnet-online.de [192.168.8.164])
+	by mail.m-online.net (Postfix) with ESMTP id 3WG4K96097z4KK5g
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 09:52:29 +0200 (CEST)
+Received: from mail.mnet-online.de ([192.168.8.180])
+	by localhost (dynscan1.mail.m-online.net [192.168.8.164]) (amavisd-new, port 10024)
+	with ESMTP id m27OYgmnwgX8 for <linux-ide@vger.kernel.org>;
+	Mon, 18 Jun 2012 09:52:26 +0200 (CEST)
+Received: from sword.brandt.rfc1918 (ppp-188-174-71-131.dynamic.mnet-online.de [188.174.71.131])
+	by mail.mnet-online.de (Postfix) with ESMTP
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 09:52:26 +0200 (CEST)
+Received: from [10.0.3.7] (work3.brandt.rfc1918 [10.0.3.7])
+	by sword.brandt.rfc1918 (Postfix) with ESMTP id 9CC302003E
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 09:52:26 +0200 (CEST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-(The subject should be: [PATCH v5 00/12] SATA ZPODD support)
+My company got hold of a Highpoint DC7280 for evaluation purposes. As we
+weren't that much impressed - mostly due abysmal propetiary drivers and
+support - I got it as a toy gift to play at home.
 
-On Mon, Jun 18, 2012 at 2:25 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi all,
->
-> This is the v5 patches to add SATA ZPODD support, to try it:
-> git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git=
- zpodd
->
-> Holger and Mathtew,
-> Patch 1 to Patch 4 are the libata acpi binding patches from you.
-> I removed dock related code from your original version.
-> Would you help to review?
->
-> v5:
-> - rebase to v3.5-rc3
-> - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu=
-)
-> - rename is_pci_ata to compat_pci_ata (Alan Cox)
->
-> v4:
-> https://lkml.org/lkml/2012/5/28/11
-> - Includes libata acpi binding patches from Holger Macht and Matthew =
-Garrett.
-> - tell scsi layer device supports runtime power off
-> - check support for device busy class events
->
-> v3:
-> https://lkml.org/lkml/2012/3/28/20
-> - Split the ACPI D3Cold state support patches out
-> - Adds "Device Attention" bit check
->
-> v2:
-> https://lkml.org/lkml/2012/3/1/61
-> - _PR3 indicates D3Cold support
-> - move can_power_off flag to pm_subsys_data
-> - allow all combinations of power resource and device
-> - split patches into smaller ones to make review easy
->
-> v1:
-> https://lkml.org/lkml/2012/2/13/86
->
->
-> Aaron Lu (4):
-> =A0 =A0 =A0libata: tell scsi layer device supports runtime power off
-> =A0 =A0 =A0[SCSI] sr: check support for device busy class events
-> =A0 =A0 =A0[SCSI] sr: support zero power ODD
-> =A0 =A0 =A0[SCSI] sr: make sure ODD is in resumed state in block ioct=
-l
->
-> Holger Macht (2):
-> =A0 =A0 =A0[SCSI]: add wrapper to access and set scsi_bus_type in str=
-uct acpi_bus_type
-> =A0 =A0 =A0libata: use correct PCI devices
->
-> Lin Ming (4):
-> =A0 =A0 =A0libata-acpi: set acpi state for SATA port
-> =A0 =A0 =A0libata-acpi: add ata port runtime D3Cold support
-> =A0 =A0 =A0libata-acpi: register/unregister device to/from power reso=
-urce
-> =A0 =A0 =A0libata: detect Device Attention support
->
-> Matthew Garrett (2):
-> =A0 =A0 =A0libata: bind the Linux device tree to the ACPI device tree
-> =A0 =A0 =A0libata: migrate ACPI code over to new bindings
->
->
-> =A0drivers/acpi/glue.c =A0 =A0 =A0 =A0| =A0 =A04 +-
-> =A0drivers/acpi/power.c =A0 =A0 =A0 | =A0 =A02 +
-> =A0drivers/ata/libata-acpi.c =A0| =A0389 ++++++++++++++++++++++++++++=
-+++++++++++++++++++++++++++++++++---------------------------
-> =A0drivers/ata/libata-core.c =A0| =A0 =A09 ++-
-> =A0drivers/ata/libata-pmp.c =A0 | =A0 =A04 -
-> =A0drivers/ata/libata-scsi.c =A0| =A0 =A03 +
-> =A0drivers/ata/libata.h =A0 =A0 =A0 | =A0 13 +--
-> =A0drivers/ata/pata_acpi.c =A0 =A0| =A0 =A04 +-
-> =A0drivers/scsi/scsi_lib.c =A0 =A0| =A0 17 ++++
-> =A0drivers/scsi/sr.c =A0 =A0 =A0 =A0 =A0| =A0160 ++++++++++++++++++++=
-+++++++++++++++-
-> =A0drivers/scsi/sr.h =A0 =A0 =A0 =A0 =A0| =A0 =A03 +
-> =A0include/linux/ata.h =A0 =A0 =A0 =A0| =A0 =A01 +
-> =A0include/linux/cdrom.h =A0 =A0 =A0| =A0 43 ++++++++++
-> =A0include/linux/libata.h =A0 =A0 | =A0 =A09 +--
-> =A0include/scsi/scsi.h =A0 =A0 =A0 =A0| =A0 10 +++
-> =A0include/scsi/scsi_device.h | =A0 =A02 +
-> =A016 files changed, 534 insertions(+), 139 deletions(-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Abstract in novella form: it is a dirt cheap 32 Port SATA-Controller. It
+features eight Marvell Chips each with a four port SATA Port Multiplier.
+Highpoint has abandoned all support (as usual) right a week before
+releasing it and the driver - dated 2011-06 - needs even some fiddling
+to compile under 3.0. Then it crashed upon writing. Besides that it is
+not THAT bad... gets around 250MB/s per Controller even with all eight
+controllers under maximum load.
+
+Is anyone else poking it with a stick?
+
+[1] http://www.highpoint-tech.cn/PDF/DC7280/DC7280_DS.pdf
+
+[2]
+http://www.highpoint-tech.com/BIOS_Driver/DC7280/driver/Linux/dc7280-linux-src-v1.0-110621-1313.tar.gz
+ (if KERNELVERSION==2.6 then... ok, so much about that one...)
+
+-- 
+Christian Brandt
+
+ life is short and in most cases it ends with death
+ but my tombstone will carry the hiscore
+
