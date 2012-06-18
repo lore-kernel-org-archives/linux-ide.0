@@ -1,52 +1,42 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v5 04/12] libata: use correct PCI devices
-Date: Mon, 18 Jun 2012 20:03:46 +0800
-Message-ID: <CAF1ivSaiVGB+TSn80QijpWJWUdkhpjuOKuu9XSTROF-kGgP_gQ@mail.gmail.com>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-	<1340000766-129148-5-git-send-email-ming.m.lin@intel.com>
-	<4FDF12F0.6080205@mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14708] Option remap63 for OnTrack diskmanager not work - kernel
+ panic, unable to mount root filesystem
+Date: Mon, 18 Jun 2012 12:51:19 +0000 (UTC)
+Message-ID: <20120618125119.71CC911FE3F@bugzilla.kernel.org>
+References: <bug-14708-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <4FDF12F0.6080205@mvista.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:44630 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751178Ab2FRMv0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jun 2012 08:51:26 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C4D80202BA
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 12:51:25 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 77B38202BB
+	for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 12:51:19 +0000 (UTC)
+In-Reply-To: <bug-14708-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Jun 18, 2012 at 7:37 PM, Sergei Shtylyov <sshtylyov@mvista.com>=
- wrote:
-> On 18-06-2012 10:25, Lin Ming wrote:
->
->> From: Holger Macht <holger@homac.de>
->
->
->> Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a
->
->
-> =A0 Please also specify that commit's summary in parens.
+https://bugzilla.kernel.org/show_bug.cgi?id=14708
 
-OK.
 
-Thanks,
-Lin Ming
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
->
->
->> made ata ports parent
->> devices of scsi hosts, so we need to go yet another level up to be a=
-ble
->> to use the correct PCI devices.
->
->
->> Signed-off-by: Holger Macht <holger@homac.de>
->> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
->
->
-> MBR, Sergei
---
-To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+                 CC|                            |alan@lxorguk.ukuu.org.uk
+         Resolution|                            |WILL_NOT_FIX
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
