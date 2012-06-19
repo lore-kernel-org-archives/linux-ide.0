@@ -1,47 +1,49 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Highpoint DC7280
-Date: Mon, 18 Jun 2012 21:28:01 -0600
-Message-ID: <4FDFF1C1.4060808@gmail.com>
-References: <4FDEDE3A.7030507@psi5.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Huacai Chen <chenhuacai@gmail.com>
+Subject: [PATCH V2 11/16] ata: Use 32-bit DMA in AHCI for Loongson-3.
+Date: Tue, 19 Jun 2012 14:50:19 +0800
+Message-ID: <1340088624-25550-12-git-send-email-chenhc@lemote.com>
+References: <1340088624-25550-1-git-send-email-chenhc@lemote.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:40748 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347Ab2FSD2I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jun 2012 23:28:08 -0400
-Received: by ghrr11 with SMTP id r11so4291737ghr.19
-        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 20:28:06 -0700 (PDT)
-In-Reply-To: <4FDEDE3A.7030507@psi5.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:54770 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753094Ab2FSG5L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2012 02:57:11 -0400
+Received: by pbbrp8 with SMTP id rp8so9254403pbb.19
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jun 2012 23:57:11 -0700 (PDT)
+In-Reply-To: <1340088624-25550-1-git-send-email-chenhc@lemote.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christian Brandt <brandtc@psi5.com>
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-mips@linux-mips.org, Fuxin Zhang <zhangfx@lemote.com>, Zhangjin Wu <wuzhangjin@gmail.com>, Huacai Chen <chenhc@lemote.com>, Hongliang Tao <taohl@lemote.com>, Hua Yan <yanh@lemote.com>, linux-ide@vger.kernel.org
+
+This is a workaround because Loongson-3 has a hardware bug that it
+doesn't support DMA address above 4GB.
+
+Signed-off-by: Huacai Chen <chenhc@lemote.com>
+Signed-off-by: Hongliang Tao <taohl@lemote.com>
+Signed-off-by: Hua Yan <yanh@lemote.com>
 Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/ahci.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-On 06/18/2012 01:52 AM, Christian Brandt wrote:
-> My company got hold of a Highpoint DC7280 for evaluation purposes. As we
-> weren't that much impressed - mostly due abysmal propetiary drivers and
-> support - I got it as a toy gift to play at home.
->
-> Abstract in novella form: it is a dirt cheap 32 Port SATA-Controller. It
-> features eight Marvell Chips each with a four port SATA Port Multiplier.
-> Highpoint has abandoned all support (as usual) right a week before
-> releasing it and the driver - dated 2011-06 - needs even some fiddling
-> to compile under 3.0. Then it crashed upon writing. Besides that it is
-> not THAT bad... gets around 250MB/s per Controller even with all eight
-> controllers under maximum load.
->
-> Is anyone else poking it with a stick?
->
-> [1] http://www.highpoint-tech.cn/PDF/DC7280/DC7280_DS.pdf
->
-> [2]
-> http://www.highpoint-tech.com/BIOS_Driver/DC7280/driver/Linux/dc7280-linux-src-v1.0-110621-1313.tar.gz
->   (if KERNELVERSION==2.6 then... ok, so much about that one...)
->
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ebaf67e..3e3cfd8 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -183,7 +183,12 @@ static const struct ata_port_info ahci_port_info[] = {
+ 	},
+ 	[board_ahci_sb700] =	/* for SB700 and SB800 */
+ 	{
++#ifndef CONFIG_CPU_LOONGSON3
+ 		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL),
++#else
++		AHCI_HFLAGS	(AHCI_HFLAG_IGN_SERR_INTERNAL |
++						AHCI_HFLAG_32BIT_ONLY),
++#endif
+ 		.flags		= AHCI_FLAG_COMMON,
+ 		.pio_mask	= ATA_PIO4,
+ 		.udma_mask	= ATA_UDMA6,
+-- 
+1.7.7.3
 
-What does lspci -vv show for that board?
-
-It looks like that driver contains a binary blob so who knows what it is 
-actually doing internally.
