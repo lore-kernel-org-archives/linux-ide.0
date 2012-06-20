@@ -1,55 +1,97 @@
-From: Huacai Chen <chenhuacai@gmail.com>
-Subject: Re: [PATCH V2 11/16] ata: Use 32-bit DMA in AHCI for Loongson-3.
-Date: Tue, 19 Jun 2012 20:36:17 +0800
-Message-ID: <CAAhV-H5H6E+sshfc3p8Mq-OfVZDKA+CizZgRwAtPswkYwY=7mw@mail.gmail.com>
-References: <1340088624-25550-1-git-send-email-chenhc@lemote.com>
-	<1340088624-25550-12-git-send-email-chenhc@lemote.com>
-	<4FE0717A.7070109@garzik.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v5 02/12] libata: bind the Linux device tree to the ACPI
+ device tree
+Date: Wed, 20 Jun 2012 16:50:50 -0700
+Message-ID: <CAA9_cmcX2pajewz1v864Ni2Z3XAy8UrCRg+mg3Y2qFEd2j=nDg@mail.gmail.com>
+References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
+	<1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56496 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865Ab2FSMgS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jun 2012 08:36:18 -0400
-Received: by bkcji2 with SMTP id ji2so5023235bkc.19
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jun 2012 05:36:17 -0700 (PDT)
-In-Reply-To: <4FE0717A.7070109@garzik.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:59769 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187Ab2FTXuv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jun 2012 19:50:51 -0400
+In-Reply-To: <1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, Fuxin Zhang <zhangfx@lemote.com>, Zhangjin Wu <wuzhangjin@gmail.com>, Huacai Chen <chenhc@lemote.com>, Hongliang Tao <taohl@lemote.com>, Hua Yan <yanh@lemote.com>, linux-ide@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 
-OK, thanks.
+On Sun, Jun 17, 2012 at 11:25 PM, Lin Ming <ming.m.lin@intel.com> wrote=
+:
+> From: Matthew Garrett <mjg@redhat.com>
+>
+> Associate the ACPI device tree and libata devices.
+> This patch uses the generic ACPI glue framework to do so.
+>
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Signed-off-by: Holger Macht <holger@homac.de>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+>
+> Changelog:
+>
+> - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu=
+)
+> - rename is_pci_ata to compat_pci_ata (Alan Cox)
+>
+> =A0drivers/acpi/glue.c =A0 =A0 =A0 | =A0 =A04 +-
+> =A0drivers/ata/libata-acpi.c | =A0125 +++++++++++++++++++++++++++++++=
+++++++++++++++
+> =A0drivers/ata/libata-core.c | =A0 =A03 ++
+> =A0drivers/ata/libata.h =A0 =A0 =A0| =A0 =A04 ++
+> =A04 files changed, 134 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+> index 1564e09..18d6812 100644
+> --- a/drivers/acpi/glue.c
+> +++ b/drivers/acpi/glue.c
+[..]
+> +static int ata_acpi_bind_host(struct device *dev, int host, acpi_han=
+dle *handle)
+> +{
+> + =A0 =A0 =A0 struct Scsi_Host *shost =3D dev_to_shost(dev);
+> + =A0 =A0 =A0 struct ata_port *ap =3D ata_shost_to_port(shost);
+> +
+> + =A0 =A0 =A0 if (ap->flags & ATA_FLAG_ACPI_SATA)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 *handle =3D acpi_get_child(DEVICE_ACPI_HANDLE(dev->pare=
+nt), ap->port_no);
+> +
+> + =A0 =A0 =A0 if (!*handle)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 return 0;
+> +}
 
-On Tue, Jun 19, 2012 at 8:32 PM, Jeff Garzik <jeff@garzik.org> wrote:
-> On 06/19/2012 02:50 AM, Huacai Chen wrote:
->>
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index ebaf67e..3e3cfd8 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -183,7 +183,12 @@ static const struct ata_port_info ahci_port_inf=
-o[] =3D
->> {
->> =A0 =A0 =A0 =A0},
->> =A0 =A0 =A0 =A0[board_ahci_sb700] =3D =A0 =A0/* for SB700 and SB800 =
-*/
->> =A0 =A0 =A0 =A0{
->> +#ifndef CONFIG_CPU_LOONGSON3
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0AHCI_HFLAGS =A0 =A0 (AHCI_HFLAG_IGN_S=
-ERR_INTERNAL),
->> +#else
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 AHCI_HFLAGS =A0 =A0 (AHCI_HFLAG_IGN_SE=
-RR_INTERNAL |
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 AHCI_HFLAG_32BIT_ONLY),
->> +#endif
->> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0.flags =A0 =A0 =A0 =A0 =A0=3D AHCI_FL=
-AG_COMMON,
->
->
->
-> NAK -- the place to fix this up is ahci_init_one()
->
+I think this patch should be squashed with patch 4, right?  That is if
+we keep the hard-coded ->parent chasing...
+
+> +static int ata_acpi_find_device(struct device *dev, acpi_handle *han=
+dle)
+> +{
+> + =A0 =A0 =A0 unsigned int host, channel, id, lun;
+> +
+> + =A0 =A0 =A0 if (sscanf(dev_name(dev), "host%u", &host) =3D=3D 1) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!compat_pci_ata(dev->parent))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ata_acpi_bind_host(dev, host, ha=
+ndle);
+> + =A0 =A0 =A0 } else if (sscanf(dev_name(dev), "%d:%d:%d:%d",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 &host, &channel, &id, &=
+lun) =3D=3D 4) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!compat_pci_ata(dev->parent->parent=
+->parent))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENODEV;
+
+=2E..this looks like it should be using a dev_to_ata_port() helper whic=
+h
+like dev_to_shost() skips the need to remember just how many parents
+until we get back to our ata_port, scsi_host, etc.
+
+--
+Dan
