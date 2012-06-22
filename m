@@ -1,62 +1,55 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [set1 PATCH 4/4] scsi: cleanup setting task state in
- scsi_error_handler()
-Date: Thu, 21 Jun 2012 23:25:42 -0700
-Message-ID: <20120622062542.21162.38580.stgit@dwillia2-linux.jf.intel.com>
-References: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
+Subject: [set4 PATCH 0/4] libsas, libata: suspend / resume and "reset once"
+Date: Thu, 21 Jun 2012 23:41:36 -0700
+Message-ID: <20120622064135.21452.82833.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9320 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761295Ab2FVGJE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 22 Jun 2012 02:09:04 -0400
-In-Reply-To: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-A quick reading of scsi_error_handler() one could come away with the
-impression that it does its wakeup event check while the task state is
-TASK_RUNNING.  In fact it sets TASK_INTERRUPTIBLE at the bottom of the
-loop, but that is ~50 lines down.
+Set4 of 5 patchsets to update scsi, libsas, and libata in
+support of the isci driver.
 
-Just set TASK_INTERRUPTIBLE at the top of loop and be done.
+Let libsas hook into the generic suspend resume infrastructure in
+libata, and provide a common suspend/resume implementation for lldds to
+reuse.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+"Reset once" is not part of the suspend/resume work.  But it is relevant
+to libsas users who need to wait for domain-wide ata error recovery and
+want to limit the effort for known well-behaved devices.
+
+These have been in -next for the past couple kernel cycles.
+
 ---
- drivers/scsi/scsi_error.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 804f632..4a6381c 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1818,15 +1818,14 @@ int scsi_error_handler(void *data)
- 	 * We never actually get interrupted because kthread_run
- 	 * disables signal delivery for the created thread.
- 	 */
--	set_current_state(TASK_INTERRUPTIBLE);
- 	while (!kthread_should_stop()) {
-+		set_current_state(TASK_INTERRUPTIBLE);
- 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
- 		    shost->host_failed != shost->host_busy) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				printk("Error handler scsi_eh_%d sleeping\n",
- 					shost->host_no));
- 			schedule();
--			set_current_state(TASK_INTERRUPTIBLE);
- 			continue;
- 		}
- 
-@@ -1863,7 +1862,6 @@ int scsi_error_handler(void *data)
- 		scsi_restart_operations(shost);
- 		if (!shost->eh_noresume)
- 			scsi_autopm_put_host(shost);
--		set_current_state(TASK_INTERRUPTIBLE);
- 	}
- 	__set_current_state(TASK_RUNNING);
- 
+Artur Wojcik (1):
+      isci: implement suspend/resume support
 
+Dan Williams (3):
+      libata: reset once
+      libata: export ata_port suspend/resume infrastructure for sas
+      libsas: suspend / resume support
+
+
+ Documentation/kernel-parameters.txt |    3 +
+ drivers/ata/libata-core.c           |   59 ++++++++++++++++++-----
+ drivers/ata/libata-eh.c             |    2 +
+ drivers/scsi/isci/host.c            |    2 -
+ drivers/scsi/isci/host.h            |    2 -
+ drivers/scsi/isci/init.c            |   58 ++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_ata.c       |   86 +++++++++++++++++++++++++++++++++
+ drivers/scsi/libsas/sas_discover.c  |   69 +++++++++++++++++++++++----
+ drivers/scsi/libsas/sas_dump.c      |    1 
+ drivers/scsi/libsas/sas_event.c     |    4 +-
+ drivers/scsi/libsas/sas_init.c      |   90 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/libsas/sas_internal.h  |    1 
+ drivers/scsi/libsas/sas_phy.c       |   21 ++++++++
+ drivers/scsi/libsas/sas_port.c      |   52 ++++++++++++++++++++
+ include/linux/libata.h              |   12 +++++
+ include/scsi/libsas.h               |   20 ++++++--
+ include/scsi/sas_ata.h              |   10 ++++
+ 17 files changed, 458 insertions(+), 34 deletions(-)
