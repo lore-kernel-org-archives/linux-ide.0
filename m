@@ -1,31 +1,47 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v5 02/12] libata: bind the Linux device tree to the ACPI
- device tree
-Date: Thu, 21 Jun 2012 08:40:15 -0700
-Message-ID: <CABE8wwtDDip2ZY63JPz9J3iJUk6goL6eAHskNAWkLaBp+QcyCg@mail.gmail.com>
-References: <1340000766-129148-1-git-send-email-ming.m.lin@intel.com>
-	<1340000766-129148-3-git-send-email-ming.m.lin@intel.com>
-	<CAA9_cmcX2pajewz1v864Ni2Z3XAy8UrCRg+mg3Y2qFEd2j=nDg@mail.gmail.com>
-	<1340242002.20081.84.camel@minggr>
-	<CAA9_cmfCVTWtqfDY4PAzK_yaVWXLV+oMO1qt_AtQKp2upPUX=Q@mail.gmail.com>
-	<1340260626.24067.4.camel@minggr>
+Subject: [set1 PATCH 0/4] scsi, libsas,
+ libata: fix up host_eh_scheduled usage
+Date: Thu, 21 Jun 2012 23:25:22 -0700
+Message-ID: <20120622062521.21162.31523.stgit@dwillia2-linux.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1340260626.24067.4.camel@minggr>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jun 20, 2012 at 11:37 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Good idea.
->
-> Below is the incremental patch on top of this series.
->
+Set1 of 5 patchsets to update scsi, libsas, and libata in
+support of the isci driver.
 
-Looks good, I like your additional change to pass a sdev to
-ata_acpi_bind_device.
+Libsas is more dependent on proper management of host_eh_scheduled
+compared to what libata has typically exposed.  Libsas has multiple
+ata_ports per Scsi_Host, while libata enforces 1:1.  Fix cases where
+this distinction causes problems.
 
---
-Dan
+These have been submitted previously for 3.4 and 3.5.
+
+---
+
+Dan Williams (3):
+      libata, libsas: introduce sched_eh and end_eh port ops
+      scsi: fix eh wakeup (scsi_schedule_eh vs scsi_restart_operations)
+      scsi: cleanup setting task state in scsi_error_handler()
+
+Maciej Trela (1):
+      libsas: cleanup spurious calls to scsi_schedule_eh
+
+
+ drivers/ata/libata-core.c           |    4 ++
+ drivers/ata/libata-eh.c             |   57 ++++++++++++++++++++++++++++-------
+ drivers/scsi/libsas/sas_ata.c       |   39 +++++++++++++++++++++---
+ drivers/scsi/libsas/sas_discover.c  |    6 ++--
+ drivers/scsi/libsas/sas_event.c     |   12 ++++---
+ drivers/scsi/libsas/sas_init.c      |   14 ++++-----
+ drivers/scsi/libsas/sas_scsi_host.c |   28 +++++++++++++----
+ drivers/scsi/scsi_error.c           |   18 +++++++++--
+ include/linux/libata.h              |    4 ++
+ include/scsi/libsas.h               |    4 ++
+ include/scsi/sas_ata.h              |    5 +++
+ 11 files changed, 149 insertions(+), 42 deletions(-)
