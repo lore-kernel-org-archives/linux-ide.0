@@ -1,108 +1,57 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libsas,
- ipr: cleanup ata_host flags initialization via ata_host_init
-Date: Thu, 28 Jun 2012 14:46:16 -0700
-Message-ID: <20120628214257.10918.476.stgit@dwillia2-linux.jf.intel.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v6 00/11] SATA ZPODD support
+Date: Fri, 29 Jun 2012 11:20:33 +0800
+Message-ID: <CAF1ivSYwRFkt4PJ=nMLO=Ux50c9WfCt8VGnuVYLp5HpfA4Cc9Q@mail.gmail.com>
+References: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:48655 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754960Ab2F1V3g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Jun 2012 17:29:36 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Brian King <brking@us.ibm.com>
 
-libsas and ipr pass flags to ata_host_init that are meant for the port.
+On Mon, Jun 25, 2012 at 4:13 PM, Lin Ming <ming.m.lin@intel.com> wrote:
+> Hi all,
+>
+> This is the v6 patches to add SATA ZPODD support, to try it:
+> git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git=
+ zpodd
+>
+> Holger and Mathtew,
+> Patch 1 to Patch 3 are the libata acpi binding patches from you.
+> I removed dock related code from your original version.
+>
+> v6:
+> - rebase to v3.5-rc4
+> - merge patch 4("libata: use correct PCI devices") with patch 2 (Dan =
+Williams)
+> - makes ata_acpi_find_device mostly independent of the topology,
+> =A0gives some type safety, and drops some redundant work finding the =
+ata_port
+> =A0(Dan Williams)
 
-ata_host flags:
-	ATA_HOST_SIMPLEX	= (1 << 0),	/* Host is simplex, one DMA channel per host only */
-	ATA_HOST_STARTED	= (1 << 1),	/* Host started */
-	ATA_HOST_PARALLEL_SCAN	= (1 << 2),	/* Ports on this host can be scanned in parallel */
-	ATA_HOST_IGNORE_ATA	= (1 << 3),	/* Ignore ATA devices on this host. */
+Hi Jeff,
 
-flags passed by libsas:
-	ATA_FLAG_SATA		= (1 << 1),
-	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
-	ATA_FLAG_NCQ		= (1 << 10), /* host supports NCQ */
+Dan has reviewed the changes.
 
-The only one that aliases is ATA_HOST_STARTED which is a 'don't care' in
-the libsas and ipr cases since ata_hosts from these sources are not
-registered with libata.
+Would you like to apply these v6 patches?
 
-Cc: Brian King <brking@us.ibm.com>
-Reported-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/libata-core.c     |    3 +--
- drivers/scsi/ipr.c            |    3 +--
- drivers/scsi/libsas/sas_ata.c |    5 +----
- include/linux/libata.h        |    3 +--
- 4 files changed, 4 insertions(+), 10 deletions(-)
+Thanks,
+Lin Ming
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index da31691..6f1e459 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5970,12 +5970,11 @@ int ata_host_start(struct ata_host *host)
-  */
- /* KILLME - the only user left is ipr */
- void ata_host_init(struct ata_host *host, struct device *dev,
--		   unsigned long flags, struct ata_port_operations *ops)
-+		   struct ata_port_operations *ops)
- {
- 	spin_lock_init(&host->lock);
- 	mutex_init(&host->eh_mutex);
- 	host->dev = dev;
--	host->flags = flags;
- 	host->ops = ops;
- }
- 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 467dc38..dacc784 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -8775,8 +8775,7 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
- 
- 	ioa_cfg = (struct ipr_ioa_cfg *)host->hostdata;
- 	memset(ioa_cfg, 0, sizeof(struct ipr_ioa_cfg));
--	ata_host_init(&ioa_cfg->ata_host, &pdev->dev,
--		      sata_port_info.flags, &ipr_sata_ops);
-+	ata_host_init(&ioa_cfg->ata_host, &pdev->dev, &ipr_sata_ops);
- 
- 	ioa_cfg->ipr_chip = ipr_get_chip_info(dev_id);
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 4208e16..5d10e4d 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -580,10 +580,7 @@ int sas_ata_init(struct domain_device *found_dev)
- 	struct ata_port *ap;
- 	int rc;
- 
--	ata_host_init(&found_dev->sata_dev.ata_host,
--		      ha->dev,
--		      sata_port_info.flags,
--		      &sas_sata_ops);
-+	ata_host_init(&found_dev->sata_dev.ata_host, ha->dev, &sas_sata_ops);
- 	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
- 				&sata_port_info,
- 				shost);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index af467d3..baf9f82 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -990,8 +990,7 @@ extern int ata_host_activate(struct ata_host *host, int irq,
- 			     irq_handler_t irq_handler, unsigned long irq_flags,
- 			     struct scsi_host_template *sht);
- extern void ata_host_detach(struct ata_host *host);
--extern void ata_host_init(struct ata_host *, struct device *,
--			  unsigned long, struct ata_port_operations *);
-+extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
-
+>
+> v5:
+> http://lkml.org/lkml/2012/6/18/62
+> - rebase to v3.5-rc3
+> - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu=
+)
+> - rename is_pci_ata to compat_pci_ata (Alan Cox)
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
