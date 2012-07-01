@@ -1,57 +1,22 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v6 00/11] SATA ZPODD support
-Date: Fri, 29 Jun 2012 11:20:33 +0800
-Message-ID: <CAF1ivSYwRFkt4PJ=nMLO=Ux50c9WfCt8VGnuVYLp5HpfA4Cc9Q@mail.gmail.com>
-References: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
+From: "Western Union, Malaysia" <Messaing@wu.com>
+Subject: [UTEXAS: SUSPECTED SPAM] Your Funds Notification
+Date: Sun, 01 Jul 2012 19:00:21 +0800
+Message-ID: <308f92$5mcto7@ironclad.mail.utexas.edu>
+Reply-To: francalee.wupc@kimo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1340611992-41457-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@amd.com>, Holger Macht <holger@homac.de>, Matthew Garrett <mjg@redhat.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, David Woodhouse <David.Woodhouse@intel.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ironclad.mail.utexas.edu ([146.6.25.7]:30658 "EHLO
+	ironclad.mail.utexas.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab2GAQcD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 1 Jul 2012 12:32:03 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <Messaing@wu.com>
 
-On Mon, Jun 25, 2012 at 4:13 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi all,
->
-> This is the v6 patches to add SATA ZPODD support, to try it:
-> git pull git://git.kernel.org/pub/scm/linux/kernel/git/mlin/linux.git=
- zpodd
->
-> Holger and Mathtew,
-> Patch 1 to Patch 3 are the libata acpi binding patches from you.
-> I removed dock related code from your original version.
->
-> v6:
-> - rebase to v3.5-rc4
-> - merge patch 4("libata: use correct PCI devices") with patch 2 (Dan =
-Williams)
-> - makes ata_acpi_find_device mostly independent of the topology,
-> =A0gives some type safety, and drops some redundant work finding the =
-ata_port
-> =A0(Dan Williams)
-
-Hi Jeff,
-
-Dan has reviewed the changes.
-
-Would you like to apply these v6 patches?
-
-Thanks,
-Lin Ming
-
->
-> v5:
-> http://lkml.org/lkml/2012/6/18/62
-> - rebase to v3.5-rc3
-> - fixed crash reported at https://lkml.org/lkml/2012/2/24/2 (Aaron Lu=
-)
-> - rename is_pci_ata to compat_pci_ata (Alan Cox)
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Your funds payment notification.
+Do send your Name, Address & Phone Number to;
+Mrs Franca Lee
++6010 3770 946.
