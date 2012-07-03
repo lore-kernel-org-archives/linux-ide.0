@@ -1,62 +1,38 @@
-From: Zheng Liu <gnehzuil.liu@gmail.com>
+From: Michael Tokarev <mjt@tls.msk.ru>
 Subject: Re: [RFC][PATCH] libata: enable SATA disk fua detection on default
-Date: Tue, 3 Jul 2012 17:04:41 +0800
-Message-ID: <20120703090441.GA4804@gmail.com>
-References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
+Date: Wed, 04 Jul 2012 00:11:36 +0400
+Message-ID: <4FF351F8.1000003@msgid.tls.msk.ru>
+References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com> <20120703090441.GA4804@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from isrv.corpit.ru ([86.62.121.231]:36106 "EHLO isrv.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933424Ab2GCULk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jul 2012 16:11:40 -0400
+In-Reply-To: <20120703090441.GA4804@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-Hi Jeff,
+On 03.07.2012 13:04, Zheng Liu wrote:
+> Hi Jeff,
+> 
+> Sorry for bothering you.  Could you please review this patch, or give me
+> some feedbacks.  If this patch can be applied, I can rebase it to the
+> lastest version of mainline kernel.  Thank you.
+[]
+>> -int libata_fua = 0;
+>> +int libata_fua = 1;
 
-Sorry for bothering you.  Could you please review this patch, or give me
-some feedbacks.  If this patch can be applied, I can rebase it to the
-lastest version of mainline kernel.  Thank you.
+I guess it can be enabled after LOTS of testing of various drives out
+there, which shows that no current drives have issues with FUA anymore,
+and after building a black-list of devices which misbehave.  It is quite
+a big project, I think.  But what it gives us in return?
 
-Regards,
-Zheng
+(I've no idea if this is the right answer, speaking of myself only)
 
-On Tue, May 08, 2012 at 11:24:03AM +0800, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
-> 
-> Currently, SATA disk fua detection is disabled on default because most of
-> devices don't support this feature at that time.  With the development of
-> technology, more and more SATA disks support this feature.  So now we can enable
-> this detection on default.
-> 
-> Although fua detection is defined as a kernel module parameter, it is too hard
-> to set its value because it must be loaded and set before system starts up.
-> That needs to modify initrd file.  So it is inconvenient for administrator who
-> needs to manage a huge number of servers.
-> 
-> CC: Jeff Garzik <jeff@garzik.org>
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> ---
->  drivers/ata/libata-core.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 23763a1..3627251 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -133,9 +133,9 @@ int atapi_passthru16 = 1;
->  module_param(atapi_passthru16, int, 0444);
->  MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
->  
-> -int libata_fua = 0;
-> +int libata_fua = 1;
->  module_param_named(fua, libata_fua, int, 0444);
-> -MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-> +MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
->  
->  static int ata_ignore_hpa;
->  module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
-> -- 
-> 1.7.4.1
-> 
+Thanks,
+
+/mjt
