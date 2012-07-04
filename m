@@ -1,145 +1,27 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH] ata: implement MODE SELECT command
-Date: Wed, 04 Jul 2012 21:20:49 +0400
-Message-ID: <4FF47B71.4030603@mvista.com>
-References: <1341400436-2546-1-git-send-email-pbonzini@redhat.com> <4FF4637A.6060901@mvista.com> <4FF46951.7050808@redhat.com>
+Date: Wed, 04 Jul 2012 21:34:47 +0200
+Message-ID: <4FF49AD7.20102@redhat.com>
+References: <1341400436-2546-1-git-send-email-pbonzini@redhat.com> <4FF4637A.6060901@mvista.com> <4FF46951.7050808@redhat.com> <4FF47B71.4030603@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:40492 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751724Ab2GDRWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Jul 2012 13:22:17 -0400
-Received: by lbbgm6 with SMTP id gm6so11485421lbb.19
-        for <linux-ide@vger.kernel.org>; Wed, 04 Jul 2012 10:22:16 -0700 (PDT)
-In-Reply-To: <4FF46951.7050808@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4FF47B71.4030603@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+List-Id: linux-ide@vger.kernel.org
 
-On 07/04/2012 08:03 PM, Paolo Bonzini wrote:
+Il 04/07/2012 19:20, Sergei Shtylyov ha scritto:
+>> > Perhaps for MODE SENSE, but not for MODE SELECT.  Otherwise, where do
+>> > you get the mode data from?
+>    They simply don't change?
 
->>> The cache_type file in sysfs lets users configure the disk cache in
->>> write-through or write-back modes.  However, ata disks do not support
->>> writing to the file because they do not implement the MODE SELECT
->>> command.
+The standard says "If the parameter list length results in the
+truncation of any mode parameter header, mode parameter block
+descriptor(s), or mode page, then the command shall be terminated with
+CHECK CONDITION status, with the sense key set to ILLEGAL REQUEST, and
+the additional sense code set to PARAMETER LIST LENGTH ERROR".
 
->>> This patch adds a translation from MODE SELECT (for the caching page
->>> only) to the ATA SET FEATURES command.
-
->>> Cc: Jeff Garzik <jgarzik@pobox.com>
->>> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
->>> ---
->>>  drivers/ata/libata-scsi.c |  147 +++++++++++++++++++++++++++++++++++++++++++--
->>>  1 files changed, 142 insertions(+), 5 deletions(-)
-
->>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>> index 41cde45..e7702d3 100644
->>> --- a/drivers/ata/libata-scsi.c
->>> +++ b/drivers/ata/libata-scsi.c
->>> @@ -3081,6 +3081,144 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->>>  }
->>>  
->>>  /**
->>> + *	ata_mselect_caching - Simulate MODE SELECT for caching info page
->>> + *	@tf: taskfile to be filled
->>> + *	@buf: input buffer
->>> + *	@len: number of valid bytes in the input buffer
->>> + *
->>> + *	Prepare a taskfile to modify caching information for the device.
->>> + *
->>> + *	LOCKING:
->>> + *	None.
->>> + */
->>> +static unsigned int ata_mselect_caching(struct ata_taskfile *tf, const u8 *buf,
->>> +					int len)
->>> +{
->>> +	u8 wce;
-
->>    Empty line after declaration block wouldn't hurt...
-
->>> +	if (len == 0)
->>> +		return 1;
->>> +
->>> +	/*
->>> +	 * The first two bytes are a header, so offsets here are 2 less
->>> +	 * than in ata_msense_caching.
->>> +	 */
->>> +	wce = buf[0] & (1 << 2);
-
->>    Perhaps it's worth denying the command if the other page fields dfifer from
->> 'def_cache_mpage' (i.e. all zeros)?
-
-> I thought about it, but it seemed a useless complication.
-
-   If you bothered to implement that, go all the way. :-)
-
->>> +/**
->>> + *	ata_scsi_mode_select_xlat - Translate MODE SELECT 6, 10 commands
->>> + *	@qc: Storage for translated ATA taskfile
->>> + *
->>> + *	Converts a MODE SELECT command to an ATA SET FEATURES taskfile.
->>> + *	Assume this is invoked for direct access devices (e.g. disks) only.
->>> + *	There should be no block descriptor for other device types.
->>> + *
->>> + *	LOCKING:
->>> + *	spin_lock_irqsave(host lock)
->>> + */
->>> +static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
->>> +{
-[...]
->>> +	/*
->>> +	 * No mode subpages supported (yet) but asking for _all_
->>> +	 * subpages may be valid
->>> +	 */
->>> +	if (spg && (spg != ALL_SUB_MPAGES))
->>> +		goto invalid_fld;
->>> +	if (pg_len > len)
->>> +		goto invalid_fld;
-
->>    It's valid to have buffer size less than data size.
-
-> Perhaps for MODE SENSE, but not for MODE SELECT.  Otherwise, where do
-> you get the mode data from?
-
-   They simply don't change?
-
-> Anyhow, checking buffer size vs. data size is done early, in
-
-> +	/* Test early for possible overrun.  */
-> +	if (scsi_sglist(scmd)->length < len)
-> +		goto invalid_fld;
-
-> not here.  What this check is doing, is ensuring that the page data does
-> not extend past the end of the buffer.
-
-   That's what I say is valid. You can get incomplete data, according to the
-buffer size. Though maybe it was only my impression...
-
->>> +	switch (pg) {
->>> +	case CACHE_MPAGE:
->>> +		if (ata_mselect_caching(tf, p, pg_len))
->>> +			goto invalid_fld;
->>> +		break;
->>> +
->>> +	default:		/* invalid page code */
->>> +		goto invalid_fld;
-
->>    Page code is not a part of CDB, hence the sense code you'll return doesn't
->> fit there.
-
-> Yes, invalid field in parameter list probably would be better.
-
-   Or "parameter not supported" (0x26/0x01).
-
-> Let me know if I should respin.
-
-   I'd prefer if you respin.
-
-> Thanks for the review!
-
-> Paolo
-
-MBR, Sergei
+Paolo
