@@ -1,71 +1,46 @@
-From: "Janet Yellen" <drakoday@aol.com>
-Subject: RE:FOREIGN TRANSFER DEPARTMENT
-Date: Tue, 03 Jul 2012 18:14:15 -0500
-Message-ID: <201207032318.q63NI4dD008871@ims-m12.mx.aol.com>
-Reply-To: janet.fedreserve1@globomail.com
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Subject: Re: [RFC][PATCH] libata: enable SATA disk fua detection on default
+Date: Wed, 4 Jul 2012 10:47:15 +0800
+Message-ID: <20120704024715.GA17095@gmail.com>
+References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
+ <20120703090441.GA4804@gmail.com>
+ <4FF351F8.1000003@msgid.tls.msk.ru>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0391378419=="
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ims-m12.mx.aol.com ([64.12.207.145]:53527 "EHLO
-	ims-m12.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756488Ab2GCXSl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2012 19:18:41 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:33330 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754426Ab2GDCjA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jul 2012 22:39:00 -0400
+Content-Disposition: inline
+In-Reply-To: <4FF351F8.1000003@msgid.tls.msk.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <drakoday@aol.com>
+To: Michael Tokarev <mjt@tls.msk.ru>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>
 
-You will not see this in a MIME-aware mail reader.
---===============0391378419==
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Description: Mail message body
+Hi Michael,
 
+On Wed, Jul 04, 2012 at 12:11:36AM +0400, Michael Tokarev wrote:
+> On 03.07.2012 13:04, Zheng Liu wrote:
+> > Hi Jeff,
+> > 
+> > Sorry for bothering you.  Could you please review this patch, or give me
+> > some feedbacks.  If this patch can be applied, I can rebase it to the
+> > lastest version of mainline kernel.  Thank you.
+> []
+> >> -int libata_fua = 0;
+> >> +int libata_fua = 1;
+> 
+> I guess it can be enabled after LOTS of testing of various drives out
+> there, which shows that no current drives have issues with FUA anymore,
+> and after building a black-list of devices which misbehave.  It is quite
+> a big project, I think.  But what it gives us in return?
+> 
+> (I've no idea if this is the right answer, speaking of myself only)
 
-It has come to our notice that you have been defrauded of your hard earned =
-money by fraudsters, View attached...
---===============0391378419==
-Content-Type: application/octet-stream
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="full details.rtf"
+Thanks for the reply.  Indeed it is quite a big project but we enable
+FUA feature for SAS disk.  Is there any differences?
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzEwMzN7XGZvbnR0Ymx7XGYwXGZu
-aWxcZmNoYXJzZXQwIENhbGlicmk7fX0NCntcKlxnZW5lcmF0b3IgTXNmdGVkaXQgNS40MS4yMS4y
-NTA5O31cdmlld2tpbmQ0XHVjMVxwYXJkXHNhMjAwXHNsMjc2XHNsbXVsdDFcbGFuZzlcZjBcZnMy
-MiBGT1JFSUdOIFRSQU5TRkVSIERFUEFSVE1FTlRccGFyDQpVTklURUQgU1RBVEVTIEZFREVSQUwg
-UkVTRVJWRVxwYXINCjIwMTIgRlJBVUQgVklDVElNUyBSRUYvUEFZTUVOVFMgQ09ERTpGUkIvMDA1
-NDZccGFyDQpccGFyDQpBdHRlbnRpb24tQmVuZWZpY2lhcnksXHBhcg0KXH5ccGFyDQpJdCBoYXMg
-Y29tZSB0byBvdXIgbm90aWNlIHRoYXQgeW91IGhhdmUgYmVlbiBkZWZyYXVkZWQgb2YgeW91ciBo
-YXJkIGVhcm5lZCBtb25leSBieSBmcmF1ZHN0ZXJzIGZyb20gQWZyaWNhIGFuZCB0aGUgcmVzdCBv
-ZiB0aGUgd29ybGQuIER1cmluZyB0aGUgbGFzdCBBbnRpLUZyYXVkIG1lZXRpbmcgaGVsZCBpbiBX
-YXNoaW5ndG9uIERDIFVTQSwgaXQgd2FzIGFsYXJtZWQgc28gbXVjaCBieSB0aGUgcmVzdCBvZiB0
-aGUgd29ybGQgb24gdGhlIGxvc3Mgb2YgZnVuZCBieSB2YXJpb3VzIGZvcmVpZ25lcnMgdG8gc2Nh
-bSBhcnRpc3RzIG9wZXJhdGluZyBhbGwgb3ZlciB0aGUgd29ybGQgdG9kYXkuXHBhcg0KXH5ccGFy
-DQpBZnRlciB0aGVcfiBtZWV0aW5nLCB3ZSBoYXZlIGRlY2lkZWQgdG8gcmVkZWVtIHRoZSBnb29k
-IGltYWdlIG9mIEFmcmljYW4gQ291bnRyaWVzLCBUaGVyZWZvcmUsIGFuIGltbWVkaWF0ZSBwYXlt
-ZW50IG9mICQxMCw1MDAsMDAwLjAwVVNEKFRlbiBNaWxsaW9uLCBGaXZlIEh1bmRyZWQgVGhvdXNh
-bmQgVW5pdGVkIFN0YXRlcyBEb2xsYXJzKSBoYXMgYmVlbiBvcmRlcmVkIGZvciBlYWNoIG9mIHRo
-ZSBhZmZlY3RlZCB2aWN0aW1zLiBUaGlzIGlzIGluIGFjY29yZGFuY2UgdG8gb3VyIHJlY29tbWVu
-ZGF0aW9ucy4gVGhpcyBwYXltZW50cyB3aWxsIGJlIG1hZGUgYnkgVU5JVEVEIFNUQVRFUyBGRURF
-UkFMIFJFU0VSVkUgYXMgdGhlIGF1dGhvcml6ZWQgYW5kIGNvcnJlc3BvbmRpbmcgcGF5aW5nIGJh
-bmsgdW5kZXIgdGhlIGZ1bmRpbmcgYXNzaXN0YW5jZSBvZiB0aGUgV29ybGQgQmFuay5ccGFyDQpc
-flxwYXINCkFzIGF0IGRhdGUgc29tZSBiZW5lZmljaWFyaWVzIGhhdmUgYmVlbiBwYWlkIG1vc3Qg
-b2YgdGhlbSBhcmUgZnJvbSBVbml0ZWQgU3RhdGVzLiBZb3VyIGluZm9ybWF0aW9uIHdlcmUgYW1v
-bmcgdGhvc2UgbWVudGlvbmVkIGJ5IHNvbWUgb2YgdGhlIHN5bmRpY2F0ZSB0aGF0IHdhcyBhcHBy
-ZWhlbmRlZCBpbiBMYWdvcyBOaWdlcmlhLCBBY2NyYSBHaGFuYSBhbmQgTG9uZG9uIGFzIG9uZSBv
-ZiB0aG9zZSB0aGF0IGhhdmUgbG9zdCBhbGxvdCBvZiBtb25leSB0byB0aGVpciBvcGVyYXRpb25z
-LlxwYXINClxwYXINCllvdSBhcmUgaGVyZWJ5IGFkdmlzZWQgYW5kIHdhcm5lZCBub3QgdG8gY29t
-bXVuaWNhdGUgb3IgZHVwbGljYXRlIHRoaXMgbWVzc2FnZSB0byBhbnlib2R5IGZvciBhbnkgcmVh
-c29uIHdoYXRzb2V2ZXIgYXMgdGhlIFUuUyBzZWNyZXQgc2VydmljZSBhbmQgdGhlIEYuQi5JIGlz
-IHdvcmtpbmcgZGF5IGFuZCBuaWdodCB0byB0cmFjayB0aGlzIGNyaW1pbmFscyBkb3duLiBUaGlz
-IGhhcyB0byBiZSBrZXB0IGNvbmZpZGVudGlhbCB1bnRpbCB0aGVzZSBjcmltaW5hbHMgYXJlIGFs
-bCBhcHByZWhlbmRlZC5ccGFyDQpcflxwYXINCllvdSBjYW4gcmVjZWl2ZSB5b3VyIHJlaW1idXJz
-ZW1lbnQgdmlhIGFueSBvZiB0aGVzZSBvcHRpb25zIHlvdSBjaG9vc2UgKENFUlRJRklFRCBCQU5L
-IERSQUZUIE9SIFdJUkUgVFJBTlNGRVIpIEluIHRoaXMgcmVnYXJkcywgWW91IGFyZSB0byBjb250
-YWN0IG1lIGltbWVkaWF0ZWx5OyBUaGlzIHdpbGwgZW5hYmxlIHRoZSBpbW1lZGlhdGUgcHJvY2Vz
-cyBvbiB0aGUgcmVsZWFzZSBvZiB5b3VyIGNvbXBlbnNhdGlvbiBwYXltZW50IHRvIHlvdS4gWW91
-ciB1cmdlbnQgcmVzcG9uc2UgaXMgYXdhaXRlZC5ccGFyDQpcflxwYXINCkphbmV0IFllbGxlblxw
-YXINClZpY2UgQ2hhaXJtYW4sXHBhcg0KVW5pdGVkIFN0YXRlcyBGZWRlcmFsIFJlc2VydmUgXHBh
-cg0KfQ0KAA==
---===============0391378419==--
+Regards,
+Zheng
