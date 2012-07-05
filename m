@@ -1,174 +1,156 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
 Subject: Re: [PATCH v2 2/2] ata: implement MODE SELECT command
-Date: Thu, 05 Jul 2012 15:42:34 +0400
-Message-ID: <4FF57DAA.8010405@mvista.com>
-References: <1341481235-12708-1-git-send-email-pbonzini@redhat.com> <1341481235-12708-3-git-send-email-pbonzini@redhat.com>
+Date: Thu, 05 Jul 2012 14:05:52 +0200
+Message-ID: <4FF58320.1050606@redhat.com>
+References: <1341481235-12708-1-git-send-email-pbonzini@redhat.com> <1341481235-12708-3-git-send-email-pbonzini@redhat.com> <4FF57DAA.8010405@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:60447 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932315Ab2GELnS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2012 07:43:18 -0400
-Received: by lbbgm6 with SMTP id gm6so12604815lbb.19
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2012 04:43:16 -0700 (PDT)
-In-Reply-To: <1341481235-12708-3-git-send-email-pbonzini@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4809 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750910Ab2GEMGl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Jul 2012 08:06:41 -0400
+In-Reply-To: <4FF57DAA.8010405@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Hello.
+Il 05/07/2012 13:42, Sergei Shtylyov ha scritto:
+>> +    six_byte = (cdb[0] == MODE_SELECT);
+>> +    if (six_byte) {
+>> +        if (scmd->cmd_len < 5)
+>> +            goto invalid_fld;
+> 
+>    Strictly speaking, it should be "invalid phase" error.
+> 
+>> +
+>> +        len = cdb[4];
+>> +    } else {
+>> +        if (scmd->cmd_len < 9)
+>> +            goto invalid_fld;
+> 
+>    The same.
+> 
+>> +
+>> +        len = (cdb[7] << 8) + cdb[8];
+>> +    }
+>> +    /* Test early for possible overrun.  */
+>> +    if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
+>> +        goto invalid_param_len;
+> 
+>     Strictly speaking, it's "data underrun" error.
 
-On 05-07-2012 13:40, Paolo Bonzini wrote:
+The exact errors don't really matter, they shouldn't happen at all.  But
+they're important so that we don't access uninitialized memory in case
+they do.  Existing xlat functions are similarly hand-wavy.
 
-> The cache_type file in sysfs lets users configure the disk cache in
-> write-through or write-back modes.  However, ata disks do not support
-> writing to the file because they do not implement the MODE SELECT
-> command.
+>> +    p = page_address(sg_page(scsi_sglist(scmd)));
+> 
+>    What if the S/G list spans multiple non-consecutive pages?
 
-> This patch adds a translation from MODE SELECT (for the caching page
-> only) to the ATA SET FEATURES command.  The set of changeable parameters
-> answered by MODE SENSE is also adjusted accordingly.
+Hmm, with a large number of block descriptors we could indeed span more
+than one page.  On the other hand, we can just fail with invalid_param
+if there is more than one block descriptor, so we're guaranteed not to
+look beyond the first page (4 bytes for the header, 8 bytes for the
+block descriptor, 4 bytes for the mode page header, 10 bytes for the
+mode page).
 
-> Cc: Sergei Shtylyov <sshtylyov@mvista.com>
-> Cc: Jeff Garzik <jgarzik@pobox.com>
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> ---
->   drivers/ata/libata-scsi.c |  185 +++++++++++++++++++++++++++++++++++++++++++--
->   1 files changed, 179 insertions(+), 6 deletions(-)
+>> +
+>> +    /* Move past header and block descriptors.  */
+>> +    if (six_byte)
+>> +        hdr_len = p[3] + 4;
+>> +    else
+>> +        hdr_len = (p[6] << 8) + p[7] + 8;
+>> +
+>> +    if (len < hdr_len)
+>> +        goto invalid_param_len;
+>> +
+>> +    len -= hdr_len;
+>> +    p += hdr_len;
+>> +    if (len == 0)
+>> +        goto skip;
+>> +
+>> +    /* Parse both possible formats for the mode page headers.  */
+>> +    pg = p[0] & 0x3f;
+>> +    if (p[0] & 0x40) {
+>> +        if (len < 4)
+>> +            goto invalid_param_len;
+>> +
+>> +        spg = p[1];
+>> +        pg_len = (p[2] << 8) | p[3];
+>> +        p += 4;
+>> +        len -= 4;
+>> +    } else {
+>> +        if (len < 2)
+>> +            goto invalid_param_len;
+>> +
+>> +        spg = 0;
+>> +        pg_len = p[1];
+>> +        p += 2;
+>> +        len -= 2;
+>> +    }
+>> +
+>> +    /*
+>> +     * Only one page has changeable data, so we only support setting one
+>> +     * page at a time.
+>> +     */
+>> +    if (len < pg_len)
+>> +        goto invalid_param;
+> 
+>     Not 'invalid_param_len'?
 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index d5aeb26..1cb88df 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-[...]
-> +/**
-> + *	ata_scsiop_mode_select - Simulate MODE SELECT 6, 10 commands
-> + *	@qc: Storage for translated ATA taskfile
-> + *
-> + *	Converts a MODE SELECT command to an ATA SET FEATURES taskfile.
-> + *	Assume this is invoked for direct access devices (e.g. disks) only.
-> + *	There should be no block descriptor for other device types.
-> + *
-> + *	LOCKING:
-> + *	spin_lock_irqsave(host lock)
-> + */
-> +static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
-> +{
-> +	struct scsi_cmnd *scmd = qc->scsicmd;
-> +	const u8 *cdb = scmd->cmnd;
-> +	const u8 *p;
-> +	u8 pg, spg;
-> +	unsigned six_byte, pg_len, hdr_len;
-> +	int len;
-> +
-> +	VPRINTK("ENTER\n");
-> +
-> +	six_byte = (cdb[0] == MODE_SELECT);
-> +	if (six_byte) {
-> +		if (scmd->cmd_len < 5)
-> +			goto invalid_fld;
+No (it is more like a shortcut for the "default" case of the switch
+statement below), but it should be "if (len > pg_len)" rather than <.
+It's also clearer to move it closer to the end of the function.
 
-    Strictly speaking, it should be "invalid phase" error.
+>> +
+>> +    /*
+>> +     * No mode subpages supported (yet) but asking for _all_
+>> +     * subpages may be valid
+>> +     */
+>> +    if (spg && (spg != ALL_SUB_MPAGES))
+>> +        goto invalid_param;
+> 
+>    Rather "paramater not supported" (0x26/0x01)...
 
-> +
-> +		len = cdb[4];
-> +	} else {
-> +		if (scmd->cmd_len < 9)
-> +			goto invalid_fld;
+SCSI spec begs to differ... there is no reference to that sense code in
+the whole SPC spec.
 
-    The same.
+>> +    if (pg_len > len)
+>> +        goto invalid_param_len;
+> 
+>    We have just checked this.
 
-> +
-> +		len = (cdb[7] << 8) + cdb[8];
-> +	}
-> +	/* Test early for possible overrun.  */
-> +	if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
-> +		goto invalid_param_len;
+See above.
 
-     Strictly speaking, it's "data underrun" error.
+>> +    switch (pg) {
+>> +    case CACHE_MPAGE:
+>> +        if (ata_mselect_caching(qc, p, pg_len) < 0)
+>> +            goto invalid_param;
+> 
+>    Rather "parameter not supported"?
 
-> +	p = page_address(sg_page(scsi_sglist(scmd)));
+Same here, SCSI spec says "invalid field in parameter list", I obey.
 
-    What if the S/G list spans multiple non-consecutive pages?
+>> +        break;
+>> +
+>> +    default:        /* invalid page code */
+>> +        goto invalid_param;
+> 
+>    Rather "paramater not supported"...
 
-> +
-> +	/* Move past header and block descriptors.  */
-> +	if (six_byte)
-> +		hdr_len = p[3] + 4;
-> +	else
-> +		hdr_len = (p[6] << 8) + p[7] + 8;
-> +
-> +	if (len < hdr_len)
-> +		goto invalid_param_len;
-> +
-> +	len -= hdr_len;
-> +	p += hdr_len;
-> +	if (len == 0)
-> +		goto skip;
-> +
-> +	/* Parse both possible formats for the mode page headers.  */
-> +	pg = p[0] & 0x3f;
-> +	if (p[0] & 0x40) {
-> +		if (len < 4)
-> +			goto invalid_param_len;
-> +
-> +		spg = p[1];
-> +		pg_len = (p[2] << 8) | p[3];
-> +		p += 4;
-> +		len -= 4;
-> +	} else {
-> +		if (len < 2)
-> +			goto invalid_param_len;
-> +
-> +		spg = 0;
-> +		pg_len = p[1];
-> +		p += 2;
-> +		len -= 2;
-> +	}
-> +
-> +	/*
-> +	 * Only one page has changeable data, so we only support setting one
-> +	 * page at a time.
-> +	 */
-> +	if (len < pg_len)
-> +		goto invalid_param;
+Same here too.
 
-     Not 'invalid_param_len'?
+Thanks for the review.
 
-> +
-> +	/*
-> +	 * No mode subpages supported (yet) but asking for _all_
-> +	 * subpages may be valid
-> +	 */
-> +	if (spg && (spg != ALL_SUB_MPAGES))
-> +		goto invalid_param;
+Paolo
 
-    Rather "paramater not supported" (0x26/0x01)...
+>> +    }
+>> +
+>> +    return 0;
+> 
+> MBR, Sergei
 
-> +	if (pg_len > len)
-> +		goto invalid_param_len;
 
-    We have just checked this.
-
-> +	switch (pg) {
-> +	case CACHE_MPAGE:
-> +		if (ata_mselect_caching(qc, p, pg_len) < 0)
-> +			goto invalid_param;
-
-    Rather "parameter not supported"?
-
-> +		break;
-> +
-> +	default:		/* invalid page code */
-> +		goto invalid_param;
-
-    Rather "paramater not supported"...
-
-> +	}
-> +
-> +	return 0;
-
-MBR, Sergei
