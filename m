@@ -1,42 +1,22 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2 2/2] ata: implement MODE SELECT command
-Date: Thu, 05 Jul 2012 23:42:33 +0400
-Message-ID: <4FF5EE29.6020706@mvista.com>
-References: <1341481235-12708-1-git-send-email-pbonzini@redhat.com> <1341481235-12708-3-git-send-email-pbonzini@redhat.com> <4FF57DAA.8010405@mvista.com> <4FF58320.1050606@redhat.com>
+From: Carline Shumaker <georgeannwyzst@yahoo.com>
+Subject: Hi! I want to meet an interesting man. You seem to suit the conditions perfectly...
+Date: Fri, 6 Jul 2012 12:19:58 +0100 (BST)
+Message-ID: <1341573598.32398.YahooMailNeo@web132303.mail.ird.yahoo.com>
+Reply-To: Carline Shumaker <carline.shumaker@songwriter.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:41719 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755838Ab2GEToB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jul 2012 15:44:01 -0400
-Received: by bkwj10 with SMTP id j10so3817443bkw.19
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jul 2012 12:43:59 -0700 (PDT)
-In-Reply-To: <4FF58320.1050606@redhat.com>
+Received: from nm14-vm0.bullet.mail.ird.yahoo.com ([77.238.189.193]:28139 "HELO
+	nm14-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933508Ab2GFLUA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Jul 2012 07:20:00 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: "jahve@vip.cybercity.dk" <jahve@vip.cybercity.dk>
 
-Hello.
-
-On 07/05/2012 04:05 PM, Paolo Bonzini wrote:
-
->>> +
->>> +    /*
->>> +     * No mode subpages supported (yet) but asking for _all_
->>> +     * subpages may be valid
->>> +     */
->>> +    if (spg && (spg != ALL_SUB_MPAGES))
->>> +        goto invalid_param;
-
->>    Rather "paramater not supported" (0x26/0x01)...
-
-> SCSI spec begs to differ... there is no reference to that sense code in
-> the whole SPC spec.
-
-   Right you are, I was just picking the more fitting ASC/ASCQ from the table
-instead of reading the command description itself. :-<
-
-MBR, Sergei
+Hello pretty! 
+I am sure we'll be good friends. I am Carline, there is so much I can tell u;)
+I saw your photos and I consider u to be quite magnetic.
+It's interesting what u have to tell! :)
