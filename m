@@ -1,38 +1,40 @@
-From: serdal@med.sdu.edu.tr
-Subject: Greetings and Compliments
-Date: Tue, 10 Jul 2012 16:50:53 +0300
-Message-ID: <20120710165053.124885ln77c6u6nx__10960.3083845743$1341929185$gmane$org@medwm.sdu.edu.tr>
-Reply-To: officerexecutive206@yahoo.com.hk
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15815] pata_legacy causes machine check
+Date: Wed, 11 Jul 2012 15:20:44 +0000 (UTC)
+Message-ID: <20120711152044.3A40E11FA5F@bugzilla.kernel.org>
+References: <bug-15815-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-9;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from med2.sdu.edu.tr ([193.140.135.234]:44338 "EHLO med.sdu.edu.tr"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751235Ab2GJOF5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Jul 2012 10:05:57 -0400
-Content-Disposition: inline
+Received: from mail.kernel.org ([198.145.19.201]:50952 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755608Ab2GKPUu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Jul 2012 11:20:50 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 99F6B201CD
+	for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2012 15:20:49 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 3C2582025B
+	for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2012 15:20:44 +0000 (UTC)
+In-Reply-To: <bug-15815-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=15815
+
+
+Alan <alan@lxorguk.ukuu.org.uk> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |WILL_NOT_FIX
 
 
 
-I am executive officer from HSBC Bank in Hong Kong and have a  
-sensitive and confidential brief from Hong Kong. I am asking for your  
-partnership in re-profiling funds ($18.350.000 Million) i am  
-contacting you because you live outside Hong Kong. Finally, note that  
-this must be concluded within two weeks.Kindly write back and i look  
-forward to hear from you so i can give you more information about  
-myself and the nature of the funds.
 
-Regards,
-P.Wong.
-Email: officerexecutive206@yahoo.com.hk
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
