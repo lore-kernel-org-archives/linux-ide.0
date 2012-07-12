@@ -1,40 +1,21 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15815] pata_legacy causes machine check
-Date: Wed, 11 Jul 2012 15:20:44 +0000 (UTC)
-Message-ID: <20120711152044.3A40E11FA5F@bugzilla.kernel.org>
-References: <bug-15815-11633@https.bugzilla.kernel.org/>
+From: Karolyn Amundson <chvwxtumlin@yahoo.com>
+Subject: I think we will make a big mistake if we do not get to know each other
+Date: Thu, 12 Jul 2012 05:52:48 +0100 (BST)
+Message-ID: <1342068768.21407.YahooMailNeo@web132506.mail.ird.yahoo.com>
+Reply-To: Karolyn Amundson <karolyn.amundson@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50952 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755608Ab2GKPUu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Jul 2012 11:20:50 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 99F6B201CD
-	for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2012 15:20:49 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 3C2582025B
-	for <linux-ide@vger.kernel.org>; Wed, 11 Jul 2012 15:20:44 +0000 (UTC)
-In-Reply-To: <bug-15815-11633@https.bugzilla.kernel.org/>
+Received: from nm15.bullet.mail.ird.yahoo.com ([77.238.189.68]:21458 "HELO
+	nm15.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752168Ab2GLEwt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Jul 2012 00:52:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "praiseiihim@yahoo.com" <praiseiihim@yahoo.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15815
-
-
-Alan <alan@lxorguk.ukuu.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |WILL_NOT_FIX
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Hey pretty! 
+I'm Karolyn. I make friends around the Earth and I'd like to learn more about you ;)
+Can't wait to talk to u! )))
