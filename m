@@ -1,21 +1,40 @@
-From: Karolyn Amundson <chvwxtumlin@yahoo.com>
-Subject: I think we will make a big mistake if we do not get to know each other
-Date: Thu, 12 Jul 2012 05:52:48 +0100 (BST)
-Message-ID: <1342068768.21407.YahooMailNeo@web132506.mail.ird.yahoo.com>
-Reply-To: Karolyn Amundson <karolyn.amundson@yahoo.com>
+From: Access Financial Services <info@lone.net>
+Subject: Darlehen anbieten !!!
+Date: Thu, 12 Jul 2012 06:25:29 -0400
+Message-ID: <20120712062529.13914chm8y1ft921__25841.6640376256$1342089139$gmane$org@webmail.onecommunications.net>
+Reply-To: insurloan@aol.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm15.bullet.mail.ird.yahoo.com ([77.238.189.68]:21458 "HELO
-	nm15.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752168Ab2GLEwt convert rfc822-to-8bit
+Received: from smtphost003.onecommunications.net ([69.95.226.33]:50896 "HELO
+	smtphost003.onecommunications.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1030222Ab2GLKcL convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jul 2012 00:52:49 -0400
+	Thu, 12 Jul 2012 06:32:11 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "praiseiihim@yahoo.com" <praiseiihim@yahoo.com>
 
-Hey pretty! 
-I'm Karolyn. I make friends around the Earth and I'd like to learn more about you ;)
-Can't wait to talk to u! )))
+Hallo
+
+Sie ben=F6tigen keine finanzielle Hilfe? Wir sind =20
+Unternehmens-Kreditgebern. Wir bieten Darlehen an die auf der ganzen =20
+Welt. Unser Angebot reicht von 10.000,00 EUR ist um 100.000.000,00 EUR =
+=20
+um 2% Zinsen pro aufzuheben.
+
+Bei Interesse bitten wir um folgende
+
+Ben=F6tigte Menge:
+Laufzeit des Kredits:
+Telefonnummer:
+Land:
+
+Viele Gr=FC=DFe
+Gesch=E4ftsf=FChrer
+Dr. Wendy Watt
+
+
+
