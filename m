@@ -1,57 +1,33 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16414] Panic during IO from both hard disk and CD-ROM on VIA
- IDE chipset using pata_via
-Date: Fri, 13 Jul 2012 14:16:11 +0000 (UTC)
-Message-ID: <20120713141611.0CD1E11FACF@bugzilla.kernel.org>
-References: <bug-16414-11633@https.bugzilla.kernel.org/>
+From: Yang Bai <hamo.by@gmail.com>
+Subject: How to map ata_link to physical link and ata_port to physical port
+Date: Mon, 16 Jul 2012 11:09:26 +0800
+Message-ID: <CAO_0yfM_qmWd_dR7UH1Y6Rk6F5b9CTVduDKLmsLb8azrmL5NZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:51084 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757585Ab2GMOQO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jul 2012 10:16:14 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B2083201CF
-	for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2012 14:16:13 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 0D93B201D1
-	for <linux-ide@vger.kernel.org>; Fri, 13 Jul 2012 14:16:11 +0000 (UTC)
-In-Reply-To: <bug-16414-11633@https.bugzilla.kernel.org/>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:63124 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535Ab2GPDJq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jul 2012 23:09:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16414
+Hi hackers,
 
+In our internal usage, we want to map the disk in system like
+sd{a,b,c} to physical disk slot. When the disk is attached to LSI HBA
+card, we find that we can rely on the phy attribute of the disk to
+find the slot since this attribute does not change no matter which
+kind of disks we attach or what order we attach the disks. But when
+doing this for AHCI, we do not find an attribute that we can rely on
+it to map the disk to slot. No matter ata_port number or ata_host
+number, when we changed the order we attached the disks to slots, they
+changed.
 
+So I want to know is there some attribute we can get from AHCI that
+map the logical disk to physical slot?
 
-
-
---- Comment #7 from old_man999@gmx.de  2012-07-13 14:16:10 ---
-Created an attachment (id=75321)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=75321)
-Kernel Panic after Reading from CD-Audio (second picture)
-
-Hardware:
-TargaVisionaryXP
-AMD AthlonXP-m
-VIA KT333 w. VT8235
-IDE DVD-Rom/CDRW Samsung SN324B with Firmware U103
-
-no access to CD possible without kernel panic after a short time.
-When inserting at boot time there are a lot of io errors on device.
-Works normally on MS Windows without read error.
-Was working before at least with kernel 2.6.18.
-Tried kernels:
-2.6.32 debian
-3.2.   -"-
-3.4
-3.2. Partition magic (slackware)    <<here device is not mounting when cd is
-inserted
-Everything was up to date. Last try: 11.07. 2012
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Thanks,
+Yang
