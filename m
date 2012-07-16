@@ -1,34 +1,68 @@
-From: viresh kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH V3 1/3] ata: pata_arasan: Add clk_{un}prepare() support
-Date: Mon, 16 Jul 2012 12:37:33 +0100
-Message-ID: <CAOh2x=nsExs-DFMPV0_CKufpq3VMH1MP46tmyihaWMK0fUeXTg@mail.gmail.com>
-References: <cover.1336536285.git.viresh.kumar@st.com>
-	<9848a1a6838c4f3a7e0cbd6cdc3bc6146fd2e2cc.1336536285.git.viresh.kumar@st.com>
-	<4FBBF09D.1010607@garzik.org>
-	<CAOh2x==5dGi4fyk3dYwSaBVYD-jD9tLOjbLffLi=LLT808O-oA@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 44871] New: Kernel Panic during IO from CD-ROM related to 16414
+Date: Mon, 16 Jul 2012 16:01:24 +0000 (UTC)
+Message-ID: <bug-44871-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:62552 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663Ab2GPLhe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2012 07:37:34 -0400
-Received: by obbuo13 with SMTP id uo13so9380312obb.19
-        for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2012 04:37:33 -0700 (PDT)
-In-Reply-To: <CAOh2x==5dGi4fyk3dYwSaBVYD-jD9tLOjbLffLi=LLT808O-oA@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.19.201]:55111 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751592Ab2GPQB2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jul 2012 12:01:28 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 846C22022D
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2012 16:01:27 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 82D8C20187
+	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2012 16:01:25 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com
+To: linux-ide@vger.kernel.org
 
-On Wed, Jun 13, 2012 at 10:12 AM, viresh kumar <viresh.linux@gmail.com> wrote:
->> these do not apply to upstream, for me...
->>
->
-> Sorry for being late. I rebased them on linux-next that time as they
-> had few dependency commits there.
-> Can you try it there?
+https://bugzilla.kernel.org/show_bug.cgi?id=44871
 
-Ping !!
+           Summary: Kernel Panic during IO from CD-ROM related to 16414
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.2.0-3-686-pae, 3.4-trunk-686-pae
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: old_man999@gmx.de
+        Regression: Yes
 
-Can you please retry applying them?
+
+see <a href="http://bugzilla.kernel.org/show_bug.cgi?id=16414">16414</a>
+
+17: SCSI 100.0: 10602 CD-ROM (DVD)                              
+  [Created at block.247]
+  UDI:
+/org/freedesktop/Hal/devices/storage_serial_Samsung_CD_RW_DVD_ROM_SN_324B
+  Unique ID: KD9E.rXgP8cnoGhD
+  Parent ID: +Y+h.mcsZ0a690T4
+  SysFS ID: /class/block/sr0
+  SysFS BusID: 1:0:0:0
+  SysFS Device Link: /devices/pci0000:00/0000:00:11.1/host1/target1:0:0/1:0:0:0
+  Hardware Class: cdrom
+  Model: "SAMSUNG CDRW/DVD SN-324B"
+  Vendor: "SAMSUNG"
+  Device: "CDRW/DVD SN-324B"
+  Revision: "u103"
+  Driver: "pata_via", "sr"
+  Driver Modules: "pata_via"
+  Device File: /dev/sr0 (/dev/sg1)
+  Device Files: /dev/sr0, /dev/cdrom1, /dev/cdrw1,
+/dev/disk/by-id/ata-Samsung_CD-RW_DVD-ROM_SN-324B,
+/dev/disk/by-path/pci-0000:00:11.1-scsi-1:0:0:0, /dev/dvd1
+  Device Number: block 11:0 (char 21:1)
+  Features: CD-R, CD-RW, DVD
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
