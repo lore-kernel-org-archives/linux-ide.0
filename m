@@ -1,68 +1,55 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 44871] New: Kernel Panic during IO from CD-ROM related to 16414
-Date: Mon, 16 Jul 2012 16:01:24 +0000 (UTC)
-Message-ID: <bug-44871-11633@https.bugzilla.kernel.org/>
+From: Yang Bai <hamo.by@gmail.com>
+Subject: Re: How to map ata_link to physical link and ata_port to physical port
+Date: Tue, 17 Jul 2012 09:59:35 +0800
+Message-ID: <CAO_0yfPpxk521qBaXCKDabdYtACMYTAWe_zkF2bG8ELveHw58g@mail.gmail.com>
+References: <CAO_0yfM_qmWd_dR7UH1Y6Rk6F5b9CTVduDKLmsLb8azrmL5NZA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55111 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751592Ab2GPQB2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jul 2012 12:01:28 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 846C22022D
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2012 16:01:27 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 82D8C20187
-	for <linux-ide@vger.kernel.org>; Mon, 16 Jul 2012 16:01:25 +0000 (UTC)
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:44821 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292Ab2GQB75 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jul 2012 21:59:57 -0400
+In-Reply-To: <CAO_0yfM_qmWd_dR7UH1Y6Rk6F5b9CTVduDKLmsLb8azrmL5NZA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, gwendal@google.com, jgarzik@redhat.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=44871
+CC-ed Gwendal and Jeff
 
-           Summary: Kernel Panic during IO from CD-ROM related to 16414
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 3.2.0-3-686-pae, 3.4-trunk-686-pae
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: high
-          Priority: P1
-         Component: IDE
-        AssignedTo: io_ide@kernel-bugs.osdl.org
-        ReportedBy: old_man999@gmx.de
-        Regression: Yes
+Ping.
+
+On Mon, Jul 16, 2012 at 11:09 AM, Yang Bai <hamo.by@gmail.com> wrote:
+> Hi hackers,
+>
+> In our internal usage, we want to map the disk in system like
+> sd{a,b,c} to physical disk slot. When the disk is attached to LSI HBA
+> card, we find that we can rely on the phy attribute of the disk to
+> find the slot since this attribute does not change no matter which
+> kind of disks we attach or what order we attach the disks. But when
+> doing this for AHCI, we do not find an attribute that we can rely on
+> it to map the disk to slot. No matter ata_port number or ata_host
+> number, when we changed the order we attached the disks to slots, the=
+y
+> changed.
+>
+> So I want to know is there some attribute we can get from AHCI that
+> map the logical disk to physical slot?
+>
+> Thanks,
+> Yang
 
 
-see <a href="http://bugzilla.kernel.org/show_bug.cgi?id=16414">16414</a>
 
-17: SCSI 100.0: 10602 CD-ROM (DVD)                              
-  [Created at block.247]
-  UDI:
-/org/freedesktop/Hal/devices/storage_serial_Samsung_CD_RW_DVD_ROM_SN_324B
-  Unique ID: KD9E.rXgP8cnoGhD
-  Parent ID: +Y+h.mcsZ0a690T4
-  SysFS ID: /class/block/sr0
-  SysFS BusID: 1:0:0:0
-  SysFS Device Link: /devices/pci0000:00/0000:00:11.1/host1/target1:0:0/1:0:0:0
-  Hardware Class: cdrom
-  Model: "SAMSUNG CDRW/DVD SN-324B"
-  Vendor: "SAMSUNG"
-  Device: "CDRW/DVD SN-324B"
-  Revision: "u103"
-  Driver: "pata_via", "sr"
-  Driver Modules: "pata_via"
-  Device File: /dev/sr0 (/dev/sg1)
-  Device Files: /dev/sr0, /dev/cdrom1, /dev/cdrw1,
-/dev/disk/by-id/ata-Samsung_CD-RW_DVD-ROM_SN-324B,
-/dev/disk/by-path/pci-0000:00:11.1-scsi-1:0:0:0, /dev/dvd1
-  Device Number: block 11:0 (char 21:1)
-  Features: CD-R, CD-RW, DVD
+--=20
+    """
+    Keep It Simple,Stupid.
+    """
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Chinese Name: =E7=99=BD=E6=9D=A8
+Nick Name: Hamo
+Homepage: http://hamobai.com/
+GPG KEY ID: 0xA4691A33
+Key fingerprint =3D 09D5 2D78 8E2B 0995 CF8E  4331 33C4 3D24 A469 1A33
