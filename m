@@ -1,83 +1,67 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH 3/5] scsi: sr: block events when runtime suspended
-Date: Mon, 23 Jul 2012 14:49:38 +0800
-Message-ID: <1343026180-22236-4-git-send-email-aaron.lu@amd.com>
-References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 4/5] scsi: pm: use runtime resume callback if available
+Date: Mon, 23 Jul 2012 18:36:12 +0400
+Message-ID: <500D615C.1080605@mvista.com>
+References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com> <1343026180-22236-5-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from co1ehsobe006.messaging.microsoft.com ([216.32.180.189]:20246
-	"EHLO co1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752386Ab2GWHGE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2012 03:06:04 -0400
-In-Reply-To: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:59455 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503Ab2GWOhr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2012 10:37:47 -0400
+Received: by lbbgm6 with SMTP id gm6so8109331lbb.19
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jul 2012 07:37:46 -0700 (PDT)
+In-Reply-To: <1343026180-22236-5-git-send-email-aaron.lu@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-When the ODD is runtime suspended, there is no need to poll it for
-events, so block events poll for it and unblock when resumed.
+Hello.
 
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
----
- block/genhd.c     | 2 ++
- drivers/scsi/sr.c | 7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
+On 07/23/2012 10:49 AM, Aaron Lu wrote:
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 9cf5583..bdb3682 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
- 
- 	mutex_unlock(&ev->block_mutex);
- }
-+EXPORT_SYMBOL(disk_block_events);
- 
- static void __disk_unblock_events(struct gendisk *disk, bool check_now)
- {
-@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
- 	if (disk->ev)
- 		__disk_unblock_events(disk, false);
- }
-+EXPORT_SYMBOL(disk_unblock_events);
- 
- /**
-  * disk_flush_events - schedule immediate event checking and flushing
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index f7a7635..69c9e22 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -208,6 +208,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
- 		return -EBUSY;
- 	}
- 
-+	disk_block_events(cd->disk);
-+
- 	return 0;
- }
- 
-@@ -230,6 +232,8 @@ static int sr_resume(struct device *dev)
- 		atomic_set(&cd->suspend_count, 1);
- 	}
- 
-+	disk_unblock_events(cd->disk);
-+
- 	return 0;
- }
- 
-@@ -318,9 +322,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 	if (CDSL_CURRENT != slot)
- 		return 0;
- 
--	if (pm_runtime_suspended(&cd->device->sdev_gendev))
--		return 0;
--
- 	/* if the logical unit just finished loading/unloading, do a TUR */
- 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
- 		events = 0;
--- 
-1.7.11.3
+> When runtime resume a scsi device, if the device's driver has
+> implemented runtime resume callback, use that instead of the resume
+> callback.
 
+> sr driver needs this to properly do different things for system resume
+> and runtime resume.
+
+> Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+> ---
+>  drivers/scsi/scsi_pm.c | 14 +++++++++-----
+>  drivers/scsi/sr.c      | 21 +++++++++++++++++++++
+>  2 files changed, 30 insertions(+), 5 deletions(-)
+
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index d4201de..19bba47 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -34,14 +34,18 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+>  	return err;
+>  }
+>  
+> -static int scsi_dev_type_resume(struct device *dev)
+> +static int scsi_dev_type_resume(struct device *dev, bool runtime)
+>  {
+>  	struct device_driver *drv;
+>  	int err = 0;
+> +	int (*resume)(struct device *);
+>  
+>  	drv = dev->driver;
+> -	if (drv && drv->resume)
+> -		err = drv->resume(dev);
+> +	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
+> +		resume = drv->pm->runtime_resume;
+> +	else
+> +		resume = drv ? drv->resume : NULL;
+
+   Call thru NULL pointer below will cause kernel oops. Is it your intention?
+
+> +	err = resume(dev);
+
+WBR, Sergei
 
