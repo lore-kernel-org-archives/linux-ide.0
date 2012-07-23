@@ -1,237 +1,36 @@
-From: Daniel J Blueman <daniel@quora.org>
-Subject: [PATCH, repost] Prevent interface errors with Seagate FreeAgent GoFlex
-Date: Mon, 23 Jul 2012 12:22:37 +0800
-Message-ID: <CAMVG2stpgbh8c3QCDC8yv8jjLE+ZbhHNK3nsE9=QmNfyPpG=Xw@mail.gmail.com>
-References: <1336058460-19924-1-git-send-email-daniel@quora.org>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH 0/5] Fix for ZPODD
+Date: Mon, 23 Jul 2012 14:49:35 +0800
+Message-ID: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:42438 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab2GWEWj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2012 00:22:39 -0400
-Received: by wibhr14 with SMTP id hr14so2436182wib.1
-        for <linux-ide@vger.kernel.org>; Sun, 22 Jul 2012 21:22:37 -0700 (PDT)
-In-Reply-To: <1336058460-19924-1-git-send-email-daniel@quora.org>
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:8823 "EHLO
+	va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752312Ab2GWGu5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2012 02:50:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@redhat.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 
-When using my Seagate FreeAgent GoFlex eSATAp external disk enclosure,
-interface errors are always seen until 1.5Gbps is negotiated [1]. This
-occurs using any disk in the enclosure, and when the disk is connected
-directly with a generic passive eSATAp cable, we see stable 3Gbps
-operation as expected.
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
 
-Blacklist 3Gbps mode to avoid dataloss and the ~30s delay bus reset
-and renegotiation incurs.
+Aaron Lu (5):
+  scsi: sr: fix for sr suspend and resume
+  scsi: sr: runtime pm when ODD is open/closed
+  scsi: sr: block events when runtime suspended
+  scsi: pm: use runtime resume callback if available
+  block: genhd: add an interface to set disk's poll interval
 
-Signed-off-by: Daniel J Blueman <daniel@quora.org>
----
- drivers/ata/libata-core.c |    1 +
- 1 file changed, 1 insertion(+)
+ block/genhd.c          | 25 ++++++++++++++++++------
+ drivers/scsi/scsi_pm.c | 14 ++++++++-----
+ drivers/scsi/sr.c      | 53 ++++++++++++++++++++++++++++++++++++--------------
+ include/linux/genhd.h  |  1 +
+ 4 files changed, 67 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28db50b..0781510 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4119,6 +4119,7 @@ static const struct ata_blacklist_entry
-ata_device_blacklist [] = {
-
-        /* Devices which aren't very happy with higher link speeds */
-        { "WD My Book",                 NULL,   ATA_HORKAGE_1_5_GBPS, },
-+       { "Seagate FreeAgent GoFlex",   NULL,   ATA_HORKAGE_1_5_GBPS, },
-
-        /*
-         * Devices which choke on SETXFER.  Applies only if both the
-
---- [1]
-
-<disk plugged into external eSATAp port>
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x4050000 action 0xe frozen
-ata5: irq_stat 0x00400040, connection status changed
-ata5: SError: { PHYRdyChg CommWake DevExch }
-ata5: hard resetting link
-ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata5.00: ATA-8: Seagate FreeAgent GoFlex, 0110, max UDMA/133
-ata5.00: 2930277168 sectors, multi 0: LBA48
-ata5.00: configured for UDMA/133
-ata5: EH complete
-scsi 4:0:0:0: Direct-Access   ATA   Seagate FreeAgen 0110 PQ: 0 ANSI: 5
-sd 4:0:0:0: [sdb] 2930277168 512-byte logical blocks: (1.50 TB/1.36 TiB)
-sd 4:0:0:0: [sdb] 4096-byte physical blocks
-sd 4:0:0:0: [sdb] Write Protect is off
-sd 4:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't
-support DPO or FUA
-sd 4:0:0:0: Attached scsi generic sg1 type 0
- sdb: unknown partition table
-sd 4:0:0:0: [sdb] Attached SCSI disk
-EXT4-fs (dm-0): mounted filesystem with ordered data mode. Opts: (null)
-ata5.00: exception Emask 0x10 SAct 0x0 SErr 0x400100 action 0x6 frozen
-ata5.00: irq_stat 0x08000000, interface fatal error
-ata5: SError: { UnrecovData Handshk }
-ata5.00: failed command: WRITE DMA EXT
-ata5.00: cmd 35/00:00:38:db:61/00:04:6d:00:00/e0 tag 0 dma 524288 out
-     res 50/00:00:37:db:61/00:00:6d:00:00/e0 Emask 0x10 (ATA bus error)
-ata5.00: status: { DRDY }
-ata5: hard resetting link
-ata5: link is slow to respond, please be patient (ready=0)
-ata5: COMRESET failed (errno=-16)
-ata5: hard resetting link
-ata5: link is slow to respond, please be patient (ready=0)
-ata5: COMRESET failed (errno=-16)
-ata5: hard resetting link
-ata5: link is slow to respond, please be patient (ready=0)
-ata5: COMRESET failed (errno=-16)
-ata5: limiting SATA link speed to 1.5 Gbps
-ata5: hard resetting link
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata5.00: configured for UDMA/133
-sd 4:0:0:0: [sdb]
-Result: hostbyte=0x00 driverbyte=0x08
-sd 4:0:0:0: [sdb]
-Sense Key : 0xb [current] [descriptor]
-Descriptor sense data with sense descriptors (in hex):
-    72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
-    6d 61 db 37
-sd 4:0:0:0: [sdb]
-ASC=0x0 ASCQ=0x0
-sd 4:0:0:0: [sdb] CDB:
-cdb[0]=0x2a: 2a 00 6d 61 db 38 00 04 00 00
-end_request: I/O error, dev sdb, sector 1835129656
-Buffer I/O error on device dm-0, logical block 229390950
-Buffer I/O error on device dm-0, logical block 229390951
-Buffer I/O error on device dm-0, logical block 229390952
-Buffer I/O error on device dm-0, logical block 229390953
-Buffer I/O error on device dm-0, logical block 229390954
-Buffer I/O error on device dm-0, logical block 229390955
-Buffer I/O error on device dm-0, logical block 229390956
-Buffer I/O error on device dm-0, logical block 229390957
-Buffer I/O error on device dm-0, logical block 229390958
-Buffer I/O error on device dm-0, logical block 229390959
-Buffer I/O error on device dm-0, logical block 229390960
-Buffer I/O error on device dm-0, logical block 229390961
-Buffer I/O error on device dm-0, logical block 229390962
-Buffer I/O error on device dm-0, logical block 229390963
-Buffer I/O error on device dm-0, logical block 229390964
-Buffer I/O error on device dm-0, logical block 229390965
-Buffer I/O error on device dm-0, logical block 229390966
-Buffer I/O error on device dm-0, logical block 229390967
-Buffer I/O error on device dm-0, logical block 229390968
-Buffer I/O error on device dm-0, logical block 229390969
-Buffer I/O error on device dm-0, logical block 229390970
-Buffer I/O error on device dm-0, logical block 229390971
-Buffer I/O error on device dm-0, logical block 229390972
-Buffer I/O error on device dm-0, logical block 229390973
-Buffer I/O error on device dm-0, logical block 229390974
-Buffer I/O error on device dm-0, logical block 229390975
-Buffer I/O error on device dm-0, logical block 229390976
-Buffer I/O error on device dm-0, logical block 229390977
-Buffer I/O error on device dm-0, logical block 229390978
-Buffer I/O error on device dm-0, logical block 229390979
-Buffer I/O error on device dm-0, logical block 229390980
-Buffer I/O error on device dm-0, logical block 229390981
-Buffer I/O error on device dm-0, logical block 229390982
-Buffer I/O error on device dm-0, logical block 229390983
-Buffer I/O error on device dm-0, logical block 229390984
-Buffer I/O error on device dm-0, logical block 229390985
-Buffer I/O error on device dm-0, logical block 229390986
-Buffer I/O error on device dm-0, logical block 229390987
-Buffer I/O error on device dm-0, logical block 229390988
-Buffer I/O error on device dm-0, logical block 229390989
-Buffer I/O error on device dm-0, logical block 229390990
-Buffer I/O error on device dm-0, logical block 229390991
-Buffer I/O error on device dm-0, logical block 229390992
-Buffer I/O error on device dm-0, logical block 229390993
-Buffer I/O error on device dm-0, logical block 229390994
-Buffer I/O error on device dm-0, logical block 229390995
-Buffer I/O error on device dm-0, logical block 229390996
-Buffer I/O error on device dm-0, logical block 229390997
-Buffer I/O error on device dm-0, logical block 229390998
-Buffer I/O error on device dm-0, logical block 229390999
-Buffer I/O error on device dm-0, logical block 229391000
-Buffer I/O error on device dm-0, logical block 229391001
-Buffer I/O error on device dm-0, logical block 229391002
-Buffer I/O error on device dm-0, logical block 229391003
-Buffer I/O error on device dm-0, logical block 229391004
-Buffer I/O error on device dm-0, logical block 229391005
-Buffer I/O error on device dm-0, logical block 229391006
-Buffer I/O error on device dm-0, logical block 229391007
-Buffer I/O error on device dm-0, logical block 229391008
-Buffer I/O error on device dm-0, logical block 229391009
-Buffer I/O error on device dm-0, logical block 229391010
-Buffer I/O error on device dm-0, logical block 229391011
-Buffer I/O error on device dm-0, logical block 229391012
-Buffer I/O error on device dm-0, logical block 229391013
-Buffer I/O error on device dm-0, logical block 229391014
-Buffer I/O error on device dm-0, logical block 229391015
-Buffer I/O error on device dm-0, logical block 229391016
-Buffer I/O error on device dm-0, logical block 229391017
-Buffer I/O error on device dm-0, logical block 229391018
-Buffer I/O error on device dm-0, logical block 229391019
-Buffer I/O error on device dm-0, logical block 229391020
-Buffer I/O error on device dm-0, logical block 229391021
-Buffer I/O error on device dm-0, logical block 229391022
-Buffer I/O error on device dm-0, logical block 229391023
-Buffer I/O error on device dm-0, logical block 229391024
-Buffer I/O error on device dm-0, logical block 229391025
-Buffer I/O error on device dm-0, logical block 229391026
-Buffer I/O error on device dm-0, logical block 229391027
-Buffer I/O error on device dm-0, logical block 229391028
-Buffer I/O error on device dm-0, logical block 229391029
-Buffer I/O error on device dm-0, logical block 229391030
-Buffer I/O error on device dm-0, logical block 229391031
-Buffer I/O error on device dm-0, logical block 229391032
-Buffer I/O error on device dm-0, logical block 229391033
-Buffer I/O error on device dm-0, logical block 229391034
-Buffer I/O error on device dm-0, logical block 229391035
-Buffer I/O error on device dm-0, logical block 229391036
-Buffer I/O error on device dm-0, logical block 229391037
-Buffer I/O error on device dm-0, logical block 229391038
-Buffer I/O error on device dm-0, logical block 229391039
-Buffer I/O error on device dm-0, logical block 229391040
-Buffer I/O error on device dm-0, logical block 229391041
-Buffer I/O error on device dm-0, logical block 229391042
-Buffer I/O error on device dm-0, logical block 229391043
-Buffer I/O error on device dm-0, logical block 229391044
-Buffer I/O error on device dm-0, logical block 229391045
-Buffer I/O error on device dm-0, logical block 229391046
-Buffer I/O error on device dm-0, logical block 229391047
-Buffer I/O error on device dm-0, logical block 229391048
-Buffer I/O error on device dm-0, logical block 229391049
-Buffer I/O error on device dm-0, logical block 229391050
-Buffer I/O error on device dm-0, logical block 229391051
-Buffer I/O error on device dm-0, logical block 229391052
-Buffer I/O error on device dm-0, logical block 229391053
-Buffer I/O error on device dm-0, logical block 229391054
-Buffer I/O error on device dm-0, logical block 229391055
-Buffer I/O error on device dm-0, logical block 229391056
-Buffer I/O error on device dm-0, logical block 229391057
-Buffer I/O error on device dm-0, logical block 229391058
-Buffer I/O error on device dm-0, logical block 229391059
-Buffer I/O error on device dm-0, logical block 229391060
-Buffer I/O error on device dm-0, logical block 229391061
-Buffer I/O error on device dm-0, logical block 229391062
-Buffer I/O error on device dm-0, logical block 229391063
-Buffer I/O error on device dm-0, logical block 229391064
-Buffer I/O error on device dm-0, logical block 229391065
-Buffer I/O error on device dm-0, logical block 229391066
-Buffer I/O error on device dm-0, logical block 229391067
-Buffer I/O error on device dm-0, logical block 229391068
-Buffer I/O error on device dm-0, logical block 229391069
-Buffer I/O error on device dm-0, logical block 229391070
-Buffer I/O error on device dm-0, logical block 229391071
-Buffer I/O error on device dm-0, logical block 229391072
-Buffer I/O error on device dm-0, logical block 229391073
-Buffer I/O error on device dm-0, logical block 229391074
-Buffer I/O error on device dm-0, logical block 229391075
-Buffer I/O error on device dm-0, logical block 229391076
-Buffer I/O error on device dm-0, logical block 229391077
-EXT4-fs warning (device dm-0): ext4_end_bio:250: I/O error writing to
-inode 57281456 (offset 3145728 size 524288 starting block 229390950)
-ata5: EH complete
-JBD2: Detected IO errors while flushing file data on dm-0-8
 -- 
-Daniel J Blueman
+1.7.11.3
+
+
