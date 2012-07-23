@@ -1,58 +1,115 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/5] scsi: sr: runtime pm when ODD is open/closed
-Date: Mon, 23 Jul 2012 10:57:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1207231052010.1633-100000@iolanthe.rowland.org>
-References: <1343026180-22236-3-git-send-email-aaron.lu@amd.com>
+From: Betty Dall <betty.dall@hp.com>
+Subject: Re: [PATCH 5/5] block: genhd: add an interface to set disk's poll
+ interval
+Date: Mon, 23 Jul 2012 12:43:34 -0600
+Message-ID: <1343069014.25735.28.camel@ejdallLaptop>
+References: <1343026180-22236-1-git-send-email-aaron.lu@amd.com>
+	 <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1343026180-22236-3-git-send-email-aaron.lu@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from g5t0006.atlanta.hp.com ([15.192.0.43]:19294 "EHLO
+	g5t0006.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970Ab2GWSni (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jul 2012 14:43:38 -0400
+In-Reply-To: <1343026180-22236-6-git-send-email-aaron.lu@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@amd.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Mon, 23 Jul 2012, Aaron Lu wrote:
+Hi Aaron,
 
-> The ODD can either be runtime resumed by the user or by a software
-> request. And for the latter part, we only support runtime resume the ODD
-> when the eject request is received. We did this in sr's block ioctl
-> function, this looks ugly.
-> 
-> Change this by runtime resuming the ODD in its open function and runtime
-> suspending it in its release function.
-> 
-> The downside of this approach is that in old distros with old udisk
-> daemon, the ODD will be polled by udisk daemon so open/close will
-> constantly be called, which will cause the ODD frequently resume from
-> suspend state, breaking the effect of power saving. User with such a
-> distro is advised to issue a udisk command to inhibit polling of the
-> disk like this:
-> $ udisks --inhibit-polling /dev/sr0
-> And since newer kernel has in kernel polling, there is no problem
-> regarding ODD's event report.
+On Mon, 2012-07-23 at 14:49 +0800, Aaron Lu wrote:
+> Set the ODD's in kernel poll interval to 2s for the user in case the
+> user is using an old distro on which udev will not set the system wide
+> block parameter events_dfl_poll_msecs.
+Why did you pick 2 seconds? 
+
 > 
 > Signed-off-by: Aaron Lu <aaron.lu@amd.com>
 > ---
->  drivers/scsi/sr.c | 18 +++++++++---------
->  1 file changed, 9 insertions(+), 9 deletions(-)
+>  block/genhd.c         | 23 +++++++++++++++++------
+>  drivers/scsi/sr.c     |  1 +
+>  include/linux/genhd.h |  1 +
+>  3 files changed, 19 insertions(+), 6 deletions(-)
 > 
+> diff --git a/block/genhd.c b/block/genhd.c
+> index bdb3682..de9b9d9 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -1619,6 +1619,19 @@ static void disk_events_workfn(struct work_struct *work)
+>  		kobject_uevent_env(&disk_to_dev(disk)->kobj, KOBJ_CHANGE, envp);
+>  }
+>  
+> +int disk_events_set_poll_msecs(struct gendisk *disk, long intv)
+> +{
+> +	if (intv < 0 && intv != -1)
+> +		return -EINVAL;
+> +
+> +	disk_block_events(disk);
+> +	disk->ev->poll_msecs = intv;
+> +	__disk_unblock_events(disk, true);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(disk_events_set_poll_msecs);
+> +
+>  /*
+>   * A disk events enabled device has the following sysfs nodes under
+>   * its /sys/block/X/ directory.
+> @@ -1675,16 +1688,14 @@ static ssize_t disk_events_poll_msecs_store(struct device *dev,
+>  {
+>  	struct gendisk *disk = dev_to_disk(dev);
+>  	long intv;
+> +	int ret;
+>  
+>  	if (!count || !sscanf(buf, "%ld", &intv))
+>  		return -EINVAL;
+>  
+> -	if (intv < 0 && intv != -1)
+> -		return -EINVAL;
+> -
+> -	disk_block_events(disk);
+> -	disk->ev->poll_msecs = intv;
+> -	__disk_unblock_events(disk, true);
+> +	ret = disk_events_set_poll_msecs(disk, intv);
+> +	if (ret)
+> +		return ret;
+>  
+>  	return count;
+>  }
 > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 5f4d19a..f7a7635 100644
+> index 2f159aa..78c4226 100644
 > --- a/drivers/scsi/sr.c
 > +++ b/drivers/scsi/sr.c
-> @@ -152,8 +152,15 @@ static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
->  	kref_get(&cd->kref);
->  	if (scsi_device_get(cd->device))
->  		goto out_put;
-> +	if (pm_runtime_get_sync(&cd->device->sdev_gendev) < 0) {
-> +		pm_runtime_put_noidle(&cd->device->sdev_gendev);
-> +		goto out_pm;
-> +	}
+> @@ -869,6 +869,7 @@ static int sr_probe(struct device *dev)
+>  	dev_set_drvdata(dev, cd);
+>  	disk->flags |= GENHD_FL_REMOVABLE;
+>  	add_disk(disk);
+> +	disk_events_set_poll_msecs(disk, 2000);
 
-You should use scsi_autopm_get_device instead of bypassing the SCSI 
-layer.  Similarly for the _put call.
+Could you check that disk event's poll_msecs is the default (-1) before
+setting it to 2s? I am thinking of a case when the probe happens after
+the call to disk_events_poll_msecs_store() and this code would overwrite
+the user specified value.
 
-I know the existing calls do this already.  They shouldn't.
+>  
+>  	sdev_printk(KERN_DEBUG, sdev,
+>  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+> index 017a7fb..7414fb5 100644
+> --- a/include/linux/genhd.h
+> +++ b/include/linux/genhd.h
+> @@ -418,6 +418,7 @@ extern void disk_block_events(struct gendisk *disk);
+>  extern void disk_unblock_events(struct gendisk *disk);
+>  extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
+>  extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
+> +extern int disk_events_set_poll_msecs(struct gendisk *disk, long intv);
+>  
+>  /* drivers/char/random.c */
+>  extern void add_disk_randomness(struct gendisk *disk);
 
-Alan Stern
+-Betty
+
