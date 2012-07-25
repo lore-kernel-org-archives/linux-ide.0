@@ -1,87 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Wed, 25 Jul 2012 18:19:13 +0400
-Message-ID: <1343225953.12094.55.camel@dabdike>
-References: <4FFB32E5.1050109@farcaster.org>
-	 <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org>
-	 <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
-	 <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
-	 <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
-	 <500A9D7C.8080801@matthiasprager.de>
-	 <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+From: Michael Eitelwein <michael@eitelwein.net>
+Subject: whitelist entry for device with known good pata-sata bridge
+Date: Wed, 25 Jul 2012 16:49:32 +0200
+Message-ID: <5010077C.5050509@eitelwein.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out.selfhost.de ([82.98.82.95]:47725 "EHLO outgoing.selfhost.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964774Ab2GYO4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jul 2012 10:56:16 -0400
+Received: from localhost (kvm-mta.eitelwein.net [192.168.123.208])
+	by mail.eitelwein.net (Postfix) with ESMTP id CC8C332689
+	for <linux-ide@vger.kernel.org>; Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
+Received: from mail.eitelwein.net ([127.0.0.1])
+	by localhost (vscan.eitelwein.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id TYKyDpaJ1s2k for <linux-ide@vger.kernel.org>;
+	Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
+Received: from [IPv6:2001:4dd0:ff00:89e5:f138:5c9a:fb3f:6095] (unknown [IPv6:2001:4dd0:ff00:89e5:f138:5c9a:fb3f:6095])
+	by mail.eitelwein.net (Postfix) with ESMTPSA id 7408C32247
+	for <linux-ide@vger.kernel.org>; Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, 2012-07-22 at 10:31 -0700, Tejun Heo wrote:
-> Hello,
-> 
-> On Sat, Jul 21, 2012 at 02:15:56PM +0200, Matthias Prager wrote:
-> > Now I'm not sure this isn't taping over another bug. Which leads me to
-> > my question: What is the correct behavior?
-> > 
-> > #1 Issuing a separate spin-up command (START UNIT?) prior to sending i/o
-> > by setting allow_restart=1 for sata disks on sas controllers
-> > 
-> > or
-> > 
-> > #2 Teaching the sas drivers they do not need spin-up commands and can
-> > simply start issuing i/o to sata disks
-> 
-> I haven't consulted SAT but it seems like a bug in SAS driver or
-> firmware.  If it's a driver bug, we better fix it there.  If a
-> firmware bug, working around those is one of major roles of drivers,
-> so I think setting allow_restart is fine.
+Hi
 
-Actually, I don't think so.  SAT-2 section 8.12.2 does say 
+I have an external SATA drive that was slowed down by bridge limits. I
+found a solution in a thread on this list posted in 2008: It introduces
+whitelist entries in libata-core.c for devices with well working bridges
+(e.g. email on Fri, 31 Oct 2008 01:45:27 -0400).
 
-        if the device is in the stopped state as the result of
-        processing a START STOP UNIT command (see 9.11), then the SATL
-        shall terminate the TEST UNIT READY command with CHECK CONDITION
-        status with the sense key set to NOT READY and the additional
-        sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
-        REQUIRED;
+I added my device to this whitelist in a custom built kernel and it
+works fine for weeks now. How can I have this device added on the
+whitelist within the official kernel? Is this whitelist mechanism still
+supported or is there a smarter way to achieve whitelisting?
 
-START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
-that's what hdparm -y issues.  We don't see this in /drivers/ata because
-TEST UNIT READY always returns success.
+I added the following whitelist entry for my Buffalo DriveStation
+Quattro "BUFFALO HD-QSU2/R5":
 
-So it looks like the mpt2sas SAT is doing the correct thing and we only
-don't see this problem in normal SATA devices because of a bug in the
-libata-scsi SAT.
+        /* Devices that do not need bridging limits applied */
+        { "MTRON MSP-SATA*",            NULL,   ATA_HORKAGE_BRIDGE_OK, },
+        { "BUFFALO HD-QSU2/R5",         NULL,   ATA_HORKAGE_BRIDGE_OK, },
 
-However, the kernel log
+Regards
 
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] Device not ready
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Sense Key : Not Ready [current]
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Add. Sense: Logical unit not ready, initializing command required
-Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] CDB: Write(10): 2a 00 57 54 52 3f 00 00 08 00
-
-Indicates we got the NOT READY to a non-TUR command, so I suspect what's
-happening is that sending the TUR causes the SAT to remember the standby
-state and respond NOT READY to all subsequent commands.  However, if we
-just send an ordinary command, not a TUR, it quietly wakes the drive and
-we don't see any problems.
-
-There is support in SAT for this behaviour because there's a note on the
-START STOP UNIT command saying
-
-        After returning GOOD status for a START STOP UNIT command with
-        the START bit set to zero, the SATL shall consider the ATA
-        device to be in the Stopped power state (see SBC-2)
-
-Which in SCSI terms would mean return NOT READY to any subsequent
-commands.
-
-Can someone verify this is indeed what the mpt2sas HBA is doing?
-
-James
-
+Michael
 
