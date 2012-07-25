@@ -1,43 +1,53 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [resend PATCH 2/5] libata: export ata_port suspend/resume infrastructure
- for sas
-Date: Wed, 25 Jul 2012 01:21:47 -0400
-Message-ID: <500F826B.2080405@pobox.com>
-References: <20120710040434.26529.86552.stgit@dwillia2-linux.jf.intel.com> <20120710040552.26529.47482.stgit@dwillia2-linux.jf.intel.com>
+From: "Rus V. Brushkoff" <brushkoff@gmail.com>
+Subject: Re: AMD SP5100 SATA low perfomance
+Date: Wed, 25 Jul 2012 09:47:16 +0300
+Message-ID: <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
+References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
+ <20120724204454.GC5167@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:60056 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102Ab2GYFVu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2012 01:21:50 -0400
-In-Reply-To: <20120710040552.26529.47482.stgit@dwillia2-linux.jf.intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:61829 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911Ab2GYGr6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2012 02:47:58 -0400
+Received: by weyx8 with SMTP id x8so270443wey.19
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jul 2012 23:47:57 -0700 (PDT)
+In-Reply-To: <20120724204454.GC5167@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Borislav Petkov <borislav.petkov@amd.com>
+Cc: linux-ide@vger.kernel.org
 
-On 07/10/2012 12:05 AM, Dan Williams wrote:
-> Reuse ata_port_{suspend|resume}_common for sas.  This path is chosen
-> over adding coordination between ata-tranport and sas-transport because
-> libsas wants to revalidate the domain at resume-time at the host level.
-> It can not validate links have resumed properly until libata has had a
-> chance to perform its revalidation, and any sane placing of an ata_port
-> in the sas-transport model would delay it's resumption until after the
-> host.
+ I will do the tests with another drive (from WD) today. But I've
+fogot to say that I have another S8005 m/b with SP5100 that working
+perfectly with these particular Hitachi drives (please see boot log
+for it in dmesg-good at the same URL). So the problem can be in init
+procedure for AMD south bridge or SATA controller. The differences
+between m/b is very little - working has onboard audio, not working
+hasn't. The diff in boot log is present too in file diff.txt
+
+>>  I'm observing the problem with AMD SP5100 SATA controller. The
+>> problem appears as very low (2-3MB/s) write perfomance. Reading drops
+>> too, but not such dramatically (from 100Mb/s on other hardware to
+>> 50-60Mb/s on SP5100). This problem is checked on several kernels
+>> (2.6.x, 3.2.x, 3.4.x) including latest 3.5 and with all possible SATA
+>> BIOS settings. The hardware is Tyan S8005 m/b (latest BIOS v1.03), AMD
+>> X6 1045T, 8GB ECC memory and Hitachi HTS725050A7E630 drive.  Moreover
+>> - I've checked 2 different identical boxes - it is 100% reproducable
+>> on both.
 >
-> Export the common portion of port suspend/resume (bypass pm_runtime),
-> and allow sas to perform these operations asynchronously (similar to the
-> libsas async-ata probe implmentation).  Async operation is determined by
-> having an external, rather than stack based, location for storing the
-> result of the operation.
+> Have you tried doing the same test on the same mobo but with another
+> drive, possibly by another manufacturer? Do you see the same write
+> slowdown with the second drive too?
 >
-> Reviewed-by: Jacek Danecki <jacek.danecki@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> Thanks.
+>
+> --
+> Regards/Gruss,
+>     Boris.
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
 
-
-
+-- 
+Rus
