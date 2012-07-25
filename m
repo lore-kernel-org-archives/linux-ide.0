@@ -1,49 +1,59 @@
-From: Michael Eitelwein <michael@eitelwein.net>
-Subject: whitelist entry for device with known good pata-sata bridge
-Date: Wed, 25 Jul 2012 16:49:32 +0200
-Message-ID: <5010077C.5050509@eitelwein.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 10:17:23 -0700
+Message-ID: <20120725171723.GB32378@google.com>
+References: <4FFB8A86.7000009@farcaster.org>
+ <4FFCBA4C.4000502@farcaster.org>
+ <4FFD6F3D.2030708@matthiasprager.de>
+ <4FFD8410.7050604@matthiasprager.de>
+ <20120717180932.GB2878@google.com>
+ <5005BF7D.2050703@matthiasprager.de>
+ <20120717200136.GC24336@google.com>
+ <500A9D7C.8080801@matthiasprager.de>
+ <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+ <1343225953.12094.55.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out.selfhost.de ([82.98.82.95]:47725 "EHLO outgoing.selfhost.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S964774Ab2GYO4Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Jul 2012 10:56:16 -0400
-Received: from localhost (kvm-mta.eitelwein.net [192.168.123.208])
-	by mail.eitelwein.net (Postfix) with ESMTP id CC8C332689
-	for <linux-ide@vger.kernel.org>; Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
-Received: from mail.eitelwein.net ([127.0.0.1])
-	by localhost (vscan.eitelwein.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id TYKyDpaJ1s2k for <linux-ide@vger.kernel.org>;
-	Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
-Received: from [IPv6:2001:4dd0:ff00:89e5:f138:5c9a:fb3f:6095] (unknown [IPv6:2001:4dd0:ff00:89e5:f138:5c9a:fb3f:6095])
-	by mail.eitelwein.net (Postfix) with ESMTPSA id 7408C32247
-	for <linux-ide@vger.kernel.org>; Wed, 25 Jul 2012 16:49:32 +0200 (CEST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1343225953.12094.55.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi
+Hello, James.
 
-I have an external SATA drive that was slowed down by bridge limits. I
-found a solution in a thread on this list posted in 2008: It introduces
-whitelist entries in libata-core.c for devices with well working bridges
-(e.g. email on Fri, 31 Oct 2008 01:45:27 -0400).
+On Wed, Jul 25, 2012 at 06:19:13PM +0400, James Bottomley wrote:
+> > I haven't consulted SAT but it seems like a bug in SAS driver or
+> > firmware.  If it's a driver bug, we better fix it there.  If a
+> > firmware bug, working around those is one of major roles of drivers,
+> > so I think setting allow_restart is fine.
+> 
+> Actually, I don't think so.  SAT-2 section 8.12.2 does say 
+> 
+>         if the device is in the stopped state as the result of
+>         processing a START STOP UNIT command (see 9.11), then the SATL
+>         shall terminate the TEST UNIT READY command with CHECK CONDITION
+>         status with the sense key set to NOT READY and the additional
+>         sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
+>         REQUIRED;
+> 
+> START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
+> that's what hdparm -y issues.  We don't see this in /drivers/ata because
+> TEST UNIT READY always returns success.
 
-I added my device to this whitelist in a custom built kernel and it
-works fine for weeks now. How can I have this device added on the
-whitelist within the official kernel? Is this whitelist mechanism still
-supported or is there a smarter way to achieve whitelisting?
+Urgh... ATA device in standby mode is ready for any command and
+definitely doesn't need an "initializing command".  Oh, well...
 
-I added the following whitelist entry for my Buffalo DriveStation
-Quattro "BUFFALO HD-QSU2/R5":
+> So it looks like the mpt2sas SAT is doing the correct thing and we only
+> don't see this problem in normal SATA devices because of a bug in the
+> libata-scsi SAT.
 
-        /* Devices that do not need bridging limits applied */
-        { "MTRON MSP-SATA*",            NULL,   ATA_HORKAGE_BRIDGE_OK, },
-        { "BUFFALO HD-QSU2/R5",         NULL,   ATA_HORKAGE_BRIDGE_OK, },
+libata is inconsistent with the standard but I think the standard is
+wrong here. :(
 
-Regards
+Thanks.
 
-Michael
-
+-- 
+tejun
