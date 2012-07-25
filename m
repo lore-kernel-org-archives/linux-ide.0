@@ -1,53 +1,87 @@
-From: "Rus V. Brushkoff" <brushkoff@gmail.com>
-Subject: Re: AMD SP5100 SATA low perfomance
-Date: Wed, 25 Jul 2012 09:47:16 +0300
-Message-ID: <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
-References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
- <20120724204454.GC5167@liondog.tnic>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Wed, 25 Jul 2012 18:19:13 +0400
+Message-ID: <1343225953.12094.55.camel@dabdike>
+References: <4FFB32E5.1050109@farcaster.org>
+	 <4FFB7354.8040809@matthiasprager.de> <4FFB8A86.7000009@farcaster.org>
+	 <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>
+	 <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>
+	 <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>
+	 <500A9D7C.8080801@matthiasprager.de>
+	 <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:61829 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750911Ab2GYGr6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Jul 2012 02:47:58 -0400
-Received: by weyx8 with SMTP id x8so270443wey.19
-        for <linux-ide@vger.kernel.org>; Tue, 24 Jul 2012 23:47:57 -0700 (PDT)
-In-Reply-To: <20120724204454.GC5167@liondog.tnic>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Matthias Prager <linux@matthiasprager.de>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <borislav.petkov@amd.com>
-Cc: linux-ide@vger.kernel.org
 
- I will do the tests with another drive (from WD) today. But I've
-fogot to say that I have another S8005 m/b with SP5100 that working
-perfectly with these particular Hitachi drives (please see boot log
-for it in dmesg-good at the same URL). So the problem can be in init
-procedure for AMD south bridge or SATA controller. The differences
-between m/b is very little - working has onboard audio, not working
-hasn't. The diff in boot log is present too in file diff.txt
+On Sun, 2012-07-22 at 10:31 -0700, Tejun Heo wrote:
+> Hello,
+> 
+> On Sat, Jul 21, 2012 at 02:15:56PM +0200, Matthias Prager wrote:
+> > Now I'm not sure this isn't taping over another bug. Which leads me to
+> > my question: What is the correct behavior?
+> > 
+> > #1 Issuing a separate spin-up command (START UNIT?) prior to sending i/o
+> > by setting allow_restart=1 for sata disks on sas controllers
+> > 
+> > or
+> > 
+> > #2 Teaching the sas drivers they do not need spin-up commands and can
+> > simply start issuing i/o to sata disks
+> 
+> I haven't consulted SAT but it seems like a bug in SAS driver or
+> firmware.  If it's a driver bug, we better fix it there.  If a
+> firmware bug, working around those is one of major roles of drivers,
+> so I think setting allow_restart is fine.
 
->>  I'm observing the problem with AMD SP5100 SATA controller. The
->> problem appears as very low (2-3MB/s) write perfomance. Reading drops
->> too, but not such dramatically (from 100Mb/s on other hardware to
->> 50-60Mb/s on SP5100). This problem is checked on several kernels
->> (2.6.x, 3.2.x, 3.4.x) including latest 3.5 and with all possible SATA
->> BIOS settings. The hardware is Tyan S8005 m/b (latest BIOS v1.03), AMD
->> X6 1045T, 8GB ECC memory and Hitachi HTS725050A7E630 drive.  Moreover
->> - I've checked 2 different identical boxes - it is 100% reproducable
->> on both.
->
-> Have you tried doing the same test on the same mobo but with another
-> drive, possibly by another manufacturer? Do you see the same write
-> slowdown with the second drive too?
->
-> Thanks.
->
-> --
-> Regards/Gruss,
->     Boris.
+Actually, I don't think so.  SAT-2 section 8.12.2 does say 
+
+        if the device is in the stopped state as the result of
+        processing a START STOP UNIT command (see 9.11), then the SATL
+        shall terminate the TEST UNIT READY command with CHECK CONDITION
+        status with the sense key set to NOT READY and the additional
+        sense code of LOGICAL UNIT NOT READY, INITIALIZING COMMAND
+        REQUIRED;
+
+START STOP UNIT (with START=0) translates to STANDBY IMMEDIATE, and
+that's what hdparm -y issues.  We don't see this in /drivers/ata because
+TEST UNIT READY always returns success.
+
+So it looks like the mpt2sas SAT is doing the correct thing and we only
+don't see this problem in normal SATA devices because of a bug in the
+libata-scsi SAT.
+
+However, the kernel log
+
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] Device not ready
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Sense Key : Not Ready [current]
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj]  Add. Sense: Logical unit not ready, initializing command required
+Apr 04 22:55:10 [kernel] sd 1:0:1:0: [sdj] CDB: Write(10): 2a 00 57 54 52 3f 00 00 08 00
+
+Indicates we got the NOT READY to a non-TUR command, so I suspect what's
+happening is that sending the TUR causes the SAT to remember the standby
+state and respond NOT READY to all subsequent commands.  However, if we
+just send an ordinary command, not a TUR, it quietly wakes the drive and
+we don't see any problems.
+
+There is support in SAT for this behaviour because there's a note on the
+START STOP UNIT command saying
+
+        After returning GOOD status for a START STOP UNIT command with
+        the START bit set to zero, the SATL shall consider the ATA
+        device to be in the Stopped power state (see SBC-2)
+
+Which in SCSI terms would mean return NOT READY to any subsequent
+commands.
+
+Can someone verify this is indeed what the mpt2sas HBA is doing?
+
+James
 
 
-
--- 
-Rus
