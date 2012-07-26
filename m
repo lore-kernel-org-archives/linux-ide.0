@@ -1,37 +1,49 @@
-From: "Rus V. Brushkoff" <brushkoff@gmail.com>
-Subject: Re: AMD SP5100 SATA low perfomance
-Date: Thu, 26 Jul 2012 13:07:02 +0300
-Message-ID: <CAKu2wpSw-jTMnRkZyDf9aGuNqY7kRp6AUUHKr7CVoo_QXRzj=Q@mail.gmail.com>
-References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
- <20120724204454.GC5167@liondog.tnic> <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
- <20120726100440.GB30717@aftab.osrc.amd.com>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v3 0/7] ZPODD patches for scsi tree
+Date: Thu, 26 Jul 2012 18:05:22 +0800
+Message-ID: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:43342 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834Ab2GZKHn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 06:07:43 -0400
-Received: by weyx8 with SMTP id x8so1215531wey.19
-        for <linux-ide@vger.kernel.org>; Thu, 26 Jul 2012 03:07:42 -0700 (PDT)
-In-Reply-To: <20120726100440.GB30717@aftab.osrc.amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>
-Cc: linux-ide@vger.kernel.org
 
->
-> One other thing you could try: can you downgrade the BIOS on one of the
-> bad Tyan boards (the -LE ones, right?) and retry the test again?
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
 
-Already did this - I've tried the 1.02 BIOS version (can try earlier
-as the earlier versions do not have my CPU id needed for starting) .
-The results are the same - poor HDD perfomance.
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
 
->
-> Any results on the test with the other drive?
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
 
-On the way - will post results in several hours.
+Aaron Lu (7):
+  scsi: sr: check support for device busy class events
+  scsi: pm: use autosuspend if device supports it
+  scsi: sr: support zero power ODD(ZPODD)
+  scsi: sr: block events when runtime suspended
+  scsi: pm: use runtime resume callback if available
+  scsi: sr: balance sr disk events block depth
+  block: genhd: add an interface to set disk's poll interval
+
+ block/genhd.c              |  25 +++++--
+ drivers/scsi/scsi_pm.c     |  23 ++++--
+ drivers/scsi/sr.c          | 176 ++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/sr.h          |   3 +
+ include/linux/cdrom.h      |  43 +++++++++++
+ include/linux/genhd.h      |   1 +
+ include/scsi/scsi_device.h |   2 +
+ 7 files changed, 260 insertions(+), 13 deletions(-)
 
 -- 
-Rus
+1.7.11.3
