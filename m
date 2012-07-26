@@ -1,50 +1,46 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v3 2/7] scsi: pm: use autosuspend if device supports it
-Date: Thu, 26 Jul 2012 18:05:24 +0800
-Message-ID: <1343297129-28174-3-git-send-email-aaron.lu@amd.com>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+From: Borislav Petkov <bp@amd64.org>
+Subject: Re: AMD SP5100 SATA low perfomance
+Date: Thu, 26 Jul 2012 12:04:40 +0200
+Message-ID: <20120726100440.GB30717@aftab.osrc.amd.com>
+References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
+ <20120724204454.GC5167@liondog.tnic>
+ <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:12404
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751720Ab2GZKGS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 06:06:18 -0400
-In-Reply-To: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+Received: from osrc3.amd.com ([217.9.48.20]:40086 "EHLO mail.x86-64.org"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750849Ab2GZKL7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Jul 2012 06:11:59 -0400
+Content-Disposition: inline
+In-Reply-To: <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+To: "Rus V. Brushkoff" <brushkoff@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-If the device is using autosuspend, when scsi_autopm_put_device is
-called for it, use autosuspend runtime pm calls instead of the sync
-call.
+On Wed, Jul 25, 2012 at 09:47:16AM +0300, Rus V. Brushkoff wrote:
+>  I will do the tests with another drive (from WD) today. But I've
+> fogot to say that I have another S8005 m/b with SP5100 that working
+> perfectly with these particular Hitachi drives (please see boot log
+> for it in dmesg-good at the same URL). So the problem can be in init
+> procedure for AMD south bridge or SATA controller. The differences
+> between m/b is very little - working has onboard audio, not working
+> hasn't. The diff in boot log is present too in file diff.txt
 
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
----
- drivers/scsi/scsi_pm.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+One other thing you could try: can you downgrade the BIOS on one of the
+bad Tyan boards (the -LE ones, right?) and retry the test again?
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index dc0ad85..7c93723 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -197,7 +197,13 @@ EXPORT_SYMBOL_GPL(scsi_autopm_get_device);
- 
- void scsi_autopm_put_device(struct scsi_device *sdev)
- {
--	pm_runtime_put_sync(&sdev->sdev_gendev);
-+	if (sdev->sdev_gendev.power.use_autosuspend) {
-+		pm_runtime_mark_last_busy(&sdev->sdev_gendev);
-+		pm_runtime_put_autosuspend(&sdev->sdev_gendev);
-+	} else {
-+		pm_runtime_put_sync(&sdev->sdev_gendev);
-+	}
-+
- }
- EXPORT_SYMBOL_GPL(scsi_autopm_put_device);
- 
+Any results on the test with the other drive?
+
+Thanks.
+
 -- 
-1.7.11.3
+Regards/Gruss,
+Boris.
 
-
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
