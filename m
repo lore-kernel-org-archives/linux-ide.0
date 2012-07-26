@@ -1,44 +1,82 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [git patches] libata updates
-Date: Thu, 26 Jul 2012 09:44:24 +0200
-Message-ID: <20120726074424.GB8421@gmail.com>
-References: <20120725203551.GA19762@havoc.gtf.org>
- <20120725204350.GA20530@havoc.gtf.org>
- <CA+55aFwCCctcmryQJMCT_3TDr60CYBQKu9HMyxOgS8482+w5Xw@mail.gmail.com>
- <50107297.305@pobox.com>
- <CA+55aFzun7GebfGZDa73MGLF_808+ROaei5Ag-9HvgUDp1bqLQ@mail.gmail.com>
- <50107A0D.3060003@pobox.com>
- <CA+55aFwi7wS3SFZA-45d+KwKi+hqn1GXqRExYmOw6gnSipv5Rg@mail.gmail.com>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v3 6/7] scsi: sr: balance sr disk events block depth
+Date: Thu, 26 Jul 2012 18:05:28 +0800
+Message-ID: <1343297129-28174-7-git-send-email-aaron.lu@amd.com>
+References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:60332 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751245Ab2GZHo3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 03:44:29 -0400
-Content-Disposition: inline
-In-Reply-To: <CA+55aFwi7wS3SFZA-45d+KwKi+hqn1GXqRExYmOw6gnSipv5Rg@mail.gmail.com>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:15739
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750834Ab2GZKGQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 06:06:16 -0400
+In-Reply-To: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+
+When the ODD is resumed, disk_unblock_events should be called when:
+1 The ODD is runtime resumed;
+2 System is resuming from S3 and the ODD is runtime suspended before S3;
+But not when the system is resuming from S3 and the ODD is runtime
+active before S3.
+
+So seperate the resume calls, one for system resume and one for runtime
+resume to do different things accordingly.
+
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ drivers/scsi/sr.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index fd1c2f6..b8c2f9d 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -82,6 +82,11 @@ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
+ static int sr_suspend(struct device *dev, pm_message_t msg);
+ static int sr_resume(struct device *dev);
++static int sr_runtime_resume(struct device *dev);
++
++static struct dev_pm_ops sr_pm_ops = {
++	.runtime_resume = sr_runtime_resume,
++};
+ 
+ static struct scsi_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+@@ -91,6 +96,7 @@ static struct scsi_driver sr_template = {
+ 		.remove		= sr_remove,
+ 		.suspend	= sr_suspend,
+ 		.resume		= sr_resume,
++		.pm		= &sr_pm_ops,
+ 	},
+ 	.done			= sr_done,
+ };
+@@ -211,6 +217,21 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 
+ static int sr_resume(struct device *dev)
+ {
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	/*
++	 * If ODD is runtime suspended before system pm, unblock disk
++	 * events now since on system resume, we will fully resume it
++	 * and set its rumtime status to active.
++	 */
++	if (pm_runtime_suspended(dev))
++		disk_unblock_events(cd->disk);
++
++	return 0;
++}
++
++static int sr_runtime_resume(struct device *dev)
++{
+ 	struct scsi_cd *cd;
+ 	struct scsi_sense_hdr sshdr;
+ 
+-- 
+1.7.11.3
 
 
-* Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
-> I couldn't find an example of that in a quick look, it's 
-> fairly uncommon to have non-conflicting merges that had 
-> semantic - but not contextual - conflicts. [...]
-
-This:
-
-  git log --grep='Semantic merge\|Semantic conflict'
-
-gives over a dozen examples of such semantic merges I've done in 
-the past 4 years. I fully agree that they are best done in the 
-merge commit - in hindsight perhaps with a tad more explanation 
-than I did.
-
-Thanks,
-
-	Ingo
