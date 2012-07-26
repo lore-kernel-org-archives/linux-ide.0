@@ -1,37 +1,22 @@
-From: Matthias Prager <linux@matthiasprager.de>
-Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
-Date: Thu, 26 Jul 2012 01:56:49 +0200
-Message-ID: <501087C1.2020209@matthiasprager.de>
-References: <4FFB8A86.7000009@farcaster.org>  <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>  <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>  <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>  <500A9D7C.8080801@matthiasprager.de>  <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>  <1343225953.12094.55.camel@dabdike> <20120725171723.GB32378@google.com> <1343246155.12094.59.camel@dabdike>
+From: Agueda Somerville <erl2244phoeuk@yahoo.com>
+Subject: New people always bring some new stories and impressions. I brought u some:)
+Date: Thu, 26 Jul 2012 02:18:56 +0100 (BST)
+Message-ID: <1343265536.84807.YahooMailNeo@web29305.mail.ird.yahoo.com>
+Reply-To: Agueda Somerville <agueda.somerville@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1343246155.12094.59.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, Robert Trace <maillist@farcaster.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org, Matthias Prager <linux@matthiasprager.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nm18.bullet.mail.ird.yahoo.com ([77.238.189.71]:28105 "HELO
+	nm18.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751107Ab2GZBS5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jul 2012 21:18:57 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "jessica.bernardi@camuzzigas.com.ar" <jessica.bernardi@camuzzigas.com.ar>
 
-Hello James,
-
-Am 25.07.2012 21:55, schrieb James Bottomley:>
-> It looks like a hack like this might be needed.
->
-> James
->
-
-<SNIP>
-
-I don't yet understand all the code but I'm following your discussion
-with Tejun: I've set up a minimal vm running gentoo with a mpt2sas
-driven controller in passthrough mode. I've applied your proposed patch
-against the vanilla 3.5.0 kernel (which includes Tejun's commit), and
-I'm happy to report the problem does seem to get fixed by it.
-Well at least sending the sata drive in standby using 'hdparm -y' now
-works (according to 'hdparm -C') without these nasty i/o errors on later
-i/o. That is to say the drive wakes up again (e.g. from a 'fdisk -l
-/dev/sda' command) and returns data.
-
---
-Matthias
+Hey! My name is Agueda.
+First of all, I've to that you definitely look beautiful on photos, I would regret forever if I did not write and send this letter. 
+Anyway, you attracted me and it will be interesting to know u a bit better. So, you already know my name, what else, I'm ginger, my eyes are big and they're dark green, I keep my figure. I really think that u're very attractive man and to convince u that I'm not kidding, Igoing to attach some sexy pics to the next letter, do you like the idea?)
+Do not think too long!)
