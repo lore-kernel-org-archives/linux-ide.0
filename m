@@ -1,47 +1,38 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v3 0/7] ZPODD patches for scsi tree
-Date: Thu, 26 Jul 2012 14:04:00 -0400
-Message-ID: <50118690.7030501@pobox.com>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com> <50114989.3010900@pobox.com> <20120726144108.GA2724@localhost.localdomain>
+Subject: Re: Andre Hedrick (anhedric) has died
+Date: Thu, 26 Jul 2012 14:26:37 -0400
+Message-ID: <50118BDD.7030505@pobox.com>
+References: <B4DFDCAD-9D5E-4AE9-83FF-041D4D521CFF@root.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37576 "EHLO
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55449 "EHLO
 	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670Ab2GZSEF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 14:04:05 -0400
-In-Reply-To: <20120726144108.GA2724@localhost.localdomain>
+	with ESMTP id S1751982Ab2GZS0l (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 14:26:41 -0400
+In-Reply-To: <B4DFDCAD-9D5E-4AE9-83FF-041D4D521CFF@root.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Nate Lawson <nate@root.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 07/26/2012 10:41 AM, Aaron Lu wrote:
-> On Thu, Jul 26, 2012 at 09:43:37AM -0400, Jeff Garzik wrote:
->> On 07/26/2012 06:05 AM, Aaron Lu wrote:
->>> I can't set a flag in libata-acpi.c since a related function is
->>> missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+On 07/20/2012 12:39 AM, Nate Lawson wrote:
+> Dear Linux hackers,
+>
+> Sorry for the intrusion on this technical list. I wanted to let Andre's fellow Linux developers know that he died this past weekend. For those that don't know him, Andre was an active developer for the ATA driver a while back.
+>
+> I have known Andre for about 9 years, although I haven't seen much of him in the past year. He and I attended several retreats together in 2002 and 2003. I'd like to share a story from the first time I met him.
+>
+> I was a FreeBSD developer at the time and had done some work in the SCSI (CAM) subsystem. I met Andre at a retreat center in the Marin woods. As we ate dinner, he mentioned that he was a software developer. "So am I", I said.
 
->> What does this mean?  Would you be more specific?
+A very sad day.  Andre taught me a lot about ATA, and could be 
+considered one of the grandfathers of libata.
 
-> The patch "libata-acpi: add ata port runtime D3Cold support" by Lin Ming
-> introduced a function ata_acpi_wake_dev in libata-acpi.c, and only lives
-> in libata-next tree but not scsi-misc tree.
-[...]
-> Another minor issue is, I need to use the can_power_off and
-> wakeup_by_user flag of the scsi_device structure in sr patches, but
-> they are all introduced in patches in libata-next tree, so I have to
-> re-define them in this patch set. Will cause conflict if James send
-> these sr patches to Linus. Any way to avoid this?
+http://hedrick4419.blogspot.com/
+http://www.theregister.co.uk/2012/07/26/andre_hedrick/?2
 
-
-Linus said he just merged the libata patches, so they should appear in 
-the torvalds/linux.git as soon as he pushes out (in the next 12 hours, 
-I'm guessing).
-
-Up to James how he wants to coordinate after that...  he might pull in 
-Linus's tree into scsi-misc or another solution.
+Rest in peace,
 
 	Jeff
 
