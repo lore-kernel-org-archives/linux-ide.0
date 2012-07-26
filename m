@@ -1,50 +1,50 @@
-From: Royal Dutch =?iso-8859-1?Q?Shell=AE?= <fleonard@mailbag.com>
-Subject: Dear Email Owner(You Won  Promo) !!!
-Date: Wed, 25 Jul 2012 21:10:38 -0500
-Message-ID: <2c887916ef11ad93e5de35d223a408f4.squirrel__16032.4859702543$1343269321$gmane$org@webmail.mailbag.com>
-Reply-To: claimsagentkeith@zing.vn
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: Re: [git patches] libata updates
+Date: Thu, 26 Jul 2012 12:47:54 +0800
+Message-ID: <5010CBFA.8020907@amd.com>
+References: <20120725203551.GA19762@havoc.gtf.org> <50106747.8070501@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from h-mailbag-msp-1.msp-coloc.binc.net ([64.73.132.140]:54450 "EHLO
-	mx.mailbag.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924Ab2GZCVx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Jul 2012 22:21:53 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50106747.8070501@pobox.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Lin Ming <minggr@gmail.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
+On 07/26/2012 05:38 AM, Jeff Garzik wrote:
+> On 07/25/2012 04:35 PM, Jeff Garzik wrote:
+>> * Updating libata to directly bind with ACPI / runtime power mgmt.
+>> This is a pre-req for SATA ZPODD (CD-ROM power management).
+>>
+>> Touches ACPI (exports++) and SCSI in minor ways. Has been in linux-next
+>> for weeks.
+>>
+>> The rest of [ZPODD] will probably come via SCSI tree, as it involves
+>> a lot of updates to the 'sr' driver etc.
+>
+> BTW Lin and Aaron, note that this did not include these changes:
+>
+> sr: check support for device busy class events
+> sr: support zero power ODD
+> sr: make sure ODD is in resumed state in block ioctl
+>
+> as in the end I wanted to put the brakes on SCSI-touching patches. These
+> should be able to go into James' scsi-misc tree with the other SCSI-area
+> ZPODD changes.
+>
+> For those three 'sr' changes listed above, you may add
+>
+> Acked-by: Jeff Garzik <jgarzik@redhat.com>
+>
+> when moving them over.
 
+Thanks Jeff.
 
+Hi James,
+I'll prepare these dropped patches plus some other fixes for ZPODD which
+I've sent v2 recently and merge them into v3 for you to review.
 
-
-Your Email address Won a Sum payout of $2,000 000.00 USD. As our Royal
-Dutch Shell Grant, in cash credited to You, Verify this mail by providing
-your Complete Details, to our Claims Agent more so, Please endeavor to quote
-your Qualification numbers (NL-222-6747,NG-900-56) in all dealings.
-====================
-Contact Person: Mr. Taylor Keith.
-Email: claimsagentkeith@zing.vn
-====================
-1.FULL NAMES:_________
-2.ADDRESS:_________
-3.COUNTRY___________
-4.AGE___________
-5.SEX:________
-6.OCCUPATION:________
-7.TELEPHONE:_______
-8.Next of Kin___________
-
-All email addresses entered for this promotional draws were randomly
-inputted from an internet resource database using the Synchronized Random
-Selection System (SRSS)keep all your winning details confidential
-until you claim your prize.
-Best Regards,
-Miss.Dorothy White
-********************************************************************
-This email and any files transmitted with it are confidential and
-intended solely for the use of the individual or entity to whom they
-are addressed.
-*********************************************************************
-
-
+Thanks,
+Aaron
