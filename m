@@ -1,46 +1,97 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH v3 2/7] scsi: pm: use autosuspend if device supports it
-Date: Thu, 26 Jul 2012 15:01:15 +0200
-Message-ID: <4732005.Un0exgRK6O@linux-lqwf.site>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com> <1476441.ovA4GKBza3@linux-lqwf.site> <20120726124326.GA2022@localhost.localdomain>
+From: Christian Gmeiner <christian.gmeiner@gmail.com>
+Subject: [RFC] [Patch] pata_cs5536: add quirk for broken udma
+Date: Thu, 26 Jul 2012 15:40:48 +0200
+Message-ID: <CAH9NwWcHv=A2EQYdzdCrjwkms7pdNQ5L9uyBh1Q8_+QAACD=zQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42406 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752137Ab2GZNCH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Jul 2012 09:02:07 -0400
-In-Reply-To: <20120726124326.GA2022@localhost.localdomain>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:52170 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751350Ab2GZNlK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 09:41:10 -0400
+Received: by lahd3 with SMTP id d3so1375991lah.19
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jul 2012 06:41:09 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: mkp@mkp.net
 
-On Thursday 26 July 2012 20:43:32 Aaron Lu wrote:
-> > What is the purpose of this approach?
-> 
-> The purpose is to let scsi layer driver(sd, sr, etc.) use the same pm
-> api(scsi_autopm_put_device) to put the device to runtime suspended
-> state.
-> When the device is ready to be suspended, if it does not make use of
-> autosuspend, call pm_runtime_put_sync for it; if it makes use of
-> autosuspend, call the autosuspend runtime pm apis for it.
-> 
-> > You need a very good reason to have an API do two different things
-> > based on this.
-> 
-> If you see the above reason not good, I'll prepare an updated version
-> to create a new api to cover the autosuspend case, something like:
-> void scsi_autopm_put_device_autosuspend(struct scsi_device *sdev)
-> {
->         pm_runtime_mark_last_busy(&sdev->sdev_gendev);
->         pm_runtime_put_autosuspend(&sdev->sdev_gendev);
-> }
-> Does this look right?
+Hi all.
 
-Much better :-)
+I am working on a device which uses the cs5536 pata driver. There are
+some broken hardware
+revisions out in the field, which can be detected via DMI. I am
+looking for a way now to get
+this quirk upstream. On older versions with an embedded BIOS and I
+used libata.dma=0
+to disable dma completely.
+Now we are switching to a coreboot/seabios based BIOS where we have
+DMI support and
+so I think its a good idea to get rid of all those hacky kernel
+parameters as the same image
+is used other devices where libata.dma=0 is not so a good idea.
 
-	Regards
-		Oliver
+I came up with this patch. I am not sure if it would be better to
+patch libata-core.c
 
+Thanks,
+---
+Christian Gmeiner, MSc
+
+
+--- linux-3.2.24___OK/drivers/ata/pata_cs5536.c	2012-07-25
+05:11:50.000000000 +0200
++++ linux-3.2.24/drivers/ata/pata_cs5536.c	2012-07-26 15:38:27.674909884 +0200
+@@ -37,6 +37,7 @@
+ #include <linux/delay.h>
+ #include <linux/libata.h>
+ #include <scsi/scsi_host.h>
++#include <linux/dmi.h>
+
+ #ifdef CONFIG_X86_32
+ #include <asm/msr.h>
+@@ -95,6 +96,21 @@
+ 	PCI_IDE_CFG, PCI_IDE_DTC, PCI_IDE_CAST, PCI_IDE_ETC,
+ };
+
++/* Some Bachmann OT200 devices have a non working UDMA support due a
++ * missing resistor.
++ */
++static const struct dmi_system_id udma_quirk_dmi_table[] = {
++        {
++                .ident = "Bachmann electronic OT200",
++                .matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Bachmann electronic"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "OT200"),
++			DMI_MATCH(DMI_PRODUCT_VERSION, "1")
++		},
++        },
++        { }
++};
++
+ static inline int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+ 	if (unlikely(use_msr)) {
+@@ -257,9 +273,22 @@
+ 		.port_ops = &cs5536_port_ops,
+ 	};
+
+-	const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
++	static const struct ata_port_info no_udma_info = {
++                .flags = ATA_FLAG_SLAVE_POSS,
++                .pio_mask = ATA_PIO4,
++                .port_ops = &cs5536_port_ops,
++	};
++
++	const struct ata_port_info *ppi[2];
+ 	u32 cfg;
+
++	if (dmi_check_system(udma_quirk_dmi_table))
++		ppi[0] = &no_udma_info;
++	else
++		ppi[0] = &info;
++
++	ppi[1] = &ata_dummy_port_info;
++
+ 	if (use_msr)
+ 		printk(KERN_ERR DRV_NAME ": Using MSR regs instead of PCI\n");
