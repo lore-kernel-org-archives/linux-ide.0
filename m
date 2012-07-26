@@ -1,39 +1,29 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: Andre Hedrick (anhedric) has died
-Date: Thu, 26 Jul 2012 14:26:37 -0400
-Message-ID: <50118BDD.7030505@pobox.com>
-References: <B4DFDCAD-9D5E-4AE9-83FF-041D4D521CFF@root.org>
+From: Robert Trace <maillist@farcaster.org>
+Subject: Re: 'Device not ready' issue on mpt2sas since 3.1.10
+Date: Thu, 26 Jul 2012 15:16:43 -0400
+Message-ID: <5011979B.9020507@farcaster.org>
+References: <4FFB8A86.7000009@farcaster.org>  <4FFCBA4C.4000502@farcaster.org> <4FFD6F3D.2030708@matthiasprager.de>  <4FFD8410.7050604@matthiasprager.de> <20120717180932.GB2878@google.com>  <5005BF7D.2050703@matthiasprager.de> <20120717200136.GC24336@google.com>  <500A9D7C.8080801@matthiasprager.de>  <20120722173146.GE5144@dhcp-172-17-108-109.mtv.corp.google.com>  <1343225953.12094.55.camel@dabdike> <20120725171723.GB32378@google.com> <1343246155.12094.59.camel@dabdike> <501087C1.2020209@matthiasprager.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:55449 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751982Ab2GZS0l (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 14:26:41 -0400
-In-Reply-To: <B4DFDCAD-9D5E-4AE9-83FF-041D4D521CFF@root.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <501087C1.2020209@matthiasprager.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Matthias Prager <linux@matthiasprager.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <jaxboe@fusionio.com>, Eric Moore <Eric.Moore@lsi.com>, Alan <alan@lxorguk.ukuu.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nate Lawson <nate@root.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-On 07/20/2012 12:39 AM, Nate Lawson wrote:
-> Dear Linux hackers,
->
-> Sorry for the intrusion on this technical list. I wanted to let Andre's fellow Linux developers know that he died this past weekend. For those that don't know him, Andre was an active developer for the ATA driver a while back.
->
-> I have known Andre for about 9 years, although I haven't seen much of him in the past year. He and I attended several retreats together in 2002 and 2003. I'd like to share a story from the first time I met him.
->
-> I was a FreeBSD developer at the time and had done some work in the SCSI (CAM) subsystem. I met Andre at a retreat center in the Marin woods. As we ate dinner, he mentioned that he was a software developer. "So am I", I said.
+On 07/25/2012 07:56 PM, Matthias Prager wrote:
+> 
+> I don't yet understand all the code but I'm following your discussion
+> with Tejun: I've set up a minimal vm running gentoo with a mpt2sas
+> driven controller in passthrough mode. I've applied your proposed patch
+> against the vanilla 3.5.0 kernel (which includes Tejun's commit), and
+> I'm happy to report the problem does seem to get fixed by it.
 
-A very sad day.  Andre taught me a lot about ATA, and could be 
-considered one of the grandfathers of libata.
+I can confirm this on my hardware as well with both 3.4.4 and 3.5.0.
+Without James' patch the kernels will immediately drop the I/O and with
+the patch both kernels will wake the SATA disks and then complete the
+I/O successfully.
 
-http://hedrick4419.blogspot.com/
-http://www.theregister.co.uk/2012/07/26/andre_hedrick/?2
-
-Rest in peace,
-
-	Jeff
-
-
+-- Robert
