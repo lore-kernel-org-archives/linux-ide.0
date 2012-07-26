@@ -1,42 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2 0/2] ata: MODE SELECT implementation
-Date: Thu, 26 Jul 2012 09:47:16 -0400
-Message-ID: <50114A64.8090500@pobox.com>
-References: <1341481235-12708-1-git-send-email-pbonzini@redhat.com> <5010F104.5080606@redhat.com>
+From: "Rus V. Brushkoff" <brushkoff@gmail.com>
+Subject: Re: AMD SP5100 SATA low perfomance
+Date: Thu, 26 Jul 2012 16:48:31 +0300
+Message-ID: <CAKu2wpT-JdYhViiDgqqWc9x-AjpdbrcmiyM-DTf667WZ4HhtEA@mail.gmail.com>
+References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
+ <20120724204454.GC5167@liondog.tnic> <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
+ <20120726100440.GB30717@aftab.osrc.amd.com> <CAKu2wpSw-jTMnRkZyDf9aGuNqY7kRp6AUUHKr7CVoo_QXRzj=Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:42817 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211Ab2GZNrU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 09:47:20 -0400
-In-Reply-To: <5010F104.5080606@redhat.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:36201 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751474Ab2GZNtN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 09:49:13 -0400
+Received: by weyx8 with SMTP id x8so1350156wey.19
+        for <linux-ide@vger.kernel.org>; Thu, 26 Jul 2012 06:49:12 -0700 (PDT)
+In-Reply-To: <CAKu2wpSw-jTMnRkZyDf9aGuNqY7kRp6AUUHKr7CVoo_QXRzj=Q@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Borislav Petkov <bp@amd64.org>
+Cc: linux-ide@vger.kernel.org
 
-On 07/26/2012 03:25 AM, Paolo Bonzini wrote:
-> Il 05/07/2012 11:40, Paolo Bonzini ha scritto:
->> This is a revised version of the MODE SELECT implementation from yesterday,
->> augmented with support for changeable parameter requests in MODE SENSE.
->>
->> Paolo Bonzini (2):
->>    ata: support MODE SENSE request for changeable parameters
->>    ata: implement MODE SELECT command
->>
->>   drivers/ata/libata-scsi.c |  242 +++++++++++++++++++++++++++++++++++++++++----
->>   1 files changed, 221 insertions(+), 21 deletions(-)
->>
+>> Any results on the test with the other drive?
+
+The test results with dmes
+
 >
-> Ping, no love for these? :)
-
-These will go in #upstream for the next kernel...
-
-	Jeff
-
+> On the way - will post results in several hours.
+>
+> --
+> Rus
 
 
 
-
+-- 
+Rus
