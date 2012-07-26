@@ -1,35 +1,42 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v3 0/7] ZPODD patches for scsi tree
-Date: Thu, 26 Jul 2012 09:43:37 -0400
-Message-ID: <50114989.3010900@pobox.com>
-References: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+Subject: Re: [PATCH v2 0/2] ata: MODE SELECT implementation
+Date: Thu, 26 Jul 2012 09:47:16 -0400
+Message-ID: <50114A64.8090500@pobox.com>
+References: <1341481235-12708-1-git-send-email-pbonzini@redhat.com> <5010F104.5080606@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gg0-f174.google.com ([209.85.161.174]:56351 "EHLO
-	mail-gg0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750867Ab2GZNnm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 09:43:42 -0400
-In-Reply-To: <1343297129-28174-1-git-send-email-aaron.lu@amd.com>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:42817 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211Ab2GZNrU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Jul 2012 09:47:20 -0400
+In-Reply-To: <5010F104.5080606@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Lin Ming <minggr@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 07/26/2012 06:05 AM, Aaron Lu wrote:
-> v3:
-> Rebase on top of scsi-misc tree;
-> Add the sr related patches previously in Jeff's libata tree;
-> Re-organize the sr patches.
-> A problem for now: for patch
-> scsi: sr: support zero power ODD(ZPODD)
-> I can't set a flag in libata-acpi.c since a related function is
-> missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+On 07/26/2012 03:25 AM, Paolo Bonzini wrote:
+> Il 05/07/2012 11:40, Paolo Bonzini ha scritto:
+>> This is a revised version of the MODE SELECT implementation from yesterday,
+>> augmented with support for changeable parameter requests in MODE SENSE.
+>>
+>> Paolo Bonzini (2):
+>>    ata: support MODE SENSE request for changeable parameters
+>>    ata: implement MODE SELECT command
+>>
+>>   drivers/ata/libata-scsi.c |  242 +++++++++++++++++++++++++++++++++++++++++----
+>>   1 files changed, 221 insertions(+), 21 deletions(-)
+>>
+>
+> Ping, no love for these? :)
 
-What does this mean?  Would you be more specific?
+These will go in #upstream for the next kernel...
 
 	Jeff
+
+
 
 
 
