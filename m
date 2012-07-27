@@ -1,73 +1,107 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: IRQ issues with multiple SiI3114's on Kernel 3.2
-Date: Fri, 27 Jul 2012 12:24:52 -0500
-Message-ID: <5012CEE4.8040306@hardwarefreak.com>
-References: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+From: Jeff Garzik <jeff@garzik.org>
+Subject: An Andre To Remember
+Date: Fri, 27 Jul 2012 13:56:55 -0400
+Message-ID: <20120727175655.GA23784@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:41952 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab2G0RdU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2012 13:33:20 -0400
-In-Reply-To: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com>
+Received: from havoc.gtf.org ([69.61.125.42]:58829 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752234Ab2G0R44 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jul 2012 13:56:56 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stirling Westrup <swestrup@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, lwn@lwn.net
 
-On 7/27/2012 11:40 AM, Stirling Westrup wrote:
 
-> I recently purchased a large system for use as a backup server for a
-> pair of small businesses. It contains a boot drive plus 10 more
-> storage drives. Despite having three onboard SATA controllers, the
-> motherboard didn't have enough SATA connectors for all the drives, so
-> I installed a pair of identical SiI3114 raid cards to handle the extra
-> connections. It has a Sandy Bridge chipset, so I installed a 3.2
-> kernel.
-> 
-> # uname -a
-> Linux ttt 3.2.0-0.bpo.2-amd64 #1 SMP Fri Jun 29 20:42:29 UTC 2012
-> x86_64 GNU/Linux
-...
-> Okay, enough background. Here's the issue: I had no trouble building
-> and sync'ing the first array, but when I try to sync the second array,
-> I always get the following dmesg an hour or so into the process:
->
-> irq 19: nobody cared (try booting with the "irqpoll" option)
-> [  346.120572] Pid: 1100, comm: md1_resync Not tainted
-3.2.0-0.bpo.2-amd64 #1
-> [  346.120573] Call Trace:
-> ...
-> [  346.120697] handlers:
-> [  346.120699] [<ffffffffa00479e0>] ahci_interrupt
-> [  346.120702] [<ffffffffa02f17ec>] sil_interrupt
-> [  346.120703] Disabling IRQ #19
-> [  346.122145] sched: RT throttling activated
-...
-> From this point onward syncing drops to a tiny fraction of its
-> previous speed. I've tried booting with 'irqpoll' as the error message
-> suggests, but it has had no effect. I'm really not sure if there is a
-> conflict between my two SiI3114's or between the SiI's and the Marvell
-> controller (although I've never had an issue with Marvell in the
-> past), nor how to go about diagnosing or fixing this.  I'll include a
-> full dmesg dump below, as well as my currently loaded modules. If
-> anyone wants any further info, just ask.
+	An Andre To Remember
+	July 2012
 
-Have you tried irqbalance to spread the interrupts across cores/cache
-domains? https://irqbalance.org/documentation.html
+Linux lost a friend and advocate this month.  Though never a household
+name, Andre Hedrick had a positive impact on everyone today running
+Linux, or using a website, with any form of IDE (ATA) or SCSI storage
+-- that means millions upon millions of users today.
 
-Dual/quad socket machines benefit more than a single socket machine, but
-the latter can still benefit if the cache hierarchy is appropriate.
+For a time, Andre interacted with practically every relevant IDE
+drive and controller manufacturer, as well as the T13 standards
+committee through which IDE changes were made.  He helped ensure
+Linux had near-universal IDE support in a hardware era when Linux
+support was a second thought if at all.  As the Register article[1]
+noted, with CPRM and other efforts, Andre worked to keep storage a
+more open platform than it might otherwise have been.
 
-~$ aptitude install irqbalance
+[1] http://www.theregister.co.uk/2012/07/26/andre_hedrick/
 
-No guarantees this will fix your problem but it's worth a shot.  Takes a
-few seconds to install, and it won't cause any negative effects, even if
-it yields no positive effects.
+Andre also played a role in IDE technology coalescing around the idea
+of a "taskfile", which is IDE-speak for an RPC command issued to a
+disk drive, and the RPC response returned from the drive.  It was
+very important to Andre that the kernel have a "taskfile ioctl",
+an API enabling full programmable access to the disk drive.  At the
+time, a more limited "cmd ioctl" API was the best option available,
+but Linux's cmd ioctl did not give users full and complete access to
+their own disk drive.
 
--- 
-Stan
+Andre's taskfile concept was a central component of the current,
+rewritten-from-scratch Linux IDE driver "libata."  libata uses an
+"ata_taskfile" to communicate with all IDE drives, whether from a
+decade ago or built yesterday.  The taskfile concept modernized
+IDE software, by forcing the industry to move away from a slow,
+signals-originated register API to a modern, packetized RPC messaging
+API, similar to where SCSI storage had already been moving.
+
+I spent many hours on the phone with Andre, circa 2003, learning all
+there was to know about ATA storage, while writing libata.  Andre could
+be considered one of the grandfathers of libata, along with Alan Cox.
+I became friends with Andre during this time, and we talked a lot.
+
+Andre was unquestionably smart, driven and an advocate for Linux user
+freedom.
+
+Andre was also mentally ill.  Some of those hours spent on the phone
+with him were not geeky discussions, but me patiently listening to
+paranoid thoughts about kernel developer conspiracies, and even
+more patiently describing how he was simply misunderstanding and
+misapplying the development process and/or basic code details.
+Andre would receive engineering feedback on some of his changes,
+and wonder why the engineer reviewing his changes was conspiring to
+shoot down his obviously-needed changes.  At some point, paranoia
+and mental illness makes you difficult to work with, which starts a
+nasty feedback loop feeding further paranoia and stress.
+
+Perhaps it is the nature of intelligence itself, or just the nature
+of computer science, but our profession seems to have a higher
+than average rate of bipolar disorder and other mental illnesses.
+A Beautiful Mind comes to mind, as does my own purely anecdotal
+observations of others as a kernel developer and maintainer.  Whatever
+the reason, Andre is not the only developer I've encountered who sees
+conspiracies, wheels-within-wheels in the feedback they receive.
+
+Although I was truly shocked by the news of Andre's suicide, it always
+seemed like Andre was continually stressed out, when I knew him.
+When spending long hours discussing kernel and storage industry
+politics over the phone with Andre, I found myself constantly advising
+him to relax, to take a break from computing.
+
+This is a time for grief and a time for celebration of Andre's
+accomplishments, but also it is a time to look around at our fellow
+geeks and offer our support, if similar behavioral signs appear.
+
+There is no computing project that is worth your life.  Turn off the
+computer.  Seek help.  Get outside, enjoy the green grass, the
+birds in the trees.  Talk to people you know.  Talk to strangers!
+Drive to Wisconsin, and find out whatever it is they do there.
+Build a treehouse.  Park on a parkway and drive on a driveway.
+Make a macaroni necklace.  Visit a dairy.  Climb a rock.  Seek life.
+
+Life is so much more than code.
+
+Rest in peace Andre,
+
+	Jeff Garzik
+	friend and libata author
+
+
+PS. Remembering Andre website: http://hedrick4419.blogspot.com/
 
