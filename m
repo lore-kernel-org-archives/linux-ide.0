@@ -1,74 +1,54 @@
-From: Aaron Lu <aaron.lu@amd.com>
-Subject: [PATCH v4 5/7] scsi: pm: use runtime resume callback if available
-Date: Fri, 27 Jul 2012 17:00:48 +0800
-Message-ID: <1343379650-2867-6-git-send-email-aaron.lu@amd.com>
-References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
+From: Borislav Petkov <bp@amd64.org>
+Subject: Re: AMD SP5100 SATA low perfomance
+Date: Fri, 27 Jul 2012 11:07:19 +0200
+Message-ID: <20120727090719.GA13992@aftab.osrc.amd.com>
+References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
+ <20120724204454.GC5167@liondog.tnic>
+ <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
+ <20120726100440.GB30717@aftab.osrc.amd.com>
+ <CAKu2wpSw-jTMnRkZyDf9aGuNqY7kRp6AUUHKr7CVoo_QXRzj=Q@mail.gmail.com>
+ <CAKu2wpQY3=VK-7RZjheRjaYPN2OQxoD=r1qU08DwmjM9xhkxcQ@mail.gmail.com>
+ <20120726180854.GD9161@aftab.osrc.amd.com>
+ <CAKu2wpThVHc9nAL=xvcPSKcv-cnOFp+Y41CpQyxsqo292FzjRA@mail.gmail.com>
+ <CAKu2wpRkHnAdwiwuoyXfS+KrWQ7DBed1yh_K5eSu0o2d0GWJuA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>
-Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from osrc3.amd.com ([217.9.48.20]:46182 "EHLO mail.x86-64.org"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751735Ab2G0JHZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Jul 2012 05:07:25 -0400
+Content-Disposition: inline
+In-Reply-To: <CAKu2wpRkHnAdwiwuoyXfS+KrWQ7DBed1yh_K5eSu0o2d0GWJuA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rus V. Brushkoff" <brushkoff@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-When runtime resume a scsi device, if the device's driver has
-implemented runtime resume callback, use that.
+On Fri, Jul 27, 2012 at 11:23:56AM +0300, Rus V. Brushkoff wrote:
+> Hello,
+> 
+> You will laugh, but I've found the issue. These particular drives do
+> not like the fan vibration and lowering the spin speed ;) Sh*t ...
 
-sr driver needs this to do different things for system resume and
-runtime resume.
+"Sh*t" really only begins to describe this. So let me get this
+correctly: your Hitachi hdds weren't mounted in a very stable manner to
+the mobo chassis and vibrations from the fan caused them to fail writes
+and retry a _lot_ leading to the write performance drop?
 
-Signed-off-by: Aaron Lu <aaron.lu@amd.com>
----
- drivers/scsi/scsi_pm.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+And the WD ones don't have a problem with the vibrations?
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 83edb93..690136c 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -34,14 +34,19 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- 	return err;
- }
- 
--static int scsi_dev_type_resume(struct device *dev)
-+static int scsi_dev_type_resume(struct device *dev, bool runtime)
- {
- 	struct device_driver *drv;
- 	int err = 0;
-+	int (*resume)(struct device *);
- 
- 	drv = dev->driver;
--	if (drv && drv->resume)
--		err = drv->resume(dev);
-+	if (runtime && drv && drv->pm && drv->pm->runtime_resume)
-+		resume = drv->pm->runtime_resume;
-+	else
-+		resume = drv ? drv->resume : NULL;
-+	if (resume)
-+		err = resume(dev);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 	return err;
-@@ -85,7 +90,7 @@ static int scsi_bus_resume_common(struct device *dev)
- 	pm_runtime_get_sync(dev->parent);
- 
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, false);
- 	if (err == 0) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
-@@ -160,7 +165,7 @@ static int scsi_runtime_resume(struct device *dev)
- 
- 	dev_dbg(dev, "scsi_runtime_resume\n");
- 	if (scsi_is_sdev_device(dev))
--		err = scsi_dev_type_resume(dev);
-+		err = scsi_dev_type_resume(dev, true);
- 
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
+Wow! Looks like some idiot was saving on production material/design to
+make the drives cheaper. Talk about a major serious FAIL.
+
+:-)
+
 -- 
-1.7.11.3
+Regards/Gruss,
+Boris.
 
-
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
