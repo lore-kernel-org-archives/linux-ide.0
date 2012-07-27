@@ -1,65 +1,83 @@
-From: "Rus V. Brushkoff" <brushkoff@gmail.com>
-Subject: Re: AMD SP5100 SATA low perfomance
-Date: Fri, 27 Jul 2012 11:23:56 +0300
-Message-ID: <CAKu2wpRkHnAdwiwuoyXfS+KrWQ7DBed1yh_K5eSu0o2d0GWJuA@mail.gmail.com>
-References: <CAKu2wpS-9T+jeab4HoBozuxa-7LPVCL3+3JZok-QkTHs6CNksA@mail.gmail.com>
- <20120724204454.GC5167@liondog.tnic> <CAKu2wpTFZNY4nwi47gRPbzaHUFPRfJEZa+GTgO4L=vJ-y+9gCA@mail.gmail.com>
- <20120726100440.GB30717@aftab.osrc.amd.com> <CAKu2wpSw-jTMnRkZyDf9aGuNqY7kRp6AUUHKr7CVoo_QXRzj=Q@mail.gmail.com>
- <CAKu2wpQY3=VK-7RZjheRjaYPN2OQxoD=r1qU08DwmjM9xhkxcQ@mail.gmail.com>
- <20120726180854.GD9161@aftab.osrc.amd.com> <CAKu2wpThVHc9nAL=xvcPSKcv-cnOFp+Y41CpQyxsqo292FzjRA@mail.gmail.com>
+From: Aaron Lu <aaron.lu@amd.com>
+Subject: [PATCH v4 4/7] scsi: sr: block events when runtime suspended
+Date: Fri, 27 Jul 2012 17:00:47 +0800
+Message-ID: <1343379650-2867-5-git-send-email-aaron.lu@amd.com>
+References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56068 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752135Ab2G0IYj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2012 04:24:39 -0400
-Received: by lahd3 with SMTP id d3so1982887lah.19
-        for <linux-ide@vger.kernel.org>; Fri, 27 Jul 2012 01:24:37 -0700 (PDT)
-In-Reply-To: <CAKu2wpThVHc9nAL=xvcPSKcv-cnOFp+Y41CpQyxsqo292FzjRA@mail.gmail.com>
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:21911
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751113Ab2G0JCK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Jul 2012 05:02:10 -0400
+In-Reply-To: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>
-Cc: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>
+Cc: Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@amd.com>
 
-Hello,
+When the ODD is runtime suspended, there is no need to poll it for
+events, so block events poll for it and unblock when resumed.
 
-You will laugh, but I've found the issue. These particular drives do
-not like the fan vibration and lowering the spin speed ;) Sh*t ...
-Sorry for bothering all of you and big thanks for support !
+Signed-off-by: Aaron Lu <aaron.lu@amd.com>
+---
+ block/genhd.c     | 2 ++
+ drivers/scsi/sr.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Rus
-
-2012/7/26 Rus V. Brushkoff <brushkoff@gmail.com>:
->> Yes, probably. Right about now I'm all out of ideas about what on the
->> motherboard could be causing this. Maybe we should ask Tyan for help or
->> whether they've seen a similar issue.
->
-> Already asked, but they can't reproduce this as I think that they do
-> not use Linux for tests ;(
->
->>
->>> Can we see (or debug) what is happenning on bad S8005GM2NR-LE
->>> motherboard during write ?
->>
->> I don't think so, without special hardware.
->
-> Hmm, what exact hardware needed for this ?
->
->>
->> Just a stab in the dark: you've done all those with the systemrescuecd
->> which has kernel 3.2, correct? Would it be possible to redo those tests,
->> especially the ones which show the slowdown, with the latest kernel -
->> 3.5 - to see whether the issue still persists?
->
-> I've tried the systemrescuecd 3.0.0-beta too, its running 3.5 kernel.
->
-> Rus
->
-> --
-> Rus
-
-
-
+diff --git a/block/genhd.c b/block/genhd.c
+index 9cf5583..bdb3682 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -1458,6 +1458,7 @@ void disk_block_events(struct gendisk *disk)
+ 
+ 	mutex_unlock(&ev->block_mutex);
+ }
++EXPORT_SYMBOL(disk_block_events);
+ 
+ static void __disk_unblock_events(struct gendisk *disk, bool check_now)
+ {
+@@ -1502,6 +1503,7 @@ void disk_unblock_events(struct gendisk *disk)
+ 	if (disk->ev)
+ 		__disk_unblock_events(disk, false);
+ }
++EXPORT_SYMBOL(disk_unblock_events);
+ 
+ /**
+  * disk_flush_events - schedule immediate event checking and flushing
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index acfd10a..cbc14ea 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -205,6 +205,8 @@ static int sr_suspend(struct device *dev, pm_message_t msg)
+ 		return -EBUSY;
+ 	}
+ 
++	disk_block_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -226,6 +228,8 @@ static int sr_resume(struct device *dev)
+ 		atomic_set(&cd->suspend_count, 1);
+ 	}
+ 
++	disk_unblock_events(cd->disk);
++
+ 	return 0;
+ }
+ 
+@@ -314,9 +318,6 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
+-	if (pm_runtime_suspended(&cd->device->sdev_gendev))
+-		return 0;
+-
+ 	/* if the logical unit just finished loading/unloading, do a TUR */
+ 	if (cd->device->can_power_off && cd->dbml && sr_unit_load_done(cd)) {
+ 		events = 0;
 -- 
-Rus
+1.7.11.3
+
+
