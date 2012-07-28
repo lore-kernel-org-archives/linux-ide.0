@@ -1,7 +1,7 @@
 From: Stirling Westrup <swestrup@gmail.com>
 Subject: Re: IRQ issues with multiple SiI3114's on Kernel 3.2
-Date: Sat, 28 Jul 2012 13:48:03 -0400
-Message-ID: <CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com>
+Date: Sat, 28 Jul 2012 14:19:49 -0400
+Message-ID: <CAJt7KB-W9aHwHTy5VsbePbxHL_6BedFcrs+XyoZ3kO=kpT65Vg@mail.gmail.com>
 References: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com>
 	<5012CEE4.8040306@hardwarefreak.com>
 	<CAJt7KB9=cr3cTB_oyO1AJEfHtQp+hR39ZDNpX5f0M1+YAyiGkQ@mail.gmail.com>
@@ -11,12 +11,12 @@ Reply-To: swestrup@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:44639 "EHLO
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:49097 "EHLO
 	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752747Ab2G1RsE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 13:48:04 -0400
-Received: by ghrr11 with SMTP id r11so4036923ghr.19
-        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2012 10:48:03 -0700 (PDT)
+	with ESMTP id S1752946Ab2G1STu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 14:19:50 -0400
+Received: by ghrr11 with SMTP id r11so4045101ghr.19
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2012 11:19:50 -0700 (PDT)
 In-Reply-To: <5013AC8F.3000606@hardwarefreak.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -74,38 +74,12 @@ On Sat, Jul 28, 2012 at 5:10 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 >>> let everyone know tomorrow if it actually finished the full 20-hour
 >>> resync without incidence.
 >
->> Alas, all it did was delay the IRQ error by a few hours. Does anyone
->> else have any ideas about how I could tackle this?
->
-> Try irqpoll and irqbalance together.  Also, which motherboard is this,
-> exact make/model please.  May be a BIOS issue.  Doesn't seem to be using
-> MSIs.  If the mobo and cards all support MSIs, enabling that may fix
-> this as well.
->
-> Also what make/model are the SiI3114 cards?  PCIe or PCI?
 
-The motherboard is an Asus P8768-V Pro/Gen3 and has full MSI support,
-but the cards
-are labeled "Syba SiI 3114 PCI to 4 Port Sata 150" and don't support MSI.
+> Try irqpoll and irqbalance together.
 
-> Have you
-> tried different slot combinations?  Moving one card to a different slot
-> may get it routed to PCI INTB instead of INTA.  That may get it mapped
-> to something other than IRQ#19.  Updating the 3114 boards to their
-> latest firmware is worth a shot, if not there already.
+Didn't help. In fact, this time the kernel felt it had to disable BOTH
+IRQ#19 and then IRQ#17
 
-At one point the system was mapping the interrupt to IRQ#17, instead
-of 19, but it still failed.
-
-I haven't tried moving the cards to different slots or anything but,
-IIRC, it only has two PCI slots.
-
-I also have yet to try upgrading the BIOS of the mobo or updating the
-card firmware. I was hoping to have a better
-idea of what was going wrong before going down that route.
-
-I also wonder if it the problem could be kernel or libata related.
-(which is why I'm asking in this forum).
 
 -- 
 Stirling Westrup
