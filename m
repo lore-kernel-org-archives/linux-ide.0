@@ -1,30 +1,30 @@
 From: Stirling Westrup <swestrup@gmail.com>
 Subject: Re: IRQ issues with multiple SiI3114's on Kernel 3.2
-Date: Sat, 28 Jul 2012 14:45:43 -0400
-Message-ID: <CAJt7KB8+V56bPrwW9Ts+=mBd1mei_5_-PKWEVPgvp1AxTG8wnw@mail.gmail.com>
+Date: Sat, 28 Jul 2012 19:41:43 -0400
+Message-ID: <CAJt7KB_L=UB8JxrJmMmnXX02r=qY-887UyjbzF7SwstCU12SNw@mail.gmail.com>
 References: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com>
 	<5012CEE4.8040306@hardwarefreak.com>
 	<CAJt7KB9=cr3cTB_oyO1AJEfHtQp+hR39ZDNpX5f0M1+YAyiGkQ@mail.gmail.com>
 	<CAJt7KB8JJE9m1WKxkZ+Svbtazr2RW1v4jWAm9zcqxbbqBFWusw@mail.gmail.com>
 	<5013AC8F.3000606@hardwarefreak.com>
-	<CAJt7KB-W9aHwHTy5VsbePbxHL_6BedFcrs+XyoZ3kO=kpT65Vg@mail.gmail.com>
+	<CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com>
 Reply-To: swestrup@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gh0-f174.google.com ([209.85.160.174]:58936 "EHLO
-	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533Ab2G1Spo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 14:45:44 -0400
-Received: by ghrr11 with SMTP id r11so4051096ghr.19
-        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2012 11:45:44 -0700 (PDT)
-In-Reply-To: <CAJt7KB-W9aHwHTy5VsbePbxHL_6BedFcrs+XyoZ3kO=kpT65Vg@mail.gmail.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50895 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506Ab2G1Xlo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 19:41:44 -0400
+Received: by obbuo13 with SMTP id uo13so6536864obb.19
+        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2012 16:41:44 -0700 (PDT)
+In-Reply-To: <CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: stan@hardwarefreak.com
 Cc: linux-ide@vger.kernel.org
 
-On Sat, Jul 28, 2012 at 2:19 PM, Stirling Westrup <swestrup@gmail.com> wrote:
+On Sat, Jul 28, 2012 at 1:48 PM, Stirling Westrup <swestrup@gmail.com> wrote:
 > On Sat, Jul 28, 2012 at 5:10 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
 >> On 7/27/2012 9:20 PM, Stirling Westrup wrote:
 >>> On Fri, Jul 27, 2012 at 6:14 PM, Stirling Westrup <swestrup@gmail.com> wrote:
@@ -76,20 +76,44 @@ On Sat, Jul 28, 2012 at 2:19 PM, Stirling Westrup <swestrup@gmail.com> wrote:
 >>>> let everyone know tomorrow if it actually finished the full 20-hour
 >>>> resync without incidence.
 >>
+>>> Alas, all it did was delay the IRQ error by a few hours. Does anyone
+>>> else have any ideas about how I could tackle this?
+>>
+>> Try irqpoll and irqbalance together.  Also, which motherboard is this,
+>> exact make/model please.  May be a BIOS issue.  Doesn't seem to be using
+>> MSIs.  If the mobo and cards all support MSIs, enabling that may fix
+>> this as well.
+>>
+>> Also what make/model are the SiI3114 cards?  PCIe or PCI?
 >
->> Try irqpoll and irqbalance together.
+> The motherboard is an Asus P8768-V Pro/Gen3 and has full MSI support,
+> but the cards
+> are labeled "Syba SiI 3114 PCI to 4 Port Sata 150" and don't support MSI.
 >
-> Didn't help. In fact, this time the kernel felt it had to disable BOTH
-> IRQ#19 and then IRQ#17
+>> Have you
+>> tried different slot combinations?  Moving one card to a different slot
+>> may get it routed to PCI INTB instead of INTA.  That may get it mapped
+>> to something other than IRQ#19.  Updating the 3114 boards to their
+>> latest firmware is worth a shot, if not there already.
+>
+> At one point the system was mapping the interrupt to IRQ#17, instead
+> of 19, but it still failed.
+>
+> I haven't tried moving the cards to different slots or anything but,
+> IIRC, it only has two PCI slots.
+>
+> I also have yet to try upgrading the BIOS of the mobo or updating the
+> card firmware. I was hoping to have a better
+> idea of what was going wrong before going down that route.
+>
+> I also wonder if it the problem could be kernel or libata related.
+> (which is why I'm asking in this forum).
 >
 
-Actually, looking at my dmesg log from the run with both irqpoll and
-irqbalance, I see something very different. I have dozens of errors
-reported by ironlake_irq_handler inside i915_irq, which is my graphics
-subsystem.
+Okay, it looks like its a known hardware chipset problem, and was
+first reported 6-months ago.
 
-I have no idea if this is a new problem, or another symptom of the old
-one.  In any case, since the dmesg log is huge, I'll just link to a
-pastebin of it:
+It affects all PCI cards in Asus Sandy-Bridge Motherboards. No known
+fix as of yet.
 
-http://pastebin.com/NmgVVvC2
+https://lkml.org/lkml/2012/1/30/216
