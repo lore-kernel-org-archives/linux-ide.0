@@ -1,185 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: An Andre To Remember
-Date: Sat, 28 Jul 2012 17:11:02 -0700
-Message-ID: <1343520662.22538.353.camel@haakon2.linux-iscsi.org>
-References: <20120727175655.GA23784@havoc.gtf.org>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: IRQ issues with multiple SiI3114's on Kernel 3.2
+Date: Sun, 29 Jul 2012 04:24:06 -0500
+Message-ID: <50150136.6070908@hardwarefreak.com>
+References: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com> <5012CEE4.8040306@hardwarefreak.com> <CAJt7KB9=cr3cTB_oyO1AJEfHtQp+hR39ZDNpX5f0M1+YAyiGkQ@mail.gmail.com> <CAJt7KB8JJE9m1WKxkZ+Svbtazr2RW1v4jWAm9zcqxbbqBFWusw@mail.gmail.com> <5013AC8F.3000606@hardwarefreak.com> <CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com> <CAJt7KB_L=UB8JxrJmMmnXX02r=qY-887UyjbzF7SwstCU12SNw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51263 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062Ab2G2ALF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 20:11:05 -0400
-In-Reply-To: <20120727175655.GA23784@havoc.gtf.org>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:42672 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381Ab2G2JYH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jul 2012 05:24:07 -0400
+In-Reply-To: <CAJt7KB_L=UB8JxrJmMmnXX02r=qY-887UyjbzF7SwstCU12SNw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, lwn@lwn.net, Wim Coekaerts <wim.coekaerts@oracle.com>, "Lawrence E. Rosen" <lrosen@rosenlaw.com>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Ralf Bacchle <ralf@linux-mips.org>
+To: swestrup@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Fri, 2012-07-27 at 13:56 -0400, Jeff Garzik wrote:
-> 	An Andre To Remember
-> 	July 2012
->=20
-> Linux lost a friend and advocate this month.  Though never a househol=
-d
-> name, Andre Hedrick had a positive impact on everyone today running
-> Linux, or using a website, with any form of IDE (ATA) or SCSI storage
-> -- that means millions upon millions of users today.
->=20
-> For a time, Andre interacted with practically every relevant IDE
-> drive and controller manufacturer, as well as the T13 standards
-> committee through which IDE changes were made.  He helped ensure
-> Linux had near-universal IDE support in a hardware era when Linux
-> support was a second thought if at all.  As the Register article[1]
-> noted, with CPRM and other efforts, Andre worked to keep storage a
-> more open platform than it might otherwise have been.
->=20
-> [1] http://www.theregister.co.uk/2012/07/26/andre_hedrick/
->=20
-> Andre also played a role in IDE technology coalescing around the idea
-> of a "taskfile", which is IDE-speak for an RPC command issued to a
-> disk drive, and the RPC response returned from the drive.  It was
-> very important to Andre that the kernel have a "taskfile ioctl",
-> an API enabling full programmable access to the disk drive.  At the
-> time, a more limited "cmd ioctl" API was the best option available,
-> but Linux's cmd ioctl did not give users full and complete access to
-> their own disk drive.
->=20
-> Andre's taskfile concept was a central component of the current,
-> rewritten-from-scratch Linux IDE driver "libata."  libata uses an
-> "ata_taskfile" to communicate with all IDE drives, whether from a
-> decade ago or built yesterday.  The taskfile concept modernized
-> IDE software, by forcing the industry to move away from a slow,
-> signals-originated register API to a modern, packetized RPC messaging
-> API, similar to where SCSI storage had already been moving.
->=20
-> I spent many hours on the phone with Andre, circa 2003, learning all
-> there was to know about ATA storage, while writing libata.  Andre cou=
-ld
-> be considered one of the grandfathers of libata, along with Alan Cox.
-> I became friends with Andre during this time, and we talked a lot.
->=20
-> Andre was unquestionably smart, driven and an advocate for Linux user
-> freedom.
->=20
+On 7/28/2012 6:41 PM, Stirling Westrup wrote:
 
-Hi Jeff,
+> Okay, it looks like its a known hardware chipset problem, and was
+> first reported 6-months ago.
+> 
+> It affects all PCI cards in Asus Sandy-Bridge Motherboards. No known
+> fix as of yet.
+> 
+> https://lkml.org/lkml/2012/1/30/216
 
-Thank you for sharing your thoughts + memories of Andre.
+At least our discussion got you looking in multiple directions, one of
+which led you to this information.
 
-As we grieve this extreme loss, I'd like to try to share some of my own
-experiences with Andre that will hopefully help others to begin to
-understand the kind + generous type of person that Andre really was, an=
-d
-just some of his staggering technical feats + accomplishments that can
-be talked about publicly today.
+Given the problem is related to legacy PCI INTx sharing/routing, whether
+on the PCI or PCIe bus, I'd recommend you step up to a high quality PCIe
+x8 SAS/SATA HBA, such as the LSI 9211-8i PCIe x8, which supports MSI-X
+and should instantly solve your problem.
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816118112
 
-Along with Andre being involved in the history of libata and IDE/ATA
-development, those of us in the Linux kernel storage development
-community also know, he was also instrumental in creation of the
-original out-of-tree PyX iSCSI target code that's now in mainline.
+You'll need two breakout cables:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816116098
 
-In summer 2002, I sitting next to Andre when he coined the term 'IBLOCK=
-'
-after drawing a rough sketch on a notebook after an idea in Walnut
-Creek, California, and the name ending up sticking..   The interesting
-development bits really started to unfold in the spring of 2004 when we
-finally managed to get drivers/ide/ export working with iscsi-target on
-x86 using 2.4.x code. =20
+This solution will set you back almost $300 USD.  I just did some
+research on the Syba 4 port SiI 3124 PCIe x1 card.  The SiI 3124 is a
+native PCI/X chip, thus the board uses a PCI-X to PCIe bridge chip which
+hides under the large heatsink.  Thus this card will not work, as it
+uses legacy PCI interrupts:
+http://www.newegg.com/Product/Product.aspx?Item=N82E16816124027
 
-That quickly unfolded into a Sony Playstation-2 (MIPS EE) port using ID=
-E
-disk DMA mode + network PIO on 2.2.x era kernel code capable of
-streaming multiple DVD quality streams to hungry iSCSI clients..
+I also looked at the Syba and Adaptec Marvell PCIe x1 SATAII 4 port
+cards.  While the Marvell chip is native PCIe I'm unable to confirm it
+supports MSI/X.  And given these cards run $80-90, that's $160-180 for
+two of them.  The LSI above is pretty much guaranteed to work for ~$100
+more.  What's your reputation with your client worth?
 
-Left to my own devices for hardware hacking, I managed to turn our firs=
-t
-disassembled PS2 into a broken parts machine (whoops) but Andre was
-going to made sure that it was not going to happen again..  I bought
-another PS2, and he was the person who soldered wires to the handful of
-tiny via pin-outs to access the one-way serial output for EE boot
-information last at night, while I worked on the necessary kernel bits
-needed for bring-up of the PS2 specific IDE backend target driver.  (Th=
-e
-PS2 IDE driver required contiguous memory for IDE DMA ops to function
-via a single struct buffer_head (TCQ=3D1) on the non-cache coherent MIP=
-S
-based platform.)
+Speaking of which, don't even look at the $110 8 port Supermicro
+SAS/SATA controller.  It uses the Marvell SAS chip.  Although the chip
+itself is fine and works with Windows, the Linux driver *will* eat your
+data, all the way up to kernel 3.4.  I've personally rectified this
+situation for a half dozen users who bought this SM SAS board on price
+alone.  I converted them all to LSI HBAs and no problems since.  The
+solution cost them 2-3x as much but they're all happy because it simply
+works reliably, and fast.
 
-He carefully made physical space in the machine's cramped chassis, usin=
-g
-sticky pads where necessary to hold the small PCB containing a simple
-ASIC doing the conversion of the signal into PC RS-232 serial output.
-He made it look completely flush, like exactly how it was supposed to
-come from the factory.  Or you know, from the magical place near the ol=
-d
-Bell Labs R&D center where new development kits for cutting edge tech
-are born.
+Or you can start swapping $150+ motherboards until you find one that
+works with those $20 Syba 3114 cards.  But then you need to ask
+yourself, how much is your time worth.  You could easily burn 20 or more
+hours going that route.
 
-CBS Sunday Morning even did a story on Andre and his family in the
-summer of 2004 while all of this was going on..  Not for the PS2
-iscsi-target or any other code of course, but for the fact that he was
-chosen by EBay to represent California small business as part of a grou=
-p
-that lobbied in Washington DC.  The reason that E-bay chose Andre is
-because he built PyX using recycled server + storage hardware bought
-from E-bay, including the family Mini-van often used to cart gear
-between home, and even him driving the PyX team right up to the service
-entrance of the Moscone Center show floor in downtown San Francisco.
+Get the LSI and be done with this.
 
-So we managed to get iscsi_target_mod up + stable with three different
-concurrent Linux x86, MSFT x86, and LinuxPPC laptops watching three
-different DVD videos just in time LinuxWorld West that August.  All of
-the hard work was leading up to a public demonstration in prime
-real-estate of the Unbreakable Linux pavilion at the entrance to the
-hall for PyX to have a hance to really show it's stuff.  The real-estat=
-e
-at the expo was also comped by Oracle out of respect for Andre's work o=
-n
-the Linux kernel.
-
-I did not sleep for one second the night before the show, and was so
-excited to be with Andre to show-off this particular demo to all of the
-people at the expo.  I was part of a hard-earned demo that was going to
-change the world with *the* Linux IDE guy!!
-
-Andre was there that first day wearing a suit jacket + dockers + cowboy
-boots (what he usually wore to conferences when doing serious buisness)
-and it was one of the times during PyX that he really genuinely seemed
-happy.  People where flocking to come and talk to *him*.   All of the
-people walking by who stopped and saw the demo that summer who knew
-Andre, understood that he pulled off something very special.  It was th=
-e
-type of technology that even seemingly non-technical people are quickly
-attracted to (especially younger people), and like a piece of technolog=
-y
-to those who don't understand it, or have had it explained in an
-accessible manner, becomes indistinguishable from magic. =20
-
-But for Andre at the show that summer, I noticed it wasn=E2=80=99t so m=
-uch about
-the tech itself (and really did love the tech), or the social events, o=
-r
-even about trying to work out some business angle for PyX, or anything
-like that..
-
-He was on the show-floor doing the thing that he really loved to do, an=
-d
-people he had never met before where coming up in waves wanting to talk
-to *him*.  Andre was always quick to greet new people at a technical
-level that they could understand, and would also do his best when a
-person came to him asking for help regardless of context.
-
-Even if it was just a young programmer asking too many questions for a
-trade-show about how the demo actually worked, while serious looking
-business people waited impatiently behind..  Andre always took the time
-to try to impart some of his own hard-earned knowledge and wisdom to
-others with a hungry mind, also regardless of context.
-
-I'm really going to to miss Andre very much, and my deepest thoughts go
-out to his family + friends during this very difficult time.
-
---nab
-
+-- 
+Stan
 
