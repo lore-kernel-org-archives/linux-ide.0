@@ -1,119 +1,185 @@
-From: Stirling Westrup <swestrup@gmail.com>
-Subject: Re: IRQ issues with multiple SiI3114's on Kernel 3.2
-Date: Sat, 28 Jul 2012 19:41:43 -0400
-Message-ID: <CAJt7KB_L=UB8JxrJmMmnXX02r=qY-887UyjbzF7SwstCU12SNw@mail.gmail.com>
-References: <CAJt7KB8-yPm7RX8doKw1WjYwxfvVQ8Af7GNmu=QVsM_sAtYKiQ@mail.gmail.com>
-	<5012CEE4.8040306@hardwarefreak.com>
-	<CAJt7KB9=cr3cTB_oyO1AJEfHtQp+hR39ZDNpX5f0M1+YAyiGkQ@mail.gmail.com>
-	<CAJt7KB8JJE9m1WKxkZ+Svbtazr2RW1v4jWAm9zcqxbbqBFWusw@mail.gmail.com>
-	<5013AC8F.3000606@hardwarefreak.com>
-	<CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com>
-Reply-To: swestrup@gmail.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: An Andre To Remember
+Date: Sat, 28 Jul 2012 17:11:02 -0700
+Message-ID: <1343520662.22538.353.camel@haakon2.linux-iscsi.org>
+References: <20120727175655.GA23784@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50895 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752506Ab2G1Xlo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 19:41:44 -0400
-Received: by obbuo13 with SMTP id uo13so6536864obb.19
-        for <linux-ide@vger.kernel.org>; Sat, 28 Jul 2012 16:41:44 -0700 (PDT)
-In-Reply-To: <CAJt7KB-9V6-56j-CNq=7Utd78rcQTFnr5a8doiBTRW-nmNdjmA@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51263 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab2G2ALF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Jul 2012 20:11:05 -0400
+In-Reply-To: <20120727175655.GA23784@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: stan@hardwarefreak.com
-Cc: linux-ide@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, lwn@lwn.net, Wim Coekaerts <wim.coekaerts@oracle.com>, "Lawrence E. Rosen" <lrosen@rosenlaw.com>, target-devel <target-devel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Ralf Bacchle <ralf@linux-mips.org>
 
-On Sat, Jul 28, 2012 at 1:48 PM, Stirling Westrup <swestrup@gmail.com> wrote:
-> On Sat, Jul 28, 2012 at 5:10 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->> On 7/27/2012 9:20 PM, Stirling Westrup wrote:
->>> On Fri, Jul 27, 2012 at 6:14 PM, Stirling Westrup <swestrup@gmail.com> wrote:
->>>> On Fri, Jul 27, 2012 at 1:24 PM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>>>> On 7/27/2012 11:40 AM, Stirling Westrup wrote:
->>>>>
->>>>>> I recently purchased a large system for use as a backup server for a
->>>>>> pair of small businesses. It contains a boot drive plus 10 more
->>>>>> storage drives. Despite having three onboard SATA controllers, the
->>>>>> motherboard didn't have enough SATA connectors for all the drives, so
->>>>>> I installed a pair of identical SiI3114 raid cards to handle the extra
->>>>>> connections. It has a Sandy Bridge chipset, so I installed a 3.2
->>>>>> kernel.
->>>>>>
->>>>>> # uname -a
->>>>>> Linux ttt 3.2.0-0.bpo.2-amd64 #1 SMP Fri Jun 29 20:42:29 UTC 2012
->>>>>> x86_64 GNU/Linux
->>>>> ...
->>>>>> Okay, enough background. Here's the issue: I had no trouble building
->>>>>> and sync'ing the first array, but when I try to sync the second array,
->>>>>> I always get the following dmesg an hour or so into the process:
->>>>>>
->>>>>> irq 19: nobody cared (try booting with the "irqpoll" option)
->>>>>> [  346.120572] Pid: 1100, comm: md1_resync Not tainted
->>>>> 3.2.0-0.bpo.2-amd64 #1
->>>>>> [  346.120573] Call Trace:
->>>>>> ...
->>>>>> [  346.120697] handlers:
->>>>>> [  346.120699] [<ffffffffa00479e0>] ahci_interrupt
->>>>>> [  346.120702] [<ffffffffa02f17ec>] sil_interrupt
->>>>>> [  346.120703] Disabling IRQ #19
->>>>>> [  346.122145] sched: RT throttling activated
->>>>> ...
->>>>>> From this point onward syncing drops to a tiny fraction of its
->>>>>> previous speed. I've tried booting with 'irqpoll' as the error message
->>>>>> suggests, but it has had no effect. I'm really not sure if there is a
->>>>>> conflict between my two SiI3114's or between the SiI's and the Marvell
->>>>>> controller (although I've never had an issue with Marvell in the
->>>>>> past), nor how to go about diagnosing or fixing this.  I'll include a
->>>>>> full dmesg dump below, as well as my currently loaded modules. If
->>>>>> anyone wants any further info, just ask.
->>>>>
->>>>> Have you tried irqbalance to spread the interrupts across cores/cache
->>>>> domains? https://irqbalance.org/documentation.html
->>>>>
->>>>
->>>> Thanks for the tip! I installed irqbalance and rebooted the system,
->>>> and everything has been running smoothly for the last two hours. I'll
->>>> let everyone know tomorrow if it actually finished the full 20-hour
->>>> resync without incidence.
->>
->>> Alas, all it did was delay the IRQ error by a few hours. Does anyone
->>> else have any ideas about how I could tackle this?
->>
->> Try irqpoll and irqbalance together.  Also, which motherboard is this,
->> exact make/model please.  May be a BIOS issue.  Doesn't seem to be using
->> MSIs.  If the mobo and cards all support MSIs, enabling that may fix
->> this as well.
->>
->> Also what make/model are the SiI3114 cards?  PCIe or PCI?
->
-> The motherboard is an Asus P8768-V Pro/Gen3 and has full MSI support,
-> but the cards
-> are labeled "Syba SiI 3114 PCI to 4 Port Sata 150" and don't support MSI.
->
->> Have you
->> tried different slot combinations?  Moving one card to a different slot
->> may get it routed to PCI INTB instead of INTA.  That may get it mapped
->> to something other than IRQ#19.  Updating the 3114 boards to their
->> latest firmware is worth a shot, if not there already.
->
-> At one point the system was mapping the interrupt to IRQ#17, instead
-> of 19, but it still failed.
->
-> I haven't tried moving the cards to different slots or anything but,
-> IIRC, it only has two PCI slots.
->
-> I also have yet to try upgrading the BIOS of the mobo or updating the
-> card firmware. I was hoping to have a better
-> idea of what was going wrong before going down that route.
->
-> I also wonder if it the problem could be kernel or libata related.
-> (which is why I'm asking in this forum).
->
+On Fri, 2012-07-27 at 13:56 -0400, Jeff Garzik wrote:
+> 	An Andre To Remember
+> 	July 2012
+>=20
+> Linux lost a friend and advocate this month.  Though never a househol=
+d
+> name, Andre Hedrick had a positive impact on everyone today running
+> Linux, or using a website, with any form of IDE (ATA) or SCSI storage
+> -- that means millions upon millions of users today.
+>=20
+> For a time, Andre interacted with practically every relevant IDE
+> drive and controller manufacturer, as well as the T13 standards
+> committee through which IDE changes were made.  He helped ensure
+> Linux had near-universal IDE support in a hardware era when Linux
+> support was a second thought if at all.  As the Register article[1]
+> noted, with CPRM and other efforts, Andre worked to keep storage a
+> more open platform than it might otherwise have been.
+>=20
+> [1] http://www.theregister.co.uk/2012/07/26/andre_hedrick/
+>=20
+> Andre also played a role in IDE technology coalescing around the idea
+> of a "taskfile", which is IDE-speak for an RPC command issued to a
+> disk drive, and the RPC response returned from the drive.  It was
+> very important to Andre that the kernel have a "taskfile ioctl",
+> an API enabling full programmable access to the disk drive.  At the
+> time, a more limited "cmd ioctl" API was the best option available,
+> but Linux's cmd ioctl did not give users full and complete access to
+> their own disk drive.
+>=20
+> Andre's taskfile concept was a central component of the current,
+> rewritten-from-scratch Linux IDE driver "libata."  libata uses an
+> "ata_taskfile" to communicate with all IDE drives, whether from a
+> decade ago or built yesterday.  The taskfile concept modernized
+> IDE software, by forcing the industry to move away from a slow,
+> signals-originated register API to a modern, packetized RPC messaging
+> API, similar to where SCSI storage had already been moving.
+>=20
+> I spent many hours on the phone with Andre, circa 2003, learning all
+> there was to know about ATA storage, while writing libata.  Andre cou=
+ld
+> be considered one of the grandfathers of libata, along with Alan Cox.
+> I became friends with Andre during this time, and we talked a lot.
+>=20
+> Andre was unquestionably smart, driven and an advocate for Linux user
+> freedom.
+>=20
 
-Okay, it looks like its a known hardware chipset problem, and was
-first reported 6-months ago.
+Hi Jeff,
 
-It affects all PCI cards in Asus Sandy-Bridge Motherboards. No known
-fix as of yet.
+Thank you for sharing your thoughts + memories of Andre.
 
-https://lkml.org/lkml/2012/1/30/216
+As we grieve this extreme loss, I'd like to try to share some of my own
+experiences with Andre that will hopefully help others to begin to
+understand the kind + generous type of person that Andre really was, an=
+d
+just some of his staggering technical feats + accomplishments that can
+be talked about publicly today.
+
+Along with Andre being involved in the history of libata and IDE/ATA
+development, those of us in the Linux kernel storage development
+community also know, he was also instrumental in creation of the
+original out-of-tree PyX iSCSI target code that's now in mainline.
+
+In summer 2002, I sitting next to Andre when he coined the term 'IBLOCK=
+'
+after drawing a rough sketch on a notebook after an idea in Walnut
+Creek, California, and the name ending up sticking..   The interesting
+development bits really started to unfold in the spring of 2004 when we
+finally managed to get drivers/ide/ export working with iscsi-target on
+x86 using 2.4.x code. =20
+
+That quickly unfolded into a Sony Playstation-2 (MIPS EE) port using ID=
+E
+disk DMA mode + network PIO on 2.2.x era kernel code capable of
+streaming multiple DVD quality streams to hungry iSCSI clients..
+
+Left to my own devices for hardware hacking, I managed to turn our firs=
+t
+disassembled PS2 into a broken parts machine (whoops) but Andre was
+going to made sure that it was not going to happen again..  I bought
+another PS2, and he was the person who soldered wires to the handful of
+tiny via pin-outs to access the one-way serial output for EE boot
+information last at night, while I worked on the necessary kernel bits
+needed for bring-up of the PS2 specific IDE backend target driver.  (Th=
+e
+PS2 IDE driver required contiguous memory for IDE DMA ops to function
+via a single struct buffer_head (TCQ=3D1) on the non-cache coherent MIP=
+S
+based platform.)
+
+He carefully made physical space in the machine's cramped chassis, usin=
+g
+sticky pads where necessary to hold the small PCB containing a simple
+ASIC doing the conversion of the signal into PC RS-232 serial output.
+He made it look completely flush, like exactly how it was supposed to
+come from the factory.  Or you know, from the magical place near the ol=
+d
+Bell Labs R&D center where new development kits for cutting edge tech
+are born.
+
+CBS Sunday Morning even did a story on Andre and his family in the
+summer of 2004 while all of this was going on..  Not for the PS2
+iscsi-target or any other code of course, but for the fact that he was
+chosen by EBay to represent California small business as part of a grou=
+p
+that lobbied in Washington DC.  The reason that E-bay chose Andre is
+because he built PyX using recycled server + storage hardware bought
+from E-bay, including the family Mini-van often used to cart gear
+between home, and even him driving the PyX team right up to the service
+entrance of the Moscone Center show floor in downtown San Francisco.
+
+So we managed to get iscsi_target_mod up + stable with three different
+concurrent Linux x86, MSFT x86, and LinuxPPC laptops watching three
+different DVD videos just in time LinuxWorld West that August.  All of
+the hard work was leading up to a public demonstration in prime
+real-estate of the Unbreakable Linux pavilion at the entrance to the
+hall for PyX to have a hance to really show it's stuff.  The real-estat=
+e
+at the expo was also comped by Oracle out of respect for Andre's work o=
+n
+the Linux kernel.
+
+I did not sleep for one second the night before the show, and was so
+excited to be with Andre to show-off this particular demo to all of the
+people at the expo.  I was part of a hard-earned demo that was going to
+change the world with *the* Linux IDE guy!!
+
+Andre was there that first day wearing a suit jacket + dockers + cowboy
+boots (what he usually wore to conferences when doing serious buisness)
+and it was one of the times during PyX that he really genuinely seemed
+happy.  People where flocking to come and talk to *him*.   All of the
+people walking by who stopped and saw the demo that summer who knew
+Andre, understood that he pulled off something very special.  It was th=
+e
+type of technology that even seemingly non-technical people are quickly
+attracted to (especially younger people), and like a piece of technolog=
+y
+to those who don't understand it, or have had it explained in an
+accessible manner, becomes indistinguishable from magic. =20
+
+But for Andre at the show that summer, I noticed it wasn=E2=80=99t so m=
+uch about
+the tech itself (and really did love the tech), or the social events, o=
+r
+even about trying to work out some business angle for PyX, or anything
+like that..
+
+He was on the show-floor doing the thing that he really loved to do, an=
+d
+people he had never met before where coming up in waves wanting to talk
+to *him*.  Andre was always quick to greet new people at a technical
+level that they could understand, and would also do his best when a
+person came to him asking for help regardless of context.
+
+Even if it was just a young programmer asking too many questions for a
+trade-show about how the demo actually worked, while serious looking
+business people waited impatiently behind..  Andre always took the time
+to try to impart some of his own hard-earned knowledge and wisdom to
+others with a hungry mind, also regardless of context.
+
+I'm really going to to miss Andre very much, and my deepest thoughts go
+out to his family + friends during this very difficult time.
+
+--nab
+
+
