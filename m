@@ -1,27 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v4 0/7] ZPODD patches
-Date: Tue, 31 Jul 2012 09:39:16 +0100
-Message-ID: <1343723956.3516.3.camel@dabdike.int.hansenpartnership.com>
-References: <1343379650-2867-1-git-send-email-aaron.lu@amd.com>
-	 <5017458F.7000504@amd.com>
+From: "roboth roli company" <info@roli.com>
+Subject: inquiry
+Date: Tue, 31 Jul 2012 16:25:19 +0700 (ICT)
+Message-ID: <49484.209.188.18.159.1343726719.squirrel__24904.1894138374$1343757493$gmane$org@123.30.138.40>
+Reply-To: robothrollilimited@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5017458F.7000504@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@amd.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Sergei Shtylyov <sshtylyov@mvista.com>, Oliver Neukum <oneukum@suse.de>, Jeff Wu <jeff.wu@amd.com>, Lin Ming <minggr@gmail.com>, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from static.vdc.vn ([123.30.138.40]:46837 "EHLO nguyenkimonline.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753979Ab2GaR5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 31 Jul 2012 13:57:52 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 2012-07-31 at 10:40 +0800, Aaron Lu wrote:
-> Hi James,
-> 
-> Any chance of these patches get merged into 3.6?
 
-Not 3.6 given that the series was only finalised a week into the merge
-window.  Generally because of the merge frenzy, linux-next doesn't work
-very well during this period so there's no way of getting any serious
-build test coverage.
 
-James
+
+i am robothroli, Purchase manager from roli Merchant Ltd. We are
+Import/export Company based in taiwan. We are interested in purchasing
+your product and I would like to make an inquiry. Please inform me on:
+
+Sample availability and price
+Minimum order quantity
+FOB Prices
+
+Sincerely
+Purchase Manager
+robothroli
