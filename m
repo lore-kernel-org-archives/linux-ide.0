@@ -1,105 +1,57 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: sata_mv query
-Date: Tue, 07 Aug 2012 14:20:48 -0400
-Message-ID: <50215C80.8080601@teksavvy.com>
-References: <006c01cd74ac$a06edf30$e14c9d90$@sturgeon@perpetual-data.com> <50214D56.9090907@teksavvy.com> <50215BC9.2020709@teksavvy.com>
+From: Adko Branil <adkobranil@yahoo.com>
+Subject: HDD problem
+Date: Tue, 7 Aug 2012 11:44:55 -0700 (PDT)
+Message-ID: <1344365095.44831.YahooMailNeo@web124702.mail.ne1.yahoo.com>
+Reply-To: Adko Branil <adkobranil@yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------050308030001050803010407"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.182]:38027 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753016Ab2HGSUt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Aug 2012 14:20:49 -0400
-In-Reply-To: <50215BC9.2020709@teksavvy.com>
+Received: from nm14-vm1.bullet.mail.ne1.yahoo.com ([98.138.91.38]:34215 "HELO
+	nm14-vm1.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751236Ab2HGSuV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Aug 2012 14:50:21 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Barry J Sturgeon <barry.sturgeon@perpetual-data.com>
-Cc: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050308030001050803010407
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Hello, I have a disk problem, i suppose, as during boot, the system som=
+e times freezes with "kernel pannic" and some times boots normally.
 
-On 12-08-07 02:17 PM, Mark Lord wrote:
-..
-> Say, here's a thought:  We could get rid of (or relocate to upper layers)
-> the busy-wait by having something similar get called from ata_qc_defer().
-> 
-> If you are feeling adventurous, here is a 100% untested patch to do just that.
-> It looks correct to me, it compiles, but that's all I can say.
+In this is peace from the log:
 
-Whoops.. return codes were reversed.
-Here's the corrected patch.
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+Jun 16 14:41:00 b kernel: libata version 1.20 loaded.=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=20
+Jun 16
+ 14:41:00 b kernel: sata_promise 0000:00:08.0: version 1.03=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+Jun 16 14:41:00 b kernel: sata_via 0000:00:0f.0: version 1.1=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=20
+Jun 16 14:41:00 b kernel: ata3: dev 0 cfg 49:2f00 82:346b 83:7d01 84:40=
+03 85:3469 86:3c01 87:4003 88:407f=A0=A0=A0=A0=A0=A0=A0=A0=20
+Jun 16 14:41:00 b kernel: sda: Mode Sense: 00 3a 00
+ 00=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+Jun 16 14:41:00 b kernel: sda: Mode Sense: 00 3a 00 00=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0
 
-The attached copy is the better one to use -- my mailer mangles inline patches.
+can You just tell me the meaning of this "sda: Mode Sense: 00 3a 00 00"=
+ ?
+Nothing else interesting i havent seen in logs, but when googled for th=
+is "mode sense", all the docs i have fount was related to disk problems=
+=2E
 
---- linux-3.4.4/drivers/ata/sata_mv.c	2012-06-22 14:37:50.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2012-08-07 14:14:43.554503157 -0400
-@@ -1388,6 +1388,17 @@
- 	}
- }
 
-+static int mv_check_for_edma_empty_idle(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = mv_ap_base(ap);
-+	const u32 empty_idle = (EDMA_STATUS_CACHE_EMPTY | EDMA_STATUS_IDLE);
-+
-+	u32 edma_stat = readl(port_mmio + EDMA_STATUS);
-+	if ((edma_stat & empty_idle) == empty_idle)
-+		return 0;
-+	return ATA_DEFER_PORT;
-+}
-+
- static int mv_qc_defer(struct ata_queued_cmd *qc)
- {
- 	struct ata_link *link = qc->dev->link;
-@@ -1423,7 +1434,7 @@
- 	 * If the port is completely idle, then allow the new qc.
- 	 */
- 	if (ap->nr_active_links == 0)
--		return 0;
-+		return mv_check_for_edma_empty_idle(ap);
+Thanks in advance !
+Best regards !
 
- 	/*
- 	 * The port is operating in host queuing mode (EDMA) with NCQ
-
---------------050308030001050803010407
-Content-Type: text/x-patch;
- name="xx_sata_mv_move_busywait.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="xx_sata_mv_move_busywait.patch"
-
---- linux-3.4.4/drivers/ata/sata_mv.c	2012-06-22 14:37:50.000000000 -0400
-+++ linux/drivers/ata/sata_mv.c	2012-08-07 14:14:43.554503157 -0400
-@@ -1388,6 +1388,17 @@
- 	}
- }
- 
-+static int mv_check_for_edma_empty_idle(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = mv_ap_base(ap);
-+	const u32 empty_idle = (EDMA_STATUS_CACHE_EMPTY | EDMA_STATUS_IDLE);
-+
-+	u32 edma_stat = readl(port_mmio + EDMA_STATUS);
-+	if ((edma_stat & empty_idle) == empty_idle)
-+		return 0;
-+	return ATA_DEFER_PORT;
-+}
-+
- static int mv_qc_defer(struct ata_queued_cmd *qc)
- {
- 	struct ata_link *link = qc->dev->link;
-@@ -1423,7 +1434,7 @@
- 	 * If the port is completely idle, then allow the new qc.
- 	 */
- 	if (ap->nr_active_links == 0)
--		return 0;
-+		return mv_check_for_edma_empty_idle(ap);
- 
- 	/*
- 	 * The port is operating in host queuing mode (EDMA) with NCQ
-
---------------050308030001050803010407--
