@@ -1,7 +1,7 @@
 From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 11/13] ide: Potential null pointer dereference in idetape_queue_rw_tail()
-Date: Thu,  9 Aug 2012 17:55:28 +0400
-Message-ID: <1344520529-19164-9-git-send-email-makienko@ispras.ru>
+Subject: [PATCH 12/13] ide: Potential null pointer dereference in issue_park_cmd()
+Date: Thu,  9 Aug 2012 17:55:29 +0400
+Message-ID: <1344520529-19164-10-git-send-email-makienko@ispras.ru>
 References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
@@ -24,21 +24,21 @@ Found by Linux Driver Verification project (linuxtesting.org).
 
 Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/ide/ide-tape.c |    2 ++
+ drivers/ide/ide-park.c |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index ce8237d..c27b05c 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -853,6 +853,8 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int size)
- 	BUG_ON(size < 0 || size % tape->blk_size);
+diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+index 6ab9ab2..4d178bd 100644
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -32,6 +32,8 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
+ 	spin_unlock_irq(&hwif->lock);
  
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq = blk_get_request(q, READ, __GFP_WAIT);
 +	if (!rq)
-+		return -EIO;
++		goto out;
+ 	rq->cmd[0] = REQ_PARK_HEADS;
+ 	rq->cmd_len = 1;
  	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd[13] = cmd;
- 	rq->rq_disk = tape->disk;
 -- 
 1.7.7
