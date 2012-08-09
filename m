@@ -1,7 +1,7 @@
 From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 07/13] ide: Potential null pointer dereference in ide_cmd_ioctl()
-Date: Thu,  9 Aug 2012 17:55:24 +0400
-Message-ID: <1344520529-19164-5-git-send-email-makienko@ispras.ru>
+Subject: [PATCH 06/13] ide: Potential null pointer dereference in generic_ide_resume()
+Date: Thu,  9 Aug 2012 17:55:23 +0400
+Message-ID: <1344520529-19164-4-git-send-email-makienko@ispras.ru>
 References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
@@ -10,7 +10,7 @@ To: "David S. Miller" <davem@davemloft.net>
 Cc: Marina Makienko <makienko@ispras.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 List-Id: linux-ide@vger.kernel.org
 
-The function blk_get_request() can return NULL in some cases. There are
+he function blk_get_request() can return NULL in some cases. There are
 checks on it if function is called with argumetns one of which is
 GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
 blk_get_request() return NULL.
@@ -24,30 +24,32 @@ Found by Linux Driver Verification project (linuxtesting.org).
 
 Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/ide/ide-ioctls.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/ide/ide-pm.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
-index 4d19eb9..463f0ff 100644
---- a/drivers/ide/ide-ioctls.c
-+++ b/drivers/ide/ide-ioctls.c
-@@ -126,6 +126,8 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsigned long arg)
- 		struct request *rq;
+diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
+index 9240609..4412f24 100644
+--- a/drivers/ide/ide-pm.c
++++ b/drivers/ide/ide-pm.c
+@@ -19,6 +19,10 @@ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
  
- 		rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
-+		if (!rq)
-+			return err;
- 		rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
- 		err = blk_execute_rq(drive->queue, NULL, rq, 0);
- 		blk_put_request(rq);
-@@ -222,6 +224,8 @@ static int generic_drive_reset(ide_drive_t *drive)
- 	int ret = 0;
+ 	memset(&rqpm, 0, sizeof(rqpm));
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
++
++	if (!rq)
++		return -EIO;
++
+ 	rq->cmd_type = REQ_TYPE_PM_SUSPEND;
+ 	rq->special = &rqpm;
+ 	rqpm.pm_step = IDE_PM_START_SUSPEND;
+@@ -59,6 +63,8 @@ int generic_ide_resume(struct device *dev)
  
+ 	memset(&rqpm, 0, sizeof(rqpm));
  	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
 +	if (!rq)
-+		return ret;
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd_len = 1;
- 	rq->cmd[0] = REQ_DRIVE_RESET;
++		return -EIO;
+ 	rq->cmd_type = REQ_TYPE_PM_RESUME;
+ 	rq->cmd_flags |= REQ_PREEMPT;
+ 	rq->special = &rqpm;
 -- 
 1.7.7
