@@ -1,41 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16481] WARNING: Unbalanced enable for IRQ 19
-Date: Thu,  9 Aug 2012 15:11:58 +0000 (UTC)
-Message-ID: <20120809151158.EB01211FA51@bugzilla.kernel.org>
-References: <bug-16481-11633@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: james.d.ralston@intel.com
+Subject: [PATCH 1/5] ahci: Add Device IDs for Intel Lynx Point-LP PCH
+Date: Thu,  9 Aug 2012 09:02:31 -0700
+Message-ID: <1344528151-2306-1-git-send-email-james.d.ralston@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:55665 "EHLO mail.kernel.org"
+Received: from mga02.intel.com ([134.134.136.20]:62991 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030521Ab2HIPMB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Aug 2012 11:12:01 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9494320276
-	for <linux-ide@vger.kernel.org>; Thu,  9 Aug 2012 15:12:00 +0000 (UTC)
-Received: from bugzilla.kernel.org (unknown [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id ECECE2026D
-	for <linux-ide@vger.kernel.org>; Thu,  9 Aug 2012 15:11:58 +0000 (UTC)
-In-Reply-To: <bug-16481-11633@https.bugzilla.kernel.org/>
+	id S1758624Ab2HIQEK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Aug 2012 12:04:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16481
+From: James Ralston <james.d.ralston@intel.com>
 
+This patch adds the AHCI-mode SATA Device IDs for the Intel Lynx Point-LP PCH
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
+---
+ drivers/ata/ahci.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-         Resolution|                            |WILL_NOT_FIX
-
-
-
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ebaf67e..c590259 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -267,6 +267,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx Point RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci }, /* Lynx Point RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx Point RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci }, /* Lynx Point-LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci }, /* Lynx Point-LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx Point-LP RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.7.7.6
+
