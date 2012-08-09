@@ -1,45 +1,36 @@
-From: james.d.ralston@intel.com
-Subject: [PATCH 2/5] ata_piix: Add Device IDs for Intel Lynx Point-LP PCH
-Date: Thu,  9 Aug 2012 09:34:20 -0700
-Message-ID: <1344530060-2435-1-git-send-email-james.d.ralston@intel.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 03/13] ide: Potential null pointer dereference in
+ ide_queue_pc_tail()
+Date: Thu, 09 Aug 2012 14:49:04 -0700 (PDT)
+Message-ID: <20120809.144904.985433220461322851.davem@davemloft.net>
+References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
+	<20120809151342.2941f851@pyramind.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:65087 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757896Ab2HIQfA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Aug 2012 12:35:00 -0400
+Received: from shards.monkeyblade.net ([149.20.54.216]:60844 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759301Ab2HIVtF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2012 17:49:05 -0400
+In-Reply-To: <20120809151342.2941f851@pyramind.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
+To: alan@lxorguk.ukuu.org.uk
+Cc: makienko@ispras.ru, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 
-From: James Ralston <james.d.ralston@intel.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Date: Thu, 9 Aug 2012 15:13:42 +0100
 
-This patch adds the IDE-mode SATA Device IDs for the Intel Lynx Point-LP PCH
+> On Thu,  9 Aug 2012 17:55:20 +0400
+> Marina Makienko <makienko@ispras.ru> wrote:
+> 
+>> The function blk_get_request() can return NULL in some cases. There are
+>> checks on it if function is called with argumetns one of which is
+>> GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
+>> blk_get_request() return NULL.
+> 
+> drivers/ide is obsolete and scheduled for removal. I'm not sure messing
+> with it is remotely useful at this point ?
 
-Signed-off-by: James Ralston <james.d.ralston@intel.com>
----
- drivers/ata/ata_piix.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 3c809bf..ef773e1 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -329,6 +329,14 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
- 	/* SATA Controller IDE (Lynx Point) */
- 	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	/* SATA Controller IDE (Lynx Point-LP) */
-+	{ 0x8086, 0x9c00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
-+	/* SATA Controller IDE (Lynx Point-LP) */
-+	{ 0x8086, 0x9c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
-+	/* SATA Controller IDE (Lynx Point-LP) */
-+	{ 0x8086, 0x9c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	/* SATA Controller IDE (Lynx Point-LP) */
-+	{ 0x8086, 0x9c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
- 	/* SATA Controller IDE (DH89xxCC) */
- 	{ 0x8086, 0x2326, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
- 	{ }	/* terminate list */
--- 
-1.7.7.6
-
+Agreed, I'm not applying this stuff.
