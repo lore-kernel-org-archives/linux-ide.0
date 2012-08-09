@@ -1,7 +1,7 @@
 From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 04/13] ide: Potential null pointer dereference in ide_cdrom_reset()
-Date: Thu,  9 Aug 2012 17:55:21 +0400
-Message-ID: <1344520529-19164-2-git-send-email-makienko@ispras.ru>
+Subject: [PATCH 08/13] ide: Potential null pointer dereference in ide_devset_execute()
+Date: Thu,  9 Aug 2012 17:55:25 +0400
+Message-ID: <1344520529-19164-6-git-send-email-makienko@ispras.ru>
 References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
@@ -24,23 +24,21 @@ Found by Linux Driver Verification project (linuxtesting.org).
 
 Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/ide/ide-cd_ioctl.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/ide/ide-devsets.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 02caa7d..e29588f 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -304,6 +304,10 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
- 	int ret;
+diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
+index 9e98122..acdb87f 100644
+--- a/drivers/ide/ide-devsets.c
++++ b/drivers/ide/ide-devsets.c
+@@ -166,6 +166,8 @@ int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
+ 		return setting->set(drive, arg);
  
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
-+
+ 	rq = blk_get_request(q, READ, __GFP_WAIT);
 +	if (!rq)
 +		return -EIO;
-+
  	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->cmd_flags = REQ_QUIET;
- 	ret = blk_execute_rq(drive->queue, cd->disk, rq, 0);
+ 	rq->cmd_len = 5;
+ 	rq->cmd[0] = REQ_DEVSET_EXEC;
 -- 
 1.7.7
