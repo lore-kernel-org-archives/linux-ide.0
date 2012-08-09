@@ -1,16 +1,14 @@
 From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 03/13] ide: Potential null pointer dereference in ide_queue_pc_tail()
-Date: Thu,  9 Aug 2012 17:55:20 +0400
-Message-ID: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.ispras.ru ([83.149.198.202]:52411 "EHLO smtp.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932262Ab2HIN7M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 9 Aug 2012 09:59:12 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH 05/13] ide: Potential null pointer dereference in ide_raw_taskfile()
+Date: Thu,  9 Aug 2012 17:55:22 +0400
+Message-ID: <1344520529-19164-3-git-send-email-makienko@ispras.ru>
+References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
 Cc: Marina Makienko <makienko@ispras.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+List-Id: linux-ide@vger.kernel.org
 
 The function blk_get_request() can return NULL in some cases. There are
 checks on it if function is called with argumetns one of which is
@@ -26,26 +24,23 @@ Found by Linux Driver Verification project (linuxtesting.org).
 
 Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/ide/ide-atapi.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/ide/ide-taskfile.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index fac3d9d..8bf4109 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -93,6 +93,12 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
- 	int error;
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 729428e..655d894 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -432,6 +432,10 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
+ 	int rw = !(cmd->tf_flags & IDE_TFLAG_WRITE) ? READ : WRITE;
  
- 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
+ 	rq = blk_get_request(drive->queue, rw, __GFP_WAIT);
 +
-+	if (!rq) {
-+		printk(KERN_ERR PFX"ide_queue_pc_tail: blk_get_request() failed. \n");
-+		return 1;
-+	}
++	if (!rq)
++		return -EIO;
 +
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
- 	rq->special = (char *)pc;
+ 	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
  
+ 	/*
 -- 
 1.7.7
-
