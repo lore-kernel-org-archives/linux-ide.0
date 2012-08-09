@@ -1,7 +1,7 @@
 From: Marina Makienko <makienko@ispras.ru>
-Subject: [PATCH 12/13] ide: Potential null pointer dereference in issue_park_cmd()
-Date: Thu,  9 Aug 2012 17:55:29 +0400
-Message-ID: <1344520529-19164-10-git-send-email-makienko@ispras.ru>
+Subject: [PATCH 10/13] ide: Potential null pointer dereference in ide_cd_queue_pc()
+Date: Thu,  9 Aug 2012 17:55:27 +0400
+Message-ID: <1344520529-19164-8-git-send-email-makienko@ispras.ru>
 References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
@@ -24,21 +24,22 @@ Found by Linux Driver Verification project (linuxtesting.org).
 
 Signed-off-by: Marina Makienko <makienko@ispras.ru>
 ---
- drivers/ide/ide-park.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/ide/ide-cd.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
-index 6ab9ab2..4d178bd 100644
---- a/drivers/ide/ide-park.c
-+++ b/drivers/ide/ide-park.c
-@@ -32,6 +32,8 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	spin_unlock_irq(&hwif->lock);
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 8126824..9dd575d 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -443,6 +443,9 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
  
- 	rq = blk_get_request(q, READ, __GFP_WAIT);
-+	if (!rq)
-+		goto out;
- 	rq->cmd[0] = REQ_PARK_HEADS;
- 	rq->cmd_len = 1;
- 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 		rq = blk_get_request(drive->queue, write, __GFP_WAIT);
+ 
++		if (!rq)
++			return -EIO;
++
+ 		memcpy(rq->cmd, cmd, BLK_MAX_CDB);
+ 		rq->cmd_type = REQ_TYPE_ATA_PC;
+ 		rq->sense = sense;
 -- 
 1.7.7
