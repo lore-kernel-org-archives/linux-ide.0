@@ -1,98 +1,51 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: HDD problem
-Date: Tue, 7 Aug 2012 22:27:45 +0200
-Message-ID: <20120807202745.GA27366@liondog.tnic>
-References: <1344365095.44831.YahooMailNeo@web124702.mail.ne1.yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Marina Makienko <makienko@ispras.ru>
+Subject: [PATCH 03/13] ide: Potential null pointer dereference in ide_queue_pc_tail()
+Date: Thu,  9 Aug 2012 17:55:20 +0400
+Message-ID: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:38649 "EHLO mail.skyhub.de"
+Received: from smtp.ispras.ru ([83.149.198.202]:52411 "EHLO smtp.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756334Ab2HGU1u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 7 Aug 2012 16:27:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1344365095.44831.YahooMailNeo@web124702.mail.ne1.yahoo.com>
+	id S932262Ab2HIN7M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Aug 2012 09:59:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adko Branil <adkobranil@yahoo.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Marina Makienko <makienko@ispras.ru>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
 
-On Tue, Aug 07, 2012 at 11:44:55AM -0700, Adko Branil wrote:
-> Hello, I have a disk problem, i suppose, as during boot, the system s=
-ome times freezes with "kernel pannic" and some times boots normally.
->=20
-> In this is peace from the log:
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=20
-> Jun 16 14:41:00 b kernel: libata version 1.20 loaded.=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=20
-> Jun 16
->  14:41:00 b kernel: sata_promise 0000:00:08.0: version 1.03=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=20
-> Jun 16 14:41:00 b kernel: sata_via 0000:00:0f.0: version 1.1=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=20
-> Jun 16 14:41:00 b kernel: ata3: dev 0 cfg 49:2f00 82:346b 83:7d01 84:=
-4003 85:3469 86:3c01 87:4003 88:407f=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=20
-> Jun 16 14:41:00 b kernel: sda: Mode Sense: 00 3a 00
->  00=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=20
-> Jun 16 14:41:00 b kernel: sda: Mode Sense: 00 3a 00 00=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0
->=20
-> can You just tell me the meaning of this "sda: Mode Sense: 00 3a 00 0=
-0" ?
-> Nothing else interesting i havent seen in logs, but when googled for =
-this "mode sense", all the docs i have fount was related to disk proble=
-ms.
->=20
+The function blk_get_request() can return NULL in some cases. There are
+checks on it if function is called with argumetns one of which is
+GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
+blk_get_request() return NULL.
 
-Well,
+But if there is function call with argument __GFP_WAIT
+the system will wait until get request or the queue becomes
+dead. If something kills the queue, blk_get_request()
+return NULL and next operations will lead to errors.
 
-the "kernel panic" is most probably the reason why your machine freezes=
-=2E
-But we need to have the exact screen dump of when the kernel panic
-happens in order to know what is causing it and whether it comes from
-the sata_via thing or whether it is something else.
+Found by Linux Driver Verification project (linuxtesting.org).
 
-So, do you have the whole panic message in the kernel log somewhere?
-Here's an example of a complete panic message:
+Signed-off-by: Marina Makienko <makienko@ispras.ru>
+---
+ drivers/ide/ide-atapi.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-http://www.linuxquestions.org/questions/ubuntu-63/frequent-kernel-panic=
--in-ubuntu7-04-a-562897/
+diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
+index fac3d9d..8bf4109 100644
+--- a/drivers/ide/ide-atapi.c
++++ b/drivers/ide/ide-atapi.c
+@@ -93,6 +93,12 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
+ 	int error;
+ 
+ 	rq = blk_get_request(drive->queue, READ, __GFP_WAIT);
++
++	if (!rq) {
++		printk(KERN_ERR PFX"ide_queue_pc_tail: blk_get_request() failed. \n");
++		return 1;
++	}
++
+ 	rq->cmd_type = REQ_TYPE_SPECIAL;
+ 	rq->special = (char *)pc;
+ 
+-- 
+1.7.7
 
-If you don't have it in the logs, try reproducing the issue and when
-the kernel panics, make a photo of the screen with a digital camera and
-upload the screenshot somewhere. Make sure it is readable.
-
-Also, what kernel are you running, have you tried the latest (3.5) to
-see whether you still can trigger the panic?
-
-Can you send full dmesg of your kernel?
-
-Thanks.
-
---=20
-Regards/Gruss,
-    Boris.
