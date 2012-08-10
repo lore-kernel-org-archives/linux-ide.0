@@ -1,36 +1,27 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 03/13] ide: Potential null pointer dereference in
- ide_queue_pc_tail()
-Date: Thu, 09 Aug 2012 14:49:04 -0700 (PDT)
-Message-ID: <20120809.144904.985433220461322851.davem@davemloft.net>
-References: <1344520529-19164-1-git-send-email-makienko@ispras.ru>
-	<20120809151342.2941f851@pyramind.ukuu.org.uk>
+From: "bdljpg" <modigaattorneys@telkomsa.net>
+Subject: =?utf-8?B?6LWE5paZ5oql5ZGK?=
+Date: Fri, 10 Aug 2012 12:20:12 +0800
+Message-ID: <ECCB8C6B251604E45B644CBED741C113@lqwxqwjk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60844 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759301Ab2HIVtF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Aug 2012 17:49:05 -0400
-In-Reply-To: <20120809151342.2941f851@pyramind.ukuu.org.uk>
+Received: from hercules.telkomsa.net ([196.25.211.23]:33905 "EHLO
+	hercules.telkomsa.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750927Ab2HJEZo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Aug 2012 00:25:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: alan@lxorguk.ukuu.org.uk
-Cc: makienko@ispras.ru, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+To: linux-ide@vger.kernel.org, www.57564939@qq.com
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Date: Thu, 9 Aug 2012 15:13:42 +0100
+5oKo5aW977ybIOaIkeWFrOWPuOS4gOebtOS7juS6i+WbveWGheWVhuS4mui0uOaYk+S4muWKoe+8
+jOWSjOWbveWGheWkmuS4quWfjuW4gueahOWkmuS4quWFrOWPuOacieWPkS3npajkuJrliqHmnaXl
+voDvvIzlj6/luK7mgqjku6Mg5Yqe5LiA5Lqb6ZyA6KaB55qE56Wo5o2u44CC5YWs5Y+45Li76KaB
+5Lul5aKe5YC8Leeoji3npajkuLrkuLvvvIzlkITnsbvlm73lnLAt56iOLeelqOWmguWVhuWTgemU
+gC3llK7vvIzlt6XkuJrnlJ/kuqfvvIzphZLlupfppJDppa7vvIzov5DovpPnrYnjgILlkITpobnn
+pajpg73mmK/lhazlj7jlvIDlh7rnmoTmraPop4Tnpajlj6/liLDlvZPlnLAg56iOLeWKoeWxgOaf
+peivgeOAguWmgumcgOWPr+ivou+8mzEzNjQwMjM0NjE1IFFROzE0MTY2NjE2NzMu5Lia5Yqh57uP
+55CGO+WImOmVh+W5sw0K
 
-> On Thu,  9 Aug 2012 17:55:20 +0400
-> Marina Makienko <makienko@ispras.ru> wrote:
-> 
->> The function blk_get_request() can return NULL in some cases. There are
->> checks on it if function is called with argumetns one of which is
->> GFP_ATOMIC/GFP_NOIO/etc. If system couldn't find request
->> blk_get_request() return NULL.
-> 
-> drivers/ide is obsolete and scheduled for removal. I'm not sure messing
-> with it is remotely useful at this point ?
 
-Agreed, I'm not applying this stuff.
