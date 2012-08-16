@@ -1,170 +1,54 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
-Date: Thu, 16 Aug 2012 10:00:39 -0600
-Message-ID: <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
-References: <cover.1345124063.git.agordeev@redhat.com> <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 0/5] x86, MSI, AHCI: Support multiple MSIs
+Date: Thu, 16 Aug 2012 12:19:43 -0400
+Message-ID: <502D1D9F.9020203@pobox.com>
+References: <cover.1345124063.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
+In-Reply-To: <cover.1345124063.git.agordeev@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, linux-doc@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Aug 16, 2012 at 8:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> The new function pci_enable_msi_block_auto() tries to allocate maximum
-> possible number of MSIs up to the number the device supports. It
-> generalizes a pattern when pci_enable_msi_block() contiguously called
-> until it succeeds or fails.
+On 08/16/2012 10:45 AM, Alexander Gordeev wrote:
+> Currently multiple MSI mode is limited to a single vector per device (at
+> least on x86 and PPC). This series breathes life into pci_enable_msi_block()
+> and makes it possible to set interrupt affinity for multiple IRQs, similarly
+> to MSI-X. Yet, only for x86 and only when IOMMUs are present.
 >
-> Opposite to pci_enable_msi_block() which takes the number of MSIs to
-> allocate as a input parameter, pci_enable_msi_block_auto() could be used
-> by device drivers to obtain the number of assigned MSIs.
+> Although IRQ and PCI subsystems are modified, the current behaviour left
+> intact. The drivers could just start using multiple MSIs just by following
+> the existing documentation.
 >
-> The function could also be used by device drivers which do not care
-> about the exact number of assigned MSIs.
+> The AHCI device driver makes use of the new mode and a new function -
+> pci_enable_msi_block_auto() - patches 4,5.
 >
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   41 ++++++++++++++++++++++++++++++++++----
->  drivers/pci/msi.c               |   29 +++++++++++++++++++++++++++
->  include/linux/pci.h             |    7 ++++++
->  3 files changed, 72 insertions(+), 5 deletions(-)
+> The series is adapted to Ingo's -tip repository, x86/apic branch.
+> Patches 4,5 could be applied independently of patches 1-3.
 >
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index 53e6fca..d5ab6d7 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -127,15 +127,46 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
->  returns as soon as it finds any constraint that doesn't allow the
->  call to succeed.
->
-> -4.2.3 pci_disable_msi
-> +4.2.3 pci_enable_msi_block_auto
-> +
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
-> +
-> +This variation on pci_enable_msi() call allows a device driver to request
-> +the maximum possible number of MSIs.  The MSI specification only allows
-> +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-> +
-> +If this function returns 0, it has succeeded in allocating as many
-> +interrupts as the device supports.
-> +
-> +If this function returns a positive number, it indicates that it has
-> +succeeded, but the number of allocated interrupts is less than the number
-> +of interrupts the device supports. The returned value in this case is the
-> +number of allocated interrupts.
+> Attached patches:
+>    1/5 x86, MSI: Support multiple MSIs in presense of IRQ remapping
+>    2/5 x86, MSI: Allocate as many multiple IRQs as requested
+>    3/5 x86, MSI: Minor readability fixes
+>    4/5 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+>    5/5 AHCI: Support multiple MSIs
 
-Seems like it would be simpler to avoid the special case of returning
-zero.  You could return a negative value for failure, otherwise return
-the number of interrupts allocated.
+Numbers?  I would like to see measurements that show this is a benefit. 
+  I'm especially wondering about lock contention for the case of 
+multiple, fast devices (e.g. RAM over SATA, or PCIe flash).
 
-Then you could also dispense with the "int *count" argument, because
-the caller could just look at the return value.
+Because I see the following obvious problems immediately:
 
-> +In both cases above, the function enables MSI on this device and updates
-> +dev->irq to be the lowest of the new interrupts assigned to it. The other
-> +interrupts assigned to the device are in the range dev->irq to dev->irq +
-> +number of allocated interrupts - 1.
-> +
-> +If the device driver needs to know the number of allocated interrupts it
-> +can pass the pointer count where that number is stored. If the device driver
-> +has other means to obtain that number or does not need it, NULL pointer can
-> +be passed instead.
-> +
-> +If this function returns a negative number, it indicates an error and the
-> +driver should not attempt to request any more MSI interrupts for this
-> +device.
-> +
-> +4.2.4 pci_disable_msi
->
->  void pci_disable_msi(struct pci_dev *dev)
->
->  This function should be used to undo the effect of pci_enable_msi() or
-> -pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
-> -interrupt number and frees the previously allocated message signaled
-> -interrupt(s).  The interrupt may subsequently be assigned to another
-> -device, so drivers should not cache the value of dev->irq.
-> +pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-> +dev->irq to the pin-based interrupt number and frees the previously
-> +allocated message signaled interrupt(s).  The interrupt may subsequently be
-> +assigned to another device, so drivers should not cache the value of
-> +dev->irq.
->
->  Before calling this function, a device driver must always call free_irq()
->  on any interrupt for which it previously called request_irq().
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index f0752d1..ef982c1 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -845,6 +845,35 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->  }
->  EXPORT_SYMBOL(pci_enable_msi_block);
->
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-> +{
-> +       int ret, pos, envec, maxvec;
-> +       u16 msgctl;
-> +
-> +       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +       if (!pos)
-> +               return -EINVAL;
-> +
-> +       pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-> +       maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +       ret = maxvec;
-> +
-> +       do {
-> +               envec = ret;
-> +               ret = pci_enable_msi_block(dev, envec);
-> +       } while (ret > 0);
-> +
-> +       if (ret < 0)
-> +               return ret;
-> +       if (nvec)
-> +               *nvec = envec;
-> +       if (envec < maxvec)
-> +               return envec;
-> +       return 0;
-> +
-> +}
-> +EXPORT_SYMBOL(pci_enable_msi_block_auto);
-> +
->  void pci_msi_shutdown(struct pci_dev *dev)
->  {
->         struct msi_desc *desc;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d8c379d..14788d0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1024,6 +1024,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->         return -1;
->  }
->
-> +static inline int
-> +pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec)
-> +{
-> +       return -1;
-> +}
-> +
->  static inline void pci_msi_shutdown(struct pci_dev *dev)
->  { }
->  static inline void pci_disable_msi(struct pci_dev *dev)
-> @@ -1055,6 +1061,7 @@ static inline int pci_msi_enabled(void)
->  }
->  #else
->  extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-> +extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *nvec);
->  extern void pci_msi_shutdown(struct pci_dev *dev);
->  extern void pci_disable_msi(struct pci_dev *dev);
->  extern int pci_msix_table_size(struct pci_dev *dev);
-> --
-> 1.7.7.6
->
->
-> --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+1) AHCI takes a host-wide lock during interrupt processing, which quite 
+reduces the value of "interrupts generated by different
+ports could be serviced on different CPUs"
+
+2) We do not put AHCI-specific code in libata-core.  Try libahci.c or 
+ahci.c.
+
+Regards,
+
+	Jeff
