@@ -1,62 +1,46 @@
-From: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Subject: Re: [PATCH 2/2] ahci_platform: add custom hard reset for Calxeda
- ahci ctrlr
-Date: Fri, 17 Aug 2012 17:25:31 -0500
-Message-ID: <502EC4DB.6020707@calxeda.com>
-References: <1345215111-11051-1-git-send-email-mark.langsdorf@calxeda.com> <1345215111-11051-3-git-send-email-mark.langsdorf@calxeda.com> <502E7E7E.80101@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: David Daney <ddaney.cavm@gmail.com>
+Subject: [PATCH 0/2] ata: Updates for pata_octeon_cf driver.
+Date: Fri, 17 Aug 2012 16:54:31 -0700
+Message-ID: <1345247673-25086-1-git-send-email-ddaney.cavm@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp141.dfw.emailsrvr.com ([67.192.241.141]:38268 "EHLO
-	smtp141.dfw.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757934Ab2HQWZX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 18:25:23 -0400
-In-Reply-To: <502E7E7E.80101@pobox.com>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:65137 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756655Ab2HQXzo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 19:55:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "probinson@gmail.com" <probinson@gmail.com>, "jonathon@jonmasters.org" <jonathon@jonmasters.org>, "dmarlin@redhat.com" <dmarlin@redhat.com>, Rob Herring <rob.herring@calxeda.com>
+To: ralf@linux-mips.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
 
-On 08/17/2012 12:25 PM, Jeff Garzik wrote:
-> On 08/17/2012 10:51 AM, Mark Langsdorf wrote:
->> Calxeda highbank SATA phy has intermittent problems bringing up a link
->> with Gen3 drives. Retrying the phy hard reset can work-around this issue,
->> but each reset also disables spread spectrum support. The reset function
->> also needs to reprogram the phy to enable spread spectrum support.
->>
->> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
->> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
->> ---
->>   .../devicetree/bindings/arm/calxeda/combophy.txt   |   17 ++
->>   .../devicetree/bindings/ata/ahci-platform.txt      |    8 +
->>   arch/arm/boot/dts/highbank.dts                     |   17 ++
->>   drivers/ata/Makefile                               |    1 +
->>   drivers/ata/ahci.h                                 |   17 ++
->>   drivers/ata/ahci_platform.c                        |   88 ++++++++-
->>   drivers/ata/sata_highbank.c                        |  199 ++++++++++++++++++++
->>   7 files changed, 339 insertions(+), 8 deletions(-)
->>   create mode 100644 Documentation/devicetree/bindings/arm/calxeda/combophy.txt
->>   create mode 100644 drivers/ata/sata_highbank.c
->
-> And the biggest issue...
-> 
-> 4) if you need all this code for workarounds, just create your own 
-> libahci driver at that point.  make sata_highbank a real driver.
+From: David Daney <david.daney@cavium.com>
 
-The frustrating bit is that we're nominally an AHCI compatible
-controller except for the reset function and some kind of initialization
-for the combophy iomem regions. The ata_port_operations already lets me
-override just the reset function, and the ahci_probe() function has a
-hook for the iomem initialization.
+The main update is conversion to device tree.  Now the the OCTEON
+device tree prerequisites are upstream, we can convert the
+pata_octeon_cf driver.
 
-Is there any way I can inherit most of the existing ahci_platform
-functions for suspend, resume, etc.? Because otherwise I'm just going to
-duplicate the code and that feels unsatisfactory and seems unlikely to
-get accepted anyway.
+The second change allows the driver to function when the kernel is
+built for little-endian operation.
 
-Would it be permissible to remove the statics from ahci_suspend,
-ahci_resume, and ahci_remove so I could use them in my libahci driver?
+The only real change in the MIPS portion of the tree is deletion of
+crap.
 
---Mark Langsdorf
-Calxeda, Inc.
+There is a dependence on patches Ralf has queued in linux-next so it
+may be best to merge via the MIPS tree (as pata_octeon_cf only exists
+in MIPS based OCTEON SOCs).  But the ata tree would be fine by me too.
+In any even we may need some cross sub-system Acked-bys.
+
+David Daney (2):
+  MIPS/OCTEON/ata: Convert pata_octeon_cf.c to use device tree.
+  ata: pata_octeon_cf: Use correct byte order for DMA in when built
+    little-endian.
+
+ arch/mips/cavium-octeon/octeon-irq.c           |   1 -
+ arch/mips/cavium-octeon/octeon-platform.c      | 102 ------
+ arch/mips/include/asm/mach-cavium-octeon/irq.h |   1 -
+ arch/mips/include/asm/octeon/octeon.h          |   7 -
+ drivers/ata/pata_octeon_cf.c                   | 423 +++++++++++++++++--------
+ 5 files changed, 288 insertions(+), 246 deletions(-)
+
+-- 
+1.7.11.2
+
