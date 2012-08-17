@@ -1,76 +1,77 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH RESEND] ahci: implement aggressive SATA device sleep support
-Date: Fri, 17 Aug 2012 13:53:11 -0400
-Message-ID: <502E8507.8060806@pobox.com>
-References: <1344361476-2154-1-git-send-email-shane.huang@amd.com>
+Subject: Enabling FUA for SATA drives (was Re: [RFC][PATCH] libata: enable
+ SATA disk fua detection on default)
+Date: Fri, 17 Aug 2012 14:06:39 -0400
+Message-ID: <502E882F.6090500@pobox.com>
+References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:45030 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757598Ab2HQRxO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 13:53:14 -0400
-Received: by yhmm54 with SMTP id m54so4226467yhm.19
-        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2012 10:53:14 -0700 (PDT)
-In-Reply-To: <1344361476-2154-1-git-send-email-shane.huang@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On 08/07/2012 01:44 PM, Shane Huang wrote:
-> @@ -702,6 +708,16 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->   		}
->   	}
+On 05/07/2012 11:24 PM, Zheng Liu wrote:
+> From: Zheng Liu <wenqing.lz@taobao.com>
 >
-> +	/* set aggressive device sleep */
-> +	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
-> +	    (hpriv->cap2 & HOST_CAP2_SADM) &&
-> +	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
-> +		if (policy == ATA_LPM_MIN_POWER)
-> +			ahci_set_aggressive_devslp(ap, true);
-> +		else
-> +			ahci_set_aggressive_devslp(ap, false);
-> +	}
-> +
->   	if (policy == ATA_LPM_MAX_POWER) {
->   		sata_link_scr_lpm(link, policy, false);
+> Currently, SATA disk fua detection is disabled on default because most of
+> devices don't support this feature at that time.  With the development of
+> technology, more and more SATA disks support this feature.  So now we can enable
+> this detection on default.
 >
-> @@ -1889,6 +1905,55 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
->   		ahci_kick_engine(ap);
->   }
+> Although fua detection is defined as a kernel module parameter, it is too hard
+> to set its value because it must be loaded and set before system starts up.
+> That needs to modify initrd file.  So it is inconvenient for administrator who
+> needs to manage a huge number of servers.
 >
-> +static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
-> +{
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	u32 devslp, dm, dito;
-> +	int rc;
-> +	unsigned int err_mask;
-> +
-> +	devslp = readl(port_mmio + PORT_DEVSLP);
-> +	if (!(devslp & PORT_DEVSLP_DSP)) {
-> +		dev_err(ap->host->dev, "port does not support device sleep\n");
-> +		return;
-> +	}
-> +
-> +	/* disable device sleep */
-> +	if (!sleep) {
-> +		writel(devslp & ~PORT_DEVSLP_ADSE, port_mmio + PORT_DEVSLP);
-> +		return;
-> +	}
-> +
-> +	/* device sleep was already enabled */
-> +	if (devslp & PORT_DEVSLP_ADSE)
-> +		return;
+> CC: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> ---
+>   drivers/ata/libata-core.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 23763a1..3627251 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -133,9 +133,9 @@ int atapi_passthru16 = 1;
+>   module_param(atapi_passthru16, int, 0444);
+>   MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+>
+> -int libata_fua = 0;
+> +int libata_fua = 1;
+>   module_param_named(fua, libata_fua, int, 0444);
+> -MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+> +MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
 
-Mostly OK.  A question and a comment.
+Applied.  Let's see how far down the rabbit hole we go ;-)
 
-* for the !sleep case, don't writel() if the devslp value is unchanged
+The FUA decision, as previously indicated, was based on early SATA 
+drives, and perhaps better ones are available now.  Only testing will 
+tell, at this point.
 
-* if we are disabling sleep -- a valid case where host & device both 
-support it, but policy denies it -- do we need to stop the ahci engine 
-as is done in the enabling case?
+The larger questions, raised by Christoph and others remain unaddressed 
+(though perhaps we can start addressing them now, with this patch):
+
+* what is smart flushing policy for ATA devices with FUA?
+
+* ATA NCQ's flush is not queued
+
+* ATA NCQ always had the FUA bit...
+
+* ...but mixing ATA NCQ FUA and !FUA in a queue is not fully supported 
+by the existing code
+
+and probably a few other details I forgot :)
+
+	Jeff
+
+
+
+
 
 
 
