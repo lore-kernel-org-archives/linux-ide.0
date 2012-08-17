@@ -1,42 +1,76 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: whitelist entry for device with known good pata-sata bridge
-Date: Fri, 17 Aug 2012 13:39:08 -0400
-Message-ID: <502E81BC.2020900@pobox.com>
-References: <5010077C.5050509@eitelwein.net>
+Subject: Re: [PATCH RESEND] ahci: implement aggressive SATA device sleep support
+Date: Fri, 17 Aug 2012 13:53:11 -0400
+Message-ID: <502E8507.8060806@pobox.com>
+References: <1344361476-2154-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:63284 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758624Ab2HQRjM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 13:39:12 -0400
-Received: by yenl14 with SMTP id l14so4224995yen.19
-        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2012 10:39:12 -0700 (PDT)
-In-Reply-To: <5010077C.5050509@eitelwein.net>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:45030 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757598Ab2HQRxO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 13:53:14 -0400
+Received: by yhmm54 with SMTP id m54so4226467yhm.19
+        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2012 10:53:14 -0700 (PDT)
+In-Reply-To: <1344361476-2154-1-git-send-email-shane.huang@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Eitelwein <michael@eitelwein.net>
-Cc: linux-ide@vger.kernel.org
+To: Shane Huang <shane.huang@amd.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
-On 07/25/2012 10:49 AM, Michael Eitelwein wrote:
-> I have an external SATA drive that was slowed down by bridge limits. I
-> found a solution in a thread on this list posted in 2008: It introduces
-> whitelist entries in libata-core.c for devices with well working bridges
-> (e.g. email on Fri, 31 Oct 2008 01:45:27 -0400).
+On 08/07/2012 01:44 PM, Shane Huang wrote:
+> @@ -702,6 +708,16 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>   		}
+>   	}
 >
-> I added my device to this whitelist in a custom built kernel and it
-> works fine for weeks now. How can I have this device added on the
-> whitelist within the official kernel? Is this whitelist mechanism still
-> supported or is there a smarter way to achieve whitelisting?
+> +	/* set aggressive device sleep */
+> +	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
+> +	    (hpriv->cap2 & HOST_CAP2_SADM) &&
+> +	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
+> +		if (policy == ATA_LPM_MIN_POWER)
+> +			ahci_set_aggressive_devslp(ap, true);
+> +		else
+> +			ahci_set_aggressive_devslp(ap, false);
+> +	}
+> +
+>   	if (policy == ATA_LPM_MAX_POWER) {
+>   		sata_link_scr_lpm(link, policy, false);
 >
-> I added the following whitelist entry for my Buffalo DriveStation
-> Quattro "BUFFALO HD-QSU2/R5":
+> @@ -1889,6 +1905,55 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+>   		ahci_kick_engine(ap);
+>   }
 >
->          /* Devices that do not need bridging limits applied */
->          { "MTRON MSP-SATA*",            NULL,   ATA_HORKAGE_BRIDGE_OK, },
->          { "BUFFALO HD-QSU2/R5",         NULL,   ATA_HORKAGE_BRIDGE_OK, },
+> +static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
+> +{
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	u32 devslp, dm, dito;
+> +	int rc;
+> +	unsigned int err_mask;
+> +
+> +	devslp = readl(port_mmio + PORT_DEVSLP);
+> +	if (!(devslp & PORT_DEVSLP_DSP)) {
+> +		dev_err(ap->host->dev, "port does not support device sleep\n");
+> +		return;
+> +	}
+> +
+> +	/* disable device sleep */
+> +	if (!sleep) {
+> +		writel(devslp & ~PORT_DEVSLP_ADSE, port_mmio + PORT_DEVSLP);
+> +		return;
+> +	}
+> +
+> +	/* device sleep was already enabled */
+> +	if (devslp & PORT_DEVSLP_ADSE)
+> +		return;
 
-added to quirk list
+Mostly OK.  A question and a comment.
+
+* for the !sleep case, don't writel() if the devslp value is unchanged
+
+* if we are disabling sleep -- a valid case where host & device both 
+support it, but policy denies it -- do we need to stop the ahci engine 
+as is done in the enabling case?
+
 
 
