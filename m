@@ -1,61 +1,21 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
-Date: Fri, 17 Aug 2012 08:22:00 -0600
-Message-ID: <CAErSpo44p_oK6PODU3ZJjEBvknrLvViU2bPVhXU89W4+Cre+Dg@mail.gmail.com>
-References: <cover.1345124063.git.agordeev@redhat.com> <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
- <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com> <20120817081907.GI2246@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH 0/2] ahci: custom reset for Calxeda ahci
+Date: Fri, 17 Aug 2012 09:51:49 -0500
+Message-ID: <1345215111-11051-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44125 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757385Ab2HQOWW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 10:22:22 -0400
-Received: by lagy9 with SMTP id y9so2128181lag.19
-        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2012 07:22:20 -0700 (PDT)
-In-Reply-To: <20120817081907.GI2246@dhcp-26-207.brq.redhat.com>
+Received: from smtp161.dfw.emailsrvr.com ([67.192.241.161]:56619 "EHLO
+	smtp161.dfw.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755436Ab2HQPBe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 11:01:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, linux-doc@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, probinson@gmail.com, jonathon@jonmasters.org, dmarlin@redhat.com
 
-On Fri, Aug 17, 2012 at 2:19 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Thu, Aug 16, 2012 at 10:00:39AM -0600, Bjorn Helgaas wrote:
->> On Thu, Aug 16, 2012 at 8:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
->> > -4.2.3 pci_disable_msi
->> > +4.2.3 pci_enable_msi_block_auto
->> > +
->> > +int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
->> > +
->> > +This variation on pci_enable_msi() call allows a device driver to request
->> > +the maximum possible number of MSIs.  The MSI specification only allows
->> > +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
->> > +
->> > +If this function returns 0, it has succeeded in allocating as many
->> > +interrupts as the device supports.
->> > +
->> > +If this function returns a positive number, it indicates that it has
->> > +succeeded, but the number of allocated interrupts is less than the number
->> > +of interrupts the device supports. The returned value in this case is the
->> > +number of allocated interrupts.
->>
->> Seems like it would be simpler to avoid the special case of returning
->> zero.  You could return a negative value for failure, otherwise return
->> the number of interrupts allocated.
->
-> But this special case is important, because some drivers would not get
-> satisfied with just any number of interrupts allocated (i.e. few Intel AHCI
-> chips (seems) have hardware logic that compares qmask vs qsize and simply
-> falls back to single interrupt if they are not equal).
->
-> So I see the fact that maximum possible number of interrupts were allocated
-> at least as important than the number itself.
->
->> Then you could also dispense with the "int *count" argument, because
->> the caller could just look at the return value.
->
-> What about returning the number of allocated interrtupts while storing the
-> number of supported interrupts to "int *count" (or maxcount)?
+The phy interface on Calxeda's EnergyCore SoC does not always connect to
+SATA drives correctly, especially when spread spectrum drives are used.
+These patches provide a software work-around to the problem.
 
-I like that idea a lot better because then you don't need a special
-case to interpret the return value.
+--Mark Langsdorf
+Calxeda, Inc.
+
