@@ -1,82 +1,59 @@
-From: Arnd Hannemann <arnd@arndnet.de>
-Subject: [PATCH] pata_atiixp: override cable detection on MSI E350DM-E33
-Date: Fri, 17 Aug 2012 10:11:15 +0200
-Message-ID: <1345191075-30425-1-git-send-email-arnd@arndnet.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Hannemann <arnd@arndnet.de>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 4/5] PCI, MSI: Enable multiple MSIs with
+ pci_enable_msi_block_auto()
+Date: Fri, 17 Aug 2012 10:19:08 +0200
+Message-ID: <20120817081907.GI2246@dhcp-26-207.brq.redhat.com>
+References: <cover.1345124063.git.agordeev@redhat.com>
+ <447517b3acece13b7e7ce86fdd4d73abe28d81f4.1345124063.git.agordeev@redhat.com>
+ <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAErSpo7RVnHQNVok9YQ7PiAAOL=XFTq_PMQmFNgFQhH9tZzy8A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, linux-doc@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The mainboard MSI E350DM-E33 is advertised with 6 SATA ports.
-As it turns out, two of them seem to be driven by on-board
-SATA<->PATA converters. If a disk drive is connected to one
-of them kernel uses UDMA/33 mode due to cable detection:
+On Thu, Aug 16, 2012 at 10:00:39AM -0600, Bjorn Helgaas wrote:
+> On Thu, Aug 16, 2012 at 8:49 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > -4.2.3 pci_disable_msi
+> > +4.2.3 pci_enable_msi_block_auto
+> > +
+> > +int pci_enable_msi_block_auto(struct pci_dev *dev, int *count)
+> > +
+> > +This variation on pci_enable_msi() call allows a device driver to request
+> > +the maximum possible number of MSIs.  The MSI specification only allows
+> > +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
+> > +
+> > +If this function returns 0, it has succeeded in allocating as many
+> > +interrupts as the device supports.
+> > +
+> > +If this function returns a positive number, it indicates that it has
+> > +succeeded, but the number of allocated interrupts is less than the number
+> > +of interrupts the device supports. The returned value in this case is the
+> > +number of allocated interrupts.
+> 
+> Seems like it would be simpler to avoid the special case of returning
+> zero.  You could return a negative value for failure, otherwise return
+> the number of interrupts allocated.
 
-[   34.550823] scsi4 : pata_atiixp
-[   34.555517] scsi5 : pata_atiixp
-[   34.555942] ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xf100 irq 14
-[   34.555948] ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xf108 irq 15
-...
-[   35.040799] ata5.00: ATA-8: WDC WD20EADS-00R6B0, 01.00A01, max UDMA/133
-[   35.040806] ata5.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-[   35.040817] ata5.00: limited to UDMA/33 due to 40-wire cable
-[   35.049166] ata5.00: configured for UDMA/33
-[   35.049402] scsi 4:0:0:0: Direct-Access     ATA      WDC WD20EADS-00R 01.0 PQ: 0 ANSI: 5
+But this special case is important, because some drivers would not get
+satisfied with just any number of interrupts allocated (i.e. few Intel AHCI
+chips (seems) have hardware logic that compares qmask vs qsize and simply
+falls back to single interrupt if they are not equal).
 
-This patch forces "short cable" mode on this board, as it seems clear that
-the on-board SATA<->PATA "cable" is short.
-With this patch the disk is configured for UDMA/100:
+So I see the fact that maximum possible number of interrupts were allocated
+at least as important than the number itself.
 
-[    5.976756] ata5.00: ATA-8: WDC WD20EADS-00R6B0, 01.00A01, max UDMA/133
-[    5.996434] ata5.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-[    6.024787] ata5.00: configured for UDMA/100
+> Then you could also dispense with the "int *count" argument, because
+> the caller could just look at the return value.
 
-Testing revealed no transfer issues.
+What about returning the number of allocated interrtupts while storing the
+number of supported interrupts to "int *count" (or maxcount)?
 
-Signed-off-by: Arnd Hannemann <arnd@arndnet.de>
----
- drivers/ata/pata_atiixp.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
-index 361c75c..24e5105 100644
---- a/drivers/ata/pata_atiixp.c
-+++ b/drivers/ata/pata_atiixp.c
-@@ -20,6 +20,7 @@
- #include <linux/delay.h>
- #include <scsi/scsi_host.h>
- #include <linux/libata.h>
-+#include <linux/dmi.h>
- 
- #define DRV_NAME "pata_atiixp"
- #define DRV_VERSION "0.4.6"
-@@ -33,11 +34,26 @@ enum {
- 	ATIIXP_IDE_UDMA_MODE 	= 0x56
- };
- 
-+static const struct dmi_system_id attixp_cable_override_dmi_table[] = {
-+	{
-+		/* Board has onboard PATA<->SATA converters */
-+		.ident = "MSI E350DM-E33",
-+		.matches = {
-+			DMI_MATCH(DMI_BOARD_VENDOR, "MSI"),
-+			DMI_MATCH(DMI_BOARD_NAME, "E350DM-E33(MS-7720)"),
-+		},
-+	},
-+	{ }
-+};
-+
- static int atiixp_cable_detect(struct ata_port *ap)
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	u8 udma;
- 
-+	if (dmi_check_system(attixp_cable_override_dmi_table))
-+		return ATA_CBL_PATA40_SHORT;
-+
- 	/* Hack from drivers/ide/pci. Really we want to know how to do the
- 	   raw detection not play follow the bios mode guess */
- 	pci_read_config_byte(pdev, ATIIXP_IDE_UDMA_MODE + ap->port_no, &udma);
 -- 
-1.7.9.5
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
