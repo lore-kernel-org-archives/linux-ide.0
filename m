@@ -1,77 +1,43 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Enabling FUA for SATA drives (was Re: [RFC][PATCH] libata: enable
- SATA disk fua detection on default)
-Date: Fri, 17 Aug 2012 14:06:39 -0400
-Message-ID: <502E882F.6090500@pobox.com>
-References: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH v3 2/2] ata: implement MODE SELECT command
+Date: Fri, 17 Aug 2012 14:11:12 -0400
+Message-ID: <502E8940.7040500@pobox.com>
+References: <1341490701-15348-1-git-send-email-pbonzini@redhat.com> <1341490701-15348-3-git-send-email-pbonzini@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1336447443-4685-1-git-send-email-wenqing.lz@taobao.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Zheng Liu <wenqing.lz@taobao.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-gh0-f174.google.com ([209.85.160.174]:40797 "EHLO
+	mail-gh0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095Ab2HQSLQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 14:11:16 -0400
+In-Reply-To: <1341490701-15348-3-git-send-email-pbonzini@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, sshtylyov@mvista.com
 
-On 05/07/2012 11:24 PM, Zheng Liu wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
+On 07/05/2012 08:18 AM, Paolo Bonzini wrote:
+> The cache_type file in sysfs lets users configure the disk cache in
+> write-through or write-back modes.  However, ata disks do not support
+> writing to the file because they do not implement the MODE SELECT
+> command.
 >
-> Currently, SATA disk fua detection is disabled on default because most of
-> devices don't support this feature at that time.  With the development of
-> technology, more and more SATA disks support this feature.  So now we can enable
-> this detection on default.
+> This patch adds a translation from MODE SELECT (for the caching page
+> only) to the ATA SET FEATURES command.  The set of changeable parameters
+> answered by MODE SENSE is also adjusted accordingly.
 >
-> Although fua detection is defined as a kernel module parameter, it is too hard
-> to set its value because it must be loaded and set before system starts up.
-> That needs to modify initrd file.  So it is inconvenient for administrator who
-> needs to manage a huge number of servers.
->
-> CC: Jeff Garzik <jeff@garzik.org>
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+> Cc: Sergei Shtylyov <sshtylyov@mvista.com>
+> Cc: Jeff Garzik <jgarzik@pobox.com>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 > ---
->   drivers/ata/libata-core.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
+> 	v2->v3: ensure that only the first page of the sg list is
+> 	accessed
 >
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 23763a1..3627251 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -133,9 +133,9 @@ int atapi_passthru16 = 1;
->   module_param(atapi_passthru16, int, 0444);
->   MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
->
-> -int libata_fua = 0;
-> +int libata_fua = 1;
->   module_param_named(fua, libata_fua, int, 0444);
-> -MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
-> +MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
+>   drivers/ata/libata-scsi.c |  194 +++++++++++++++++++++++++++++++++++++++++++--
+>   1 files changed, 188 insertions(+), 6 deletions(-)
 
-Applied.  Let's see how far down the rabbit hole we go ;-)
-
-The FUA decision, as previously indicated, was based on early SATA 
-drives, and perhaps better ones are available now.  Only testing will 
-tell, at this point.
-
-The larger questions, raised by Christoph and others remain unaddressed 
-(though perhaps we can start addressing them now, with this patch):
-
-* what is smart flushing policy for ATA devices with FUA?
-
-* ATA NCQ's flush is not queued
-
-* ATA NCQ always had the FUA bit...
-
-* ...but mixing ATA NCQ FUA and !FUA in a queue is not fully supported 
-by the existing code
-
-and probably a few other details I forgot :)
-
-	Jeff
-
-
-
-
+applied 1-2
 
 
 
