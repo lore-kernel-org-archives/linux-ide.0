@@ -1,35 +1,50 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/2] ahci: un-staticize ahci_dev_classify
-Date: Fri, 17 Aug 2012 13:27:41 -0400
-Message-ID: <502E7F0D.2050201@pobox.com>
-References: <1345215111-11051-1-git-send-email-mark.langsdorf@calxeda.com> <1345215111-11051-2-git-send-email-mark.langsdorf@calxeda.com>
+Subject: Re: [PATCH] pata_atiixp: override cable detection on MSI E350DM-E33
+Date: Fri, 17 Aug 2012 13:27:53 -0400
+Message-ID: <502E7F19.50306@pobox.com>
+References: <1345191075-30425-1-git-send-email-arnd@arndnet.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:57297 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757994Ab2HQR1r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 13:27:47 -0400
-Received: by yenl14 with SMTP id l14so4214878yen.19
-        for <linux-ide@vger.kernel.org>; Fri, 17 Aug 2012 10:27:44 -0700 (PDT)
-In-Reply-To: <1345215111-11051-2-git-send-email-mark.langsdorf@calxeda.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:35986 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758651Ab2HQR14 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Aug 2012 13:27:56 -0400
+In-Reply-To: <1345191075-30425-1-git-send-email-arnd@arndnet.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Cc: linux-ide@vger.kernel.org, probinson@gmail.com, jonathon@jonmasters.org, dmarlin@redhat.com, Rob Herring <rob.herring@calxeda.com>
+To: Arnd Hannemann <arnd@arndnet.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 08/17/2012 10:51 AM, Mark Langsdorf wrote:
-> From: Rob Herring <rob.herring@calxeda.com>
+On 08/17/2012 04:11 AM, Arnd Hannemann wrote:
+> The mainboard MSI E350DM-E33 is advertised with 6 SATA ports.
+> As it turns out, two of them seem to be driven by on-board
+> SATA<->PATA converters. If a disk drive is connected to one
+> of them kernel uses UDMA/33 mode due to cable detection:
 >
-> Make ahci_dev_classify available to the ahci platform driver for custom
-> hard reset function.
+> [   34.550823] scsi4 : pata_atiixp
+> [   34.555517] scsi5 : pata_atiixp
+> [   34.555942] ata5: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xf100 irq 14
+> [   34.555948] ata6: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xf108 irq 15
+> ...
+> [   35.040799] ata5.00: ATA-8: WDC WD20EADS-00R6B0, 01.00A01, max UDMA/133
+> [   35.040806] ata5.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> [   35.040817] ata5.00: limited to UDMA/33 due to 40-wire cable
+> [   35.049166] ata5.00: configured for UDMA/33
+> [   35.049402] scsi 4:0:0:0: Direct-Access     ATA      WDC WD20EADS-00R 01.0 PQ: 0 ANSI: 5
 >
-> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
-> ---
->   drivers/ata/ahci.h    |    1 +
->   drivers/ata/libahci.c |    3 ++-
->   2 files changed, 3 insertions(+), 1 deletion(-)
+> This patch forces "short cable" mode on this board, as it seems clear that
+> the on-board SATA<->PATA "cable" is short.
+> With this patch the disk is configured for UDMA/100:
+>
+> [    5.976756] ata5.00: ATA-8: WDC WD20EADS-00R6B0, 01.00A01, max UDMA/133
+> [    5.996434] ata5.00: 3907029168 sectors, multi 16: LBA48 NCQ (depth 0/32)
+> [    6.024787] ata5.00: configured for UDMA/100
+>
+> Testing revealed no transfer issues.
+>
+> Signed-off-by: Arnd Hannemann <arnd@arndnet.de>
 
 applied
 
