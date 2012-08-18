@@ -1,26 +1,43 @@
-From: sonia <sonialife2@yahoo.com>
-Subject: hii
-Date: Sat, 18 Aug 2012 15:33:22 +0200 (CEST)
-Message-ID: <11103526.7711651345296802125.JavaMail.defaultUser__40483.3063287244$1345296844$gmane$org@defaultHost>
-Reply-To: sonia <sonialife2@yahoo.com>
+From: "Mr.Bojan Limsley" <Limsley@ey.com>
+Subject: MAIL 18.08.2012
+Date: Sun, 19 Aug 2012 00:55:24 +0200
+Message-ID: <201208182259.q7IMpuOj019382__30134.6907079735$1345331755$gmane$org@mail.ucla.edu>
+Reply-To: bojan_limsley@aol.com
 Mime-Version: 1.0
-Content-Type: text/plain;charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from outrelay02.libero.it ([212.52.84.102]:52112 "EHLO
-	outrelay02.libero.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755406Ab2HRNdY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2012 09:33:24 -0400
+Received: from out-73.smtp.ucla.edu ([169.232.46.180]:34082 "EHLO
+	out-73.smtp.ucla.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753232Ab2HRXPc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2012 19:15:32 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sonialife2@yahoo.com
+To: Recipients <Limsley@ey.com>
 
-Hello my dear
- How was your living life today i hope all is well, am Sonia by name i just
-went into your profile at this site  linux-archive.org  and saw how you have 
-pest
-your explanation over it i feel to know who your are so that we can shear one
-thing or the
-other from there i can send you my photo you can know who am ok . i am waiting
-for your reply yours Sonia
+Dear Friend,
 
+My name is Mr.Bojan Limsley, an Armenia national. I work as an external auditor for Bank of United Kingdom. I Work as part of a bigger team that covers the entire Scotland and England region. I have taken pains to find your contact through personal endeavours.
+
+I wish to discuss with you an issue of immense benefit to us. Your prompt response will be highly appreciated. Contact me only through my private email address: bojan_limsley@aol.com 
+
+
+Kind Regards, 
+
+Bojan Limsley.
+Ernst & Young
+E:Limsley@ey.com
+http://www.ey.com/
+
+
+
+_____________________________________________________________________ 
+This e-mail originated from the Internet and has been scanned for known viruses by the Messagelabs SkyScan Service. 
+*********************************************************************************** 
+This e-mail is intended for the addressee(s) named above and any other use is prohibited. It may contain confidential information. If you received this e-mail in error please contact the sender by return e-mail. 
+
+Ernst & Young does not accept legal responsibility for the contents of this message if it has reached you via the Internet, as Internet communications are not secure. Any opinions expressed are those of the author and are not necessarily endorsed by Ernst & Young. 
+
+Recipients are advised to apply their own virus checks to this message . 
+***********************************************************************************
