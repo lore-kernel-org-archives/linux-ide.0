@@ -1,43 +1,44 @@
-From: "Mr.Bojan Limsley" <Limsley@ey.com>
-Subject: MAIL 18.08.2012
-Date: Sun, 19 Aug 2012 00:55:24 +0200
-Message-ID: <201208182259.q7IMpuOj019382__30134.6907079735$1345331755$gmane$org@mail.ucla.edu>
-Reply-To: bojan_limsley@aol.com
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH RESEND] ahci: implement aggressive SATA device sleep
+ support
+Date: Sun, 19 Aug 2012 15:48:13 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E107E16A3C@SCYBEXDAG03.amd.com>
+References: <1344361476-2154-1-git-send-email-shane.huang@amd.com>
+ <502E8507.8060806@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out-73.smtp.ucla.edu ([169.232.46.180]:34082 "EHLO
-	out-73.smtp.ucla.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232Ab2HRXPc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Aug 2012 19:15:32 -0400
-Content-Description: Mail message body
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:37667
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753364Ab2HSPs1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 19 Aug 2012 11:48:27 -0400
+In-Reply-To: <502E8507.8060806@pobox.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <Limsley@ey.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Aaron Lu <aaron.lwe@gmail.com>, "Huang, Shane" <Shane.Huang@amd.com>
 
-Dear Friend,
+Hi Jeff,
 
-My name is Mr.Bojan Limsley, an Armenia national. I work as an external auditor for Bank of United Kingdom. I Work as part of a bigger team that covers the entire Scotland and England region. I have taken pains to find your contact through personal endeavours.
+Thanks for your feedback.
 
-I wish to discuss with you an issue of immense benefit to us. Your prompt response will be highly appreciated. Contact me only through my private email address: bojan_limsley@aol.com 
+> * for the !sleep case, don't writel() if the devslp value is unchanged
+
+You are right, I will fix it in v2 together with some other improvements.
+
+> * if we are disabling sleep -- a valid case where host & device both 
+> support it, but policy denies it -- do we need to stop the ahci engine 
+> as is done in the enabling case?
+
+The spec said that software shall only set DITO, MDAT, DETO when
+PxCMD.ST is cleared to 0. While disabling case doesn't need stop
+engine because the above requirement is unnecessary for ADSE.
+Please tell me if you have concern.
 
 
-Kind Regards, 
+Regards
+Shane
 
-Bojan Limsley.
-Ernst & Young
-E:Limsley@ey.com
-http://www.ey.com/
-
-
-
-_____________________________________________________________________ 
-This e-mail originated from the Internet and has been scanned for known viruses by the Messagelabs SkyScan Service. 
-*********************************************************************************** 
-This e-mail is intended for the addressee(s) named above and any other use is prohibited. It may contain confidential information. If you received this e-mail in error please contact the sender by return e-mail. 
-
-Ernst & Young does not accept legal responsibility for the contents of this message if it has reached you via the Internet, as Internet communications are not secure. Any opinions expressed are those of the author and are not necessarily endorsed by Ernst & Young. 
-
-Recipients are advised to apply their own virus checks to this message . 
-***********************************************************************************
