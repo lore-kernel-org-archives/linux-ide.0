@@ -1,79 +1,39 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2] ahci: implement aggressive SATA device sleep support
-Date: Thu, 23 Aug 2012 11:09:39 -0400
-Message-ID: <503647B3.6050706@pobox.com>
-References: <1345761072-2123-1-git-send-email-shane.huang@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH] libata: Add a space to " 2GB ATA Flash Disk" DMA blacklist entry
+Date: Thu, 23 Aug 2012 15:11:52 -0400
+Message-ID: <1345749112-24885-1-git-send-email-prarit@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:61932 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752607Ab2HWPJo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Aug 2012 11:09:44 -0400
-Received: by vbbff1 with SMTP id ff1so884578vbb.19
-        for <linux-ide@vger.kernel.org>; Thu, 23 Aug 2012 08:09:43 -0700 (PDT)
-In-Reply-To: <1345761072-2123-1-git-send-email-shane.huang@amd.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50326 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751162Ab2HWTL6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 23 Aug 2012 15:11:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
-Cc: linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: linux-ide@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, Jeff Garzik <jgarzik@pobox.com>
 
-On 08/23/2012 06:31 PM, Shane Huang wrote:
-> This patch enables Aggressive Device Sleep only if both host controller
-> and device support it.
-[...]
+commit d70e551c8e1ecb6f20422f8db6bfe6a0049edcb8, Add " 2GB ATA Flash
+Disk"/"ADMA428M" to DMA blacklist, should have added a space before 2GB.
 
-> @@ -2323,6 +2324,26 @@ int ata_dev_configure(struct ata_device *dev)
->   			}
->   		}
->
-> +		if (ata_id_has_devslp(dev->id)) {
-> +			err_mask = ata_dev_set_feature(dev,
-> +						       SETFEATURES_SATA_ENABLE,
-> +						       SATA_DEVSLP);
-> +			if (err_mask)
-> +				ata_dev_err(dev,
-> +					    "failed to enable DEVSLP (err_mask=0x%x)\n",
-> +					    err_mask);
-> +			else {
-> +				dev->flags |= ATA_DFLAG_DEVSLP;
-> +				err_mask = ata_read_log_page(dev,
-> +						ATA_LOG_SATA_SETTINGS,
-> +						dev->sata_settings,
-> +						1);
-> +				if (err_mask)
-> +					ata_dev_warn(dev,
-> +						     "failed to get Identify Device Data\n");
-> +			}
-> +		}
-> +
->   		dev->cdb_len = 16;
->   	}
->
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+---
+ drivers/ata/libata-core.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-1) Contra the patch description (quoted above), you are enabling 
-SATA_DEVSLP on the device regardless of power policy or host controller 
-support.
-
-I'm not sure about the ata_dev_configure() change.  If the power policy 
-is not enabling aggressive sleep, we should not send this command to the 
-device.
-
-2) If we are going to unconditionally add ATA_SECT_SIZE bytes to every 
-ata_device structure, let's at least move the ata_read_log_page() call 
-outside of the devslp test, so that others may have this information 
-even if the device does not support devslp.
-
-3) please define constants in linux/ata.h for sata_settings information, 
-rather than using hexidecimal constants ("magic numbers").
-
-4) is it wise to issue SET_FEATURES / SATA_DEVSLP prior to programming 
-the host controller?  that order seems wrong.
-
-	Jeff
-
-
-
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index fadd586..6c524dd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4062,7 +4062,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "_NEC DV5800A", 	NULL,		ATA_HORKAGE_NODMA },
+ 	{ "SAMSUNG CD-ROM SN-124", "N001",	ATA_HORKAGE_NODMA },
+ 	{ "Seagate STT20000A", NULL,		ATA_HORKAGE_NODMA },
+-	{ "2GB ATA Flash Disk", "ADMA428M",	ATA_HORKAGE_NODMA },
++	{ " 2GB ATA Flash Disk", "ADMA428M",	ATA_HORKAGE_NODMA },
+ 	/* Odd clown on sil3726/4726 PMPs */
+ 	{ "Config  Disk",	NULL,		ATA_HORKAGE_DISABLE },
+ 
+-- 
+1.7.9.3
 
