@@ -1,20 +1,25 @@
-From: Adko Branil <adkobranil@yahoo.com>
-Subject: Re: HDD problem, software bug, bios bug, or hardware ?
-Date: Sat, 25 Aug 2012 10:46:45 -0700 (PDT)
-Message-ID: <1345916805.54948.YahooMailNeo@web124706.mail.ne1.yahoo.com>
-References: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com>
-Reply-To: Adko Branil <adkobranil@yahoo.com>
+From: Thi Kearns <pamula3445balder@yahoo.com>
+Subject: I think we will make a big mistake if we do not get to know each other
+Date: Sun, 26 Aug 2012 11:30:57 +0100 (BST)
+Message-ID: <1345977057.37279.YahooMailNeo@web132303.mail.ird.yahoo.com>
+Reply-To: Thi Kearns <thi.kearns@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm21-vm0.bullet.mail.ne1.yahoo.com ([98.138.90.94]:26411 "EHLO
-	nm21-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750748Ab2HYRqq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Aug 2012 13:46:46 -0400
-In-Reply-To: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+Received: from nm8-vm0.bullet.mail.ird.yahoo.com ([77.238.189.203]:45760 "HELO
+	nm8-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753822Ab2HZKa6 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 26 Aug 2012 06:30:58 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-It crashes more than 10 times more frequently, when "nosmp" is passed - i expected the opposite case.
-
+Hello, it is Thi. 
+Here I'm interesting in finding a pal to have unforgettable time together. 
+I'm fond of reading books, listening to hard rock music, go surfing and watching funny films. We could do these things together. 
+And, of course I like having sex! I'm nympho beauty and that's why have sex with each pal that I could impress me! 
+Of course, they have no hesitations of having sex with stunning girlie like me! 
+Maybe u will become one of their quantity! 
+So, write me. All the best! I'm waiting for your answer.
