@@ -1,99 +1,48 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: [PATCH V3 Resend 2/3] ata: pata_arasan: add Device Tree probing capability
-Date: Mon, 27 Aug 2012 10:37:18 +0530
-Message-ID: <818d0dc1eed7a38361ca96f8e3d9fdc8f7abdf63.1346042344.git.viresh.kumar@linaro.com>
-References: <cover.1346042344.git.viresh.kumar@linaro.com>
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: HDD problem, software bug, bios bug, or hardware ?
+Date: Mon, 27 Aug 2012 09:50:55 +0200
+Message-ID: <201208270950.55590.rjw@sisk.pl>
+References: <1345858271.82172.YahooMailNeo@web124705.mail.ne1.yahoo.com> <20120825113301.GA15210@liondog.tnic>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:33966 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751806Ab2H0FH1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Aug 2012 01:07:27 -0400
-In-Reply-To: <cover.1346042344.git.viresh.kumar@linaro.com>
-In-Reply-To: <cover.1346042344.git.viresh.kumar@linaro.com>
-References: <cover.1346042344.git.viresh.kumar@linaro.com>
+Received: from ogre.sisk.pl ([193.178.161.156]:34319 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753372Ab2H0Ho4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Aug 2012 03:44:56 -0400
+In-Reply-To: <20120825113301.GA15210@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@redhat.com
-Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@linaro.com>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Adko Branil <adkobranil@yahoo.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Viresh Kumar <viresh.kumar@linaro.com>
+On Saturday, August 25, 2012, Borislav Petkov wrote:
+> On Fri, Aug 24, 2012 at 06:31:11PM -0700, Adko Branil wrote:
+> > To add some more info - i just noticed in dmesg of the latest kernel-2.5.2 some suspicious lines:
+> > 
+> > 	* [   44.251706] microcode: AMD CPU family 0xf not supported
+> > 	* [   44.255721] powernow-k8: Found 1 AMD Athlon(tm) 64 X2 Dual Core Processor 4200+ (2 cpu cores) (version 2.20.00)
+> > 	* [   44.255736] [Firmware Bug]: powernow-k8: No compatible ACPI _PSS objects found.
+> > 	* [   44.255736] [Firmware Bug]: powernow-k8: Try again with latest BIOS.
+> > 
+> > Coult it be related to the crashes , and should i update my bios ?
+> 
+> No.
+> 
+> Try to enable the Cool'n'Quiet option in your BIOS - this message should
+> disappear then.
+> 
+> Btw, there's a patch to make this more understandable:
+> 
+> http://marc.info/?l=linux-kernel&m=134262430326493
+> 
+> Rafael, this one is queued for 3.7, I assume?
 
-SPEAr platforms now support DT and so must convert all drivers to support D=
-T.
-This patch adds DT probing support for Arasan Compact Flash controller and
-updates its documentation too.
+Well, it should be, but I seem to have failed to merge my pm-cpufreq-next branch
+into linux-next.  Sorry about that, will fix when I get back home from the
+KS/LinuxCon.
 
-Signed-off-by: Viresh Kumar <viresh.kumar@linaro.com>
----
- Documentation/devicetree/bindings/ata/pata-arasan.txt | 17 +++++++++++++++=
-++
- drivers/ata/pata_arasan_cf.c                          | 10 ++++++++++
- 2 files changed, 27 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/pata-arasan.txt
-
-diff --git a/Documentation/devicetree/bindings/ata/pata-arasan.txt b/Docume=
-ntation/devicetree/bindings/ata/pata-arasan.txt
-new file mode 100644
-index 0000000..95ec7f8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/pata-arasan.txt
-@@ -0,0 +1,17 @@
-+* ARASAN PATA COMPACT FLASH CONTROLLER
-+
-+Required properties:
-+- compatible: "arasan,cf-spear1340"
-+- reg: Address range of the CF registers
-+- interrupt-parent: Should be the phandle for the interrupt controller
-+  that services interrupts for this device
-+- interrupt: Should contain the CF interrupt number
-+
-+Example:
-+
-+=09cf@fc000000 {
-+=09=09compatible =3D "arasan,cf-spear1340";
-+=09=09reg =3D <0xfc000000 0x1000>;
-+=09=09interrupt-parent =3D <&vic1>;
-+=09=09interrupts =3D <12>;
-+=09};
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index d82c6dc..26201eb 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
- #include <linux/libata.h>
- #include <linux/module.h>
-+#include <linux/of.h>
- #include <linux/pata_arasan_cf_data.h>
- #include <linux/platform_device.h>
- #include <linux/pm.h>
-@@ -935,6 +936,14 @@ static int arasan_cf_resume(struct device *dev)
-=20
- static SIMPLE_DEV_PM_OPS(arasan_cf_pm_ops, arasan_cf_suspend, arasan_cf_re=
-sume);
-=20
-+#ifdef CONFIG_OF
-+static const struct of_device_id arasan_cf_id_table[] =3D {
-+=09{ .compatible =3D "arasan,cf-spear1340" },
-+=09{}
-+};
-+MODULE_DEVICE_TABLE(of, arasan_cf_id_table);
-+#endif
-+
- static struct platform_driver arasan_cf_driver =3D {
- =09.probe=09=09=3D arasan_cf_probe,
- =09.remove=09=09=3D __devexit_p(arasan_cf_remove),
-@@ -942,6 +951,7 @@ static struct platform_driver arasan_cf_driver =3D {
- =09=09.name=09=3D DRIVER_NAME,
- =09=09.owner=09=3D THIS_MODULE,
- =09=09.pm=09=3D &arasan_cf_pm_ops,
-+=09=09.of_match_table =3D of_match_ptr(arasan_cf_id_table),
- =09},
- };
-=20
---=20
-1.7.12.rc2.18.g61b472e
-
-
+Thanks,
+Rafael
