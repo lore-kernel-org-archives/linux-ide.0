@@ -1,86 +1,35 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: [PATCH v2] ahci: implement aggressive SATA device sleep support
-Date: Mon, 27 Aug 2012 10:36:05 +0000
-Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E107E1BAEB@SCYBEXDAG03.amd.com>
-References: <1345761072-2123-1-git-send-email-shane.huang@amd.com>
- <503647B3.6050706@pobox.com>
- <43EB3AB3EEFE8D43B525F4D2EAF507E107E1A41A@SCYBEXDAG03.amd.com>
- <50379F65.3070009@pobox.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: Storage related regression in linux-next 20120824
+Date: Mon, 27 Aug 2012 10:40:32 -0400
+Message-ID: <CAFtxgO536xEMjMw_D1u3utT1f1iy-6EsjcawdYvbocRxc=Wu=A@mail.gmail.com>
+References: <CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:35322 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751632Ab2H0KgY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Aug 2012 06:36:24 -0400
-In-Reply-To: <50379F65.3070009@pobox.com>
-Content-Language: en-US
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56485 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750936Ab2H0Oke (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Aug 2012 10:40:34 -0400
+In-Reply-To: <CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, "Huang, Shane" <Shane.Huang@amd.com>
+To: Arvydas Sidorenko <asido4@gmail.com>
+Cc: linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> To avoid attempting to enable on older devices, you will need an 
-> appropriate test (ata_id_has_ncq perhaps?)
+On Mon, Aug 27, 2012 at 4:59 AM, Arvydas Sidorenko <asido4@gmail.com> wrote:
+> linux-next 20120824 introduced regression on Mac mini 2011 - /root partition
+> gets mounted as read-only and it stays so even when trying to reboot into
+> previously working kernel. In order to make it work on older kernel again
+> `fsck` needs to be executed:
+> ----------------------------------------------------------------------
+> Root partition uses ext4 filesystem on Intel 330 SSD connected to SATA3.
+> dmesg shows that journaling was disabled:
+> ----------------------------------------------------------------------
+> I haven't bisected to which exactly tree introduces the regression,
+> but I can tell
+> that linux-next 20120813 and v3.6-rc3 work fine.
 
-So far I don't find better method to exclude old devices than yours.
+Can you pastebin 'dmesg' and 'lspci'?  Did this occur only once, or is
+it reproducible?
 
-
-> As you figured out in the other email, I was referring to sata_settings
-
-I'm going to modify both sata_settings and ID[78].
-
-
-> I just do not like programming the device, when power policy may 
-> indicate otherwise.
-> 
-> Most conservative is to leave devslp feature in reset state and not 
-> touch device or host until power policy dictates it is time to program 
-> host + device.
-
-OK, I'll move setting feature back to ahci_set_aggressive_devslp().
-I'm trying to avoid setting feature each time for every sleep to
-improve performance.
-
-Adding pp->device_devslp_enabled with the code below does not make
-much difference because it is still called for every sleep.
-Do you have good suggestion?
-
-Any should we also call setting feature to disable device DevSlp
-for each !sleep?
-
-
-static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
-{
-...
-        /* disable device sleep */
-        if (!sleep) {
-                if (devslp & PORT_DEVSLP_ADSE)
-                        writel(devslp & ~PORT_DEVSLP_ADSE,
-                               port_mmio + PORT_DEVSLP);
-                if (pp->device_devslp_enabled)
-                        pp->device_devslp_enabled = false;
-                return;
-        }
-...
-        ahci_start_engine(ap);
-
-        /* enable device sleep feature for the drive */
-        if (!pp->device_devslp_enabled) {
-                err_mask = ata_dev_set_feature(ap->link.device,
-                                               SETFEATURES_SATA_ENABLE,
-                                               SATA_DEVSLP);
-                if (err_mask && err_mask != AC_ERR_DEV)
-                        ata_dev_warn(ap->link.device,
-                                     "failed to enable DEVSLP, Emask 0x%x\n", err_mask);
-                else
-                        pp->device_devslp_enabled = true;
-        }
-}
-
-
-Thanks,
-Shane
-
+     Jeff
