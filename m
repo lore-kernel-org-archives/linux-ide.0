@@ -1,48 +1,86 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: HDD problem, software bug, bios bug, or hardware ?
-Date: Mon, 27 Aug 2012 09:50:55 +0200
-Message-ID: <201208270950.55590.rjw@sisk.pl>
-References: <1345858271.82172.YahooMailNeo@web124705.mail.ne1.yahoo.com> <20120825113301.GA15210@liondog.tnic>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH v2] ahci: implement aggressive SATA device sleep support
+Date: Mon, 27 Aug 2012 10:36:05 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E107E1BAEB@SCYBEXDAG03.amd.com>
+References: <1345761072-2123-1-git-send-email-shane.huang@amd.com>
+ <503647B3.6050706@pobox.com>
+ <43EB3AB3EEFE8D43B525F4D2EAF507E107E1A41A@SCYBEXDAG03.amd.com>
+ <50379F65.3070009@pobox.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([193.178.161.156]:34319 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753372Ab2H0Ho4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 27 Aug 2012 03:44:56 -0400
-In-Reply-To: <20120825113301.GA15210@liondog.tnic>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:35322 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751632Ab2H0KgY convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Aug 2012 06:36:24 -0400
+In-Reply-To: <50379F65.3070009@pobox.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Adko Branil <adkobranil@yahoo.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, "Huang, Shane" <Shane.Huang@amd.com>
 
-On Saturday, August 25, 2012, Borislav Petkov wrote:
-> On Fri, Aug 24, 2012 at 06:31:11PM -0700, Adko Branil wrote:
-> > To add some more info - i just noticed in dmesg of the latest kernel-2.5.2 some suspicious lines:
-> > 
-> > 	* [   44.251706] microcode: AMD CPU family 0xf not supported
-> > 	* [   44.255721] powernow-k8: Found 1 AMD Athlon(tm) 64 X2 Dual Core Processor 4200+ (2 cpu cores) (version 2.20.00)
-> > 	* [   44.255736] [Firmware Bug]: powernow-k8: No compatible ACPI _PSS objects found.
-> > 	* [   44.255736] [Firmware Bug]: powernow-k8: Try again with latest BIOS.
-> > 
-> > Coult it be related to the crashes , and should i update my bios ?
-> 
-> No.
-> 
-> Try to enable the Cool'n'Quiet option in your BIOS - this message should
-> disappear then.
-> 
-> Btw, there's a patch to make this more understandable:
-> 
-> http://marc.info/?l=linux-kernel&m=134262430326493
-> 
-> Rafael, this one is queued for 3.7, I assume?
+> To avoid attempting to enable on older devices, you will need an 
+> appropriate test (ata_id_has_ncq perhaps?)
 
-Well, it should be, but I seem to have failed to merge my pm-cpufreq-next branch
-into linux-next.  Sorry about that, will fix when I get back home from the
-KS/LinuxCon.
+So far I don't find better method to exclude old devices than yours.
+
+
+> As you figured out in the other email, I was referring to sata_settings
+
+I'm going to modify both sata_settings and ID[78].
+
+
+> I just do not like programming the device, when power policy may 
+> indicate otherwise.
+> 
+> Most conservative is to leave devslp feature in reset state and not 
+> touch device or host until power policy dictates it is time to program 
+> host + device.
+
+OK, I'll move setting feature back to ahci_set_aggressive_devslp().
+I'm trying to avoid setting feature each time for every sleep to
+improve performance.
+
+Adding pp->device_devslp_enabled with the code below does not make
+much difference because it is still called for every sleep.
+Do you have good suggestion?
+
+Any should we also call setting feature to disable device DevSlp
+for each !sleep?
+
+
+static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
+{
+...
+        /* disable device sleep */
+        if (!sleep) {
+                if (devslp & PORT_DEVSLP_ADSE)
+                        writel(devslp & ~PORT_DEVSLP_ADSE,
+                               port_mmio + PORT_DEVSLP);
+                if (pp->device_devslp_enabled)
+                        pp->device_devslp_enabled = false;
+                return;
+        }
+...
+        ahci_start_engine(ap);
+
+        /* enable device sleep feature for the drive */
+        if (!pp->device_devslp_enabled) {
+                err_mask = ata_dev_set_feature(ap->link.device,
+                                               SETFEATURES_SATA_ENABLE,
+                                               SATA_DEVSLP);
+                if (err_mask && err_mask != AC_ERR_DEV)
+                        ata_dev_warn(ap->link.device,
+                                     "failed to enable DEVSLP, Emask 0x%x\n", err_mask);
+                else
+                        pp->device_devslp_enabled = true;
+        }
+}
+
 
 Thanks,
-Rafael
+Shane
+
