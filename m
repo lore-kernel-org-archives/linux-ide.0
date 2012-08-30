@@ -1,96 +1,258 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Which disk is ata4?
-Date: Wed, 29 Aug 2012 21:38:52 -0700
-Message-ID: <CALCETrW-LFzcHYgx=thQiuTfU8RdRBrtXwE7QboWpNrjz4An4A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:40216 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848Ab2H3EjP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Aug 2012 00:39:15 -0400
-Received: by wibhr14 with SMTP id hr14so1578242wib.1
-        for <linux-ide@vger.kernel.org>; Wed, 29 Aug 2012 21:39:13 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 1/4] libata: pm: differentiate system and runtime pm for ata port
+Date: Thu, 30 Aug 2012 14:40:15 +0800
+Message-ID: <1346308818-27039-2-git-send-email-aaron.lu@intel.com>
+References: <1346308818-27039-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1346308818-27039-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-One of my disks went out to lunch for a while.  Logs below.
+For sata port, only runtime pm needs to be taken care of;
+For IDE port, only system pm needs to be taken care of.
+Currently, we use PMSG_SUSPEND for both system suspend and runtime
+suspend and PMSG_ON for both system resume and runtime resume.
 
-Which one is it?  The only useful thing in /sys/class/ata_port/ata4 is
-the device symlink, which points at
-/sys/devices/pci0000:00/0000:00:1f.2/ata4.  That, in turn, has an
-ata_port directory (contains nothing I don't already know) and a link4
-directory.  The ata_link directory is unhelpful, as is
-/sys/devices/pci0000:00/0000:00:1f.2/ata4/link4/dev4.0/ata_device/dev4.0.
+Change this by using PMSG_AUTO_SUSPEND for runtime suspend and
+PMSG_AUTO_RESUME for runtime resume.
 
-Taking a leap of faith, /sys/devices/pci0000:00/0000:00:1f.2 contains
-ata1-6 and host0-5.  So maybe ata4 is host3.  Following lots of
-symlinks through host3 leads me to the block device sdd.  Maybe that's
-correct?  I'm really not sure.  Am I missing something obvious?
+The ata_acpi_set_state is modified accordingly. And the sata case and
+pata case is seperated for easy understanding.
 
-I even tried looking for symlinks the other way, like this:
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/ata/libata-acpi.c | 83 ++++++++++++++++++++++++++++++++---------------
+ drivers/ata/libata-core.c | 22 +++++++++----
+ drivers/ata/libata-eh.c   |  9 ++---
+ 3 files changed, 78 insertions(+), 36 deletions(-)
 
-/sys$ find -type l -exec echo -n {} ' ' \; -exec readlink {} \; |grep ata4
-./devices/pci0000:00/0000:00:1f.2/ata4/ata_port/ata4/subsystem
-../../../../../../class/ata_port
-./devices/pci0000:00/0000:00:1f.2/ata4/ata_port/ata4/device  ../../../ata4
-./devices/pci0000:00/0000:00:1f.2/ata4/link4/ata_link/link4/subsystem
-../../../../../../../class/ata_link
-./devices/pci0000:00/0000:00:1f.2/ata4/link4/ata_link/link4/device
-../../../link4
-./devices/pci0000:00/0000:00:1f.2/ata4/link4/dev4.0/ata_device/dev4.0/subsystem
- ../../../../../../../../class/ata_device
-./devices/pci0000:00/0000:00:1f.2/ata4/link4/dev4.0/ata_device/dev4.0/device
- ../../../dev4.0
-./class/ata_link/link4
-../../devices/pci0000:00/0000:00:1f.2/ata4/link4/ata_link/link4
-./class/ata_port/ata4  ../../devices/pci0000:00/0000:00:1f.2/ata4/ata_port/ata4
-./class/ata_device/dev4.0
-../../devices/pci0000:00/0000:00:1f.2/ata4/link4/dev4.0/ata_device/dev4.0
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index fd9ecf7..b67b565 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -832,50 +832,81 @@ void ata_acpi_on_resume(struct ata_port *ap)
+ 	}
+ }
+ 
+-/**
+- * ata_acpi_set_state - set the port power state
+- * @ap: target ATA port
+- * @state: state, on/off
+- *
+- * This function executes the _PS0/_PS3 ACPI method to set the power state.
+- * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
+- */
+-void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
++static void sata_acpi_set_state(struct ata_port *ap, pm_message_t state)
+ {
+-	struct ata_device *dev;
+-	acpi_handle handle;
+ 	int acpi_state;
++	acpi_handle handle;
++	struct ata_device *dev;
+ 
+-	/* channel first and then drives for power on and vica versa
+-	   for power off */
+-	handle = ata_ap_acpi_handle(ap);
+-	if (handle && state.event == PM_EVENT_ON)
+-		acpi_bus_set_power(handle, ACPI_STATE_D0);
++	if (!PMSG_IS_AUTO(state))
++		return;
+ 
+ 	ata_for_each_dev(dev, &ap->link, ENABLED) {
+ 		handle = ata_dev_acpi_handle(dev);
+ 		if (!handle)
+ 			continue;
+ 
+-		if (state.event != PM_EVENT_ON) {
++		if (state.event == PM_EVENT_AUTO_SUSPEND) {
+ 			acpi_state = acpi_pm_device_sleep_state(
+ 				&dev->sdev->sdev_gendev, NULL, ACPI_STATE_D3);
+ 			if (acpi_state > 0)
+ 				acpi_bus_set_power(handle, acpi_state);
+-			/* TBD: need to check if it's runtime pm request */
+-			acpi_pm_device_run_wake(
+-				&dev->sdev->sdev_gendev, true);
++			acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
+ 		} else {
+-			/* Ditto */
+-			acpi_pm_device_run_wake(
+-				&dev->sdev->sdev_gendev, false);
++			acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, false);
+ 			acpi_bus_set_power(handle, ACPI_STATE_D0);
+ 		}
+ 	}
++}
++
++/**
++ * pata_acpi_set_state - set the port power state
++ * @ap: target ATA port
++ * @state: state, on/off
++ *
++ * This function executes the _PS0/_PS3 ACPI method to set the power state.
++ * ACPI spec requires _PS0 when IDE power on and _PS3 when power off
++ */
++static void pata_acpi_set_state(struct ata_port *ap, pm_message_t state)
++{
++	struct ata_device *dev;
++
++	if (!ata_ap_acpi_handle(ap))
++		return;
++
++	/*
++	 * Channel first and then drives for power on and
++	 * vica versa for power off
++	 */
++	if (state.event == PM_EVENT_ON)
++		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D0);
++
++	ata_for_each_dev(dev, &ap->link, ENABLED) {
++		if (ata_dev_acpi_handle(dev))
++			acpi_bus_set_power(ata_dev_acpi_handle(dev),
++					state.event == PM_EVENT_ON ?
++					ACPI_STATE_D0 : ACPI_STATE_D3);
++
++	}
+ 
+-	handle = ata_ap_acpi_handle(ap);
+-	if (handle && state.event != PM_EVENT_ON)
+-		acpi_bus_set_power(handle, ACPI_STATE_D3);
++	if (state.event != PM_EVENT_ON)
++		acpi_bus_set_power(ata_ap_acpi_handle(ap), ACPI_STATE_D3);
++}
++
++/**
++ * ata_acpi_set_state - set the port power state
++ * @ap: target ATA port
++ * @state: state, on/off
++ *
++ * Depends on whether the port is a PATA port or a SATA port,
++ * this function calls into different functions.
++ */
++void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
++{
++	if (ap->flags & ATA_FLAG_ACPI_SATA)
++		sata_acpi_set_state(ap, state);
++	else
++		pata_acpi_set_state(ap, state);
+ }
+ 
+ /**
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c3fbdca..6c7d167 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5309,7 +5309,7 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
+ 	 *
+ 	 * http://thread.gmane.org/gmane.linux.ide/46764
+ 	 */
+-	if (mesg.event == PM_EVENT_SUSPEND)
++	if (mesg.event & PM_EVENT_SUSPEND)
+ 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
+ 
+ 	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
+@@ -5324,6 +5324,11 @@ static int ata_port_suspend(struct device *dev)
+ 	return ata_port_suspend_common(dev, PMSG_SUSPEND);
+ }
+ 
++static int ata_port_runtime_suspend(struct device *dev)
++{
++	return ata_port_suspend_common(dev, PMSG_AUTO_SUSPEND);
++}
++
+ static int ata_port_do_freeze(struct device *dev)
+ {
+ 	if (pm_runtime_suspended(dev))
+@@ -5340,12 +5345,12 @@ static int ata_port_poweroff(struct device *dev)
+ 	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
+ }
+ 
+-static int ata_port_resume_common(struct device *dev)
++static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
+ {
+ 	struct ata_port *ap = to_ata_port(dev);
+ 	int rc;
+ 
+-	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
++	rc = ata_port_request_pm(ap, mesg, ATA_EH_RESET,
+ 		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
+ 	return rc;
+ }
+@@ -5354,7 +5359,7 @@ static int ata_port_resume(struct device *dev)
+ {
+ 	int rc;
+ 
+-	rc = ata_port_resume_common(dev);
++	rc = ata_port_resume_common(dev, PMSG_ON);
+ 	if (!rc) {
+ 		pm_runtime_disable(dev);
+ 		pm_runtime_set_active(dev);
+@@ -5364,6 +5369,11 @@ static int ata_port_resume(struct device *dev)
+ 	return rc;
+ }
+ 
++static int ata_port_runtime_resume(struct device *dev)
++{
++	return ata_port_resume_common(dev, PMSG_AUTO_RESUME);
++}
++
+ static int ata_port_runtime_idle(struct device *dev)
+ {
+ 	return pm_runtime_suspend(dev);
+@@ -5377,8 +5387,8 @@ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.poweroff = ata_port_poweroff,
+ 	.restore = ata_port_resume,
+ 
+-	.runtime_suspend = ata_port_suspend,
+-	.runtime_resume = ata_port_resume_common,
++	.runtime_suspend = ata_port_runtime_suspend,
++	.runtime_resume = ata_port_runtime_resume,
+ 	.runtime_idle = ata_port_runtime_idle,
+ };
+ 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 7d4535e..f3eced6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -4021,7 +4021,7 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
+ 	/* are we suspending? */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	if (!(ap->pflags & ATA_PFLAG_PM_PENDING) ||
+-	    ap->pm_mesg.event == PM_EVENT_ON) {
++	    !(ap->pm_mesg.event & PM_EVENT_SUSPEND)) {
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 		return;
+ 	}
+@@ -4040,7 +4040,7 @@ static void ata_eh_handle_port_suspend(struct ata_port *ap)
+ 	if (ap->ops->port_suspend)
+ 		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
+ 
+-	ata_acpi_set_state(ap, PMSG_SUSPEND);
++	ata_acpi_set_state(ap, ap->pm_mesg);
+  out:
+ 	/* report result */
+ 	spin_lock_irqsave(ap->lock, flags);
+@@ -4080,7 +4080,8 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
+ 	/* are we resuming? */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	if (!(ap->pflags & ATA_PFLAG_PM_PENDING) ||
+-	    ap->pm_mesg.event != PM_EVENT_ON) {
++	    (ap->pm_mesg.event != PM_EVENT_ON &&
++	     ap->pm_mesg.event != PM_EVENT_AUTO_RESUME)) {
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 		return;
+ 	}
+@@ -4099,7 +4100,7 @@ static void ata_eh_handle_port_resume(struct ata_port *ap)
+ 		ata_for_each_dev(dev, link, ALL)
+ 			ata_ering_clear(&dev->ering);
+ 
+-	ata_acpi_set_state(ap, PMSG_ON);
++	ata_acpi_set_state(ap, ap->pm_mesg);
+ 
+ 	if (ap->ops->port_resume)
+ 		rc = ap->ops->port_resume(ap);
+-- 
+1.7.11.5
 
-No luck.
-
-[784786.047673] ata4.00: exception Emask 0x10 SAct 0x7800 SErr 0x0
-action 0x6 frozen
-[784786.047707] ata4.00: irq_stat 0x08000000, interface fatal error
-[784786.047730] ata4.00: failed command: READ FPDMA QUEUED
-[784786.047752] ata4.00: cmd 60/40:58:80:a9:48/00:00:86:00:00/40 tag
-11 ncq 32768 in
-[784786.047753]          res c0/00:40:80:15:8d/00:00:86:00:00/40 Emask
-0x12 (ATA bus error)
-[784786.047805] ata4.00: status: { Busy }
-[784786.047819] ata4.00: failed command: READ FPDMA QUEUED
-[784786.047840] ata4.00: cmd 60/40:60:80:aa:48/00:00:86:00:00/40 tag
-12 ncq 32768 in
-[784786.047841]          res c0/00:40:80:15:8d/00:00:86:00:00/40 Emask
-0x12 (ATA bus error)
-[784786.047893] ata4.00: status: { Busy }
-[784786.047907] ata4.00: failed command: READ FPDMA QUEUED
-[784786.047928] ata4.00: cmd 60/40:68:c0:aa:48/00:00:86:00:00/40 tag
-13 ncq 32768 in
-[784786.047929]          res c0/00:40:80:15:8d/00:00:86:00:00/40 Emask
-0x12 (ATA bus error)
-[784786.047981] ata4.00: status: { Busy }
-[784786.047996] ata4.00: failed command: READ FPDMA QUEUED
-[784786.048016] ata4.00: cmd 60/40:70:00:ab:48/00:00:86:00:00/40 tag
-14 ncq 32768 in
-[784786.048017]          res c0/00:40:80:15:8d/00:00:86:00:00/40 Emask
-0x12 (ATA bus error)
-[784786.048067] ata4.00: status: { Busy }
-[784786.048085] ata4: hard resetting link
-[784786.365119] ata4: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[784786.380854] ata4.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
-[784786.380860] ata4.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY
-FREEZE LOCK) filtered out
-[784786.380864] ata4.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE
-CONFIGURATION OVERLAY) filtered out
-[784786.382279] ata4.00: ACPI cmd ef/10:06:00:00:00:00 (SET FEATURES) succeeded
-[784786.382283] ata4.00: ACPI cmd f5/00:00:00:00:00:00 (SECURITY
-FREEZE LOCK) filtered out
-[784786.382287] ata4.00: ACPI cmd b1/c1:00:00:00:00:00 (DEVICE
-CONFIGURATION OVERLAY) filtered out
-[784786.382747] ata4.00: configured for UDMA/133
-[784786.382761] ata4: EH complete
-
---Andy
