@@ -1,45 +1,65 @@
-From: Jan Engelhardt <jengelh@inai.de>
-Subject: Re: Which disk is ata4?
-Date: Thu, 30 Aug 2012 19:13:15 +0200 (CEST)
-Message-ID: <alpine.LNX.2.01.1208301912560.27195@frira.zrqbmnf.qr>
-References: <CALCETrW-LFzcHYgx=thQiuTfU8RdRBrtXwE7QboWpNrjz4An4A@mail.gmail.com> <alpine.LNX.2.01.1208301809370.25988@frira.zrqbmnf.qr> <CALCETrVBTWvvJvziAoDzdUyC10jSKHmx38qyNXxJKVVpaB+7Pg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from seven.inai.de ([5.9.24.206]:48277 "EHLO seven.medozas.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753840Ab2H3RNR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 30 Aug 2012 13:13:17 -0400
-In-Reply-To: <CALCETrVBTWvvJvziAoDzdUyC10jSKHmx38qyNXxJKVVpaB+7Pg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v5 0/7] ZPODD patches
+Date: Fri, 31 Aug 2012 17:42:28 +0800
+Message-ID: <1346406155-4768-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Bjoern Franke <bjo@nord-west.org>, Borislav Petkov <bp@alien8.de>, Tim Nufire <linux_ide_tim@ibink.com>
 
-On Thursday 2012-08-30 18:57, Andy Lutomirski wrote:
+v5:
+Add may_power_off flag to scsi device.
+Alan Stern suggested that I should not mess runtime suspend with
+runtime power off, but the current zpodd implementation made it not
+easy to seperate. So I re-wrote the zpodd implementation, the end
+result is, normal ODD can also enter runtime suspended state, but
+their power won't be removed.
 
->On Thu, Aug 30, 2012 at 9:14 AM, Jan Engelhardt <jengelh@inai.de> wrote:
->> On Thursday 2012-08-30 06:38, Andy Lutomirski wrote:
->>
->>>One of my disks went out to lunch for a while.  Logs below.
->>>
->>>[784786.047673] ata4.00: exception Emask 0x10 SAct 0x7800 SErr 0x0
->>>action 0x6 frozen
->>>
->>>Which one is it?  The only useful thing in /sys/class/ata_port/ata4 is
->>>the device symlink, which points at
->>>/sys/devices/pci0000:00/0000:00:1f.2/ata4.
->>
->> For example, ata2 here:
->>
->> $ cd /sys/devices
->> $ find . -name ata2
->> ./pci0000:00/0000:00:1f.2/ata2
->> ./pci0000:00/0000:00:1f.2/ata2/ata_port/ata2
->> $ cd ./pci0000:00/0000:00:1f.2/ata2
->> $ ls -dl host*/targ*
->> drwxr-xr-x 4 root root 0 Aug 30 18:09 host1/target1:0:0
->
->Aha!  This works on 3.5 but not on 3.2.
+v4:
+Rebase on top of Linus' tree, due to this, the problem of a missing
+flag in v3 is gone;
+Add a new function scsi_autopm_put_device_autosuspend to first mark
+last busy for the device and then put autosuspend it as suggested by
+Oliver Neukum.
+Typo fix as pointed by Sergei Shtylyov.
+Check can_power_off flag before any runtime pm operations in sr.
 
-3.4.x here..
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
+
+
+Aaron Lu (7):
+  scsi: sr: support runtime pm for ODD
+  block: genhd: export disk_(un)block_events
+  scsi: sr: block events checking when suspended for zpodd
+  libata: acpi: set can_power_off for both ODD and HD
+  scsi: pm: add may_power_off flag
+  scsi: sr: use may_power_off
+  libata: acpi: respect may_power_off flag
+
+ block/genhd.c              |  2 ++
+ drivers/ata/libata-acpi.c  | 35 +++++++++++++------
+ drivers/scsi/scsi_sysfs.c  | 10 +++---
+ drivers/scsi/sr.c          | 85 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sr.h          |  1 +
+ include/scsi/scsi_device.h |  2 ++
+ 6 files changed, 120 insertions(+), 15 deletions(-)
+
+-- 
+1.7.11.5
+
