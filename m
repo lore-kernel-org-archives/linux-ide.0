@@ -1,45 +1,126 @@
-From: Franck Jullien <franck.jullien@gmail.com>
-Subject: Problem with Marvell 6121
-Date: Mon, 3 Sep 2012 14:55:04 +0200
-Message-ID: <CAJfOKBx2jYpcZ7iQnU_wV6dayOxa=yqBnvH9T4cvbt5ABHJupw@mail.gmail.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+Date: Mon, 3 Sep 2012 11:53:39 -0700
+Message-ID: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
+References: <cover.1346653435.git.agordeev@redhat.com>
+	<034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:50660 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756177Ab2ICMzF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2012 08:55:05 -0400
-Received: by qcro28 with SMTP id o28so3324932qcr.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Sep 2012 05:55:04 -0700 (PDT)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54256 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754370Ab2ICSxk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Sep 2012 14:53:40 -0400
+In-Reply-To: <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> The MSI specification has several constraints in comparison with MSI-X,
+> most notable of them is the inability to configure MSIs independently.
+> As a result, it is impossible to dispatch interrupts from different
+> queues to different CPUs. This is largely devalues the support of
+> multiple MSIs in SMP systems.
+>
+> Also, a necessity to allocate a contiguous block of vector numbers for
+> devices capable of multiple MSIs might cause a considerable pressure on
+> x86 interrupt vector allocator and could lead to fragmentation of the
+> interrupt vectors space.
+>
+> This patch overcomes both drawbacks in presense of IRQ remapping and
+> lets devices take advantage of multiple queues and per-IRQ affinity
+> assignments.
+>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/x86/kernel/apic/io_apic.c |  166 +++++++++++++++++++++++++++++++++++++--
+>  include/linux/irq.h            |    6 ++
+>  kernel/irq/chip.c              |   30 +++++--
+>  kernel/irq/irqdesc.c           |   31 ++++++++
+>  4 files changed, 216 insertions(+), 17 deletions(-)
+>
+> diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
+> index c265593..5fd2577 100644
+> --- a/arch/x86/kernel/apic/io_apic.c
+> +++ b/arch/x86/kernel/apic/io_apic.c
+> @@ -305,6 +305,11 @@ static int alloc_irq_from(unsigned int from, int node)
+>         return irq_alloc_desc_from(from, node);
+>  }
+>
+> +static int alloc_irqs_from(unsigned int from, unsigned int count, int node)
+> +{
+> +       return irq_alloc_descs_from(from, count, node);
+> +}
+> +
+>  static void free_irq_at(unsigned int at, struct irq_cfg *cfg)
+>  {
+>         free_irq_cfg(at, cfg);
+> @@ -3039,6 +3044,55 @@ int create_irq(void)
+>         return irq;
+>  }
+>
+> +unsigned int create_irqs(unsigned int from, unsigned int count, int node)
+> +{
+> +       struct irq_cfg **cfg;
+> +       unsigned long flags;
+> +       int irq, i;
+> +
+> +       if (from < nr_irqs_gsi)
+> +               from = nr_irqs_gsi;
+> +
+> +       cfg = kzalloc_node(count * sizeof(cfg[0]), GFP_KERNEL, node);
+> +       if (!cfg)
+> +               return 0;
+> +
+> +       irq = alloc_irqs_from(from, count, node);
+> +       if (irq < 0)
+> +               goto out_cfgs;
+> +
+> +       for (i = 0; i < count; i++) {
+> +               cfg[i] = alloc_irq_cfg(irq + i, node);
+> +               if (!cfg[i])
+> +                       goto out_irqs;
+> +       }
+> +
+> +       raw_spin_lock_irqsave(&vector_lock, flags);
+> +       for (i = 0; i < count; i++)
+> +               if (__assign_irq_vector(irq + i, cfg[i], apic->target_cpus()))
+> +                       goto out_vecs;
+> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
+> +
+> +       for (i = 0; i < count; i++) {
+> +               irq_set_chip_data(irq + i, cfg[i]);
+> +               irq_clear_status_flags(irq + i, IRQ_NOREQUEST);
+> +       }
+> +
+> +       kfree(cfg);
+> +       return irq;
+> +
+> +out_vecs:
+> +       for (; i; i--)
+> +               __clear_irq_vector(irq + i - 1, cfg[i - 1]);
+> +       raw_spin_unlock_irqrestore(&vector_lock, flags);
+> +out_irqs:
+> +       for (i = 0; i < count; i++)
+> +               free_irq_at(irq + i, cfg[i]);
+> +out_cfgs:
+> +       kfree(cfg);
+> +       return 0;
+> +}
+> +
 
-I'm using a Marvell 6121 SATA controller on a custom board and this is
-what I get at Linux (2.6.26) startup:
+You may update create_irq_nr to be __create_irq_nr, and it could take
+extra count.
 
-ahci 0000:06:00.0: controller can't do NCQ, turning off CAP_NCQ
-ahci 0000:06:00.0: MV_AHCI HACK: port_map 7 -> 3
-ahci 0000:06:00.0: AHCI 0001.0000 32 slots 3 ports 3 Gbps 0x3 impl IDE mode
-ahci 0000:06:00.0: flags: 64bit stag led pmp slum part
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-ata1: SATA max UDMA/133 abar m1024@0xbf7ffc00 port 0xbf7ffd00 irq 67
-ata2: SATA max UDMA/133 abar m1024@0xbf7ffc00 port 0xbf7ffd80 irq 67
-ata3: DUMMY
-ata1: SATA link down (SStatus 101 SControl 300)
-ata2: SATA link down (SStatus 0 SControl 300)
+and later have create_irq_nr to be __create_irq_nr(,1,)
+and create_irqs to be __create_irq_nr(,count,)
+....
 
-The ata1 status says the "Interface is active state" and "Device
-present detected but Phy communication is not etablished". What does
-it mean ?
+BTW, in short, how much performance benefits for adding 500 lines code?
 
-The SATA controller is connected to a CFAST card.
+Thanks
 
-I don't know why the link is not up. Do you have any idea ?
-
-BR,
-Franck.
+Yinghai
