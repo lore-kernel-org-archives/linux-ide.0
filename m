@@ -1,71 +1,239 @@
 From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: [PATCH v6 0/7] ZPODD patches
-Date: Tue,  4 Sep 2012 22:24:33 +0800
-Message-ID: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Subject: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Tue,  4 Sep 2012 22:24:34 +0800
+Message-ID: <1346768680-7287-2-git-send-email-aaron.lwe@gmail.com>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:44458 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757188Ab2IDOZW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2012 10:25:22 -0400
+In-Reply-To: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>, Aaron Lu <aaron.lwe@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-v6:
-When user changes may_power_off flag through sysfs entry and if device
-is already runtime suspended, resume resume it so that it can respect
-this flag next time it is runtime suspended as suggested by Alan Stern.
-Call scsi_autopm_get/put_device once in sr_check_events as suggested by
-Alan Stern.
+From: Aaron Lu <aaron.lu@intel.com>
 
-v5:
-Add may_power_off flag to scsi device.
-Alan Stern suggested that I should not mess runtime suspend with
-runtime power off, but the current zpodd implementation made it not
-easy to seperate. So I re-wrote the zpodd implementation, the end
-result is, normal ODD can also enter runtime suspended state, but
-their power won't be removed.
+The ODD will be placed into suspend state when:
+1 For tray type ODD, no media inside and door closed;
+2 For slot type ODD, no media inside;
+And together with ACPI, when we suspend the ODD's parent(the port it
+attached to), we will omit the power altogether to reduce power
+consumption(done in libata-acpi.c).
 
-v4:
-Rebase on top of Linus' tree, due to this, the problem of a missing
-flag in v3 is gone;
-Add a new function scsi_autopm_put_device_autosuspend to first mark
-last busy for the device and then put autosuspend it as suggested by
-Oliver Neukum.
-Typo fix as pointed by Sergei Shtylyov.
-Check can_power_off flag before any runtime pm operations in sr.
+The ODD can be resumed either by user or by software.
 
-v3:
-Rebase on top of scsi-misc tree;
-Add the sr related patches previously in Jeff's libata tree;
-Re-organize the sr patches.
-A problem for now: for patch
-scsi: sr: support zero power ODD(ZPODD)
-I can't set a flag in libata-acpi.c since a related function is
-missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+For user to resume the suspended ODD:
+1 For tray type ODD, press the eject button;
+2 For slot type ODD, insert a disc;
+Once such events happened, an ACPI notification will be sent and in our
+handler, we will resume the ODD(again in libata-acpi.c).
+This kind of resume requires platform and device support and is
+reflected by the can_power_off flag.
 
-v2:
-Bug fix for v1;
-Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+For software to resume the suspended ODD, we did this in ODD's
+open/release and check_event function.
 
-v1:
-Here are some patches to make ZPODD easier to use for end users and
-a fix for using ZPODD with system suspend.
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/ata/libata-acpi.c  |  6 ++--
+ drivers/scsi/sr.c          | 76 ++++++++++++++++++++++++++++++++++++++++++++--
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 79 insertions(+), 4 deletions(-)
 
-Aaron Lu (7):
-  scsi: sr: support runtime pm for ODD
-  block: genhd: export disk_(un)block_events
-  scsi: sr: block events checking when suspended for zpodd
-  libata: acpi: set can_power_off for both ODD and HD
-  scsi: pm: add may_power_off flag
-  scsi: sr: use may_power_off
-  libata: acpi: respect may_power_off flag
-
- block/genhd.c              |  2 ++
- drivers/ata/libata-acpi.c  | 35 ++++++++++++------
- drivers/scsi/scsi_sysfs.c  | 37 ++++++++++++++++++-
- drivers/scsi/sr.c          | 89 ++++++++++++++++++++++++++++++++++++++++++++--
- drivers/scsi/sr.h          |  1 +
- include/scsi/scsi_device.h |  2 ++
- 6 files changed, 152 insertions(+), 14 deletions(-)
-
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 902b5a4..64ba43d 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+ 	struct ata_device *ata_dev = context;
+ 
+ 	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
+-			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
+-		scsi_autopm_get_device(ata_dev->sdev);
++			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
++		ata_dev->sdev->wakeup_by_user = 1;
++		pm_runtime_resume(&ata_dev->sdev->sdev_gendev);
++	}
+ }
+ 
+ static void ata_acpi_add_pm_notifier(struct ata_device *dev)
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 5fc97d2..637f4ca 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -45,6 +45,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi.h>
+@@ -79,6 +80,8 @@ static DEFINE_MUTEX(sr_mutex);
+ static int sr_probe(struct device *);
+ static int sr_remove(struct device *);
+ static int sr_done(struct scsi_cmnd *);
++static int sr_suspend(struct device *, pm_message_t msg);
++static int sr_resume(struct device *);
+ 
+ static struct scsi_driver sr_template = {
+ 	.owner			= THIS_MODULE,
+@@ -86,6 +89,8 @@ static struct scsi_driver sr_template = {
+ 		.name   	= "sr",
+ 		.probe		= sr_probe,
+ 		.remove		= sr_remove,
++		.suspend	= sr_suspend,
++		.resume		= sr_resume,
+ 	},
+ 	.done			= sr_done,
+ };
+@@ -146,8 +151,12 @@ static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
+ 	kref_get(&cd->kref);
+ 	if (scsi_device_get(cd->device))
+ 		goto out_put;
++	if (scsi_autopm_get_device(cd->device))
++		goto out_pm;
+ 	goto out;
+ 
++ out_pm:
++	scsi_device_put(cd->device);
+  out_put:
+ 	kref_put(&cd->kref, sr_kref_release);
+ 	cd = NULL;
+@@ -163,9 +172,61 @@ static void scsi_cd_put(struct scsi_cd *cd)
+ 	mutex_lock(&sr_ref_mutex);
+ 	kref_put(&cd->kref, sr_kref_release);
+ 	scsi_device_put(sdev);
++	scsi_autopm_put_device(sdev);
+ 	mutex_unlock(&sr_ref_mutex);
+ }
+ 
++static int sr_suspend(struct device *dev, pm_message_t msg)
++{
++	int suspend;
++	struct scsi_sense_hdr sshdr;
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	/* no action for system pm */
++	if (!PMSG_IS_AUTO(msg))
++		return 0;
++
++	/*
++	 * ODD can be runtime suspended when:
++	 * tray type: no media inside and tray closed
++	 * slot type: no media inside
++	 */
++	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
++
++	if (cd->cdi.mask & CDC_CLOSE_TRAY)
++		/* no media for caddy/slot type ODD */
++		suspend = scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a;
++	else
++		/* no media and door closed for tray type ODD */
++		suspend = scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a &&
++			sshdr.ascq == 0x01;
++
++	if (!suspend)
++		return -EBUSY;
++
++	return 0;
++}
++
++static int sr_resume(struct device *dev)
++{
++	struct scsi_cd *cd;
++	struct scsi_sense_hdr sshdr;
++
++	cd = dev_get_drvdata(dev);
++
++	/* get the disk ready */
++	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
++
++	/* if user wakes up the ODD, eject the tray */
++	if (cd->device->wakeup_by_user) {
++		cd->device->wakeup_by_user = 0;
++		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
++			sr_tray_move(&cd->cdi, 1);
++	}
++
++	return 0;
++}
++
+ static unsigned int sr_get_events(struct scsi_device *sdev)
+ {
+ 	u8 buf[8];
+@@ -220,6 +281,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
++	scsi_autopm_get_device(cd->device);
++
+ 	events = sr_get_events(cd->device);
+ 	cd->get_event_changed |= events & DISK_EVENT_MEDIA_CHANGE;
+ 
+@@ -246,7 +309,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	}
+ 
+ 	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
+-		return events;
++		goto out;
+ do_tur:
+ 	/* let's see whether the media is there with TUR */
+ 	last_present = cd->media_present;
+@@ -270,7 +333,7 @@ do_tur:
+ 	}
+ 
+ 	if (cd->ignore_get_event)
+-		return events;
++		goto out;
+ 
+ 	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
+ 	if (!cd->tur_changed) {
+@@ -287,6 +350,8 @@ do_tur:
+ 	cd->tur_changed = false;
+ 	cd->get_event_changed = false;
+ 
++out:
++	scsi_autopm_put_device(cd->device);
+ 	return events;
+ }
+ 
+@@ -718,6 +783,10 @@ static int sr_probe(struct device *dev)
+ 
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
++
++	/* enable runtime pm */
++	scsi_autopm_put_device(cd->device);
++
+ 	return 0;
+ 
+ fail_put:
+@@ -965,6 +1034,9 @@ static int sr_remove(struct device *dev)
+ {
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
+ 
++	/* disable runtime pm */
++	scsi_autopm_get_device(cd->device);
++
+ 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
+ 	del_gendisk(cd->disk);
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 9895f69..72d946f 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -156,6 +156,7 @@ struct scsi_device {
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned can_power_off:1; /* Device supports runtime power off */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
++	unsigned wakeup_by_user:1;	/* User wakes up the device */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
 -- 
 1.7.11.3
 
