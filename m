@@ -1,38 +1,71 @@
-From: "Jenkins, Clive" <Clive.Jenkins@xerox.com>
-Subject: RE: [PATCH] sata_fsl: add workaround for data length mismatch on
- freescale V2 controller
-Date: Tue, 4 Sep 2012 13:00:28 +0100
-Message-ID: <929D3CED81F34E43887A393170D66FB906C13480@GBRSUN01MS002.eu.xerox.net>
-References: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Class: urn:content-classes:message
-In-Reply-To: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Shaohui Xie <Shaohui.Xie@freescale.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Anju Bhartiya <Anju.Bhartiya@freescale.com>
+From: Aaron Lu <aaron.lwe@gmail.com>
+Subject: [PATCH v6 0/7] ZPODD patches
+Date: Tue,  4 Sep 2012 22:24:33 +0800
+Message-ID: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-> The freescale V2 SATA controller checks
-> if the received data length matches
-> the programmed length 'ttl', if not,
-> it assumes that this is an error.
-...
+v6:
+When user changes may_power_off flag through sysfs entry and if device
+is already runtime suspended, resume resume it so that it can respect
+this flag next time it is runtime suspended as suggested by Alan Stern.
+Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+Alan Stern.
 
-Can you tell us exactly what
-"The freescale V2 SATA controller" is,
-and what versions of what devices contain it?
+v5:
+Add may_power_off flag to scsi device.
+Alan Stern suggested that I should not mess runtime suspend with
+runtime power off, but the current zpodd implementation made it not
+easy to seperate. So I re-wrote the zpodd implementation, the end
+result is, normal ODD can also enter runtime suspended state, but
+their power won't be removed.
 
-Thanks,
-Clive
+v4:
+Rebase on top of Linus' tree, due to this, the problem of a missing
+flag in v3 is gone;
+Add a new function scsi_autopm_put_device_autosuspend to first mark
+last busy for the device and then put autosuspend it as suggested by
+Oliver Neukum.
+Typo fix as pointed by Sergei Shtylyov.
+Check can_power_off flag before any runtime pm operations in sr.
+
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
+
+Aaron Lu (7):
+  scsi: sr: support runtime pm for ODD
+  block: genhd: export disk_(un)block_events
+  scsi: sr: block events checking when suspended for zpodd
+  libata: acpi: set can_power_off for both ODD and HD
+  scsi: pm: add may_power_off flag
+  scsi: sr: use may_power_off
+  libata: acpi: respect may_power_off flag
+
+ block/genhd.c              |  2 ++
+ drivers/ata/libata-acpi.c  | 35 ++++++++++++------
+ drivers/scsi/scsi_sysfs.c  | 37 ++++++++++++++++++-
+ drivers/scsi/sr.c          | 89 ++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/sr.h          |  1 +
+ include/scsi/scsi_device.h |  2 ++
+ 6 files changed, 152 insertions(+), 14 deletions(-)
+
+-- 
+1.7.11.3
+
