@@ -1,47 +1,46 @@
-From: "David Laight" <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH] sata_fsl: add workaround for data length mismatch on freescale V2 controller
-Date: Tue, 4 Sep 2012 15:51:26 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6FD6@saturn3.aculab.com>
-References: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] ahci: Add identifiers for ASM106x devices
+Date: Tue, 04 Sep 2012 16:25:25 +0100
+Message-ID: <20120904152516.14714.76823.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohui Xie <Shaohui.Xie@freescale.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Anju Bhartiya <Anju.Bhartiya@freescale.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43220 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757129Ab2IDPHq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2012 11:07:46 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@redhat.com
 
-> +	/* Read command completed register */
-> +	done_mask = ioread32(hcr_base + CC);
-> +
-> +	if (host_priv->quirks & SATA_FSL_QUIRK_V2_ERRATA) {
-> +		if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-> +			for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-> +				qc = ata_qc_from_tag(ap, tag);
-> +				if (qc && ata_is_atapi(qc->tf.protocol))
-{
-> +					atapi_flag = 1;
-> +					break;
-> +				}
-> +			}
-> +		}
-> +	}
-> +
-> +	/* Workaround for data length mismatch errata */
-> +	if (atapi_flag) {
+From: Alan Cox <alan@linux.intel.com>
 
-Seems to me like the conditionals for this code are all
-in the wrong order - adding code to the normal path.
+They don't always appear as AHCI class devices but instead as IDE class.
 
-The whole lot should probably be inside:
-	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-and the 'atapi_flag' boolean removed.
+Based on an initial patch by Hiroaki Nito
 
-I also wonder it this is worthy of an actual quirk?
-Might be worth doing anyway.
+Resolves-bug: https://bugzilla.kernel.org/show_bug.cgi?id=42804
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+---
 
-	David
+ drivers/ata/ahci.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8ec1bc8..dfe4fa7 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -402,7 +402,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+ 
+ 	/* Asmedia */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
+ 
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+
