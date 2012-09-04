@@ -1,41 +1,47 @@
-From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: [PATCH v6 7/7] libata: acpi: respect may_power_off flag
-Date: Tue,  4 Sep 2012 22:24:40 +0800
-Message-ID: <1346768680-7287-8-git-send-email-aaron.lwe@gmail.com>
-References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>, Aaron Lu <aaron.lwe@gmail.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Tue, 4 Sep 2012 15:51:26 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6FD6@saturn3.aculab.com>
+References: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaohui Xie <Shaohui.Xie@freescale.com>, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 List-Id: linux-ide@vger.kernel.org
 
-From: Aaron Lu <aaron.lu@intel.com>
+> +	/* Read command completed register */
+> +	done_mask = ioread32(hcr_base + CC);
+> +
+> +	if (host_priv->quirks & SATA_FSL_QUIRK_V2_ERRATA) {
+> +		if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+> +			for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+> +				qc = ata_qc_from_tag(ap, tag);
+> +				if (qc && ata_is_atapi(qc->tf.protocol))
+{
+> +					atapi_flag = 1;
+> +					break;
+> +				}
+> +			}
+> +		}
+> +	}
+> +
+> +	/* Workaround for data length mismatch errata */
+> +	if (atapi_flag) {
 
-If user does not want the device being powered off when runtime
-suspended by setting may_power_off flag to 0, we will not choose D3 cold
-ACPI D-State for it.
+Seems to me like the conditionals for this code are all
+in the wrong order - adding code to the normal path.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-acpi.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+The whole lot should probably be inside:
+	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+and the 'atapi_flag' boolean removed.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 6c8f89c..774180d 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -869,7 +869,9 @@ void ata_acpi_set_state(struct ata_port *ap, pm_message_t state)
- 
- 		if (state.event != PM_EVENT_ON) {
- 			acpi_state = acpi_pm_device_sleep_state(
--				&dev->sdev->sdev_gendev, NULL, ACPI_STATE_D3);
-+				&dev->sdev->sdev_gendev, NULL,
-+				dev->sdev->may_power_off ?
-+				ACPI_STATE_D3_COLD : ACPI_STATE_D3_HOT);
- 			if (acpi_state > 0)
- 				acpi_bus_set_power(handle, acpi_state);
- 			/* TBD: need to check if it's runtime pm request */
--- 
-1.7.11.3
+I also wonder it this is worthy of an actual quirk?
+Might be worth doing anyway.
 
+	David
