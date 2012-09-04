@@ -1,51 +1,133 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 -tip 1/5] x86, MSI: Support multiple MSIs in presense
- of IRQ remapping
-Date: Tue, 4 Sep 2012 11:32:31 +0200
-Message-ID: <20120904093230.GA17873@dhcp-26-207.brq.redhat.com>
-References: <cover.1346653435.git.agordeev@redhat.com>
- <034a9cbb168501954408f1004a28c827f3a4158b.1346653435.git.agordeev@redhat.com>
- <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
+From: Shaohui Xie <Shaohui.Xie@freescale.com>
+Subject: [PATCH] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Tue, 4 Sep 2012 19:08:40 +0800
+Message-ID: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAE9FiQUuAPy884Ytu5PrFkcoQ5tT_DPxyYDk1D1jKbo+G577Mw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from db3ehsobe004.messaging.microsoft.com ([213.199.154.142]:13968
+	"EHLO db3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752375Ab2IDLll (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Sep 2012 07:41:41 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
-On Mon, Sep 03, 2012 at 11:53:39AM -0700, Yinghai Lu wrote:
-> On Mon, Sep 3, 2012 at 2:17 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> You may update create_irq_nr to be __create_irq_nr, and it could take
-> extra count.
-> 
-> and later have create_irq_nr to be __create_irq_nr(,1,)
-> and create_irqs to be __create_irq_nr(,count,)
-> ....
+The freescale V2 SATA controller checks if the received data length matches
+the programmed length 'ttl', if not, it assumes that this is an error.
+In ATAPI, the 'ttl' is based on max allocation length and not the actual
+data transfer length, controller will raise 'DLM' (Data length Mismatch)
+error bit in Hstatus register. Along with 'DLM', DE (Device error) and
+FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
+bit is set in Serror register and CE (Command Error) and DE (Device error)
+registers have the corresponding bit set. In this condition, we need to
+clear errors in following way: in the service routine, based on 'DLM' flag,
+HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
+register.
 
-Indeed. Will do.
+Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
+Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
+---
+ drivers/ata/sata_fsl.c |   48 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 43 insertions(+), 5 deletions(-)
 
-> BTW, in short, how much performance benefits for adding 500 lines code?
-
-Unfortunatelly, I do not have a short answer here. There are three types
-of performance this series deals with - I'll try to summarize:
-
-- devices - 3 SATA HDDs generate roughly one interrupt every 273 us while
-  it get handled in less than 5 us. So there is/could be no increase here;
-
-- the hardware context interrupt handler - its performance dropped 2.5 times
-  (little bit more in fact) at the expense of increase of 1.3 times in
-  overall interrupt handling time (hardware context + threaded context);
-
-- overall system performance - I *assume* it should increase, because:
-  (a) AHCI interrupt handlers keep local interrupts disabled 2.5 times less
-  (b) separate AHCI IRQs become subjects of IRQ balancing
-  (c) threaded handlers are per-device, per-CPU (well, up to irqbalanced)
-      and executed with local interrupts enabled;
-
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index d6577b9..00a00cc 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -143,6 +143,7 @@ enum {
+ 	    FATAL_ERR_CRC_ERR_RX |
+ 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
+ 
++	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
+ 	INT_ON_FATAL_ERR = (1 << 5),
+ 	INT_ON_PHYRDY_CHG = (1 << 4),
+ 
+@@ -283,6 +284,8 @@ struct sata_fsl_host_priv {
+ 	int irq;
+ 	int data_snoop;
+ 	struct device_attribute intr_coalescing;
++	u32 quirks;
++#define SATA_FSL_QUIRK_V2_ERRATA        (1 << 1)
+ };
+ 
+ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+@@ -1180,26 +1183,58 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	u32 hstatus, done_mask = 0;
+ 	struct ata_queued_cmd *qc;
+-	u32 SError;
++	u32 SError, tag, atapi_flag = 0;
++	u32 status_mask = INT_ON_ERROR;
+ 
+ 	hstatus = ioread32(hcr_base + HSTATUS);
+ 
+ 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 
++	/* Read command completed register */
++	done_mask = ioread32(hcr_base + CC);
++
++	if (host_priv->quirks & SATA_FSL_QUIRK_V2_ERRATA) {
++		if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
++			for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++				qc = ata_qc_from_tag(ap, tag);
++				if (qc && ata_is_atapi(qc->tf.protocol)) {
++					atapi_flag = 1;
++					break;
++				}
++			}
++		}
++	}
++
++	/* Workaround for data length mismatch errata */
++	if (atapi_flag) {
++		u32 Hcontrol;
++#define HCONTROL_CLEAR_ERROR	(1 << 27)
++		/* Set HControl[27] to clear error registers */
++		Hcontrol = ioread32(hcr_base + HCONTROL);
++		iowrite32(Hcontrol | HCONTROL_CLEAR_ERROR, hcr_base + HCONTROL);
++
++		/* Clear HControl[27] */
++		iowrite32(Hcontrol & (~HCONTROL_CLEAR_ERROR),
++						hcr_base + HCONTROL);
++
++		/* Clear SError[E] bit */
++		sata_fsl_scr_write(&ap->link, SCR_ERROR, SError);
++
++		/* Ignore fatal error and device error */
++		status_mask &= ~(INT_ON_SINGL_DEVICE_ERR | INT_ON_FATAL_ERR);
++	}
++
+ 	if (unlikely(SError & 0xFFFF0000)) {
+ 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+ 		sata_fsl_error_intr(ap);
+ 	}
+ 
+-	if (unlikely(hstatus & INT_ON_ERROR)) {
++	if (unlikely(hstatus & status_mask)) {
+ 		DPRINTK("error interrupt!!\n");
+ 		sata_fsl_error_intr(ap);
+ 		return;
+ 	}
+ 
+-	/* Read command completed register */
+-	done_mask = ioread32(hcr_base + CC);
+-
+ 	VPRINTK("Status of all queues :\n");
+ 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
+ 		done_mask,
+@@ -1437,6 +1472,9 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+ 	else
+ 		host_priv->data_snoop = DATA_SNOOP_ENABLE_V1;
+ 
++	if (of_device_is_compatible(ofdev->dev.of_node, "fsl,pq-sata-v2"))
++		host_priv->quirks |= SATA_FSL_QUIRK_V2_ERRATA;
++
+ 	/* allocate host structure */
+ 	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_FSL_MAX_PORTS);
+ 	if (!host) {
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.6.4
+
+
