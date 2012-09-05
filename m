@@ -1,88 +1,63 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Tue, 04 Sep 2012 20:47:15 +0200
-Message-ID: <11638307.8MbrDPKO6y@linux-lqwf.site>
-References: <Pine.LNX.4.44L0.1209041350490.1605-100000@iolanthe.rowland.org>
+From: Xie Shaohui-B21989 <B21989@freescale.com>
+Subject: RE: [PATCH] sata_fsl: add workaround for data length mismatch on
+ freescale V2 controller
+Date: Wed, 5 Sep 2012 03:20:04 +0000
+Message-ID: <ED492CCEAF882048BC2237DE806547C9079C4915@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1346756920-19128-1-git-send-email-Shaohui.Xie@freescale.com>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B6FD6@saturn3.aculab.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209041350490.1605-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B6FD6@saturn3.aculab.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Laight <David.Laight@ACULAB.COM>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bhartiya Anju-B07263 <B07263@freescale.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tuesday 04 September 2012 13:59:38 Alan Stern wrote:
-> On Tue, 4 Sep 2012, Oliver Neukum wrote:
+> -----Original Message-----
+> From: David Laight [mailto:David.Laight@ACULAB.COM]
+> Sent: Tuesday, September 04, 2012 10:51 PM
+> To: Xie Shaohui-B21989; jgarzik@pobox.com; linux-ide@vger.kernel.org
+> Cc: linuxppc-dev@lists.ozlabs.org; linux-kernel@vger.kernel.org; Bhartiya
+> Anju-B07263
+> Subject: RE: [PATCH] sata_fsl: add workaround for data length mismatch on
+> freescale V2 controller
 > 
-> > On Tuesday 04 September 2012 22:24:34 Aaron Lu wrote:
-> > > From: Aaron Lu <aaron.lu@intel.com>
-> > > 
-> > > The ODD will be placed into suspend state when:
-> > > 1 For tray type ODD, no media inside and door closed;
-> > > 2 For slot type ODD, no media inside;
-> > > And together with ACPI, when we suspend the ODD's parent(the port it
-> > > attached to), we will omit the power altogether to reduce power
-> > > consumption(done in libata-acpi.c).
-> > 
-> > Well, this is quite a layering violation. You encode that specific requirement
-> > in the generic sr_suspend()
+> > +	/* Read command completed register */
+> > +	done_mask = ioread32(hcr_base + CC);
+> > +
+> > +	if (host_priv->quirks & SATA_FSL_QUIRK_V2_ERRATA) {
+> > +		if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+> > +			for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+> > +				qc = ata_qc_from_tag(ap, tag);
+> > +				if (qc && ata_is_atapi(qc->tf.protocol))
+> {
+> > +					atapi_flag = 1;
+> > +					break;
+> > +				}
+> > +			}
+> > +		}
+> > +	}
+> > +
+> > +	/* Workaround for data length mismatch errata */
+> > +	if (atapi_flag) {
 > 
-> What requirement are you talking about?  The "no media and door closed" 
-> thing?  How is that a layering violation?  Are you suggesting this
-
-There is no reason this requirement should apply to any other drive than the
-device this is aimed at. It comes from the ability of this specific combination
-to detect medium changes.
-
-> should go into the CD layer instead?
-
-No. It needs to be specific to a certain hardware. It needs to be a callback.
- 
-> > > @@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
-> > >  	struct ata_device *ata_dev = context;
-> > >  
-> > >  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
-> > > -			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
-> > > -		scsi_autopm_get_device(ata_dev->sdev);
-> > > +			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
-> > > +		ata_dev->sdev->wakeup_by_user = 1;
-> > 
-> > That flag is badly named. Something like "insert_event_during_suspend"
-> > would be better.
+> Seems to me like the conditionals for this code are all in the wrong
+> order - adding code to the normal path.
 > 
-> What happens on non-ACPI systems when a new disc is inserted into a
-> suspended ODD?  How does the drive let the computer know that an insert
-> event has occurred?
+> The whole lot should probably be inside:
+> 	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) { and the
+> 'atapi_flag' boolean removed.
+[S.H] OK. But I need to move the "done_mask = ioread32(hcr_base + CC);" before these codes,
+ because these codes will clean command completed register.
 
-Good question. Again either the kernel polls the drive or there a mechanism
-specific to the hardware.
- 
-> > > +	if (cd->cdi.mask & CDC_CLOSE_TRAY)
-> > > +		/* no media for caddy/slot type ODD */
-> > > +		suspend = scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a;
-> > > +	else
-> > > +		/* no media and door closed for tray type ODD */
-> > > +		suspend = scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a &&
-> > > +			sshdr.ascq == 0x01;
-> > 
-> > That requirement is valid for a specific type of disk. You cannot put it
-> > into generic sd_suspend().
 > 
-> You mean sr_suspend().  What's not generic about it?
+> I also wonder it this is worthy of an actual quirk?
+> Might be worth doing anyway.
+[S.H] The quirk is useful for our internal use(there is another errata but got fixed by silicon upgrade),
+but you are right it's worth doing anyway in upstream, since the upstream code only handles this errata.
 
-Yes. We may encounter drives which cannot register a medium change while
-suspended, but can be safely suspended while their door is locked.
-
-> >  And even so I don't see why you wouldn't
-> > want to suspend for example a drive with an inserted but unopened disk.
-> 
-> I assume that Aaron wanted to handle the easiest case first.  Adding 
-> suspend/resume handling to the open/close routines can be done later.
-
-Sure, but this patch blocks that in contrast to just not implementing it.
-
-	Regards
-		Oliver
-
+Best Regards, 
+Shaohui Xie
