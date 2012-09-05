@@ -1,49 +1,55 @@
-From: Paolo Minazzi <paolo.minazzi@gmail.com>
-Subject: problem on harddisk
-Date: Wed, 5 Sep 2012 09:48:04 +0200
-Message-ID: <CABmfJQYyYaZF0KQ4ZJt0Q8i95uZKvjsWR2ogwZfkrMstbpe-8g@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: problem on harddisk
+Date: Wed, 05 Sep 2012 16:09:29 +0400
+Message-ID: <504740F9.7000304@mvista.com>
+References: <CABmfJQYyYaZF0KQ4ZJt0Q8i95uZKvjsWR2ogwZfkrMstbpe-8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:57327 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395Ab2IEHsF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2012 03:48:05 -0400
-Received: by weyx8 with SMTP id x8so186364wey.19
-        for <linux-ide@vger.kernel.org>; Wed, 05 Sep 2012 00:48:04 -0700 (PDT)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:55343 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758729Ab2IEMKn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2012 08:10:43 -0400
+Received: by lbbgj3 with SMTP id gj3so304362lbb.19
+        for <linux-ide@vger.kernel.org>; Wed, 05 Sep 2012 05:10:36 -0700 (PDT)
+In-Reply-To: <CABmfJQYyYaZF0KQ4ZJt0Q8i95uZKvjsWR2ogwZfkrMstbpe-8g@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org
+To: Paolo Minazzi <paolo.minazzi@gmail.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Hi Jeff,
-I have a desktop PC with a SATA harddisk and a slackware 13.1 x86_64.
+Hello.
 
-In the last days I have seen a lot of problem on my console.
-Now I don't have the exact messages, but I saw
+On 05-09-2012 11:48, Paolo Minazzi wrote:
 
-ACC=0x11, ASCQ=0x05
-......
-....please be patiente
-reset ...
+> Hi Jeff,
+> I have a desktop PC with a SATA harddisk and a slackware 13.1 x86_64.
 
-I think it is not related to a bad hardware.
-I have tried an harddisk check program under DOS and it seems OK.
-On windows I don't have problems, or maybe there are no messages visible.
+> In the last days I have seen a lot of problem on my console.
+> Now I don't have the exact messages, but I saw
 
-I have tried the last kernel but I think I see more messages of errors.
-It seems better with older kernel, for exampel 2.6.21, the one with
-slackware 12.
+> ACC=0x11, ASCQ=0x05
 
-I have tried to enable only the old IDE subsystem, but my controller
-is not supported.
-I need the new SATA subsystem.
+    ASC=11h means "unrecovered read error", ASCQ further qualifies it as "L-EC 
+uncorrectable error" which shouldn't be returned by hard disks. Are you sure 
+you got this right?
 
-This is my controller:
-{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
+> ......
+> ....please be patiente
+> reset ...
 
-Can you give me an advice ?
-I can give you all details you want.
+> I think it is not related to a bad hardware.
 
-Thanks for your time
-Paolo Minazzi
+    Unfortunately, it seems your hard disk has bad sectors.
+
+> I have tried an harddisk check program under DOS and it seems OK.
+
+    Which DOS program you tried?
+
+> On windows I don't have problems, or maybe there are no messages visible.
+
+    Maybe there's no bad sectors on Windows partition...
+
+MBR, Sergei
+
