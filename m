@@ -1,65 +1,30 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Wed, 5 Sep 2012 12:08:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
-References: <20120905152251.GA2794@localhost.localdomain>
+From: "DR.NED OKOH" <infomail@ok.net>
+Subject: REPLY NEEDED
+Date: Wed, 05 Sep 2012 10:10:31 -0700
+Message-ID: <SERVERm0fwYdka0fIQT00004992__11385.0348898724$1346866026$gmane$org@offline.co.il>
+Reply-To: mail.info187@ok.net
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; CHARSET=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:33107 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752789Ab2IEQI0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2012 12:08:26 -0400
-In-Reply-To: <20120905152251.GA2794@localhost.localdomain>
+Received: from mxout11.netvision.net.il ([194.90.6.39]:42783 "EHLO
+	mxout11.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754083Ab2IER0Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Sep 2012 13:26:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lwe@gmail.com>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-On Wed, 5 Sep 2012, Aaron Lu wrote:
+Good day my dear,
+I am writing to acknowledged you that this is the second time we are notifying you about your payment worth of US$16.5m USD,with foreign Remittance payment department office which is due to be released into your Account As we begin the first fiscal payment of the year 2012.Please send the information below as needed for your fund release to you OK.
 
-> > > > That flag is badly named. Something like "insert_event_during_suspend"
-> > > > would be better.
-> 
-> This flag means, the reason the device gets runtime resumed is due to
-> user as described by the above situation 2, not by software(e.g. by
-> sr_check_events).
-> 
-> I don't quite understand insert_event_during_suspend mean here...
+1)Your Full Name__________________________ _____________
+2)Your Address_______________________ ______________________________
+3)Your Age___________________________ _______________________
+4)Your Direct Telephone Number________________________ ________________
+5)Fax Number________________________ _________________
+6)Occupation____________________ __________________________
 
-It means: An insert event occurred while the device was suspended.
+We sincerely apologies for our late contact with you, We are committed to serve you better OK and you have been advice to get back to me immediately for more details OK.
 
-> > > >  And even so I don't see why you wouldn't
-> > > > want to suspend for example a drive with an inserted but unopened disk.
-> > > 
-> > > I assume that Aaron wanted to handle the easiest case first.  Adding 
-> > > suspend/resume handling to the open/close routines can be done later.
-> > 
-> > Sure, but this patch blocks that in contrast to just not implementing it.
-> 
-> It's already implemented. I did it in scsi_cd_get/put.
-> 
-> And the reason I didn't allow runtime suspend for medium inside and door
-> closed case are:
-> 1 ZPODD has a spec and it didn't allow that;
-
-In theory we should allow runtime suspend in this case too, but leave 
-the power on.  (Although in practice, turning the power off would 
-probably work even though it may violate the spec.)
-
-> 2 It's not easy to implement. Imagine user just inserts a disc, and the
-> sr_suspend routine checks that door is closed so that it wants to
-> suspend the device. But actually, after user just inserts a disc, he
-> definitely wants to use the device, so it's not a good thing to do. And
-> if ZPODD is used, the device will be powered off instantly when the door
-> is closed, this is not good.
-
-That's why we have an autosuspend delay.  Although for some reason the 
-SCSI subsystem doesn't use it currently...  We need to add a call to 
-pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-pm_runtime_autosuspend().  And there should be calls to 
-pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
-
-Alan Stern
-
+Yours in service
+Dr.Ned Okoh
