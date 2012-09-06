@@ -1,41 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 6 Sep 2012 11:06:49 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1209061103530.1363-100000@iolanthe.rowland.org>
-References: <20120905224912.GA1443@localhost.localdomain>
+From: "MR.TAN WONG" <subaru04@m6.gyao.ne.jp>
+Subject: (unknown)
+Date: Thu, 06 Sep 2012 21:23:36 +0900
+Message-ID: <20120906122336.00006812.0125__12671.9648404562$1346944903$gmane$org@m6.gyao.ne.jp>
+Reply-To: <tan.wong222@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55333 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756295Ab2IFPGu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 11:06:50 -0400
-In-Reply-To: <20120905224912.GA1443@localhost.localdomain>
+Received: from ms-fb03.so-net.ne.jp ([202.238.84.143]:30779 "EHLO
+	ms-fb03.so-net.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895Ab2IFPUn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 11:20:43 -0400
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lwe@gmail.com>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+To: info.rowanc@yahoo.com.ph
 
-On Thu, 6 Sep 2012, Aaron Lu wrote:
-
-> > That's why we have an autosuspend delay.  Although for some reason the 
-> > SCSI subsystem doesn't use it currently...  We need to add a call to 
-> > pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-> > pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-> > pm_runtime_autosuspend().  And there should be calls to 
-> > pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
-> 
-> I tried to use autosuspend when preparing the patch, but the fact that
-> the devices will be polled every 2 seconds make it impossible to enter
-> suspend state if the autosuspend delay is larger than that.
-
-You can always increase the polling interval.
-
-But in the long run that wouldn't be a good solution.  What I'd really 
-like is a way to do the status polling without having it reset the 
-idle timer.
-
-Oliver, what do you think?  Would that be a good solution?
-
-Alan Stern
+DQpGUk9NOk1SLlRBTiBXT05HDQoNCih0YW4ud29uZzIyMkB5YWhvby5jb20uaGspTGV0IG1lIHN0
+YXJ0IGJ5IGludHJvZHVjaW5nIG15c2VsZi4gSSBhbSBNci4gVGFuIFdvbmcgZGlyZWN0b3Igb2Yg
+b3BlcmF0aW9ucyBvZiB0aGUgSGFuZyBTZW5nIEJhbmsgTHRkLiBJIGhhdmUgYW4gb2JzY3VyZWQg
+YnVzaW5lc3Mgc3VnZ2VzdGlvbiBmb3IgeW91LiBUaGF0IHdpbGwgYmUgYSBncmVhdCBiZW5lZml0
+IGZvciB5b3UgYW5kIG1lLiBJdCBpbnZvbHZlIHRoZSB0cmFuc2ZlciBvZiBUd2VudHkgRm91ciBt
+aWxsaW9ucyBGaXZlIEh1bmRyZWQgVGhvdXNhbmQgVW5pdGVkIFN0YXRlIERvbGxhcigkMjQsNTAw
+LDAwMCwwMCkgZGVwb3NpdCBpbiBteSBiYW5rIFNvLCBUd2VudHkgRm91ciBtaWxsaW9ucyBGaXZl
+IEh1bmRyZWQgVGhvdXNhbmQgVW5pdGVkIFN0YXRlIERvbGxhcigkMjQsNTAwLDAwMCwwMCkgaXMg
+c3RpbGwgbHlpbmcgaW4gbXkgYmFuayBhbmQgbm8gb25lIHdpbGwgZXZlciBjb21lIGZvcndhcmQg
+dG8gY2xhaW0gaXQuIFdoYXQgYm90aGVycyBtZSBtb3N0IGlzIHRoYXQgYWNjb3JkaW5nIHRvIHRo
+ZSBsYXdzIG9mIG15IGNvdW50cnkgYXQgdGhlIGV4cGlyYXRpb24gOHllYXJzIHRoZSBmdW5kcyB3
+aWxsIHJldmVydCB0byB0aGUgb3duZXJzaGlwIG9mIHRoZSBIb25nIEtvbmcgR292ZXJubWVudCBp
+ZiBub2JvZHkgYXBwbGllcyB0byBjbGFpbSB0aGUgZnVuZHMuIEFnYWluc3QgdGhpcyBiYWNrZHJv
+cCwgbXkgc3VnZ2VzdGlvbiB0byB5b3UgaXMgdGhhdCBJIHdpbGwgbGlrZSB5b3UgYXMgYSBmb3Jl
+aWduZXIgdG8gc3RhbmQgYXMgdGhlIG5leHQgb2Yga2luIHRvIE1ham9yIEZhZGkgQmFzZW0gc28g
+dGhhdCB5b3Ugd2lsbCBiZSBhYmxlIHRvIHJlY2VpdmUgaGlzIGZ1bmRzLlRyYW5zZmVyLiBTaG91
+bGQgeW91IGJlIGludGVyZXN0ZWQgcGxlYXNlIHNlbmQgbWUgeW91ciBmdWxsIG5hbWVzIGFuZCBj
+dXJyZW50IHJlc2lkZW50aWFsIGFkZHJlc3MgYW5kIEkgd2lsbCBwcmVmZXIgeW91IHRvIHJlYWNo
+IG1lIG9uIHRoaXMgZW1haWwgYWRkcmVzcyAodGFuLndvbmcyMjJAeWFob28uY29tLmhrKSB3aGlj
+aCBpcyBteSBwcml2YXRlIGVtYWlsIGFkZHJlc3MgYW5kIGZpbmFsbHkgYWZ0ZXIgdGhhdCBJIHNo
+YWxsIHByb3ZpZGUgeW91IHdpdGggbW9yZSBkZXRhaWxzIG9mIHRoaXMgb3BlcmF0aW9uLllvdXIg
+ZWFybGllc3QgcmVzcG9uc2UgdG8gdGhpcyBsZXR0ZXIgd2lsbCBiZSBhcHByZWNpYXRlZC4gS2lu
+ZCBSZWdhcmRzLCBNci5UYW4gV29uZy4NCg==
 
