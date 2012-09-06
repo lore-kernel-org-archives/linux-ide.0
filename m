@@ -1,62 +1,41 @@
-From: Xie Shaohui-B21989 <B21989@freescale.com>
-Subject: RE: [PATCH] [v2] sata_fsl: add workaround for data length mismatch
- on freescale V2 controller
-Date: Thu, 6 Sep 2012 11:57:37 +0000
-Message-ID: <ED492CCEAF882048BC2237DE806547C9079D3C6C@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1346905686-27912-1-git-send-email-Shaohui.Xie@freescale.com>
- <504888F8.5060907@mvista.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Thu, 6 Sep 2012 11:06:49 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209061103530.1363-100000@iolanthe.rowland.org>
+References: <20120905224912.GA1443@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe010.messaging.microsoft.com ([216.32.180.30]:35003
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751208Ab2IFL5m convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 6 Sep 2012 07:57:42 -0400
-In-Reply-To: <504888F8.5060907@mvista.com>
-Content-Language: en-US
+Received: from iolanthe.rowland.org ([192.131.102.54]:55333 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756295Ab2IFPGu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 11:06:50 -0400
+In-Reply-To: <20120905224912.GA1443@localhost.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>, Bhartiya Anju-B07263 <B07263@freescale.com>
+To: Aaron Lu <aaron.lwe@gmail.com>
+Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 
-> >
-> >   	hstatus = ioread32(hcr_base + HSTATUS);
-> >
-> >   	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
-> >
-> > +	/* Read command completed register */
-> > +	done_mask = ioread32(hcr_base + CC);
-> > +
-> > +	/* Workaround for data length mismatch errata */
-> > +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-> > +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-> > +			qc = ata_qc_from_tag(ap, tag);
-> > +			if (qc && ata_is_atapi(qc->tf.protocol)) {
-> > +				u32 Hcontrol;
+On Thu, 6 Sep 2012, Aaron Lu wrote:
+
+> > That's why we have an autosuspend delay.  Although for some reason the 
+> > SCSI subsystem doesn't use it currently...  We need to add a call to 
+> > pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
+> > pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
+> > pm_runtime_autosuspend().  And there should be calls to 
+> > pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
 > 
->     No uppercase in variable names please. 
-[S.H] OK.
+> I tried to use autosuspend when preparing the patch, but the fact that
+> the devices will be polled every 2 seconds make it impossible to enter
+> suspend state if the autosuspend delay is larger than that.
 
-Besides, you have 'hstatus'
-> variable already and that would be inconsistent.
-[S.H] Yes, but I ignored fatal error and device error, so this won't be an issue.
+You can always increase the polling interval.
 
-> 
-> > +#define HCONTROL_CLEAR_ERROR	(1 << 27)
-> > +				/* Set HControl[27] to clear error registers */
-> > +				Hcontrol = ioread32(hcr_base + HCONTROL);
-> > +				iowrite32(Hcontrol | HCONTROL_CLEAR_ERROR,
-> > +						hcr_base + HCONTROL);
-> > +
-> > +				/* Clear HControl[27] */
-> > +				iowrite32(Hcontrol & (~HCONTROL_CLEAR_ERROR),
-> 
->     Parens not needed around ~HCONTROL_CLEAR_ERROR.
-[S.H] OK.
+But in the long run that wouldn't be a good solution.  What I'd really 
+like is a way to do the status polling without having it reset the 
+idle timer.
 
+Oliver, what do you think?  Would that be a good solution?
 
-Best Regards, 
-Shaohui Xie
+Alan Stern
 
