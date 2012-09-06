@@ -1,115 +1,42 @@
-From: Shaohui Xie <Shaohui.Xie@freescale.com>
-Subject: [PATCH] [v2] sata_fsl: add workaround for data length mismatch on freescale V2 controller
-Date: Thu, 6 Sep 2012 12:28:06 +0800
-Message-ID: <1346905686-27912-1-git-send-email-Shaohui.Xie@freescale.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Thu, 6 Sep 2012 13:17:33 +0800
+Message-ID: <20120906051732.GA1706@mint-spring.sh.intel.com>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+ <1346768680-7287-2-git-send-email-aaron.lwe@gmail.com>
+ <1519541.IZ88lAq0Bj@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:27756
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750883Ab2IFFAy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 01:00:54 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1519541.IZ88lAq0Bj@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, David.Laight@ACULAB.COM, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
-The freescale V2 SATA controller checks if the received data length matches
-the programmed length 'ttl', if not, it assumes that this is an error.
-In ATAPI, the 'ttl' is based on max allocation length and not the actual
-data transfer length, controller will raise 'DLM' (Data length Mismatch)
-error bit in Hstatus register. Along with 'DLM', DE (Device error) and
-FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
-bit is set in Serror register and CE (Command Error) and DE (Device error)
-registers have the corresponding bit set. In this condition, we need to
-clear errors in following way: in the service routine, based on 'DLM' flag,
-HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
-register.
+On Tue, Sep 04, 2012 at 05:57:35PM +0200, Oliver Neukum wrote:
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index 902b5a4..64ba43d 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -985,8 +985,10 @@ static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+> >  	struct ata_device *ata_dev = context;
+> >  
+> >  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
+> > -			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
+> > -		scsi_autopm_get_device(ata_dev->sdev);
+> > +			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev)) {
+> > +		ata_dev->sdev->wakeup_by_user = 1;
+> 
+> That flag is badly named. Something like "insert_event_during_suspend"
+> would be better.
 
-Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
-Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
----
-changes for V2:
-1. remove the using of quirk;
-2. wrap errata codes in condition;
+The reason I added the flag is to let sr knows that when the device
+gets resumed, please eject its tray since user just pressed the eject
+button when it is in powered off state.
 
- drivers/ata/sata_fsl.c |   40 +++++++++++++++++++++++++++++++++++-----
- 1 files changed, 35 insertions(+), 5 deletions(-)
+If wakeup_by_user is badly named, what about need_eject? I don't think
+insert_event_during_suspend reflects what happened here.
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index d6577b9..6b7b73e 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -143,6 +143,7 @@ enum {
- 	    FATAL_ERR_CRC_ERR_RX |
- 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
- 
-+	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
- 	INT_ON_FATAL_ERR = (1 << 5),
- 	INT_ON_PHYRDY_CHG = (1 << 4),
- 
-@@ -1180,26 +1181,55 @@ static void sata_fsl_host_intr(struct ata_port *ap)
- 	void __iomem *hcr_base = host_priv->hcr_base;
- 	u32 hstatus, done_mask = 0;
- 	struct ata_queued_cmd *qc;
--	u32 SError;
-+	u32 SError, tag;
-+	u32 status_mask = INT_ON_ERROR;
- 
- 	hstatus = ioread32(hcr_base + HSTATUS);
- 
- 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
- 
-+	/* Read command completed register */
-+	done_mask = ioread32(hcr_base + CC);
-+
-+	/* Workaround for data length mismatch errata */
-+	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-+		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-+			qc = ata_qc_from_tag(ap, tag);
-+			if (qc && ata_is_atapi(qc->tf.protocol)) {
-+				u32 Hcontrol;
-+#define HCONTROL_CLEAR_ERROR	(1 << 27)
-+				/* Set HControl[27] to clear error registers */
-+				Hcontrol = ioread32(hcr_base + HCONTROL);
-+				iowrite32(Hcontrol | HCONTROL_CLEAR_ERROR,
-+						hcr_base + HCONTROL);
-+
-+				/* Clear HControl[27] */
-+				iowrite32(Hcontrol & (~HCONTROL_CLEAR_ERROR),
-+						hcr_base + HCONTROL);
-+
-+				/* Clear SError[E] bit */
-+				sata_fsl_scr_write(&ap->link, SCR_ERROR,
-+						SError);
-+
-+				/* Ignore fatal error and device error */
-+				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
-+						| INT_ON_FATAL_ERR);
-+				break;
-+			}
-+		}
-+	}
-+
- 	if (unlikely(SError & 0xFFFF0000)) {
- 		DPRINTK("serror @host_intr : 0x%x\n", SError);
- 		sata_fsl_error_intr(ap);
- 	}
- 
--	if (unlikely(hstatus & INT_ON_ERROR)) {
-+	if (unlikely(hstatus & status_mask)) {
- 		DPRINTK("error interrupt!!\n");
- 		sata_fsl_error_intr(ap);
- 		return;
- 	}
- 
--	/* Read command completed register */
--	done_mask = ioread32(hcr_base + CC);
--
- 	VPRINTK("Status of all queues :\n");
- 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
- 		done_mask,
--- 
-1.6.4
-
-
+-Aaron
