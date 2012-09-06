@@ -1,54 +1,48 @@
-From: Oliver Neukum <oliver@neukum.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 06 Sep 2012 20:06:05 +0200
-Message-ID: <1670507.4ddqykZP6b@linux-lqwf.site>
-References: <Pine.LNX.4.44L0.1209061306270.1182-100000@iolanthe.rowland.org>
+Date: Thu, 6 Sep 2012 14:50:32 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org>
+References: <1670507.4ddqykZP6b@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209061306270.1182-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1670507.4ddqykZP6b@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
 Cc: Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thursday 06 September 2012 13:08:18 Alan Stern wrote:
-> On Thu, 6 Sep 2012, Oliver Neukum wrote:
-> 
-> > On Thursday 06 September 2012 11:06:49 Alan Stern wrote:
-> > > On Thu, 6 Sep 2012, Aaron Lu wrote:
-> > > 
-> > > > > That's why we have an autosuspend delay.  Although for some reason the 
-> > > > > SCSI subsystem doesn't use it currently...  We need to add a call to 
-> > > > > pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-> > > > > pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-> > > > > pm_runtime_autosuspend().  And there should be calls to 
-> > > > > pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
+On Thu, 6 Sep 2012, Oliver Neukum wrote:
+
+> > > > But in the long run that wouldn't be a good solution.  What I'd really 
+> > > > like is a way to do the status polling without having it reset the 
+> > > > idle timer.
 > > > > 
-> > > > I tried to use autosuspend when preparing the patch, but the fact that
-> > > > the devices will be polled every 2 seconds make it impossible to enter
-> > > > suspend state if the autosuspend delay is larger than that.
+> > > > Oliver, what do you think?  Would that be a good solution?
 > > > 
-> > > You can always increase the polling interval.
-> > > 
-> > > But in the long run that wouldn't be a good solution.  What I'd really 
-> > > like is a way to do the status polling without having it reset the 
-> > > idle timer.
-> > > 
-> > > Oliver, what do you think?  Would that be a good solution?
+> > > Well, we could introduce a flag into the requests for the polls.
+> > > But best would be to simply declare a device immediately idle
+> > > as soon as we learn that it has no medium. No special casing
+> > > would be needed.
 > > 
-> > Well, we could introduce a flag into the requests for the polls.
-> > But best would be to simply declare a device immediately idle
-> > as soon as we learn that it has no medium. No special casing
-> > would be needed.
+> > We could do that, but what about idle drives that do have media?
 > 
-> We could do that, but what about idle drives that do have media?
+> Then we do have a problem. To handle this optimally we'd have to make
+> a difference between the first time a new medium is noticed and later
+> polls.
 
-Then we do have a problem. To handle this optimally we'd have to make
-a difference between the first time a new medium is noticed and later
-polls.
+That's right.  It shouldn't be too difficult to accomplish.
 
-	Regards
-		Oliver
+One case to watch out for is a ZPODD with no media and an open door.  
+We should put the drive into runtime suspend immediately, but continue
+polling and leave the power on.  The runtime suspend after each poll
+will to see if the door is shut; when it is then polling can be turned
+off and power removed.
+
+This leads to a question: How should the sr device tell its parent 
+whether or not to turn off the power?  Aaron's current patches simply 
+rely on the device being runtime suspended, but that won't work with 
+this scheme.  Do we need a "ready_to_power_down" flag?
+
+Alan Stern
 
