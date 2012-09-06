@@ -1,40 +1,115 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v6 5/7] scsi: pm: add may_power_off flag
-Date: Thu, 6 Sep 2012 09:52:01 +0800
-Message-ID: <20120906015200.GA1866@mint-spring.sh.intel.com>
-References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
- <1346768680-7287-6-git-send-email-aaron.lwe@gmail.com>
- <1539628.e0bNDi5Td8@linux-lqwf.site>
+From: Shaohui Xie <Shaohui.Xie@freescale.com>
+Subject: [PATCH] [v2] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Thu, 6 Sep 2012 12:28:06 +0800
+Message-ID: <1346905686-27912-1-git-send-email-Shaohui.Xie@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1539628.e0bNDi5Td8@linux-lqwf.site>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:27756
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750883Ab2IFFAy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 01:00:54 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, David.Laight@ACULAB.COM, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
-On Tue, Sep 04, 2012 at 06:01:22PM +0200, Oliver Neukum wrote:
-> On Tuesday 04 September 2012 22:24:38 Aaron Lu wrote:
-> > From: Aaron Lu <aaron.lu@intel.com>
-> > 
-> > Add a new flag may_power_off for scsi device, it gives the user a chance
-> > to control when the device is runtime suspended, can we remove its power
-> > if possible.
-> > 
-> > And if the device can be powered off(reflected by can_power_off flag,
-> > determined by individual driver), create a sysfs entry named
-> > may_power_off to let user control the flag.
-> 
-> Do we really need yet another interface to user space?
+The freescale V2 SATA controller checks if the received data length matches
+the programmed length 'ttl', if not, it assumes that this is an error.
+In ATAPI, the 'ttl' is based on max allocation length and not the actual
+data transfer length, controller will raise 'DLM' (Data length Mismatch)
+error bit in Hstatus register. Along with 'DLM', DE (Device error) and
+FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
+bit is set in Serror register and CE (Command Error) and DE (Device error)
+registers have the corresponding bit set. In this condition, we need to
+clear errors in following way: in the service routine, based on 'DLM' flag,
+HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
+register.
 
-We do not have a way to let user decide when device is runtime
-suspended, can we remove its power, so I added this flag. PCI subsystem
-has a similar flag named d3cold_allowed.
+Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
+Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
+---
+changes for V2:
+1. remove the using of quirk;
+2. wrap errata codes in condition;
 
-This flag can disable the power off of ZPODD capable devices, or put a
-rotational disk into powered off if user so choose.
+ drivers/ata/sata_fsl.c |   40 +++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 35 insertions(+), 5 deletions(-)
 
-Thanks,
-Aaron
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index d6577b9..6b7b73e 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -143,6 +143,7 @@ enum {
+ 	    FATAL_ERR_CRC_ERR_RX |
+ 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
+ 
++	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
+ 	INT_ON_FATAL_ERR = (1 << 5),
+ 	INT_ON_PHYRDY_CHG = (1 << 4),
+ 
+@@ -1180,26 +1181,55 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	u32 hstatus, done_mask = 0;
+ 	struct ata_queued_cmd *qc;
+-	u32 SError;
++	u32 SError, tag;
++	u32 status_mask = INT_ON_ERROR;
+ 
+ 	hstatus = ioread32(hcr_base + HSTATUS);
+ 
+ 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 
++	/* Read command completed register */
++	done_mask = ioread32(hcr_base + CC);
++
++	/* Workaround for data length mismatch errata */
++	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
++		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++			qc = ata_qc_from_tag(ap, tag);
++			if (qc && ata_is_atapi(qc->tf.protocol)) {
++				u32 Hcontrol;
++#define HCONTROL_CLEAR_ERROR	(1 << 27)
++				/* Set HControl[27] to clear error registers */
++				Hcontrol = ioread32(hcr_base + HCONTROL);
++				iowrite32(Hcontrol | HCONTROL_CLEAR_ERROR,
++						hcr_base + HCONTROL);
++
++				/* Clear HControl[27] */
++				iowrite32(Hcontrol & (~HCONTROL_CLEAR_ERROR),
++						hcr_base + HCONTROL);
++
++				/* Clear SError[E] bit */
++				sata_fsl_scr_write(&ap->link, SCR_ERROR,
++						SError);
++
++				/* Ignore fatal error and device error */
++				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
++						| INT_ON_FATAL_ERR);
++				break;
++			}
++		}
++	}
++
+ 	if (unlikely(SError & 0xFFFF0000)) {
+ 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+ 		sata_fsl_error_intr(ap);
+ 	}
+ 
+-	if (unlikely(hstatus & INT_ON_ERROR)) {
++	if (unlikely(hstatus & status_mask)) {
+ 		DPRINTK("error interrupt!!\n");
+ 		sata_fsl_error_intr(ap);
+ 		return;
+ 	}
+ 
+-	/* Read command completed register */
+-	done_mask = ioread32(hcr_base + CC);
+-
+ 	VPRINTK("Status of all queues :\n");
+ 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
+ 		done_mask,
+-- 
+1.6.4
+
+
