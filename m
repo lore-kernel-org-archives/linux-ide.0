@@ -1,74 +1,40 @@
-From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
-Date: Thu, 6 Sep 2012 06:49:13 +0800
-Message-ID: <20120905224912.GA1443@localhost.localdomain>
-References: <20120905152251.GA2794@localhost.localdomain>
- <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 5/7] scsi: pm: add may_power_off flag
+Date: Thu, 6 Sep 2012 09:52:01 +0800
+Message-ID: <20120906015200.GA1866@mint-spring.sh.intel.com>
+References: <1346768680-7287-1-git-send-email-aaron.lwe@gmail.com>
+ <1346768680-7287-6-git-send-email-aaron.lwe@gmail.com>
+ <1539628.e0bNDi5Td8@linux-lqwf.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1209051154400.1837-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+In-Reply-To: <1539628.e0bNDi5Td8@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Sep 05, 2012 at 12:08:25PM -0400, Alan Stern wrote:
-> On Wed, 5 Sep 2012, Aaron Lu wrote:
-> 
-> > > > > That flag is badly named. Something like "insert_event_during_suspend"
-> > > > > would be better.
+On Tue, Sep 04, 2012 at 06:01:22PM +0200, Oliver Neukum wrote:
+> On Tuesday 04 September 2012 22:24:38 Aaron Lu wrote:
+> > From: Aaron Lu <aaron.lu@intel.com>
 > > 
-> > This flag means, the reason the device gets runtime resumed is due to
-> > user as described by the above situation 2, not by software(e.g. by
-> > sr_check_events).
+> > Add a new flag may_power_off for scsi device, it gives the user a chance
+> > to control when the device is runtime suspended, can we remove its power
+> > if possible.
 > > 
-> > I don't quite understand insert_event_during_suspend mean here...
+> > And if the device can be powered off(reflected by can_power_off flag,
+> > determined by individual driver), create a sysfs entry named
+> > may_power_off to let user control the flag.
 > 
-> It means: An insert event occurred while the device was suspended.
+> Do we really need yet another interface to user space?
 
-Thanks, I got it now.
+We do not have a way to let user decide when device is runtime
+suspended, can we remove its power, so I added this flag. PCI subsystem
+has a similar flag named d3cold_allowed.
 
-> 
-> > > > >  And even so I don't see why you wouldn't
-> > > > > want to suspend for example a drive with an inserted but unopened disk.
-> > > > 
-> > > > I assume that Aaron wanted to handle the easiest case first.  Adding 
-> > > > suspend/resume handling to the open/close routines can be done later.
-> > > 
-> > > Sure, but this patch blocks that in contrast to just not implementing it.
-> > 
-> > It's already implemented. I did it in scsi_cd_get/put.
-> > 
-> > And the reason I didn't allow runtime suspend for medium inside and door
-> > closed case are:
-> > 1 ZPODD has a spec and it didn't allow that;
-> 
-> In theory we should allow runtime suspend in this case too, but leave 
-> the power on.  (Although in practice, turning the power off would 
-> probably work even though it may violate the spec.)
-> 
+This flag can disable the power off of ZPODD capable devices, or put a
+rotational disk into powered off if user so choose.
 
-Agree. But it's not easy to implement with autosuspend.
-Please see below.
-
-> > 2 It's not easy to implement. Imagine user just inserts a disc, and the
-> > sr_suspend routine checks that door is closed so that it wants to
-> > suspend the device. But actually, after user just inserts a disc, he
-> > definitely wants to use the device, so it's not a good thing to do. And
-> > if ZPODD is used, the device will be powered off instantly when the door
-> > is closed, this is not good.
-> 
-> That's why we have an autosuspend delay.  Although for some reason the 
-> SCSI subsystem doesn't use it currently...  We need to add a call to 
-> pm_runtime_use_autosuspend() in scsi_sysfs_add_sdev().  Likewise, the 
-> pm_schedule_suspend() call in scsi_runtime_idle() should be changed to 
-> pm_runtime_autosuspend().  And there should be calls to 
-> pm_runtime_set_autosuspend_delay() in the sd and sr drivers.
-
-I tried to use autosuspend when preparing the patch, but the fact that
-the devices will be polled every 2 seconds make it impossible to enter
-suspend state if the autosuspend delay is larger than that.
-
--Aaron
+Thanks,
+Aaron
