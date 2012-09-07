@@ -1,80 +1,118 @@
-From: Thomas Schwinge <thomas@codesourcery.com>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Fri, 7 Sep 2012 11:14:33 +0200
-Message-ID: <877gs69oue.fsf@schwinge.name>
-References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com>
+From: Shaohui Xie <Shaohui.Xie@freescale.com>
+Subject: [PATCH][v3] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Fri, 7 Sep 2012 18:01:35 +0800
+Message-ID: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
-Return-path: <bounce-debian-kernel=glddk-debian-kernel=m.gmane.org@lists.debian.org>
-In-Reply-To: <20120618155141.GF8378@aftab.osrc.amd.com>
-Resent-Message-ID: <hHDsWUglJyN.A.Zw.jsbSQB@bendel>
-List-URL: <http://lists.debian.org/debian-kernel/>
-List-Post: <mailto:debian-kernel@lists.debian.org>
-List-Help: <mailto:debian-kernel-request@lists.debian.org?subject=help>
-List-Subscribe: <mailto:debian-kernel-request@lists.debian.org?subject=subscribe>
-List-Unsubscribe: <mailto:debian-kernel-request@lists.debian.org?subject=unsubscribe>
-To: Borislav Petkov <bp@amd64.org>
-Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:37044
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760245Ab2IGKeL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 06:34:11 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+The freescale V2 SATA controller checks if the received data length matches
+the programmed length 'ttl', if not, it assumes that this is an error.
+In ATAPI, the 'ttl' is based on max allocation length and not the actual
+data transfer length, controller will raise 'DLM' (Data length Mismatch)
+error bit in Hstatus register. Along with 'DLM', DE (Device error) and
+FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
+bit is set in Serror register and CE (Command Error) and DE (Device error)
+registers have the corresponding bit set. In this condition, we need to
+clear errors in following way: in the service routine, based on 'DLM' flag,
+HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
+register.
 
-Hi Borislav!
+Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
+Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
+---
+changes for v3:
+1. not using uppercase for variable names;
+2. remove unnecessary parens;
 
-I'm sorry for the late answer.
+changes for v2:
+1. remove the using of quirk;
+2. wrap errata codes in condition;
+
+ drivers/ata/sata_fsl.c |   39 +++++++++++++++++++++++++++++++++++----
+ 1 files changed, 35 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index d6577b9..9fbab68 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -143,6 +143,7 @@ enum {
+ 	    FATAL_ERR_CRC_ERR_RX |
+ 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
+ 
++	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
+ 	INT_ON_FATAL_ERR = (1 << 5),
+ 	INT_ON_PHYRDY_CHG = (1 << 4),
+ 
+@@ -1181,25 +1182,55 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 	u32 hstatus, done_mask = 0;
+ 	struct ata_queued_cmd *qc;
+ 	u32 SError;
++	u32 tag;
++	u32 status_mask = INT_ON_ERROR;
+ 
+ 	hstatus = ioread32(hcr_base + HSTATUS);
+ 
+ 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 
++	/* Read command completed register */
++	done_mask = ioread32(hcr_base + CC);
++
++	/* Workaround for data length mismatch errata */
++	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
++		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++			qc = ata_qc_from_tag(ap, tag);
++			if (qc && ata_is_atapi(qc->tf.protocol)) {
++				u32 hcontrol;
++#define HCONTROL_CLEAR_ERROR	(1 << 27)
++				/* Set HControl[27] to clear error registers */
++				hcontrol = ioread32(hcr_base + HCONTROL);
++				iowrite32(hcontrol | HCONTROL_CLEAR_ERROR,
++						hcr_base + HCONTROL);
++
++				/* Clear HControl[27] */
++				iowrite32(hcontrol & ~HCONTROL_CLEAR_ERROR,
++						hcr_base + HCONTROL);
++
++				/* Clear SError[E] bit */
++				sata_fsl_scr_write(&ap->link, SCR_ERROR,
++						SError);
++
++				/* Ignore fatal error and device error */
++				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
++						| INT_ON_FATAL_ERR);
++				break;
++			}
++		}
++	}
++
+ 	if (unlikely(SError & 0xFFFF0000)) {
+ 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+ 		sata_fsl_error_intr(ap);
+ 	}
+ 
+-	if (unlikely(hstatus & INT_ON_ERROR)) {
++	if (unlikely(hstatus & status_mask)) {
+ 		DPRINTK("error interrupt!!\n");
+ 		sata_fsl_error_intr(ap);
+ 		return;
+ 	}
+ 
+-	/* Read command completed register */
+-	done_mask = ioread32(hcr_base + CC);
+-
+ 	VPRINTK("Status of all queues :\n");
+ 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
+ 		done_mask,
+-- 
+1.6.4
 
 
-On Mon, 18 Jun 2012 17:51:41 +0200, Borislav Petkov <bp@amd64.org> wrote:
-> On Mon, Jun 18, 2012 at 04:52:36PM +0200, Thomas Schwinge wrote:
-> > > Ok, can you do the following:
-> > >=20
-> > > $ setpci -s 18.0 0x68.l
-> >=20
-> >     $ sudo setpci -s 18.0 0x68.l
-> >     0f00cc0f
-> >=20
-> > > $ rdmsr 0xc001001f
-> >=20
-> >     $ sudo modprobe msr
-> >     $ sudo rdmsr 0xc001001f
-> >     8
->=20
-> Ok, this is a BIOS bug - we have a recommendation about what the BIOS
-> should do but yours doesn't do it. Are you sure you're using the latest
-> BIOS for your motherboard?
->=20
-> Can you check for updates and if you get a newer version, can you update
-> your BIOS and do the two commands above?
-
-I have now finally been able to check this, and yes, I'm already using
-the latest version of the BIOS, which is Phoenix cME FirstBIOS Desktop
-Pro version 5.00 R1.07.2264.A1 (a.k.a.  5.00.1.07, 25.04.2006) for
-Fujitsu Siemens Esprimo E5600, mainboard D2264-A1, CPU AMD Sempron 3000+.
-
-> If there's no newer BIOS, we can try applying the workaround at boot in
-> an init script to fix your issue.
-
-How'd that be done?
-
-
-Gr=C3=BC=C3=9Fe,
- Thomas
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJQSbr5AAoJENuKOtuXzphJ3tcH/imLh1StPoUZgiSkovI2c69n
-olKgp+srGs3kZfuWloQeSD+3e8czKXA8/UQEU0eAZXuwKJkXjjurXlkzj9C1spWv
-KGQ1uwtg7OavstDFagK+LM60wi7JM3H35uKOG4DA/vFSOVCa7lL7az3GZleTz8Fp
-eLFipP7gJrqIUqmUsg7NFJhzxZ943c7ToEPLSUdVbrzLtWD6eKfkr9wuMidcONYg
-TCgHw8xnEKdovt9vMuoh3oNCqvXnWLYoObkyQuWyPvADM9B8uulkQ4IIbkemCPuc
-YaxJf8nxusLvf1/rGTaKz4Aq0+vps20327O8GGAnlLUcdAqN5au9wtHkVdEuk+8=
-=EnNu
------END PGP SIGNATURE-----
---=-=-=--
