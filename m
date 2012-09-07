@@ -1,54 +1,87 @@
-From: "Mr. Harris Conklin" <subaru04@m6.gyao.ne.jp>
-Subject: Congratulations: You Have Won
-Date: Fri, 07 Sep 2012 12:49:15 +0900
-Message-ID: <20120907034915.00005588.0973@m6.gyao.ne.jp>
-Reply-To: <mrharris_conklin@yahoo.com.hk>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH RESEND v3 1/2] ata: define enum constants for IDENTIFY DEVICE
+Date: Fri, 7 Sep 2012 22:38:20 +0800
+Message-ID: <1347028700-1773-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: Text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ms-gomx11.so-net.ne.jp ([202.238.84.218]:64531 "EHLO
-	ms-gomx11.plus.so-net.ne.jp" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1759643Ab2IGD4R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Sep 2012 23:56:17 -0400
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:26649
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751011Ab2IGGiY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 02:38:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: info@winners.com
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 
-Congratulations: You Have Won
+Define enumeration constants for IDENTIFY DEVICE words.
 
-The MICROSOFT EMAIL PROMO TEAM is glad to announce that
-after a successful completion of the PROMO DRAWS held
-on the 1st September 2012 your e-mail address,attached
-to winning numbers: (11) (80) (12)(96) (09) (43) won in
-the Tenth lottery category.
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+---
+ include/linux/ata.h |   21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
-You have therefore been approved to claim a total sum
-of? 450,000,00 Pounds Sterling in cash credited to REF
-NO:MICRO-L/2009-END10.
-
-All participants were selected through our Microsoft
-computer ballot system drawn from 167,000 Names, as
-part of our International "E-MAIL" Promotion Program
-for our prominent MS-WORD users all over the world and
-for the continuous use of the Internet. You are advised
-to contact the claims-processor with the details below
-via his e-mail address :
-
-NAME:  Mr. Harris Conklin
-EMAIL: mrharrisconklin1@yahoo.com.hk
-
-PLEASE NOTE YOU ARE TO SEND THE FOLLOWING INFORMATION
-TO CLAIM YOUR PRIZE:
-
-1.Full Name:.......
-2.Address:.......
-3.Phone:.......
-4.Country:.......
-5.Sex/Gender:.......
-
-
-YOURS SINCERELY,
-Mr. Harris Conklin.
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 5713d3a..47a9dbf 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -77,6 +77,9 @@ enum {
+ 	ATA_ID_EIDE_PIO_IORDY	= 68,
+ 	ATA_ID_ADDITIONAL_SUPP	= 69,
+ 	ATA_ID_QUEUE_DEPTH	= 75,
++	ATA_ID_SATA_CAPABILITY	= 76,
++	ATA_ID_SATA_CAPABILITY_2	= 77,
++	ATA_ID_FEATURE_SUPP	= 78,
+ 	ATA_ID_MAJOR_VER	= 80,
+ 	ATA_ID_COMMAND_SET_1	= 82,
+ 	ATA_ID_COMMAND_SET_2	= 83,
+@@ -558,15 +561,17 @@ static inline int ata_is_data(u8 prot)
+ #define ata_id_is_ata(id)	(((id)[ATA_ID_CONFIG] & (1 << 15)) == 0)
+ #define ata_id_has_lba(id)	((id)[ATA_ID_CAPABILITY] & (1 << 9))
+ #define ata_id_has_dma(id)	((id)[ATA_ID_CAPABILITY] & (1 << 8))
+-#define ata_id_has_ncq(id)	((id)[76] & (1 << 8))
++#define ata_id_has_ncq(id)	((id)[ATA_ID_SATA_CAPABILITY] & (1 << 8))
+ #define ata_id_queue_depth(id)	(((id)[ATA_ID_QUEUE_DEPTH] & 0x1f) + 1)
+ #define ata_id_removeable(id)	((id)[ATA_ID_CONFIG] & (1 << 7))
+ #define ata_id_has_atapi_AN(id)	\
+-	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
+-	  ((id)[78] & (1 << 5)) )
++	((((id)[ATA_ID_SATA_CAPABILITY] != 0x0000) && \
++	  ((id)[ATA_ID_SATA_CAPABILITY] != 0xffff)) && \
++	 ((id)[ATA_ID_FEATURE_SUPP] & (1 << 5)))
+ #define ata_id_has_fpdma_aa(id)	\
+-	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
+-	  ((id)[78] & (1 << 2)) )
++	((((id)[ATA_ID_SATA_CAPABILITY] != 0x0000) && \
++	  ((id)[ATA_ID_SATA_CAPABILITY] != 0xffff)) && \
++	 ((id)[ATA_ID_FEATURE_SUPP] & (1 << 2)))
+ #define ata_id_iordy_disable(id) ((id)[ATA_ID_CAPABILITY] & (1 << 10))
+ #define ata_id_has_iordy(id) ((id)[ATA_ID_CAPABILITY] & (1 << 11))
+ #define ata_id_u32(id,n)	\
+@@ -578,11 +583,11 @@ static inline int ata_is_data(u8 prot)
+ 	  ((u64) (id)[(n) + 0]) )
+ 
+ #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
+-#define ata_id_has_da(id)	((id)[77] & (1 << 4))
++#define ata_id_has_da(id)	((id)[ATA_ID_SATA_CAPABILITY_2] & (1 << 4))
+ 
+ static inline bool ata_id_has_hipm(const u16 *id)
+ {
+-	u16 val = id[76];
++	u16 val = id[ATA_ID_SATA_CAPABILITY];
+ 
+ 	if (val == 0 || val == 0xffff)
+ 		return false;
+@@ -592,7 +597,7 @@ static inline bool ata_id_has_hipm(const u16 *id)
+ 
+ static inline bool ata_id_has_dipm(const u16 *id)
+ {
+-	u16 val = id[78];
++	u16 val = id[ATA_ID_FEATURE_SUPP];
+ 
+ 	if (val == 0 || val == 0xffff)
+ 		return false;
+-- 
+1.7.9.5
 
 
