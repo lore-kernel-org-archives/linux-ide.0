@@ -1,448 +1,80 @@
-From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH RESEND v3 2/2] ahci: implement aggressive SATA device sleep support
-Date: Fri, 7 Sep 2012 22:40:01 +0800
-Message-ID: <1347028801-1808-1-git-send-email-shane.huang@amd.com>
+From: Thomas Schwinge <thomas@codesourcery.com>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Fri, 7 Sep 2012 11:14:33 +0200
+Message-ID: <877gs69oue.fsf@schwinge.name>
+References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [216.32.181.181] ([216.32.181.181]:54168 "EHLO
-	ch1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750762Ab2IGGlA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 02:41:00 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+	protocol="application/pgp-signature"
+Return-path: <bounce-debian-kernel=glddk-debian-kernel=m.gmane.org@lists.debian.org>
+In-Reply-To: <20120618155141.GF8378@aftab.osrc.amd.com>
+Resent-Message-ID: <hHDsWUglJyN.A.Zw.jsbSQB@bendel>
+List-URL: <http://lists.debian.org/debian-kernel/>
+List-Post: <mailto:debian-kernel@lists.debian.org>
+List-Help: <mailto:debian-kernel-request@lists.debian.org?subject=help>
+List-Subscribe: <mailto:debian-kernel-request@lists.debian.org?subject=subscribe>
+List-Unsubscribe: <mailto:debian-kernel-request@lists.debian.org?subject=unsubscribe>
+To: Borislav Petkov <bp@amd64.org>
+Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 
-Device Sleep is a feature as described in AHCI 1.3.1 Technical Proposal.
-This feature enables an HBA and SATA storage device to enter the DevSleep
-interface state, enabling lower power SATA-based systems.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Aggressive Device Sleep enables the HBA to assert the DEVSLP signal as
-soon as there are no commands outstanding to the device and the port
-specific Device Sleep idle timer has expired. This enables autonomous
-entry into the DevSleep interface state without waiting for software
-in power sensitive systems.
+Hi Borislav!
 
-This patch enables Aggressive Device Sleep only if both host controller
-and device support it.
-
-Tested on AMD reference board together with Device Sleep supported device
-sample.
-
-Signed-off-by: Shane Huang <shane.huang@amd.com>
-Reviewed-by: Aaron Lu <aaron.lwe@gmail.com>
----
-Changes from the last version(v2):
-* Define enumeration constants in linux/ata.h to replace hexadecimal
-  constants.
-* Add one parameter for ata_read_log_page() to support log and page.
-* Move the reading of SATA Settings page outside of DevSlp check.
-* Check the validness of DevSlp timing variables before the use.
-* Move ata_dev_set_feature() back into ahci_set_aggressive_devslp()
-  to set device DevSlp only when power policy dictates it is time.
-
-Changes from v1:
-* Refine the description and add test information.
-* No need to disable DevSlp again if it was already disabled.
-* No need to call ata_dev_set_feature() in each DevSlp enablement,
-  move it to ata_dev_configure().
-* Get MDAT from Identify Device Data Log of the device, if the value
-  is zero, then use the nominal value 10ms.
-* Get DETO from Identify Device Data Log of the device, if the value
-  is zero, then use the nominal value 20ms.
-
- drivers/ata/ahci.h        |   14 +++++++
- drivers/ata/libahci.c     |   97 ++++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-core.c |   29 +++++++++++---
- drivers/ata/libata-eh.c   |   12 +++---
- drivers/ata/libata.h      |    2 +
- include/linux/ata.h       |    9 +++++
- include/linux/libata.h    |    4 ++
- 7 files changed, 156 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 57eb1c2..6441cbe 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -115,6 +115,9 @@ enum {
- 	HOST_CAP2_BOH		= (1 << 0),  /* BIOS/OS handoff supported */
- 	HOST_CAP2_NVMHCI	= (1 << 1),  /* NVMHCI supported */
- 	HOST_CAP2_APST		= (1 << 2),  /* Automatic partial to slumber */
-+	HOST_CAP2_SDS		= (1 << 3),  /* Support device sleep */
-+	HOST_CAP2_SADM		= (1 << 4),  /* Support aggressive DevSlp */
-+	HOST_CAP2_DESO		= (1 << 5),  /* DevSlp from slumber only */
- 
- 	/* registers for each SATA port */
- 	PORT_LST_ADDR		= 0x00, /* command list DMA addr */
-@@ -133,6 +136,7 @@ enum {
- 	PORT_SCR_ACT		= 0x34, /* SATA phy register: SActive */
- 	PORT_SCR_NTF		= 0x3c, /* SATA phy register: SNotification */
- 	PORT_FBS		= 0x40, /* FIS-based Switching */
-+	PORT_DEVSLP		= 0x44, /* device sleep */
- 
- 	/* PORT_IRQ_{STAT,MASK} bits */
- 	PORT_IRQ_COLD_PRES	= (1 << 31), /* cold presence detect */
-@@ -186,6 +190,7 @@ enum {
- 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
- 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
- 
-+	/* PORT_FBS bits */
- 	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
- 	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
- 	PORT_FBS_DEV_OFFSET	= 8,  /* FBS device to issue offset */
-@@ -194,6 +199,15 @@ enum {
- 	PORT_FBS_DEC		= (1 << 1), /* FBS device error clear */
- 	PORT_FBS_EN		= (1 << 0), /* Enable FBS */
- 
-+	/* PORT_DEVSLP bits */
-+	PORT_DEVSLP_DM_OFFSET	= 25,             /* DITO multiplier offset */
-+	PORT_DEVSLP_DM_MASK	= (0xf << 25),    /* DITO multiplier mask */
-+	PORT_DEVSLP_DITO_OFFSET	= 15,             /* DITO offset */
-+	PORT_DEVSLP_MDAT_OFFSET	= 10,             /* Minimum assertion time */
-+	PORT_DEVSLP_DETO_OFFSET	= 2,              /* DevSlp exit timeout */
-+	PORT_DEVSLP_DSP		= (1 << 1),       /* DevSlp present */
-+	PORT_DEVSLP_ADSE	= (1 << 0),       /* Aggressive DevSlp enable */
-+
- 	/* hpriv->flags bits */
- 
- #define AHCI_HFLAGS(flags)		.private_data	= (void *)(flags)
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 555c07a..4201e53 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -45,6 +45,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
- #include "ahci.h"
-+#include "libata.h"
- 
- static int ahci_skip_host_reset;
- int ahci_ignore_sss;
-@@ -76,6 +77,7 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc);
- static int ahci_pmp_qc_defer(struct ata_queued_cmd *qc);
- static void ahci_freeze(struct ata_port *ap);
- static void ahci_thaw(struct ata_port *ap);
-+static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep);
- static void ahci_enable_fbs(struct ata_port *ap);
- static void ahci_disable_fbs(struct ata_port *ap);
- static void ahci_pmp_attach(struct ata_port *ap);
-@@ -193,6 +195,10 @@ module_param(ahci_em_messages, int, 0444);
- MODULE_PARM_DESC(ahci_em_messages,
- 	"AHCI Enclosure Management Message control (0 = off, 1 = on)");
- 
-+int devslp_idle_timeout = 1000;	/* device sleep idle timeout in ms */
-+module_param(devslp_idle_timeout, int, 0644);
-+MODULE_PARM_DESC(devslp_idle_timeout, "device sleep idle timeout");
-+
- static void ahci_enable_ahci(void __iomem *mmio)
- {
- 	int i;
-@@ -702,6 +708,16 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 		}
- 	}
- 
-+	/* set aggressive device sleep */
-+	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
-+	    (hpriv->cap2 & HOST_CAP2_SADM) &&
-+	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
-+		if (policy == ATA_LPM_MIN_POWER)
-+			ahci_set_aggressive_devslp(ap, true);
-+		else
-+			ahci_set_aggressive_devslp(ap, false);
-+	}
-+
- 	if (policy == ATA_LPM_MAX_POWER) {
- 		sata_link_scr_lpm(link, policy, false);
- 
-@@ -1890,6 +1906,81 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
- 		ahci_kick_engine(ap);
- }
- 
-+static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
-+{
-+	void __iomem *port_mmio = ahci_port_base(ap);
-+	struct ata_device *dev = ap->link.device;
-+	u32 devslp, dm, dito, mdat, deto;
-+	int rc;
-+	unsigned int err_mask;
-+
-+	devslp = readl(port_mmio + PORT_DEVSLP);
-+	if (!(devslp & PORT_DEVSLP_DSP)) {
-+		dev_err(ap->host->dev, "port does not support device sleep\n");
-+		return;
-+	}
-+
-+	/* disable device sleep */
-+	if (!sleep) {
-+		if (devslp & PORT_DEVSLP_ADSE) {
-+			writel(devslp & ~PORT_DEVSLP_ADSE,
-+			       port_mmio + PORT_DEVSLP);
-+			err_mask = ata_dev_set_feature(dev,
-+						       SETFEATURES_SATA_DISABLE,
-+						       SATA_DEVSLP);
-+			if (err_mask && err_mask != AC_ERR_DEV)
-+				ata_dev_warn(dev, "failed to disable DEVSLP\n");
-+		}
-+		return;
-+	}
-+
-+	/* device sleep was already enabled */
-+	if (devslp & PORT_DEVSLP_ADSE)
-+		return;
-+
-+	/* set DITO, MDAT, DETO and enable DevSlp, need to stop engine first */
-+	rc = ahci_stop_engine(ap);
-+	if (rc)
-+		return;
-+
-+	dm = (devslp & PORT_DEVSLP_DM_MASK) >> PORT_DEVSLP_DM_OFFSET;
-+	dito = devslp_idle_timeout / (dm + 1);
-+	if (dito > 0x3ff)
-+		dito = 0x3ff;
-+
-+	/* Use the nominal value 10 ms if the read MDAT is zero,
-+	 * the nominal value of DETO is 20 ms.
-+	 */
-+	if (dev->sata_settings[ATA_LOG_DEVSLP_VALID] &
-+	    ATA_LOG_DEVSLP_VALID_MASK) {
-+		mdat = dev->sata_settings[ATA_LOG_DEVSLP_MDAT] &
-+		       ATA_LOG_DEVSLP_MDAT_MASK;
-+		if (!mdat)
-+			mdat = 10;
-+		deto = dev->sata_settings[ATA_LOG_DEVSLP_DETO];
-+		if (!deto)
-+			deto = 20;
-+	} else {
-+		mdat = 10;
-+		deto = 20;
-+	}
-+
-+	devslp |= ((dito << PORT_DEVSLP_DITO_OFFSET) |
-+		   (mdat << PORT_DEVSLP_MDAT_OFFSET) |
-+		   (deto << PORT_DEVSLP_DETO_OFFSET) |
-+		   PORT_DEVSLP_ADSE);
-+	writel(devslp, port_mmio + PORT_DEVSLP);
-+
-+	ahci_start_engine(ap);
-+
-+	/* enable device sleep feature for the drive */
-+	err_mask = ata_dev_set_feature(dev,
-+				       SETFEATURES_SATA_ENABLE,
-+				       SATA_DEVSLP);
-+	if (err_mask && err_mask != AC_ERR_DEV)
-+		ata_dev_warn(dev, "failed to enable DEVSLP\n");
-+}
-+
- static void ahci_enable_fbs(struct ata_port *ap)
- {
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -2164,7 +2255,8 @@ void ahci_print_info(struct ata_host *host, const char *scc_s)
- 		"flags: "
- 		"%s%s%s%s%s%s%s"
- 		"%s%s%s%s%s%s%s"
--		"%s%s%s%s%s%s\n"
-+		"%s%s%s%s%s%s%s"
-+		"%s%s\n"
- 		,
- 
- 		cap & HOST_CAP_64 ? "64bit " : "",
-@@ -2184,6 +2276,9 @@ void ahci_print_info(struct ata_host *host, const char *scc_s)
- 		cap & HOST_CAP_CCC ? "ccc " : "",
- 		cap & HOST_CAP_EMS ? "ems " : "",
- 		cap & HOST_CAP_SXS ? "sxs " : "",
-+		cap2 & HOST_CAP2_DESO ? "deso " : "",
-+		cap2 & HOST_CAP2_SADM ? "sadm " : "",
-+		cap2 & HOST_CAP2_SDS ? "sds " : "",
- 		cap2 & HOST_CAP2_APST ? "apst " : "",
- 		cap2 & HOST_CAP2_NVMHCI ? "nvmp " : "",
- 		cap2 & HOST_CAP2_BOH ? "boh " : ""
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8e1039c..f1dbb18 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2155,6 +2155,7 @@ int ata_dev_configure(struct ata_device *dev)
- 	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
- 	const u16 *id = dev->id;
- 	unsigned long xfer_mask;
-+	unsigned int err_mask;
- 	char revbuf[7];		/* XYZ-99\0 */
- 	char fwrevbuf[ATA_ID_FW_REV_LEN+1];
- 	char modelbuf[ATA_ID_PROD_LEN+1];
-@@ -2323,6 +2324,26 @@ int ata_dev_configure(struct ata_device *dev)
- 			}
- 		}
- 
-+		/* check and mark DevSlp capability */
-+		if (ata_id_has_devslp(dev->id))
-+			dev->flags |= ATA_DFLAG_DEVSLP;
-+
-+		/* Obtain SATA Settings page from Identify Device Data Log,
-+		 * which contains DevSlp timing variables etc.
-+		 * Exclude old devices with ata_id_has_ncq()
-+		 */
-+		if (ata_id_has_ncq(dev->id)) {
-+			err_mask = ata_read_log_page(dev,
-+						     ATA_LOG_SATA_ID_DEV_DATA,
-+						     ATA_LOG_SATA_SETTINGS,
-+						     dev->sata_settings,
-+						     1);
-+			if (err_mask)
-+				ata_dev_dbg(dev,
-+					    "failed to get Identify Device Data, Emask 0x%x\n",
-+					    err_mask);
-+		}
-+
- 		dev->cdb_len = 16;
- 	}
- 
-@@ -2351,8 +2372,6 @@ int ata_dev_configure(struct ata_device *dev)
- 		    (ap->flags & ATA_FLAG_AN) && ata_id_has_atapi_AN(id) &&
- 		    (!sata_pmp_attached(ap) ||
- 		     sata_scr_read(&ap->link, SCR_NOTIFICATION, &sntf) == 0)) {
--			unsigned int err_mask;
--
- 			/* issue SET feature command to turn this on */
- 			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_ENABLE, SATA_AN);
-@@ -3598,7 +3617,7 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	switch (policy) {
- 	case ATA_LPM_MAX_POWER:
- 		/* disable all LPM transitions */
--		scontrol |= (0x3 << 8);
-+		scontrol |= (0x7 << 8);
- 		/* initiate transition to active state */
- 		if (spm_wakeup) {
- 			scontrol |= (0x4 << 12);
-@@ -3608,12 +3627,12 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	case ATA_LPM_MED_POWER:
- 		/* allow LPM to PARTIAL */
- 		scontrol &= ~(0x1 << 8);
--		scontrol |= (0x2 << 8);
-+		scontrol |= (0x6 << 8);
- 		break;
- 	case ATA_LPM_MIN_POWER:
- 		if (ata_link_nr_enabled(link) > 0)
- 			/* no restrictions on LPM transitions */
--			scontrol &= ~(0x3 << 8);
-+			scontrol &= ~(0x7 << 8);
- 		else {
- 			/* empty port, power off */
- 			scontrol &= ~0xf;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 7d4535e..2659894 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1487,6 +1487,7 @@ static const char *ata_err_string(unsigned int err_mask)
- /**
-  *	ata_read_log_page - read a specific log page
-  *	@dev: target device
-+ *	@log: log to read
-  *	@page: page to read
-  *	@buf: buffer to store read page
-  *	@sectors: number of sectors to read
-@@ -1499,17 +1500,18 @@ static const char *ata_err_string(unsigned int err_mask)
-  *	RETURNS:
-  *	0 on success, AC_ERR_* mask otherwise.
-  */
--static unsigned int ata_read_log_page(struct ata_device *dev,
--				      u8 page, void *buf, unsigned int sectors)
-+unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
-+			       u8 page, void *buf, unsigned int sectors)
- {
- 	struct ata_taskfile tf;
- 	unsigned int err_mask;
- 
--	DPRINTK("read log page - page %d\n", page);
-+	DPRINTK("read log page - log 0x%x, page 0x%x\n", log, page);
- 
- 	ata_tf_init(dev, &tf);
- 	tf.command = ATA_CMD_READ_LOG_EXT;
--	tf.lbal = page;
-+	tf.lbal = log;
-+	tf.lbam = page;
- 	tf.nsect = sectors;
- 	tf.hob_nsect = sectors >> 8;
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
-@@ -1545,7 +1547,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
- 	u8 csum;
- 	int i;
- 
--	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, buf, 1);
-+	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1);
- 	if (err_mask)
- 		return -EIO;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 50e4dff..7148a58 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -165,6 +165,8 @@ extern void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 			       unsigned int action);
- extern void ata_eh_done(struct ata_link *link, struct ata_device *dev,
- 			unsigned int action);
-+extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
-+				      u8 page, void *buf, unsigned int sectors);
- extern void ata_eh_autopsy(struct ata_port *ap);
- const char *ata_get_cmd_descript(u8 command);
- extern void ata_eh_report(struct ata_port *ap);
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 47a9dbf..408da95 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -295,6 +295,13 @@ enum {
- 
- 	/* READ_LOG_EXT pages */
- 	ATA_LOG_SATA_NCQ	= 0x10,
-+	ATA_LOG_SATA_ID_DEV_DATA  = 0x30,
-+	ATA_LOG_SATA_SETTINGS	  = 0x08,
-+	ATA_LOG_DEVSLP_MDAT	  = 0x30,
-+	ATA_LOG_DEVSLP_MDAT_MASK  = 0x1F,
-+	ATA_LOG_DEVSLP_DETO	  = 0x31,
-+	ATA_LOG_DEVSLP_VALID	  = 0x37,
-+	ATA_LOG_DEVSLP_VALID_MASK = 0x80,
- 
- 	/* READ/WRITE LONG (obsolete) */
- 	ATA_CMD_READ_LONG	= 0x22,
-@@ -348,6 +355,7 @@ enum {
- 	SATA_FPDMA_IN_ORDER	= 0x04,	/* FPDMA in-order data delivery */
- 	SATA_AN			= 0x05,	/* Asynchronous Notification */
- 	SATA_SSP		= 0x06,	/* Software Settings Preservation */
-+	SATA_DEVSLP		= 0x09,	/* Device Sleep */
- 
- 	/* feature values for SET_MAX */
- 	ATA_SET_MAX_ADDR	= 0x00,
-@@ -584,6 +592,7 @@ static inline int ata_is_data(u8 prot)
- 
- #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
- #define ata_id_has_da(id)	((id)[ATA_ID_SATA_CAPABILITY_2] & (1 << 4))
-+#define ata_id_has_devslp(id)	((id)[ATA_ID_FEATURE_SUPP] & (1 << 8))
- 
- static inline bool ata_id_has_hipm(const u16 *id)
- {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 64f90e1..464e67c 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -162,6 +162,7 @@ enum {
- 	ATA_DFLAG_DETACHED	= (1 << 25),
- 
- 	ATA_DFLAG_DA		= (1 << 26), /* device supports Device Attention */
-+	ATA_DFLAG_DEVSLP	= (1 << 27), /* device supports Device Sleep */
- 
- 	ATA_DEV_UNKNOWN		= 0,	/* unknown device */
- 	ATA_DEV_ATA		= 1,	/* ATA device */
-@@ -649,6 +650,9 @@ struct ata_device {
- 		u32		gscr[SATA_PMP_GSCR_DWORDS]; /* PMP GSCR block */
- 	};
- 
-+	/* Identify Device Data Log (30h), SATA Settings (page 08h) */
-+	u8			sata_settings[ATA_SECT_SIZE];
-+
- 	/* error history */
- 	int			spdn_cnt;
- 	/* ering is CLEAR_END, read comment above CLEAR_END */
--- 
-1.7.9.5
+I'm sorry for the late answer.
 
 
+On Mon, 18 Jun 2012 17:51:41 +0200, Borislav Petkov <bp@amd64.org> wrote:
+> On Mon, Jun 18, 2012 at 04:52:36PM +0200, Thomas Schwinge wrote:
+> > > Ok, can you do the following:
+> > >=20
+> > > $ setpci -s 18.0 0x68.l
+> >=20
+> >     $ sudo setpci -s 18.0 0x68.l
+> >     0f00cc0f
+> >=20
+> > > $ rdmsr 0xc001001f
+> >=20
+> >     $ sudo modprobe msr
+> >     $ sudo rdmsr 0xc001001f
+> >     8
+>=20
+> Ok, this is a BIOS bug - we have a recommendation about what the BIOS
+> should do but yours doesn't do it. Are you sure you're using the latest
+> BIOS for your motherboard?
+>=20
+> Can you check for updates and if you get a newer version, can you update
+> your BIOS and do the two commands above?
+
+I have now finally been able to check this, and yes, I'm already using
+the latest version of the BIOS, which is Phoenix cME FirstBIOS Desktop
+Pro version 5.00 R1.07.2264.A1 (a.k.a.  5.00.1.07, 25.04.2006) for
+Fujitsu Siemens Esprimo E5600, mainboard D2264-A1, CPU AMD Sempron 3000+.
+
+> If there's no newer BIOS, we can try applying the workaround at boot in
+> an init script to fix your issue.
+
+How'd that be done?
+
+
+Gr=C3=BC=C3=9Fe,
+ Thomas
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAEBAgAGBQJQSbr5AAoJENuKOtuXzphJ3tcH/imLh1StPoUZgiSkovI2c69n
+olKgp+srGs3kZfuWloQeSD+3e8czKXA8/UQEU0eAZXuwKJkXjjurXlkzj9C1spWv
+KGQ1uwtg7OavstDFagK+LM60wi7JM3H35uKOG4DA/vFSOVCa7lL7az3GZleTz8Fp
+eLFipP7gJrqIUqmUsg7NFJhzxZ943c7ToEPLSUdVbrzLtWD6eKfkr9wuMidcONYg
+TCgHw8xnEKdovt9vMuoh3oNCqvXnWLYoObkyQuWyPvADM9B8uulkQ4IIbkemCPuc
+YaxJf8nxusLvf1/rGTaKz4Aq0+vps20327O8GGAnlLUcdAqN5au9wtHkVdEuk+8=
+=EnNu
+-----END PGP SIGNATURE-----
+--=-=-=--
