@@ -1,246 +1,133 @@
-From: Adko Branil <adkobranil@yahoo.com>
-Subject: Re: HDD problem, software bug, bios bug, or hardware ?
-Date: Fri, 7 Sep 2012 04:32:56 -0700 (PDT)
-Message-ID: <1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com>
-References: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20120826130152.GA20021@liondog.tnic> <1346086872.65665.YahooMailNeo@web124704.mail.ne1.yahoo.com> <20120827215952.GA18719@liondog.tnic> <1346259574.81504.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20120830095808.GB24680@liondog.tnic> <1346325007.23643.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20547.48101.900727.735398@pilspetsen.it.uu.se>
-Reply-To: Adko Branil <adkobranil@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Kumar Gala <galak@kernel.crashing.org>
+Subject: Re: [PATCH][v3] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Fri, 7 Sep 2012 07:37:53 -0500
+Message-ID: <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
+References: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
+Mime-Version: 1.0 (Apple Message framework v1278)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm5-vm2.bullet.mail.ne1.yahoo.com ([98.138.90.153]:43956 "HELO
-	nm5-vm2.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753222Ab2IGLc5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Sep 2012 07:32:57 -0400
-In-Reply-To: <20547.48101.900727.735398@pilspetsen.it.uu.se>
+Received: from gate.crashing.org ([63.228.1.57]:57790 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933048Ab2IGMiF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 08:38:05 -0400
+In-Reply-To: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Borislav Petkov <bp@alien8.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>"linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Dan Merillat <dan.merillat@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
-
-After updating bios no more crashes happened, i tested it many times on=
- heavy HDD IO loads, with many kernels (including CONFIG_PREEMPT kernel=
-s). But now if enable "Cool'n' Quiet" option in bios,=A0 CONFIG_PREEMPT=
-_VOLUNTARY kernel with passed "nosmp" at boot time, crashes during boot=
- process with kernel panic, while=A0 CONFIG_PREEMPT kernlel without "no=
-smp" works fine=A0 - but it is another story i think, should not be rel=
-ated with the crashes when it was old bios, and i think it is probably =
-"nosmp" the reason. (i have never changed cpu frequency of this cpu at =
-all) When "Cool'n' Quiet" is disabled, the system works perfectly adequ=
-ately with all kind of kernels i tried. Except that this warning messag=
-e in dmesg still appears (if it is problem at all). I put here this mes=
-sage for "nosmp" case as well, kernel is 3.5.2:
+To: Shaohui Xie <Shaohui.Xie@freescale.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
 
+On Sep 7, 2012, at 5:01 AM, Shaohui Xie wrote:
 
+> The freescale V2 SATA controller checks if the received data length matches
+> the programmed length 'ttl', if not, it assumes that this is an error.
+> In ATAPI, the 'ttl' is based on max allocation length and not the actual
+> data transfer length, controller will raise 'DLM' (Data length Mismatch)
+> error bit in Hstatus register. Along with 'DLM', DE (Device error) and
+> FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
+> bit is set in Serror register and CE (Command Error) and DE (Device error)
+> registers have the corresponding bit set. In this condition, we need to
+> clear errors in following way: in the service routine, based on 'DLM' flag,
+> HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
+> register.
+> 
+> Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
+> Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
+> ---
+> changes for v3:
+> 1. not using uppercase for variable names;
+> 2. remove unnecessary parens;
+> 
+> changes for v2:
+> 1. remove the using of quirk;
+> 2. wrap errata codes in condition;
+> 
+> drivers/ata/sata_fsl.c |   39 +++++++++++++++++++++++++++++++++++----
+> 1 files changed, 35 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+> index d6577b9..9fbab68 100644
+> --- a/drivers/ata/sata_fsl.c
+> +++ b/drivers/ata/sata_fsl.c
+> @@ -143,6 +143,7 @@ enum {
+> 	    FATAL_ERR_CRC_ERR_RX |
+> 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
+> 
+> +	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
+> 	INT_ON_FATAL_ERR = (1 << 5),
+> 	INT_ON_PHYRDY_CHG = (1 << 4),
+> 
+> @@ -1181,25 +1182,55 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+> 	u32 hstatus, done_mask = 0;
+> 	struct ata_queued_cmd *qc;
+> 	u32 SError;
+> +	u32 tag;
+> +	u32 status_mask = INT_ON_ERROR;
+> 
+> 	hstatus = ioread32(hcr_base + HSTATUS);
+> 
+> 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+> 
+> +	/* Read command completed register */
+> +	done_mask = ioread32(hcr_base + CC);
+> +
+> +	/* Workaround for data length mismatch errata */
+> +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+> +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+> +			qc = ata_qc_from_tag(ap, tag);
+> +			if (qc && ata_is_atapi(qc->tf.protocol)) {
+> +				u32 hcontrol;
+> +#define HCONTROL_CLEAR_ERROR	(1 << 27)
 
+shouldn't we have this #define be part of the enum that the other HCONTROL_ bits/flags are part of?
 
-[=A0=A0=A0 1.912494] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-[=A0=A0=A0 1.912494] [ INFO: inconsistent lock state ]
-[=A0=A0=A0 1.912494] 3.5.2 #4 Not tainted
-[=A0=A0=A0 1.912494] ---------------------------------
-[=A0=A0=A0 1.912494] inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usag=
-e.
-[=A0=A0=A0 1.912494] swapper/0/1 [HC1[1]:SC1[1]:HE0:SE0] takes:
-[=A0=A0=A0 1.912494]=A0 (&(&host->lock)->rlock){?.+...}, at: [<ffffffff=
-818f4e47>] ata_bmdma_interrupt+0x27/0x1d0
-[=A0=A0=A0 1.912494] {HARDIRQ-ON-W} state was registered at:
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff810998fb>] __lock_acquire+0x61b/0x=
-1af0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff8109b31a>] lock_acquire+0x8a/0x110
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff81b4d051>] _raw_spin_lock+0x31/0x4=
-0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff8190b3c5>] pdc_sata_hardreset+0x85=
-/0x100
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818eabba>] ata_do_reset+0x3a/0x90
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818edd72>] ata_eh_reset+0x372/0xe0=
-0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818eec25>] ata_eh_recover+0x2a5/0x=
-13d0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818f073d>] ata_do_eh+0x4d/0xb0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818f33ba>] ata_sff_error_handler+0=
-xca/0x120
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff8190a9e4>] pdc_error_handler+0x24/=
-0x30
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818f029c>] ata_scsi_port_error_han=
-dler+0x47c/0x800
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff818f06be>] ata_scsi_error+0x9e/0xd=
-0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff816732e8>] scsi_error_handler+0xf8=
-/0x500
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff810654fe>] kthread+0xae/0xc0
-[=A0=A0=A0 1.912494]=A0=A0 [<ffffffff81b4f5f4>] kernel_thread_helper+0x=
-4/0x10
-[=A0=A0=A0 1.912494] irq event stamp: 661637
-[=A0=A0=A0 1.912494] hardirqs last=A0 enabled at (661636): [<ffffffff81=
-049ff1>] __do_softirq+0x71/0x1f0
-[=A0=A0=A0 1.912494] hardirqs last disabled at (661637): [<ffffffff81b4=
-da67>] common_interrupt+0x67/0x6c
-[=A0=A0=A0 1.912494] softirqs last=A0 enabled at (661610): [<ffffffff81=
-04a0b4>] __do_softirq+0x134/0x1f0
-[=A0=A0=A0 1.912494] softirqs last disabled at (661635): [<ffffffff81b4=
-f6ec>] call_softirq+0x1c/0x30
-[=A0=A0=A0 1.912494]=20
-[=A0=A0=A0 1.912494] other info that might help us debug this:
-[=A0=A0=A0 1.912494]=A0 Possible unsafe locking scenario:
-[=A0=A0=A0 1.912494]=20
-[=A0=A0=A0 1.912494]=A0=A0=A0=A0=A0=A0=A0 CPU0
-[=A0=A0=A0 1.912494]=A0=A0=A0=A0=A0=A0=A0 ----
-[=A0=A0=A0 1.912494]=A0=A0 lock(&(&host->lock)->rlock);
-[=A0=A0=A0 1.912494]=A0=A0 <Interrupt>
-[=A0=A0=A0 1.912494]=A0=A0=A0=A0 lock(&(&host->lock)->rlock);
-[=A0=A0=A0 1.912494]=20
-[=A0=A0=A0 1.912494]=A0 *** DEADLOCK ***
-[=A0=A0=A0 1.912494]=20
-[=A0=A0=A0 1.912494] 5 locks held by swapper/0/1:
-[=A0=A0=A0 1.912494]=A0 #0:=A0 (&__lockdep_no_validate__){......}, at: =
-[<ffffffff81636b1b>] __driver_attach+0x5b/0xb0
-[=A0=A0=A0 1.912494]=A0 #1:=A0 (&__lockdep_no_validate__){......}, at: =
-[<ffffffff81636b29>] __driver_attach+0x69/0xb0
-[=A0=A0=A0 1.912494]=A0 #2:=A0 (usb_bus_list_lock){+.+.+.}, at: [<fffff=
-fff81954f95>] usb_add_hcd+0x295/0x6a0
-[=A0=A0=A0 1.912494]=A0 #3:=A0 (&__lockdep_no_validate__){......}, at: =
-[<ffffffff816367ea>] device_attach+0x2a/0xc0
-[=A0=A0=A0 1.912494]=A0 #4:=A0 (&__lockdep_no_validate__){......}, at: =
-[<ffffffff816367ea>] device_attach+0x2a/0xc0
-[=A0=A0=A0 1.912494]=20
-[=A0=A0=A0 1.912494] stack backtrace:
-[=A0=A0=A0 1.912494] Pid: 1, comm: swapper/0 Not tainted 3.5.2 #4
-[=A0=A0=A0 1.912494] Call Trace:
-[=A0=A0=A0 1.912494]=A0 <IRQ>=A0 [<ffffffff81b35961>] print_usage_bug+0=
-x1f7/0x208
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8101001f>] ? save_stack_trace+0x2f/0x=
-50
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81098730>] ? print_shortest_lock_depe=
-ndencies+0x1d0/0x1d0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810992a2>] mark_lock+0x262/0x2a0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810995b5>] ? __lock_acquire+0x2d5/0x1=
-af0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81099af3>] __lock_acquire+0x813/0x1af=
-0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810995b5>] ? __lock_acquire+0x2d5/0x1=
-af0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8109b31a>] lock_acquire+0x8a/0x110
-[=A0=A0=A0 1.912494]=A0 [<ffffffff818f4e47>] ? ata_bmdma_interrupt+0x27=
-/0x1d0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81079258>] ? cpuacct_charge+0xa8/0xf0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4d151>] _raw_spin_lock_irqsave+0x4=
-1/0x60
-[=A0=A0=A0 1.912494]=A0 [<ffffffff818f4e47>] ? ata_bmdma_interrupt+0x27=
-/0x1d0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff818f4e47>] ata_bmdma_interrupt+0x27/0=
-x1d0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810061f2>] ? mask_and_ack_8259A+0x32/=
-0x110
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810c2d5d>] handle_irq_event_percpu+0x=
-5d/0x1f0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810c2f38>] handle_irq_event+0x48/0x70
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8100622e>] ? mask_and_ack_8259A+0x6e/=
-0x110
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810c5a3e>] ? handle_level_irq+0x1e/0x=
-c0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810c5a91>] handle_level_irq+0x71/0xc0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81003ce2>] handle_irq+0x22/0x40
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4fdaa>] do_IRQ+0x5a/0xe0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4da6c>] common_interrupt+0x6c/0x6c
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810c2f43>] ? handle_irq_event+0x53/0x=
-70
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81049ff9>] ? __do_softirq+0x79/0x1f0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4f6ec>] call_softirq+0x1c/0x30
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81003d85>] do_softirq+0x85/0xc0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8104a425>] irq_exit+0xb5/0xc0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4fdb3>] do_IRQ+0x63/0xe0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4da6c>] common_interrupt+0x6c/0x6c
-[=A0=A0=A0 1.912494]=A0 <EOI>=A0 [<ffffffff8104378b>] ? vprintk_emit+0x=
-16b/0x4c0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b34815>] printk_emit+0x31/0x33
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81138f64>] ? kfree+0xd4/0x160
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81632c97>] __dev_printk+0x127/0x240
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81138f25>] ? kfree+0x95/0x160
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195818f>] ? usb_control_msg+0xef/0x1=
-30
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8109bd25>] ? trace_hardirqs_on_caller=
-+0x105/0x190
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8109bdbd>] ? trace_hardirqs_on+0xd/0x=
-10
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81632e03>] _dev_info+0x53/0x60
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195159a>] hub_probe+0x3ea/0x850
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4b3de>] ? mutex_unlock+0xe/0x10
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195b494>] usb_probe_interface+0x184/=
-0x230
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163692e>] driver_probe_device+0x7e/0=
-x210
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636b70>] ? __driver_attach+0xb0/0xb=
-0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636bbb>] __device_attach+0x4b/0x60
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81634a4e>] bus_for_each_drv+0x4e/0xa0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636867>] device_attach+0xa7/0xc0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81635ce0>] bus_probe_device+0xb0/0xe0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163404d>] device_add+0x5cd/0x6a0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195977e>] usb_set_configuration+0x4b=
-e/0x710
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81962fb3>] generic_probe+0x43/0xa0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195b56f>] usb_probe_device+0x2f/0x60
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163692e>] driver_probe_device+0x7e/0=
-x210
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636b70>] ? __driver_attach+0xb0/0xb=
-0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636bbb>] __device_attach+0x4b/0x60
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81634a4e>] bus_for_each_drv+0x4e/0xa0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636867>] device_attach+0xa7/0xc0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81635ce0>] bus_probe_device+0xb0/0xe0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163404d>] device_add+0x5cd/0x6a0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81951bdc>] usb_new_device+0x1dc/0x2a0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8195506b>] usb_add_hcd+0x36b/0x6a0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff819641a9>] usb_hcd_pci_probe+0x249/0x=
-3c0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff815a629f>] pci_device_probe+0xaf/0x13=
-0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163692e>] driver_probe_device+0x7e/0=
-x210
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636b6b>] __driver_attach+0xab/0xb0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81636ac0>] ? driver_probe_device+0x21=
-0/0x210
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81634af5>] bus_for_each_dev+0x55/0x90
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8163629e>] driver_attach+0x1e/0x20
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81635ff8>] bus_add_driver+0x1a8/0x270
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81637217>] driver_register+0x77/0x150
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff815a4fff>] __pci_register_driver+0x6f=
-/0xe0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162fcd>] uhci_hcd_init+0x80/0xc3
-[=A0=A0=A0 1.912494]=A0 [<ffffffff82162f4d>] ? ohci_hcd_mod_init+0x54/0=
-x54
-[=A0=A0=A0 1.912494]=A0 [<ffffffff810002a2>] do_one_initcall+0x122/0x17=
-0
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8212cd03>] kernel_init+0x139/0x1bd
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8212c5af>] ? do_early_param+0x8c/0x8c
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4f5f4>] kernel_thread_helper+0x4/0=
-x10
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4db19>] ? retint_restore_args+0xe/=
-0xe
-[=A0=A0=A0 1.912494]=A0 [<ffffffff8212cbca>] ? start_kernel+0x3bc/0x3bc
-[=A0=A0=A0 1.912494]=A0 [<ffffffff81b4f5f0>] ? gs_change+0xb/0xb
-[=A0=A0=A0 3.201635] ata4.00: ATA-6: ST3200822AS, 3.01, max UDMA/133
-[=A0=A0=A0 3.209975] ata4.00: 390721968 sectors, multi 16: LBA48=20
-[=A0=A0=A0 3.218619] uhci_hcd 0000:00:10.1: UHCI Host Controller
-[=A0=A0=A0 3.227150] ata2: SATA link down (SStatus 0 SControl 0)
-
-
-
-Thanks.
-
-Best regards
-Adko.
+> +				/* Set HControl[27] to clear error registers */
+> +				hcontrol = ioread32(hcr_base + HCONTROL);
+> +				iowrite32(hcontrol | HCONTROL_CLEAR_ERROR,
+> +						hcr_base + HCONTROL);
+> +
+> +				/* Clear HControl[27] */
+> +				iowrite32(hcontrol & ~HCONTROL_CLEAR_ERROR,
+> +						hcr_base + HCONTROL);
+> +
+> +				/* Clear SError[E] bit */
+> +				sata_fsl_scr_write(&ap->link, SCR_ERROR,
+> +						SError);
+> +
+> +				/* Ignore fatal error and device error */
+> +				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
+> +						| INT_ON_FATAL_ERR);
+> +				break;
+> +			}
+> +		}
+> +	}
+> +
+> 	if (unlikely(SError & 0xFFFF0000)) {
+> 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+> 		sata_fsl_error_intr(ap);
+> 	}
+> 
+> -	if (unlikely(hstatus & INT_ON_ERROR)) {
+> +	if (unlikely(hstatus & status_mask)) {
+> 		DPRINTK("error interrupt!!\n");
+> 		sata_fsl_error_intr(ap);
+> 		return;
+> 	}
+> 
+> -	/* Read command completed register */
+> -	done_mask = ioread32(hcr_base + CC);
+> -
+> 	VPRINTK("Status of all queues :\n");
+> 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
+> 		done_mask,
+> -- 
+> 1.6.4
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
