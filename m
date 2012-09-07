@@ -1,133 +1,94 @@
-From: Kumar Gala <galak@kernel.crashing.org>
-Subject: Re: [PATCH][v3] sata_fsl: add workaround for data length mismatch on freescale V2 controller
-Date: Fri, 7 Sep 2012 07:37:53 -0500
-Message-ID: <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
-References: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
-Mime-Version: 1.0 (Apple Message framework v1278)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Daniel Smedegaard Buus <danielbuus@gmail.com>
+Subject: Regression bug - Random SATA drives on PMPs on sata_sil24 cards not
+ being detected at boot with 3.2, 3.4, 3.6
+Date: Fri, 7 Sep 2012 15:59:31 +0200
+Message-ID: <CAHnuAezw5KFykmiS=nLfY_v_gac_Yau3akMxWYbLUYyUC99sXg@mail.gmail.com>
+References: <CAHnuAexq=R12+hv+XkL5b+qh6RYKXKVG8M6YX5sjbVSbEne6zA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:57790 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933048Ab2IGMiF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 08:38:05 -0400
-In-Reply-To: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:55032 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756545Ab2IGOAN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 10:00:13 -0400
+Received: by obbuo13 with SMTP id uo13so4634021obb.19
+        for <linux-ide@vger.kernel.org>; Fri, 07 Sep 2012 07:00:12 -0700 (PDT)
+In-Reply-To: <CAHnuAexq=R12+hv+XkL5b+qh6RYKXKVG8M6YX5sjbVSbEne6zA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohui Xie <Shaohui.Xie@freescale.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Anju Bhartiya <Anju.Bhartiya@freescale.com>
+To: linux-ide@vger.kernel.org
 
+Hello good folks :)
 
-On Sep 7, 2012, at 5:01 AM, Shaohui Xie wrote:
+Don't know what the right way to  report this is, but I was told in
+the thread at buzilla.kernel.org
+(https://bugzilla.kernel.org/show_bug.cgi?id=43153) to post my bug
+here.
 
-> The freescale V2 SATA controller checks if the received data length matches
-> the programmed length 'ttl', if not, it assumes that this is an error.
-> In ATAPI, the 'ttl' is based on max allocation length and not the actual
-> data transfer length, controller will raise 'DLM' (Data length Mismatch)
-> error bit in Hstatus register. Along with 'DLM', DE (Device error) and
-> FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
-> bit is set in Serror register and CE (Command Error) and DE (Device error)
-> registers have the corresponding bit set. In this condition, we need to
-> clear errors in following way: in the service routine, based on 'DLM' flag,
-> HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
-> register.
-> 
-> Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
-> Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
-> ---
-> changes for v3:
-> 1. not using uppercase for variable names;
-> 2. remove unnecessary parens;
-> 
-> changes for v2:
-> 1. remove the using of quirk;
-> 2. wrap errata codes in condition;
-> 
-> drivers/ata/sata_fsl.c |   39 +++++++++++++++++++++++++++++++++++----
-> 1 files changed, 35 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index d6577b9..9fbab68 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -143,6 +143,7 @@ enum {
-> 	    FATAL_ERR_CRC_ERR_RX |
-> 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
-> 
-> +	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
-> 	INT_ON_FATAL_ERR = (1 << 5),
-> 	INT_ON_PHYRDY_CHG = (1 << 4),
-> 
-> @@ -1181,25 +1182,55 @@ static void sata_fsl_host_intr(struct ata_port *ap)
-> 	u32 hstatus, done_mask = 0;
-> 	struct ata_queued_cmd *qc;
-> 	u32 SError;
-> +	u32 tag;
-> +	u32 status_mask = INT_ON_ERROR;
-> 
-> 	hstatus = ioread32(hcr_base + HSTATUS);
-> 
-> 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
-> 
-> +	/* Read command completed register */
-> +	done_mask = ioread32(hcr_base + CC);
-> +
-> +	/* Workaround for data length mismatch errata */
-> +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-> +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-> +			qc = ata_qc_from_tag(ap, tag);
-> +			if (qc && ata_is_atapi(qc->tf.protocol)) {
-> +				u32 hcontrol;
-> +#define HCONTROL_CLEAR_ERROR	(1 << 27)
+Basically, here's what I wrote in that bug report:
 
-shouldn't we have this #define be part of the enum that the other HCONTROL_ bits/flags are part of?
+==
 
-> +				/* Set HControl[27] to clear error registers */
-> +				hcontrol = ioread32(hcr_base + HCONTROL);
-> +				iowrite32(hcontrol | HCONTROL_CLEAR_ERROR,
-> +						hcr_base + HCONTROL);
-> +
-> +				/* Clear HControl[27] */
-> +				iowrite32(hcontrol & ~HCONTROL_CLEAR_ERROR,
-> +						hcr_base + HCONTROL);
-> +
-> +				/* Clear SError[E] bit */
-> +				sata_fsl_scr_write(&ap->link, SCR_ERROR,
-> +						SError);
-> +
-> +				/* Ignore fatal error and device error */
-> +				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
-> +						| INT_ON_FATAL_ERR);
-> +				break;
-> +			}
-> +		}
-> +	}
-> +
-> 	if (unlikely(SError & 0xFFFF0000)) {
-> 		DPRINTK("serror @host_intr : 0x%x\n", SError);
-> 		sata_fsl_error_intr(ap);
-> 	}
-> 
-> -	if (unlikely(hstatus & INT_ON_ERROR)) {
-> +	if (unlikely(hstatus & status_mask)) {
-> 		DPRINTK("error interrupt!!\n");
-> 		sata_fsl_error_intr(ap);
-> 		return;
-> 	}
-> 
-> -	/* Read command completed register */
-> -	done_mask = ioread32(hcr_base + CC);
-> -
-> 	VPRINTK("Status of all queues :\n");
-> 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
-> 		done_mask,
-> -- 
-> 1.6.4
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Hi :)
 
+I originally reported this to the Ubuntu kernel bugzilla
+(https://bugs.launchpad.net/ubuntu/+source/linux/+bug/987353) and was directed
+here.
+
+Since switching my Kubuntu system from Oneiric (kernel 3.0) to Precise daily
+(kernel 3.2), GRUB will hang for a minute or more immediately after boot
+selection while (according to dmesg) hard resetting the links on my sata_sil24
+based PCIe controllers that have 1:5 port multipliers attached to them.
+
+Eventually it will semi-succeed and continue booting, but I'll be missing one
+or two SATA drives until I manually hotplug them out and back in, at which
+point they'll function normally (AFAICT - I haven't really stress-tested this,
+but at least they're all present and seem to work without issues).
+
+The box in question (amd64) has 22 SATA drives,
+6 on ICH10R
+15 on three sata_sil24 PCIe 1-port cards using three 1:5 PMPs
+1 on a sata_sil PCI32 4-port card
+
+There is no fakeraid configured.
+
+The problem showed with the kernel shipped with the Precise daily build I
+installed, 3.2.0-23-generic. I installed 3.4.0-030400rc4-generic from
+http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.4-rc4-precise/ which didn't
+help, and then reverted to 3.0.0-17-generic, which resolved the issue
+immediately.
+
+I'll attach some files for reference (all from the 3.2 configuration - there
+are more at the Ubuntu link previously mentioned, not sure which are relevant
+to you), please let me know if I should provide or do anything else.
+
+Thanks for your time and effort,
+Daniel :)
+
+==
+
+...and...
+
+==
+
+diffing the sata_sil24 driver module from 3.0 with the one from 3.3
+doesn't really show any difference AFAICT if you ignore renaming of some
+function calls and a couple of type changes. My C knowledge isn't exactly vast,
+but it'd appear the problem originates elsewhere?
+
+==
+
+...and...
+
+==
+
+Just thought I'd update the bug, adding 3.6 to the list of affected versions as
+I just had a test run on the mainline 3.6 RC3 kernel for Quantal :)
+
+==
+
+So, anything to do about this? What can I do to help? On the bug
+report page, dmesg, lspci and version info is attached.
+
+Cheers,
+Daniel :)
