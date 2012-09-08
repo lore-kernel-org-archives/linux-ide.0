@@ -1,170 +1,134 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v2 -tip 4/5] PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
-Date: Fri, 7 Sep 2012 13:53:03 -0700
-Message-ID: <CAErSpo6Pd1O_vzhiwrRX_fjjoDs789orX_t+uJoZKbk5XWZa6w@mail.gmail.com>
-References: <cover.1346653435.git.agordeev@redhat.com> <6a425d611ce5c276ec6949fd6aadf575580e07fe.1346653435.git.agordeev@redhat.com>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: Re: HDD problem, software bug, bios bug, or hardware ?
+Date: Sat, 8 Sep 2012 18:30:41 +0200
+Message-ID: <20555.29361.138287.766030@pilspetsen.it.uu.se>
+References: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+	<20120826130152.GA20021@liondog.tnic>
+	<1346086872.65665.YahooMailNeo@web124704.mail.ne1.yahoo.com>
+	<20120827215952.GA18719@liondog.tnic>
+	<1346259574.81504.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+	<20120830095808.GB24680@liondog.tnic>
+	<1346325007.23643.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+	<20547.48101.900727.735398@pilspetsen.it.uu.se>
+	<1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:37734 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755693Ab2IGUxZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Sep 2012 16:53:25 -0400
-Received: by lagy9 with SMTP id y9so6765lag.19
-        for <linux-ide@vger.kernel.org>; Fri, 07 Sep 2012 13:53:24 -0700 (PDT)
-In-Reply-To: <6a425d611ce5c276ec6949fd6aadf575580e07fe.1346653435.git.agordeev@redhat.com>
+Received: from smtp1.uu.se ([130.238.7.54]:52890 "EHLO smtp1.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750940Ab2IHQcb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2012 12:32:31 -0400
+In-Reply-To: <1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+To: Adko Branil <adkobranil@yahoo.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Borislav Petkov <bp@alien8.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Dan Merillat <dan.merillat@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-On Mon, Sep 3, 2012 at 2:19 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> The new function pci_enable_msi_block_auto() tries to allocate maximum
-> possible number of MSIs up to the number the device supports. It
-> generalizes a pattern when pci_enable_msi_block() is contiguously called
-> until it succeeds or fails.
->
-> Opposite to pci_enable_msi_block() which takes the number of MSIs to
-> allocate as a input parameter, pci_enable_msi_block_auto() could be used
-> by device drivers to obtain the number of assigned MSIs and the number
-> of MSIs the device supports.
->
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Adko Branil writes:
+ > After updating bios no more crashes happened, i tested it many times
+ > on heavy HDD IO loads, with many kernels (including CONFIG_PREEMPT
+ > kernels). But now if enable "Cool'n' Quiet" option in bios,=A0
+ > CONFIG_PREEMPT_VOLUNTARY kernel with passed "nosmp" at boot time,
+ > crashes during boot process with kernel panic, while=A0 CONFIG_PREEM=
+PT
+ > kernlel without "nosmp" works fine=A0 - but it is another story i th=
+ink,
+ > should not be related with the crashes when it was old bios, and i
+ > think it is probably "nosmp" the reason. (i have never changed cpu
+ > frequency of this cpu at all) When "Cool'n' Quiet" is disabled, the
+ > system works perfectly adequately with all kind of kernels i tried.
+ > Except that this warning message in dmesg still appears (if it is
+ > problem at all). I put here this message for "nosmp" case as well,
+ > kernel is 3.5.2:
+ >=20
+ > [=A0=A0=A0 1.912494] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+ > [=A0=A0=A0 1.912494] [ INFO: inconsistent lock state ]
+ > [=A0=A0=A0 1.912494] 3.5.2 #4 Not tainted
+ > [=A0=A0=A0 1.912494] ---------------------------------
+ > [=A0=A0=A0 1.912494] inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} u=
+sage.
+ > [=A0=A0=A0 1.912494] swapper/0/1 [HC1[1]:SC1[1]:HE0:SE0] takes:
+ > [=A0=A0=A0 1.912494]=A0 (&(&host->lock)->rlock){?.+...}, at: [<fffff=
+fff818f4e47>] ata_bmdma_interrupt+0x27/0x1d0
+ > [=A0=A0=A0 1.912494] {HARDIRQ-ON-W} state was registered at:
+ > [=A0=A0=A0 1.912494]=A0=A0 [<ffffffff810998fb>] __lock_acquire+0x61b=
+/0x1af0
+ > [=A0=A0=A0 1.912494]=A0=A0 [<ffffffff8109b31a>] lock_acquire+0x8a/0x=
+110
+ > [=A0=A0=A0 1.912494]=A0=A0 [<ffffffff81b4d051>] _raw_spin_lock+0x31/=
+0x40
+ > [=A0=A0=A0 1.912494]=A0=A0 [<ffffffff8190b3c5>] pdc_sata_hardreset+0=
+x85/0x100
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Please try the patch below, which implements the fix I described a
+week ago. It's for 3.6-rc4 but should work in any recent kernel.
+Without this patch one of my test machines always throws a lockdep
+warning involving pdc_sata_hardreset and pdc_interrupt during bootup,
+but with the patch the warning is gone, as expected.
 
-I haven't looked at the other patches in this series, but if the
-x86/IRQ folks like them, I'm OK with this part.
+If it works for you I'll add your Tested-by: and submit it properly.
 
-Since the series is mostly non-PCI, I think it makes the most sense to
-keep it all together and merge it through some x86 or IRQ tree,
-including this PCI bit.
+/Mikael
 
-> ---
->  Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++++++++++++++++++++++++++-----
->  drivers/pci/msi.c               |   26 ++++++++++++++++++++++++++
->  include/linux/pci.h             |    7 +++++++
->  3 files changed, 65 insertions(+), 5 deletions(-)
->
-> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-> index 53e6fca..a091780 100644
-> --- a/Documentation/PCI/MSI-HOWTO.txt
-> +++ b/Documentation/PCI/MSI-HOWTO.txt
-> @@ -127,15 +127,42 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
->  returns as soon as it finds any constraint that doesn't allow the
->  call to succeed.
->
-> -4.2.3 pci_disable_msi
-> +4.2.3 pci_enable_msi_block_auto
-> +
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
-> +
-> +This variation on pci_enable_msi() call allows a device driver to request
-> +the maximum possible number of MSIs.  The MSI specification only allows
-> +interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-> +
-> +If this function returns a positive number, it indicates that it has
-> +succeeded and the returned value is the number of allocated interrupts. In
-> +this case, the function enables MSI on this device and updates dev->irq to
-> +be the lowest of the new interrupts assigned to it.  The other interrupts
-> +assigned to the device are in the range dev->irq to dev->irq + returned
-> +value - 1.
-> +
-> +If this function returns a negative number, it indicates an error and
-> +the driver should not attempt to request any more MSI interrupts for
-> +this device.
-> +
-> +If the device driver needs to know the number of interrupts the device
-> +supports it can pass the pointer count where that number is stored. The
-> +device driver must decide what action to take if pci_enable_msi_block_auto()
-> +succeeds, but returns a value less than the number of interrupts supported.
-> +If the device driver does not need to know the number of interrupts
-> +supported, it can set the pointer count to NULL.
-> +
-> +4.2.4 pci_disable_msi
->
->  void pci_disable_msi(struct pci_dev *dev)
->
->  This function should be used to undo the effect of pci_enable_msi() or
-> -pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
-> -interrupt number and frees the previously allocated message signaled
-> -interrupt(s).  The interrupt may subsequently be assigned to another
-> -device, so drivers should not cache the value of dev->irq.
-> +pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-> +dev->irq to the pin-based interrupt number and frees the previously
-> +allocated message signaled interrupt(s).  The interrupt may subsequently be
-> +assigned to another device, so drivers should not cache the value of
-> +dev->irq.
->
->  Before calling this function, a device driver must always call free_irq()
->  on any interrupt for which it previously called request_irq().
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index f0752d1..690b268 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -845,6 +845,32 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->  }
->  EXPORT_SYMBOL(pci_enable_msi_block);
->
-> +int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-> +{
-> +       int ret, pos, nvec;
-> +       u16 msgctl;
-> +
-> +       pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-> +       if (!pos)
-> +               return -EINVAL;
-> +
-> +       pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-> +       ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-> +
-> +       if (maxvec)
-> +               *maxvec = ret;
-> +
-> +       do {
-> +               nvec = ret;
-> +               ret = pci_enable_msi_block(dev, nvec);
-> +       } while (ret > 0);
-> +
-> +       if (ret < 0)
-> +               return ret;
-> +       return nvec;
-> +}
-> +EXPORT_SYMBOL(pci_enable_msi_block_auto);
-> +
->  void pci_msi_shutdown(struct pci_dev *dev)
->  {
->         struct msi_desc *desc;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5faa831..b8a9454 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1070,6 +1070,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
->         return -1;
->  }
->
-> +static inline int
-> +pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-> +{
-> +       return -1;
-> +}
-> +
->  static inline void pci_msi_shutdown(struct pci_dev *dev)
->  { }
->  static inline void pci_disable_msi(struct pci_dev *dev)
-> @@ -1101,6 +1107,7 @@ static inline int pci_msi_enabled(void)
->  }
->  #else
->  extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-> +extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
->  extern void pci_msi_shutdown(struct pci_dev *dev);
->  extern void pci_disable_msi(struct pci_dev *dev);
->  extern int pci_msix_table_size(struct pci_dev *dev);
-> --
-> 1.7.7.6
->
->
-> --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+--- linux-3.6-rc4/drivers/ata/sata_promise.c.~1~	2012-09-08 12:18:24.00=
+0000000 +0200
++++ linux-3.6-rc4/drivers/ata/sata_promise.c	2012-09-08 17:55:49.000000=
+000 +0200
+@@ -147,6 +147,10 @@ struct pdc_port_priv {
+ 	dma_addr_t		pkt_dma;
+ };
+=20
++struct pdc_host_priv {
++	spinlock_t hard_reset_lock;
++};
++
+ static int pdc_sata_scr_read(struct ata_link *link, unsigned int sc_re=
+g, u32 *val);
+ static int pdc_sata_scr_write(struct ata_link *link, unsigned int sc_r=
+eg, u32 val);
+ static int pdc_ata_init_one(struct pci_dev *pdev, const struct pci_dev=
+ice_id *ent);
+@@ -801,9 +805,10 @@ static void pdc_hard_reset_port(struct a
+ 	void __iomem *host_mmio =3D ap->host->iomap[PDC_MMIO_BAR];
+ 	void __iomem *pcictl_b1_mmio =3D host_mmio + PDC_PCI_CTL + 1;
+ 	unsigned int ata_no =3D pdc_ata_port_to_ata_no(ap);
++	struct pdc_host_priv *hpriv =3D ap->host->private_data;
+ 	u8 tmp;
+=20
+-	spin_lock(&ap->host->lock);
++	spin_lock(&hpriv->hard_reset_lock);
+=20
+ 	tmp =3D readb(pcictl_b1_mmio);
+ 	tmp &=3D ~(0x10 << ata_no);
+@@ -814,7 +819,7 @@ static void pdc_hard_reset_port(struct a
+ 	writeb(tmp, pcictl_b1_mmio);
+ 	readb(pcictl_b1_mmio); /* flush */
+=20
+-	spin_unlock(&ap->host->lock);
++	spin_unlock(&hpriv->hard_reset_lock);
+ }
+=20
+ static int pdc_sata_hardreset(struct ata_link *link, unsigned int *cla=
+ss,
+@@ -1182,6 +1187,7 @@ static int pdc_ata_init_one(struct pci_d
+ 	const struct ata_port_info *pi =3D &pdc_port_info[ent->driver_data];
+ 	const struct ata_port_info *ppi[PDC_MAX_PORTS];
+ 	struct ata_host *host;
++	struct pdc_host_priv *hpriv;
+ 	void __iomem *host_mmio;
+ 	int n_ports, i, rc;
+ 	int is_sataii_tx4;
+@@ -1218,6 +1224,11 @@ static int pdc_ata_init_one(struct pci_d
+ 		dev_err(&pdev->dev, "failed to allocate host\n");
+ 		return -ENOMEM;
+ 	}
++	hpriv =3D devm_kzalloc(&pdev->dev, sizeof *hpriv, GFP_KERNEL);
++	if (!hpriv)
++		return -ENOMEM;
++	spin_lock_init(&hpriv->hard_reset_lock);
++	host->private_data =3D hpriv;
+ 	host->iomap =3D pcim_iomap_table(pdev);
+=20
+ 	is_sataii_tx4 =3D pdc_is_sataii_tx4(pi->flags);
