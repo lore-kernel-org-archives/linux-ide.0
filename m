@@ -1,39 +1,106 @@
-From: Adko Branil <adkobranil@yahoo.com>
-Subject: Re: HDD problem, software bug, bios bug, or hardware ?
-Date: Sat, 8 Sep 2012 10:22:43 -0700 (PDT)
-Message-ID: <1347124963.91847.YahooMailNeo@web124701.mail.ne1.yahoo.com>
-References: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20120826130152.GA20021@liondog.tnic> <1346086872.65665.YahooMailNeo@web124704.mail.ne1.yahoo.com> <20120827215952.GA18719@liondog.tnic> <1346259574.81504.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20120830095808.GB24680@liondog.tnic> <1346325007.23643.YahooMailNeo@web124706.mail.ne1.yahoo.com> <20547.48101.900727.735398@pilspetsen.it.uu.se> <1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com> <20555.29361.138287.766030@pilspetsen.it.uu.se>
-Reply-To: Adko Branil <adkobranil@yahoo.com>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: Storage related regression in linux-next 20120824
+Date: Sun, 9 Sep 2012 00:38:27 -0700 (PDT)
+Message-ID: <alpine.LSU.2.00.1209090012390.2416@eggly.anvils>
+References: <CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com> <CAFtxgO536xEMjMw_D1u3utT1f1iy-6EsjcawdYvbocRxc=Wu=A@mail.gmail.com> <503BA2DB.9080704@gmail.com> <503BB4BB.4080307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm28.bullet.mail.ne1.yahoo.com ([98.138.90.91]:33879 "EHLO
-	nm28.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751119Ab2IHRWp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Sep 2012 13:22:45 -0400
-In-Reply-To: <20555.29361.138287.766030@pilspetsen.it.uu.se>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43803 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751957Ab2IIHjG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2012 03:39:06 -0400
+Received: by iahk25 with SMTP id k25so862561iah.19
+        for <linux-ide@vger.kernel.org>; Sun, 09 Sep 2012 00:39:04 -0700 (PDT)
+In-Reply-To: <503BB4BB.4080307@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: Borislav Petkov <bp@alien8.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Dan Merillat <dan.merillat@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Arvydas Sidorenko <asido4@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Zheng Liu <wenqing.lz@taobao.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
 
->Please try the patch below, which implements the fix I described a
+On Mon, 27 Aug 2012, Arvydas Sidorenko wrote:
+> On 08/27/2012 06:39 PM, Arvydas Sidorenko wrote:
+> > > Can you pastebin 'dmesg' and 'lspci'?  Did this occur only once, or is
+> > > it reproducible?
+> > > 
+> > >       Jeff
+> > It does happen every time when booting into -next 20120824.
 
->week ago. It's for 3.6-rc4 but should work in any recent kernel.
->Without this patch one of my test machines always throws a lockdep
->warning involving pdc_sata_hardreset and pdc_interrupt during bootup,
->but with the patch the warning is gone, as expected.
+I don't know what went into next-20120824 versus next-20120813 (which
+you reported to be good), but I'm seeing similar behaviour on PowerMac
+G5 on Thursday's mmotm based on next-20120907 - critical target error,
+root remounted read-only, the reboot with good kernel then has to fsck
+(although fsck doesn't find anything interesting to fix in my case).
 
->If it works for you I'll add your Tested-by: and submit it properly.
+> > [   11.035530] sd 0:0:0:0: [sda]
+> > [   11.035533] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> > [   11.035535] sd 0:0:0:0: [sda]
+> > [   11.035536] Sense Key : Illegal Request [current]
+> > [   11.035539] sd 0:0:0:0: [sda]
+> > [   11.035541] Add. Sense: Invalid field in cdb
+> > [   11.035543] sd 0:0:0:0: [sda] CDB:
+> > [   11.035544] Write(10): 2a 08 0b ad d1 78 00 00 08 00
+> > [   11.035550] end_request: critical target error, dev sda, sector
+> > 195940728
+> > [   11.035552] end_request: critical target error, dev sda, sector
+> > 195940728
+> > [   11.035557] Aborting journal on device sda4-8.
+> > [   11.046413] EXT4-fs error (device sda4): ext4_journal_start_sb:348:
+> > Detected aborted journal
+> > [   11.046418] EXT4-fs (sda4): Remounting filesystem read-only
+> > 
+> I believe the problem is in SCSI. Mode sense command catches my attention:
+>     [    3.955397] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 10
+> All logs from older kernels has different mode page code: 00 3a 00 00
+> 
+> sg_modes from broken kernel shows DPOFUA set, which is 0x10th bit.
+> Anyone knowing SCSI better could tell if that might cause the problems?
 
->/Mikael
+I think you know your way around SCSI/libata much better than I do.
 
+I just bisected linux-next, and it comes down to the commit below, which
+introduces the regression for me, and I'm guessing for you also.  Maybe
+it can be fixed up to satisfy us, but otherwise will have to be reverted:
+we don't invert a default if it's going to break older working systems.
 
-I will be able to try it no sooner than next week.
+A good workaround for me meanwhile is to add boot option "libata.fua=0":
+please try that (or reverting the commit) and let us know the result.
 
+Thanks,
+Hugh
 
-Thanks !
+commit 91895b786e631ab47b618c901231f22b5a44115b
+Author: Zheng Liu <wenqing.lz@taobao.com>
+Date:   Tue May 8 11:24:03 2012 +0800
 
-Regards
-Adko.
+    libata: enable SATA disk fua detection on default
+    
+    Currently, SATA disk fua detection is disabled on default because most of
+    devices don't support this feature at that time.  With the development of
+    technology, more and more SATA disks support this feature.  So now we can enable
+    this detection on default.
+    
+    Although fua detection is defined as a kernel module parameter, it is too hard
+    to set its value because it must be loaded and set before system starts up.
+    That needs to modify initrd file.  So it is inconvenient for administrator who
+    needs to manage a huge number of servers.
+    
+    Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 5eee1c1..c3fbdca 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -135,9 +135,9 @@ int atapi_passthru16 = 1;
+ module_param(atapi_passthru16, int, 0444);
+ MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+ 
+-int libata_fua = 0;
++int libata_fua = 1;
+ module_param_named(fua, libata_fua, int, 0444);
+-MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
++MODULE_PARM_DESC(fua, "FUA support (0=off, 1=on [default])");
+ 
+ static int ata_ignore_hpa;
+ module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
