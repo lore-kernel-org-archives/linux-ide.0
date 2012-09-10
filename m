@@ -1,62 +1,46 @@
-From: Xie Shaohui-B21989 <B21989@freescale.com>
-Subject: RE: [PATCH][v3] sata_fsl: add workaround for data length mismatch
- on freescale V2 controller
-Date: Mon, 10 Sep 2012 10:45:37 +0000
-Message-ID: <ED492CCEAF882048BC2237DE806547C9079D9FCF@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
- <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
- <ED492CCEAF882048BC2237DE806547C9079D9AB9@039-SN2MPN1-012.039d.mgd.msft.net>
- <504DBF3D.2000102@mvista.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Mon, 10 Sep 2012 12:45:51 +0200
+Message-ID: <4663685.bsC7gzLV6E@linux-lqwf.site>
+References: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org> <504DAFE6.50507@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <504DBF3D.2000102@mvista.com>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bhartiya Anju-B07263 <B07263@freescale.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp-out003.kontent.com ([81.88.40.217]:42246 "EHLO
+	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757382Ab2IJKrV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2012 06:47:21 -0400
+In-Reply-To: <504DAFE6.50507@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-> -----Original Message-----
-> From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
-> Sent: Monday, September 10, 2012 6:22 PM
-> To: Xie Shaohui-B21989
-> Cc: Kumar Gala; jgarzik@pobox.com; linux-ide@vger.kernel.org; linuxppc-
-> dev@lists.ozlabs.org; linux-kernel@vger.kernel.org; Bhartiya Anju-B07263
-> Subject: Re: [PATCH][v3] sata_fsl: add workaround for data length
-> mismatch on freescale V2 controller
-> 
-> Hello.
-> 
-> On 10-09-2012 6:53, Xie Shaohui-B21989 wrote:
-> 
-> >>> +	/* Workaround for data length mismatch errata */
-> >>> +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-> >>> +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-> >>> +			qc = ata_qc_from_tag(ap, tag);
-> >>> +			if (qc && ata_is_atapi(qc->tf.protocol)) {
-> >>> +				u32 hcontrol;
-> >>> +#define HCONTROL_CLEAR_ERROR	(1 << 27)
-> 
-> >> shouldn't we have this #define be part of the enum that the other
-> >> HCONTROL_ bits/flags are part of?
-> 
-> > [S.H] do you mean this?
-> 
->     Apparently not. He said *enum*, not #define.
+On Monday 10 September 2012 17:16:22 Aaron Lu wrote:
 
-[S.H] OK. Thank you for the clarification.
+> +static int sr_resume(struct device *dev)
+> +{
+> +	struct scsi_cd *cd;
+> +	struct scsi_sense_hdr sshdr;
+> +
+> +	cd = dev_get_drvdata(dev);
+> +
+> +	if (!cd->device->powered_off)
+> +		return 0;
+> +
+> +	/* get the disk ready */
+> +	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> +
+> +	/* if user wakes up the ODD, eject the tray */
+> +	if (cd->device->need_eject) {
+> +		cd->device->need_eject = 0;
+> +		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
+> +			sr_tray_move(&cd->cdi, 1);
 
+1. Even if the door is locked?
+2. sr_tray_move allocates memory with GFP_KERNEL. This smells of a deadlock.
 
-Best Regards, 
-Shaohui Xie
+	Regards
+		Oliver
+
