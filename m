@@ -1,30 +1,62 @@
-From: "DR.NED OKOH" <emailinfo@ok.net>
-Subject: NICE DAY
-Date: Mon, 10 Sep 2012 03:29:03 -0700
-Message-ID: <SERVERgpYfRo3wO5blw00007683__47936.1940561377$1347273971$gmane$org@offline.co.il>
-Reply-To: mail.info187@ok.net
+From: Xie Shaohui-B21989 <B21989@freescale.com>
+Subject: RE: [PATCH][v3] sata_fsl: add workaround for data length mismatch
+ on freescale V2 controller
+Date: Mon, 10 Sep 2012 10:45:37 +0000
+Message-ID: <ED492CCEAF882048BC2237DE806547C9079D9FCF@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
+ <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
+ <ED492CCEAF882048BC2237DE806547C9079D9AB9@039-SN2MPN1-012.039d.mgd.msft.net>
+ <504DBF3D.2000102@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; CHARSET=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxout11.netvision.net.il ([194.90.6.39]:46117 "EHLO
-	mxout11.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756475Ab2IJKph (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2012 06:45:37 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <504DBF3D.2000102@mvista.com>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bhartiya Anju-B07263 <B07263@freescale.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-ide@vger.kernel.org
 
-Good day my dear,
-I am writing to acknowledged you that this is the second time we are notifying you about your payment worth of US$16.5m USD,with foreign Remittance payment department office which is due to be released into your Account As we begin the first fiscal payment of the year 2012.Please send the information below as needed for your fund release to you OK.
+> -----Original Message-----
+> From: Sergei Shtylyov [mailto:sshtylyov@mvista.com]
+> Sent: Monday, September 10, 2012 6:22 PM
+> To: Xie Shaohui-B21989
+> Cc: Kumar Gala; jgarzik@pobox.com; linux-ide@vger.kernel.org; linuxppc-
+> dev@lists.ozlabs.org; linux-kernel@vger.kernel.org; Bhartiya Anju-B07263
+> Subject: Re: [PATCH][v3] sata_fsl: add workaround for data length
+> mismatch on freescale V2 controller
+> 
+> Hello.
+> 
+> On 10-09-2012 6:53, Xie Shaohui-B21989 wrote:
+> 
+> >>> +	/* Workaround for data length mismatch errata */
+> >>> +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+> >>> +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+> >>> +			qc = ata_qc_from_tag(ap, tag);
+> >>> +			if (qc && ata_is_atapi(qc->tf.protocol)) {
+> >>> +				u32 hcontrol;
+> >>> +#define HCONTROL_CLEAR_ERROR	(1 << 27)
+> 
+> >> shouldn't we have this #define be part of the enum that the other
+> >> HCONTROL_ bits/flags are part of?
+> 
+> > [S.H] do you mean this?
+> 
+>     Apparently not. He said *enum*, not #define.
 
-1)Your Full Name__________________________ _____________
-2)Your Address_______________________ ______________________________
-3)Your Age___________________________ _______________________
-4)Your Direct Telephone Number________________________ ________________
-5)Fax Number________________________ _________________
-6)Occupation____________________ __________________________
+[S.H] OK. Thank you for the clarification.
 
-We sincerely apologies for our late contact with you, We are committed to serve you better OK and you have been advice to get back to me immediately for more details OK.
 
-Yours in service
-Dr.Ned Okoh
+Best Regards, 
+Shaohui Xie
