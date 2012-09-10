@@ -1,115 +1,70 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: Regression bug - Random SATA drives on PMPs on sata_sil24 cards
- not being detected at boot with 3.2, 3.4, 3.6
-Date: Mon, 10 Sep 2012 01:27:39 -0700
-Message-ID: <CAMHSBOVgw-DWYWvckwUNN7o4Qeq_q-omGAUL2XnWtOznWWDz3g@mail.gmail.com>
-References: <CAHnuAexq=R12+hv+XkL5b+qh6RYKXKVG8M6YX5sjbVSbEne6zA@mail.gmail.com>
-	<CAHnuAezw5KFykmiS=nLfY_v_gac_Yau3akMxWYbLUYyUC99sXg@mail.gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: HDD problem, software bug, bios bug, or hardware ?
+Date: Mon, 10 Sep 2012 11:15:46 +0200
+Message-ID: <20120910091546.GA4431@liondog.tnic>
+References: <1345901771.8871.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+ <20120826130152.GA20021@liondog.tnic>
+ <1346086872.65665.YahooMailNeo@web124704.mail.ne1.yahoo.com>
+ <20120827215952.GA18719@liondog.tnic>
+ <1346259574.81504.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+ <20120830095808.GB24680@liondog.tnic>
+ <1346325007.23643.YahooMailNeo@web124706.mail.ne1.yahoo.com>
+ <20547.48101.900727.735398@pilspetsen.it.uu.se>
+ <1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:51679 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946Ab2IJI1k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2012 04:27:40 -0400
-Received: by qcro28 with SMTP id o28so839772qcr.19
-        for <linux-ide@vger.kernel.org>; Mon, 10 Sep 2012 01:27:39 -0700 (PDT)
-In-Reply-To: <CAHnuAezw5KFykmiS=nLfY_v_gac_Yau3akMxWYbLUYyUC99sXg@mail.gmail.com>
+Received: from mail.skyhub.de ([78.46.96.112]:46767 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758Ab2IJJPv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 10 Sep 2012 05:15:51 -0400
+Content-Disposition: inline
+In-Reply-To: <1347017576.44763.YahooMailNeo@web124703.mail.ne1.yahoo.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Smedegaard Buus <danielbuus@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Adko Branil <adkobranil@yahoo.com>
+Cc: Mikael Pettersson <mikpe@it.uu.se>, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Dan Merillat <dan.merillat@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-Daniel,
+On Fri, Sep 07, 2012 at 04:32:56AM -0700, Adko Branil wrote:
+> After updating bios no more crashes happened, i tested it many times
+> on heavy HDD IO loads, with many kernels (including CONFIG_PREEMPT
+> kernels).
 
-I work issues related to port multiplier and Sil controllers. I would
-like to get more info:
-I already have the dmesg. from bug/987353 [kernel 3.2.0]
-- Can you include dmesg using 3.0.0-17-generic
-- Can you include dmesg when you hotplug the disks with 3.2.0
+Alriiight, one of the most seldom times where a BIOS update actually
+fixes things :-).
 
-My patches fix staggered spinup and allow more time for recovery, but
-also cause system to boot more slowly - see thread
-"http://www.spinics.net/lists/linux-ide/msg41700.html"
+> But now if enable "Cool'n' Quiet" option in bios,=C2=A0
+> CONFIG_PREEMPT_VOLUNTARY kernel with passed "nosmp" at boot time,
+> crashes during boot process with kernel panic, while=C2=A0 CONFIG_PRE=
+EMPT
+> kernlel without "nosmp" works fine=C2=A0 - but it is another story i
+> think, should not be related with the crashes when it was old bios,
+> and i think it is probably "nosmp" the reason.
 
-Gwendal.
-On Fri, Sep 7, 2012 at 6:59 AM, Daniel Smedegaard Buus
-<danielbuus@gmail.com> wrote:
-> Hello good folks :)
->
-> Don't know what the right way to  report this is, but I was told in
-> the thread at buzilla.kernel.org
-> (https://bugzilla.kernel.org/show_bug.cgi?id=43153) to post my bug
-> here.
->
-> Basically, here's what I wrote in that bug report:
->
-> ==
->
-> Hi :)
->
-> I originally reported this to the Ubuntu kernel bugzilla
-> (https://bugs.launchpad.net/ubuntu/+source/linux/+bug/987353) and was directed
-> here.
->
-> Since switching my Kubuntu system from Oneiric (kernel 3.0) to Precise daily
-> (kernel 3.2), GRUB will hang for a minute or more immediately after boot
-> selection while (according to dmesg) hard resetting the links on my sata_sil24
-> based PCIe controllers that have 1:5 port multipliers attached to them.
->
-> Eventually it will semi-succeed and continue booting, but I'll be missing one
-> or two SATA drives until I manually hotplug them out and back in, at which
-> point they'll function normally (AFAICT - I haven't really stress-tested this,
-> but at least they're all present and seem to work without issues).
->
-> The box in question (amd64) has 22 SATA drives,
-> 6 on ICH10R
-> 15 on three sata_sil24 PCIe 1-port cards using three 1:5 PMPs
-> 1 on a sata_sil PCI32 4-port card
->
-> There is no fakeraid configured.
->
-> The problem showed with the kernel shipped with the Precise daily build I
-> installed, 3.2.0-23-generic. I installed 3.4.0-030400rc4-generic from
-> http://kernel.ubuntu.com/~kernel-ppa/mainline/v3.4-rc4-precise/ which didn't
-> help, and then reverted to 3.0.0-17-generic, which resolved the issue
-> immediately.
->
-> I'll attach some files for reference (all from the 3.2 configuration - there
-> are more at the Ubuntu link previously mentioned, not sure which are relevant
-> to you), please let me know if I should provide or do anything else.
->
-> Thanks for your time and effort,
-> Daniel :)
->
-> ==
->
-> ...and...
->
-> ==
->
-> diffing the sata_sil24 driver module from 3.0 with the one from 3.3
-> doesn't really show any difference AFAICT if you ignore renaming of some
-> function calls and a couple of type changes. My C knowledge isn't exactly vast,
-> but it'd appear the problem originates elsewhere?
->
-> ==
->
-> ...and...
->
-> ==
->
-> Just thought I'd update the bug, adding 3.6 to the list of affected versions as
-> I just had a test run on the mainline 3.6 RC3 kernel for Quantal :)
->
-> ==
->
-> So, anything to do about this? What can I do to help? On the bug
-> report page, dmesg, lspci and version info is attached.
->
-> Cheers,
-> Daniel :)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hmm, Cool'n'Quiet enabled actually means that you have _PSS objects and
+powernow-k8 should be detecting the P-states properly.
+
+Can you catch dmesg from that machine twice?
+
+* one with Cool'n'Quiet disabled
+* one with the kernel panic
+
+> (i have never changed cpu frequency of this cpu at all) When "Cool'n'
+> Quiet" is disabled, the system works perfectly adequately with all
+> kind of kernels i tried. Except that this warning message in dmesg
+> still appears (if it is problem at all). I put here this message for
+> "nosmp" case as well, kernel is 3.5.2:
+
+Right, so AFAICU, you can run a CONFIG_PREEMPT kernel perfectly fine no=
+w
+after the BIOS update, right?
+
+If so and when you say that the oopses started happening after an
+electrical instability, I'd venture a guess that something got damaged
+in the BIOS EPROM and since you've flashed it anew, the corrupted data
+got overwritten and so no more crashes. Correct?
+
+--=20
+Regards/Gruss,
+    Boris.
