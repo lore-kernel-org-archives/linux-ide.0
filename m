@@ -1,83 +1,50 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH RESEND] ahci: Add JMicron 362 device IDs
-Date: Mon, 10 Sep 2012 02:06:03 +0100
-Message-ID: <1347239163.5134.40.camel@deadeye.wl.decadent.org.uk>
-References: <1347235744.5134.14.camel@deadeye.wl.decadent.org.uk>
-	 <20120910003850.GA158@mannheim-rule.local>
+From: Xie Shaohui-B21989 <B21989@freescale.com>
+Subject: RE: [PATCH][v3] sata_fsl: add workaround for data length mismatch
+ on freescale V2 controller
+Date: Mon, 10 Sep 2012 02:53:35 +0000
+Message-ID: <ED492CCEAF882048BC2237DE806547C9079D9AB9@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1347012095-4404-1-git-send-email-Shaohui.Xie@freescale.com>
+ <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-XjP5Z4aFDej2/1TSkp7W"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52436 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753300Ab2IJBGQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Sep 2012 21:06:16 -0400
-In-Reply-To: <20120910003850.GA158@mannheim-rule.local>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <82046C25-828E-4E0F-9F86-8E038AE5C93C@kernel.crashing.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Kumar Gala <galak@kernel.crashing.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Bhartiya Anju-B07263 <B07263@freescale.com>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Martin Michlmayr <tbm@cyrius.com>
+
+> > +	/* Workaround for data length mismatch errata */
+> > +	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+> > +		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+> > +			qc = ata_qc_from_tag(ap, tag);
+> > +			if (qc && ata_is_atapi(qc->tf.protocol)) {
+> > +				u32 hcontrol;
+> > +#define HCONTROL_CLEAR_ERROR	(1 << 27)
+> 
+> shouldn't we have this #define be part of the enum that the other
+> HCONTROL_ bits/flags are part of?
+[S.H] do you mean this?
+
+#ifdef SATA_FSL_XXX_ERRATUAM
+#define HCONTROL_CLEAR_ERROR	(1 << 27)
+#endif
+
+Then we need to decide where to put "#define SATA_FSL_XXX_ERRATUAM".
+
+It's only a readable definition of a register bit which avoiding magic number.
 
 
---=-XjP5Z4aFDej2/1TSkp7W
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Sun, 2012-09-09 at 17:39 -0700, Jonathan Nieder wrote:
-> Hi,
->=20
-> Ben Hutchings wrote:
->=20
-> > The JMicron JMB362 controller supports AHCI only, but some revisions
-> > use the IDE class code.  These need to be matched by device ID.
-> [...]
-> > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> [...]
-> >  drivers/ata/ahci.c |    3 +++
-> >  1 files changed, 3 insertions(+), 0 deletions(-)
-> [...]
-> > --- a/drivers/ata/ahci.c
-> > +++ b/drivers/ata/ahci.c
-> > @@ -263,6 +263,9 @@ static const struct pci_device_id ahci_pci_tbl[] =
-=3D {
-> >  	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
-> >  	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
-> >  	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
-> > +	/* JMicron 362B and 362C have an AHCI function with IDE class code */
-> > +	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
-> > +	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
->=20
-> Should this go to stable kernels as well?
-
-I suppose so, yes.
-
-Ben.
-
---=20
-Ben Hutchings
-Make three consecutive correct guesses and you will be considered an expert=
-.
-
---=-XjP5Z4aFDej2/1TSkp7W
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIVAwUAUE08++e/yOyVhhEJAQrW6xAAzUzmlQ/tdG0LPWtLX1Czpi9lwhpeEkTT
-zAxXSEv+qFRFML81WRZMO/Sw0SOt4aFTNpwP8VjWWiP4zyeGuNdou0k3myOhO1hk
-AWV8YUtjJ8HE7PkzS7yJuKJz9SO4FtuqOKfd38oLizQkI8mL94MXYnn2Yql6Dilc
-LnYNajC9DBzsc/S34QJZI2q9ZwLLX9pvxWWUs8aEDws+TlzFduQY2q52sbD0GPwv
-5QCxo06FeUdd4857wTX0xXVQhMLjsFbAahV7aOj8WLv/QcS2IrPfrP1aVhrCUb3c
-tp5oTdj2pDU4tJCxnf/ePWBTBpZJsMFiVyxTZcPEKGiABNekW88TFNw5EvwAt7dC
-un11Y6oBo+VnhYcwbviKs8XWVW4oUGNDKRS3ldj/hvA3JCBDpVcPIJeek/K0McIn
-Hp2ZB3a1qRTrAOWy9JVeGYgOHskPY6CNf3x4XyGABXng8DoeD3TqPvzxI5Ie0sTO
-eg+rbcDfMLcncT7BTamBEFQRBrW3KAtzAbbqDqEKG5JRC0f4aX1kyQh1iICAiI9D
-m6NZ1aqvYz6UXSz4xprjHzxByZxsT1y/ap9GQNYccAQavirRA+3H54WoeBbgwoez
-m77uhlHjDRLxZLsobYZdvk/xPJZ26xJnaiHrXVrOa+X7hbn5dchhWRAn7GSypQFk
-OVUr8Rc4s0Y=
-=PNp9
------END PGP SIGNATURE-----
-
---=-XjP5Z4aFDej2/1TSkp7W--
+Best Regards, 
+Shaohui Xie
