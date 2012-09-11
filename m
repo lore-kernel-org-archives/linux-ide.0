@@ -1,129 +1,55 @@
-From: Shaohui Xie <Shaohui.Xie@freescale.com>
-Subject: [PATCH][v4] sata_fsl: add workaround for data length mismatch on freescale V2 controller
-Date: Tue, 11 Sep 2012 10:48:53 +0800
-Message-ID: <1347331734-6540-1-git-send-email-Shaohui.Xie@freescale.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v6 1/7] scsi: sr: support runtime pm for ODD
+Date: Tue, 11 Sep 2012 14:44:30 +0800
+Message-ID: <20120911064429.GA2196@mint-spring.sh.intel.com>
+References: <Pine.LNX.4.44L0.1209061437050.1182-100000@iolanthe.rowland.org>
+ <504DAFE6.50507@intel.com>
+ <4663685.bsC7gzLV6E@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:31129
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754916Ab2IKDW7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2012 23:22:59 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4663685.bsC7gzLV6E@linux-lqwf.site>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
-The freescale V2 SATA controller checks if the received data length matches
-the programmed length 'ttl', if not, it assumes that this is an error.
-In ATAPI, the 'ttl' is based on max allocation length and not the actual
-data transfer length, controller will raise 'DLM' (Data length Mismatch)
-error bit in Hstatus register. Along with 'DLM', DE (Device error) and
-FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
-bit is set in Serror register and CE (Command Error) and DE (Device error)
-registers have the corresponding bit set. In this condition, we need to
-clear errors in following way: in the service routine, based on 'DLM' flag,
-HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
-register.
+On Mon, Sep 10, 2012 at 12:45:51PM +0200, Oliver Neukum wrote:
+> On Monday 10 September 2012 17:16:22 Aaron Lu wrote:
+> 
+> > +static int sr_resume(struct device *dev)
+> > +{
+> > +	struct scsi_cd *cd;
+> > +	struct scsi_sense_hdr sshdr;
+> > +
+> > +	cd = dev_get_drvdata(dev);
+> > +
+> > +	if (!cd->device->powered_off)
+> > +		return 0;
+> > +
+> > +	/* get the disk ready */
+> > +	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> > +
+> > +	/* if user wakes up the ODD, eject the tray */
+> > +	if (cd->device->need_eject) {
+> > +		cd->device->need_eject = 0;
+> > +		if (!(cd->cdi.mask & CDC_CLOSE_TRAY))
+> > +			sr_tray_move(&cd->cdi, 1);
+> 
+> 1. Even if the door is locked?
 
-Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
-Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
----
-changes for v4:
-1. put HCONTROL_CLEAR_ERROR to enum and rename it as CLEAR_ERROR;
+This piece of code of sr_resume is intended for ZPODD devices, for
+normal devices it will simply return as the powered_off flag will never
+be set for them.
 
-changes for v3:
-1. not using uppercase for variable names;
-2. remove unnecessary parens;
+And for ZPODD devices, the door shouldn't be in locked state here since
+for it to enter power off state, "no medium inside" has to be satisfied
+and when there is no medium inside, we do not lock its door.
 
-changes for v2:
-1. remove the using of quirk;
-2. wrap errata codes in condition;
+> 2. sr_tray_move allocates memory with GFP_KERNEL. This smells of a deadlock.
 
+Sorry, don't get this. Can you please elaborate?
 
- drivers/ata/sata_fsl.c |   39 +++++++++++++++++++++++++++++++++++----
- 1 files changed, 35 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index d6577b9..124b2c1 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -123,6 +123,7 @@ enum {
- 	ONLINE = (1 << 31),
- 	GOING_OFFLINE = (1 << 30),
- 	BIST_ERR = (1 << 29),
-+	CLEAR_ERROR = (1 << 27),
- 
- 	FATAL_ERR_HC_MASTER_ERR = (1 << 18),
- 	FATAL_ERR_PARITY_ERR_TX = (1 << 17),
-@@ -143,6 +144,7 @@ enum {
- 	    FATAL_ERR_CRC_ERR_RX |
- 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
- 
-+	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
- 	INT_ON_FATAL_ERR = (1 << 5),
- 	INT_ON_PHYRDY_CHG = (1 << 4),
- 
-@@ -1181,25 +1183,54 @@ static void sata_fsl_host_intr(struct ata_port *ap)
- 	u32 hstatus, done_mask = 0;
- 	struct ata_queued_cmd *qc;
- 	u32 SError;
-+	u32 tag;
-+	u32 status_mask = INT_ON_ERROR;
- 
- 	hstatus = ioread32(hcr_base + HSTATUS);
- 
- 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
- 
-+	/* Read command completed register */
-+	done_mask = ioread32(hcr_base + CC);
-+
-+	/* Workaround for data length mismatch errata */
-+	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
-+		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
-+			qc = ata_qc_from_tag(ap, tag);
-+			if (qc && ata_is_atapi(qc->tf.protocol)) {
-+				u32 hcontrol;
-+				/* Set HControl[27] to clear error registers */
-+				hcontrol = ioread32(hcr_base + HCONTROL);
-+				iowrite32(hcontrol | CLEAR_ERROR,
-+						hcr_base + HCONTROL);
-+
-+				/* Clear HControl[27] */
-+				iowrite32(hcontrol & ~CLEAR_ERROR,
-+						hcr_base + HCONTROL);
-+
-+				/* Clear SError[E] bit */
-+				sata_fsl_scr_write(&ap->link, SCR_ERROR,
-+						SError);
-+
-+				/* Ignore fatal error and device error */
-+				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
-+						| INT_ON_FATAL_ERR);
-+				break;
-+			}
-+		}
-+	}
-+
- 	if (unlikely(SError & 0xFFFF0000)) {
- 		DPRINTK("serror @host_intr : 0x%x\n", SError);
- 		sata_fsl_error_intr(ap);
- 	}
- 
--	if (unlikely(hstatus & INT_ON_ERROR)) {
-+	if (unlikely(hstatus & status_mask)) {
- 		DPRINTK("error interrupt!!\n");
- 		sata_fsl_error_intr(ap);
- 		return;
- 	}
- 
--	/* Read command completed register */
--	done_mask = ioread32(hcr_base + CC);
--
- 	VPRINTK("Status of all queues :\n");
- 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
- 		done_mask,
--- 
-1.6.4
-
-
+Thanks,
+Aaron
