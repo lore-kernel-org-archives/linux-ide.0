@@ -1,88 +1,129 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: HDD problem, software bug, bios bug, or hardware ?
-Date: Mon, 10 Sep 2012 23:59:16 +0200
-Message-ID: <20120910215916.GA13334@liondog.tnic>
-References: <1345858271.82172.YahooMailNeo@web124705.mail.ne1.yahoo.com>
- <20120825113301.GA15210@liondog.tnic>
- <CAPL5yKdj2NrtQ0edWLjv6nefkcAG0VacQgSxPhuZ_TLpXeb+0Q@mail.gmail.com>
- <20120902072420.GC21982@liondog.tnic>
- <CAPL5yKcyzf1ta9Vc8Sh0EKCxBhonYjRFH7dnMEDBHbFYDh7u5w@mail.gmail.com>
- <20120910205121.GA11370@liondog.tnic>
- <CAPL5yKdNJnKoWQSKb6-bjDAGP4sEtvUdfR+bZb9XEhseE=SMYg@mail.gmail.com>
+From: Shaohui Xie <Shaohui.Xie@freescale.com>
+Subject: [PATCH][v4] sata_fsl: add workaround for data length mismatch on freescale V2 controller
+Date: Tue, 11 Sep 2012 10:48:53 +0800
+Message-ID: <1347331734-6540-1-git-send-email-Shaohui.Xie@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:49184 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754430Ab2IJV7T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Sep 2012 17:59:19 -0400
-Content-Disposition: inline
-In-Reply-To: <CAPL5yKdNJnKoWQSKb6-bjDAGP4sEtvUdfR+bZb9XEhseE=SMYg@mail.gmail.com>
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:31129
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754916Ab2IKDW7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Sep 2012 23:22:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Merillat <dan.merillat@gmail.com>
-Cc: Adko Branil <adkobranil@yahoo.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Shaohui Xie <Shaohui.Xie@freescale.com>, Anju Bhartiya <Anju.Bhartiya@freescale.com>
 
-On Mon, Sep 10, 2012 at 05:29:50PM -0400, Dan Merillat wrote:
-> It has two states, "Automatic" and "Disabled", but anything
-> OS-controlled (such as virtualization) has the same two states. It's
-> set to "Automatic".
+The freescale V2 SATA controller checks if the received data length matches
+the programmed length 'ttl', if not, it assumes that this is an error.
+In ATAPI, the 'ttl' is based on max allocation length and not the actual
+data transfer length, controller will raise 'DLM' (Data length Mismatch)
+error bit in Hstatus register. Along with 'DLM', DE (Device error) and
+FE (fatal Error) bits are also set in Hstatus register, 'E' (Internal Error)
+bit is set in Serror register and CE (Command Error) and DE (Device error)
+registers have the corresponding bit set. In this condition, we need to
+clear errors in following way: in the service routine, based on 'DLM' flag,
+HCONTROL[27] operation clears Hstatus, CE and DE registers, clear Serror
+register.
 
-Hmm, so it should be enabled then.
+Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
+Signed-off-by: Anju Bhartiya <Anju.Bhartiya@freescale.com>
+---
+changes for v4:
+1. put HCONTROL_CLEAR_ERROR to enum and rename it as CLEAR_ERROR;
 
-> I can probably boot back to a 3.2 where it was working, what ACPI
-> debugging would be useful to you from a good kernel?
+changes for v3:
+1. not using uppercase for variable names;
+2. remove unnecessary parens;
 
-Hmm, if you say it worked before 3.2, then it didn't use ACPI the way it
-does today so that it fails on your box.
+changes for v2:
+1. remove the using of quirk;
+2. wrap errata codes in condition;
 
-Here's what I got on my box:
 
-[    0.000000] ACPI: RSDP 00000000000f6620 00014 (v00 GBT   )
-[    0.000000] ACPI: RSDT 00000000cfff3000 00038 (v01 GBT    NVDAACPI 42302E31 NVDA 01010101)
-[    0.000000] ACPI: FACP 00000000cfff3040 00074 (v01 GBT    NVDAACPI 42302E31 NVDA 01010101)
-[    0.000000] ACPI: DSDT 00000000cfff30c0 04C8E (v01 GBT    NVDAACPI 00001000 MSFT 0100000C)
-[    0.000000] ACPI: FACS 00000000cfff0000 00040
-[    0.000000] ACPI: SSDT 00000000cfff7e40 004CE (v01 PTLTD  POWERNOW 00000001  LTP 00000001)
-[    0.000000] ACPI: HPET 00000000cfff8340 00038 (v01 GBT    NVDAACPI 42302E31 NVDA 00000098)
-[    0.000000] ACPI: MCFG 00000000cfff8380 0003C (v01 GBT    NVDAACPI 42302E31 NVDA 01010101)
-[    0.000000] ACPI: APIC 00000000cfff7d80 00098 (v01 GBT    NVDAACPI 42302E31 NVDA 01010101)
+ drivers/ata/sata_fsl.c |   39 +++++++++++++++++++++++++++++++++++----
+ 1 files changed, 35 insertions(+), 4 deletions(-)
 
-and the SSDT table contains, when disassembled, all those _PCT and _PSS
-objects. (I guessed it by the OEM Table ID "POWERNOW" :-)) They look
-something like this:
-
-        Name (_PCT, Package (0x02)
-        {
-            ResourceTemplate ()
-            {
-                Register (FFixedHW, 
-                    0x40,               // Bit Width
-                    0x00,               // Bit Offset
-                    0x00000000C0010062, // Address
-                    ,)
-            }, 
-	...
-
-each in a _PR - processor - scope. (Boy, do I hate ACPI!).
-
-Now, if we look at your ACPI tables:
-
-[    0.000000] ACPI: RSDP 00000000000f7170 00014 (v00 GBT   )
-[    0.000000] ACPI: RSDT 00000000c7de3000 00034 (v01 GBT    GBTUACPI 42302E31 GBTU 01010101)
-[    0.000000] ACPI: FACP 00000000c7de3040 00074 (v01 GBT    GBTUACPI 42302E31 GBTU 01010101)
-[    0.000000] ACPI: DSDT 00000000c7de30c0 064A2 (v01 GBT    GBTUACPI 00001000 MSFT 03000000)
-[    0.000000] ACPI: FACS 00000000c7de0000 00040
-[    0.000000] ACPI: HPET 00000000c7de9640 00038 (v01 GBT    GBTUACPI 42302E31 GBTU 00000098)
-[    0.000000] ACPI: MCFG 00000000c7de9680 0003C (v01 GBT    GBTUACPI 42302E31 GBTU 01010101)
-[    0.000000] ACPI: APIC 00000000c7de9580 00084 (v01 GBT    GBTUACPI 42302E31 GBTU 01010101)
-
-the one missing is the SSDT table so either your BIOS is not providing
-the it, or P-states are hidden in some other table or ...
-
-Your BIOS is from 2008. Can you get a newer one from Gigabyte and update
-it, if possible?
-
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index d6577b9..124b2c1 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -123,6 +123,7 @@ enum {
+ 	ONLINE = (1 << 31),
+ 	GOING_OFFLINE = (1 << 30),
+ 	BIST_ERR = (1 << 29),
++	CLEAR_ERROR = (1 << 27),
+ 
+ 	FATAL_ERR_HC_MASTER_ERR = (1 << 18),
+ 	FATAL_ERR_PARITY_ERR_TX = (1 << 17),
+@@ -143,6 +144,7 @@ enum {
+ 	    FATAL_ERR_CRC_ERR_RX |
+ 	    FATAL_ERR_FIFO_OVRFL_TX | FATAL_ERR_FIFO_OVRFL_RX,
+ 
++	INT_ON_DATA_LENGTH_MISMATCH = (1 << 12),
+ 	INT_ON_FATAL_ERR = (1 << 5),
+ 	INT_ON_PHYRDY_CHG = (1 << 4),
+ 
+@@ -1181,25 +1183,54 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 	u32 hstatus, done_mask = 0;
+ 	struct ata_queued_cmd *qc;
+ 	u32 SError;
++	u32 tag;
++	u32 status_mask = INT_ON_ERROR;
+ 
+ 	hstatus = ioread32(hcr_base + HSTATUS);
+ 
+ 	sata_fsl_scr_read(&ap->link, SCR_ERROR, &SError);
+ 
++	/* Read command completed register */
++	done_mask = ioread32(hcr_base + CC);
++
++	/* Workaround for data length mismatch errata */
++	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
++		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++			qc = ata_qc_from_tag(ap, tag);
++			if (qc && ata_is_atapi(qc->tf.protocol)) {
++				u32 hcontrol;
++				/* Set HControl[27] to clear error registers */
++				hcontrol = ioread32(hcr_base + HCONTROL);
++				iowrite32(hcontrol | CLEAR_ERROR,
++						hcr_base + HCONTROL);
++
++				/* Clear HControl[27] */
++				iowrite32(hcontrol & ~CLEAR_ERROR,
++						hcr_base + HCONTROL);
++
++				/* Clear SError[E] bit */
++				sata_fsl_scr_write(&ap->link, SCR_ERROR,
++						SError);
++
++				/* Ignore fatal error and device error */
++				status_mask &= ~(INT_ON_SINGL_DEVICE_ERR
++						| INT_ON_FATAL_ERR);
++				break;
++			}
++		}
++	}
++
+ 	if (unlikely(SError & 0xFFFF0000)) {
+ 		DPRINTK("serror @host_intr : 0x%x\n", SError);
+ 		sata_fsl_error_intr(ap);
+ 	}
+ 
+-	if (unlikely(hstatus & INT_ON_ERROR)) {
++	if (unlikely(hstatus & status_mask)) {
+ 		DPRINTK("error interrupt!!\n");
+ 		sata_fsl_error_intr(ap);
+ 		return;
+ 	}
+ 
+-	/* Read command completed register */
+-	done_mask = ioread32(hcr_base + CC);
+-
+ 	VPRINTK("Status of all queues :\n");
+ 	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%x\n",
+ 		done_mask,
 -- 
-Regards/Gruss,
-    Boris.
+1.6.4
+
+
