@@ -1,47 +1,80 @@
-From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: Storage related regression in linux-next 20120824
-Date: Wed, 12 Sep 2012 12:36:47 +0800
-Message-ID: <20120912043647.GA3084@gmail.com>
-References: <CA+6av4=uxu_q5U_46HtpUt=FSgbh3pZuAEY54J5_xK=MKWq-YQ@mail.gmail.com>
- <CAFtxgO536xEMjMw_D1u3utT1f1iy-6EsjcawdYvbocRxc=Wu=A@mail.gmail.com>
- <503BA2DB.9080704@gmail.com>
- <503BB4BB.4080307@gmail.com>
- <alpine.LSU.2.00.1209090012390.2416@eggly.anvils>
- <CA+6av4=6WeLcde5me2FCpBtQJAOTtHZvf4pkMExgMW9agVNLWg@mail.gmail.com>
- <504CFBE3.401@pobox.com>
- <CANsGZ6aPB6ZjTmUJ=xeLY68iV5V9ghGGAQrp9KvJcyC0d-ARUg@mail.gmail.com>
- <504D0127.5080807@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:56353 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750780Ab2ILE0Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Sep 2012 00:26:25 -0400
-Content-Disposition: inline
-In-Reply-To: <504D0127.5080807@pobox.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v7 0/6] ZPODD patches
+Date: Wed, 12 Sep 2012 16:29:51 +0800
+Message-ID: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Hugh Dickins <hughd@google.com>, Arvydas Sidorenko <asido4@gmail.com>, Zheng Liu <wenqing.lz@taobao.com>, linux-kernel@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Sun, Sep 09, 2012 at 04:50:47PM -0400, Jeff Garzik wrote:
-> On 09/09/2012 04:36 PM, Hugh Dickins wrote:
-> >On Sun, Sep 9, 2012 at 1:28 PM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> >>I'll send Linus a patch to disable.
-> >
-> >Thanks, but no, the change in question hasn't reached Linus yet, it's
-> >just a linux-next or mmotm thing - isn't it?
-> 
-> Yep, libata-dev#upstream.  Sorry, got my own branches confused for a
-> second there.
+v7:
+Re work of runtime pm of sr driver, based on ideas of Alan Stern and
+Oliver Neukum.
 
-Sorry for delay reply.  In our product system, we tested a lot of
-different brands of SATA disks, and it is OK after fua is enabled on
-default.  Certainly we can't test all disks. :-(
+Jeff, due to the ready_to_power_off flag added, there is a small
+change in [PATCH v7 6/6] libata: acpi: respect may_power_off flag,
+please check if I can still get your ack, thanks.
 
-So I think we quite have to revert my patch now, and try to fix the
-current problem.
+v6:
+When user changes may_power_off flag through sysfs entry and if device
+is already runtime suspended, resume resume it so that it can respect
+this flag next time it is runtime suspended as suggested by Alan Stern.
+Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+Alan Stern.
 
-Regards,
-Zheng
+v5:
+Add may_power_off flag to scsi device.
+Alan Stern suggested that I should not mess runtime suspend with
+runtime power off, but the current zpodd implementation made it not
+easy to seperate. So I re-wrote the zpodd implementation, the end
+result is, normal ODD can also enter runtime suspended state, but
+their power won't be removed.
+
+v4:
+Rebase on top of Linus' tree, due to this, the problem of a missing
+flag in v3 is gone;
+Add a new function scsi_autopm_put_device_autosuspend to first mark
+last busy for the device and then put autosuspend it as suggested by
+Oliver Neukum.
+Typo fix as pointed by Sergei Shtylyov.
+Check can_power_off flag before any runtime pm operations in sr.
+
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
+
+Aaron Lu (6):
+  block: genhd: add an interface to set disk poll interval
+  scsi: sr: support runtime pm
+  scsi: sr: support zero power ODD(ZPODD)
+  scsi: pm: add may_power_off flag
+  scsi: sr: use may_power_off
+  libata: acpi: respect may_power_off flag
+
+ block/genhd.c              | 23 +++++++++----
+ drivers/ata/libata-acpi.c  | 30 +++++++++++-----
+ drivers/scsi/scsi_sysfs.c  | 37 +++++++++++++++++++-
+ drivers/scsi/sr.c          | 86 +++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/sr.h          |  1 +
+ drivers/scsi/sr_ioctl.c    |  7 +++-
+ include/linux/genhd.h      |  1 +
+ include/scsi/scsi_device.h |  4 +++
+ 8 files changed, 168 insertions(+), 21 deletions(-)
+
+-- 
+1.7.12.21.g871e293
+
