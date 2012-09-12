@@ -1,116 +1,72 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v7 4/6] scsi: pm: add may_power_off flag
-Date: Wed, 12 Sep 2012 16:29:55 +0800
-Message-ID: <1347438597-5903-5-git-send-email-aaron.lu@intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Change in sysfs topology for libata
+Date: Wed, 12 Sep 2012 13:02:28 -0700
+Message-ID: <CAMHSBOV360yPM6+aMSNKK_iNfMKCnu8dgz4kQLysA6fpo8R7aQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:51992 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132Ab2ILUC3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Sep 2012 16:02:29 -0400
+Received: by qcro28 with SMTP id o28so1391153qcr.19
+        for <linux-ide@vger.kernel.org>; Wed, 12 Sep 2012 13:02:28 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Add a new flag may_power_off for scsi device, it gives the user a chance
-to control when the device is runtime suspended, can we remove its power
-if possible.
+Lin,
 
-And if the device can be powered off(reflected by can_power_off flag,
-determined by individual driver), create a sysfs entry named
-may_power_off to let user control the flag.
+ Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a introduces a change
+in sysfs directory for ata controller:
 
-When user changes this flag through sysfs entry and if the device is
-already runtime suspended, runtime resume it so that it can respect this
-flag next time it is runtime suspended.
+Before:
+           /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+           |-- ata1                                (ata port)
+           |-- host0                               (scsi host)
+              |-- target0:0:0                      (scsi target)
+                  |-- 0:0:0:0                      (disk)
 
-I'm planning using this flag for sr and sd.
+After:
+           /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+           |-- ata1                                (ata port)
+               |-- host0                           (scsi host)
+                   |-- target0:0:0                 (scsi target)
+                       |-- 0:0:0:0                 (disk)
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/scsi/scsi_sysfs.c  | 37 ++++++++++++++++++++++++++++++++++++-
- include/scsi/scsi_device.h |  1 +
- 2 files changed, 37 insertions(+), 1 deletion(-)
+The problem is an ata controller, managed by libata, is still
+considered by the kernel as a SCSI controller: diverging even more
+from other SCSI controller sysfs layout is not a good idea.
+When I wrote libata-transport.c, my plan was to be consistent with SAS
+objects: for instance, for a SAS controller with a simple SAS topology
+we have:
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 093d4f6..8c8efd3 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -509,6 +509,7 @@ sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
- 	return ret;							\
- }									\
- static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_store_##field);
-+#endif
- 
- /*
-  * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "1",
-@@ -526,7 +527,7 @@ static int scsi_sdev_check_buf_bit(const char *buf)
- 	} else
- 		return -EINVAL;
- }
--#endif
-+
- /*
-  * Create the actual show/store functions and data structures.
-  */
-@@ -860,6 +861,37 @@ static struct device_attribute sdev_attr_queue_type_rw =
- 	__ATTR(queue_type, S_IRUGO | S_IWUSR, show_queue_type_field,
- 	       sdev_store_queue_type_rw);
- 
-+static ssize_t
-+sdev_show_may_power_off(struct device *dev, struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct scsi_device *sdev;
-+	sdev = to_scsi_device(dev);
-+	return snprintf (buf, 20, "%d\n", sdev->may_power_off);
-+}
-+
-+static ssize_t
-+sdev_store_may_power_off(struct device *dev, struct device_attribute *attr,
-+			 const char *buf, size_t count)
-+{
-+	int ret;
-+	struct scsi_device *sdev;
-+
-+	ret = scsi_sdev_check_buf_bit(buf);
-+	if (ret >= 0) {
-+		sdev = to_scsi_device(dev);
-+		if (sdev->may_power_off != ret) {
-+			sdev->may_power_off = ret;
-+			if (pm_runtime_suspended(dev))
-+				pm_runtime_resume(dev);
-+		}
-+		ret = count;
-+	}
-+	return ret;
-+}
-+static DEVICE_ATTR(may_power_off, S_IRUGO | S_IWUSR,
-+			sdev_show_may_power_off, sdev_store_may_power_off);
-+
- /**
-  * scsi_sysfs_add_sdev - add scsi device to sysfs
-  * @sdev:	scsi_device to add
-@@ -950,6 +982,9 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 		}
- 	}
- 
-+	if (sdev->can_power_off)
-+		device_create_file(&sdev->sdev_gendev, &dev_attr_may_power_off);
-+
- 	return error;
- }
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index da5c86f..4712aa1 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -159,6 +159,7 @@ struct scsi_device {
- 	unsigned need_eject:1;	/* Need eject the tray when wakes up */
- 	unsigned ready_to_power_off:1;	/* Device is ready to be powered off */
- 	unsigned powered_off:1;	/* Device is powered off */
-+	unsigned may_power_off:1; /* Power off is allowed by user */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
--- 
-1.7.12.21.g871e293
 
+/sys/bus/pci/devices/0000\:0c\:00.0/
+|-- host7/
+    |-- phy-7:0
+    |-- phy-7:1
+..
+    |-- phy-7:7
+    |-- port-7:0
+        |-- end_device-7\:0
+            |-- target7:0:0/
+                |-- 7:0:0:0
+    |-- port-7:1
+..
+
+Similarly, I wanted to represent an ata_port [equivalent to SAS phy]
+and ata_link [equivalent to SAS port] under scsi_host hostX object,
+but as far as i remember, when I wrote the code that was not possible,
+I could not find a clean way to share object references between libata
+and scsi layer. That's why ata_port object was sitting alongside to
+the scsi_host object. I have to see if it is possible now.
+
+In the meantime, what would be the impact to revert that commit?
+Do you think melting libata sysfs object into scsi sysfs objects would
+work with your changes related to pm?
+
+Thanks,
+
+Gwendal.
