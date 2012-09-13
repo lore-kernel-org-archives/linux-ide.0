@@ -1,43 +1,69 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 2/2] [trivial] Documentation: broken URL in libata
-Date: Thu, 13 Sep 2012 00:18:26 -0400
-Message-ID: <50515E92.1090404@pobox.com>
-References: <1329124192-27461-1-git-send-email-michael.opdenacker@free-electrons.com> <1329124192-27461-3-git-send-email-michael.opdenacker@free-electrons.com> <4F3946DC.3090102@xenotime.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata new PCI IDs
+Date: Thu, 13 Sep 2012 01:17:43 -0400
+Message-ID: <20120913051743.GA23786@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:37304 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738Ab2IMESb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2012 00:18:31 -0400
-In-Reply-To: <4F3946DC.3090102@xenotime.net>
+Received: from havoc.gtf.org ([69.61.125.42]:34160 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752411Ab2IMFRo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Sep 2012 01:17:44 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Michael Opdenacker <michael.opdenacker@free-electrons.com>, trivial@kernel.org, lucas.demarchi@profusion.mobi, linux-doc@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-
-On 02/13/2012 12:22 PM, Randy Dunlap wrote:
-> On 02/13/2012 01:09 AM, Michael Opdenacker wrote:
->> Fix broken link to license text:
->> http://www.opensource.org/licenses/osl-1.1.txt
->> The text for version 1.1 of the Open Sofware license doesn't seem
->> to be available anywhere on http://www.opensource.org/ any more.
->> Replace it with a snapshot from the Internet Wayback Machine.
->
-> That's one option.
-> Too bad opensource.org doesn't provide archives.
->
-> OSL v1.1 is also available here:
-> http://fedoraproject.org/wiki/Licensing:OSL1.1
->
-> and here:
-> http://www.samurajdata.se/opensource/mirror/licenses/osl.php
->
-> Jeff, I don't suppose there is any chance of changing this file's license?
-> (since the Debian people found it to be a problem .. long ago)
-
-Yeah, that's fine...
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Please pull 7b4f6ecacb14f384adc1a5a67ad95eb082c02bd1 from
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream-linus
 
+
+to receive the following updates:
+
+ drivers/ata/ahci.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
+
+Alan Cox (2):
+      ahci: Add alternate identifier for the 88SE9172
+      ahci: Add identifiers for ASM106x devices
+
+Ben Hutchings (1):
+      ahci: Add JMicron 362 device IDs
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 50d5dea..7862d17 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -268,6 +268,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci_ign_iferr },
++	/* JMicron 362B and 362C have an AHCI function with IDE class code */
++	{ PCI_VDEVICE(JMICRON, 0x2362), board_ahci_ign_iferr },
++	{ PCI_VDEVICE(JMICRON, 0x236f), board_ahci_ign_iferr },
+ 
+ 	/* ATI */
+ 	{ PCI_VDEVICE(ATI, 0x4380), board_ahci_sb600 }, /* ATI SB600 */
+@@ -393,6 +396,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
+ 	{ PCI_DEVICE(0x1b4b, 0x917a),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
++	{ PCI_DEVICE(0x1b4b, 0x9192),
++	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 on some Gigabyte */
+ 	{ PCI_DEVICE(0x1b4b, 0x91a3),
+ 	  .driver_data = board_ahci_yes_fbs },
+ 
+@@ -400,7 +405,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
+ 
+ 	/* Asmedia */
+-	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci },	/* ASM1060 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
++	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
+ 
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
