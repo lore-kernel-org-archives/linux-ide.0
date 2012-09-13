@@ -1,92 +1,95 @@
-From: Lin Ming <minggr@gmail.com>
-Subject: Re: Change in sysfs topology for libata
-Date: Thu, 13 Sep 2012 23:38:52 +0800
-Message-ID: <CAF1ivSbvMHZr0HLFaSDd7wkH3TtGZfcp7t8uO_es-yspOUfiuw@mail.gmail.com>
-References: <CAMHSBOV360yPM6+aMSNKK_iNfMKCnu8dgz4kQLysA6fpo8R7aQ@mail.gmail.com>
-	<CAMHSBOWz1z3faEXzL19d93QiiOjnb2Fhw2QEpCZtG3g2H1DdmQ@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
+Date: Thu, 13 Sep 2012 12:24:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
+References: <1791163.r67kWVIx1R@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:55703 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758251Ab2IMPix (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2012 11:38:53 -0400
-Received: by lbbgj3 with SMTP id gj3so2054819lbb.19
-        for <linux-ide@vger.kernel.org>; Thu, 13 Sep 2012 08:38:52 -0700 (PDT)
-In-Reply-To: <CAMHSBOWz1z3faEXzL19d93QiiOjnb2Fhw2QEpCZtG3g2H1DdmQ@mail.gmail.com>
+Received: from netrider.rowland.org ([192.131.102.5]:59414 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758330Ab2IMQYr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Sep 2012 12:24:47 -0400
+In-Reply-To: <1791163.r67kWVIx1R@linux-lqwf.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, aaron.lu@intel.com
+To: Oliver Neukum <oneukum@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Thu, Sep 13, 2012 at 4:07 AM, Gwendal Grignou <gwendal@google.com> wrote:
-> [-Lin, +Lin]
+On Thu, 13 Sep 2012, Oliver Neukum wrote:
 
-CC Aaron@Intel
+> > > > Well, I don't like the way the interaction of the patches is going.
+> > > > You're the one proposing powering down the device outside of the
+> > > > standards defined transitions, so you need to be responsible for the
+> > > > actions that necessitates, including synchronizing the cache.  The specs
+> > > > (SPC-4) say that cache management is explicitly unnecessary for the
+> > > > standard SCSI power states (Active, Idle, Standby and Stopped), so
+> > > > someone at some point is going to read that and remove the unnecessary
+> > > > cache sync in the code.  When that happens, you'll start getting data
+> > > > loss.
+> > > 
+> > > The cache is handled identically in sd_suspend() and sd_shutdown().
+> > > In fact sd_shutdown() will skip handling it if the device has already been
+> > > suspended, so the assumption is built into the code and has been so
+> > > for a long time.
+> > > 
+> > > Though it wouldn't hurt to add a comment that says that the system going
+> > > to S3 or S4 will cut power to a lot of disk so that the cache needs to be synced
+> > > even if the spec says we need not. Runtime PM doesn't much alter the
+> > > situation.
+> > 
+> > I think you're confusing two things.  Sleep states (S3 and S4) aren't
+> > spec'd in SCSI, so we have to take care of everything (including the
+> > cache before power off) because they're done invisibly to the disk.  The
+> 
+> Yes, but this confusion is necessary. The driver core is supposed to
+> be generic and knows strictly speaking only suspended and active.
+> It is a driver's job to do what needs to be done and translate this
+> into the appropriate device states.
 
->
-> On Wed, Sep 12, 2012 at 1:02 PM, Gwendal Grignou <gwendal@google.com> wrote:
->> Lin,
->>
->>  Commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a introduces a change
->> in sysfs directory for ata controller:
->>
->> Before:
->>            /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
->>            |-- ata1                                (ata port)
->>            |-- host0                               (scsi host)
->>               |-- target0:0:0                      (scsi target)
->>                   |-- 0:0:0:0                      (disk)
->>
->> After:
->>            /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
->>            |-- ata1                                (ata port)
->>                |-- host0                           (scsi host)
->>                    |-- target0:0:0                 (scsi target)
->>                        |-- 0:0:0:0                 (disk)
->>
->> The problem is an ata controller, managed by libata, is still
->> considered by the kernel as a SCSI controller: diverging even more
->> from other SCSI controller sysfs layout is not a good idea.
->> When I wrote libata-transport.c, my plan was to be consistent with SAS
->> objects: for instance, for a SAS controller with a simple SAS topology
->> we have:
->>
->>
->> /sys/bus/pci/devices/0000\:0c\:00.0/
->> |-- host7/
->>     |-- phy-7:0
->>     |-- phy-7:1
->> ..
->>     |-- phy-7:7
->>     |-- port-7:0
->>         |-- end_device-7\:0
->>             |-- target7:0:0/
->>                 |-- 7:0:0:0
->>     |-- port-7:1
->> ..
->>
->> Similarly, I wanted to represent an ata_port [equivalent to SAS phy]
->> and ata_link [equivalent to SAS port] under scsi_host hostX object,
->> but as far as i remember, when I wrote the code that was not possible,
->> I could not find a clean way to share object references between libata
->> and scsi layer. That's why ata_port object was sitting alongside to
->> the scsi_host object. I have to see if it is possible now.
->>
->> In the meantime, what would be the impact to revert that commit?
->> Do you think melting libata sysfs object into scsi sysfs objects would
->> work with your changes related to pm?
+Currently the sd driver's suspend routine is not very sophisticated.  
+It needs to become smarter about the differences between system
+suspend, runtime suspend, and power off.
 
-The SATA disk runtime pm and ZPODD(Zero Power ODD) relies on the new
-sysfs directory I introduced in commit 9a6d6a2.
+> > same tends to go for link power management, which was previously our
+> > only form of runtime PM, but which doesn't actually affect the disk at
+> > all and, of course, ACPI power off of devices (ZPDD).
+> 
+> The latter however does cut power to the drive. So the driver should do
+> what it does when other operations that affect power are done.
+> 
+> > Disk runtime power states are defined in the standard and so we rely on
+> > the standard taking care of the cache.  I suspect the most efficient use
+> > may be via the power management mode page, which does everything
+> > automatically on timers (you just get to set the timer interval, plus
+> > some transports *may* require an initialising command which we already
+> > have some provision for) than doing it all ourselves from block.
+> 
+> Well, yes, but we need support modes of power management that cut off
+> power to the disk in any case, so what does it matter if we also do it for
+> runtime PM?
+> 
+> Are you concerned about layering?
 
-Could you show me what's the sysfs directory structure after libata
-sysfs object melted into scsi sysfs objects?
+It sounds like James is partly concerned about efficiency.  If Lin
+Ming's patches are merged then we will be doing runtime suspend
+relatively often, not just when the device file is closed.  The
+sd_suspend routine should know when SYNCHRONIZE CACHE is needed and
+when it can be skipped.
 
-Thanks,
-Lin Ming
+>From what I gather of this discussion, we can avoid flushing the cache 
+during (1) a runtime suspend provided (2) the drive isn't going to be 
+powered down.  If either (1) or (2) doesn't hold then the cache needs 
+to be synchronized.
 
->>
->> Thanks,
->>
->> Gwendal.
+The problem with relying on the internal timers and the power
+management mode page is that the transitions take place automatically
+and the host system doesn't know about them.  We _want_ to know about
+them so that the higher layers of the device tree can go to low power
+when the disk does.
+
+On the other hand, perhaps sd_suspend/sd_resume could use the mode page
+by telling it to go into or out of Stopped mode immediately.
+
+Alan Stern
+
