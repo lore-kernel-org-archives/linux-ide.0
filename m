@@ -1,75 +1,64 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Aaron Lu <aaron.lu@intel.com>
 Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
-Date: Thu, 13 Sep 2012 16:46:29 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1209131639250.31536-100000@netrider.rowland.org>
-References: <1787325.sGDVDNVD6E@linux-lqwf.site>
+Date: Fri, 14 Sep 2012 13:20:42 +0800
+Message-ID: <20120914052041.GA5177@mint-spring.sh.intel.com>
+References: <1347522049-1836-1-git-send-email-aaron.lu@intel.com>
+ <1347522049-1836-2-git-send-email-aaron.lu@intel.com>
+ <1347524092.2720.1.camel@dabdike.int.hansenpartnership.com>
+ <50519801.6080502@intel.com>
+ <1347525466.2720.10.camel@dabdike.int.hansenpartnership.com>
+ <50519E08.10800@intel.com>
+ <1347526590.2720.15.camel@dabdike.int.hansenpartnership.com>
+ <5051A25F.7040704@intel.com>
+ <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1787325.sGDVDNVD6E@linux-lqwf.site>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:56465 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751069Ab2INFUs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Sep 2012 01:20:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1347528404.2720.28.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oliver@neukum.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Thu, 13 Sep 2012, Oliver Neukum wrote:
-
-> On Thursday 13 September 2012 12:24:46 Alan Stern wrote:
-> > On Thu, 13 Sep 2012, Oliver Neukum wrote:
+On Thu, Sep 13, 2012 at 10:26:44AM +0100, James Bottomley wrote:
+> On Thu, 2012-09-13 at 17:07 +0800, Aaron Lu wrote:
+> > So I think this is basically 2 things, one is the runtime suspend of the
+> > disk, another is when it is runtime suspended, how to remove its power.
+> > I'm currently doing the latter one, which is simpler, so I want to do it
+> > first :-)
 > 
-> > > Yes, but this confusion is necessary. The driver core is supposed to
-> > > be generic and knows strictly speaking only suspended and active.
-> > > It is a driver's job to do what needs to be done and translate this
-> > > into the appropriate device states.
-> > 
-> > Currently the sd driver's suspend routine is not very sophisticated.  
-> > It needs to become smarter about the differences between system
-> > suspend, runtime suspend, and power off.
-> 
-> In what way?
+> Well, I don't like the way the interaction of the patches is going.
+> You're the one proposing powering down the device outside of the
+> standards defined transitions, so you need to be responsible for the
+> actions that necessitates, including synchronizing the cache. The specs
 
-sd_suspend should know whether or not to issue the SYNCHRONIZE CACHE 
-command.
+OK, I'll update the code.
 
-> > It sounds like James is partly concerned about efficiency.  If Lin
-> > Ming's patches are merged then we will be doing runtime suspend
-> > relatively often, not just when the device file is closed.  The
-> > sd_suspend routine should know when SYNCHRONIZE CACHE is needed and
-> > when it can be skipped.
-> 
-> How? This depends on the hardware?
+> (SPC-4) say that cache management is explicitly unnecessary for the
+> standard SCSI power states (Active, Idle, Standby and Stopped), so
 
-It depends partly on the hardware, partly on the type of suspend, and 
-partly on the flag settings in sysfs.
+Just read the SPC-4 spec, in section 5.12.3, it has words like this:
 
-> > From what I gather of this discussion, we can avoid flushing the cache 
-> > during (1) a runtime suspend provided (2) the drive isn't going to be 
-> > powered down.  If either (1) or (2) doesn't hold then the cache needs 
-> > to be synchronized.
-> 
-> This is true, but how is it relevant?
+Logical units that contain cache memory shall write all cached data to
+the medium for the logical unit(e.g., as a logical unit would do in
+response to a SYNCHRONIZE CACHE command as described SBC-3) prior to
+entering into any power condition that prevents accessing the
+media(e.g., before a hard drive stops its spindle motor during a change
+to the standby power condition).
 
-This, or something like it, is the algorithm sd_suspend should use for 
-determining whether or not to issue SYNCHRONIZE CACHE.
+So this looks like cache needs to be synced before the device enter
+standby/stopped power condition. Or do I miss somthing?
 
-> > The problem with relying on the internal timers and the power
-> > management mode page is that the transitions take place automatically
-> > and the host system doesn't know about them.  We _want_ to know about
-> > them so that the higher layers of the device tree can go to low power
-> > when the disk does.
-> 
-> Why would you want that to correlate? The operation of the controller
-> and the driver is independent of the state.
+> someone at some point is going to read that and remove the unnecessary
+> cache sync in the code.  When that happens, you'll start getting data
+> loss.
 
-That's the problem -- I would like them not to be so independent.  The
-reason stated above: If we know when the controller puts the drive in a
-low-power state then we can tell the higher layers of the device tree
-to go to low power at those times.
+Indeed, I'll make sure cache gets synced when we are to power off the
+device. Thanks for the remind.
 
-> And what would it tell us, as the driver knows aout all IO anyway?
-
-But the driver doesn't know when the controller has spun down the disk.  
-That's something else sd_suspend has to worry about.
-
-Alan Stern
-
+-Aaron
