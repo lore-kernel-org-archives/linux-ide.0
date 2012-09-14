@@ -1,24 +1,24 @@
-From: Aaron Lu <aaron.lu@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH 1/2] scsi: sd: set ready_to_power_off for scsi disk
-Date: Fri, 14 Sep 2012 14:57:19 +0800
-Message-ID: <20120914065717.GB5177@mint-spring.sh.intel.com>
-References: <1791163.r67kWVIx1R@linux-lqwf.site>
- <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
+Date: Fri, 14 Sep 2012 09:15:18 +0100
+Message-ID: <1347610518.2794.9.camel@dabdike.int.hansenpartnership.com>
+References: <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18317 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750930Ab2ING5W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 14 Sep 2012 02:57:22 -0400
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57754 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751724Ab2INIPY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Sep 2012 04:15:24 -0400
 In-Reply-To: <Pine.LNX.4.44L0.1209131213450.21932-100000@netrider.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: Oliver Neukum <oneukum@suse.de>, Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Thu, Sep 13, 2012 at 12:24:46PM -0400, Alan Stern wrote:
+On Thu, 2012-09-13 at 12:24 -0400, Alan Stern wrote:
+> On Thu, 13 Sep 2012, Oliver Neukum wrote:
 > > > Disk runtime power states are defined in the standard and so we rely on
 > > > the standard taking care of the cache.  I suspect the most efficient use
 > > > may be via the power management mode page, which does everything
@@ -32,19 +32,28 @@ On Thu, Sep 13, 2012 at 12:24:46PM -0400, Alan Stern wrote:
 > > 
 > > Are you concerned about layering?
 > 
-> It sounds like James is partly concerned about efficiency.  If Lin
+> It sounds like James is partly concerned about efficiency.
+
+Sort of, but my main worry is correctness: I don't want a path in
+runtime suspend that requires a cache flush to be dependent on the flush
+being in a path which doesn't because efficiency dictates that at some
+time or other the unnecessary flush will get removed (and then we'll
+start corrupting data).
+
+>   If Lin
 > Ming's patches are merged then we will be doing runtime suspend
 > relatively often, not just when the device file is closed.  The
 > sd_suspend routine should know when SYNCHRONIZE CACHE is needed and
 > when it can be skipped.
-> 
-> From what I gather of this discussion, we can avoid flushing the cache 
+
+Keeping the flush in sd_suspend and making sure we know when to use it
+would be fine by me as well ... I just need all the independent runtime
+suspend patch authors to agree on this scheme.
+
+> >From what I gather of this discussion, we can avoid flushing the cache 
 > during (1) a runtime suspend provided (2) the drive isn't going to be 
 > powered down.  If either (1) or (2) doesn't hold then the cache needs 
 > to be synchronized.
-
-Agree.
-
 > 
 > The problem with relying on the internal timers and the power
 > management mode page is that the transitions take place automatically
@@ -52,19 +61,16 @@ Agree.
 > them so that the higher layers of the device tree can go to low power
 > when the disk does.
 
-Looks like it's not easy to know when the device entered a low power
-state. Constantly polling with request sense doesn't seem to be a good
-idea.
+Sigh ... the standards guys didn't help there then, since SPC-4
+specifically says there will be no notifications.
 
-This will make upper layer devices not able to enter runtime suspend
-state and device's power can't be cut.
-
-> 
 > On the other hand, perhaps sd_suspend/sd_resume could use the mode page
 > by telling it to go into or out of Stopped mode immediately.
 
-BTW, is it necessary to issue the stop command before we cut its power
-either due to runtime power off or system entering S3/S4/S5?
+That's perfectly legal.  Even if you use timer based power state
+management afforded by the mode page you can still preempt the timer
+with an explicit go into this power state command.
 
-Thanks,
-Aaron
+James
+
+
