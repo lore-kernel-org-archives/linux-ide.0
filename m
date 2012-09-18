@@ -1,31 +1,43 @@
-From: Oliver Neukum <oneukum@suse.de>
+From: Aaron Lu <aaron.lu@intel.com>
 Subject: Re: [PATCH v2 1/4] scsi: introduce sync_before_stop flag
-Date: Tue, 18 Sep 2012 09:30:11 +0200
-Message-ID: <1676757.rqQnA7IDdg@linux-lqwf.site>
-References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com> <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+Date: Tue, 18 Sep 2012 15:47:49 +0800
+Message-ID: <20120918074748.GA1696@mint-spring.sh.intel.com>
+References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
+ <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+ <1676757.rqQnA7IDdg@linux-lqwf.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60334 "EHLO mx2.suse.de"
+Received: from mga09.intel.com ([134.134.136.24]:33417 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932082Ab2IRHbp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Sep 2012 03:31:45 -0400
-In-Reply-To: <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
+	id S932089Ab2IRHrw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Sep 2012 03:47:52 -0400
+Content-Disposition: inline
+In-Reply-To: <1676757.rqQnA7IDdg@linux-lqwf.site>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
+To: Oliver Neukum <oneukum@suse.de>
 Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
 
-On Tuesday 18 September 2012 15:00:28 Aaron Lu wrote:
-> When scsi device received stop command, it will take care of its
-> internal cache before enters stopped power condition. This command is
-> translated to standby immediate in libata-scsi, but standby doesn't
-> imply flush cache for ATA device, so to issue stop command to ATA
-> device, an additional flush cache has to be issued.
+On Tue, Sep 18, 2012 at 09:30:11AM +0200, Oliver Neukum wrote:
+> On Tuesday 18 September 2012 15:00:28 Aaron Lu wrote:
+> > When scsi device received stop command, it will take care of its
+> > internal cache before enters stopped power condition. This command is
+> > translated to standby immediate in libata-scsi, but standby doesn't
+> > imply flush cache for ATA device, so to issue stop command to ATA
+> > device, an additional flush cache has to be issued.
+> 
+> Why not just set WCE?
 
-Why not just set WCE?
+This flag is used for devices whose WCE bit is set.
 
-	Regards
-		Oliver
+This flag means, when we are to issue a scsi stop command, we need to
+issue an additional sync cache command first.
 
+For scsi device, per the spec, there is no such need as the device will
+take care of its internal cache when going to stop power condition.
+
+But for ata device, the stop command is translated to standby immediate,
+and we have to flush the internal cache before enter standby.
+
+-Aaron
