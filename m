@@ -1,92 +1,151 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v2 1/4] scsi: introduce sync_before_stop flag
-Date: Tue, 18 Sep 2012 16:31:38 +0800
-Message-ID: <20120918083138.GA1792@mint-spring.sh.intel.com>
-References: <1347951631-1592-1-git-send-email-aaron.lu@intel.com>
- <1347951631-1592-2-git-send-email-aaron.lu@intel.com>
- <1347955015.2388.0.camel@dabdike.int.hansenpartnership.com>
- <20120918080915.GA1740@mint-spring.sh.intel.com>
- <1347956420.2388.9.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1347956420.2388.9.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, Oliver Neukum <oneukum@suse.de>, Aaron Lu <aaron.lwe@gmail.com>, Jack Wang <jack_wang@usish.com>, Shane Huang <shane.huang@amd.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
+From: Olaf Hering <olaf@aepfle.de>
+Subject: [PATCH] ata_piix: reenable MS Virtual PC guests
+Date: Tue, 18 Sep 2012 17:48:01 +0200
+Message-ID: <1347983281-15422-1-git-send-email-olaf@aepfle.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mo-p00-ob.rzone.de ([81.169.146.161]:9977 "EHLO
+	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753581Ab2IRPsS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Sep 2012 11:48:18 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: KY Srinivasan <kys@microsoft.com>, Olaf Hering <olaf@aepfle.de>
 
-On Tue, Sep 18, 2012 at 09:20:20AM +0100, James Bottomley wrote:
-> On Tue, 2012-09-18 at 16:09 +0800, Aaron Lu wrote:
-> > On Tue, Sep 18, 2012 at 08:56:55AM +0100, James Bottomley wrote:
-> > > On Tue, 2012-09-18 at 15:00 +0800, Aaron Lu wrote:
-> > > > When scsi device received stop command, it will take care of its
-> > > > internal cache before enters stopped power condition. This command is
-> > > > translated to standby immediate in libata-scsi, but standby doesn't
-> > > > imply flush cache for ATA device, so to issue stop command to ATA
-> > > > device, an additional flush cache has to be issued.
-> > > > 
-> > > > Introduce this flag so that when we are to stop the ATA disk in scsi
-> > > > disk driver, also flush its internal cache.
-> > > > 
-> > > > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> > > > ---
-> > > >  include/scsi/scsi_device.h | 1 +
-> > > >  1 file changed, 1 insertion(+)
-> > > > 
-> > > > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > > > index 4712aa1..26c3621 100644
-> > > > --- a/include/scsi/scsi_device.h
-> > > > +++ b/include/scsi/scsi_device.h
-> > > > @@ -160,6 +160,7 @@ struct scsi_device {
-> > > >  	unsigned ready_to_power_off:1;	/* Device is ready to be powered off */
-> > > >  	unsigned powered_off:1;	/* Device is powered off */
-> > > >  	unsigned may_power_off:1; /* Power off is allowed by user */
-> > > > +	unsigned sync_before_stop:1; /* Sync cache before stop */
-> > > 
-> > > Why do you need this?
-> > > 
-> > > Surely it's all conditioned on the WCE flag.  If WCE isn't set, the
-> > > cache is write through (or uncached) and there's no need for a sync
-> > > before power down.
-> > 
-> > The set of this flag doesn't mean we will sync cache for sure.
-> > 
-> > It's only meaningful when WCE is set, and in that case, it means when we
-> > are to send a stop command to the device, do we need to send an
-> > additional flush cache command first?
-> 
-> Then surely it indicates support for ACPI power down and it's wrongly
-> named?
+An earlier commit cd006086fa5d91414d8ff9ff2b78fbb593878e3c ("ata_piix:
+defer disks to the Hyper-V drivers by default") broke MS Virtual PC
+guests. Hyper-V guests and Virtual PC guests have nearly identical DMI
+info. As a result the driver does currently ignore the emulated hardware
+in Virtual PC guests and defers the handling to hv_blkvsc. Since Virtual
+PC does not offer paravirtualized drivers no disks will be found in the
+guest.
 
-It's generic ATA requirement that before standby, cache has to be
-flushed and unlike scsi, standby does not imply cache flush.
+One difference in the DMI info is the product version. This patch adds a
+match for MS Virtual PC 2007 and "unignores" the emulated hardware.
 
-> 
-> > In sd_suspend, the cache will be synchronized when:
-> > 1 For devices do not support start_stop, always;
-> > 2 For devices support start_stop, if it is standard scsi device, never;
-> >   and if it is an ata device(reflected by this newly introduced flag),
-> >   always.
-> 
-> This doesn't look right to me.  I think it's probably just a layering
-> violation.  For sd, we need to use the standard SCSI commands.  That
-> means we treat power states as the SCSI standard says.  The fact that
-> ATA devices may be required to translate START_STOP_UNIT with STANDBY as
-> a flush followed by one of the ATA standby commands.  This is very
-> important: if we construct a libata SATL that doesn't conform to the
-> standards, things will eventually explode when we try to interact with
-> devices with their own internal SATL (like the LSI card, or various USB
-> devices) because eventually we'll make one unexpected interaction too
-> many.
+This was reported for openSuSE 12.1 in bugzilla:
+https://bugzilla.novell.com/show_bug.cgi?id=737532
 
-I agree that it is better handled in libata's SALT, I tried to do this
-but didn't find a good way so I introduced this flag. The SALT is 1-1
-mapping, I'm not sure how to handle this 1-2 mapping.
+Here is a detailed list of DMI info from example guests:
 
-I'll check this again to see how to do it there.
+hwinfo --bios:
 
-Thanks for your comments.
+virtual pc guest:
 
--Aaron
+  System Info: #1
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "VS2005R2"
+    Serial: "3178-9905-1533-4840-9282-0569-59"
+    UUID: undefined, but settable
+    Wake-up: 0x06 (Power Switch)
+  Board Info: #2
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "5.0"
+    Serial: "3178-9905-1533-4840-9282-0569-59"
+  Chassis Info: #3
+    Manufacturer: "Microsoft Corporation"
+    Version: "5.0"
+    Serial: "3178-9905-1533-4840-9282-0569-59"
+    Asset Tag: "7188-3705-6309-9738-9645-0364-00"
+    Type: 0x03 (Desktop)
+    Bootup State: 0x03 (Safe)
+    Power Supply State: 0x03 (Safe)
+    Thermal State: 0x01 (Other)
+    Security Status: 0x01 (Other)
+
+win2k8 guest:
+
+  System Info: #1
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "7.0"
+    Serial: "9106-3420-9819-5495-1514-2075-48"
+    UUID: undefined, but settable
+    Wake-up: 0x06 (Power Switch)
+  Board Info: #2
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "7.0"
+    Serial: "9106-3420-9819-5495-1514-2075-48"
+  Chassis Info: #3
+    Manufacturer: "Microsoft Corporation"
+    Version: "7.0"
+    Serial: "9106-3420-9819-5495-1514-2075-48"
+    Asset Tag: "7076-9522-6699-1042-9501-1785-77"
+    Type: 0x03 (Desktop)
+    Bootup State: 0x03 (Safe)
+    Power Supply State: 0x03 (Safe)
+    Thermal State: 0x01 (Other)
+    Security Status: 0x01 (Other)
+
+win2k12 guest:
+
+  System Info: #1
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "7.0"
+    Serial: "8179-1954-0187-0085-3868-2270-14"
+    UUID: undefined, but settable
+    Wake-up: 0x06 (Power Switch)
+  Board Info: #2
+    Manufacturer: "Microsoft Corporation"
+    Product: "Virtual Machine"
+    Version: "7.0"
+    Serial: "8179-1954-0187-0085-3868-2270-14"
+  Chassis Info: #3
+    Manufacturer: "Microsoft Corporation"
+    Version: "7.0"
+    Serial: "8179-1954-0187-0085-3868-2270-14"
+    Asset Tag: "8374-0485-4557-6331-0620-5845-25"
+    Type: 0x03 (Desktop)
+    Bootup State: 0x03 (Safe)
+    Power Supply State: 0x03 (Safe)
+    Thermal State: 0x01 (Other)
+    Security Status: 0x01 (Other)
+
+Signed-off-by: Olaf Hering <olaf@aepfle.de>
+
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ef773e1..bec35f4 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1585,12 +1585,31 @@ static void piix_ignore_devices_quirk(struct ata_host *host)
+ 		},
+ 		{ }	/* terminate list */
+ 	};
+-	const struct dmi_system_id *dmi = dmi_first_match(ignore_hyperv);
++	static const struct dmi_system_id allow_virtual_pc[] = {
++		{
++			/* In MS Virtual PC guests the DMI ident is nearly
++			 * identical to a Hyper-V guest. One difference is the
++			 * product version which is used here to identify
++			 * a Virtual PC guest. This entry allows ata_piix to
++			 * drive the emulated hardware.
++			 */
++			.ident = "MS Virtual PC 2007",
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR,
++						"Microsoft Corporation"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Virtual Machine"),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "VS2005R2"),
++			},
++		},
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *ignore = dmi_first_match(ignore_hyperv);
++	const struct dmi_system_id *allow = dmi_first_match(allow_virtual_pc);
+ 
+-	if (dmi && prefer_ms_hyperv) {
++	if (ignore && !allow && prefer_ms_hyperv) {
+ 		host->flags |= ATA_HOST_IGNORE_ATA;
+ 		dev_info(host->dev, "%s detected, ATA device ignore set\n",
+-			dmi->ident);
++			ignore->ident);
+ 	}
+ #endif
+ }
+-- 
+1.7.12
+
