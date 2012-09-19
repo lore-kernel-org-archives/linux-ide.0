@@ -1,151 +1,97 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: [PATCH] ata_piix: reenable MS Virtual PC guests
-Date: Tue, 18 Sep 2012 17:48:01 +0200
-Message-ID: <1347983281-15422-1-git-send-email-olaf@aepfle.de>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Wed, 19 Sep 2012 16:03:30 +0800
+Message-ID: <20120919080328.GA4283@mint-spring.sh.intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.161]:9977 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753581Ab2IRPsS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Sep 2012 11:48:18 -0400
+Received: from mga11.intel.com ([192.55.52.93]:56537 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751728Ab2ISIDd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 19 Sep 2012 04:03:33 -0400
+Content-Disposition: inline
+In-Reply-To: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: KY Srinivasan <kys@microsoft.com>, Olaf Hering <olaf@aepfle.de>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-An earlier commit cd006086fa5d91414d8ff9ff2b78fbb593878e3c ("ata_piix:
-defer disks to the Hyper-V drivers by default") broke MS Virtual PC
-guests. Hyper-V guests and Virtual PC guests have nearly identical DMI
-info. As a result the driver does currently ignore the emulated hardware
-in Virtual PC guests and defers the handling to hv_blkvsc. Since Virtual
-PC does not offer paravirtualized drivers no disks will be found in the
-guest.
+Hi James,
 
-One difference in the DMI info is the product version. This patch adds a
-match for MS Virtual PC 2007 and "unignores" the emulated hardware.
+May I know if this patchset will enter v3.7?
 
-This was reported for openSuSE 12.1 in bugzilla:
-https://bugzilla.novell.com/show_bug.cgi?id=737532
+Thanks,
+Aaron
 
-Here is a detailed list of DMI info from example guests:
-
-hwinfo --bios:
-
-virtual pc guest:
-
-  System Info: #1
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "VS2005R2"
-    Serial: "3178-9905-1533-4840-9282-0569-59"
-    UUID: undefined, but settable
-    Wake-up: 0x06 (Power Switch)
-  Board Info: #2
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "5.0"
-    Serial: "3178-9905-1533-4840-9282-0569-59"
-  Chassis Info: #3
-    Manufacturer: "Microsoft Corporation"
-    Version: "5.0"
-    Serial: "3178-9905-1533-4840-9282-0569-59"
-    Asset Tag: "7188-3705-6309-9738-9645-0364-00"
-    Type: 0x03 (Desktop)
-    Bootup State: 0x03 (Safe)
-    Power Supply State: 0x03 (Safe)
-    Thermal State: 0x01 (Other)
-    Security Status: 0x01 (Other)
-
-win2k8 guest:
-
-  System Info: #1
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "7.0"
-    Serial: "9106-3420-9819-5495-1514-2075-48"
-    UUID: undefined, but settable
-    Wake-up: 0x06 (Power Switch)
-  Board Info: #2
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "7.0"
-    Serial: "9106-3420-9819-5495-1514-2075-48"
-  Chassis Info: #3
-    Manufacturer: "Microsoft Corporation"
-    Version: "7.0"
-    Serial: "9106-3420-9819-5495-1514-2075-48"
-    Asset Tag: "7076-9522-6699-1042-9501-1785-77"
-    Type: 0x03 (Desktop)
-    Bootup State: 0x03 (Safe)
-    Power Supply State: 0x03 (Safe)
-    Thermal State: 0x01 (Other)
-    Security Status: 0x01 (Other)
-
-win2k12 guest:
-
-  System Info: #1
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "7.0"
-    Serial: "8179-1954-0187-0085-3868-2270-14"
-    UUID: undefined, but settable
-    Wake-up: 0x06 (Power Switch)
-  Board Info: #2
-    Manufacturer: "Microsoft Corporation"
-    Product: "Virtual Machine"
-    Version: "7.0"
-    Serial: "8179-1954-0187-0085-3868-2270-14"
-  Chassis Info: #3
-    Manufacturer: "Microsoft Corporation"
-    Version: "7.0"
-    Serial: "8179-1954-0187-0085-3868-2270-14"
-    Asset Tag: "8374-0485-4557-6331-0620-5845-25"
-    Type: 0x03 (Desktop)
-    Bootup State: 0x03 (Safe)
-    Power Supply State: 0x03 (Safe)
-    Thermal State: 0x01 (Other)
-    Security Status: 0x01 (Other)
-
-Signed-off-by: Olaf Hering <olaf@aepfle.de>
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ef773e1..bec35f4 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1585,12 +1585,31 @@ static void piix_ignore_devices_quirk(struct ata_host *host)
- 		},
- 		{ }	/* terminate list */
- 	};
--	const struct dmi_system_id *dmi = dmi_first_match(ignore_hyperv);
-+	static const struct dmi_system_id allow_virtual_pc[] = {
-+		{
-+			/* In MS Virtual PC guests the DMI ident is nearly
-+			 * identical to a Hyper-V guest. One difference is the
-+			 * product version which is used here to identify
-+			 * a Virtual PC guest. This entry allows ata_piix to
-+			 * drive the emulated hardware.
-+			 */
-+			.ident = "MS Virtual PC 2007",
-+			.matches = {
-+				DMI_MATCH(DMI_SYS_VENDOR,
-+						"Microsoft Corporation"),
-+				DMI_MATCH(DMI_PRODUCT_NAME, "Virtual Machine"),
-+				DMI_MATCH(DMI_PRODUCT_VERSION, "VS2005R2"),
-+			},
-+		},
-+		{ }	/* terminate list */
-+	};
-+	const struct dmi_system_id *ignore = dmi_first_match(ignore_hyperv);
-+	const struct dmi_system_id *allow = dmi_first_match(allow_virtual_pc);
- 
--	if (dmi && prefer_ms_hyperv) {
-+	if (ignore && !allow && prefer_ms_hyperv) {
- 		host->flags |= ATA_HOST_IGNORE_ATA;
- 		dev_info(host->dev, "%s detected, ATA device ignore set\n",
--			dmi->ident);
-+			ignore->ident);
- 	}
- #endif
- }
--- 
-1.7.12
-
+On Wed, Sep 12, 2012 at 04:29:51PM +0800, Aaron Lu wrote:
+> v7:
+> Re work of runtime pm of sr driver, based on ideas of Alan Stern and
+> Oliver Neukum.
+> 
+> Jeff, due to the ready_to_power_off flag added, there is a small
+> change in [PATCH v7 6/6] libata: acpi: respect may_power_off flag,
+> please check if I can still get your ack, thanks.
+> 
+> v6:
+> When user changes may_power_off flag through sysfs entry and if device
+> is already runtime suspended, resume resume it so that it can respect
+> this flag next time it is runtime suspended as suggested by Alan Stern.
+> Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+> Alan Stern.
+> 
+> v5:
+> Add may_power_off flag to scsi device.
+> Alan Stern suggested that I should not mess runtime suspend with
+> runtime power off, but the current zpodd implementation made it not
+> easy to seperate. So I re-wrote the zpodd implementation, the end
+> result is, normal ODD can also enter runtime suspended state, but
+> their power won't be removed.
+> 
+> v4:
+> Rebase on top of Linus' tree, due to this, the problem of a missing
+> flag in v3 is gone;
+> Add a new function scsi_autopm_put_device_autosuspend to first mark
+> last busy for the device and then put autosuspend it as suggested by
+> Oliver Neukum.
+> Typo fix as pointed by Sergei Shtylyov.
+> Check can_power_off flag before any runtime pm operations in sr.
+> 
+> v3:
+> Rebase on top of scsi-misc tree;
+> Add the sr related patches previously in Jeff's libata tree;
+> Re-organize the sr patches.
+> A problem for now: for patch
+> scsi: sr: support zero power ODD(ZPODD)
+> I can't set a flag in libata-acpi.c since a related function is
+> missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+> 
+> v2:
+> Bug fix for v1;
+> Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+> 
+> v1:
+> Here are some patches to make ZPODD easier to use for end users and
+> a fix for using ZPODD with system suspend.
+> 
+> Aaron Lu (6):
+>   block: genhd: add an interface to set disk poll interval
+>   scsi: sr: support runtime pm
+>   scsi: sr: support zero power ODD(ZPODD)
+>   scsi: pm: add may_power_off flag
+>   scsi: sr: use may_power_off
+>   libata: acpi: respect may_power_off flag
+> 
+>  block/genhd.c              | 23 +++++++++----
+>  drivers/ata/libata-acpi.c  | 30 +++++++++++-----
+>  drivers/scsi/scsi_sysfs.c  | 37 +++++++++++++++++++-
+>  drivers/scsi/sr.c          | 86 +++++++++++++++++++++++++++++++++++++++++++---
+>  drivers/scsi/sr.h          |  1 +
+>  drivers/scsi/sr_ioctl.c    |  7 +++-
+>  include/linux/genhd.h      |  1 +
+>  include/scsi/scsi_device.h |  4 +++
+>  8 files changed, 168 insertions(+), 21 deletions(-)
+> 
+> -- 
+> 1.7.12.21.g871e293
+> 
