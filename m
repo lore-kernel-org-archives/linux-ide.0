@@ -1,61 +1,47 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: [PATCH -next] ata: fix sata_highbank.c build errors
-Date: Wed, 19 Sep 2012 11:15:43 -0700
-Message-ID: <505A0BCF.5040905@xenotime.net>
-References: <20120919162643.907ddda75e198f060e4e83fe@canb.auug.org.au>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v7 0/6] ZPODD patches
+Date: Thu, 20 Sep 2012 08:34:59 +0800
+Message-ID: <61B33BA8121D47DDB62CF71F004E15E8@usish.com.cn>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <20120919080328.GA4283@mint-spring.sh.intel.com> <1348057667.2479.33.camel@dabdike.int.hansenpartnership.com> <1348067972.21322.218.camel@shinybook.infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:44365 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932895Ab2ISSQX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Sep 2012 14:16:23 -0400
-In-Reply-To: <20120919162643.907ddda75e198f060e4e83fe@canb.auug.org.au>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1348067972.21322.218.camel@shinybook.infradead.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: 'David Woodhouse' <dwmw2@infradead.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>
+Cc: 'Aaron Lu' <aaron.lu@intel.com>, 'Alan Stern' <stern@rowland.harvard.edu>, 'Oliver Neukum' <oliver@neukum.org>, 'Jeff Garzik' <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, 'Aaron Lu' <aaron.lwe@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+> 
+> On Wed, 2012-09-19 at 13:27 +0100, James Bottomley wrote:
+> > I think we could do this with a couple of flags sitting inside struct
+> > device itself: one for pm state and capabilities defined at a generic
+> > level and one for device specific pm state.  The latter would be for
+> > things like the door lock information which is very specific to CDs
+> > (although not specific to SCSI CDs).  Alternatively, even if we can't
+> > use these capabilities at the generic pm level, we still need an
+> > internal state set of flags because power state stuff traverses the
+> > stack and struct device is the only universal object in that stack.
+> 
+> FWIW the SATA Device Sleep support, which is currently only used (in a
+> patch which is pending) automatically as an extension of the AHCI link
+> power management, can also be triggered manually by a GPIO line; I've
+> got a platform where it's done with an ACPI call. I suspect we'll see
+> that kind of manual setup on a few embedded platforms too.
+> 
+> If we're working on hooking this up through the device layers, perhaps
+> that's worth taking into consideration?
+> 
+> --
 
-Fix build errors in sata_highbank.c by also building libahci.o.
-Fixes these build errors:
+Hi David,
 
-drivers/built-in.o: In function `ahci_highbank_hardreset':
-sata_highbank.c:(.text+0x1edc9a): undefined reference to `ahci_stop_engine'
-sata_highbank.c:(.text+0x1edfab): undefined reference to `ahci_start_engine'
-sata_highbank.c:(.text+0x1edfd5): undefined reference to `ahci_dev_classify'
-drivers/built-in.o: In function `ahci_highbank_resume':
-sata_highbank.c:(.text+0x1ee0af): undefined reference to `ahci_reset_controller'
-sata_highbank.c:(.text+0x1ee0e1): undefined reference to `ahci_init_controller'
-drivers/built-in.o: In function `ahci_highbank_probe':
-sata_highbank.c:(.init.text+0xc577): undefined reference to `ahci_save_initial_config'
-sata_highbank.c:(.init.text+0xc5ca): undefined reference to `ahci_set_em_messages'
-sata_highbank.c:(.init.text+0xc630): undefined reference to `ahci_ignore_sss'
-sata_highbank.c:(.init.text+0xc660): undefined reference to `ahci_reset_em'
-sata_highbank.c:(.init.text+0xc72f): undefined reference to `ahci_reset_controller'
-sata_highbank.c:(.init.text+0xc75a): undefined reference to `ahci_init_controller'
-sata_highbank.c:(.init.text+0xc774): undefined reference to `ahci_print_info'
-sata_highbank.c:(.init.text+0xc77c): undefined reference to `ahci_interrupt'
-drivers/built-in.o:(.data+0x1d5ec): undefined reference to `ahci_ops'
-drivers/built-in.o:(.data+0x1d690): undefined reference to `ahci_shost_attrs'
-drivers/built-in.o:(.data+0x1d694): undefined reference to `ahci_sdev_attrs'
+For SATA Device sleep, what's the appropriate time to set the Device sleep,
+this seems also part of runtime PM?
 
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
----
- drivers/ata/Makefile |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Best regards!
 
---- linux-next-20120919.orig/drivers/ata/Makefile
-+++ linux-next-20120919/drivers/ata/Makefile
-@@ -9,7 +9,7 @@ obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
- obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
- obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
- obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
--obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o
-+obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
- 
- # SFF w/ custom DMA
- obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+Jack
+
