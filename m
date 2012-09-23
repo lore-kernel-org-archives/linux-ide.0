@@ -1,57 +1,44 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Sat, 22 Sep 2012 23:48:52 +0200
-Message-ID: <201209222348.52273.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1209221615360.11873-100000@netrider.rowland.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 47781] ata2: exception Emask 0x10 SAct 0x0 SErr 0x4050002
+ action 0xe frozen
+Date: Sun, 23 Sep 2012 21:07:26 +0000 (UTC)
+Message-ID: <20120923210726.A8A4811FB24@bugzilla.kernel.org>
+References: <bug-47781-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209221615360.11873-100000@netrider.rowland.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oliver@neukum.org>, Aaron Lu <aaron.lu@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:37630 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754446Ab2IWVH3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 23 Sep 2012 17:07:29 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 3FD63202B6
+	for <linux-ide@vger.kernel.org>; Sun, 23 Sep 2012 21:07:28 +0000 (UTC)
+Received: from bugzilla.kernel.org (unknown [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 29462202A6
+	for <linux-ide@vger.kernel.org>; Sun, 23 Sep 2012 21:07:27 +0000 (UTC)
+In-Reply-To: <bug-47781-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Saturday, September 22, 2012, Alan Stern wrote:
-> On Sat, 22 Sep 2012, Rafael J. Wysocki wrote:
-> 
-> > > > I see. So the sr's runtime suspend may be useful even without the power-off
-> > > > feature, right?
-> > > 
-> > > Exactly.  Even though the drive itself may not be powered off, by 
-> > > putting it into runtime suspend we gain the ability to suspend the 
-> > > ancestor devices.
-> > 
-> > OK, so what about using a PM QoS-based approach as described (in general
-> > terms) in this message in the "USB ports power off" thread:
-> > 
-> > http://marc.info/?l=linux-pm&m=134831537224566&w=4
-> 
-> I'm not entirely sure.  It may well work out better in this case than 
-> in the USB ports case.
-> 
-> For the ZPODD stuff, the userspace control amounts to a single flag
-> ("do not allow zero-power") which can easily be represented as a QoS
-> constraint.
-> 
-> For the USB ports, the situation is more complicated.  The decision 
-> about whether or not to power-off a port depends not just on the port 
-> itself but also on the device plugged into the port, and there's no 
-> direct relation between the two in the sysfs device tree.  (That could 
-> be fixed perhaps by adding symbolic links between them.)
+https://bugzilla.kernel.org/show_bug.cgi?id=47781
 
-That doesn't seem to be a big obstacle as far as PM QoS is concerned, though.
-The trick may be to add PM QoS constraints not for the device itself, but
-directly for the port it is connected to (it always is possible to add a
-constraint for the device too, but that simply may be unnecessary).  Then,
-whoever decides whether or not to power off the port would only have to
-look at the effective PM QoS requirement bits of the port.
 
-> This should be discussed in the USB thread, though...
+Alan <alan@lxorguk.ukuu.org.uk> changed:
 
-Sure.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |alan@lxorguk.ukuu.org.uk
 
-Thanks,
-Rafael
+
+
+
+--- Comment #4 from Alan <alan@lxorguk.ukuu.org.uk>  2012-09-23 21:07:26 ---
+It's reporting a cable or device change. Are all the disks and CDROMs correctly
+seen ?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
