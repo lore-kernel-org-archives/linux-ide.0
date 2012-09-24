@@ -1,195 +1,119 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 0/6] ZPODD patches
-Date: Mon, 24 Sep 2012 23:04:50 +0800
-Message-ID: <20120924150449.GB3293@mint-spring.sh.intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
- <201209212318.28137.rjw@sisk.pl>
- <20120924025540.GA15069@mint-spring.sh.intel.com>
- <201209241506.11631.rjw@sisk.pl>
+From: Stephan Schreiber <info@fs-driver.org>
+Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
+ uninitialized ICH4 IDE EXBAR mem resource
+Date: Mon, 24 Sep 2012 19:09:12 +0200
+Message-ID: <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
+References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
+ <20120917115619.13d3a3cb@pyramind.ukuu.org.uk>
+ <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
+ <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9395 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755902Ab2IXPE6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 24 Sep 2012 11:04:58 -0400
+Received: from smtprelay05.ispgateway.de ([80.67.31.100]:34450 "EHLO
+	smtprelay05.ispgateway.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238Ab2IXRJR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2012 13:09:17 -0400
+In-Reply-To: <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <201209241506.11631.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 679545@bugs.debian.org, jrnieder@gmail.com
 
-On Mon, Sep 24, 2012 at 03:06:11PM +0200, Rafael J. Wysocki wrote:
-> On Monday, September 24, 2012, Aaron Lu wrote:
-> > On Fri, Sep 21, 2012 at 11:18:27PM +0200, Rafael J. Wysocki wrote:
-> > > On Friday, September 21, 2012, Aaron Lu wrote:
-> > > > On Thu, Sep 20, 2012 at 10:00:51PM +0200, Rafael J. Wysocki wrote:
-> > > > > On Wednesday, September 19, 2012, Aaron Lu wrote:
-> > > > > > Thanks Rafael, and if there is any question/problem,
-> > > > > > please kindly let me know.
-> > > > > 
-> > > > > Well, unfortunately my initial review indicates that the patchset is not
-> > > > > quite ready to go upstream yet.
-> > > > > 
-> > > > > I'll send comments in replies to the individual patches, but overall I can
-> > > > > say that at this stage of development, when I look at the patches, it should
-> > > > > be clear to me not only what is being changed, but _why_ it is being changed
-> > > > > in the first place and, secondly, why it is being changed in this particular
-> > > > > way.  It's far from that, though.
-> > > > 
-> > > > I'm adding zero power support for optical disk drive(ZPODD), which is
-> > > > made possible with the newly defined device attention(DA) pin introduced
-> > > > in SATA 3.1 spec.
-> > > > 
-> > > > The idea here is to use runtime pm to achieve this, so I basically did 2
-> > > > things:
-> > > > 1 Add runtime pm support for ODD;
-> > > > 2 Add power off support for ODD after it is runtime suspended.
-> > > > 
-> > > > Patch 2 is runtime pm support for ODD, the reason it is done this way is
-> > > > discussed here:
-> > > > http://www.spinics.net/lists/linux-scsi/msg61551.html
-> > > 
-> > > Why isn't it explained in the patch changelog, then?  People should be able
-> > > to learn why things are done the way they are done from git logs.
-> > > 
-> > > > The basic idea is, the ODD will be runtime suspended as long as there is
-> > > > nobody using it, that is, no programs opening the block device.
-> > > > 
-> > > > The ODD will be polled periodically, so it will be runtime resumed
-> > > > before checking if there is any events pending and suspended when done.
-> > > 
-> > > OK.  So what happens if we power off the drive via runtime PM.  Does it
-> > > it really make sense to resumie it through polling in that case?
-> > 
-> > No, this is the reason I introduced the powered_off flag. If set, the
-> > poll will simply return without touching the device.
-> > 
-> > I've tried to do a disk_block_events call on its suspend callback when
-> > it is ready to be powered off, but there is a race that I don't know how
-> > to solve:
-> > pm_runtime_suspend			disk_events_workfn		
-> >   scsi_dev_type_suspend			  sr_block_check_events
-> >     sr_suspend				    cdrom_check_events
-> >       disk_block_events		      	      cdrom_update_events
-> >       (this call waits for all		        sr_check_events
-> >       running events_checking function	          scsi_autopm_get_device
-> >       to return)
-> > 
-> > Suppose sr_suspend runs first, and then sr_check_events comes in.
-> > sr_suspend calls disk_block_events, which waits for sr_check_events,
-> > while scsi_autopm_get_device wait for suspend callback to finish,
-> > deadlock.
-> 
-> I need some more time to think about this, stay tuned.
+Mpfff, there aren't many replies; seems I didn't satisfy what you want  
+to have...
 
-Thanks.
+At first I want to mention that I just want to help the Debian project  
+and started testing Debian Wheezy my old ia64 box.
+Since these are my first messages on the kernel lists, I really don't  
+feel me in a position to tell you what's right or wrong for the Kernel  
+- I guess you have much more Linux Kernel knowledge than me.
 
-> 
-> > > > The only exception is, if we found a disc is just inserted, we will not
-> > > > idle it immediately at the end of the poll, reason explained in another
-> > > > mail.
-> > > > 
-> > > > This is the rational I wrote patch 2, and patch 1 is used by patch 2.
-> > > > 
-> > > > Patch 3 is adding power off support for ODD after it is runtime
-> > > > suspended, the condition is specified in section 15:
-> > > > ftp://ftp.seagate.com/sff/INF-8090.PDF
-> > > > 
-> > > > That is, for tray type ODD: no media inside and door closed; for slot
-> > > > type ODD: no media inside.
-> > > > 
-> > > > The is the reason sr_suspend is written, for non-ZPODD capable devices,
-> > > > it does nothing; for ZPODD devices, it will check the above condition to
-> > > > see if it is ready to be powered off. The ready_to_power_off flag will be
-> > > > used by ATA layer to decide if power can be removed.
-> > > 
-> > > Now, James says he doesn't like the way ready_to_power_off is used.  Sure
-> > > enough, it is totally irrelevant to the majority of SCSI devices.  It actually
-> > > is totally irrelevant to everything in the SCSI subsystem except for the sr
-> > > driver and libata.  So I wonder if you have considered any alternative
-> > > way to address the use case at hand?
-> > > 
-> > > > When in powered off state, if user presses the eject button or insert a
-> > > > disc, an ACPI event will be generated and our acpi wake handler will
-> > > > pm_runtime_resume the ODD. And if it is a tray type ODD, its tray should
-> > > > be ejected(need_eject flag) after powered on. This is patch 3.
-> > > 
-> > > That sounds reasonable enough, but the role of the powered_off and
-> > > need_eject flags could be explained a bit better.  In particular, it would
-> > 
-> > powered_off: set when the device is powered off, clear otherwise.
-> 
-> That's pretty clear, but I think this flag should be called no_polling
-> or something like this, because that's what it means to the SCSI layer.
 
-Agree.
+> The firmware left the memory BAR at 0x24 cleared (0x00000000), but it
+> also left the MEM bit in the command register disabled.  So it seems
+> like a Linux bug that we're trying to use that zero address from the
+> BAR.  If the firmware left the MEM or IO decode enable bit cleared,
+> why would we assume it put anything useful in the corresponding BARs?
 
-> 
-> > need_eject:
-> > First consider how the device will be runtime resumed:
-> > 1 Some program opens the block device;
-> > 2 Events checking poll when it's not powered off yet;
-> > 3 User presses the eject button or inserts a disc into the slot when the
-> >   device is in powered off state.
-> > And the need_eject flag is for case 3, when the device is in powered off
-> > state and user presses the eject button, it will be powered on(through
-> > acpi wake notification function) and runtime resumed. In its runtime
-> > resume callback, its tray needs to be ejected since user just presses
-> > the eject button. The whole process of ZPODD is opaque to the user,
-> > he/she doesn't know the ODD lost power so the ODD has to behave exactly
-> > like it doesn't lose power.
-> 
-> Do you think it can be useful for other types of devices, not necessarily
-> handled through ACPI?
+Your idea would be a fundamental change in the Kernel; I just want to  
+fix the ata_piix problem in Debian Wheezy.
 
-I can only say that it is useful for ZPODD, if ZPODD someday is used on
-another platform that does not use ACPI, the need_eject flag should
-still be needed.
+I can't tell you whether the developer of the EFI thought this. Maybe  
+it is simply a bug.
+If you would evaluate the command registers, which the BIOS or EFI has  
+initialized, you would work around some wrong BARs. You might run into  
+trouble due to wrong command register values instead.
+Are you sure that any BIOS or EFI sets the command registers correctly?
 
-As for other scsi devices, I'm not sure.
+Currently the Linux Kernel sets and clears the IORESOURCE_MEM and  
+IORESOURCE_IO bits in the command registers as needed.
+Windows reconfigures any PCI device. The settings of the BIOS or EFI  
+do not matter at all; the user doesn't experience any BIOS bug at all.
 
-> 
-> > Hi Oliver,
-> > This flag is really to say the tray needs to be ejected after runtime
-> > resumed, it's not that media change detected. It is possible that user
-> > ejects the tray without putting any disc inside and simply close the
-> > tray, which doesn't qualify a media change event. And if user does
-> > put a disc in, the sr_check_events will find that and report the media
-> > change event to user space. Agree?
-> > 
-> > > be nice to have explained why they have to be present in struct scsi_device,
-> > > because they don't seem to be particularly useful for many SCSI devices
-> > > that aren't CD drives (the need_eject one in particular).
-> > 
-> > With your suggestion of pm_platform_power_off_allowed, I suppose
-> > powered_off can be eliminated similarly with something like
-> > pm_platform_powered_off returning true or false(for ACPI platform,
-> > return true when device is in D3 cold state).
-> 
-> I'm currently thinking that using PM QoS may be a better approach here.
 
-Is it something like a "power_off_allowed" binary constraint?
-Then both the sr driver and the user can change the value so that both
-the ready_to_power_off and may_power_off is no longer needed.
 
-> 
-> > And for the need_eject flag, I don't know if there is a better place for
-> > it. The acpi wake notification code resides in libata(where we need to
-> > record that this resume is due to user presses the eject button and the
-> > tray needs to be ejected after resumed), and the runtime resume callback
-> > resides in scsi driver(where we actually eject the tray). Ideally, this
-> > flag should sit in scsi_cd structure, but libata does not have access to
-> > it.
-> 
-> Yes, that's the problem that James mentioned.
 
-Right, not easy to find a home for need_eject...
 
-Thanks,
-Aaron
+> This still isn't very generic.  It only looks at BAR 5 and only for
+> IDE controllers, so it fixes the problem for this device and this
+> BIOS, but there's no reason the same problem couldn't happen on other
+> devices and other BARs.
+>
+> My proposal was basically:
+>
+>     pci_read_config_word(dev, PCI_COMMAND, &cmd);
+>     for (i = 0; i < 6; i++) {
+>         /* read BAR i here */
+>         r = dev->resource[i];
+>         if (((r->flags & IORESOURCE_MEM) && (cmd & PCI_COMMAND_MEMORY)) ||
+>             ((r->flags & IORESOURCE_IO) && (cmd & PCI_COMMAND_IO))) {
+>             /* treat resource as valid */
+>         } else {
+>             /* treat resource as unassigned; try to assign it later */
+>         }
+>     }
 
-> 
-> Thanks,
-> Rafael
+Both of my two patches hide the BAR5 when we know that BAR5 is not functional.
+The first patch makes sure that the PCI device id matches; the second  
+one checks whether it is an ide controller in legacy mode. The  
+associated ide/piix or ata/ata_piix doesn't need the BAR5 memory  
+resource at all.
+The other BARs are functional and needed.
+
+I don't know what regression can occur when you hide *any*  
+uninitialized BAR of *any* pci device. Some drivers might be screwed  
+up when a needed mem resource is absend - after pci_enable_device() or  
+pcim_enable_device() returned success.
+
+
+
+Ben Hutchings of the Debian project pointed to some interesting detail  
+about ide/piix:
+"By the way, the reason the old IDE driver worked is that
+drivers/ide/setup-pci.c has a fallback for this:
+
+	if (pci_enable_device(dev)) {
+		ret = pci_enable_device_io(dev);
+
+It was added almost exactly 10 years ago without any specific comment."
+
+
+Debian had both ide/piix and ata/ata_piix in the past. When ata_piix  
+didn't initialize, ide/piix took over the device. The user didn't  
+experience any problem.
+The old ide/piix has been removed with recent Debian versions (due to  
+problems with shared interrupts). Thus, the ICH4 problem is on the  
+table again.
+
+
+Since you don't want to take my patches, I need some new ideas. The  
+patch shouldn't be a fundamental, experimental change with the risk of  
+regression because it is intended for a *stable* Debian release.
+
+Suggestions or comments are appreciated.
+
+Stephan
+
+
