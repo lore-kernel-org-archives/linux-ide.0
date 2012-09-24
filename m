@@ -1,119 +1,159 @@
-From: Stephan Schreiber <info@fs-driver.org>
-Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
- uninitialized ICH4 IDE EXBAR mem resource
-Date: Mon, 24 Sep 2012 19:09:12 +0200
-Message-ID: <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
- <20120917115619.13d3a3cb@pyramind.ukuu.org.uk>
- <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
- <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Mon, 24 Sep 2012 23:40:18 +0200
+Message-ID: <201209242340.18318.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209241455.31754.rjw@sisk.pl> <20120924145235.GA3293@mint-spring.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtprelay05.ispgateway.de ([80.67.31.100]:34450 "EHLO
-	smtprelay05.ispgateway.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238Ab2IXRJR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Sep 2012 13:09:17 -0400
-In-Reply-To: <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
-Content-Disposition: inline
+Received: from ogre.sisk.pl ([193.178.161.156]:42341 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750824Ab2IXVdq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 24 Sep 2012 17:33:46 -0400
+In-Reply-To: <20120924145235.GA3293@mint-spring.sh.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 679545@bugs.debian.org, jrnieder@gmail.com
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-Mpfff, there aren't many replies; seems I didn't satisfy what you want  
-to have...
+On Monday, September 24, 2012, Aaron Lu wrote:
+> On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
+> > On Monday, September 24, 2012, Aaron Lu wrote:
+> > > On Fri, Sep 21, 2012 at 10:49:32PM +0200, Rafael J. Wysocki wrote:
+> > > > On Friday, September 21, 2012, Aaron Lu wrote:
+> > > > > On Thu, Sep 20, 2012 at 10:48:10PM +0200, Rafael J. Wysocki wrote:
+> > > > > > On Wednesday, September 12, 2012, Aaron Lu wrote:
 
-At first I want to mention that I just want to help the Debian project  
-and started testing Debian Wheezy my old ia64 box.
-Since these are my first messages on the kernel lists, I really don't  
-feel me in a position to tell you what's right or wrong for the Kernel  
-- I guess you have much more Linux Kernel knowledge than me.
+[...] 
 
+> > > > > > >  	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
+> > > > > > >  	if (!cd->tur_changed) {
+> > > > > > > @@ -287,6 +294,12 @@ do_tur:
+> > > > > > >  	cd->tur_changed = false;
+> > > > > > >  	cd->get_event_changed = false;
+> > > > > > >  
+> > > > > > > +out:
+> > > > > > > +	if (cd->media_present && !last_present)
+> > > > > > > +		pm_runtime_put_noidle(&cd->device->sdev_gendev);
+> > > > > > > +	else
+> > > > > > > +		scsi_autopm_put_device(cd->device);
+> > > > > > > +
+> > > > > > 
+> > > > > > This thing is asking for a comment.
+> > > > > > 
+> > > > > > It looks like you're kind of avoiding to call _idle() for the device, but why?
+> > > > > > What might go wrong if pm_runtime_put() is used instead of the whole conditional,
+> > > > > > among other things?
+> > > > > 
+> > > > > The above code means, if we found that a disc is just inserted(reflected
+> > > > > by cd->media_present is true and last_present is false), we do not want
+> > > > > to put the device into suspend state immediately until next poll. In the
+> > > > > interval, some programs may decide to use this device by opening it.
+> > > > > 
+> > > > > Nothing will go wrong, but it can possibly avoid a runtime status change.
+> > > > 
+> > > > OK, so suppose the condition is true and we do the _noidle() put.  Who's
+> > > > going to suspend the device in that case if no one actually uses the device?
+> > > 
+> > > Next time when the check_events poll runs, it will find that:
+> > > 1 Either the disc is still there, then both last_present and
+> > >   media_present would be true, we will do the put to idle it;
+> > > 2 Or the disc is ejected, we will do the put to idle it.
+> > 
+> > In that case I would do:
+> > 
+> > pm_runtime_put_noidle(&cd->device->sdev_gendev);
+> > if (cd->media_present && !last_present)
+> >     pm_runtime_suspend(&cd->device->sdev_gendev);
+> 
+> This doesn't cover the !cd->media_present(media not present) case.
+> If there is no media present, we will also need to idle it.
 
-> The firmware left the memory BAR at 0x24 cleared (0x00000000), but it
-> also left the MEM bit in the command register disabled.  So it seems
-> like a Linux bug that we're trying to use that zero address from the
-> BAR.  If the firmware left the MEM or IO decode enable bit cleared,
-> why would we assume it put anything useful in the corresponding BARs?
+Oh, I got the condition backwards.  I meant:
 
-Your idea would be a fundamental change in the Kernel; I just want to  
-fix the ata_piix problem in Debian Wheezy.
+pm_runtime_put_noidle(&cd->device->sdev_gendev);
+if (!cd->media_present || last_present)
+     pm_runtime_suspend(&cd->device->sdev_gendev);
 
-I can't tell you whether the developer of the EFI thought this. Maybe  
-it is simply a bug.
-If you would evaluate the command registers, which the BIOS or EFI has  
-initialized, you would work around some wrong BARs. You might run into  
-trouble due to wrong command register values instead.
-Are you sure that any BIOS or EFI sets the command registers correctly?
+which should be equivalent to your original code (if I'm not mistaken again).
 
-Currently the Linux Kernel sets and clears the IORESOURCE_MEM and  
-IORESOURCE_IO bits in the command registers as needed.
-Windows reconfigures any PCI device. The settings of the BIOS or EFI  
-do not matter at all; the user doesn't experience any BIOS bug at all.
+> > And I'd add a comment about the next poll.
+> > 
+> > This appears somewhat racy, though, because in theory a media may be inserted
+> > while we are removing power from the device.  Isn't that a problem?
+> 
+> Yes, this is a problem.
+> To avoid this race, I think the following needs to be done:
+> - For slot type ODD, make it such that user can't insert a disc;
+> - For tray type ODD, make it such that when user presses the eject
+>   button, the tray doesn't open.
+> I'll see if this is possible, thanks for the remind.
 
+OK
 
+> > > The poll runs periodically, until the device is powered off(reflected by
+> > > the powered_off flag), in which case, the poll will simply return
+> > > 0 without touching this device.
+> > 
+> > Is it useful to poll the device after it has been suspended, but not powered
+> > off?
+> 
+> Yes, it is necessary to poll the device when it has been suspended with
+> power left. The reason is, we need to check if there is a media change
+> event happened, and the way to check this is to issue a
+> GET_EVENT_STATUS_NOTIFICATION comand.
+> 
+> Please note that when the drive is not powered off, it will not send us
+> a notification when its eject button is pressed.
 
+I'm not sure about that, actually.  If it doesn't notify us, that whole thing
+is inherently racy pretty much beyond fixing, because it is always possible
+that the user will press the eject button right after we've checked the
+status last time and right before power removal.  We're going to lose that
+event, so the user will have to push the button once again in that case.
 
+> > > > > > >  	return events;
+> > > > > > >  }
+> > > > > > >  
+> > > > > > > @@ -715,9 +728,14 @@ static int sr_probe(struct device *dev)
+> > > > > > >  	dev_set_drvdata(dev, cd);
+> > > > > > >  	disk->flags |= GENHD_FL_REMOVABLE;
+> > > > > > >  	add_disk(disk);
+> > > > > > > +	disk_events_set_poll_msecs(disk, 5000);
+> > > > > > 
+> > > > > > Why do you need this and why is the poll interval universally suitable?
+> > > > > 
+> > > > > For a system with udev, the block module parameter events_dfl_poll_msecs
+> > > > > will be set to 2s. If disk's events_poll_msecs is not set, that will be
+> > > > > used. So the disk will be polled every 2s, that means it will be runtime
+> > > > > suspended/resumed every 2s if there is no user. I set it to 5s so that
+> > > > > the device can stay in runtime suspended state longer.
+> > > > > 
+> > > > > And the sysfs interface is still there, if udev thinks a device needs
+> > > > > special setting, it will do that and I'll not overwrite that setting.
+> > > > 
+> > > > I'm not quite convinced this is the right approach here.
+> > > > 
+> > > > So if you set it to 5 s this way, the user space will have no idea that
+> > > > the polling happens less often than it thinks, or am I misunderstanding
+> > > > what you said above?
+> > > 
+> > > That's correct.
+> > > AFAIK, user space does not care how often the device is polled, it
+> > > cares only one thing: when there is a media change event, please let me
+> > > know(through uevent).
+> > 
+> > So that's why we do the polling, right?
+> 
+> Yes.
 
-> This still isn't very generic.  It only looks at BAR 5 and only for
-> IDE controllers, so it fixes the problem for this device and this
-> BIOS, but there's no reason the same problem couldn't happen on other
-> devices and other BARs.
->
-> My proposal was basically:
->
->     pci_read_config_word(dev, PCI_COMMAND, &cmd);
->     for (i = 0; i < 6; i++) {
->         /* read BAR i here */
->         r = dev->resource[i];
->         if (((r->flags & IORESOURCE_MEM) && (cmd & PCI_COMMAND_MEMORY)) ||
->             ((r->flags & IORESOURCE_IO) && (cmd & PCI_COMMAND_IO))) {
->             /* treat resource as valid */
->         } else {
->             /* treat resource as unassigned; try to assign it later */
->         }
->     }
+Well, that's difficult.
 
-Both of my two patches hide the BAR5 when we know that BAR5 is not functional.
-The first patch makes sure that the PCI device id matches; the second  
-one checks whether it is an ide controller in legacy mode. The  
-associated ide/piix or ata/ata_piix doesn't need the BAR5 memory  
-resource at all.
-The other BARs are functional and needed.
+If the remote wakeup is signaled through a GPE, it should be possible to
+enable it before we actually put the device into D3cold.  That may allow us
+to eliminate the races.
 
-I don't know what regression can occur when you hide *any*  
-uninitialized BAR of *any* pci device. Some drivers might be screwed  
-up when a needed mem resource is absend - after pci_enable_device() or  
-pcim_enable_device() returned success.
-
-
-
-Ben Hutchings of the Debian project pointed to some interesting detail  
-about ide/piix:
-"By the way, the reason the old IDE driver worked is that
-drivers/ide/setup-pci.c has a fallback for this:
-
-	if (pci_enable_device(dev)) {
-		ret = pci_enable_device_io(dev);
-
-It was added almost exactly 10 years ago without any specific comment."
-
-
-Debian had both ide/piix and ata/ata_piix in the past. When ata_piix  
-didn't initialize, ide/piix took over the device. The user didn't  
-experience any problem.
-The old ide/piix has been removed with recent Debian versions (due to  
-problems with shared interrupts). Thus, the ICH4 problem is on the  
-table again.
-
-
-Since you don't want to take my patches, I need some new ideas. The  
-patch shouldn't be a fundamental, experimental change with the risk of  
-regression because it is intended for a *stable* Debian release.
-
-Suggestions or comments are appreciated.
-
-Stephan
-
-
+Thanks,
+Rafael
