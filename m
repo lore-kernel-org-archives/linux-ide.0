@@ -1,94 +1,177 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Tue, 25 Sep 2012 16:01:35 +0800
-Message-ID: <20120925080133.GA1629@mint-spring.sh.intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Tue, 25 Sep 2012 16:18:26 +0800
+Message-ID: <20120925081825.GA1666@mint-spring.sh.intel.com>
 References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
- <201209241455.31754.rjw@sisk.pl>
- <20120924145235.GA3293@mint-spring.sh.intel.com>
- <201209242340.18318.rjw@sisk.pl>
+ <201209241506.11631.rjw@sisk.pl>
+ <20120924150449.GB3293@mint-spring.sh.intel.com>
+ <201209242346.03414.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20321 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753571Ab2IYIBo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Sep 2012 04:01:44 -0400
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201209242340.18318.rjw@sisk.pl>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <201209242346.03414.rjw@sisk.pl>
+Sender: linux-acpi-owner@vger.kernel.org
 To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Cc: Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
+On Mon, Sep 24, 2012 at 11:46:03PM +0200, Rafael J. Wysocki wrote:
 > On Monday, September 24, 2012, Aaron Lu wrote:
-> > On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
-> > > And I'd add a comment about the next poll.
+> > On Mon, Sep 24, 2012 at 03:06:11PM +0200, Rafael J. Wysocki wrote:
+> > > On Monday, September 24, 2012, Aaron Lu wrote:
+> > > > need_eject:
+> > > > First consider how the device will be runtime resumed:
+> > > > 1 Some program opens the block device;
+> > > > 2 Events checking poll when it's not powered off yet;
+> > > > 3 User presses the eject button or inserts a disc into the slot when the
+> > > >   device is in powered off state.
+> > > > And the need_eject flag is for case 3, when the device is in powered off
+> > > > state and user presses the eject button, it will be powered on(through
+> > > > acpi wake notification function) and runtime resumed. In its runtime
+> > > > resume callback, its tray needs to be ejected since user just presses
+> > > > the eject button. The whole process of ZPODD is opaque to the user,
+> > > > he/she doesn't know the ODD lost power so the ODD has to behave exactly
+> > > > like it doesn't lose power.
 > > > 
-> > > This appears somewhat racy, though, because in theory a media may be inserted
-> > > while we are removing power from the device.  Isn't that a problem?
+> > > Do you think it can be useful for other types of devices, not necessarily
+> > > handled through ACPI?
 > > 
-> > Yes, this is a problem.
-> > To avoid this race, I think the following needs to be done:
-> > - For slot type ODD, make it such that user can't insert a disc;
-> > - For tray type ODD, make it such that when user presses the eject
-> >   button, the tray doesn't open.
-> > I'll see if this is possible, thanks for the remind.
-> 
-> OK
-
-Looks like this is not the right thing to do, if I lock the door user
-will be confused.
-
-> 
-> > > > The poll runs periodically, until the device is powered off(reflected by
-> > > > the powered_off flag), in which case, the poll will simply return
-> > > > 0 without touching this device.
-> > > 
-> > > Is it useful to poll the device after it has been suspended, but not powered
-> > > off?
+> > I can only say that it is useful for ZPODD, if ZPODD someday is used on
+> > another platform that does not use ACPI, the need_eject flag should
+> > still be needed.
 > > 
-> > Yes, it is necessary to poll the device when it has been suspended with
-> > power left. The reason is, we need to check if there is a media change
-> > event happened, and the way to check this is to issue a
-> > GET_EVENT_STATUS_NOTIFICATION comand.
-> > 
-> > Please note that when the drive is not powered off, it will not send us
-> > a notification when its eject button is pressed.
+> > As for other scsi devices, I'm not sure.
 > 
-> I'm not sure about that, actually.  If it doesn't notify us, that whole thing
-> is inherently racy pretty much beyond fixing, because it is always possible
-> that the user will press the eject button right after we've checked the
-> status last time and right before power removal.  We're going to lose that
-> event, so the user will have to push the button once again in that case.
+> I see.  This means we don't really have good arguments for putting that flag
+> into struct scsi_device ...
 
-I just checked the spec again and tested, when the ODD has power, it
-will also send out notifications on pressing the eject button/inserting
-a disc. So we should be able to capture such a event.
+OK.
 
-> 
-> > > > That's correct.
-> > > > AFAIK, user space does not care how often the device is polled, it
-> > > > cares only one thing: when there is a media change event, please let me
-> > > > know(through uevent).
-> > > 
-> > > So that's why we do the polling, right?
-> > 
-> > Yes.
-> 
-> Well, that's difficult.
-> 
-> If the remote wakeup is signaled through a GPE, it should be possible to
-> enable it before we actually put the device into D3cold.  That may allow us
-> to eliminate the races.
+I'm thinking of moving the acpi wake notification code from ata to scsi,
+so that the notification function lives in sr module and then I do not
+need to set this need_eject flag in scsi_device and scsi_cd structure
+needs to host this flag.
 
-Thanks for the suggestion, I'll update the code.
+A example patch would be something like the following, I didn't seperate
+these ACPI calls in sr.c as this is just a concept proof, if this is the
+right thing to do, I will separate them into another file sr-acpi.c and
+make empty stubs for them in sr.h for systems do not have ACPI configured.
 
-I'm thinking of enabling this GPE in sr_suspend once we decided that it
-is ready to be powered off, so the time frame between sr_suspend and
-when the power is actually removed in libata should be taken care of by
-the GPE. If GPE fires, the notification function will request a runtime
-resume of the device. Does this sound OK?
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index ef72682..94d17f1 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -46,6 +46,7 @@
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
+ #include <linux/pm_runtime.h>
++#include <linux/acpi.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi.h>
+@@ -57,6 +58,8 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
+ 
++#include <acpi/acpi_bus.h>
++
+ #include "scsi_logging.h"
+ #include "sr.h"
+ 
+@@ -212,8 +220,8 @@ static int sr_resume(struct device *dev)
+ 	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+ 
+ 	/* If user wakes up the ODD, eject the tray */
+-	if (cd->device->need_eject) {
+-		cd->device->need_eject = 0;
++	if (cd->need_eject) {
++		cd->need_eject = false;
+ 		/* But only for tray type ODD when door is not locked */
+ 		if (!(cd->cdi.mask & CDC_CLOSE_TRAY) && !cd->door_locked)
+ 			sr_tray_move(&cd->cdi, 1);
+@@ -704,6 +711,58 @@ static void sr_release(struct cdrom_device_info *cdi)
+ 
+ }
+ 
++static void sr_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
++{
++	struct device *dev = context;
++	struct scsi_cd *cd = dev_get_drvdata(dev);
++
++	if (event == ACPI_NOTIFY_DEVICE_WAKE && pm_runtime_suspended(dev)) {
++		cd->need_eject = true;
++		pm_runtime_resume(dev);
++	}
++}
++
++static void sr_acpi_add_pm_notifier(struct device *dev)
++{
++	struct acpi_device *acpi_dev;
++	acpi_handle handle;
++	acpi_status status;
++
++	handle = dev->archdata.acpi_handle;
++	if (!handle)
++		return;
++
++	status = acpi_bus_get_device(handle, &acpi_dev);
++	if (ACPI_FAILURE(status))
++		return;
++
++	acpi_power_resource_register_device(dev, handle);
++	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
++					sr_acpi_wake_dev, dev);
++	device_set_run_wake(dev, true);
++}
++
++static void sr_acpi_remove_pm_notifier(struct device *dev)
++{
++	struct acpi_device *acpi_dev;
++	acpi_handle handle;
++	acpi_status status;
++
++	handle = dev->archdata.acpi_handle;
++	if (!handle)
++		return;
++
++	status = acpi_bus_get_device(handle, &acpi_dev);
++	if (ACPI_FAILURE(status))
++		return;
++
++	acpi_power_resource_unregister_device(dev, handle);
++	device_set_run_wake(dev, false);
++	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY, sr_acpi_wake_dev);
++}
++
+ static int sr_probe(struct device *dev)
+ {
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+@@ -786,7 +845,9 @@ static int sr_probe(struct device *dev)
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+ 
+-	/* enable runtime pm */
++	if (sdev->can_power_off)
++		sr_acpi_add_pm_notifier(dev);
++
+ 	scsi_autopm_put_device(cd->device);
+ 
+ 	return 0;
+@@ -1036,8 +1097,9 @@ static int sr_remove(struct device *dev)
+ {
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
+ 
+-	/* disable runtime pm */
+ 	scsi_autopm_get_device(cd->device);
++	if (cd->device->can_power_off)
++		sr_acpi_remove_pm_notifier(dev);
+ 
+ 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
+ 	del_gendisk(cd->disk);
+
 
 Thanks,
 Aaron
+
