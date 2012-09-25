@@ -1,183 +1,94 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
- uninitialized ICH4 IDE EXBAR mem resource
-Date: Mon, 24 Sep 2012 17:54:57 -0600
-Message-ID: <20120924235457.GA31372@google.com>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
- <20120917115619.13d3a3cb@pyramind.ukuu.org.uk>
- <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
- <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
- <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Tue, 25 Sep 2012 16:01:35 +0800
+Message-ID: <20120925080133.GA1629@mint-spring.sh.intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+ <201209241455.31754.rjw@sisk.pl>
+ <20120924145235.GA3293@mint-spring.sh.intel.com>
+ <201209242340.18318.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ia64-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:20321 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753571Ab2IYIBo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Sep 2012 04:01:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
-Sender: linux-ia64-owner@vger.kernel.org
-To: Stephan Schreiber <info@fs-driver.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 679545@bugs.debian.org, jrnieder@gmail.com
+In-Reply-To: <201209242340.18318.rjw@sisk.pl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Mon, Sep 24, 2012 at 07:09:12PM +0200, Stephan Schreiber wrote:
-> Mpfff, there aren't many replies; seems I didn't satisfy what you
-> want to have...
+On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
+> On Monday, September 24, 2012, Aaron Lu wrote:
+> > On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
+> > > And I'd add a comment about the next poll.
+> > > 
+> > > This appears somewhat racy, though, because in theory a media may be inserted
+> > > while we are removing power from the device.  Isn't that a problem?
+> > 
+> > Yes, this is a problem.
+> > To avoid this race, I think the following needs to be done:
+> > - For slot type ODD, make it such that user can't insert a disc;
+> > - For tray type ODD, make it such that when user presses the eject
+> >   button, the tray doesn't open.
+> > I'll see if this is possible, thanks for the remind.
 > 
-> At first I want to mention that I just want to help the Debian
-> project and started testing Debian Wheezy my old ia64 box.
+> OK
 
-Thanks, I really appreciate that, and you've done a huge amount of
-debugging and testing already.  It's very normal to iterate on the
-resolution as we're doing now.
+Looks like this is not the right thing to do, if I lock the door user
+will be confused.
 
-> >The firmware left the memory BAR at 0x24 cleared (0x00000000), but it
-> >also left the MEM bit in the command register disabled.  So it seems
-> >like a Linux bug that we're trying to use that zero address from the
-> >BAR.  If the firmware left the MEM or IO decode enable bit cleared,
-> >why would we assume it put anything useful in the corresponding BARs?
 > 
-> Your idea would be a fundamental change in the Kernel; I just want
-> to fix the ata_piix problem in Debian Wheezy.
+> > > > The poll runs periodically, until the device is powered off(reflected by
+> > > > the powered_off flag), in which case, the poll will simply return
+> > > > 0 without touching this device.
+> > > 
+> > > Is it useful to poll the device after it has been suspended, but not powered
+> > > off?
+> > 
+> > Yes, it is necessary to poll the device when it has been suspended with
+> > power left. The reason is, we need to check if there is a media change
+> > event happened, and the way to check this is to issue a
+> > GET_EVENT_STATUS_NOTIFICATION comand.
+> > 
+> > Please note that when the drive is not powered off, it will not send us
+> > a notification when its eject button is pressed.
+> 
+> I'm not sure about that, actually.  If it doesn't notify us, that whole thing
+> is inherently racy pretty much beyond fixing, because it is always possible
+> that the user will press the eject button right after we've checked the
+> status last time and right before power removal.  We're going to lose that
+> event, so the user will have to push the button once again in that case.
 
-Right.  I think you've tripped over a rather fundamental issue, and
-I'm hoping we can fix that.  If we can, that will help many users,
-not just the handful who have this ia64 box.
+I just checked the spec again and tested, when the ODD has power, it
+will also send out notifications on pressing the eject button/inserting
+a disc. So we should be able to capture such a event.
 
-> If you would evaluate the command registers, which the BIOS or EFI
-> has initialized, you would work around some wrong BARs. You might
-> run into trouble due to wrong command register values instead.
-> Are you sure that any BIOS or EFI sets the command registers correctly?
+> 
+> > > > That's correct.
+> > > > AFAIK, user space does not care how often the device is polled, it
+> > > > cares only one thing: when there is a media change event, please let me
+> > > > know(through uevent).
+> > > 
+> > > So that's why we do the polling, right?
+> > 
+> > Yes.
+> 
+> Well, that's difficult.
+> 
+> If the remote wakeup is signaled through a GPE, it should be possible to
+> enable it before we actually put the device into D3cold.  That may allow us
+> to eliminate the races.
 
-We can't be 100% sure about things like that, of course.  But we do
-know that if the MEM or IO bits are set in the command register, the
-device will claim transactions that match whatever is in the BARs.
-So setting the MEM or IO bit is a pretty strong statement that the
-BAR contains a valid address.  If the BIOS leaves those bits clear,
-we really can't conclude anything about the BAR contents.
+Thanks for the suggestion, I'll update the code.
 
-> Currently the Linux Kernel sets and clears the IORESOURCE_MEM and
-> IORESOURCE_IO bits in the command registers as needed.
-> Windows reconfigures any PCI device. The settings of the BIOS or EFI
-> do not matter at all; the user doesn't experience any BIOS bug at
-> all.
+I'm thinking of enabling this GPE in sr_suspend once we decided that it
+is ready to be powered off, so the time frame between sr_suspend and
+when the power is actually removed in libata should be taken care of by
+the GPE. If GPE fires, the notification function will request a runtime
+resume of the device. Does this sound OK?
 
-On x86, Windows normally doesn't reconfigure PCI devices unless it
-finds a problem with the configuration done by the BIOS.  I suspect
-it works similarly on ia64.  I would guess that Windows noticed that
-the MEM bit was not set, and therefore ignored the MEM BAR contents.
-
-Can you try the following patch?  It's based on 3.6-rc5+, but I think
-it will apply to your 3.2.23 kernel with minor conflicts that shouldn't
-be too hard to resolve.
-
-It's not quite right because we really shouldn't turn on the MEM or IO
-decode bit unless *all* of the corresponding BARs have been set, but
-in your case, I think there is only one MEM BAR that is an issue.
-
-Bjorn
-
-
-
-
-commit 9038dd3b3c4c9e4c7ca0118c8df398c4c646ab58
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Sep 24 17:16:28 2012 -0600
-
-    vsprintf: Add support for IORESOURCE_UNSET in %pR
-
-diff --git a/lib/vsprintf.c b/lib/vsprintf.c
-index 0e33754..b6ceeee 100644
---- a/lib/vsprintf.c
-+++ b/lib/vsprintf.c
-@@ -600,7 +600,7 @@ char *resource_string(char *buf, char *end, struct resource *res,
- 	 * 64-bit res (sizeof==8): 20 chars in dec, 18 in hex ("0x" + 16) */
- #define RSRC_BUF_SIZE		((2 * sizeof(resource_size_t)) + 4)
- #define FLAG_BUF_SIZE		(2 * sizeof(res->flags))
--#define DECODED_BUF_SIZE	sizeof("[mem - 64bit pref window disabled]")
-+#define DECODED_BUF_SIZE	sizeof("[mem - 64bit pref window unset disabled]")
- #define RAW_BUF_SIZE		sizeof("[mem - flags 0x]")
- 	char sym[max(2*RSRC_BUF_SIZE + DECODED_BUF_SIZE,
- 		     2*RSRC_BUF_SIZE + FLAG_BUF_SIZE + RAW_BUF_SIZE)];
-@@ -642,6 +642,8 @@ char *resource_string(char *buf, char *end, struct resource *res,
- 			p = string(p, pend, " pref", str_spec);
- 		if (res->flags & IORESOURCE_WINDOW)
- 			p = string(p, pend, " window", str_spec);
-+		if (res->flags & IORESOURCE_UNSET)
-+			p = string(p, pend, " unset", str_spec);
- 		if (res->flags & IORESOURCE_DISABLED)
- 			p = string(p, pend, " disabled", str_spec);
- 	} else {
-
-commit f4795a79dc370b6f4106768b16a4a9edba4df933
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Sep 24 17:15:30 2012 -0600
-
-    PCI: Ignore BAR contents when firmware left decoding disabled
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2396111..6926dcb 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -175,9 +175,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 
- 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
- 
-+	pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
-+
- 	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
--		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
- 		pci_write_config_word(dev, PCI_COMMAND,
- 			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
- 	}
-@@ -211,9 +212,13 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		if (res->flags & IORESOURCE_IO) {
- 			l &= PCI_BASE_ADDRESS_IO_MASK;
- 			mask = PCI_BASE_ADDRESS_IO_MASK & (u32) IO_SPACE_LIMIT;
-+			if (!(orig_cmd & PCI_COMMAND_IO))
-+				res->flags |= IORESOURCE_UNSET;
- 		} else {
- 			l &= PCI_BASE_ADDRESS_MEM_MASK;
- 			mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
-+			if (!(orig_cmd & PCI_COMMAND_MEM))
-+				res->flags |= IORESOURCE_UNSET;
- 		}
- 	} else {
- 		res->flags |= (l & IORESOURCE_ROM_ENABLE);
-@@ -248,6 +253,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 			/* Address above 32-bit boundary; disable the BAR */
- 			pci_write_config_dword(dev, pos, 0);
- 			pci_write_config_dword(dev, pos + 4, 0);
-+			res->flags |= IORESOURCE_UNSET;
- 			region.start = 0;
- 			region.end = sz64;
- 			pcibios_bus_to_resource(dev, res, &region);
-
-commit f90b82ab54efa462681d5dd99fd926f2563f7a93
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Mon Sep 24 17:28:21 2012 -0600
-
-    PCI: Don't claim BARs that haven't been assigned
-
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 81b88bd..9f9e31a 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -113,6 +113,9 @@ int pci_claim_resource(struct pci_dev *dev, int resource)
- 	struct resource *res = &dev->resource[resource];
- 	struct resource *root, *conflict;
- 
-+	if (res->flags & IORESOURCE_UNSET)
-+		return 0;
-+
- 	root = pci_find_parent_resource(dev, res);
- 	if (!root) {
- 		dev_info(&dev->dev, "no compatible bridge window for %pR\n",
-@@ -334,6 +337,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 
- 		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
- 			continue;
-+		if (r->flags & IORESOURCE_UNSET)
-+			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
- 			continue;
+Thanks,
+Aaron
