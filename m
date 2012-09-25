@@ -1,93 +1,110 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Tue, 25 Sep 2012 13:47:52 +0200
-Message-ID: <201209251347.52407.rjw@sisk.pl>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209242340.18318.rjw@sisk.pl> <20120925080133.GA1629@mint-spring.sh.intel.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 0/6] ZPODD patches
+Date: Tue, 25 Sep 2012 21:56:12 +0800
+Message-ID: <20120925135611.GA2858@mint-spring.sh.intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com>
+ <201209241506.11631.rjw@sisk.pl>
+ <20120924150449.GB3293@mint-spring.sh.intel.com>
+ <201209242346.03414.rjw@sisk.pl>
+ <20120925081825.GA1666@mint-spring.sh.intel.com>
+ <1348570949.2457.36.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20120925080133.GA1629@mint-spring.sh.intel.com>
+Content-Disposition: inline
+In-Reply-To: <1348570949.2457.36.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oliver@neukum.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tuesday, September 25, 2012, Aaron Lu wrote:
-> On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
-> > On Monday, September 24, 2012, Aaron Lu wrote:
-> > > On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
-> > > > And I'd add a comment about the next poll.
-> > > > 
-> > > > This appears somewhat racy, though, because in theory a media may be inserted
-> > > > while we are removing power from the device.  Isn't that a problem?
-> > > 
-> > > Yes, this is a problem.
-> > > To avoid this race, I think the following needs to be done:
-> > > - For slot type ODD, make it such that user can't insert a disc;
-> > > - For tray type ODD, make it such that when user presses the eject
-> > >   button, the tray doesn't open.
-> > > I'll see if this is possible, thanks for the remind.
-> > 
-> > OK
+On Tue, Sep 25, 2012 at 03:02:29PM +0400, James Bottomley wrote:
+> On Tue, 2012-09-25 at 16:18 +0800, Aaron Lu wrote:
+> > A example patch would be something like the following, I didn't seperate
+> > these ACPI calls in sr.c as this is just a concept proof, if this is the
+> > right thing to do, I will separate them into another file sr-acpi.c and
+> > make empty stubs for them in sr.h for systems do not have ACPI configured.
 > 
-> Looks like this is not the right thing to do, if I lock the door user
-> will be confused.
+> Apart from the needed separation to compile in the !ACPI case
 > 
-> > 
-> > > > > The poll runs periodically, until the device is powered off(reflected by
-> > > > > the powered_off flag), in which case, the poll will simply return
-> > > > > 0 without touching this device.
-> > > > 
-> > > > Is it useful to poll the device after it has been suspended, but not powered
-> > > > off?
-> > > 
-> > > Yes, it is necessary to poll the device when it has been suspended with
-> > > power left. The reason is, we need to check if there is a media change
-> > > event happened, and the way to check this is to issue a
-> > > GET_EVENT_STATUS_NOTIFICATION comand.
-> > > 
-> > > Please note that when the drive is not powered off, it will not send us
-> > > a notification when its eject button is pressed.
-> > 
-> > I'm not sure about that, actually.  If it doesn't notify us, that whole thing
-> > is inherently racy pretty much beyond fixing, because it is always possible
-> > that the user will press the eject button right after we've checked the
-> > status last time and right before power removal.  We're going to lose that
-> > event, so the user will have to push the button once again in that case.
+> > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> > index ef72682..94d17f1 100644
+> > --- a/drivers/scsi/sr.c
+> > +++ b/drivers/scsi/sr.c
+> > @@ -46,6 +46,7 @@
+> >  #include <linux/mutex.h>
+> >  #include <linux/slab.h>
+> >  #include <linux/pm_runtime.h>
+> > +#include <linux/acpi.h>
+> >  #include <asm/uaccess.h>
+> >  
+> >  #include <scsi/scsi.h>
+> > @@ -57,6 +58,8 @@
+> >  #include <scsi/scsi_host.h>
+> >  #include <scsi/scsi_ioctl.h>	/* For the door lock/unlock commands */
+> >  
+> > +#include <acpi/acpi_bus.h>
+> > +
+> >  #include "scsi_logging.h"
+> >  #include "sr.h"
+> >  
+> > @@ -212,8 +220,8 @@ static int sr_resume(struct device *dev)
+> >  	scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+> >  
+> >  	/* If user wakes up the ODD, eject the tray */
+> > -	if (cd->device->need_eject) {
+> > -		cd->device->need_eject = 0;
+> > +	if (cd->need_eject) {
+> > +		cd->need_eject = false;
+> >  		/* But only for tray type ODD when door is not locked */
+> >  		if (!(cd->cdi.mask & CDC_CLOSE_TRAY) && !cd->door_locked)
+> >  			sr_tray_move(&cd->cdi, 1);
+> > @@ -704,6 +711,58 @@ static void sr_release(struct cdrom_device_info *cdi)
+> >  
+> >  }
+> >  
+> > +static void sr_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
+> > +{
+> > +	struct device *dev = context;
+> > +	struct scsi_cd *cd = dev_get_drvdata(dev);
+> > +
+> > +	if (event == ACPI_NOTIFY_DEVICE_WAKE && pm_runtime_suspended(dev)) {
+> > +		cd->need_eject = true;
+> > +		pm_runtime_resume(dev);
+> > +	}
+> > +}
+> > +
+> > +static void sr_acpi_add_pm_notifier(struct device *dev)
+> > +{
+> > +	struct acpi_device *acpi_dev;
+> > +	acpi_handle handle;
+> > +	acpi_status status;
+> > +
+> > +	handle = dev->archdata.acpi_handle;
 > 
-> I just checked the spec again and tested, when the ODD has power, it
-> will also send out notifications on pressing the eject button/inserting
-> a disc. So we should be able to capture such a event.
+> This is a complete no-no.  archdata is defined to be specific to the
+> architecture it's supposed to be opaque to non-arch code.  You'll find
+> that only x86 and ia64 defines an acpi_handle there.  This will
+> instantly fail to compile on non intel.  If you need the handle, it
 
-Good!
+If you are OK with this change to solve the need_eject flag, I'll prepare
+a formal patch, in which, all of the newly added function will be within
+the range of
 
-> > > > > That's correct.
-> > > > > AFAIK, user space does not care how often the device is polled, it
-> > > > > cares only one thing: when there is a media change event, please let me
-> > > > > know(through uevent).
-> > > > 
-> > > > So that's why we do the polling, right?
-> > > 
-> > > Yes.
-> > 
-> > Well, that's difficult.
-> > 
-> > If the remote wakeup is signaled through a GPE, it should be possible to
-> > enable it before we actually put the device into D3cold.  That may allow us
-> > to eliminate the races.
-> 
-> Thanks for the suggestion, I'll update the code.
-> 
-> I'm thinking of enabling this GPE in sr_suspend once we decided that it
-> is ready to be powered off, so the time frame between sr_suspend and
-> when the power is actually removed in libata should be taken care of by
-> the GPE. If GPE fires, the notification function will request a runtime
-> resume of the device. Does this sound OK?
+#ifdef CONFIG_ACPI
+... ...
+#endif
 
-Well, depending on the implementation.  sr_suspend() should be rather
-generic, but the ACPI association (including the GPE thing) is specific to ATA.
+And for the CONFIG_ACPI not defined case, they will be static inline
+empty functions. Then there should be no compile errors.
+
+> should be obtained via some accessor like dev_to_acpi_handle() which
+> will allow this to continue to function when, say, arm acquires ACPI.
+
+There is a DEVICE_ACPI_HANDLE macro that I'll use when preparing the
+formal patch. I'm rushing out these code to show the idea.
+Sorry for not considering these things.
 
 Thanks,
-Rafael
+Aaron
+
