@@ -1,125 +1,68 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH 2/3] scsi: Allow devices to have arbitrary parent
-Date: Thu, 27 Sep 2012 12:04:03 -0700
-Message-ID: <1348772644-12486-3-git-send-email-gwendal@google.com>
-References: <1348772644-12486-1-git-send-email-gwendal@google.com>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: AHCI power down via unbind/rmmod
+Date: Thu, 27 Sep 2012 15:29:26 -0700
+Message-ID: <CAN8TOE8jSOgv7iMgTOBMX0-DVRd3fdE3SVmc7m5dA5hfEnj_MQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-fa0-f74.google.com ([209.85.161.74]:49256 "EHLO
-	mail-fa0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753444Ab2I0TEQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 15:04:16 -0400
-Received: by faet1 with SMTP id t1so157200fae.1
-        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2012 12:04:15 -0700 (PDT)
-In-Reply-To: <1348772644-12486-1-git-send-email-gwendal@google.com>
-In-Reply-To: <20120920020145.GA23210@mint-spring.sh.intel.com>
-References: <20120920020145.GA23210@mint-spring.sh.intel.com>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:52094 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754738Ab2I0W31 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 18:29:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com
-Cc: Gwendal Grignou <gwendal@google.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Mark Brown <broonie@sirena.org.uk>, Kevin Cernekee <cernekee@gmail.com>, Brian Norris <computersforpeace@gmail.com>
 
-Allow driver who calls __scsi_add_device directly to create the scsi
-device on any parent, not just scsi_host directly.
-This is alreay done for transport with their own class [SAS, iSCSI, FC, ...]
+Hi,
 
-Change-Id: Ibcf132a8959fbf732dcd0b34a7f4a570d7cf394d
+I'm trying to support unbinding an AHCI platform device from the
+ahci_platform driver, so that I can put my entire SoC SATA core into a
+low power state with no functionality, similar to case 1 here:
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
+  http://article.gmane.org/gmane.linux.power-management.general/27080
+
+The bind/unbind suggestion is here:
+
+  http://article.gmane.org/gmane.linux.power-management.general/27093
+
+Right now, ahci_platform doesn't support unbinding due to its use of
+platform_driver_probe(). I have tried patching it to be a typical
+module_platform_driver(), including a proper .probe function in the
+platform_driver struct. This gives me the unbind sysfs hook I'm
+looking for.
+
+However, I'm running into a problem with the AHCI/ATA system. If I
+power down my core during the "exit" hook in ahci_remove
+(drivers/ata/ahci_platform.c:212), then the ATA subsystem still tries
+to perform HW activity via its devres cleanup functions. This
+obviously causes a bus error, as my core is powered down. In fact,
+this error occurs with either unbind or rmmod - see below.
+
+So: this really comes down to the fact that ATA's devres system is
+being used in an unsafe way. Typically, devres is just used for
+SW-only cleanup, right? (DMA buffers, memory, etc.?) The suspect line
+(libata-core.c:5880):
+
+  start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+
+Thanks,
+Brian
+
 ---
- drivers/ata/libata-scsi.c      |    4 ++--
- drivers/firewire/sbp2.c        |    3 ++-
- drivers/message/i2o/i2o_scsi.c |    4 ++--
- drivers/scsi/scsi_scan.c       |    9 +++++----
- include/scsi/scsi_device.h     |    2 +-
- 5 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index be38930..bfda61f 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3649,8 +3649,8 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
- 			else
- 				channel = link->pmp;
- 
--			sdev = __scsi_add_device(ap->scsi_host, channel, id, 0,
--						 NULL);
-+			sdev = __scsi_add_device(&ap->scsi_host->shost_gendev,
-+						 channel, id, 0, NULL);
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
-diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
-index 1162d6b..839afa5 100644
---- a/drivers/firewire/sbp2.c
-+++ b/drivers/firewire/sbp2.c
-@@ -879,7 +879,8 @@ static void sbp2_login(struct work_struct *work)
- 		ssleep(SBP2_INQUIRY_DELAY);
- 
- 	shost = container_of((void *)tgt, struct Scsi_Host, hostdata[0]);
--	sdev = __scsi_add_device(shost, 0, 0, sbp2_lun2int(lu->lun), lu);
-+	sdev = __scsi_add_device(&shost->shost_gendev, 0, 0,
-+				 sbp2_lun2int(lu->lun), lu);
- 	/*
- 	 * FIXME:  We are unable to perform reconnects while in sbp2_login().
- 	 * Therefore __scsi_add_device() will get into trouble if a bus reset
-diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
-index 1d31d72..ee1353c 100644
---- a/drivers/message/i2o/i2o_scsi.c
-+++ b/drivers/message/i2o/i2o_scsi.c
-@@ -294,8 +294,8 @@ static int i2o_scsi_probe(struct device *dev)
- 	}
- 
- 	scsi_dev =
--	    __scsi_add_device(i2o_shost->scsi_host, channel, le32_to_cpu(id),
--			      le64_to_cpu(lun), i2o_dev);
-+	    __scsi_add_device(&i2o_shost->scsi_host->shost_gendev, channel,
-+			      le32_to_cpu(id), le64_to_cpu(lun), i2o_dev);
- 
- 	if (IS_ERR(scsi_dev)) {
- 		osm_warn("can not add SCSI device %03x\n",
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 56a9379..105123c 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1489,11 +1489,11 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
- 	return ret;
- }
- 
--struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
-+struct scsi_device *__scsi_add_device(struct device *parent, uint channel,
- 				      uint id, uint lun, void *hostdata)
- {
-+	struct Scsi_Host *shost = dev_to_shost(parent);
- 	struct scsi_device *sdev = ERR_PTR(-ENODEV);
--	struct device *parent = &shost->shost_gendev;
- 	struct scsi_target *starget;
- 
- 	if (strncmp(scsi_scan_type, "none", 4) == 0)
-@@ -1524,8 +1524,9 @@ EXPORT_SYMBOL(__scsi_add_device);
- int scsi_add_device(struct Scsi_Host *host, uint channel,
- 		    uint target, uint lun)
- {
--	struct scsi_device *sdev = 
--		__scsi_add_device(host, channel, target, lun, NULL);
-+	struct scsi_device *sdev =
-+		__scsi_add_device(&host->shost_gendev, channel, target,
-+				  lun, NULL);
- 	if (IS_ERR(sdev))
- 		return PTR_ERR(sdev);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 9895f69..9646a1d 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -285,7 +285,7 @@ static inline struct scsi_target *scsi_target(struct scsi_device *sdev)
- #define starget_printk(prefix, starget, fmt, a...)	\
- 	dev_printk(prefix, &(starget)->dev, fmt, ##a)
- 
--extern struct scsi_device *__scsi_add_device(struct Scsi_Host *,
-+extern struct scsi_device *__scsi_add_device(struct device *,
- 		uint, uint, uint, void *hostdata);
- extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- 			   uint target, uint lun);
--- 
-1.7.7.3
-
+# rmmod ahci_platform.ko
+Data bus error, epc == e07c0ca0, ra == e07c0d24
+Oops[#1]:
+...
+Call Trace:
+[<e07c0ca0>] ahci_stop_engine+0x28/0x84 [libahci]
+[<e07c0d24>] ahci_deinit_port+0x28/0xe8 [libahci]
+[<e07c0e08>] ahci_port_stop+0x24/0x64 [libahci]
+[<802dcc28>] ata_host_stop+0x5c/0xc0
+[<802b5390>] release_nodes+0x144/0x244
+[<802b159c>] __device_release_driver+0x68/0xcc
+[<802b1fd8>] driver_detach+0xe8/0xf0
+[<802b13e0>] bus_remove_driver+0x98/0x128
+[<8007b9e4>] sys_delete_module+0x188/0x2d4
+[<8000e6fc>] stack_done+0x20/0x40
