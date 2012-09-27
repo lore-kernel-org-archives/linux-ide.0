@@ -1,59 +1,95 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
-Date: Thu, 27 Sep 2012 22:55:34 +0800
-Message-ID: <506468E6.1020007@intel.com>
-References: <Pine.LNX.4.44L0.1209271038050.1596-100000@iolanthe.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH 3/3] libata: Change transport topology layout
+Date: Thu, 27 Sep 2012 12:04:04 -0700
+Message-ID: <1348772644-12486-4-git-send-email-gwendal@google.com>
+References: <1348772644-12486-1-git-send-email-gwendal@google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1209271038050.1596-100000@iolanthe.rowland.org>
+In-Reply-To: <1348772644-12486-1-git-send-email-gwendal@google.com>
+In-Reply-To: <20120920020145.GA23210@mint-spring.sh.intel.com>
+References: <20120920020145.GA23210@mint-spring.sh.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com
+Cc: Gwendal Grignou <gwendal@google.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 09/27/2012 10:42 PM, Alan Stern wrote:
-> On Thu, 27 Sep 2012, Aaron Lu wrote:
-> 
->>> Moreover, I'd like to migrate SCSI drivers to the PM handling based on struct
->>> dev_pm_ops eventually and your change is kind of going in the opposite
->>> direction.  I don't know how much effort the migration is going to take,
->>> though, so perhaps we can just make this change first.
->>
->> Does the following change look OK?
->>
->> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
->> index dc0ad85..1fb7ccc 100644
->> --- a/drivers/scsi/scsi_pm.c
->> +++ b/drivers/scsi/scsi_pm.c
->> @@ -143,7 +143,15 @@ static int scsi_runtime_suspend(struct device *dev)
->>  
->>  	dev_dbg(dev, "scsi_runtime_suspend\n");
->>  	if (scsi_is_sdev_device(dev)) {
->> -		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
->> +		err = scsi_device_quiesce(to_scsi_device(dev));
->> +		if (err)
->> +			goto out;
->> +
->> +		err = pm_generic_runtime_suspend(dev);
->> +		if (!err)
->> +			goto out;
->> +
->> +		scsi_device_resume(to_scsi_device(dev));
->>  		if (err == -EAGAIN)
->>  			pm_schedule_suspend(dev, jiffies_to_msecs(
->>  				round_jiffies_up_relative(HZ/10)));
-> 
-> Maybe in the end it will be better, but for now this looks like 
-> unnecessary code duplication.  Basically you are copying 
-> scsi_dev_type_suspend() into scsi_runtime_suspend(), except that you 
-> omitted the debugging statement.
+Integrate ata objects [port, link, device] with scsi objects.
 
-And I've used pm_generic_runtime_suspend :-)
-That would allow me to write runtime callbacks of dev_pm_ops for
-indivisual scsi drivers, like sr.
 
-Thanks,
-Aaron
+The path of a scsi device is:
+.../0000:00:1f.2/host0/ata1/link1/dev1.0/target0:0:0/0:0:0:0
+
+or when a port multiplier is present: for instance the device in port 4 of the
+port multiplier:
+.../0000:00:06.0/0000:09:00.0/host5/ata6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+
+
+Change-Id: I202e089208e8746ccdaf2053d43da831a0c0976d
+
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+---
+ drivers/ata/libata-core.c      |   13 ++++++-------
+ drivers/ata/libata-scsi.c      |    4 ++--
+ drivers/ata/libata-transport.c |    2 +-
+ 3 files changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 611050d..c83590b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6063,19 +6063,18 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 	for (i = 0; i < host->n_ports; i++)
+ 		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
+ 
++	rc = ata_scsi_add_hosts(host, sht);
++	if (rc)
++		return rc;
+ 
+ 	/* Create associated sysfs transport objects  */
+ 	for (i = 0; i < host->n_ports; i++) {
+-		rc = ata_tport_add(host->dev,host->ports[i]);
+-		if (rc) {
++		struct ata_port *ap = host->ports[i];
++		rc = ata_tport_add(&ap->scsi_host->shost_gendev, ap);
++		if (rc)
+ 			goto err_tadd;
+-		}
+ 	}
+ 
+-	rc = ata_scsi_add_hosts(host, sht);
+-	if (rc)
+-		goto err_tadd;
+-
+ 	/* set cable, sata_spd_limit and report */
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfda61f..9023bb1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3649,8 +3649,8 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
+ 			else
+ 				channel = link->pmp;
+ 
+-			sdev = __scsi_add_device(&ap->scsi_host->shost_gendev,
+-						 channel, id, 0, NULL);
++			sdev = __scsi_add_device(&dev->tdev, channel, id, 0,
++						 NULL);
+ 			if (!IS_ERR(sdev)) {
+ 				dev->sdev = sdev;
+ 				scsi_device_put(sdev);
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index c04d393..6829be6 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -284,7 +284,7 @@ int ata_tport_add(struct device *parent,
+ 
+ 	dev->parent = get_device(parent);
+ 	dev->release = ata_tport_release;
+-	dev_set_name(dev, "ata%d", ap->print_id);
++	dev_set_name(dev, "port%d", ap->print_id);
+ 	transport_setup_device(dev);
+ 	error = device_add(dev);
+ 	if (error) {
+-- 
+1.7.7.3
 
