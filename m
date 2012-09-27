@@ -1,32 +1,56 @@
-From: viresh kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH V3 Resend 0/3] ata: pata_arasan and ahci_platform updates
-Date: Thu, 27 Sep 2012 16:29:32 +0530
-Message-ID: <CAOh2x=n7yap1yBO3hW5VM+tL4Ht4TBQ6RZ+sXBDmv=JpSR3-pA@mail.gmail.com>
-References: <cover.1346042344.git.viresh.kumar@linaro.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
+Date: Thu, 27 Sep 2012 10:42:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209271038050.1596-100000@iolanthe.rowland.org>
+References: <50641BC5.2090000@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:44285 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187Ab2I0K7c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 06:59:32 -0400
-Received: by oagh16 with SMTP id h16so1614708oag.19
-        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2012 03:59:32 -0700 (PDT)
-In-Reply-To: <cover.1346042344.git.viresh.kumar@linaro.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40919 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752628Ab2I0Omm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 10:42:42 -0400
+In-Reply-To: <50641BC5.2090000@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@redhat.com
-Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@linaro.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 
-On Mon, Aug 27, 2012 at 10:37 AM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
-> From: Viresh Kumar <viresh.kumar@linaro.com>
-> This patchset contains updates for pata_arasan and ahci_platform drivers. I have
-> updated it as per earlier discussions for following patchset:
-> "clk: Add non CONFIG_HAVE_CLK routines"
+On Thu, 27 Sep 2012, Aaron Lu wrote:
 
-Hi Jeff,
+> > Moreover, I'd like to migrate SCSI drivers to the PM handling based on struct
+> > dev_pm_ops eventually and your change is kind of going in the opposite
+> > direction.  I don't know how much effort the migration is going to take,
+> > though, so perhaps we can just make this change first.
+> 
+> Does the following change look OK?
+> 
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index dc0ad85..1fb7ccc 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -143,7 +143,15 @@ static int scsi_runtime_suspend(struct device *dev)
+>  
+>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+>  	if (scsi_is_sdev_device(dev)) {
+> -		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
+> +		err = scsi_device_quiesce(to_scsi_device(dev));
+> +		if (err)
+> +			goto out;
+> +
+> +		err = pm_generic_runtime_suspend(dev);
+> +		if (!err)
+> +			goto out;
+> +
+> +		scsi_device_resume(to_scsi_device(dev));
+>  		if (err == -EAGAIN)
+>  			pm_schedule_suspend(dev, jiffies_to_msecs(
+>  				round_jiffies_up_relative(HZ/10)));
 
-Can you please apply these patches?
+Maybe in the end it will be better, but for now this looks like 
+unnecessary code duplication.  Basically you are copying 
+scsi_dev_type_suspend() into scsi_runtime_suspend(), except that you 
+omitted the debugging statement.
 
---
-viresh
+Alan Stern
+
