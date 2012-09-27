@@ -1,45 +1,32 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Thu, 27 Sep 2012 12:46:41 +0200
-Message-ID: <3158525.rj2S1Jvnll@linux-lqwf.site>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209242340.18318.rjw@sisk.pl> <20120925080133.GA1629@mint-spring.sh.intel.com>
+From: viresh kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCH V3 Resend 0/3] ata: pata_arasan and ahci_platform updates
+Date: Thu, 27 Sep 2012 16:29:32 +0530
+Message-ID: <CAOh2x=n7yap1yBO3hW5VM+tL4Ht4TBQ6RZ+sXBDmv=JpSR3-pA@mail.gmail.com>
+References: <cover.1346042344.git.viresh.kumar@linaro.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20120925080133.GA1629@mint-spring.sh.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oa0-f46.google.com ([209.85.219.46]:44285 "EHLO
+	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187Ab2I0K7c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 06:59:32 -0400
+Received: by oagh16 with SMTP id h16so1614708oag.19
+        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2012 03:59:32 -0700 (PDT)
+In-Reply-To: <cover.1346042344.git.viresh.kumar@linaro.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@redhat.com
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@linaro.com>
 
-On Tuesday 25 September 2012 16:01:35 Aaron Lu wrote:
-> On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
-> > On Monday, September 24, 2012, Aaron Lu wrote:
-> > > On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
+On Mon, Aug 27, 2012 at 10:37 AM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+> From: Viresh Kumar <viresh.kumar@linaro.com>
+> This patchset contains updates for pata_arasan and ahci_platform drivers. I have
+> updated it as per earlier discussions for following patchset:
+> "clk: Add non CONFIG_HAVE_CLK routines"
 
-> I just checked the spec again and tested, when the ODD has power, it
-> will also send out notifications on pressing the eject button/inserting
-> a disc. So we should be able to capture such a event.
+Hi Jeff,
 
-In this case there's no need to poll for disk change unless the button has
-been pressed.
+Can you please apply these patches?
 
-> I'm thinking of enabling this GPE in sr_suspend once we decided that it
-> is ready to be powered off, so the time frame between sr_suspend and
-> when the power is actually removed in libata should be taken care of by
-> the GPE. If GPE fires, the notification function will request a runtime
-> resume of the device. Does this sound OK?
-
-This sounds terribly, needlessly complicated. Just enable it when
-you detect the presence of a disk drive that supports it.
-
-Furthermore we have a device which can detect that a button has
-been pressed. It is fundamentally wrong to poll for medium change in
-such devices. You know that it hasn't been changed.
-We should notify the upper layers that we can do medium change
-detection on our own.
-
-	Regards
-		Oliver
-
+--
+viresh
