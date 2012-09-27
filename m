@@ -1,68 +1,76 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: AHCI power down via unbind/rmmod
-Date: Thu, 27 Sep 2012 15:29:26 -0700
-Message-ID: <CAN8TOE8jSOgv7iMgTOBMX0-DVRd3fdE3SVmc7m5dA5hfEnj_MQ@mail.gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 3/6] scsi: sr: support zero power ODD(ZPODD)
+Date: Fri, 28 Sep 2012 01:29:48 +0200
+Message-ID: <201209280129.48715.rjw@sisk.pl>
+References: <Pine.LNX.4.44L0.1209271038050.1596-100000@iolanthe.rowland.org> <506468E6.1020007@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:52094 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754738Ab2I0W31 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Sep 2012 18:29:27 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <506468E6.1020007@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Mark Brown <broonie@sirena.org.uk>, Kevin Cernekee <cernekee@gmail.com>, Brian Norris <computersforpeace@gmail.com>
 
-Hi,
+On Thursday, September 27, 2012, Aaron Lu wrote:
+> On 09/27/2012 10:42 PM, Alan Stern wrote:
+> > On Thu, 27 Sep 2012, Aaron Lu wrote:
+> > 
+> >>> Moreover, I'd like to migrate SCSI drivers to the PM handling based on struct
+> >>> dev_pm_ops eventually and your change is kind of going in the opposite
+> >>> direction.  I don't know how much effort the migration is going to take,
+> >>> though, so perhaps we can just make this change first.
+> >>
+> >> Does the following change look OK?
+> >>
+> >> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> >> index dc0ad85..1fb7ccc 100644
+> >> --- a/drivers/scsi/scsi_pm.c
+> >> +++ b/drivers/scsi/scsi_pm.c
+> >> @@ -143,7 +143,15 @@ static int scsi_runtime_suspend(struct device *dev)
+> >>  
+> >>  	dev_dbg(dev, "scsi_runtime_suspend\n");
+> >>  	if (scsi_is_sdev_device(dev)) {
+> >> -		err = scsi_dev_type_suspend(dev, PMSG_AUTO_SUSPEND);
+> >> +		err = scsi_device_quiesce(to_scsi_device(dev));
+> >> +		if (err)
+> >> +			goto out;
+> >> +
+> >> +		err = pm_generic_runtime_suspend(dev);
+> >> +		if (!err)
+> >> +			goto out;
+> >> +
+> >> +		scsi_device_resume(to_scsi_device(dev));
+> >>  		if (err == -EAGAIN)
+> >>  			pm_schedule_suspend(dev, jiffies_to_msecs(
+> >>  				round_jiffies_up_relative(HZ/10)));
+> > 
+> > Maybe in the end it will be better, but for now this looks like 
+> > unnecessary code duplication.  Basically you are copying 
+> > scsi_dev_type_suspend() into scsi_runtime_suspend(), except that you 
+> > omitted the debugging statement.
+> 
+> And I've used pm_generic_runtime_suspend :-)
+> That would allow me to write runtime callbacks of dev_pm_ops for
+> indivisual scsi drivers, like sr.
 
-I'm trying to support unbinding an AHCI platform device from the
-ahci_platform driver, so that I can put my entire SoC SATA core into a
-low power state with no functionality, similar to case 1 here:
+Well, actually, I meant something different.
 
-  http://article.gmane.org/gmane.linux.power-management.general/27080
+The above patch would make it possible for drivers to provide runtime PM
+callbacks through dev->driver.pm, but drv->suspend and drv->resume would
+still be used for system suspend/resume (and hibernation).
 
-The bind/unbind suggestion is here:
+The transition to struct dev_pm_ops I meant, however, would be to start using
+callbacks from dev->driver.pm for _all_ device PM operations by default and
+fall back to drv->suspend and drv->resume for the drivers whose dev->driver.pm
+is NULL (along the lines of what PCI does).  The next step would be to
+convert all drivers to use dev->driver.pm only.
 
-  http://article.gmane.org/gmane.linux.power-management.general/27093
-
-Right now, ahci_platform doesn't support unbinding due to its use of
-platform_driver_probe(). I have tried patching it to be a typical
-module_platform_driver(), including a proper .probe function in the
-platform_driver struct. This gives me the unbind sysfs hook I'm
-looking for.
-
-However, I'm running into a problem with the AHCI/ATA system. If I
-power down my core during the "exit" hook in ahci_remove
-(drivers/ata/ahci_platform.c:212), then the ATA subsystem still tries
-to perform HW activity via its devres cleanup functions. This
-obviously causes a bus error, as my core is powered down. In fact,
-this error occurs with either unbind or rmmod - see below.
-
-So: this really comes down to the fact that ATA's devres system is
-being used in an unsafe way. Typically, devres is just used for
-SW-only cleanup, right? (DMA buffers, memory, etc.?) The suspect line
-(libata-core.c:5880):
-
-  start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+So I wouldn't like any drivers to use dev->driver.pm callbacks for some
+operations and drv->suspend and drv->resume for the remaining ones at the
+same time.
 
 Thanks,
-Brian
-
----
-
-# rmmod ahci_platform.ko
-Data bus error, epc == e07c0ca0, ra == e07c0d24
-Oops[#1]:
-...
-Call Trace:
-[<e07c0ca0>] ahci_stop_engine+0x28/0x84 [libahci]
-[<e07c0d24>] ahci_deinit_port+0x28/0xe8 [libahci]
-[<e07c0e08>] ahci_port_stop+0x24/0x64 [libahci]
-[<802dcc28>] ata_host_stop+0x5c/0xc0
-[<802b5390>] release_nodes+0x144/0x244
-[<802b159c>] __device_release_driver+0x68/0xcc
-[<802b1fd8>] driver_detach+0xe8/0xf0
-[<802b13e0>] bus_remove_driver+0x98/0x128
-[<8007b9e4>] sys_delete_module+0x188/0x2d4
-[<8000e6fc>] stack_done+0x20/0x40
+Rafael
