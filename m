@@ -1,74 +1,76 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Fri, 28 Sep 2012 16:20:50 +0800
-Message-ID: <50655DE2.3030600@intel.com>
-References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209242340.18318.rjw@sisk.pl> <20120925080133.GA1629@mint-spring.sh.intel.com> <3158525.rj2S1Jvnll@linux-lqwf.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH] ATA: sata_mv: Fix warnings when no PCI
+Date: Fri, 28 Sep 2012 17:04:10 +0200
+Message-ID: <1348844650-2957-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:35511 "EHLO mga11.intel.com"
+Received: from londo.lunn.ch ([80.238.139.98]:34410 "EHLO londo.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751340Ab2I1IV1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2012 04:21:27 -0400
-In-Reply-To: <3158525.rj2S1Jvnll@linux-lqwf.site>
+	id S932148Ab2I1PEW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2012 11:04:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-On 09/27/2012 06:46 PM, Oliver Neukum wrote:
-> On Tuesday 25 September 2012 16:01:35 Aaron Lu wrote:
->> On Mon, Sep 24, 2012 at 11:40:18PM +0200, Rafael J. Wysocki wrote:
->>> On Monday, September 24, 2012, Aaron Lu wrote:
->>>> On Mon, Sep 24, 2012 at 02:55:31PM +0200, Rafael J. Wysocki wrote:
-> 
->> I just checked the spec again and tested, when the ODD has power, it
->> will also send out notifications on pressing the eject button/inserting
->> a disc. So we should be able to capture such a event.
-> 
-> In this case there's no need to poll for disk change unless the button has
-> been pressed.
+Dove can be configured with PCI. We then get a number of warnings:
 
-The SATA spec says the device attention pin shall assert when:
-- For tray type ODD, its front panel button is released;
-- For slot type ODD, media is inserted.
+warning: 'msi' defined but not used
+warning: 'mv5_sht' defined but not used
+warning: 'mv_dump_pci_cfg' defined but not used.
 
-I've a slot type ODD which has a eject button. The notification will be
-sent when a disc is inserted, but not when the eject button is pressed,
-and this doesn't violate the spec.
+Move around variables and add #ifdef as necassary to fix the warnings.
 
-But if we disable the poll for disc changes, we will lose an event when
-the disc is ejected by the eject button(the device attention pin shall
-not trigger this time). I suppose this is a problem?
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+ drivers/ata/sata_mv.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-I think the device attention scheme is not designed to do this job,
-while SATA asynchronous notification is.
-
-> 
->> I'm thinking of enabling this GPE in sr_suspend once we decided that it
->> is ready to be powered off, so the time frame between sr_suspend and
->> when the power is actually removed in libata should be taken care of by
->> the GPE. If GPE fires, the notification function will request a runtime
->> resume of the device. Does this sound OK?
-> 
-> This sounds terribly, needlessly complicated. Just enable it when
-> you detect the presence of a disk drive that supports it.
-> 
-> Furthermore we have a device which can detect that a button has
-> been pressed. It is fundamentally wrong to poll for medium change in
-> such devices. You know that it hasn't been changed.
-
-That may depend on the ODD's capability. For the slot type ODD I
-mentioned above, we will not know when the disc is gone.
-
-Thanks,
-Aaron
-
-> We should notify the upper layers that we can do medium change
-> detection on our own.
-> 
-> 	Regards
-> 		Oliver
-> 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 311be18..68f4fb5 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -79,8 +79,8 @@
+  * module options
+  */
+ 
+-static int msi;
+ #ifdef CONFIG_PCI
++static int msi;
+ module_param(msi, int, S_IRUGO);
+ MODULE_PARM_DESC(msi, "Enable use of PCI MSI (0=off, 1=on)");
+ #endif
+@@ -652,12 +652,13 @@ static u8 mv_sff_check_status(struct ata_port *ap);
+  * because we have to allow room for worst case splitting of
+  * PRDs for 64K boundaries in mv_fill_sg().
+  */
++#ifdef CONFIG_PCI
+ static struct scsi_host_template mv5_sht = {
+ 	ATA_BASE_SHT(DRV_NAME),
+ 	.sg_tablesize		= MV_MAX_SG_CT / 2,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+ };
+-
++#endif
+ static struct scsi_host_template mv6_sht = {
+ 	ATA_NCQ_SHT(DRV_NAME),
+ 	.can_queue		= MV_MAX_Q_DEPTH - 1,
+@@ -1252,7 +1253,7 @@ static void mv_dump_mem(void __iomem *start, unsigned bytes)
+ 	}
+ }
+ #endif
+-
++#if defined(ATA_DEBUG) || defined(CONFIG_PCI)
+ static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
+ {
+ #ifdef ATA_DEBUG
+@@ -1269,6 +1270,7 @@ static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
+ 	}
+ #endif
+ }
++#endif
+ static void mv_dump_all_regs(void __iomem *mmio_base, int port,
+ 			     struct pci_dev *pdev)
+ {
+-- 
+1.7.10.4
 
