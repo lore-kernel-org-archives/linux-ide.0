@@ -1,76 +1,74 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH] ATA: sata_mv: Fix warnings when no PCI
-Date: Fri, 28 Sep 2012 17:04:10 +0200
-Message-ID: <1348844650-2957-1-git-send-email-andrew@lunn.ch>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH -next] ata: fix sata_highbank.c build errors
+Date: Fri, 28 Sep 2012 10:13:30 -0700
+Message-ID: <5065DABA.7060404@xenotime.net>
+References: <20120919162643.907ddda75e198f060e4e83fe@canb.auug.org.au> <505A0BCF.5040905@xenotime.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from londo.lunn.ch ([80.238.139.98]:34410 "EHLO londo.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932148Ab2I1PEW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 28 Sep 2012 11:04:22 -0400
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:38141 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757836Ab2I1RNi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2012 13:13:38 -0400
+In-Reply-To: <505A0BCF.5040905@xenotime.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
+To: linux-next@vger.kernel.org
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-Dove can be configured with PCI. We then get a number of warnings:
+On 09/19/2012 11:15 AM, Randy Dunlap wrote:
 
-warning: 'msi' defined but not used
-warning: 'mv5_sht' defined but not used
-warning: 'mv_dump_pci_cfg' defined but not used.
+> From: Randy Dunlap <rdunlap@xenotime.net>
+> 
 
-Move around variables and add #ifdef as necassary to fix the warnings.
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
----
- drivers/ata/sata_mv.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ping.
+This build error is still present in linux-next of 20120928.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 311be18..68f4fb5 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -79,8 +79,8 @@
-  * module options
-  */
- 
--static int msi;
- #ifdef CONFIG_PCI
-+static int msi;
- module_param(msi, int, S_IRUGO);
- MODULE_PARM_DESC(msi, "Enable use of PCI MSI (0=off, 1=on)");
- #endif
-@@ -652,12 +652,13 @@ static u8 mv_sff_check_status(struct ata_port *ap);
-  * because we have to allow room for worst case splitting of
-  * PRDs for 64K boundaries in mv_fill_sg().
-  */
-+#ifdef CONFIG_PCI
- static struct scsi_host_template mv5_sht = {
- 	ATA_BASE_SHT(DRV_NAME),
- 	.sg_tablesize		= MV_MAX_SG_CT / 2,
- 	.dma_boundary		= MV_DMA_BOUNDARY,
- };
--
-+#endif
- static struct scsi_host_template mv6_sht = {
- 	ATA_NCQ_SHT(DRV_NAME),
- 	.can_queue		= MV_MAX_Q_DEPTH - 1,
-@@ -1252,7 +1253,7 @@ static void mv_dump_mem(void __iomem *start, unsigned bytes)
- 	}
- }
- #endif
--
-+#if defined(ATA_DEBUG) || defined(CONFIG_PCI)
- static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
- {
- #ifdef ATA_DEBUG
-@@ -1269,6 +1270,7 @@ static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
- 	}
- #endif
- }
-+#endif
- static void mv_dump_all_regs(void __iomem *mmio_base, int port,
- 			     struct pci_dev *pdev)
- {
+> Fix build errors in sata_highbank.c by also building libahci.o.
+> Fixes these build errors:
+> 
+> drivers/built-in.o: In function `ahci_highbank_hardreset':
+> sata_highbank.c:(.text+0x1edc9a): undefined reference to `ahci_stop_engine'
+> sata_highbank.c:(.text+0x1edfab): undefined reference to `ahci_start_engine'
+> sata_highbank.c:(.text+0x1edfd5): undefined reference to `ahci_dev_classify'
+> drivers/built-in.o: In function `ahci_highbank_resume':
+> sata_highbank.c:(.text+0x1ee0af): undefined reference to `ahci_reset_controller'
+> sata_highbank.c:(.text+0x1ee0e1): undefined reference to `ahci_init_controller'
+> drivers/built-in.o: In function `ahci_highbank_probe':
+> sata_highbank.c:(.init.text+0xc577): undefined reference to `ahci_save_initial_config'
+> sata_highbank.c:(.init.text+0xc5ca): undefined reference to `ahci_set_em_messages'
+> sata_highbank.c:(.init.text+0xc630): undefined reference to `ahci_ignore_sss'
+> sata_highbank.c:(.init.text+0xc660): undefined reference to `ahci_reset_em'
+> sata_highbank.c:(.init.text+0xc72f): undefined reference to `ahci_reset_controller'
+> sata_highbank.c:(.init.text+0xc75a): undefined reference to `ahci_init_controller'
+> sata_highbank.c:(.init.text+0xc774): undefined reference to `ahci_print_info'
+> sata_highbank.c:(.init.text+0xc77c): undefined reference to `ahci_interrupt'
+> drivers/built-in.o:(.data+0x1d5ec): undefined reference to `ahci_ops'
+> drivers/built-in.o:(.data+0x1d690): undefined reference to `ahci_shost_attrs'
+> drivers/built-in.o:(.data+0x1d694): undefined reference to `ahci_sdev_attrs'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
+> ---
+>  drivers/ata/Makefile |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- linux-next-20120919.orig/drivers/ata/Makefile
+> +++ linux-next-20120919/drivers/ata/Makefile
+> @@ -9,7 +9,7 @@ obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+>  obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+>  obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+>  obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+> -obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o
+> +obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+>  
+>  # SFF w/ custom DMA
+>  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+> 
+
+
+
 -- 
-1.7.10.4
-
+~Randy
