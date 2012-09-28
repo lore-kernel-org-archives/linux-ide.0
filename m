@@ -1,37 +1,143 @@
-From: viresh kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH V3 Resend 0/3] ata: pata_arasan and ahci_platform updates
-Date: Fri, 28 Sep 2012 09:55:46 +0530
-Message-ID: <CAOh2x=mrvH4FeLWKxy+_LhBzK_y0HoZpjP0LAqS7grpSYYYNuQ@mail.gmail.com>
-References: <cover.1346042344.git.viresh.kumar@linaro.com>
-	<CAOh2x=n7yap1yBO3hW5VM+tL4Ht4TBQ6RZ+sXBDmv=JpSR3-pA@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
+Date: Fri, 28 Sep 2012 14:27:10 +0800
+Message-ID: <20120928062709.GA2091@mint-spring.sh.intel.com>
+References: <20120920020145.GA23210@mint-spring.sh.intel.com>
+ <1348772644-12486-1-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:46701 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810Ab2I1EZr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2012 00:25:47 -0400
-Received: by obbuo13 with SMTP id uo13so2540549obb.19
-        for <linux-ide@vger.kernel.org>; Thu, 27 Sep 2012 21:25:46 -0700 (PDT)
-In-Reply-To: <CAOh2x=n7yap1yBO3hW5VM+tL4Ht4TBQ6RZ+sXBDmv=JpSR3-pA@mail.gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:35731 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751093Ab2I1G1M (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2012 02:27:12 -0400
+Content-Disposition: inline
+In-Reply-To: <1348772644-12486-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@redhat.com
-Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@linaro.com>
+To: Gwendal Grignou <gwendal@google.com>
+Cc: minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Sep 27, 2012 at 4:29 PM, viresh kumar <viresh.kumar@linaro.org> wrote:
-> On Mon, Aug 27, 2012 at 10:37 AM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
->> From: Viresh Kumar <viresh.kumar@linaro.com>
->> This patchset contains updates for pata_arasan and ahci_platform drivers. I have
->> updated it as per earlier discussions for following patchset:
->> "clk: Add non CONFIG_HAVE_CLK routines"
->
-> Hi Jeff,
->
-> Can you please apply these patches?
+On Thu, Sep 27, 2012 at 12:04:01PM -0700, Gwendal Grignou wrote:
+> This set of patches improve ATA transport classes integration with SCSI
+> objects.
+> 
+> Before [2.6.x]
+> 
+> Ata and scsi transport class where separated:
+> `--0000:09:00.0
+> |  `--ata1
+> |  |  `--port_port
+> |  |  `--link1
+> |  |  |  `--dev1.0
+> |  |  |  `--dev1.1
+> |  `--ata2
+> |  ...
+> |  `--host0
+> |  |  `--scsi_host
+> |  |  |  `--host0
+> |  |  `--target0:0:0
+> |  |  |  `--0:0:0:0
+> |  |  |  |  `--block
+> |  |  |  |  |  `--sda
+> |  |  |  |  |  |  `--sda1
+> 
+> In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
+> the issue of linking the ata port with the scsi host object by placing the
+> scsi_host object under ata port objects.
+> 
+> However to be more consistent with other transport, this patch does the opposite:
+> 
+> For instance, with SAS transport, We have
+> `--0000:0b:00.0
+> |  `--host6
+> |  |  `--phy-6:0
+> |  |  `--phy-6:1
+> ...
+> |  |  `--port-6:0
+> |  |  |  `--end_device-6:0
+> |  |  |  |  `--sas_device
+> |  |  |  |  |  `--end_device-6:0
+> |  |  |  |  `--sas_end_device
+> |  |  |  |  |  `--end_device-6:0
+> |  |  |  |  `--target6:0:0
+> |  |  |  |  |  `--6:0:0:0
+> |  |  |  |  |  |  `--block
+> |  |  |  |  |  |  |  `--sdb
+> ...
+> |  |  `--port-6:1
+> |  |  |  `--end_device-6:1
+> ...
+> phy and port have to be separated, sas_port are created dynamically.
+> 
+> For ata, all objects are created at initialization time, so the layout is:
+> `--0000:09:00.0
+> |  `--host0
+> |  |  `--port1
+> |  |  |  `--link1
+> |  |  |  |  `--dev1.0
+> |  |  |  |  |  `--target0:0:0
+> |  |  |  |  |  |  `--0:0:0:0
+> |  |  |  |  |  |  |  `--block
+> |  |  |  |  |  |  |  |  `--sda
+> 
+> If we have a port multiplier, more links are created.
+> `--0000:09:00.0
+> ...
+> |  `--host4
+> |  |  `--port5
+> |  |  |  `--link5
+> |  |  |  |  `--dev5.0
+> [device for the port multiplier]
+> |  |  |  `--link5.0
+> |  |  |  |  `--dev5.0.0
+> |  |  |  |  |  `--target4:0:0
+> |  |  |  |  |  |  `--4:0:0:0
+> |  |  |  |  |  |  |  `--block
+> |  |  |  |  |  |  |  |  `--sdc
+> [disk in port 0 of the port multiplier]
+> ...
+> |  |  |  `--link5.2
+> |  |  |  |  `--dev5.2.0
+> |  |  |  |  |  `--target4:2:0
+> |  |  |  |  |  |  `--4:2:0:0
+> |  |  |  |  |  |  |  `--block
+> |  |  |  |  |  |  |  |  `--sde
+> [disk in port 2 of the port multiplier]
+> 
+> In consequence, the path of a scsi device becomes:
+> .../0000:00:1f.2/host0/ata1/link1/dev1.0/target0:0:0/0:0:0:0
+                         ~~~~
+Should be port1 :-)
 
-So sorry to ping you.... They are already pushed on 27th August...
+> dev1.0 indicates the master device [0] in ata port 1.
+> ata1 being under host0, we know the reliationships between the scsi_host id and
+> ata port id.
+> 
+> or when a port multiplier is present: for instance the device in port 4 of the
+> port multiplier:
+> .../0000:00:06.0/0000:09:00.0/host5/ata6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
 
-Thanks.
+Same here.
 
-viresh
+Thanks,
+Aaron
+
+> 
+> Gwendal Grignou (3):
+>   Revert "ata: make ata port as parent device of scsi host"
+>   scsi: Allow devices to have arbitrary parent
+>   libata: Change transport topology layout
+> 
+>  drivers/ata/libata-core.c      |   13 ++++++-------
+>  drivers/ata/libata-scsi.c      |    4 ++--
+>  drivers/ata/libata-transport.c |    2 +-
+>  drivers/firewire/sbp2.c        |    3 ++-
+>  drivers/message/i2o/i2o_scsi.c |    4 ++--
+>  drivers/scsi/scsi_scan.c       |    9 +++++----
+>  include/scsi/scsi_device.h     |    2 +-
+>  7 files changed, 19 insertions(+), 18 deletions(-)
+> 
+> -- 
+> 1.7.7.3
+> 
