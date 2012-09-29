@@ -1,58 +1,109 @@
-From: Felix Miata <mrmazda@earthlink.net>
-Subject: Re: sata adapter
-Date: Fri, 28 Sep 2012 17:37:33 -0400
-Message-ID: <5066189D.3000501@earthlink.net>
-References: <201209281704.44471.gheskett@wdtv.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Sat, 29 Sep 2012 10:10:10 +0800
+Message-ID: <50665882.8020104@intel.com>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209280115.06964.rjw@sisk.pl> <5064FA08.6030005@intel.com> <201209282346.15872.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:60944 "EHLO
-	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1032297Ab2I1VqO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Sep 2012 17:46:14 -0400
-Received: from [69.22.80.46] (helo=[192.168.0.11])
-	by elasmtp-dupuy.atl.sa.earthlink.net with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.67)
-	(envelope-from <mrmazda@earthlink.net>)
-	id 1THiFa-00009o-Fa
-	for linux-ide@vger.kernel.org; Fri, 28 Sep 2012 17:37:34 -0400
-In-Reply-To: <201209281704.44471.gheskett@wdtv.com>
+Received: from mga14.intel.com ([143.182.124.37]:45927 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759399Ab2I2CK3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Sep 2012 22:10:29 -0400
+In-Reply-To: <201209282346.15872.rjw@sisk.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 2012-09-28 17:04 (GMT-0400) Gene Heskett composed:
+[Adding more people and list back in]
 
-> I have a nearly 30 year old computer that has an aftermarket scsi adapter
-> plugged into it.  Unforch the scsi2 drives I have are suffering from
-> stiction and will only start if given a tap sufficient to break the seal
-> between the disks and the heads.
+On 09/29/2012 05:46 AM, Rafael J. Wysocki wrote:
+> On Friday, September 28, 2012, Aaron Lu wrote:
+>> On 09/28/2012 07:15 AM, Rafael J. Wysocki wrote:
+>>> On Thursday, September 27, 2012, Aaron Lu wrote:
+>>>> On 09/27/2012 05:37 AM, Rafael J. Wysocki wrote:
+>>>>>
+>>>>> Say the user has pressed the eject button.  What does need to happen so that
+>>>>> the tray is physically ejected?
+>>>>
+>>>> The tray is ejected by the ODD itself, host does not have to do anything.
+>>>>
+>>>> There is a command(PREVENT_MEDIUM_REMOVAL) to lock the door so that when
+>>>> user presses the eject button, the tray will not be ejected. This command
+>>>> is usually sent when we have a disc inside and a user space program
+>>>> opened the underlying block device(e.g. /dev/sr0) to read/write data.
+>>>>
+>>>> And host can also eject the tray by sending a START_STOP_UNIT command
+>>>> with param LoEj set to 1 and we have a function called sr_tray_move to
+>>>> do just this. And this is also what I've used to eject the tray after
+>>>> user wakes up the ODD, as when user presses the eject button when the
+>>>> ODD is in zero power state, it can't eject the tray as usual, so host
+>>>> software will need to do this, that's the reason I need to know such
+>>>> information:
+>>>> When ODD is resumed, is it because user wakes it up?
+>>>
+>>> But START_STOP_UNIT eventually causes ata_scsi_start_stop_xlat() to be
+>>
+>> You are following ata case, while the ODD is an atapi device :-)
+>> The translation function is atapi_xlat, but that doesn't affect the idea
+>> here.
+>>
+>>> executed, so I wonder if we really need to go up through the SCSI stack
+>>> to send that command to the drive from there?  It should be possible
+>>> to issue STANDBY/READ VERIFY to the device directly from libata if
+>>> an eject event is signaled through a GPE.
+>>
+>> Yes, this is possible.
+>> Though it doesn't feel very cool, since I have no idea if the ODD is a
+>> tray type or slot type in ATA layer and I'll blindly send this command
+>> to it then, not a problem maybe.
+> 
+> It would be good to verify if that works for slot devices, if possible.
 
-> So, what I am looking for is a scsi2 (50 pin) adapter so I can use a more
-> modern sata drive on it.
+The ACPI GPE event is triggered when user inserts a disc into a slot
+type ODD, and if I send an eject command to it, the disc will be
+ejected, which is wrong.
 
-If you mean to connect an SATA HD to an old SCSI HBA via an adapter, good 
-luck. SATA, PATA and SCSI2 drives are all IDE drives. I doubt any such 
-adaptation would be possible.
+I need to know the loading mechanism(tray type or slot type) of the ODD
+to decide if I should send this command.
 
-> Is there such a beast, and if so, where can I buy it in the US?
+> 
+>> And what do you think of moving the acpi notification code to sr?
+>> http://marc.info/?l=linux-pm&m=134873904332704&w=4
+> 
+> I don't think this is a good idea, quite frankly.  sr seems to be a too
+> generic place for that.
 
-Exactly what you want to do to make the switch is unclear. If you mean to put 
-a SCSI card in a modern PC so that you can copy from the old SCSI HDs to 
-modern SATA drives, then you need a SCSI host bus adapter compatible with the 
-one in your old computer. If it uses NCR, or Symbios or LSI Logic (e.g. 810, 
-815, 825, 875), then 
-http://www.ebay.com/itm/Compaq-Symbios-53C875JE-SCSI-Controller-/120260021267?pt=US_Internal_Port_Expansion_Cards&hash=item1c000e4c13 
-would be one solution.
+Does this mean sr can only have code that is useful to all devices it
+manages? i.e. If a piece of code enables a feature for a special kind of
+ODD(like the sata based ZPODD), it shouldn't be done in sr?
 
-If you have an Adaptec SBA in the old machine, then you'd need a similarly 
-compatible PCI HBA with an Adaptec chip, such as 
-http://www.ebay.com/itm/Adaptec-Ultra-Wide-SCSI-Card-AHA-2940UW-/160870373189?pt=US_Internal_Port_Expansion_Cards&hash=item25749f1745
--- 
-"The wise are known for their understanding, and pleasant
-words are persuasive." Proverbs 16:21 (New Living Translation)
+> 
+> Ideally, the whole ZPODD handling should not be visible to the SCSI layer,
 
-  Team OS/2 ** Reg. Linux User #211409 ** a11y rocks!
+I can see 2 problems:
+- Don't know its loading machanism so we have the problem above;
+- Need to send command to find out if ODD is zero power ready somewhere
+  in ata layer, this implies the device is doing IO after it is runtime
+  suspended in scsi layer.
 
-Felix Miata  ***  http://fm.no-ip.com/
+> perhaps except the "no_polling" flag disabling the polling that may be
+> useful for other purposes in principle.
+
+I hope so, let's hear what other people has to say.
+
+> 
+> I'm not sure if it's possible at this point, but if not we need to know
+> very precisely why not.
+
+There is nothing in theory stopping us from doing this in ata layer.
+For the loading mechanism, we can always send an ATAPI command to figure
+it out.
+
+So gentlemen, I need your opinions on where this ZPODD code should live
+before I can continue this work, thanks.
+
+-Aaron
+
