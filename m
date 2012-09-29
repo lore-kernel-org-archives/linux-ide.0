@@ -1,82 +1,42 @@
-From: Gene Heskett <gheskett@wdtv.com>
-Subject: Re: sata adapter
-Date: Sat, 29 Sep 2012 08:55:54 -0400
-Message-ID: <201209290855.54621.gheskett@wdtv.com>
-References: <201209281704.44471.gheskett@wdtv.com> <20582.53793.610242.797773@pilspetsen.it.uu.se>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Sat, 29 Sep 2012 10:29:15 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1209291024380.29902-100000@netrider.rowland.org>
+References: <50665882.8020104@intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1256"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.wdtv.com ([66.118.69.84]:50433 "EHLO mail.wdtv.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964836Ab2I2Mz5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Sep 2012 08:55:57 -0400
-In-Reply-To: <20582.53793.610242.797773@pilspetsen.it.uu.se>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <50665882.8020104@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikael Pettersson <mikpe@it.uu.se>
-Cc: linux-ide@vger.kernel.org
 
-On Saturday 29 September 2012 08:13:26 Mikael Pettersson did opine:
+On Sat, 29 Sep 2012, Aaron Lu wrote:
 
-> Gene Heskett writes:
->  > Greetings all;
->  > 
->  > I have a nearly 30 year old computer that has an aftermarket scsi
->  > adapter plugged into it.  Unforch the scsi2 drives I have are
->  > suffering from stiction and will only start if given a tap
->  > sufficient to break the seal between the disks and the heads.
->  > 
->  > So, what I am looking for is a scsi2 (50 pin) adapter so I can use a
->  > more modern sata drive on it.
->  > 
->  > Is there such a beast, and if so, where can I buy it in the US?
+> > I don't think this is a good idea, quite frankly.  sr seems to be a too
+> > generic place for that.
 > 
-> I was in a similar situation myself recently.  I have seen a
-> scsi-to-sata adapter somewhere once, but it was a very niche and
-> expensive product. There are cheap scsi 50/68/80-pin adapters out there
-> however (try google), allowing you to connect a semi-modern scsi drive
-> to an old 50-pin interface.
+> Does this mean sr can only have code that is useful to all devices it
+> manages? i.e. If a piece of code enables a feature for a special kind of
+> ODD(like the sata based ZPODD), it shouldn't be done in sr?
+
+Drivers are allowed to have special features and quirks that apply only 
+to some devices.
+
+> There is nothing in theory stopping us from doing this in ata layer.
+> For the loading mechanism, we can always send an ATAPI command to figure
+> it out.
 > 
-> If you do find an inexpensive scsi 50-pin to sata adapter then please
-> let us know about it ...
-> 
-> /Mikael
+> So gentlemen, I need your opinions on where this ZPODD code should live
+> before I can continue this work, thanks.
 
-I'd be glad too, but google seems to be mute on the subject.
+Can arbitrary SCSI devices be ZP, or does this notion apply only to
+ATAPI-based drives?  That's the key question, and the answer determines
+where the ZP support belongs.
 
-I did find an IDE to dual SATA adapter, at $7.95 USD a copy, but using that 
-would need an IDE kit for the same computer, which is currently going for 
-$110 USD.
+On the other hand, the sr driver certainly deserves to have some form 
+of runtime PM support, even for devices that aren't ZP.
 
-However, this kit also supports a CF card that can be partitioned into 4 
-virtual drives, and could hold every byte of every program ever written for 
-this machine.  But that also has the same problem as the HD, limited 
-lifetime and recently, poor availability too.  And when I am working on a 
-driver for this machine, such as its mouse driver (old MS/Logitech serial 
-protocol, I autoswitch modes to make it work correctly), I would use up a 
-serious amount of the CF's lifetime with the numerous re-writes of the src 
-assembly code.
+Alan Stern
 
-This machine and OS (it, OS9, now Nitros9, user supported & faster, is a 
-mini unix) are like many of the older ones, its maximum drive size is I 
-believe 4Gb including all partitions.  With 1Gb, to use the whole drive, 
-the minimum file allocation size is 16, 256 byte sectors for a 1 byte file.  
-This is caused by its single FAT, which is limited to 65536 bytes.  But we 
-normally set a 1Gb drive up as 500 megs for OS9, then 256 more virtual 
-disks for the original rsdos 160k format images.  That doesn't use all the 
-drive by quite a bit but its a great plenty for us.
-
-So we're still having a discussion with myself.  Another possibility is by 
-using drivewire, a program written in java, I believe its possible to 
-actually boot that machine from an image maintained as a file on one of the 
-4 1Tb drives in this machine.  To get it started is a chicken/egg problem 
-but it can be done.
-Cheers, Gene
--- 
-"There are four boxes to be used in defense of liberty:
- soap, ballot, jury, and ammo. Please use in that order."
--Ed Howdershelt (Author)
-My web page: <http://coyoteden.dyndns-free.com:85/gene> is up!
-Put cats in the coffee and mice in the tea!
