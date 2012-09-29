@@ -1,84 +1,117 @@
-From: Stephan Schreiber <info@fs-driver.org>
-Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
- uninitialized ICH4 IDE EXBAR mem resource
-Date: Sun, 30 Sep 2012 00:09:34 +0200
-Message-ID: <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
- <20120917115619.13d3a3cb@pyramind.ukuu.org.uk>
- <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
- <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
- <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
- <20120924235457.GA31372@google.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Sun, 30 Sep 2012 00:27:41 +0200
+Message-ID: <201209300027.41533.rjw@sisk.pl>
+References: <1347438597-5903-1-git-send-email-aaron.lu@intel.com> <201209282346.15872.rjw@sisk.pl> <50665882.8020104@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed; DelSp=Yes
-Return-path: <linux-ia64-owner@vger.kernel.org>
-In-Reply-To: <20120924235457.GA31372@google.com>
-Content-Disposition: inline
-Sender: linux-ia64-owner@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 679545@bugs.debian.org, jrnieder@gmail.com
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <50665882.8020104@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello Bjorn,
-thank you very much for the patch.
-I tested it; it works.
+On Saturday, September 29, 2012, Aaron Lu wrote:
+> [Adding more people and list back in]
+> 
+> On 09/29/2012 05:46 AM, Rafael J. Wysocki wrote:
+> > On Friday, September 28, 2012, Aaron Lu wrote:
+> >> On 09/28/2012 07:15 AM, Rafael J. Wysocki wrote:
+> >>> On Thursday, September 27, 2012, Aaron Lu wrote:
+> >>>> On 09/27/2012 05:37 AM, Rafael J. Wysocki wrote:
+> >>>>>
+> >>>>> Say the user has pressed the eject button.  What does need to happen so that
+> >>>>> the tray is physically ejected?
+> >>>>
+> >>>> The tray is ejected by the ODD itself, host does not have to do anything.
+> >>>>
+> >>>> There is a command(PREVENT_MEDIUM_REMOVAL) to lock the door so that when
+> >>>> user presses the eject button, the tray will not be ejected. This command
+> >>>> is usually sent when we have a disc inside and a user space program
+> >>>> opened the underlying block device(e.g. /dev/sr0) to read/write data.
+> >>>>
+> >>>> And host can also eject the tray by sending a START_STOP_UNIT command
+> >>>> with param LoEj set to 1 and we have a function called sr_tray_move to
+> >>>> do just this. And this is also what I've used to eject the tray after
+> >>>> user wakes up the ODD, as when user presses the eject button when the
+> >>>> ODD is in zero power state, it can't eject the tray as usual, so host
+> >>>> software will need to do this, that's the reason I need to know such
+> >>>> information:
+> >>>> When ODD is resumed, is it because user wakes it up?
+> >>>
+> >>> But START_STOP_UNIT eventually causes ata_scsi_start_stop_xlat() to be
+> >>
+> >> You are following ata case, while the ODD is an atapi device :-)
+> >> The translation function is atapi_xlat, but that doesn't affect the idea
+> >> here.
+> >>
+> >>> executed, so I wonder if we really need to go up through the SCSI stack
+> >>> to send that command to the drive from there?  It should be possible
+> >>> to issue STANDBY/READ VERIFY to the device directly from libata if
+> >>> an eject event is signaled through a GPE.
+> >>
+> >> Yes, this is possible.
+> >> Though it doesn't feel very cool, since I have no idea if the ODD is a
+> >> tray type or slot type in ATA layer and I'll blindly send this command
+> >> to it then, not a problem maybe.
+> > 
+> > It would be good to verify if that works for slot devices, if possible.
+> 
+> The ACPI GPE event is triggered when user inserts a disc into a slot
+> type ODD, and if I send an eject command to it, the disc will be
+> ejected, which is wrong.
+> 
+> I need to know the loading mechanism(tray type or slot type) of the ODD
+> to decide if I should send this command.
+> 
+> > 
+> >> And what do you think of moving the acpi notification code to sr?
+> >> http://marc.info/?l=linux-pm&m=134873904332704&w=4
+> > 
+> > I don't think this is a good idea, quite frankly.  sr seems to be a too
+> > generic place for that.
+> 
+> Does this mean sr can only have code that is useful to all devices it
+> manages? i.e. If a piece of code enables a feature for a special kind of
+> ODD(like the sata based ZPODD), it shouldn't be done in sr?
 
-(typing mistake: it must read PCI_COMMAND_MEMORY instead of  
-PCI_COMMAND_MEM at one location;
-some hunks of the patch couldn't be applied automatically on Kernel  
-3.2.23 because some comments in the contexts are different)
+If the feature is specific to one special kind of ODD only, then I don't
+think sr is the right place to add support for it.
 
-The dmesg output:
-[    0.000000] Initializing cgroup subsys cpuset
-[    0.000000] Initializing cgroup subsys cpu
-[    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)  
-(debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) )  
-#1 SMP Fri Sep 28 21:57:11 CEST 2012
-...
-[    0.065510] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
-[    0.065524] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
-[    0.065535] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
-[    0.065546] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
-[    0.065556] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
-[    0.065567] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
-[    0.065578] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff unset]
-...
-[    1.391380] libata version 3.00 loaded.
-[    1.391922] ata_piix 0000:00:1f.1: version 2.13
-[    1.391938] ata_piix 0000:00:1f.1: can't derive routing for PCI INT A
-[    1.392493] scsi0 : ata_piix
-[    1.392886] scsi1 : ata_piix
-[    1.393018] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1000 irq 34
-[    1.393066] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1008 irq 33
-[    1.557756] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-T40N, JR03, max UDMA/33
-[    1.573616] ata1.00: configured for UDMA/33
-[    1.579147] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM  
-GSA-T40N  JR03 PQ: 0 ANSI: 5
-[    1.590806] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw  
-xa/form2 cdda tray
-[    1.590872] cdrom: Uniform CD-ROM driver Revision: 3.20
-[    1.591272] sr 0:0:0:0: Attached scsi CD-ROM sr0
-[    1.593910] sr 0:0:0:0: Attached scsi generic sg0 type 5
-...
+> > Ideally, the whole ZPODD handling should not be visible to the SCSI layer,
+> 
+> I can see 2 problems:
+> - Don't know its loading machanism so we have the problem above;
 
+Does using the need_eject flag address this problem somehow?
 
-How is the chance to get this patch or a similar one into linux-next?
+> - Need to send command to find out if ODD is zero power ready somewhere
+>   in ata layer, this implies the device is doing IO after it is runtime
+>   suspended in scsi layer.
 
+There's nothing wrong with accessig suspended devices as long as we know
+that they will respond. :-)
 
+> > perhaps except the "no_polling" flag disabling the polling that may be
+> > useful for other purposes in principle.
+> 
+> I hope so, let's hear what other people has to say.
+> 
+> > 
+> > I'm not sure if it's possible at this point, but if not we need to know
+> > very precisely why not.
+> 
+> There is nothing in theory stopping us from doing this in ata layer.
+> For the loading mechanism, we can always send an ATAPI command to figure
+> it out.
+> 
+> So gentlemen, I need your opinions on where this ZPODD code should live
+> before I can continue this work, thanks.
 
-> On x86, Windows normally doesn't reconfigure PCI devices unless it
-> finds a problem with the configuration done by the BIOS.  I suspect
-> it works similarly on ia64.  I would guess that Windows noticed that
-> the MEM bit was not set, and therefore ignored the MEM BAR contents.
+I would _try_ to add it at the ATA level.
 
-Since I have the four Windows versions 'for Itanium Based Systems' on  
-that box as well (XP, Server 2003, 2008, 2008 R2), I can tell you more:
-The Device Manager shows a memory range FFBFFC00-FFBFFFFF for the  
-"Intel 82801DB Ultra ATA Storage Controller-24CB" - on any of these  
-Windows versions.
-
-
-Stephan
-
-
-
+Thanks,
+Rafael
