@@ -1,96 +1,132 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC/PATCH v2] ia64, SR870, EFI bug breaks ata_piix,
- uninitialized ICH4 IDE EXBAR mem resource
-Date: Mon, 1 Oct 2012 10:28:20 -0600
-Message-ID: <CAErSpo4ErJsp5pWNLsu3x4YL9ZrtxHfk0tkYL7hZaY5TmMtH+A@mail.gmail.com>
-References: <20120916183914.Horde._TGALdjz9kRQVgCy6ATxxJA@webmail.df.eu>
- <20120917115619.13d3a3cb@pyramind.ukuu.org.uk> <20120920161603.Horde.aF7BBcL8999QWyUjk2AmsNA@webmail.df.eu>
- <CAErSpo6+WYE6wnj4CcKVidNHmg-oGH9SBsvg3QP9syC+vo09HQ@mail.gmail.com>
- <20120924190912.Horde.qznUIqGZi1VQYJO46HeGkwA@webmail.df.eu>
- <20120924235457.GA31372@google.com> <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120930000934.Horde.grdOKKGZi1VQZ3GeI_YW9ZA@webmail.df.eu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephan Schreiber <info@fs-driver.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ia64@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, 679545@bugs.debian.org, jrnieder@gmail.com
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
+Date: Mon,  1 Oct 2012 11:22:53 -0700
+Message-ID: <1349115776-17569-1-git-send-email-gwendal@google.com>
+References: <20120928062709.GA2091@mint-spring.sh.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f202.google.com ([209.85.216.202]:33362 "EHLO
+	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab2JASXD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2012 14:23:03 -0400
+Received: by qcqs25 with SMTP id s25so676761qcq.1
+        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2012 11:23:01 -0700 (PDT)
+In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
+In-Reply-To: <20120928062709.GA2091@mint-spring.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com
+Cc: Gwendal Grignou <gwendal@google.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Sep 29, 2012 at 4:09 PM, Stephan Schreiber <info@fs-driver.org> wrote:
-> Hello Bjorn,
-> thank you very much for the patch.
-> I tested it; it works.
->
-> (typing mistake: it must read PCI_COMMAND_MEMORY instead of PCI_COMMAND_MEM
-> at one location;
-> some hunks of the patch couldn't be applied automatically on Kernel 3.2.23
-> because some comments in the contexts are different)
+This set of patches improve ATA transport classes integration with SCSI
+objects.
 
-Thanks a lot for testing this!  I'll fix up this typo and work on
-getting something like this merged.
+Before [2.6.x]
 
-> The dmesg output:
->
-> [    0.000000] Initializing cgroup subsys cpuset
-> [    0.000000] Initializing cgroup subsys cpu
-> [    0.000000] Linux version 3.2.0-3-mckinley (Debian 3.2.23-1)
-> (debian-kernel@lists.debian.org) (gcc version 4.6.3 (Debian 4.6.3-8) ) #1
-> SMP Fri Sep 28 21:57:11 CEST 2012
-> ...
-> [    0.065510] pci 0000:00:1f.1: [8086:24cb] type 0 class 0x000101
-> [    0.065524] pci 0000:00:1f.1: reg 10: [io  0x0000-0x0007]
-> [    0.065535] pci 0000:00:1f.1: reg 14: [io  0x0000-0x0003]
-> [    0.065546] pci 0000:00:1f.1: reg 18: [io  0x0000-0x0007]
-> [    0.065556] pci 0000:00:1f.1: reg 1c: [io  0x0000-0x0003]
-> [    0.065567] pci 0000:00:1f.1: reg 20: [io  0x1000-0x100f]
-> [    0.065578] pci 0000:00:1f.1: reg 24: [mem 0x00000000-0x000003ff unset]
-> ...
-> [    1.391380] libata version 3.00 loaded.
-> [    1.391922] ata_piix 0000:00:1f.1: version 2.13
-> [    1.391938] ata_piix 0000:00:1f.1: can't derive routing for PCI INT A
-> [    1.392493] scsi0 : ata_piix
-> [    1.392886] scsi1 : ata_piix
-> [    1.393018] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0x1000 irq
-> 34
-> [    1.393066] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0x1008 irq
-> 33
-> [    1.557756] ata1.00: ATAPI: HL-DT-ST DVDRAM GSA-T40N, JR03, max UDMA/33
-> [    1.573616] ata1.00: configured for UDMA/33
-> [    1.579147] scsi 0:0:0:0: CD-ROM            HL-DT-ST DVDRAM GSA-T40N
-> JR03 PQ: 0 ANSI: 5
-> [    1.590806] sr0: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2
-> cdda tray
-> [    1.590872] cdrom: Uniform CD-ROM driver Revision: 3.20
-> [    1.591272] sr 0:0:0:0: Attached scsi CD-ROM sr0
-> [    1.593910] sr 0:0:0:0: Attached scsi generic sg0 type 5
-> ...
+Ata and scsi transport class where separated:
+`--0000:09:00.0
+|  `--ata1
+|  |  `--port_port
+|  |  `--link1
+|  |  |  `--dev1.0
+|  |  |  `--dev1.1
+|  `--ata2
+|  ...
+|  `--host0
+|  |  `--scsi_host
+|  |  |  `--host0
+|  |  `--target0:0:0
+|  |  |  `--0:0:0:0
+|  |  |  |  `--block
+|  |  |  |  |  `--sda
+|  |  |  |  |  |  `--sda1
 
->> On x86, Windows normally doesn't reconfigure PCI devices unless it
->> finds a problem with the configuration done by the BIOS.  I suspect
->> it works similarly on ia64.  I would guess that Windows noticed that
->> the MEM bit was not set, and therefore ignored the MEM BAR contents.
->
->
-> Since I have the four Windows versions 'for Itanium Based Systems' on that
-> box as well (XP, Server 2003, 2008, 2008 R2), I can tell you more:
-> The Device Manager shows a memory range FFBFFC00-FFBFFFFF for the "Intel
-> 82801DB Ultra ATA Storage Controller-24CB" - on any of these Windows
-> versions.
+In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
+the issue of linking the ata port with the scsi host object by placing the
+scsi_host object under ata port objects.
 
-Oh, that's good data, thanks!  It looks like Windows noticed that the
-BAR was invalid and assigned a valid resource to it.  That's in the
-third aperture below:
+However to be more consistent with other transport, this patch does the opposite:
 
-ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-01])
-pci_root PNP0A03:00: host bridge window [mem 0x000a0000-0x000fffff]
-pci_root PNP0A03:00: host bridge window [mem 0xfa000000-0xfbffffff]
-pci_root PNP0A03:00: host bridge window [mem 0xff000000-0xffffffff]
-pci_root PNP0A03:00: host bridge window [mem 0xfec00000-0xfec0ffff]
+For instance, with SAS transport, We have
+`--0000:0b:00.0
+|  `--host6
+|  |  `--phy-6:0
+|  |  `--phy-6:1
+...
+|  |  `--port-6:0
+|  |  |  `--end_device-6:0
+|  |  |  |  `--sas_device
+|  |  |  |  |  `--end_device-6:0
+|  |  |  |  `--sas_end_device
+|  |  |  |  |  `--end_device-6:0
+|  |  |  |  `--target6:0:0
+|  |  |  |  |  `--6:0:0:0
+|  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  `--sdb
+...
+|  |  `--port-6:1
+|  |  |  `--end_device-6:1
+...
+phy and port have to be separated, sas_port are created dynamically.
 
-Linux *should* probably do the same (though at a different actual
-address because we assign bottom-up instead of top-down as Windows
-does).  I don't know off the top of my head whether we actually do in
-this case or not.
+For ata, all objects are created at initialization time, so the layout is:
+`--0000:09:00.0
+|  `--host0
+|  |  `--port1
+|  |  |  `--link1
+|  |  |  |  `--dev1.0
+|  |  |  |  |  `--target0:0:0
+|  |  |  |  |  |  `--0:0:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sda
 
-What's the output of "dmesg | grep 0000:00:1f.1; lspci -vs00:1f.1"?
+If we have a port multiplier, more links are created.
+`--0000:09:00.0
+...
+|  `--host4
+|  |  `--port5
+|  |  |  `--link5
+|  |  |  |  `--dev5.0
+[device for the port multiplier]
+|  |  |  `--link5.0
+|  |  |  |  `--dev5.0.0
+|  |  |  |  |  `--target4:0:0
+|  |  |  |  |  |  `--4:0:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sdc
+[disk in port 0 of the port multiplier]
+...
+|  |  |  `--link5.2
+|  |  |  |  `--dev5.2.0
+|  |  |  |  |  `--target4:2:0
+|  |  |  |  |  |  `--4:2:0:0
+|  |  |  |  |  |  |  `--block
+|  |  |  |  |  |  |  |  `--sde
+[disk in port 2 of the port multiplier]
+
+In consequence, the path of a scsi device becomes:
+.../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
+dev1.0 indicates the master device [0] in ata port 1.
+ata1 being under host0, we know the reliationships between the scsi_host id and
+ata port id.
+
+or when a port multiplier is present: for instance the device in port 4 of the
+port multiplier:
+.../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+
+Gwendal Grignou (3):
+  Revert "ata: make ata port as parent device of scsi host"
+  scsi: Allow devices to have arbitrary parent
+  libata: Change transport topology layout
+
+ drivers/ata/libata-core.c      |   13 ++++++-------
+ drivers/ata/libata-scsi.c      |    4 ++--
+ drivers/ata/libata-transport.c |    2 +-
+ drivers/firewire/sbp2.c        |    3 ++-
+ drivers/message/i2o/i2o_scsi.c |    4 ++--
+ drivers/scsi/scsi_scan.c       |    9 +++++----
+ include/scsi/scsi_device.h     |    2 +-
+ 7 files changed, 19 insertions(+), 18 deletions(-)
+
+-- 
+1.7.7.3
+
