@@ -1,41 +1,80 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Mon, 01 Oct 2012 00:57:48 -0400
-Message-ID: <506922CC.1030002@pobox.com>
-References: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v3 -tip 0/5] x86, MSI, AHCI: Support multiple MSIs
+Date: Mon, 1 Oct 2012 10:08:09 +0200
+Message-ID: <cover.1349074231.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:51338 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab2JAE5v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2012 00:57:51 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Aaron Lu <aaron.lu@intel.com>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 09/30/2012 03:43 PM, Alan Stern wrote:
-> On Sun, 30 Sep 2012, Jeff Garzik wrote:
->
->> The simple fact of "only ZPODD devices out there are ATA" is not the
->> decision-maker for where the code should live.  It is more a question
->> where ZPODD belongs in the device/command set model currently employed.
->
-> I don't really accept this argument.  It's a little like saying: The
-> tty layer uses ioctl commands to control RS232 line settings; therefore
-> RS232 settings should be handled in the VFS layer as part of the ioctl
-> core.
+Currently multiple MSI mode is limited to a single vector per device (at
+least on x86 and PPC). This series breathes life into pci_enable_msi_block()
+and makes it possible to set interrupt affinity for multiple IRQs, similarly
+to MSI-X. Yet, only for x86 and only when IOMMUs are present.
 
-Hardly -- sr is an optical device driver, much more aligned.
+Although IRQ and PCI subsystems are modified, the current behaviour left
+intact. The drivers could just start using multiple MSIs just by following
+the existing documentation.
 
-And libata is probably at least 50% of the entire sr userbase, if not 
-much much more.
+The AHCI device driver makes use of the new mode and a new function -
+pci_enable_msi_block_auto() - patches 4,5.
 
-	Jeff
+The series is adapted to Ingo's -tip repository.
 
 
+Compared to v2:
+
+	1/5:	v1 is conditionally acked by Suresh
+
+		Based on Yinghai's comment:
+		- create_irqs() is updated to be __create_irqs(, count, );
+		- create_irq_nr() done as __create_irqs(, 1, ) call;
+
+	2,3/5:	No changes since v1, conditionally acked by Suresh
+
+	4/5:	No changes, v2 acked by Bjorn
+
+	5/5:	"Shared Last Message" mode leftovers removed;
+
+		Based on Jeff's comments:
+
+		- PCI-specific code moved from libahci.c to ahci.c -
+		  ahci_host_activate() lost scsi_host_template* parameter
+		  as result;
+
+		- spinlock initialization moved to ahci_port_start() -
+		  AHCI_HFLAG_MULTI_MSI flag introduced for that;
 
 
+Alexander Gordeev (5):
+  1/5 x86, MSI: Support multiple MSIs in presense of IRQ remapping
+  2/5 x86, MSI: Allocate as many multiple IRQs as requested
+  3/5 x86, MSI: Minor readability fixes
+  4/5 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+  5/5 AHCI: Support multiple MSIs
+
+ Documentation/PCI/MSI-HOWTO.txt |   37 +++++++-
+ arch/x86/kernel/apic/io_apic.c  |  178 ++++++++++++++++++++++++++++++++-------
+ drivers/ata/ahci.c              |   91 +++++++++++++++++++-
+ drivers/ata/ahci.h              |    6 ++
+ drivers/ata/libahci.c           |  118 ++++++++++++++++++++++++--
+ drivers/pci/msi.c               |   36 ++++++++-
+ include/linux/irq.h             |    6 ++
+ include/linux/msi.h             |    1 +
+ include/linux/pci.h             |    7 ++
+ kernel/irq/chip.c               |   30 +++++--
+ kernel/irq/irqdesc.c            |   31 +++++++
+ 11 files changed, 486 insertions(+), 55 deletions(-)
+
+-- 
+1.7.7.6
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
