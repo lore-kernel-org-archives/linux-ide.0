@@ -1,41 +1,36 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [git patches] libata fixes for 3.7
-Date: Tue, 02 Oct 2012 15:59:39 -0400
-Message-ID: <506B47AB.9020506@pobox.com>
-References: <20121002194053.GA11100@havoc.gtf.org> <506B4404.20100@msgid.tls.msk.ru>
+From: "MR.Takamine Jokichi" <info@tokyo.net>
+Subject: Business Proposal
+Date: Tue, 2 Oct 2012 23:05:06 +0200
+Message-ID: <bb68c2b76610205ae64930b5a99949ad.squirrel@www.physik.tu-berlin.de>
+Reply-To: j.takamine@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:64340 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab2JBT7n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Oct 2012 15:59:43 -0400
-In-Reply-To: <506B4404.20100@msgid.tls.msk.ru>
+Received: from mail.tu-berlin.de ([130.149.7.33]:10145 "EHLO mail.tu-berlin.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756862Ab2JBXtU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Oct 2012 19:49:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 10/02/2012 03:44 PM, Michael Tokarev wrote:
-> On 02.10.2012 23:40, Jeff Garzik wrote:
->
->> Minor libata updates, nothing notable.
->>
->> 1) Apply -- and then revert -- the FUA feature.  Caused
->>     disk corruption in linux-next, proving it cannot be turned on by
->>     default.
->
-> Any details on that?  Disk corruprion is rather a nasty
-> side-effect indeed.
+Greetings,
 
-One thread with reports is
+I am sorry to encroach into your privacy in this manner, I found your
+names listed in the Trade Centre Chambers of Commerce directory here in
+Japan, I find it pleasurable to offer you my partnership in this
+transaction, I pray at this time your address is still valid. I want to
+solicit your attention to receive money on my behalf.
 
-	Storage related regression in linux-next 20120824
+I am contacting you, because my status would not permit me to do this
+alone. When you respond to this mail, I will furnish you with the full
+details of the funds and myself. Please reply through my alternate Email:
+j.takamine@yahoo.com.hk
 
-Regards,
+MR.Takamine Jokichi
+EXTERNAL AUDITOR.
+BANK OF TOKYO-MITSUBISHI UFJ, LTD
 
-	Jeff
-
-
+NOTE : If You Recieve This Message In Your Junk Or Spam Its Due To Your
+Internet Provider
 
