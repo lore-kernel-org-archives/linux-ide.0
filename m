@@ -1,119 +1,42 @@
-From: Dan Williams <djbw@fb.com>
-Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
-Date: Mon, 1 Oct 2012 12:14:47 -0700
-Message-ID: <CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
-References: <20120928062709.GA2091@mint-spring.sh.intel.com>
-	<1349115776-17569-1-git-send-email-gwendal@google.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH V3 Resend 0/3] ata: pata_arasan and ahci_platform updates
+Date: Mon, 01 Oct 2012 22:46:59 -0400
+Message-ID: <506A55A3.8050204@pobox.com>
+References: <cover.1346042344.git.viresh.kumar@linaro.com> <CAOh2x=n7yap1yBO3hW5VM+tL4Ht4TBQ6RZ+sXBDmv=JpSR3-pA@mail.gmail.com> <CAOh2x=mrvH4FeLWKxy+_LhBzK_y0HoZpjP0LAqS7grpSYYYNuQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1349115776-17569-1-git-send-email-gwendal@google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:42753 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752218Ab2JBCrG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Oct 2012 22:47:06 -0400
+Received: by qaas11 with SMTP id s11so200061qaa.19
+        for <linux-ide@vger.kernel.org>; Mon, 01 Oct 2012 19:47:06 -0700 (PDT)
+In-Reply-To: <CAOh2x=mrvH4FeLWKxy+_LhBzK_y0HoZpjP0LAqS7grpSYYYNuQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: viresh kumar <viresh.kumar@linaro.org>
+Cc: linux-ide@vger.kernel.org, sshtylyov@mvista.com, spear-devel@list.st.com, viresh.linux@gmail.com, Viresh Kumar <viresh.kumar@linaro.com>
 
-On Mon, Oct 1, 2012 at 11:22 AM, Gwendal Grignou <gwendal@google.com> wrote:
-> This set of patches improve ATA transport classes integration with SCSI
-> objects.
+On 09/28/2012 12:25 AM, viresh kumar wrote:
+> On Thu, Sep 27, 2012 at 4:29 PM, viresh kumar <viresh.kumar@linaro.org> wrote:
+>> On Mon, Aug 27, 2012 at 10:37 AM, Viresh Kumar <viresh.kumar@linaro.org> wrote:
+>>> From: Viresh Kumar <viresh.kumar@linaro.com>
+>>> This patchset contains updates for pata_arasan and ahci_platform drivers. I have
+>>> updated it as per earlier discussions for following patchset:
+>>> "clk: Add non CONFIG_HAVE_CLK routines"
+>>
+>> Hi Jeff,
+>>
+>> Can you please apply these patches?
 >
-> Before [2.6.x]
->
-> Ata and scsi transport class where separated:
-> `--0000:09:00.0
-> |  `--ata1
-> |  |  `--port_port
-> |  |  `--link1
-> |  |  |  `--dev1.0
-> |  |  |  `--dev1.1
-> |  `--ata2
-> |  ...
-> |  `--host0
-> |  |  `--scsi_host
-> |  |  |  `--host0
-> |  |  `--target0:0:0
-> |  |  |  `--0:0:0:0
-> |  |  |  |  `--block
-> |  |  |  |  |  `--sda
-> |  |  |  |  |  |  `--sda1
->
-> In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
-> the issue of linking the ata port with the scsi host object by placing the
-> scsi_host object under ata port objects.
->
-> However to be more consistent with other transport, this patch does the opposite:
->
-> For instance, with SAS transport, We have
-> `--0000:0b:00.0
-> |  `--host6
-> |  |  `--phy-6:0
-> |  |  `--phy-6:1
-> ...
-> |  |  `--port-6:0
-> |  |  |  `--end_device-6:0
-> |  |  |  |  `--sas_device
-> |  |  |  |  |  `--end_device-6:0
-> |  |  |  |  `--sas_end_device
-> |  |  |  |  |  `--end_device-6:0
-> |  |  |  |  `--target6:0:0
-> |  |  |  |  |  `--6:0:0:0
-> |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  `--sdb
-> ...
-> |  |  `--port-6:1
-> |  |  |  `--end_device-6:1
-> ...
-> phy and port have to be separated, sas_port are created dynamically.
->
-> For ata, all objects are created at initialization time, so the layout is:
-> `--0000:09:00.0
-> |  `--host0
-> |  |  `--port1
-> |  |  |  `--link1
-> |  |  |  |  `--dev1.0
-> |  |  |  |  |  `--target0:0:0
-> |  |  |  |  |  |  `--0:0:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sda
->
-> If we have a port multiplier, more links are created.
-> `--0000:09:00.0
-> ...
-> |  `--host4
-> |  |  `--port5
-> |  |  |  `--link5
-> |  |  |  |  `--dev5.0
-> [device for the port multiplier]
-> |  |  |  `--link5.0
-> |  |  |  |  `--dev5.0.0
-> |  |  |  |  |  `--target4:0:0
-> |  |  |  |  |  |  `--4:0:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sdc
-> [disk in port 0 of the port multiplier]
-> ...
-> |  |  |  `--link5.2
-> |  |  |  |  `--dev5.2.0
-> |  |  |  |  |  `--target4:2:0
-> |  |  |  |  |  |  `--4:2:0:0
-> |  |  |  |  |  |  |  `--block
-> |  |  |  |  |  |  |  |  `--sde
-> [disk in port 2 of the port multiplier]
->
-> In consequence, the path of a scsi device becomes:
-> .../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
-> dev1.0 indicates the master device [0] in ata port 1.
-> ata1 being under host0, we know the reliationships between the scsi_host id and
-> ata port id.
->
-> or when a port multiplier is present: for instance the device in port 4 of the
-> port multiplier:
-> .../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
+> So sorry to ping you.... They are already pushed on 27th August...
 
-What's the benefit of this?  From a PM perspective now it seems we'll
-have the parent hardware port suspended before all the scsi_hosts on
-that port, which defeats the original purpose of putting the ata_port
-in the PM hierarchy.
+Yes, they have been in linux-next for well over a month...
 
---
-Dan
+	Jeff
+
+
+
+
