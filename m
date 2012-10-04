@@ -1,42 +1,94 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v3 -tip 5/5] AHCI: Support multiple MSIs
-Date: Thu, 4 Oct 2012 16:35:11 +0200
-Message-ID: <20121004143511.GE2258@dhcp-26-207.brq.redhat.com>
+Subject: Re: [PATCH v3 -tip 1/5] x86, MSI: Support multiple MSIs in presense
+ of IRQ remapping
+Date: Thu, 4 Oct 2012 09:54:43 +0200
+Message-ID: <20121004075442.GD2258@dhcp-26-207.brq.redhat.com>
 References: <cover.1349074231.git.agordeev@redhat.com>
- <cc6441a31a2c600ad9ae33e7715de65b8d46a66f.1349074231.git.agordeev@redhat.com>
- <20121002050929.GD7756@gmail.com>
- <20121002164220.GB2258@dhcp-26-207.brq.redhat.com>
- <506B1A26.2060609@pobox.com>
+ <b15a9b5242c7de5770d2315ea8d13f4dcf63c00b.1349074231.git.agordeev@redhat.com>
+ <20121002045518.GA7756@gmail.com>
+ <20121002110630.GA2258@dhcp-26-207.brq.redhat.com>
+ <20121002112524.GA12420@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5902 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754732Ab2JDHzF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Oct 2012 03:55:05 -0400
 Content-Disposition: inline
-In-Reply-To: <506B1A26.2060609@pobox.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Ingo Molnar <mingo@kernel.org>, linux-kernel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20121002112524.GA12420@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ingo Molnar <mingo@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Oct 02, 2012 at 12:45:26PM -0400, Jeff Garzik wrote:
-> >>>+	VPRINTK("ENTER\n");
-> >>
-> >>Is this per IRQ handler execution debugging code still needed?
-> >>Same for the other VPRINTK() lines in this patch.
-> >
-> >These VPRINKs are only to make new handlers look like ahci_interrupt()
-> >which did not change. I believe, if they need to go it is better to
-> >remove them altogether, with a separate followup patch.
+On Tue, Oct 02, 2012 at 01:25:24PM +0200, Ingo Molnar wrote:
+> > > > @@ -584,8 +586,12 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+> > > >  #define irq_alloc_desc_from(from, node)		\
+> > > >  	irq_alloc_descs(-1, from, 1, node)
+> > > >  
+> > > > +#define irq_alloc_descs_from(from, cnt, node)	\
+> > > > +	irq_alloc_descs(-1, from, cnt, node)
+> > > > +
+> > > 
+> > > Please use inlines instead of macros. Might transform the one 
+> > > above it as well in the process.
+> > 
+> > You mean here do not introduce irq_alloc_descs_from, but rather use
+> > irq_alloc_descs() directly?
 > 
-> Definitely followup patch material + discussion :)
+> My suggestion is to add irq_alloc_descs_from() as a (very 
+> simple) inline function and change irq_alloc_desc_from() to be 
+> an inline function as well.
 
-It appears the discussion comes first :)
+These defines were added on purpose with commit ec53cf2 ("irq: don't put
+module.h into irq.h for tracking irqgen modules.") - the relevant hunk is
+below. I suppose we do not want to revert it?
 
-As DPRINTKs/VPRINTKs are all over the ATA stack, I do not really realize
-why it should be eliminated in one places (i.e. in hardware handlers) and
-left in anothers. So as long as you would not like to remove them all, I
-would leave it as is for now.
 
-Does it make sense for you?
+@@ -567,29 +567,21 @@ static inline struct msi_desc *irq_data_get_msi(struct irq_data *d)
+ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
+ 		struct module *owner);
+ 
+-static inline int irq_alloc_descs(int irq, unsigned int from, unsigned int cnt,
+-		int node)
+-{
+-	return __irq_alloc_descs(irq, from, cnt, node, THIS_MODULE);
+-}
++/* use macros to avoid needing export.h for THIS_MODULE */
++#define irq_alloc_descs(irq, from, cnt, node)	\
++	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
+ 
+-void irq_free_descs(unsigned int irq, unsigned int cnt);
+-int irq_reserve_irqs(unsigned int from, unsigned int cnt);
++#define irq_alloc_desc(node)			\
++	irq_alloc_descs(-1, 0, 1, node)
+ 
+-static inline int irq_alloc_desc(int node)
+-{
+-	return irq_alloc_descs(-1, 0, 1, node);
+-}
++#define irq_alloc_desc_at(at, node)		\
++	irq_alloc_descs(at, at, 1, node)
+ 
+-static inline int irq_alloc_desc_at(unsigned int at, int node)
+-{
+-	return irq_alloc_descs(at, at, 1, node);
+-}
++#define irq_alloc_desc_from(from, node)		\
++	irq_alloc_descs(-1, from, 1, node)
+ 
+-static inline int irq_alloc_desc_from(unsigned int from, int node)
+-{
+-	return irq_alloc_descs(-1, from, 1, node);
+-}
++void irq_free_descs(unsigned int irq, unsigned int cnt);
++int irq_reserve_irqs(unsigned int from, unsigned int cnt);
+ 
+ static inline void irq_free_desc(unsigned int irq)
+ {
+
+
 
 -- 
 Regards,
