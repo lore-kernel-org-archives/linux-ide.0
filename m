@@ -1,48 +1,45 @@
-From: Fabio Estevam <festevam@gmail.com>
-Subject: [PATCH] ata: sata_highbank: Fix section mismatch
-Date: Sun,  7 Oct 2012 19:46:36 -0300
-Message-ID: <1349649996-17115-1-git-send-email-festevam@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f46.google.com ([209.85.213.46]:56258 "EHLO
-	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491Ab2JGWqr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Oct 2012 18:46:47 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Dan Williams <djbw@fb.com>
+Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
+Date: Sun, 7 Oct 2012 16:13:31 -0700
+Message-ID: <CAA9_cmfOVuBQ0o0Nhaofi-N6wDL-FBqAjDc-CHwtcRr69hGNTg@mail.gmail.com>
+References: <20120928062709.GA2091@mint-spring.sh.intel.com>
+	<1349115776-17569-1-git-send-email-gwendal@google.com>
+	<CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
+	<CAMHSBOV8ghAV_RCRMPMHW0Gk8ugX6zWTp+aNnWUJ9tmiFeN8pg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAMHSBOV8ghAV_RCRMPMHW0Gk8ugX6zWTp+aNnWUJ9tmiFeN8pg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: rob.herring@calxeda.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-From: Fabio Estevam <fabio.estevam@freescale.com>
+On Thu, Oct 4, 2012 at 9:56 AM, Gwendal Grignou <gwendal@google.com> wrote:
+>> What's the benefit of this?
+> + To unify ata transport sysfs topology with other scsi transport.
 
-Building multi_v7_defconfig leads to the following warning:
+My concern is the thrash and breakage to switch the ordering around
+given the (minor) growing pains injecting an ata_port into the device
+path caused.  Although, it seems like Aaron has caught where this
+reversal broke things at the cost of some additional special-casing (4
+files changed, 25 insertions(+), 13 deletions(-)).  Patch 1 also
+creates a problem for bisections as the code that assumes
+<dev>/port/host will break.
 
-WARNING: vmlinux.o(.data+0xf7d8): Section mismatch in reference from the variable ahci_highbank_driver to the function .init.text:ahci_highbank_probe()
-The variable ahci_highbank_driver references
-the function __init ahci_highbank_probe()
-If the reference is valid then annotate the
-variable with __init* or __refdata (see linux/init.h) or name the variable:
-*_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+I don't know... I'm all for consistency, but if the only justification
+is to make the transports look the "same" we'll still have a glaring
+transport difference between ata and sas.  In the sas case one
+hba/host spanning all possible sas domains vs the ata case of a
+guaranteed ata_port per "ata domain" relationship with at least one
+host per port.  The "port" does live higher in the topology in the ata
+case.
 
-Fix it by annotating ahci_highbank_probe as __devinit.
+> + To easily map a ata_port with its associated scsi_host structure.
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
----
- drivers/ata/sata_highbank.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Not sure this is getting any easier.  There would now be three options
+based on kernel version: look for the ata_port as a host attribute,
+look at the host's parent, or look for the host's child.
 
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index 0d7c4c2..36a141a 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -260,7 +260,7 @@ static const struct of_device_id ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
--static int __init ahci_highbank_probe(struct platform_device *pdev)
-+static int __devinit ahci_highbank_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
--- 
-1.7.9.5
-
+--
+Dan
