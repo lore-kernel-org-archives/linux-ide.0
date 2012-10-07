@@ -1,136 +1,63 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH 0/3] Insert ATA transport objects in SCSI syfs topology.
-Date: Thu, 4 Oct 2012 09:56:25 -0700
-Message-ID: <CAMHSBOV8ghAV_RCRMPMHW0Gk8ugX6zWTp+aNnWUJ9tmiFeN8pg@mail.gmail.com>
-References: <20120928062709.GA2091@mint-spring.sh.intel.com>
-	<1349115776-17569-1-git-send-email-gwendal@google.com>
-	<CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v4 -tip 0/3] x86, MSI, AHCI: Support multiple MSIs
+Date: Sun, 7 Oct 2012 07:24:58 +0200
+Message-ID: <cover.1349517905.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:50017 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932774Ab2JDQ40 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Oct 2012 12:56:26 -0400
-Received: by mail-qa0-f46.google.com with SMTP id c26so2877481qad.19
-        for <linux-ide@vger.kernel.org>; Thu, 04 Oct 2012 09:56:25 -0700 (PDT)
-In-Reply-To: <CAA9_cmdWHRLBru6hN1ibGK75rw3ZQbQ9TULRe-bU=3q4-fb+qw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:29117 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820Ab2JGFWO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 7 Oct 2012 01:22:14 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <djbw@fb.com>
-Cc: aaron.lu@intel.com, minggr@gmail.com, tj@kernel.org, jgarzik@pobox.com, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Oct 1, 2012 at 12:14 PM, Dan Williams <djbw@fb.com> wrote:
-> On Mon, Oct 1, 2012 at 11:22 AM, Gwendal Grignou <gwendal@google.com> wrote:
->> This set of patches improve ATA transport classes integration with SCSI
->> objects.
->>
->> Before [2.6.x]
->>
->> Ata and scsi transport class where separated:
->> `--0000:09:00.0
->> |  `--ata1
->> |  |  `--port_port
->> |  |  `--link1
->> |  |  |  `--dev1.0
->> |  |  |  `--dev1.1
->> |  `--ata2
->> |  ...
->> |  `--host0
->> |  |  `--scsi_host
->> |  |  |  `--host0
->> |  |  `--target0:0:0
->> |  |  |  `--0:0:0:0
->> |  |  |  |  `--block
->> |  |  |  |  |  `--sda
->> |  |  |  |  |  |  `--sda1
->>
->> In 3.2, Lin - in commit 9a6d6a2ddabbd32c07f6a38b659e5f3db319fa5a - addressed
->> the issue of linking the ata port with the scsi host object by placing the
->> scsi_host object under ata port objects.
->>
->> However to be more consistent with other transport, this patch does the opposite:
->>
->> For instance, with SAS transport, We have
->> `--0000:0b:00.0
->> |  `--host6
->> |  |  `--phy-6:0
->> |  |  `--phy-6:1
->> ...
->> |  |  `--port-6:0
->> |  |  |  `--end_device-6:0
->> |  |  |  |  `--sas_device
->> |  |  |  |  |  `--end_device-6:0
->> |  |  |  |  `--sas_end_device
->> |  |  |  |  |  `--end_device-6:0
->> |  |  |  |  `--target6:0:0
->> |  |  |  |  |  `--6:0:0:0
->> |  |  |  |  |  |  `--block
->> |  |  |  |  |  |  |  `--sdb
->> ...
->> |  |  `--port-6:1
->> |  |  |  `--end_device-6:1
->> ...
->> phy and port have to be separated, sas_port are created dynamically.
->>
->> For ata, all objects are created at initialization time, so the layout is:
->> `--0000:09:00.0
->> |  `--host0
->> |  |  `--port1
->> |  |  |  `--link1
->> |  |  |  |  `--dev1.0
->> |  |  |  |  |  `--target0:0:0
->> |  |  |  |  |  |  `--0:0:0:0
->> |  |  |  |  |  |  |  `--block
->> |  |  |  |  |  |  |  |  `--sda
->>
->> If we have a port multiplier, more links are created.
->> `--0000:09:00.0
->> ...
->> |  `--host4
->> |  |  `--port5
->> |  |  |  `--link5
->> |  |  |  |  `--dev5.0
->> [device for the port multiplier]
->> |  |  |  `--link5.0
->> |  |  |  |  `--dev5.0.0
->> |  |  |  |  |  `--target4:0:0
->> |  |  |  |  |  |  `--4:0:0:0
->> |  |  |  |  |  |  |  `--block
->> |  |  |  |  |  |  |  |  `--sdc
->> [disk in port 0 of the port multiplier]
->> ...
->> |  |  |  `--link5.2
->> |  |  |  |  `--dev5.2.0
->> |  |  |  |  |  `--target4:2:0
->> |  |  |  |  |  |  `--4:2:0:0
->> |  |  |  |  |  |  |  `--block
->> |  |  |  |  |  |  |  |  `--sde
->> [disk in port 2 of the port multiplier]
->>
->> In consequence, the path of a scsi device becomes:
->> .../0000:00:1f.2/host0/port1/link1/dev1.0/target0:0:0/0:0:0:0
->> dev1.0 indicates the master device [0] in ata port 1.
->> ata1 being under host0, we know the reliationships between the scsi_host id and
->> ata port id.
->>
->> or when a port multiplier is present: for instance the device in port 4 of the
->> port multiplier:
->> .../0000:00:06.0/0000:09:00.0/host5/port6/link6.4/dev6.4.0/target5:4:0/5:4:0:0
->
-> What's the benefit of this?
-+ To unify ata transport sysfs topology with other scsi transport.
-+ To easily map a ata_port with its associated scsi_host structure.
+Hello,
 
-> From a PM perspective now it seems we'll
-> have the parent hardware port suspended before all the scsi_hosts on
-> that port,
-There is a one to one mapping between ata port and scsi-host, so it works.
-All ata ports must be suspended before the parent hardware is.
+Compared to v3:
 
-Gwendal.
-> which defeats the original purpose of putting the ata_port
-> in the PM hierarchy.
->
-> --
-> Dan
+	Based on Ingo's review:
+
+	I have not noticed that v3 2/5 patch "x86, MSI: Allocate as many
+	multiple IRQs as requested" is redundant, since the AHCI code
+	tries to allocate maximum possible number of MSIs. As there are
+	no other users of this functionality, I removed the patch for now;
+
+	v3 patch 3/5 "x86, MSI: Minor readability fixes" merged into
+  	v4 patch 1/3 "x86, MSI: Support multiple MSIs in presense of IRQ
+	remapping";
+
+	1,3/3:	multi-line comments fixed;
+		loops 'for (; i; i--)' changed to 'for (i--; i >= 0; i--)';
+
+	3/3:	ahci_host_activate() failure path tested;
+		ahci_port_priv::lock field commented;
+
+
+Alexander Gordeev (3):
+  1/3 x86, MSI: Support multiple MSIs in presense of IRQ remapping
+  2/3 PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+  3/3 AHCI: Support multiple MSIs
+
+ Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++-
+ arch/x86/kernel/apic/io_apic.c  |  165 +++++++++++++++++++++++++++++++--------
+ drivers/ata/ahci.c              |   93 +++++++++++++++++++++-
+ drivers/ata/ahci.h              |    6 ++
+ drivers/ata/libahci.c           |  118 ++++++++++++++++++++++++++--
+ drivers/pci/msi.c               |   26 ++++++
+ include/linux/irq.h             |    5 +
+ include/linux/pci.h             |    7 ++
+ kernel/irq/chip.c               |   30 +++++--
+ 9 files changed, 432 insertions(+), 55 deletions(-)
+
+-- 
+1.7.7.6
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
