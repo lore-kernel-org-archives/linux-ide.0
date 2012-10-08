@@ -1,88 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
-Date: Mon, 08 Oct 2012 11:21:56 +0100
-Message-ID: <1349691716.2615.34.camel@dabdike.int.hansenpartnership.com>
-References: <50689794.50203@pobox.com>
-	 <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
-	 <20121008092703.GA2541@mint-spring.sh.intel.com>
+From: Dan van der Ster <dan@vanderster.com>
+Subject: Re: ata_dev_acpi_handle - NULL ptr deref (bug #48211)
+Date: Mon, 8 Oct 2012 21:16:39 +0200
+Message-ID: <CABZ+qqkAXvuUTOB59f6ZH1-Gk73bdMtAvjQPgRCsEt0+tx4ArQ@mail.gmail.com>
+References: <CABZ+qqkQY4jRpTjLcOmLwBHY7Q8o1ooiqT82-Y6ogZp5OL6=4g@mail.gmail.com>
+ <507244EC.4000206@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56057 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751550Ab2JHKWB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2012 06:22:01 -0400
-In-Reply-To: <20121008092703.GA2541@mint-spring.sh.intel.com>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:54175 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498Ab2JHTRW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Oct 2012 15:17:22 -0400
+Received: by mail-ob0-f174.google.com with SMTP id uo13so3896983obb.19
+        for <linux-ide@vger.kernel.org>; Mon, 08 Oct 2012 12:17:22 -0700 (PDT)
+Received: by mail-oa0-f46.google.com with SMTP id h16so4221915oag.19
+        for <linux-ide@vger.kernel.org>; Mon, 08 Oct 2012 12:17:20 -0700 (PDT)
+In-Reply-To: <507244EC.4000206@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, mjg@redhat.com, Jeff Garzik <jgarzik@pobox.com>
 
-On Mon, 2012-10-08 at 17:27 +0800, Aaron Lu wrote:
-> On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
-> > On Sun, 30 Sep 2012, Jeff Garzik wrote:
-> > 
-> > > The simple fact of "only ZPODD devices out there are ATA" is not the 
-> > > decision-maker for where the code should live.  It is more a question 
-> > > where ZPODD belongs in the device/command set model currently employed.
-> > 
-> > I don't really accept this argument.  It's a little like saying: The
-> > tty layer uses ioctl commands to control RS232 line settings; therefore
-> > RS232 settings should be handled in the VFS layer as part of the ioctl
-> > core.
-> > 
-> > Regardless, according to Aaron the ZP power-off stuff is currently
-> > implemented only in ACPI, tied more closely to the ATA layer than the
-> > SCSI layer (though not part of either).  It is not part of the SCSI
-> > spec in any form.
-> 
-> The mechanism of SATA ODD zero power model is specified in Mount Fuji
-> spec v8 section 15 describing what the ODD needs support, how to sense
-> if the ODD is ready to be powered off and on power up what needs to be
-> done, etc. And the actual power off and wakeup is implemented in ACPI
-> and SATA.
-> 
-> > Now it's true that determining whether a device is
-> > in the right state for power to be removed involves sending a TEST UNIT
-> > READY command, which is of course a SCSI command.  This seems to be
-> > incidental to the overall scheme, however.
-> 
-> I need to add that, there are 2 schemes to sense if the ODD is ready to
-> be powered off:
-> 1 the one I used here, by checking if the door is closed and no media
->   inside with test_unit_ready;
-> 2 some ZP capable ODDs can report zero power ready(ZPReady) event to
->   host when queried, eliminating the need of host checking the conditions.
+On Mon, Oct 8, 2012 at 5:13 AM, Aaron Lu <aaron.lu@intel.com> wrote:
+> On 10/03/2012 07:30 PM, Dan van der Ster wrote:
+>> Hi,
+>> I filed this bug report:
+>>    https://bugzilla.kernel.org/show_bug.cgi?id=48211
+>> and Alan suggested I mail this list.
+>>
+>> I cannot boot 3.6 with acpi on using this hardware:
+>>     Shuttle sp35p2, Intel P35, AHCI SATA
+>>     disks attached via an external SATA port multiplier
+>>
+>> I get a NULL ptr deref in ata_dev_acpi_handle with 3.6, but not with 3.5.4.
+>> Using acpi=off convinces 3.6 to boot.
+>
+> Attached a patch on the bugzilla page, can you please give it a try?
 
-The way I read the standard is that ZP ODD is a hack to try and get to
-off and ZPready is the same hack but integrated into the standardised
-power management states (and hence available to normal power saving).
-The standard even implies ZP ODD is a less desirable hack by
-recommending the use of ZPready.
+Your patch fixes the problem.
 
-The ZPready method, being an extension of the usual SCSI power
-management model, is pretty much what we support today (especially as
-the whole thing is timer driven from values in the mode page and happens
-pretty much invisibly to us).
-
-Since the object is to make this as painless as possible, why don't we
-just implement ZPODD the way the spec recommends?  i.e. emulate the
-timers at an incredibly low level and intercept and emulate the non-disk
-commands listed in table 321.  I bet, in Linux, since we moved basically
-to GET_EVENT_STATUS_NOTIFICATION, that's the only one that actually
-needs an emulation.
-
-The state model seems to work if you snoop the polled media event, so
-you wait for no media, then set your internal timer, stop it if we get a
-media change and power off the device after interval expiry.  Thereafter
-you emulate media event with no change keeping the device powered off.
-If a disc gets inserted or the eject button is pressed, you see that via
-the SATA PHY events (so wake the drive) and if the Upper Layer sends an
-unexpected command, you also power on the drive.
-
-That way all of this should be nicely containable within SATA/ACPI.
-
-James
+Thanks,
+Dan
 
 
+> Thanks.
+>
+> -Aaron
+>
