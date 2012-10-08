@@ -1,51 +1,58 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: ata_dev_acpi_handle - NULL ptr deref (bug #48211)
-Date: Mon, 08 Oct 2012 11:13:48 +0800
-Message-ID: <507244EC.4000206@intel.com>
-References: <CABZ+qqkQY4jRpTjLcOmLwBHY7Q8o1ooiqT82-Y6ogZp5OL6=4g@mail.gmail.com>
+Subject: Re: [PATCH v7 2/6] scsi: sr: support runtime pm
+Date: Mon, 8 Oct 2012 17:27:04 +0800
+Message-ID: <20121008092703.GA2541@mint-spring.sh.intel.com>
+References: <50689794.50203@pobox.com>
+ <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50427 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:10030 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751211Ab2JHDNw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 7 Oct 2012 23:13:52 -0400
-In-Reply-To: <CABZ+qqkQY4jRpTjLcOmLwBHY7Q8o1ooiqT82-Y6ogZp5OL6=4g@mail.gmail.com>
+	id S1751580Ab2JHJ1H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 8 Oct 2012 05:27:07 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1209301533280.18360-100000@netrider.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan van der Ster <dan@vanderster.com>
-Cc: linux-ide@vger.kernel.org, mjg@redhat.com, Jeff Garzik <jgarzik@pobox.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Oliver Neukum <oneukum@suse.de>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, Linux-pm mailing list <linux-pm@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-On 10/03/2012 07:30 PM, Dan van der Ster wrote:
-> Hi,
-> I filed this bug report:
->    https://bugzilla.kernel.org/show_bug.cgi?id=48211
-> and Alan suggested I mail this list.
+On Sun, Sep 30, 2012 at 03:43:27PM -0400, Alan Stern wrote:
+> On Sun, 30 Sep 2012, Jeff Garzik wrote:
 > 
-> I cannot boot 3.6 with acpi on using this hardware:
->     Shuttle sp35p2, Intel P35, AHCI SATA
->     disks attached via an external SATA port multiplier
+> > The simple fact of "only ZPODD devices out there are ATA" is not the 
+> > decision-maker for where the code should live.  It is more a question 
+> > where ZPODD belongs in the device/command set model currently employed.
 > 
-> I get a NULL ptr deref in ata_dev_acpi_handle with 3.6, but not with 3.5.4.
-> Using acpi=off convinces 3.6 to boot.
+> I don't really accept this argument.  It's a little like saying: The
+> tty layer uses ioctl commands to control RS232 line settings; therefore
+> RS232 settings should be handled in the VFS layer as part of the ioctl
+> core.
+> 
+> Regardless, according to Aaron the ZP power-off stuff is currently
+> implemented only in ACPI, tied more closely to the ATA layer than the
+> SCSI layer (though not part of either).  It is not part of the SCSI
+> spec in any form.
 
-Attached a patch on the bugzilla page, can you please give it a try?
-Thanks.
+The mechanism of SATA ODD zero power model is specified in Mount Fuji
+spec v8 section 15 describing what the ODD needs support, how to sense
+if the ODD is ready to be powered off and on power up what needs to be
+done, etc. And the actual power off and wakeup is implemented in ACPI
+and SATA.
 
--Aaron
+> Now it's true that determining whether a device is
+> in the right state for power to be removed involves sending a TEST UNIT
+> READY command, which is of course a SCSI command.  This seems to be
+> incidental to the overall scheme, however.
 
-> 
-> I'm new to kernel debugging and don't have a serial console, but I did
-> manage to slow the printk's and take a video. See around 2:00 here:
->     http://www.youtube.com/watch?v=WNkQCnfc56g&t=2m1s
-> 
-> Please let me know if you require any further info to debug this.
-> 
-> Best Regards, Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I need to add that, there are 2 schemes to sense if the ODD is ready to
+be powered off:
+1 the one I used here, by checking if the door is closed and no media
+  inside with test_unit_ready;
+2 some ZP capable ODDs can report zero power ready(ZPReady) event to
+  host when queried, eliminating the need of host checking the conditions.
+
+Thanks,
+Aaron
 
