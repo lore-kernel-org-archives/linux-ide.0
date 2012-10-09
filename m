@@ -1,18 +1,12 @@
-From: vasanthananthan@gmail.com
+From: Vasanth Ananthan <vasanthananthan@gmail.com>
 Subject: [PATCH 0/6] Adding support for SATA in EXYNO5
-Date: Tue,  9 Oct 2012 17:17:13 +0530
-Message-ID: <50740e3a.694c420a.41d4.fffff550@mx.google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:37187 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752363Ab2JILo7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Oct 2012 07:44:59 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Date: Tue,  9 Oct 2012 17:18:46 +0530
+Message-ID: <1349783332-18467-1-git-send-email-vasanthananthan@gmail.com>
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+Sender: linux-samsung-soc-owner@vger.kernel.org
 To: kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk
 Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanthananthan@gmail.com>
-
-From: Vasanth Ananthan <vasanthananthan@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
 The following set of patches provides drivers for SATA
 and SATA PHY controller and also an interface for the 
@@ -47,4 +41,3 @@ Vasanth Ananthan (6):
 
 -- 
 1.7.5.4
-
