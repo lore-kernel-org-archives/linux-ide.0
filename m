@@ -1,54 +1,50 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH] libata-acpi: Fix NULL ptr derference in ata_acpi_dev_handle
-Date: Tue, 09 Oct 2012 15:37:48 +0800
-Message-ID: <5073D44C.7070101@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Dan van der Ster <dan@vanderster.com>
-Cc: linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
+From: vasanthananthan@gmail.com
+Subject: [PATCH 0/6] Adding support for SATA in EXYNO5
+Date: Tue,  9 Oct 2012 17:17:13 +0530
+Message-ID: <50740e3a.694c420a.41d4.fffff550@mx.google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:37187 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752363Ab2JILo7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Oct 2012 07:44:59 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk
+Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanthananthan@gmail.com>
 
-commit 6b66d95895c149cbc04d4fac5a2f5477c543a8ae didn't handle SATA PMP
-case in ata_acpi_bind_device and will cause a NULL ptr dereference when
-user attached a SATA drive to the PMP port. Fix this by checking PMP
-support.
+From: Vasanth Ananthan <vasanthananthan@gmail.com>
 
-This bug is reported by Dan van der Ster in the following bugzilla page:
-https://bugzilla.kernel.org/show_bug.cgi?id=48211
+The following set of patches provides drivers for SATA
+and SATA PHY controller and also an interface for the 
+two entity to interact. 
 
-Reported-by: Dan van der Ster <dan@vanderster.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/ata/libata-acpi.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+Vasanth Ananthan (6):
+  ARM: EXYNOS5: Clock settings for SATA and SATA PHY
+  ARM: EXYNOS5: DT Support for SATA and SATA PHY
+  DRIVERS: ATA: SATA PHY utility framework
+  ARM: S3C2410: I2C driver polling mode support
+  ARM: EYNOS5: SATA controller driver
+  ARM: EXYNOS5: SATA PHY controller driver
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index fd9ecf7..5b0ba3f 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1105,10 +1105,15 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 	struct acpi_device *acpi_dev;
- 	struct acpi_device_power_state *states;
- 
--	if (ap->flags & ATA_FLAG_ACPI_SATA)
--		ata_dev = &ap->link.device[sdev->channel];
--	else
-+	if (ap->flags & ATA_FLAG_ACPI_SATA) {
-+		if (!sata_pmp_attached(ap))
-+			ata_dev = &ap->link.device[sdev->id];
-+		else
-+			ata_dev = &ap->pmp_link[sdev->channel].device[sdev->id];
-+	}
-+	else {
- 		ata_dev = &ap->link.device[sdev->id];
-+	}
- 
- 	*handle = ata_dev_acpi_handle(ata_dev);
- 
+ arch/arm/boot/dts/exynos5250-smdk5250.dts    |   11 +
+ arch/arm/boot/dts/exynos5250.dtsi            |   20 ++
+ arch/arm/mach-exynos/clock-exynos5.c         |   19 ++-
+ arch/arm/mach-exynos/include/mach/map.h      |    7 +
+ arch/arm/mach-exynos/include/mach/regs-pmu.h |    3 +
+ arch/arm/mach-exynos/mach-exynos5-dt.c       |    6 +
+ drivers/ata/Kconfig                          |    9 +
+ drivers/ata/Makefile                         |    1 +
+ drivers/ata/sata_exynos.c                    |  274 +++++++++++++++++++++++
+ drivers/ata/sata_exynos_phy.c                |  303 ++++++++++++++++++++++++++
+ drivers/ata/sata_phy.c                       |   99 +++++++++
+ drivers/ata/sata_phy.h                       |   44 ++++
+ drivers/i2c/busses/i2c-s3c2410.c             |   84 ++++++--
+ 13 files changed, 859 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/ata/sata_exynos.c
+ create mode 100644 drivers/ata/sata_exynos_phy.c
+ create mode 100644 drivers/ata/sata_phy.c
+ create mode 100644 drivers/ata/sata_phy.h
+
 -- 
-1.7.12.21.g871e293
+1.7.5.4
 
