@@ -1,56 +1,25 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH] ide: use module_pci_driver to simplify the code
-Date: Wed, 10 Oct 2012 21:08:45 +0800
-Message-ID: <CAPgLHd8Cd_R5VvdtTfrFYJcfXTQ2sUrCSr-wvF44R38kAsPtbA@mail.gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] cs5536: use module_pci_driver to simplify the code
+Date: Wed, 10 Oct 2012 11:37:48 -0400 (EDT)
+Message-ID: <20121010.113748.1650953424894878640.davem@davemloft.net>
+References: <CAPgLHd-Cx5k566XJ2C-VrmLUJ4AVPV=w52ZVfLATONv_sqbMaA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:50553 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755832Ab2JJNIq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2012 09:08:46 -0400
-Received: by mail-qa0-f46.google.com with SMTP id c26so4450969qad.19
-        for <linux-ide@vger.kernel.org>; Wed, 10 Oct 2012 06:08:45 -0700 (PDT)
+Received: from shards.monkeyblade.net ([149.20.54.216]:49987 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751535Ab2JJPhw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Oct 2012 11:37:52 -0400
+In-Reply-To: <CAPgLHd-Cx5k566XJ2C-VrmLUJ4AVPV=w52ZVfLATONv_sqbMaA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
+To: weiyj.lk@gmail.com
 Cc: yongjun_wei@trendmicro.com.cn, linux-ide@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Use the module_pci_driver() macro to make the code simpler
-by eliminating module_init and module_exit calls.
+Sorry, the IDE device layer is in deep freeze state, no simplifications,
+no cleanups.
 
-dpatch engine is used to auto generate this patch.
-(https://github.com/weiyj/dpatch)
-
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/ide/delkin_cb.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
-
-diff --git a/drivers/ide/delkin_cb.c b/drivers/ide/delkin_cb.c
-index 1e10eba..e6550dc 100644
---- a/drivers/ide/delkin_cb.c
-+++ b/drivers/ide/delkin_cb.c
-@@ -174,18 +174,7 @@ static struct pci_driver delkin_cb_pci_driver = {
- 	.resume		= delkin_cb_resume,
- };
- 
--static int __init delkin_cb_init(void)
--{
--	return pci_register_driver(&delkin_cb_pci_driver);
--}
--
--static void __exit delkin_cb_exit(void)
--{
--	pci_unregister_driver(&delkin_cb_pci_driver);
--}
--
--module_init(delkin_cb_init);
--module_exit(delkin_cb_exit);
-+module_pci_driver(delkin_cb_pci_driver);
- 
- MODULE_AUTHOR("Mark Lord");
- MODULE_DESCRIPTION("Basic support for Delkin/ASKA/Workbit Cardbus IDE");
-
+I'll accept changes that address kernel-wide API adjustments, but that's
+it.
