@@ -1,39 +1,30 @@
-From: Royaldoc International Globe <bensonblake_co@yahoo.com>
-Subject: enquiry
-Date: Sat, 13 Oct 2012 08:37:19 +0900
-Message-ID: <20121013083719.59176q18jivprbsw__10152.1732555286$1350091567$gmane$org@27.120.95.201>
-Reply-To: royaldoc@inbox.org.tw
+From: "Western Union" <moneytransfer@western.com>
+Subject: =?utf-8?q?RE=3A_Cash_Awaiting_Pick_Up=C2=AE?=
+Date: Fri, 12 Oct 2012 10:53:30 -0500
+Message-ID: <20121012155654.E8475A543F5E@webmail.pmm.edu.my>
+Reply-To: moneytransfer@xtra.co.nz
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from v-27-120-95-201.ub-freebit.net ([27.120.95.201]:39980 "EHLO
-	ns.pro.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752848Ab2JMBZl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 12 Oct 2012 21:25:41 -0400
-Content-Disposition: inline
+Received: from [122.129.124.231] ([122.129.124.231]:33152 "EHLO
+	webmail.pmm.edu.my" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941Ab2JMBlk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2012 21:41:40 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <moneytransfer@western.com>
 
+ This is to re-notify you of the =A3500,000.00(POUNDS) was deposited he=
+re by the Heritage=20
+Lottery Board in the western union office in your name is available for=
+ pickup. Contact this
+email: moneytransfer@xtra.co.nz for your M.T.C.N Numbers.Contact Person=
+: Mrs. Hillary Florence.
 
-
-
-Royaldoc International Globe,
-103, Park son road,
-Carlifonia,USA.
-63-1-3522 2501
-royaldoc@inbox.org.tw
-
-   We are interested in purchasing your products and I would like to  
-make an inquiry. can you inform me of your minimum order quantity? and  
-also your maximum order quantity, if there is any available sample do  
-let me know.
-
-
-Sincerely,
-Purchase Manager
-Alan Smith
-
+Mr. Greg Steve
+Western Union Branch Coordinator.=20
+Transaction Managing Director.
+Phone: +447-024-026-030
+=2E............................
