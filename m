@@ -1,30 +1,28 @@
-From: "Western Union" <moneytransfer@western.com>
-Subject: =?utf-8?q?RE=3A_Cash_Awaiting_Pick_Up=C2=AE?=
-Date: Fri, 12 Oct 2012 10:53:30 -0500
-Message-ID: <20121012155654.E8475A543F5E@webmail.pmm.edu.my>
-Reply-To: moneytransfer@xtra.co.nz
+From: Don Obi <creativemindincalice1@hotmail.com>
+Subject: Flood victims In Nigeria....Urgent Help needed
+Date: Sat, 13 Oct 2012 08:23:37 -0400
+Message-ID: <E1TN0kj-0006hB-CC@linux.z1z.com>
+Reply-To: donobichamber@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [122.129.124.231] ([122.129.124.231]:33152 "EHLO
-	webmail.pmm.edu.my" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752941Ab2JMBlk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Oct 2012 21:41:40 -0400
-Content-Description: Mail message body
+Received: from [184.107.172.18] ([184.107.172.18]:57907 "EHLO linux.z1z.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751045Ab2JNIqc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 14 Oct 2012 04:46:32 -0400
+Received: from dgroup by linux.z1z.com with local (Exim 4.80)
+	(envelope-from <dgroup@linux.z1z.com>)
+	id 1TN0kj-0006hB-CC
+	for linux-ide@vger.kernel.org; Sat, 13 Oct 2012 08:23:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <moneytransfer@western.com>
+To: linux-ide@vger.kernel.org
 
- This is to re-notify you of the =A3500,000.00(POUNDS) was deposited he=
-re by the Heritage=20
-Lottery Board in the western union office in your name is available for=
- pickup. Contact this
-email: moneytransfer@xtra.co.nz for your M.T.C.N Numbers.Contact Person=
-: Mrs. Hillary Florence.
+Dear Friend, My name is Don Obi, we are flood victims in Nigeria and i need your help to help me save some funds in your country.....http://pmnewsnigeria.com/2012/10/12/flood-sacks-5-banks-in-bayelsa/     http://pmnewsnigeria.com/2012/10/12/jonathan-inspects-flood-ravaged-home-state-by-air/
 
-Mr. Greg Steve
-Western Union Branch Coordinator.=20
-Transaction Managing Director.
-Phone: +447-024-026-030
-=2E............................
+don obi
++2348079731210
+
+
+
