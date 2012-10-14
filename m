@@ -1,28 +1,19 @@
-From: Don Obi <creativemindincalice1@hotmail.com>
-Subject: Flood victims In Nigeria....Urgent Help needed
-Date: Sat, 13 Oct 2012 08:23:37 -0400
-Message-ID: <E1TN0kj-0006hB-CC@linux.z1z.com>
-Reply-To: donobichamber@yahoo.com
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: (unknown)
+Date: Sun, 14 Oct 2012 13:17:18 +0300
+Message-ID: <CACVxJT_FetciLUv-Um-zmrqcmvBdzCgFMBQ+4YTQyXB3uRk+Jg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [184.107.172.18] ([184.107.172.18]:57907 "EHLO linux.z1z.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751045Ab2JNIqc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 14 Oct 2012 04:46:32 -0400
-Received: from dgroup by linux.z1z.com with local (Exim 4.80)
-	(envelope-from <dgroup@linux.z1z.com>)
-	id 1TN0kj-0006hB-CC
-	for linux-ide@vger.kernel.org; Sat, 13 Oct 2012 08:23:37 -0400
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:49464 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339Ab2JNKrc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Oct 2012 06:47:32 -0400
+Received: by mail-ob0-f194.google.com with SMTP id un3so810299obb.1
+        for <linux-ide@vger.kernel.org>; Sun, 14 Oct 2012 03:47:32 -0700 (PDT)
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: tglx@linutronix.de, linux-ide@vger.kernel.org, maxim.prohorenko@gmail.com, tilman@imap.cc, hare@suse.de
 
-Dear Friend, My name is Don Obi, we are flood victims in Nigeria and i need your help to help me save some funds in your country.....http://pmnewsnigeria.com/2012/10/12/flood-sacks-5-banks-in-bayelsa/     http://pmnewsnigeria.com/2012/10/12/jonathan-inspects-flood-ravaged-home-state-by-air/
-
-don obi
-+2348079731210
-
-
-
+  http://www.snoyoga.com/wp-content/plugins/wordpress-social-ring/working.html
