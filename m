@@ -1,56 +1,91 @@
-From: Heiko =?iso-8859-15?q?St=FCbner?= <heiko@sntech.de>
-Subject: Re: [PATCH 4/6] ARM: S3C2410: I2C driver polling mode support
-Date: Mon, 15 Oct 2012 10:33:20 +0200
-Message-ID: <201210151033.20714.heiko@sntech.de>
-References: <1349783332-18467-1-git-send-email-vasanthananthan@gmail.com> <1349783332-18467-5-git-send-email-vasanthananthan@gmail.com>
+From: Vasanth Ananthan <vasanthananthan@gmail.com>
+Subject: Re: [PATCH 3/6] DRIVERS: ATA: SATA PHY utility framework
+Date: Mon, 15 Oct 2012 15:16:51 +0530
+Message-ID: <CAK1UHixH=CJXzhi=uDfQ5Yq78hQzOCXuJCzgUAC+X+Ogsx-qmQ@mail.gmail.com>
+References: <1349783332-18467-1-git-send-email-vasanthananthan@gmail.com>
+	<1349783332-18467-4-git-send-email-vasanthananthan@gmail.com>
+	<2368802.eUtXvopXao@flatron>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1349783332-18467-5-git-send-email-vasanthananthan@gmail.com>
+In-Reply-To: <2368802.eUtXvopXao@flatron>
 Sender: linux-samsung-soc-owner@vger.kernel.org
-To: Vasanth Ananthan <vasanthananthan@gmail.com>
+To: Tomasz Figa <tomasz.figa@gmail.com>
 Cc: kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanth.a@samsung.com>
 List-Id: linux-ide@vger.kernel.org
 
-Am Dienstag, 9. Oktober 2012, 13:48:50 schrieb Vasanth Ananthan:
-> This patch adds polling mode support for i2c s3c-2410 driver.
-> The I2C_SATAPHY controller lacks an interrupt line but the s3c-2410 driver
-> is interrupt driven. Hence this support is required for functioning
-> of the I2C_SATAPHY controller.
-> 
-> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
-> ---
->  drivers/i2c/busses/i2c-s3c2410.c |   84
-> +++++++++++++++++++++++++++++--------- 1 files changed, 65 insertions(+),
-> 19 deletions(-)
-> 
-> diff --git a/drivers/i2c/busses/i2c-s3c2410.c
-> b/drivers/i2c/busses/i2c-s3c2410.c index 5ae3b02..699b530 100644
-> --- a/drivers/i2c/busses/i2c-s3c2410.c
-> +++ b/drivers/i2c/busses/i2c-s3c2410.c
+Hi Tomasz,
 
-[...]
+On Sat, Oct 13, 2012 at 4:00 AM, Tomasz Figa <tomasz.figa@gmail.com> wrote:
+> Hi Vasanth,
+>
+> On Tuesday 09 of October 2012 17:18:49 Vasanth Ananthan wrote:
+>> This patch adds SATA PHY utility framework APIs. The framework acts as
+>> an interface between the SATA device and the PHY device. The SATA PHY
+>> device registers itself with the framework through the APIs provided
+>> and the SATA device finds and requests for an appropriate PHY device.
+>>
+>> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
+>> ---
+>>  drivers/ata/Kconfig    |    9 ++++
+>>  drivers/ata/Makefile   |    1 +
+>>  drivers/ata/sata_phy.c |   99
+>> ++++++++++++++++++++++++++++++++++++++++++++++++ drivers/ata/sata_phy.h
+>> |   44 +++++++++++++++++++++
+>>  4 files changed, 153 insertions(+), 0 deletions(-)
+>>  create mode 100644 drivers/ata/sata_phy.c
+>>  create mode 100644 drivers/ata/sata_phy.h
+>>
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index 27cecd3..0344b78 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -83,6 +83,15 @@ config SATA_AHCI_PLATFORM
+>>
+>>         If unsure, say N.
+>>
+>> +config SATA_EXYNOS
+>> +     bool "Exynos SATA AHCI support"
+>> +     depends on I2C_S3C2410
+>> +     help
+>> +          This option enables support for Exynos AHCI Serial ATA
+>> +          controllers.
+>> +
+>> +          If unsure, say N.
+>> +
+>>  config SATA_FSL
+>>       tristate "Freescale 3.0Gbps SATA support"
+>>       depends on FSL_SOC
+>> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+>> index a454a13..bf3fd91 100644
+>> --- a/drivers/ata/Makefile
+>> +++ b/drivers/ata/Makefile
+>> @@ -9,6 +9,7 @@ obj-$(CONFIG_SATA_FSL)                += sata_fsl.o
+>>  obj-$(CONFIG_SATA_INIC162X)  += sata_inic162x.o
+>>  obj-$(CONFIG_SATA_SIL24)     += sata_sil24.o
+>>  obj-$(CONFIG_SATA_DWC)               += sata_dwc_460ex.o
+>> +obj-$(CONFIG_SATA_EXYNOS)          += sata_phy.o libahci.o
+>
+>
+> If the framework introduced by this patch is supposed to be generic, maybe
+> a new Kconfig entry should be created for it, like CONFIG_SATA_PHY, which
+> would be selected by any drivers using it?
+>
 
-> @@ -102,10 +103,14 @@ static struct platform_device_id s3c24xx_driver_ids[]
-> = { };
->  MODULE_DEVICE_TABLE(platform, s3c24xx_driver_ids);
-> 
-> +static int i2c_s3c_irq_nextbyte(struct s3c24xx_i2c *i2c, unsigned long
-> iicstat); +
->  #ifdef CONFIG_OF
->  static const struct of_device_id s3c24xx_i2c_match[] = {
->  	{ .compatible = "samsung,s3c2410-i2c", .data = (void *)0 },
->  	{ .compatible = "samsung,s3c2440-i2c", .data = (void *)QUIRK_S3C2440 },
-> +	{ .compatible = "samsung,s3c2440-sataphy-i2c",
-> +	  .data = (void *)(QUIRK_S3C2440|QUIRK_SATAPHY|QUIRK_NO_GPIO) },
->  	{ .compatible = "samsung,s3c2440-hdmiphy-i2c",
->  	  .data = (void *)(QUIRK_S3C2440 | QUIRK_HDMIPHY | QUIRK_NO_GPIO) },
->  	{},
-
-Out of curiosity, why is it called s3c2440-sataphy-i2c when it's an exynos 
-specific component?
-
-
-Heiko
+>> +int sata_add_phy(struct sata_phy *phy, enum sata_phy_type type)
+>> +{
+>> +     unsigned long flag;
+>> +     unsigned int ret = -EINVAL;
+>> +     struct sata_phy *x;
+>
+> If you need to handle the situation when phy is NULL here, then why not
+> to:
+>
+>         if (!phy)
+>                 return -EINVAL;
+>
+> and then make the code below unconditional?
+>
+I'll incorporate the suggestions.
+-- 
+Vasanth
