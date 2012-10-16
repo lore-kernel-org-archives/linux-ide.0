@@ -1,64 +1,95 @@
-From: Vasanth Ananthan <vasanthananthan@gmail.com>
-Subject: Re: [PATCH 6/6] ARM: EXYNOS5: SATA PHY controller driver
-Date: Tue, 16 Oct 2012 12:03:47 +0530
-Message-ID: <CAK1UHiw8+ebzGyjV53Y9efpMFPbCL9RR_o9ZSw=NTuRw_9gRwg@mail.gmail.com>
-References: <1349783332-18467-1-git-send-email-vasanthananthan@gmail.com>
-	<1349783332-18467-7-git-send-email-vasanthananthan@gmail.com>
-	<10179968.slaZyPIETn@flatron>
+From: Borislav Petkov <bp@amd64.org>
+Subject: ata4.00: failed to get Identify Device Data, Emask 0x1
+Date: Tue, 16 Oct 2012 16:49:32 +0200
+Message-ID: <20121016144932.GA24044@aftab.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:45653 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752844Ab2JPGds (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2012 02:33:48 -0400
-In-Reply-To: <10179968.slaZyPIETn@flatron>
+Received: from mail.x86-64.org ([217.9.48.20]:45186 "EHLO mail.x86-64.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754597Ab2JPOtf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Oct 2012 10:49:35 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tomasz Figa <tomasz.figa@gmail.com>
-Cc: kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanth.a@samsung.com>
+To: linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 
-Hi Tomasz,
+Hi all,
 
-On Sat, Oct 13, 2012 at 4:20 AM, Tomasz Figa <tomasz.figa@gmail.com> wrote:
-> Hi,
->
-> On Tuesday 09 of October 2012 17:18:52 Vasanth Ananthan wrote:
->> This patch adds a platform driver and I2C client driver for SATA PHY
->> controller
->>
->> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
->> ---
->>  drivers/ata/Makefile          |    2 +-
->>  drivers/ata/sata_exynos_phy.c |  303
->> +++++++++++++++++++++++++++++++++++++++++ 2 files changed, 304
->> insertions(+), 1 deletions(-)
->>  create mode 100644 drivers/ata/sata_exynos_phy.c
->>
-[ ... ]
->> +
->> +     phy->init = sataphy_init;
->> +     phy->shutdown = sataphy_shutdown;
->> +     phy->priv_data = (void *)sataphy;
->> +     phy->dev = &pdev->dev;
->> +
->> +     ret = sata_add_phy(phy, SATA_PHY_GENERATION3);
->> +     if (ret < 0)
->> +             goto err4;
->
-> Do you have any warranties that phy callbacks won't get called before i2c
-> device probes and sets i2c_client?
->
->> +
->> +     ret = i2c_add_driver(&sataphy_i2c_driver);
->> +     if (ret < 0)
->> +             goto err5;
->> +
->> +     platform_set_drvdata(pdev, phy);
+a bunch of my boxes started showing this on 3.7-rc1 (and maybe earlier):
 
-I shall register my i2c client driver before assigning the SATA PHY
-call backs. Would that guarantee the calling of phy callbacks after
-the i2c device probes?
+[    4.667077] ata4.00: failed to get Identify Device Data, Emask 0x1
+[    4.675071] ata4.00: failed to get Identify Device Data, Emask 0x1
 
---
-Vasanth Ananthan
+Another one:
+
+[    3.325371] ata4.00: failed to get Identify Device Data, Emask 0x1
+[    3.488602] ata4.00: failed to get Identify Device Data, Emask 0x1
+
+This last one is a laptop which suspends/resumes so this message happens
+each time the driver gets initialized.
+
+[    1.389734] ata1.00: failed to get Identify Device Data, Emask 0x1
+[    1.395031] ata1.00: failed to get Identify Device Data, Emask 0x1
+[16825.339587] ata1.00: failed to get Identify Device Data, Emask 0x1
+[16825.345835] ata1.00: failed to get Identify Device Data, Emask 0x1
+[16842.294983] ata1.00: failed to get Identify Device Data, Emask 0x1
+[16842.300513] ata1.00: failed to get Identify Device Data, Emask 0x1
+[23628.820487] ata1.00: failed to get Identify Device Data, Emask 0x1
+[23628.825556] ata1.00: failed to get Identify Device Data, Emask 0x1
+[23661.555111] ata1.00: failed to get Identify Device Data, Emask 0x1
+[23661.560745] ata1.00: failed to get Identify Device Data, Emask 0x1
+
+Grepping points to:
+
+		/* Obtain SATA Settings page from Identify Device Data Log,
+		 * which contains DevSlp timing variables etc.
+		 * Exclude old devices with ata_id_has_ncq()
+		 */
+		if (ata_id_has_ncq(dev->id)) {
+			err_mask = ata_read_log_page(dev,
+						     ATA_LOG_SATA_ID_DEV_DATA,
+						     ATA_LOG_SATA_SETTINGS,
+						     dev->sata_settings,
+						     1);
+			if (err_mask)
+				ata_dev_dbg(dev,
+					    "failed to get Identify Device Data, Emask 0x%x\n",
+					    err_mask);
+		}
+
+in ata_dev_configure().
+
+Judging by the logs, it must've came in during this merge window:
+
+Oct  4 11:08:13 kepek kernel: [    4.670357] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 11:08:13 kepek kernel: [    4.678833] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 11:29:23 kepek kernel: [    4.690456] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 11:29:23 kepek kernel: [    4.698473] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 11:54:20 kepek kernel: [    4.706777] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 11:54:20 kepek kernel: [    4.715194] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 14:30:17 kepek kernel: [    4.666199] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 14:30:17 kepek kernel: [    4.674742] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 15:30:17 kepek kernel: [    4.686204] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct  4 15:30:17 kepek kernel: [    4.694194] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 10 13:09:40 kepek kernel: [    4.670245] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 10 13:09:40 kepek kernel: [    4.678429] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 10 15:28:56 kepek kernel: [    4.658456] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 10 15:28:56 kepek kernel: [    4.666485] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 12 10:38:17 kepek kernel: [    4.694542] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 12 10:38:17 kepek kernel: [    4.702561] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 16 14:30:26 kepek kernel: [    4.667077] ata4.00: failed to get Identify Device Data, Emask 0x1
+Oct 16 14:30:26 kepek kernel: [    4.675071] ata4.00: failed to get Identify Device Data, Emask 0x1
+
+Thanks.
+
+-- 
+Regards/Gruss,
+Boris.
+
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
