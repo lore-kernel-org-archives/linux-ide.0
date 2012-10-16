@@ -1,30 +1,77 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: ata4.00: failed to get Identify Device Data, Emask 0x1
-Date: Tue, 16 Oct 2012 15:58:24 +0100
-Message-ID: <20121016155824.00d5b618@pyramind.ukuu.org.uk>
-References: <20121016144932.GA24044@aftab.osrc.amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20121016144932.GA24044@aftab.osrc.amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+From: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Subject: [PATCH 1/5] ata: suspend/resume callbacks should be conditionally compiled on CONFIG_PM_SLEEP
+Date: Tue, 16 Oct 2012 22:59:01 +0800
+Message-ID: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:2900 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754233Ab2JPO7B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Oct 2012 10:59:01 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Yuanhan Liu <yuanhan.liu@linux.intel.com>, Jeff Garzik <jgarzik@pobox.com>, Viresh Kumar <viresh.linux@gmail.com>, linux-ide@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
 
-On Tue, 16 Oct 2012 16:49:32 +0200
-Borislav Petkov <bp@amd64.org> wrote:
+This will fix warnings like following when CONFIG_PM_SLEEP is not set:
 
-> Hi all,
-> 
-> a bunch of my boxes started showing this on 3.7-rc1 (and maybe earlier):
-> 
-> [    4.667077] ata4.00: failed to get Identify Device Data, Emask 0x1
-> [    4.675071] ata4.00: failed to get Identify Device Data, Emask 0x1
+        warning: 'xxx_suspend' defined but not used [-Wunused-function]
+        warning: 'xxx_resume' defined but not used [-Wunused-function]
 
-Can you check whether 3.6 works on them. I know 3.6 is horribly broken on
-several brands of AHCI controller (Jmicron for example). Dunno where Jeff
-is on fixing the regressions ?
+Because
+	SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
 
-Alan
+Only references the callbacks on CONFIG_PM_SLEEP (instead of CONFIG_PM).
+
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+ drivers/ata/ahci_platform.c  |    2 +-
+ drivers/ata/pata_arasan_cf.c |    2 +-
+ drivers/ata/sata_highbank.c  |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index b1ae480..b7078af 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -238,7 +238,7 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ahci_suspend(struct device *dev)
+ {
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index 26201eb..3fe2f66 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -908,7 +908,7 @@ static int __devexit arasan_cf_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int arasan_cf_suspend(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 0d7c4c2..b045b19 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -378,7 +378,7 @@ static int __devexit ahci_highbank_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ahci_highbank_suspend(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+-- 
+1.7.7.6
+
