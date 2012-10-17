@@ -1,46 +1,42 @@
-From: viresh kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH 1/5] ata: suspend/resume callbacks should be conditionally
- compiled on CONFIG_PM_SLEEP
-Date: Wed, 17 Oct 2012 09:09:42 +0530
-Message-ID: <CAOh2x=nDAJF7m6Xf1d9DdXsJTkAHLkhOrjo+W3+G2nGGpcpqhw@mail.gmail.com>
-References: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: ata4.00: failed to get Identify Device Data, Emask 0x1
+Date: Tue, 16 Oct 2012 22:50:54 -0600
+Message-ID: <507E392E.2010305@gmail.com>
+References: <20121016144932.GA24044@aftab.osrc.amd.com> <20121016155824.00d5b618@pyramind.ukuu.org.uk> <20121016151830.GB24044@aftab.osrc.amd.com> <507E0C1A.1010705@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:49399 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755690Ab2JQDjm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Oct 2012 23:39:42 -0400
-In-Reply-To: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:50074 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750877Ab2JQEu5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Oct 2012 00:50:57 -0400
+In-Reply-To: <507E0C1A.1010705@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>, linux-pm@vger.kernel.org, spear-devel <spear-devel@list.st.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Borislav Petkov <bp@amd64.org>, Shane Huang <shane.huang@amd.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Oct 16, 2012 at 8:29 PM, Yuanhan Liu
-<yuanhan.liu@linux.intel.com> wrote:
-> This will fix warnings like following when CONFIG_PM_SLEEP is not set:
+On 10/16/2012 07:38 PM, Aaron Lu wrote:
+> On 10/16/2012 11:18 PM, Borislav Petkov wrote:
+>> On Tue, Oct 16, 2012 at 03:58:24PM +0100, Alan Cox wrote:
+>>> Can you check whether 3.6 works on them. I know 3.6 is horribly broken
+>>> on several brands of AHCI controller (Jmicron for example). Dunno
+>>> where Jeff is on fixing the regressions ?
+>>
+>> If by "works" you mean I don't see the message there, then yes, it does.
+>> Logs say the message started appearing on Oct 4th after me building
+>> Linus master after the merge window started.
+>>
+>> Ok, let me test 3.6.2 just in case ...<tests>... yes, no error message
+>> there.
 >
->         warning: 'xxx_suspend' defined but not used [-Wunused-function]
->         warning: 'xxx_resume' defined but not used [-Wunused-function]
+> This is brought by commit: 65fe1f0f66a57380229a4ced844188103135f37b,
+> ahci: implement aggressive SATA device sleep support.
 >
-> Because
->         SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
->
-> Only references the callbacks on CONFIG_PM_SLEEP (instead of CONFIG_PM).
->
-> Cc: Jeff Garzik <jgarzik@pobox.com>
-> Cc: Viresh Kumar <viresh.linux@gmail.com>
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-> ---
->  drivers/ata/ahci_platform.c  |    2 +-
->  drivers/ata/pata_arasan_cf.c |    2 +-
+> Shane, got time to take a look? This debug message made people
+> uncomfortable :-)
 
-For pata_arasan:
-
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
-
---
-viresh
+I don't have whatever version of ATA command set defines this command, 
+but surely there's some identify bit which lists whether this log page 
+is supported. Right now checking for it is only conditional on NCQ support.
