@@ -1,12 +1,12 @@
 From: Tomasz Figa <t.figa@samsung.com>
 Subject: Re: [PATCH 6/6] ARM: EXYNOS5: SATA PHY controller driver
-Date: Tue, 16 Oct 2012 12:02:14 +0200
-Message-ID: <2178134.oExSl5aWTm@amdc1227>
+Date: Wed, 17 Oct 2012 17:42:28 +0200
+Message-ID: <1536414.tLHsaDcjWh@amdc1227>
 References: <1349783332-18467-1-git-send-email-vasanthananthan@gmail.com>
  <10179968.slaZyPIETn@flatron>
  <CAK1UHiw8+ebzGyjV53Y9efpMFPbCL9RR_o9ZSw=NTuRw_9gRwg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============2653589176884717231=="
+Content-Type: multipart/mixed; boundary="===============7852135590629209226=="
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-reply-to: <CAK1UHiw8+ebzGyjV53Y9efpMFPbCL9RR_o9ZSw=NTuRw_9gRwg@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
@@ -24,13 +24,13 @@ List-Id: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
---===============2653589176884717231==
-Content-type: multipart/alternative; boundary=nextPart2826037.xbMqiPxAPu
+--===============7852135590629209226==
+Content-type: multipart/alternative; boundary=nextPart2771693.M5rp9yeEIc
 Content-transfer-encoding: 7Bit
 
 This is a multi-part message in MIME format.
 
---nextPart2826037.xbMqiPxAPu
+--nextPart2771693.M5rp9yeEIc
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
 
@@ -99,7 +99,7 @@ Best regards,
 Tomasz Figa
 Samsung Poland R&D Center
 
---nextPart2826037.xbMqiPxAPu
+--nextPart2771693.M5rp9yeEIc
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/html; charset="us-ascii"
 
@@ -167,11 +167,11 @@ p, li { white-space: pre-wrap; }
 <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">Tomasz Figa</p>
 <p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; -qt-user-state:0;">Samsung Poland R&amp;D Center</p>
 <p style="-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; ">&nbsp;</p></body></html>
---nextPart2826037.xbMqiPxAPu--
+--nextPart2771693.M5rp9yeEIc--
 
 
 
---===============2653589176884717231==
+--===============7852135590629209226==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -182,4 +182,4 @@ linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
 http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
---===============2653589176884717231==--
+--===============7852135590629209226==--
