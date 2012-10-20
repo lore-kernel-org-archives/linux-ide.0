@@ -1,25 +1,38 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
-Date: Sat, 20 Oct 2012 14:00:48 +0200
-Message-ID: <20121020120047.GC17563@liondog.tnic>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Sat, 20 Oct 2012 12:00:52 +0000 (UTC)
+Message-ID: <20121020120052.536F511FC39@bugzilla.kernel.org>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:47259 "EHLO mail.skyhub.de"
+Received: from mail.kernel.org ([198.145.19.201]:40567 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755244Ab2JTMAv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 20 Oct 2012 08:00:51 -0400
-Content-Disposition: inline
+	id S1755244Ab2JTMA4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 20 Oct 2012 08:00:56 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 9686E20193
+	for <linux-ide@vger.kernel.org>; Sat, 20 Oct 2012 12:00:55 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 548902019C
+	for <linux-ide@vger.kernel.org>; Sat, 20 Oct 2012 12:00:53 +0000 (UTC)
 In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Anton V. Boyarshinov" <boyarsh@altlinux.org>, phillip.wood@dunelm.org.uk
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D49151
+
+
+
+
+
+--- Comment #3 from Borislav Petkov <bp@alien8.de>  2012-10-20 12:00:52=
+ ---
 On Sat, Oct 20, 2012 at 10:19:22AM +0000, bugzilla-daemon@bugzilla.kern=
-el.org wrote:
+el.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=3D49151
 >=20
 >            Summary: NULL pointer dereference in pata_acpi
@@ -66,9 +79,10 @@ more people to CC.
 =46rom Anton's disassembly I get:
 
 =C3=84 2.703078=C3=9C Code: 01 00 00 00 f6 43 10 10 74 0a 41 89 c7 43 8=
-d 0c 3f 41 d3 e6 41 0f b6 bd e1 02 00 00 e8 ce 74 0f 00 41 80 bd e1 02 =
-00 00 3f 77 44 <0f> b7 40 10 41 f7 d6 44 21 73 10 4d 63 ff 42 89 44 fb =
-04 48 89
+d 0c 3f 41 d3 e6
+41 0f b6 bd e1 02 00 00 e8 ce 74 0f 00 41 80 bd e1 02 00 00 3f 77 44 <0=
+f> b7 40
+10 41 f7 d6 44 21 73 10 4d 63 ff 42 89 44 fb 04 48 89
 All code
 =3D=3D=3D=3D=3D=3D=3D=3D
    0:   01 00                   add    %eax,(%rax)
@@ -84,8 +98,8 @@ All code
   21:   41 80 bd e1 02 00 00    cmpb   $0x3f,0x2e1(%r13)
   28:   3f=20
   29:   77 44                   ja     0x6f
-  2b:*  0f b7 40 10             movzwl 0x10(%rax),%eax     <-- trapping=
- instruction
+  2b:*  0f b7 40 10             movzwl 0x10(%rax),%eax     <-- trapping
+instruction
   2f:   41 f7 d6                not    %r14d
   32:   44 21 73 10             and    %r14d,0x10(%rbx)
   36:   4d 63 ff                movslq %r15d,%r15
@@ -97,16 +111,16 @@ And although I cannot generate the exact code here, building
 drivers/ata/pata_acpi.c locally gives only one instruction like the
 trapping one (thankfully, function is short enough):
 
-	sall	%cl, %eax	# tmp92, tmp93
-	orl	%eax, 16(%rbx)	# tmp93, acpi_6->gtm.flags
-	jmp	.L30	#
+    sall    %cl, %eax    # tmp92, tmp93
+    orl    %eax, 16(%rbx)    # tmp93, acpi_6->gtm.flags
+    jmp    .L30    #
 =2ELVL46:
 =2EL29:
-	.loc 1 151 0
-	movzwl	16(%rax), %eax	# t_12->cycle, t_12->cycle		<---
+    .loc 1 151 0
+    movzwl    16(%rax), %eax    # t_12->cycle, t_12->cycle        <---
 =2ELVL47:
-	.loc 1 152 0
-	leal	(%r12,%r12), %ecx	#, tmp97
+    .loc 1 152 0
+    leal    (%r12,%r12), %ecx    #, tmp97
 
 which could mean that ata_timing_find_mode() might be returning NULL
 on those systems (t is in %(r|e)ax in both oopses and the 0x10 offset
@@ -122,23 +136,26 @@ index 09723b76beac..c5a54faecb98 100644
 --- a/drivers/ata/pata_acpi.c
 +++ b/drivers/ata/pata_acpi.c
 @@ -144,6 +144,12 @@ static void pacpi_set_dmamode(struct ata_port *ap,=
- struct ata_device *adev)
-=20
- 	/* Now stuff the nS values into the structure */
- 	t =3D ata_timing_find_mode(adev->dma_mode);
+ struct
+ata_device *adev)
+
+     /* Now stuff the nS values into the structure */
+     t =3D ata_timing_find_mode(adev->dma_mode);
 +
-+	if (!t) {
-+		WARN(1, "%s: ata_timing_find_mode gives NULL\n", __func__);
-+		return;
-+	}
++    if (!t) {
++        WARN(1, "%s: ata_timing_find_mode gives NULL\n", __func__);
++        return;
++    }
 +
- 	if (adev->dma_mode >=3D XFER_UDMA_0) {
- 		acpi->gtm.drive[unit].dma =3D t->udma;
- 		acpi->gtm.flags |=3D (1 << (2 * unit));
+     if (adev->dma_mode >=3D XFER_UDMA_0) {
+         acpi->gtm.drive[unit].dma =3D t->udma;
+         acpi->gtm.flags |=3D (1 << (2 * unit));
 --
 
 Thanks.
 
 --=20
-Regards/Gruss,
-    Boris.
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
