@@ -1,36 +1,23 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Sun, 21 Oct 2012 16:04:17 +0000 (UTC)
-Message-ID: <20121021160417.5E78911FB29@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Phillip Wood <phillip.wood@talktalk.net>
+Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
+Date: Sun, 21 Oct 2012 17:04:12 +0100
+Message-ID: <50841CFC.2030802@talktalk.net>
+References: <bug-49151-11633@https.bugzilla.kernel.org/> <20121020120047.GC17563@liondog.tnic>
+Reply-To: phillip.wood@dunelm.org.uk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:36031 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753986Ab2JUQEW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2012 12:04:22 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 608DC201E0
-	for <linux-ide@vger.kernel.org>; Sun, 21 Oct 2012 16:04:21 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 71F3B201AE
-	for <linux-ide@vger.kernel.org>; Sun, 21 Oct 2012 16:04:18 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+Received: from out1.ip02ir2.opaltelecom.net ([62.24.128.238]:48213 "EHLO
+	out1.ip02ir2.opaltelecom.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752397Ab2JUQOA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Oct 2012 12:14:00 -0400
+In-Reply-To: <20121020120047.GC17563@liondog.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=3D49151
-
-
-
-
-
---- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org> =
- 2012-10-21 16:04:17 ---
-Reply-To: phillip.wood@talktalk.net
+To: Borislav Petkov <bp@alien8.de>
+Cc: "Anton V. Boyarshinov" <boyarsh@altlinux.org>, phillip.wood@dunelm.org.uk, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
 On 10/20/2012 01:00 PM, Borislav Petkov wrote:
 > On Sat, Oct 20, 2012 at 10:19:22AM +0000, bugzilla-daemon@bugzilla.ke=
@@ -281,8 +268,3 @@ pacpi_set_dmamode+0xc7/0xe0 [pata_acpi]()
   [    2.106520]  [<c140f8f6>] ? kernel_thread_helper+0x6/0xd
   [    2.106520] ---[ end trace 7db6a26b2c0e9209 ]---
 
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
