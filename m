@@ -1,35 +1,27 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Mon, 22 Oct 2012 20:27:38 +0000 (UTC)
-Message-ID: <20121022202738.4AEAE11FB02@bugzilla.kernel.org>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
+Date: Mon, 22 Oct 2012 22:27:34 +0200
+Message-ID: <20121022202734.GA16169@liondog.tnic>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
+ <20121020120047.GC17563@liondog.tnic>
+ <50841CFC.2030802@talktalk.net>
+ <20121021165756.GA20642@liondog.tnic>
+ <50856AA8.1000607@talktalk.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:44154 "EHLO mail.kernel.org"
+Received: from mail.skyhub.de ([78.46.96.112]:59193 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756157Ab2JVU1m convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Oct 2012 16:27:42 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 008F72037C
-	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 20:27:41 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 50FF22036F
-	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 20:27:39 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+	id S1756157Ab2JVU1i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2012 16:27:38 -0400
+Content-Disposition: inline
+In-Reply-To: <50856AA8.1000607@talktalk.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: phillip.wood@dunelm.org.uk
+Cc: "Anton V. Boyarshinov" <boyarsh@altlinux.org>, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D49151
-
-
-
-
-
---- Comment #10 from Borislav Petkov <bp@alien8.de>  2012-10-22 20:27:3=
-7 ---
 On Mon, Oct 22, 2012 at 04:47:52PM +0100, Phillip Wood wrote:
 > 00:04.0 IDE interface: ULi Electronics Inc. M5229 IDE (rev c3) (prog-=
 if f0)
@@ -64,7 +56,5 @@ kernels).
 HTH.
 
 --=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Regards/Gruss,
+    Boris.
