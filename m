@@ -1,21 +1,21 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Mon, 22 Oct 2012 12:15:50 +0000 (UTC)
-Message-ID: <20121022121550.599BF11FAE0@bugzilla.kernel.org>
+Date: Mon, 22 Oct 2012 12:21:55 +0000 (UTC)
+Message-ID: <20121022122155.B252A11FAE0@bugzilla.kernel.org>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:56525 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.19.201]:56612 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751451Ab2JVMP4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Oct 2012 08:15:56 -0400
+	id S1751990Ab2JVMV7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 22 Oct 2012 08:21:59 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id F1C6720267
-	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 12:15:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4993B2026F
+	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 12:21:57 +0000 (UTC)
 Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 07A2420257
-	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 12:15:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2772026B
+	for <linux-ide@vger.kernel.org>; Mon, 22 Oct 2012 12:21:55 +0000 (UTC)
 In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -24,131 +24,193 @@ To: linux-ide@vger.kernel.org
 https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
 
-Anton Boyarshinov <boyarsh@altlinux.org> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |boyarsh@altlinux.org
 
 
 
+--- Comment #7 from Anton Boyarshinov <boyarsh@altlinux.org>  2012-10-22 12:21:55 ---
+lspci -v from the box above
+----------------
+00:00.0 RAM memory: NVIDIA Corporation MCP65 Memory Controller (rev a3)
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0
+    Capabilities: [44] HyperTransport: Slave or Primary Interface
+    Capabilities: [dc] HyperTransport: MSI Mapping Enable+ Fixed-
 
---- Comment #6 from Anton Boyarshinov <boyarsh@altlinux.org>  2012-10-22 12:15:50 ---
-Thank you for responce!
-There is a log with both patches applied. System boots and works.
--------------------------
-[    1.108357] ata3: PATA max UDMA/133 cmd 0xf80 ctl 0xf00 bmdma 0xb800 irq 21
-[    1.108363] ata4: PATA max UDMA/133 cmd 0xe80 ctl 0xe00 bmdma 0xb808 irq 21
-[    1.264255] ------------[ cut here ]------------
-[    1.264303] WARNING: at drivers/ata/libata-core.c:2928
-ata_timing_find_mode+0x6a/0x80 [libata]()
-[    1.264307] Hardware name: ATLANT \xffffffd52 4800/251
-[    1.264312] ata_timing_find_mode: unable to find timing for xfer_mode 0x0
-[    1.264315] Modules linked in: ahci libahci pata_acpi libata scsi_mod
-[    1.264332] Pid: 547, comm: scsi_eh_2 Not tainted 3.6.3-un-def-alt1 #1
-[    1.264336] Call Trace:
-[    1.264353]  [<ffffffff81059b2a>] warn_slowpath_common+0x7a/0xb0
-[    1.264361]  [<ffffffff81059c01>] warn_slowpath_fmt+0x41/0x50
-[    1.264380]  [<ffffffffa0097b4a>] ata_timing_find_mode+0x6a/0x80 [libata]
-[    1.264391]  [<ffffffffa0037282>] pacpi_set_dmamode+0x42/0xf0 [pata_acpi]
-[    1.264401]  [<ffffffffa00373fa>] pacpi_qc_issue+0x5a/0x7c [pata_acpi]
-[    1.264421]  [<ffffffffa00997af>] ata_qc_issue+0x1ff/0x370 [libata]
-[    1.264433]  [<ffffffff81047e73>] ? default_spin_lock_flags+0x13/0x20
-[    1.264453]  [<ffffffffa0099c61>] ata_exec_internal_sg+0x341/0x640 [libata]
-[    1.264475]  [<ffffffffa00aaf27>] ? ata_sff_dev_classify+0x67/0x110 [libata]
-[    1.264494]  [<ffffffffa0099fd4>] ata_exec_internal+0x74/0xb0 [libata]
-[    1.264514]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.264533]  [<ffffffffa009a0b5>] ata_do_dev_read_id+0x25/0x30 [libata]
-[    1.264553]  [<ffffffffa00a5d8c>] ? ata_eh_reset+0x24c/0xc80 [libata]
-[    1.264571]  [<ffffffffa009a3e4>] ata_dev_read_id+0x324/0x5a0 [libata]
-[    1.264590]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.264599]  [<ffffffff81047e73>] ? default_spin_lock_flags+0x13/0x20
-[    1.264619]  [<ffffffffa00a7164>] ata_eh_recover+0x824/0x13e0 [libata]
-[    1.264629]  [<ffffffff810993e1>] ? load_balance+0x611/0x8c0
-[    1.264649]  [<ffffffffa00aae20>] ? ata_sff_drain_fifo+0x80/0x80 [libata]
-[    1.264668]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.264677]  [<ffffffffa00371c0>] ? pacpi_port_start+0xa0/0xa0 [pata_acpi]
-[    1.264687]  [<ffffffff814acf39>] ? _raw_spin_lock_irq+0x39/0x50
-[    1.264696]  [<ffffffff810789cb>] ? wait_on_work+0x1fb/0x210
-[    1.264705]  [<ffffffffa00371c0>] ? pacpi_port_start+0xa0/0xa0 [pata_acpi]
-[    1.264724]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.264744]  [<ffffffffa00a869d>] ata_do_eh+0x4d/0xc0 [libata]
-[    1.264763]  [<ffffffffa00aae20>] ? ata_sff_drain_fifo+0x80/0x80 [libata]
-[    1.264782]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.264802]  [<ffffffffa00aabee>] ata_sff_error_handler+0xce/0x130 [libata]
-[    1.264821]  [<ffffffffa00aacdf>] ata_bmdma_error_handler+0x8f/0x150
-[libata]
-[    1.264841]  [<ffffffffa00a82a9>] ata_scsi_port_error_handler+0x499/0x770
-[libata]
-[    1.264861]  [<ffffffffa00a8613>] ata_scsi_error+0x93/0xd0 [libata]
-[    1.264896]  [<ffffffffa0007eba>] scsi_error_handler+0x12a/0x720 [scsi_mod]
-[    1.264915]  [<ffffffffa0007d90>] ? scsi_eh_get_sense+0x210/0x210 [scsi_mod]
-[    1.264933]  [<ffffffffa0007d90>] ? scsi_eh_get_sense+0x210/0x210 [scsi_mod]
-[    1.264940]  [<ffffffff8107f386>] kthread+0x96/0xa0
-[    1.264950]  [<ffffffff814b5804>] kernel_thread_helper+0x4/0x10
-[    1.264957]  [<ffffffff8107f2f0>] ? kthread_freezable_should_stop+0x80/0x80
-[    1.264964]  [<ffffffff814b5800>] ? gs_change+0x13/0x13
-[    1.264969] ---[ end trace a98d36ed22847d07 ]---
-[    1.264972] ------------[ cut here ]------------
-[    1.264980] WARNING: at drivers/ata/pata_acpi.c:149
-pacpi_set_dmamode+0xdf/0xf0 [pata_acpi]()
-[    1.264983] Hardware name: ATLANT \xffffffd52 4800/251
-[    1.264987] pacpi_set_dmamode: ata_timing_find_mode gives NULL
-[    1.264989] Modules linked in: ahci libahci pata_acpi libata scsi_mod
-[    1.265002] Pid: 547, comm: scsi_eh_2 Tainted: G        W   
-3.6.3-un-def-alt1 #1
-[    1.265005] Call Trace:
-[    1.265013]  [<ffffffff81059b2a>] warn_slowpath_common+0x7a/0xb0
-[    1.265020]  [<ffffffff81059c01>] warn_slowpath_fmt+0x41/0x50
-[    1.265030]  [<ffffffffa003731f>] pacpi_set_dmamode+0xdf/0xf0 [pata_acpi]
-[    1.265038]  [<ffffffffa00373fa>] pacpi_qc_issue+0x5a/0x7c [pata_acpi]
-[    1.265057]  [<ffffffffa00997af>] ata_qc_issue+0x1ff/0x370 [libata]
-[    1.265065]  [<ffffffff81047e73>] ? default_spin_lock_flags+0x13/0x20
-[    1.265084]  [<ffffffffa0099c61>] ata_exec_internal_sg+0x341/0x640 [libata]
-[    1.265104]  [<ffffffffa00aaf27>] ? ata_sff_dev_classify+0x67/0x110 [libata]
-[    1.265123]  [<ffffffffa0099fd4>] ata_exec_internal+0x74/0xb0 [libata]
-[    1.265142]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.265161]  [<ffffffffa009a0b5>] ata_do_dev_read_id+0x25/0x30 [libata]
-[    1.265180]  [<ffffffffa00a5d8c>] ? ata_eh_reset+0x24c/0xc80 [libata]
-[    1.265198]  [<ffffffffa009a3e4>] ata_dev_read_id+0x324/0x5a0 [libata]
-[    1.265217]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.265226]  [<ffffffff81047e73>] ? default_spin_lock_flags+0x13/0x20
-[    1.265246]  [<ffffffffa00a7164>] ata_eh_recover+0x824/0x13e0 [libata]
-[    1.265254]  [<ffffffff810993e1>] ? load_balance+0x611/0x8c0
-[    1.265273]  [<ffffffffa00aae20>] ? ata_sff_drain_fifo+0x80/0x80 [libata]
-[    1.265292]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.265301]  [<ffffffffa00371c0>] ? pacpi_port_start+0xa0/0xa0 [pata_acpi]
-[    1.265308]  [<ffffffff814acf39>] ? _raw_spin_lock_irq+0x39/0x50
-[    1.265315]  [<ffffffff810789cb>] ? wait_on_work+0x1fb/0x210
-[    1.265324]  [<ffffffffa00371c0>] ? pacpi_port_start+0xa0/0xa0 [pata_acpi]
-[    1.265343]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.265363]  [<ffffffffa00a869d>] ata_do_eh+0x4d/0xc0 [libata]
-[    1.265382]  [<ffffffffa00aae20>] ? ata_sff_drain_fifo+0x80/0x80 [libata]
-[    1.265401]  [<ffffffffa00ab450>] ? ata_sff_wait_after_reset+0x140/0x140
-[libata]
-[    1.265420]  [<ffffffffa00aabee>] ata_sff_error_handler+0xce/0x130 [libata]
-[    1.265440]  [<ffffffffa00aacdf>] ata_bmdma_error_handler+0x8f/0x150
-[libata]
-[    1.265460]  [<ffffffffa00a82a9>] ata_scsi_port_error_handler+0x499/0x770
-[libata]
-[    1.265480]  [<ffffffffa00a8613>] ata_scsi_error+0x93/0xd0 [libata]
-[    1.265499]  [<ffffffffa0007eba>] scsi_error_handler+0x12a/0x720 [scsi_mod]
-[    1.265518]  [<ffffffffa0007d90>] ? scsi_eh_get_sense+0x210/0x210 [scsi_mod]
-[    1.265535]  [<ffffffffa0007d90>] ? scsi_eh_get_sense+0x210/0x210 [scsi_mod]
-[    1.265542]  [<ffffffff8107f386>] kthread+0x96/0xa0
-[    1.265550]  [<ffffffff814b5804>] kernel_thread_helper+0x4/0x10
-[    1.265558]  [<ffffffff8107f2f0>] ? kthread_freezable_should_stop+0x80/0x80
-[    1.265565]  [<ffffffff814b5800>] ? gs_change+0x13/0x13
-[    1.265568] ---[ end trace a98d36ed22847d08 ]---
+00:01.0 ISA bridge: NVIDIA Corporation MCP65 LPC Bridge (rev a3)
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0
+    I/O ports at 2f00 [size=256]
+
+00:01.1 SMBus: NVIDIA Corporation MCP65 SMBus (rev a1)
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: 66MHz, fast devsel, IRQ 11
+    I/O ports at 2900 [size=64]
+    I/O ports at 2d00 [size=64]
+    I/O ports at 2e00 [size=64]
+    Capabilities: [44] Power Management version 2
+    Kernel driver in use: nForce2_smbus
+
+00:01.2 RAM memory: NVIDIA Corporation MCP65 Memory Controller (rev a1)
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: 66MHz, fast devsel
+
+00:02.0 USB controller: NVIDIA Corporation MCP65 USB Controller (rev a3)
+(prog-if 10 [OHCI])
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 23
+    Memory at f9eff000 (32-bit, non-prefetchable) [size=4K]
+    Capabilities: [44] Power Management version 2
+    Kernel driver in use: ohci_hcd
+
+00:02.1 USB controller: NVIDIA Corporation MCP65 USB Controller (rev a3)
+(prog-if 20 [EHCI])
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 22
+    Memory at f9efec00 (32-bit, non-prefetchable) [size=256]
+    Capabilities: [44] Debug port: BAR=1 offset=0098
+    Capabilities: [80] Power Management version 2
+    Kernel driver in use: ehci_hcd
+
+00:08.0 PCI bridge: NVIDIA Corporation MCP65 PCI bridge (rev a1) (prog-if 01
+[Subtractive decode])
+    Flags: bus master, 66MHz, fast devsel, latency 0
+    Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
+    Capabilities: [b8] Subsystem: Micro-Star International Co., Ltd. Device
+7369
+    Capabilities: [8c] HyperTransport: MSI Mapping Enable- Fixed-
+
+00:09.0 IDE interface: NVIDIA Corporation MCP65 IDE (rev a1) (prog-if 8a
+[Master SecP PriP])
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0
+    [virtual] Memory at 000001f0 (32-bit, non-prefetchable) [size=8]
+    [virtual] Memory at 000003f0 (type 3, non-prefetchable)
+    [virtual] Memory at 00000170 (32-bit, non-prefetchable) [size=8]
+    [virtual] Memory at 00000370 (type 3, non-prefetchable)
+    I/O ports at ffa0 [size=16]
+    Capabilities: [44] Power Management version 2
+    Kernel driver in use: pata_acpi
+
+00:0a.0 IDE interface: NVIDIA Corporation MCP65 SATA Controller (rev a3)
+(prog-if 85 [Master SecO PriO])
+    Subsystem: Micro-Star International Co., Ltd. Device 7369
+    Flags: bus master, 66MHz, fast devsel, latency 0, IRQ 21
+    I/O ports at 0f80 [size=8]
+    I/O ports at 0f00 [size=4]
+    I/O ports at 0e80 [size=8]
+    I/O ports at 0e00 [size=4]
+    I/O ports at b800 [size=16]
+    Memory at f9efc000 (32-bit, non-prefetchable) [size=8K]
+    Capabilities: [44] Power Management version 2
+    Capabilities: [b0] MSI: Enable- Count=1/8 Maskable- 64bit+
+    Capabilities: [cc] HyperTransport: MSI Mapping Enable- Fixed+
+    Kernel driver in use: pata_acpi
+
+00:0b.0 PCI bridge: NVIDIA Corporation Device 045b (rev a1) (prog-if 00 [Normal
+decode])
+    Flags: bus master, fast devsel, latency 0
+    Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+    Capabilities: [40] Subsystem: NVIDIA Corporation Device 0000
+    Capabilities: [48] Power Management version 2
+    Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
+    Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
+    Capabilities: [80] Express Root Port (Slot+), MSI 00
+    Capabilities: [100] Virtual Channel
+    Kernel driver in use: pcieport
+
+00:0c.0 PCI bridge: NVIDIA Corporation MCP65 PCI Express bridge (rev a1)
+(prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0
+    Bus: primary=00, secondary=03, subordinate=03, sec-latency=0
+    I/O behind bridge: 0000d000-0000dfff
+    Memory behind bridge: f9f00000-f9ffffff
+    Capabilities: [40] Subsystem: NVIDIA Corporation Device 0000
+    Capabilities: [48] Power Management version 2
+    Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
+    Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
+    Capabilities: [80] Express Root Port (Slot+), MSI 00
+    Capabilities: [100] Virtual Channel
+    Kernel driver in use: pcieport
+
+00:0d.0 PCI bridge: NVIDIA Corporation MCP65 PCI Express bridge (rev a1)
+(prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0
+    Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+    I/O behind bridge: 0000e000-0000efff
+    Memory behind bridge: fa000000-febfffff
+    Prefetchable memory behind bridge: 00000000d0000000-00000000dfffffff
+    Capabilities: [40] Subsystem: NVIDIA Corporation Device 0000
+    Capabilities: [48] Power Management version 2
+    Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
+    Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
+    Capabilities: [80] Express Root Port (Slot+), MSI 00
+    Capabilities: [100] Virtual Channel
+    Kernel driver in use: pcieport
+
+00:0e.0 PCI bridge: NVIDIA Corporation MCP65 PCI Express bridge (rev a1)
+(prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0
+    Bus: primary=00, secondary=05, subordinate=05, sec-latency=0
+    Capabilities: [40] Subsystem: NVIDIA Corporation Device 0000
+    Capabilities: [48] Power Management version 2
+    Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
+    Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
+    Capabilities: [80] Express Root Port (Slot+), MSI 00
+    Capabilities: [100] Virtual Channel
+    Kernel driver in use: pcieport
+
+00:18.0 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+HyperTransport Technology Configuration
+    Flags: fast devsel
+    Capabilities: [80] HyperTransport: Host or Secondary Interface
+
+00:18.1 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] Address
+Map
+    Flags: fast devsel
+
+00:18.2 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron] DRAM
+Controller
+    Flags: fast devsel
+
+00:18.3 Host bridge: Advanced Micro Devices [AMD] K8 [Athlon64/Opteron]
+Miscellaneous Control
+    Flags: fast devsel
+    Capabilities: [f0] Secure device <?>
+    Kernel driver in use: k8temp
+
+03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168B PCI
+Express Gigabit Ethernet controller (rev 01)
+    Subsystem: Micro-Star International Co., Ltd. Device 369c
+    Flags: bus master, fast devsel, latency 0, IRQ 44
+    I/O ports at d800 [size=256]
+    Memory at f9fff000 (64-bit, non-prefetchable) [size=4K]
+    Expansion ROM at f9fc0000 [disabled] [size=128K]
+    Capabilities: [40] Power Management version 2
+    Capabilities: [48] Vital Product Data
+    Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
+    Capabilities: [60] Express Endpoint, MSI 00
+    Capabilities: [84] Vendor Specific Information: Len=4c <?>
+    Capabilities: [100] Advanced Error Reporting
+    Capabilities: [12c] Virtual Channel
+    Capabilities: [148] Device Serial Number 1d-00-00-00-10-ec-81-68
+    Capabilities: [154] Power Budgeting <?>
+    Kernel driver in use: r8169
+
+04:00.0 VGA compatible controller: NVIDIA Corporation G84 [GeForce 8600 GT]
+(rev a1) (prog-if 00 [VGA controller])
+    Flags: bus master, fast devsel, latency 0, IRQ 18
+    Memory at fd000000 (32-bit, non-prefetchable) [size=16M]
+    Memory at d0000000 (64-bit, prefetchable) [size=256M]
+    Memory at fa000000 (64-bit, non-prefetchable) [size=32M]
+    I/O ports at ec00 [size=128]
+    Expansion ROM at febe0000 [disabled] [size=128K]
+    Capabilities: [60] Power Management version 2
+    Capabilities: [68] MSI: Enable- Count=1/1 Maskable- 64bit+
+    Capabilities: [78] Express Endpoint, MSI 00
+    Capabilities: [100] Virtual Channel
+    Capabilities: [128] Power Budgeting <?>
+    Capabilities: [600] Vendor Specific Information: ID=0001 Rev=1 Len=024 <?>
+    Kernel driver in use: nouveau
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
