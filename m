@@ -1,29 +1,34 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
-Date: Tue, 23 Oct 2012 18:12:16 +0200
-Message-ID: <20121023161216.GC26756@x1.osrc.amd.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Tue, 23 Oct 2012 16:12:19 +0000 (UTC)
+Message-ID: <20121023161219.6FC5711FB3D@bugzilla.kernel.org>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
- <20121020120047.GC17563@liondog.tnic>
- <50841CFC.2030802@talktalk.net>
- <20121021165756.GA20642@liondog.tnic>
- <50856AA8.1000607@talktalk.net>
- <20121022202734.GA16169@liondog.tnic>
- <20121023110549.06f9c2e8@pyramind.ukuu.org.uk>
- <20121023101751.GA24656@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:37150 "EHLO mail.skyhub.de"
+Received: from mail.kernel.org ([198.145.19.201]:46343 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754731Ab2JWQMS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2012 12:12:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20121023101751.GA24656@liondog.tnic>
+	id S1754731Ab2JWQMY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Oct 2012 12:12:24 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2EF272039C
+	for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2012 16:12:23 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id E57A420426
+	for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2012 16:12:21 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>
-Cc: phillip.wood@dunelm.org.uk, "Anton V. Boyarshinov" <boyarsh@altlinux.org>, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
+
+
+
+
+
+--- Comment #17 from Borislav Petkov <bp@alien8.de>  2012-10-23 16:12:18 ---
 On Tue, Oct 23, 2012 at 12:17:51PM +0200, Borislav Petkov wrote:
 > On Tue, Oct 23, 2012 at 11:05:49AM +0100, Alan Cox wrote:
 > > > So yes, blacklisting it and verifying that your system still operates
@@ -89,5 +94,6 @@ doable at all.
 Thanks.
 
 -- 
-Regards/Gruss,
-Boris.
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
