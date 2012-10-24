@@ -1,38 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Tue, 23 Oct 2012 21:10:25 +0000 (UTC)
-Message-ID: <20121023211025.C10C011FC39@bugzilla.kernel.org>
+From: "Anton V. Boyarshinov" <boyarsh@altlinux.org>
+Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
+Date: Wed, 24 Oct 2012 10:43:05 +0400
+Message-ID: <20121024104305.14d9573d@ion.home>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
+	<20121020120047.GC17563@liondog.tnic>
+	<50841CFC.2030802@talktalk.net>
+	<20121021165756.GA20642@liondog.tnic>
+	<50856AA8.1000607@talktalk.net>
+	<20121022202734.GA16169@liondog.tnic>
+	<20121023110549.06f9c2e8@pyramind.ukuu.org.uk>
+	<20121023101751.GA24656@liondog.tnic>
+	<20121023161216.GC26756@x1.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=KOI8-R
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58526 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933665Ab2JWVKb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Oct 2012 17:10:31 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D2D6D2068B
-	for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2012 21:10:29 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 3EEE220686
-	for <linux-ide@vger.kernel.org>; Tue, 23 Oct 2012 21:10:28 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+Received: from vint.altlinux.org ([194.107.17.35]:42082 "EHLO
+	vint.altlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757868Ab2JXGnJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2012 02:43:09 -0400
+In-Reply-To: <20121023161216.GC26756@x1.osrc.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>, phillip.wood@dunelm.org.uk, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
+Hello
 
+=F7 Tue, 23 Oct 2012 18:12:16 +0200
+Borislav Petkov wrote:
 
+> @Tejun: so basically there are two people with oopses when using
+> pata_acpi
+Not two. We have two boxes in our office (about 20 boxes) and more then
+ten reports from our users (only from early adopters yet). It seems
+that this problem doesn't exists when someone build kernel for his own
+box, but will be triggered very often when 3.6 will be wide used distro
+kernel.
 
-
-
---- Comment #22 from Szymon Janc <szymon@janc.net.pl>  2012-10-23 21:10:25 ---
-sure, i'll put info when build is finished.
-
-btw: I forgot to mention that I don't have any pata drives in that pc.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--=20
+Regards
+Anton
