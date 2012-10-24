@@ -1,22 +1,35 @@
-From: Phillip Wood <phillip.wood@talktalk.net>
-Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
-Date: Wed, 24 Oct 2012 10:28:42 +0100
-Message-ID: <5087B4CA.1030502@talktalk.net>
-References: <bug-49151-11633@https.bugzilla.kernel.org/> <20121020120047.GC17563@liondog.tnic> <50841CFC.2030802@talktalk.net> <20121021165756.GA20642@liondog.tnic> <50856AA8.1000607@talktalk.net> <20121022202734.GA16169@liondog.tnic> <20121023110549.06f9c2e8@pyramind.ukuu.org.uk> <20121023101751.GA24656@liondog.tnic>
-Reply-To: phillip.wood@dunelm.org.uk
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Wed, 24 Oct 2012 09:28:47 +0000 (UTC)
+Message-ID: <20121024092847.C536E11FC6B@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1.ip03ir2.opaltelecom.net ([62.24.128.239]:25019 "EHLO
-	out1.ip03ir2.opaltelecom.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756152Ab2JXJ2r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2012 05:28:47 -0400
-In-Reply-To: <20121023101751.GA24656@liondog.tnic>
+Received: from mail.kernel.org ([198.145.19.201]:46973 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756152Ab2JXJ2v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2012 05:28:51 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 553922038D
+	for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2012 09:28:50 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 447D120389
+	for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2012 09:28:49 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, phillip.wood@dunelm.org.uk, "Anton V. Boyarshinov" <boyarsh@altlinux.org>, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
+
+
+
+
+
+--- Comment #24 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2012-10-24 09:28:47 ---
+Reply-To: phillip.wood@talktalk.net
 
 On 10/23/2012 11:17 AM, Borislav Petkov wrote:
 > ---
@@ -44,3 +57,8 @@ pacpi_set_dmamode: ata_timing_find_mode gives NULL; adev->dma_mode: 0x0
 
 as well here if I build pata_acpi as a module, if I build it into the 
 kernel I don't get any message.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
