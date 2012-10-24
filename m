@@ -1,33 +1,38 @@
-From: "Anton V. Boyarshinov" <boyarsh@altlinux.org>
-Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
-Date: Wed, 24 Oct 2012 10:43:05 +0400
-Message-ID: <20121024104305.14d9573d@ion.home>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Wed, 24 Oct 2012 06:43:10 +0000 (UTC)
+Message-ID: <20121024064310.A9A5211FC43@bugzilla.kernel.org>
 References: <bug-49151-11633@https.bugzilla.kernel.org/>
-	<20121020120047.GC17563@liondog.tnic>
-	<50841CFC.2030802@talktalk.net>
-	<20121021165756.GA20642@liondog.tnic>
-	<50856AA8.1000607@talktalk.net>
-	<20121022202734.GA16169@liondog.tnic>
-	<20121023110549.06f9c2e8@pyramind.ukuu.org.uk>
-	<20121023101751.GA24656@liondog.tnic>
-	<20121023161216.GC26756@x1.osrc.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=KOI8-R
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vint.altlinux.org ([194.107.17.35]:42082 "EHLO
-	vint.altlinux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757868Ab2JXGnJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2012 02:43:09 -0400
-In-Reply-To: <20121023161216.GC26756@x1.osrc.amd.com>
+Received: from mail.kernel.org ([198.145.19.201]:42818 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933331Ab2JXGnN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Oct 2012 02:43:13 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 4E9B6202AF
+	for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2012 06:43:12 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 75A022022B
+	for <linux-ide@vger.kernel.org>; Wed, 24 Oct 2012 06:43:11 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>, phillip.wood@dunelm.org.uk, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: linux-ide@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D49151
+
+
+
+
+
+--- Comment #23 from Anton Boyarshinov <boyarsh@altlinux.org>  2012-10-=
+24 06:43:10 ---
 Hello
 
-=F7 Tue, 23 Oct 2012 18:12:16 +0200
+=D0=92 Tue, 23 Oct 2012 18:12:16 +0200
 Borislav Petkov wrote:
 
 > @Tejun: so basically there are two people with oopses when using
@@ -39,5 +44,7 @@ box, but will be triggered very often when 3.6 will be wide used distro
 kernel.
 
 --=20
-Regards
-Anton
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
