@@ -1,70 +1,37 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] sata_sx4: pdc20621_{ata|host}_sg() do not need 'tf' parameter
-Date: Thu, 25 Oct 2012 21:19:12 +0400
-Message-ID: <201210252119.13022.sshtylyov@ru.mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC 3/3] libata: don't perform HW activity in devres
+Date: Thu, 25 Oct 2012 10:25:42 -0700
+Message-ID: <20121025172542.GG11442@htj.dyndns.org>
+References: <1351184161-31433-1-git-send-email-computersforpeace@gmail.com>
+ <1351184161-31433-4-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:55401 "EHLO
-	wasted.dev.rtsoft.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935930Ab2JYRUs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2012 13:20:48 -0400
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:58996 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935953Ab2JYRZq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2012 13:25:46 -0400
+Content-Disposition: inline
+In-Reply-To: <1351184161-31433-4-git-send-email-computersforpeace@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, Linux Kernel <linux-kernel@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>
 
-... because those functions don't use this parameter.
+On Thu, Oct 25, 2012 at 09:56:01AM -0700, Brian Norris wrote:
+> devres functions are intended for simplified cleanup of memory and other
+> software resources on device exit, not for hardware shutdown sequences.
+> In addition, inducing hardware activity at device removal hamstrings
+> some drivers (particularly ahci_platform) so that they cannot totally
+> power off their hardware before removal, as devres cleanup occurs after
+> the driver's exit() sequence.
+> 
+> More concretely, I experience the following bus error when using rmmod
+> to remove (and power off) the SATA block on my SoC:
 
-While at it, correctly align 'total_len' parameter.
+Shouldn't poweroff happen from ->port/host_stop()?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Thanks.
 
----
-The patch is atop of the 'upstream' branch of libata-dev.git...
-
- drivers/ata/sata_sx4.c |   14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
-
-Index: libata-dev/drivers/ata/sata_sx4.c
-===================================================================
---- libata-dev.orig/drivers/ata/sata_sx4.c
-+++ libata-dev/drivers/ata/sata_sx4.c
-@@ -315,9 +315,8 @@ static int pdc_port_start(struct ata_por
- 	return 0;
- }
- 
--static inline void pdc20621_ata_sg(struct ata_taskfile *tf, u8 *buf,
--				   unsigned int portno,
--					   unsigned int total_len)
-+static inline void pdc20621_ata_sg(u8 *buf, unsigned int portno,
-+				   unsigned int total_len)
- {
- 	u32 addr;
- 	unsigned int dw = PDC_DIMM_APKT_PRD >> 2;
-@@ -337,9 +336,8 @@ static inline void pdc20621_ata_sg(struc
- 		buf32[dw], buf32[dw + 1]);
- }
- 
--static inline void pdc20621_host_sg(struct ata_taskfile *tf, u8 *buf,
--				    unsigned int portno,
--					    unsigned int total_len)
-+static inline void pdc20621_host_sg(u8 *buf, unsigned int portno,
-+				    unsigned int total_len)
- {
- 	u32 addr;
- 	unsigned int dw = PDC_DIMM_HPKT_PRD >> 2;
-@@ -486,10 +484,10 @@ static void pdc20621_dma_prep(struct ata
- 	/*
- 	 * Build ATA, host DMA packets
- 	 */
--	pdc20621_host_sg(&qc->tf, &pp->dimm_buf[0], portno, total_len);
-+	pdc20621_host_sg(&pp->dimm_buf[0], portno, total_len);
- 	pdc20621_host_pkt(&qc->tf, &pp->dimm_buf[0], portno);
- 
--	pdc20621_ata_sg(&qc->tf, &pp->dimm_buf[0], portno, total_len);
-+	pdc20621_ata_sg(&pp->dimm_buf[0], portno, total_len);
- 	i = pdc20621_ata_pkt(&qc->tf, qc->dev->devno, &pp->dimm_buf[0], portno);
- 
- 	if (qc->tf.flags & ATA_TFLAG_LBA48)
+-- 
+tejun
