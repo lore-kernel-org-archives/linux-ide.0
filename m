@@ -1,64 +1,50 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [RFC 1/3] ahci_platform: enable hotplug unbinding
-Date: Thu, 25 Oct 2012 09:55:59 -0700
-Message-ID: <1351184161-31433-2-git-send-email-computersforpeace@gmail.com>
-References: <1351184161-31433-1-git-send-email-computersforpeace@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351184161-31433-1-git-send-email-computersforpeace@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, Linux Kernel <linux-kernel@vger.kernel.org>, Brian Norris <computersforpeace@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, Tejun Heo <tj@kernel.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] pata_arasan_cf: declare/use 'qc' and 'ap' variables in arasan_cf_dma_start()
+Date: Thu, 25 Oct 2012 21:08:46 +0400
+Message-ID: <201210252108.47085.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:55395 "EHLO
+	wasted.dev.rtsoft.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1946112Ab2JYRUM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2012 13:20:12 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, jgarzik@pobox.com, viresh.linux@gmail.com
 
-platform_driver_probe() should be used for registering this driver only
-if we want to
+'acdev->qc' and 'acdev->qc->ap' expressions are used multiple times in this
+function, so it makes sense to use the local variables for them.
 
-    "...remove its run-once probe() infrastructure from memory after the
-    driver has bound to the device."
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-However, we may want to leave the probe infrastructure in place in order
-to support binding/unbinding a device dynamically. This is useful, for
-instance, as a power management mechanism, where a device can be totally
-powered down when unbound (whereas with runtime power management,
-powering down the SATA core would incur unacceptable loss of
-functionality).
-
-Thus, convert this driver to use platform_driver_register().
-
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
 ---
- drivers/ata/ahci_platform.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+The patch is atop of the 'upstream' branch of libata-dev.git...
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 9e419e1..f467ba8 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -73,7 +73,7 @@ static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT("ahci_platform"),
- };
+ drivers/ata/pata_arasan_cf.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+Index: libata-dev/drivers/ata/pata_arasan_cf.c
+===================================================================
+--- libata-dev.orig/drivers/ata/pata_arasan_cf.c
++++ libata-dev/drivers/ata/pata_arasan_cf.c
+@@ -668,13 +668,15 @@ void arasan_cf_error_handler(struct ata_
  
--static int __init ahci_probe(struct platform_device *pdev)
-+static int __devinit ahci_probe(struct platform_device *pdev)
+ static void arasan_cf_dma_start(struct arasan_cf_dev *acdev)
  {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-@@ -286,6 +286,7 @@ static const struct of_device_id ahci_of_match[] = {
- MODULE_DEVICE_TABLE(of, ahci_of_match);
++	struct ata_queued_cmd *qc = acdev->qc;
++	struct ata_port *ap = qc->ap;
+ 	u32 xfer_ctr = readl(acdev->vbase + XFER_CTR) & ~XFER_DIR_MASK;
+-	u32 write = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
++	u32 write = qc->tf.flags & ATA_TFLAG_WRITE;
  
- static struct platform_driver ahci_driver = {
-+	.probe = ahci_probe,
- 	.remove = __devexit_p(ahci_remove),
- 	.driver = {
- 		.name = "ahci",
-@@ -300,7 +301,7 @@ static struct platform_driver ahci_driver = {
+ 	xfer_ctr |= write ? XFER_WRITE : XFER_READ;
+ 	writel(xfer_ctr, acdev->vbase + XFER_CTR);
  
- static int __init ahci_init(void)
- {
--	return platform_driver_probe(&ahci_driver, ahci_probe);
-+	return platform_driver_register(&ahci_driver);
+-	acdev->qc->ap->ops->sff_exec_command(acdev->qc->ap, &acdev->qc->tf);
++	ap->ops->sff_exec_command(ap, &qc->tf);
+ 	ata_sff_queue_work(&acdev->work);
  }
- module_init(ahci_init);
  
--- 
-1.7.11.3
