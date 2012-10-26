@@ -1,38 +1,70 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] ide: use %*ph to print small buffers
-Date: Fri, 26 Oct 2012 16:44:07 +0300
-Message-ID: <1351259047-19327-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] pata_arasan_cf: declare/use 'qc' and 'ap' variables in
+ arasan_cf_dma_start()
+Date: Fri, 26 Oct 2012 22:17:58 +0400
+Message-ID: <508AD3D6.6080502@mvista.com>
+References: <201210252108.47085.sshtylyov@ru.mvista.com> <CAOh2x==5iy4cDvney8uue2V10Ok1m+v5zeRJjqsw4Tk16reMaQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:53800 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932948Ab2JZNoT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Oct 2012 09:44:19 -0400
+Received: from mail-la0-f46.google.com ([209.85.215.46]:47300 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965556Ab2JZSTG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Oct 2012 14:19:06 -0400
+Received: by mail-la0-f46.google.com with SMTP id h6so2579868lag.19
+        for <linux-ide@vger.kernel.org>; Fri, 26 Oct 2012 11:19:05 -0700 (PDT)
+In-Reply-To: <CAOh2x==5iy4cDvney8uue2V10Ok1m+v5zeRJjqsw4Tk16reMaQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: viresh kumar <viresh.kumar@linaro.org>
+Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, linux-ide@vger.kernel.org, jgarzik@pobox.com, spear-devel <spear-devel@list.st.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/ide/ide-acpi.c |    5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Hello.
 
-diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
-index f1a6796b..b768f46 100644
---- a/drivers/ide/ide-acpi.c
-+++ b/drivers/ide/ide-acpi.c
-@@ -310,10 +310,7 @@ static int do_drive_set_taskfiles(ide_drive_t *drive,
- 		u8 *gtf = (u8 *)(gtf_address + ix * REGS_PER_GTF);
- 		struct ide_cmd cmd;
- 
--		DEBPRINT("(0x1f1-1f7): "
--			 "hex: %02x %02x %02x %02x %02x %02x %02x\n",
--			 gtf[0], gtf[1], gtf[2],
--			 gtf[3], gtf[4], gtf[5], gtf[6]);
-+		DEBPRINT("(0x1f1-1f7): hex: %7ph\n", gtf);
- 
- 		if (!ide_acpigtf) {
- 			DEBPRINT("_GTF execution disabled\n");
--- 
-1.7.10.4
+On 10/26/2012 07:31 AM, viresh kumar wrote:
+
+>> 'acdev->qc' and 'acdev->qc->ap' expressions are used multiple times in this
+>> function, so it makes sense to use the local variables for them.
+
+>> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+
+  Another idea came to me afterwards...
+
+>> ---
+>> The patch is atop of the 'upstream' branch of libata-dev.git...
+>>
+>>  drivers/ata/pata_arasan_cf.c |    6 ++++--
+>>  1 file changed, 4 insertions(+), 2 deletions(-)
+
+>> Index: libata-dev/drivers/ata/pata_arasan_cf.c
+>> ===================================================================
+>> --- libata-dev.orig/drivers/ata/pata_arasan_cf.c
+>> +++ libata-dev/drivers/ata/pata_arasan_cf.c
+>> @@ -668,13 +668,15 @@ void arasan_cf_error_handler(struct ata_
+>>
+>>  static void arasan_cf_dma_start(struct arasan_cf_dev *acdev)
+>>  {
+>> +       struct ata_queued_cmd *qc = acdev->qc;
+>> +       struct ata_port *ap = qc->ap;
+>>         u32 xfer_ctr = readl(acdev->vbase + XFER_CTR) & ~XFER_DIR_MASK;
+>> -       u32 write = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
+>> +       u32 write = qc->tf.flags & ATA_TFLAG_WRITE;
+>>
+>>         xfer_ctr |= write ? XFER_WRITE : XFER_READ;
+>>         writel(xfer_ctr, acdev->vbase + XFER_CTR);
+>>
+>> -       acdev->qc->ap->ops->sff_exec_command(acdev->qc->ap, &acdev->qc->tf);
+>> +       ap->ops->sff_exec_command(ap, &qc->tf);
+
+
+   Perhaps it was also worth declaring:
+
+	struct ata_taskfile *tf = &qc->tf;
+
+   I'll submit the next version of patch next week, probably...
+
+MBR, Sergei
 
