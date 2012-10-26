@@ -1,39 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC 3/3] libata: don't perform HW activity in devres
-Date: Thu, 25 Oct 2012 10:43:31 -0700
-Message-ID: <20121025174331.GK11442@htj.dyndns.org>
-References: <1351184161-31433-1-git-send-email-computersforpeace@gmail.com>
- <1351184161-31433-4-git-send-email-computersforpeace@gmail.com>
- <20121025172542.GG11442@htj.dyndns.org>
- <CAN8TOE_DThBeGvHN9HQtX3CDLuiWDJEVZNKFqRnnOmP=xHN8XQ@mail.gmail.com>
+From: viresh kumar <viresh.kumar@linaro.org>
+Subject: Re: [PATCH] pata_arasan_cf: declare/use 'qc' and 'ap' variables in arasan_cf_dma_start()
+Date: Fri, 26 Oct 2012 09:01:23 +0530
+Message-ID: <CAOh2x==5iy4cDvney8uue2V10Ok1m+v5zeRJjqsw4Tk16reMaQ@mail.gmail.com>
+References: <201210252108.47085.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:51270 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757050Ab2JYRnf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2012 13:43:35 -0400
-Content-Disposition: inline
-In-Reply-To: <CAN8TOE_DThBeGvHN9HQtX3CDLuiWDJEVZNKFqRnnOmP=xHN8XQ@mail.gmail.com>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:43486 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755893Ab2JZDbY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Oct 2012 23:31:24 -0400
+Received: by mail-vc0-f174.google.com with SMTP id fk26so2652124vcb.19
+        for <linux-ide@vger.kernel.org>; Thu, 25 Oct 2012 20:31:24 -0700 (PDT)
+In-Reply-To: <201210252108.47085.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, Linux Kernel <linux-kernel@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, spear-devel <spear-devel@list.st.com>
 
-Hello,
+On Thu, Oct 25, 2012 at 10:38 PM, Sergei Shtylyov
+<sshtylyov@ru.mvista.com> wrote:
+> 'acdev->qc' and 'acdev->qc->ap' expressions are used multiple times in this
+> function, so it makes sense to use the local variables for them.
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-On Thu, Oct 25, 2012 at 10:41:57AM -0700, Brian Norris wrote:
-> Hmm, I guess that makes more sense. I was using the ahci_platform
-> ahci_platform_data->exit() function. Would it be safe to call the
-> platform init()/exit() functions as part of a
-> ata_port_operations.host_{start,stop}() hook? These functions aren't
-> currently implemented at all in ahci_platform, but I don't see why
-> they couldn't be.
+Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
 
-I don't have much idea about the specifics but host_start/stop() are
-supposed to perform the functions you're describing.
-
-Thanks.
-
--- 
-tejun
+> ---
+> The patch is atop of the 'upstream' branch of libata-dev.git...
+>
+>  drivers/ata/pata_arasan_cf.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> Index: libata-dev/drivers/ata/pata_arasan_cf.c
+> ===================================================================
+> --- libata-dev.orig/drivers/ata/pata_arasan_cf.c
+> +++ libata-dev/drivers/ata/pata_arasan_cf.c
+> @@ -668,13 +668,15 @@ void arasan_cf_error_handler(struct ata_
+>
+>  static void arasan_cf_dma_start(struct arasan_cf_dev *acdev)
+>  {
+> +       struct ata_queued_cmd *qc = acdev->qc;
+> +       struct ata_port *ap = qc->ap;
+>         u32 xfer_ctr = readl(acdev->vbase + XFER_CTR) & ~XFER_DIR_MASK;
+> -       u32 write = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
+> +       u32 write = qc->tf.flags & ATA_TFLAG_WRITE;
+>
+>         xfer_ctr |= write ? XFER_WRITE : XFER_READ;
+>         writel(xfer_ctr, acdev->vbase + XFER_CTR);
+>
+> -       acdev->qc->ap->ops->sff_exec_command(acdev->qc->ap, &acdev->qc->tf);
+> +       ap->ops->sff_exec_command(ap, &qc->tf);
+>         ata_sff_queue_work(&acdev->work);
+>  }
+>
