@@ -1,112 +1,64 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [RFC v2 3/3] ahci_platform: perform platform exit in host_stop() hook
-Date: Sat, 27 Oct 2012 13:09:36 -0700
-Message-ID: <1351368576-5264-4-git-send-email-computersforpeace@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [linux-pm] [RFC v2 0/3] ahci_platform: unbind/rmmod power down sequence
+Date: Sun, 28 Oct 2012 02:11:59 +0200
+Message-ID: <1569755.7jSillTKZU@vostro.rjw.lan>
 References: <1351368576-5264-1-git-send-email-computersforpeace@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:44950 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758551Ab2J0UKR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Oct 2012 16:10:17 -0400
-Received: by mail-pb0-f46.google.com with SMTP id rr4so3454458pbb.19
-        for <linux-ide@vger.kernel.org>; Sat, 27 Oct 2012 13:10:17 -0700 (PDT)
+Received: from ogre.sisk.pl ([193.178.161.156]:41066 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752528Ab2J1AIC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Oct 2012 20:08:02 -0400
 In-Reply-To: <1351368576-5264-1-git-send-email-computersforpeace@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, Kevin Cernekee <cernekee@gmail.com>, Brian Norris <computersforpeace@gmail.com>
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Linux PM list <linux-pm@vger.kernel.org>
 
-AHCI platform devices may provide an exit() routine, via
-ahci_platform_data, that powers off the SATA core. Such a routine should
-be executed from the ata_port_operations host_stop() hook. That way, the
-ATA subsystem can perform any last-minute hardware cleanup (via devres,
-for example), then trigger the power-off at the appropriate time.
+Hi,
 
-This patch fixes bus errors triggered during module removal or device
-unbinding, seen on an SoC SATA core.
+Please don't CC the linux-pm@lists.linux-foundation.org list, which is dead.
 
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
----
- drivers/ata/ahci_platform.c | 28 ++++++++++++++++++++++------
- 1 file changed, 22 insertions(+), 6 deletions(-)
+Please use linux-pm@vger.kernel.org for future submissions, as documented in
+multiple places.
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index d9fbd10..dcd23a9 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -23,6 +23,8 @@
- #include <linux/ahci_platform.h>
- #include "ahci.h"
- 
-+static void ahci_host_stop(struct ata_host *host);
-+
- enum ahci_type {
- 	AHCI,		/* standard platform ahci */
- 	IMX53_AHCI,	/* ahci on i.mx53 */
-@@ -45,6 +47,15 @@ static struct platform_device_id ahci_devtype[] = {
- };
- MODULE_DEVICE_TABLE(platform, ahci_devtype);
- 
-+struct ata_port_operations ahci_platform_ops = {
-+	.inherits	= &ahci_ops,
-+	.host_stop	= ahci_host_stop,
-+};
-+
-+struct ata_port_operations ahci_platform_retry_srst_ops = {
-+	.inherits	= &ahci_pmp_retry_srst_ops,
-+	.host_stop	= ahci_host_stop,
-+};
- 
- static const struct ata_port_info ahci_port_info[] = {
- 	/* by features */
-@@ -52,20 +63,20 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= ATA_PIO4,
- 		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
-+		.port_ops	= &ahci_platform_ops,
- 	},
- 	[IMX53_AHCI] = {
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= ATA_PIO4,
- 		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_pmp_retry_srst_ops,
-+		.port_ops	= &ahci_platform_retry_srst_ops,
- 	},
- 	[STRICT_AHCI] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_DELAY_ENGINE),
- 		.flags		= AHCI_FLAG_COMMON,
- 		.pio_mask	= ATA_PIO4,
- 		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_ops,
-+		.port_ops	= &ahci_platform_ops,
- 	},
- };
- 
-@@ -202,15 +213,20 @@ err0:
- static int __devexit ahci_remove(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 
- 	ata_host_detach(host);
- 
-+	return 0;
-+}
-+
-+static void ahci_host_stop(struct ata_host *host)
-+{
-+	struct device *dev = host->dev;
-+	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+
- 	if (pdata && pdata->exit)
- 		pdata->exit(dev);
--
--	return 0;
- }
- 
- #ifdef CONFIG_PM
+Thanks,
+Rafael
+
+
+On Saturday, October 27, 2012 01:09:33 PM Brian Norris wrote:
+> Hello,
+> 
+> This is a follow up on a previous questions and RFC series I sent. See here for
+> some context:
+> 
+>     http://article.gmane.org/gmane.linux.ide/53143
+>     http://article.gmane.org/gmane.linux.ide/52951
+> 
+> This series:
+> 
+> (1) Allows ahci_platform to unbind a device from the driver. This is useful for
+>     allowing total power-off of the device, for instance.
+> (2) Adds ahci_platform ata_port_operations.host_stop() hook, so that
+>     platform-device exit() can power down the device at the appropriate point
+>     in the removal sequence.
+> 
+> Thanks to Tejun for the comments, which suggested that ahci_platform (not
+> libata-core) was broken.
+> 
+> Brian
+> 
+> Brian Norris (3):
+>   ahci_platform: enable hotplug unbinding
+>   ahci_platform: convert to module_platform_driver
+>   ahci_platform: perform platform exit in host_stop() hook
+> 
+>  drivers/ata/ahci_platform.c | 44 +++++++++++++++++++++++++-------------------
+>  1 file changed, 25 insertions(+), 19 deletions(-)
+> 
+> 
 -- 
-1.7.11.3
-
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
