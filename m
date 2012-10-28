@@ -1,45 +1,32 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 02/16] ata: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-Date: Sun, 28 Oct 2012 01:05:40 -0700
-Message-ID: <ff89ae9b42c644728575a3cf606184ab9875d6e9.1351411047.git.joe@perches.com>
+From: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+Date: Sun, 28 Oct 2012 14:54:02 +0400
+Message-ID: <508D0ECA.8040008@mvista.com>
 References: <cover.1351411047.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1351411047.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <cover.1351411047.git.joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-watchdog-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-dev_<level> calls take less code than dev_printk(KERN_<LEVEL>
-and reducing object size is good.
-Coalesce formats for easier grep.
+Hello.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ata/pata_cmd64x.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+On 28-10-2012 12:05, Joe Perches wrote:
 
-diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
-index 7ba0141..2949cfc 100644
---- a/drivers/ata/pata_cmd64x.c
-+++ b/drivers/ata/pata_cmd64x.c
-@@ -474,14 +474,14 @@ static int cmd64x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	/* check for enabled ports */
- 	pci_read_config_byte(pdev, CNTRL, &reg);
- 	if (!port_ok)
--		dev_printk(KERN_NOTICE, &pdev->dev, "Mobility Bridge detected, ignoring CNTRL port enable/disable\n");
-+		dev_notice(&pdev->dev, "Mobility Bridge detected, ignoring CNTRL port enable/disable\n");
- 	if (port_ok && cntrl_ch0_ok && !(reg & CNTRL_CH0)) {
--		dev_printk(KERN_NOTICE, &pdev->dev, "Primary port is disabled\n");
-+		dev_notice(&pdev->dev, "Primary port is disabled\n");
- 		ppi[0] = &ata_dummy_port_info;
- 
- 	}
- 	if (port_ok && !(reg & CNTRL_CH1)) {
--		dev_printk(KERN_NOTICE, &pdev->dev, "Secondary port is disabled\n");
-+		dev_notice(&pdev->dev, "Secondary port is disabled\n");
- 		ppi[1] = &ata_dummy_port_info;
- 	}
- 
--- 
-1.7.8.112.g3fd21
+> dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
+> Convert non-debug calls to this form.
+
+> Joe Perches (16):
+>    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+[...]
+>    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+[...]
+>    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+
+    Hm, somehow this patch is repeated thrice?
+
+MBR, Sergei
