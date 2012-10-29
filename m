@@ -1,64 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 09/11] block: add a new interface to block events
-Date: Mon, 29 Oct 2012 08:35:36 -0700
-Message-ID: <20121029153536.GL5171@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v8 02/11] ata: zpodd: Add CONFIG_SATA_ZPODD
+Date: Mon, 29 Oct 2012 22:11:22 +0400
+Message-ID: <1351534282.3051.7.camel@dabdike>
 References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
- <1351501298-3716-10-git-send-email-aaron.lu@intel.com>
+	 <1351501298-3716-3-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1351501298-3716-10-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1351501298-3716-3-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
 To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
+> Added a new config CONFIG_SATA_ZPODD, which is ued to support
+> SATA based zero power ODD. It depends on ACPI, and selects BLK_DEV_SR
+> as the implementation of ZPODD depends on SCSI sr driver.
+> 
+> 2 new files are added, which will be used to host ZPODD related code.
+> They are empty for this commit.
 
-On Mon, Oct 29, 2012 at 05:01:36PM +0800, Aaron Lu wrote:
-> ODD_suspend                        disk_events_workfn
->   ata_port_suspend                   check_events
->     disk_block_events                  resume ODD
->       cancel_delayed_work_sync           resume parent
->       (waiting for disk_events_workfn)   (waiting for suspend callback)
+I think you actually need to combine this with patch 3 to have it
+compile ...
 
-I don't understand why solving it needs to be this elaborate.
-check_event() can retry.  Just add a per-sr mutex which is try-locked
-by sr_block_check_events() and grab it when entering zero power.
+James
 
-> +/*
-> + * Under some circumstances, there is a race between the calling thread
-> + * of disk_block_events and the events checking function. To avoid such a race,
-> + * this function will check if the delayed work is pending. If not, it means
-> + * the work is either not queued or is already running, false is returned.
-> + * And if yes, try to cancel the delayed work. If succedded, disk_block_events
-> + * will be called and there is no worry that cancel_delayed_work_sync will
-> + * deadlock the events checking function. And if failed, false is returned.
-> + */
-> +bool disk_try_block_events(struct gendisk *disk)
-> +{
-> +	struct disk_events *ev = disk->ev;
+
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  drivers/ata/Kconfig  | 12 ++++++++++++
+>  drivers/ata/Makefile |  1 +
+>  2 files changed, 13 insertions(+)
+>  create mode 100644 drivers/ata/sata_zpodd.c
+>  create mode 100644 drivers/ata/sata_zpodd.h
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index e08d322..2cdecee 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -58,6 +58,18 @@ config ATA_ACPI
+>  	  You can disable this at kernel boot time by using the
+>  	  option libata.noacpi=1
+>  
+> +config SATA_ZPODD
+> +	bool "SATA Zero Power ODD Support"
+> +	depends on ACPI
+> +	select BLK_DEV_SR
+> +	default n
+> +	help
+> +	  This option adds support for SATA ZPODD. It requires both
+> +	  ODD and the platform support, and if enabled, will automatically
+> +	  power on/off the ODD when certain condition is satisfied. This
+> +	  does not impact user's experience of the ODD, only power is saved
+> +	  when ODD is not in use(i.e. no disc inside).
 > +
-> +	if (!ev)
-> +		return false;
-> +
-> +	if (delayed_work_pending(&ev->dwork)) {
+>  config SATA_PMP
+>  	bool "SATA Port Multiplier support"
+>  	default y
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 9329daf..a5120ff 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -107,3 +107,4 @@ libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
+>  libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
+>  libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
+>  libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
+> +obj-$(CONFIG_SATA_ZPODD)	+= sata_zpodd.o
+> diff --git a/drivers/ata/sata_zpodd.c b/drivers/ata/sata_zpodd.c
+> new file mode 100644
+> index 0000000..e69de29
+> diff --git a/drivers/ata/sata_zpodd.h b/drivers/ata/sata_zpodd.h
+> new file mode 100644
+> index 0000000..e69de29
 
-And please don't use delayed_work_pending() like this.  It doesn't add
-anything.  cancel_delayed_work() already needs to perform all the
-necessary tests.
 
-> +		if (cancel_delayed_work(&disk->ev->dwork)) {
-> +			disk_block_events(disk);
-> +			return true;
-> +		}
-> +	}
-> +
-> +	return false;
-> +}
-
-Thanks.
-
--- 
-tejun
