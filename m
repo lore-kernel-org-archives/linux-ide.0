@@ -1,38 +1,39 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Mon, 29 Oct 2012 13:36:14 +0000 (UTC)
-Message-ID: <20121029133614.8985C11FB81@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
+Date: Mon, 29 Oct 2012 08:20:51 -0700
+Message-ID: <20121029152051.GK5171@htj.dyndns.org>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
+ <1351501298-3716-6-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:50400 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753053Ab2J2NgV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Oct 2012 09:36:21 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B18542037D
-	for <linux-ide@vger.kernel.org>; Mon, 29 Oct 2012 13:36:20 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 0851A20383
-	for <linux-ide@vger.kernel.org>; Mon, 29 Oct 2012 13:36:16 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:52834 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616Ab2J2PU4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Oct 2012 11:20:56 -0400
+Content-Disposition: inline
+In-Reply-To: <1351501298-3716-6-git-send-email-aaron.lu@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
+On Mon, Oct 29, 2012 at 05:01:32PM +0800, Aaron Lu wrote:
+> ata_exec_internal will preempt the ata link's active_tag and ata port's
+> qc_active flags, this is OK for error recovery, but if normal code path
+> wants to use ata_exec_internal, there is a problem: we need to check if
+> it is OK to issue a new command with the help of port_ops->defer.
+> 
+> In ZPODD, I'll need to find out the loading mechanism of the ODD by
+> issuing a GET_CONFIGURATION command. And this command may very well
+> race with commands issued from SCSI layer. So instead of preempt the
+> current command, defer the new command if it's not OK to issue it, as
+> it is always wrong to issue a non-NCQ command when there is command(s)
+> in processing.
 
+Why not do the discovery from EH?
 
-
-
-
---- Comment #29 from cthx <sntmail@gmail.com>  2012-10-29 13:36:13 ---
-Created an attachment (id=85211)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=85211)
-crash on asus m2n32_sli_deluxe
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
