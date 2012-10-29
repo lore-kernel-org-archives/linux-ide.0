@@ -1,44 +1,49 @@
-From: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 00/16] treewide: Convert dev_printk(KERN_<LEVEL> to
- dev_<level>(
-Date: Sun, 28 Oct 2012 05:12:15 -0700
-Message-ID: <1351426335.2008.6.camel@joe-AO722>
-References: <cover.1351411047.git.joe@perches.com>
-	 <508D0ECA.8040008@mvista.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC v2 3/3] ahci_platform: perform platform exit in host_stop()
+ hook
+Date: Sun, 28 Oct 2012 18:37:09 -0700
+Message-ID: <20121029013709.GB5171@htj.dyndns.org>
+References: <1351368576-5264-1-git-send-email-computersforpeace@gmail.com>
+ <1351368576-5264-4-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <508D0ECA.8040008-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, virtualization-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-watchdog-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:55373 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837Ab2J2BhP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Oct 2012 21:37:15 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rr4so3898987pbb.19
+        for <linux-ide@vger.kernel.org>; Sun, 28 Oct 2012 18:37:15 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1351368576-5264-4-git-send-email-computersforpeace@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-pm@lists.linux-foundation.org, Kevin Cernekee <cernekee@gmail.com>
 
-On Sun, 2012-10-28 at 14:54 +0400, Sergei Shtylyov wrote:
-> Hello.
-
-Hi Sergei.
-
-> On 28-10-2012 12:05, Joe Perches wrote:
+On Sat, Oct 27, 2012 at 01:09:36PM -0700, Brian Norris wrote:
+> AHCI platform devices may provide an exit() routine, via
+> ahci_platform_data, that powers off the SATA core. Such a routine should
+> be executed from the ata_port_operations host_stop() hook. That way, the
+> ATA subsystem can perform any last-minute hardware cleanup (via devres,
+> for example), then trigger the power-off at the appropriate time.
 > 
-> > dev_<level> create smaller objects than dev_printk(KERN_<LEVEL>.
-> > Convert non-debug calls to this form.
+> This patch fixes bus errors triggered during module removal or device
+> unbinding, seen on an SoC SATA core.
 > 
-> > Joe Perches (16):
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> [...]
-> >    tile: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
-> 
->     Hm, somehow this patch is repeated thrice?
+> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
 
-Nope, I forgot to edit the 0000 file after I edited
-patches locally when I noticed I forgot to update
-the subject lines.  Patches are corrected, 0000 not.
+For all three patches,
 
-I don't think it's a bit deal, I could repost just the 0000
-if you want though.
+  Acked-by: Tejun Heo <tj@kernel.org>
 
-cheers, Joe
+If you have some time, it would be nice to introduce
+ata_platform_remove_one().  There's no reason to have that implemented
+separately in each driver.  It would also be nice to move
+remove_one()'s to some higher level port_ops so that individual
+drivers don't have to specify them explicitly.
+
+Thanks.
+
+-- 
+tejun
