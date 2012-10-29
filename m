@@ -1,44 +1,88 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v8 10/11] scsi: sr: support (un)block events
-Date: Mon, 29 Oct 2012 18:22:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1210291818100.31151-100000@netrider.rowland.org>
-References: <1351534295.3051.9.camel@dabdike>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1351534295.3051.9.camel@dabdike>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] sata_svw: check DMA start bit before reset
+Date: Mon, 29 Oct 2012 18:00:22 -0500
+Message-ID: <1351551622-1193-1-git-send-email-dmilburn@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:14970 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754754Ab2J2WyZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Oct 2012 18:54:25 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org, caiqian@redhat.com
 
-On Mon, 29 Oct 2012, James Bottomley wrote:
+If kdump is triggered with pending IO, controller may not respond causing
+kdump to fail.
 
-> On Mon, 2012-10-29 at 17:01 +0800, Aaron Lu wrote:
-> > 2 interfaces are added to block/unblock events for the disk sr manages.
-> > This is used by SATA ZPODD, when ODD is runtime powered off, the events
-> > poll is no longer needed so better be blocked. And once powered on,
-> > events poll will be unblocked.
-> > 
-> > These 2 interfaces are needed here because SATA layer does not have
-> > access to the gendisk structure sr manages.
-> 
-> I'm afraid this is a nasty layering violation.  You can't have a low
-> level driver have knowledge of a call back in an upper layer one (in
-> this case sr_block_events).
-> 
-> This is all done it looks like because of the problem of getting access
-> to the scsi_cd structure from libata, but it's not the right way to
-> solve it.
-> 
-> I also don't really think you need to do any blocking or unblocking.  As
-> I said in the previous thread, just fake the events the standard tells
-> you to, so userspace can probe to its heart's content and you can keep
-> the device powered off.
+http://marc.info/?l=linux-ide&m=133032255424658&w=2
 
-James, one of us has misunderstood the event-polling mechanism.  As far
-as I know, the polling calls that Aaron is concerned with are generated
-by the kernel, not by userspace.
+During error recovery ata_do_dev_read_id never completes due hang
+in mmio_insw.
 
-Alan Stern
+ata_do_dev_read_id
+ ata_sff_data_xfer
+  ioread16_rep
+   mmio_insw
 
+if DMA start bit is cleared before reset, PIO command is successful
+and kdump succeeds.
+
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/sata_svw.c |   35 +++++++++++++++++++++++++++++++++++
+ 1 files changed, 35 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 44a4256..08608de 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -142,6 +142,39 @@ static int k2_sata_scr_write(struct ata_link *link,
+ 	return 0;
+ }
+ 
++static int k2_sata_softreset(struct ata_link *link,
++			     unsigned int *class, unsigned long deadline)
++{
++	u8 dmactl;
++	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
++
++	dmactl = readb(mmio + ATA_DMA_CMD);
++
++	/* Clear the start bit */
++	if (dmactl & ATA_DMA_START) {
++		dmactl &= ~ATA_DMA_START;
++		writeb(dmactl, mmio + ATA_DMA_CMD);
++	}
++
++	return ata_sff_softreset(link, class, deadline);
++}
++
++static int k2_sata_hardreset(struct ata_link *link,
++			     unsigned int *class, unsigned long deadline)
++{
++	u8 dmactl;
++	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
++
++	dmactl = readb(mmio + ATA_DMA_CMD);
++
++	/* Clear the start bit */
++	if (dmactl & ATA_DMA_START) {
++		dmactl &= ~ATA_DMA_START;
++		writeb(dmactl, mmio + ATA_DMA_CMD);
++	}
++
++	return sata_sff_hardreset(link, class, deadline);
++}
+ 
+ static void k2_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+ {
+@@ -346,6 +379,8 @@ static struct scsi_host_template k2_sata_sht = {
+ 
+ static struct ata_port_operations k2_sata_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
++	.softreset              = k2_sata_softreset,
++	.hardreset              = k2_sata_hardreset,
+ 	.sff_tf_load		= k2_sata_tf_load,
+ 	.sff_tf_read		= k2_sata_tf_read,
+ 	.sff_check_status	= k2_stat_check_status,
