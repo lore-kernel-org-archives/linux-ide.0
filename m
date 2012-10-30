@@ -1,346 +1,384 @@
 From: Vasanth Ananthan <vasanthananthan@gmail.com>
-Subject: [PATCH v2 5/6] DRIVERS: ATA:  SATA controller driver
-Date: Tue, 30 Oct 2012 17:01:36 +0100
-Message-ID: <1351612897-14923-6-git-send-email-vasanthananthan@gmail.com>
+Subject: [PATCH v2 6/6] DRIVERS: ATA: SATA PHY controller driver
+Date: Tue, 30 Oct 2012 17:01:37 +0100
+Message-ID: <1351612897-14923-7-git-send-email-vasanthananthan@gmail.com>
 References: <1351612897-14923-1-git-send-email-vasanthananthan@gmail.com>
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56890 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933913Ab2J3QCJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Oct 2012 12:02:09 -0400
 In-Reply-To: <1351612897-14923-1-git-send-email-vasanthananthan@gmail.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk
 Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanthananthan@gmail.com>, Vasanth Ananthan <vasanth.a@samsung.com>
-List-Id: linux-ide@vger.kernel.org
 
-This patch adds a platform driver for SATA controller.
+This patch adds a platform driver and I2C client driver for SATA PHY controller
 
 Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
 ---
- arch/arm/mach-exynos/include/mach/regs-pmu.h |    3 +
- drivers/ata/Kconfig                          |   12 ++
- drivers/ata/Makefile                         |    1 +
- drivers/ata/sata_exynos.c                    |  268 ++++++++++++++++++++++++++
- 4 files changed, 284 insertions(+), 0 deletions(-)
- create mode 100644 drivers/ata/sata_exynos.c
+ arch/arm/mach-exynos/include/mach/regs-sata.h |   29 +++
+ drivers/ata/Makefile                          |    2 +-
+ drivers/ata/sata_exynos_phy.c                 |  300 +++++++++++++++++++++++++
+ 3 files changed, 330 insertions(+), 1 deletions(-)
+ create mode 100644 arch/arm/mach-exynos/include/mach/regs-sata.h
+ create mode 100644 drivers/ata/sata_exynos_phy.c
 
-diff --git a/arch/arm/mach-exynos/include/mach/regs-pmu.h b/arch/arm/mach-exynos/include/mach/regs-pmu.h
-index d4e392b..3716ce8 100644
---- a/arch/arm/mach-exynos/include/mach/regs-pmu.h
-+++ b/arch/arm/mach-exynos/include/mach/regs-pmu.h
-@@ -367,4 +367,7 @@
- 
- #define EXYNOS5_OPTION_USE_RETENTION				(1 << 4)
- 
-+/* Only for EXYNOS5250 */
-+#define EXYNOS5_SATA_PHY_CONTROL		S5P_PMUREG(0x0724)
-+
- #endif /* __ASM_ARCH_REGS_PMU_H */
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index e3a2972..f3384ed 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -93,6 +93,18 @@ config SATA_PHY
- 	  with the framework through the APIs provided and the SATA
- 	  device finds and requests for an appropriate PHY device.
- 
-+config SATA_EXYNOS
-+        bool "Exynos SATA AHCI support"
-+        select I2C
-+        select HAVE_S3C2410_I2C
-+        select I2C_S3C2410
-+        select SATA_PHY
-+        help
-+          This option enables support for Exynos AHCI Serial ATA
-+          controllers.
-+
-+          If unsure, say N.
-+
- config SATA_FSL
- 	tristate "Freescale 3.0Gbps SATA support"
- 	depends on FSL_SOC
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 3d219a9..43bb38e 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -11,6 +11,7 @@ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
- obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
- obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
- obj-$(CONFIG_SATA_PHY)		+= sata_phy.o
-+obj-$(CONFIG_SATA_EXYNOS)	+= sata_exynos.o libahci.o
- 
- # SFF w/ custom DMA
- obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
-diff --git a/drivers/ata/sata_exynos.c b/drivers/ata/sata_exynos.c
+diff --git a/arch/arm/mach-exynos/include/mach/regs-sata.h b/arch/arm/mach-exynos/include/mach/regs-sata.h
 new file mode 100644
-index 0000000..41dc17d
+index 0000000..80dd564
 --- /dev/null
-+++ b/drivers/ata/sata_exynos.c
-@@ -0,0 +1,268 @@
++++ b/arch/arm/mach-exynos/include/mach/regs-sata.h
+@@ -0,0 +1,29 @@
 +/*
 + * Copyright (c) 2010-2012 Samsung Electronics Co., Ltd.
 + *              http://www.samsung.com
 + *
-+ * EXYNOS - SATA controller driver
++ * EXYNOS - SATA PHY controller definition
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 as
 + * published by the Free Software Foundation.
 +*/
 +
-+#include <linux/kernel.h>
-+#include <linux/gfp.h>
++#define EXYNOS5_SATA_RESET		0x4
++#define RESET_CMN_RST_N			(1 << 1)
++#define LINK_RESET			0xF0000
++
++#define EXYNOS5_SATA_MODE0		0x10
++
++#define EXYNOS5_SATA_CTRL0		0x14
++#define CTRL0_P0_PHY_CALIBRATED_SEL	(1 << 9)
++#define CTRL0_P0_PHY_CALIBRATED		(1 << 8)
++
++#define EXYNOS5_SATA_PHSATA_CTRLM	0xE0
++#define PHCTRLM_REF_RATE		(1 << 1)
++#define PHCTRLM_HIGH_SPEED		(1 << 0)
++
++#define EXYNOS5_SATA_PHSATA_STATM	0xF0
++#define PHSTATM_PLL_LOCKED		(1 << 0)
++
++#define SATA_PHY_CON_RESET              0xF003F
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 43bb38e..6a3a8ee 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -11,7 +11,7 @@ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_SATA_PHY)		+= sata_phy.o
+-obj-$(CONFIG_SATA_EXYNOS)	+= sata_exynos.o libahci.o
++obj-$(CONFIG_SATA_EXYNOS)	+= sata_exynos.o sata_exynos_phy.o libahci.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+diff --git a/drivers/ata/sata_exynos_phy.c b/drivers/ata/sata_exynos_phy.c
+new file mode 100644
+index 0000000..ec61db5
+--- /dev/null
++++ b/drivers/ata/sata_exynos_phy.c
+@@ -0,0 +1,300 @@
++/*
++ * Copyright (c) 2010-2012 Samsung Electronics Co., Ltd.
++ *              http://www.samsung.com
++ *
++ * EXYNOS - SATA PHY controller driver
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++*/
++
 +#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
 +#include <linux/device.h>
 +#include <linux/platform_device.h>
-+#include <linux/libata.h>
-+#include <linux/ahci_platform.h>
++#include <linux/i2c.h>
 +#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/dma-mapping.h>
++#include <linux/ahci_platform.h>
++#include <linux/kernel.h>
 +#include <linux/slab.h>
-+#include <linux/of.h>
++#include <linux/list.h>
++#include <linux/io.h>
 +
-+#include "ahci.h"
++#include <plat/cpu.h>
++
++#include <mach/irqs.h>
++#include <mach/map.h>
++#include <mach/regs-pmu.h>
++#include <mach/regs-sata.h>
++
 +#include "sata_phy.h"
 +
-+#define MHZ            (1000 * 1000)
++#define	SATA_TIME_LIMIT		1000
 +
-+static const struct ata_port_info ahci_port_info = {
-+	.flags = AHCI_FLAG_COMMON,
-+	.pio_mask = ATA_PIO4,
-+	.udma_mask = ATA_UDMA6,
-+	.port_ops = &ahci_ops,
-+};
++static struct i2c_client *i2c_client;
 +
-+static struct scsi_host_template ahci_platform_sht = {
-+	AHCI_SHT("ahci_platform"),
-+};
++static struct i2c_driver sataphy_i2c_driver;
 +
-+struct exynos_sata {
-+	struct clk *sclk;
++struct exynos_sata_phy {
++	void __iomem *mmio;
++	struct resource *mem;
 +	struct clk *clk;
-+	struct sata_phy *phy;
-+	int irq;
-+	unsigned int freq;
 +};
 +
-+static void exynos_sata_parse_dt(struct device_node *np,
-+					struct exynos_sata *sata)
++static bool sata_is_reg(void __iomem *base, u32 reg, u32 checkbit, u32 status)
 +{
-+	if (!np)
-+		return;
-+
-+	of_property_read_u32(np, "samsung,sata-freq", &sata->freq);
++	if ((readl(base + reg) & checkbit) == status)
++		return true;
++	else
++		return false;
 +}
 +
-+static int __init exynos_sata_probe(struct platform_device *pdev)
++static bool wait_for_reg_status(void __iomem *base, u32 reg, u32 checkbit,
++				u32 status)
 +{
-+	struct device *dev = &pdev->dev;
-+	struct ata_port_info pi = ahci_port_info;
-+	const struct ata_port_info *ppi[] = { &pi, NULL };
-+	struct ahci_host_priv *hpriv;
-+	struct exynos_sata *sata;
-+	struct ata_host *host;
-+	struct resource *mem;
-+	int n_ports, i, ret;
++	u16 time_limit_cnt = 0;
++	while (!sata_is_reg(base, reg, checkbit, status)) {
++		if (time_limit_cnt == SATA_TIME_LIMIT)
++			return false;
++		udelay(1000);
++		time_limit_cnt++;
++	}
++	return true;
++}
 +
-+	sata = devm_kzalloc(dev, sizeof(*sata), GFP_KERNEL);
-+	if (!sata) {
-+		dev_err(dev, "can't alloc sata\n");
++static int sataphy_init(struct sata_phy *phy)
++{
++	int ret;
++	u32 val;
++
++	/* Values to be written to enable 40 bits interface */
++	u8 buf[] = { 0x3A, 0x0B };
++
++	struct exynos_sata_phy *sata_phy;
++
++	if (!i2c_client)
++		return -EPROBE_DEFER;
++
++	sata_phy = (struct exynos_sata_phy *)phy->priv_data;
++
++	clk_enable(sata_phy->clk);
++
++	writel(S5P_PMU_SATA_PHY_CONTROL_EN, EXYNOS5_SATA_PHY_CONTROL);
++
++	val = 0;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_RESET);
++	val |= 0xFF;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_RESET);
++	val |= LINK_RESET;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_RESET);
++	val |= RESET_CMN_RST_N;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_PHSATA_CTRLM);
++	val &= ~PHCTRLM_REF_RATE;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_PHSATA_CTRLM);
++
++	/* High speed enable for Gen3 */
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_PHSATA_CTRLM);
++	val |= PHCTRLM_HIGH_SPEED;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_PHSATA_CTRLM);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_CTRL0);
++	val |= CTRL0_P0_PHY_CALIBRATED_SEL | CTRL0_P0_PHY_CALIBRATED;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_CTRL0);
++
++	writel(SATA_PHY_GENERATION3, sata_phy->mmio + EXYNOS5_SATA_MODE0);
++
++	ret = i2c_master_send(i2c_client, buf, sizeof(buf));
++	if (ret < 0)
 +		return -EINVAL;
++
++	/* release cmu reset */
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_RESET);
++	val &= ~RESET_CMN_RST_N;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	val = readl(sata_phy->mmio + EXYNOS5_SATA_RESET);
++	val |= RESET_CMN_RST_N;
++	writel(val, sata_phy->mmio + EXYNOS5_SATA_RESET);
++
++	if (wait_for_reg_status(sata_phy->mmio, EXYNOS5_SATA_PHSATA_STATM,
++				PHSTATM_PLL_LOCKED, 1)) {
++		return 0;
++	}
++	return -EINVAL;
++}
++
++static int sataphy_shutdown(struct sata_phy *phy)
++{
++
++	struct exynos_sata_phy *sata_phy;
++
++	sata_phy = (struct exynos_sata_phy *)phy->priv_data;
++
++	clk_disable(sata_phy->clk);
++
++	return 0;
++}
++
++static int __init sata_i2c_probe(struct i2c_client *client,
++			  const struct i2c_device_id *i2c_id)
++{
++	i2c_client = client;
++	return 0;
++}
++
++static int __init sata_phy_probe(struct platform_device *pdev)
++{
++	struct exynos_sata_phy *sataphy;
++	struct sata_phy *phy;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	int ret = 0;
++
++	phy = kzalloc(sizeof(struct sata_phy), GFP_KERNEL);
++	if (!phy) {
++		dev_err(&pdev->dev, "failed to allocate memory\n");
++		ret = -ENOMEM;
++		goto out;
 +	}
 +
-+	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
-+	if (!hpriv) {
-+		dev_err(dev, "can't alloc ahci_host_priv\n");
++	sataphy = kzalloc(sizeof(struct exynos_sata_phy), GFP_KERNEL);
++	if (!sataphy) {
++		dev_err(dev, "failed to allocate memory\n");
 +		ret = -ENOMEM;
++		goto err0;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		dev_err(dev, "Could not find IO resource\n");
++		ret = -EINVAL;
 +		goto err1;
 +	}
 +
-+	hpriv->flags |= (unsigned long)pi.private_data;
-+
-+	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!mem) {
-+		dev_err(dev, "no mmio space\n");
++	sataphy->mem = devm_request_mem_region(dev, res->start,
++					resource_size(res), pdev->name);
++	if (!sataphy->mem) {
++		dev_err(dev, "Could not request IO resource\n");
 +		ret = -EINVAL;
-+		goto err2;
++		goto err1;
 +	}
 +
-+	sata->irq = platform_get_irq(pdev, 0);
-+	if (sata->irq <= 0) {
-+		dev_err(dev, "no irq\n");
-+		ret = -EINVAL;
-+		goto err2;
-+	}
-+
-+	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
-+	if (!hpriv->mmio) {
-+		dev_err(dev, "can't map %pR\n", mem);
++	sataphy->mmio =
++	    devm_ioremap(dev, res->start, resource_size(res));
++	if (!sataphy->mmio) {
++		dev_err(dev, "failed to remap IO\n");
 +		ret = -ENOMEM;
 +		goto err2;
 +	}
 +
-+	exynos_sata_parse_dt(dev->of_node, sata);
-+
-+	sata->sclk = devm_clk_get(dev, "sclk_sata");
-+	if (IS_ERR(sata->sclk)) {
-+		dev_err(dev, "failed to get sclk_sata\n");
-+		ret = PTR_ERR(sata->sclk);
++	sataphy->clk = devm_clk_get(dev, "sata-phy");
++	if (IS_ERR(sataphy->clk)) {
++		dev_err(dev, "failed to get clk for PHY\n");
++		ret = PTR_ERR(sataphy->clk);
 +		goto err3;
 +	}
-+	clk_enable(sata->sclk);
 +
-+	clk_set_rate(sata->sclk, sata->freq * MHZ);
++	phy->init = sataphy_init;
++	phy->shutdown = sataphy_shutdown;
++	phy->priv_data = (void *)sataphy;
++	phy->dev = dev;
 +
-+	sata->clk = devm_clk_get(dev, "sata");
-+	if (IS_ERR(sata->clk)) {
-+		dev_err(dev, "failed to get sata clock\n");
-+		ret = PTR_ERR(sata->clk);
++	ret = sata_add_phy(phy, SATA_PHY_GENERATION3);
++	if (ret < 0)
 +		goto err4;
-+	}
-+	clk_enable(sata->clk);
 +
-+	/*  Get a gen 3 PHY controller */
-+
-+	sata->phy = sata_get_phy(SATA_PHY_GENERATION3);
-+	if (!sata->phy) {
-+		dev_err(dev, "failed to get sata phy\n");
-+		ret = -EPROBE_DEFER;
++	ret = i2c_add_driver(&sataphy_i2c_driver);
++	if (ret < 0)
 +		goto err5;
-+	}
 +
-+	/* Initialize the controller */
++	platform_set_drvdata(pdev, phy);
 +
-+	ret = sata_init_phy(sata->phy);
-+	if (ret < 0) {
-+		dev_err(dev, "failed to initialize sata phy\n");
-+		goto err6;
-+	}
-+
-+	ahci_save_initial_config(dev, hpriv, 0, 0);
-+
-+	/* prepare host */
-+	if (hpriv->cap & HOST_CAP_NCQ)
-+		pi.flags |= ATA_FLAG_NCQ;
-+
-+	if (hpriv->cap & HOST_CAP_PMP)
-+		pi.flags |= ATA_FLAG_PMP;
-+
-+	ahci_set_em_messages(hpriv, &pi);
-+
-+	/* CAP.NP sometimes indicate the index of the last enabled
-+	 * port, at other times, that of the last possible port, so
-+	 * determining the maximum port number requires looking at
-+	 * both CAP.NP and port_map.
-+	 */
-+	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
-+
-+	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
-+	if (!host) {
-+		ret = -ENOMEM;
-+		goto err7;
-+	}
-+
-+	host->private_data = hpriv;
-+
-+	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
-+		host->flags |= ATA_HOST_PARALLEL_SCAN;
-+	else
-+		pr_info(KERN_INFO
-+		       "ahci: SSS flag set, parallel bus scan disabled\n");
-+
-+	if (pi.flags & ATA_FLAG_EM)
-+		ahci_reset_em(host);
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		ata_port_desc(ap, "mmio %pR", mem);
-+		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
-+
-+		/* set enclosure management message type */
-+		if (ap->flags & ATA_FLAG_EM)
-+			ap->em_message_type = hpriv->em_msg_type;
-+
-+		/* disabled/not-implemented port */
-+		if (!(hpriv->port_map & (1 << i)))
-+			ap->ops = &ata_dummy_port_ops;
-+	}
-+
-+	ret = ahci_reset_controller(host);
-+	if (ret)
-+		goto err7;
-+
-+	ahci_init_controller(host);
-+	ahci_print_info(host, "platform");
-+
-+	ret = ata_host_activate(host, sata->irq, ahci_interrupt, IRQF_SHARED,
-+				&ahci_platform_sht);
-+	if (ret)
-+		goto err7;
-+
-+	platform_set_drvdata(pdev, sata);
-+
-+	return 0;
-+
-+ err7:
-+	sata_shutdown_phy(sata->phy);
-+
-+ err6:
-+	sata_put_phy(sata->phy);
++	return ret;
 +
 + err5:
-+	clk_disable(sata->clk);
-+	devm_clk_put(dev, sata->clk);
++	sata_remove_phy(phy);
 +
 + err4:
-+	clk_disable(sata->sclk);
-+	devm_clk_put(dev, sata->sclk);
++	clk_disable(sataphy->clk);
++	devm_clk_put(dev, sataphy->clk);
 +
 + err3:
-+	devm_iounmap(dev, hpriv->mmio);
++	devm_iounmap(dev, sataphy->mmio);
 +
 + err2:
-+	devm_kfree(dev, hpriv);
++	devm_release_mem_region(dev, res->start, resource_size(res));
 +
 + err1:
-+	devm_kfree(dev, sata);
++	kfree(sataphy);
 +
++ err0:
++	kfree(phy);
++
++ out:
 +	return ret;
 +}
 +
-+static int __devexit exynos_sata_remove(struct platform_device *pdev)
++static int sata_phy_remove(struct platform_device *pdev)
 +{
-+	struct device *dev = &pdev->dev;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct exynos_sata *sata = platform_get_drvdata(pdev);
++	struct sata_phy *phy;
++	struct exynos_sata_phy *sataphy;
 +
-+	ata_host_detach(host);
++	phy = platform_get_drvdata(pdev);
 +
-+	sata_shutdown_phy(sata->phy);
-+	sata_put_phy(sata->phy);
++	sataphy = (struct exynos_sata_phy *)phy->priv_data;
++	sata_remove_phy(phy);
++
++	kfree(sataphy);
++	kfree(phy);
 +
 +	return 0;
 +}
 +
-+static const struct of_device_id ahci_of_match[] = {
-+	{ .compatible = "samsung,exynos5-sata-ahci", },
++static const struct of_device_id sata_phy_of_match[] = {
++	{ .compatible = "samsung,exynos5-sata-phy", },
++	{},
 +};
 +
-+MODULE_DEVICE_TABLE(of, ahci_of_match);
++MODULE_DEVICE_TABLE(of, sata_phy_of_match);
 +
-+static struct platform_driver exynos_sata_driver = {
-+	.probe	= exynos_sata_probe,
-+	.remove = exynos_sata_remove,
++static const struct i2c_device_id phy_i2c_device_match[] = {
++	{ "sata-phy", 0 },
++};
++
++MODULE_DEVICE_TABLE(of, phy_i2c_device_match);
++
++static struct platform_driver sata_phy_driver = {
++	.probe = sata_phy_probe,
++	.remove = sata_phy_remove,
 +	.driver = {
-+		.name = "ahci-sata",
-+		.owner = THIS_MODULE,
-+		.of_match_table = ahci_of_match,
++		   .name = "sata-phy",
++		   .owner = THIS_MODULE,
++		   .of_match_table = sata_phy_of_match,
 +	},
 +};
 +
-+module_platform_driver(exynos_sata_driver);
++static struct i2c_driver sataphy_i2c_driver = {
++	.driver = {
++		   .name = "sata-phy-i2c",
++		   .owner = THIS_MODULE,
++		   .of_match_table = phy_i2c_device_match,
++	},
++	.probe = sata_i2c_probe,
++	.id_table = phy_i2c_device_match,
++};
 +
-+MODULE_DESCRIPTION("EXYNOS SATA DRIVER");
++module_platform_driver(sata_phy_driver);
++
++MODULE_DESCRIPTION("EXYNOS SATA PHY DRIVER");
 +MODULE_AUTHOR("Vasanth Ananthan, <vasanth.a@samsung.com>");
 +MODULE_LICENSE("GPL");
 -- 
 1.7.4.1
+
