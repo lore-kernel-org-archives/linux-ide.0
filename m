@@ -1,88 +1,37 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: [PATCH] sata_svw: check DMA start bit before reset
-Date: Mon, 29 Oct 2012 18:00:22 -0500
-Message-ID: <1351551622-1193-1-git-send-email-dmilburn@redhat.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14970 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754754Ab2J2WyZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Oct 2012 18:54:25 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
+Date: Tue, 30 Oct 2012 11:00:16 +0800
+Message-ID: <508F42C0.8070807@intel.com>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-6-git-send-email-aaron.lu@intel.com> <20121029152051.GK5171@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20121029152051.GK5171@htj.dyndns.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, benh@kernel.crashing.org, caiqian@redhat.com
 
-If kdump is triggered with pending IO, controller may not respond causing
-kdump to fail.
+On 10/29/2012 11:20 PM, Tejun Heo wrote:
+> On Mon, Oct 29, 2012 at 05:01:32PM +0800, Aaron Lu wrote:
+>> ata_exec_internal will preempt the ata link's active_tag and ata port's
+>> qc_active flags, this is OK for error recovery, but if normal code path
+>> wants to use ata_exec_internal, there is a problem: we need to check if
+>> it is OK to issue a new command with the help of port_ops->defer.
+>>
+>> In ZPODD, I'll need to find out the loading mechanism of the ODD by
+>> issuing a GET_CONFIGURATION command. And this command may very well
+>> race with commands issued from SCSI layer. So instead of preempt the
+>> current command, defer the new command if it's not OK to issue it, as
+>> it is always wrong to issue a non-NCQ command when there is command(s)
+>> in processing.
+> 
+> Why not do the discovery from EH?
 
-http://marc.info/?l=linux-ide&m=133032255424658&w=2
+Do you mean set a device level EH flag and then schedule EH to do the
+discovery?
 
-During error recovery ata_do_dev_read_id never completes due hang
-in mmio_insw.
+Thanks,
+Aaron
 
-ata_do_dev_read_id
- ata_sff_data_xfer
-  ioread16_rep
-   mmio_insw
-
-if DMA start bit is cleared before reset, PIO command is successful
-and kdump succeeds.
-
-Signed-off-by: David Milburn <dmilburn@redhat.com>
----
- drivers/ata/sata_svw.c |   35 +++++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 44a4256..08608de 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -142,6 +142,39 @@ static int k2_sata_scr_write(struct ata_link *link,
- 	return 0;
- }
- 
-+static int k2_sata_softreset(struct ata_link *link,
-+			     unsigned int *class, unsigned long deadline)
-+{
-+	u8 dmactl;
-+	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
-+
-+	dmactl = readb(mmio + ATA_DMA_CMD);
-+
-+	/* Clear the start bit */
-+	if (dmactl & ATA_DMA_START) {
-+		dmactl &= ~ATA_DMA_START;
-+		writeb(dmactl, mmio + ATA_DMA_CMD);
-+	}
-+
-+	return ata_sff_softreset(link, class, deadline);
-+}
-+
-+static int k2_sata_hardreset(struct ata_link *link,
-+			     unsigned int *class, unsigned long deadline)
-+{
-+	u8 dmactl;
-+	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
-+
-+	dmactl = readb(mmio + ATA_DMA_CMD);
-+
-+	/* Clear the start bit */
-+	if (dmactl & ATA_DMA_START) {
-+		dmactl &= ~ATA_DMA_START;
-+		writeb(dmactl, mmio + ATA_DMA_CMD);
-+	}
-+
-+	return sata_sff_hardreset(link, class, deadline);
-+}
- 
- static void k2_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
- {
-@@ -346,6 +379,8 @@ static struct scsi_host_template k2_sata_sht = {
- 
- static struct ata_port_operations k2_sata_ops = {
- 	.inherits		= &ata_bmdma_port_ops,
-+	.softreset              = k2_sata_softreset,
-+	.hardreset              = k2_sata_hardreset,
- 	.sff_tf_load		= k2_sata_tf_load,
- 	.sff_tf_read		= k2_sata_tf_read,
- 	.sff_check_status	= k2_stat_check_status,
