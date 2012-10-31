@@ -1,34 +1,49 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch 06/10] ata: use scsi_host_alloc_node
-Date: Tue, 30 Oct 2012 16:14:40 -0400
-Message-ID: <1351628084-29358-9-git-send-email-jmoyer@redhat.com>
-References: <1351628084-29358-1-git-send-email-jmoyer@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1351628084-29358-1-git-send-email-jmoyer@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v8 09/11] block: add a new interface to block events
+Date: Wed, 31 Oct 2012 14:51:21 -0700
+Message-ID: <20121031215121.GC2945@htj.dyndns.org>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com>
+ <1351501298-3716-10-git-send-email-aaron.lu@intel.com>
+ <20121029153536.GL5171@htj.dyndns.org>
+ <508F7BF1.1040009@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:44785 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754482Ab2JaVv1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Oct 2012 17:51:27 -0400
+Content-Disposition: inline
+In-Reply-To: <508F7BF1.1040009@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
+Hello,
 
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- drivers/ata/libata-scsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+On Tue, Oct 30, 2012 at 03:04:17PM +0800, Aaron Lu wrote:
+> > check_event() can retry.  Just add a per-sr mutex which is try-locked
+> > by sr_block_check_events() and grab it when entering zero power.
+> 
+> Good suggestion. I didn't think about solving it this way.
+> 
+> Many people suggest me that ZPODD is pure SATA/ACPI stuff, and should
+> not pollute sr driver, so I was trying hard not to touch sr while
+> preparing these patches, unless there is no other choice(like the
+> blocking event interface).
+> 
+> So I'm not sure if your suggestion is the way to go.
+> 
+> James, what do you think? Is it OK if I add a mutex into the scsi_cd
+> structure to do this? Of course I'll define this only under
+> CONFIG_SATA_ZPODD.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e3bda07..9d5dd09 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3586,7 +3586,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		struct Scsi_Host *shost;
- 
- 		rc = -ENOMEM;
--		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
-+		shost = scsi_host_alloc_node(sht, sizeof(struct ata_port *),
-+					     dev_to_node(host->dev));
- 		if (!shost)
- 			goto err_alloc;
- 
+I don't think what James' and my suggestions are that different.  Just
+silence check_event() while zpodd is kicked in somehow.  There's no
+reason to synchronize across multiple subsystems.
+
+Thanks.
+
 -- 
-1.7.1
+tejun
