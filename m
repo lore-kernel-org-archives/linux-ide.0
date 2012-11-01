@@ -1,56 +1,38 @@
-From: viresh kumar <viresh.kumar@linaro.org>
-Subject: Re: [PATCH v2] pata_arasan_cf: declare/use more local variables in arasan_cf_dma_start()
-Date: Thu, 1 Nov 2012 20:01:50 +0530
-Message-ID: <CAOh2x=nxu0+bG5WayqXqTgW0JVV8G+ECnZbXy3oXxiGT0RFZtQ@mail.gmail.com>
-References: <201211011828.36550.sshtylyov@ru.mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Thu,  1 Nov 2012 15:18:30 +0000 (UTC)
+Message-ID: <20121101151830.30DB511FB81@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:63419 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934896Ab2KAObu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2012 10:31:50 -0400
-Received: by mail-qc0-f174.google.com with SMTP id o22so1717590qcr.19
-        for <linux-ide@vger.kernel.org>; Thu, 01 Nov 2012 07:31:50 -0700 (PDT)
-In-Reply-To: <201211011828.36550.sshtylyov@ru.mvista.com>
+Received: from mail.kernel.org ([198.145.19.201]:52147 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992455Ab2KAPSe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Nov 2012 11:18:34 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6EC9820411
+	for <linux-ide@vger.kernel.org>; Thu,  1 Nov 2012 15:18:33 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 1E8E820412
+	for <linux-ide@vger.kernel.org>; Thu,  1 Nov 2012 15:18:31 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, spear-devel <spear-devel@list.st.com>
+To: linux-ide@vger.kernel.org
 
-On Thu, Nov 1, 2012 at 8:58 PM, Sergei Shtylyov <sshtylyov@ru.mvista.com> wrote:
-> 'acdev->qc', 'acdev->qc->ap', and 'acdev->qc->tf' expressions are used multiple
-> times in this function, so it makes sense to use the local variables for them.
->
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
->
-> ---
-> The patch is atop of the 'upstream' branch of libata-dev.git...
->
->  drivers/ata/pata_arasan_cf.c |    7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
->
-> Index: libata-dev/drivers/ata/pata_arasan_cf.c
-> ===================================================================
-> --- libata-dev.orig/drivers/ata/pata_arasan_cf.c
-> +++ libata-dev/drivers/ata/pata_arasan_cf.c
-> @@ -668,13 +668,16 @@ void arasan_cf_error_handler(struct ata_
->
->  static void arasan_cf_dma_start(struct arasan_cf_dev *acdev)
->  {
-> +       struct ata_queued_cmd *qc = acdev->qc;
-> +       struct ata_port *ap = qc->ap;
-> +       struct ata_taskfile *tf = &qc->tf;
->         u32 xfer_ctr = readl(acdev->vbase + XFER_CTR) & ~XFER_DIR_MASK;
-> -       u32 write = acdev->qc->tf.flags & ATA_TFLAG_WRITE;
-> +       u32 write = tf->flags & ATA_TFLAG_WRITE;
->
->         xfer_ctr |= write ? XFER_WRITE : XFER_READ;
->         writel(xfer_ctr, acdev->vbase + XFER_CTR);
->
-> -       acdev->qc->ap->ops->sff_exec_command(acdev->qc->ap, &acdev->qc->tf);
-> +       ap->ops->sff_exec_command(ap, tf);
->         ata_sff_queue_work(&acdev->work);
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
-Looks fine. Thanks.
+
+
+
+
+--- Comment #30 from Roland Bogner <geist1@sms.at>  2012-11-01 15:18:29 ---
+crash on 3.7 rc-3 too.
+Asus M2N32-SLI
+Last working kernel was 3-5.x
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
