@@ -1,41 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] sata_highbank: use ATA_BUSY
-Date: Thu, 1 Nov 2012 20:59:28 +0300
-Message-ID: <201211012059.29109.sshtylyov@ru.mvista.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v8 05/11] libata-eh: allow defer in ata_exec_internal
+Date: Fri, 02 Nov 2012 08:43:00 +0800
+Message-ID: <50931714.6090505@intel.com>
+References: <1351501298-3716-1-git-send-email-aaron.lu@intel.com> <1351501298-3716-6-git-send-email-aaron.lu@intel.com> <20121029152051.GK5171@htj.dyndns.org> <508F42C0.8070807@intel.com> <20121030030144.GG4066@htj.dyndns.org> <508F44E1.3000801@intel.com> <20121031215213.GD2945@htj.dyndns.org> <5091DFDE.1060904@intel.com> <20121101160300.GB9169@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:46496 "EHLO
-	wasted.dev.rtsoft.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750745Ab2KARF3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 Nov 2012 13:05:29 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20121101160300.GB9169@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-ahci_highbank_hardreset() uses bare number for the BSY bit of the ATA status
-register, despite it is #define'd in <linux/ata.h>
+On 11/02/2012 12:03 AM, Tejun Heo wrote:
+> Hello, Aaron.
+> 
+> On Thu, Nov 01, 2012 at 10:35:10AM +0800, Aaron Lu wrote:
+>>> You can always add some fields. :)
+>>
+>> OK. My concern is that, such information is only useful to ZPODD
+>> capable device+platforms, so checking this loading mechanism thing for
+>> all ATAPI devices during probe time doesn't seem a good idea.
+> 
+> Hmmm.. but it's not like querying acpi is high cost or anything.
+> Maybe I'm missing something but if it can be simpler that way, please
+> do so by all means.  I don't care whether you add some extra fields or
+> some processing overhead during probing.  It doesn't really matter.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+OK, thanks for the suggestion.
 
----
-The patch is atop of the 'upstream' branch of libata-dev.git...
+> 
+>>> Hmm... I see.  Which ACPI binding is it?  The ATA ACPI binding happens
+>>> during probing.  It's a different one, I presume?
+>>
+>> Since commit 6b66d95895c149cbc04d4fac5a2f5477c543a8ae:
+>> libata: bind the Linux device tree to the ACPI device tree
+>> ACPI binding happens when SCSI devices are added to the device tree. The
+>> ata port/device software structure does not have a acpi_handle field
+>> anymore.
+> 
+> Please bear with me.  I haven't paid much attention to zpodd, so it
+> probably is my ignorance but at least the ATA <-> ACPI association
+> happens during probing by calling ata_acpi_on_devcfg() from
+> ata_dev_configure(), and it pretty much has to happen then because
+> _SDD/_GTF should be executed after hardreset which happens during
+> probing.  So, yeah, I'm confused.
 
- drivers/ata/sata_highbank.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Oh, yes, ACPI handle can be retrieved any time by quering some ACPI
+method. And during probe time, it is done that way, while the binding
+happens much later... But the ACPI handle can indeed be fetched at that
+time :-)
+So all the conditions I need to test ZPODD support is ready during probe
+time and I'll move the check loading mechanism code there, thanks for
+your suggestion.
 
-Index: libata-dev/drivers/ata/sata_highbank.c
-===================================================================
---- libata-dev.orig/drivers/ata/sata_highbank.c
-+++ libata-dev/drivers/ata/sata_highbank.c
-@@ -213,7 +213,7 @@ static int ahci_highbank_hardreset(struc
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
- 	ata_tf_init(link->device, &tf);
--	tf.command = 0x80;
-+	tf.command = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	do {
+Thanks,
+Aaron
+
