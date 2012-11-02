@@ -1,72 +1,39 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 04/14] libata: implement ata_platform_remove_one()
-Date: Fri, 02 Nov 2012 15:07:09 +0400
-Message-ID: <5093A95D.6090403@mvista.com>
-References: <1351842388-27210-1-git-send-email-computersforpeace@gmail.com> <1351842388-27210-5-git-send-email-computersforpeace@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Fri,  2 Nov 2012 12:07:38 +0000 (UTC)
+Message-ID: <20121102120738.70E9911FB80@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:45845 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112Ab2KBLIX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2012 07:08:23 -0400
-Received: by mail-la0-f46.google.com with SMTP id h6so2517311lag.19
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2012 04:08:22 -0700 (PDT)
-In-Reply-To: <1351842388-27210-5-git-send-email-computersforpeace@gmail.com>
+Received: from mail.kernel.org ([198.145.19.201]:51962 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752550Ab2KBMHm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 2 Nov 2012 08:07:42 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id E455E20278
+	for <linux-ide@vger.kernel.org>; Fri,  2 Nov 2012 12:07:40 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id CCCE420257
+	for <linux-ide@vger.kernel.org>; Fri,  2 Nov 2012 12:07:39 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: linux-ide@vger.kernel.org
 
-Hello.
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
-On 02-11-2012 11:46, Brian Norris wrote:
 
-> This relatively simple boiler-plate code is repeated in several platform
-> drivers. We should implement a common version in libata.
 
-> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-> ---
->   drivers/ata/libata-core.c | 23 +++++++++++++++++++++++
->   include/linux/libata.h    |  4 ++++
->   2 files changed, 27 insertions(+)
 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 611050d..820e47f 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-[...]
-> @@ -6350,6 +6351,26 @@ int ata_pci_device_resume(struct pci_dev *pdev)
->
->   #endif /* CONFIG_PCI */
->
-> +/**
-> + *      ata_platform_remove_one- Platform layer callback for device removal
-> + *      @pdev: Platform device that was removed
-> + *
-> + *      Platform layer indicates to libata via this hook that hot-unplug or
-> + *      module unload event has occurred.  Detach all ports.  Resource
-> + *      release is handled via devres.
-> + *
-> + *      LOCKING:
-> + *      Inherited from platform layer (may sleep).
-> + */
-> +int ata_platform_remove_one(struct platform_device *pdev)
-> +{
-> +        struct ata_host *host = platform_get_drvdata(pdev);
-> +
-> +        ata_host_detach(host);
 
-    Indent with tabs, not spaces, as below.
+--- Comment #31 from Roland Bogner <geist1@sms.at>  2012-11-02 12:07:37 ---
+Re-Compiled ubuntu mainline kernel without enabling "ATA-ACPI Support" then i
+was able to boot the kernel without the freeze.
 
-> +
-> +	return 0;
-> +}
-> +
->   static int __init ata_parse_force_one(char **cur,
->   				      struct ata_force_ent *force_ent,
->   				      const char **reason)
+Unfortunaly none IDE HDD's works then.
 
-MBR, Sergei
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
