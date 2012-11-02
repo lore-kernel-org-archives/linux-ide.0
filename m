@@ -1,110 +1,71 @@
 From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH 00/14] ahci/libata: clean up platform device removal
-Date: Fri,  2 Nov 2012 00:46:14 -0700
-Message-ID: <1351842388-27210-1-git-send-email-computersforpeace@gmail.com>
+Subject: [PATCH 01/14] ahci_platform: enable hotplug unbinding
+Date: Fri,  2 Nov 2012 00:46:15 -0700
+Message-ID: <1351842388-27210-2-git-send-email-computersforpeace@gmail.com>
+References: <1351842388-27210-1-git-send-email-computersforpeace@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 Received: from mail-pb0-f46.google.com ([209.85.160.46]:56817 "EHLO
 	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754179Ab2KBHqv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2012 03:46:51 -0400
+	with ESMTP id S1754179Ab2KBHqw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Nov 2012 03:46:52 -0400
 Received: by mail-pb0-f46.google.com with SMTP id rr4so2297937pbb.19
-        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2012 00:46:51 -0700 (PDT)
+        for <linux-ide@vger.kernel.org>; Fri, 02 Nov 2012 00:46:52 -0700 (PDT)
+In-Reply-To: <1351842388-27210-1-git-send-email-computersforpeace@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>, Kevin Cernekee <cernekee@broadcom.com>
+Cc: linux-ide@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>
 
-Hi,
+platform_driver_probe() should be used for registering this driver only
+if we want to
 
-This is a revision and extension of an RFC series I sent out a few times. Here
-are links to the previous patches, discussion, and questions.
+    "...remove its run-once probe() infrastructure from memory after the
+    driver has bound to the device."
 
-    http://article.gmane.org/gmane.linux.ide/53159
-    http://article.gmane.org/gmane.linux.ide/53143
-    http://article.gmane.org/gmane.linux.ide/52951
+However, we may want to leave the probe infrastructure in place in order
+to support binding/unbinding a device dynamically. This is useful, for
+instance, as a power management mechanism, where a device can be totally
+powered down when unbound (whereas with runtime power management,
+powering down the SATA core would incur unacceptable loss of
+functionality).
 
-The major change from RFC v2 is that I rebased to the current libata/NEXT, then
-added new patches (PATCH 04/14 through PATCH 14/14).
+Thus, convert this driver to use platform_driver_register().
 
-This series does the following:
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+---
+ drivers/ata/ahci_platform.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-(1) Allows ahci_platform to unbind a device from the driver. This is useful for
-    allowing total power-off of the device, for instance.
-(2) Adds ahci_platform ata_port_operations.host_stop() hook, so that
-    platform-device exit() can power down the device at the appropriate point
-    in the removal sequence.
-(3) Adds a common ata_platform_remove_one() function so that we don't
-    re-implement a simple host detach across many platform drivers
-(4) Switches many platform drivers to the new .remove function from (3)
-
-Thanks to Tejun for the comments, which suggested that ahci_platform (not
-libata-core) was broken.
-
-Note that patch 13 provides untested new functionality to the pata_octeon_cf
-driver. It was missing a .remove function, so I took the liberty to add the
-common one. Feel free to exclude this patch.
-
-Thanks,
-Brian
-
-P.S. A related but distinct issue: someting is still broken in the
-ata_host_detach() function, for shutting down the host, spinning down disks,
-etc. When I rmmod the driver or unbind the device, I get the following
-failures, and the HDD doesn't spin down:
-
-   # echo strict-ahci.0 > /sys/bus/platform/drivers/ahci/unbind 
-   ata2.00: disabled
-   sd 1:0:0:0: [sda] Synchronizing SCSI cache
-   sd 1:0:0:0: [sda]  Result: hostbyte=0x04 driverbyte=0x00
-   sd 1:0:0:0: [sda] Stopping disk
-   sd 1:0:0:0: [sda] START_STOP FAILED
-   sd 1:0:0:0: [sda]  Result: hostbyte=0x04 driverbyte=0x00
-
-This is reproducible on my laptop (v3.2 kernel, AHCI PCI driver) and on my SoC
-AHCI core (v3.3 kernel, AHCI platform driver). I haven't been able to try a
-more recent kernel, but nothing I see in the changelogs suggests that there
-would be any difference.
-
-I have narrowed down the error messages to the following info, although I am
-not yet familiar enough with these codepaths to make a recommendation:
-
-ata_host_detach
-|_ ata_port_detach
-  |_ ata_port_schedule_eh => SCSI error handler calls ata_dev_disable()
-  | ...
-  |_scsi_remove_host()
-    | ...
-    |__..._ sd_start_stop_device() => failure!
-
-Brian Norris (14):
-  ahci_platform: enable hotplug unbinding
-  ahci_platform: convert to module_platform_driver
-  ahci_platform: perform platform exit in host_stop() hook
-  libata: implement ata_platform_remove_one()
-  ahci_platform: utilize common ata_platform_remove_one()
-  pata_ixp4xx_cf: utilize common ata_platform_remove_one()
-  pata_mpc52xx: utilize common ata_platform_remove_one()
-  pata_of_platform: utilize common ata_platform_remove_one()
-  pata_platform: utilize common ata_platform_remove_one()
-  ata_platform: remove unused remove function
-  pata_palmld: utilize common ata_platform_remove_one()
-  sata_highbank: utilize common ata_platform_remove_one()
-  pata_octeon_cf: perform host detach, removal on exit
-  libata: use pci_get_drvdata() helper
-
- drivers/ata/ahci_platform.c    | 44 +++++++++++++++++++-----------------------
- drivers/ata/libata-core.c      | 30 ++++++++++++++++++++++++----
- drivers/ata/pata_ixp4xx_cf.c   | 11 +----------
- drivers/ata/pata_mpc52xx.c     | 17 +++-------------
- drivers/ata/pata_octeon_cf.c   |  1 +
- drivers/ata/pata_of_platform.c |  7 +------
- drivers/ata/pata_palmld.c      |  4 +---
- drivers/ata/pata_platform.c    | 24 +----------------------
- drivers/ata/sata_highbank.c    | 12 +-----------
- include/linux/ata_platform.h   |  2 --
- include/linux/libata.h         |  4 ++++
- 11 files changed, 59 insertions(+), 97 deletions(-)
-
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index b1ae480..9bc8a78 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -75,7 +75,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT("ahci_platform"),
+ };
+ 
+-static int __init ahci_probe(struct platform_device *pdev)
++static int __devinit ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+@@ -326,6 +326,7 @@ static const struct of_device_id ahci_of_match[] = {
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+ static struct platform_driver ahci_driver = {
++	.probe = ahci_probe,
+ 	.remove = __devexit_p(ahci_remove),
+ 	.driver = {
+ 		.name = "ahci",
+@@ -338,7 +339,7 @@ static struct platform_driver ahci_driver = {
+ 
+ static int __init ahci_init(void)
+ {
+-	return platform_driver_probe(&ahci_driver, ahci_probe);
++	return platform_driver_register(&ahci_driver);
+ }
+ module_init(ahci_init);
+ 
 -- 
 1.7.11.3
 
