@@ -1,39 +1,40 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v2 06/10] ata: use scsi_host_alloc_node
-Date: Fri,  2 Nov 2012 17:45:59 -0400
-Message-ID: <1351892763-21325-7-git-send-email-jmoyer@redhat.com>
-References: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Sat,  3 Nov 2012 04:23:21 +0000 (UTC)
+Message-ID: <20121103042321.8F5B111FB82@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20081 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.19.201]:48147 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758170Ab2KBVqX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 2 Nov 2012 17:46:23 -0400
-In-Reply-To: <1351892763-21325-1-git-send-email-jmoyer@redhat.com>
+	id S1750823Ab2KCEXZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 Nov 2012 00:23:25 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 1356B2021B
+	for <linux-ide@vger.kernel.org>; Sat,  3 Nov 2012 04:23:24 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 2374320215
+	for <linux-ide@vger.kernel.org>; Sat,  3 Nov 2012 04:23:23 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
 
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- drivers/ata/libata-scsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e3bda07..9d5dd09 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3586,7 +3586,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		struct Scsi_Host *shost;
- 
- 		rc = -ENOMEM;
--		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
-+		shost = scsi_host_alloc_node(sht, sizeof(struct ata_port *),
-+					     dev_to_node(host->dev));
- 		if (!shost)
- 			goto err_alloc;
- 
+
+
+--- Comment #32 from Borislav Petkov <bp@alien8.de>  2012-11-03 04:23:21 ---
+You could try enabling the platform-specific pata driver for your system and
+don't compile pata_acpi at all. Until libata folks fix this properly, that
+is...
+
+Thanks.
+
 -- 
-1.7.1
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
