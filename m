@@ -1,50 +1,42 @@
-From: Administrador de Sistemas <s111151640@studentmail.unimap.edu.my>
-Subject: =?utf-8?Q?ATEN=C3=87=C3=83O;?=
-Date: Mon, 5 Nov 2012 22:58:46 +0800 (MYT)
-Message-ID: <12249487.25748.1352127526367.JavaMail.root@studentmail.unimap.edu.my>
-Reply-To: Administrador de Sistemas <administratorsystem@inmail24.com>
+From: "Mr.Evans Thomas Jr" <evansthomas2012@gmail.com>
+Subject: Business Relationship
+Date: Mon, 5 Nov 2012 13:25:02 -0500
+Message-ID: <0103be964870fe0c05f03d76cf634d11.squirrel__39038.6513471187$1352142406$gmane$org@emailmg.netfirms.com>
+Reply-To: mr.evansthomas@rocketmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2.unimap.edu.my ([58.27.57.25]:51203 "EHLO
-	email.unimap.edu.my" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932783Ab2KEPgd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2012 10:36:33 -0500
+Received: from bosmailout08.eigbox.net ([66.96.186.8]:36920 "EHLO
+	bosmailout08.eigbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933108Ab2KETGV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Nov 2012 14:06:21 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
 
-ATEN=C3=87=C3=83O;
 
-Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 10=
-GB, conforme definido pelo seu
-administrador, que est=C3=A1 atualmente em execu=C3=A7=C3=A3o no 10.9GB=
-, voc=C3=AA pode n=C3=A3o ser capaz
-para enviar ou receber novas mensagens at=C3=A9 que voc=C3=AA re-valida=
-r a sua caixa de correio.
-Para revalidar sua caixa postal, envie os seguintes dados abaixo:
+From:Mr.Evans Thomas
+Accra, Ghana.
 
-nome:
-Nome de usu=C3=A1rio:
-senha:
-Confirme a Senha:
-E-mail:
-telefone:
 
-Se voc=C3=AA n=C3=A3o conseguir revalidar sua caixa de correio, o corre=
-io ser=C3=A1 desactivado!
+This e-mail is strictly confidential and is for your attention only.I am
+making this venture proposal to you with faith, hoping that you will be
+capable to do this transaction with me in confidence.
 
-obrigado
-Administrador de Sistemas
+I wish to transfer sum of($38,000,000.00) US Dollars, which belong to the
+director and owner of petrochemical service. He died with out a will,
+through my investigation. However, if you can  be honest with me,please
+send me your phone
+number,your age and  profession; so that I will detail you on how we will
+conclude this  transaction in 5 banking working days
 
-Lamentamos o inconveniente.
-C=C3=B3digo de verifica=C3=A7=C3=A3o: pt:9.5-12
-Correio T=C3=A9cnico Suporte =C2=A92012
+I will give you more information regarding this transaction if you are
+interested.
 
---=20
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
+Yours,
+
+Mr.Evans Thomas
+mr.evansthomas@rocketmail.com
 
