@@ -1,74 +1,47 @@
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-Subject: Re: [PATCH 02/10] arm: at91: move platfarm_data to include/linux/platform_data/atmel.h
-Date: Wed, 07 Nov 2012 13:20:41 +0100
-Message-ID: <509A5219.2080408@pengutronix.de>
-References: <20121107111235.GH20063@game.jcrosoft.org> <1352287374-25176-1-git-send-email-plagnioj@jcrosoft.com> <1352287374-25176-2-git-send-email-plagnioj@jcrosoft.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig35807B8655F8528925E7C0C9"
-Return-path: <linux-can-owner@vger.kernel.org>
-In-Reply-To: <1352287374-25176-2-git-send-email-plagnioj@jcrosoft.com>
-Sender: linux-can-owner@vger.kernel.org
-To: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
-Cc: linux-arm-kernel@lists.infradead.org, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-ide@vger.kernel.org, linux-input@vger.kernel.org, linux-mmc@vger.kernel.org, linux-can@vger.kernel.org, netdev@vger.kernel.org, linux-pcmcia@lists.infradead.org, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux-serial@vger.kernel.org, linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org
+From: Viresh Kumar <viresh.kumar@linaro.org>
+Subject: [PATCH] ata: pata_arasan: Initialize cf clock to 166MHz
+Date: Thu,  8 Nov 2012 20:39:54 +0530
+Message-ID: <382d2087350ff0955ba14f125294ace4ed28382b.1352387366.git.viresh.kumar@linaro.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:37057 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631Ab2KHPKG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Nov 2012 10:10:06 -0500
+Received: by mail-pa0-f46.google.com with SMTP id hz1so2046422pad.19
+        for <linux-ide@vger.kernel.org>; Thu, 08 Nov 2012 07:10:06 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, spear-devel@list.st.com, Vipul Kumar Samar <vipulkumar.samar@st.com>, Viresh Kumar <viresh.kumar@linaro.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig35807B8655F8528925E7C0C9
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Vipul Kumar Samar <vipulkumar.samar@st.com>
 
-On 11/07/2012 12:22 PM, Jean-Christophe PLAGNIOL-VILLARD wrote:
-> Signed-off-by: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>=
+PATA arasan driver expects the clock to be set to 166 MHz for proper functioning.
+This patch sets clk to 166 MHz in probe.
 
-> Cc: Nicolas Ferre <nicolas.ferre@atmel.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-input@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pcmcia@lists.infradead.org
-> Cc: rtc-linux@googlegroups.com
-> Cc: spi-devel-general@lists.sourceforge.net
-> Cc: linux-serial@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-fbdev@vger.kernel.org
-> ---
-> HI all,
->=20
-> 	If it's ok with everyone this will go via at91
-> 	with the patch serie than clean up the include/mach
+Signed-off-by: Vipul Kumar Samar <vipulkumar.samar@st.com>
+Signed-off-by: Viresh Kumar <viresh.kumar@linaro.org>
+---
+ drivers/ata/pata_arasan_cf.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Fine with me.
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index 26201eb..71111f2 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -317,6 +317,12 @@ static int cf_init(struct arasan_cf_dev *acdev)
+ 		return ret;
+ 	}
+ 
++	ret = clk_set_rate(acdev->clk, 166000000);
++	if (ret) {
++		dev_warn(acdev->host->dev, "clock set rate failed");
++		return ret;
++	}
++
+ 	spin_lock_irqsave(&acdev->host->lock, flags);
+ 	/* configure CF interface clock */
+ 	writel((pdata->cf_if_clk <= CF_IF_CLK_200M) ? pdata->cf_if_clk :
+-- 
+1.7.12.rc2.18.g61b472e
 
-> 	For preparation to switch to arm multiarch kernel
-
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de> (for the CAN related cha=
-nges)
-
-Marc
-
-
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
-
-
---------------enig35807B8655F8528925E7C0C9
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
-
-iEYEARECAAYFAlCaUhwACgkQjTAFq1RaXHPpxACghbRDxGsYGS6OC3LEGKKRMvVE
-P6cAn1B3NTtB3CmBscGxjMuHx42LmYYR
-=omqt
------END PGP SIGNATURE-----
-
---------------enig35807B8655F8528925E7C0C9--
