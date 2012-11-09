@@ -1,38 +1,35 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v4 -tip 3/3] AHCI: Support multiple MSIs
-Date: Fri, 9 Nov 2012 17:20:12 +0100
-Message-ID: <20121109162012.GB31918@dhcp-26-207.brq.redhat.com>
-References: <cover.1349517905.git.agordeev@redhat.com>
- <b9a66434759a77b2fa870565ab9708fc286d7368.1349517905.git.agordeev@redhat.com>
- <20121025090957.GA7424@gmail.com>
- <20121025092555.GF16350@dhcp-26-207.brq.redhat.com>
- <20121025093626.GG16350@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20121025093626.GG16350@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-kernel@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: [patch,v3 06/10] ata: use scsi_host_alloc_node
+Date: Fri,  9 Nov 2012 14:18:03 -0500
+Message-ID: <1352488687-19935-7-git-send-email-jmoyer@redhat.com>
+References: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Bart Van Assche <bvanassche@acm.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Oct 25, 2012 at 11:36:26AM +0200, Alexander Gordeev wrote:
-> On Thu, Oct 25, 2012 at 11:25:55AM +0200, Alexander Gordeev wrote:
-> > On Thu, Oct 25, 2012 at 11:09:57AM +0200, Ingo Molnar wrote:
-> > > Has Jeff acked this patch?
-> > 
-> > Yep,
-> > http://lkml.indiana.edu/hypermail/linux/kernel/1210.0/00795.html
-> 
-> Ah.. sorry - Jeff acked v3, not the recent one.
-> Jeff, would you keep your ack for this patch?
 
-Hi Jeff,
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+---
+ drivers/ata/libata-scsi.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Could you please review this patch?
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e3bda07..9d5dd09 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3586,7 +3586,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		struct Scsi_Host *shost;
+ 
+ 		rc = -ENOMEM;
+-		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
++		shost = scsi_host_alloc_node(sht, sizeof(struct ata_port *),
++					     dev_to_node(host->dev));
+ 		if (!shost)
+ 			goto err_alloc;
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
