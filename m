@@ -1,86 +1,75 @@
 From: Kukjin Kim <kgene.kim@samsung.com>
-Subject: RE: [PATCH v2 1/6] ARM: EXYNOS5: Clock settings for SATA and SATA PHY
-Date: Fri, 09 Nov 2012 20:03:57 +0900
-Message-ID: <0e8a01cdbe69$ea6e67c0$bf4b3740$%kim@samsung.com>
+Subject: RE: [PATCH v2 2/6] ARM: EXYNOS5: DT Support for SATA and SATA PHY
+Date: Fri, 09 Nov 2012 20:10:42 +0900
+Message-ID: <0e8b01cdbe6a$dbd36ed0$937a4c70$%kim@samsung.com>
 References: <1351612897-14923-1-git-send-email-vasanthananthan@gmail.com>
- <1351612897-14923-2-git-send-email-vasanthananthan@gmail.com>
+ <1351612897-14923-3-git-send-email-vasanthananthan@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-reply-to: <1351612897-14923-2-git-send-email-vasanthananthan@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:22704 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115Ab2KILKo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Nov 2012 06:10:44 -0500
+In-reply-to: <1351612897-14923-3-git-send-email-vasanthananthan@gmail.com>
 Content-language: ko
-Sender: linux-samsung-soc-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: 'Vasanth Ananthan' <vasanthananthan@gmail.com>, jgarzik@pobox.com, linux@arm.linux.org.uk
 Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, 'Vasanth Ananthan' <vasanth.a@samsung.com>
-List-Id: linux-ide@vger.kernel.org
 
 Vasanth Ananthan wrote:
 > 
-> This patch adds neccessary clock entries for SATA, SATA PHY and
-> I2C_SATAPHY
+> This patch adds Device Nodes for SATA and SATA PHY device.
 > 
-> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
-> ---
->  arch/arm/mach-exynos/clock-exynos5.c |   21 ++++++++++++++++++---
->  1 files changed, 18 insertions(+), 3 deletions(-)
+
+[...]
+
+> @@ -188,6 +188,9 @@
+>  #define EXYNOS4_PA_SATA			0x12560000
+>  #define EXYNOS4_PA_SATAPHY		0x125D0000
+>  #define EXYNOS4_PA_SATAPHY_CTRL		0x126B0000
+> +#define EXYNOS5_PA_SATA_PHY_CTRL	0x12170000
+> +#define EXYNOS5_PA_SATA_PHY_I2C		0x121D0000
+> +#define EXYNOS5_PA_SATA_BASE		0x122F0000
 > 
-> diff --git a/arch/arm/mach-exynos/clock-exynos5.c b/arch/arm/mach-
-> exynos/clock-exynos5.c
-> index c44ca1e..124c54f 100644
-> --- a/arch/arm/mach-exynos/clock-exynos5.c
-> +++ b/arch/arm/mach-exynos/clock-exynos5.c
-> @@ -651,15 +651,20 @@ static struct clk exynos5_init_clocks_off[] = {
->  		.ctrlbit	= (1 << 15),
->  	}, {
->  		.name		= "sata",
-> -		.devname	= "ahci",
-> +		.devname	= "exynos5-sata",
-> +		.parent         = &exynos5_clk_aclk_200.clk,
->  		.enable		= exynos5_clk_ip_fsys_ctrl,
->  		.ctrlbit	= (1 << 6),
->  	}, {
-> -		.name		= "sata_phy",
-> +		.name		= "sata-phy",
-> +		.devname	= "exynos5-sata-phy",
-> +		.parent         = &exynos5_clk_aclk_200.clk,
->  		.enable		= exynos5_clk_ip_fsys_ctrl,
->  		.ctrlbit	= (1 << 24),
->  	}, {
-> -		.name		= "sata_phy_i2c",
-> +		.name		= "i2c",
-> +		.devname	= "exynos5-sata-phy-i2c",
-> +		.parent         = &exynos5_clk_aclk_200.clk,
->  		.enable		= exynos5_clk_ip_fsys_ctrl,
->  		.ctrlbit	= (1 << 25),
->  	}, {
-> @@ -1226,6 +1231,16 @@ static struct clksrc_clk exynos5_clksrcs[] = {
->  		.reg_div = { .reg = EXYNOS5_CLKDIV_TOP0, .shift = 24, .size
-> = 3 },
->  	}, {
->  		.clk	= {
-> +			.name		= "sclk_sata",
-> +			.devname	= "exynos5-sata",
-> +			.enable		= exynos5_clksrc_mask_fsys_ctrl,
-> +			.ctrlbit	= (1 << 24),
-> +		},
-> +		.sources = &exynos5_clkset_aclk,
-> +		.reg_src = { .reg = EXYNOS5_CLKSRC_FSYS, .shift = 24, .size
-> = 1 },
-> +		.reg_div = { .reg = EXYNOS5_CLKDIV_FSYS0, .shift = 20, .size
-> = 4 },
-> +	}, {
-> +		.clk	= {
->  			.name		= "sclk_gscl_wrap",
->  			.devname	= "s5p-mipi-csis.0",
->  			.enable		= exynos5_clksrc_mask_gscl_ctrl,
+>  #define EXYNOS4_PA_SROMC		0x12570000
+>  #define EXYNOS5_PA_SROMC		0x12250000
+> diff --git a/arch/arm/mach-exynos/mach-exynos5-dt.c b/arch/arm/mach-
+> exynos/mach-exynos5-dt.c
+> index db1cd8e..7dbd4cc 100644
+> --- a/arch/arm/mach-exynos/mach-exynos5-dt.c
+> +++ b/arch/arm/mach-exynos/mach-exynos5-dt.c
+> @@ -61,6 +61,12 @@ static const struct of_dev_auxdata
+> exynos5250_auxdata_lookup[] __initconst = {
+>  				"exynos4210-spi.1", NULL),
+>  	OF_DEV_AUXDATA("samsung,exynos4210-spi", EXYNOS5_PA_SPI2,
+>  				"exynos4210-spi.2", NULL),
+> +	OF_DEV_AUXDATA("samsung,exynos5-sata-ahci", EXYNOS5_PA_SATA_BASE,
+> +				"exynos5-sata", NULL),
+> +	OF_DEV_AUXDATA("samsung,exynos5-sata-phy", EXYNOS5_PA_SATA_PHY_CTRL,
+> +				"exynos5-sata-phy", NULL),
+> +	OF_DEV_AUXDATA("samsung,exynos5-sata-phy-i2c",
+> EXYNOS5_PA_SATA_PHY_I2C,
+> +				"exynos5-sata-phy-i2c", NULL),
+>  	OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_PDMA0, "dma-pl330.0", NULL),
+>  	OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_PDMA1, "dma-pl330.1", NULL),
+>  	OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_MDMA1, "dma-pl330.2", NULL),
 > --
 > 1.7.4.1
 
-Looks OK to me, need to think again about naming though?, anyway, this can
-be handled separate from this series.
+Just following is enough? Because we don't need the definitions only for
+here...
 
-Let me take this into Samsung tree, if any problems, please let me know.
+8<-------
++	OF_DEV_AUXDATA("samsung,exynos5-sata-ahci", 0x122F0000,
++				"exynos5-sata", NULL),
++	OF_DEV_AUXDATA("samsung,exynos5-sata-phy", 0x126B0000,
++				"exynos5-sata-phy", NULL),
++	OF_DEV_AUXDATA("samsung,exynos5-sata-phy-i2c", 0x121D0000,
++				"exynos5-sata-phy-i2c", NULL),
+8<-------
 
 Thanks.
 
@@ -89,3 +78,4 @@ Kgene.
 --
 Kukjin Kim <kgene.kim@samsung.com>, Senior Engineer,
 SW Solution Development Team, Samsung Electronics Co., Ltd.
+
