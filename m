@@ -1,35 +1,66 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [patch,v3 06/10] ata: use scsi_host_alloc_node
-Date: Fri,  9 Nov 2012 14:18:03 -0500
-Message-ID: <1352488687-19935-7-git-send-email-jmoyer@redhat.com>
-References: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1352488687-19935-1-git-send-email-jmoyer@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+From: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 02/10] arm: at91: move platfarm_data to
+	include/linux/platform_data/atmel.h
+Date: Sat, 10 Nov 2012 00:42:56 -0800
+Message-ID: <20121110084256.GB14761@core.coreip.homeip.net>
+References: <20121107111235.GH20063@game.jcrosoft.org>
+	<1352287374-25176-1-git-send-email-plagnioj@jcrosoft.com>
+	<1352287374-25176-2-git-send-email-plagnioj@jcrosoft.com>
+	<509A5219.2080408@pengutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <509A5219.2080408-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=spi-devel-general>
+List-Post: <mailto:spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+List-Help: <mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/spi-devel-general>,
+	<mailto:spi-devel-general-request-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org?subject=subscribe>
+Errors-To: spi-devel-general-bounces-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+To: Marc Kleine-Budde <mkl-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Nicolas Ferre <nicolas.ferre-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>, linux-can-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Jean-Christophe PLAGNIOL-VILLARD <plagnioj-sclMFOaUSTBWk0Htik3J/w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
+On Wed, Nov 07, 2012 at 01:20:41PM +0100, Marc Kleine-Budde wrote:
+> On 11/07/2012 12:22 PM, Jean-Christophe PLAGNIOL-VILLARD wrote:
+> > Signed-off-by: Jean-Christophe PLAGNIOL-VILLARD <plagnioj-sclMFOaUSTBWk0Htik3J/w@public.gmane.org>
+> > Cc: Nicolas Ferre <nicolas.ferre-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
+> > Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-can-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+> > Cc: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+> > Cc: spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+> > Cc: linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > Cc: linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> > ---
+> > HI all,
+> > 
+> > 	If it's ok with everyone this will go via at91
+> > 	with the patch serie than clean up the include/mach
+> 
+> Fine with me.
+> 
+> > 	For preparation to switch to arm multiarch kernel
+> 
+> Acked-by: Marc Kleine-Budde <mkl-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org> (for the CAN related changes)
 
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- drivers/ata/libata-scsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Acked-by: Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e3bda07..9d5dd09 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3586,7 +3586,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		struct Scsi_Host *shost;
- 
- 		rc = -ENOMEM;
--		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
-+		shost = scsi_host_alloc_node(sht, sizeof(struct ata_port *),
-+					     dev_to_node(host->dev));
- 		if (!shost)
- 			goto err_alloc;
- 
+for input piece.
+
 -- 
-1.7.1
+Dmitry
 
+------------------------------------------------------------------------------
+Everyone hates slow websites. So do we.
+Make your web apps faster with AppDynamics
+Download AppDynamics Lite for free today:
+http://p.sf.net/sfu/appdyn_d2d_nov
