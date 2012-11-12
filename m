@@ -1,98 +1,76 @@
-From: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
-Subject: Re: [PATCH 02/10] arm: at91: move platfarm_data to
- include/linux/platform_data/atmel.h
-Date: Mon, 12 Nov 2012 15:06:46 +0100
-Message-ID: <20121112140646.GK4576@game.jcrosoft.org>
-References: <20121107111235.GH20063@game.jcrosoft.org>
- <1352287374-25176-1-git-send-email-plagnioj@jcrosoft.com>
- <1352287374-25176-2-git-send-email-plagnioj@jcrosoft.com>
- <CAGhQ9VxgbCGzOPVtQq-LYsEPuyyGjRDfB3jHPtvbHr1xLgntXA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 03/10] ata: zpodd: identify and init ZPODD devices
+Date: Mon, 12 Nov 2012 10:53:01 -0800
+Message-ID: <20121112185301.GB5560@mtj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-pm-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAGhQ9VxgbCGzOPVtQq-LYsEPuyyGjRDfB3jHPtvbHr1xLgntXA@mail.gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Joachim Eastwood <manabian@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-fbdev@vger.kernel.org, linux-usb@vger.kernel.org, rtc-linux@googlegroups.com, linux-mmc@vger.kernel.org, linux-pcmcia@lists.infradead.org, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-can@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-serial@vger.kernel.org, linux-input@vger.kernel.org, spi-devel-general@lists.sourceforge.net
+In-Reply-To: <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 11:54 Sat 10 Nov     , Joachim Eastwood wrote:
-> Hi Jean-Christophe,
-> 
-> On 7 November 2012 12:22, Jean-Christophe PLAGNIOL-VILLARD
-> <plagnioj@jcrosoft.com> wrote:
-> > Signed-off-by: Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
-> > Cc: Nicolas Ferre <nicolas.ferre@atmel.com>
-> > Cc: linux-ide@vger.kernel.org
-> > Cc: linux-input@vger.kernel.org
-> > Cc: linux-mmc@vger.kernel.org
-> > Cc: linux-can@vger.kernel.org
-> > Cc: netdev@vger.kernel.org
-> > Cc: linux-pcmcia@lists.infradead.org
-> > Cc: rtc-linux@googlegroups.com
-> > Cc: spi-devel-general@lists.sourceforge.net
-> > Cc: linux-serial@vger.kernel.org
-> > Cc: linux-usb@vger.kernel.org
-> > Cc: linux-fbdev@vger.kernel.org
-> > ---
-> > HI all,
-> >
-> >         If it's ok with everyone this will go via at91
-> >         with the patch serie than clean up the include/mach
-> >
-> >         For preparation to switch to arm multiarch kernel
-> >
-> > Best Regards,
-> > J.
-> >  arch/arm/mach-at91/include/mach/board.h     |   55 ----------------------
-> >  arch/avr32/mach-at32ap/include/mach/board.h |    7 ---
-> >  drivers/ata/pata_at91.c                     |    2 +-
-> >  drivers/input/touchscreen/atmel_tsadcc.c    |    2 +-
-> >  drivers/mmc/host/atmel-mci.c                |    2 +-
-> >  drivers/net/can/at91_can.c                  |    3 +-
-> >  drivers/net/ethernet/cadence/at91_ether.c   |    2 +-
-> >  drivers/pcmcia/at91_cf.c                    |    2 +-
-> >  drivers/rtc/rtc-at91sam9.c                  |    2 +-
-> >  drivers/spi/spi-atmel.c                     |    2 +-
-> >  drivers/tty/serial/atmel_serial.c           |    2 +-
-> >  drivers/usb/gadget/at91_udc.c               |    2 +-
-> >  drivers/usb/gadget/atmel_usba_udc.c         |    2 +-
-> >  drivers/usb/host/ohci-at91.c                |    2 +-
-> >  drivers/video/atmel_lcdfb.c                 |    2 +-
-> >  include/linux/platform_data/atmel.h         |   67 +++++++++++++++++++++++++++
-> >  16 files changed, 80 insertions(+), 76 deletions(-)
-> 
-> <snip>
-> 
-> > diff --git a/drivers/net/ethernet/cadence/at91_ether.c b/drivers/net/ethernet/cadence/at91_ether.c
-> > index 4e980a7..35fc6edb 100644
-> > --- a/drivers/net/ethernet/cadence/at91_ether.c
-> > +++ b/drivers/net/ethernet/cadence/at91_ether.c
-> > @@ -31,6 +31,7 @@
-> >  #include <linux/clk.h>
-> >  #include <linux/gfp.h>
-> >  #include <linux/phy.h>
-> > +#include <linux/platform_data/atmel.h>
-> >
-> >  #include <asm/io.h>
-> >  #include <asm/uaccess.h>
-> > @@ -38,7 +39,6 @@
-> >
-> >  #include <mach/at91rm9200_emac.h>
-> >  #include <asm/gpio.h>
-> > -#include <mach/board.h>
-> >
-> >  #include "at91_ether.h"
-> 
-> The at91_ether driver in net-next does not need to be change since it
-> all mach includes has already been removed by other patches and it
-> includes linux/platform_data/macb.h directly.
-> 
-> What tree was these patches based on?
-> The at91_ether driver changes has been in linux-next for a long while now.
-the conflict is minor easy to handle and the cleanup need to go first on arm soc so this is
-based on rc3
+Hello,
 
-Best Regards,
-J.
+On Fri, Nov 09, 2012 at 02:51:55PM +0800, Aaron Lu wrote:
+>  void ata_acpi_unbind(struct ata_device *dev)
+>  {
+> +	if (zpodd_dev_enabled(dev))
+> +		zpodd_deinit(dev);
+
+Maybe zpodd_exit() instead?
+
+> +void zpodd_init(struct ata_device *dev)
+> +{
+> +	int ret;
+> +	struct zpodd *zpodd;
+> +
+> +	if (dev->private_data)
+> +		return;
+> +
+> +	if (!device_can_poweroff(dev))
+> +		return;
+> +
+> +	if ((ret = check_loading_mechanism(dev)) == -ENODEV)
+> +		return;
+> +
+> +	zpodd = kzalloc(sizeof(struct zpodd), GFP_KERNEL);
+> +	if (!zpodd)
+> +		return;
+> +
+> +	if (ret)
+> +		zpodd->drawer = true;
+> +	else
+> +		zpodd->slot = true;
+> +
+> +	zpodd->dev = dev;
+> +	dev->private_data = zpodd;
+
+I don't think you're supposed to use dev->private_data from libata
+core layer.  Just add a new field.  Nobody cares about adding 8 more
+bytes to struct ata_device and spending 8 more bytes is way better
+than muddying the ownership of ->private_data.
+
+> +/* libata-zpodd.c */
+> +#ifdef CONFIG_SATA_ZPODD
+> +void zpodd_init(struct ata_device *dev);
+> +void zpodd_deinit(struct ata_device *dev);
+> +static inline bool zpodd_dev_enabled(struct ata_device *dev)
+> +{
+> +	if (dev->flags & ATA_DFLAG_DA && dev->private_data)
+> +		return true;
+> +	else
+> +		return false;
+> +}
+
+And this gets completely wrong.  What if the device supports DA and
+low level driver makes use of ->private_data?
+
+Thanks.
+
+-- 
+tejun
