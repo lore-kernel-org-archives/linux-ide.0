@@ -1,40 +1,93 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Thu, 15 Nov 2012 18:07:32 +0000 (UTC)
-Message-ID: <20121115180732.2888F11FEDC@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Christian Gmeiner <christian.gmeiner@gmail.com>
+Subject: [PATCH] pata_cs5536: add quirk for broken udma
+Date: Thu, 15 Nov 2012 23:03:22 +0100
+Message-ID: <CAH9NwWfVBg9srhyfUaHxsfBSoSVyLgDgZUPu_iK6fbQC9krH5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:45132 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1768597Ab2KOSHj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2012 13:07:39 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 1B87E2033B
-	for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2012 18:07:38 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 851EB2034C
-	for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2012 18:07:33 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:59385 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429Ab2KOWDo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2012 17:03:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, mkp@mkp.net, jgarzik@pobox.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
+I am working on a device which uses the cs5536 pata driver. There
+are some broken hardware revisions out in the field, which can be
+detected via DMI. On older versions with an embedded BIOS I
+used libata.dma=0 to disable dma completely.
+Now we are switching to a coreboot/seabios based BIOS where we
+have DMI support and so I think its a good idea to get rid of
+all those hacky kernel parameters as the same image
+is used other devices where libata.dma=0 is not a good idea.
+
+Signed-off-by: Christian Gmeiner <christian.gmeiner@gmail.com>
+---
+ drivers/ata/pata_cs5536.c | 32 ++++++++++++++++++++++++++++++
++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index dec1b6c..0448860 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -38,6 +38,7 @@
+ #include <linux/delay.h>
+ #include <linux/libata.h>
+ #include <scsi/scsi_host.h>
++#include <linux/dmi.h>
+
+ #ifdef CONFIG_X86_32
+ #include <asm/msr.h>
+@@ -80,6 +81,21 @@ enum {
+        IDE_ETC_UDMA_MASK       = 0xc0,
+ };
+
++/* Some Bachmann OT200 devices have a non working UDMA support due a
++ * missing resistor.
++ */
++static const struct dmi_system_id udma_quirk_dmi_table[] = {
++       {
++               .ident = "Bachmann electronic OT200",
++               .matches = {
++                       DMI_MATCH(DMI_SYS_VENDOR, "Bachmann electronic"),
++                       DMI_MATCH(DMI_PRODUCT_NAME, "OT200"),
++                       DMI_MATCH(DMI_PRODUCT_VERSION, "1")
++               },
++       },
++       { }
++};
++
+ static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+        if (unlikely(use_msr)) {
+@@ -242,9 +258,23 @@ static int cs5536_init_one(struct pci_dev *dev,
+const struct pci_device_id *id)
+                .port_ops = &cs5536_port_ops,
+        };
+
+-       const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
++       static const struct ata_port_info no_udma_info = {
++               .flags = ATA_FLAG_SLAVE_POSS,
++               .pio_mask = ATA_PIO4,
++               .port_ops = &cs5536_port_ops,
++       };
++
++
++       const struct ata_port_info *ppi[2];
+        u32 cfg;
+
++       if (dmi_check_system(udma_quirk_dmi_table))
++               ppi[0] = &no_udma_info;
++       else
++               ppi[0] = &info;
++
++       ppi[1] = &ata_dummy_port_info;
++
+        if (use_msr)
+                printk(KERN_ERR DRV_NAME ": Using MSR regs instead of PCI\n");
 
 
-
-
-
---- Comment #38 from Szymon Janc <szymon@janc.net.pl>  2012-11-15 18:07:31 ---
-Created an attachment (id=86441)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=86441)
-dmesg
-
-dmesg on A8N-E with some extra prints
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--
+1.7.12.2.421.g261b511
