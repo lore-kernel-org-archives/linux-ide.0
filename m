@@ -1,33 +1,24 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Fri, 16 Nov 2012 04:50:43 +0000 (UTC)
-Message-ID: <20121116045043.BA9A711FEDC@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [Bug 49151] New: NULL pointer dereference in pata_acpi
+Date: Thu, 15 Nov 2012 23:50:38 -0500
+Message-ID: <50A5C61E.2050502@pobox.com>
+References: <bug-49151-11633@https.bugzilla.kernel.org/> <20121020120047.GC17563@liondog.tnic> <50841CFC.2030802@talktalk.net> <20121021165756.GA20642@liondog.tnic> <50856AA8.1000607@talktalk.net> <20121022202734.GA16169@liondog.tnic> <20121023110549.06f9c2e8@pyramind.ukuu.org.uk> <20121023101751.GA24656@liondog.tnic> <5087B4CA.1030502@talktalk.net> <20121024115746.3d41fce7@pyramind.ukuu.org.uk> <20121103042635.GA21829@liondog.tnic> <20121103164819.14c71bb5@pyramind.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33229 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751283Ab2KPEur (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 Nov 2012 23:50:47 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 9F7BB2020A
-	for <linux-ide@vger.kernel.org>; Fri, 16 Nov 2012 04:50:45 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id AA36D20232
-	for <linux-ide@vger.kernel.org>; Fri, 16 Nov 2012 04:50:44 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:60317 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751283Ab2KPEum (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2012 23:50:42 -0500
+Received: by mail-vc0-f174.google.com with SMTP id fk26so2484697vcb.19
+        for <linux-ide@vger.kernel.org>; Thu, 15 Nov 2012 20:50:42 -0800 (PST)
+In-Reply-To: <20121103164819.14c71bb5@pyramind.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Borislav Petkov <bp@alien8.de>, phillip.wood@dunelm.org.uk, phillip.wood@talktalk.net, "Anton V. Boyarshinov" <boyarsh@altlinux.org>, bugzilla-daemon@bugzilla.kernel.org, linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
-
-
-
-
-
---- Comment #39 from Jeff Garzik <jgarzik@pobox.com>  2012-11-16 04:50:43 ---
 On 11/03/2012 12:48 PM, Alan Cox wrote:
 > On Sat, 3 Nov 2012 05:26:35 +0100
 > Borislav Petkov <bp@alien8.de> wrote:
@@ -52,9 +43,8 @@ On 11/03/2012 12:48 PM, Alan Cox wrote:
 Agreed -- though the WARN_ONCE() will at least give us trivially better 
 poops.
 
-    Jeff
+	Jeff
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
+
+
