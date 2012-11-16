@@ -1,47 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH 1/5] ata: suspend/resume callbacks should be conditionally
- compiled on CONFIG_PM_SLEEP
-Date: Fri, 16 Nov 2012 00:48:11 -0500
-Message-ID: <50A5D39B.4090007@pobox.com>
-References: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+From: Administrador de Sistemas <s111151640@studentmail.unimap.edu.my>
+Subject: =?utf-8?Q?ATEN=C3=87=C3=83O;?=
+Date: Fri, 16 Nov 2012 13:09:43 +0800 (MYT)
+Message-ID: <1637675.31469.1353042583455.JavaMail.root@studentmail.unimap.edu.my>
+Reply-To: Administrador de Sistemas <sistemasadmin@inmail24.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:63041 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750999Ab2KPFsP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2012 00:48:15 -0500
-In-Reply-To: <1350399545-11179-1-git-send-email-yuanhan.liu@linux.intel.com>
+Received: from email1.unimap.edu.my ([58.27.57.25]:49566 "EHLO
+	email.unimap.edu.my" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750999Ab2KPGcv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2012 01:32:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, Viresh Kumar <viresh.linux@gmail.com>, linux-ide@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
-
-On 10/16/2012 10:59 AM, Yuanhan Liu wrote:
-> This will fix warnings like following when CONFIG_PM_SLEEP is not set:
->
->          warning: 'xxx_suspend' defined but not used [-Wunused-function]
->          warning: 'xxx_resume' defined but not used [-Wunused-function]
->
-> Because
-> 	SET_SYSTEM_SLEEP_PM_OPS(suspend_fn, resume_fn)
->
-> Only references the callbacks on CONFIG_PM_SLEEP (instead of CONFIG_PM).
->
-> Cc: Jeff Garzik <jgarzik@pobox.com>
-> Cc: Viresh Kumar <viresh.linux@gmail.com>
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Yuanhan Liu <yuanhan.liu@linux.intel.com>
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
-> ---
->   drivers/ata/ahci_platform.c  |    2 +-
->   drivers/ata/pata_arasan_cf.c |    2 +-
->   drivers/ata/sata_highbank.c  |    2 +-
->   3 files changed, 3 insertions(+), 3 deletions(-)
 
 
-applied
 
+ATEN=C3=87=C3=83O;
 
+Sua caixa de correio excedeu o limite de armazenamento que =C3=A9 de 10=
+GB, conforme definido pelo seu
+administrador, que est=C3=A1 atualmente em execu=C3=A7=C3=A3o no 10.9GB=
+, voc=C3=AA pode n=C3=A3o ser capaz
+para enviar ou receber novas mensagens at=C3=A9 que voc=C3=AA re-valida=
+r a sua caixa de correio.
+Para revalidar sua caixa postal, envie os seguintes dados abaixo:
+
+nome:
+Nome de usu=C3=A1rio:
+senha:
+Confirme a Senha:
+E-mail:
+telefone:
+
+Se voc=C3=AA n=C3=A3o conseguir revalidar sua caixa de correio, o corre=
+io ser=C3=A1 desactivado!
+
+obrigado
+Administrador de Sistemas
+
+Lamentamos o inconveniente.
+C=C3=B3digo de verifica=C3=A7=C3=A3o: pt:9.5-12
+Correio T=C3=A9cnico Suporte =C2=A92012
+
+--=20
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
