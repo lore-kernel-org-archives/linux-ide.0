@@ -1,93 +1,68 @@
-From: Christian Gmeiner <christian.gmeiner@gmail.com>
-Subject: [PATCH] pata_cs5536: add quirk for broken udma
-Date: Thu, 15 Nov 2012 23:03:22 +0100
-Message-ID: <CAH9NwWfVBg9srhyfUaHxsfBSoSVyLgDgZUPu_iK6fbQC9krH5A@mail.gmail.com>
+From: Simple Simon <tangouniform@sbcglobal.net>
+Subject: Re: [PATCH] libata-acpi: Fix NULL ptr derference in ata_acpi_dev_handle
+Date: Fri, 16 Nov 2012 03:40:44 +0000
+Message-ID: <50A5B5BC.8060006@sbcglobal.net>
+References: <5073D44C.7070101@intel.com> <CABZ+qqkv-iuAxs=DXnQzQn+j-BWaH5jwLsuv0nREFpz3gqHE=g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:59385 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429Ab2KOWDo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Nov 2012 17:03:44 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <CABZ+qqkv-iuAxs=DXnQzQn+j-BWaH5jwLsuv0nREFpz3gqHE=g@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, mkp@mkp.net, jgarzik@pobox.com
 
-I am working on a device which uses the cs5536 pata driver. There
-are some broken hardware revisions out in the field, which can be
-detected via DMI. On older versions with an embedded BIOS I
-used libata.dma=0 to disable dma completely.
-Now we are switching to a coreboot/seabios based BIOS where we
-have DMI support and so I think its a good idea to get rid of
-all those hacky kernel parameters as the same image
-is used other devices where libata.dma=0 is not a good idea.
+On 2012-10-11 08:27, Dan van der Ster wrote:
+> On Tue, Oct 9, 2012 at 9:37 AM, Aaron Lu <aaron.lu@intel.com> wrote:
+>> commit 6b66d95895c149cbc04d4fac5a2f5477c543a8ae didn't handle SATA PMP
+>> case in ata_acpi_bind_device and will cause a NULL ptr dereference when
+>> user attached a SATA drive to the PMP port. Fix this by checking PMP
+>> support.
+>>
+>> This bug is reported by Dan van der Ster in the following bugzilla page:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=48211
+>>
+>> Reported-by: Dan van der Ster <dan@vanderster.com>
+>> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+>> Cc: <stable@vger.kernel.org>
+> Tested-by: Dan van der Ster <dan@vanderster.com>
+Tested-by: Simon <tangouniform@sbcglobal.net>
 
-Signed-off-by: Christian Gmeiner <christian.gmeiner@gmail.com>
----
- drivers/ata/pata_cs5536.c | 32 ++++++++++++++++++++++++++++++
-+-
- 1 file changed, 31 insertions(+), 1 deletion(-)
+There's a third successful patch test report attached to the bugzilla
+entry (link above) 10 days ago.
 
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index dec1b6c..0448860 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -38,6 +38,7 @@
- #include <linux/delay.h>
- #include <linux/libata.h>
- #include <scsi/scsi_host.h>
-+#include <linux/dmi.h>
-
- #ifdef CONFIG_X86_32
- #include <asm/msr.h>
-@@ -80,6 +81,21 @@ enum {
-        IDE_ETC_UDMA_MASK       = 0xc0,
- };
-
-+/* Some Bachmann OT200 devices have a non working UDMA support due a
-+ * missing resistor.
-+ */
-+static const struct dmi_system_id udma_quirk_dmi_table[] = {
-+       {
-+               .ident = "Bachmann electronic OT200",
-+               .matches = {
-+                       DMI_MATCH(DMI_SYS_VENDOR, "Bachmann electronic"),
-+                       DMI_MATCH(DMI_PRODUCT_NAME, "OT200"),
-+                       DMI_MATCH(DMI_PRODUCT_VERSION, "1")
-+               },
-+       },
-+       { }
-+};
-+
- static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
- {
-        if (unlikely(use_msr)) {
-@@ -242,9 +258,23 @@ static int cs5536_init_one(struct pci_dev *dev,
-const struct pci_device_id *id)
-                .port_ops = &cs5536_port_ops,
-        };
-
--       const struct ata_port_info *ppi[] = { &info, &ata_dummy_port_info };
-+       static const struct ata_port_info no_udma_info = {
-+               .flags = ATA_FLAG_SLAVE_POSS,
-+               .pio_mask = ATA_PIO4,
-+               .port_ops = &cs5536_port_ops,
-+       };
-+
-+
-+       const struct ata_port_info *ppi[2];
-        u32 cfg;
-
-+       if (dmi_check_system(udma_quirk_dmi_table))
-+               ppi[0] = &no_udma_info;
-+       else
-+               ppi[0] = &info;
-+
-+       ppi[1] = &ata_dummy_port_info;
-+
-        if (use_msr)
-                printk(KERN_ERR DRV_NAME ": Using MSR regs instead of PCI\n");
+I ran into this, with 3.6.6 failing to boot, I think because of an
+esata-attached enclosure w/ port multiplier.
 
 
---
-1.7.12.2.421.g261b511
+>> ---
+>>  drivers/ata/libata-acpi.c | 11 ++++++++---
+>>  1 file changed, 8 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+>> index fd9ecf7..5b0ba3f 100644
+>> --- a/drivers/ata/libata-acpi.c
+>> +++ b/drivers/ata/libata-acpi.c
+>> @@ -1105,10 +1105,15 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
+>>         struct acpi_device *acpi_dev;
+>>         struct acpi_device_power_state *states;
+>>
+>> -       if (ap->flags & ATA_FLAG_ACPI_SATA)
+>> -               ata_dev = &ap->link.device[sdev->channel];
+>> -       else
+>> +       if (ap->flags & ATA_FLAG_ACPI_SATA) {
+>> +               if (!sata_pmp_attached(ap))
+>> +                       ata_dev = &ap->link.device[sdev->id];
+>> +               else
+>> +                       ata_dev = &ap->pmp_link[sdev->channel].device[sdev->id];
+>> +       }
+>> +       else {
+>>                 ata_dev = &ap->link.device[sdev->id];
+>> +       }
+>>
+>>         *handle = ata_dev_acpi_handle(ata_dev);
+>>
+>> --
+>> 1.7.12.21.g871e293
+>>
+
