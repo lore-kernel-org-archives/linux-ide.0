@@ -1,44 +1,231 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: ata4.00: failed to get Identify Device Data, Emask 0x1
-Date: Fri, 16 Nov 2012 12:44:28 -0500
-Message-ID: <50A67B7C.4090608@pobox.com>
-References: <20121016144932.GA24044@aftab.osrc.amd.com> <20121016155824.00d5b618@pyramind.ukuu.org.uk> <20121016151830.GB24044@aftab.osrc.amd.com> <507E0C1A.1010705@intel.com> <507E392E.2010305@gmail.com> <507E5671.6070504@intel.com> <43EB3AB3EEFE8D43B525F4D2EAF507E107EA8AA9@SCYBEXDAG03.amd.com> <43EB3AB3EEFE8D43B525F4D2EAF507E107EF3D53@SCYBEXDAG04.amd.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata fixes
+Date: Fri, 16 Nov 2012 23:39:18 -0500
+Message-ID: <20121117043918.GA11155@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vb0-f46.google.com ([209.85.212.46]:60879 "EHLO
-	mail-vb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547Ab2KPRoc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Nov 2012 12:44:32 -0500
-In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E107EF3D53@SCYBEXDAG04.amd.com>
+Received: from havoc.gtf.org ([69.61.125.42]:58593 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752077Ab2KQFJN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Nov 2012 00:09:13 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Robert Hancock <hancockrwd@gmail.com>, Borislav Petkov <bp@amd64.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-
-On 11/16/2012 11:02 AM, Huang, Shane wrote:
->> I tried word 78 bit 5(Hardware Feature Control) which does not work,
->> it is 0 on my HDD sample with log 30h page 08h and DevSlp supported.
->>
->> Seems that word 78 bit 5 is only the sufficient condition, not the
->> essential condition. Do you guys have suggestion?
->
-> Eventually I received the confirmation from the DevSlp HDD vendor,
-> bit 5 should be and will be set in production drives with log 30h
-> page 08h supported. So I will submit a patch to use it instead.
->
->
-> Hi Jeff,
->
-> I don't know when I will receive some production drives to verify
-> my patch, are you okay if I submit my patch first without testing
-> so as to meet kernel 3.7 bug fix window?
-
-Yes, please do.
-
-	Jeff
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+If you were going to shoot me for not sending these earlier, you would be
+right.  -rc6 beat me by ~2 hours it seems, and they really should have
+gone out to libata-dev.git and you long before that.
+
+These have been in libata-dev.git for a day or so (unfortunately
+linux-next is on vacation).  The main one is #1, with the others being
+minor bits.  #1 has multiple tested-by, and can be considered a
+regression fix IMO.
+
+1) Fix ACPI oops, https://bugzilla.kernel.org/show_bug.cgi?id=48211
+
+2) Temporary WARN_ONCE() debugging patch for further ACPI debugging.
+   The code already oopses here, and so this merely gives slightly
+   better info.  Related to https://bugzilla.kernel.org/show_bug.cgi?id=49151
+   which has been bisected down to a patch that _exposes_ a latent bug,
+   but said bisection target does not actually appear to be the root cause
+   itself.
+
+3) sata_svw: fix longstanding error recovery bug, which was
+   preventing kdump, by adding missing DMA-start bit check.  Core
+   code was already checking DMA-start, but ancillary, less-used
+   routines were not.  Fixed.
+
+4) sata_highbank: fix minor __init/__devinit warning
+
+5) Fix minor warning, if CONFIG_PM is set, but CONFIG_PM_SLEEP is not set
+
+6) pata_arasan: proper functioning requires clock setting
+
+Please pull 29448ec129c5c9c7ece2ef28c72a0dafd70c8af2 from
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream-linus
 
 
+to receive the following updates:
+
+ drivers/ata/ahci_platform.c  |  2 +-
+ drivers/ata/libata-acpi.c    | 11 ++++++++---
+ drivers/ata/libata-core.c    |  4 ++++
+ drivers/ata/pata_arasan_cf.c |  8 +++++++-
+ drivers/ata/sata_highbank.c  |  4 ++--
+ drivers/ata/sata_svw.c       | 35 +++++++++++++++++++++++++++++++++++
+ 6 files changed, 57 insertions(+), 7 deletions(-)
+
+Aaron Lu (1):
+      libata-acpi: Fix NULL ptr derference in ata_acpi_dev_handle
+
+Arnd Bergmann (1):
+      sata_highbank: mark ahci_highbank_probe as __devinit
+
+Borislav Petkov (1):
+      libata debugging: Warn when unable to find timing descriptor based on xfer_mode
+
+David Milburn (1):
+      sata_svw: check DMA start bit before reset
+
+Vipul Kumar Samar (1):
+      pata_arasan: Initialize cf clock to 166MHz
+
+Yuanhan Liu (1):
+      [libata] PM callbacks should be conditionally compiled on CONFIG_PM_SLEEP
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index b1ae480..b7078af 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -238,7 +238,7 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ahci_suspend(struct device *dev)
+ {
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index fd9ecf7..5b0ba3f 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -1105,10 +1105,15 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
+ 	struct acpi_device *acpi_dev;
+ 	struct acpi_device_power_state *states;
+ 
+-	if (ap->flags & ATA_FLAG_ACPI_SATA)
+-		ata_dev = &ap->link.device[sdev->channel];
+-	else
++	if (ap->flags & ATA_FLAG_ACPI_SATA) {
++		if (!sata_pmp_attached(ap))
++			ata_dev = &ap->link.device[sdev->id];
++		else
++			ata_dev = &ap->pmp_link[sdev->channel].device[sdev->id];
++	}
++	else {
+ 		ata_dev = &ap->link.device[sdev->id];
++	}
+ 
+ 	*handle = ata_dev_acpi_handle(ata_dev);
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3cc7096..f46fbd3 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2942,6 +2942,10 @@ const struct ata_timing *ata_timing_find_mode(u8 xfer_mode)
+ 
+ 	if (xfer_mode == t->mode)
+ 		return t;
++
++	WARN_ONCE(true, "%s: unable to find timing for xfer_mode 0x%x\n",
++			__func__, xfer_mode);
++
+ 	return NULL;
+ }
+ 
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index 26201eb..371fd2c 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -317,6 +317,12 @@ static int cf_init(struct arasan_cf_dev *acdev)
+ 		return ret;
+ 	}
+ 
++	ret = clk_set_rate(acdev->clk, 166000000);
++	if (ret) {
++		dev_warn(acdev->host->dev, "clock set rate failed");
++		return ret;
++	}
++
+ 	spin_lock_irqsave(&acdev->host->lock, flags);
+ 	/* configure CF interface clock */
+ 	writel((pdata->cf_if_clk <= CF_IF_CLK_200M) ? pdata->cf_if_clk :
+@@ -908,7 +914,7 @@ static int __devexit arasan_cf_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int arasan_cf_suspend(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 0d7c4c2..400bf1c 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -260,7 +260,7 @@ static const struct of_device_id ahci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+-static int __init ahci_highbank_probe(struct platform_device *pdev)
++static int __devinit ahci_highbank_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+@@ -378,7 +378,7 @@ static int __devexit ahci_highbank_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ahci_highbank_suspend(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 44a4256..08608de 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -142,6 +142,39 @@ static int k2_sata_scr_write(struct ata_link *link,
+ 	return 0;
+ }
+ 
++static int k2_sata_softreset(struct ata_link *link,
++			     unsigned int *class, unsigned long deadline)
++{
++	u8 dmactl;
++	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
++
++	dmactl = readb(mmio + ATA_DMA_CMD);
++
++	/* Clear the start bit */
++	if (dmactl & ATA_DMA_START) {
++		dmactl &= ~ATA_DMA_START;
++		writeb(dmactl, mmio + ATA_DMA_CMD);
++	}
++
++	return ata_sff_softreset(link, class, deadline);
++}
++
++static int k2_sata_hardreset(struct ata_link *link,
++			     unsigned int *class, unsigned long deadline)
++{
++	u8 dmactl;
++	void __iomem *mmio = link->ap->ioaddr.bmdma_addr;
++
++	dmactl = readb(mmio + ATA_DMA_CMD);
++
++	/* Clear the start bit */
++	if (dmactl & ATA_DMA_START) {
++		dmactl &= ~ATA_DMA_START;
++		writeb(dmactl, mmio + ATA_DMA_CMD);
++	}
++
++	return sata_sff_hardreset(link, class, deadline);
++}
+ 
+ static void k2_sata_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
+ {
+@@ -346,6 +379,8 @@ static struct scsi_host_template k2_sata_sht = {
+ 
+ static struct ata_port_operations k2_sata_ops = {
+ 	.inherits		= &ata_bmdma_port_ops,
++	.softreset              = k2_sata_softreset,
++	.hardreset              = k2_sata_hardreset,
+ 	.sff_tf_load		= k2_sata_tf_load,
+ 	.sff_tf_read		= k2_sata_tf_read,
+ 	.sff_check_status	= k2_stat_check_status,
