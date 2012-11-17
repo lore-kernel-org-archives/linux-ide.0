@@ -1,45 +1,70 @@
-From: Alexander Shiyan <shc_work@mail.ru>
-Subject: [PATCH] ata: highbank: Fix section mismatch
-Date: Sat, 17 Nov 2012 15:54:38 +0400
-Message-ID: <1353153278-23570-1-git-send-email-shc_work@mail.ru>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH] libata: check SATA_SETTINGS log with HW Feature Ctrl
+Date: Sun, 18 Nov 2012 04:44:41 +0800
+Message-ID: <1353185081-11349-1-git-send-email-shane.huang@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback8.mail.ru ([94.100.176.136]:35430 "EHLO
-	fallback8.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab2KQMBv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Nov 2012 07:01:51 -0500
-Received: from smtp18.mail.ru (smtp18.mail.ru [94.100.176.155])
-	by fallback8.mail.ru (mPOP.Fallback_MX) with ESMTP id 4D900D48559
-	for <linux-ide@vger.kernel.org>; Sat, 17 Nov 2012 15:55:06 +0400 (MSK)
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:54035 "EHLO
+	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751715Ab2KQMnY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Nov 2012 07:43:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alexander Shiyan <shc_work@mail.ru>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Shane Huang <shane.huang@amd.com>
 
-WARNING: drivers/built-in.o(.data+0x4f40): Section mismatch in reference from the variable ahci_highbank_driver to the function .init.text:ahci_highbank_probe()
-The variable ahci_highbank_driver references
-the function __init ahci_highbank_probe()
-If the reference is valid then annotate the
-variable with __init* or __refdata (see linux/init.h) or name the variable:
-*_template, *_timer, *_sht, *_ops, *_probe, *_probe_one, *_console
+NCQ capability was used to check availability of SATA Settings page
+from Identify Device Data Log, which contains DevSlp timing variables.
+It does not work on some HDDs and leads to error messages.
+IDENTIFY word 78 bit 5(Hardware Feature Control) should be used.
 
-Signed-off-by: Alexander Shiyan <shc_work@mail.ru>
+Quoting SATA spec 3.1:
+If Hardware Feature Control is supported, then:
+a) IDENTIFY DEVICE data word 78 bit 5 (see 13.2.1.18) shall be
+set to one;
+b) the SET FEATURES Select Hardware Feature Control subcommand
+shall be supported (see 13.3.8);
+c) page 08h of the Identify Device Data log (see 13.7.7) shall
+be supported;
+
+This patch is not tested on SATA HDD with DevSlp supported.
+
+Reported-by: Borislav Petkov <bp@amd64.org>
+Signed-off-by: Shane Huang <shane.huang@amd.com>
 ---
- drivers/ata/sata_highbank.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/ata/libata-core.c |    3 +--
+ include/linux/ata.h       |    1 +
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index 0d7c4c2..36a141a 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -260,7 +260,7 @@ static const struct of_device_id ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3cc7096..4c9a58b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2330,9 +2330,8 @@ int ata_dev_configure(struct ata_device *dev)
  
--static int __init ahci_highbank_probe(struct platform_device *pdev)
-+static int __devinit ahci_highbank_probe(struct platform_device *pdev)
+ 		/* Obtain SATA Settings page from Identify Device Data Log,
+ 		 * which contains DevSlp timing variables etc.
+-		 * Exclude old devices with ata_id_has_ncq()
+ 		 */
+-		if (ata_id_has_ncq(dev->id)) {
++		if (ata_id_has_hw_feature_ctrl(dev->id)) {
+ 			err_mask = ata_read_log_page(dev,
+ 						     ATA_LOG_SATA_ID_DEV_DATA,
+ 						     ATA_LOG_SATA_SETTINGS,
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 408da95..18cbb93 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -593,6 +593,7 @@ static inline int ata_is_data(u8 prot)
+ #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
+ #define ata_id_has_da(id)	((id)[ATA_ID_SATA_CAPABILITY_2] & (1 << 4))
+ #define ata_id_has_devslp(id)	((id)[ATA_ID_FEATURE_SUPP] & (1 << 8))
++#define ata_id_has_hw_feature_ctrl(id)	((id)[ATA_ID_FEATURE_SUPP] & (1 << 5))
+ 
+ static inline bool ata_id_has_hipm(const u16 *id)
  {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
 -- 
-1.7.8.6
+1.7.9.5
+
 
