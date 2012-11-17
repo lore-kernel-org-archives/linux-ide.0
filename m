@@ -1,70 +1,42 @@
-From: Shane Huang <shane.huang@amd.com>
-Subject: [PATCH] libata: check SATA_SETTINGS log with HW Feature Ctrl
-Date: Sun, 18 Nov 2012 04:44:41 +0800
-Message-ID: <1353185081-11349-1-git-send-email-shane.huang@amd.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Sat, 17 Nov 2012 16:29:16 +0000 (UTC)
+Message-ID: <20121117162916.6FDBF11FEE3@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:54035 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751715Ab2KQMnY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Nov 2012 07:43:24 -0500
+Received: from mail.kernel.org ([198.145.19.201]:52890 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751881Ab2KQQ3V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 Nov 2012 11:29:21 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 37C22201AC
+	for <linux-ide@vger.kernel.org>; Sat, 17 Nov 2012 16:29:20 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id 57B80201B9
+	for <linux-ide@vger.kernel.org>; Sat, 17 Nov 2012 16:29:19 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Shane Huang <shane.huang@amd.com>
+To: linux-ide@vger.kernel.org
 
-NCQ capability was used to check availability of SATA Settings page
-from Identify Device Data Log, which contains DevSlp timing variables.
-It does not work on some HDDs and leads to error messages.
-IDENTIFY word 78 bit 5(Hardware Feature Control) should be used.
+https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
-Quoting SATA spec 3.1:
-If Hardware Feature Control is supported, then:
-a) IDENTIFY DEVICE data word 78 bit 5 (see 13.2.1.18) shall be
-set to one;
-b) the SET FEATURES Select Hardware Feature Control subcommand
-shall be supported (see 13.3.8);
-c) page 08h of the Identify Device Data log (see 13.7.7) shall
-be supported;
 
-This patch is not tested on SATA HDD with DevSlp supported.
+dutra.julio@gmail.com changed:
 
-Reported-by: Borislav Petkov <bp@amd64.org>
-Signed-off-by: Shane Huang <shane.huang@amd.com>
----
- drivers/ata/libata-core.c |    3 +--
- include/linux/ata.h       |    1 +
- 2 files changed, 2 insertions(+), 2 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |dutra.julio@gmail.com
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3cc7096..4c9a58b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2330,9 +2330,8 @@ int ata_dev_configure(struct ata_device *dev)
- 
- 		/* Obtain SATA Settings page from Identify Device Data Log,
- 		 * which contains DevSlp timing variables etc.
--		 * Exclude old devices with ata_id_has_ncq()
- 		 */
--		if (ata_id_has_ncq(dev->id)) {
-+		if (ata_id_has_hw_feature_ctrl(dev->id)) {
- 			err_mask = ata_read_log_page(dev,
- 						     ATA_LOG_SATA_ID_DEV_DATA,
- 						     ATA_LOG_SATA_SETTINGS,
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 408da95..18cbb93 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -593,6 +593,7 @@ static inline int ata_is_data(u8 prot)
- #define ata_id_cdb_intr(id)	(((id)[ATA_ID_CONFIG] & 0x60) == 0x20)
- #define ata_id_has_da(id)	((id)[ATA_ID_SATA_CAPABILITY_2] & (1 << 4))
- #define ata_id_has_devslp(id)	((id)[ATA_ID_FEATURE_SUPP] & (1 << 8))
-+#define ata_id_has_hw_feature_ctrl(id)	((id)[ATA_ID_FEATURE_SUPP] & (1 << 5))
- 
- static inline bool ata_id_has_hipm(const u16 *id)
- {
+
+
+
+--- Comment #42 from dutra.julio@gmail.com  2012-11-17 16:29:15 ---
+Works great.
+
 -- 
-1.7.9.5
-
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
