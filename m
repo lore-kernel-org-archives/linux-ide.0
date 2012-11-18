@@ -1,39 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Sat, 17 Nov 2012 17:22:52 +0000 (UTC)
-Message-ID: <20121117172252.E077511FEE4@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 03/10] ata: zpodd: identify and init ZPODD devices
+Date: Sun, 18 Nov 2012 06:38:00 -0800
+Message-ID: <20121118143800.GI7306@mtj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <1352443922-13734-4-git-send-email-aaron.lu@intel.com>
+ <20121112185301.GB5560@mtj.dyndns.org>
+ <50A2F4AB.6060903@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:53451 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751967Ab2KQRW6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 Nov 2012 12:22:58 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 2EB1D201B0
-	for <linux-ide@vger.kernel.org>; Sat, 17 Nov 2012 17:22:57 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id 3323E2019D
-	for <linux-ide@vger.kernel.org>; Sat, 17 Nov 2012 17:22:56 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <50A2F4AB.6060903@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
+Hello, Aaron.
 
+On Wed, Nov 14, 2012 at 09:32:27AM +0800, Aaron Lu wrote:
+> > I don't think you're supposed to use dev->private_data from libata
+> > core layer.  Just add a new field.  Nobody cares about adding 8 more
+> > bytes to struct ata_device and spending 8 more bytes is way better
+> > than muddying the ownership of ->private_data.
+> 
+> OK.
+> And just out of curiosity, who's supposed to use device's private_data?
+> I didn't find any user for ata_device's private_data in libata.
 
+All the ->private_data fields are to be used by low level drivers
+(ahci, ata_piix, pata_via...).  Given the twisted nature of ATA
+devices, it's a bit surprising that no driver yet found a need for
+ata_dev->private_data.  For most SATA controllers, port to device is
+one to one so maybe ap->private_data is enough.
 
+> > And this gets completely wrong.  What if the device supports DA and
+> > low level driver makes use of ->private_data?
+> 
+> I didn't find any user of ata_device's private_data, so I used it for
+> ZPODD. But if this is dangerous, I'll use a new field.
 
+As there currently is no other user, it won't break anything but yeah
+please add a properly typed and named field.
 
---- Comment #43 from Szymon Janc <szymon@janc.net.pl>  2012-11-17 17:22:52 ---
-Boots fine here as well. Thanks!
-Would be also great to see it in stable :)
-
-Tested-by: Szymon Janc <szymon@janc.net.pl>
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
