@@ -1,73 +1,41 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 07/10] block: add a new interface to block events
-Date: Mon, 19 Nov 2012 11:21:53 +0800
-Message-ID: <50A9A5D1.5060900@intel.com>
-References: <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1211182058450.10879-100000@netrider.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Daniel J Blueman <daniel@quora.org>
+Subject: [PATCH] AHCI: fix build warning when PM && !PM_SLEEP
+Date: Mon, 19 Nov 2012 17:06:26 +0800
+Message-ID: <1353315986-27317-1-git-send-email-daniel@quora.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:60801 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753183Ab2KSJGj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2012 04:06:39 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so308239pad.19
+        for <linux-ide@vger.kernel.org>; Mon, 19 Nov 2012 01:06:39 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Daniel J Blueman <daniel@quora.org>
 
-On 11/19/2012 10:07 AM, Alan Stern wrote:
-> On Sun, 18 Nov 2012, Tejun Heo wrote:
-> 
->> Hey, Alan.
-> 
-> Hey...
-> 
->> It's controlled by /sys/class/scsi_host/hostX/link_power_management.
->> Once enabled, the power saving is completedly handled by hardware.  If
->> link stays idle longer than certain duration, the hardware initiates
->> low power state and leaves it when something needs to happen.
->>
->>>> So, this whole autopm thing doesn't sound like a good idea to me.
->>>
->>> No doubt it's better suited to some devices than to others.
->>
->> Yeah, SATA seems to need a different approach than USB.
-> 
-> Based on your description, I agree.
-> 
->>> That may be true for SATA.  For USB optical drives, it does make sense
->>> to power-down the host controller when the drive isn't in use.  USB
->>> suspend/resume takes on the order of 50-100 ms or so.
->>
->> I see.  For SATA too, the controller / link bring up doesn't take too
->> long.  The crappy part is what the attached, especially ATAPI, devices
->> would do after such events as those events will be visible to them
->> basically as random link resets.
->>
->> So, at least for SATA, I think what autopm can do is...
->>
->> * Trigger zpodd if possible.
->>
->> * Trigger suspend iff polling isn't happening on the device.
-> 
-> That sums it up nicely.  Of course, the PM core is unaware of details
-> such as media polling.  What we can do is have the SATA runtime-idle
-> method return -EBUSY if the device isn't a ZPODD and if polling is
-> enabled.  Unfortunately I don't think there's any way currently to
-> trigger autopm when the user turns off polling.  Maybe something could
-> be added to the appropriate sysfs handler.
+Change the conditional around ahci_suspend/resume to the same as the
+SIMPLE_DEV_PM_OPS macro that uses these functions, fixing an unused build
+warning.
 
-OK, thanks for your(both of you) suggestions.
+Signed-off-by: Daniel J Blueman <daniel@quora.org>
+---
+ drivers/ata/ahci_platform.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-But probably for ZPODD devices first, as it has a clear use case and
-should already have productions. For async notification capable ODDs,
-I'll leave it for someone else or maybe at a later time if I can get
-such a device to test on.
-
-To conclude, the ata port's runtime idle callback will return 0 when:
-1 It attached a ZPODD capable ODD;
-2 Or it attached a hard disk.
-For all other cases, it will return -EBUSY.
-Does this look correct?
-
-Thanks,
-Aaron
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index b1ae480..b7078af 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -238,7 +238,7 @@ static int __devexit ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
++#ifdef CONFIG_PM_SLEEP
+ static int ahci_suspend(struct device *dev)
+ {
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+-- 
+1.7.10.4
 
