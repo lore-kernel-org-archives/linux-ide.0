@@ -1,156 +1,87 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v4 -tip 2/3] PCI, MSI: Enable multiple MSIs with
- pci_enable_msi_block_auto()
-Date: Mon, 19 Nov 2012 16:02:10 +0100
-Message-ID: <c3de2419df94a0f95ca1a6f755afc421486455e6.1353324359.git.agordeev@redhat.com>
-References: <cover.1353324359.git.agordeev@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 19 Nov 2012 15:06:51 +0000
+Message-ID: <1353337611.2444.32.camel@dabdike.int.hansenpartnership.com>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+	 <1352443922-13734-7-git-send-email-aaron.lu@intel.com>
+	 <20121112191303.GE5560@mtj.dyndns.org> <50A2FF6F.3080603@intel.com>
+	 <20121118150004.GJ7306@mtj.dyndns.org> <50A9A2F4.3020006@intel.com>
+	 <20121119145605.GC15971@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <cover.1353324359.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20121119145605.GC15971@htj.dyndns.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The new function pci_enable_msi_block_auto() tries to allocate maximum
-possible number of MSIs up to the number the device supports. It
-generalizes a pattern when pci_enable_msi_block() is contiguously called
-until it succeeds or fails.
+On Mon, 2012-11-19 at 06:56 -0800, Tejun Heo wrote:
+> Hey, Aaron.
+> 
+> On Mon, Nov 19, 2012 at 11:09:40AM +0800, Aaron Lu wrote:
+> > > What I'm confused about is what autopm does for devices w/o zpodd.
+> > > What happens then?  Is it gonna leave power on for the device and,
+> > > say, go on to suspend the controller?  But, how would that work for,
+> > > say, future devices with async notification for media events?
+> > 
+> > Maybe we shouldn't allow autopm for such devices?
+> 
+> Yeah, maybe.  It would be nice to be able to automatically power off
+> disks and ports which aren't being used tho.
+> 
+> > > That said, I can't say the snooping is pretty.  It's a rather nasty
+> > > thing to do.  So, libata now wants information from the event polling
+> > > in block layer, but reaching for block_device from ata_devices is
+> > > nasty too.  Hmmm... but aren't you already doing that to block polling
+> > > on a powered down device?
+> > 
+> > I was feeling brain damaged by this for some time :-)
+> > 
+> > Basically, only ATA layer is aware of the power off thing, and sr knows
+> > nothing about this(or it is not supposed to know this, at least, this is
+> > what SCSI people think) and once powered off, I do not want the poll to
+> > disturb the device, so I need to block the poll. I can't come up with
+> > another way to achieve this except this nasty way.
+> > 
+> > James suggests me to keep the poll, but emulate the command. The problem
+> > with this is, the autopm for resume will kick in on each poll, so I'll
+> > need to decide if power up the ODD for this time's resume is needed in
+> > port's runtime resume callback. This made things complex and it also put
+> > too much logic in the resume callback, which is not desired. And even if
+> > I keep the ODD in powered off state by emulating this poll command, its
+> > ancestor devices will still be resumed, and I may need to do some trick
+> > in their resume callback to avoid needless power/state transitions. This
+> > doesn't feel like an elegant way to solve this either.
+> > 
+> > So yes, I'm still using this _nasty_ way to make the ODD stay in powered
+> > off state as long as possible. But if there is other elegant ways to
+> > solve this, I would appreciate it and happily using it. Personally, I
+> > hope we can make sr aware of ZPODD, that would make the pain gone.
+> 
+> I really think we need a way for (auto)pm and event polling to talk to
+> each other so that autopm can tell event poll to sod off while pm is
+> in effect.  Trying to solve this from inside libata doesn't seem
+> right.  The problem, again, seems to be figuring out which hardware
+> device maps to which block device.  Hmmm... Any good ideas?
 
-Opposite to pci_enable_msi_block() which takes the number of MSIs to
-allocate as a input parameter, pci_enable_msi_block_auto() could be used
-by device drivers to obtain the number of assigned MSIs and the number
-of MSIs the device supports.
+I've asked the PM people several times about this, because it's a real
+problem for almost everything:  PM needs some type of top to bottom
+stack view, which the layering isolation we have within storage really
+doesn't cope with well.  No real suggestion has been forthcoming.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++++++++++++++++++++++++++-----
- drivers/pci/msi.c               |   26 ++++++++++++++++++++++++++
- include/linux/pci.h             |    7 +++++++
- 3 files changed, 65 insertions(+), 5 deletions(-)
+The reason I think it should be emulated (in the acpi layer, not libata,
+but as long as it's not in SCSI, I'm not so fussed where it ends up) is
+because ZPODD is the software equivalent of ZPREADY, which will be done
+in hardware and will be effectively invisible to autopm in the same way
+that SCSI (and ATA) power management is mostly invisible.  If we
+currently do ZPREADY emulation in the low layer (i.e. ZPODD has exact
+ZPREADY emulation), we won't care (except for flipping the sofware bit)
+whether the device support ZPODD or ZPREADY and it will all just
+work(tm).  The industry expectation is that ZPODD is just a transition
+state between current power management and ZPREADY.
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 53e6fca..a091780 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -127,15 +127,42 @@ on the number of vectors that can be allocated; pci_enable_msi_block()
- returns as soon as it finds any constraint that doesn't allow the
- call to succeed.
- 
--4.2.3 pci_disable_msi
-+4.2.3 pci_enable_msi_block_auto
-+
-+int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
-+
-+This variation on pci_enable_msi() call allows a device driver to request
-+the maximum possible number of MSIs.  The MSI specification only allows
-+interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
-+
-+If this function returns a positive number, it indicates that it has
-+succeeded and the returned value is the number of allocated interrupts. In
-+this case, the function enables MSI on this device and updates dev->irq to
-+be the lowest of the new interrupts assigned to it.  The other interrupts
-+assigned to the device are in the range dev->irq to dev->irq + returned
-+value - 1.
-+
-+If this function returns a negative number, it indicates an error and
-+the driver should not attempt to request any more MSI interrupts for
-+this device.
-+
-+If the device driver needs to know the number of interrupts the device
-+supports it can pass the pointer count where that number is stored. The
-+device driver must decide what action to take if pci_enable_msi_block_auto()
-+succeeds, but returns a value less than the number of interrupts supported.
-+If the device driver does not need to know the number of interrupts
-+supported, it can set the pointer count to NULL.
-+
-+4.2.4 pci_disable_msi
- 
- void pci_disable_msi(struct pci_dev *dev)
- 
- This function should be used to undo the effect of pci_enable_msi() or
--pci_enable_msi_block().  Calling it restores dev->irq to the pin-based
--interrupt number and frees the previously allocated message signaled
--interrupt(s).  The interrupt may subsequently be assigned to another
--device, so drivers should not cache the value of dev->irq.
-+pci_enable_msi_block() or pci_enable_msi_block_auto().  Calling it restores
-+dev->irq to the pin-based interrupt number and frees the previously
-+allocated message signaled interrupt(s).  The interrupt may subsequently be
-+assigned to another device, so drivers should not cache the value of
-+dev->irq.
- 
- Before calling this function, a device driver must always call free_irq()
- on any interrupt for which it previously called request_irq().
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a825d78..6ec44e2 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -839,6 +839,32 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- }
- EXPORT_SYMBOL(pci_enable_msi_block);
- 
-+int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-+{
-+	int ret, pos, nvec;
-+	u16 msgctl;
-+
-+	pos = pci_find_capability(dev, PCI_CAP_ID_MSI);
-+	if (!pos)
-+		return -EINVAL;
-+
-+	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	if (maxvec)
-+		*maxvec = ret;
-+
-+	do {
-+		nvec = ret;
-+		ret = pci_enable_msi_block(dev, nvec);
-+	} while (ret > 0);
-+
-+	if (ret < 0)
-+		return ret;
-+	return nvec;
-+}
-+EXPORT_SYMBOL(pci_enable_msi_block_auto);
-+
- void pci_msi_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *desc;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ee21795..fbba374 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1080,6 +1080,12 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
- 	return -1;
- }
- 
-+static inline int
-+pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
-+{
-+	return -1;
-+}
-+
- static inline void pci_msi_shutdown(struct pci_dev *dev)
- { }
- static inline void pci_disable_msi(struct pci_dev *dev)
-@@ -1111,6 +1117,7 @@ static inline int pci_msi_enabled(void)
- }
- #else
- extern int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
-+extern int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
- extern void pci_msi_shutdown(struct pci_dev *dev);
- extern void pci_disable_msi(struct pci_dev *dev);
- extern int pci_msix_table_size(struct pci_dev *dev);
--- 
-1.7.7.6
+James
 
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
