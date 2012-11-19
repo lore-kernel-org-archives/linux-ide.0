@@ -1,72 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 19 Nov 2012 06:56:05 -0800
-Message-ID: <20121119145605.GC15971@htj.dyndns.org>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
- <1352443922-13734-7-git-send-email-aaron.lu@intel.com>
- <20121112191303.GE5560@mtj.dyndns.org>
- <50A2FF6F.3080603@intel.com>
- <20121118150004.GJ7306@mtj.dyndns.org>
- <50A9A2F4.3020006@intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v4 -tip 0/3] x86, MSI, AHCI: Support multiple MSIs
+Date: Mon, 19 Nov 2012 16:00:51 +0100
+Message-ID: <cover.1353324359.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:30036 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751944Ab2KSPBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Nov 2012 10:01:24 -0500
 Content-Disposition: inline
-In-Reply-To: <50A9A2F4.3020006@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Ingo Molnar <mingo@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, Suresh Siddha <suresh.b.siddha@intel.com>, Yinghai Lu <yinghai@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hey, Aaron.
+Hi Jeff,
 
-On Mon, Nov 19, 2012 at 11:09:40AM +0800, Aaron Lu wrote:
-> > What I'm confused about is what autopm does for devices w/o zpodd.
-> > What happens then?  Is it gonna leave power on for the device and,
-> > say, go on to suspend the controller?  But, how would that work for,
-> > say, future devices with async notification for media events?
-> 
-> Maybe we shouldn't allow autopm for such devices?
+I am resending this series with changes based on Ingo's review of v3.
 
-Yeah, maybe.  It would be nice to be able to automatically power off
-disks and ports which aren't being used tho.
+Patch #3 has a single change in functionality compared to the previous
+version you acked before - that is a fix of invalid index spotted by Ingo
+(below is the interdiff's hunk). Could you please review the patch again
+and ack or comment?
 
-> > That said, I can't say the snooping is pretty.  It's a rather nasty
-> > thing to do.  So, libata now wants information from the event polling
-> > in block layer, but reaching for block_device from ata_devices is
-> > nasty too.  Hmmm... but aren't you already doing that to block polling
-> > on a powered down device?
-> 
-> I was feeling brain damaged by this for some time :-)
-> 
-> Basically, only ATA layer is aware of the power off thing, and sr knows
-> nothing about this(or it is not supposed to know this, at least, this is
-> what SCSI people think) and once powered off, I do not want the poll to
-> disturb the device, so I need to block the poll. I can't come up with
-> another way to achieve this except this nasty way.
-> 
-> James suggests me to keep the poll, but emulate the command. The problem
-> with this is, the autopm for resume will kick in on each poll, so I'll
-> need to decide if power up the ODD for this time's resume is needed in
-> port's runtime resume callback. This made things complex and it also put
-> too much logic in the resume callback, which is not desired. And even if
-> I keep the ODD in powered off state by emulating this poll command, its
-> ancestor devices will still be resumed, and I may need to do some trick
-> in their resume callback to avoid needless power/state transitions. This
-> doesn't feel like an elegant way to solve this either.
-> 
-> So yes, I'm still using this _nasty_ way to make the ODD stay in powered
-> off state as long as possible. But if there is other elegant ways to
-> solve this, I would appreciate it and happily using it. Personally, I
-> hope we can make sr aware of ZPODD, that would make the pain gone.
+@@ -1129,8 +1131,8 @@
+ out_free_all_irqs:
+ 	i = host->n_ports;
+ out_free_irqs:
+-	for (; i; i--)
+-		devm_free_irq(host->dev, irq + i - 1, host->ports[i]);
++	for (i--; i >= 0; i--)
++		devm_free_irq(host->dev, irq + i, host->ports[i]);
+ 
+ 	return rc;
+ }
 
-I really think we need a way for (auto)pm and event polling to talk to
-each other so that autopm can tell event poll to sod off while pm is
-in effect.  Trying to solve this from inside libata doesn't seem
-right.  The problem, again, seems to be figuring out which hardware
-device maps to which block device.  Hmmm... Any good ideas?
+Whole series compared to v3:
 
-Thanks.
+	I have not noticed that v3 2/5 patch "x86, MSI: Allocate as many
+	multiple IRQs as requested" is redundant, since the AHCI code
+	tries to allocate maximum possible number of MSIs. As there are
+	no other users of this functionality, I removed v3 2/5 patch for now;
+
+	v3 patch 3/5 "x86, MSI: Minor readability fixes" merged into
+  	v4 patch 1/3 "x86, MSI: Support multiple MSIs in presense of IRQ
+	remapping";
+
+	1/3:	- racy can_create_irqs() check removed;
+		- multi-line comments fixed;
+		- loops 'for (; i; i--)' changed to 'for (i--; i >= 0; i--)';
+
+		v1 conditionally acked by Suresh
+		v2 concerned Yinghai's comments
+
+	2/3:	v2 acked by Bjorn, no changes since
+
+	3/3:	- ahci_host_activate() failure path fixed and tested;
+		- ahci_port_priv::lock field commented;
+		- multi-line comments fixed;
+
+		v3 acked by Jeff
+
+Alexander Gordeev (3):
+  x86, MSI: Support multiple MSIs in presense of IRQ remapping
+  PCI, MSI: Enable multiple MSIs with pci_enable_msi_block_auto()
+  AHCI: Support multiple MSIs
+
+ Documentation/PCI/MSI-HOWTO.txt |   37 ++++++++-
+ arch/x86/kernel/apic/io_apic.c  |  165 +++++++++++++++++++++++++++++++--------
+ drivers/ata/ahci.c              |   93 +++++++++++++++++++++-
+ drivers/ata/ahci.h              |    6 ++
+ drivers/ata/libahci.c           |  118 ++++++++++++++++++++++++++--
+ drivers/pci/msi.c               |   26 ++++++
+ include/linux/irq.h             |    5 +
+ include/linux/pci.h             |    7 ++
+ kernel/irq/chip.c               |   30 +++++--
+ 9 files changed, 432 insertions(+), 55 deletions(-)
 
 -- 
-tejun
+1.7.7.6
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
