@@ -1,87 +1,210 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 19 Nov 2012 15:06:51 +0000
-Message-ID: <1353337611.2444.32.camel@dabdike.int.hansenpartnership.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
-	 <1352443922-13734-7-git-send-email-aaron.lu@intel.com>
-	 <20121112191303.GE5560@mtj.dyndns.org> <50A2FF6F.3080603@intel.com>
-	 <20121118150004.GJ7306@mtj.dyndns.org> <50A9A2F4.3020006@intel.com>
-	 <20121119145605.GC15971@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121119145605.GC15971@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Bill Pemberton <wfp5p@virginia.edu>
+Subject: [PATCH 405/493] ide: remove use of __devexit
+Date: Mon, 19 Nov 2012 13:25:54 -0500
+Message-ID: <1353349642-3677-405-git-send-email-wfp5p@virginia.edu>
+References: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from viridian.itc.Virginia.EDU ([128.143.12.139]:41486 "EHLO
+	viridian.itc.virginia.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754264Ab2KSSe4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Nov 2012 13:34:56 -0500
+In-Reply-To: <1353349642-3677-1-git-send-email-wfp5p@virginia.edu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: gregkh@linuxfoundation.org
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Mon, 2012-11-19 at 06:56 -0800, Tejun Heo wrote:
-> Hey, Aaron.
-> 
-> On Mon, Nov 19, 2012 at 11:09:40AM +0800, Aaron Lu wrote:
-> > > What I'm confused about is what autopm does for devices w/o zpodd.
-> > > What happens then?  Is it gonna leave power on for the device and,
-> > > say, go on to suspend the controller?  But, how would that work for,
-> > > say, future devices with async notification for media events?
-> > 
-> > Maybe we shouldn't allow autopm for such devices?
-> 
-> Yeah, maybe.  It would be nice to be able to automatically power off
-> disks and ports which aren't being used tho.
-> 
-> > > That said, I can't say the snooping is pretty.  It's a rather nasty
-> > > thing to do.  So, libata now wants information from the event polling
-> > > in block layer, but reaching for block_device from ata_devices is
-> > > nasty too.  Hmmm... but aren't you already doing that to block polling
-> > > on a powered down device?
-> > 
-> > I was feeling brain damaged by this for some time :-)
-> > 
-> > Basically, only ATA layer is aware of the power off thing, and sr knows
-> > nothing about this(or it is not supposed to know this, at least, this is
-> > what SCSI people think) and once powered off, I do not want the poll to
-> > disturb the device, so I need to block the poll. I can't come up with
-> > another way to achieve this except this nasty way.
-> > 
-> > James suggests me to keep the poll, but emulate the command. The problem
-> > with this is, the autopm for resume will kick in on each poll, so I'll
-> > need to decide if power up the ODD for this time's resume is needed in
-> > port's runtime resume callback. This made things complex and it also put
-> > too much logic in the resume callback, which is not desired. And even if
-> > I keep the ODD in powered off state by emulating this poll command, its
-> > ancestor devices will still be resumed, and I may need to do some trick
-> > in their resume callback to avoid needless power/state transitions. This
-> > doesn't feel like an elegant way to solve this either.
-> > 
-> > So yes, I'm still using this _nasty_ way to make the ODD stay in powered
-> > off state as long as possible. But if there is other elegant ways to
-> > solve this, I would appreciate it and happily using it. Personally, I
-> > hope we can make sr aware of ZPODD, that would make the pain gone.
-> 
-> I really think we need a way for (auto)pm and event polling to talk to
-> each other so that autopm can tell event poll to sod off while pm is
-> in effect.  Trying to solve this from inside libata doesn't seem
-> right.  The problem, again, seems to be figuring out which hardware
-> device maps to which block device.  Hmmm... Any good ideas?
+CONFIG_HOTPLUG is going away as an option so __devexit is no
+longer needed.
 
-I've asked the PM people several times about this, because it's a real
-problem for almost everything:  PM needs some type of top to bottom
-stack view, which the layering isolation we have within storage really
-doesn't cope with well.  No real suggestion has been forthcoming.
+Signed-off-by: Bill Pemberton <wfp5p@virginia.edu>
+Cc: "David S. Miller" <davem@davemloft.net> 
+Cc: linux-ide@vger.kernel.org 
+---
+ drivers/ide/aec62xx.c      | 2 +-
+ drivers/ide/cy82c693.c     | 2 +-
+ drivers/ide/hpt366.c       | 2 +-
+ drivers/ide/icside.c       | 2 +-
+ drivers/ide/ide_platform.c | 2 +-
+ drivers/ide/it821x.c       | 2 +-
+ drivers/ide/pdc202xx_new.c | 2 +-
+ drivers/ide/rapide.c       | 2 +-
+ drivers/ide/scc_pata.c     | 2 +-
+ drivers/ide/siimage.c      | 2 +-
+ drivers/ide/sis5513.c      | 2 +-
+ drivers/ide/tc86c001.c     | 2 +-
+ drivers/ide/via82cxxx.c    | 2 +-
+ 13 files changed, 13 insertions(+), 13 deletions(-)
 
-The reason I think it should be emulated (in the acpi layer, not libata,
-but as long as it's not in SCSI, I'm not so fussed where it ends up) is
-because ZPODD is the software equivalent of ZPREADY, which will be done
-in hardware and will be effectively invisible to autopm in the same way
-that SCSI (and ATA) power management is mostly invisible.  If we
-currently do ZPREADY emulation in the low layer (i.e. ZPODD has exact
-ZPREADY emulation), we won't care (except for flipping the sofware bit)
-whether the device support ZPODD or ZPREADY and it will all just
-work(tm).  The industry expectation is that ZPODD is just a transition
-state between current power management and ZPREADY.
-
-James
-
+diff --git a/drivers/ide/aec62xx.c b/drivers/ide/aec62xx.c
+index 35ffff1..c7eaf20 100644
+--- a/drivers/ide/aec62xx.c
++++ b/drivers/ide/aec62xx.c
+@@ -287,7 +287,7 @@ static int aec62xx_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	return err;
+ }
+ 
+-static void __devexit aec62xx_remove(struct pci_dev *dev)
++static void aec62xx_remove(struct pci_dev *dev)
+ {
+ 	ide_pci_remove(dev);
+ 	pci_disable_device(dev);
+diff --git a/drivers/ide/cy82c693.c b/drivers/ide/cy82c693.c
+index 1ea2d59..8955162 100644
+--- a/drivers/ide/cy82c693.c
++++ b/drivers/ide/cy82c693.c
+@@ -190,7 +190,7 @@ static int cy82c693_init_one(struct pci_dev *dev, const struct pci_device_id *id
+ 	return ret;
+ }
+ 
+-static void __devexit cy82c693_remove(struct pci_dev *dev)
++static void cy82c693_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct pci_dev *dev2 = host->dev[1] ? to_pci_dev(host->dev[1]) : NULL;
+diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+index 9cf2093..696b6c1 100644
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -1499,7 +1499,7 @@ static int hpt366_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	return ret;
+ }
+ 
+-static void __devexit hpt366_remove(struct pci_dev *dev)
++static void hpt366_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct ide_info *info = host->host_priv;
+diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+index d17d3a7..8eeda28 100644
+--- a/drivers/ide/icside.c
++++ b/drivers/ide/icside.c
+@@ -604,7 +604,7 @@ icside_probe(struct expansion_card *ec, const struct ecard_id *id)
+ 	return ret;
+ }
+ 
+-static void __devexit icside_remove(struct expansion_card *ec)
++static void icside_remove(struct expansion_card *ec)
+ {
+ 	struct icside_state *state = ecard_get_drvdata(ec);
+ 
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index d2b648a..6bfdf66 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -115,7 +115,7 @@ out:
+ 	return ret;
+ }
+ 
+-static int __devexit plat_ide_remove(struct platform_device *pdev)
++static int plat_ide_remove(struct platform_device *pdev)
+ {
+ 	struct ide_host *host = dev_get_drvdata(&pdev->dev);
+ 
+diff --git a/drivers/ide/it821x.c b/drivers/ide/it821x.c
+index 7054004..f01ba46 100644
+--- a/drivers/ide/it821x.c
++++ b/drivers/ide/it821x.c
+@@ -667,7 +667,7 @@ static int it821x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	return rc;
+ }
+ 
+-static void __devexit it821x_remove(struct pci_dev *dev)
++static void it821x_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct it821x_dev *itdevs = host->host_priv;
+diff --git a/drivers/ide/pdc202xx_new.c b/drivers/ide/pdc202xx_new.c
+index 0a1afa2..df73cbd 100644
+--- a/drivers/ide/pdc202xx_new.c
++++ b/drivers/ide/pdc202xx_new.c
+@@ -514,7 +514,7 @@ static int pdc202new_init_one(struct pci_dev *dev, const struct pci_device_id *i
+ 	return ide_pci_init_one(dev, d, NULL);
+ }
+ 
+-static void __devexit pdc202new_remove(struct pci_dev *dev)
++static void pdc202new_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct pci_dev *dev2 = host->dev[1] ? to_pci_dev(host->dev[1]) : NULL;
+diff --git a/drivers/ide/rapide.c b/drivers/ide/rapide.c
+index 052a33e..8b39f21 100644
+--- a/drivers/ide/rapide.c
++++ b/drivers/ide/rapide.c
+@@ -64,7 +64,7 @@ rapide_probe(struct expansion_card *ec, const struct ecard_id *id)
+ 	return ret;
+ }
+ 
+-static void __devexit rapide_remove(struct expansion_card *ec)
++static void rapide_remove(struct expansion_card *ec)
+ {
+ 	struct ide_host *host = ecard_get_drvdata(ec);
+ 
+diff --git a/drivers/ide/scc_pata.c b/drivers/ide/scc_pata.c
+index a250a13..9eedfe0 100644
+--- a/drivers/ide/scc_pata.c
++++ b/drivers/ide/scc_pata.c
+@@ -846,7 +846,7 @@ static int scc_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+  *	Called by the PCI code when it removes an SCC PATA controller.
+  */
+ 
+-static void __devexit scc_remove(struct pci_dev *dev)
++static void scc_remove(struct pci_dev *dev)
+ {
+ 	struct scc_ports *ports = pci_get_drvdata(dev);
+ 	struct ide_host *host = ports->host;
+diff --git a/drivers/ide/siimage.c b/drivers/ide/siimage.c
+index 3791333..bb065f0 100644
+--- a/drivers/ide/siimage.c
++++ b/drivers/ide/siimage.c
+@@ -790,7 +790,7 @@ static int siimage_init_one(struct pci_dev *dev,
+ 	return rc;
+ }
+ 
+-static void __devexit siimage_remove(struct pci_dev *dev)
++static void siimage_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	void __iomem *ioaddr = host->host_priv;
+diff --git a/drivers/ide/sis5513.c b/drivers/ide/sis5513.c
+index dd33d4d..247853e 100644
+--- a/drivers/ide/sis5513.c
++++ b/drivers/ide/sis5513.c
+@@ -595,7 +595,7 @@ static int sis5513_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	return ide_pci_init_one(dev, &d, NULL);
+ }
+ 
+-static void __devexit sis5513_remove(struct pci_dev *dev)
++static void sis5513_remove(struct pci_dev *dev)
+ {
+ 	ide_pci_remove(dev);
+ 	pci_disable_device(dev);
+diff --git a/drivers/ide/tc86c001.c b/drivers/ide/tc86c001.c
+index d364319b8..345c773 100644
+--- a/drivers/ide/tc86c001.c
++++ b/drivers/ide/tc86c001.c
+@@ -232,7 +232,7 @@ out:
+ 	return rc;
+ }
+ 
+-static void __devexit tc86c001_remove(struct pci_dev *dev)
++static void tc86c001_remove(struct pci_dev *dev)
+ {
+ 	ide_pci_remove(dev);
+ 	pci_release_region(dev, 5);
+diff --git a/drivers/ide/via82cxxx.c b/drivers/ide/via82cxxx.c
+index b73d5fc..01464f1 100644
+--- a/drivers/ide/via82cxxx.c
++++ b/drivers/ide/via82cxxx.c
+@@ -489,7 +489,7 @@ static int via_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	return rc;
+ }
+ 
+-static void __devexit via_remove(struct pci_dev *dev)
++static void via_remove(struct pci_dev *dev)
+ {
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct via82cxxx_dev *vdev = host->host_priv;
+-- 
+1.8.0
 
