@@ -1,64 +1,54 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v10 10/10] libata: do not suspend port if normal ODD is attached
-Date: Wed, 21 Nov 2012 19:50:39 +0800
-Message-ID: <1353498639-27631-11-git-send-email-aaron.lu@intel.com>
-References: <1353498639-27631-1-git-send-email-aaron.lu@intel.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] sata_highbank: use ATA_BUSY
+Date: Wed, 21 Nov 2012 22:35:17 +0300
+Message-ID: <50AD2CF5.6080907@mvista.com>
+References: <201211012059.29109.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:33823 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754541Ab2KULus (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 21 Nov 2012 06:50:48 -0500
-In-Reply-To: <1353498639-27631-1-git-send-email-aaron.lu@intel.com>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:50261 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755524Ab2KUSek (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Nov 2012 13:34:40 -0500
+Received: by mail-la0-f46.google.com with SMTP id p5so3071792lag.19
+        for <linux-ide@vger.kernel.org>; Wed, 21 Nov 2012 10:34:39 -0800 (PST)
+In-Reply-To: <201211012059.29109.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com
 
-For ODDs, the upper layer will poll for media change every a few
-seconds, which will make it enter and leave suspend state very
-oftern. And as each suspend will also cause a hard/soft reset,
-the gain of runtime suspend is very little while the ODD may
-mis-function after constantly being reset. So the idle callback
-here will not proceed to suspend if a non-ZPODD capable ODD is
-attached to the port.
+Hello.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-core.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+On 11/01/2012 08:59 PM, Sergei Shtylyov wrote:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 97987e7..9cdfb04 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5406,8 +5406,27 @@ static int ata_port_resume(struct device *dev)
- 	return rc;
- }
- 
-+/*
-+ * For ODDs, the upper layer will poll for media change every a few seconds,
-+ * which will make it enter and leave suspend state every a few seconds. And
-+ * as each suspend will cause a hard/soft reset, the gain of runtime suspend
-+ * is very little and the ODD may mis-function after constantly being reset.
-+ * So the idle callback here will not proceed to suspend if a non-ZPODD capable
-+ * ODD is attached to the port.
-+ */
- static int ata_port_runtime_idle(struct device *dev)
- {
-+	struct ata_port *ap = to_ata_port(dev);
-+	struct ata_link *link;
-+	struct ata_device *adev;
-+
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		ata_for_each_dev(adev, link, ENABLED)
-+			if (adev->class == ATA_DEV_ATAPI &&
-+			    !zpodd_dev_enabled(adev))
-+				return -EBUSY;
-+	}
-+
- 	return pm_runtime_suspend(dev);
- }
- 
--- 
-1.7.12.4
+> ahci_highbank_hardreset() uses bare number for the BSY bit of the ATA status
+> register, despite it is #define'd in <linux/ata.h>
+
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+> ---
+> The patch is atop of the 'upstream' branch of libata-dev.git...
+
+>  drivers/ata/sata_highbank.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+> Index: libata-dev/drivers/ata/sata_highbank.c
+> ===================================================================
+> --- libata-dev.orig/drivers/ata/sata_highbank.c
+> +++ libata-dev/drivers/ata/sata_highbank.c
+> @@ -213,7 +213,7 @@ static int ahci_highbank_hardreset(struc
+>  
+>  	/* clear D2H reception area to properly wait for D2H FIS */
+>  	ata_tf_init(link->device, &tf);
+> -	tf.command = 0x80;
+> +	tf.command = ATA_BUSY;
+>  	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+>  
+>  	do {
+
+   Jeff, are you going to queue this one and earlier patches from me?
+
+MBR, Sergei
 
