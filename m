@@ -1,7 +1,7 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v10 08/10] PM / BLOCK: add PM_QOS_FLAG_NO_POLL to skip events checking
-Date: Wed, 21 Nov 2012 19:50:37 +0800
-Message-ID: <1353498639-27631-9-git-send-email-aaron.lu@intel.com>
+Subject: [PATCH v10 09/10] libata: use PM_QOS_FLAG_NO_POLL to avoid events checking for ZPODD
+Date: Wed, 21 Nov 2012 19:50:38 +0800
+Message-ID: <1353498639-27631-10-git-send-email-aaron.lu@intel.com>
 References: <1353498639-27631-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <1353498639-27631-1-git-send-email-aaron.lu@intel.com>
@@ -10,60 +10,50 @@ To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysoc
 Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Some device may enter into a power state when events checking is no
-longer necessary, this patch introduces the PM_QOS_FLAG_NO_POLL flag
-and once set, events checking work function in block layer will skip
-invoke the disk's check_events callback.
-
-This will be used by ZPODD, when ODD is powered off, it doesn't make
-sense to poll for media change events anymore.
+When ODD is powered off, there is no need to do events checking, so
+set the PM_QOS_FLAG_NO_POLL flag. And the flag is cleared on power on.
 
 Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
- block/genhd.c          | 8 +++++++-
- include/linux/pm_qos.h | 1 +
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ drivers/ata/libata-acpi.c  | 3 ++-
+ drivers/ata/libata-zpodd.c | 3 +++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 6cace66..b0092bb 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -18,6 +18,7 @@
- #include <linux/mutex.h>
- #include <linux/idr.h>
- #include <linux/log2.h>
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 27a84de..61a90de 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -840,7 +840,8 @@ static int ata_acpi_choose_state(struct ata_device *dev)
+ 
+ 	if (zpodd_dev_enabled(dev)) {
+ 		if (zpodd_poweroff_ready(dev))
+-			dev_pm_qos_update_request(&dev->pm_qos_req, 0);
++			dev_pm_qos_update_request(&dev->pm_qos_req,
++						  PM_QOS_FLAG_NO_POLL);
+ 		else
+ 			dev_pm_qos_update_request(&dev->pm_qos_req,
+ 						  PM_QOS_FLAG_NO_POWER_OFF);
+diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
+index d4dbe42..a37833f 100644
+--- a/drivers/ata/libata-zpodd.c
++++ b/drivers/ata/libata-zpodd.c
+@@ -2,6 +2,7 @@
+ #include <linux/cdrom.h>
+ #include <linux/pm_runtime.h>
+ #include <scsi/scsi_device.h>
 +#include <linux/pm_qos.h>
  
- #include "blk.h"
+ #include "libata.h"
  
-@@ -1595,9 +1596,14 @@ static void disk_events_workfn(struct work_struct *work)
- 	unsigned int events;
- 	unsigned long intv;
- 	int nr_events = 0, i;
-+	enum pm_qos_flags_status stat;
+@@ -215,6 +216,8 @@ void zpodd_post_resume(struct ata_device *dev)
  
- 	/* check events */
--	events = disk->fops->check_events(disk, clearing);
-+	stat = dev_pm_qos_flags(disk->driverfs_dev, PM_QOS_FLAG_NO_POLL);
-+	if (stat == PM_QOS_FLAGS_ALL)
-+		events = 0;
-+	else
-+		events = disk->fops->check_events(disk, clearing);
+ 	zpodd->last_ready = 0;
+ 	zpodd->zp_ready = false;
++
++	dev_pm_qos_update_request(&dev->pm_qos_req, 0);
+ }
  
- 	/* accumulate pending events and schedule next poll if necessary */
- 	spin_lock_irq(&ev->lock);
-diff --git a/include/linux/pm_qos.h b/include/linux/pm_qos.h
-index 5a95013..318a422 100644
---- a/include/linux/pm_qos.h
-+++ b/include/linux/pm_qos.h
-@@ -36,6 +36,7 @@ enum pm_qos_flags_status {
- 
- #define PM_QOS_FLAG_NO_POWER_OFF	(1 << 0)
- #define PM_QOS_FLAG_REMOTE_WAKEUP	(1 << 1)
-+#define PM_QOS_FLAG_NO_POLL		(1 << 3)
- 
- struct pm_qos_request {
- 	struct plist_node node;
+ static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
 -- 
 1.7.12.4
 
