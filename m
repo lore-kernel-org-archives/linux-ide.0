@@ -1,17 +1,21 @@
 From: Vasanth Ananthan <vasanthananthan@gmail.com>
-Subject: Re: [PATCH v2 2/6] ARM: EXYNOS5: DT Support for SATA and SATA PHY
-Date: Fri, 23 Nov 2012 14:18:40 +0530
-Message-ID: <CAK1UHixAjv_zrQyUqpDc75+36-s+3JuVqMPBgw5+ejpH_Z5gvg@mail.gmail.com>
+Subject: Re: [PATCH v2 3/6] DRIVERS: ATA: SATA PHY utility framework
+Date: Fri, 23 Nov 2012 14:20:55 +0530
+Message-ID: <CAK1UHizJSK_RCNRYSOCQnFx-ZNjA+Z3OTYGgR0cnTqdfbaeW9g@mail.gmail.com>
 References: <1351612897-14923-1-git-send-email-vasanthananthan@gmail.com>
-	<1351612897-14923-3-git-send-email-vasanthananthan@gmail.com>
+	<1351612897-14923-4-git-send-email-vasanthananthan@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1351612897-14923-3-git-send-email-vasanthananthan@gmail.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:50475 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757911Ab2KWIu4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2012 03:50:56 -0500
+In-Reply-To: <1351612897-14923-4-git-send-email-vasanthananthan@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: ben-linux@fluff.org
 Cc: linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-ide@vger.kernel.org, thomas.abraham@linaro.org, Vasanth Ananthan <vasanthananthan@gmail.com>, Vasanth Ananthan <vasanth.a@samsung.com>, kgene.kim@samsung.com, jgarzik@pobox.com, linux@arm.linux.org.uk, linux-i2c@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
@@ -22,156 +26,214 @@ Vasanth.
 
 On Tue, Oct 30, 2012 at 9:31 PM, Vasanth Ananthan
 <vasanthananthan@gmail.com> wrote:
-> This patch adds Device Nodes for SATA and SATA PHY device.
+> This patch adds SATA PHY utility framework APIs. The framework acts as an
+> interface between the SATA device and the PHY device. The SATA PHY device
+> registers itself with the framework through the APIs provided and the SATA
+> device finds and requests for an appropriate PHY device.
 >
 > Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
 > ---
->  .../devicetree/bindings/ata/exynos-sata-phy.txt    |   14 ++++++++++++++
->  .../devicetree/bindings/ata/exynos-sata.txt        |   17 +++++++++++++++++
->  arch/arm/boot/dts/exynos5250-smdk5250.dts          |   15 +++++++++++++++
->  arch/arm/boot/dts/exynos5250.dtsi                  |   18 ++++++++++++++++++
->  arch/arm/mach-exynos/include/mach/map.h            |    3 +++
->  arch/arm/mach-exynos/mach-exynos5-dt.c             |    6 ++++++
->  6 files changed, 73 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/exynos-sata.txt
+>  drivers/ata/Kconfig    |   10 +++++
+>  drivers/ata/Makefile   |    1 +
+>  drivers/ata/sata_phy.c |  104 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/sata_phy.h |   44 ++++++++++++++++++++
+>  4 files changed, 159 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_phy.c
+>  create mode 100644 drivers/ata/sata_phy.h
 >
-> diff --git a/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt b/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index e08d322..e3a2972 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -83,6 +83,16 @@ config SATA_AHCI_PLATFORM
+>
+>           If unsure, say N.
+>
+> +config SATA_PHY
+> +       bool "SATA PHY Framework"
+> +       default n
+> +       help
+> +         This option enables the SATA PHY utility framework APIs.
+> +         The framework acts as an interface between the SATA device
+> +         and the PHY device. The SATA PHY device registers itself
+> +         with the framework through the APIs provided and the SATA
+> +         device finds and requests for an appropriate PHY device.
+> +
+>  config SATA_FSL
+>         tristate "Freescale 3.0Gbps SATA support"
+>         depends on FSL_SOC
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 9329daf..3d219a9 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)   += sata_inic162x.o
+>  obj-$(CONFIG_SATA_SIL24)       += sata_sil24.o
+>  obj-$(CONFIG_SATA_DWC)         += sata_dwc_460ex.o
+>  obj-$(CONFIG_SATA_HIGHBANK)    += sata_highbank.o libahci.o
+> +obj-$(CONFIG_SATA_PHY)         += sata_phy.o
+>
+>  # SFF w/ custom DMA
+>  obj-$(CONFIG_PDC_ADMA)         += pdc_adma.o
+> diff --git a/drivers/ata/sata_phy.c b/drivers/ata/sata_phy.c
 > new file mode 100644
-> index 0000000..37824fa
+> index 0000000..e5631a9
 > --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
-> @@ -0,0 +1,14 @@
-> +* Samsung SATA PHY Controller
+> +++ b/drivers/ata/sata_phy.c
+> @@ -0,0 +1,104 @@
+> +/*
+> + * Copyright (c) 2010-2012 Samsung Electronics Co., Ltd.
+> + *              http://www.samsung.com
+> + *
+> + * EXYNOS - SATA utility framework.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> +*/
 > +
-> +SATA PHY nodes are defined to describe on-chip SATA Physical layer controllers.
-> +Each SATA PHY controller should have its own node.
+> +#include <linux/kernel.h>
+> +#include <linux/export.h>
+> +#include <linux/err.h>
+> +#include <linux/device.h>
+> +#include <linux/slab.h>
+> +#include <linux/list.h>
+> +#include "sata_phy.h"
 > +
-> +Required properties:
-> +- compatible        : compatible list, contains "samsung,exynos5-sata-phy"
-> +- reg               : <registers mapping>
+> +static LIST_HEAD(phy_list);
+> +static DEFINE_SPINLOCK(phy_lock);
 > +
-> +Example:
-> +        sata@ffe07000 {
-> +                compatible = "samsung,exynos5-sata-phy";
-> +                reg = <0xffe07000 0x1000>;
-> +        };
-> diff --git a/Documentation/devicetree/bindings/ata/exynos-sata.txt b/Documentation/devicetree/bindings/ata/exynos-sata.txt
+> +struct sata_phy *sata_get_phy(enum sata_phy_type type)
+> +{
+> +       struct sata_phy *x = NULL;
+> +       unsigned long flag;
+> +
+> +       if (list_empty(&phy_list))
+> +               return x;
+> +
+> +       spin_lock_irqsave(&phy_lock, flag);
+> +
+> +       list_for_each_entry(x, &phy_list, head) {
+> +               if (x->type == type) {
+> +                       get_device(x->dev);
+> +                       break;
+> +               }
+> +       }
+> +
+> +       spin_unlock_irqrestore(&phy_lock, flag);
+> +       return x;
+> +}
+> +EXPORT_SYMBOL(sata_get_phy);
+> +
+> +int sata_add_phy(struct sata_phy *phy, enum sata_phy_type type)
+> +{
+> +       unsigned long flag;
+> +       unsigned int ret = -EINVAL;
+> +       struct sata_phy *x;
+> +
+> +       spin_lock_irqsave(&phy_lock, flag);
+> +
+> +       if (!phy)
+> +               return ret;
+> +
+> +       list_for_each_entry(x, &phy_list, head) {
+> +               if (x->type == type) {
+> +                       dev_err(phy->dev, "transceiver type already exists\n");
+> +                       goto out;
+> +               }
+> +       }
+> +       phy->type = type;
+> +       list_add_tail(&phy->head, &phy_list);
+> +       ret = 0;
+> +
+> + out:
+> +       spin_unlock_irqrestore(&phy_lock, flag);
+> +       return ret;
+> +}
+> +EXPORT_SYMBOL(sata_add_phy);
+> +
+> +void sata_remove_phy(struct sata_phy *phy)
+> +{
+> +       unsigned long flag;
+> +       struct sata_phy *x;
+> +
+> +       spin_lock_irqsave(&phy_lock, flag);
+> +
+> +       if (!phy)
+> +               return;
+> +
+> +       list_for_each_entry(x, &phy_list, head) {
+> +               if (x->type == phy->type)
+> +                       list_del(&phy->head);
+> +       }
+> +
+> +       spin_unlock_irqrestore(&phy_lock, flag);
+> +}
+> +EXPORT_SYMBOL(sata_remove_phy);
+> +
+> +void sata_put_phy(struct sata_phy *phy)
+> +{
+> +       unsigned long flag;
+> +
+> +       spin_lock_irqsave(&phy_lock, flag);
+> +
+> +       if (!phy)
+> +               return;
+> +
+> +       put_device(phy->dev);
+> +       spin_unlock_irqrestore(&phy_lock, flag);
+> +
+> +}
+> +EXPORT_SYMBOL(sata_put_phy);
+> diff --git a/drivers/ata/sata_phy.h b/drivers/ata/sata_phy.h
 > new file mode 100644
-> index 0000000..0849f10
+> index 0000000..dc38683
 > --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/exynos-sata.txt
-> @@ -0,0 +1,17 @@
-> +* Samsung AHCI SATA Controller
+> +++ b/drivers/ata/sata_phy.h
+> @@ -0,0 +1,44 @@
+> +/*
+> + * Copyright (c) 2010-2012 Samsung Electronics Co., Ltd.
+> + *              http://www.samsung.com
+> + *
+> + * EXYNOS - SATA utility framework definitions.
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> +*/
 > +
-> +SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +Each SATA controller should have its own node.
+> +enum sata_phy_type {
+> +       SATA_PHY_GENERATION1,
+> +       SATA_PHY_GENERATION2,
+> +       SATA_PHY_GENERATION3,
+> +};
 > +
-> +Required properties:
-> +- compatible        : compatible list, contains "samsung,exynos5-sata"
-> +- interrupts        : <interrupt mapping for SATA IRQ>
-> +- reg               : <registers mapping>
-> +- samsung,sata-freq : <frequency in MHz>
+> +struct sata_phy {
+> +       int (*init) (struct sata_phy *);
+> +       int (*shutdown) (struct sata_phy *);
+> +       struct device *dev;
+> +       void *priv_data;
+> +       enum sata_phy_type type;
+> +       struct list_head head;
+> +};
 > +
-> +Example:
-> +        sata@ffe08000 {
-> +                compatible = "samsung,exynos5-sata";
-> +                reg = <0xffe08000 0x1000>;
-> +                interrupts = <115>;
-> +        };
-> diff --git a/arch/arm/boot/dts/exynos5250-smdk5250.dts b/arch/arm/boot/dts/exynos5250-smdk5250.dts
-> index a352df4..6910deb 100644
-> --- a/arch/arm/boot/dts/exynos5250-smdk5250.dts
-> +++ b/arch/arm/boot/dts/exynos5250-smdk5250.dts
-> @@ -55,6 +55,21 @@
->                 };
->         };
->
-> +       i2c@121D0000 {
-> +               samsung,i2c-sda-delay = <100>;
-> +               samsung,i2c-max-bus-freq = <40000>;
-> +               samsung,i2c-slave-addr = <0x38>;
+> +static inline int sata_init_phy(struct sata_phy *x)
+> +{
+> +       if (x && x->init)
+> +               return x->init(x);
 > +
-> +               sata-phy {
-> +                       compatible = "samsung,sata-phy";
-> +                       reg = <0x38>;
-> +               };
-> +       };
+> +       return -EINVAL;
+> +}
 > +
-> +       sata@122F0000 {
-> +               samsung,sata-freq = <66>;
-> +       };
+> +static inline void sata_shutdown_phy(struct sata_phy *x)
+> +{
+> +       if (x && x->shutdown)
+> +               x->shutdown(x);
+> +}
 > +
->         i2c@12C80000 {
->                 status = "disabled";
->         };
-> diff --git a/arch/arm/boot/dts/exynos5250.dtsi b/arch/arm/boot/dts/exynos5250.dtsi
-> index dddfd6e..e41520f 100644
-> --- a/arch/arm/boot/dts/exynos5250.dtsi
-> +++ b/arch/arm/boot/dts/exynos5250.dtsi
-> @@ -92,6 +92,17 @@
->                 interrupts = <0 54 0>;
->         };
->
-> +       sata@122F0000 {
-> +               compatible = "samsung,exynos5-sata-ahci";
-> +               reg = <0x122F0000 0x1ff>;
-> +               interrupts = <0 115 0>;
-> +       };
-> +
-> +       sata-phy@12170000 {
-> +               compatible = "samsung,exynos5-sata-phy";
-> +               reg = <0x12170000 0x1ff>;
-> +       };
-> +
->         i2c@12C60000 {
->                 compatible = "samsung,s3c2440-i2c";
->                 reg = <0x12C60000 0x100>;
-> @@ -156,6 +167,13 @@
->                 #size-cells = <0>;
->         };
->
-> +       i2c@121D0000 {
-> +                compatible = "samsung,exynos5-sata-phy-i2c";
-> +                reg = <0x121D0000 0x100>;
-> +                #address-cells = <1>;
-> +                #size-cells = <0>;
-> +       };
-> +
->         spi_0: spi@12d20000 {
->                 compatible = "samsung,exynos4210-spi";
->                 reg = <0x12d20000 0x100>;
-> diff --git a/arch/arm/mach-exynos/include/mach/map.h b/arch/arm/mach-exynos/include/mach/map.h
-> index 8480849..ffeb761 100644
-> --- a/arch/arm/mach-exynos/include/mach/map.h
-> +++ b/arch/arm/mach-exynos/include/mach/map.h
-> @@ -188,6 +188,9 @@
->  #define EXYNOS4_PA_SATA                        0x12560000
->  #define EXYNOS4_PA_SATAPHY             0x125D0000
->  #define EXYNOS4_PA_SATAPHY_CTRL                0x126B0000
-> +#define EXYNOS5_PA_SATA_PHY_CTRL       0x12170000
-> +#define EXYNOS5_PA_SATA_PHY_I2C                0x121D0000
-> +#define EXYNOS5_PA_SATA_BASE           0x122F0000
->
->  #define EXYNOS4_PA_SROMC               0x12570000
->  #define EXYNOS5_PA_SROMC               0x12250000
-> diff --git a/arch/arm/mach-exynos/mach-exynos5-dt.c b/arch/arm/mach-exynos/mach-exynos5-dt.c
-> index db1cd8e..7dbd4cc 100644
-> --- a/arch/arm/mach-exynos/mach-exynos5-dt.c
-> +++ b/arch/arm/mach-exynos/mach-exynos5-dt.c
-> @@ -61,6 +61,12 @@ static const struct of_dev_auxdata exynos5250_auxdata_lookup[] __initconst = {
->                                 "exynos4210-spi.1", NULL),
->         OF_DEV_AUXDATA("samsung,exynos4210-spi", EXYNOS5_PA_SPI2,
->                                 "exynos4210-spi.2", NULL),
-> +       OF_DEV_AUXDATA("samsung,exynos5-sata-ahci", EXYNOS5_PA_SATA_BASE,
-> +                               "exynos5-sata", NULL),
-> +       OF_DEV_AUXDATA("samsung,exynos5-sata-phy", EXYNOS5_PA_SATA_PHY_CTRL,
-> +                               "exynos5-sata-phy", NULL),
-> +       OF_DEV_AUXDATA("samsung,exynos5-sata-phy-i2c", EXYNOS5_PA_SATA_PHY_I2C,
-> +                               "exynos5-sata-phy-i2c", NULL),
->         OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_PDMA0, "dma-pl330.0", NULL),
->         OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_PDMA1, "dma-pl330.1", NULL),
->         OF_DEV_AUXDATA("arm,pl330", EXYNOS5_PA_MDMA1, "dma-pl330.2", NULL),
+> +struct sata_phy *sata_get_phy(enum sata_phy_type);
+> +int sata_add_phy(struct sata_phy *, enum sata_phy_type);
+> +void sata_remove_phy(struct sata_phy *);
+> +void sata_put_phy(struct sata_phy *);
 > --
 > 1.7.4.1
 >
