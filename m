@@ -1,54 +1,54 @@
-From: "Norman Diamond" <n0diamond@yahoo.co.jp>
-Subject: Re: Is FBS (FIS) working on Silicon Image 3726 port multiplier?
-Date: Sat, 24 Nov 2012 10:01:11 +0900
-Message-ID: <AED0AC29B70A44EA8DD19C569B87263C@diamond1720>
+From: Jack Wang <jack.wang.usish@gmail.com>
+Subject: Re: AHCI performance and IRQ load
+Date: Sun, 25 Nov 2012 15:58:10 +0800
+Message-ID: <CA+res+SicJw8RBz+02L+bOZRxa8j8y9ni=GzrMm=Ly3YYM6sPQ@mail.gmail.com>
+References: <50AF9E0F.8030300@missinglinkelectronics.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="UTF-8";
-	reply-type=original
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp505.mail.kks.yahoo.co.jp ([114.111.99.166]:35580 "HELO
-	smtp505.mail.kks.yahoo.co.jp" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932477Ab2KXBIQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Nov 2012 20:08:16 -0500
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:57414 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378Ab2KYH6L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Nov 2012 02:58:11 -0500
+Received: by mail-ie0-f174.google.com with SMTP id k11so4983280iea.19
+        for <linux-ide@vger.kernel.org>; Sat, 24 Nov 2012 23:58:11 -0800 (PST)
+In-Reply-To: <50AF9E0F.8030300@missinglinkelectronics.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Joachim Foerster <joachim.foerster@missinglinkelectronics.com>
+Cc: linux-ide@vger.kernel.org, Lorenz Kolb <lorenz.kolb@missinglinkelectronics.com>
 
-I wrot on October 17, 2012 2:25 PM
+2012/11/24 Joachim Foerster <joachim.foerster@missinglinkelectronics.com>:
+> Hi all,
+>
+> we are currently working on a high performance storage test solution using
+> SATA/AHCI. Due to having performance issues with small block sizes (high
+> interrupt load), we did some research and came across a FAST12 paper by
+> Intel: "When Poll is Better than Interrupt".
+> The authors do suggest a synchronous completion model or even a hybrid mode
+> with support for async and sync completion - for future SSDs.
+>
+> Does anybody know, if there already is work going on to incorporate such
+> functionality into the block layer & backends (meaning, among others:
+> libata/ahci)?
+>
+> Another thing, which seemed promising was AHCI's CommandCompletionCoalescing
+> (CCC) feature. However most AHCI controllers don't seem to support this
+> feature.
+> Anybody aware of AHCI controllers having CCC support?
+>
+> There seemed to be a discussion about CCC support for the ahci driver some
+> years ago http://www.spinics.net/lists/linux-ide/msg02994.html, but
+> obviously no code came out of it - or is there a known patchset?
+>
+> Thanks,
+> --
 
-> I'm trying to use an SIL3726 with 5 SATA drives and an SIL3132.
-> FBS should work, right?  But performance looks like CBS.
-> Is there some way to check if FBS is actually enabled?
+Hi,
 
-I added some ata_dev_printk calls in file libahci.c,
-static void ahci_enable_fbs(struct ata_port *ap)
-and a few other places, but none of them were logged.
-In file libata-pmp.c, the following continues to be logged:
-if (print_info) {
-ata_dev_printk(dev, KERN_INFO, "Port Multiplier %s, "
-       "0x%04x:0x%04x r%d, %d ports, feat 0x%x/0x%x\n",
-       sata_pmp_spec_rev_str(gscr), vendor, devid,
-       sata_pmp_gscr_rev(gscr),
-       nr_ports, gscr[SATA_PMP_GSCR_FEAT_EN],
-       gscr[SATA_PMP_GSCR_FEAT]);
-ata3.15: Port Multiplier 1.1, 0x1095:0x3726 r23, 6 ports, feat 0x1/0x9
+Maybe  patchset ---- x86, MSI, AHCI: Support multiple MSIs should help
+in your case.
 
-Finally I figured out that the sil24 driver uses its own port multiplier 
-code and never calls the libahci code.
+regards!
 
-So the reason why it performs like CBS instead of FBS is due to something in 
-the sil24 driver, or the SIL3132 HBA firmware, or the SIL3726 port 
-multiplier firmware.  I still can't figure out which.
-
-I read that someone else got FBS working on a Marvell HBA with SIL3726 port 
-multiplier, but my Marvell HBA errors out in trying to detect the SIL3726, 
-maybe because SAS-to-eSATA cables seem to have numerous problems.  My 
-Marvell HBA also errors out trying to detect a JMicron port multiplier, 
-maybe because of the same cable or maybe because JMicron firmware is 
-generally pretty miserable.
-
-Does anyone have FBS (FIS) working with an SIL3726? 
-
+Jack
