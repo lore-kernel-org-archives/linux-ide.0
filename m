@@ -1,43 +1,37 @@
-From: Administrador de Sistemas <norazman@mohr.gov.my>
-Subject: Mensagem importante
-Date: Wed, 28 Nov 2012 19:32:42 +0800 (MYT)
-Message-ID: <594639321.681985.1354102362745.JavaMail.root@mail.mohr.gov.my>
-Reply-To: Administrador de Sistemas <sistemasadmin@inmail24.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] sata_highbank: use ATA_BUSY
+Date: Wed, 28 Nov 2012 12:42:36 -0500
+Message-ID: <50B64D0C.9020203@pobox.com>
+References: <201211012059.29109.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.mohr.gov.my ([202.75.5.162]:57051 "EHLO mail.mohr.gov.my"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754358Ab2K1LjP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 06:39:15 -0500
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:48127 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582Ab2K1Rmk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:42:40 -0500
+Received: by mail-qa0-f46.google.com with SMTP id c11so4790621qad.19
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2012 09:42:39 -0800 (PST)
+In-Reply-To: <201211012059.29109.sshtylyov@ru.mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Cc: linux-ide@vger.kernel.org
+
+On 11/01/2012 01:59 PM, Sergei Shtylyov wrote:
+> ahci_highbank_hardreset() uses bare number for the BSY bit of the ATA status
+> register, despite it is #define'd in <linux/ata.h>
+>
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+>
+> ---
+> The patch is atop of the 'upstream' branch of libata-dev.git...
+>
+>   drivers/ata/sata_highbank.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+
+applied
 
 
 
-ATEN=C3=87=C3=83O;
-
-Sua caixa de correio excedeu o limite de armazenamento, que =C3=A9 de 5=
- GB como definido pelo administrador, que est=C3=A1 atualmente em execu=
-=C3=A7=C3=A3o no 10.9GB, voc=C3=AA pode n=C3=A3o ser capaz de enviar ou=
- receber novas mensagens at=C3=A9 que voc=C3=AA re-validar a sua caixa =
-de correio. Para revalidar sua caixa de correio, envie os seguintes dad=
-os abaixo:
-
-nome:
-Nome de usu=C3=A1rio:
-senha:
-Confirme a Senha:
-Endere=C3=A7o de e-mail:
-Telefone:
-
-Se voc=C3=AA n=C3=A3o conseguir revalidar sua caixa de correio, sua cai=
-xa postal vai ser desativado!
-
-Lamentamos o inconveniente.
-C=C3=B3digo de verifica=C3=A7=C3=A3o: pt: 6524
-Correio T=C3=A9cnico Suporte =C2=A92012
-
-obrigado
-Administrador de Sistemas
