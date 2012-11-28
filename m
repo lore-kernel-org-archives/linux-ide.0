@@ -1,37 +1,31 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2] pata_arasan_cf: declare/use more local variables in
- arasan_cf_dma_start()
-Date: Wed, 28 Nov 2012 12:42:47 -0500
-Message-ID: <50B64D17.8040706@pobox.com>
-References: <201211011828.36550.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 02/16] ata: Convert dev_printk(KERN_<LEVEL> to dev_<level>(
+Date: Wed, 28 Nov 2012 12:42:58 -0500
+Message-ID: <50B64D22.2010004@pobox.com>
+References: <cover.1351411047.git.joe@perches.com> <ff89ae9b42c644728575a3cf606184ab9875d6e9.1351411047.git.joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:64936 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab2K1Rmv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:42:51 -0500
-Received: by mail-qc0-f174.google.com with SMTP id o22so9856987qcr.19
-        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2012 09:42:50 -0800 (PST)
-In-Reply-To: <201211011828.36550.sshtylyov@ru.mvista.com>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:48127 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754006Ab2K1RnB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:43:01 -0500
+In-Reply-To: <ff89ae9b42c644728575a3cf606184ab9875d6e9.1351411047.git.joe@perches.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org, viresh.linux@gmail.com
+To: Joe Perches <joe@perches.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/01/2012 11:28 AM, Sergei Shtylyov wrote:
-> 'acdev->qc', 'acdev->qc->ap', and 'acdev->qc->tf' expressions are used multiple
-> times in this function, so it makes sense to use the local variables for them.
+On 10/28/2012 04:05 AM, Joe Perches wrote:
+> dev_<level> calls take less code than dev_printk(KERN_<LEVEL>
+> and reducing object size is good.
+> Coalesce formats for easier grep.
 >
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-> Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
->
+> Signed-off-by: Joe Perches <joe@perches.com>
 > ---
-> The patch is atop of the 'upstream' branch of libata-dev.git...
->
->   drivers/ata/pata_arasan_cf.c |    7 +++++--
->   1 file changed, 5 insertions(+), 2 deletions(-)
+>   drivers/ata/pata_cmd64x.c |    6 +++---
+>   1 files changed, 3 insertions(+), 3 deletions(-)
 
 applied
 
