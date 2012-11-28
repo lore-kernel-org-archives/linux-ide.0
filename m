@@ -1,38 +1,39 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_sx4: pdc20621_{ata|host}_sg() do not need 'tf' parameter
-Date: Wed, 28 Nov 2012 12:43:09 -0500
-Message-ID: <50B64D2D.4000506@pobox.com>
-References: <201210252119.13022.sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] sata_sil24: remove unused variable from sata_sil24.c
+Date: Wed, 28 Nov 2012 12:43:26 -0500
+Message-ID: <50B64D3E.8050105@pobox.com>
+References: <CAPgLHd_tvQysNUQ6vuMh_GEjEiRaMeAj-aiPq7YDkKeBQz49QQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:47813 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754158Ab2K1RnM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:43:12 -0500
-Received: by mail-qa0-f53.google.com with SMTP id k31so5083024qat.19
-        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2012 09:43:11 -0800 (PST)
-In-Reply-To: <201210252119.13022.sshtylyov@ru.mvista.com>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:51683 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754200Ab2K1Rn3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:43:29 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so9857430qcr.19
+        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2012 09:43:28 -0800 (PST)
+In-Reply-To: <CAPgLHd_tvQysNUQ6vuMh_GEjEiRaMeAj-aiPq7YDkKeBQz49QQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Cc: linux-ide@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: yongjun_wei@trendmicro.com.cn, linux-ide@vger.kernel.org
 
-On 10/25/2012 01:19 PM, Sergei Shtylyov wrote:
-> ... because those functions don't use this parameter.
+On 10/22/2012 05:02 AM, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 >
-> While at it, correctly align 'total_len' parameter.
+> The variable addr is initialized but never used
+> otherwise, so remove the unused variable.
 >
-> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+> dpatch engine is used to auto generate this patch.
+> (https://github.com/weiyj/dpatch)
 >
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 > ---
-> The patch is atop of the 'upstream' branch of libata-dev.git...
->
->   drivers/ata/sata_sx4.c |   14 ++++++--------
->   1 file changed, 6 insertions(+), 8 deletions(-)
+>   drivers/ata/sata_sil24.c | 4 ----
+>   1 file changed, 4 deletions(-)
 
-applied
+applied this, and two others of similar nature
 
 
 
