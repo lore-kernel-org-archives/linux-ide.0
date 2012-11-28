@@ -1,40 +1,113 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] pata_cs5536: add quirk for broken udma
-Date: Wed, 28 Nov 2012 12:43:39 -0500
-Message-ID: <50B64D4B.6020109@pobox.com>
-References: <1349797992-32611-1-git-send-email-christian.gmeiner@gmail.com>
+Subject: Re: [PATCH] ata_piix: reenable MS Virtual PC guests
+Date: Wed, 28 Nov 2012 12:44:07 -0500
+Message-ID: <50B64D67.3080202@pobox.com>
+References: <1347983281-15422-1-git-send-email-olaf@aepfle.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:51683 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754008Ab2K1Rnm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 28 Nov 2012 12:43:42 -0500
-Received: by mail-qc0-f174.google.com with SMTP id o22so9857430qcr.19
-        for <linux-ide@vger.kernel.org>; Wed, 28 Nov 2012 09:43:41 -0800 (PST)
-In-Reply-To: <1349797992-32611-1-git-send-email-christian.gmeiner@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1347983281-15422-1-git-send-email-olaf@aepfle.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, KY Srinivasan <kys@microsoft.com>
 List-Id: linux-ide@vger.kernel.org
-To: Christian Gmeiner <christian.gmeiner@gmail.com>
-Cc: linux-ide@vger.kernel.org, mkp@mkp.net
 
-On 10/09/2012 11:53 AM, Christian Gmeiner wrote:
-> I am working on a device which uses the cs5536 pata driver. There
-> are some broken hardware revisions out in the field, which can be
-> detected via DMI. On older versions with an embedded BIOS I
-> used libata.dma=0 to disable dma completely.
-> Now we are switching to a coreboot/seabios based BIOS where we
-> have DMI support and so I think its a good idea to get rid of
-> all those hacky kernel parameters as the same image
-> is used other devices where libata.dma=0 is not a good idea.
+On 09/18/2012 11:48 AM, Olaf Hering wrote:
+> An earlier commit cd006086fa5d91414d8ff9ff2b78fbb593878e3c ("ata_piix:
+> defer disks to the Hyper-V drivers by default") broke MS Virtual PC
+> guests. Hyper-V guests and Virtual PC guests have nearly identical DMI
+> info. As a result the driver does currently ignore the emulated hardware
+> in Virtual PC guests and defers the handling to hv_blkvsc. Since Virtual
+> PC does not offer paravirtualized drivers no disks will be found in the
+> guest.
 >
-> Signed-off-by: Christian Gmeiner <christian.gmeiner@gmail.com>
-> ---
->   drivers/ata/pata_cs5536.c | 32 +++++++++++++++++++++++++++++++-
->   1 file changed, 31 insertions(+), 1 deletion(-)
+> One difference in the DMI info is the product version. This patch adds a
+> match for MS Virtual PC 2007 and "unignores" the emulated hardware.
+>
+> This was reported for openSuSE 12.1 in bugzilla:
+> https://bugzilla.novell.com/show_bug.cgi?id=737532
+>
+> Here is a detailed list of DMI info from example guests:
+>
+> hwinfo --bios:
+>
+> virtual pc guest:
+>
+>    System Info: #1
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "VS2005R2"
+>      Serial: "3178-9905-1533-4840-9282-0569-59"
+>      UUID: undefined, but settable
+>      Wake-up: 0x06 (Power Switch)
+>    Board Info: #2
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "5.0"
+>      Serial: "3178-9905-1533-4840-9282-0569-59"
+>    Chassis Info: #3
+>      Manufacturer: "Microsoft Corporation"
+>      Version: "5.0"
+>      Serial: "3178-9905-1533-4840-9282-0569-59"
+>      Asset Tag: "7188-3705-6309-9738-9645-0364-00"
+>      Type: 0x03 (Desktop)
+>      Bootup State: 0x03 (Safe)
+>      Power Supply State: 0x03 (Safe)
+>      Thermal State: 0x01 (Other)
+>      Security Status: 0x01 (Other)
+>
+> win2k8 guest:
+>
+>    System Info: #1
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "7.0"
+>      Serial: "9106-3420-9819-5495-1514-2075-48"
+>      UUID: undefined, but settable
+>      Wake-up: 0x06 (Power Switch)
+>    Board Info: #2
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "7.0"
+>      Serial: "9106-3420-9819-5495-1514-2075-48"
+>    Chassis Info: #3
+>      Manufacturer: "Microsoft Corporation"
+>      Version: "7.0"
+>      Serial: "9106-3420-9819-5495-1514-2075-48"
+>      Asset Tag: "7076-9522-6699-1042-9501-1785-77"
+>      Type: 0x03 (Desktop)
+>      Bootup State: 0x03 (Safe)
+>      Power Supply State: 0x03 (Safe)
+>      Thermal State: 0x01 (Other)
+>      Security Status: 0x01 (Other)
+>
+> win2k12 guest:
+>
+>    System Info: #1
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "7.0"
+>      Serial: "8179-1954-0187-0085-3868-2270-14"
+>      UUID: undefined, but settable
+>      Wake-up: 0x06 (Power Switch)
+>    Board Info: #2
+>      Manufacturer: "Microsoft Corporation"
+>      Product: "Virtual Machine"
+>      Version: "7.0"
+>      Serial: "8179-1954-0187-0085-3868-2270-14"
+>    Chassis Info: #3
+>      Manufacturer: "Microsoft Corporation"
+>      Version: "7.0"
+>      Serial: "8179-1954-0187-0085-3868-2270-14"
+>      Asset Tag: "8374-0485-4557-6331-0620-5845-25"
+>      Type: 0x03 (Desktop)
+>      Bootup State: 0x03 (Safe)
+>      Power Supply State: 0x03 (Safe)
+>      Thermal State: 0x01 (Other)
+>      Security Status: 0x01 (Other)
+>
+> Signed-off-by: Olaf Hering <olaf@aepfle.de>
 
-applied
-
-
-
+applied.  Apologies for missing this one.  It was accidentally shifting 
+into the low-priority pile.
