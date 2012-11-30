@@ -1,68 +1,203 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Fri, 30 Nov 2012 12:15:20 +0100
-Message-ID: <2098128.OOSiMIlA4d@vostro.rjw.lan>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <20121128013928.GB15971@htj.dyndns.org> <50B8749C.3050105@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Supermicro X9SRL-F - channel enumeration error & ACPI/firmware
+ bug question
+Date: Thu, 29 Nov 2012 20:38:53 -0700
+Message-ID: <CAErSpo6zvcN3aS_5ZNFD04yGNm_ehrNY_VUjO=172PSMKZYe+A@mail.gmail.com>
+References: <097501cdca7b$7e303890$7a90a9b0$@lucidpixels.com>
+ <20121126224245.248f0901@neptune.home> <CAErSpo7Y7m9o2u36ghiW1UDkwweSCG1ZGBx167Anfw4wXTYrCg@mail.gmail.com>
+ <CAErSpo6vrHMTht1nQxiF6HD7qCvUE-NS2eAnQjgUXym1pnNkSA@mail.gmail.com>
+ <004201cdcc3a$a7538310$f5fa8930$@lucidpixels.com> <CAErSpo7530xA6=1Ytj09dwyS1M_N_yAfk4xkr3f9Z_NBn6TJrA@mail.gmail.com>
+ <00a501cdcca3$c2638510$472a8f30$@lucidpixels.com> <00b501cdcca6$03f88af0$0be9a0d0$@lucidpixels.com>
+ <50B6ADA5.2030205@gmail.com> <04b301cdcdcb$65e2f400$31a8dc00$@lucidpixels.com>
+ <CADLC3L09uxX_AU+22nfS20DCE97n1_ZxkG5A1R9joJcEua-EBg@mail.gmail.com>
+ <02d501cdce0f$4b0ce520$e126af60$@lucidpixels.com> <CAErSpo7MpFrSX9rVH48A4mvsRdBjQybqiocv3nrZOPoK_+aqcw@mail.gmail.com>
+ <CADLC3L1BAgQCbi1V=N0CRkJxbaQVK36q4pzbdnanO60exFem4w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:36733 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757818Ab2K3LKg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 Nov 2012 06:10:36 -0500
-In-Reply-To: <50B8749C.3050105@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CADLC3L1BAgQCbi1V=N0CRkJxbaQVK36q4pzbdnanO60exFem4w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Justin Piszcz <jpiszcz@lucidpixels.com>, =?ISO-8859-1?Q?Bruno_Pr=E9mont?= <bonbons@linux-vserver.org>, support@supermicro.com, linux-kernel@vger.kernel.org, Dan Williams <djbw@fb.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>, Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-acpi@vger.kernel.org
-Cc: Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Friday, November 30, 2012 04:55:56 PM Aaron Lu wrote:
-> On 11/28/2012 09:39 AM, Tejun Heo wrote:
-> > Hey, Rafael.
-> > 
-> > On Wed, Nov 28, 2012 at 01:51:00AM +0100, Rafael J. Wysocki wrote:
-> >> Having considered that a bit more I'm now thinking that in fact the power state
-> >> the device is in at the moment doesn't really matter, so the polling code need
-> >> not really know what PM is doing.  What it needs to know is that the device
-> >> will generate a hardware event when something interesting happens, so it is not
-> >> necessary to poll it.
-> >>
-> >> In this particular case it is related to power management (apparently, hardware
-> >> events will only be generated after the device has been put into ACPI D3cold,
-> >> or so Aaron seems to be claiming), but it need not be in general, at least in
-> >> principle.
-> >>
-> >> It looks like we need an "event driven" flag that the can be set in the lower
-> >> layers and read by the upper layers.  I suppose this means it would need to be
-> >> in struct device, but not necessarily in the PM-specific part of it.
-> > 
-> > We already have that.  That's what gendisk->async_events is for (as
-> > opposed to gendisk->events).  If all events are async_events, block
-> > won't poll for events, but I'm not sure that's the golden bullet.
-> > 
-> > * None implements async_events yet and an API is missing -
-> >   disk_check_events() - which is trivial to add, but it's the same
-> >   story.  We'll need a mechanism to shoot up notification from libata
-> >   to block layer.  It's admittedly easier to justify routing through
-> 
-> I don't see a way to do this, since libata has no chance of accessing
-> the gendisk pointer. Or we can add a new field to struct device,
-> something like no_poll, but I don't think it is the right thing to do,
-> as not all devices are block ones.
-> 
-> Any other suggestions/ideas please?
+[+cc Jeff, linux-ide, David, Joerg, iommu]
 
-I think you can follow the James' suggestion:
+On Thu, Nov 29, 2012 at 7:39 PM, Robert Hancock <hancockrwd@gmail.com> =
+wrote:
+> On Thu, Nov 29, 2012 at 12:16 PM, Bjorn Helgaas <bhelgaas@google.com>=
+ wrote:
+>> On Thu, Nov 29, 2012 at 1:55 AM, Justin Piszcz <jpiszcz@lucidpixels.=
+com> wrote:
+>>>
+>>>
+>>> -----Original Message-----
+>>> From: Robert Hancock [mailto:hancockrwd@gmail.com]
+>>> Sent: Wednesday, November 28, 2012 7:55 PM
+>>> To: Justin Piszcz
+>>> Cc: Bjorn Helgaas; Bruno Pr=E9mont; support@supermicro.com;
+>>> linux-kernel@vger.kernel.org; Dan Williams
+>>> Subject: Re: Supermicro X9SRL-F - channel enumeration error & ACPI/=
+firmware
+>>> bug question
+>>>
+>>> On Wed, Nov 28, 2012 at 6:49 PM, Justin Piszcz <jpiszcz@lucidpixels=
+=2Ecom>
+>>> wrote:
+>>>>
+>>>>
+>>>> -----Original Message-----
+>>>> From: Robert Hancock [mailto:hancockrwd@gmail.com]
+>>>> Sent: Wednesday, November 28, 2012 7:35 PM
+>>>> To: Justin Piszcz
+>>>> Cc: 'Bjorn Helgaas'; 'Bruno Pr=E9mont'; support@supermicro.com;
+>>>> linux-kernel@vger.kernel.org; 'Dan Williams'
+>>>> Subject: Re: Supermicro X9SRL-F - channel enumeration error &
+>>> ACPI/firmware
+>>>> bug question
+>>>>
+>>>>
+>>>> What does lspci -vv show on that controller? Not sure what actual
+>>>> chipset that controller is, but there's a known issue with some Ma=
+rvell
+>>>> 6Gbps SATA controllers with DMAR enabled - it seems the device iss=
+ues
+>>>> memory read/write requests from the wrong PCI function ID and the =
+IOMMU
+>>>> rightly denies access as the function listed in the requests doesn=
+'t
+>>>> have any mapping to that memory. I don't think there's presently a
+>>>> workaround other than disabling DMAR. We could (and likely should)=
+ be
+>>>> detecting that device and adding some kind of quirk for it.
+>>>>
+>>>> That sounds likely...
+>>>> It is shown below:
+>>>>
+>>>> Card name: HighPoint Rocket 620 Dual Port SATA 6 Gbps PCI Express =
+2.0 Host
+>>>> Adapter
+>>>>
+>>>> lspci -vv output:
+>>>>
+>>>> 84:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9123 PC=
+Ie SATA
+>>>> 6.0 Gb/s controller (rev 11) (prog-if 01 [AHCI 1.0])
+>>>>   Subsystem: Marvell Technology Group Ltd. 88SE9123 PCIe SATA 6.0 =
+Gb/s
+>>>> controller
+>>>
+>>> Yeah, that's one of those controllers I think. But I can't tell fro=
+m
+>>> the bit of the dmesg you posted exactly what's going on. Can you po=
+st
+>>> a full boot log from having the card installed and some drive attac=
+hed
+>>> (by putting the boot drive on another controller for example)?
+>>>
+>>>>> =3D=3D> Further issues with the X9SRL-F -- does this board suppor=
+t ASPM or is
+>>>>> this a Linux/ASPM implementation issue?
+>>>>> [    0.632170]  pci0000:ff: ACPI _OSC support notification failed=
+,
+>>>> disabling
+>>>>> PCIe ASPM
+>>>>> [    0.632239]  pci0000:ff: Unable to request _OSC control (_OSC =
+support
+>>>>> mask: 0x08)
+>>>>
+>>>> What's the full dmesg from this machine (or is it already posted
+>>> somewhere)?
+>>>>
+>>>> It is now available here:
+>>>> http://home.comcast.net/~jpiszcz/20121128/dmesg.txt
+>>>
+>>>> Is that the same boot log? It doesn't have this error in it.
+>>>
+>>> Yes, the error is here: (its towards the bottom)
+>>>
+>>>  [    7.973015] ata14.00: qc timeout (cmd 0xa1)
+>>> [    8.472120] ata14.00: failed to IDENTIFY (I/O error, err_mask=3D=
+0x4)
+>>> [    9.275922] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 3=
+00)
+>>> [   19.260667] ata14.00: qc timeout (cmd 0xa1)
+>>> [   19.759828] ata14.00: failed to IDENTIFY (I/O error, err_mask=3D=
+0x4)
+>>> [   19.760451] ata14: limiting SATA link speed to 1.5 Gbps
+>>> [   20.566598] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 3=
+10)
+>>> [   50.521078] ata14.00: qc timeout (cmd 0xa1)
+>>> [   51.020880] ata14.00: failed to IDENTIFY (I/O error, err_mask=3D=
+0x4)
+>>> [   51.824664] ata14: SATA link up 1.5 Gbps (SStatus 113 SControl 3=
+10)
+>>> [   51.824682] dmar: DRHD: handling fault status reg 502
+>>> [   51.824686] dmar: DMAR:[DMA Read] Request device [04:00.0] fault=
+ addr 0
+>>> [   51.824686] DMAR:[fault reason 06] PTE Read access is not set
+>>
+>> You have these devices:
+>>
+>>     pci 0000:04:00.0: [10de:01d3] type 00 class 0x030000 nVidia G72
+>>     pci 0000:84:00.0: [1b4b:9123] type 00 class 0x010601 Marvell 88S=
+E9123 SATA
+>>     pci 0000:84:00.1: [1b4b:91a4] type 00 class 0x01018f Marvell 88S=
+E9128 IDE
+>>
+>> I think the 04:00.0 DMAR errors are symptoms of nouveau driver issue=
+s,
+>> and if you get rid of that driver, they'll probably go away.
+>>
+>> But this 84:00.1 DMAR error:
+>>
+>>     dmar: DMAR:[DMA Read] Request device [84:00.1] fault addr fff000=
+00
+>>     DMAR:[fault reason 02] Present bit in context entry is clear
+>>
+>> looks like the probable cause of the Marvell issue.  It looks simila=
+r
+>> to https://bugzilla.kernel.org/show_bug.cgi?id=3D42679, although the
+>> reports there show a bb:dd.0 device (but no bb:dd.1 device), and the
+>> DMAR rejects DMA that appears to be from bb:dd.1.
+>>
+>> Another report that's even more similar is
+>> https://bugzilla.redhat.com/show_bug.cgi?id=3D757166 .  In that case=
+,
+>> both bb:dd.0 and bb:dd.1 exist (as in your system), and the DMAR fau=
+lt
+>> is exactly like what you're seeing.
+>>
+>> So you're not alone, but unfortunately, nobody seems to be working o=
+n
+>> either bug report.  I took the liberty to add you to the cc: list of
+>> both.
+>>
+>> I don't really know what else to do at this point.  Maybe a SATA
+>> expert with some Marvell docs could figure out why we're seeing DMA
+>> from the IDE controller, but I'm not that person :)
+>
+> I doubt any Marvell docs would really be very helpful (except for
+> maybe an errata list but that likely would just tell us what we can
+> already figure out). The SATA controller part of the device seems to
+> just be issuing accesses with the wrong PCI function ID.
+>
+> The only solution I can think of would be at the PCI/DMAR layer -
+> basically functions 0 and 1 on this device should be allowed to acces=
+s
+> each other's DMA regions.
 
-http://www.spinics.net/lists/linux-acpi/msg40257.html
+That's essentially the patch at
+https://bugzilla.redhat.com/show_bug.cgi?id=3D757166#c16, which in my
+opinion is too ugly to consider.  But fortunately, I'm not the
+maintainer for any IOMMU drivers.
 
-and see how that goes.
-
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+My point about the docs is that often we think "this hardware is
+clearly broken and the only workaround is X," but sometimes it's just
+that we don't understand the hardware designer's intent.  It may be
+that the hardware was just never tested with DMAR and is indeed
+broken, or it may be that it does work with DMAR given a different
+driver structure or different device initialization.  I just don't
+want lack of imagination to force us to assume there's only one
+workaround.
