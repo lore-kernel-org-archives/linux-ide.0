@@ -1,33 +1,37 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] ata_piix: re-oder code and remove prototypes
-Date: Mon, 03 Dec 2012 13:39:40 -0500
-Message-ID: <50BCF1EC.7090300@pobox.com>
-References: <201211301156.04953.b.zolnierkie@samsung.com> <50BCFDAD.6070209@mvista.com>
+Subject: Re: [PATCH v3 1/4] sata_highbank: utilize common ata_platform_remove_one()
+Date: Mon, 03 Dec 2012 13:55:02 -0500
+Message-ID: <50BCF586.1090006@pobox.com>
+References: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50BCFDAD.6070209@mvista.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:36861 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751182Ab2LCSzG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:55:06 -0500
+Received: by mail-qc0-f174.google.com with SMTP id o22so1669050qcr.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:55:05 -0800 (PST)
+In-Reply-To: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On 12/03/2012 02:29 PM, Sergei Shtylyov wrote:
-> Hello.
+On 12/03/2012 01:34 PM, Brian Norris wrote:
+> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> ---
+> v2: fix whitespace
+> v3: Resend to fix a trivial conflict
 >
-> On 11/30/2012 01:56 PM, Bartlomiej Zolnierkiewicz wrote:
+> (Note: This patch is on its 3rd version, where others are v2.)
 >
->> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->> Subject: [PATCH] ata_piix: re-oder code and remove prototypes
->
->     You meant "re-order", I think.
->
->> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->> Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
->> ---
->> Jeff, please apply.  Thanks!
->
->     Perhaps Jeff can correct the typo too...
+>   drivers/ata/sata_highbank.c | 12 +-----------
+>   1 file changed, 1 insertion(+), 11 deletions(-)
 
-Yep, corrected and results in libata-dev.git already
+applied 1-4
+
+
+
