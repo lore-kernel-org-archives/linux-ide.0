@@ -1,123 +1,36 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 3 Dec 2012 16:59:38 +0800
-Message-ID: <20121203085937.GA29898@aaronlu.sh.intel.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
- <35648985.61QNrr0Knq@vostro.rjw.lan>
- <1353906191.2523.25.camel@dabdike>
- <21511277.LLinyDpbAK@vostro.rjw.lan>
- <20121128013928.GB15971@htj.dyndns.org>
- <1354092969.2276.49.camel@dabdike>
- <20121203081321.GA9990@mint-spring.sh.intel.com>
- <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] libata: set dma_mode to 0xff in reset
+Date: Mon, 3 Dec 2012 09:43:40 +0000
+Message-ID: <20121203094340.649e29ef@pyramind.ukuu.org.uk>
+References: <50BBFA94.2070105@intel.com>
+	<50BC1DE6.7080008@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:50061 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939Ab2LCJiv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 04:38:51 -0500
+In-Reply-To: <50BC1DE6.7080008@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Borislav Petkov <bp@alien8.de>, Dutra Julio <dutra.julio@gmail.com>, Phillip Wood <phillip.wood@dunelm.org.uk>, Tejun Heo <tj@kernel.org>, Szymon Janc <szymon@janc.net.pl>, Bernd Buschinski <b.buschinski@googlemail.com>, linux-ide@vger.kernel.org
 
-On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
-> On Mon, 2012-12-03 at 16:13 +0800, Aaron Lu wrote:
-> > On Wed, Nov 28, 2012 at 08:56:09AM +0000, James Bottomley wrote:
-> > > On Tue, 2012-11-27 at 17:39 -0800, Tejun Heo wrote:
-> > > > Hey, Rafael.
-> > > > 
-> > > > On Wed, Nov 28, 2012 at 01:51:00AM +0100, Rafael J. Wysocki wrote:
-> > > > > Having considered that a bit more I'm now thinking that in fact the power state
-> > > > > the device is in at the moment doesn't really matter, so the polling code need
-> > > > > not really know what PM is doing.  What it needs to know is that the device
-> > > > > will generate a hardware event when something interesting happens, so it is not
-> > > > > necessary to poll it.
-> > > > > 
-> > > > > In this particular case it is related to power management (apparently, hardware
-> > > > > events will only be generated after the device has been put into ACPI D3cold,
-> > > > > or so Aaron seems to be claiming), but it need not be in general, at least in
-> > > > > principle.
-> > > > > 
-> > > > > It looks like we need an "event driven" flag that the can be set in the lower
-> > > > > layers and read by the upper layers.  I suppose this means it would need to be
-> > > > > in struct device, but not necessarily in the PM-specific part of it.
-> > > > 
-> > > > We already have that.  That's what gendisk->async_events is for (as
-> > > > opposed to gendisk->events).  If all events are async_events, block
-> > > > won't poll for events, but I'm not sure that's the golden bullet.
-> > > > 
-> > > > * None implements async_events yet and an API is missing -
-> > > >   disk_check_events() - which is trivial to add, but it's the same
-> > > >   story.  We'll need a mechanism to shoot up notification from libata
-> > > >   to block layer.  It's admittedly easier to justify routing through
-> > > >   SCSI tho.  So, we're mostly shifting the problem.  Given that async
-> > > >   events is nice to have, so it isn't a bad idea.
-> > > 
-> > > Could we drive it in the polling code?  As in, if we set a flag to say
-> > > we're event driven and please don't bother us, we could just respond to
-> > > the poll with the last known state (this would probably have to be in
-> > > SCSI somewhere since most polls are Test Unit Readys).  That way ZPODD
-> > > sets this flag when the device powers down and unsets it when it powers
-> > > up.
-> > 
-> > Does it mean I can do something like this:
-> > 
-> > diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> > index 5fc97d2..219820c 100644
-> > --- a/drivers/scsi/sr.c
-> > +++ b/drivers/scsi/sr.c
-> > @@ -578,7 +578,10 @@ static unsigned int sr_block_check_events(struct gendisk *disk,
-> >  					  unsigned int clearing)
-> >  {
-> >  	struct scsi_cd *cd = scsi_cd(disk);
-> > -	return cdrom_check_events(&cd->cdi, clearing);
-> > +	if (!cd->device->event_driven)
-> > +		return cdrom_check_events(&cd->cdi, clearing);
-> > +	else
-> > +		return 0;
-> >  }
-> >  
-> >  static int sr_block_revalidate_disk(struct gendisk *disk)
-> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > index e65c62e..1756151 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -160,6 +160,7 @@ struct scsi_device {
-> >  	unsigned can_power_off:1; /* Device supports runtime power off */
-> >  	unsigned wce_default_on:1;	/* Cache is ON by default */
-> >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
-> > +	unsigned event_driven:1; /* No need to poll the device */
-> >  
-> >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
-> >  	struct list_head event_list;	/* asserted events */
-> 
-> Yes, but if we can get away with doing that, it should be in genhd
-> because it's completely generic.
-> 
-> I was imagining we'd have to fake the reply to the test unit ready or
-> some other commands, which is why it would need to be in sr.c
-> 
-> The check events code is Tejun's baby, if he's OK with it then just do
-> it in genhd.c
-
-I agree that it better be done in genhd, the only concern is, in that
-case, this flag will need to be in struct device. I'm not sure if this
-is acceptible though, since the whole events checking thing is for block
-based devices only.
-
-Ideally, it should be in struct disk_events, but I don't see a way for
-libata to access that structure... so any suggestion of doing this? or
-it is OK to add such a field to struct device?
-
-Thanks,
-Aaron
+On Mon, 03 Dec 2012 11:35:02 +0800
+Aaron Lu <aaron.lu@intel.com> wrote:
 
 > 
-> > Then when ZPODD is powered off, it will set this flag; and unset it when
-> > it is powered up.
+> ata_device->dma_mode's initial value is zero, which is not a valid dma
+> mode, but ata_dma_enabled will return true for this value. This patch
+> sets dma_mode to 0xff in reset function, so that ata_dma_enabled will
+> not return true for this case, or it will cause problem for pata_acpi.
 > 
-> Right.
+> The corrsponding bugzilla page is at:
+> https://bugzilla.kernel.org/show_bug.cgi?id=49151
 > 
-> James
-> 
-> 
+> Reported-by: Phillip Wood <phillip.wood@dunelm.org.uk>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+
+Acked-by: Alan Cox <alan@linux.intel.com>
