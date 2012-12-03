@@ -1,61 +1,33 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH v2 3/4] libata: use pci_get_drvdata() helper
-Date: Mon,  3 Dec 2012 10:34:41 -0800
-Message-ID: <1354559682-30965-3-git-send-email-computersforpeace@gmail.com>
-References: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da0-f46.google.com ([209.85.210.46]:50377 "EHLO
-	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab2LCSfA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:35:00 -0500
-Received: by mail-da0-f46.google.com with SMTP id p5so1426137dak.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:34:59 -0800 (PST)
-In-Reply-To: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] ata_piix: re-oder code and remove prototypes
+Date: Mon, 03 Dec 2012 13:39:40 -0500
+Message-ID: <50BCF1EC.7090300@pobox.com>
+References: <201211301156.04953.b.zolnierkie@samsung.com> <50BCFDAD.6070209@mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <50BCFDAD.6070209@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Brian Norris <computersforpeace@gmail.com>
 
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-Acked-by: Tejun Heo <tj@kernel.org>
----
-v2: no change (rebased along with previous patches)
+On 12/03/2012 02:29 PM, Sergei Shtylyov wrote:
+> Hello.
+>
+> On 11/30/2012 01:56 PM, Bartlomiej Zolnierkiewicz wrote:
+>
+>> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+>> Subject: [PATCH] ata_piix: re-oder code and remove prototypes
+>
+>     You meant "re-order", I think.
+>
+>> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+>> Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
+>> ---
+>> Jeff, please apply.  Thanks!
+>
+>     Perhaps Jeff can correct the typo too...
 
- drivers/ata/libata-core.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8e3f4a9..47d5961 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6287,8 +6287,7 @@ void ata_host_detach(struct ata_host *host)
-  */
- void ata_pci_remove_one(struct pci_dev *pdev)
- {
--	struct device *dev = &pdev->dev;
--	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ata_host *host = pci_get_drvdata(pdev);
- 
- 	ata_host_detach(host);
- }
-@@ -6357,7 +6356,7 @@ int ata_pci_device_do_resume(struct pci_dev *pdev)
- 
- int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
--	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	struct ata_host *host = pci_get_drvdata(pdev);
- 	int rc = 0;
- 
- 	rc = ata_host_suspend(host, mesg);
-@@ -6371,7 +6370,7 @@ int ata_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- 
- int ata_pci_device_resume(struct pci_dev *pdev)
- {
--	struct ata_host *host = dev_get_drvdata(&pdev->dev);
-+	struct ata_host *host = pci_get_drvdata(pdev);
- 	int rc;
- 
- 	rc = ata_pci_device_do_resume(pdev);
--- 
-1.8.0
-
+Yep, corrected and results in libata-dev.git already
