@@ -1,39 +1,60 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata_piix: re-oder code and remove prototypes
-Date: Mon, 03 Dec 2012 22:29:49 +0300
-Message-ID: <50BCFDAD.6070209@mvista.com>
-References: <201211301156.04953.b.zolnierkie@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: [PATCH v3 1/4] sata_highbank: utilize common ata_platform_remove_one()
+Date: Mon,  3 Dec 2012 10:34:39 -0800
+Message-ID: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:54043 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750904Ab2LCS37 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:29:59 -0500
-Received: by mail-lb0-f174.google.com with SMTP id gi11so2638181lbb.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:29:58 -0800 (PST)
-In-Reply-To: <201211301156.04953.b.zolnierkie@samsung.com>
+Received: from mail-da0-f46.google.com ([209.85.210.46]:50377 "EHLO
+	mail-da0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879Ab2LCSex (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:34:53 -0500
+Received: by mail-da0-f46.google.com with SMTP id p5so1426137dak.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:34:53 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Brian Norris <computersforpeace@gmail.com>
 
-Hello.
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+v2: fix whitespace
+v3: Resend to fix a trivial conflict
 
-On 11/30/2012 01:56 PM, Bartlomiej Zolnierkiewicz wrote:
+(Note: This patch is on its 3rd version, where others are v2.)
 
-> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Subject: [PATCH] ata_piix: re-oder code and remove prototypes
+ drivers/ata/sata_highbank.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-   You meant "re-order", I think.
-
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
-> ---
-> Jeff, please apply.  Thanks!
-
-   Perhaps Jeff can correct the typo too...
-
-MBR, Sergei
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 75c0f3c..dc7d78e 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -368,16 +368,6 @@ err0:
+ 	return rc;
+ }
+ 
+-static int __devexit ahci_highbank_remove(struct platform_device *pdev)
+-{
+-	struct device *dev = &pdev->dev;
+-	struct ata_host *host = dev_get_drvdata(dev);
+-
+-	ata_host_detach(host);
+-
+-	return 0;
+-}
+-
+ #ifdef CONFIG_PM_SLEEP
+ static int ahci_highbank_suspend(struct device *dev)
+ {
+@@ -432,7 +422,7 @@ SIMPLE_DEV_PM_OPS(ahci_highbank_pm_ops,
+ 		  ahci_highbank_suspend, ahci_highbank_resume);
+ 
+ static struct platform_driver ahci_highbank_driver = {
+-        .remove = __devexit_p(ahci_highbank_remove),
++	.remove = ata_platform_remove_one,
+         .driver = {
+                 .name = "highbank-ahci",
+                 .owner = THIS_MODULE,
+-- 
+1.8.0
 
