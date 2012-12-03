@@ -1,61 +1,55 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: ata1: COMRESET failed
-Date: Mon, 3 Dec 2012 12:57:34 +0100
-Message-ID: <20121203115734.GA32243@liondog.tnic>
-References: <508A7A8A.7030908@suse.cz>
- <50BC8A1C.8070805@suse.cz>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Mon, 3 Dec 2012 08:23:23 -0800
+Message-ID: <20121203162323.GB19802@htj.dyndns.org>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+ <35648985.61QNrr0Knq@vostro.rjw.lan>
+ <1353906191.2523.25.camel@dabdike>
+ <21511277.LLinyDpbAK@vostro.rjw.lan>
+ <20121128013928.GB15971@htj.dyndns.org>
+ <1354092969.2276.49.camel@dabdike>
+ <20121203081321.GA9990@mint-spring.sh.intel.com>
+ <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:53564 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751758Ab2LCL5j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Dec 2012 06:57:39 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <50BC8A1C.8070805@suse.cz>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-On Mon, Dec 03, 2012 at 12:16:44PM +0100, Jiri Slaby wrote:
-> On 10/26/2012 01:56 PM, Jiri Slaby wrote:
-> > Hello,
-> > 
-> > at every boot I'm seeing:
-> > 
-> > At 5th second:
-> > ata1: link is slow to respond, please be patient (ready=0)
-> > 
-> > At 10th second:
-> > ata1: COMRESET failed (errno=-16)
-> > ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > ata1.00: ATA-7: INTEL SSDSA2M080G2GC, 2CV102HD, max UDMA/133
-> > ata1.00: 156301488 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> > ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > ata1.00: configured for UDMA/133
-> > scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-> > 
-> > 
-> > So that I have to wait 5 s for the disk to come up. I tried 3.4.15 and
-> > 3.6.3, both with the same result.
-> > 
-> > 00:1f.2 SATA controller [0106]: Intel Corporation 7 Series Chipset
-> > Family 6-port SATA Controller [AHCI mode] [8086:1e03] (rev 04)
-> > 
-> > Any ideas what is going on?
+Hello, James.
+
+On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
+> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> > index e65c62e..1756151 100644
+> > --- a/include/scsi/scsi_device.h
+> > +++ b/include/scsi/scsi_device.h
+> > @@ -160,6 +160,7 @@ struct scsi_device {
+> >  	unsigned can_power_off:1; /* Device supports runtime power off */
+> >  	unsigned wce_default_on:1;	/* Cache is ON by default */
+> >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+> > +	unsigned event_driven:1; /* No need to poll the device */
+> >  
+> >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+> >  	struct list_head event_list;	/* asserted events */
 > 
-> Anybody? I also tried 3.0, it's there too. And libahci.skip_host_reset=1
-> works around the issue.
+> Yes, but if we can get away with doing that, it should be in genhd
+> because it's completely generic.
+> 
+> I was imagining we'd have to fake the reply to the test unit ready or
+> some other commands, which is why it would need to be in sr.c
+> 
+> The check events code is Tejun's baby, if he's OK with it then just do
+> it in genhd.c
 
-FWIW, I had the same issue on an AMD chipset at the old job. It needs to
-reset SATA link for some reason, probably BIOS programs it wrongly...
+The problem here is there's no easy to reach genhd from libata (or the
+other way around) without going through sr.  I think we're gonna have
+to have something in sr one way or the other.
 
-+ Alan.
+Thanks.
 
 -- 
-Regards/Gruss,
-    Boris.
+tejun
