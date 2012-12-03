@@ -1,48 +1,39 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2 12/14] sata_highbank: utilize common ata_platform_remove_one()
-Date: Mon, 3 Dec 2012 10:12:45 -0800
-Message-ID: <CAN8TOE_npd7i8o4RtW4DF1DPwb4FW9kJrn7t0U0kqUN5ewVG4A@mail.gmail.com>
-References: <1351842388-27210-13-git-send-email-computersforpeace@gmail.com>
-	<1351883526-32412-1-git-send-email-computersforpeace@gmail.com>
-	<50BC7C22.2010608@pobox.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] ata_piix: re-oder code and remove prototypes
+Date: Mon, 03 Dec 2012 22:29:49 +0300
+Message-ID: <50BCFDAD.6070209@mvista.com>
+References: <201211301156.04953.b.zolnierkie@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ia0-f174.google.com ([209.85.210.174]:49673 "EHLO
-	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750794Ab2LCSMr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:12:47 -0500
-Received: by mail-ia0-f174.google.com with SMTP id y25so2385983iay.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:12:47 -0800 (PST)
-In-Reply-To: <50BC7C22.2010608@pobox.com>
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:54043 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750904Ab2LCS37 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:29:59 -0500
+Received: by mail-lb0-f174.google.com with SMTP id gi11so2638181lbb.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:29:58 -0800 (PST)
+In-Reply-To: <201211301156.04953.b.zolnierkie@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@mvista.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Dec 3, 2012 at 2:17 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
-> On 11/02/2012 03:12 PM, Brian Norris wrote:
->>
->> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
->> ---
->> v2: fix whitespace
->>
->>   drivers/ata/sata_highbank.c | 12 +-----------
->>   1 file changed, 1 insertion(+), 11 deletions(-)
->
->
-> applied patches 1-11
+Hello.
 
-Thanks.
+On 11/30/2012 01:56 PM, Bartlomiej Zolnierkiewicz wrote:
 
-> patch #12 failed to apply (even manually), so I stopped there
+> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Subject: [PATCH] ata_piix: re-oder code and remove prototypes
 
-There was just a trivial change to the #ifdef next to the (unrelated,
-but adjacent) ahci_highbank_suspend function. I'll resend 12-14, as a
-v2 series, plus a (new) compile-error fix for pata_of_platform.
+   You meant "re-order", I think.
 
-BTW, Tejun posted his "Ack" in reply to the original series. I'll
-include it in my version 2 of the original patches, but I noticed you
-didn't add it in libata-dev.git.
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
+> ---
+> Jeff, please apply.  Thanks!
 
-Brian
+   Perhaps Jeff can correct the typo too...
+
+MBR, Sergei
+
