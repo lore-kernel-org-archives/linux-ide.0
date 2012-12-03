@@ -1,55 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 3 Dec 2012 08:23:23 -0800
-Message-ID: <20121203162323.GB19802@htj.dyndns.org>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
- <35648985.61QNrr0Knq@vostro.rjw.lan>
- <1353906191.2523.25.camel@dabdike>
- <21511277.LLinyDpbAK@vostro.rjw.lan>
- <20121128013928.GB15971@htj.dyndns.org>
- <1354092969.2276.49.camel@dabdike>
- <20121203081321.GA9990@mint-spring.sh.intel.com>
- <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: Re: [PATCH v2 12/14] sata_highbank: utilize common ata_platform_remove_one()
+Date: Mon, 3 Dec 2012 10:12:45 -0800
+Message-ID: <CAN8TOE_npd7i8o4RtW4DF1DPwb4FW9kJrn7t0U0kqUN5ewVG4A@mail.gmail.com>
+References: <1351842388-27210-13-git-send-email-computersforpeace@gmail.com>
+	<1351883526-32412-1-git-send-email-computersforpeace@gmail.com>
+	<50BC7C22.2010608@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:49673 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750794Ab2LCSMr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 13:12:47 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so2385983iay.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 10:12:47 -0800 (PST)
+In-Reply-To: <50BC7C22.2010608@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@mvista.com>
 
-Hello, James.
-
-On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
-> > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > index e65c62e..1756151 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -160,6 +160,7 @@ struct scsi_device {
-> >  	unsigned can_power_off:1; /* Device supports runtime power off */
-> >  	unsigned wce_default_on:1;	/* Cache is ON by default */
-> >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
-> > +	unsigned event_driven:1; /* No need to poll the device */
-> >  
-> >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
-> >  	struct list_head event_list;	/* asserted events */
-> 
-> Yes, but if we can get away with doing that, it should be in genhd
-> because it's completely generic.
-> 
-> I was imagining we'd have to fake the reply to the test unit ready or
-> some other commands, which is why it would need to be in sr.c
-> 
-> The check events code is Tejun's baby, if he's OK with it then just do
-> it in genhd.c
-
-The problem here is there's no easy to reach genhd from libata (or the
-other way around) without going through sr.  I think we're gonna have
-to have something in sr one way or the other.
+On Mon, Dec 3, 2012 at 2:17 AM, Jeff Garzik <jgarzik@pobox.com> wrote:
+> On 11/02/2012 03:12 PM, Brian Norris wrote:
+>>
+>> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+>> ---
+>> v2: fix whitespace
+>>
+>>   drivers/ata/sata_highbank.c | 12 +-----------
+>>   1 file changed, 1 insertion(+), 11 deletions(-)
+>
+>
+> applied patches 1-11
 
 Thanks.
 
--- 
-tejun
+> patch #12 failed to apply (even manually), so I stopped there
+
+There was just a trivial change to the #ifdef next to the (unrelated,
+but adjacent) ahci_highbank_suspend function. I'll resend 12-14, as a
+v2 series, plus a (new) compile-error fix for pata_of_platform.
+
+BTW, Tejun posted his "Ack" in reply to the original series. I'll
+include it in my version 2 of the original patches, but I noticed you
+didn't add it in libata-dev.git.
+
+Brian
