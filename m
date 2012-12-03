@@ -1,47 +1,44 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] libata: check SATA_SETTINGS log with HW Feature Ctrl
-Date: Mon, 03 Dec 2012 04:58:50 -0500
-Message-ID: <50BC77DA.1060401@pobox.com>
-References: <1353185081-11349-1-git-send-email-shane.huang@amd.com>
+Subject: Re: [PATCH] libata: restore acpi disable functionality
+Date: Mon, 03 Dec 2012 04:58:40 -0500
+Message-ID: <50BC77D0.8040306@pobox.com>
+References: <50B3044D.4020209@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:34171 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752359Ab2LCJ6y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 04:58:54 -0500
-Received: by mail-qa0-f46.google.com with SMTP id r4so1226812qaq.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 01:58:53 -0800 (PST)
-In-Reply-To: <1353185081-11349-1-git-send-email-shane.huang@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <50B3044D.4020209@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Dimitris Damigos <damigos@freemail.gr>, Tejun Heo <tj@kernel.org>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, ACPI Devel Mailing List <linux-acpi@vger.kernel.org>, Aaron Lu <aaron.lwe@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
-Cc: linux-ide@vger.kernel.org
 
-On 11/17/2012 03:44 PM, Shane Huang wrote:
-> NCQ capability was used to check availability of SATA Settings page
-> from Identify Device Data Log, which contains DevSlp timing variables.
-> It does not work on some HDDs and leads to error messages.
-> IDENTIFY word 78 bit 5(Hardware Feature Control) should be used.
+On 11/26/2012 12:55 AM, Aaron Lu wrote:
 >
-> Quoting SATA spec 3.1:
-> If Hardware Feature Control is supported, then:
-> a) IDENTIFY DEVICE data word 78 bit 5 (see 13.2.1.18) shall be
-> set to one;
-> b) the SET FEATURES Select Hardware Feature Control subcommand
-> shall be supported (see 13.3.8);
-> c) page 08h of the Identify Device Data log (see 13.7.7) shall
-> be supported;
+> Commit 66fa7f215 "libata-acpi: improve ACPI disabling" introdcued the
+> behaviour of disabling ATA ACPI if ata_acpi_on_devcfg failed the 2nd
+> time, but commit 30dcf76ac dropped this behaviour and this caused
+> problem for Dimitris Damigos, where his laptop can not resume correctly.
 >
-> This patch is not tested on SATA HDD with DevSlp supported.
+> The bugzilla page for it is:
+> https://bugzilla.kernel.org/show_bug.cgi?id=49331
 >
-> Reported-by: Borislav Petkov <bp@amd64.org>
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> The problem is, ata_dev_push_id will fail the 2nd time it is invoked,
+> and due to disabling ACPI code is dropped, ata_acpi_on_devcfg which
+> calls ata_dev_push_id will keep failing and eventually made the device
+> disabled.
+>
+> This patch restores the original behaviour, if acpi failed the 2nd time,
+> disable acpi functionality for the device(and we do not event need to
+> add a debug message for this as it is still there ;-).
+>
+> Reported-by: Dimitris Damigos <damigos@freemail.gr>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> Cc: <stable@vger.kernel.org>
 > ---
->   drivers/ata/libata-core.c |    3 +--
->   include/linux/ata.h       |    1 +
->   2 files changed, 2 insertions(+), 2 deletions(-)
+>   drivers/ata/libata-acpi.c | 4 ++++
+>   include/linux/libata.h    | 1 +
+>   2 files changed, 5 insertions(+)
 
 applied
 
