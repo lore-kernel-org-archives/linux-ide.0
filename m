@@ -1,54 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Mon, 03 Dec 2012 13:56:56 -0500
-Message-ID: <50BCF5F8.2030802@pobox.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Mon, 03 Dec 2012 15:22:04 -0500
+Message-ID: <50BD09EC.5060705@redhat.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra>	<50B67230.4080602@genband.com> <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com> <50B67417.2020606@genband.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121203162323.GB19802@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <50B67417.2020606@genband.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Chris Friesen <chris.friesen@genband.com>
+Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 12/03/2012 11:23 AM, Tejun Heo wrote:
-> Hello, James.
+On 11/28/2012 03:29 PM, Chris Friesen wrote:
+> On 11/28/2012 02:27 PM, Mathias Bur=E9n wrote:
 >
-> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
->>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->>> index e65c62e..1756151 100644
->>> --- a/include/scsi/scsi_device.h
->>> +++ b/include/scsi/scsi_device.h
->>> @@ -160,6 +160,7 @@ struct scsi_device {
->>>   	unsigned can_power_off:1; /* Device supports runtime power off */
->>>   	unsigned wce_default_on:1;	/* Cache is ON by default */
->>>   	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
->>> +	unsigned event_driven:1; /* No need to poll the device */
->>>
->>>   	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
->>>   	struct list_head event_list;	/* asserted events */
->>
->> Yes, but if we can get away with doing that, it should be in genhd
->> because it's completely generic.
->>
->> I was imagining we'd have to fake the reply to the test unit ready or
->> some other commands, which is why it would need to be in sr.c
->>
->> The check events code is Tejun's baby, if he's OK with it then just do
->> it in genhd.c
+>> The drives look healthy, but am I reading that right? More than 10
+>> self tests per hour?
 >
-> The problem here is there's no easy to reach genhd from libata (or the
-> other way around) without going through sr.  I think we're gonna have
-> to have something in sr one way or the other.
+> Yeah....we cranked it up to try and increase how frequently we see th=
+e problem.
+>
+> From what I understand normally it runs once a day.
+>
+> Chris
 
-  ...which is precisely as I said when v1 of this ZPODD patchset appeared.
+Did the vendor suggest to you that running a self test on an active dri=
+ve would=20
+be OK? I would expect errors in this case - specifically time outs....
 
-sr modifications cannot be avoided.
+Regards,
 
-	Jeff
+Ric
 
-
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-raid" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
