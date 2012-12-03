@@ -1,65 +1,37 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH] libata: set dma_mode to 0xff in reset
-Date: Mon, 03 Dec 2012 11:35:02 +0800
-Message-ID: <50BC1DE6.7080008@intel.com>
-References: <50BBFA94.2070105@intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 49151] NULL pointer dereference in pata_acpi
+Date: Mon,  3 Dec 2012 03:39:17 +0000 (UTC)
+Message-ID: <20121203033917.29D3311FEA5@bugzilla.kernel.org>
+References: <bug-49151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:8720 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.19.201]:60742 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751916Ab2LCDeo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 2 Dec 2012 22:34:44 -0500
-In-Reply-To: <50BBFA94.2070105@intel.com>
+	id S1754530Ab2LCDjV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 2 Dec 2012 22:39:21 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id C9F6F2035D
+	for <linux-ide@vger.kernel.org>; Mon,  3 Dec 2012 03:39:20 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id D956320255
+	for <linux-ide@vger.kernel.org>; Mon,  3 Dec 2012 03:39:18 +0000 (UTC)
+In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Borislav Petkov <bp@alien8.de>, Dutra Julio <dutra.julio@gmail.com>, Phillip Wood <phillip.wood@dunelm.org.uk>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Szymon Janc <szymon@janc.net.pl>, Bernd Buschinski <b.buschinski@googlemail.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-
-ata_device->dma_mode's initial value is zero, which is not a valid dma
-mode, but ata_dma_enabled will return true for this value. This patch
-sets dma_mode to 0xff in reset function, so that ata_dma_enabled will
-not return true for this case, or it will cause problem for pata_acpi.
-
-The corrsponding bugzilla page is at:
 https://bugzilla.kernel.org/show_bug.cgi?id=49151
 
-Reported-by: Phillip Wood <phillip.wood@dunelm.org.uk>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Tested-by: Szymon Janc <szymon@janc.net.pl>
-Tested-by: Dutra Julio <dutra.julio@gmail.com>
-Cc: <stable@kernel.org>
----
- drivers/ata/libata-core.c | 1 +
- drivers/ata/libata-eh.c   | 1 +
- 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f46fbd3..586362e 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2560,6 +2560,7 @@ int ata_bus_probe(struct ata_port *ap)
- 		 * bus as we may be talking too fast.
- 		 */
- 		dev->pio_mode = XFER_PIO_0;
-+		dev->dma_mode = 0xff;
- 
- 		/* If the controller has a pio mode setup function
- 		 * then use it to set the chipset to rights. Don't
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index e60437c..bf039b0 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2657,6 +2657,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 		 * bus as we may be talking too fast.
- 		 */
- 		dev->pio_mode = XFER_PIO_0;
-+		dev->dma_mode = 0xff;
- 
- 		/* If the controller has a pio mode setup function
- 		 * then use it to set the chipset to rights. Don't
+
+
+
+--- Comment #50 from Aaron Lu <aaron.lu@intel.com>  2012-12-03 03:39:16 ---
+Turned out Alan Cox prefer the first approach, so I sent that patch out. Sorry
+for the trouble brought by the 2nd patch.
+
 -- 
-1.7.12.4
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
