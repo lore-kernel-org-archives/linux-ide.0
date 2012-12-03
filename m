@@ -1,35 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2 12/14] sata_highbank: utilize common ata_platform_remove_one()
-Date: Mon, 03 Dec 2012 05:17:06 -0500
-Message-ID: <50BC7C22.2010608@pobox.com>
-References: <1351842388-27210-13-git-send-email-computersforpeace@gmail.com> <1351883526-32412-1-git-send-email-computersforpeace@gmail.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: Re: ata1: COMRESET failed
+Date: Mon, 03 Dec 2012 12:16:44 +0100
+Message-ID: <50BC8A1C.8070805@suse.cz>
+References: <508A7A8A.7030908@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:34589 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753528Ab2LCKRJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 05:17:09 -0500
-Received: by mail-qa0-f53.google.com with SMTP id a19so1090678qad.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 02:17:09 -0800 (PST)
-In-Reply-To: <1351883526-32412-1-git-send-email-computersforpeace@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <508A7A8A.7030908@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sshtylyov@mvista.com>
 
-On 11/02/2012 03:12 PM, Brian Norris wrote:
-> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-> ---
-> v2: fix whitespace
->
->   drivers/ata/sata_highbank.c | 12 +-----------
->   1 file changed, 1 insertion(+), 11 deletions(-)
+On 10/26/2012 01:56 PM, Jiri Slaby wrote:
+> Hello,
+> 
+> at every boot I'm seeing:
+> 
+> At 5th second:
+> ata1: link is slow to respond, please be patient (ready=0)
+> 
+> At 10th second:
+> ata1: COMRESET failed (errno=-16)
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
+> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+> ata1.00: ATA-7: INTEL SSDSA2M080G2GC, 2CV102HD, max UDMA/133
+> ata1.00: 156301488 sectors, multi 16: LBA48 NCQ (depth 31/32)
+> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
+> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+> ata1.00: configured for UDMA/133
+> scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSA2M080 2CV1 PQ: 0 ANSI: 5
+> 
+> 
+> So that I have to wait 5 s for the disk to come up. I tried 3.4.15 and
+> 3.6.3, both with the same result.
+> 
+> 00:1f.2 SATA controller [0106]: Intel Corporation 7 Series Chipset
+> Family 6-port SATA Controller [AHCI mode] [8086:1e03] (rev 04)
+> 
+> Any ideas what is going on?
 
-applied patches 1-11
+Anybody? I also tried 3.0, it's there too. And libahci.skip_host_reset=1
+works around the issue.
 
-patch #12 failed to apply (even manually), so I stopped there
-
-
-
+> thanks,
+-- 
+js
+suse labs
