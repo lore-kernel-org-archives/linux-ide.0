@@ -1,82 +1,66 @@
-From: Dave Jiang <dave.jiang@intel.com>
-Subject: Re: getting I/O errors in super_written()...any ideas what would
- cause this?
-Date: Mon, 03 Dec 2012 14:59:49 -0700
-Message-ID: <50BD20D5.40606@intel.com>
-References: <8134827.27.1354128708501.JavaMail.root@zimbra> <50B67230.4080602@genband.com> <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com> <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com> <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com> <50BD14B1.7000203@genband.com> <50BD17CD.8080206@intel.com> <50BD1B67.7090606@genband.com>
+From: David Daney <ddaney.cavm@gmail.com>
+Subject: Re: [PATCH v2 2/4] pata_octeon_cf: perform host detach, removal on
+ exit
+Date: Mon, 03 Dec 2012 16:26:25 -0800
+Message-ID: <50BD4331.6010904@gmail.com>
+References: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com> <1354559682-30965-2-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <50BD1B67.7090606@genband.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Chris Friesen <chris.friesen@genband.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:46644 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201Ab2LDA02 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Dec 2012 19:26:28 -0500
+Received: by mail-pb0-f46.google.com with SMTP id wy7so2398980pbc.19
+        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 16:26:28 -0800 (PST)
+In-Reply-To: <1354559682-30965-2-git-send-email-computersforpeace@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, David Daney <david.daney@cavium.com>
 
-On 12/03/2012 02:36 PM, Chris Friesen wrote:
-> On 12/03/2012 03:21 PM, Dave Jiang wrote:
->> On 12/03/2012 02:08 PM, Chris Friesen wrote:
->>> On 12/03/2012 02:52 PM, Ric Wheeler wrote:
->>>
->>>> I jumped into this thread late - can you repost detail on the specific
->>>> drive and HBA used here? In any case, it sounds like this is a better
->>>> topic for the linux-scsi or linux-ide list where most of the low level
->>>> storage people lurk :)
->>> Okay, expanding the receiver list. :)
->>>
->>> To recap:
->>>
->>> I'm running 2.6.27 with LVM over software RAID 1 over a pair of SAS disks.
->>> Disks are WD9001BKHG, controller is Intel C600.
->> Just curious what driver are you using with the C600. The upstream
->> driver for C600 didn't get accepted until 3.0-rc6 and all of the
->> outstanding patches weren't accepted until 3.7-rc. So I'd say 3.6 would
->> be your best bet until 3.7 is released. Did you attempt a backport of
->> the isci driver or using something like an LSI port on 2.6.27? Have you
->> verified the issue on a more recent kernel?
-> We're using a driver provided by the hardware vendor.  It appears to be 
-> a backport of version 1.0.1 of the isci driver.  We've been using it 
-> since mid-March or so.
-
-Yikes. There has been significant updates to libsas, libata, and isci
-driver since March. Looks like you are barely limping along. I would
-imagine the error handling and the hotplug would be a giant mess to say
-the least.
-
-> This is an embedded system, so as is all too common in that environment 
-> upgrading the whole kernel isn't an option since it requires support 
-> from multiple hardware/software vendors.
+On 12/03/2012 10:34 AM, Brian Norris wrote:
+> This driver does not detach and remove its ata_host properly on device
+> removal. Add the common .remove helper.
 >
-> Upgrading just the driver might be possible--do you think it's likely as 
-> a cause for these errors?  The current driver has a binary firmware file 
-> that it uses--would we keep that with the new driver?
-You can certainly try but it needs the libsas, libata, and some block
-fixes to function in a stable fashion. Given that it was a backport by a
-vendor, one would wonder how much of libsas they actually backported.
-It's really difficult to say where the error is coming from without
-being able to verify on a later kernel. Is there any other I/O
-controller you can use to test this? I'm guessing the answer is no since
-it's embedded board. You are using a very old driver that is backported
-to a very old kernel that requires significant subsystem backporting as
-well. You may need to go poke your OS vendor and have them support the
-issue?
+> Note: I do not know this driver well enough to ensure this is the right
+> thing to do. Merge this patch with caution.
+>
+> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> Cc: David Daney <david.daney@cavium.com>
+> ---
+> v2: no change (rebased along with previous patch)
+>
+>   drivers/ata/pata_octeon_cf.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+> index 1d61d5d..d8df93b 100644
+> --- a/drivers/ata/pata_octeon_cf.c
+> +++ b/drivers/ata/pata_octeon_cf.c
+> @@ -921,6 +921,7 @@ free_cf_port:
+>
+>   static struct platform_driver octeon_cf_driver = {
+>   	.probe		= octeon_cf_probe,
+> +	.remove		= ata_platform_remove_one,
 
-The binary firmware file is really there in case you are not able to
-load your OEM parameter properly from the platform. It's there to allow
-you to limp if that is the case and by no means should be used for
-standard operation. You are suppose to get the appropriate values for
-your specific platform using a tool called phytune (which you should've
-gotten from your Intel field rep). You need to program those values and
-others into the OEM parameter block in the SPI flash of your platform.
-In your BIOS you need to have either the OROM or the EFI driver loaded
-during boot. The OROM or EFI driver then copies the values out of SPI
-flash at boot and provides it to the driver. Those parameters provide
-important timing values and others. If you are loading the wrong values
-against your platform, it is very possible that you could see I/O errors.
+Can you point me at the definition of ata_platform_remove_one()?
 
+I can seem to find it.  Without knowing what that does, I would be 
+inclined to NACK the whole thing.
 
+How did you test the patch?
 
-> Chris
+This patch is likely to be incomplete as the driver is also missing the 
+module_exit() things.
 
+It might be simpler to just make the driver "bool" instead of "tristate" 
+in the Kconfig.
+
+>   	.driver		= {
+>   		.name	= DRV_NAME,
+>   		.owner	= THIS_MODULE,
+>
 
