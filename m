@@ -1,64 +1,83 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Tue, 04 Dec 2012 12:11:40 +0000
-Message-ID: <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
-	 <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>
-	 <21511277.LLinyDpbAK@vostro.rjw.lan>
-	 <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike>
-	 <20121203081321.GA9990@mint-spring.sh.intel.com>
-	 <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
-	 <20121203162323.GB19802@htj.dyndns.org>
+From: Chris Friesen <chris.friesen@genband.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Tue, 04 Dec 2012 16:00:51 -0600
+Message-ID: <50BE7293.8060200@genband.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra>	<50B67230.4080602@genband.com> <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com> <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com> <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com> <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20121203162323.GB19802@htj.dyndns.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <50BD1F45.1040802@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 2012-12-03 at 08:23 -0800, Tejun Heo wrote:
-> Hello, James.
+On 12/03/2012 03:53 PM, Ric Wheeler wrote:
+> On 12/03/2012 04:08 PM, Chris Friesen wrote:
+>> On 12/03/2012 02:52 PM, Ric Wheeler wrote:
+>>
+>>> I jumped into this thread late - can you repost detail on the specific
+>>> drive and HBA used here? In any case, it sounds like this is a better
+>>> topic for the linux-scsi or linux-ide list where most of the low level
+>>> storage people lurk :)
+>> Okay, expanding the receiver list. :)
+>>
+>> To recap:
+>>
+>> I'm running 2.6.27 with LVM over software RAID 1 over a pair of SAS 
+>> disks.
+>> Disks are WD9001BKHG, controller is Intel C600.
+>>
+>> Recently we started seeing messages of the following pattern, and we
+>> don't know what's causing them:
+>>
+>> Nov 28 08:57:10 kernel: end_request: I/O error, dev sda, sector 
+>> 1758169523
+>> Nov 28 08:57:10 kernel: md: super_written gets error=-5, uptodate=0
+>> Nov 28 08:57:10 kernel: raid1: Disk failure on sda2, disabling device.
+>> Nov 28 08:57:10 kernel: raid1: Operation continuing on 1 devices.
+>>
+>> We've been assuming it's a software issue since it's reproducible on
+>> multiple systems, although so far we've only seen the problem with
+>> these particular disks.
+>>
+>> We've seen the problems with disk write cache enabled and disabled.
 > 
-> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
-> > > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> > > index e65c62e..1756151 100644
-> > > --- a/include/scsi/scsi_device.h
-> > > +++ b/include/scsi/scsi_device.h
-> > > @@ -160,6 +160,7 @@ struct scsi_device {
-> > >  	unsigned can_power_off:1; /* Device supports runtime power off */
-> > >  	unsigned wce_default_on:1;	/* Cache is ON by default */
-> > >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
-> > > +	unsigned event_driven:1; /* No need to poll the device */
-> > >  
-> > >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
-> > >  	struct list_head event_list;	/* asserted events */
-> > 
-> > Yes, but if we can get away with doing that, it should be in genhd
-> > because it's completely generic.
-> > 
-> > I was imagining we'd have to fake the reply to the test unit ready or
-> > some other commands, which is why it would need to be in sr.c
-> > 
-> > The check events code is Tejun's baby, if he's OK with it then just do
-> > it in genhd.c
+> Hi Chris,
 > 
-> The problem here is there's no easy to reach genhd from libata (or the
-> other way around) without going through sr.  I think we're gonna have
-> to have something in sr one way or the other.
+> Are there any earlier IO errors or sda related errors in the log?
 
-Can't we do that via an event? It's a bit clunky because we need the
-callback in the layer that sees the sdev, which is libata-scsi, we just
-need an analogue of ata_scsi_media_change_notify, but ignoring and
-allowing polling is essentially event driven as well, so it should all
-work.  We'll need a listener in genhd, which might be trickier.
+Nope, at least not nearby.  On one system for instance we boot up and
+get into steady-state, then there are no kernel logs for about half an
+hour then out of the blue we see:
 
-This may also work as the more generic route for stuff where we can't
-connect the bottom to the top of the stack (which looks like a problem
-we'll begin wrestling with a lot now).
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: end_request: I/O error, dev sda, sector 1758169523
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: md: super_written gets error=-5, uptodate=0
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: raid1: Disk failure on sda2, disabling device.
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: raid1: Operation continuing on 1 devices.
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: end_request: I/O error, dev sdb, sector 1758169523
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: md: super_written gets error=-5, uptodate=0
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: RAID1 conf printout:
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: --- wd:1 rd:2
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: disk 0, wo:1, o:0, dev:sda2
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: disk 1, wo:0, o:1, dev:sdb2
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: RAID1 conf printout:
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: --- wd:1 rd:2
+Nov 27 14:58:13 base0-0-0-13-0-11-1 kernel: disk 1, wo:0, o:1, dev:sdb2
 
-James
 
+As another data point, it looks like we may be doing a SEND DIAGNOSTIC
+command specifying the default self-test in addition to the background
+short self-test.  This seems a bit risky and excessive to me, but
+apparently the guy that wrote it is no longer with the company.
 
+What is the recommended method for monitoring disks on a system that
+is likely to go a long time between boots?  Do we avoid any in-service
+testing and just monitor the SMART data and only test it if something
+actually goes wrong?  Or should we intentionally drop a disk out of the
+array and test it?  (The downside of that is that we lose
+redundancy since we only have 2 disks.)
+
+Chris
