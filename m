@@ -1,88 +1,64 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2 2/4] pata_octeon_cf: perform host detach, removal on exit
-Date: Mon, 3 Dec 2012 22:10:03 -0800
-Message-ID: <CAN8TOE_Zmd8ek-OXqHKiuQ57aUF7BdLFX2KOD-20tt8EBDhg+Q@mail.gmail.com>
-References: <1354559682-30965-1-git-send-email-computersforpeace@gmail.com>
-	<1354559682-30965-2-git-send-email-computersforpeace@gmail.com>
-	<50BD4331.6010904@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Tue, 04 Dec 2012 12:11:40 +0000
+Message-ID: <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com>
+References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com>
+	 <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike>
+	 <21511277.LLinyDpbAK@vostro.rjw.lan>
+	 <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike>
+	 <20121203081321.GA9990@mint-spring.sh.intel.com>
+	 <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com>
+	 <20121203162323.GB19802@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:41163 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827Ab2LDGKE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Dec 2012 01:10:04 -0500
-Received: by mail-ie0-f174.google.com with SMTP id c11so5593500ieb.19
-        for <linux-ide@vger.kernel.org>; Mon, 03 Dec 2012 22:10:03 -0800 (PST)
-In-Reply-To: <50BD4331.6010904@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <20121203162323.GB19802@htj.dyndns.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lu@intel.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, David Daney <david.daney@cavium.com>
 
-Jeff,
+On Mon, 2012-12-03 at 08:23 -0800, Tejun Heo wrote:
+> Hello, James.
+> 
+> On Mon, Dec 03, 2012 at 08:25:43AM +0000, James Bottomley wrote:
+> > > diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> > > index e65c62e..1756151 100644
+> > > --- a/include/scsi/scsi_device.h
+> > > +++ b/include/scsi/scsi_device.h
+> > > @@ -160,6 +160,7 @@ struct scsi_device {
+> > >  	unsigned can_power_off:1; /* Device supports runtime power off */
+> > >  	unsigned wce_default_on:1;	/* Cache is ON by default */
+> > >  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+> > > +	unsigned event_driven:1; /* No need to poll the device */
+> > >  
+> > >  	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+> > >  	struct list_head event_list;	/* asserted events */
+> > 
+> > Yes, but if we can get away with doing that, it should be in genhd
+> > because it's completely generic.
+> > 
+> > I was imagining we'd have to fake the reply to the test unit ready or
+> > some other commands, which is why it would need to be in sr.c
+> > 
+> > The check events code is Tejun's baby, if he's OK with it then just do
+> > it in genhd.c
+> 
+> The problem here is there's no easy to reach genhd from libata (or the
+> other way around) without going through sr.  I think we're gonna have
+> to have something in sr one way or the other.
 
-Per David's comments, I recommend that this patch be dropped from inclusion.
+Can't we do that via an event? It's a bit clunky because we need the
+callback in the layer that sees the sdev, which is libata-scsi, we just
+need an analogue of ata_scsi_media_change_notify, but ignoring and
+allowing polling is essentially event driven as well, so it should all
+work.  We'll need a listener in genhd, which might be trickier.
 
-Hi David,
+This may also work as the more generic route for stuff where we can't
+connect the bottom to the top of the stack (which looks like a problem
+we'll begin wrestling with a lot now).
 
-On Mon, Dec 3, 2012 at 4:26 PM, David Daney <ddaney.cavm@gmail.com> wrote:
-> On 12/03/2012 10:34 AM, Brian Norris wrote:
->> This driver does not detach and remove its ata_host properly on device
->> removal. Add the common .remove helper.
->>
->> Note: I do not know this driver well enough to ensure this is the right
->> thing to do. Merge this patch with caution.
->>
->> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
->> Acked-by: Tejun Heo <tj@kernel.org>
->> Cc: David Daney <david.daney@cavium.com>
->> ---
->> v2: no change (rebased along with previous patch)
->>
->>   drivers/ata/pata_octeon_cf.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
->> index 1d61d5d..d8df93b 100644
->> --- a/drivers/ata/pata_octeon_cf.c
->> +++ b/drivers/ata/pata_octeon_cf.c
->> @@ -921,6 +921,7 @@ free_cf_port:
->>
->>   static struct platform_driver octeon_cf_driver = {
->>         .probe          = octeon_cf_probe,
->> +       .remove         = ata_platform_remove_one,
->
->
-> Can you point me at the definition of ata_platform_remove_one()?
+James
 
-It's a recent addition, and this series (v2/v3) is just part of the
-already-accepted series. Jeff already queued it all up in
-libata-dev.git:
-https://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=shortlog;h=refs/heads/ALL
 
-> I can seem to find it.  Without knowing what that does, I would be inclined
-> to NACK the whole thing.
-
-A NACK is probably the right thing. I was mostly converting a few
-other drivers which used some simple, common patterns to use my new
-common code, but this driver was missing it altogether. It looks like
-there may be bigger issues, though, as you point out.
-
-> How did you test the patch?
-
-I didn't; I don't have a cavium-octeon system.
-
-> This patch is likely to be incomplete as the driver is also missing the
-> module_exit() things.
->
-> It might be simpler to just make the driver "bool" instead of "tristate" in
-> the Kconfig.
-
-As noted earlier, I don't have much interest in this driver. I agree
-that there are some other issues with the driver; I think it leaks
-memory if it is ever allowed to unload, for one. Feel free to submit
-an alternative patch to prevent this driver from being built as a
-module.
-
-Brian
