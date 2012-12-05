@@ -1,115 +1,61 @@
-From: Tilman Schmidt <tilman@imap.cc>
-Subject: Re: possible regression in kernel 3.6 and 3.7-rc: system hangs during
- nightly tape backup
-Date: Wed, 05 Dec 2012 12:03:51 +0100
-Message-ID: <50BF2A17.10904@imap.cc>
-References: <50AACB7E.8060601@imap.cc>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Wed, 05 Dec 2012 06:41:02 -0500
+Message-ID: <50BF32CE.2010704@redhat.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra> 	<50B67230.4080602@genband.com>  <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>  <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>  <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>  <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>  <50BE7293.8060200@genband.com> <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig337A7DA0A3858B2547429E4F"
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:53602 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751765Ab2LELED (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Dec 2012 06:04:03 -0500
-In-Reply-To: <50AACB7E.8060601@imap.cc>
+Received: from mx1.redhat.com ([209.132.183.28]:33551 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751768Ab2LELlz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Dec 2012 06:41:55 -0500
+In-Reply-To: <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, Linux IDE <linux-ide@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Chris Friesen <chris.friesen@genband.com>, =?UTF-8?B?TWF0aGlhcyBCdXLDqQ==?= =?UTF-8?B?bg==?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig337A7DA0A3858B2547429E4F
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: quoted-printable
+On 12/05/2012 04:20 AM, James Bottomley wrote:
+> On Tue, 2012-12-04 at 16:00 -0600, Chris Friesen wrote:
+>> As another data point, it looks like we may be doing a SEND DIAGNOSTIC
+>> command specifying the default self-test in addition to the background
+>> short self-test.  This seems a bit risky and excessive to me, but
+>> apparently the guy that wrote it is no longer with the company.
+> This is a really bad idea.  A lot of disks go out to lunch until the
+> diagnostics complete (the same goes for SMART diagnostics).  This means
+> that if you do diagnostics on a running device, the drivers start to get
+> timeouts on commands which are queued waiting for diagnostics to
+> complete ... if those go over the standard SCSI timeouts, we'll start to
+> try error recovery and likely have the disaster you see above.
+>
+>> What is the recommended method for monitoring disks on a system that
+>> is likely to go a long time between boots?  Do we avoid any in-service
+>> testing and just monitor the SMART data and only test it if something
+>> actually goes wrong?  Or should we intentionally drop a disk out of the
+>> array and test it?  (The downside of that is that we lose
+>> redundancy since we only have 2 disks.)
+> What do you mean by "monitoring" ... as in what are you looking for?  To
+> make sure the disk is healthy and responding, a simple test unit ready
+> works.  To look at other parameters, read the mode pages.
+>
+> Anything that actively causes the disk to go out and check something is
+> a bad idea in a running environment.  Only do this if you can quiesce
+> the I/O before starting the active diagnostic (or drop the disk from the
+> array as you suggest).
+>
+> To be honest, though, modern disks do a whole host of diagnostics as
+> they write data just to check that it is safely committed, so passive
+> monitoring should be fine.
+>
+> James
+>
+>
 
-Problem still exists in kernel 3.7-rc7.
+I don't think that the basic stat gathering (smartctl -a ....) has this kind of 
+impact, but am worried about the running of the diagnostics,
 
-During the second backup run after I booted kernel 3.7.0-rc7, once
-again all disk activity suddenly ceased, dmesg started to report
-tasks "hung for more than 120 seconds", and everything happening
-after that was forgotten after a reboot.
+ric
 
-Can I do anything to help hunting this down?
-
-Am 20.11.2012 01:14, schrieb Tilman Schmidt:
-> For the 4th time now after switching to kernel 3.6, my system became
-> unresponsive during the nightly Bacula backup run. It looks as if
-> all disk accesses are suddenly blocked:
-> - Desktop apps stop responding one after another, starting with
->   Firefox followed by other "heavy" apps, while Konsole windows
->   continue being usable for a while.
-> - "top" shows the load average steadily increasing with no process
->   actually consuming relevant quantities of CPU.
-> - I can do "dmesg > /root/dmesg.out" followed by "less /root/dmesg.out"=
-
->   in a Konsole window just fine, but after the inevitable hard reset
->   the file /root/dmesg.out isn't there.
-> - The "sync" command hangs indefinitely.
-> - The "shutdown" command and ctrl/alt/Del emit "system going down"
->   broadcast messages but never get anywhere.
-> - Killing processes manually works for some (bacula-sd even ejects
->   the tape before exiting) but most remain in state D or Z.
-> - Eventually, all text consoles are blocked and a hardware reset is
->   the only remaining option.
-> - After the reboot, a Bacula spool file is left behind in
->   /var/spool/bacula, proof that the hang happened during the backup.
->=20
-> This does not happen during every backup run, but frequently enough
-> to be annoying. (About once per week.) It never happened with kernel
-> 3.5. For comparison went back to kernel 3.5.7 for a week and it
-> never happened during that time. Last night I booted 3.6.7 and the
-> very next backup caused the hang again. The last kernel message that
-> made it to the syslog on disk was
->=20
-> Nov 19 23:05:04 xenon kernel: [73877.128546] st0: Block limits 256 -
-> 524288 bytes.
->=20
-> triggered by the start of the backup. In dmesg the next message was
->=20
-> [74401.249091] INFO: task flush-253:2:1320 blocked for more than 120
-> seconds.
->=20
-> followed by a backtrace. I have photos of the remaining dmesg output
-> which I'll try to upload somewhere accessible tomorrow.
->=20
-> Hardware configuration:
-> Intel Pentium D, Intel DQ965GF mainboard, 6 GB RAM
-> onboard S-ATA controller driving two 500 GB S-ATA disks
-> and a Pioneer DVR-216D DVD-RW drive
-> Adaptec 29160B Ultra160 SCSI adapter driving a
-> Tandberg TS400 LTO-2 tape drive
->=20
-> Disk configuration: md RAID1, LVM, ext3 and ext4 volumes
->=20
-> Software: Opensuse 11.4 64 bit, vanilla kernel 3.5.7 and 3.6.7,
-> Bacula 5.2.12
->=20
-> HTH
-> T.
->=20
-
-
---=20
-Tilman Schmidt                    E-Mail: tilman@imap.cc
-Bonn, Germany
-Diese Nachricht besteht zu 100% aus wiederverwerteten Bits.
-Unge=F6ffnet mindestens haltbar bis: (siehe R=FCckseite)
-
-
-
---------------enig337A7DA0A3858B2547429E4F
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.12 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAlC/KiAACgkQMdB4Whm86/kWawCfbzkUY/guLkA4iLRc9M82dmMT
-9gMAnjlU1mY082G3/weU/RgTStF6W5Ck
-=xc2A
------END PGP SIGNATURE-----
-
---------------enig337A7DA0A3858B2547429E4F--
