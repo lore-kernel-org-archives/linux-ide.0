@@ -1,35 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: getting I/O errors in super_written()...any ideas what would
- cause this?
-Date: Wed, 05 Dec 2012 11:57:04 +0000
-Message-ID: <1354708624.2240.21.camel@dabdike.int.hansenpartnership.com>
-References: <8134827.27.1354128708501.JavaMail.root@zimbra>
-	 	<50B67230.4080602@genband.com>
-	  <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>
-	  <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>
-	  <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>
-	  <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>
-	  <50BE7293.8060200@genband.com>
-	 <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
-	 <50BF32CE.2010704@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <50BF32CE.2010704@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: Chris Friesen <chris.friesen@genband.com>, Mathias =?ISO-8859-1?Q?Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: [PATCH] ahci_platform: make structs static
+Date: Wed,  5 Dec 2012 23:44:20 -0800
+Message-ID: <1354779860-8655-1-git-send-email-computersforpeace@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:45951 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754582Ab2LFHog (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Dec 2012 02:44:36 -0500
+Received: by mail-pa0-f46.google.com with SMTP id bh2so4243178pad.19
+        for <linux-ide@vger.kernel.org>; Wed, 05 Dec 2012 23:44:36 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@redhat.com>
+Cc: Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org, Fengguang Wu <fengguang.wu@intel.com>
 
-On Wed, 2012-12-05 at 06:41 -0500, Ric Wheeler wrote:
-> I don't think that the basic stat gathering (smartctl -a ....) has this kind of 
-> impact, but am worried about the running of the diagnostics,
+These structs are used only for ahci_platform.c, so they should be
+static. Thanks to Fengguang for the (automated) suggestion.
 
-Right, that's what I was trying to say above.  Anything that just reads
-existing data is fine.  Anything that causes the disk to go off and test
-things to gather data is likely to cause I/O errors due to timeouts.
+Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+Cc: Fengguang Wu <fengguang.wu@intel.com>
+---
+ drivers/ata/ahci_platform.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-James
-
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 1d90690..1cc467b 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -49,12 +49,12 @@ static struct platform_device_id ahci_devtype[] = {
+ };
+ MODULE_DEVICE_TABLE(platform, ahci_devtype);
+ 
+-struct ata_port_operations ahci_platform_ops = {
++static struct ata_port_operations ahci_platform_ops = {
+ 	.inherits	= &ahci_ops,
+ 	.host_stop	= ahci_host_stop,
+ };
+ 
+-struct ata_port_operations ahci_platform_retry_srst_ops = {
++static struct ata_port_operations ahci_platform_retry_srst_ops = {
+ 	.inherits	= &ahci_pmp_retry_srst_ops,
+ 	.host_stop	= ahci_host_stop,
+ };
+@@ -323,7 +323,7 @@ disable_unprepare_clk:
+ }
+ #endif
+ 
+-SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
++static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
+-- 
+1.7.9.5
 
