@@ -1,48 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Long delays when waking up from suspend-to-ram on Gigabyte MB
- with JMicron controller
-Date: Thu, 6 Dec 2012 09:34:47 -0800
-Message-ID: <20121206173447.GP19802@htj.dyndns.org>
-References: <50BEA22A.1020300@intel.com>
+From: Chris Friesen <chris.friesen@genband.com>
+Subject: Re: getting I/O errors in super_written()...any ideas what would
+ cause this?
+Date: Thu, 06 Dec 2012 12:15:32 -0600
+Message-ID: <50C0E0C4.9050400@genband.com>
+References: <8134827.27.1354128708501.JavaMail.root@zimbra>		<50B67230.4080602@genband.com>	 <CADNH=7Hv2RgBv=0Xia=yMyzKmgAOgvxJSAKn2arcE7k1x_T4FQ@mail.gmail.com>	 <50B67417.2020606@genband.com> <50BD09EC.5060705@redhat.com>	 <50BD0F44.7010808@genband.com> <50BD1127.6090304@redhat.com>	 <50BD14B1.7000203@genband.com> <50BD1F45.1040802@redhat.com>	 <50BE7293.8060200@genband.com> <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:57118 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423100Ab2LFRew (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Dec 2012 12:34:52 -0500
-Received: by mail-pa0-f46.google.com with SMTP id bh2so4591185pad.19
-        for <linux-ide@vger.kernel.org>; Thu, 06 Dec 2012 09:34:51 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <50BEA22A.1020300@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1354699254.2243.5.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Ric Wheeler <rwheeler@redhat.com>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Roy Sigurd Karlsbakk <roy@karlsbakk.net>, Neil Brown <neilb@suse.de>, Linux-RAID <linux-raid@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, butz.tsai@gmail.com
-Cc: Show Lu <showlu@jmicron.com>, Mehmet Giritli <mehmet@giritli.eu>, Steven Chen <stevenchen@jmicron.com>, Orson <orson.wellies@gmail.com>, Aries Lee <arieslee@jmicron.com>, Jonathan Nieder <jrnieder@gmail.com>, linux-ide@vger.kernel.org
 
-Let's hope Justin is still there.
+On 12/05/2012 03:20 AM, James Bottomley wrote:
+> On Tue, 2012-12-04 at 16:00 -0600, Chris Friesen wrote:
+>> As another data point, it looks like we may be doing a SEND DIAGNOSTIC
+>> command specifying the default self-test in addition to the background
+>> short self-test.  This seems a bit risky and excessive to me, but
+>> apparently the guy that wrote it is no longer with the company.
+>
+> This is a really bad idea.  A lot of disks go out to lunch until the
+> diagnostics complete (the same goes for SMART diagnostics).  This means
+> that if you do diagnostics on a running device, the drivers start to get
+> timeouts on commands which are queued waiting for diagnostics to
+> complete ... if those go over the standard SCSI timeouts, we'll start to
+> try error recovery and likely have the disaster you see above.
 
-On Wed, Dec 05, 2012 at 09:23:54AM +0800, Aaron Lu wrote:
-> Hi Show,
-> 
-> Can you please take a look at the following bugzilla? Mehmet has
-> problems resuming his system, the port keeps reporting connection status
-> change event:
-> https://bugzilla.kernel.org/show_bug.cgi?id=47831
-> 
-> This is kind of like the issue I found here:
-> http://marc.info/?l=linux-ide&m=132609120812842&w=2
-> 
-> Suggestions are welcome.
-> 
-> The fact that Windows does not have a problem with the card made me
-> think:
-> 1 Either Linux's driver has a problem;
-> 2 Or Windows' driver has a quirk but we don't know.
-> 
-> Thanks,
-> Aaron
-> 
+So it turns out that our problems are intermittently triggered when 
+running the default self test.  This agrees with the statement in 
+sg_senddiag to not do foreground self-tests on disks with mounted 
+filesystems.
 
--- 
-tejun
+We seem to be able to do background short self-tests (ie, SEND 
+DIAGNOSTIC command with self-test code of 001b and ST code of 0b) 
+without causing any problems.  Is this pushing our luck or is this 
+something that should work according to the spec and the linux stack? 
+The scsi spec indicates that in this case for most commands the test 
+will be paused and the command executed within 2 seconds, but I don't 
+know what the normal scsi timeouts are.
+
+Thanks for the input, this is very useful.
+
+Chris
