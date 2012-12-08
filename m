@@ -1,18 +1,19 @@
-From: SEC Capitals Loan <aruma@ifam.edu.br>
+From: SEC Capitals Loan <dcssrh@ufcg.edu.br>
 Subject: loan offer
-Date: Fri, 07 Dec 2012 05:29:25 -0400 (AMT)
-Message-ID: <46aad18e-11f0-477b-9c0f-9a6cff1c222b__23233.86074645$1354877466$gmane$org@novo.ifam.edu.br>
-Reply-To: SEC Capitals Loan <seccapital@bklynmail.com>
+Date: Fri, 7 Dec 2012 22:36:06 -0300 (BRT)
+Message-ID: <420191693.40931.1354930566788.JavaMail.root__8515.08559794656$1354931237$gmane$org@ufcg.edu.br>
+Reply-To: SEC Capitals Loan <secapitaloans@kimo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tucano2.ifam.edu.br ([200.129.168.170]:36768 "EHLO ifam.edu.br"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932204Ab2LGKun (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Dec 2012 05:50:43 -0500
+Received: from mta1.ufcg.edu.br ([150.165.111.244]:48110 "EHLO
+	mta1.ufcg.edu.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757647Ab2LHBqv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Dec 2012 20:46:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+
 
 
 Loan Offer at 3%, Feel Free to REPLY back to us for more info
