@@ -1,54 +1,56 @@
-From: Michael Labriola <michael.d.labriola@gmail.com>
-Subject: Re: v3.6 and up can't find HDD
-Date: Fri, 14 Dec 2012 14:41:16 -0500
-Message-ID: <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
-References: <CAOQxz3zHBtO=d1agOZQwfM4uVu7ysgAiNyoiziN6KUdu25=cQQ@mail.gmail.com>
-	<50CB3CC1.6000300@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Hugh Daschbach <hugh.daschbach@enmotus.com>
+Subject: [PATCH 3.7.0] Add AHCI support for Enmotus Bobcat device.
+Date: Fri, 14 Dec 2012 11:29:51 -0800
+Message-ID: <1355513391-29458-1-git-send-email-hugh.daschbach@enmotus.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:60039 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932202Ab2LNTlS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 14:41:18 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm9so747684wib.1
-        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2012 11:41:16 -0800 (PST)
-In-Reply-To: <50CB3CC1.6000300@intel.com>
+Received: from reverse.techspace.com ([216.174.116.17]:63340 "EHLO
+	hdasch-dt.enmotus.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932133Ab2LNTlt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 14:41:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Matthew Garrett <mjg@redhat.com>, linux-ide@vger.kernel.org, "Labriola, Michael" <mlabriol@gdeb.com>, jbolano@gdeb.com, "Dyke, Jayson" <jdyke@gdeb.com>, "Wehrly, Stuart" <swehrly@gdeb.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hugh Daschbach <hugh.daschbach@enmotus.com>
 
-On Fri, Dec 14, 2012 at 9:50 AM, Aaron Lu <aaron.lu@intel.com> wrote:
-> On 12/14/2012 06:32 AM, Michael Labriola wrote:
->> Jeff, Matthew,
->>
->> After updating from 3.3 to 3.6.8, the kernel fails to detect my hard
->> drive.  I'm using the included .config, which I migrated over from a
->> 3.3 kernel by just accepting all the defaults.  I bisected the problem
->> back to this commit:
->
-> Hello Michael,
->
-> I believe this is the same problem discussed here:
-> https://bugzilla.kernel.org/show_bug.cgi?id=49151
->
-> And the patch to fix this problem didn't reach Linus' tree yet, but is
-> already queued in Jeff's NEXT branch:
-> https://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=commit;h=5416912af75de9cba5d1c75b99a7888b0bbbd2fb
->
-> Please give it a test to see if it fixed your problem, thanks.
->
-> Thanks,
-> Aaron
+Silicon does not support standard AHCI BAR assignment.  Add
+vendor/device exception to force BAR 2.
 
-Aaron,
+Signed-off-by: Hugh Daschbach <hugh.daschbach@enmotus.com>
+---
+ drivers/ata/ahci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-I just got done testing Jeff's NEXT branch merged into v3.7.  It does
-fix the traceback on the old dual Xeon, but both the old Xeon and my
-newish Quad-core still fail to detect a HDD.  I get a bunch of ata
-errors about retries and such, but nothing ever comes up.  The only
-way to get my boxes to boot properly is to either compile with
-CONFIG_ATA_ACPI turned off or with pata_acpi blacklisted...
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7862d17..3cb008f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -53,6 +53,7 @@
+ 
+ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
++	AHCI_PCI_BAR_ENMOTUS	= 2,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+ 
+@@ -410,6 +411,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
+ 
++	/* Enmotus */
++	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
++
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+@@ -1101,6 +1105,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* The Connext uses non-standard BAR */
+ 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
++	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
++		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
+ 
+ 	/* acquire resources */
+ 	rc = pcim_enable_device(pdev);
+-- 
+1.7.11.7
 
-Should udev even be loading pata_acpi on a recent system w/ only SATA devices?
