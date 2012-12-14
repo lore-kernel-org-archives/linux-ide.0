@@ -1,56 +1,29 @@
-From: Hugh Daschbach <hugh.daschbach@enmotus.com>
-Subject: [PATCH 3.7.0] Add AHCI support for Enmotus Bobcat device.
-Date: Fri, 14 Dec 2012 11:29:51 -0800
-Message-ID: <1355513391-29458-1-git-send-email-hugh.daschbach@enmotus.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: v3.6 and up can't find HDD
+Date: Fri, 14 Dec 2012 14:52:02 -0500
+Message-ID: <50CB8362.1090601@pobox.com>
+References: <CAOQxz3zHBtO=d1agOZQwfM4uVu7ysgAiNyoiziN6KUdu25=cQQ@mail.gmail.com> <50CB3CC1.6000300@intel.com> <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from reverse.techspace.com ([216.174.116.17]:63340 "EHLO
-	hdasch-dt.enmotus.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932133Ab2LNTlt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 14:41:49 -0500
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:62391 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754461Ab2LNTwG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 14:52:06 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so4590886vcd.19
+        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2012 11:52:06 -0800 (PST)
+In-Reply-To: <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hugh Daschbach <hugh.daschbach@enmotus.com>
+To: Michael Labriola <michael.d.labriola@gmail.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Matthew Garrett <mjg@redhat.com>, linux-ide@vger.kernel.org, "Labriola, Michael" <mlabriol@gdeb.com>, jbolano@gdeb.com, "Dyke, Jayson" <jdyke@gdeb.com>, "Wehrly, Stuart" <swehrly@gdeb.com>
 
-Silicon does not support standard AHCI BAR assignment.  Add
-vendor/device exception to force BAR 2.
+On 12/14/2012 02:41 PM, Michael Labriola wrote:
+> Should udev even be loading pata_acpi on a recent system w/ only SATA devices?
 
-Signed-off-by: Hugh Daschbach <hugh.daschbach@enmotus.com>
----
- drivers/ata/ahci.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Probably not, IMO.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7862d17..3cb008f 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -53,6 +53,7 @@
- 
- enum {
- 	AHCI_PCI_BAR_STA2X11	= 0,
-+	AHCI_PCI_BAR_ENMOTUS	= 2,
- 	AHCI_PCI_BAR_STANDARD	= 5,
- };
- 
-@@ -410,6 +411,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
- 	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
- 
-+	/* Enmotus */
-+	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-@@ -1101,6 +1105,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	/* The Connext uses non-standard BAR */
- 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
- 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
-+	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
-+		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
- 
- 	/* acquire resources */
- 	rc = pcim_enable_device(pdev);
--- 
-1.7.11.7
+	Jeff
+
 
