@@ -1,50 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] [libata] scsi: fix Null pointer dereference on disk error
-Date: Fri, 14 Dec 2012 09:40:58 -0500
-Message-ID: <50CB3A7A.9040400@pobox.com>
-References: <1355386339-11411-1-git-send-email-xtfeng@gmail.com>
+Subject: Re: sata_dwc_460ex.c with exec bit
+Date: Fri, 14 Dec 2012 09:44:22 -0500
+Message-ID: <50CB3B46.4050808@pobox.com>
+References: <50CA7B6B.2020408@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:56311 "EHLO
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:44701 "EHLO
 	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755097Ab2LNOlD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 09:41:03 -0500
-In-Reply-To: <1355386339-11411-1-git-send-email-xtfeng@gmail.com>
+	with ESMTP id S1754116Ab2LNOo0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 09:44:26 -0500
+Received: by mail-vc0-f174.google.com with SMTP id d16so4034617vcd.19
+        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2012 06:44:25 -0800 (PST)
+In-Reply-To: <50CA7B6B.2020408@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Xiaotian Feng <xtfeng@gmail.com>
-Cc: Xiaotian Feng <dannyfeng@tencent.com>, Jeff Garzik <jgarzik@redhat.com>, James Bottomley <JBottomley@Parallels.com>, stable@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: jgarzik@redhat.com, linux-ide@vger.kernel.org
 
-On 12/13/2012 03:12 AM, Xiaotian Feng wrote:
-> Following oops were observed when disk error happened:
+On 12/13/2012 08:05 PM, Xose Vazquez Perez wrote:
+> hi,
 >
-> [ 4272.896937] sd 0:0:0:0: [sda] Unhandled error code
-> [ 4272.896939] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> [ 4272.896942] sd 0:0:0:0: [sda] CDB: Read(10): 28 00 00 5a de a7 00 00 08 00
-> [ 4272.896951] end_request: I/O error, dev sda, sector 5955239
-> [ 4291.574947] BUG: unable to handle kernel NULL pointer dereference at (null)
-> [ 4291.658305] IP: [] ahci_activity_show+0x1/0x40
-> [ 4291.730090] PGD 76dbbc067 PUD 6c4fba067 PMD 0
-> [ 4291.783408] Oops: 0000 [#1] SMP
-> [ 4291.822100] last sysfs file: /sys/devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/sw_activity
-> [ 4291.934235] CPU 9
-> [ 4291.958301] Pid: 27942, comm: hwinfo ......
->
-> ata_scsi_find_dev could return NULL, so ata_scsi_activity_{show,store} should check if atadev is NULL.
->
-> Signed-off-by: Xiaotian Feng <dannyfeng@tencent.com>
-> Cc: Jeff Garzik <jgarzik@redhat.com>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: stable@kernel.org
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->   drivers/ata/libata-scsi.c |    6 ++++--
->   1 file changed, 4 insertions(+), 2 deletions(-)
+> please, remove exec bit of the sata_dwc_460ex.c file.
 
-applied
+Fixed
 
 
 
