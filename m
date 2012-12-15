@@ -1,67 +1,117 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: v3.6 and up can't find HDD
-Date: Sat, 15 Dec 2012 16:40:16 +0800
-Message-ID: <50CC3770.3080106@intel.com>
-References: <CAOQxz3zHBtO=d1agOZQwfM4uVu7ysgAiNyoiziN6KUdu25=cQQ@mail.gmail.com> <50CB3CC1.6000300@intel.com> <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Sat, 15 Dec 2012 15:55:44 -0600
+Message-ID: <50CCF1E0.9070804@gmail.com>
+References: <kahap3$mur$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24916 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751038Ab2LOIju (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 15 Dec 2012 03:39:50 -0500
-In-Reply-To: <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
+Received: from mail-ia0-f174.google.com ([209.85.210.174]:43780 "EHLO
+	mail-ia0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969Ab2LOVzs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Dec 2012 16:55:48 -0500
+Received: by mail-ia0-f174.google.com with SMTP id y25so4315780iay.19
+        for <linux-ide@vger.kernel.org>; Sat, 15 Dec 2012 13:55:48 -0800 (PST)
+In-Reply-To: <kahap3$mur$1@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Labriola <michael.d.labriola@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Matthew Garrett <mjg@redhat.com>, linux-ide@vger.kernel.org, "Labriola, Michael" <mlabriol@gdeb.com>, jbolano@gdeb.com, "Dyke, Jayson" <jdyke@gdeb.com>, "Wehrly, Stuart" <swehrly@gdeb.com>
+To: bl0 <bl0-052@playker.info>
+Cc: linux-ide@vger.kernel.org
 
-On 12/15/2012 03:41 AM, Michael Labriola wrote:
-> On Fri, Dec 14, 2012 at 9:50 AM, Aaron Lu <aaron.lu@intel.com> wrote:
->> On 12/14/2012 06:32 AM, Michael Labriola wrote:
->>> Jeff, Matthew,
->>>
->>> After updating from 3.3 to 3.6.8, the kernel fails to detect my hard
->>> drive.  I'm using the included .config, which I migrated over from a
->>> 3.3 kernel by just accepting all the defaults.  I bisected the problem
->>> back to this commit:
->>
->> Hello Michael,
->>
->> I believe this is the same problem discussed here:
->> https://bugzilla.kernel.org/show_bug.cgi?id=49151
->>
->> And the patch to fix this problem didn't reach Linus' tree yet, but is
->> already queued in Jeff's NEXT branch:
->> https://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=commit;h=5416912af75de9cba5d1c75b99a7888b0bbbd2fb
->>
->> Please give it a test to see if it fixed your problem, thanks.
->>
->> Thanks,
->> Aaron
-> 
-> Aaron,
-> 
-> I just got done testing Jeff's NEXT branch merged into v3.7.  It does
-> fix the traceback on the old dual Xeon, but both the old Xeon and my
-> newish Quad-core still fail to detect a HDD.  I get a bunch of ata
-> errors about retries and such, but nothing ever comes up.  The only
-> way to get my boxes to boot properly is to either compile with
-> CONFIG_ATA_ACPI turned off or with pata_acpi blacklisted...
-> 
-> Should udev even be loading pata_acpi on a recent system w/ only SATA devices?
+On 12/15/2012 02:02 AM, bl0 wrote:
+> I have a PCI card based on Silicon Image 3114 SATA controller. Like many
+> people in the past I have experienced silent data corruption.
+> I am lucky to have a hardware configuration where it is easy to reproduce
+> this behavior with 100% rate by copying a file from a USB stick plugged
+> into another PCI card. My motherboard has nvidia chipset.
+>
+> Going through messages and bug reports about this problem, someone mentioned
+> that PCI cache line size may be relevant. I did some testing with different
+> CLS values and found that the problem of data corruption is solved if
+> either
+> A). CLS is set to 0, before or after sata_sil kernel driver is loaded
+>    # setpci -d 1095:3114 CACHE_LINE_SIZE=0
+> where 1095:3114 is the device id as shown by 'lspci -nn'. The same command
+> can also be used in grub2 (recent versions) shell or configuration file
+> before booting linux.
+> or
+> B). CLS is set to a sufficiently large value, only after sata_sil is loaded.
+>    # setpci -d 1095:3114 CACHE_LINE_SIZE=28
+> (value is hexadecimal, in 4-byte units, here it's 160 bytes)
+> What is a sufficiently large value depends on the value that is set before
+> the driver is loaded. If the value before the driver is loaded is 32 or 64
+> bytes, I have to increase it (after the driver is loaded) to 128 or 160
+> bytes, respectively.
+>
+> In sata_sil.c source in sil_init_controller it writes some hardware-specific
+> value depending on PCI cache line size. By lowering this value I can get it
+> to work with lower CLS. The lowest value 0 works with CLS 64 bytes. If the
+> CLS is 32 bytes, I have to increase the CLS.
 
-PATA_ACPI will only try to initialize IDE interface controllers, so did
-you set the SATA controller to legacy IDE mode?
+The meaning of that value from the datasheet is: "This bit field is used 
+to specify the system cacheline size in terms of 32-bit words. The upper 
+2 bits are not used, resulting a maximum size of 64 32-bit words. With 
+the SiI3114 as a master, initiating a read transaction, it issues PCI 
+command Read Multiple in place, when empty space in its FIFO is larger 
+than the value programmed in this register."
 
-And for IDE controllers, PATA_ACPI should be the last module to try to
-initialize the controller. See this bugzilla for more information on
-this:
-https://bugzilla.kernel.org/show_bug.cgi?id=48631
+I think this value is likely the key. The cache line size itself 
+shouldn't make any difference with this controller as it only really 
+affects Memory Write & Invalidate (MWI) and the driver doesn't try to 
+enable that for this device. But it's being used to derive the value 
+written into this register.
 
-Thanks,
-Aaron
+Can you add in some output to figure out what values are being written 
+to this register and see which values are working or not working?
 
-> 
+>
+> Data corruption is the biggest problem for me and these workarounds help but
+> another problem remains, sometimes when accessing multiple PCI devices at
+> the same time sata becomes inaccessible and times out with log messages
+> similar to:
+> [  411.351805] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+> frozen
+> [  411.351824] ata3.00: cmd c8/00:00:00:af:00/00:00:00:00:00/e0 tag 0 dma
+> 131072 in
+> [  411.351826]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4
+> (timeout)
+> [  411.351830] ata3.00: status: { DRDY }
+> [  411.351843] ata3: hard resetting link
+> [  411.671775] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [  411.697059] ata3.00: configured for UDMA/100
+> [  411.697080] ata3: EH complete
+>
+> Reboot is needed to access sata drives again. If I had the root filesystem
+> on a sata drive it would probably crash the system.
+>
+> Another thing that may be related. Comparing lspci output reveals that when
+> accessing multiple PCI devices at the same time, the flag DiscTmrStat
+> (Discard Timer Status) gets toggled on for device "00:08.0 PCI bridge:
+> nVidia Corporation nForce2 External PCI Bridge". I don't know if it's
+> normal or not.
+
+I'm not an expert on the whole PCI bridge/delayed completion stuff but 
+it appears that this means that a device (either the host bridge/CPU or 
+a device behind that bridge) initiated a delayed transaction for a read, 
+but then didn't retry the request to pick up the read data later. From 
+what I can tell this seems abnormal, at least in most cases.
+
+Can you post the full lspci -vv output? Do the problems only occur if 
+there are multiple devices plugged in behind that bridge?
+
+>
+> Finally, the same simple test that I use on Linux does not produce data
+> corruption on FreeBSD. Either this problem doesn't occur there or it's not
+> trivial to reproduce.
+>
+> This bug has been around for so long. I hope someone will find this
+> information useful.
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
