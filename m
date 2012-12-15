@@ -1,29 +1,89 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: v3.6 and up can't find HDD
-Date: Fri, 14 Dec 2012 14:52:02 -0500
-Message-ID: <50CB8362.1090601@pobox.com>
-References: <CAOQxz3zHBtO=d1agOZQwfM4uVu7ysgAiNyoiziN6KUdu25=cQQ@mail.gmail.com> <50CB3CC1.6000300@intel.com> <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
+From: bl0 <bl0-052@playker.info>
+Subject: sata_sil data corruption, possible workarounds
+Date: Sat, 15 Dec 2012 09:02:19 +0100
+Message-ID: <kahap3$mur$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f174.google.com ([209.85.220.174]:62391 "EHLO
-	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754461Ab2LNTwG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Dec 2012 14:52:06 -0500
-Received: by mail-vc0-f174.google.com with SMTP id d16so4590886vcd.19
-        for <linux-ide@vger.kernel.org>; Fri, 14 Dec 2012 11:52:06 -0800 (PST)
-In-Reply-To: <CAOQxz3wTqGppkuN3EKcw94Vd2Yi1mNc_1DPJmwZcy7-xEWD9Uw@mail.gmail.com>
+Received: from plane.gmane.org ([80.91.229.3]:48435 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750783Ab2LOIE4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 15 Dec 2012 03:04:56 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1Tjmk3-0000Js-Ky
+	for linux-ide@vger.kernel.org; Sat, 15 Dec 2012 09:05:03 +0100
+Received: from 91.150.147.9.internetia.net.pl ([91.150.147.9])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 15 Dec 2012 09:05:03 +0100
+Received: from bl0-052 by 91.150.147.9.internetia.net.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Sat, 15 Dec 2012 09:05:03 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Labriola <michael.d.labriola@gmail.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Matthew Garrett <mjg@redhat.com>, linux-ide@vger.kernel.org, "Labriola, Michael" <mlabriol@gdeb.com>, jbolano@gdeb.com, "Dyke, Jayson" <jdyke@gdeb.com>, "Wehrly, Stuart" <swehrly@gdeb.com>
+To: linux-ide@vger.kernel.org
 
-On 12/14/2012 02:41 PM, Michael Labriola wrote:
-> Should udev even be loading pata_acpi on a recent system w/ only SATA devices?
+I have a PCI card based on Silicon Image 3114 SATA controller. Like many
+people in the past I have experienced silent data corruption.
+I am lucky to have a hardware configuration where it is easy to reproduce
+this behavior with 100% rate by copying a file from a USB stick plugged
+into another PCI card. My motherboard has nvidia chipset.
 
-Probably not, IMO.
+Going through messages and bug reports about this problem, someone mentioned
+that PCI cache line size may be relevant. I did some testing with different
+CLS values and found that the problem of data corruption is solved if
+either
+A). CLS is set to 0, before or after sata_sil kernel driver is loaded
+  # setpci -d 1095:3114 CACHE_LINE_SIZE=0
+where 1095:3114 is the device id as shown by 'lspci -nn'. The same command
+can also be used in grub2 (recent versions) shell or configuration file
+before booting linux.
+or
+B). CLS is set to a sufficiently large value, only after sata_sil is loaded.
+  # setpci -d 1095:3114 CACHE_LINE_SIZE=28
+(value is hexadecimal, in 4-byte units, here it's 160 bytes)
+What is a sufficiently large value depends on the value that is set before
+the driver is loaded. If the value before the driver is loaded is 32 or 64
+bytes, I have to increase it (after the driver is loaded) to 128 or 160
+bytes, respectively.
 
-	Jeff
+In sata_sil.c source in sil_init_controller it writes some hardware-specific
+value depending on PCI cache line size. By lowering this value I can get it
+to work with lower CLS. The lowest value 0 works with CLS 64 bytes. If the
+CLS is 32 bytes, I have to increase the CLS.
+
+Data corruption is the biggest problem for me and these workarounds help but
+another problem remains, sometimes when accessing multiple PCI devices at
+the same time sata becomes inaccessible and times out with log messages
+similar to:
+[  411.351805] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+frozen
+[  411.351824] ata3.00: cmd c8/00:00:00:af:00/00:00:00:00:00/e0 tag 0 dma
+131072 in
+[  411.351826]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4
+(timeout)
+[  411.351830] ata3.00: status: { DRDY }
+[  411.351843] ata3: hard resetting link
+[  411.671775] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[  411.697059] ata3.00: configured for UDMA/100
+[  411.697080] ata3: EH complete
+
+Reboot is needed to access sata drives again. If I had the root filesystem
+on a sata drive it would probably crash the system.
+
+Another thing that may be related. Comparing lspci output reveals that when
+accessing multiple PCI devices at the same time, the flag DiscTmrStat
+(Discard Timer Status) gets toggled on for device "00:08.0 PCI bridge:
+nVidia Corporation nForce2 External PCI Bridge". I don't know if it's
+normal or not.
+
+Finally, the same simple test that I use on Linux does not produce data
+corruption on FreeBSD. Either this problem doesn't occur there or it's not
+trivial to reproduce.
+
+This bug has been around for so long. I hope someone will find this
+information useful.
 
 
