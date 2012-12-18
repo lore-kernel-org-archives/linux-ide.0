@@ -1,61 +1,53 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Tue, 18 Dec 2012 16:30:51 +0800
-Message-ID: <50D029BB.7060408@intel.com>
-References: <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org> <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com> <50C1891A.7040900@intel.com> <50C5564F.8030000@intel.com> <20121211051027.GB1932@mtj.dyndns.org>
+From: Andrius Narbutas <andrius.narbutas@gmail.com>
+Subject: Re: Crash with Z77 chipset
+Date: Tue, 18 Dec 2012 10:51:15 +0200
+Message-ID: <50D02E83.3090403@gmail.com>
+References: <50CF5143.5020207@gmail.com> <50CFE5E3.9080003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14026 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751348Ab2LRIaY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2012 03:30:24 -0500
-In-Reply-To: <20121211051027.GB1932@mtj.dyndns.org>
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:49067 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754078Ab2LRI6L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Dec 2012 03:58:11 -0500
+Received: by mail-lb0-f181.google.com with SMTP id ge1so403594lbb.26
+        for <linux-ide@vger.kernel.org>; Tue, 18 Dec 2012 00:58:09 -0800 (PST)
+In-Reply-To: <50CFE5E3.9080003@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Everyone,
+On 2012.12.18 05:41, Robert Hancock wrote:
+> My first thought would be that a power problem is a possibility. These
+> kinds of setups with multiple HDs in a RAID setup are known to cause
+> these issues in some cases if the PSU isn't adequate.
 
-Due to lack of information, I think I'll go ahead and pick up a simple
-solution for this(i.e. the code I attached previously to set a flag
-event_driven in scsi_device to let sr skip events poll) and send a new
-series out for you to review. After all, I can't wait forever...
+I do not think PSU is a problem, because:
+1) All hard disks combined draw less energy than loaded CPU, even at 
+heavy load (from HDD datasheet: "Read/Write: 6.80 Watts; Idle	6.10 
+Watts" - difference is 0.7W per HDD, so < 3W combined, CPU draws ~40W 
+when loaded, compared to idle). Loading CPU/RAM to max does not crash 
+system at all
+2) I'm planning power supplies at 2x needed power (you know, all those 
+"Chinese Watt" system is unreliable). Anyway, should be more than enough 
+for whole system (and CPU is almost at idle when creating filesystem, so 
+load on PSU is very low - should be < 70W - that's almost nothing on 
+560W PSU, even counting "Chinese Watt" coefficient)
+3) If PSU is fault - why it fails at exact the same place? Most of 
+hardware failures have some "random" factor - you get segfaults at 
+random places from faulty RAM, crashes from dying PSU when doing random 
+tasks... But now it fails at exactly the same place (when using the same 
+kernel)
+4) Let's say PSU is faulty. Then how comes, that with 3.6.10 kernel i 
+still have control over system (when it crashes) - so only disk 
+subsystem fails? Because it has only one 12V rail - you cannot 
+disconnect disks from system, without killing motherboard power too. But 
+after crash i still can do `ssh root@deadhost 'echo b > 
+/proc/sysrq-trigger'` - so system is alive and working well (just disks 
+are dead)
 
-Please feel free to let me know if you don't think I should send a new
-series with the above mentioned solution.
-
-Thanks a lot for your(all of you) kind help and comments.
-
--Aaron
-
-On 12/11/2012 01:10 PM, Tejun Heo wrote:
-> Hello, guys.
-> 
-> On Mon, Dec 10, 2012 at 11:26:07AM +0800, Aaron Lu wrote:
->>>>> The problem here is there's no easy to reach genhd from libata (or the
->>>>> other way around) without going through sr.  I think we're gonna have
->>>>> to have something in sr one way or the other.
->>>>
->>>> Can't we do that via an event? It's a bit clunky because we need the
->>>> callback in the layer that sees the sdev, which is libata-scsi, we just
->>>> need an analogue of ata_scsi_media_change_notify, but ignoring and
->>>> allowing polling is essentially event driven as well, so it should all
->>>> work.  We'll need a listener in genhd, which might be trickier.
-> 
-> I'm not really following what you mean.  Can you please elaborate?
-> One way or the other, doesn't the notification have to bubble up
-> through SCSI?
-> 
->> A colleague of mine reminded me that it's impolite to write something
->> like this, and here is my apology. I didn't mean to be rude, I'm sorry
->> for this if it made you feel uncomfortable.
-> 
-> Oh, no, it's not rude at all. I was just being distracted w/ other
-> stuff and lazy.  Sorry about that.
-> 
-> Thanks.
-> 
+I could imagine that motherboard itself is faulty (well, interesting 
+anyway - why it fails only on heavy I/O load), so i will try to get 
+Windows Server installed to check if that will work.
 
