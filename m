@@ -1,314 +1,100 @@
-From: Andrius Narbutas <andrius.narbutas@gmail.com>
-Subject: Crash with Z77 chipset
-Date: Mon, 17 Dec 2012 19:07:15 +0200
-Message-ID: <50CF5143.5020207@gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Crash with Z77 chipset
+Date: Mon, 17 Dec 2012 21:41:23 -0600
+Message-ID: <50CFE5E3.9080003@gmail.com>
+References: <50CF5143.5020207@gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------020403090207000305010302"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:60520 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753189Ab2LQRHa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2012 12:07:30 -0500
-Received: by mail-ee0-f46.google.com with SMTP id e53so3373038eek.19
-        for <linux-ide@vger.kernel.org>; Mon, 17 Dec 2012 09:07:29 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------020403090207000305010302
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:38867 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab2LRDl0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Dec 2012 22:41:26 -0500
+Received: by mail-ie0-f176.google.com with SMTP id 13so189942iea.7
+        for <linux-ide@vger.kernel.org>; Mon, 17 Dec 2012 19:41:26 -0800 (PST)
+In-Reply-To: <50CF5143.5020207@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Andrius Narbutas <andrius.narbutas@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
-(probably a bit long mail, but i will try to describe what i did or tried)
-using ASRock Z77 Pro3 motherboard with Z77 chipset, 4xSATA WDC 
-WD1002FAEX-00Z3A0 drives, Debian Linux (basic installation, no X or 
-other services).
-Problem: any intense I/O to disk causes system to crash. Easiest method 
-(for me) to reproduce (100% so far) problem - just do mkfs.ext2 
-/dev/sdb3 (any failsystem will work, the same goes for `dd if=/dev/zero 
-of=/dev/sdb bs=1M`, just a bit slower). Before crash inode creation 
-slows down, for ~10 seconds, then stops at all (and crash immediately).
-What i tried:
-  - first i noticed that system will crash with default debian kernel 
-(2.6.32-5-amd64). This is only one kernel which writes something to 
-message log, and crashes when writing inodes at count ~3250/7464. It 
-writes info to /var/log/messages and console, system becomes 
-unresponsive (kernel.panic from sysctl does not reboot system, same goes 
-for software watchdog - you need to "manually" reboot system)
-  - i recompiled current stable kernel (3.6.10) with 
-CONFIG_DETECT_HUNG_TASK=y and CONFIG_BOOTPARAM_HUNG_TASK_PANIC=y and 
-re-tested. System hangs when writing inodes at ~3450/7464, no info on 
-screen or syslog. System could be rebooted with `echo b > 
-/proc/sysrq-trigger` on another console, console is responsive, but any 
-disk access will hung console. Sometimes (rarely) system becomes 
-unresponsive, and reboots after timeout
-  - i recompiled todays git kernel, recompiled with the same parameters. 
-It hangs ~6400/7464 (note - goes much further than previous versions), 
-but completely - does not reboot itself, does not respond to ping, only 
-poweroff helps. Nothing in syslog, photo from screen will be attached 
-with logs in next post (can't be scrolled up/down - so no info what 
-happened earlier)
+On 12/17/2012 11:07 AM, Andrius Narbutas wrote:
+> Hello,
+> (probably a bit long mail, but i will try to describe what i did or tried)
+> using ASRock Z77 Pro3 motherboard with Z77 chipset, 4xSATA WDC
+> WD1002FAEX-00Z3A0 drives, Debian Linux (basic installation, no X or
+> other services).
+> Problem: any intense I/O to disk causes system to crash. Easiest method
+> (for me) to reproduce (100% so far) problem - just do mkfs.ext2
+> /dev/sdb3 (any failsystem will work, the same goes for `dd if=/dev/zero
+> of=/dev/sdb bs=1M`, just a bit slower). Before crash inode creation
+> slows down, for ~10 seconds, then stops at all (and crash immediately).
+> What i tried:
 
-Observations:
-  - system could be "alive" and working with low disk activity for long 
-time (at least, more than week). But enough to do some disk I/O - crash 
-(for example, copying bzip'ed kernel image from one place to another is 
-enough to trigger crash)
-  - disk type does not matter. I tried to attach Hitachi HDS722020ALA330 
-disk instead of WD - the same (i would say, it crashed even earlier, but 
-didn't measured exactly)
-  - SATA cables are replaced, system could run prime95 torture test for 
-several hours - so i could say that RAM/CPU isn't a problem here
-  - could be crashed with activity on any disk. I tried to make RAID10, 
-LVM on top - crash; disassembled md array, tested with disk activity to 
-_all_ disks separately - any disk activity could crash system
-  - tested all "quick" solutions i could find on internet, including 
-module params "acpi=off noapic", "libata.noacpi=1", 
-"libata.force=1.5Gbps", some other woodoo magic like disabling write 
-cache or disabling NCQ - no difference (probably tested something more, 
-like 'norst', i forgot already)
-Attached zip'ed logs - one from 2.6 kernel (with trace), another from 
-today's git kernel (entire log from boot to crash, next line in log 
-starts again with rsyslog...).
-Also, screen images from "dead" system (nothing in logs, and i can't 
-scroll up):
-  - todays git kernel: http://i49.tinypic.com/js0xl2.jpg
-  - 3.6.10 on shutdown (crashed): http://i47.tinypic.com/2exv4fr.jpg
+My first thought would be that a power problem is a possibility. These 
+kinds of setups with multiple HDs in a RAID setup are known to cause 
+these issues in some cases if the PSU isn't adequate. It tends to show 
+up in situations like this where all hard drives are maxed out with disk 
+activity and they all pull their peak power at the same time - if the 
+voltage dips too low you can get problems with the SATA link dropping, etc.
 
-Because this problem is easily reproducible - i could try to get as much 
-information as i can, if you ask. Minor problem - i do not have physical 
-access to system, so if tests should be done with latest kernel (which 
-hangs completely and needs access to system for restart) - i can do 
-tests only at day, when others could access and reboot system.
+You might want to try running with only one or two disks powered up, or 
+try moving disks to different power cables, etc. to see if that affects 
+the problem.
 
-Thanks.
+>   - first i noticed that system will crash with default debian kernel
+> (2.6.32-5-amd64). This is only one kernel which writes something to
+> message log, and crashes when writing inodes at count ~3250/7464. It
+> writes info to /var/log/messages and console, system becomes
+> unresponsive (kernel.panic from sysctl does not reboot system, same goes
+> for software watchdog - you need to "manually" reboot system)
+>   - i recompiled current stable kernel (3.6.10) with
+> CONFIG_DETECT_HUNG_TASK=y and CONFIG_BOOTPARAM_HUNG_TASK_PANIC=y and
+> re-tested. System hangs when writing inodes at ~3450/7464, no info on
+> screen or syslog. System could be rebooted with `echo b >
+> /proc/sysrq-trigger` on another console, console is responsive, but any
+> disk access will hung console. Sometimes (rarely) system becomes
+> unresponsive, and reboots after timeout
+>   - i recompiled todays git kernel, recompiled with the same parameters.
+> It hangs ~6400/7464 (note - goes much further than previous versions),
+> but completely - does not reboot itself, does not respond to ping, only
+> poweroff helps. Nothing in syslog, photo from screen will be attached
+> with logs in next post (can't be scrolled up/down - so no info what
+> happened earlier)
+>
+> Observations:
+>   - system could be "alive" and working with low disk activity for long
+> time (at least, more than week). But enough to do some disk I/O - crash
+> (for example, copying bzip'ed kernel image from one place to another is
+> enough to trigger crash)
+>   - disk type does not matter. I tried to attach Hitachi HDS722020ALA330
+> disk instead of WD - the same (i would say, it crashed even earlier, but
+> didn't measured exactly)
+>   - SATA cables are replaced, system could run prime95 torture test for
+> several hours - so i could say that RAM/CPU isn't a problem here
+>   - could be crashed with activity on any disk. I tried to make RAID10,
+> LVM on top - crash; disassembled md array, tested with disk activity to
+> _all_ disks separately - any disk activity could crash system
+>   - tested all "quick" solutions i could find on internet, including
+> module params "acpi=off noapic", "libata.noacpi=1",
+> "libata.force=1.5Gbps", some other woodoo magic like disabling write
+> cache or disabling NCQ - no difference (probably tested something more,
+> like 'norst', i forgot already)
+> Attached zip'ed logs - one from 2.6 kernel (with trace), another from
+> today's git kernel (entire log from boot to crash, next line in log
+> starts again with rsyslog...).
+> Also, screen images from "dead" system (nothing in logs, and i can't
+> scroll up):
+>   - todays git kernel: http://i49.tinypic.com/js0xl2.jpg
+>   - 3.6.10 on shutdown (crashed): http://i47.tinypic.com/2exv4fr.jpg
+>
+> Because this problem is easily reproducible - i could try to get as much
+> information as i can, if you ask. Minor problem - i do not have physical
+> access to system, so if tests should be done with latest kernel (which
+> hangs completely and needs access to system for restart) - i can do
+> tests only at day, when others could access and reboot system.
+>
+> Thanks.
+>
 
-
---------------020403090207000305010302
-Content-Type: application/zip;
- name="logs.zip"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="logs.zip"
-
-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
-WvAt2kYYrBIaOxG6MPV7xragXRoFNN3yR8tS3XJk1Q7UqRHxFssJiURH3DLxJIv49XaWSmCj
-b9gokAliF3rlocqSun2MvyZ2DdQy8wcabUoWs2Q55GjDqWzNLFcerxptCIOULWsYTsPRxqDA
-o5b1wibF+4LM2bjevUiptsiWJZvyAKwzH5aWCNw1GSZxcIx3vrnS1jvjP9lRe3tsS4PM5jBi
-vsi8CIKx1W6QQzmI3MMjocFx8Pz8htwCjxDqDF6Cw3f9N94SZJyT3RM3OttqASagTX0PqTRx
-8hRF5BBBbMP0DgJHFc32BypMXGK38ZTLHtg7Wo6e1eHPDJOU4i2eKOIbwvnexcmJha9g5pdm
-PioDfz+CBaKPnRHcu14Rxnq67A7ZWivGlizOZ3JAqvpSNZx90736+mKlKkawtcKO17N1Ya7j
-Ox2Y4hi8APP7EP4qMNkG2vEMW6DH9OU4TacI0vw749tDCGfLI9m2qliVc/yu3ZzTbgc9Um4a
-rdr6Wpu1aJkdGzHJ3dqKfslgDDaMkQQA98wwFuZsT0mwaVEoibKzReE/YLuHsiikHMslArrb
-3ewJbc+wVpFV3cXkDOMCq67BMk1l/f0NUEsBAj8AFAAAAAgA9ZWRQcu4t/TSBQAA/BcAABwA
-JAAAAAAAAAAgIAAAAAAAAG1lc3NhZ2VzX3dpdGhfMl82X2tlcm5lbC5sb2cKACAAAAAAAAEA
-GAAC02E6dtzNAQz4Kyd23M0BDPgrJ3bczQFQSwECPwAUAAAACACtlpFBqKTx5oomAADiuQAA
-HAAkAAAAAAAAACAgAAAMBgAAbWVzc2FnZXNfd2l0aF9naXRfa2VybmVsLmxvZwoAIAAAAAAA
-AQAYAGIJCgd33M0BiSQ1gXbczQGJJDWBdtzNAVBLBQYAAAAAAgACANwAAADQLAAAAAA=
---------------020403090207000305010302--
