@@ -1,37 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 49151] NULL pointer dereference in pata_acpi
-Date: Tue, 18 Dec 2012 07:26:51 +0000 (UTC)
-Message-ID: <20121218072651.7AD4F11FF10@bugzilla.kernel.org>
-References: <bug-49151-11633@https.bugzilla.kernel.org/>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
+Date: Tue, 18 Dec 2012 16:30:51 +0800
+Message-ID: <50D029BB.7060408@intel.com>
+References: <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org> <1354623100.3206.34.camel@dabdike.int.hansenpartnership.com> <50C1891A.7040900@intel.com> <50C5564F.8030000@intel.com> <20121211051027.GB1932@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:49986 "EHLO mail.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:14026 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751259Ab2LRH0z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 18 Dec 2012 02:26:55 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B8D102030F
-	for <linux-ide@vger.kernel.org>; Tue, 18 Dec 2012 07:26:54 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id B68C720307
-	for <linux-ide@vger.kernel.org>; Tue, 18 Dec 2012 07:26:53 +0000 (UTC)
-In-Reply-To: <bug-49151-11633@https.bugzilla.kernel.org/>
+	id S1751348Ab2LRIaY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 18 Dec 2012 03:30:24 -0500
+In-Reply-To: <20121211051027.GB1932@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=49151
+Hi Everyone,
 
+Due to lack of information, I think I'll go ahead and pick up a simple
+solution for this(i.e. the code I attached previously to set a flag
+event_driven in scsi_device to let sr skip events poll) and send a new
+series out for you to review. After all, I can't wait forever...
 
+Please feel free to let me know if you don't think I should send a new
+series with the above mentioned solution.
 
+Thanks a lot for your(all of you) kind help and comments.
 
+-Aaron
 
---- Comment #53 from Aaron Lu <aaron.lu@intel.com>  2012-12-18 07:26:50 ---
-No I'm afraid. But it already arrived in Linus' tree so should appear in 3.7
-stable tree some time later.
+On 12/11/2012 01:10 PM, Tejun Heo wrote:
+> Hello, guys.
+> 
+> On Mon, Dec 10, 2012 at 11:26:07AM +0800, Aaron Lu wrote:
+>>>>> The problem here is there's no easy to reach genhd from libata (or the
+>>>>> other way around) without going through sr.  I think we're gonna have
+>>>>> to have something in sr one way or the other.
+>>>>
+>>>> Can't we do that via an event? It's a bit clunky because we need the
+>>>> callback in the layer that sees the sdev, which is libata-scsi, we just
+>>>> need an analogue of ata_scsi_media_change_notify, but ignoring and
+>>>> allowing polling is essentially event driven as well, so it should all
+>>>> work.  We'll need a listener in genhd, which might be trickier.
+> 
+> I'm not really following what you mean.  Can you please elaborate?
+> One way or the other, doesn't the notification have to bubble up
+> through SCSI?
+> 
+>> A colleague of mine reminded me that it's impolite to write something
+>> like this, and here is my apology. I didn't mean to be rude, I'm sorry
+>> for this if it made you feel uncomfortable.
+> 
+> Oh, no, it's not rude at all. I was just being distracted w/ other
+> stuff and lazy.  Sorry about that.
+> 
+> Thanks.
+> 
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
