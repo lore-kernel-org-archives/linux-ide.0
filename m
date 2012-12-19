@@ -1,72 +1,63 @@
-From: geomatsi <geomatsi@gmail.com>
-Subject: Re: DMA support for CF
-Date: Tue, 18 Dec 2012 21:59:44 +0000
-Message-ID: <50D0E750.6070406@gmail.com>
-References: <50D0264C.1010907@norik.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: Crash with Z77 chipset
+Date: Tue, 18 Dec 2012 21:36:51 -0600
+Message-ID: <50D13653.3000708@gmail.com>
+References: <50CF5143.5020207@gmail.com> <50CFE5E3.9080003@gmail.com> <50D02E83.3090403@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:44011 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab2LRSad (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Dec 2012 13:30:33 -0500
-Received: by mail-la0-f43.google.com with SMTP id z14so854427lag.16
-        for <linux-ide@vger.kernel.org>; Tue, 18 Dec 2012 10:30:31 -0800 (PST)
-In-Reply-To: <50D0264C.1010907@norik.com>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:61155 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071Ab2LSDmI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Dec 2012 22:42:08 -0500
+Received: by mail-ie0-f177.google.com with SMTP id k13so2050186iea.22
+        for <linux-ide@vger.kernel.org>; Tue, 18 Dec 2012 19:42:07 -0800 (PST)
+In-Reply-To: <50D02E83.3090403@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matej Kupljen <matej.kupljen@norik.com>
-Cc: Jeff Garzik <jgarzik@redhat.com>, nicolas.ferre@atmel.com, linux-ide@vger.kernel.org
+To: Andrius Narbutas <andrius.narbutas@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On 12/18/2012 08:16 AM, Matej Kupljen wrote:
-> Dear Sergey and Jeff,
-
-> I have a board based on AT91SAM9263, with the CF connected to
-> the EBI0 and I am using the pata-at91.c driver.
+On 12/18/2012 02:51 AM, Andrius Narbutas wrote:
+> On 2012.12.18 05:41, Robert Hancock wrote:
+>> My first thought would be that a power problem is a possibility. These
+>> kinds of setups with multiple HDs in a RAID setup are known to cause
+>> these issues in some cases if the PSU isn't adequate.
 >
-> My question is, can I use DMA (MWDMA and/or UDMA) for the CF card,
-> of course, if I add support to the driver?
-> Basically, the question is, can we use the HDMAC (DMA controller)
-> to support the DMA transfers?
-> Please note that the DMARQ and DMACK are connected from CF to SoC.
+> I do not think PSU is a problem, because:
+> 1) All hard disks combined draw less energy than loaded CPU, even at
+> heavy load (from HDD datasheet: "Read/Write: 6.80 Watts; Idle    6.10
+> Watts" - difference is 0.7W per HDD, so < 3W combined, CPU draws ~40W
+> when loaded, compared to idle). Loading CPU/RAM to max does not crash
+> system at all
+
+The CPU has a voltage regulator in front of it which can compensate for 
+dips in the input voltage. The disks don't. The wattage figures don't 
+necessarily account for short-duration power draw peaks. And depending 
+on how the drives are hooked up, especially if they are all on one 
+cable, they can potentially see a problematic voltage drop.
+
+> 2) I'm planning power supplies at 2x needed power (you know, all those
+> "Chinese Watt" system is unreliable). Anyway, should be more than enough
+> for whole system (and CPU is almost at idle when creating filesystem, so
+> load on PSU is very low - should be < 70W - that's almost nothing on
+> 560W PSU, even counting "Chinese Watt" coefficient)
+> 3) If PSU is fault - why it fails at exact the same place? Most of
+> hardware failures have some "random" factor - you get segfaults at
+> random places from faulty RAM, crashes from dying PSU when doing random
+> tasks... But now it fails at exactly the same place (when using the same
+> kernel)
+> 4) Let's say PSU is faulty. Then how comes, that with 3.6.10 kernel i
+> still have control over system (when it crashes) - so only disk
+> subsystem fails? Because it has only one 12V rail - you cannot
+> disconnect disks from system, without killing motherboard power too. But
+> after crash i still can do `ssh root@deadhost 'echo b >
+> /proc/sysrq-trigger'` - so system is alive and working well (just disks
+> are dead)
 >
->
-> I've been looking for this in the documentation, and I cannot find the
-> answer. Considering that the SAM9263 is considered legacy, I have
-> checked the documentation for AT91SAM9R/RL and AT91SAM9G and I couldn't
-> find the answer there either.
->
-> Can you answer this question, please?
-> If not, to whom I should send it?
->
-> Thank you and Best Regards,
-> Matej Kupljen
-
-Hi,
-
-In the future could you please consider sending your questions to a 
-proper kernel mail list cc-ing authors/maintainers if necessary.
+> I could imagine that motherboard itself is faulty (well, interesting
+> anyway - why it fails only on heavy I/O load), so i will try to get
+> Windows Server installed to check if that will work.
 
 
-As you noted, driver pata-at91 does not have dma support. This is 
-because originally it has been developed for a board based on 
-at91sam9260 chip which has no dma engine. More recent at91 chips 
-(including at91sam9263) do have dma engines. It should be possible to 
-add dma support to pata-at91 driver and use dma transfers for CF.
-
-A couple of notes regarding at91sam9263:
-
-1. DMA driver
-IIRC at91sam9263 chip has a different dma engine than all the other 
-chips of at91 family. More recent chips have HDMAC: 
-drivers/dma/at_hdmac.c while at91sam9263 has DWDMA: drivers/dma/dw_dmac.c
-
-2. Size of dma transfers
-IIRC there is a problem with dma engine on at91sam9263 chip: it has 
-significantly reduced block size for transfers. This leads into a fairly 
-small max transfer size in a single block transfer. As a result, it 
-might not be practical to use this particular dma engine for CF.
-
-Thanks,
-Sergey
