@@ -1,59 +1,57 @@
-From: bl0 <bl0-052@playker.info>
-Subject: Re: sata_sil data corruption, possible workarounds
-Date: Thu, 20 Dec 2012 09:54:32 +0100
-Message-ID: <kaujmk$op$1@ger.gmane.org>
-References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <50D13831.9040105@gmail.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: [PATCH] libata: Shut up annoying native_sectors warning
+Date: Thu, 20 Dec 2012 13:25:55 +0100
+Message-ID: <1356006355-6819-1-git-send-email-bp@alien8.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:46722 "EHLO plane.gmane.org"
+Received: from mail.skyhub.de ([78.46.96.112]:57186 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751218Ab2LTIx5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 20 Dec 2012 03:53:57 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1TlbtJ-000316-3s
-	for linux-ide@vger.kernel.org; Thu, 20 Dec 2012 09:54:09 +0100
-Received: from 91.150.147.9.internetia.net.pl ([91.150.147.9])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 20 Dec 2012 09:54:09 +0100
-Received: from bl0-052 by 91.150.147.9.internetia.net.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Thu, 20 Dec 2012 09:54:09 +0100
+	id S1751602Ab2LTM0D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 20 Dec 2012 07:26:03 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Borislav Petkov <bp@alien8.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On Wednesday 19 December 2012 04:44, Robert Hancock wrote:
+I'm getting this
 
-> On 12/18/2012 09:23 AM, bl0 wrote:
->> Do you think something should be done about it in the linux sata_sil
->> driver? For a lack of a better solution, here is my suggestion. There is
->> already one option 'slow_down' for problematic disks. Another option, for
->> example 'cache_line_workaround', could be added for problematic
->> motherboards. If enabled, the most straightforward way is to set cache
->> line size to 0 and not worry about the fifo_cfg register. If someone else
->> confirms that it solves the problem for them, this option could be
->> enabled automatically if certain motherboard chipset is detected.
-> 
-> We'd have to somehow narrow down which chipsets were involved, which
-> might be a hard task. Do you have an idea of how much the performance is
-> hurt by these workarounds? If it's not a lot, it might make sense to do
-> it by default.
+drivers/ata/libata-core.c: In function =E2=80=98ata_hpa_resize=E2=80=99=
+:
+drivers/ata/libata-core.c:1397:3: warning: =E2=80=98native_sectors=E2=80=
+=99 may be used uninitialized in this function [-Wmaybe-uninitialized]
 
-After setting cache line size to 0, write speed as shown by 'dd
-if=/tmpfs/testfile of=/dev/sdc9 bs=1M count=256' goes down from about
-45 MB/s to 17 MB/s. Personally I don't care about performance, reliability
-and data safety are more important to me.
+for a couple of kernel releases now with gcc (Debian 4.7.2-4) 4.7.2.
 
-The other workaround is to increase cache line size to 64 bytes, if
-necessary, and set fifo_cfg to 0. No difference in performance measured.
-This workaround is more of a hit or miss. It seems to contradict that code
-commit made back in 2005, which was also about data corruption. In the
-worst case, what solves data corruption problem on some motherboards might
-introduce this problem on some other motherboards.
+And the warning is bogus because ata_read_native_max_address either
+returns a sensible max_sectors aka native_sectors through its second
+arg pointer or an error value which is properly handled in its caller
+ata_hpa_resize().
 
+So shut up gcc already.
+
+Cc: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Borislav Petkov <bp@alien8.de>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9e8b99af400d..3860f6be8c19 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ 	int print_info =3D ehc->i.flags & ATA_EHI_PRINTINFO;
+ 	bool unlock_hpa =3D ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_H=
+PA;
+ 	u64 sectors =3D ata_id_n_sectors(dev->id);
+-	u64 native_sectors;
++	u64 native_sectors =3D 0;
+ 	int rc;
+=20
+ 	/* do we need to do it? */
+--=20
+1.8.1.rc2
 
