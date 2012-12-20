@@ -1,49 +1,57 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] libata: Shut up annoying native_sectors warning
-Date: Thu, 20 Dec 2012 13:01:59 +0000
-Message-ID: <20121220130159.7125e700@pyramind.ukuu.org.uk>
-References: <1356006355-6819-1-git-send-email-bp@alien8.de>
+From: Dirk Behme <dirk.behme@gmail.com>
+Subject: Re: [PATCH] libata-core: disable uninitialized var warning
+Date: Thu, 20 Dec 2012 15:14:44 +0100
+Message-ID: <50D31D54.2040907@gmail.com>
+References: <1356012638-4942-1-git-send-email-dirk.behme@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:55153 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068Ab2LTM43 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Dec 2012 07:56:29 -0500
-In-Reply-To: <1356006355-6819-1-git-send-email-bp@alien8.de>
+Received: from mail-bk0-f54.google.com ([209.85.214.54]:36041 "EHLO
+	mail-bk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895Ab2LTOOt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Dec 2012 09:14:49 -0500
+Received: by mail-bk0-f54.google.com with SMTP id je9so1716924bkc.13
+        for <linux-ide@vger.kernel.org>; Thu, 20 Dec 2012 06:14:48 -0800 (PST)
+In-Reply-To: <1356012638-4942-1-git-send-email-dirk.behme@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>
 
-On Thu, 20 Dec 2012 13:25:55 +0100
-Borislav Petkov <bp@alien8.de> wrote:
+Am 20.12.2012 15:10, schrieb Dirk Behme:
+> Make GCC happy by disabling the warning
+>
+> drivers/ata/libata-core.c: In function 'ata_hpa_resize':
+> drivers/ata/libata-core.c:1394:3: warning: 'native_sectors' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>
+> Looking on the code, 'native_sectors' is always initialized by calling
+> ata_read_native_max_address(dev, &native_sectors).
+>
+> Signed-off-by: Dirk Behme <dirk.behme@gmail.com>
+> CC: Jeff Garzik <jgarzik@pobox.com>
 
-> I'm getting this
->=20
-> drivers/ata/libata-core.c: In function =E2=80=98ata_hpa_resize=E2=80=99=
-:
-> drivers/ata/libata-core.c:1397:3: warning: =E2=80=98native_sectors=E2=
-=80=99 may be used uninitialized in this function [-Wmaybe-uninitialize=
-d]
->=20
-> for a couple of kernel releases now with gcc (Debian 4.7.2-4) 4.7.2.
->=20
-> And the warning is bogus because ata_read_native_max_address either
-> returns a sensible max_sectors aka native_sectors through its second
-> arg pointer or an error value which is properly handled in its caller
-> ata_hpa_resize().
->=20
-> So shut up gcc already.
+Ah, sorry, just saw that there is already a similar discussion from 
+today. Seems this didn't make it to Google, yet ;)
 
-And ensure it won't be noticed if a real problem is found. So we go fro=
-m
-warning for a few people who ignore it, to silence for everyone if a re=
-al
-bug appears
+Dirk
 
-Net lose IMHO - better to file a gcc bug report
-
-Alan
+> ---
+>   drivers/ata/libata-core.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 9e8b99a..21623cf 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+>   	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
+>   	bool unlock_hpa = ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_HPA;
+>   	u64 sectors = ata_id_n_sectors(dev->id);
+> -	u64 native_sectors;
+> +	u64 native_sectors = 0 /* GCC */;
+>   	int rc;
+>
+>   	/* do we need to do it? */
+>
 
