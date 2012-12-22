@@ -1,115 +1,127 @@
-From: Derek Basehore <dbasehore@chromium.org>
-Subject: [PATCH 2/2] ata: don't wait on resume
-Date: Thu, 20 Dec 2012 20:35:40 -0800
-Message-ID: <1356064540-17414-2-git-send-email-dbasehore@chromium.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
+Date: Sat, 22 Dec 2012 18:32:19 +0400
+Message-ID: <50D5C473.2030902@mvista.com>
 References: <1356064540-17414-1-git-send-email-dbasehore@chromium.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1356064540-17414-1-git-send-email-dbasehore@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Derek Basehore <dbasehore@chromium.org>
+To: Derek Basehore <dbasehore@chromium.org>
+Cc: JBottomley@parallels.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-When resuming an ata port, do not wait for the function ata_port_request_pm to
-return. The reasoning behing this is that we can resume the device much faster
-if we do not wait for ata ports connected to spinning disks to resume.
+Hello.
 
-A small change is made in ata_port_request_pm to make it return 0 when we do not
-wait. Previously, the function just returned an uninitialized variable if it did
-not wait.
+On 21-12-2012 8:35, Derek Basehore wrote:
 
-The pm runtime status of the ata port is set to active (even though is has not
-fully resumed yet).
+> We no longer wait for the disk to spin up in sd_resume. It now enters the
+> request to spinup the disk into the elevator and returns.
+>
+> A function is scheduled under the scsi_sd_probe_domain to wait for the command
+> to spinup the disk to complete. This function then checks for errors and cleans
+> up after the sd resume function.
 
-Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+> This allows system resume to complete much faster on systems with an HDD since
+> spinning up the disk is a significant portion of resume time.
 
-Conflicts:
+> Signed-off-by: Derek Basehore <dbasehore@chromium.org>
+> ---
+>   drivers/scsi/sd.c |  106 +++++++++++++++++++++++++++++++++++++++++++++++++---
+>   drivers/scsi/sd.h |    9 ++++
+>   2 files changed, 108 insertions(+), 7 deletions(-)
 
-	drivers/ata/libata-core.c
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 7992635..2fe051f 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+[...]
+> @@ -3087,20 +3089,110 @@ done:
+>   	return ret;
+>   }
+>
+> +/*
+> + * Callback function for when the request that starts the disk completes. Passed
+> + * into blk_execute_rq_nowait in sd_resume.
+> + */
+> +static void sd_end_start_rq(struct request *rq, int error)
+> +{
+> +	struct completion *waiting = rq->end_io_data;
+> +
+> +	rq->end_io_data = NULL;
+> +	/*
+> +	 * Set the end_io_data to NULL before calling complete. This (with
+> +	 * sd_resume async) ensures that it is set to NULL before we call
+> +	 * blk_put_request.
+> +	 */
 
----
- drivers/ata/libata-core.c |   25 ++++++++++++++++---------
- 1 files changed, 16 insertions(+), 9 deletions(-)
+    Shouldn't this comment precede the previous statement?
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9e8b99a..c700b79 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5279,7 +5279,7 @@ bool ata_link_offline(struct ata_link *link)
- #ifdef CONFIG_PM
- static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 			       unsigned int action, unsigned int ehi_flags,
--			       int *async)
-+			       int *async, int wait)
- {
- 	struct ata_link *link;
- 	unsigned long flags;
-@@ -5289,9 +5289,12 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	 * progress.  Wait for PM_PENDING to clear.
- 	 */
- 	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
--		if (async) {
--			*async = -EAGAIN;
--			return 0;
-+		if (!wait) {
-+			if (async) {
-+				*async = -EAGAIN;
-+				return 0;
-+			}
-+			return -EAGAIN;
- 		}
- 		ata_port_wait_eh(ap);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-@@ -5303,7 +5306,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	ap->pm_mesg = mesg;
- 	if (async)
- 		ap->pm_result = async;
--	else
-+	else if (wait)
- 		ap->pm_result = &rc;
- 
- 	ap->pflags |= ATA_PFLAG_PM_PENDING;
-@@ -5317,7 +5320,7 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	/* wait and check result */
--	if (!async) {
-+	if (wait) {
- 		ata_port_wait_eh(ap);
- 		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
- 	}
-@@ -5341,7 +5344,8 @@ static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int
- 	if (mesg.event == PM_EVENT_SUSPEND)
- 		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
- 
--	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
-+	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async,
-+			async == NULL ? 1 : 0);
- 	return rc;
- }
- 
-@@ -5381,7 +5385,8 @@ static int __ata_port_resume_common(struct ata_port *ap, int *async)
- 	int rc;
- 
- 	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
--		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async,
-+		async == NULL ? 1 : 0);
- 	return rc;
- }
- 
-@@ -5394,9 +5399,11 @@ static int ata_port_resume_common(struct device *dev)
- 
- static int ata_port_resume(struct device *dev)
- {
-+	struct ata_port *ap = to_ata_port(dev);
- 	int rc;
- 
--	rc = ata_port_resume_common(dev);
-+	rc = ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, NULL, 0);
- 	if (!rc) {
- 		pm_runtime_disable(dev);
- 		pm_runtime_set_active(dev);
--- 
-1.7.7.3
+> +	complete(waiting);
+> +}
+[...]
+>   static int sd_resume(struct device *dev)
+>   {
+>   	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
+> -	int ret = 0;
+> +	struct scsi_device *sdp = sdkp->device;
+> +	struct resume_async_struct *resume = NULL;
+> +	struct request *req;
+> +	unsigned char cmd[6] = { START_STOP };	/* START_VALID */
+>
+> -	if (!sdkp->device->manage_start_stop)
+> -		goto done;
+> +	if (!sdkp->device->manage_start_stop) {
+> +		scsi_disk_put(sdkp);
+> +		return 0;
+> +	}
+>
+>   	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+> -	ret = sd_start_stop_device(sdkp, 1);
+>
+> -done:
+> -	scsi_disk_put(sdkp);
+> -	return ret;
+> +	cmd[4] |= 1;	/* START */
+> +
+> +	if (sdp->start_stop_pwr_cond)
+> +		cmd[4] |= 1 << 4;	/* Active */
+> +
+> +	if (!scsi_device_online(sdp))
+> +		return -ENODEV;
+> +
+> +	resume = kzalloc(sizeof(struct resume_async_struct), GFP_NOIO);
+> +	if (!resume)
+> +		return DRIVER_ERROR << 24;
+> +
+> +	req = blk_get_request(sdp->request_queue, 0, __GFP_WAIT);
+> +	if (!req)
+> +		return DRIVER_ERROR << 24;
+> +
+> +	resume->req = req;
+> +	resume->sdkp = sdkp;
+> +	init_completion(&resume->wait);
+> +
+> +	req->cmd_len = COMMAND_SIZE(cmd[0]);
+> +	memcpy(req->cmd, cmd, req->cmd_len);
+> +	req->sense = resume->sense;
+> +	req->sense_len = 0;
+
+    Not SCSI_SENSE_BUFFERSIZE?
+
+> +	req->retries = SD_MAX_RETRIES;
+> +	req->timeout = SD_TIMEOUT;
+> +	req->cmd_type = REQ_TYPE_BLOCK_PC;
+> +	req->cmd_flags |= REQ_QUIET | REQ_PREEMPT;
+> +	req->end_io_data = &resume->wait;
+> +
+> +	async_schedule_domain(sd_resume_async, resume, &scsi_sd_probe_domain);
+> +	/*
+> +	 * don't wait here for the disk to spin up, since we can resume faster
+> +	 * if we don't. Cleanup and checking for errors is done the the
+
+    s/the the/in the/
+
+WBR, Sergei
