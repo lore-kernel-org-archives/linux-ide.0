@@ -1,75 +1,50 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Wed, 26 Dec 2012 09:42:14 +0800
-Message-ID: <50DA55F6.8080706@intel.com>
-References: <1352443922-13734-1-git-send-email-aaron.lu@intel.com> <35648985.61QNrr0Knq@vostro.rjw.lan> <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org> <50D2AB1D.9050602@intel.com> <20121225171723.GI10220@mtj.dyndns.org>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: [PATCH] libata: replace sata_settings with devslp_timing
+Date: Wed, 26 Dec 2012 02:29:14 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E107F3F0FC@SCYBEXDAG04.amd.com>
+References: <1355757539-4529-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121225171723.GI10220@mtj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [216.32.181.184] ([216.32.181.184]:37829 "EHLO
+	ch1outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752807Ab2LZCaO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Dec 2012 21:30:14 -0500
+In-Reply-To: <1355757539-4529-1-git-send-email-shane.huang@amd.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "bp@alien8.de" <bp@alien8.de>, "kou1.ono@gmail.com" <kou1.ono@gmail.com>, Tom Rini <tom.rini@gmail.com>, "jlee@suse.com" <jlee@suse.com>, "Huang, Shane" <Shane.Huang@amd.com>
 
-On 12/26/2012 01:17 AM, Tejun Heo wrote:
-> Hello, Aaron.
-> 
-> On Thu, Dec 20, 2012 at 02:07:25PM +0800, Aaron Lu wrote:
->> +static int is_gendisk_part0(struct device *dev, void *data)
->> +{
->> +	struct device **child = data;
->> +
->> +	if (dev->class == &block_class && dev->type == &disk_type) {
->> +		*child = dev;
->> +		return 1;
->> +	} else
->> +		return 0;
->> +}
->> +
->> +/**
->> + * disk_from_device - Get the gendisk pointer for this device.
->> + * @dev: the device this gendisk is created for, i.e. gendisk->driverfs_dev
->> + *
->> + * LLD sometimes need to play with the gendisk without HLD's aware,
->> + * this routine gives LLD the required access to gendisk.
->> + *
->> + * CONTEXT:
->> + * Don't care.
->> + */
->> +struct gendisk *disk_from_device(struct device *dev)
->> +{
->> +	struct device *child;
->> +
->> +	if (device_for_each_child(dev, &child, is_gendisk_part0))
->> +		return dev_to_disk(child);
->> +	else
->> +		return NULL;
->> +}
->> +EXPORT_SYMBOL(disk_from_device);
-> 
-> This is really a round-about way to find out the matching device and
-> it wouldn't work if the disk device nests deeper.  Doesn't really look
-> like a good idea to me.
+Jeff,
 
-I don't quite understand the 'disk device nests deeper' case, can you
-please elaborate? My understanding is, as long as the disk's part0
-device has a parent, this function should work. For LLDs want to take
-advantage of this function, it should pass the device that is the parent
-of part0 as the param, this function itself doesn't try to dig further.
-The only problem I can see is when there are multiple gendisks created
-for a single device, which I don't know if there is such a case?
-
+> NCQ capability was used to check availability of SATA Settings page
+> from Identify Device Data Log, which contains DevSlp timing variables.
+> It does not work on some HDDs and leads to error messages.
 > 
->> Then together with disk_try_block_events and disk_unblock_events, we can
->> avoid touching SCSI layer to let ODD stay in zero power state.
+> IDENTIFY word 78 bit 5(Hardware Feature Control) can't work either
+> because it is only the sufficient condition of Identify Device data
+> log, not the necessary condition.
 > 
-> Also, I'd much prefer something along the line of
-> block_events_nowait() instead of try_block.
+> This patch replaced ata_device->sata_settings with ->devslp_timing
+> to only save DevSlp timing variables(8 bytes), instead of the whole
+> SATA Settings page(512 bytes).
+> 
+> Reported-by: Borislav Petkov <bp@alien8.de>
+> Signed-off-by: Shane Huang <shane.huang@amd.com>
+> Cc: stable@kernel.org
 
-Sure, no problem.
+Happy holidays!
+
+Do you have comments to this patch? It also fixed bugzilla #51881
+reported and verified by Kouichi.
+
+Please also help to apply it into the stable tree.
 
 Thanks,
-Aaron
+Shane
+
 
