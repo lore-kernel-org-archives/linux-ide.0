@@ -1,45 +1,60 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 51841] sata_sil falls off some time after boot
-Date: Wed,  2 Jan 2013 14:30:34 +0000 (UTC)
-Message-ID: <20130102143034.8164B11FF04@bugzilla.kernel.org>
-References: <bug-51841-11633@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Hugh Daschbach <hugh.daschbach@enmotus.com>
+Subject: [PATCH RESEND v3.7.0] Add AHCI support for Enmotus Bobcat device.
+Date: Thu,  3 Jan 2013 10:35:07 -0800
+Message-ID: <1357238107-4630-1-git-send-email-hugh.daschbach@enmotus.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:33888 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752682Ab3ABOal (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Jan 2013 09:30:41 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B5AEA202BE
-	for <linux-ide@vger.kernel.org>; Wed,  2 Jan 2013 14:30:39 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id B67BF202F2
-	for <linux-ide@vger.kernel.org>; Wed,  2 Jan 2013 14:30:38 +0000 (UTC)
-In-Reply-To: <bug-51841-11633@https.bugzilla.kernel.org/>
+Received: from reverse.techspace.com ([216.174.116.17]:47506 "EHLO
+	hdasch-dt.enmotus.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753773Ab3ACSct (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jan 2013 13:32:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hugh Daschbach <hugh.daschbach@enmotus.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=51841
+Silicon does not support standard AHCI BAR assignment.  Add
+vendor/device exception to force BAR 2.
 
+Signed-off-by: Hugh Daschbach <hugh.daschbach@enmotus.com>
+---
+Previously sent 14 Dec 2012.  Any feedback?
+Thanks,
+Hugh
 
-Alan <alan@lxorguk.ukuu.org.uk> changed:
+ drivers/ata/ahci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |alan@lxorguk.ukuu.org.uk
-          Component|IDE                         |Serial ATA
-         AssignedTo|io_ide@kernel-bugs.osdl.org |jgarzik@pobox.com
-
-
-
-
---- Comment #1 from Alan <alan@lxorguk.ukuu.org.uk>  2013-01-02 14:30:34 ---
->From the errors it looks like you may have a hardware problem - inadequate
-power/bad cable or similar.
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 7862d17..3cb008f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -53,6 +53,7 @@
+ 
+ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
++	AHCI_PCI_BAR_ENMOTUS	= 2,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+ 
+@@ -410,6 +411,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
+ 
++	/* Enmotus */
++	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
++
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+@@ -1101,6 +1105,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* The Connext uses non-standard BAR */
+ 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
++	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
++		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
+ 
+ 	/* acquire resources */
+ 	rc = pcim_enable_device(pdev);
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.7.11.7
+
