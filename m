@@ -1,43 +1,71 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v9 06/10] ata: zpodd: check zero power ready status
-Date: Fri, 04 Jan 2013 09:04:04 +0800
-Message-ID: <50E62A84.2070702@intel.com>
-References: <1353906191.2523.25.camel@dabdike> <21511277.LLinyDpbAK@vostro.rjw.lan> <20121128013928.GB15971@htj.dyndns.org> <1354092969.2276.49.camel@dabdike> <20121203081321.GA9990@mint-spring.sh.intel.com> <1354523143.2307.2.camel@dabdike.int.hansenpartnership.com> <20121203162323.GB19802@htj.dyndns.org> <50D2AB1D.9050602@intel.com> <20121225171723.GI10220@mtj.dyndns.org> <50DA55F6.8080706@intel.com> <20121228211635.GB3062@mtj.dyndns.org>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Subject: [3.8-{rc1,rc2}] ata1.00: failed to get Identify Device Data, Emask 0x1
+Date: Fri, 4 Jan 2013 16:40:03 +0100
+Message-ID: <CA+icZUUCB3K1=DuM6Nonu+Qc+qg3cM_ODk9TDZ-uYCfLVOhrdw@mail.gmail.com>
+Reply-To: sedat.dilek@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20121228211635.GB3062@mtj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:63800 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014Ab3ADPkF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jan 2013 10:40:05 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Shane Huang <shane.huang@amd.com>, Aaron Lu <aaron.lu@intel.com>
 
-On 12/29/2012 05:16 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Dec 26, 2012 at 09:42:14AM +0800, Aaron Lu wrote:
->>> This is really a round-about way to find out the matching device and
->>> it wouldn't work if the disk device nests deeper.  Doesn't really look
->>> like a good idea to me.
->>
->> I don't quite understand the 'disk device nests deeper' case, can you
->> please elaborate? My understanding is, as long as the disk's part0
->> device has a parent, this function should work. For LLDs want to take
-> 
-> Hmmm, maybe I misread but it looked like it wouldn't work if there are
-> intermediate nodes between the parent device and part0.  It might not
-> happen for sata but I don't think it's a good idea to assume that the
-> part0 and hardware device are connected directly.
-> 
-> In general, it's a quite roundabout way to do it.  Let's just push it
-> through SCSI.  That's how everything else is routed after all.  It's
-> confusing to do this one differently.
+Hi,
 
-OK, thanks for the suggestion.
-I'll prepare v11 using the previous demonstrated way(adding the
-event_driven flag to scsi_device) to silence the poll.
+I noticed messages like the following in my syslogs with Linux
+v3.8-rc1 and v3.8-rc2:
 
-Best regards,
-Aaron
+ata1.00: failed to get Identify Device Data, Emask 0x1
 
+In this Samsung ultrabook there exists a small SSD and a 500GiB HDD.
+I had no look which of the two is "ata1" or "ata2".
+NOTE: With ata2 I do not see the messages.
+I haven't checked older Linux-kernel versions.
+
+I followed the thread in [1] a bit and Aaron Lu pointed to the commit
+which causes these messages.
+Shane wanted to submit a patch [3] which I first didn't found.
+But I guess it's the one from [4], building right now...
+
+Hope this helps a bit to narrow down the problem.
+
+Regards,
+- Sedat -
+
+[1] https://lkml.org/lkml/2012/10/16/557
+[2] http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commitdiff;h=65fe1f0f66a57380229a4ced844188103135f37b
+[3] https://lkml.org/lkml/2012/11/16/369
+[4] http://git.kernel.org/?p=linux/kernel/git/jgarzik/libata-dev.git;a=patch;h=de90cd71f68e947d3bd6c3f2ef5731ead010a768
+
+P.S.: Excerpts from the quoted commit:
+
+[ drivers/ata/libata-core.c ]
+...
++               /* check and mark DevSlp capability */
++               if (ata_id_has_devslp(dev->id))
++                       dev->flags |= ATA_DFLAG_DEVSLP;
++
++
++               /* Obtain SATA Settings page from Identify Device Data Log,
++                * which contains DevSlp timing variables etc.
++                * Exclude old devices with ata_id_has_ncq()
++                */
++               if (ata_id_has_ncq(dev->id)) {
++                       err_mask = ata_read_log_page(dev,
++                                                    ATA_LOG_SATA_ID_DEV_DATA,
++                                                    ATA_LOG_SATA_SETTINGS,
++                                                    dev->sata_settings,
++                                                    1);
++                       if (err_mask)
++                               ata_dev_dbg(dev,
++                                           "failed to get Identify
+Device Data, Emask 0x%x\n",
++                                           err_mask);
++               }
++
+- EOT -
