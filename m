@@ -1,90 +1,45 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v11 8/9] libata: no poll when ODD is powered off
-Date: Sun,  6 Jan 2013 10:48:28 +0800
-Message-ID: <1357440509-28108-9-git-send-email-aaron.lu@intel.com>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
+From: y b <ycbzzjlby@gmail.com>
+Subject: Fix ahci don't retry commands after a success error handler.
+Date: Sun, 6 Jan 2013 13:14:24 +0800
+Message-ID: <CAPoh-nbV0yc_QH-D3L5ms_n_83BkPFC6ZUJHd=H9t=hqKRKVWw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-da0-f52.google.com ([209.85.210.52]:59457 "EHLO
+	mail-da0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab3AFFOZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2013 00:14:25 -0500
+Received: by mail-da0-f52.google.com with SMTP id f10so8088799dak.11
+        for <linux-ide@vger.kernel.org>; Sat, 05 Jan 2013 21:14:25 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com, kernel@teksavvy.com
+Cc: linux-ide@vger.kernel.org
 
-When the ODD is powered off, any action the user did to the ODD that
-would generate a media event will trigger an ACPI interrupt, so the
-poll for media event is no longer necessary. And the poll will also
-cause a runtime status change, which will stop the ODD from staying in
-powered off state, so the poll should better be stopped.
+>From 78c0fb104c9957db682518b97ce6a01ce1bc07b6 Mon Sep 17 00:00:00 2001
+From: Bian Yu <bianyu@kedacom.com>
+Date: Wed, 12 Dec 2012 22:26:58 -0500
+Subject: [PATCH] It should be a mistake introduced by commit 8d899e70c1b3afff.
+ because only qc->flags can't be set AC_ERR_*
 
-But since we don't have access to the gendisk structure in LLDs, here
-comes the event_driven flag for scsi device. This flag serves as a
-capability of the device, conveyed by the LLDs to upper layer. It is set
-when LLDs know that this device will no longer generate any media
-related events, so that the check_events can simply return 0 without
-bothering the device, effectively silence the poll.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Signed-off-by: Bian Yu <bianyu@kedacom.com>
 ---
- drivers/ata/libata-zpodd.c | 8 ++++++++
- drivers/scsi/sr.c          | 6 +++++-
- include/scsi/scsi_device.h | 1 +
- 3 files changed, 14 insertions(+), 1 deletion(-)
+ drivers/ata/libata-eh.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 3c39987..5843a18 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -177,6 +177,13 @@ void zpodd_pre_poweroff(struct ata_device *dev)
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index bf039b0..bcf4437 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2094,7 +2094,7 @@ static unsigned int ata_eh_speed_down(struct
+ata_device *dev,
+  */
+ static inline int ata_eh_worth_retry(struct ata_queued_cmd *qc)
  {
- 	struct zpodd *zpodd = dev->zpodd;
- 
-+	/*
-+	 * Silence the media change poll, as we will be notified when
-+	 * user wants to use the ODD so there is no meaning to poll
-+	 * it when it is powered off
-+	 */
-+	dev->sdev->event_driven = true;
-+
- 	zpodd->powered_off = true;
- 	device_set_run_wake(&dev->sdev->sdev_gendev, true);
- 	acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -209,6 +216,7 @@ void zpodd_post_resume(struct ata_device *dev)
- 
- 	zpodd->last_ready = 0;
- 	zpodd->zp_ready = false;
-+	dev->sdev->event_driven = false;
- }
- 
- static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 4d1a610..b034274 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -594,7 +594,11 @@ static unsigned int sr_block_check_events(struct gendisk *disk,
- 					  unsigned int clearing)
- {
- 	struct scsi_cd *cd = scsi_cd(disk);
--	return cdrom_check_events(&cd->cdi, clearing);
-+
-+	if (!cd->device->event_driven)
-+		return cdrom_check_events(&cd->cdi, clearing);
-+	else
-+		return 0;
- }
- 
- static int sr_block_revalidate_disk(struct gendisk *disk)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e65c62e..1756151 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -160,6 +160,7 @@ struct scsi_device {
- 	unsigned can_power_off:1; /* Device supports runtime power off */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
-+	unsigned event_driven:1; /* No need to poll the device */
- 
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
+-       if (qc->flags & AC_ERR_MEDIA)
++       if (qc->err_mask & AC_ERR_MEDIA)
+                return 0;       /* don't retry media errors */
+        if (qc->flags & ATA_QCFLAG_IO)
+                return 1;       /* otherwise retry anything from fs stack */
 -- 
-1.7.11.7
-
+1.7.1
