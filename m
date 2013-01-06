@@ -1,194 +1,57 @@
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Ask for help with "qc timeout" and "failed to read log page 10h"
-Date: Sun, 6 Jan 2013 09:59:24 +0100
-Message-ID: <CACna6rxYU3Gap30nVbi8bXpxHF2pToPUUd-ckg0-40kT0FR7VQ@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v11 9/9] libata: do not suspend port if normal ODD is
+ attached
+Date: Sun, 06 Jan 2013 18:34:36 +0400
+Message-ID: <50E98B7C.7030908@mvista.com>
+References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com> <1357440509-28108-10-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=089e01183fa6e0142804d29aed37
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:36278 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740Ab3AFI70 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2013 03:59:26 -0500
-Received: by mail-wg0-f48.google.com with SMTP id dt10so8492387wgb.15
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2013 00:59:24 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1357440509-28108-10-git-send-email-aaron.lu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
---089e01183fa6e0142804d29aed37
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Hello.
 
-I'm using old notebook (coming from about 2008) and recently
-experienced my first problem with the harddrive. There is one file I
-can not fully read. It's size is 4.4GB, but after copying 3.4GB I get
-that errors in dmesg and copying hangs.
+On 06-01-2013 6:48, Aaron Lu wrote:
 
-This is the only case where I experience this issue. As long as I
-don't touch that problematic file I don't see any problems/errors.
+> For ODDs, the upper layer will poll for media change every a few
+> seconds, which will make it enter and leave suspend state very
+> oftern. And as each suspend will also cause a hard/soft reset,
 
-Is this possible some part of the file was saved on a bad block of my
-hard drive? Can this mean some problem with the driver scanning for
-the bad blocks? Or could that be just an accident that block became a
-bad one after using it (when it was OK)?
+    s/oftern/often/
 
-EXT4-fs (sdb1): mounted filesystem with ordered data mode. Opts: (null)
-ata1.00: qc timeout (cmd 0x2f)
-ata1: failed to read log page 10h (errno=3D-5)
-ata1.00: exception Emask 0x1 SAct 0x3 SErr 0x0 action 0x6 frozen
-(... see dmesg.txt)
+> the gain of runtime suspend is very little while the ODD may
+> mis-function after constantly being reset. So the idle callback
+> here will not proceed to suspend if a non-ZPODD capable ODD is
+> attached to the port.
 
---=20
-Rafa=C5=82
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>   drivers/ata/libata-core.c | 19 +++++++++++++++++++
+>   1 file changed, 19 insertions(+)
 
---089e01183fa6e0142804d29aed37
-Content-Type: text/plain; charset=US-ASCII; name="lspci.txt"
-Content-Disposition: attachment; filename="lspci.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hbly8lov0
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 65a362e..f664a90 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5408,8 +5408,27 @@ static int ata_port_resume(struct device *dev)
+>   	return rc;
+>   }
+>
+> +/*
+> + * For ODDs, the upper layer will poll for media change every a few seconds,
+> + * which will make it enter and leave suspend state every a few seconds. And
 
-MDA6MDAuMCBIb3N0IGJyaWRnZSBbMDYwMF06IEludGVsIENvcnBvcmF0aW9uIE1vYmlsZSA0IFNl
-cmllcyBDaGlwc2V0IE1lbW9yeSBDb250cm9sbGVyIEh1YiBbODA4NjoyYTQwXSAocmV2IDA3KQow
-MDowMS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBJbnRlbCBDb3Jwb3JhdGlvbiBNb2JpbGUgNCBTZXJp
-ZXMgQ2hpcHNldCBQQ0kgRXhwcmVzcyBHcmFwaGljcyBQb3J0IFs4MDg2OjJhNDFdIChyZXYgMDcp
-CjAwOjFhLjAgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRlbCBDb3Jwb3JhdGlvbiA4MjgwMUkg
-KElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICM0IFs4MDg2OjI5MzddIChyZXYgMDMp
-CjAwOjFhLjEgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRlbCBDb3Jwb3JhdGlvbiA4MjgwMUkg
-KElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICM1IFs4MDg2OjI5MzhdIChyZXYgMDMp
-CjAwOjFhLjcgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRlbCBDb3Jwb3JhdGlvbiA4MjgwMUkg
-KElDSDkgRmFtaWx5KSBVU0IyIEVIQ0kgQ29udHJvbGxlciAjMiBbODA4NjoyOTNjXSAocmV2IDAz
-KQowMDoxYi4wIEF1ZGlvIGRldmljZSBbMDQwM106IEludGVsIENvcnBvcmF0aW9uIDgyODAxSSAo
-SUNIOSBGYW1pbHkpIEhEIEF1ZGlvIENvbnRyb2xsZXIgWzgwODY6MjkzZV0gKHJldiAwMykKMDA6
-MWMuMCBQQ0kgYnJpZGdlIFswNjA0XTogSW50ZWwgQ29ycG9yYXRpb24gODI4MDFJIChJQ0g5IEZh
-bWlseSkgUENJIEV4cHJlc3MgUG9ydCAxIFs4MDg2OjI5NDBdIChyZXYgMDMpCjAwOjFjLjEgUENJ
-IGJyaWRnZSBbMDYwNF06IEludGVsIENvcnBvcmF0aW9uIDgyODAxSSAoSUNIOSBGYW1pbHkpIFBD
-SSBFeHByZXNzIFBvcnQgMiBbODA4NjoyOTQyXSAocmV2IDAzKQowMDoxYy4zIFBDSSBicmlkZ2Ug
-WzA2MDRdOiBJbnRlbCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBQQ0kgRXhwcmVz
-cyBQb3J0IDQgWzgwODY6Mjk0Nl0gKHJldiAwMykKMDA6MWMuNCBQQ0kgYnJpZGdlIFswNjA0XTog
-SW50ZWwgQ29ycG9yYXRpb24gODI4MDFJIChJQ0g5IEZhbWlseSkgUENJIEV4cHJlc3MgUG9ydCA1
-IFs4MDg2OjI5NDhdIChyZXYgMDMpCjAwOjFkLjAgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRl
-bCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICMx
-IFs4MDg2OjI5MzRdIChyZXYgMDMpCjAwOjFkLjEgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRl
-bCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICMy
-IFs4MDg2OjI5MzVdIChyZXYgMDMpCjAwOjFkLjIgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRl
-bCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICMz
-IFs4MDg2OjI5MzZdIChyZXYgMDMpCjAwOjFkLjMgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRl
-bCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBVU0IgVUhDSSBDb250cm9sbGVyICM2
-IFs4MDg2OjI5MzldIChyZXYgMDMpCjAwOjFkLjcgVVNCIENvbnRyb2xsZXIgWzBjMDNdOiBJbnRl
-bCBDb3Jwb3JhdGlvbiA4MjgwMUkgKElDSDkgRmFtaWx5KSBVU0IyIEVIQ0kgQ29udHJvbGxlciAj
-MSBbODA4NjoyOTNhXSAocmV2IDAzKQowMDoxZS4wIFBDSSBicmlkZ2UgWzA2MDRdOiBJbnRlbCBD
-b3Jwb3JhdGlvbiA4MjgwMSBNb2JpbGUgUENJIEJyaWRnZSBbODA4NjoyNDQ4XSAocmV2IDkzKQow
-MDoxZi4wIElTQSBicmlkZ2UgWzA2MDFdOiBJbnRlbCBDb3Jwb3JhdGlvbiBJQ0g5TSBMUEMgSW50
-ZXJmYWNlIENvbnRyb2xsZXIgWzgwODY6MjkxOV0gKHJldiAwMykKMDA6MWYuMiBTQVRBIGNvbnRy
-b2xsZXIgWzAxMDZdOiBJbnRlbCBDb3Jwb3JhdGlvbiBJQ0g5TS9NLUUgU0FUQSBBSENJIENvbnRy
-b2xsZXIgWzgwODY6MjkyOV0gKHJldiAwMykKMDA6MWYuMyBTTUJ1cyBbMGMwNV06IEludGVsIENv
-cnBvcmF0aW9uIDgyODAxSSAoSUNIOSBGYW1pbHkpIFNNQnVzIENvbnRyb2xsZXIgWzgwODY6Mjkz
-MF0gKHJldiAwMykKMDE6MDAuMCBWR0EgY29tcGF0aWJsZSBjb250cm9sbGVyIFswMzAwXTogQVRJ
-IFRlY2hub2xvZ2llcyBJbmMgTW9iaWxpdHkgUmFkZW9uIEhEIDM0MDAgU2VyaWVzIFsxMDAyOjk1
-YzRdCjAxOjAwLjEgQXVkaW8gZGV2aWNlIFswNDAzXTogQVRJIFRlY2hub2xvZ2llcyBJbmMgUlY2
-MjAgQXVkaW8gZGV2aWNlIFtSYWRlb24gSEQgMzR4eCBTZXJpZXNdIFsxMDAyOmFhMjhdCjA2OjAw
-LjAgTmV0d29yayBjb250cm9sbGVyIFswMjgwXTogSW50ZWwgQ29ycG9yYXRpb24gV2lGaSBMaW5r
-IDUxMDAgWzgwODY6NDIzMl0KMDg6MDAuMCBFdGhlcm5ldCBjb250cm9sbGVyIFswMjAwXTogTWFy
-dmVsbCBUZWNobm9sb2d5IEdyb3VwIEx0ZC4gODhFODA1NSBQQ0ktRSBHaWdhYml0IEV0aGVybmV0
-IENvbnRyb2xsZXIgWzExYWI6NDM2M10gKHJldiAxMykKMGE6MDMuMCBGaXJlV2lyZSAoSUVFRSAx
-Mzk0KSBbMGMwMF06IFJpY29oIENvIEx0ZCBSNUM4MzIgSUVFRSAxMzk0IENvbnRyb2xsZXIgWzEx
-ODA6MDgzMl0gKHJldiAwNSkKMGE6MDMuMSBTRCBIb3N0IGNvbnRyb2xsZXIgWzA4MDVdOiBSaWNv
-aCBDbyBMdGQgUjVDODIyIFNEL1NESU8vTU1DL01TL01TUHJvIEhvc3QgQWRhcHRlciBbMTE4MDow
-ODIyXSAocmV2IDIyKQowYTowMy4yIFN5c3RlbSBwZXJpcGhlcmFsIFswODgwXTogUmljb2ggQ28g
-THRkIFI1QzU5MiBNZW1vcnkgU3RpY2sgQnVzIEhvc3QgQWRhcHRlciBbMTE4MDowNTkyXSAocmV2
-IDEyKQo=
---089e01183fa6e0142804d29aed37
-Content-Type: text/plain; charset=US-ASCII; name="dmesg.txt"
-Content-Disposition: attachment; filename="dmesg.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hbly8n8o1
+    Article is not needed before "few". (Same comment to the changelog.)
 
-WzIzOTUxMy44MjQ0OTldIEVYVDQtZnMgKHNkYjEpOiBtb3VudGVkIGZpbGVzeXN0ZW0gd2l0aCBv
-cmRlcmVkIGRhdGEgbW9kZS4gT3B0czogKG51bGwpCgpbMjQwODE4LjE3OTA1NF0gYXRhMS4wMDog
-cWMgdGltZW91dCAoY21kIDB4MmYpClsyNDA4MTguMTc5MDY5XSBhdGExOiBmYWlsZWQgdG8gcmVh
-ZCBsb2cgcGFnZSAxMGggKGVycm5vPS01KQpbMjQwODE4LjE3OTA3M10gYXRhMS4wMDogZXhjZXB0
-aW9uIEVtYXNrIDB4MSBTQWN0IDB4MyBTRXJyIDB4MCBhY3Rpb24gMHg2IGZyb3plbgpbMjQwODE4
-LjE3OTA3NV0gYXRhMS4wMDogaXJxX3N0YXQgMHg0MDAwMDAwOApbMjQwODE4LjE3OTA3OF0gYXRh
-MS4wMDogZmFpbGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEgUVVFVUVEClsyNDA4MTguMTc5MDg0XSBh
-dGExLjAwOiBjbWQgNjAvMDA6MDA6MWY6YmE6ZTIvMDI6MDA6MjI6MDA6MDAvNDAgdGFnIDAgbmNx
-IDI2MjE0NCBpbgpbMjQwODE4LjE3OTA4NF0gICAgICAgICAgcmVzIDQwLzAwOjA4OjFmOmI4OmUy
-LzAwOjAwOjIyOjAwOjAwLzQwIEVtYXNrIDB4MSAoZGV2aWNlIGVycm9yKQpbMjQwODE4LjE3OTA4
-Nl0gYXRhMS4wMDogc3RhdHVzOiB7IERSRFkgfQpbMjQwODE4LjE3OTA4OV0gYXRhMS4wMDogZmFp
-bGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEgUVVFVUVEClsyNDA4MTguMTc5MDkzXSBhdGExLjAwOiBj
-bWQgNjAvMDA6MDg6MWY6Yjg6ZTIvMDI6MDA6MjI6MDA6MDAvNDAgdGFnIDEgbmNxIDI2MjE0NCBp
-bgpbMjQwODE4LjE3OTA5M10gICAgICAgICAgcmVzIDQwLzAwOjA4OjFmOmI4OmUyLzAwOjAwOjIy
-OjAwOjAwLzQwIEVtYXNrIDB4MSAoZGV2aWNlIGVycm9yKQpbMjQwODE4LjE3OTA5Nl0gYXRhMS4w
-MDogc3RhdHVzOiB7IERSRFkgfQpbMjQwODE4LjE3OTEwMV0gYXRhMTogaGFyZCByZXNldHRpbmcg
-bGluawpbMjQwODE4LjQ4NTEyNF0gYXRhMTogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVz
-IDExMyBTQ29udHJvbCAzMDApClsyNDA4MTguNDg1NjkyXSBhdGExLjAwOiBBQ1BJIGNtZCBmNS8w
-MDowMDowMDowMDowMDphMCAoU0VDVVJJVFkgRlJFRVpFIExPQ0spIGZpbHRlcmVkIG91dApbMjQw
-ODE4LjQ4NjYxMV0gYXRhMS4wMDogQUNQSSBjbWQgZjUvMDA6MDA6MDA6MDA6MDA6YTAgKFNFQ1VS
-SVRZIEZSRUVaRSBMT0NLKSBmaWx0ZXJlZCBvdXQKWzI0MDgxOC40ODY4NTJdIGF0YTEuMDA6IGNv
-bmZpZ3VyZWQgZm9yIFVETUEvMTAwClsyNDA4MTguNDk3MDgwXSBzZCAwOjA6MDowOiBbc2RhXQpb
-MjQwODE4LjQ5NzA4M10gUmVzdWx0OiBob3N0Ynl0ZT1ESURfT0sgZHJpdmVyYnl0ZT1EUklWRVJf
-U0VOU0UKWzI0MDgxOC40OTcwODZdIHNkIDA6MDowOjA6IFtzZGFdClsyNDA4MTguNDk3MDg3XSBT
-ZW5zZSBLZXkgOiBBYm9ydGVkIENvbW1hbmQgW2N1cnJlbnRdIFtkZXNjcmlwdG9yXQpbMjQwODE4
-LjQ5NzA5MV0gRGVzY3JpcHRvciBzZW5zZSBkYXRhIHdpdGggc2Vuc2UgZGVzY3JpcHRvcnMgKGlu
-IGhleCk6ClsyNDA4MTguNDk3MDkzXSAgICAgICAgIDcyIDBiIDAwIDAwIDAwIDAwIDAwIDBjIDAw
-IDBhIDgwIDAwIDAwIDAwIDAwIDAwClsyNDA4MTguNDk3MTAyXSAgICAgICAgIDIyIGUyIGI4IDFm
-ClsyNDA4MTguNDk3MTA3XSBzZCAwOjA6MDowOiBbc2RhXQpbMjQwODE4LjQ5NzEwOV0gQWRkLiBT
-ZW5zZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbgpbMjQwODE4LjQ5NzExMl0gc2Qg
-MDowOjA6MDogW3NkYV0gQ0RCOgpbMjQwODE4LjQ5NzExM10gUmVhZCgxMCk6IDI4IDAwIDIyIGUy
-IGJhIDFmIDAwIDAyIDAwIDAwClsyNDA4MTguNDk3MTIyXSBlbmRfcmVxdWVzdDogSS9PIGVycm9y
-LCBkZXYgc2RhLCBzZWN0b3IgNTg1Mjg0MTI3ClsyNDA4MTguNDk3MTUwXSBzZCAwOjA6MDowOiBb
-c2RhXQpbMjQwODE4LjQ5NzE1Ml0gUmVzdWx0OiBob3N0Ynl0ZT1ESURfT0sgZHJpdmVyYnl0ZT1E
-UklWRVJfU0VOU0UKWzI0MDgxOC40OTcxNTRdIHNkIDA6MDowOjA6IFtzZGFdClsyNDA4MTguNDk3
-MTU1XSBTZW5zZSBLZXkgOiBBYm9ydGVkIENvbW1hbmQgW2N1cnJlbnRdIFtkZXNjcmlwdG9yXQpb
-MjQwODE4LjQ5NzE1OF0gRGVzY3JpcHRvciBzZW5zZSBkYXRhIHdpdGggc2Vuc2UgZGVzY3JpcHRv
-cnMgKGluIGhleCk6ClsyNDA4MTguNDk3MTU5XSAgICAgICAgIDcyIDBiIDAwIDAwIDAwIDAwIDAw
-IDBjIDAwIDBhIDgwIDAwIDAwIDAwIDAwIDAwClsyNDA4MTguNDk3MTY5XSAgICAgICAgIDIyIGUy
-IGI4IDFmClsyNDA4MTguNDk3MTczXSBzZCAwOjA6MDowOiBbc2RhXQpbMjQwODE4LjQ5NzE3NV0g
-QWRkLiBTZW5zZTogTm8gYWRkaXRpb25hbCBzZW5zZSBpbmZvcm1hdGlvbgpbMjQwODE4LjQ5NzE3
-OF0gc2QgMDowOjA6MDogW3NkYV0gQ0RCOgpbMjQwODE4LjQ5NzE3OV0gUmVhZCgxMCk6IDI4IDAw
-IDIyIGUyIGI4IDFmIDAwIDAyIDAwIDAwClsyNDA4MTguNDk3MTg3XSBlbmRfcmVxdWVzdDogSS9P
-IGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgNTg1MjgzNjE1ClsyNDA4MTguNDk3MjEwXSBhdGExOiBF
-SCBjb21wbGV0ZQoKWzI0MDgyNC41NTQzMDRdIGF0YTEuMDA6IGV4Y2VwdGlvbiBFbWFzayAweDAg
-U0FjdCAweDMgU0VyciAweDAgYWN0aW9uIDB4MApbMjQwODI0LjU1NDMwOF0gYXRhMS4wMDogaXJx
-X3N0YXQgMHg0MDAwMDAwOApbMjQwODI0LjU1NDMxMV0gYXRhMS4wMDogZmFpbGVkIGNvbW1hbmQ6
-IFJFQUQgRlBETUEgUVVFVUVEClsyNDA4MjQuNTU0MzE3XSBhdGExLjAwOiBjbWQgNjAvMDg6MDA6
-Y2Y6Yjg6ZTIvMDA6MDA6MjI6MDA6MDAvNDAgdGFnIDAgbmNxIDQwOTYgaW4KWzI0MDgyNC41NTQz
-MTddICAgICAgICAgIHJlcyA0MS80MDowODowZDo3ODo1Mi8wMDowMDowMzowMDowMC80MCBFbWFz
-ayAweDQwOSAobWVkaWEgZXJyb3IpIDxGPgpbMjQwODI0LjU1NDMyMF0gYXRhMS4wMDogc3RhdHVz
-OiB7IERSRFkgRVJSIH0KWzI0MDgyNC41NTQzMjFdIGF0YTEuMDA6IGVycm9yOiB7IFVOQyB9Clsy
-NDA4MjQuNTU2NDY4XSBhdGExLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMApbMjQwODI0LjU1
-NjQ4MV0gc2QgMDowOjA6MDogW3NkYV0gVW5oYW5kbGVkIHNlbnNlIGNvZGUKWzI0MDgyNC41NTY0
-ODNdIHNkIDA6MDowOjA6IFtzZGFdICAKWzI0MDgyNC41NTY0ODVdIFJlc3VsdDogaG9zdGJ5dGU9
-RElEX09LIGRyaXZlcmJ5dGU9RFJJVkVSX1NFTlNFClsyNDA4MjQuNTU2NDg3XSBzZCAwOjA6MDow
-OiBbc2RhXSAgClsyNDA4MjQuNTU2NDg5XSBTZW5zZSBLZXkgOiBNZWRpdW0gRXJyb3IgW2N1cnJl
-bnRdIFtkZXNjcmlwdG9yXQpbMjQwODI0LjU1NjQ5Ml0gRGVzY3JpcHRvciBzZW5zZSBkYXRhIHdp
-dGggc2Vuc2UgZGVzY3JpcHRvcnMgKGluIGhleCk6ClsyNDA4MjQuNTU2NDk0XSAgICAgICAgIDcy
-IDAzIDExIDA0IDAwIDAwIDAwIDBjIDAwIDBhIDgwIDAwIDAwIDAwIDAwIDAwIApbMjQwODI0LjU1
-NjUwNF0gICAgICAgICAwMyA1MiA3OCAwZCAKWzI0MDgyNC41NTY1MDhdIHNkIDA6MDowOjA6IFtz
-ZGFdICAKWzI0MDgyNC41NTY1MTFdIEFkZC4gU2Vuc2U6IFVucmVjb3ZlcmVkIHJlYWQgZXJyb3Ig
-LSBhdXRvIHJlYWxsb2NhdGUgZmFpbGVkClsyNDA4MjQuNTU2NTE0XSBzZCAwOjA6MDowOiBbc2Rh
-XSBDREI6IApbMjQwODI0LjU1NjUxNl0gUmVhZCgxMCk6IDI4IDAwIDIyIGUyIGI4IGNmIDAwIDAw
-IDA4IDAwClsyNDA4MjQuNTU2NTI1XSBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RhLCBz
-ZWN0b3IgNTg1MjgzNzkxClsyNDA4MjQuNTU2NTQ1XSBhdGExOiBFSCBjb21wbGV0ZQpbMjQwODMw
-LjYxNzk4NV0gYXRhMS4wMDogZXhjZXB0aW9uIEVtYXNrIDB4MCBTQWN0IDB4NDAgU0VyciAweDAg
-YWN0aW9uIDB4MApbMjQwODMwLjYxNzk4OV0gYXRhMS4wMDogaXJxX3N0YXQgMHg0MDAwMDAwOApb
-MjQwODMwLjYxNzk5Ml0gYXRhMS4wMDogZmFpbGVkIGNvbW1hbmQ6IFJFQUQgRlBETUEgUVVFVUVE
-ClsyNDA4MzAuNjE3OTk4XSBhdGExLjAwOiBjbWQgNjAvMDg6MzA6Y2Y6Yjg6ZTIvMDA6MDA6MjI6
-MDA6MDAvNDAgdGFnIDYgbmNxIDQwOTYgaW4KWzI0MDgzMC42MTc5OThdICAgICAgICAgIHJlcyA0
-MS80MDozMDpjZjpiODplMi8wMDowMDoyMjowMDowMC80MCBFbWFzayAweDQwOSAobWVkaWEgZXJy
-b3IpIDxGPgpbMjQwODMwLjYxODAxNV0gYXRhMS4wMDogc3RhdHVzOiB7IERSRFkgRVJSIH0KWzI0
-MDgzMC42MTgwMTddIGF0YTEuMDA6IGVycm9yOiB7IFVOQyB9ClsyNDA4MzAuNjIwMDM1XSBhdGEx
-LjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMApbMjQwODMwLjYyMDA1M10gc2QgMDowOjA6MDog
-W3NkYV0gVW5oYW5kbGVkIHNlbnNlIGNvZGUKWzI0MDgzMC42MjAwNTZdIHNkIDA6MDowOjA6IFtz
-ZGFdICAKWzI0MDgzMC42MjAwNThdIFJlc3VsdDogaG9zdGJ5dGU9RElEX09LIGRyaXZlcmJ5dGU9
-RFJJVkVSX1NFTlNFClsyNDA4MzAuNjIwMDYwXSBzZCAwOjA6MDowOiBbc2RhXSAgClsyNDA4MzAu
-NjIwMDYxXSBTZW5zZSBLZXkgOiBNZWRpdW0gRXJyb3IgW2N1cnJlbnRdIFtkZXNjcmlwdG9yXQpb
-MjQwODMwLjYyMDA2NV0gRGVzY3JpcHRvciBzZW5zZSBkYXRhIHdpdGggc2Vuc2UgZGVzY3JpcHRv
-cnMgKGluIGhleCk6ClsyNDA4MzAuNjIwMDY3XSAgICAgICAgIDcyIDAzIDExIDA0IDAwIDAwIDAw
-IDBjIDAwIDBhIDgwIDAwIDAwIDAwIDAwIDAwIApbMjQwODMwLjYyMDA3N10gICAgICAgICAyMiBl
-MiBiOCBjZiAKWzI0MDgzMC42MjAwODFdIHNkIDA6MDowOjA6IFtzZGFdICAKWzI0MDgzMC42MjAw
-ODVdIEFkZC4gU2Vuc2U6IFVucmVjb3ZlcmVkIHJlYWQgZXJyb3IgLSBhdXRvIHJlYWxsb2NhdGUg
-ZmFpbGVkClsyNDA4MzAuNjIwMDg4XSBzZCAwOjA6MDowOiBbc2RhXSBDREI6IApbMjQwODMwLjYy
-MDA4OV0gUmVhZCgxMCk6IDI4IDAwIDIyIGUyIGI4IGNmIDAwIDAwIDA4IDAwClsyNDA4MzAuNjIw
-MDk4XSBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgNTg1MjgzNzkxClsy
-NDA4MzAuNjIwMTIyXSBhdGExOiBFSCBjb21wbGV0ZQo=
---089e01183fa6e0142804d29aed37--
+> + * as each suspend will cause a hard/soft reset, the gain of runtime suspend
+> + * is very little and the ODD may mis-function after constantly being reset.
+
+    s/mis-function/malfunction/ perhaps? (Same in the changelog.)
+
+MBR, Sergei
+
