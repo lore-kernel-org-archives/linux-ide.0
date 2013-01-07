@@ -1,49 +1,110 @@
 From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: Ask for help with "qc timeout" and "failed to read log page 10h"
-Date: Sun, 06 Jan 2013 22:02:31 -0600
-Message-ID: <50EA48D7.7000606@gmail.com>
-References: <CACna6rxYU3Gap30nVbi8bXpxHF2pToPUUd-ckg0-40kT0FR7VQ@mail.gmail.com>
+Subject: Re: Possible corruption over AHCI
+Date: Sun, 06 Jan 2013 22:08:50 -0600
+Message-ID: <50EA4A52.2030800@gmail.com>
+References: <alpine.LNX.2.00.1301031441140.19998@winds.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:45126 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753511Ab3AGECf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2013 23:02:35 -0500
-Received: by mail-ie0-f169.google.com with SMTP id c14so23053457ieb.28
-        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2013 20:02:34 -0800 (PST)
-In-Reply-To: <CACna6rxYU3Gap30nVbi8bXpxHF2pToPUUd-ckg0-40kT0FR7VQ@mail.gmail.com>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:47714 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab3AGEIw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jan 2013 23:08:52 -0500
+Received: by mail-ie0-f174.google.com with SMTP id c11so22741702ieb.33
+        for <linux-ide@vger.kernel.org>; Sun, 06 Jan 2013 20:08:52 -0800 (PST)
+In-Reply-To: <alpine.LNX.2.00.1301031441140.19998@winds.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Byron Stanoszek <bstanoszek@comtime.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-On 01/06/2013 02:59 AM, Rafa=C5=82 Mi=C5=82ecki wrote:
-> I'm using old notebook (coming from about 2008) and recently
-> experienced my first problem with the harddrive. There is one file I
-> can not fully read. It's size is 4.4GB, but after copying 3.4GB I get
-> that errors in dmesg and copying hangs.
+On 01/03/2013 02:45 PM, Byron Stanoszek wrote:
+> Hi Jeff, all,
 >
-> This is the only case where I experience this issue. As long as I
-> don't touch that problematic file I don't see any problems/errors.
+> I'm having a data corruption issue while storing data to a specific type of
+> Compact Flash card connected over AHCI. It seems that when two (or more)
+> processes are writing to disk at the same time, and a sync() happens, every
+> once in a while some data from one process's file writes will appear in
+> place
+> of data in the other file.
 >
-> Is this possible some part of the file was saved on a bad block of my
-> hard drive? Can this mean some problem with the driver scanning for
-> the bad blocks? Or could that be just an accident that block became a
-> bad one after using it (when it was OK)?
+> Here are the specifics of my hardware:
 >
-> EXT4-fs (sdb1): mounted filesystem with ordered data mode. Opts: (nul=
-l)
-> ata1.00: qc timeout (cmd 0x2f)
-> ata1: failed to read log page 10h (errno=3D-5)
-> ata1.00: exception Emask 0x1 SAct 0x3 SErr 0x0 action 0x6 frozen
-> (... see dmesg.txt)
+> I'm using the built-in CF card slot on a Siemens 627C Industrial PC,
+> which is
+> connected to the motherboard via an AHCI chipset. The CF card is
+> bootable. The
+> BIOS is configured to use "RAID" mode ("Enhanced" or "AHCI" mode will
+> not boot
+> the CF card).
 >
+> AHCI chipset in use:
+> 00:1f.2 0104: 8086:282a (rev 05)
+> 00:1f.2 RAID bus controller: Intel Corporation 82801 Mobile SATA
+> Controller [RAID mode] (rev 05)
+>
+> CF card with the problem:  SanDisk Ultra 8GB   (model SDCFH-008G)
+> CF card that always works: SanDisk Extreme 8GB (model SDCFX-008G)
+>
+> Filesystem: ReiserFS
+>
+> Kernels tested to show symptoms: 3.0.14, 3.4.11, 3.7.1
+>
+> I can get the problem to reproduce almost 50% of the time by having a
+> program
+> drop a 50MB core dump in the background (over and over again) to the disk,
+> while in the meantime I rsync over a 190MB gzipped file over to the disk
+> from a
+> remote PC. After that, I "sync", and then I clear the kernel's clean cache
+> using "echo 1 > /proc/sys/vm/drop_caches".
+>
+> 50% of the time, rereading the gzipped file will show one or more 4K
+> chunks of
+> data from the core dump (or other process writing to disk) come out in
+> random
+> locations in the file, compared to what the file showed before clearing the
+> cache. In other words, after the write and sync is complete, the cached
+> file in
+> Linux memory shows correct, but the copy stored on disk is wrong.
+>
+> I've reproduced the problem on several 627C PCs and Ultra cards now. If
+> I use
+> the same Ultra card on any other type of PC (using ata_piix or pata_jmicron
+> drivers, since the Siemens PC is the only system I have with an AHCI
+> chipset),
+> it works fine. If I use an Extreme card instead on the Siemens PC, it works
+> fine (even after 1000 transfers).
+>
+> I tried mounting and recreating the ReiserFS using the "notail" option,
+> still
+> same problem.
+>
+> I tried limiting the disk to use UDMA/33 or PIO4 mode, still same
+> problem. (The
+> Ultra disk normally comes up as UDMA/66, and the Extreme disk normally
+> comes up
+> as UDMA/100).
+>
+> I verified NCQ is not being used.
+>
+> Assuming this is a problem in the AHCI driver for the moment, what other
+> options can I tweak to try to narrow down the problem? Are there any
+> relevant
+> AHCI features I can turn on/off by changing the source?
+>
+> I've attached the dmesg & lspci of the Siemens PC.
+>
+> Thanks and best regards,
+>   -Byron
 
- From the dmesg output (specifically the UNC bit) it looks like the=20
-drive is reporting it is unable to read a number of sectors. I would=20
-back up all important data possible from it and replace it ASAP.
+My first inclination is that this isn't very likely to be a problem in 
+the AHCI driver. It's the most widely used storage driver on modern PCs 
+so it seems unlikely that this sort of problem would show up there at 
+this point.
 
-Not sure what you mean by "the driver scanning for the bad blocks".
+I assume there's some kind of SATA to PATA bridge involved in the chain 
+(likely on the motherboard). It's possible that some combination of 
+timing changes between the cards, the controller operating mode and/or 
+the different host controller causes a bug to occur in either the CF 
+card or the bridge chip.
