@@ -1,76 +1,45 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: ata1: COMRESET failed
-Date: Mon, 7 Jan 2013 18:24:25 +0100
-Message-ID: <20130107172425.GD5954@liondog.tnic>
-References: <508A7A8A.7030908@suse.cz>
- <50BC8A1C.8070805@suse.cz>
- <20121203115734.GA32243@liondog.tnic>
+From: "D. Hugh Redelmeier" <hugh@mimosa.com>
+Subject: bitrot on wiki [was Re: HP Compaq 2710p notebook suffers too many
+ head unloads]
+Date: Mon, 7 Jan 2013 12:29:16 -0500 (EST)
+Message-ID: <alpine.LRH.2.02.1301071219360.8843@redclaw.mimosa.com>
+References: <alpine.LRH.2.02.1301020002520.1546@redclaw.mimosa.com>
+Reply-To: "D. Hugh Redelmeier" <hugh@mimosa.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:59617 "EHLO mail.skyhub.de"
+Received: from gw-d.mimosa.com ([209.161.207.149]:60574 "EHLO gw-d.mimosa.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751180Ab3AGRY2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Jan 2013 12:24:28 -0500
-Content-Disposition: inline
-In-Reply-To: <20121203115734.GA32243@liondog.tnic>
+	id S1751228Ab3AGR3U (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jan 2013 12:29:20 -0500
+Received: from gw-c.mimosa.com (reddoor.mimosa.com [192.139.70.80])
+	by gw-d.mimosa.com (8.12.8/8.12.8) with ESMTP id r07HTHh4018814
+	for <linux-ide@vger.kernel.org>; Mon, 7 Jan 2013 12:29:17 -0500
+Received: from redclaw.mimosa.com (redclaw.mimosa.com. [192.139.70.88])
+	by gw-c.mimosa.com (8.12.8/8.12.8) with ESMTP id r07HTHSO010743
+	for <linux-ide@vger.kernel.org>; Mon, 7 Jan 2013 12:29:17 -0500
+In-Reply-To: <alpine.LRH.2.02.1301020002520.1546@redclaw.mimosa.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Shane Huang <Shane.Huang@amd.com>
-Cc: Jiri Slaby <jslaby@suse.cz>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
 
-Adding some more people.
+| From: D. Hugh Redelmeier <hugh@mimosa.com>
+| Date: Wed, 2 Jan 2013 00:50:40 -0500 (EST)
 
-Aaron, Shane, do you guys have any ideas? I've been seeing something
-similar on an AMD desktop box recently and Jiri sees it on a laptop with
-an SSD.
+| The head unloading problem is as described here:
+| <https://ata.wiki.kernel.org/index.php/Known_issues#Drives_which_perform_frequent_head_unloads_under_Linux>
+| 
+| I am intending that this report contributes to that table.
+| (Aside: many of the links in that table are broken.)
 
-Here's Jiri's original mail with more info: http://lkml.org/lkml/2012/10/26/208
+I've added a row for my system.
 
-Thanks.
+After the table, there is a section of sorage-fixup.  The links are
+all broken.  This leaves us with no suggested work-around.
+I've added a note for the crude work-around that I implemented.
 
-On Mon, Dec 03, 2012 at 12:57:34PM +0100, Borislav Petkov wrote:
-> On Mon, Dec 03, 2012 at 12:16:44PM +0100, Jiri Slaby wrote:
-> > On 10/26/2012 01:56 PM, Jiri Slaby wrote:
-> > > Hello,
-> > > 
-> > > at every boot I'm seeing:
-> > > 
-> > > At 5th second:
-> > > ata1: link is slow to respond, please be patient (ready=0)
-> > > 
-> > > At 10th second:
-> > > ata1: COMRESET failed (errno=-16)
-> > > ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> > > ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > > ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > > ata1.00: ATA-7: INTEL SSDSA2M080G2GC, 2CV102HD, max UDMA/133
-> > > ata1.00: 156301488 sectors, multi 16: LBA48 NCQ (depth 31/32)
-> > > ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
-> > > ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
-> > > ata1.00: configured for UDMA/133
-> > > scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSA2M080 2CV1 PQ: 0 ANSI: 5
-> > > 
-> > > 
-> > > So that I have to wait 5 s for the disk to come up. I tried 3.4.15 and
-> > > 3.6.3, both with the same result.
-> > > 
-> > > 00:1f.2 SATA controller [0106]: Intel Corporation 7 Series Chipset
-> > > Family 6-port SATA Controller [AHCI mode] [8086:1e03] (rev 04)
-> > > 
-> > > Any ideas what is going on?
-> > 
-> > Anybody? I also tried 3.0, it's there too. And libahci.skip_host_reset=1
-> > works around the issue.
-> 
-> FWIW, I had the same issue on an AMD chipset at the old job. It needs to
-> reset SATA link for some reason, probably BIOS programs it wrongly...
-> 
-> + Alan.
+It would be good if someone could fix the links.
 
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Wouldn't it be nice if the utility formerly known as Palimpsest and
+other S.M.A.R.T. monitoring systems would monitor and warn of this
+silent killer?
