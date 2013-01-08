@@ -1,43 +1,86 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ATA controllers giveaway!
-Date: Tue, 8 Jan 2013 10:21:34 -0800
-Message-ID: <20130108182134.GD3926@htj.dyndns.org>
-References: <20130107155728.GD3926@htj.dyndns.org>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH] Allow Marvell SATA driver to work with
+ LEDS_TRIGGER_IDE_DISK
+Date: Tue, 8 Jan 2013 14:06:58 -0500
+Message-ID: <20130108190657.GW5075@titan.lakedaemon.net>
+References: <1357668987-3610-1-git-send-email-josh.coombs@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:62259 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756589Ab3AHSVl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 13:21:41 -0500
-Received: by mail-pb0-f43.google.com with SMTP id um15so398265pbc.30
-        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2013 10:21:40 -0800 (PST)
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:21540 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756641Ab3AHTHJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 14:07:09 -0500
 Content-Disposition: inline
-In-Reply-To: <20130107155728.GD3926@htj.dyndns.org>
+In-Reply-To: <1357668987-3610-1-git-send-email-josh.coombs@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, CAI Qian <caiqian@redhat.com>
-Cc: Alan Cox <alan@linux.intel.com>, Mark Lord <mlord@pobox.com>, showlu@jmicron.com, arislee@jmicron.com, Mikhail.Amchislavsky@siliconimage.com
+To: Joshua Coombs <josh.coombs@gmail.com>
+Cc: cooloney@gmail.com, rpurdie@rpsys.net, linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Mon, Jan 07, 2013 at 07:57:28AM -0800, Tejun Heo wrote:
-> It has been quite a while since I did anything useful with my
-> collection of [PS]ATA controllers and devices.  Four / five years
-> back, I had a pretty good libata test coverage with this set.
+On Tue, Jan 08, 2013 at 01:16:27PM -0500, Joshua Coombs wrote:
+> Add a call to the IDE LED Trigger within the Marvell SATA driver to allow
+> Marvell SoC devices to show SATA activity via GPIO connected LEDs.
 > 
-> I'm hoping to find a better home for these devices.  We have a lot of
-> code related to these controllers and most of them will be around for
-> a long time, so it would be great if these are in the right hands.  If
-> you think you're the right person, please let me know.  I'll pack and
-> send them your way.
+> Signed-off-by: Joshua Coombs <josh.coombs@gmail.com>
+> ---
+>  drivers/ata/sata_mv.c | 3 +++
+>  drivers/leds/Kconfig  | 3 +--
+>  2 files changed, 4 insertions(+), 2 deletions(-)
 > 
-> I bought some of them.  Alan and Mark sent me some.  There are also
-> dev samples from JMicron and Silicon Image.  If anyone objects, please
-> let me know.  I'll keep the specific devices.
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 68f4fb5..4aaf6f0 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -71,6 +71,7 @@
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_device.h>
+>  #include <linux/libata.h>
+> +#include <linux/leds.h>
+>  
+>  #define DRV_NAME	"sata_mv"
+>  #define DRV_VERSION	"1.28"
+> @@ -1156,6 +1157,8 @@ static void mv_start_edma(struct ata_port *ap, void __iomem *port_mmio,
+>  {
+>  	int want_ncq = (protocol == ATA_PROT_NCQ);
+>  
+> +	ledtrig_ide_activity();
+> +
+>  	if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
+>  		int using_ncq = ((pp->pp_flags & MV_PP_FLAG_NCQ_EN) != 0);
+>  		if (want_ncq != using_ncq)
+> diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+> index b58bc8a..d2071d0 100644
+> --- a/drivers/leds/Kconfig
+> +++ b/drivers/leds/Kconfig
+> @@ -496,10 +496,9 @@ config LEDS_TRIGGER_ONESHOT
+>  
+>  config LEDS_TRIGGER_IDE_DISK
+>  	bool "LED IDE Disk Trigger"
+> -	depends on IDE_GD_ATA
+>  	depends on LEDS_TRIGGERS
+>  	help
+> -	  This allows LEDs to be controlled by IDE disk activity.
+> +	  This allows LEDs to be controlled by IDE or SATA disk activity.
+>  	  If unsure, say Y.
+>  
+>  config LEDS_TRIGGER_HEARTBEAT
 
-CAI, who's leading an upstream kernel storage testing effort, is
-taking them.
 
-Thanks.
+Hmmm, I'm not sure about this.  Ideally, wouldn't all sata users want to
+have this option?  In which case, it should be changed to
+LEDS_TRIGGER_DISK_IO or similar.  However, this seems to be the first
+attempt at it:
 
--- 
-tejun
+$ git grep ledtrig_ide_activity -- drivers/ata/*.c
+...nada...
+$ 
+
+At any rate, I'd like to see this patch extended to facilitate other
+sata drivers using it.  eg adjusting the naming more appropriately, and
+'depends on IDE_GD_ATA || ATA' or similar.  In it's current state, it
+should depend on IDE_GD_ATA || SATA_MV.
+
+thx,
+
+Jason.
