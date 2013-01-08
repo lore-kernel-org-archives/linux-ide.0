@@ -1,79 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 3/9] libata: identify and init ZPODD devices
-Date: Tue, 8 Jan 2013 09:52:02 -0800
-Message-ID: <20130108175202.GZ3926@htj.dyndns.org>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
- <1357440509-28108-4-git-send-email-aaron.lu@intel.com>
- <20130107182052.GP3926@htj.dyndns.org>
- <50EBE1E2.5080406@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <50EBE1E2.5080406@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Joshua Coombs <josh.coombs@gmail.com>
+Subject: [PATCH] Allow Marvell SATA driver to work with LEDS_TRIGGER_IDE_DISK
+Date: Tue,  8 Jan 2013 13:16:27 -0500
+Message-ID: <1357668987-3610-1-git-send-email-josh.coombs@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:13760 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab3AHSQf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 13:16:35 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: cooloney@gmail.com, rpurdie@rpsys.net, linux-leds@vger.kernel.org, linux-kernel@vger.kernel.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Joshua Coombs <josh.coombs@gmail.com>
 
-Hello, Aaron.
+Add a call to the IDE LED Trigger within the Marvell SATA driver to allow
+Marvell SoC devices to show SATA activity via GPIO connected LEDs.
 
-On Tue, Jan 08, 2013 at 05:07:46PM +0800, Aaron Lu wrote:
-> >> +struct zpodd {
-> >> +	bool slot:1;
-> >> +	bool drawer:1;
-> >> +
-> >> +	struct ata_device *dev;
-> >> +};
-> > 
-> > Field names are usually indented.  It would be nice to have a comment
-> 
-> checkscript.sh doesn't seem like this if I put a tab around the ':'
-> 
-> ERROR: spaces prohibited around that ':' (ctx:VxW)
-> #222: FILE: include/uapi/linux/cdrom.h:915:
-> +	__u8 reserved1:		2;
->  	              ^
-> 
-> Which style should I follow?
+Signed-off-by: Joshua Coombs <josh.coombs@gmail.com>
+---
+ drivers/ata/sata_mv.c | 3 +++
+ drivers/leds/Kconfig  | 3 +--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-struct zpodd {
-	bool			slot:1;
-	bool			drawer:1;
-
-	struct ata_device	*dev;
-};
-
-> > explaining synchronization.  Bitfields w/ their implicit RMW ops tend
-> > to make people wonder about what the access rules are.
-> 
-> The slot and drawer bit field is assigned only once during ata probe
-> time in EH context, and accessed later in PM's callback context.
-> Not sure what access rule should I describe...
-
-/* init during probe, RO afterwards */ should do but I'd prefer if you
-stay away from bitfields altogether.  There are cases where bitfields
-are okay but when you're working across multiple locking domains, it
-usually is a bad idea because the code which accesses those fields
-look completely independent while still being able to interact with
-each other.  They look properly synchronized until you realized they
-live on the same machine word.
-
-> >> +/*
-> >> + * Per the spec, only slot type and drawer type ODD can be supported
-> >> + *
-> >> + * Return 0 for slot type, 1 for drawer, -ENODEV for other types or on error.
-> >> + */
-> > 
-> > Maybe bool odd_has_drawer() is better?
-> 
-> There are other types of ODD other than slot and drawer, and both slot
-> and drawer type ODDs can be supported for ZPODD. So a bool can't convey
-> such information :-)
-
-Then please make it a proper ATA enum and use it in struct zpodd too.
-
-Thanks!
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 68f4fb5..4aaf6f0 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -71,6 +71,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+ #include <linux/libata.h>
++#include <linux/leds.h>
+ 
+ #define DRV_NAME	"sata_mv"
+ #define DRV_VERSION	"1.28"
+@@ -1156,6 +1157,8 @@ static void mv_start_edma(struct ata_port *ap, void __iomem *port_mmio,
+ {
+ 	int want_ncq = (protocol == ATA_PROT_NCQ);
+ 
++	ledtrig_ide_activity();
++
+ 	if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
+ 		int using_ncq = ((pp->pp_flags & MV_PP_FLAG_NCQ_EN) != 0);
+ 		if (want_ncq != using_ncq)
+diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+index b58bc8a..d2071d0 100644
+--- a/drivers/leds/Kconfig
++++ b/drivers/leds/Kconfig
+@@ -496,10 +496,9 @@ config LEDS_TRIGGER_ONESHOT
+ 
+ config LEDS_TRIGGER_IDE_DISK
+ 	bool "LED IDE Disk Trigger"
+-	depends on IDE_GD_ATA
+ 	depends on LEDS_TRIGGERS
+ 	help
+-	  This allows LEDs to be controlled by IDE disk activity.
++	  This allows LEDs to be controlled by IDE or SATA disk activity.
+ 	  If unsure, say Y.
+ 
+ config LEDS_TRIGGER_HEARTBEAT
 -- 
-tejun
+1.8.0.2
+
