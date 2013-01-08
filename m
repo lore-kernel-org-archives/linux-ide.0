@@ -1,32 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 0/9] ZPODD Patches
-Date: Mon, 7 Jan 2013 10:49:28 -0800
-Message-ID: <20130107184928.GV3926@htj.dyndns.org>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: ata1: COMRESET failed
+Date: Tue, 08 Jan 2013 09:31:54 +0800
+Message-ID: <50EB770A.4090302@intel.com>
+References: <508A7A8A.7030908@suse.cz> <50BC8A1C.8070805@suse.cz> <20121203115734.GA32243@liondog.tnic> <20130107172425.GD5954@liondog.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1357440509-28108-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:9046 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752724Ab3AHBbQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Jan 2013 20:31:16 -0500
+In-Reply-To: <20130107172425.GD5954@liondog.tnic>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>, Jiri Slaby <jslaby@suse.cz>
+Cc: Shane Huang <Shane.Huang@amd.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Hello, Aaron.
+On 01/08/2013 01:24 AM, Borislav Petkov wrote:
+> Adding some more people.
+> 
+> Aaron, Shane, do you guys have any ideas? I've been seeing something
+> similar on an AMD desktop box recently and Jiri sees it on a laptop with
+> an SSD.
 
-On Sun, Jan 06, 2013 at 10:48:20AM +0800, Aaron Lu wrote:
-> v11:
-> Introduce event_driven flag in scsi_device to silence the media event
-> poll after ODD is powered off;
-> Removed ata layer PM QOS control, instead, simply limit ACPI state to
-> D3_HOT when choosing state;
-> Make the power off delay a module param named zpodd_poweroff_delay,
-> defaults to 30 seconds.
+I've seen a similar problem on a bug report recently for a Crucial SSD,
+and upgrading the disk's firmware fixed the problem:
+https://bugzilla.kernel.org/show_bug.cgi?id=49701
 
-Other than the nitpicks.  The series generally looks good to me.
+If the controller has problem, it should have problems for all kinds of
+disks attached to it. So possible to test with other disks, Jiri?
 
-Thanks a lot!
+Hope this helps.
 
--- 
-tejun
+-Aaron
+
+> 
+> Here's Jiri's original mail with more info: http://lkml.org/lkml/2012/10/26/208
+> 
+> Thanks.
+> 
+> On Mon, Dec 03, 2012 at 12:57:34PM +0100, Borislav Petkov wrote:
+>> On Mon, Dec 03, 2012 at 12:16:44PM +0100, Jiri Slaby wrote:
+>>> On 10/26/2012 01:56 PM, Jiri Slaby wrote:
+>>>> Hello,
+>>>>
+>>>> at every boot I'm seeing:
+>>>>
+>>>> At 5th second:
+>>>> ata1: link is slow to respond, please be patient (ready=0)
+>>>>
+>>>> At 10th second:
+>>>> ata1: COMRESET failed (errno=-16)
+>>>> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+>>>> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
+>>>> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+>>>> ata1.00: ATA-7: INTEL SSDSA2M080G2GC, 2CV102HD, max UDMA/133
+>>>> ata1.00: 156301488 sectors, multi 16: LBA48 NCQ (depth 31/32)
+>>>> ata1.00: ACPI cmd ef/02:00:00:00:00:a0 (SET FEATURES) succeeded
+>>>> ata1.00: ACPI cmd f5/00:00:00:00:00:a0 (SECURITY FREEZE LOCK) filtered out
+>>>> ata1.00: configured for UDMA/133
+>>>> scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSA2M080 2CV1 PQ: 0 ANSI: 5
+>>>>
+>>>>
+>>>> So that I have to wait 5 s for the disk to come up. I tried 3.4.15 and
+>>>> 3.6.3, both with the same result.
+>>>>
+>>>> 00:1f.2 SATA controller [0106]: Intel Corporation 7 Series Chipset
+>>>> Family 6-port SATA Controller [AHCI mode] [8086:1e03] (rev 04)
+>>>>
+>>>> Any ideas what is going on?
+>>>
+>>> Anybody? I also tried 3.0, it's there too. And libahci.skip_host_reset=1
+>>> works around the issue.
+>>
+>> FWIW, I had the same issue on an AMD chipset at the old job. It needs to
+>> reset SATA link for some reason, probably BIOS programs it wrongly...
+>>
+>> + Alan.
+> 
+
