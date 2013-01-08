@@ -1,43 +1,75 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: Re: ata1: COMRESET failed
-Date: Tue, 08 Jan 2013 12:46:20 +0100
-Message-ID: <50EC070C.2090101@suse.cz>
-References: <508A7A8A.7030908@suse.cz> <50BC8A1C.8070805@suse.cz> <20121203115734.GA32243@liondog.tnic> <20130107172425.GD5954@liondog.tnic> <50EB770A.4090302@intel.com>
+From: bl0 <bl0-052@playker.info>
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Tue, 08 Jan 2013 13:25:30 +0100
+Message-ID: <kch37o$77s$1@ger.gmane.org>
+References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <50D13831.9040105@gmail.com> <kaujmk$op$1@ger.gmane.org> <50EA4AEE.1050401@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:64858 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755153Ab3AHLqW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 06:46:22 -0500
-In-Reply-To: <50EB770A.4090302@intel.com>
+Received: from plane.gmane.org ([80.91.229.3]:42818 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755981Ab3AHMZs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Jan 2013 07:25:48 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1TsYFj-0002LP-32
+	for linux-ide@vger.kernel.org; Tue, 08 Jan 2013 13:25:59 +0100
+Received: from 91.150.147.9.internetia.net.pl ([91.150.147.9])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2013 13:25:59 +0100
+Received: from bl0-052 by 91.150.147.9.internetia.net.pl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Tue, 08 Jan 2013 13:25:59 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Borislav Petkov <bp@alien8.de>, Shane Huang <Shane.Huang@amd.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: linux-ide@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
 
-On 01/08/2013 02:31 AM, Aaron Lu wrote:
-> On 01/08/2013 01:24 AM, Borislav Petkov wrote:
->> Adding some more people.
+On Monday 07 January 2013 05:11, Robert Hancock wrote:
+
+> On 12/20/2012 02:54 AM, bl0 wrote:
+>> On Wednesday 19 December 2012 04:44, Robert Hancock wrote:
 >>
->> Aaron, Shane, do you guys have any ideas? I've been seeing something
->> similar on an AMD desktop box recently and Jiri sees it on a laptop with
->> an SSD.
+>>> On 12/18/2012 09:23 AM, bl0 wrote:
+>>>> Do you think something should be done about it in the linux sata_sil
+>>>> driver? For a lack of a better solution, here is my suggestion. There
+>>>> is already one option 'slow_down' for problematic disks. Another
+>>>> option, for example 'cache_line_workaround', could be added for
+>>>> problematic motherboards. If enabled, the most straightforward way is
+>>>> to set cache line size to 0 and not worry about the fifo_cfg register.
+>>>> If someone else confirms that it solves the problem for them, this
+>>>> option could be enabled automatically if certain motherboard chipset is
+>>>> detected.
+>>>
+>>> We'd have to somehow narrow down which chipsets were involved, which
+>>> might be a hard task. Do you have an idea of how much the performance is
+>>> hurt by these workarounds? If it's not a lot, it might make sense to do
+>>> it by default.
+>>
+>> After setting cache line size to 0, write speed as shown by 'dd
+>> if=/tmpfs/testfile of=/dev/sdc9 bs=1M count=256' goes down from about
+>> 45 MB/s to 17 MB/s. Personally I don't care about performance,
+>> reliability and data safety are more important to me.
 > 
-> I've seen a similar problem on a bug report recently for a Crucial SSD,
-> and upgrading the disk's firmware fixed the problem:
-> https://bugzilla.kernel.org/show_bug.cgi?id=49701
+> Yeah, cutting performance by 2/3rds is fairly bad though.
+
+Yes, it's probably not a good thing to do by default for everyone.
+
+>> The other workaround is to increase cache line size to 64 bytes, if
+>> necessary, and set fifo_cfg to 0. No difference in performance measured.
+>> This workaround is more of a hit or miss. It seems to contradict that
+>> code commit made back in 2005, which was also about data corruption. In
+>> the worst case, what solves data corruption problem on some motherboards
+>> might introduce this problem on some other motherboards.
 > 
-> If the controller has problem, it should have problems for all kinds of
-> disks attached to it. So possible to test with other disks, Jiri?
+> That's possible, which is why I suspect that someone from Silicon Image
+> would have to confirm a possible fix - might be hard to get their
+> attention about this old chipset..
 
-Yes, I tested a normal spinning disk and it does not happen with that.
-This happens only with this Intel SSD: SSDSA2M080G2GC
+I still recommend, for a start, a kernel module option, along with a message
+in dmesg. (If you haven't seen it yet, the code diff in my last message
+shows a possible way to do this.)
 
-So I will try to investigate how to upgrade the firmware and will report.
 
-thakns,
--- 
-js
-suse labs
