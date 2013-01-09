@@ -1,86 +1,44 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v11 3/9] libata: identify and init ZPODD devices
-Date: Wed, 09 Jan 2013 11:20:37 +0800
-Message-ID: <50ECE205.3000005@intel.com>
-References: <1357440509-28108-1-git-send-email-aaron.lu@intel.com> <1357440509-28108-4-git-send-email-aaron.lu@intel.com> <20130107182052.GP3926@htj.dyndns.org> <50EBE1E2.5080406@intel.com> <20130108175202.GZ3926@htj.dyndns.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Tue, 08 Jan 2013 22:48:43 -0600
+Message-ID: <50ECF6AB.30007@gmail.com>
+References: <kahap3$mur$1@ger.gmane.org> <50CCF1E0.9070804@gmail.com> <kakea2$dh1$1@ger.gmane.org> <50CEB13B.9010100@gmail.com> <kaq1n6$hqa$1@ger.gmane.org> <kb9pa2$mi8$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20130108175202.GZ3926@htj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:58917 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756059Ab3AIEsq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 23:48:46 -0500
+In-Reply-To: <kb9pa2$mi8$1@ger.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bl0 <bl0-052@playker.info>
+Cc: linux-ide@vger.kernel.org, linux-pci@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 
-Hi Tejun,
-
-On 01/09/2013 01:52 AM, Tejun Heo wrote:
-> Hello, Aaron.
-> 
-> On Tue, Jan 08, 2013 at 05:07:46PM +0800, Aaron Lu wrote:
->>>> +struct zpodd {
->>>> +	bool slot:1;
->>>> +	bool drawer:1;
->>>> +
->>>> +	struct ata_device *dev;
->>>> +};
->>>
->>> Field names are usually indented.  It would be nice to have a comment
+On 12/24/2012 08:37 AM, bl0 wrote:
+> On Tuesday 18 December 2012 16:23, bl0 wrote:
+>
+>> On Monday 17 December 2012 06:44, Robert Hancock wrote:
 >>
->> checkscript.sh doesn't seem like this if I put a tab around the ':'
+>>> But it seems quite likely that
+>>> whatever magic numbers this code is picking don't work on your system
+>>> for some reason. It appears the root cause is likely a bug in the SiI
+>>> chip. There shouldn't be any region why messing around with these values
+>>> should cause data corruption other than that.
 >>
->> ERROR: spaces prohibited around that ':' (ctx:VxW)
->> #222: FILE: include/uapi/linux/cdrom.h:915:
->> +	__u8 reserved1:		2;
->>  	              ^
->>
->> Which style should I follow?
-> 
-> struct zpodd {
-> 	bool			slot:1;
-> 	bool			drawer:1;
-> 
-> 	struct ata_device	*dev;
-> };
+>> Do you think something should be done about it in the linux sata_sil
+>> driver? For a lack of a better solution, here is my suggestion. There is
+>> already one option 'slow_down' for problematic disks. Another option, for
+>> example 'cache_line_workaround', could be added for problematic
+>> motherboards. If enabled, the most straightforward way is to set cache
+>> line size to 0 and not worry about the fifo_cfg register.
+>
+> Here is the code I currently have, attached as a diff. (This diff is not
+> against the latest git tree, it's against an older linux version which I
+> use.)
 
-Oh, got it :-)
-
-> 
->>> explaining synchronization.  Bitfields w/ their implicit RMW ops tend
->>> to make people wonder about what the access rules are.
->>
->> The slot and drawer bit field is assigned only once during ata probe
->> time in EH context, and accessed later in PM's callback context.
->> Not sure what access rule should I describe...
-> 
-> /* init during probe, RO afterwards */ should do but I'd prefer if you
-> stay away from bitfields altogether.  There are cases where bitfields
-> are okay but when you're working across multiple locking domains, it
-> usually is a bad idea because the code which accesses those fields
-> look completely independent while still being able to interact with
-> each other.  They look properly synchronized until you realized they
-> live on the same machine word.
-
-Then I will not use bitfields, I was just thinking to save some space
-and didn't realize it would bring such nasty problems...
-
-> 
->>>> +/*
->>>> + * Per the spec, only slot type and drawer type ODD can be supported
->>>> + *
->>>> + * Return 0 for slot type, 1 for drawer, -ENODEV for other types or on error.
->>>> + */
->>>
->>> Maybe bool odd_has_drawer() is better?
->>
->> There are other types of ODD other than slot and drawer, and both slot
->> and drawer type ODDs can be supported for ZPODD. So a bool can't convey
->> such information :-)
-> 
-> Then please make it a proper ATA enum and use it in struct zpodd too.
-
-Sure, and thanks for all the suggestions!
-
--Aaron
+I wouldn't mind something like this as an option, anyway. Jeff, Tejun, 
+thoughts?
 
