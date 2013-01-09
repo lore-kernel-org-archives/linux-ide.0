@@ -1,70 +1,52 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH] ata: pata_samsung_cf: Use devm_clk_get()
-Date: Wed, 09 Jan 2013 10:22:41 +0900
-Message-ID: <002c01cdee07$d1ddacc0$75990640$%han@samsung.com>
+From: "Kim, Milo" <Milo.Kim@ti.com>
+Subject: RE: [PATCH] Allow Marvell SATA driver to work with
+ LEDS_TRIGGER_IDE_DISK
+Date: Wed, 9 Jan 2013 01:29:44 +0000
+Message-ID: <A874F61F95741C4A9BA573A70FE3998F69E12010@DQHE02.ent.ti.com>
+References: <1357668987-3610-1-git-send-email-josh.coombs@gmail.com>
+ <20130108190657.GW5075@titan.lakedaemon.net>
+ <CAMW5UfY2vKEJ7K8tLJ1+JeKsr_hxtUTva9HGJxLan6k+KGdmvg@mail.gmail.com>
+ <20130108200350.GX5075@titan.lakedaemon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:35587 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755860Ab3AIBWx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 20:22:53 -0500
-Received: from epcpsbgm1.samsung.com (epcpsbgm1 [203.254.230.26])
- by mailout4.samsung.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0MGC00H763STJV80@mailout4.samsung.com> for
- linux-ide@vger.kernel.org; Wed, 09 Jan 2013 10:22:41 +0900 (KST)
-Received: from DOJG1HAN02 ([12.23.120.99])
- by mmp2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTPA id <0MGC0042W3TTX360@mmp2.samsung.com> for
- linux-ide@vger.kernel.org; Wed, 09 Jan 2013 10:22:41 +0900 (KST)
-Content-language: ko
+Received: from comal.ext.ti.com ([198.47.26.152]:52574 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756389Ab3AIBaH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jan 2013 20:30:07 -0500
+In-Reply-To: <20130108200350.GX5075@titan.lakedaemon.net>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+To: Jason Cooper <jason@lakedaemon.net>, Josh Coombs <josh.coombs@gmail.com>
+Cc: "cooloney@gmail.com" <cooloney@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "rpurdie@rpsys.net" <rpurdie@rpsys.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>
 
-The devm_ functions allocate memory that is released when a driver
-detaches. This patch uses devm_clk_get() for these functions.
-These make the code smaller and a bit simpler.
+> -----Original Message-----
+> From: linux-leds-owner@vger.kernel.org [mailto:linux-leds-
+> owner@vger.kernel.org] On Behalf Of Jason Cooper
+> Sent: Wednesday, January 09, 2013 5:04 AM
+> To: Josh Coombs
+> Cc: cooloney@gmail.com; linux-kernel@vger.kernel.org; linux-
+> ide@vger.kernel.org; rpurdie@rpsys.net; linux ARM; jgarzik@pobox.com;
+> linux-leds@vger.kernel.org
+> Subject: Re: [PATCH] Allow Marvell SATA driver to work with
+> LEDS_TRIGGER_IDE_DISK
+> 
+> On Tue, Jan 08, 2013 at 02:18:04PM -0500, Josh Coombs wrote:
+> > Would it make more sense to add a second trigger
+> > for SATA instead?
+> 
+> I'll leave that up to the led guys, I just wanted to raise the point
+> that the driver could logically support other types of disks, and we
+> should come up with a migration path instead of adding capabilities
+> ad-hoc.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
- drivers/ata/pata_samsung_cf.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+I agree with Jason's suggestion. One more thing to consider.
 
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index 63ffb00..70b0e01 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -512,7 +512,7 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
--	info->clk = clk_get(&pdev->dev, "cfcon");
-+	info->clk = devm_clk_get(&pdev->dev, "cfcon");
- 	if (IS_ERR(info->clk)) {
- 		dev_err(dev, "failed to get access to cf controller clock\n");
- 		ret = PTR_ERR(info->clk);
-@@ -589,7 +589,6 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
- 
- stop_clk:
- 	clk_disable(info->clk);
--	clk_put(info->clk);
- 	return ret;
- }
- 
-@@ -601,7 +600,6 @@ static int __exit pata_s3c_remove(struct platform_device *pdev)
- 	ata_host_detach(host);
- 
- 	clk_disable(info->clk);
--	clk_put(info->clk);
- 
- 	return 0;
- }
--- 
-1.7.2.5
+If we replace the name, 'ide-disk' or 'ide_disk' with general one,
+then we should change the value of 'default_trigger' under arch directory also.
+LED trigger works if the name is matched with trigger name of LED device.
 
-
+Thanks,
+Milo
