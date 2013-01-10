@@ -1,63 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_sil data corruption, possible workarounds
-Date: Wed, 9 Jan 2013 11:17:53 -0800
-Message-ID: <20130109191753.GQ3926@htj.dyndns.org>
-References: <kahap3$mur$1@ger.gmane.org>
- <50CCF1E0.9070804@gmail.com>
- <kakea2$dh1$1@ger.gmane.org>
- <50CEB13B.9010100@gmail.com>
- <kaq1n6$hqa$1@ger.gmane.org>
- <kb9pa2$mi8$1@ger.gmane.org>
- <50ECF6AB.30007@gmail.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH v2] ata: pata_samsung_cf: Use devm_clk_get()
+Date: Thu, 10 Jan 2013 11:05:06 +0900
+Message-ID: <007401cdeed6$e9095f50$bb1c1df0$%han@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f47.google.com ([209.85.160.47]:51851 "EHLO
-	mail-pb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932425Ab3AITR5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2013 14:17:57 -0500
-Content-Disposition: inline
-In-Reply-To: <50ECF6AB.30007@gmail.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:10505 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758113Ab3AJCFH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2013 21:05:07 -0500
+Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
+ by mailout3.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MGE00D4N0FXUKI0@mailout3.samsung.com> for
+ linux-ide@vger.kernel.org; Thu, 10 Jan 2013 11:05:06 +0900 (KST)
+Received: from DOJG1HAN02 ([12.23.120.99])
+ by mmp1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTPA id <0MGE006PF0GIIT30@mmp1.samsung.com> for
+ linux-ide@vger.kernel.org; Thu, 10 Jan 2013 11:05:06 +0900 (KST)
+References: 
+In-reply-to: 
+Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: bl0 <bl0-052@playker.info>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Hello, Robert, bl0 (would be cool if this were your real name :)
+Use devm_clk_get() rather than clk_get() to make cleanup paths
+more simple.
 
-On Tue, Jan 08, 2013 at 10:48:43PM -0600, Robert Hancock wrote:
-> >>Do you think something should be done about it in the linux sata_sil
-> >>driver? For a lack of a better solution, here is my suggestion. There is
-> >>already one option 'slow_down' for problematic disks. Another option, for
-> >>example 'cache_line_workaround', could be added for problematic
-> >>motherboards. If enabled, the most straightforward way is to set cache
-> >>line size to 0 and not worry about the fifo_cfg register.
-> >
-> >Here is the code I currently have, attached as a diff. (This diff is not
-> >against the latest git tree, it's against an older linux version which I
-> >use.)
-> 
-> I wouldn't mind something like this as an option, anyway. Jeff,
-> Tejun, thoughts?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+Changes since v1:
+- modified the commit message
 
-I don't know.  This thread makes me want to eat obsessivly, cry in
-fetal position and then puke and wet my pants.
+ drivers/ata/pata_samsung_cf.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-The issue has been there from the beginning.  The current code seems
-to cope with, I hope, majority of configurations; unfortunately, for
-the problematic ones, there hasn't been any sensible explanation or
-reliable way to detect what is causing the problem.  I don't even know
-how we should blacklist them.  Is it chipset-specific or
-system-specific?  ie. Should we blacklist north/south bridges or DMI
-system identifiers?
-
-Having a module option is easy and can be helpful for the very rare
-cases where the admin is aware of the issue, but, in general, it
-doesn't really help that much.
-
-So, let's throw in a module option.  Other than that, no idea.
-
-\pukes
-
+diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+index 63ffb00..70b0e01 100644
+--- a/drivers/ata/pata_samsung_cf.c
++++ b/drivers/ata/pata_samsung_cf.c
+@@ -512,7 +512,7 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-	info->clk = clk_get(&pdev->dev, "cfcon");
++	info->clk = devm_clk_get(&pdev->dev, "cfcon");
+ 	if (IS_ERR(info->clk)) {
+ 		dev_err(dev, "failed to get access to cf controller clock\n");
+ 		ret = PTR_ERR(info->clk);
+@@ -589,7 +589,6 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 
+ stop_clk:
+ 	clk_disable(info->clk);
+-	clk_put(info->clk);
+ 	return ret;
+ }
+ 
+@@ -601,7 +600,6 @@ static int __exit pata_s3c_remove(struct platform_device *pdev)
+ 	ata_host_detach(host);
+ 
+ 	clk_disable(info->clk);
+-	clk_put(info->clk);
+ 
+ 	return 0;
+ }
 -- 
-tejun
+1.7.2.5
+
+
