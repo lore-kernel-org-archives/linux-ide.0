@@ -1,74 +1,139 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH v2] ata: pata_samsung_cf: Use devm_clk_get()
-Date: Thu, 10 Jan 2013 11:05:06 +0900
-Message-ID: <007401cdeed6$e9095f50$bb1c1df0$%han@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:10505 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758113Ab3AJCFH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jan 2013 21:05:07 -0500
-Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
- by mailout3.samsung.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0MGE00D4N0FXUKI0@mailout3.samsung.com> for
- linux-ide@vger.kernel.org; Thu, 10 Jan 2013 11:05:06 +0900 (KST)
-Received: from DOJG1HAN02 ([12.23.120.99])
- by mmp1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTPA id <0MGE006PF0GIIT30@mmp1.samsung.com> for
- linux-ide@vger.kernel.org; Thu, 10 Jan 2013 11:05:06 +0900 (KST)
-References: 
-In-reply-to: 
-Content-language: ko
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v12 1/9] scsi: sr: support runtime pm
+Date: Thu, 10 Jan 2013 17:24:22 +0800
+Message-ID: <1357809870-18816-2-git-send-email-aaron.lu@intel.com>
+References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: 'Jeff Garzik' <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Use devm_clk_get() rather than clk_get() to make cleanup paths
-more simple.
+This patch adds runtime pm support for sr.
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+It did this by increasing the runtime usage_count of the device when:
+- its block device is opened;
+- the events checking is to run.
+
+And decreasing the runtime usage_count of the device when:
+- its block device is closed;
+- After the events checking is done.
+
+The idea is discussed in this mail thread:
+http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
+
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 ---
-Changes since v1:
-- modified the commit message
+ drivers/scsi/sr.c | 30 +++++++++++++++++++++++++-----
+ 1 file changed, 25 insertions(+), 5 deletions(-)
 
- drivers/ata/pata_samsung_cf.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index 63ffb00..70b0e01 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -512,7 +512,7 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
- 		return -ENOMEM;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 5fc97d2..4d1a610 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -45,6 +45,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ 
+ #include <scsi/scsi.h>
+@@ -146,7 +147,8 @@ static inline struct scsi_cd *scsi_cd_get(struct gendisk *disk)
+ 	kref_get(&cd->kref);
+ 	if (scsi_device_get(cd->device))
+ 		goto out_put;
+-	goto out;
++	if (!scsi_autopm_get_device(cd->device))
++		goto out;
+ 
+  out_put:
+ 	kref_put(&cd->kref, sr_kref_release);
+@@ -162,6 +164,7 @@ static void scsi_cd_put(struct scsi_cd *cd)
+ 
+ 	mutex_lock(&sr_ref_mutex);
+ 	kref_put(&cd->kref, sr_kref_release);
++	scsi_autopm_put_device(sdev);
+ 	scsi_device_put(sdev);
+ 	mutex_unlock(&sr_ref_mutex);
+ }
+@@ -211,7 +214,7 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 				    unsigned int clearing, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+-	bool last_present;
++	bool last_present = cd->media_present;
+ 	struct scsi_sense_hdr sshdr;
+ 	unsigned int events;
+ 	int ret;
+@@ -220,6 +223,8 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 	if (CDSL_CURRENT != slot)
+ 		return 0;
+ 
++	scsi_autopm_get_device(cd->device);
++
+ 	events = sr_get_events(cd->device);
+ 	cd->get_event_changed |= events & DISK_EVENT_MEDIA_CHANGE;
+ 
+@@ -246,10 +251,9 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
  	}
  
--	info->clk = clk_get(&pdev->dev, "cfcon");
-+	info->clk = devm_clk_get(&pdev->dev, "cfcon");
- 	if (IS_ERR(info->clk)) {
- 		dev_err(dev, "failed to get access to cf controller clock\n");
- 		ret = PTR_ERR(info->clk);
-@@ -589,7 +589,6 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
+-		return events;
++		goto out;
+ do_tur:
+ 	/* let's see whether the media is there with TUR */
+-	last_present = cd->media_present;
+ 	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
  
- stop_clk:
- 	clk_disable(info->clk);
--	clk_put(info->clk);
- 	return ret;
+ 	/*
+@@ -270,7 +274,7 @@ do_tur:
+ 	}
+ 
+ 	if (cd->ignore_get_event)
+-		return events;
++		goto out;
+ 
+ 	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
+ 	if (!cd->tur_changed) {
+@@ -287,6 +291,18 @@ do_tur:
+ 	cd->tur_changed = false;
+ 	cd->get_event_changed = false;
+ 
++out:
++	/*
++	 * If there is no medium detected or the medium has been there
++	 * since last poll, try to suspend the device. Otherwise, keep
++	 * it active for one more poll interval so that if user space
++	 * application opens the block device, we can avoid a runtime
++	 * status change.
++	 */
++	pm_runtime_put_noidle(&cd->device->sdev_gendev);
++	if (!cd->media_present || last_present)
++		pm_runtime_suspend(&cd->device->sdev_gendev);
++
+ 	return events;
  }
  
-@@ -601,7 +600,6 @@ static int __exit pata_s3c_remove(struct platform_device *pdev)
- 	ata_host_detach(host);
+@@ -718,6 +734,8 @@ static int sr_probe(struct device *dev)
  
- 	clk_disable(info->clk);
--	clk_put(info->clk);
- 
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
++	scsi_autopm_put_device(cd->device);
++
  	return 0;
- }
+ 
+ fail_put:
+@@ -965,6 +983,8 @@ static int sr_remove(struct device *dev)
+ {
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
+ 
++	scsi_autopm_get_device(cd->device);
++
+ 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
+ 	del_gendisk(cd->disk);
+ 
 -- 
-1.7.2.5
-
+1.7.11.7
 
