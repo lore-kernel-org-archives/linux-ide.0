@@ -1,70 +1,55 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
-Date: Fri, 11 Jan 2013 11:16:26 +0800
-Message-ID: <20130111031626.GA26613@aaronlu.sh.intel.com>
-References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
- <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
- <20130110195610.GL20454@htj.dyndns.org>
- <20130111021110.GB26270@aaronlu.sh.intel.com>
- <20130111021701.GA2513@mtj.dyndns.org>
+From: bl0 <bl0-052@playker.info>
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Fri, 11 Jan 2013 11:28:35 +0100
+Message-ID: <201301111128.35957.bl0-052@playker.info>
+References: <kahap3$mur$1@ger.gmane.org> <50ECF6AB.30007@gmail.com> <20130109191753.GQ3926@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <20130109191753.GQ3926@htj.dyndns.org>
 Content-Disposition: inline
-In-Reply-To: <20130111021701.GA2513@mtj.dyndns.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Robert Hancock <hancockrwd@gmail.com>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Tejun,
+On Wednesday 09 January 2013 20:17:53 Tejun Heo wrote:
+> Hello, Robert, bl0 (would be cool if this were your real name :)
+>
+> On Tue, Jan 08, 2013 at 10:48:43PM -0600, Robert Hancock wrote:
+> > I wouldn't mind something like this as an option, anyway. Jeff,
+> > Tejun, thoughts?
+>
+> I don't know.  This thread makes me want to eat obsessivly, cry in
+> fetal position and then puke and wet my pants.
+>
+> The issue has been there from the beginning.  The current code seems
+> to cope with, I hope, majority of configurations; unfortunately, for
+> the problematic ones, there hasn't been any sensible explanation or
+> reliable way to detect what is causing the problem.  I don't even know
+> how we should blacklist them.  Is it chipset-specific or
+> system-specific?  ie. Should we blacklist north/south bridges or DMI
+> system identifiers?
+>
+> Having a module option is easy and can be helpful for the very rare
+> cases where the admin is aware of the issue, but, in general, it
+> doesn't really help that much.
+>
+> So, let's throw in a module option.  Other than that, no idea.
+>
+> \pukes
 
-On Thu, Jan 10, 2013 at 06:17:01PM -0800, Tejun Heo wrote:
-> Hello, Aaron.
-> 
-> On Fri, Jan 11, 2013 at 10:11:10AM +0800, Aaron Lu wrote:
-> > > What's the synchronization rule for this field?
-> > 
-> > I documented the rule in include/scsi/scsi_device.h.
-> > 
-> > This field is modified in the ata port's runtime suspend and resume
-> > callback, and is read accessed in the check_events callback of the sr
-> > block driver. The runtime PM callback is synchronized by PM core, in
-> > that the two callbacks will never run concurrently. So I guess saying
-> > synchronized by PM core is enough for this field?
-> > 
-> > This is what I've added in v12 for scsi_device structure:
-> > 
-> > +	bool disable_disk_events; /* disable poll for disk events, used in
-> > +				   * ATA layer, sychronized by PM core */
-> > +
-> > 
-> > Or do you mean I should add a comment explaining the sync rule when it
-> > is modifed, like in the above code?
-> 
-> The thing is that disabling disk events doesn't necessarily have
-> anything to do with PM, so tying synchronization to PM subsystem is a
-> bit unexpected.  How about making it an atomic_t?  That way, disabling
-> can stack and synchronization dependency to PM is removed.
+Thanks for bringing much needed enthusiasm into this thread. I too would 
+like to know the root cause of this problem. Since the chances of finding 
+it are very low, the only thing that remains is to deal with data corruption 
+problem using the means available.
 
-OK, will make it atomic in next version, thanks for the advice.
+Some people asked for help and posted relevant entries from their logs. Now 
+they would be able to find a hint about the module option in the logs. Some 
+people have set the slow_down option. The code i posted enables the 
+workaround for them too.
 
-Perhaps I can add two scsi helper functions in scsi_lib.c like:
-
-void sdev_disable_disk_events(struct scsi_device *sdev)
-{
-	atomic_inc(&sdev->disk_events_disable_depth);
-}
-
-void sdev_enable_disk_events(struct scsi_device *sdev)
-{
-	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-		return;
-	atomic_dec(&sdev->disk_events_disable_depth);
-}
-
-And call them in ATA layer. Do you like this?
-
-Thanks,
-Aaron
-
+As for blacklisting, I was thinking about maybe looking at the vendor and 
+device ID of the PCI bridge under which the sata_sil device is found.
