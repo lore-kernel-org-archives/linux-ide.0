@@ -1,107 +1,102 @@
-From: Byron Stanoszek <bstanoszek@comtime.com>
-Subject: Re: Possible corruption over AHCI
-Date: Sun, 13 Jan 2013 18:31:00 -0500 (EST)
-Message-ID: <alpine.LNX.2.00.1301131821570.560@winds.org>
-References: <alpine.LNX.2.00.1301031441140.19998@winds.org> <50EA4A52.2030800@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: libata-pmp.c patch for Silicon Image 3826 port multiplier
+Date: Mon, 14 Jan 2013 16:23:46 +0400
+Message-ID: <50F3F8D2.70506@mvista.com>
+References: <CANQSiW0f4A=Y3db0-=2fdiHbGO2SigOE1ejPTYsUcZHhpEg1pQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from winds.org ([68.75.195.9]:49953 "EHLO winds.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755348Ab3AMXbA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 13 Jan 2013 18:31:00 -0500
-In-Reply-To: <50EA4A52.2030800@gmail.com>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:52629 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756276Ab3ANMYB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jan 2013 07:24:01 -0500
+Received: by mail-lb0-f170.google.com with SMTP id j14so2906679lbo.1
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2013 04:24:00 -0800 (PST)
+In-Reply-To: <CANQSiW0f4A=Y3db0-=2fdiHbGO2SigOE1ejPTYsUcZHhpEg1pQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Terry Suereth <terry.suereth@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sun, 6 Jan 2013, Robert Hancock wrote:
+Hello.
 
-> On 01/03/2013 02:45 PM, Byron Stanoszek wrote:
->>  Hi Jeff, all,
->>
->>  I'm having a data corruption issue while storing data to a specific type of
->>  Compact Flash card connected over AHCI. It seems that when two (or more)
->>  processes are writing to disk at the same time, and a sync() happens, every
->>  once in a while some data from one process's file writes will appear in
->>  place of data in the other file.
->>
->>  Here are the specifics of my hardware:
->>
->>  I'm using the built-in CF card slot on a Siemens 627C Industrial PC, which
->>  is connected to the motherboard via an AHCI chipset. The CF card is
->>  bootable. The BIOS is configured to use "RAID" mode ("Enhanced" or "AHCI"
->>  mode will not boot the CF card).
->>
->>  AHCI chipset in use:
->>  00:1f.2 0104: 8086:282a (rev 05)
->>  00:1f.2 RAID bus controller: Intel Corporation 82801 Mobile SATA
->>  Controller [RAID mode] (rev 05)
->>
->>  CF card with the problem:  SanDisk Ultra 8GB   (model SDCFH-008G)
->>  CF card that always works: SanDisk Extreme 8GB (model SDCFX-008G)
->>
->>  Filesystem: ReiserFS
->>
->>  Kernels tested to show symptoms: 3.0.14, 3.4.11, 3.7.1
->>
->>  I can get the problem to reproduce almost 50% of the time by having a
->>  program drop a 50MB core dump in the background (over and over again) to
->>  the disk, while in the meantime I rsync over a 190MB gzipped file over to
->>  the disk from a remote PC. After that, I "sync", and then I clear the
->>  kernel's clean cache using "echo 1 > /proc/sys/vm/drop_caches".
->>
->>  50% of the time, rereading the gzipped file will show one or more 4K chunks
->>  of data from the core dump (or other process writing to disk) come out in
->>  random locations in the file, compared to what the file showed before
->>  clearing the cache. In other words, after the write and sync is complete,
->>  the cached file in Linux memory shows correct, but the copy stored on disk
->>  is wrong.
->>
->>  I've reproduced the problem on several 627C PCs and Ultra cards now. If I
->>  use the same Ultra card on any other type of PC (using ata_piix or
->>  pata_jmicron drivers, since the Siemens PC is the only system I have with
->>  an AHCI chipset), it works fine. If I use an Extreme card instead on the
->>  Siemens PC, it works fine (even after 1000 transfers).
->>
->>  I tried mounting and recreating the ReiserFS using the "notail" option,
->>  still same problem.
->>
->>  I tried limiting the disk to use UDMA/33 or PIO4 mode, still same problem.
->>  (The Ultra disk normally comes up as UDMA/66, and the Extreme disk normally
->>  comes up as UDMA/100).
->>
->>  I verified NCQ is not being used.
->>
->>  Assuming this is a problem in the AHCI driver for the moment, what other
->>  options can I tweak to try to narrow down the problem? Are there any
->>  relevant AHCI features I can turn on/off by changing the source?
->>
->>  I've attached the dmesg & lspci of the Siemens PC.
->>
->>  Thanks and best regards,
->>    -Byron
+On 14-01-2013 1:58, Terry Suereth wrote:
+
+> Hello linux-ide mailing list,
+
+> I recently purchased and equipped one of my Slackware boxes with a
+> Rosewill RAID enclosure (RSV-S8), which claimed to use a Sil3726 PMP
+> chipset, but which actually uses a Sil3826 chipset.  This appears to
+> be some relatively new silicon, and (presumably) a replacement for the
+> 3726 going forward.
+
+> I had some difficulties using this hardware at first - excessively
+> long delays linking to the PMP at startup - but once I discovered the
+> chipset version issue, it was simple to fix -- libata just needs to
+> apply the same PMP quirks that are currently used on the 3726, to the
+> 3826.  I've done this in a local kernel build and it's working great
+> so far.
+
+> The same bug/fix has been posted to the Red Hat bug tracker:
+> https://bugzilla.redhat.com/show_bug.cgi?id=890237 -- although the
+> patch noted there (in the PDF (!?) attachment) appears incomplete.
+
+> My somewhat-redundant patch, based on the current linux-stable version
+> from git, is pasted inline below.  It should be very simple and
+> unsurprising.
+
+> Best,
+
+> Terry Suereth
+> terry.suereth@gmail.com
+
+
+
+> --- libata-pmp.c.old 2013-01-13 13:42:56.582780772 -0800
+> +++ libata-pmp.c 2013-01-13 13:43:33.670964680 -0800
+> @@ -289,24 +289,24 @@
 >
-> My first inclination is that this isn't very likely to be a problem in the 
-> AHCI driver. It's the most widely used storage driver on modern PCs so it 
-> seems unlikely that this sort of problem would show up there at this point.
+>    /* Disable sending Early R_OK.
+>    * With "cached read" HDD testing and multiple ports busy on a SATA
+> - * host controller, 3726 PMP will very rarely drop a deferred
+> + * host controller, 3x26 PMP will very rarely drop a deferred
+>    * R_OK that was intended for the host. Symptom will be all
+>    * 5 drives under test will timeout, get reset, and recover.
+>    */
+> - if (vendor == 0x1095 && devid == 0x3726) {
+> + if (vendor == 0x1095 && (devid == 0x3726 || devid == 0x3826)) {
+>    u32 reg;
 >
-> I assume there's some kind of SATA to PATA bridge involved in the chain 
-> (likely on the motherboard). It's possible that some combination of timing 
-> changes between the cards, the controller operating mode and/or the different 
-> host controller causes a bug to occur in either the CF card or the bridge 
-> chip.
+>    err_mask = sata_pmp_read(&ap->link, PMP_GSCR_SII_POL, &reg);
+>    if (err_mask) {
+>    rc = -EIO;
+> - reason = "failed to read Sil3726 Private Register";
+> + reason = "failed to read Sil3x26 Private Register";
+>    goto fail;
+>    }
+>    reg &= ~0x1;
+>    err_mask = sata_pmp_write(&ap->link, PMP_GSCR_SII_POL, reg);
+>    if (err_mask) {
+>    rc = -EIO;
+> - reason = "failed to write Sil3726 Private Register";
+> + reason = "failed to write Sil3x26 Private Register";
+>    goto fail;
+>    }
+>    }
+> @@ -383,8 +383,8 @@
+>    u16 devid = sata_pmp_gscr_devid(gscr);
+>    struct ata_link *link;
+>
+> - if (vendor == 0x1095 && devid == 0x3726) {
+> - /* sil3726 quirks */
+> + if (vendor == 0x1095 && (devid == 0x3726 || devid == 0x3826)) {
+> + /* sil3x26 quirks */
+>    ata_for_each_link(link, ap, EDGE) {
+>    /* link reports offline after LPM */
+>    link->flags |= ATA_LFLAG_NO_LPM;
 
-Robert,
+    Your patch is whitespace damaged, misses signoff and proper description.
 
-Thanks for the info. I tried disabling some AHCI features in the driver too,
-but nothing ended up helping. My best guess is that the hardware layer
-controlling the CF card is still sending transactions too fast (UDMA/100 or
-higher), and the card cannot handle the throughput.
-
-We've decided to just change all of our cards to the Extreme (UDMA/100) version
-to solve the problem.
-
-  -Byron
+MBR, Sergei
 
