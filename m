@@ -1,216 +1,172 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v13 3/9] libata: move acpi notification code to zpodd
-Date: Tue, 15 Jan 2013 17:20:59 +0800
-Message-ID: <1358241665-2156-4-git-send-email-aaron.lu@intel.com>
-References: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH v2] libata: export host controller number thru /sys
+Date: Tue, 15 Jan 2013 16:07:42 -0600
+Message-ID: <1358287662-24016-1-git-send-email-dmilburn@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29538 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42985 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756637Ab3AOJU2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 15 Jan 2013 04:20:28 -0500
-In-Reply-To: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
+	id S1754012Ab3AOWCX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Jan 2013 17:02:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, kay.sievers@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com--suppress-cc=all, David Milburn <dmilburn@redhat.com>
 
-Since the ata acpi notification code introduced in commit
-3bd46600a7a7e938c54df8cdbac9910668c7dfb0 is solely for ZPODD, and we
-now have a dedicated place for it, move these code there.
+As low-level drivers register their host controller(s), keep track
+of the number of controllers and export thru /sys in a <host.port>
+format so that udev can better match up port numbers with a 
+specific controller.
 
-And the ata_acpi_add_pm_notifier code is changed a little bit in that it
-is now invoked when scsi device is not bound with ACPI yet, so the way
-to get the acpi handle is different with the previous version. And the
-ata_acpi_add/remove_pm_notifier is also simplified a little bit in that
-it doesn't check if the acpi_device for the handle exists or not as the
-odd_can_poweroff function already checked that.
+# pwd
+/sys/devices/pci0000:00
+# find . -name 'ata*' -print
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-Acked-by: Tejun Heo <tj@kernel.org>
+(2nd controller with port multiplier attached)
+
+./0000:00:1e.0/0000:05:01.0/ata2.7
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7/dev7.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.0/dev7.0.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.0/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.1/dev7.1.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.1/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.2/dev7.2.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.2/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.3/dev7.3.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.3/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.4/dev7.4.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.4/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.5/dev7.5.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.5/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.6/dev7.6.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.6/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.7/dev7.7.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.7/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.8/dev7.8.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.8/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.9/dev7.9.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.9/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/ata_port
+./0000:00:1e.0/0000:05:01.0/ata2.7/ata_port/ata2.7
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.10/dev7.10.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.10/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.11/dev7.11.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.11/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.12/dev7.12.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.12/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.13/dev7.13.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.13/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.14/dev7.14.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.7/link7.14/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.8
+./0000:00:1e.0/0000:05:01.0/ata2.8/link8/dev8.0/ata_device
+./0000:00:1e.0/0000:05:01.0/ata2.8/link8/ata_link
+./0000:00:1e.0/0000:05:01.0/ata2.8/ata_port
+./0000:00:1e.0/0000:05:01.0/ata2.8/ata_port/ata2.8
+
+(1st controller)
+
+./0000:00:1f.2/ata1.1
+./0000:00:1f.2/ata1.1/link1/dev1.0/ata_device
+./0000:00:1f.2/ata1.1/link1/ata_link
+./0000:00:1f.2/ata1.1/ata_port
+./0000:00:1f.2/ata1.1/ata_port/ata1.1
+./0000:00:1f.2/ata1.2
+./0000:00:1f.2/ata1.2/link2/dev2.0/ata_device
+./0000:00:1f.2/ata1.2/link2/ata_link
+./0000:00:1f.2/ata1.2/ata_port
+./0000:00:1f.2/ata1.2/ata_port/ata1.2
+./0000:00:1f.2/ata1.3
+./0000:00:1f.2/ata1.3/link3/dev3.0/ata_device
+./0000:00:1f.2/ata1.3/link3/ata_link
+./0000:00:1f.2/ata1.3/ata_port
+./0000:00:1f.2/ata1.3/ata_port/ata1.3
+./0000:00:1f.2/ata1.4
+./0000:00:1f.2/ata1.4/link4/dev4.0/ata_device
+./0000:00:1f.2/ata1.4/link4/ata_link
+./0000:00:1f.2/ata1.4/ata_port
+./0000:00:1f.2/ata1.4/ata_port/ata1.4
+./0000:00:1f.2/ata1.5
+./0000:00:1f.2/ata1.5/link5/dev5.0/ata_device
+./0000:00:1f.2/ata1.5/link5/ata_link
+./0000:00:1f.2/ata1.5/ata_port
+./0000:00:1f.2/ata1.5/ata_port/ata1.5
+./0000:00:1f.2/ata1.6
+./0000:00:1f.2/ata1.6/link6/dev6.0/ata_device
+./0000:00:1f.2/ata1.6/link6/ata_link
+./0000:00:1f.2/ata1.6/ata_port
+./0000:00:1f.2/ata1.6/ata_port/ata1.6
+
+Signed-off-by: David Milburn <dmilburn@redhat.com>
 ---
- drivers/ata/libata-acpi.c  | 71 ----------------------------------------------
- drivers/ata/libata-zpodd.c | 34 ++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 71 deletions(-)
+changes from v1->v2:
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index ef01ac0..446b4e7 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -974,57 +974,6 @@ void ata_acpi_on_disable(struct ata_device *dev)
- 	ata_acpi_clear_gtf(dev);
- }
+Fengguang Wu reported a sparse warning for host_print_id, declared as extern in drivers/ata/libata.h
+
+drivers/ata/libata-core.c:102:10: sparse: symbol 'host_print_id' was not declared. Should it be static?
+
+ drivers/ata/libata-core.c      |    4 ++++
+ drivers/ata/libata-transport.c |    2 +-
+ drivers/ata/libata.h           |    1 +
+ include/linux/libata.h         |    1 +
+ 4 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 46cd3f4..275941b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -99,6 +99,7 @@ static void ata_dev_xfermask(struct ata_device *dev);
+ static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
  
--static void ata_acpi_wake_dev(acpi_handle handle, u32 event, void *context)
--{
--	struct ata_device *ata_dev = context;
--
--	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
--			pm_runtime_suspended(&ata_dev->sdev->sdev_gendev))
--		scsi_autopm_get_device(ata_dev->sdev);
--}
--
--static void ata_acpi_add_pm_notifier(struct ata_device *dev)
--{
--	struct acpi_device *acpi_dev;
--	acpi_handle handle;
--	acpi_status status;
--
--	handle = ata_dev_acpi_handle(dev);
--	if (!handle)
--		return;
--
--	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_FAILURE(status))
--		return;
--
--	if (dev->sdev->can_power_off) {
--		acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--			ata_acpi_wake_dev, dev);
--		device_set_run_wake(&dev->sdev->sdev_gendev, true);
--	}
--}
--
--static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
--{
--	struct acpi_device *acpi_dev;
--	acpi_handle handle;
--	acpi_status status;
--
--	handle = ata_dev_acpi_handle(dev);
--	if (!handle)
--		return;
--
--	status = acpi_bus_get_device(handle, &acpi_dev);
--	if (ACPI_FAILURE(status))
--		return;
--
--	if (dev->sdev->can_power_off) {
--		device_set_run_wake(&dev->sdev->sdev_gendev, false);
--		acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
--			ata_acpi_wake_dev);
--	}
--}
--
- static void ata_acpi_register_power_resource(struct ata_device *dev)
- {
- 	struct scsi_device *sdev = dev->sdev;
-@@ -1057,13 +1006,11 @@ static void ata_acpi_unregister_power_resource(struct ata_device *dev)
+ atomic_t ata_print_id = ATOMIC_INIT(0);
++atomic_t host_print_id = ATOMIC_INIT(0);
  
- void ata_acpi_bind(struct ata_device *dev)
- {
--	ata_acpi_add_pm_notifier(dev);
- 	ata_acpi_register_power_resource(dev);
- }
+ struct ata_force_param {
+ 	const char	*name;
+@@ -6097,6 +6098,9 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 	for (i = host->n_ports; host->ports[i]; i++)
+ 		kfree(host->ports[i]);
  
- void ata_acpi_unbind(struct ata_device *dev)
- {
--	ata_acpi_remove_pm_notifier(dev);
- 	ata_acpi_unregister_power_resource(dev);
- }
- 
-@@ -1105,9 +1052,6 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 				acpi_handle *handle)
- {
- 	struct ata_device *ata_dev;
--	acpi_status status;
--	struct acpi_device *acpi_dev;
--	struct acpi_device_power_state *states;
- 
- 	if (ap->flags & ATA_FLAG_ACPI_SATA) {
- 		if (!sata_pmp_attached(ap))
-@@ -1124,21 +1068,6 @@ static int ata_acpi_bind_device(struct ata_port *ap, struct scsi_device *sdev,
- 	if (!*handle)
- 		return -ENODEV;
- 
--	status = acpi_bus_get_device(*handle, &acpi_dev);
--	if (ACPI_FAILURE(status))
--		return 0;
--
--	/*
--	 * If firmware has _PS3 or _PR3 for this device,
--	 * and this ata ODD device support device attention,
--	 * it means this device can be powered off
--	 */
--	states = acpi_dev->power.states;
--	if ((states[ACPI_STATE_D3_HOT].flags.valid ||
--			states[ACPI_STATE_D3_COLD].flags.explicit_set) &&
--			ata_dev->flags & ATA_DFLAG_DA)
--		sdev->can_power_off = 1;
--
- 	return 0;
- }
- 
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 27eed2f..9a0d90d 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -1,5 +1,7 @@
- #include <linux/libata.h>
- #include <linux/cdrom.h>
-+#include <linux/pm_runtime.h>
-+#include <scsi/scsi_device.h>
- 
- #include "libata.h"
- 
-@@ -12,6 +14,10 @@ enum odd_mech_type {
- struct zpodd {
- 	enum odd_mech_type	mech_type; /* init during probe, RO afterwards */
- 	struct ata_device	*dev;
++	/* track host controller */
++	host->host_id = atomic_inc_return(&host_print_id);
 +
-+	/* The following fields are synchronized by PM core. */
-+	bool			from_notify; /* resumed as a result of
-+					      * acpi wake notification */
+ 	/* give ports names and add SCSI hosts */
+ 	for (i = 0; i < host->n_ports; i++)
+ 		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index c04d393..61dca7a 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -284,7 +284,7 @@ int ata_tport_add(struct device *parent,
+ 
+ 	dev->parent = get_device(parent);
+ 	dev->release = ata_tport_release;
+-	dev_set_name(dev, "ata%d", ap->print_id);
++	dev_set_name(dev, "ata%d.%d", ap->host->host_id, ap->print_id);
+ 	transport_setup_device(dev);
+ 	error = device_add(dev);
+ 	if (error) {
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 7148a58..97776fd 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -54,6 +54,7 @@ enum {
  };
  
- /* Per the spec, only slot type and drawer type ODD can be supported */
-@@ -68,6 +74,32 @@ static bool odd_can_poweroff(struct ata_device *ata_dev)
- 	return acpi_device_can_poweroff(acpi_dev);
- }
+ extern atomic_t ata_print_id;
++extern atomic_t host_print_id;
+ extern int atapi_passthru16;
+ extern int libata_fua;
+ extern int libata_noacpi;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 649e5f8..7ae207e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -546,6 +546,7 @@ struct ata_host {
+ 	void			*private_data;
+ 	struct ata_port_operations *ops;
+ 	unsigned long		flags;
++	unsigned int            host_id; /* user visible host ID */
  
-+static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
-+{
-+	struct ata_device *ata_dev = context;
-+	struct zpodd *zpodd = ata_dev->zpodd;
-+	struct device *dev = &ata_dev->sdev->sdev_gendev;
-+
-+	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
-+			pm_runtime_suspended(dev)) {
-+		zpodd->from_notify = true;
-+		pm_runtime_resume(dev);
-+	}
-+}
-+
-+static void ata_acpi_add_pm_notifier(struct ata_device *dev)
-+{
-+	acpi_handle handle = ata_dev_acpi_handle(dev);
-+	acpi_install_notify_handler(handle, ACPI_SYSTEM_NOTIFY,
-+				    zpodd_wake_dev, dev);
-+}
-+
-+static void ata_acpi_remove_pm_notifier(struct ata_device *dev)
-+{
-+	acpi_handle handle = DEVICE_ACPI_HANDLE(&dev->sdev->sdev_gendev);
-+	acpi_remove_notify_handler(handle, ACPI_SYSTEM_NOTIFY, zpodd_wake_dev);
-+}
-+
- void zpodd_init(struct ata_device *dev)
- {
- 	enum odd_mech_type mech_type;
-@@ -89,12 +121,14 @@ void zpodd_init(struct ata_device *dev)
- 
- 	zpodd->mech_type = mech_type;
- 
-+	ata_acpi_add_pm_notifier(dev);
- 	zpodd->dev = dev;
- 	dev->zpodd = zpodd;
- }
- 
- void zpodd_exit(struct ata_device *dev)
- {
-+	ata_acpi_remove_pm_notifier(dev);
- 	kfree(dev->zpodd);
- 	dev->zpodd = NULL;
- }
--- 
-1.7.11.7
-
+ 	struct mutex		eh_mutex;
+ 	struct task_struct	*eh_owner;
