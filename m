@@ -1,58 +1,33 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
-Date: Tue, 15 Jan 2013 15:12:42 +0800
-Message-ID: <20130115071242.GA16590@aaronlu.sh.intel.com>
-References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
- <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
- <20130110195610.GL20454@htj.dyndns.org>
- <20130111021110.GB26270@aaronlu.sh.intel.com>
- <20130111021701.GA2513@mtj.dyndns.org>
- <20130111031626.GA26613@aaronlu.sh.intel.com>
- <20130111184457.GQ20454@htj.dyndns.org>
- <50F4480B.7050001@pobox.com>
+From: bl0 <bl0-052@playker.info>
+Subject: Re: sata_sil data corruption, possible workarounds
+Date: Tue, 15 Jan 2013 08:44:22 +0100
+Message-ID: <201301150844.22693.bl0-052@playker.info>
+References: <kahap3$mur$1@ger.gmane.org> <50F0199D.4090502@teksavvy.com> <50F4475F.9000509@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:42313 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756065Ab3AOHos (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2013 02:44:48 -0500
+Received: by mail-bk0-f48.google.com with SMTP id jc3so2368084bkc.7
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2013 23:44:47 -0800 (PST)
+In-Reply-To: <50F4475F.9000509@pobox.com>
 Content-Disposition: inline
-In-Reply-To: <50F4480B.7050001@pobox.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <kernel@teksavvy.com>, Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, linux-pci@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-On Mon, Jan 14, 2013 at 01:01:47PM -0500, Jeff Garzik wrote:
-> On 01/11/2013 01:44 PM, Tejun Heo wrote:
-> >Hello,
-> >
-> >On Fri, Jan 11, 2013 at 11:16:26AM +0800, Aaron Lu wrote:
-> >>OK, will make it atomic in next version, thanks for the advice.
-> >>
-> >>Perhaps I can add two scsi helper functions in scsi_lib.c like:
-> >>
-> >>void sdev_disable_disk_events(struct scsi_device *sdev)
-> >>{
-> >>	atomic_inc(&sdev->disk_events_disable_depth);
-> >>}
-> >>
-> >>void sdev_enable_disk_events(struct scsi_device *sdev)
-> >>{
-> >>	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-> >>		return;
-> >>	atomic_dec(&sdev->disk_events_disable_depth);
-> >>}
-> >>
-> >>And call them in ATA layer. Do you like this?
-> >
-> >Sounds good to me.  James, how does the series look to you?
-> 
-> Indeed.  Want James' Acked-by for patch #1.
-> 
-> I think it's ready.  It can go into libata-dev.git #upstream, and be
-> reverted prior to Linus push if James NAKs.
+On Monday 14 January 2013 18:58:55 Jeff Garzik wrote:
+> If the issue continues to be seen, 
 
-Great! Thanks.
+You mean, more than it has been seen already?
 
-I'll incorporate Tejun's suggestions into v13 and send them out soon.
+> a knob to enable an ugly solution is 
+> better than nothing, from the user's perspective.
 
--Aaron
-
+Also, I fail to see how this is any more ugly than what the current code 
+does.
