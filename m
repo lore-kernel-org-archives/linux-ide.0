@@ -1,69 +1,58 @@
-From: Terry Suereth <terry.suereth@gmail.com>
-Subject: [PATCH] libata: apply behavioral quirks to sil3826 PMP
-Date: Mon, 14 Jan 2013 13:01:32 -0800
-Message-ID: <CANQSiW0zKNcg5tgmR=3_X5rJSDu0gr=qNS3=2naannGxgn52fg@mail.gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v12 7/9] libata: scsi: no poll when ODD is powered off
+Date: Tue, 15 Jan 2013 15:12:42 +0800
+Message-ID: <20130115071242.GA16590@aaronlu.sh.intel.com>
+References: <1357809870-18816-1-git-send-email-aaron.lu@intel.com>
+ <1357809870-18816-8-git-send-email-aaron.lu@intel.com>
+ <20130110195610.GL20454@htj.dyndns.org>
+ <20130111021110.GB26270@aaronlu.sh.intel.com>
+ <20130111021701.GA2513@mtj.dyndns.org>
+ <20130111031626.GA26613@aaronlu.sh.intel.com>
+ <20130111184457.GQ20454@htj.dyndns.org>
+ <50F4480B.7050001@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:39914 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756459Ab3ANVBd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jan 2013 16:01:33 -0500
-Received: by mail-qc0-f179.google.com with SMTP id b14so2776577qcs.38
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2013 13:01:32 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <50F4480B.7050001@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Fixing support for the Silicon Image 3826 port multiplier, by applying to it
-the same quirks applied to the Silicon Image 3726.  Specifically fixes the
-repeated timeout/reset process which previously afflicted the 3726, as
-described from line 290.  Slightly based on notes from:
+On Mon, Jan 14, 2013 at 01:01:47PM -0500, Jeff Garzik wrote:
+> On 01/11/2013 01:44 PM, Tejun Heo wrote:
+> >Hello,
+> >
+> >On Fri, Jan 11, 2013 at 11:16:26AM +0800, Aaron Lu wrote:
+> >>OK, will make it atomic in next version, thanks for the advice.
+> >>
+> >>Perhaps I can add two scsi helper functions in scsi_lib.c like:
+> >>
+> >>void sdev_disable_disk_events(struct scsi_device *sdev)
+> >>{
+> >>	atomic_inc(&sdev->disk_events_disable_depth);
+> >>}
+> >>
+> >>void sdev_enable_disk_events(struct scsi_device *sdev)
+> >>{
+> >>	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
+> >>		return;
+> >>	atomic_dec(&sdev->disk_events_disable_depth);
+> >>}
+> >>
+> >>And call them in ATA layer. Do you like this?
+> >
+> >Sounds good to me.  James, how does the series look to you?
+> 
+> Indeed.  Want James' Acked-by for patch #1.
+> 
+> I think it's ready.  It can go into libata-dev.git #upstream, and be
+> reverted prior to Linus push if James NAKs.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=890237
+Great! Thanks.
 
-Signed-off-by: Terry Suereth <terry.suereth@gmail.com>
----
-diff -up drivers/ata/libata-pmp.c.old drivers/ata/libata-pmp.c
---- drivers/ata/libata-pmp.c.old	2013-01-13 13:42:56.582780772 -0800
-+++ drivers/ata/libata-pmp.c	2013-01-13 13:43:33.670964680 -0800
-@@ -289,24 +289,24 @@ static int sata_pmp_configure(struct ata
+I'll incorporate Tejun's suggestions into v13 and send them out soon.
 
- 	/* Disable sending Early R_OK.
- 	 * With "cached read" HDD testing and multiple ports busy on a SATA
--	 * host controller, 3726 PMP will very rarely drop a deferred
-+	 * host controller, 3x26 PMP will very rarely drop a deferred
- 	 * R_OK that was intended for the host. Symptom will be all
- 	 * 5 drives under test will timeout, get reset, and recover.
- 	 */
--	if (vendor == 0x1095 && devid == 0x3726) {
-+	if (vendor == 0x1095 && (devid == 0x3726 || devid == 0x3826)) {
- 		u32 reg;
+-Aaron
 
- 		err_mask = sata_pmp_read(&ap->link, PMP_GSCR_SII_POL, &reg);
- 		if (err_mask) {
- 			rc = -EIO;
--			reason = "failed to read Sil3726 Private Register";
-+			reason = "failed to read Sil3x26 Private Register";
- 			goto fail;
- 		}
- 		reg &= ~0x1;
- 		err_mask = sata_pmp_write(&ap->link, PMP_GSCR_SII_POL, reg);
- 		if (err_mask) {
- 			rc = -EIO;
--			reason = "failed to write Sil3726 Private Register";
-+			reason = "failed to write Sil3x26 Private Register";
- 			goto fail;
- 		}
- 	}
-@@ -383,8 +383,8 @@ static void sata_pmp_quirks(struct ata_p
- 	u16 devid = sata_pmp_gscr_devid(gscr);
- 	struct ata_link *link;
-
--	if (vendor == 0x1095 && devid == 0x3726) {
--		/* sil3726 quirks */
-+	if (vendor == 0x1095 && (devid == 0x3x26 || devid == 0x3826)) {
-+		/* sil3x26 quirks */
- 		ata_for_each_link(link, ap, EDGE) {
- 			/* link reports offline after LPM */
- 			link->flags |= ATA_LFLAG_NO_LPM;
