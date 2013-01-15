@@ -1,33 +1,188 @@
-From: bl0 <bl0-052@playker.info>
-Subject: Re: sata_sil data corruption, possible workarounds
-Date: Tue, 15 Jan 2013 08:44:22 +0100
-Message-ID: <201301150844.22693.bl0-052@playker.info>
-References: <kahap3$mur$1@ger.gmane.org> <50F0199D.4090502@teksavvy.com> <50F4475F.9000509@pobox.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v13 0/9] ZPODD Patches
+Date: Tue, 15 Jan 2013 17:20:56 +0800
+Message-ID: <1358241665-2156-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f48.google.com ([209.85.214.48]:42313 "EHLO
-	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756065Ab3AOHos (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2013 02:44:48 -0500
-Received: by mail-bk0-f48.google.com with SMTP id jc3so2368084bkc.7
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jan 2013 23:44:47 -0800 (PST)
-In-Reply-To: <50F4475F.9000509@pobox.com>
-Content-Disposition: inline
+Received: from mga01.intel.com ([192.55.52.88]:50433 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756637Ab3AOJUW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Jan 2013 04:20:22 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, Mark Lord <kernel@teksavvy.com>, Tejun Heo <tj@kernel.org>, Robert Hancock <hancockrwd@gmail.com>, linux-pci@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-On Monday 14 January 2013 18:58:55 Jeff Garzik wrote:
-> If the issue continues to be seen, 
+v13:
+Use atomic type for disk_events_disable_depth, so that disabling can
+stack and has its own synchronization rule as suggested by Tejun Heo;
 
-You mean, more than it has been seen already?
+Set zp_ready to false whenever we found the ODD is not in ZP ready state
+due to support of NO_POWEROFF qos flag. This change is made in patch 6
+instead of patch 4 so that it is clear why this change is necessary.
 
-> a knob to enable an ugly solution is 
-> better than nothing, from the user's perspective.
+v12:
+Suggestions by Tejun Heo:
+Fold patch 2 into patch 3;
+Do not use bitfields in zpodd structure;
+Call zpodd_exit in ata_scsi_remove_dev;
+Remove run_atapi_cmd, use ata_exec_internal directly;
+Use enum to return ODD loading mechanism type information;
+Added some comments.
 
-Also, I fail to see how this is any more ugly than what the current code 
-does.
+Typo fix:
+Fixed some mis-spellings as pointed out by Sergei Shtylyov.
+
+Several function name changes:
+Rename zpodd_pre_poweroff to zpodd_enable_run_wake, zpodd_pre_poweron
+to zpodd_disable_run_wake. This feels clearer and people can get what
+the two functions are supposed to do by their names;
+Rename zpodd_post_resume to zpodd_post_poweron, since this function is
+only useful when the ODD is powered off during suspend.
+I decided to rename these functions when I'm adding comments for them
+as suggested by Tejun Heo, and I felt I didn't name them well...
+
+QOS no_poweroff flag:
+Only export qos flag for ZPODD devices, disks that can be runtime
+powered off should also export this interface, but it doesn't belong
+to this patchset so will be done in other patches.
+
+A new patch:
+Added a patch to remove a no more useful scsi_device flag can_power_off.
+
+A git repo for it:
+https://github.com/aaronlu/linux.git zpodd_v12
+
+v11:
+Introduce event_driven flag in scsi_device to silence the media event
+poll after ODD is powered off;
+Removed ata layer PM QOS control, instead, simply limit ACPI state to
+D3_HOT when choosing state;
+Make the power off delay a module param named zpodd_poweroff_delay,
+defaults to 30 seconds.
+
+v10:
+Introduce PM_QOS_NO_POLL flag to skip calling disk's events_check
+callback;
+Do not use zero power ready hint information from event poll;
+Check attached device in port's runtime idle callback to decide if
+suspend is desired;
+Address various comments from Tejun Heo.
+
+v9:
+Build ZPODD as part of libata instead of another standalone module
+as it is tightly related to other libata files.
+Identify and init ZPODD during probe time instead of after SCSI
+device is created as suggested by Tejun Heo.
+Make use of pm qos flag to give ACPI hint when choosing ACPI state.
+Expose qos flag to give user control of whether power off is allowed.
+
+This patchset used Rafael's pm-qos work:
+git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git pm-qos
+
+v8:
+This version is a redesign, it doesn't have much to do with previous
+versions. The ZPODD implementation is done almost entirely in ATA layer
+now, except 2 helper functions from SCSI sr driver to block disk events.
+
+The basic idea is that, when ata port is runtime suspended, it will
+check if the ODD is ready to be powered off. And if yes, events is
+blocked and power omitted; if not, ODD's power supply remains unchanged
+by keeping ACPI state at D0.
+
+Some background knowledge about ZPODD is added below v1 history log.
+
+v7:
+Re work of runtime pm of sr driver, based on ideas of Alan Stern and
+Oliver Neukum.
+
+Jeff, due to the ready_to_power_off flag added, there is a small
+change in [PATCH v7 6/6] libata: acpi: respect may_power_off flag,
+please check if I can still get your ack, thanks.
+
+v6:
+When user changes may_power_off flag through sysfs entry and if device
+is already runtime suspended, resume resume it so that it can respect
+this flag next time it is runtime suspended as suggested by Alan Stern.
+Call scsi_autopm_get/put_device once in sr_check_events as suggested by
+Alan Stern.
+
+v5:
+Add may_power_off flag to scsi device.
+Alan Stern suggested that I should not mess runtime suspend with
+runtime power off, but the current zpodd implementation made it not
+easy to seperate. So I re-wrote the zpodd implementation, the end
+result is, normal ODD can also enter runtime suspended state, but
+their power won't be removed.
+
+v4:
+Rebase on top of Linus' tree, due to this, the problem of a missing
+flag in v3 is gone;
+Add a new function scsi_autopm_put_device_autosuspend to first mark
+last busy for the device and then put autosuspend it as suggested by
+Oliver Neukum.
+Typo fix as pointed by Sergei Shtylyov.
+Check can_power_off flag before any runtime pm operations in sr.
+
+v3:
+Rebase on top of scsi-misc tree;
+Add the sr related patches previously in Jeff's libata tree;
+Re-organize the sr patches.
+A problem for now: for patch
+scsi: sr: support zero power ODD(ZPODD)
+I can't set a flag in libata-acpi.c since a related function is
+missing in scsi-misc tree. Will fix this when 3.6-rc1 released.
+
+v2:
+Bug fix for v1;
+Use scsi_autopm_* in sr driver instead of pm_runtime_*;
+
+v1:
+Here are some patches to make ZPODD easier to use for end users and
+a fix for using ZPODD with system suspend.
+
+Some background knowledge about ZPODD:
+ODD means Optical Disc Drive.
+ZPODD means Zero Power ODD, it is a mechanism to place the ODD into
+zero power state when the system is running at S0 system state without
+user's awareness.
+It achieved this by ACPI and SATA device attention pin. For power off,
+normal ACPI control method is used to place the device into D3 cold
+ACPI device state, aka. device power supply omitted. For power on, when
+user press the eject button of a drawer type ODD or when user inserts
+an ODD into a slot type ODD, the device attention pin will trigger. In
+the current x86 implementation, this pin will connect to a GPE, and the
+GPE will trigger an ACPI interrupt. With our pre-registered ACPI
+notification code, the device can be runtime resumed, and we place the
+device back to full power state by setting its ACPI state to D0. The
+whole process is transparent to the end user.
+
+Aaron Lu (9):
+  scsi: sr: support runtime pm
+  libata: identify and init ZPODD devices
+  libata: move acpi notification code to zpodd
+  libata: check zero power ready status for ZPODD
+  libata: handle power transition of ODD
+  libata: expose pm qos flags for ata device
+  libata: scsi: no poll when ODD is powered off
+  libata: do not suspend port if normal ODD is attached
+  scsi: remove can_power_off flag from scsi_device
+
+ drivers/ata/Kconfig        |  13 ++
+ drivers/ata/Makefile       |   1 +
+ drivers/ata/libata-acpi.c  | 109 +++++-----------
+ drivers/ata/libata-core.c  |  23 +++-
+ drivers/ata/libata-eh.c    |  16 ++-
+ drivers/ata/libata-scsi.c  |   2 +
+ drivers/ata/libata-zpodd.c | 300 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h       |  27 ++++
+ drivers/scsi/scsi_lib.c    |  14 +++
+ drivers/scsi/sr.c          |  36 +++++-
+ include/linux/libata.h     |   3 +
+ include/scsi/scsi_device.h |   5 +-
+ include/uapi/linux/cdrom.h |  34 +++++
+ 13 files changed, 492 insertions(+), 91 deletions(-)
+ create mode 100644 drivers/ata/libata-zpodd.c
+
+-- 
+1.7.11.7
+
