@@ -1,60 +1,55 @@
-From: Kay Sievers <kay@vrfy.org>
-Subject: Re: [PATCH v2] libata: export host controller number thru /sys
-Date: Wed, 16 Jan 2013 02:01:39 +0100
-Message-ID: <CAPXgP12JEjksJz7eyvOmzAXh+nFPrEXEU_bsoff-u9bwiyipZg@mail.gmail.com>
-References: <1358287662-24016-1-git-send-email-dmilburn@redhat.com>
+From: Sedat Dilek <sedat.dilek@gmail.com>
+Subject: Re: [3.8-{rc1,rc2}] ata1.00: failed to get Identify Device Data,
+ Emask 0x1
+Date: Wed, 16 Jan 2013 11:10:06 +0100
+Message-ID: <CA+icZUU7UmoYb5j7Pg57pMdgfw5GNA=M0aBuc5362o2t7Hqt3w@mail.gmail.com>
+References: <CA+icZUUCB3K1=DuM6Nonu+Qc+qg3cM_ODk9TDZ-uYCfLVOhrdw@mail.gmail.com>
+	<CA+icZUXrQ4aq+cKXj3qEwnhtTGPBfHcJ6q_zTm3xSBUUh9W8dQ@mail.gmail.com>
+	<CA+icZUVBdsAa7ZA7e_UNpBsAOpVOXcawhUncbHNdkC-MGY4qLw@mail.gmail.com>
+	<43EB3AB3EEFE8D43B525F4D2EAF507E107F4160E@SCYBEXDAG04.amd.com>
+Reply-To: sedat.dilek@gmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:47501 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757044Ab3APBCC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jan 2013 20:02:02 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hq4so2946918wib.7
-        for <linux-ide@vger.kernel.org>; Tue, 15 Jan 2013 17:02:00 -0800 (PST)
-In-Reply-To: <1358287662-24016-1-git-send-email-dmilburn@redhat.com>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:41911 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757793Ab3APKKH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2013 05:10:07 -0500
+In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E107F4160E@SCYBEXDAG04.amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
+To: "Huang, Shane" <Shane.Huang@amd.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>, linux-next <linux-next@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Tue, Jan 15, 2013 at 11:07 PM, David Milburn <dmilburn@redhat.com> wrote:
-> As low-level drivers register their host controller(s), keep track
-> of the number of controllers and export thru /sys in a <host.port>
-> format so that udev can better match up port numbers with a
-> specific controller.
+On Sat, Jan 5, 2013 at 3:20 AM, Huang, Shane <Shane.Huang@amd.com> wrote:
+>> OK, I see the patch I mentioned to fix the problem was later reverted [1].
+>> The real fix is "libata: replace sata_settings with devslp_timing" [2].
+>
+> Yes, please use [2] which can also be found in kernel bugzilla #51881
+> and is pending on Jeff's acceptance. Sorry for the trouble to you guys.
+>
 
-Hmm, I tried this and I don't think it will solve out problem. But I
-might have missed something ...
+[ CCing Linus ]
 
-This is host 2 with port "7", but it is really port 1:
+Thanks for taking care (my latest experiences on LKML/linux-next tell
+me even this is no more the fact!)!
 
-> ./0000:00:1e.0/0000:05:01.0/ata2.7
-> ./0000:00:1e.0/0000:05:01.0/ata2.7/link7/dev7.0/ata_device
+Your patch finally hit Linux-Next (next-20130116) and IIRC it is also
+marked for previous Linux-kernel releases (CC -stable).
+I have tested your patch as said also against Linux v3.8-rcX.
 
-This is host 1 with port "6":
+Unfortunately, the applied patch in Linux-Next does not contain any of
+my desired Reported-by/Tested-by.
+This makes me a bit unhappy, but I do NOT insist on it.
 
-> ./0000:00:1f.2/ata1.6/ata_port
-> ./0000:00:1f.2/ata1.6/ata_port/ata1.6
+Mr. Torvalds himself pointed several times to all maintainers to
+honour people - even they report and ideally report-and-test!
 
-The host number is meaningless regarding stable identifiers, as it
-depends on probing/driver binding order.
+I am doing all my testings in my free-time and I am not paid for it.
+I am raping my hardware here!
+I can't do more than that!
 
-Now, the port number is still *global* across all all controllers, and
-therefore also not useful. We need *host-local* numbers, which share
-nothing with other hosts, so the drivers and bus enumeration order can
-change at any time without affecting any of the device numbers used
-inside the host.
+- Sedat -
 
-I have not much clue about port-multipliers, never seen them, but if
-we want to support arbitrary stacking of them we will need to compose
-a "chain of numbers" in the "stable identifier" out of the individual
-port numbers they are connected to, very much like USB hub chaining
-works. This means we will need every instance in the chain to start
-with their own numbers again.
-
-Any global counters used for device naming/enumeration are not useful
-to identify devices from userspace.
-
-Thanks,
-Kay
+> Thanks,
+> Shane
