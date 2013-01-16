@@ -1,45 +1,79 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Wed, 16 Jan 2013 11:31:31 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
-References: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH v2] libata: export host controller number thru /sys
+Date: Wed, 16 Jan 2013 15:25:57 -0600
+Message-ID: <50F71AE5.6050906@redhat.com>
+References: <1358287662-24016-1-git-send-email-dmilburn@redhat.com> <CAPXgP12JEjksJz7eyvOmzAXh+nFPrEXEU_bsoff-u9bwiyipZg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:60153 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757149Ab3APQbc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2013 11:31:32 -0500
-In-Reply-To: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61869 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755763Ab3APV0I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Jan 2013 16:26:08 -0500
+In-Reply-To: <CAPXgP12JEjksJz7eyvOmzAXh+nFPrEXEU_bsoff-u9bwiyipZg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: Kay Sievers <kay@vrfy.org>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
 
-On Wed, 16 Jan 2013, James Bottomley wrote:
-
-> On Tue, 2013-01-15 at 17:20 +0800, Aaron Lu wrote:
-> > This patch adds runtime pm support for sr.
-> > 
-> > It did this by increasing the runtime usage_count of the device when:
-> > - its block device is opened;
-> > - the events checking is to run.
-> > 
-> > And decreasing the runtime usage_count of the device when:
-> > - its block device is closed;
-> > - After the events checking is done.
-> > 
-> > The idea is discussed in this mail thread:
-> > http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
-> > 
-> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Kay Sievers wrote:
+> On Tue, Jan 15, 2013 at 11:07 PM, David Milburn <dmilburn@redhat.com> wrote:
+>> As low-level drivers register their host controller(s), keep track
+>> of the number of controllers and export thru /sys in a <host.port>
+>> format so that udev can better match up port numbers with a
+>> specific controller.
 > 
-> I'd like an ack from Alan Stern as well, please, but with that, you can
-> add my acked-by.
+> Hmm, I tried this and I don't think it will solve out problem. But I
+> might have missed something ...
+> 
+> This is host 2 with port "7", but it is really port 1:
+> 
+>> ./0000:00:1e.0/0000:05:01.0/ata2.7
+>> ./0000:00:1e.0/0000:05:01.0/ata2.7/link7/dev7.0/ata_device
+> 
+> This is host 1 with port "6":
+> 
+>> ./0000:00:1f.2/ata1.6/ata_port
+>> ./0000:00:1f.2/ata1.6/ata_port/ata1.6
+> 
+> The host number is meaningless regarding stable identifiers, as it
+> depends on probing/driver binding order.
+> 
+> Now, the port number is still *global* across all all controllers, and
+> therefore also not useful. We need *host-local* numbers, which share
+> nothing with other hosts, so the drivers and bus enumeration order can
+> change at any time without affecting any of the device numbers used
+> inside the host.
+> 
+> I have not much clue about port-multipliers, never seen them, but if
+> we want to support arbitrary stacking of them we will need to compose
+> a "chain of numbers" in the "stable identifier" out of the individual
+> port numbers they are connected to, very much like USB hub chaining
+> works. This means we will need every instance in the chain to start
+> with their own numbers again.
+> 
+> Any global counters used for device naming/enumeration are not useful
+> to identify devices from userspace.
 
-Aaron, have you checked whether this patch works okay when you play a
-track on an audio-only CD on the computer?  The block interface looks 
-okay but I'm not sure about the cdrom_device interface.
+Hi Kay,
 
-Alan Stern
+So, if we eliminated the global ata_print_id counter, then we would
+need to check all the places ap->print_id is used and consider the host
+controller and a local_print_id. So, if the above changed to 2.1, we
+would expect ata2.1 to show up in dmesg during error recovery
+instead of ata7, right?
+
+There are other places (non-printk stuff) in libata that check the global
+counter that would need to change, and libsas increments the global
+counter when a SATA drive is present on a SAS controller.
+
+Thanks,
+David
+
+> 
+> Thanks,
+> Kay
+
+
 
