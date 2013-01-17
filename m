@@ -1,37 +1,33 @@
-From: Simon Que <sque@chromium.org>
-Subject: [PATCH] ata: libata-core: initialize native_sectors in ata_hpa_resize()
-Date: Wed, 16 Jan 2013 16:09:11 -0800
-Message-ID: <1358381351-27898-1-git-send-email-sque@chromium.org>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] ata: libata-core: initialize native_sectors in ata_hpa_resize()
+Date: Thu, 17 Jan 2013 16:06:04 +0400
+Message-ID: <50F7E92C.8070409@mvista.com>
+References: <1358381351-27898-1-git-send-email-sque@chromium.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f201.google.com ([209.85.213.201]:62874 "EHLO
-	mail-ye0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757567Ab3AQAch (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jan 2013 19:32:37 -0500
-Received: by mail-ye0-f201.google.com with SMTP id r11so244735yen.2
-        for <linux-ide@vger.kernel.org>; Wed, 16 Jan 2013 16:32:36 -0800 (PST)
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:33234 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756315Ab3AQMML (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2013 07:12:11 -0500
+Received: by mail-lb0-f179.google.com with SMTP id gm13so1850777lbb.38
+        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 04:12:09 -0800 (PST)
+In-Reply-To: <1358381351-27898-1-git-send-email-sque@chromium.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: msb@chromium.org, Simon Que <sque@chromium.org>
+To: Simon Que <sque@chromium.org>
+Cc: linux-ide@vger.kernel.org, msb@chromium.org
 
-Signed-off-by: Simon Que <sque@chromium.org>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hello.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d2b18ea..b185db1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
- 	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
- 	bool unlock_hpa = ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_HPA;
- 	u64 sectors = ata_id_n_sectors(dev->id);
--	u64 native_sectors;
-+	u64 native_sectors = 0;
- 	int rc;
- 
- 	/* do we need to do it? */
--- 
-1.7.8.6
+On 17-01-2013 4:09, Simon Que wrote:
+
+    Why we need to initialize it? Thats should told be in your (missing) 
+changelog.
+
+> Signed-off-by: Simon Que <sque@chromium.org>
+
+MBR, Sergei
+
 
