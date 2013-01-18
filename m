@@ -1,59 +1,96 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Fri, 18 Jan 2013 15:42:40 +0800
-Message-ID: <20130118074240.GA6861@aaronlu.sh.intel.com>
-References: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
- <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
+From: Jiada Wang <stephen.jiadawang@gmail.com>
+Subject: [patch] libata handle HDIO_SET_DMA HDIO_GET_DMA ioctl
+Date: Fri, 18 Jan 2013 16:55:19 +0900
+Message-ID: <CAK4xk3h7FVCsSzE3M1AJKV8rF0S0C+HiEvu0a6D24joPe-n7jA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary=20cf300fafc1c76ff804d38b6ee0
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:61544 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867Ab3ARHl6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jan 2013 02:41:58 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:34613 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314Ab3ARHzU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 02:55:20 -0500
+Received: by mail-qa0-f44.google.com with SMTP id o13so1130149qaj.17
+        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 23:55:19 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-On Wed, Jan 16, 2013 at 11:31:31AM -0500, Alan Stern wrote:
-> On Wed, 16 Jan 2013, James Bottomley wrote:
-> 
-> > On Tue, 2013-01-15 at 17:20 +0800, Aaron Lu wrote:
-> > > This patch adds runtime pm support for sr.
-> > > 
-> > > It did this by increasing the runtime usage_count of the device when:
-> > > - its block device is opened;
-> > > - the events checking is to run.
-> > > 
-> > > And decreasing the runtime usage_count of the device when:
-> > > - its block device is closed;
-> > > - After the events checking is done.
-> > > 
-> > > The idea is discussed in this mail thread:
-> > > http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
-> > > 
-> > > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> > 
-> > I'd like an ack from Alan Stern as well, please, but with that, you can
-> > add my acked-by.
-> 
-> Aaron, have you checked whether this patch works okay when you play a
-> track on an audio-only CD on the computer?  The block interface looks 
-> okay but I'm not sure about the cdrom_device interface.
+--20cf300fafc1c76ff804d38b6ee0
+Content-Type: text/plain; charset=ISO-8859-1
 
-Just verified it works OK with the whole patchset applied using 2 audio
-CDs.
+Hi
 
-After the ODD has been put into zero power state, insert an audio cd.
-ODD will be resumed, gvfs will automatically mount the disc, and a
-dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
-application will get started. Press the Play button of rhythmbox, songs
-will start to play, and runtime_usage is 2. Eject the disc, the ODD will
-be put to zero power state some time later.
+The purpose of this patch is to switch SATA device in PIO mode and DMA mode,
+And get current transfer mode,
+
+Please kindly give me your comments
 
 Thanks,
-Aaron
 
+Jiada
+
+--20cf300fafc1c76ff804d38b6ee0
+Content-Type: application/octet-stream;
+	name="0001-libata-handle-HDIO_SET_DMA-HDIO_GET_DMA-ioctl.patch"
+Content-Disposition: attachment;
+	filename="0001-libata-handle-HDIO_SET_DMA-HDIO_GET_DMA-ioctl.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_hc319twq0
+
+RnJvbSBkOTI1ODZkOGE3MDdmMDZkYzBiODE4OWZkMjI0ODNhOWQ4YTc1M2Q0IE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBKaWFkYSBXYW5nIDxqaWFkYV93YW5nQG1lbnRvci5jb20+CkRh
+dGU6IFdlZCwgMjYgRGVjIDIwMTIgMTc6MDA6MzkgKzA5MDAKU3ViamVjdDogW1BBVENIXSBsaWJh
+dGE6IGhhbmRsZSBIRElPX1NFVF9ETUEgJiBIRElPX0dFVF9ETUEgaW9jdGwKCmN1cnJlbnRseSBI
+RElPX1NFVF9ETUEgJiBIRElPX0dFVF9ETUEgYXJlIG5vdCBoYW5kbGVkIGluIGxpYmF0YSwKdGhp
+cyBwYXRjaCBhZGQgc3VwcG9ydCB0byBoYW5kbGUgSERJT19TRVRfRE1BICYgSERJT19HRVRfRE1B
+IGlvY3RsLAp3aGljaCBlbmFibGVzIHVzZXIgdG8gc2V0IGF0YSBkZXZpY2Ugd29yayBpbiBQSU8g
+b3IgRE1BIG1vZGUuCgpTaWduZWQtb2ZmLWJ5OiBKaWFkYSBXYW5nIDxqaWFkYV93YW5nQG1lbnRv
+ci5jb20+Ci0tLQogZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYyB8ICAyICstCiBkcml2ZXJzL2F0
+YS9saWJhdGEtc2NzaS5jIHwgMzYgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
+CiBpbmNsdWRlL2xpbnV4L2xpYmF0YS5oICAgIHwgIDEgKwogMyBmaWxlcyBjaGFuZ2VkLCAzOCBp
+bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGli
+YXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMKaW5kZXggNzFlODM4NS4uNmIx
+Njk1MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYworKysgYi9kcml2ZXJz
+L2F0YS9saWJhdGEtY29yZS5jCkBAIC0zMTM2LDcgKzMxMzYsNyBAQCBpbnQgYXRhX2Rvd25feGZl
+cm1hc2tfbGltaXQoc3RydWN0IGF0YV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHNlbCkKIAly
+ZXR1cm4gMDsKIH0KIAotc3RhdGljIGludCBhdGFfZGV2X3NldF9tb2RlKHN0cnVjdCBhdGFfZGV2
+aWNlICpkZXYpCitpbnQgYXRhX2Rldl9zZXRfbW9kZShzdHJ1Y3QgYXRhX2RldmljZSAqZGV2KQog
+ewogCXN0cnVjdCBhdGFfcG9ydCAqYXAgPSBkZXYtPmxpbmstPmFwOwogCXN0cnVjdCBhdGFfZWhf
+Y29udGV4dCAqZWhjID0gJmRldi0+bGluay0+ZWhfY29udGV4dDsKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvYXRhL2xpYmF0YS1zY3NpLmMgYi9kcml2ZXJzL2F0YS9saWJhdGEtc2NzaS5jCmluZGV4IDIy
+MjI2MzUuLmJlYWMyODUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMKKysr
+IGIvZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYwpAQCAtNjYwLDYgKzY2MCw4IEBAIGludCBhdGFf
+c2FzX3Njc2lfaW9jdGwoc3RydWN0IGF0YV9wb3J0ICphcCwgc3RydWN0IHNjc2lfZGV2aWNlICpz
+Y3NpZGV2LAogewogCWludCB2YWwgPSAtRUlOVkFMLCByYyA9IC1FSU5WQUw7CiAJdW5zaWduZWQg
+bG9uZyBmbGFnczsKKwlzdHJ1Y3QgYXRhX2RldmljZSAqZGV2ID0gX19hdGFfc2NzaV9maW5kX2Rl
+dihhcCwgc2NzaWRldik7CisJaW50IGRtYTsKIAogCXN3aXRjaCAoY21kKSB7CiAJY2FzZSBBVEFf
+SU9DX0dFVF9JTzMyOgpAQCAtNjk5LDYgKzcwMSw0MCBAQCBpbnQgYXRhX3Nhc19zY3NpX2lvY3Rs
+KHN0cnVjdCBhdGFfcG9ydCAqYXAsIHN0cnVjdCBzY3NpX2RldmljZSAqc2NzaWRldiwKIAkJCXJl
+dHVybiAtRUFDQ0VTOwogCQlyZXR1cm4gYXRhX3Rhc2tfaW9jdGwoc2NzaWRldiwgYXJnKTsKIAor
+CWNhc2UgSERJT19HRVRfRE1BOgorCQlyZXR1cm4gcHV0X3VzZXIoZGV2LT54ZmVyX21vZGUgPT0g
+ZGV2LT5kbWFfbW9kZSwKKwkJCQkobG9uZyBfX3VzZXIgKikgYXJnKTsKKwljYXNlIEhESU9fU0VU
+X0RNQToKKwkJaWYgKCFjYXBhYmxlKENBUF9TWVNfQURNSU4pIHx8ICFjYXBhYmxlKENBUF9TWVNf
+UkFXSU8pKQorCQkJcmV0dXJuIC1FQUNDRVM7CisKKwkJaWYgKGNvcHlfZnJvbV91c2VyKCZkbWEs
+IGFyZywgc2l6ZW9mKGRtYSkpKQorCQkJcmV0dXJuIC1FRkFVTFQ7CisKKwkJaWYgKGRtYSkgewor
+CQkJaWYgKCFhdGFfZG1hX2VuYWJsZWQoZGV2KSkKKwkJCQlyZXR1cm4gLUVJTlZBTDsKKworCQkJ
+ZGV2LT54ZmVyX21vZGUgPSBkZXYtPmRtYV9tb2RlOworCQkJZGV2LT54ZmVyX3NoaWZ0ID0gYXRh
+X3hmZXJfbW9kZTJzaGlmdChkZXYtPmRtYV9tb2RlKTsKKwkJCWlmIChhcC0+b3BzLT5zZXRfZG1h
+bW9kZSkKKwkJCQlhcC0+b3BzLT5zZXRfZG1hbW9kZShhcCwgZGV2KTsKKwkJfSBlbHNlIHsKKwkJ
+CWlmIChkZXYtPnBpb19tb2RlID09IDB4ZmYpCisJCQkJcmV0dXJuIC1FSU5WQUw7CisKKwkJCWRl
+di0+eGZlcl9tb2RlID0gZGV2LT5waW9fbW9kZTsKKwkJCWRldi0+eGZlcl9zaGlmdCA9IEFUQV9T
+SElGVF9QSU87CisJCQlpZiAoYXAtPm9wcy0+c2V0X3Bpb21vZGUpCisJCQkJYXAtPm9wcy0+c2V0
+X3Bpb21vZGUoYXAsIGRldik7CisJCX0KKworCQlhdGFfZWhfYWNxdWlyZShhcCk7CisJCXJjID0g
+YXRhX2Rldl9zZXRfbW9kZShkZXYpOworCQlhdGFfZWhfcmVsZWFzZShhcCk7CisKKwkJcmV0dXJu
+IHJjOworCiAJZGVmYXVsdDoKIAkJcmMgPSAtRU5PVFRZOwogCQlicmVhazsKZGlmZiAtLWdpdCBh
+L2luY2x1ZGUvbGludXgvbGliYXRhLmggYi9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCmluZGV4IDZl
+ODg3YzcuLjg4NjY0YjY3IDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCisrKyBi
+L2luY2x1ZGUvbGludXgvbGliYXRhLmgKQEAgLTEwNjcsNiArMTA2Nyw3IEBAIGV4dGVybiBpbnQg
+YXRhX2NhYmxlXzgwd2lyZShzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKIGV4dGVybiBpbnQgYXRhX2Nh
+YmxlX3NhdGEoc3RydWN0IGF0YV9wb3J0ICphcCk7CiBleHRlcm4gaW50IGF0YV9jYWJsZV9pZ25v
+cmUoc3RydWN0IGF0YV9wb3J0ICphcCk7CiBleHRlcm4gaW50IGF0YV9jYWJsZV91bmtub3duKHN0
+cnVjdCBhdGFfcG9ydCAqYXApOworZXh0ZXJuIGludCBhdGFfZGV2X3NldF9tb2RlKHN0cnVjdCBh
+dGFfZGV2aWNlICpkZXYpOwogCiAvKiBUaW1pbmcgaGVscGVycyAqLwogZXh0ZXJuIHVuc2lnbmVk
+IGludCBhdGFfcGlvX25lZWRfaW9yZHkoY29uc3Qgc3RydWN0IGF0YV9kZXZpY2UgKik7Ci0tIAox
+LjcuMTIuMwoK
+--20cf300fafc1c76ff804d38b6ee0--
