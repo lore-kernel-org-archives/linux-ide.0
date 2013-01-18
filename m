@@ -1,92 +1,59 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] [libata]Set proper SK when CK_COND is set.
-Date: Thu, 17 Jan 2013 18:18:30 -0800
-Message-ID: <1358475510-23949-1-git-send-email-gwendal@google.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
+Date: Fri, 18 Jan 2013 15:42:40 +0800
+Message-ID: <20130118074240.GA6861@aaronlu.sh.intel.com>
+References: <1358351148.2384.34.camel@dabdike.int.hansenpartnership.com>
+ <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f202.google.com ([209.85.223.202]:58194 "EHLO
-	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752879Ab3ARCnn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2013 21:43:43 -0500
-Received: by mail-ie0-f202.google.com with SMTP id s9so844103iec.5
-        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 18:43:43 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:61544 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750867Ab3ARHl6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Jan 2013 02:41:58 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1301161127540.1704-100000@iolanthe.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 
-When the user application sends a ATA_12 or ATA_16 PASSTHROUGH
-scsi command, put the task file register in the sense data with the
-proper Sense Key. Instead of NO SENSE, set RECOVERED, as
-specified in [SAT2]12.2.5 Table 92.
+On Wed, Jan 16, 2013 at 11:31:31AM -0500, Alan Stern wrote:
+> On Wed, 16 Jan 2013, James Bottomley wrote:
+> 
+> > On Tue, 2013-01-15 at 17:20 +0800, Aaron Lu wrote:
+> > > This patch adds runtime pm support for sr.
+> > > 
+> > > It did this by increasing the runtime usage_count of the device when:
+> > > - its block device is opened;
+> > > - the events checking is to run.
+> > > 
+> > > And decreasing the runtime usage_count of the device when:
+> > > - its block device is closed;
+> > > - After the events checking is done.
+> > > 
+> > > The idea is discussed in this mail thread:
+> > > http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
+> > > 
+> > > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> > 
+> > I'd like an ack from Alan Stern as well, please, but with that, you can
+> > add my acked-by.
+> 
+> Aaron, have you checked whether this patch works okay when you play a
+> track on an audio-only CD on the computer?  The block interface looks 
+> okay but I'm not sure about the cdrom_device interface.
 
-Change-Id: Ia7d77d09f6db6db4796310b4dc9789ac0d7af69b
-Tested:
-Using udev ata_id to generate a passthrough command, IDENTIFY:
-before:
- sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
-a1 08 2e 00 01 00 00 00 00 ec 00 00
- sd 0:0:0:0: [sda] Sense Key : No Sense [current] [descriptor]
- Descriptor sense data with sense descriptors (in hex):
-         72 00 00 00 00 00 00 0e 09 0c 00 00 00 00 00 3f
-         00 18 00 a6 e0 50
+Just verified it works OK with the whole patchset applied using 2 audio
+CDs.
 
-after
- sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
-a1 08 2e 00 01 00 00 00 00 ec 00 00
- sd 0:0:0:0: [sda]  Sense Key : Recovered Error [current] [descriptor]
- Descriptor sense data with sense descriptors (in hex):
-        72 01 00 1d 00 00 00 0e 09 0c 00 00 00 01 00 00
-        00 00 00 00 00 50
+After the ODD has been put into zero power state, insert an audio cd.
+ODD will be resumed, gvfs will automatically mount the disc, and a
+dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
+application will get started. Press the Play button of rhythmbox, songs
+will start to play, and runtime_usage is 2. Eject the disc, the ODD will
+be put to zero power state some time later.
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- drivers/ata/libata-scsi.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7c337e7..d5f81b2 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -933,7 +933,11 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
-  *	block specified for the ATA pass through commands.  Regardless
-  *	of whether the command errored or not, return a sense
-  *	block. Copy all controller registers into the sense
-- *	block. Clear sense key, ASC & ASCQ if there is no error.
-+ *	block. If there was no error, we get the request from an ATA
-+ *	passthrough command, so we use the following sense data:
-+ *	sk = RECOVERED ERROR
-+ *	asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
-+ *      
-  *
-  *	LOCKING:
-  *	None.
-@@ -959,6 +963,10 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
- 		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
- 				   &sb[1], &sb[2], &sb[3], verbose);
- 		sb[1] &= 0x0f;
-+	} else {
-+		sb[1] = RECOVERED_ERROR;
-+		sb[2] = 0;
-+		sb[3] = 0x1D;
- 	}
- 
- 	/*
-@@ -1733,10 +1741,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
- 	 * user mandated it or if there's an error.  Note that if we
--	 * generate because the user forced us to, a check condition
--	 * is generated and the ATA register values are returned
-+	 * generate because the user forced us to [CK_COND =1 ], a check
-+	 * condition is generated and the ATA register values are returned
- 	 * whether the command completed successfully or not. If there
--	 * was no error, SK, ASC and ASCQ will all be zero.
-+	 * was no error, we use the following sense data:
-+	 * sk = RECOVERED ERROR
-+	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
- 	 */
- 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
- 	    ((cdb[2] & 0x20) || need_sense)) {
--- 
-1.7.7.3
+Thanks,
+Aaron
 
