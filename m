@@ -1,96 +1,74 @@
-From: Jiada Wang <stephen.jiadawang@gmail.com>
-Subject: [patch] libata handle HDIO_SET_DMA HDIO_GET_DMA ioctl
-Date: Fri, 18 Jan 2013 16:55:19 +0900
-Message-ID: <CAK4xk3h7FVCsSzE3M1AJKV8rF0S0C+HiEvu0a6D24joPe-n7jA@mail.gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH] [libata]Set proper SK when CK_COND is set.
+Date: Fri, 18 Jan 2013 15:17:57 +0400
+Message-ID: <50F92F65.6060904@mvista.com>
+References: <1358475510-23949-1-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=20cf300fafc1c76ff804d38b6ee0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:34613 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314Ab3ARHzU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 02:55:20 -0500
-Received: by mail-qa0-f44.google.com with SMTP id o13so1130149qaj.17
-        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 23:55:19 -0800 (PST)
+Received: from mail-la0-f53.google.com ([209.85.215.53]:57118 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649Ab3ARLSK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 06:18:10 -0500
+Received: by mail-la0-f53.google.com with SMTP id fn20so3654510lab.26
+        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2013 03:18:08 -0800 (PST)
+In-Reply-To: <1358475510-23949-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
+To: Gwendal Grignou <gwendal@google.com>
+Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org
 
---20cf300fafc1c76ff804d38b6ee0
-Content-Type: text/plain; charset=ISO-8859-1
+Hello.
 
-Hi
+On 18-01-2013 6:18, Gwendal Grignou wrote:
 
-The purpose of this patch is to switch SATA device in PIO mode and DMA mode,
-And get current transfer mode,
+> When the user application sends a ATA_12 or ATA_16 PASSTHROUGH
+> scsi command, put the task file register in the sense data with the
+> proper Sense Key. Instead of NO SENSE, set RECOVERED, as
+> specified in [SAT2]12.2.5 Table 92.
 
-Please kindly give me your comments
+> Change-Id: Ia7d77d09f6db6db4796310b4dc9789ac0d7af69b
 
-Thanks,
+    Remove this line please.
 
-Jiada
+> Tested:
+> Using udev ata_id to generate a passthrough command, IDENTIFY:
+> before:
+>   sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+> a1 08 2e 00 01 00 00 00 00 ec 00 00
+>   sd 0:0:0:0: [sda] Sense Key : No Sense [current] [descriptor]
+>   Descriptor sense data with sense descriptors (in hex):
+>           72 00 00 00 00 00 00 0e 09 0c 00 00 00 00 00 3f
+>           00 18 00 a6 e0 50
 
---20cf300fafc1c76ff804d38b6ee0
-Content-Type: application/octet-stream;
-	name="0001-libata-handle-HDIO_SET_DMA-HDIO_GET_DMA-ioctl.patch"
-Content-Disposition: attachment;
-	filename="0001-libata-handle-HDIO_SET_DMA-HDIO_GET_DMA-ioctl.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_hc319twq0
+> after
+>   sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+> a1 08 2e 00 01 00 00 00 00 ec 00 00
+>   sd 0:0:0:0: [sda]  Sense Key : Recovered Error [current] [descriptor]
+>   Descriptor sense data with sense descriptors (in hex):
+>          72 01 00 1d 00 00 00 0e 09 0c 00 00 00 01 00 00
+>          00 00 00 00 00 50
 
-RnJvbSBkOTI1ODZkOGE3MDdmMDZkYzBiODE4OWZkMjI0ODNhOWQ4YTc1M2Q0IE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBKaWFkYSBXYW5nIDxqaWFkYV93YW5nQG1lbnRvci5jb20+CkRh
-dGU6IFdlZCwgMjYgRGVjIDIwMTIgMTc6MDA6MzkgKzA5MDAKU3ViamVjdDogW1BBVENIXSBsaWJh
-dGE6IGhhbmRsZSBIRElPX1NFVF9ETUEgJiBIRElPX0dFVF9ETUEgaW9jdGwKCmN1cnJlbnRseSBI
-RElPX1NFVF9ETUEgJiBIRElPX0dFVF9ETUEgYXJlIG5vdCBoYW5kbGVkIGluIGxpYmF0YSwKdGhp
-cyBwYXRjaCBhZGQgc3VwcG9ydCB0byBoYW5kbGUgSERJT19TRVRfRE1BICYgSERJT19HRVRfRE1B
-IGlvY3RsLAp3aGljaCBlbmFibGVzIHVzZXIgdG8gc2V0IGF0YSBkZXZpY2Ugd29yayBpbiBQSU8g
-b3IgRE1BIG1vZGUuCgpTaWduZWQtb2ZmLWJ5OiBKaWFkYSBXYW5nIDxqaWFkYV93YW5nQG1lbnRv
-ci5jb20+Ci0tLQogZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYyB8ICAyICstCiBkcml2ZXJzL2F0
-YS9saWJhdGEtc2NzaS5jIHwgMzYgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-CiBpbmNsdWRlL2xpbnV4L2xpYmF0YS5oICAgIHwgIDEgKwogMyBmaWxlcyBjaGFuZ2VkLCAzOCBp
-bnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGli
-YXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMKaW5kZXggNzFlODM4NS4uNmIx
-Njk1MiAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYworKysgYi9kcml2ZXJz
-L2F0YS9saWJhdGEtY29yZS5jCkBAIC0zMTM2LDcgKzMxMzYsNyBAQCBpbnQgYXRhX2Rvd25feGZl
-cm1hc2tfbGltaXQoc3RydWN0IGF0YV9kZXZpY2UgKmRldiwgdW5zaWduZWQgaW50IHNlbCkKIAly
-ZXR1cm4gMDsKIH0KIAotc3RhdGljIGludCBhdGFfZGV2X3NldF9tb2RlKHN0cnVjdCBhdGFfZGV2
-aWNlICpkZXYpCitpbnQgYXRhX2Rldl9zZXRfbW9kZShzdHJ1Y3QgYXRhX2RldmljZSAqZGV2KQog
-ewogCXN0cnVjdCBhdGFfcG9ydCAqYXAgPSBkZXYtPmxpbmstPmFwOwogCXN0cnVjdCBhdGFfZWhf
-Y29udGV4dCAqZWhjID0gJmRldi0+bGluay0+ZWhfY29udGV4dDsKZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvYXRhL2xpYmF0YS1zY3NpLmMgYi9kcml2ZXJzL2F0YS9saWJhdGEtc2NzaS5jCmluZGV4IDIy
-MjI2MzUuLmJlYWMyODUgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMKKysr
-IGIvZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYwpAQCAtNjYwLDYgKzY2MCw4IEBAIGludCBhdGFf
-c2FzX3Njc2lfaW9jdGwoc3RydWN0IGF0YV9wb3J0ICphcCwgc3RydWN0IHNjc2lfZGV2aWNlICpz
-Y3NpZGV2LAogewogCWludCB2YWwgPSAtRUlOVkFMLCByYyA9IC1FSU5WQUw7CiAJdW5zaWduZWQg
-bG9uZyBmbGFnczsKKwlzdHJ1Y3QgYXRhX2RldmljZSAqZGV2ID0gX19hdGFfc2NzaV9maW5kX2Rl
-dihhcCwgc2NzaWRldik7CisJaW50IGRtYTsKIAogCXN3aXRjaCAoY21kKSB7CiAJY2FzZSBBVEFf
-SU9DX0dFVF9JTzMyOgpAQCAtNjk5LDYgKzcwMSw0MCBAQCBpbnQgYXRhX3Nhc19zY3NpX2lvY3Rs
-KHN0cnVjdCBhdGFfcG9ydCAqYXAsIHN0cnVjdCBzY3NpX2RldmljZSAqc2NzaWRldiwKIAkJCXJl
-dHVybiAtRUFDQ0VTOwogCQlyZXR1cm4gYXRhX3Rhc2tfaW9jdGwoc2NzaWRldiwgYXJnKTsKIAor
-CWNhc2UgSERJT19HRVRfRE1BOgorCQlyZXR1cm4gcHV0X3VzZXIoZGV2LT54ZmVyX21vZGUgPT0g
-ZGV2LT5kbWFfbW9kZSwKKwkJCQkobG9uZyBfX3VzZXIgKikgYXJnKTsKKwljYXNlIEhESU9fU0VU
-X0RNQToKKwkJaWYgKCFjYXBhYmxlKENBUF9TWVNfQURNSU4pIHx8ICFjYXBhYmxlKENBUF9TWVNf
-UkFXSU8pKQorCQkJcmV0dXJuIC1FQUNDRVM7CisKKwkJaWYgKGNvcHlfZnJvbV91c2VyKCZkbWEs
-IGFyZywgc2l6ZW9mKGRtYSkpKQorCQkJcmV0dXJuIC1FRkFVTFQ7CisKKwkJaWYgKGRtYSkgewor
-CQkJaWYgKCFhdGFfZG1hX2VuYWJsZWQoZGV2KSkKKwkJCQlyZXR1cm4gLUVJTlZBTDsKKworCQkJ
-ZGV2LT54ZmVyX21vZGUgPSBkZXYtPmRtYV9tb2RlOworCQkJZGV2LT54ZmVyX3NoaWZ0ID0gYXRh
-X3hmZXJfbW9kZTJzaGlmdChkZXYtPmRtYV9tb2RlKTsKKwkJCWlmIChhcC0+b3BzLT5zZXRfZG1h
-bW9kZSkKKwkJCQlhcC0+b3BzLT5zZXRfZG1hbW9kZShhcCwgZGV2KTsKKwkJfSBlbHNlIHsKKwkJ
-CWlmIChkZXYtPnBpb19tb2RlID09IDB4ZmYpCisJCQkJcmV0dXJuIC1FSU5WQUw7CisKKwkJCWRl
-di0+eGZlcl9tb2RlID0gZGV2LT5waW9fbW9kZTsKKwkJCWRldi0+eGZlcl9zaGlmdCA9IEFUQV9T
-SElGVF9QSU87CisJCQlpZiAoYXAtPm9wcy0+c2V0X3Bpb21vZGUpCisJCQkJYXAtPm9wcy0+c2V0
-X3Bpb21vZGUoYXAsIGRldik7CisJCX0KKworCQlhdGFfZWhfYWNxdWlyZShhcCk7CisJCXJjID0g
-YXRhX2Rldl9zZXRfbW9kZShkZXYpOworCQlhdGFfZWhfcmVsZWFzZShhcCk7CisKKwkJcmV0dXJu
-IHJjOworCiAJZGVmYXVsdDoKIAkJcmMgPSAtRU5PVFRZOwogCQlicmVhazsKZGlmZiAtLWdpdCBh
-L2luY2x1ZGUvbGludXgvbGliYXRhLmggYi9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCmluZGV4IDZl
-ODg3YzcuLjg4NjY0YjY3IDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCisrKyBi
-L2luY2x1ZGUvbGludXgvbGliYXRhLmgKQEAgLTEwNjcsNiArMTA2Nyw3IEBAIGV4dGVybiBpbnQg
-YXRhX2NhYmxlXzgwd2lyZShzdHJ1Y3QgYXRhX3BvcnQgKmFwKTsKIGV4dGVybiBpbnQgYXRhX2Nh
-YmxlX3NhdGEoc3RydWN0IGF0YV9wb3J0ICphcCk7CiBleHRlcm4gaW50IGF0YV9jYWJsZV9pZ25v
-cmUoc3RydWN0IGF0YV9wb3J0ICphcCk7CiBleHRlcm4gaW50IGF0YV9jYWJsZV91bmtub3duKHN0
-cnVjdCBhdGFfcG9ydCAqYXApOworZXh0ZXJuIGludCBhdGFfZGV2X3NldF9tb2RlKHN0cnVjdCBh
-dGFfZGV2aWNlICpkZXYpOwogCiAvKiBUaW1pbmcgaGVscGVycyAqLwogZXh0ZXJuIHVuc2lnbmVk
-IGludCBhdGFfcGlvX25lZWRfaW9yZHkoY29uc3Qgc3RydWN0IGF0YV9kZXZpY2UgKik7Ci0tIAox
-LjcuMTIuMwoK
---20cf300fafc1c76ff804d38b6ee0--
+> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+> ---
+>   drivers/ata/libata-scsi.c |   18 ++++++++++++++----
+>   1 files changed, 14 insertions(+), 4 deletions(-)
+
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 7c337e7..d5f81b2 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+[...]
+> @@ -1733,10 +1741,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+>
+>   	/* For ATA pass thru (SAT) commands, generate a sense block if
+>   	 * user mandated it or if there's an error.  Note that if we
+> -	 * generate because the user forced us to, a check condition
+> -	 * is generated and the ATA register values are returned
+> +	 * generate because the user forced us to [CK_COND =1 ], a check
+
+    Space before ] not needed.
+
+MBR, Sergei
+
