@@ -1,43 +1,93 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Fri, 18 Jan 2013 10:24:28 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301181017070.1988-100000@iolanthe.rowland.org>
-References: <20130118074240.GA6861@aaronlu.sh.intel.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20130118074240.GA6861@aaronlu.sh.intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH] [libata]Set proper SK when CK_COND is set.
+Date: Fri, 18 Jan 2013 10:56:43 -0800
+Message-ID: <1358535403-1976-1-git-send-email-gwendal@google.com>
+References: <50F92F65.6060904@mvista.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ie0-f202.google.com ([209.85.223.202]:46466 "EHLO
+	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574Ab3ARS4w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 13:56:52 -0500
+Received: by mail-ie0-f202.google.com with SMTP id s9so990990iec.1
+        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2013 10:56:51 -0800 (PST)
+In-Reply-To: <50F92F65.6060904@mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
-On Fri, 18 Jan 2013, Aaron Lu wrote:
+When the user application sends a ATA_12 or ATA_16 PASSTHROUGH
+scsi command, put the task file register in the sense data with the
+proper Sense Key. Instead of NO SENSE, set RECOVERED, as
+specified in [SAT2]12.2.5 Table 92.
 
-> > Aaron, have you checked whether this patch works okay when you play a
-> > track on an audio-only CD on the computer?  The block interface looks 
-> > okay but I'm not sure about the cdrom_device interface.
-> 
-> Just verified it works OK with the whole patchset applied using 2 audio
-> CDs.
-> 
-> After the ODD has been put into zero power state, insert an audio cd.
-> ODD will be resumed, gvfs will automatically mount the disc, and a
-> dialog titled "Audio Disc" asks me what to do. Press OK, the rhythmbox
-> application will get started. Press the Play button of rhythmbox, songs
-> will start to play, and runtime_usage is 2. Eject the disc, the ODD will
-> be put to zero power state some time later.
+Tested:
+Using udev ata_id to generate a passthrough command, IDENTIFY:
+before:
+ sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+a1 08 2e 00 01 00 00 00 00 ec 00 00
+ sd 0:0:0:0: [sda] Sense Key : No Sense [current] [descriptor]
+ Descriptor sense data with sense descriptors (in hex):
+         72 00 00 00 00 00 00 0e 09 0c 00 00 00 00 00 3f
+         00 18 00 a6 e0 50
 
-What happens if you use a non-ZP drive?
+after
+ sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+a1 08 2e 00 01 00 00 00 00 ec 00 00
+ sd 0:0:0:0: [sda]  Sense Key : Recovered Error [current] [descriptor]
+ Descriptor sense data with sense descriptors (in hex):
+        72 01 00 1d 00 00 00 0e 09 0c 00 00 00 01 00 00
+        00 00 00 00 00 50
 
-What happens if you're not running a desktop graphical environment, so
-gvfs doesn't mount the disc?  Basically, I'm worried that the drive may
-remain suspended after sr_open() returns.
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+---
+ drivers/ata/libata-scsi.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-What happens if you use a program other than rhythmbox?  There are (or
-used to be) programs which would issue the PLAY AUDIO command and then
-exit.  The drive would continue playing even while the device file was
-closed.  Do we want to drop support for that kind of behavior?
-
-Alan Stern
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7c337e7..edc7f43 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -933,7 +933,11 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
+  *	block specified for the ATA pass through commands.  Regardless
+  *	of whether the command errored or not, return a sense
+  *	block. Copy all controller registers into the sense
+- *	block. Clear sense key, ASC & ASCQ if there is no error.
++ *	block. If there was no error, we get the request from an ATA
++ *	passthrough command, so we use the following sense data:
++ *	sk = RECOVERED ERROR
++ *	asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
++ *      
+  *
+  *	LOCKING:
+  *	None.
+@@ -959,6 +963,10 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+ 		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
+ 				   &sb[1], &sb[2], &sb[3], verbose);
+ 		sb[1] &= 0x0f;
++	} else {
++		sb[1] = RECOVERED_ERROR;
++		sb[2] = 0;
++		sb[3] = 0x1D;
+ 	}
+ 
+ 	/*
+@@ -1733,10 +1741,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 
+ 	/* For ATA pass thru (SAT) commands, generate a sense block if
+ 	 * user mandated it or if there's an error.  Note that if we
+-	 * generate because the user forced us to, a check condition
+-	 * is generated and the ATA register values are returned
++	 * generate because the user forced us to [CK_COND =1], a check
++	 * condition is generated and the ATA register values are returned
+ 	 * whether the command completed successfully or not. If there
+-	 * was no error, SK, ASC and ASCQ will all be zero.
++	 * was no error, we use the following sense data:
++	 * sk = RECOVERED ERROR
++	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
+ 	 */
+ 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+ 	    ((cdb[2] & 0x20) || need_sense)) {
+-- 
+1.7.7.3
 
