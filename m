@@ -1,109 +1,92 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: LSF/MM Summit CFP
-Date: Thu, 17 Jan 2013 21:19:10 -0500
-Message-ID: <yq1mww7i675.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+From: Gwendal Grignou <gwendal@google.com>
+Subject: [PATCH] [libata]Set proper SK when CK_COND is set.
+Date: Thu, 17 Jan 2013 18:18:30 -0800
+Message-ID: <1358475510-23949-1-git-send-email-gwendal@google.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ie0-f202.google.com ([209.85.223.202]:58194 "EHLO
+	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab3ARCnn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2013 21:43:43 -0500
+Received: by mail-ie0-f202.google.com with SMTP id s9so844103iec.5
+        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 18:43:43 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
+When the user application sends a ATA_12 or ATA_16 PASSTHROUGH
+scsi command, put the task file register in the sense data with the
+proper Sense Key. Instead of NO SENSE, set RECOVERED, as
+specified in [SAT2]12.2.5 Table 92.
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2013 will be held on April 18th and 19th following the Linux Foundation
-Collaboration Summit at Parc 55 Hotel in San Francisco, CA:
+Change-Id: Ia7d77d09f6db6db4796310b4dc9789ac0d7af69b
+Tested:
+Using udev ata_id to generate a passthrough command, IDENTIFY:
+before:
+ sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+a1 08 2e 00 01 00 00 00 00 ec 00 00
+ sd 0:0:0:0: [sda] Sense Key : No Sense [current] [descriptor]
+ Descriptor sense data with sense descriptors (in hex):
+         72 00 00 00 00 00 00 0e 09 0c 00 00 00 00 00 3f
+         00 18 00 a6 e0 50
 
-	https://events.linuxfoundation.org/events/collaboration-summit
-	https://events.linuxfoundation.org/events/lsfmm-summit
+after
+ sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
+a1 08 2e 00 01 00 00 00 00 ec 00 00
+ sd 0:0:0:0: [sda]  Sense Key : Recovered Error [current] [descriptor]
+ Descriptor sense data with sense descriptors (in hex):
+        72 01 00 1d 00 00 00 0e 09 0c 00 00 00 01 00 00
+        00 00 00 00 00 50
 
-We'd therefore like to issue a call for agenda proposals that are
-suitable for cross-track discussion as well as more technical subjects
-for discussion in the breakout sessions.
+Signed-off-by: Gwendal Grignou <gwendal@google.com>
+---
+ drivers/ata/libata-scsi.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
 
-1) Suggestions for agenda topics should be sent before February 8th
-2013 to:
-
-	lsf-pc@lists.linux-foundation.org
-
-and optionally cc the Linux list which would be most interested in it:
-
-	ATA: linux-ide@vger.kernel.org
-	SCSI: linux-scsi@vger.kernel.org
-	FS: linux-fsdevel@vger.kernel.org
-	MM: linux-mm@kvack.org
-
-Please remember to tag your subject with [LSF/MM TOPIC] to make it
-easier to track. Agenda topics and attendees will be selected by the
-program committee, but the final agenda will be formed by consensus of
-the attendees on the day.
-
-We'll try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend the summit should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarize what expertise you will bring to the meeting, and what
-you'd like to discuss.  please also tag your email with [ATTEND] so
-there's less chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However,
-written minutes will be published as in previous years:
-
-2012:
-	http://lwn.net/Articles/490114/
-	http://lwn.net/Articles/490501/
-
-2011:
-	http://lwn.net/Articles/436871/
-	http://lwn.net/Articles/437066/
-
-2010:
-	http://lwn.net/Articles/399148/
-	http://lwn.net/Articles/399313/
-	http://lwn.net/Articles/400589/
-
-2009:
-	http://lwn.net/Articles/327601/
-	http://lwn.net/Articles/327740/
-	http://lwn.net/Articles/328347/
-
-Prior years:
-	http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-	http://www.usenix.org/publications/login/2007-06/openpdfs...
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-Storage:
-	Martin K. Petersen
-	Jens Axboe
-	James Bottomley
-
-Filesystems:
-	Ric Wheeler
-	Christoph Hellwig
-	Jaegeuk Kim
-	Jeffrey Layton
-	Tao Ma
-	Chris Mason
-	Trond Myklebust
-	Eric Sandeen
-	Theodore Ts'o
-	Sage Weil
-
-MM:
-	Rik van Riel
-	Mel Gorman
-	Ying Han
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7c337e7..d5f81b2 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -933,7 +933,11 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
+  *	block specified for the ATA pass through commands.  Regardless
+  *	of whether the command errored or not, return a sense
+  *	block. Copy all controller registers into the sense
+- *	block. Clear sense key, ASC & ASCQ if there is no error.
++ *	block. If there was no error, we get the request from an ATA
++ *	passthrough command, so we use the following sense data:
++ *	sk = RECOVERED ERROR
++ *	asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
++ *      
+  *
+  *	LOCKING:
+  *	None.
+@@ -959,6 +963,10 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
+ 		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
+ 				   &sb[1], &sb[2], &sb[3], verbose);
+ 		sb[1] &= 0x0f;
++	} else {
++		sb[1] = RECOVERED_ERROR;
++		sb[2] = 0;
++		sb[3] = 0x1D;
+ 	}
+ 
+ 	/*
+@@ -1733,10 +1741,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
+ 
+ 	/* For ATA pass thru (SAT) commands, generate a sense block if
+ 	 * user mandated it or if there's an error.  Note that if we
+-	 * generate because the user forced us to, a check condition
+-	 * is generated and the ATA register values are returned
++	 * generate because the user forced us to [CK_COND =1 ], a check
++	 * condition is generated and the ATA register values are returned
+ 	 * whether the command completed successfully or not. If there
+-	 * was no error, SK, ASC and ASCQ will all be zero.
++	 * was no error, we use the following sense data:
++	 * sk = RECOVERED ERROR
++	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
+ 	 */
+ 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
+ 	    ((cdb[2] & 0x20) || need_sense)) {
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+1.7.7.3
+
