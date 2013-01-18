@@ -1,41 +1,109 @@
-From: Simon Que <sque@chromium.org>
-Subject: [PATCH v2] ata: libata-core: initialize native_sectors in ata_hpa_resize()
-Date: Thu, 17 Jan 2013 10:30:19 -0800
-Message-ID: <1358447419-4851-1-git-send-email-sque@chromium.org>
-References: <50F7E92C.8070409 () mvista ! com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f202.google.com ([209.85.223.202]:47760 "EHLO
-	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070Ab3AQShH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jan 2013 13:37:07 -0500
-Received: by mail-ie0-f202.google.com with SMTP id s9so749041iec.5
-        for <linux-ide@vger.kernel.org>; Thu, 17 Jan 2013 10:37:06 -0800 (PST)
-In-Reply-To: <50F7E92C.8070409 () mvista ! com>
-Sender: linux-ide-owner@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: LSF/MM Summit CFP
+Date: Thu, 17 Jan 2013 21:19:10 -0500
+Message-ID: <yq1mww7i675.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sshtylyov@mvista.com, linux-ide@vger.kernel.org
-Cc: msb@chromium.org, Simon Que <sque@chromium.org>
 
-Eliminates a compiler warning about uninitialized variable.
 
-Signed-off-by: Simon Que <sque@chromium.org>
----
- drivers/ata/libata-core.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2013 will be held on April 18th and 19th following the Linux Foundation
+Collaboration Summit at Parc 55 Hotel in San Francisco, CA:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d2b18ea..b185db1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
- 	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
- 	bool unlock_hpa = ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_HPA;
- 	u64 sectors = ata_id_n_sectors(dev->id);
--	u64 native_sectors;
-+	u64 native_sectors = 0;
- 	int rc;
- 
- 	/* do we need to do it? */
+	https://events.linuxfoundation.org/events/collaboration-summit
+	https://events.linuxfoundation.org/events/lsfmm-summit
+
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
+
+1) Suggestions for agenda topics should be sent before February 8th
+2013 to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+	ATA: linux-ide@vger.kernel.org
+	SCSI: linux-scsi@vger.kernel.org
+	FS: linux-fsdevel@vger.kernel.org
+	MM: linux-mm@kvack.org
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+program committee, but the final agenda will be formed by consensus of
+the attendees on the day.
+
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend the summit should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However,
+written minutes will be published as in previous years:
+
+2012:
+	http://lwn.net/Articles/490114/
+	http://lwn.net/Articles/490501/
+
+2011:
+	http://lwn.net/Articles/436871/
+	http://lwn.net/Articles/437066/
+
+2010:
+	http://lwn.net/Articles/399148/
+	http://lwn.net/Articles/399313/
+	http://lwn.net/Articles/400589/
+
+2009:
+	http://lwn.net/Articles/327601/
+	http://lwn.net/Articles/327740/
+	http://lwn.net/Articles/328347/
+
+Prior years:
+	http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+	http://www.usenix.org/publications/login/2007-06/openpdfs...
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+	Martin K. Petersen
+	Jens Axboe
+	James Bottomley
+
+Filesystems:
+	Ric Wheeler
+	Christoph Hellwig
+	Jaegeuk Kim
+	Jeffrey Layton
+	Tao Ma
+	Chris Mason
+	Trond Myklebust
+	Eric Sandeen
+	Theodore Ts'o
+	Sage Weil
+
+MM:
+	Rik van Riel
+	Mel Gorman
+	Ying Han
+
 -- 
-1.7.8.6
-
+Martin K. Petersen	Oracle Linux Engineering
