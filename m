@@ -1,93 +1,82 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] [libata]Set proper SK when CK_COND is set.
-Date: Fri, 18 Jan 2013 10:56:43 -0800
-Message-ID: <1358535403-1976-1-git-send-email-gwendal@google.com>
-References: <50F92F65.6060904@mvista.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 52821] New: ata_piix ATA_HOST_IGNORE_ATA for Hyper-V also
+ affects Virtual PC 7
+Date: Sat, 19 Jan 2013 00:11:28 +0000 (UTC)
+Message-ID: <bug-52821-11633@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f202.google.com ([209.85.223.202]:46466 "EHLO
-	mail-ie0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751574Ab3ARS4w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 13:56:52 -0500
-Received: by mail-ie0-f202.google.com with SMTP id s9so990990iec.1
-        for <linux-ide@vger.kernel.org>; Fri, 18 Jan 2013 10:56:51 -0800 (PST)
-In-Reply-To: <50F92F65.6060904@mvista.com>
+Received: from mail.kernel.org ([198.145.19.201]:54722 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751092Ab3ASALc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jan 2013 19:11:32 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6E2AD202AF
+	for <linux-ide@vger.kernel.org>; Sat, 19 Jan 2013 00:11:31 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id C3433202C6
+	for <linux-ide@vger.kernel.org>; Sat, 19 Jan 2013 00:11:28 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
+To: linux-ide@vger.kernel.org
 
-When the user application sends a ATA_12 or ATA_16 PASSTHROUGH
-scsi command, put the task file register in the sense data with the
-proper Sense Key. Instead of NO SENSE, set RECOVERED, as
-specified in [SAT2]12.2.5 Table 92.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D52821
 
-Tested:
-Using udev ata_id to generate a passthrough command, IDENTIFY:
-before:
- sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
-a1 08 2e 00 01 00 00 00 00 ec 00 00
- sd 0:0:0:0: [sda] Sense Key : No Sense [current] [descriptor]
- Descriptor sense data with sense descriptors (in hex):
-         72 00 00 00 00 00 00 0e 09 0c 00 00 00 00 00 3f
-         00 18 00 a6 e0 50
+           Summary: ata_piix ATA_HOST_IGNORE_ATA for Hyper-V also affec=
+ts
+                    Virtual PC 7
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.4+
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+        AssignedTo: io_ide@kernel-bugs.osdl.org
+        ReportedBy: linuxuser330250@gmx.net
+        Regression: No
 
-after
- sd 0:0:0:0: [sda] CDB: ATA command pass through(12)/Blank: \
-a1 08 2e 00 01 00 00 00 00 ec 00 00
- sd 0:0:0:0: [sda]  Sense Key : Recovered Error [current] [descriptor]
- Descriptor sense data with sense descriptors (in hex):
-        72 01 00 1d 00 00 00 0e 09 0c 00 00 00 01 00 00
-        00 00 00 00 00 50
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- drivers/ata/libata-scsi.c |   18 ++++++++++++++----
- 1 files changed, 14 insertions(+), 4 deletions(-)
+[PATCH 2/2] ata_piix: defer disks to the Hyper-V drivers by default
+Sat, 14 Apr 2012 16:53:16 +0100
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7c337e7..edc7f43 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -933,7 +933,11 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
-  *	block specified for the ATA pass through commands.  Regardless
-  *	of whether the command errored or not, return a sense
-  *	block. Copy all controller registers into the sense
-- *	block. Clear sense key, ASC & ASCQ if there is no error.
-+ *	block. If there was no error, we get the request from an ATA
-+ *	passthrough command, so we use the following sense data:
-+ *	sk = RECOVERED ERROR
-+ *	asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
-+ *      
-  *
-  *	LOCKING:
-  *	None.
-@@ -959,6 +963,10 @@ static void ata_gen_passthru_sense(struct ata_queued_cmd *qc)
- 		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
- 				   &sb[1], &sb[2], &sb[3], verbose);
- 		sb[1] &= 0x0f;
-+	} else {
-+		sb[1] = RECOVERED_ERROR;
-+		sb[2] = 0;
-+		sb[3] = 0x1D;
- 	}
- 
- 	/*
-@@ -1733,10 +1741,12 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 
- 	/* For ATA pass thru (SAT) commands, generate a sense block if
- 	 * user mandated it or if there's an error.  Note that if we
--	 * generate because the user forced us to, a check condition
--	 * is generated and the ATA register values are returned
-+	 * generate because the user forced us to [CK_COND =1], a check
-+	 * condition is generated and the ATA register values are returned
- 	 * whether the command completed successfully or not. If there
--	 * was no error, SK, ASC and ASCQ will all be zero.
-+	 * was no error, we use the following sense data:
-+	 * sk = RECOVERED ERROR
-+	 * asc,ascq = ATA PASS-THROUGH INFORMATION AVAILABLE
- 	 */
- 	if (((cdb[0] == ATA_16) || (cdb[0] == ATA_12)) &&
- 	    ((cdb[2] & 0x20) || need_sense)) {
--- 
-1.7.7.3
+https://lkml.org/lkml/2012/4/14/136
 
+This patch apparently also affects Virtual PC 7.0.3 for Mac, with the r=
+esult
+that only the emulated CD/DVD drive is visible to the system due to a m=
+issing
+paravirtualised
+driver for the ATA device. An installation of Linux (with a kernel 3.4 =
+and
+newer) in the emulated environment of VPC7 is therefor impossible.
+
+The problem seems to be that VPC7 also provides DMI 2.3, which also con=
+tains
+the strings "Microsoft Corporation" and "Virtual Machine" -- just like =
+Hyper-V.
+
+VPC6 (Connectix Virtual PC 6.0) is not affected. (UNCONFIRMED, but 99% =
+sure:
+there cannot be "Microsoft Corporation" in it, because it was from Conn=
+ectix!)
+
+I don=E2=80=99t know how, but piix_ignore_devices_quirk should either b=
+e more thorough
+in identifying Hyper-V or it should confirm that it is not running insi=
+de
+Virtual PC.
+
+I would be happy to help with inside data, like a DMI dump or anything,=
+ but
+you=E2=80=99d have to tell me exactly what to do.
+
+--=20
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
