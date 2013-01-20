@@ -1,57 +1,61 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Sat, 19 Jan 2013 13:46:15 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
-References: <50FA5F67.4080102@intel.com>
+From: Kay Sievers <kay@vrfy.org>
+Subject: Re: [PATCH v2] libata: export host controller number thru /sys
+Date: Sun, 20 Jan 2013 03:57:16 +0100
+Message-ID: <CAPXgP10jOrO4ULwOusf80GiqqCydYykfcWaLjky6_fKFNR1PeA@mail.gmail.com>
+References: <1358287662-24016-1-git-send-email-dmilburn@redhat.com>
+ <CAPXgP12JEjksJz7eyvOmzAXh+nFPrEXEU_bsoff-u9bwiyipZg@mail.gmail.com>
+ <50F71AE5.6050906@redhat.com> <CAPXgP11pk7xT+SzH9p1+Yj5C16ar0qFdZikg=67w37aS_V9W8Q@mail.gmail.com>
+ <20130117182239.GA31009@dhcp-10-15-1-70.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <50FA5F67.4080102@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:54343 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752365Ab3ATC5h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jan 2013 21:57:37 -0500
+Received: by mail-wi0-f180.google.com with SMTP id hj13so4021217wib.13
+        for <linux-ide@vger.kernel.org>; Sat, 19 Jan 2013 18:57:36 -0800 (PST)
+In-Reply-To: <20130117182239.GA31009@dhcp-10-15-1-70.hsv.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
 
-On Sat, 19 Jan 2013, Aaron Lu wrote:
+On Thu, Jan 17, 2013 at 7:22 PM, David Milburn <dmilburn@redhat.com> wrote:
 
-> > What happens if you're not running a desktop graphical environment, so
-> > gvfs doesn't mount the disc?  Basically, I'm worried that the drive may
-> > remain suspended after sr_open() returns.
-> 
-> Tried on my notebook with a normal ODD, using mplayer under console
-> mode, no GUI environment running, works fine.
-> 
-> The usage count will be incremented by the app, and get decreased
-> only when it exits. So the ODD will not be in runtime suspended state
-> when the app is running.
+> The port multiplier extends the ATA port with up to 15 additional ports (links),
+> so with this patch
+>
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1/dev1.0/ata_device
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1/ata_link
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1.0/dev1.0.0/ata_device
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1.0/ata_link
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1.1/dev1.1.0/ata_device
+> ./pci0000:00/0000:00:1e.0/0000:05:01.0/ata1/link1.1/ata_link
+>
+> ata<localport>/link<localport>.<unique port mult port>/dev<localport>.<port mult port>.0/ata_device
 
-You missed my point.  What happens when sr_open() gets called?  It 
-doesn't try to resume the device.  Will we run into trouble then?
+@@ -284,7 +284,7 @@ int ata_tport_add(struct device *parent,
 
-> > What happens if you use a program other than rhythmbox?  There are (or
-> > used to be) programs which would issue the PLAY AUDIO command and then
-> > exit.  The drive would continue playing even while the device file was
-> 
-> Then we indeed have a problem. But I didn't find any such app in
-> Fedora's repo or by searching the internet.
+        dev->parent = get_device(parent);
+        dev->release = ata_tport_release;
+-       dev_set_name(dev, "ata%d", ap->print_id);
++       dev_set_name(dev, "ata%d", ap->local_print_id);
 
-http://rpm.pbone.net/index.php3/stat/4/idpl/2392183/dir/redhat_5.x/com/cdp-0.33-10.i386.rpm.html
+> @@ -410,9 +410,9 @@ int ata_tlink_add(struct ata_link *link)
+>         dev->parent = get_device(&ap->tdev);
+>         dev->release = ata_tlink_release;
+>         if (ata_is_host_link(link))
+> -               dev_set_name(dev, "link%d", ap->print_id);
+> +               dev_set_name(dev, "link%d", ap->local_print_id);
 
-> > closed.  Do we want to drop support for that kind of behavior?
-> 
-> I don't think we should drop such support.
-> And the safest way to avoid such break is we refine the suspend
-> condition for ODD, and using what ZPODD defined condition isn't that
-> bad to me:
-> - for tray type, no media inside and tray close;
-> - for slot type, no media inside.
-> While whether tray is closed or not may not be that important, but at
-> least we should make sure there is no media inside.
-> 
-> Thoughts?
+Hmm, multiple controllers will clash with their names here now, right?
+The "ata%d"  and "link%d..." devices all show up in /sys/class/ in the
+same directories and need a unique name there, now that we start at
+every controller with out own counter, right?
 
-That sounds reasonable to me, at least as a first step.  If people want 
-their CD drive to suspend, they can eject the disc.
+We need to prefix the names with the global counter?
 
-Alan Stern
-
+Thanks,
+Kay
