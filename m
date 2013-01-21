@@ -1,54 +1,71 @@
-From: Thierry Reding <thierry.reding@avionic-design.de>
-Subject: [PATCH 05/33] ata: Convert to devm_ioremap_resource()
-Date: Mon, 21 Jan 2013 11:08:58 +0100
-Message-ID: <1358762966-20791-6-git-send-email-thierry.reding@avionic-design.de>
-References: <1358762966-20791-1-git-send-email-thierry.reding@avionic-design.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:57273 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752654Ab3AUKJg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2013 05:09:36 -0500
-In-Reply-To: <1358762966-20791-1-git-send-email-thierry.reding@avionic-design.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
+Date: Mon, 21 Jan 2013 21:36:02 +0800
+Message-ID: <50FD4442.9080600@intel.com>
+References: <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Arnd Bergmann <arnd@arndb.de>, Wolfram Sang <w.sang@pengutronix.de>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-Convert all uses of devm_request_and_ioremap() to the newly introduced
-devm_ioremap_resource() which provides more consistent error handling.
+On 01/20/2013 02:46 AM, Alan Stern wrote:
+> On Sat, 19 Jan 2013, Aaron Lu wrote:
+>> Then we indeed have a problem. But I didn't find any such app in
+>> Fedora's repo or by searching the internet.
+>
+> http://rpm.pbone.net/index.php3/stat/4/idpl/2392183/dir/redhat_5.x/com/cdp-0.33-10.i386.rpm.html
 
-Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/pata_ep93xx.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Now that with the RFC PATCH, the cd drive's runtime status will always
+be active if there is disc inside, so we don't have this problem any
+more. Tested on two systems, one with a ZP-drive and the other with a
+normal one.
 
-diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 556222f..c1bfaf4 100644
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -31,6 +31,7 @@
-  *   Copyright (C) 2006 Tower Technologies
-  */
- 
-+#include <linux/err.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/init.h>
-@@ -937,9 +938,9 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
- 		goto err_rel_gpio;
- 	}
- 
--	ide_base = devm_request_and_ioremap(&pdev->dev, mem_res);
--	if (!ide_base) {
--		err = -ENXIO;
-+	ide_base = devm_ioremap_resource(&pdev->dev, mem_res);
-+	if (IS_ERR(ide_base)) {
-+		err = PTR_ERR(ide_base);
- 		goto err_rel_gpio;
- 	}
- 
--- 
-1.8.1.1
+BTW, I can't get the above app run, as it requires an old ncurses lib.
+And compiling it is not easy...
 
+For an amusement, I wrote the following stupid simple app intended for
+test:
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <linux/cdrom.h>
+
+int main(void)
+{
+	int ret = 0;
+	struct cdrom_msf msf = { 1, 0, 0, 2, 0, 0 };
+	int fd;
+	
+	fd = open("/dev/sr0", O_RDONLY | O_NONBLOCK);
+	if (fd == -1) {
+		perror("open");
+		return -1;
+	}
+
+	ret = ioctl(fd, CDROMPLAYMSF, &msf);
+	if (ret) {
+		perror("ioctl");
+		goto out;
+	}
+out:
+	close(fd);
+
+	return ret;
+}
+
+Insert an audio disc, make sure no app is accessing it, run the above
+app, then the app will exit and the led on the drive will be blinking
+for roughly one minute, as the app has set, but I didn't hear any sound...
+
+And the runtime status is of course active all the time, no matter if
+there is app accessing it or not as expected.
+
+Thanks,
+Aaron
