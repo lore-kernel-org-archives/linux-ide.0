@@ -1,47 +1,35 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH v13 1/9] scsi: sr: support runtime pm
-Date: Mon, 21 Jan 2013 14:31:50 +1100
-Message-ID: <CAGRGNgXMthaFSvj4aJ8KCZb2R70rvohh_kHPu2JY1tV_9veriQ@mail.gmail.com>
-References: <50FA5F67.4080102@intel.com> <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
+From: xiangliang yu <yxlraid@gmail.com>
+Subject: Libahci kernel panic in interrupt context when enable FBS feature
+Date: Mon, 21 Jan 2013 15:45:17 +0800
+Message-ID: <CAP0P+NWTxGO2kvANSVw4dGLt2jS1=sguQzxuvdvVjDrRKzQ4Vw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1301191312050.13032-100000@netrider.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Oliver Neukum <oneukum@suse.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f47.google.com ([209.85.214.47]:41954 "EHLO
+	mail-bk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311Ab3AUHpS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jan 2013 02:45:18 -0500
+Received: by mail-bk0-f47.google.com with SMTP id j4so2837739bkw.6
+        for <linux-ide@vger.kernel.org>; Sun, 20 Jan 2013 23:45:17 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: jgarzik@pobox.com
+Cc: linux-ide@vger.kernel.org
 
-Hi Alan,
+Hi, Jgarzik
 
-On Sun, Jan 20, 2013 at 5:46 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Sat, 19 Jan 2013, Aaron Lu wrote:
->> > closed.  Do we want to drop support for that kind of behavior?
->>
->> I don't think we should drop such support.
->> And the safest way to avoid such break is we refine the suspend
->> condition for ODD, and using what ZPODD defined condition isn't that
->> bad to me:
->> - for tray type, no media inside and tray close;
->> - for slot type, no media inside.
->> While whether tray is closed or not may not be that important, but at
->> least we should make sure there is no media inside.
->>
->> Thoughts?
->
-> That sounds reasonable to me, at least as a first step.  If people want
-> their CD drive to suspend, they can eject the disc.
+When enable FBS feature, ahci_port_intr function will kernel panic if
+have PORT_IRQ_ERROR error. I can't capture the log, but the code patch
+is very clear:
 
-Stupid question: does the kernel know if a CD has audio tracks?
+            ata_exec_internal  [ the function might sleep ]
+             sata_pmp_read
+             sata_pmp_scr_read
+             sata_scr_read
+             ata_phys_link_online
+             ata_link_online
+             ahci_error_intr
+             ahci_port_intr
 
-(I'm assuming that nobody will access a data track without mounting it
-or holding the device open)
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Now, i can't find the best method to fix the issue, so, please help
+fix the issue. Thanks!
