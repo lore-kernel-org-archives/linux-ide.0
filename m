@@ -1,72 +1,48 @@
 From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [libata:upstream 7/11] drivers/ata/libata-zpodd.c:83 zpodd_wake_dev()
- warn: variable dereferenced before check 'ata_dev' (see line 80)
-Date: Tue, 22 Jan 2013 16:45:51 +0800
-Message-ID: <50FE51BF.1060409@intel.com>
-References: <20130122062536.GB16282@mwanda> <50FE4E86.5090308@intel.com> <20130122083812.GC16282@mwanda>
+Subject: Re: [PATCH] libata: pm: differentiate system and runtime pm for ata
+ port
+Date: Tue, 22 Jan 2013 16:48:54 +0800
+Message-ID: <20130122084854.GA26256@aaronlu.sh.intel.com>
+References: <1346143791-2995-1-git-send-email-aaron.lu@intel.com>
+ <50FDA8B3.6090100@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21003 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:56803 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754049Ab3AVIpG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Jan 2013 03:45:06 -0500
-In-Reply-To: <20130122083812.GC16282@mwanda>
+	id S1754210Ab3AVIsM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Jan 2013 03:48:12 -0500
+Content-Disposition: inline
+In-Reply-To: <50FDA8B3.6090100@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Jeff Garzik <jgarzik@redhat.com>
-Cc: linux-ide@vger.kernel.org, kbuild@01.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>
 
-On 01/22/2013 04:38 PM, Dan Carpenter wrote:
-> On Tue, Jan 22, 2013 at 04:32:06PM +0800, Aaron Lu wrote:
->> Hi Dan,
->>
->> Thanks for the remind.
->>
->> On 01/22/2013 02:25 PM, Dan Carpenter wrote:
->>> Hi Aaron,
->>>
->>> FYI, there are new smatch warnings show up in
->>>
->>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream
->>> head:   7e15e9be37eb834aaaca69030064ac97eaf5df2f
->>> commit: f064a20dded807448669426c9bfb7d03aba5659c [7/11] libata: move acpi notification code to zpodd
->>>
->>> New smatch warnings:
->>> drivers/ata/libata-zpodd.c:83 zpodd_wake_dev() warn: variable dereferenced before check 'ata_dev' (see line 80)
->>
->> The ata_dev variable shouldn't ever be NULL here.
->>
->>>
->>> git remote add libata git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>> git remote update libata
->>> git checkout f064a20dded807448669426c9bfb7d03aba5659c
->>> vim +/ata_dev +83 drivers/ata/libata-zpodd.c
->>>
->>> afe75951 Aaron Lu 2013-01-15  74  	return acpi_device_can_poweroff(acpi_dev);
->>> afe75951 Aaron Lu 2013-01-15  75  }
->>> afe75951 Aaron Lu 2013-01-15  76  
->>> f064a20d Aaron Lu 2013-01-15  77  static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
->>> f064a20d Aaron Lu 2013-01-15  78  {
->>> f064a20d Aaron Lu 2013-01-15  79  	struct ata_device *ata_dev = context;
->>> f064a20d Aaron Lu 2013-01-15 @80  	struct zpodd *zpodd = ata_dev->zpodd;
->>> f064a20d Aaron Lu 2013-01-15  81  	struct device *dev = &ata_dev->sdev->sdev_gendev;
->>> f064a20d Aaron Lu 2013-01-15  82  
->>> f064a20d Aaron Lu 2013-01-15 @83  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
->>
->> If I remove the check for ata_dev here, will the smatch warning go away?
->> Or should I add a check above? I suppose we need to do something to the
->> warning, so that it won't pop up in the future, so please feel free to
->> suggest, thanks!
+On Mon, Jan 21, 2013 at 03:44:35PM -0500, Jeff Garzik wrote:
+> On 08/28/2012 04:49 AM, Aaron Lu wrote:
+> >For sata port, only runtime pm needs to be taken care of;
+> >For IDE port, only system pm needs to be taken care of.
+> >Currently, we use PMSG_SUSPEND for both system suspend and runtime
+> >suspend and PMSG_ON for both system resume and runtime resume.
+> >
+> >Change this by using PMSG_AUTO_SUSPEND for runtime suspend and
+> >PMSG_AUTO_RESUME for runtime resume.
+> >
+> >The ata_acpi_set_state is modified accordingly. And the sata case and
+> >pata case is seperated for easy understanding.
+> >
+> >Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> >---
+> >  drivers/ata/libata-acpi.c | 83 ++++++++++++++++++++++++++++++++---------------
+> >  drivers/ata/libata-core.c | 22 +++++++++----
+> >  drivers/ata/libata-eh.c   |  9 ++---
+> >  3 files changed, 78 insertions(+), 36 deletions(-)
 > 
-> Removing the check would silence the warning.
+> 
+> Can you rediff this on top of libata-dev.git #upstream?
 
-OK, thanks.
+Sure. Will send out when it's ready, thanks.
 
-Hi Jeff,
-Should I prepare a new patch to fix this or update the original patch?
-
-Thanks,
-Aaron
+-Aaron
 
