@@ -1,30 +1,40 @@
-From: "Wood, John" <john.wood@cowetaschools.net>
-Subject: =?iso-8859-1?B?oUhvbGE=?=
-Date: Thu, 24 Jan 2013 14:43:17 -0500
-Message-ID: <526F364C0060FD4BA398CDCD75A9BDDB2EAAE0@bashful.cowetaschools.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Simon Que <sque@chromium.org>
+Subject: [PATCH v3] ata: libata-core: initialize native_sectors in ata_hpa_resize()
+Date: Thu, 24 Jan 2013 11:57:58 -0800
+Message-ID: <1359057478-3920-1-git-send-email-sque@chromium.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.cowetaschools.net ([168.9.128.21]:10777 "EHLO
-	Scuttle.cowetaschools.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756777Ab3AXVEd convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 24 Jan 2013 16:04:33 -0500
-Content-class: urn:content-classes:message
+Received: from mail-qc0-f201.google.com ([209.85.216.201]:51232 "EHLO
+	mail-qc0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755405Ab3AXVv7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2013 16:51:59 -0500
+Received: by mail-qc0-f201.google.com with SMTP id a22so600442qcs.2
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jan 2013 13:51:58 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sshtylyov@mvista.com, linux-ide@vger.kernel.org
+Cc: msb@chromium.org, Simon Que <sque@chromium.org>
 
-Jag anv=E4nder detta medium f=F6r att informera er om en =F6msesidig tr=
-ansaktion som inbegriper =F6verf=F6ring av $ 21.500.000 i min bank i Ki=
-na, f=F6r att informera dig som mottagare. T Du kan n=E5 mig p=E5 chins=
-ang233@yahoo.com.hk f=F6r mer information.
-g=E4ller
-Sang Chin.
-#######################################################################=
-##############
-Scanned by MailMarshal - M86 Security's comprehensive email content sec=
-urity solution.=20
-Download a free evaluation of MailMarshal at www.m86security.com
-#######################################################################=
-##############
+Eliminates a compiler warning about uninitialized variable.
+"warning: 'native_sectors' may be used uninitialized in this function"
+
+Signed-off-by: Simon Que <sque@chromium.org>
+---
+ drivers/ata/libata-core.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d2b18ea..b185db1 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ 	int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
+ 	bool unlock_hpa = ata_ignore_hpa || dev->flags & ATA_DFLAG_UNLOCK_HPA;
+ 	u64 sectors = ata_id_n_sectors(dev->id);
+-	u64 native_sectors;
++	u64 native_sectors = 0;
+ 	int rc;
+ 
+ 	/* do we need to do it? */
+-- 
+1.7.8.6
+
