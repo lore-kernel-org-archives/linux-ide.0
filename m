@@ -1,133 +1,109 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH v14 2/3] libata: scsi: no poll when ODD is powered off
-Date: Wed, 23 Jan 2013 15:09:32 +0800
-Message-ID: <1358924973-18269-3-git-send-email-aaron.lu@intel.com>
-References: <1358924973-18269-1-git-send-email-aaron.lu@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1358924973-18269-1-git-send-email-aaron.lu@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
+From: Jiada Wang <jiada_wang@mentor.com>
+Subject: [PATCH] libata: handle HDIO_SET_DMA & HDIO_GET_DMA ioctl
+Date: Thu, 24 Jan 2013 15:39:22 +0900
+Message-ID: <1359009562-22595-1-git-send-email-jiada_wang@mentor.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay1.mentorg.com ([192.94.38.131]:36716 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752898Ab3AXGj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2013 01:39:26 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com
 
-When the ODD is powered off, any action the user did to the ODD that
-would generate a media event will trigger an ACPI interrupt, so the
-poll for media event is no longer necessary. And the poll will also
-cause a runtime status change, which will stop the ODD from staying in
-powered off state, so the poll should better be stopped.
+currently HDIO_SET_DMA & HDIO_GET_DMA are not handled in libata,
+this patch add support to handle HDIO_SET_DMA & HDIO_GET_DMA ioctl,
+which enables user to set ata device work in PIO or DMA mode.
 
-But since we don't have access to the gendisk structure in LLDs, here
-comes the disk_events_disable_depth for scsi device. This field is a
-hint set by LLDs to convey information to upper layer drivers. A value
-of 0 means media poll is necessary for the device, while values above 0
-means media poll is not needed and should better be skipped. So we can
-increase its value when we are to power off the ODD in ATA layer and
-decrease its value when the ODD is powered on, effectively silence the
-media events poll.
-
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Signed-off-by: Jiada Wang <jiada_wang@mentor.com>
 ---
- drivers/ata/libata-zpodd.c |  7 +++++++
- drivers/scsi/scsi_lib.c    | 14 ++++++++++++++
- drivers/scsi/sr.c          | 10 +++++++---
- include/scsi/scsi_device.h |  4 ++++
- 4 files changed, 32 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c |  2 +-
+ drivers/ata/libata-scsi.c | 36 ++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |  1 +
+ 3 files changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 540b0b7..a7df603 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -178,11 +178,16 @@ bool zpodd_zpready(struct ata_device *dev)
-  * Enable runtime wake capability through ACPI and set the powered_off flag,
-  * this flag will be used during resume to decide what operations are needed
-  * to take.
-+ *
-+ * Also, media poll needs to be silenced, so that it doesn't bring the ODD
-+ * back to full power state every few seconds.
-  */
- void zpodd_enable_run_wake(struct ata_device *dev)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 71e8385..6b16952 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3136,7 +3136,7 @@ int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
+ 	return 0;
+ }
+ 
+-static int ata_dev_set_mode(struct ata_device *dev)
++int ata_dev_set_mode(struct ata_device *dev)
  {
- 	struct zpodd *zpodd = dev->zpodd;
+ 	struct ata_port *ap = dev->link->ap;
+ 	struct ata_eh_context *ehc = &dev->link->eh_context;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2222635..beac285 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -660,6 +660,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ {
+ 	int val = -EINVAL, rc = -EINVAL;
+ 	unsigned long flags;
++	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
++	int dma;
  
-+	sdev_disable_disk_events(dev->sdev);
+ 	switch (cmd) {
+ 	case ATA_IOC_GET_IO32:
+@@ -699,6 +701,40 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ 			return -EACCES;
+ 		return ata_task_ioctl(scsidev, arg);
+ 
++	case HDIO_GET_DMA:
++		return put_user(dev->xfer_mode == dev->dma_mode,
++				(long __user *) arg);
++	case HDIO_SET_DMA:
++		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
++			return -EACCES;
 +
- 	zpodd->powered_off = true;
- 	device_set_run_wake(&dev->sdev->sdev_gendev, true);
- 	acpi_pm_device_run_wake(&dev->sdev->sdev_gendev, true);
-@@ -231,6 +236,8 @@ void zpodd_post_poweron(struct ata_device *dev)
- 
- 	zpodd->zp_sampled = false;
- 	zpodd->zp_ready = false;
++		if (copy_from_user(&dma, arg, sizeof(dma)))
++			return -EFAULT;
 +
-+	sdev_enable_disk_events(dev->sdev);
- }
- 
- static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index f1bf5af..765398c 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2617,3 +2617,17 @@ void scsi_kunmap_atomic_sg(void *virt)
- 	kunmap_atomic(virt);
- }
- EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
++		if (dma) {
++			if (!ata_dma_enabled(dev))
++				return -EINVAL;
 +
-+void sdev_disable_disk_events(struct scsi_device *sdev)
-+{
-+	atomic_inc(&sdev->disk_events_disable_depth);
-+}
-+EXPORT_SYMBOL(sdev_disable_disk_events);
++			dev->xfer_mode = dev->dma_mode;
++			dev->xfer_shift = ata_xfer_mode2shift(dev->dma_mode);
++			if (ap->ops->set_dmamode)
++				ap->ops->set_dmamode(ap, dev);
++		} else {
++			if (dev->pio_mode == 0xff)
++				return -EINVAL;
 +
-+void sdev_enable_disk_events(struct scsi_device *sdev)
-+{
-+	if (WARN_ON_ONCE(atomic_read(&sdev->disk_events_disable_depth) <= 0))
-+		return;
-+	atomic_dec(&sdev->disk_events_disable_depth);
-+}
-+EXPORT_SYMBOL(sdev_enable_disk_events);
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 2e8ddd7..f2884ee 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -602,9 +602,13 @@ static unsigned int sr_block_check_events(struct gendisk *disk,
- 	struct scsi_cd *cd = scsi_cd(disk);
- 	unsigned int ret;
- 
--	scsi_autopm_get_device(cd->device);
--	ret = cdrom_check_events(&cd->cdi, clearing);
--	scsi_autopm_put_device(cd->device);
-+	if (atomic_read(&cd->device->disk_events_disable_depth) == 0) {
-+		scsi_autopm_get_device(cd->device);
-+		ret = cdrom_check_events(&cd->cdi, clearing);
-+		scsi_autopm_put_device(cd->device);
-+	} else {
-+		ret = 0;
-+	}
- 
- 	return ret;
- }
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index e65c62e..bb1371b 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -161,6 +161,8 @@ struct scsi_device {
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 
-+	atomic_t disk_events_disable_depth; /* disable depth for disk events */
++			dev->xfer_mode = dev->pio_mode;
++			dev->xfer_shift = ATA_SHIFT_PIO;
++			if (ap->ops->set_piomode)
++				ap->ops->set_piomode(ap, dev);
++		}
 +
- 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
- 	struct list_head event_list;	/* asserted events */
- 	struct work_struct event_work;
-@@ -397,6 +399,8 @@ extern int scsi_execute_req(struct scsi_device *sdev, const unsigned char *cmd,
- 			    int data_direction, void *buffer, unsigned bufflen,
- 			    struct scsi_sense_hdr *, int timeout, int retries,
- 			    int *resid);
-+extern void sdev_disable_disk_events(struct scsi_device *sdev);
-+extern void sdev_enable_disk_events(struct scsi_device *sdev);
++		ata_eh_acquire(ap);
++		rc = ata_dev_set_mode(dev);
++		ata_eh_release(ap);
++
++		return rc;
++
+ 	default:
+ 		rc = -ENOTTY;
+ 		break;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6e887c7..88664b67 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1067,6 +1067,7 @@ extern int ata_cable_80wire(struct ata_port *ap);
+ extern int ata_cable_sata(struct ata_port *ap);
+ extern int ata_cable_ignore(struct ata_port *ap);
+ extern int ata_cable_unknown(struct ata_port *ap);
++extern int ata_dev_set_mode(struct ata_device *dev);
  
- #ifdef CONFIG_PM_RUNTIME
- extern int scsi_autopm_get_device(struct scsi_device *);
+ /* Timing helpers */
+ extern unsigned int ata_pio_need_iordy(const struct ata_device *);
 -- 
-1.8.1
+1.8.1.1
 
