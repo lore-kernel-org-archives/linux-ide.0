@@ -1,109 +1,105 @@
-From: Jiada Wang <jiada_wang@mentor.com>
-Subject: [PATCH] libata: handle HDIO_SET_DMA & HDIO_GET_DMA ioctl
-Date: Thu, 24 Jan 2013 15:39:22 +0900
-Message-ID: <1359009562-22595-1-git-send-email-jiada_wang@mentor.com>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH v2] libata: export host controller number thru /sys
+Date: Wed, 23 Jan 2013 23:55:14 -0800
+Message-ID: <CAMHSBOWsby9TKgAeuO2Vp3=h-a==fBTHU9HGC9ZtiG1Rj_ULTA@mail.gmail.com>
+References: <1358287662-24016-1-git-send-email-dmilburn@redhat.com>
+	<CAPXgP12JEjksJz7eyvOmzAXh+nFPrEXEU_bsoff-u9bwiyipZg@mail.gmail.com>
+	<50F71AE5.6050906@redhat.com>
+	<CAPXgP11pk7xT+SzH9p1+Yj5C16ar0qFdZikg=67w37aS_V9W8Q@mail.gmail.com>
+	<20130117182239.GA31009@dhcp-10-15-1-70.hsv.redhat.com>
+	<CAPXgP10jOrO4ULwOusf80GiqqCydYykfcWaLjky6_fKFNR1PeA@mail.gmail.com>
+	<20130121154909.GA5750@dhcp-10-15-1-70.hsv.redhat.com>
+	<CAMHSBOXWkZTyH18goC6iS-S7VAmCuHJ9Wwhzy6kB1m5RKwFEAA@mail.gmail.com>
+	<50FF0858.50504@redhat.com>
+	<CAPXgP10YPOgdzJGCieY6G6CA5MTAYxBZrKPUX_ov+Ku4YE8mww@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.mentorg.com ([192.94.38.131]:36716 "EHLO
-	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898Ab3AXGj0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2013 01:39:26 -0500
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:37712 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751450Ab3AXHzQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jan 2013 02:55:16 -0500
+Received: by mail-wi0-f181.google.com with SMTP id hq4so174289wib.14
+        for <linux-ide@vger.kernel.org>; Wed, 23 Jan 2013 23:55:14 -0800 (PST)
+In-Reply-To: <CAPXgP10YPOgdzJGCieY6G6CA5MTAYxBZrKPUX_ov+Ku4YE8mww@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: jgarzik@pobox.com
+To: Kay Sievers <kay@vrfy.org>
+Cc: David Milburn <dmilburn@redhat.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, coughlan <coughlan@redhat.com>, "fengguang.wu" <fengguang.wu@intel.com>
 
-currently HDIO_SET_DMA & HDIO_GET_DMA are not handled in libata,
-this patch add support to handle HDIO_SET_DMA & HDIO_GET_DMA ioctl,
-which enables user to set ata device work in PIO or DMA mode.
+I see. But this behavior """numbers which are entirely independent of
+driver probing order.""" is not consistent with the rest of scsi
+subsystem: for instance scsi_host are named using a global number as
+well; sas object naming is completely dependent on the probing order.
+The idea behind using the global number is to be able to link ata
+objects to their pci object parent as they are named in dmesg, so that
+we see error messages in dmesg we could locate the whole topology.
 
-Signed-off-by: Jiada Wang <jiada_wang@mentor.com>
----
- drivers/ata/libata-core.c |  2 +-
- drivers/ata/libata-scsi.c | 36 ++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |  1 +
- 3 files changed, 38 insertions(+), 1 deletion(-)
+The name of the object needs to contain <global port>.
+If we want to add <local port> , to be consistent with sas sysfs, I
+suggest <object_name><global port><separator><local port> syntax.
+<separator> is ':' for scsi transport, but I used '.' already, so we
+can continue with it.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 71e8385..6b16952 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3136,7 +3136,7 @@ int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
- 	return 0;
- }
- 
--static int ata_dev_set_mode(struct ata_device *dev)
-+int ata_dev_set_mode(struct ata_device *dev)
- {
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_eh_context *ehc = &dev->link->eh_context;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2222635..beac285 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -660,6 +660,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
- {
- 	int val = -EINVAL, rc = -EINVAL;
- 	unsigned long flags;
-+	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
-+	int dma;
- 
- 	switch (cmd) {
- 	case ATA_IOC_GET_IO32:
-@@ -699,6 +701,40 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
- 			return -EACCES;
- 		return ata_task_ioctl(scsidev, arg);
- 
-+	case HDIO_GET_DMA:
-+		return put_user(dev->xfer_mode == dev->dma_mode,
-+				(long __user *) arg);
-+	case HDIO_SET_DMA:
-+		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-+			return -EACCES;
-+
-+		if (copy_from_user(&dma, arg, sizeof(dma)))
-+			return -EFAULT;
-+
-+		if (dma) {
-+			if (!ata_dma_enabled(dev))
-+				return -EINVAL;
-+
-+			dev->xfer_mode = dev->dma_mode;
-+			dev->xfer_shift = ata_xfer_mode2shift(dev->dma_mode);
-+			if (ap->ops->set_dmamode)
-+				ap->ops->set_dmamode(ap, dev);
-+		} else {
-+			if (dev->pio_mode == 0xff)
-+				return -EINVAL;
-+
-+			dev->xfer_mode = dev->pio_mode;
-+			dev->xfer_shift = ATA_SHIFT_PIO;
-+			if (ap->ops->set_piomode)
-+				ap->ops->set_piomode(ap, dev);
-+		}
-+
-+		ata_eh_acquire(ap);
-+		rc = ata_dev_set_mode(dev);
-+		ata_eh_release(ap);
-+
-+		return rc;
-+
- 	default:
- 		rc = -ENOTTY;
- 		break;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 6e887c7..88664b67 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1067,6 +1067,7 @@ extern int ata_cable_80wire(struct ata_port *ap);
- extern int ata_cable_sata(struct ata_port *ap);
- extern int ata_cable_ignore(struct ata_port *ap);
- extern int ata_cable_unknown(struct ata_port *ap);
-+extern int ata_dev_set_mode(struct ata_device *dev);
- 
- /* Timing helpers */
- extern unsigned int ata_pio_need_iordy(const struct ata_device *);
--- 
-1.8.1.1
+Gwendal.
 
+
+On Tue, Jan 22, 2013 at 8:29 PM, Kay Sievers <kay@vrfy.org> wrote:
+>
+> On Tue, Jan 22, 2013 at 10:44 PM, David Milburn <dmilburn@redhat.com> wrote:
+> > Gwendal Grignou wrote:
+> >>
+> >> <resent as text 2>
+> >> Although your solution works, it breaks the current numbering. The X
+> >> in <pci-path>/ataX/link<..> has changed meaning, and it is not obvious
+> >> to an untrained eyes.
+> >> If we are willing to change, could we reconsider the patches in
+> >> "Insert ATA transport objects in SCSI syfs topology"? These patches
+> >> also makes udev rules easier to write, given we have scsi host id
+> >> available in the path.
+> >
+> > Hi Gwendal,
+> >
+> > I applied
+> >
+> > http://marc.info/?l=linux-ide&m=134911579601940&w=2
+> > http://marc.info/?l=linux-ide&m=134911580102060&w=2
+> > http://marc.info/?l=linux-ide&m=134931181222435&w=2
+> >
+> > # find . -name 'sd*' -print
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.0/dev7.0.0/target6:0:0/6:0:0:0/block/sdd
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.0/dev7.0.0/target6:0:0/6:0:0:0/block/sdd/sdd1
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.0/dev7.0.0/target6:0:0/6:0:0:0/block/sdd/sdd2
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.3/dev7.3.0/target6:3:0/6:3:0:0/block/sde
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.3/dev7.3.0/target6:3:0/6:3:0:0/block/sde/sde1
+> > ./0000:00:1e.0/0000:05:01.0/host6/port7/link7.3/dev7.3.0/target6:3:0/6:3:0:0/block/sde/sde2
+> > ./0000:00:1f.2/host1/port2/link2/dev2.0/target1:0:0/1:0:0:0/block/sda
+> > ./0000:00:1f.2/host1/port2/link2/dev2.0/target1:0:0/1:0:0:0/block/sda/sda1
+> > ./0000:00:1f.2/host1/port2/link2/dev2.0/target1:0:0/1:0:0:0/block/sda/sda2
+> >
+> > ./0000:00:1f.2/host3/port4/link4/dev4.0/target3:0:0/3:0:0:0/block/sdb/sdb1
+> > ./0000:00:1f.2/host3/port4/link4/dev4.0/target3:0:0/3:0:0:0/block/sdb/sdb2
+> > ./0000:00:1f.2/host4/port5/link5/dev5.0/target4:0:0/4:0:0:0/block/sdc
+> > ./0000:00:1f.2/host4/port5/link5/dev5.0/target4:0:0/4:0:0:0/block/sdc/sdc1
+> >
+> > I think Kay still wants us to avoid using the global ap->print_id, he
+> > expects local
+> > port numbers per controller, for instance, port7 is really port1.
+>
+> Right, I need numbers which are entirely independent of driver probing
+> order. The should all start locally and span multiple independent
+> controllers/drivers/devices.
+>
+> I kind of like it when the topology appears directly in the device hierarchy.
+>
+> We could append the local number just as as .<local port> to the
+> existing number, or we dould add a sysfs attribute(file) to the
+> device, containing just the local port number.
+>
+> Both should work to retrieve the information and compose a string out
+> of it, to create a by-path/ symlink, which will not change when the
+> multiple drivers are loaded in different orders, or if devices are
+> unplugged and re-plugged during runtime of the machine.
+>
+> Thanks,
+> Kay
