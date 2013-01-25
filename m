@@ -1,51 +1,41 @@
-From: Seth Heasley <seth.heasley@intel.com>
-Subject: [PATCH 2/3] ahci: AHCI-mode SATA patch for Intel Avoton DeviceIDs
-Date: Fri, 25 Jan 2013 12:01:05 -0800
-Message-ID: <1359144065-3359-1-git-send-email-seth.heasley@intel.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH v2 2/2] libata: PM code cleanup for ata port
+Date: Fri, 25 Jan 2013 15:34:03 -0500
+Message-ID: <5102EC3B.9040901@pobox.com>
+References: <1346143791-2995-1-git-send-email-aaron.lu@intel.com> <50FDA8B3.6090100@pobox.com> <20130125062935.GA9779@aaronlu.sh.intel.com> <510226F9.5000709@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43466 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756547Ab3AYTC7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jan 2013 14:02:59 -0500
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:52285 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750945Ab3AYUeH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2013 15:34:07 -0500
+In-Reply-To: <510226F9.5000709@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>
 
-This patch adds the AHCI and RAID-mode SATA DeviceIDs for the Intel Avoton SOC.
+On 01/25/2013 01:32 AM, Aaron Lu wrote:
+> For system freeze, if the port is already runtime suspended, leave it
+> alone and just return. The port will be resumed on thaw before it will
+> be used.
+>
+> And since we will call get_noresume for every device during prepare
+> phase, and the port is resumed during thaw phase, it can't be in runtime
+> suspended state during the poweroff phase. So remove the
+> runtime_suspended check in poweroff callback.
+>
+> And for all suspend(freeze/suspend/poweroff/etc.), there is no need to
+> touch the device, so set no_autopsy and no_recovery for them all.
+>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>   drivers/ata/libata-core.c | 16 ++++------------
+>   1 file changed, 4 insertions(+), 12 deletions(-)
 
-Signed-off-by: Seth Heasley <seth.heasley@intel.com>
----
- drivers/ata/ahci.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+applied 1-2
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7862d17..2e6530e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -264,6 +264,22 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx Point-LP RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f22), board_ahci }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f23), board_ahci }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f24), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f25), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f26), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f27), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f2e), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f2f), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f35), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f36), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci }, /* Avoton RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--- 
-1.7.11.7
+
 
