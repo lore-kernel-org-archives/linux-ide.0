@@ -1,80 +1,69 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [libata:upstream 7/11] drivers/ata/libata-zpodd.c:83 zpodd_wake_dev()
- warn: variable dereferenced before check 'ata_dev' (see line 80)
-Date: Fri, 25 Jan 2013 15:38:45 -0500
-Message-ID: <5102ED55.2000605@pobox.com>
-References: <20130122062536.GB16282@mwanda> <50FE4E86.5090308@intel.com> <20130122083812.GC16282@mwanda> <50FE51BF.1060409@intel.com>
+From: Simon Que <sque@chromium.org>
+Subject: Re: [PATCH v3] ata: libata-core: initialize native_sectors in ata_hpa_resize()
+Date: Fri, 25 Jan 2013 15:31:57 -0800
+Message-ID: <CANV8Hs0dyU7jcO0WqdU6JqcaUPNHhOQF7vKcqCB0tkTVgiSxYw@mail.gmail.com>
+References: <1359057478-3920-1-git-send-email-sque@chromium.org>
+	<51026AD1.7070202@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:49248 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623Ab3AYUir (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2013 15:38:47 -0500
-Received: by mail-qa0-f45.google.com with SMTP id g10so471821qah.11
-        for <linux-ide@vger.kernel.org>; Fri, 25 Jan 2013 12:38:47 -0800 (PST)
-In-Reply-To: <50FE51BF.1060409@intel.com>
+Received: from mail-ee0-f51.google.com ([74.125.83.51]:54430 "EHLO
+	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441Ab3AYXcC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2013 18:32:02 -0500
+Received: by mail-ee0-f51.google.com with SMTP id d17so446028eek.38
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jan 2013 15:31:58 -0800 (PST)
+In-Reply-To: <51026AD1.7070202@mvista.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, kbuild@01.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-ide@vger.kernel.org, Mandeep Baines <msb@chromium.org>
 
-On 01/22/2013 03:45 AM, Aaron Lu wrote:
-> On 01/22/2013 04:38 PM, Dan Carpenter wrote:
->> On Tue, Jan 22, 2013 at 04:32:06PM +0800, Aaron Lu wrote:
->>> Hi Dan,
->>>
->>> Thanks for the remind.
->>>
->>> On 01/22/2013 02:25 PM, Dan Carpenter wrote:
->>>> Hi Aaron,
->>>>
->>>> FYI, there are new smatch warnings show up in
->>>>
->>>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git upstream
->>>> head:   7e15e9be37eb834aaaca69030064ac97eaf5df2f
->>>> commit: f064a20dded807448669426c9bfb7d03aba5659c [7/11] libata: move acpi notification code to zpodd
->>>>
->>>> New smatch warnings:
->>>> drivers/ata/libata-zpodd.c:83 zpodd_wake_dev() warn: variable dereferenced before check 'ata_dev' (see line 80)
->>>
->>> The ata_dev variable shouldn't ever be NULL here.
->>>
->>>>
->>>> git remote add libata git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
->>>> git remote update libata
->>>> git checkout f064a20dded807448669426c9bfb7d03aba5659c
->>>> vim +/ata_dev +83 drivers/ata/libata-zpodd.c
->>>>
->>>> afe75951 Aaron Lu 2013-01-15  74  	return acpi_device_can_poweroff(acpi_dev);
->>>> afe75951 Aaron Lu 2013-01-15  75  }
->>>> afe75951 Aaron Lu 2013-01-15  76
->>>> f064a20d Aaron Lu 2013-01-15  77  static void zpodd_wake_dev(acpi_handle handle, u32 event, void *context)
->>>> f064a20d Aaron Lu 2013-01-15  78  {
->>>> f064a20d Aaron Lu 2013-01-15  79  	struct ata_device *ata_dev = context;
->>>> f064a20d Aaron Lu 2013-01-15 @80  	struct zpodd *zpodd = ata_dev->zpodd;
->>>> f064a20d Aaron Lu 2013-01-15  81  	struct device *dev = &ata_dev->sdev->sdev_gendev;
->>>> f064a20d Aaron Lu 2013-01-15  82
->>>> f064a20d Aaron Lu 2013-01-15 @83  	if (event == ACPI_NOTIFY_DEVICE_WAKE && ata_dev &&
->>>
->>> If I remove the check for ata_dev here, will the smatch warning go away?
->>> Or should I add a check above? I suppose we need to do something to the
->>> warning, so that it won't pop up in the future, so please feel free to
->>> suggest, thanks!
->>
->> Removing the check would silence the warning.
+I'm using a ChromeOS / ChromiumOS gcc.
+
+Technically it won't be used uninitialized since there's a check for
+the return value.  But this isn't always obvious to the compiler --
+it'd have to be smart enough to look at ata_read_native_max_address()
+to see that if '*max_sectors' is not set, then there is a nonzero
+return value, which would cause ata_hpa_resize() to return early.
+
+This patch is really meant to satisfy the compiler, rather than to
+catch some corner case where 'native_sectors' gets used uninitialized.
+ Setting it to 0 makes more sense because its "true initialization" is
+in a later call.
+
+On Fri, Jan 25, 2013 at 3:21 AM, Sergei Shtylyov <sshtylyov@mvista.com> wrote:
+> Hello.
 >
-> OK, thanks.
 >
-> Hi Jeff,
-> Should I prepare a new patch to fix this or update the original patch?
-
-If it's in libata-dev.git#upstream, then a patch on top of all the 
-others, which addresses the issue.
-
-	Jeff
-
-
-
-
+> On 24-01-2013 23:57, Simon Que wrote:
+>
+>> Eliminates a compiler warning about uninitialized variable.
+>> "warning: 'native_sectors' may be used uninitialized in this function"
+>
+>
+>> Signed-off-by: Simon Que <sque@chromium.org>
+>> ---
+>>   drivers/ata/libata-core.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index d2b18ea..b185db1 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+>>         int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
+>>         bool unlock_hpa = ata_ignore_hpa || dev->flags &
+>> ATA_DFLAG_UNLOCK_HPA;
+>>         u64 sectors = ata_id_n_sectors(dev->id);
+>> -       u64 native_sectors;
+>> +       u64 native_sectors = 0;
+>
+>
+>    Isn't it wiser to set it to 'sectors'? And frankly speaking I don't see
+> how this variable may indeed be used unitialized. What version of gcc are
+> you using?
+>
+> MBR, Sergei
+>
