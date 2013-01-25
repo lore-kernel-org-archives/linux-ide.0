@@ -1,40 +1,41 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH #upstream] revert libata: export host controller number
- thru /sys
-Date: Fri, 25 Jan 2013 15:31:18 -0500
-Message-ID: <5102EB96.70405@pobox.com>
-References: <1359045189-16813-1-git-send-email-dmilburn@redhat.com>
+Subject: Re: [PATCH v14 1/3] scsi: sr: support runtime pm
+Date: Fri, 25 Jan 2013 15:37:28 -0500
+Message-ID: <5102ED08.2070201@pobox.com>
+References: <1358924973-18269-1-git-send-email-aaron.lu@intel.com> <1358924973-18269-2-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:51027 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945Ab3AYUg5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2013 15:36:57 -0500
-Received: by mail-qc0-f177.google.com with SMTP id u28so398561qcs.22
-        for <linux-ide@vger.kernel.org>; Fri, 25 Jan 2013 12:36:56 -0800 (PST)
-In-Reply-To: <1359045189-16813-1-git-send-email-dmilburn@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1358924973-18269-2-git-send-email-aaron.lu@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, kay.sievers@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
 
-On 01/24/2013 11:33 AM, David Milburn wrote:
->      Revert "libata: export host controller number thru /sys"
+On 01/23/2013 02:09 AM, Aaron Lu wrote:
+> This patch adds runtime pm support for sr.
 >
->      This reverts commit 1757d902b029a29dfcef63609964385cf8865b5a.
+> It did this by increasing the runtime usage_count of the device when
+> its block device is accessed. And decreasing the runtime usage_count
+> of the device when the access is done.
 >
->      Solution still uses global counter for ata port.
+> If there is media inside, runtime suspend is not allowed as we don't
+> always know if the ODD is being used or not.
 >
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+> The idea is discussed here:
+> http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
+> and the restriction to check media inside is discussed here:
+> http://thread.gmane.org/gmane.linux.ide/53665/focus=58836
+>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
+> Acked-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 > ---
->   drivers/ata/libata-core.c      |    4 ----
->   drivers/ata/libata-transport.c |    2 +-
->   include/linux/libata.h         |    1 -
->   3 files changed, 1 insertions(+), 6 deletions(-)
+>   drivers/scsi/sr.c | 42 +++++++++++++++++++++++++++++++++++++++---
+>   1 file changed, 39 insertions(+), 3 deletions(-)
 
-applied
+applied 1-3
 
 
 
