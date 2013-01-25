@@ -1,87 +1,43 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH v2 2/2] libata: PM code cleanup for ata port
-Date: Fri, 25 Jan 2013 13:29:10 +0100
-Message-ID: <1512636.TS44I6d7Dq@vostro.rjw.lan>
-References: <1346143791-2995-1-git-send-email-aaron.lu@intel.com> <510226F9.5000709@intel.com> <51026D90.7040309@mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
+From: Seth Heasley <seth.heasley@intel.com>
+Subject: [PATCH 1/3] ata_piix: IDE-mode SATA patch for Intel Avoton DeviceIDs
+Date: Fri, 25 Jan 2013 11:57:05 -0800
+Message-ID: <1359143825-3255-1-git-send-email-seth.heasley@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:55382 "EHLO hydra.sisk.pl"
+Received: from mga09.intel.com ([134.134.136.24]:25572 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751605Ab3AYMXH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 25 Jan 2013 07:23:07 -0500
-In-Reply-To: <51026D90.7040309@mvista.com>
+	id S1755991Ab3AYS7A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 25 Jan 2013 13:59:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, Tejun Heo <tj@kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
 
-On Friday, January 25, 2013 03:33:36 PM Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 25-01-2013 10:32, Aaron Lu wrote:
-> 
-> > For system freeze, if the port is already runtime suspended, leave it
-> > alone and just return. The port will be resumed on thaw before it will
-> > be used.
-> 
-> > And since we will call get_noresume for every device during prepare
-> > phase, and the port is resumed during thaw phase, it can't be in runtime
-> > suspended state during the poweroff phase. So remove the
-> > runtime_suspended check in poweroff callback.
-> 
-> > And for all suspend(freeze/suspend/poweroff/etc.), there is no need to
-> > touch the device, so set no_autopsy and no_recovery for them all.
-> 
-> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> > ---
-> >   drivers/ata/libata-core.c | 16 ++++------------
-> >   1 file changed, 4 insertions(+), 12 deletions(-)
-> 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 6a5ef86..439c608 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -5334,9 +5334,6 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
-> >
-> >   static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int *async)
-> >   {
-> > -	unsigned int ehi_flags = ATA_EHI_QUIET;
-> > -	int rc;
-> > -
-> >   	/*
-> >   	 * On some hardware, device fails to respond after spun down
-> >   	 * for suspend.  As the device won't be used before being
-> > @@ -5345,11 +5342,9 @@ static int __ata_port_suspend_common(struct ata_port *ap, pm_message_t mesg, int
-> >   	 *
-> >   	 * http://thread.gmane.org/gmane.linux.ide/46764
-> >   	 */
-> > -	if (mesg.event & PM_EVENT_SUSPEND)
-> > -		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
-> > -
-> > -	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
-> > -	return rc;
-> > +	unsigned int ehi_flags = ATA_EHI_QUIET | ATA_EHI_NO_AUTOPSY |
-> > +				 ATA_EHI_NO_RECOVERY;
-> 
->     Please keep the existing coding style and insert empty line after 
-> declarations.
->     Wait, you don't need this variable at all...
+This patch adds the IDE-mode SATA DeviceIDs for the Intel Avoton SOC.
 
-Well, I suppose Aaron just wanted to avoid ugly line breaks in the return
-line below and whether or not to keep the empty line in this case is a matter
-of taste IMHO.
+Signed-off-by: Seth Heasley <seth.heasley@intel.com>
+---
+ drivers/ata/ata_piix.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-In my personal opinion it would be cleaner with the empty line.
-
-> > +	return ata_port_request_pm(ap, mesg, 0, ehi_flags, async);
-> >   }
-
-Thanks,
-Rafael
-
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 174eca6..651fa85 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -317,6 +317,14 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x8086, 0x9c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (DH89xxCC) */
+ 	{ 0x8086, 0x2326, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	/* SATA Controller IDE (Avoton) */
++	{ 0x8086, 0x1f20, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
++	/* SATA Controller IDE (Avoton) */
++	{ 0x8086, 0x1f21, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
++	/* SATA Controller IDE (Avoton) */
++	{ 0x8086, 0x1f30, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	/* SATA Controller IDE (Avoton) */
++	{ 0x8086, 0x1f31, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	{ }	/* terminate list */
+ };
+ 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+1.7.11.7
+
