@@ -1,24 +1,43 @@
-From: "Mrs. Anna Sanchez" <no-reply@mx2.4shared.com>
-Subject: RE: Am dying of breast cancer
-Date: Fri, 25 Jan 2013 20:28:10 -0200
-Message-ID: <20130125222603.C644A25DD8B@zcs-mail.inconcertcc.com>
-Reply-To: mrsannasanchez@1email.eu
+From: "=?utf-8?B?5LiA5Liq5YOP5aSP5aSp77yM5LiA5Liq5YOP56eL?= =?utf-8?B?5aSp?="
+	<zhtclz@foxmail.com>
+Subject: sil24 cmd issue question
+Date: Sat, 26 Jan 2013 15:19:25 +0800
+Message-ID: <tencent_255AC6987FC0818063C5E66A@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.inconcertcc.com ([200.40.135.92]:40902 "EHLO
-	zcs-mail.inconcertcc.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754871Ab3AZAab convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jan 2013 19:30:31 -0500
-Content-Description: Mail message body
+Received: from smtpbg64.qq.com ([103.7.28.238]:43069 "HELO smtpbg117.qq.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751337Ab3AZHTy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 26 Jan 2013 02:19:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <no-reply@mx2.4shared.com>
+To: =?utf-8?B?bGludXgtaWRl?= <linux-ide@vger.kernel.org>
 
-Hello,
+aGVsbG8sDQogICAgUmVuY2VudGx5IEkgYW0gd3JpdGluZSBhIGRyaXZlciBhYm91dCBzaWwz
+MTMyLCBhbmQgcmVhZGluZyBrZXJuZWwgY29kZSBhYm91dCBzaWwzMTMyLCBhbmQgSSBoYXZl
+IGEgcXVlc3Rpb24gYWJvdXQgaXNzdWUgY21kIHRvIHNpbDMxMzIuDQogICAgT24gdGhlIGRh
+dGFzaGVldCwgaXQgZGVzY3JpYmUgdGhhdCB0d28gbWV0aG9kcyB0byBpc3N1ZSBjbWQsIGRp
+cmVjdCBhbmQgaW5kaXJlY3QuIEkgaGF2ZSB1c2UgaW5kaXJlY3QgbWV0aG9kIHRoYXQgd3Jp
+dGVzIHRoZSBwaHlzaWNhbCBhZGRyZXNzIG9mIHRoZSBQUkIgaW50byB0aGUgQWN0aXZhdGlv
+biByZWdpc3RlciBjb3JyZXNwb25kaW5nIHRvIHRoZSBzZWxlY3RlZCBzbG90LiBCdXQgdGhl
+IGNtZCBkaWRuJ3Qgd29yayB3bGwsIGFuZCBlcnJvciBjb2RlIGlzIFBMRENNREVSUk9SUENJ
+UEVSUiAgb3IgUExEQ01ERVJST1JNQVNURVJBQk9SVC4gDQogICAgIEkgaGF2ZSBpbml0IHRo
+ZSBkZXZpY2UgYWNjb3JkaW5nIHRvIHRoZSBkYXRhc2hlZXQsICBjb3JyZWN0aW5nIGNvbmZp
+ZyB0aGUgcGNpLWUgIHNwYWNlIChCdXMgTWFzdGVyLCBNZW1vcnkgU3BhY2UgaW4gUENJIENv
+bW1hbmQgd2hpY2ggaXMgaW4gUENJIEhlYWRlciApLCBzZXR0aW5nIHNpbDMyIGluIDMyLWJp
+dCBtb2RlICwgYW5kIG1ha2luZyBzdXJlIHRoZSBieXRlIG9yZGVyKCBteSBjcHUgaXMgYmln
+IGVuZGlhbiwgYnV0IHBjaS1lIGlzIGxpdHRsZSBlbmRpYW4pIHdyaXR0ZW4gdG8gQWN0aXZh
+dGlvbiByZWdpc3Rlci4gIElzc3VlIGNtZCB3aXRoIGF0YW5kYXJkIEFUQSBjb21tYW5kIFBS
+QiwgYW5kIEkgYW0gc3VyZSB0aGF0IGFsbCBmaWVsZHMgYXJlIGNvcnJlY3QgY29uZmlnZWQu
+IEJ1dCB0aGVyZSBub3RoaW5nIGhhcHBlbmQsIHdpdGhvdXQgYW55IGludGVycnVwdC4gSSBk
+b24ndCBrbm93IHdoYXQgaXMgdGhlIHJlYXNpb24uIFRoZW4gSSB1c2UgdGhlIGRpcmVjdCBt
+ZXRob2QgdG8gaXNzdWUgdGhlIGNtZCwgaXQncyBzdWNjZXNzZnUgYW5kIGFsbCBpbmZvcm1h
+dGlvbiByZXR1cm5lZCBpcyBjb3JyZWN0Lg0KICAgICBDYW4geW91IGdpdmUgbWUgc29tZSBp
+ZGVhcyBhYm91dCBuYXR1cmUgb2YgdGhlIHByb2JsZW0/DQoNClRoYW5rIFlvdS4NCnpoLg0K
+LS0tLS0tLS0tLS0tLS0tLS0tDQpIZSB3aG8gZ2F0aGVycyBjcm9wcyBpbiBzdW1tZXIgaXMg
+YSB3aXNlIHNvbiwgYnV0IGhlIHdobyBzbGVlcHMgZHVyaW5nIGhhcnZlc3QgaXMgYSBkaXNn
+cmFjZWZ1bCBzb24u
 
-Am dying of breast cancer and I need your assistance to help me carry out my dream charity work with my funds 2.8M Euros which i deposited with a Security firm, if you are interested please reach me for more details on this email: mrsannasanchez@1email.eu
-
-Yours Sincerely,
-Mrs. Anna Sanchez
