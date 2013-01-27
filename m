@@ -1,19 +1,19 @@
 From: Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v2 03/22] PCI, libata: remove find_bridge in acpi_bus_type
-Date: Sat, 26 Jan 2013 21:36:24 -0800
-Message-ID: <1359265003-16166-4-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQUhrVPNKcdWbiqHLa5PzH7Dg-uduVc9BP-OjM-eCqSXdw@mail.gmail.com>
- <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v3 03/22] PCI, libata: remove find_bridge in acpi_bus_type
+Date: Sun, 27 Jan 2013 11:23:30 -0800
+Message-ID: <1359314629-18651-4-git-send-email-yinghai@kernel.org>
+References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
+ <1359314629-18651-1-git-send-email-yinghai@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37584 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:32287 "EHLO
 	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755727Ab3A0Fhe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2013 00:37:34 -0500
-In-Reply-To: <1359265003-16166-1-git-send-email-yinghai@kernel.org>
+	with ESMTP id S1755313Ab3A0TYQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2013 14:24:16 -0500
+In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <jiang.liu@huawei.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Taku Izumi <izumi.taku@jp.fujitsu.com>
-Cc: linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <jiang.liu@huawei.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Taku Izumi <izumi.taku@jp.fujitsu.com>, Toshi Kani <toshi.kani@hp.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
 The struct member is not used anymore, remove it.
 
