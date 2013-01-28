@@ -1,48 +1,49 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v3 03/22] PCI, libata: remove find_bridge in acpi_bus_type
-Date: Sun, 27 Jan 2013 11:23:30 -0800
-Message-ID: <1359314629-18651-4-git-send-email-yinghai@kernel.org>
-References: <CAE9FiQXHG01NjnYNDbC-KEpbcvY-q4pBe97CxTOGS7W4vZQBYQ@mail.gmail.com>
- <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32287 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755313Ab3A0TYQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Jan 2013 14:24:16 -0500
-In-Reply-To: <1359314629-18651-1-git-send-email-yinghai@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v14 1/3] scsi: sr: support runtime pm
+Date: Mon, 28 Jan 2013 09:36:14 +0800
+Message-ID: <20130128013614.GA26742@aaronlu.sh.intel.com>
+References: <1358924973-18269-1-git-send-email-aaron.lu@intel.com>
+ <1358924973-18269-2-git-send-email-aaron.lu@intel.com>
+ <5102ED08.2070201@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5102ED08.2070201@pobox.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Aaron Lu <aaron.lwe@gmail.com>, Jeff Wu <jeff.wu@amd.com>, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>, Jiang Liu <jiang.liu@huawei.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Taku Izumi <izumi.taku@jp.fujitsu.com>, Toshi Kani <toshi.kani@hp.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-pci@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
 
-The struct member is not used anymore, remove it.
+On Fri, Jan 25, 2013 at 03:37:28PM -0500, Jeff Garzik wrote:
+> On 01/23/2013 02:09 AM, Aaron Lu wrote:
+> >This patch adds runtime pm support for sr.
+> >
+> >It did this by increasing the runtime usage_count of the device when
+> >its block device is accessed. And decreasing the runtime usage_count
+> >of the device when the access is done.
+> >
+> >If there is media inside, runtime suspend is not allowed as we don't
+> >always know if the ODD is being used or not.
+> >
+> >The idea is discussed here:
+> >http://thread.gmane.org/gmane.linux.acpi.devel/55243/focus=52703
+> >and the restriction to check media inside is discussed here:
+> >http://thread.gmane.org/gmane.linux.ide/53665/focus=58836
+> >
+> >Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> >Acked-by: Alan Stern <stern@rowland.harvard.edu>
+> >Acked-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> >---
+> >  drivers/scsi/sr.c | 42 +++++++++++++++++++++++++++++++++++++++---
+> >  1 file changed, 39 insertions(+), 3 deletions(-)
+> 
+> applied 1-3
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
----
- drivers/ata/libata-acpi.c |    6 ------
- 1 file changed, 6 deletions(-)
+Now that the whole patchset is queued, I would like to thank all of you,
+especially Alan Stern and Tejun Heo, for your kind help, without that I
+would not be able to make it.
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index ef01ac0..7038225 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1177,13 +1177,7 @@ static int ata_acpi_find_device(struct device *dev, acpi_handle *handle)
- 		return -ENODEV;
- }
- 
--static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
--{
--	return -ENODEV;
--}
--
- static struct acpi_bus_type ata_acpi_bus = {
--	.find_bridge = ata_acpi_find_dummy,
- 	.find_device = ata_acpi_find_device,
- };
- 
--- 
-1.7.10.4
+Thanks and best regards,
+Aaron
 
