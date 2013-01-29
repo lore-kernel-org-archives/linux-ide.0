@@ -1,73 +1,38 @@
-From: Simon Que <sque@chromium.org>
-Subject: Re: [PATCH v3] ata: libata-core: initialize native_sectors in ata_hpa_resize()
-Date: Mon, 28 Jan 2013 12:39:20 -0800
-Message-ID: <CANV8Hs0N8auuds4oEtTOf44gYiq-iwLT1+HzAK7EONAh4x26pQ@mail.gmail.com>
-References: <1359057478-3920-1-git-send-email-sque@chromium.org>
-	<51026AD1.7070202@mvista.com>
-	<CANV8Hs0dyU7jcO0WqdU6JqcaUPNHhOQF7vKcqCB0tkTVgiSxYw@mail.gmail.com>
+From: shellie campbell <shellie.campbell@mgccc.edu>
+Subject: =?iso-8859-1?Q?PERSONAL_/_Student_/_fakulteten_{ANM=C4LAN}?=
+Date: Tue, 29 Jan 2013 11:30:13 +0000
+Message-ID: <7F16140F07F8B34FB6B62F5C8C80E2543BA826AE@mgcccmail2010-2.mgccc.cc.ms.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ea0-f172.google.com ([209.85.215.172]:56668 "EHLO
-	mail-ea0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752712Ab3A1UjW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jan 2013 15:39:22 -0500
-Received: by mail-ea0-f172.google.com with SMTP id f13so1370974eaa.3
-        for <linux-ide@vger.kernel.org>; Mon, 28 Jan 2013 12:39:21 -0800 (PST)
-In-Reply-To: <CANV8Hs0dyU7jcO0WqdU6JqcaUPNHhOQF7vKcqCB0tkTVgiSxYw@mail.gmail.com>
+Received: from mail1.mgccc.edu ([216.79.147.173]:51805 "EHLO
+	ironport1.mgccc.cc.ms.us" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753067Ab3A2Ljw convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jan 2013 06:39:52 -0500
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: linux-ide@vger.kernel.org, Mandeep Baines <msb@chromium.org>
 
-More specifically... I have gcc 4.7.1.
 
-On Fri, Jan 25, 2013 at 3:31 PM, Simon Que <sque@chromium.org> wrote:
-> I'm using a ChromeOS / ChromiumOS gcc.
->
-> Technically it won't be used uninitialized since there's a check for
-> the return value.  But this isn't always obvious to the compiler --
-> it'd have to be smart enough to look at ata_read_native_max_address()
-> to see that if '*max_sectors' is not set, then there is a nonzero
-> return value, which would cause ata_hpa_resize() to return early.
->
-> This patch is really meant to satisfy the compiler, rather than to
-> catch some corner case where 'native_sectors' gets used uninitialized.
->  Setting it to 0 makes more sense because its "true initialization" is
-> in a later call.
->
-> On Fri, Jan 25, 2013 at 3:21 AM, Sergei Shtylyov <sshtylyov@mvista.com> wrote:
->> Hello.
->>
->>
->> On 24-01-2013 23:57, Simon Que wrote:
->>
->>> Eliminates a compiler warning about uninitialized variable.
->>> "warning: 'native_sectors' may be used uninitialized in this function"
->>
->>
->>> Signed-off-by: Simon Que <sque@chromium.org>
->>> ---
->>>   drivers/ata/libata-core.c |    2 +-
->>>   1 files changed, 1 insertions(+), 1 deletions(-)
->>
->>
->>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->>> index d2b18ea..b185db1 100644
->>> --- a/drivers/ata/libata-core.c
->>> +++ b/drivers/ata/libata-core.c
->>> @@ -1324,7 +1324,7 @@ static int ata_hpa_resize(struct ata_device *dev)
->>>         int print_info = ehc->i.flags & ATA_EHI_PRINTINFO;
->>>         bool unlock_hpa = ata_ignore_hpa || dev->flags &
->>> ATA_DFLAG_UNLOCK_HPA;
->>>         u64 sectors = ata_id_n_sectors(dev->id);
->>> -       u64 native_sectors;
->>> +       u64 native_sectors = 0;
->>
->>
->>    Isn't it wiser to set it to 'sectors'? And frankly speaking I don't see
->> how this variable may indeed be used unitialized. What version of gcc are
->> you using?
->>
->> MBR, Sergei
->>
+
+
+
+Viuppleverkonstigaproblemp=E5v=E5r databas,om man intetardu kan f=F6rlo=
+ra dine-postkonto.Viberdig attverifieraditt kontosker inom f=F6ljande12=
+timmar,klickah=E4r<https://docs.google.com/spreadsheet/viewform?formkey=
+=3DdE5xMGNMOW5ZRlI2UnR3MWU5YkF1dHc6MQ> f=F6r att verifieraditt e-postko=
+ntof=F6r b=E4ttreservice.
+-----------------------------------------
+The information contained in this e-mail message is intended only for t=
+he personal and confidential use of the recipient(s) named above. This =
+message may be an attorney-client communication and/or work product and=
+ as such is privileged and confidential. If the reader of this message =
+is not the intended recipient or an agent responsible for delivering it=
+ to the intended recipient, you are hereby notified that you have recei=
+ved this document in error and that any review, dissemination, distribu=
+tion, or copying of this message is strictly prohibited. If you have re=
+ceived this communication in error, please notify us immediately by e-m=
+ail, and delete the original message.
+
