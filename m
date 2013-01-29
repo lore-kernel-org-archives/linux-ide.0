@@ -1,38 +1,36 @@
-From: shellie campbell <shellie.campbell@mgccc.edu>
-Subject: =?iso-8859-1?Q?PERSONAL_/_Student_/_fakulteten_{ANM=C4LAN}?=
-Date: Tue, 29 Jan 2013 11:30:13 +0000
-Message-ID: <7F16140F07F8B34FB6B62F5C8C80E2543BA826AE@mgcccmail2010-2.mgccc.cc.ms.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.mgccc.edu ([216.79.147.173]:51805 "EHLO
-	ironport1.mgccc.cc.ms.us" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753067Ab3A2Ljw convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Jan 2013 06:39:52 -0500
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+From: Vasanth Ananthan <vasanthananthan@gmail.com>
+Subject: [PATCH 0/2] Adding SATA PHY framework and PHY controller driver
+Date: Tue, 29 Jan 2013 20:49:16 +0530
+Message-ID: <1359472758-31350-1-git-send-email-vasanthananthan@gmail.com>
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: jeff@garzik.org, jgarzik@redhat.com, linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com, thomas.abraham@linaro.org, girish.shivananjappa@linaro.org, Vasanth Ananthan <vasanthananthan@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
+Adding SATA PHY framework. The framework acts as an interface
+between the SATA controller and the PHY controller.
 
+The framework can be used by any platform with device tree support.
+It primarily serves to de-couple the SATA controller driver and the
+PHY controller driver.
 
+Vasanth Ananthan (2):
+  driver: ata: SATA PHY framework
+  driver: ata: add new Exynos5250 SATA PHY controller driver
 
+ arch/arm/mach-exynos/include/mach/regs-pmu.h  |    3 +
+ arch/arm/mach-exynos/include/mach/regs-sata.h |   29 +++
+ drivers/ata/Kconfig                           |   10 +
+ drivers/ata/Makefile                          |    1 +
+ drivers/ata/sata_exynos_phy.c                 |  265 +++++++++++++++++++++++++
+ drivers/ata/sata_phy.c                        |  145 ++++++++++++++
+ drivers/ata/sata_phy.h                        |   29 +++
+ 7 files changed, 482 insertions(+)
+ create mode 100644 arch/arm/mach-exynos/include/mach/regs-sata.h
+ create mode 100644 drivers/ata/sata_exynos_phy.c
+ create mode 100644 drivers/ata/sata_phy.c
+ create mode 100644 drivers/ata/sata_phy.h
 
-Viuppleverkonstigaproblemp=E5v=E5r databas,om man intetardu kan f=F6rlo=
-ra dine-postkonto.Viberdig attverifieraditt kontosker inom f=F6ljande12=
-timmar,klickah=E4r<https://docs.google.com/spreadsheet/viewform?formkey=
-=3DdE5xMGNMOW5ZRlI2UnR3MWU5YkF1dHc6MQ> f=F6r att verifieraditt e-postko=
-ntof=F6r b=E4ttreservice.
------------------------------------------
-The information contained in this e-mail message is intended only for t=
-he personal and confidential use of the recipient(s) named above. This =
-message may be an attorney-client communication and/or work product and=
- as such is privileged and confidential. If the reader of this message =
-is not the intended recipient or an agent responsible for delivering it=
- to the intended recipient, you are hereby notified that you have recei=
-ved this document in error and that any review, dissemination, distribu=
-tion, or copying of this message is strictly prohibited. If you have re=
-ceived this communication in error, please notify us immediately by e-m=
-ail, and delete the original message.
-
+-- 
+1.7.9.5
