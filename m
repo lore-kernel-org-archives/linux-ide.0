@@ -1,58 +1,51 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] ata: Fix DVD not dectected at some Haswell platforms
-Date: Wed, 30 Jan 2013 16:29:19 +0400
-Message-ID: <5109121F.1000205@mvista.com>
-References: <1359566374-27286-1-git-send-email-youquan.song@intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 52821] ata_piix ATA_HOST_IGNORE_ATA for Hyper-V also affects
+ Virtual PC 7
+Date: Wed, 30 Jan 2013 22:19:21 +0000 (UTC)
+Message-ID: <20130130221921.89F9111FF01@bugzilla.kernel.org>
+References: <bug-52821-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:53272 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029Ab3A3M3i (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jan 2013 07:29:38 -0500
-Received: by mail-lb0-f172.google.com with SMTP id n8so2077337lbj.17
-        for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2013 04:29:36 -0800 (PST)
-In-Reply-To: <1359566374-27286-1-git-send-email-youquan.song@intel.com>
+Received: from mail.kernel.org ([198.145.19.201]:42140 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754304Ab3A3WTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jan 2013 17:19:25 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CA472203AA
+	for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2013 22:19:24 +0000 (UTC)
+Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
+	by mail.kernel.org (Postfix) with ESMTP id E20E920386
+	for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2013 22:19:22 +0000 (UTC)
+In-Reply-To: <bug-52821-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Youquan Song <youquan.song@intel.com>
-Cc: htejun@gmail.com, ming.lei@canonical.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, Youquan Song <youquan.song@linux.intel.com>
+To: linux-ide@vger.kernel.org
 
-Hello.
+https://bugzilla.kernel.org/show_bug.cgi?id=52821
 
-On 30-01-2013 21:19, Youquan Song wrote:
 
-> There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d fix the 4 ports
-> IDE controller 32bit PIO mode.
-> Recently, the problem was showed at Haswell platform which includes 2 ports
-> IDE controller.
+Andreas <linuxuser330250@gmx.net> changed:
 
-> So introduce a qurik patch to disable 32bit PIO at this IDE controller.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |PATCH_ALREADY_AVAILABLE
 
-> Signed-off-by: Youquan Song <youquan.song@intel.com>
-> ---
->   drivers/ata/ata_piix.c |   14 +++++++++++++-
->   1 files changed, 13 insertions(+), 1 deletions(-)
 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index ef773e1..1993e52 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-[...]
-> @@ -326,7 +327,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
->   	/* SATA Controller IDE (Lynx Point) */
->   	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
->   	/* SATA Controller IDE (Lynx Point) */
-> -	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-> +	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
->   	/* SATA Controller IDE (Lynx Point) */
->   	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
 
-    Also, are you sure this one and the following Lynx Point controllers are 
-not affected?
 
->   	/* SATA Controller IDE (Lynx Point-LP) */
+--- Comment #2 from Andreas <linuxuser330250@gmx.net>  2013-01-30 22:19:21 ---
+First appearance:
+https://bugzilla.novell.com/show_bug.cgi?id=737532
+Patch:
+https://lkml.org/lkml/2012/9/18/306
 
-MBR, Sergei
+Since I discovered the bug in a recent version of a bootable ISO, I assume a
+lot of recent distros are still affected.
+Anyway, future releases should be fixed. Thanks.
 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
