@@ -1,53 +1,75 @@
-From: Tomasz Figa <tomasz.figa@gmail.com>
-Subject: Re: [PATCH 0/2] Adding SATA PHY framework and PHY controller driver
-Date: Tue, 29 Jan 2013 20:18:57 +0100
-Message-ID: <27192849.OiIKBt794p@flatron>
-References: <1359472758-31350-1-git-send-email-vasanthananthan@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+From: Youquan Song <youquan.song@intel.com>
+Subject: [PATCH] ata: Fix DVD not dectected at some Haswell platforms
+Date: Wed, 30 Jan 2013 12:19:33 -0500
+Message-ID: <1359566374-27286-1-git-send-email-youquan.song@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f51.google.com ([74.125.83.51]:44355 "EHLO
-	mail-ee0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352Ab3A2TTD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jan 2013 14:19:03 -0500
-In-Reply-To: <1359472758-31350-1-git-send-email-vasanthananthan@gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:24012 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750769Ab3A3FML (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 30 Jan 2013 00:12:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vasanth Ananthan <vasanthananthan@gmail.com>
-Cc: linux-ide@vger.kernel.org, jeff@garzik.org, jgarzik@redhat.com, linux-samsung-soc@vger.kernel.org, kgene.kim@samsung.com, thomas.abraham@linaro.org, girish.shivananjappa@linaro.org
+To: htejun@gmail.com, ming.lei@canonical.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
 
-Hi,
+There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d fix the 4 ports
+IDE controller 32bit PIO mode. 
+Recently, the problem was showed at Haswell platform which includes 2 ports 
+IDE controller.
 
-On Tuesday 29 of January 2013 20:49:16 Vasanth Ananthan wrote:
-> Adding SATA PHY framework. The framework acts as an interface
-> between the SATA controller and the PHY controller.
-> 
-> The framework can be used by any platform with device tree support.
-> It primarily serves to de-couple the SATA controller driver and the
-> PHY controller driver.
-> 
-> Vasanth Ananthan (2):
->   driver: ata: SATA PHY framework
->   driver: ata: add new Exynos5250 SATA PHY controller driver
-> 
->  arch/arm/mach-exynos/include/mach/regs-pmu.h  |    3 +
->  arch/arm/mach-exynos/include/mach/regs-sata.h |   29 +++
->  drivers/ata/Kconfig                           |   10 +
->  drivers/ata/Makefile                          |    1 +
->  drivers/ata/sata_exynos_phy.c                 |  265
-> +++++++++++++++++++++++++ drivers/ata/sata_phy.c                       
-> |  145 ++++++++++++++ drivers/ata/sata_phy.h                        |  
-> 29 +++
->  7 files changed, 482 insertions(+)
->  create mode 100644 arch/arm/mach-exynos/include/mach/regs-sata.h
->  create mode 100644 drivers/ata/sata_exynos_phy.c
->  create mode 100644 drivers/ata/sata_phy.c
->  create mode 100644 drivers/ata/sata_phy.h
+So introduce a qurik patch to disable 32bit PIO at this IDE controller. 
 
-It seems like you haven't addressed any of the comments received last time 
-you posted this series...
+Signed-off-by: Youquan Song <youquan.song@intel.com>
+---
+ drivers/ata/ata_piix.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-Best regards,
-Tomasz
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ef773e1..1993e52 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -150,6 +150,7 @@ enum piix_controller_ids {
+ 	tolapai_sata,
+ 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
+ 	ich8_sata_snb,
++	ich8_2port_sata_snb,
+ };
+ 
+ struct piix_map_db {
+@@ -326,7 +327,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* SATA Controller IDE (Lynx Point) */
+ 	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Lynx Point) */
+-	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
+ 	/* SATA Controller IDE (Lynx Point) */
+ 	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (Lynx Point-LP) */
+@@ -502,6 +503,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
+ 	[ich8m_apple_sata]	= &ich8m_apple_map_db,
+ 	[tolapai_sata]		= &tolapai_map_db,
+ 	[ich8_sata_snb]		= &ich8_map_db,
++	[ich8_2port_sata_snb]	= &ich8_2port_map_db,
+ };
+ 
+ static struct ata_port_info piix_port_info[] = {
+@@ -643,6 +645,16 @@ static struct ata_port_info piix_port_info[] = {
+ 		.port_ops	= &piix_sata_ops,
+ 	},
+ 
++	[ich8_2port_sata_snb] =
++	{
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR | PIIX_FLAG_PIO16,
++		.pio_mask	= ATA_PIO4,
++		.mwdma_mask	= ATA_MWDMA2,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &piix_sata_ops,
++	},
++
++
+ };
+ 
+ static struct pci_bits piix_enable_bits[] = {
+-- 
+1.6.4.2
 
