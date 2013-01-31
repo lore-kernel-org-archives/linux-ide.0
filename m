@@ -1,51 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 52821] ata_piix ATA_HOST_IGNORE_ATA for Hyper-V also affects
- Virtual PC 7
-Date: Wed, 30 Jan 2013 22:19:21 +0000 (UTC)
-Message-ID: <20130130221921.89F9111FF01@bugzilla.kernel.org>
-References: <bug-52821-11633@https.bugzilla.kernel.org/>
+From: "dbasehore ." <dbasehore@chromium.org>
+Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
+Date: Thu, 31 Jan 2013 14:00:09 -0800
+Message-ID: <CAGAzgso4cJHM+CNV0nCu6zUmq=xUstbsguynUp+hyx581LcHJg@mail.gmail.com>
+References: <1356064540-17414-1-git-send-email-dbasehore@chromium.org>
+	<50D5C473.2030902@mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:42140 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754304Ab3A3WTZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jan 2013 17:19:25 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id CA472203AA
-	for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2013 22:19:24 +0000 (UTC)
-Received: from bugzilla.kernel.org (bugzilla.kernel.org [198.145.19.217])
-	by mail.kernel.org (Postfix) with ESMTP id E20E920386
-	for <linux-ide@vger.kernel.org>; Wed, 30 Jan 2013 22:19:22 +0000 (UTC)
-In-Reply-To: <bug-52821-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <50D5C473.2030902@mvista.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: JBottomley@parallels.com, jgarzik@pobox.com, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=52821
+(Resending as plain text so the message is tracked on vger)
 
+Hi, thanks for reading through my patch.
 
-Andreas <linuxuser330250@gmx.net> changed:
+With regards to SCSI_SENSE_BUFFERSIZE, I'm following the precedent of
+scsi_execute_req found in drivers/scsi/scsi_lib.c
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |PATCH_ALREADY_AVAILABLE
+It seems that it is used by the scsi_normalize_sense function which I
+call in sd_resume_async. I just input SCSI_SENSE_BUFFERSIZE directly
+there though. I didn't know if anything would change its behavior on a
+lower level if I made sense_len = SCSI_SENSE_BUFFERSIZE, so I just
+went with what was already done.
 
+I'll make sure the semantic fixes go into the final patch.
 
+Also, I forgot to mention one possible problem earlier. I understand
+that some hard drives have a command buffer that can be executed by
+the hard drive in an order it determines. Does anyone know of a
+potential problem if the following happens?
 
+-resume finishes (hard drive not started yet)
+-read/write sent to disk, inserted before start command
 
---- Comment #2 from Andreas <linuxuser330250@gmx.net>  2013-01-30 22:19:21 ---
-First appearance:
-https://bugzilla.novell.com/show_bug.cgi?id=737532
-Patch:
-https://lkml.org/lkml/2012/9/18/306
+Could this happen? If so, could it cause any problems?
 
-Since I discovered the bug in a recent version of a bootable ISO, I assume a
-lot of recent distros are still affected.
-Anyway, future releases should be fixed. Thanks.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+I've tested the possibility of a program trying to read/write from the
+disk before it has started, and the read/write blocks until the disk
+has actually been spun up. I don't know if there are specific hard
+drives where this could be a problem though.
