@@ -1,99 +1,47 @@
-From: Youquan Song <youquan.song@intel.com>
-Subject: [PATCH v2] ata: Fix DVD not dectected at some Haswell platforms
-Date: Fri,  1 Feb 2013 10:19:42 -0500
-Message-ID: <1359731982-1390-1-git-send-email-youquan.song@intel.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: htejun@gmail.com, ming.lei@canonical.com, sshtylyov@mvista.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, stable@vger.kernel.org, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
+From: Youquan Song <youquan.song@linux.intel.com>
+Subject: Re: [PATCH] ata: Fix DVD not dectected at some Haswell platforms
+Date: Fri, 1 Feb 2013 10:26:12 -0500
+Message-ID: <20130201152612.GA2186@linux-youquan.bj.intel.com>
+References: <1359566374-27286-1-git-send-email-youquan.song@intel.com> <51091159.5080304@mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <51091159.5080304@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Youquan Song <youquan.song@intel.com>, htejun@gmail.com, ming.lei@canonical.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, Youquan Song <youquan.song@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d 
-"ata_piix: make DVD Drive recognisable on systems with Intel Sandybridge
- chipsets(v2)
+> On 30-01-2013 21:19, Youquan Song wrote:
+>
+>> There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d
+>
+>   Please also specify the summary of that patch in parens.
+>
+>> fix the 4 ports
+>
+>    s/fix/fixing/
+>
+>> IDE controller 32bit PIO mode.
+>> Recently, the problem was showed
+>
+>    s/showed/shown/
+>
+>> at Haswell platform which includes 2 ports IDE controller.
+>
+>> So introduce a qurik
+>
+>    Quirk.
+>
+>> patch to disable 32bit PIO at this IDE controller.
+>
+>    s/at/on/
+>
+>> Signed-off-by: Youquan Song <youquan.song@intel.com>
+>
+> MBR, Sergei
 
-    This quirk patch fixes one kind of bug inside some Intel Sandybridge
-    chipsets, see reports from
+Thanks a lot! I have sent out a fixing patch for it.
 
-           https://bugzilla.kernel.org/show_bug.cgi?id=40592.
-
-    Many guys also have reported the problem before:
-
-        https://bugs.launchpad.net/bugs/737388
-        https://bugs.launchpad.net/bugs/794642
-        https://bugs.launchpad.net/bugs/782389
-        ......
-
-    With help from Tejun, the problem is found to be caused by 32bit PIO
-    mode, so introduce the quirk patch to disable 32bit PIO on SATA piix
-    for some Sandybridge CPT chipsets.
-
-    Seth also tested the patch on all five affected chipsets
-    (pci device ID: 0x1c00, 0x1c01, 0x1d00, 0x1e00, 0x1e01), and found
-    the patch does fix the problem.
-"
-
-The above patch only fixing the 4 ports IDE controller 32bit PIO mode. 
-
-Recently, the problem was shown at Haswell Desktop platform which includes 2 
-ports IDE controller.
-
-So introduce a quirk patch to disable 32bit PIO on this IDE controller. 
-
-v2: Change spelling error in statememnt pointed by Sergei Shtylyov.
-
-Tested-by: Lee, Chun-Yi <jlee@suse.com>
-Signed-off-by: Youquan Song <youquan.song@intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/ata/ata_piix.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ef773e1..1993e52 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -150,6 +150,7 @@ enum piix_controller_ids {
- 	tolapai_sata,
- 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
- 	ich8_sata_snb,
-+	ich8_2port_sata_snb,
- };
- 
- struct piix_map_db {
-@@ -326,7 +327,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* SATA Controller IDE (Lynx Point) */
- 	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
- 	/* SATA Controller IDE (Lynx Point) */
--	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
- 	/* SATA Controller IDE (Lynx Point) */
- 	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
- 	/* SATA Controller IDE (Lynx Point-LP) */
-@@ -502,6 +503,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich8m_apple_sata]	= &ich8m_apple_map_db,
- 	[tolapai_sata]		= &tolapai_map_db,
- 	[ich8_sata_snb]		= &ich8_map_db,
-+	[ich8_2port_sata_snb]	= &ich8_2port_map_db,
- };
- 
- static struct ata_port_info piix_port_info[] = {
-@@ -643,6 +645,16 @@ static struct ata_port_info piix_port_info[] = {
- 		.port_ops	= &piix_sata_ops,
- 	},
- 
-+	[ich8_2port_sata_snb] =
-+	{
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR | PIIX_FLAG_PIO16,
-+		.pio_mask	= ATA_PIO4,
-+		.mwdma_mask	= ATA_MWDMA2,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &piix_sata_ops,
-+	},
-+
-+
- };
- 
- static struct pci_bits piix_enable_bits[] = {
--- 
-1.6.4.2
+-Youquan
