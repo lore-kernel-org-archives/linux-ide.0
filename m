@@ -1,48 +1,151 @@
-From: girishks2000@gmail.com
-Subject: [PATCH 2/2] arm: exynos5440: add dts node for the ahci sata
-Date: Fri,  1 Feb 2013 17:56:25 -0800
-Message-ID: <510c7283.a4d1440a.7061.2699@mx.google.com>
-References: <1359770185-31867-1-git-send-email-yes>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da0-f54.google.com ([209.85.210.54]:39078 "EHLO
-	mail-da0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757284Ab3BBB5Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2013 20:57:24 -0500
-Received: by mail-da0-f54.google.com with SMTP id n2so1955784dad.41
-        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2013 17:57:24 -0800 (PST)
-In-Reply-To: <1359770185-31867-1-git-send-email-yes>
-Sender: linux-ide-owner@vger.kernel.org
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
+Date: Sat, 02 Feb 2013 18:45:26 +0800
+Message-ID: <510CEE46.80308@intel.com>
+References: <Pine.LNX.4.44L0.1302011026070.1752-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1302011026070.1752-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Derek Basehore <dbasehore@chromium.org>, James Bottomley <JBottomley@Parallels.com>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: kgene.kim@samsung.com, linux-arm-kernel@lists.infradead.org, Girish K S <ks.giri@samsung.com>
 
-From: Girish K S <ks.giri@samsung.com>
+On 02/01/2013 11:28 PM, Alan Stern wrote:
+> On Fri, 1 Feb 2013, Aaron Lu wrote:
+> 
+>> Hi Derek,
+>>
+>> On 12/21/2012 12:35 PM, Derek Basehore wrote:
+>>> We no longer wait for the disk to spin up in sd_resume. It now enters the
+>>> request to spinup the disk into the elevator and returns.
+>>>
+>>> A function is scheduled under the scsi_sd_probe_domain to wait for the command
+>>> to spinup the disk to complete. This function then checks for errors and cleans
+>>> up after the sd resume function.
+>>>
+>>> This allows system resume to complete much faster on systems with an HDD since
+>>> spinning up the disk is a significant portion of resume time.
+>>
+>> An alternative way of possibly solving this problem from PM's point of
+>> view might be:
+>> 1 Set both ata port and scsi device's runtime status to RPM_SUSPENDED
+>>   in their system suspend callback;
+>> 2 On resume, do nothing in their system resume callback;
+>> 3 With request based runtime PM introduced here:
+>>   http://thread.gmane.org/gmane.linux.power-management.general/30405
+>>   When a request comes for the HDD after system resume, both the ata
+>>   port and the scsi device will be runtime resumed, which involves
+>>   re-initialize the ata link(in ata port's runtime resume callback) and
+>>   spin up the HDD(in sd's runtime resume callback).
+>>
+>> To make HDD un-affetcted by runtime PM during normal use, a large enough
+>> autosuspend_delay can be set for it.
+>>
+>> Just my 2 cents, I've not verified or tried in any way yet :-)
+> 
+> It's a good idea.  The problem is that it won't work if CONFIG_PM_SLEEP
+> is enabled but CONFIG_PM_RUNTIME isn't.
 
-This patch adds dts support for the sata controller
+Right, what a pity... thanks for the hint.
 
-Signed-off-by: Girish K S <ks.giri@samsung.com>
----
- arch/arm/boot/dts/exynos5440.dtsi |    9 +++++++++
- 1 file changed, 9 insertions(+)
+But the code is really simple if we ignore this problem(with some proper
+modifications to scsi bus PM callbacks, see the delayed_resume branch if
+you are interested), so I'm tempted to post it here :-)
 
-diff --git a/arch/arm/boot/dts/exynos5440.dtsi b/arch/arm/boot/dts/exynos5440.dtsi
-index a00ed6a..8d6a784 100644
---- a/arch/arm/boot/dts/exynos5440.dtsi
-+++ b/arch/arm/boot/dts/exynos5440.dtsi
-@@ -193,4 +193,13 @@
- 		clocks = <&clock 8>;
- 		clock-names = "rtc";
- 	};
+ drivers/ata/libata-core.c | 22 +++++++++++-----------
+ drivers/scsi/scsi_pm.c    | 14 +++++++++++---
+ 2 files changed, 22 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 497adea..38000fc 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5355,10 +5355,19 @@ static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
+ 
+ static int ata_port_suspend(struct device *dev)
+ {
++	int ret;
 +
-+	sata@210000 {
-+		compatible = "samsung,exynos5440-ahci";
-+		reg = <0x210000 0x10000>;
-+		interrupts = <0 30 0>;
-+		clocks = <&clock 10>;
-+		clock-names = "sata";
-+	};
+ 	if (pm_runtime_suspended(dev))
+ 		return 0;
+ 
+-	return ata_port_suspend_common(dev, PMSG_SUSPEND);
++	ret = ata_port_suspend_common(dev, PMSG_SUSPEND);
++	if (!ret) {
++		__pm_runtime_disable(dev, false);
++		pm_runtime_set_suspended(dev);
++		pm_runtime_enable(dev);
++	}
 +
- };
++	return ret;
+ }
+ 
+ static int ata_port_do_freeze(struct device *dev)
+@@ -5393,16 +5402,7 @@ static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
+ 
+ static int ata_port_resume(struct device *dev)
+ {
+-	int rc;
+-
+-	rc = ata_port_resume_common(dev, PMSG_RESUME);
+-	if (!rc) {
+-		pm_runtime_disable(dev);
+-		pm_runtime_set_active(dev);
+-		pm_runtime_enable(dev);
+-	}
+-
+-	return rc;
++	return 0;
+ }
+ 
+ /*
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d9956b6..d0b6997 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -127,13 +127,21 @@ static int scsi_bus_prepare(struct device *dev)
+ static int scsi_bus_suspend(struct device *dev)
+ {
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_suspend_common(dev, pm ? pm->suspend : NULL);
++	int ret;
++
++	ret = scsi_bus_suspend_common(dev, pm ? pm->suspend : NULL);
++	if (!ret) {
++		__pm_runtime_disable(dev, false);
++		pm_runtime_set_suspended(dev);
++		pm_runtime_enable(dev);
++	}
++
++	return ret;
+ }
+ 
+ static int scsi_bus_resume(struct device *dev)
+ {
+-	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+-	return scsi_bus_resume_common(dev, pm ? pm->resume : NULL);
++	return 0;
+ }
+ 
+ static int scsi_bus_freeze(struct device *dev)
 -- 
-1.7.10.4
+1.8.1
 
+
+Below branch has all the code necessary to try this out:
+https://github.com/aaronlu/linux.git delayed_resume
+
+And you will have to enable runtime PM for both ata port and scsi device,
+it works for HDD and normal ODD(ZPODD needs some extra work), tested on
+my thinkpad R61i with a HDD and an ODD.
+
+But yeah, as Alan has said, this can't be a general solution.
+But someday it may be, when CONFIG_RUNTIME_PM and CONFIG_PM_SLEEP are
+regarded as base functions of the kernel and always compiled in :-)
+
+Sorry for the noise.
+
+-Aaron
