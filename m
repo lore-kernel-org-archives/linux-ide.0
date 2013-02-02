@@ -1,55 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/2] don't wait on disk to start on resume
-Date: Fri, 1 Feb 2013 10:28:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1302011026070.1752-100000@iolanthe.rowland.org>
-References: <510BAC49.7000709@intel.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: girishks2000@gmail.com
+Subject: [PATCH 1/2] ahci: sata: add support for exynos5440 sata
+Date: Fri,  1 Feb 2013 17:56:24 -0800
+Message-ID: <510c7282.a4d1440a.7061.2697@mx.google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:35237 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751506Ab3BAP2U (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2013 10:28:20 -0500
-In-Reply-To: <510BAC49.7000709@intel.com>
+Received: from mail-pb0-f44.google.com ([209.85.160.44]:47725 "EHLO
+	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757284Ab3BBB5X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Feb 2013 20:57:23 -0500
+Received: by mail-pb0-f44.google.com with SMTP id wz12so2388053pbc.31
+        for <linux-ide@vger.kernel.org>; Fri, 01 Feb 2013 17:57:22 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Derek Basehore <dbasehore@chromium.org>, JBottomley@parallels.com, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: kgene.kim@samsung.com, linux-arm-kernel@lists.infradead.org, Girish K S <ks.giri@samsung.com>
 
-On Fri, 1 Feb 2013, Aaron Lu wrote:
+From: Girish K S <ks.giri@samsung.com>
 
-> Hi Derek,
-> 
-> On 12/21/2012 12:35 PM, Derek Basehore wrote:
-> > We no longer wait for the disk to spin up in sd_resume. It now enters the
-> > request to spinup the disk into the elevator and returns.
-> > 
-> > A function is scheduled under the scsi_sd_probe_domain to wait for the command
-> > to spinup the disk to complete. This function then checks for errors and cleans
-> > up after the sd resume function.
-> > 
-> > This allows system resume to complete much faster on systems with an HDD since
-> > spinning up the disk is a significant portion of resume time.
-> 
-> An alternative way of possibly solving this problem from PM's point of
-> view might be:
-> 1 Set both ata port and scsi device's runtime status to RPM_SUSPENDED
->   in their system suspend callback;
-> 2 On resume, do nothing in their system resume callback;
-> 3 With request based runtime PM introduced here:
->   http://thread.gmane.org/gmane.linux.power-management.general/30405
->   When a request comes for the HDD after system resume, both the ata
->   port and the scsi device will be runtime resumed, which involves
->   re-initialize the ata link(in ata port's runtime resume callback) and
->   spin up the HDD(in sd's runtime resume callback).
-> 
-> To make HDD un-affetcted by runtime PM during normal use, a large enough
-> autosuspend_delay can be set for it.
-> 
-> Just my 2 cents, I've not verified or tried in any way yet :-)
+This patch adds the compatible string of the exynos5440 sata controller
+compliant with the ahci 1.3 and sata 3.0 specification.
 
-It's a good idea.  The problem is that it won't work if CONFIG_PM_SLEEP
-is enabled but CONFIG_PM_RUNTIME isn't.
+Signed-off-by: Girish K S <ks.giri@samsung.com>
+---
+ drivers/ata/ahci_platform.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Alan Stern
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 7a8a284..c06f021 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -327,6 +327,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
++	{ .compatible = "samsung,exynos5440-ahci", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+-- 
+1.7.10.4
 
