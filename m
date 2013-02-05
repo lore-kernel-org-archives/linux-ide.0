@@ -1,70 +1,170 @@
-From: Alex Williamson <alex.l.williamson@gmail.com>
-Subject: Re: options to disable 2nd channel on pata_via?
-Date: Mon, 4 Feb 2013 20:23:29 -0700
-Message-ID: <CAEMbtcJcjb=Y0A_SOtrCrGR7WwkbRm9Vc0akR6QWo2rkdwNsqg@mail.gmail.com>
-References: <CAEMbtc+U-bfsnPzVUhkjFguCVMSE9h2vsEg0B=GKS0n3zqKO0w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH v9 0/4] block layer runtime pm
+Date: Tue,  5 Feb 2013 16:03:12 +0800
+Message-ID: <1360051396-3080-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:64326 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754484Ab3BEDXb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Feb 2013 22:23:31 -0500
-Received: by mail-la0-f52.google.com with SMTP id fs12so5231285lab.39
-        for <linux-ide@vger.kernel.org>; Mon, 04 Feb 2013 19:23:29 -0800 (PST)
-In-Reply-To: <CAEMbtc+U-bfsnPzVUhkjFguCVMSE9h2vsEg0B=GKS0n3zqKO0w@mail.gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:56540 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753655Ab3BEICh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Feb 2013 03:02:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>
 
-On Sat, Jan 26, 2013 at 11:40 AM, Alex Williamson
-<alex.l.williamson@gmail.com> wrote:
-> Hi,
->
-> I've got a very old and underpowered x86 thin client that makes use of
-> a via ide controller.  The system only has a connection for the first
-> pata channel, but when probed both ata1 and ata2 are enabled:
->
-> [   39.868935] pata_via 0000:00:11.1: version 0.3.4
-> [   40.608489] scsi0 : pata_via
-> [   40.656186] scsi1 : pata_via
-> [   40.740964] ata1: PATA max UDMA/100 cmd 0x1f0 ctl 0x3f6 bmdma 0xd400 irq 14
-> [   40.769302] ata2: PATA max UDMA/100 cmd 0x170 ctl 0x376 bmdma 0xd408 irq 15
-> [   40.948947] ata1.00: CFA:  256MB ATA Flash Disk, ADBA217H, max PIO4
-> [   40.949003] ata1.00: 501760 sectors, multi 0: LBA
-> [   40.974450] ata1.00: configured for PIO4
-> [   40.995461] scsi 0:0:0:0: Direct-Access     ATA       256MB ATA
-> Flash ADBA PQ: 0 ANSI: 5
-> [   41.011318] sd 0:0:0:0: [sda] 501760 512-byte logical blocks: (256
-> MB/245 MiB)
-> [   41.018358] sd 0:0:0:0: Attached scsi generic sg0 type 0
-> [   41.024696] ata2: port disabled--ignoring
-> [   41.050498] sd 0:0:0:0: [sda] Write Protect is off
-> [   41.050556] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [   41.097776] sd 0:0:0:0: [sda] Write cache: disabled, read cache:
-> enabled, doesn't support DPO or FUA
-> [   41.378651]  sda: sda1
-> [   41.565716] sd 0:0:0:0: [sda] Attached SCSI disk
->
-> This of course works, but my ethernet controller is also using irq 15
-> and now needlessly shares it with pata_via.  I wouldn't mind, but I'm
-> actually seeing 10%+ cpu time from irq/15-pata_via in top, so it's
-> actually degrading the performance of this already slow system.
-> Ideally I'd like to only enable the first IDE channel on irq 14 and
-> leave irq 15 exclusively to the ethernet controller.  Is this
-> possible?  In the past I've used the noprobe option to ide_core, which
-> ISTR allowed this.  I'm not finding anything similar in libata.
-> Suggestions?  Please cc, I'm not on this list.  Thanks,
+In August 2010, Jens and Alan discussed about "Runtime PM and the block
+layer". http://marc.info/?t=128259108400001&r=1&w=2
+And then Alan has given a detailed implementation guide:
+http://marc.info/?l=linux-scsi&m=133727953625963&w=2
 
-I haven't heard anything better, so I'll at least make note of my
-workaround in case someone else runs into this.  The device ID and
-subsystem ID on this box are not unique, so there's not much
-opportunity to change the device table.  It's probably not worth
-trying to do something with DMI, so instead I just added a kprobe
-module to replace the device table locally.  Here's a link in case it
-helps anyone:
+To test:
+# ls -l /sys/block/sda
+/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
 
-https://github.com/awilliam/pata_via_singlechannel/blob/master/pata_via_singlechannel.c
+# echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+Then you'll see sda is suspended after 10secs idle.
 
-Thanks,
-Alex
+[ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+[ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
+
+And if you do some IO, it will resume immediately.
+[ 1791.052438] sd 2:0:0:0: [sda] Starting disk
+
+For test, I often set the autosuspend time to 1 second. If you are using
+a GUI, the 10 seconds delay may be too long that the disk can not enter
+runtime suspended state.
+
+Note that sd's runtime suspend callback will dump some kernel messages
+and the syslog daemon will write kernel message to /var/log/messages,
+making the disk instantly resume after suspended. So for test, the
+syslog daemon should better be temporarily stopped.
+
+A git repo for it, on top of libata/upstream, scsi/for-next and
+block/for-next:
+https://github.com/aaronlu/linux.git blockpm
+
+v9:
+- No need to mark last busy and autosuspend in blk_pm_runtime_init as
+  suggested by Alan Stern;
+- mark last busy in blk_runtime_post_suspend if driver failed to runtime
+  suspend the device, so that PM core can try to autosuspend it some
+  time later;
+- Update scsi bus layer runtime callback to handle scsi devices which
+  use request based runtime PM and which don't.
+
+v8:
+- Set default autosuspend delay to -1 to avoid suspend till an updated
+  value is set as suggested by Alan Stern;
+- Always check the dev field of the queue structure, as it is incorrect
+  and meaningless to do any operation on devices that do not use block
+  layer runtime PM as reminded by Alan Stern;
+- Update scsi bus level runtime PM callback to take care of scsi devices
+  that use block layer runtime PM and that don't.
+
+v7:
+- Add kernel doc for block layer runtime PM API as suggested by
+  Alan Stern;
+
+- Add back check for q->dev, as that serves as a flag if driver
+  is using block layer runtime PM;
+
+- Do not auto suspend when last request is finished, as that's a hot
+  path and auto suspend is not a trivial function. Instead, mark last
+  busy in pre_suspend so that runtim PM core will retry suspend some
+  time later to solve the 1st problem demostrated in v6, suggested by
+  Alan Stern.
+
+- Move block layer runtime PM strtegy functions to where they are
+  needed instead of in include/linux/blkdev.h as suggested by Alan
+  Stern since clients of block layer do not need to know those
+  functions.
+
+v6:
+Take over from Lin Ming.
+
+- Instead of put the device into autosuspend state in
+  blk_post_runtime_suspend, do it when the last request is finished.
+  This can also solve the problem illustrated below:
+
+      thread A				      thread B
+|suspend timer expired			|
+|  ... ...				|a new request comes in,
+|  ... ...				|blk_pm_add_request
+|  ... ...				|skip request_resume due to
+|  ... ...				|q->status is still RPM_ACTIVE
+|  rpm_suspend				|  ... ...
+|    scsi_runtime_suspend		|  ... ...
+|      blk_pre_runtime_suspend		|  ... ...
+|      return -EBUSY due to nr_pending	|  ... ...
+|  rpm_suspend done			|  ... ...
+|					|    blk_pm_put_request, mark last busy
+
+But no more trigger point, and the device will stay at RPM_ACTIVE state.
+Run pm_runtime_autosuspend after the last request is finished solved
+this problem.
+
+- Requests which have the REQ_PM flag should not involve nr_pending
+  counting, or we may lose the condition to resume the device:
+  Suppose queue is active and nr_pending is 0. Then a REQ_PM request
+  comes and nr_pending will be increased to 1, but since the request has
+  REQ_PM flag, it will not cause resume. Before it is finished, a normal
+  request comes in, and since nr_pending is 1 now, it will not trigger
+  the resume of the device either. Bug.
+
+- Do not quiesce the device in scsi bus level runtime suspend callback.
+  Since the only reason the device is to be runtime suspended is due to
+  no more requests pending for it, quiesce it is pointless.
+
+- Remove scsi_autopm_* from sd_check_events as we are request driven.
+
+- Call blk_pm_runtime_init in scsi_sysfs_initialize_dev, so that we do
+  not need to check queue's device in blk_pm_add/put_request.
+
+- Do not mark last busy and initiate an autosuspend for the device in
+  blk_pm_runtime_init function.
+
+- Do not mark last busy and initiate an autosuspend for the device in
+  block_post_runtime_resume, as when the request that triggered the
+  resume finished, the blk_pm_put_request will mark last busy and
+  initiate an autosuspend.
+
+v5:
+- rename scsi_execute_req to scsi_execute_req_flags
+  and wrap scsi_execute_req around it.
+- add detail function descriptions in patch 2 log
+- define static helper functions to do runtime pm work on block layer
+  and put the definitions inside a #ifdef block
+
+v4:
+- add CONFIG_PM_RUNTIME check
+- update queue runtime pm status after system resume
+- use pm_runtime_autosuspend instead of pm_request_autosuspend in scsi_runtime_idle
+- always count PM request
+
+v3:
+- remove block layer suspend/resume callbacks
+- add block layer runtime pm helper functions
+
+v2:
+- remove queue idle timer, use runtime pm core's auto suspend
+
+Lin Ming (4):
+  block: add a flag to identify PM request
+  block: add runtime pm helpers
+  block: implement runtime pm strategy
+  sd: change to auto suspend mode
+
+ block/blk-core.c           | 183 +++++++++++++++++++++++++++++++++++++++++++++
+ block/elevator.c           |  26 +++++++
+ drivers/scsi/scsi_lib.c    |   9 +--
+ drivers/scsi/scsi_pm.c     |  79 +++++++++++++++----
+ drivers/scsi/sd.c          |  22 ++----
+ include/linux/blk_types.h  |   2 +
+ include/linux/blkdev.h     |  27 +++++++
+ include/scsi/scsi_device.h |  16 +++-
+ 8 files changed, 326 insertions(+), 38 deletions(-)
+
+-- 
+1.8.1
+
