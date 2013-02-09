@@ -1,38 +1,78 @@
-From: James Ralston <james.d.ralston@intel.com>
-Subject: [PATCH 5/5] ahci: Add Device IDs for Intel Wellsburg PCH
-Date: Fri,  8 Feb 2013 17:34:47 -0800
-Message-ID: <1360373687-2127-1-git-send-email-james.d.ralston@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
+From: Sagar Borikar <sagar.borikar@gmail.com>
+Subject: LSI controller resetting with fault_state 0x2622
+Date: Fri, 8 Feb 2013 23:30:19 -0800
+Message-ID: <CAFwMWxtk4Kmo5ztBdoLCOowsaPgzvO2JfU6jiADM4kBR8zRM5A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:36311 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751988Ab3BIHal (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Feb 2013 02:30:41 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
 
-This patch adds the AHCI-mode SATA Device IDs for the Intel Wellsburg PCH
+Hi,
 
-Signed-off-by: James Ralston <james.d.ralston@intel.com>
----
- drivers/ata/ahci.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+I am using LSI 9207 controller on mips board and ported the standard
+driver came with the controller on linux-mips 2.6.23 kernel. I know
+its bit old but that's what I have available on the board that I am
+using.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4979127..6aac3f7 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -265,6 +265,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx Point-LP RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d0e), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d62), board_ahci }, /* Wellsburg AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x8d64), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci }, /* Wellsburg RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--- 
-1.7.7.6
+After loading the driver, I can see the end device properly.
+
+
+# lsmod
+Module                  Size  Used by    Not tainted
+mpt2sas 246000 0 - Live 0xc01a9000
+# /config/lsscsi -t
+[0:0:0:0]    disk    sas:0x5000c5001db47d9d          /dev/sda
+
+But when I am creating the ext3 fs on the disk, It throws following error:
+8192 inodes per group
+Superblock backups stored on blocks:
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
+        4096000, 7962624, 11239424, 20480000, 23887872
+
+Allocating group tables: done
+Writing inode tables: [16844.399000] mpt2sas0: fault_state(0x2622)!
+[16844.400000] mpt2sas0: sending diag reset !!
+[16845.590000] mpt2sas0: diag reset: SUCCESS
+[16845.687000] mpt2sas0: LSISAS2308: FWVersion(13.00.57.00),
+ChipRevision(0x05), BiosVersion(07.25.00.00)
+[16845.688000] mpt2sas0: Protocol=(Initiator,Target),
+Capabilities=(TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set
+Full,NCQ)
+[16845.720000] mpt2sas0: sending port enable !!
+[16853.398000] mpt2sas0: port enable: SUCCESS
+
+While checking the meaning of fault_state 0x2622, I happen to find a
+link which states that there was an issue with the controller firmware
+as following:
+
+SCS Engineering Release Notice
+Phase14 Pre-Alpha Release Version 13.250.01.00 - SAS2FW_Phase14 (SCGCQ00276613)
+
+Total Defects Resolved (6)
+(SCGCQ00268527)
+HEADLINE:
+DESC OF CHANGE:
+TO REPRODUCE:
+ISSUE DESC:
+Defect 1/6
+Fault 0x2622 will occur if Request Equalization bit is set during PCIe Training
+Masked the unnecessary interrupts.
+Using a PCIe protocol exerciser, set the Request Equalization bit in
+the PCIe Training Sets. No known
+systems currently set this bit.
+Devices supporting Gen3 PCIe speeds can have interrupts occur when
+PCIe training sets the Request
+Equalization bit. The interrupt should be masked since firmware
+intervention is not required. Firmware
+faults on the unexpected interrupt with the belief that it is an error.
+
+Not sure whether the problem is as described above.
+
+Thanks
+Sagar
