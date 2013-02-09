@@ -1,45 +1,43 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
-Date: Wed, 6 Feb 2013 10:51:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
-References: <5111BBA1.4010200@intel.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <5111BBA1.4010200@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+From: James Ralston <james.d.ralston@intel.com>
+Subject: [PATCH 1/5] ata_piix: Add Device IDs for Intel Wellsburg PCH
+Date: Fri,  8 Feb 2013 17:24:12 -0800
+Message-ID: <1360373052-1961-1-git-send-email-james.d.ralston@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:31085 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932216Ab3BIBYv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 Feb 2013 20:24:51 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
 
-On Wed, 6 Feb 2013, Aaron Lu wrote:
+This patch adds the IDE-mode SATA Device IDs for the Intel Wellsburg PCH
 
-> > The "if (err == -EAGAIN)" test and the call to pm_schedule_suspend seem
-> > to have been dropped since v8 of this series.  It looks like they ought
-> > to be moved into sdev_runtime_suspend.
-> 
-> I thought they were no longer needed...
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
+---
+ drivers/ata/ata_piix.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-You did not mention this in the patch description.
-
-> For sd, we have request based rutime PM and the PM core will always try
-> to autosuspend the device with the timer; and for sr, the poll will
-> trigger suspend constantly.
-
-What if the poll has been disabled?
-
-> And for both, we don't return -EAGAIN anyway.
-> So I suppose that code is not necessary?
-
-You could replace it with WARN_ON(err == -EAGAIN).  That way if some 
-SCSI driver does return -EAGAIN in the future, people will know 
-something is wrong.
-
-> BTW, I'll be on vocation till 02/17, and I don't have access to the
-> internet in my hometown, but please feel free to drop any comments and
-> I'll check them when I get back.
-
-I'm going on vacation next week too.  Enjoy your trip.
-
-Alan Stern
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 174eca6..32b6c36 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -317,6 +317,14 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	{ 0x8086, 0x9c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (DH89xxCC) */
+ 	{ 0x8086, 0x2326, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	/* SATA Controller IDE (Wellsburg) */
++	{ 0x8086, 0x8d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
++	/* SATA Controller IDE (Wellsburg) */
++	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	/* SATA Controller IDE (Wellsburg) */
++	{ 0x8086, 0x8d60, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
++	/* SATA Controller IDE (Wellsburg) */
++	{ 0x8086, 0x8d68, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	{ }	/* terminate list */
+ };
+ 
+-- 
+1.7.7.6
 
