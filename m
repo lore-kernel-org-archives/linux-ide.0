@@ -1,20 +1,26 @@
-From: "Capt:Mohamed Habbash" <ham@dipaso.com.ec>
-Subject: Re: From Capt: Mohamed Habbash
-Date: Wed, 13 Feb 2013 20:38:55 -0500 (ECT)
-Message-ID: <16795860.573871.1360805935980.JavaMail.root__21394.594180356$1360806891$gmane$org@dipaso.com.ec>
-Reply-To: "Capt:Mohamed Habbash" <habbash58@yahoo.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH 0/4] R-Car SATA driver and platform data
+Date: Sun, 17 Feb 2013 01:35:27 +0300
+Message-ID: <201302170135.28336.sergei.shtylyov@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.dipaso.com.ec ([190.52.72.117]:59751 "EHLO
-	mail.dipaso.com.ec" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753879Ab3BNByS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Feb 2013 20:54:18 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: horms@verge.net.au, magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
+Cc: grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
+Hello.
 
-Assalamu'alaikum, wr,wb.,
-Attn:Dear,
-I am, Capt: Mohamed Habbash, am seeking for an Agent in your country to transfer $10.3Million US Dollars for investment get back for more Detail, if interested.
+   Here's the set of 4 patches against the Simon Horman's renesas.git repo, 'next' branch:
+
+[1/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
+[2/4] ARM: mach-shmobile: r8a7779: add SATA support
+[3/4] libata: add R-Car SATA driver
+[4/4] ARM: mach-shmobile: marzen: add SATA support
+
+Patch 3 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git repo.
+
+MBR, Sergei
