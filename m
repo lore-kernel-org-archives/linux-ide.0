@@ -1,48 +1,81 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH 0/4] R-Car SATA driver and platform data
-Date: Mon, 18 Feb 2013 10:23:22 +0900
-Message-ID: <20130218012322.GA11807@verge.net.au>
-References: <201302170135.28336.sergei.shtylyov@cogentembedded.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 4/4] sd: change to auto suspend mode
+Date: Mon, 18 Feb 2013 11:20:39 +0800
+Message-ID: <20130218032039.GA25348@aaronlu.sh.intel.com>
+References: <5111BBA1.4010200@intel.com>
+ <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:4625 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755351Ab3BRDTk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Feb 2013 22:19:40 -0500
 Content-Disposition: inline
-In-Reply-To: <201302170135.28336.sergei.shtylyov@cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org
+In-Reply-To: <Pine.LNX.4.44L0.1302061048180.1893-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 
-On Sun, Feb 17, 2013 at 01:35:27AM +0300, Sergei Shtylyov wrote:
-> Hello.
+On Wed, Feb 06, 2013 at 10:51:19AM -0500, Alan Stern wrote:
+> On Wed, 6 Feb 2013, Aaron Lu wrote:
 > 
->    Here's the set of 4 patches against the Simon Horman's renesas.git repo, 'next' branch:
+> > > The "if (err == -EAGAIN)" test and the call to pm_schedule_suspend seem
+> > > to have been dropped since v8 of this series.  It looks like they ought
+> > > to be moved into sdev_runtime_suspend.
+> > 
+> > I thought they were no longer needed...
 > 
-> [1/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
-> [2/4] ARM: mach-shmobile: r8a7779: add SATA support
-> [3/4] libata: add R-Car SATA driver
-> [4/4] ARM: mach-shmobile: marzen: add SATA support
+> You did not mention this in the patch description.
+
+Sorry about that.
+
 > 
-> Patch 3 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git repo.
+> > For sd, we have request based rutime PM and the PM core will always try
+> > to autosuspend the device with the timer; and for sr, the poll will
+> > trigger suspend constantly.
+> 
+> What if the poll has been disabled?
+> 
+> > And for both, we don't return -EAGAIN anyway.
+> > So I suppose that code is not necessary?
+> 
+> You could replace it with WARN_ON(err == -EAGAIN).  That way if some 
+> SCSI driver does return -EAGAIN in the future, people will know 
+> something is wrong.
 
-Hi Sergei, Hi All,
+Placing a WARN_ON there seems to suggest drivers should not return
+-EAGAIN, so I think I'll just add back those dropped code to
+sdev_runtime_suspend as you have suggested like this:
 
-I do not expect patch 3 of this series to got through
-the renesas tree, however, I have included it and the other three patches
-in this series to a topic branch in the renesas tree, topic/r-car-stat.
+static int sdev_runtime_suspend(struct device *dev)
+{
+	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+	int (*cb)(struct device *) = pm ? pm->runtime_suspend : NULL;
+	struct scsi_device *sdev = to_scsi_device(dev);
+	int ret;
 
-The base of the topic branch is:
-* a merge of renesas.git next and libata-dev.git upstream, and;
-* a boot fix for Marzen which I plan to add to next once it is reviewed:
-  "ARM: shmobile: r8a7779: Correct TMU clock support again" (v3).
+	if (sdev->request_queue->dev)
+		return sdev_blk_runtime_suspend(sdev, cb);
 
-With this in place I built a kernel using the marzen_defconfig and booted it.
-However, I wonder if I am missing a kernel option, or perhaps something
-else of a minor nature as I see the following:
+	ret = scsi_dev_type_suspend(dev, cb);
+	if (ret == -EAGAIN)
+		pm_schedule_suspend(dev, jiffies_to_msecs(
+					round_jiffies_up_relative(HZ/10)));
+	return ret;
+}
 
-# dmesg | grep sata
-sata_rcar sata_rcar: coherent DMA mask is unset
-sata_rcar sata_rcar: failed to start port 0 (errno=-12)
-sata_rcar: probe of sata_rcar failed with error -12
+Does this look OK?
 
+> 
+> > BTW, I'll be on vocation till 02/17, and I don't have access to the
+> > internet in my hometown, but please feel free to drop any comments and
+> > I'll check them when I get back.
+> 
+> I'm going on vacation next week too.  Enjoy your trip.
+
+Thanks, the trip was great.
+
+-Aaron
 
