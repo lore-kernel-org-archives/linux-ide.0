@@ -1,60 +1,189 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH 0/4] R-Car SATA driver and platform data
-Date: Tue, 19 Feb 2013 09:49:47 +0900
-Message-ID: <20130219004947.GB14932@verge.net.au>
-References: <201302170135.28336.sergei.shtylyov@cogentembedded.com>
- <20130218012322.GA11807@verge.net.au>
- <512234E5.5050700@cogentembedded.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH v9 3/4] block: implement runtime pm strategy
+Date: Tue, 19 Feb 2013 10:29:00 +0800
+Message-ID: <20130219022900.GA2285@aaronlu.sh.intel.com>
+References: <1360051396-3080-1-git-send-email-aaron.lu@intel.com>
+ <1360051396-3080-4-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:20910 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755170Ab3BSC2B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Feb 2013 21:28:01 -0500
 Content-Disposition: inline
-In-Reply-To: <512234E5.5050700@cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org
+In-Reply-To: <1360051396-3080-4-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 
-On Mon, Feb 18, 2013 at 06:04:21PM +0400, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 18-02-2013 5:23, Simon Horman wrote:
-> 
-> >>    Here's the set of 4 patches against the Simon Horman's renesas.git repo, 'next' branch:
-> 
-> >>[1/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
-> >>[2/4] ARM: mach-shmobile: r8a7779: add SATA support
-> >>[3/4] libata: add R-Car SATA driver
-> >>[4/4] ARM: mach-shmobile: marzen: add SATA support
-> 
-> >>Patch 3 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git repo.
-> 
-> >Hi Sergei, Hi All,
-> 
-> >I do not expect patch 3 of this series to got through
-> >the renesas tree, however, I have included it and the other three patches
-> >in this series to a topic branch in the renesas tree, topic/r-car-stat.
-> 
->    I probably make the patch 3 patch 1 in the next posting.
-> 
-> >The base of the topic branch is:
-> >* a merge of renesas.git next and libata-dev.git upstream, and;
-> >* a boot fix for Marzen which I plan to add to next once it is reviewed:
-> >   "ARM: shmobile: r8a7779: Correct TMU clock support again" (v3).
-> 
-> >With this in place I built a kernel using the marzen_defconfig and booted it.
-> >However, I wonder if I am missing a kernel option, or perhaps something
-> >else of a minor nature as I see the following:
-> 
-> ># dmesg | grep sata
-> >sata_rcar sata_rcar: coherent DMA mask is unset
-> >sata_rcar sata_rcar: failed to start port 0 (errno=-12)
-> >sata_rcar: probe of sata_rcar failed with error -12
-> 
->    No, it's entirely our fault -- Vladimir didn't test the driver in
-> non-DT mode with DMA support added (due to the above mentioned boot
-> fix missing), and I didn't notice the missing intializers for
-> 'sata_device.dev.[coherent_]dma_mask' when reviewing his patches. V2
-> will be posted soon.
+Hi Alan,
 
-Great, thanks.
+On Tue, Feb 05, 2013 at 04:03:15PM +0800, Aaron Lu wrote:
+> From: Lin Ming <ming.m.lin@intel.com>
+> 
+> When a request is added:
+>     If device is suspended or is suspending and the request is not a
+>     PM request, resume the device.
+> 
+> When the last request finishes:
+>     Call pm_runtime_mark_last_busy().
+> 
+> When pick a request:
+>     If device is resuming/suspending, then only PM request is allowed
+>     to go.
+
+I think I should add the following words in patch 2 & 3's changelog:
+
+The idea and API is designed by Alan Stern and described here:
+http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+
+to reflect your credit if you don't object.
+
+Please let me know what do you think, or if there is a better way to
+reflect this, please feel free to let me know.
+
+Thanks,
+Aaron
+
+> 
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+> ---
+>  block/blk-core.c | 39 +++++++++++++++++++++++++++++++++++++++
+>  block/elevator.c | 26 ++++++++++++++++++++++++++
+>  2 files changed, 65 insertions(+)
+> 
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index ce7d366..81f173e 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -1264,6 +1264,16 @@ void part_round_stats(int cpu, struct hd_struct *part)
+>  }
+>  EXPORT_SYMBOL_GPL(part_round_stats);
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +static void blk_pm_put_request(struct request *rq)
+> +{
+> +	if (rq->q->dev && !(rq->cmd_flags & REQ_PM) && !--rq->q->nr_pending)
+> +		pm_runtime_mark_last_busy(rq->q->dev);
+> +}
+> +#else
+> +static inline void blk_pm_put_request(struct request *rq) {}
+> +#endif
+> +
+>  /*
+>   * queue lock must be held
+>   */
+> @@ -1274,6 +1284,8 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+>  	if (unlikely(--req->ref_count))
+>  		return;
+>  
+> +	blk_pm_put_request(req);
+> +
+>  	elv_completed_request(q, req);
+>  
+>  	/* this is a bio leak */
+> @@ -2051,6 +2063,28 @@ static void blk_account_io_done(struct request *req)
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +/*
+> + * Don't process normal requests when queue is suspended
+> + * or in the process of suspending/resuming
+> + */
+> +static struct request *blk_pm_peek_request(struct request_queue *q,
+> +					   struct request *rq)
+> +{
+> +	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+> +	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
+> +		return NULL;
+> +	else
+> +		return rq;
+> +}
+> +#else
+> +static inline struct request *blk_pm_peek_request(struct request_queue *q,
+> +						  struct request *rq)
+> +{
+> +	return rq;
+> +}
+> +#endif
+> +
+>  /**
+>   * blk_peek_request - peek at the top of a request queue
+>   * @q: request queue to peek at
+> @@ -2073,6 +2107,11 @@ struct request *blk_peek_request(struct request_queue *q)
+>  	int ret;
+>  
+>  	while ((rq = __elv_next_request(q)) != NULL) {
+> +
+> +		rq = blk_pm_peek_request(q, rq);
+> +		if (!rq)
+> +			break;
+> +
+>  		if (!(rq->cmd_flags & REQ_STARTED)) {
+>  			/*
+>  			 * This is the first time the device driver
+> diff --git a/block/elevator.c b/block/elevator.c
+> index 11683bb..29c5c7e 100644
+> --- a/block/elevator.c
+> +++ b/block/elevator.c
+> @@ -34,6 +34,7 @@
+>  #include <linux/blktrace_api.h>
+>  #include <linux/hash.h>
+>  #include <linux/uaccess.h>
+> +#include <linux/pm_runtime.h>
+>  
+>  #include <trace/events/block.h>
+>  
+> @@ -515,6 +516,27 @@ void elv_bio_merged(struct request_queue *q, struct request *rq,
+>  		e->type->ops.elevator_bio_merged_fn(q, rq, bio);
+>  }
+>  
+> +#ifdef CONFIG_PM_RUNTIME
+> +static void blk_pm_requeue_request(struct request *rq)
+> +{
+> +	if (rq->q->dev && !(rq->cmd_flags & REQ_PM))
+> +		rq->q->nr_pending--;
+> +}
+> +
+> +static void blk_pm_add_request(struct request_queue *q, struct request *rq)
+> +{
+> +	if (q->dev && !(rq->cmd_flags & REQ_PM) && q->nr_pending++ == 0 &&
+> +	    (q->rpm_status == RPM_SUSPENDED || q->rpm_status == RPM_SUSPENDING))
+> +		pm_request_resume(q->dev);
+> +}
+> +#else
+> +static inline void blk_pm_requeue_request(struct request *rq) {}
+> +static inline void blk_pm_add_request(struct request_queue *q,
+> +				      struct request *rq)
+> +{
+> +}
+> +#endif
+> +
+>  void elv_requeue_request(struct request_queue *q, struct request *rq)
+>  {
+>  	/*
+> @@ -529,6 +551,8 @@ void elv_requeue_request(struct request_queue *q, struct request *rq)
+>  
+>  	rq->cmd_flags &= ~REQ_STARTED;
+>  
+> +	blk_pm_requeue_request(rq);
+> +
+>  	__elv_add_request(q, rq, ELEVATOR_INSERT_REQUEUE);
+>  }
+>  
+> @@ -551,6 +575,8 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+>  {
+>  	trace_block_rq_insert(q, rq);
+>  
+> +	blk_pm_add_request(q, rq);
+> +
+>  	rq->q = q;
+>  
+>  	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+> -- 
+> 1.8.1
+> 
