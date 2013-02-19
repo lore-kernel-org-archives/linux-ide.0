@@ -1,34 +1,50 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH v2 0/4] R-Car SATA driver and platform data
-Date: Tue, 19 Feb 2013 12:42:12 +0900
-Message-ID: <20130219034210.GA7701@verge.net.au>
-References: <201302182327.46930.sergei.shtylyov@cogentembedded.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v9 3/4] block: implement runtime pm strategy
+Date: Tue, 19 Feb 2013 11:34:33 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1302191134050.2215-100000@iolanthe.rowland.org>
+References: <20130219022900.GA2285@aaronlu.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201302182327.46930.sergei.shtylyov@cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org, vladimir.barinov@cogentembedded.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59577 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758508Ab3BSQee (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2013 11:34:34 -0500
+In-Reply-To: <20130219022900.GA2285@aaronlu.sh.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
 
-On Mon, Feb 18, 2013 at 11:27:46PM +0300, Sergei Shtylyov wrote:
-> Hello.
-> 
->    Here's the v2 of the set of 4 patches against the Simon Horman's renesas.git
-> repo, 'next' branch:
-> 
-> [1/4] libata: add R-Car SATA driver
-> [2/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
-> [3/4] ARM: mach-shmobile: r8a7779: add SATA support
-> [4/4] ARM: mach-shmobile: marzen: add SATA support
-> 
-> Patch 1 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git
-> repo.
-> 
-> Patch changes since the initial posting are reported in the individual patches.
+On Tue, 19 Feb 2013, Aaron Lu wrote:
 
-Thanks, I have updated topic/r-car-sata and verified
-that the SATA driver is successfully initialised for both
-non-DT and DT boot.
+> Hi Alan,
+> 
+> On Tue, Feb 05, 2013 at 04:03:15PM +0800, Aaron Lu wrote:
+> > From: Lin Ming <ming.m.lin@intel.com>
+> > 
+> > When a request is added:
+> >     If device is suspended or is suspending and the request is not a
+> >     PM request, resume the device.
+> > 
+> > When the last request finishes:
+> >     Call pm_runtime_mark_last_busy().
+> > 
+> > When pick a request:
+> >     If device is resuming/suspending, then only PM request is allowed
+> >     to go.
+> 
+> I think I should add the following words in patch 2 & 3's changelog:
+> 
+> The idea and API is designed by Alan Stern and described here:
+> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+> 
+> to reflect your credit if you don't object.
+> 
+> Please let me know what do you think, or if there is a better way to
+> reflect this, please feel free to let me know.
+
+That's fine, go right ahead.
+
+Alan Stern
+
