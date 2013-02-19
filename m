@@ -1,50 +1,23 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v9 3/4] block: implement runtime pm strategy
-Date: Tue, 19 Feb 2013 11:34:33 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1302191134050.2215-100000@iolanthe.rowland.org>
-References: <20130219022900.GA2285@aaronlu.sh.intel.com>
+From: =?ISO-8859-1?Q?Csaba_Hal=E1sz?= <csaba.halasz@gmail.com>
+Subject: Re: [PATCH 1/4] libata: add R-Car SATA driver
+Date: Tue, 19 Feb 2013 19:49:29 +0100
+Message-ID: <CA+WQ+_1pZ6ASbjWdJdOdiszT1VWo5kmdnrS32iKGjbcBNu5S4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:59577 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758508Ab3BSQee (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2013 11:34:34 -0500
-In-Reply-To: <20130219022900.GA2285@aaronlu.sh.intel.com>
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:59692 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932809Ab3BSS5g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Feb 2013 13:57:36 -0500
+Received: by mail-vc0-f177.google.com with SMTP id m18so4480292vcm.22
+        for <linux-ide@vger.kernel.org>; Tue, 19 Feb 2013 10:57:35 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>
+To: linux-ide@vger.kernel.org
 
-On Tue, 19 Feb 2013, Aaron Lu wrote:
+The "return IRQ_NONE;" in sata_rcar_interrupt bypasses the
+spin_unlock_irqrestore, that doesn't sound right.
 
-> Hi Alan,
-> 
-> On Tue, Feb 05, 2013 at 04:03:15PM +0800, Aaron Lu wrote:
-> > From: Lin Ming <ming.m.lin@intel.com>
-> > 
-> > When a request is added:
-> >     If device is suspended or is suspending and the request is not a
-> >     PM request, resume the device.
-> > 
-> > When the last request finishes:
-> >     Call pm_runtime_mark_last_busy().
-> > 
-> > When pick a request:
-> >     If device is resuming/suspending, then only PM request is allowed
-> >     to go.
-> 
-> I think I should add the following words in patch 2 & 3's changelog:
-> 
-> The idea and API is designed by Alan Stern and described here:
-> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
-> 
-> to reflect your credit if you don't object.
-> 
-> Please let me know what do you think, or if there is a better way to
-> reflect this, please feel free to let me know.
-
-That's fine, go right ahead.
-
-Alan Stern
-
+-- 
+Cheers,
+Csaba Halasz
