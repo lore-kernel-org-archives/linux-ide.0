@@ -1,38 +1,19 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ata_piix: Add MODULE_PARM_DESC to prefer_ms_hyperv
-Date: Thu, 21 Feb 2013 21:50:39 +0300
-Message-ID: <51266C7F.8040904@cogentembedded.com>
-References: <693649786.7135156.1361468581077.JavaMail.root@redhat.com>
+From: Webmail Administrator <fauzi@matic.gov.my>
+Subject: =?utf-8?Q?Your_Mailbox_Has_Exceeded_It_Quota/Limit=C2=AE?=
+Date: Fri, 22 Feb 2013 00:00:43 +0800 (MYT)
+Message-ID: <246010858.30034.1361462443488.JavaMail.root__37100.325842812$1361470132$gmane$org@mail.matic.gov.my>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <693649786.7135156.1361468581077.JavaMail.root@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rado Vrbovsky <rvrbovsk@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff <jgarzik@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.matic.gov.my ([175.28.14.3]:35926 "HELO mail.matic.gov.my"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756166Ab3BUSIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2013 13:08:09 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
 
-On 02/21/2013 08:43 PM, Rado Vrbovsky wrote:
 
-> From: Andrew Brownfield<abrownfi@redhat.com>
->    
-
-    Hm, I don't see his signoff...
-
-> In reference to the commit cd006086fa5d91414d8ff9ff2b78fbb593878e3c
->    
-
-    Please also specify that commit's summary in parens (or however you 
-like).
-
-> this trivial patch adds a description to prefer_ms_hyperv.
->
-> [rvrbovsk@redhat.com: MODULE_PARM_DESC() string formatting modified]
->
-> Signed-off-by: Radomir Vrbovsky<rvrbovsk@redhat.com>
->    
-
-MBR, Sergei
+-- 
+Your Mailbox Has Exceeded It Quota/Limit As Set By Your Administration, And You May Not Be Able To Send Or Receive New Mails Until You Re-Validate It. To Re-Validate, Please CLICK:  www.mailservices.at.tf
