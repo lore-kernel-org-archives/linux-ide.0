@@ -1,15 +1,15 @@
 From: Webmail Administrator <fauzi@matic.gov.my>
 Subject: =?utf-8?Q?Your_Mailbox_Has_Exceeded_It_Quota/Limit=C2=AE?=
-Date: Fri, 22 Feb 2013 00:00:43 +0800 (MYT)
-Message-ID: <246010858.30034.1361462443488.JavaMail.root__37100.325842812$1361470132$gmane$org@mail.matic.gov.my>
+Date: Fri, 22 Feb 2013 00:00:39 +0800 (MYT)
+Message-ID: <729710404.30030.1361462439162.JavaMail.root__16825.2393290915$1361470136$gmane$org@mail.matic.gov.my>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.matic.gov.my ([175.28.14.3]:35926 "HELO mail.matic.gov.my"
+Received: from mail.matic.gov.my ([175.28.14.3]:35923 "HELO mail.matic.gov.my"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1756166Ab3BUSIJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Feb 2013 13:08:09 -0500
+	id S1755421Ab3BUSII (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2013 13:08:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
