@@ -1,50 +1,37 @@
-From: Rado Vrbovsky <rvrbovsk@redhat.com>
-Subject: Re: [PATCH] ata_piix: Add MODULE_PARM_DESC to prefer_ms_hyperv
-Date: Thu, 21 Feb 2013 14:01:50 -0500 (EST)
-Message-ID: <774443881.7195405.1361473310424.JavaMail.root@redhat.com>
-References: <51266C7F.8040904@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: James Ralston <james.d.ralston@intel.com>
+Subject: [PATCH 1/1] ahci: Add Device IDs for Intel Wellsburg PCH
+Date: Thu, 21 Feb 2013 11:08:51 -0800
+Message-ID: <1361473731-2266-1-git-send-email-james.d.ralston@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:47592 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725Ab3BUTBv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Feb 2013 14:01:51 -0500
-In-Reply-To: <51266C7F.8040904@cogentembedded.com>
+Received: from mga02.intel.com ([134.134.136.20]:59233 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752231Ab3BUTJv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Feb 2013 14:09:51 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jeff <jgarzik@redhat.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
 
-From: Andrew Brownfield <abrownfi@redhat.com>
+This patch adds the RAID-mode SATA Device IDs for the Intel Wellsburg PCH
 
-In reference to the commit cd006086fa5d91414d8ff9ff2b78fbb593878e3c 
-"ata_piix: defer disks to the Hyper-V drivers by default",
-this trivial patch adds a description to prefer_ms_hyperv.
-
-[rvrbovsk@redhat.com: MODULE_PARM_DESC() string formatting modified]
-
-Signed-off-by: Andrew Brownfield <abrownfi@redhat.com>
-Signed-off-by: Radomir Vrbovsky <rvrbovsk@redhat.com>
-
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
 ---
- drivers/ata/ata_piix.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/ata/ahci.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 174eca6..b9bf99a 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1530,6 +1530,10 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
- 
- static int prefer_ms_hyperv = 1;
- module_param(prefer_ms_hyperv, int, 0); 
-+MODULE_PARM_DESC(prefer_ms_hyperv,
-+       "Prefer Hyper-V paravirtualization drivers instead of ATA, "
-+       "0 - Use ATA drivers, "
-+       "1 (Default) - Use the paravirtualization drivers.");
- 
- static void piix_ignore_devices_quirk(struct ata_host *host)
- {
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 4032961..ffac5cf 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -265,6 +265,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
++	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci }, /* Wellsburg RAID */
 -- 
-1.7.11.7
+1.7.7.6
+
