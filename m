@@ -1,40 +1,44 @@
-From: Syam Sidhardhan <syamsidhardh@gmail.com>
-Subject: [PATCH] sata_fsl: Remove redundant NULL check before kfree
-Date: Mon, 25 Feb 2013 04:44:07 +0530
-Message-ID: <1361747647-29539-1-git-send-email-s.syam@samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da0-f47.google.com ([209.85.210.47]:57478 "EHLO
-	mail-da0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763Ab3BXXOR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Feb 2013 18:14:17 -0500
-Received: by mail-da0-f47.google.com with SMTP id s35so1176984dak.34
-        for <linux-ide@vger.kernel.org>; Sun, 24 Feb 2013 15:14:17 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2 0/4] R-Car SATA driver and platform data
+Date: Mon, 25 Feb 2013 17:08:19 +0400
+Message-ID: <512B6243.9060808@cogentembedded.com>
+References: <201302182327.46930.sergei.shtylyov@cogentembedded.com> <20130219034210.GA7701@verge.net.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <20130219034210.GA7701@verge.net.au>
+Sender: linux-sh-owner@vger.kernel.org
+To: Simon Horman <horms@verge.net.au>
+Cc: magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org, vladimir.barinov@cogentembedded.com
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: syamsidhardh@gmail.com, jgarzik@pobox.com
 
-kfree on NULL pointer is a no-op.
+Hello.
 
-Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
----
- drivers/ata/sata_fsl.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On 19-02-2013 7:42, Simon Horman wrote:
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 124b2c1..608f82f 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1511,8 +1511,7 @@ error_exit_with_cleanup:
- 
- 	if (hcr_base)
- 		iounmap(hcr_base);
--	if (host_priv)
--		kfree(host_priv);
-+	kfree(host_priv);
- 
- 	return retval;
- }
--- 
-1.7.9.5
+>>     Here's the v2 of the set of 4 patches against the Simon Horman's renesas.git
+>> repo, 'next' branch:
+
+>> [1/4] libata: add R-Car SATA driver
+>> [2/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
+>> [3/4] ARM: mach-shmobile: r8a7779: add SATA support
+>> [4/4] ARM: mach-shmobile: marzen: add SATA support
+
+>> Patch 1 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git
+>> repo.
+
+>> Patch changes since the initial posting are reported in the individual patches.
+
+> Thanks, I have updated topic/r-car-sata and verified
+> that the SATA driver is successfully initialised for both
+> non-DT and DT boot.
+
+    The SATA driver have been already merged by Linus:
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=163cf81d266f017d718ef786fbbb6b2513ce7ec3
+
+Can we merge the rest of the patches in this merge window?
+
+WBR, Sergei
 
