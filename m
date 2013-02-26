@@ -1,34 +1,50 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH #upstream] libata: export local port number through /sys
-Date: Mon, 25 Feb 2013 16:16:43 -0500
-Message-ID: <512BD4BB.7000206@pobox.com>
-References: <1359049929-17069-1-git-send-email-dmilburn@redhat.com> <512BD1DA.80305@redhat.com>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH v2 0/4] R-Car SATA driver and platform data
+Date: Tue, 26 Feb 2013 09:07:09 +0900
+Message-ID: <20130226000709.GB16202@verge.net.au>
+References: <201302182327.46930.sergei.shtylyov@cogentembedded.com>
+ <20130219034210.GA7701@verge.net.au>
+ <512B6243.9060808@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:54757 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759604Ab3BYVQq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Feb 2013 16:16:46 -0500
-Received: by mail-qa0-f42.google.com with SMTP id cr7so1886588qab.8
-        for <linux-ide@vger.kernel.org>; Mon, 25 Feb 2013 13:16:45 -0800 (PST)
-In-Reply-To: <512BD1DA.80305@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <512B6243.9060808@cogentembedded.com>
+Sender: linux-sh-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: magnus.damm@gmail.com, linux@arm.linux.org.uk, linux-sh@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, grant.likely@secretlab.ca, rob.herring@calxeda.com, devicetree-discuss@lists.ozlabs.org, vladimir.barinov@cogentembedded.com
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, kay.sievers@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
 
-On 02/25/2013 04:04 PM, David Milburn wrote:
-> Hi Jeff, Gwendal, Kay,
->
-> Any thoughts on this patch, is this something we could consider for
-> 3.9?
+On Mon, Feb 25, 2013 at 05:08:19PM +0400, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 19-02-2013 7:42, Simon Horman wrote:
+> 
+> >>    Here's the v2 of the set of 4 patches against the Simon Horman's renesas.git
+> >>repo, 'next' branch:
+> 
+> >>[1/4] libata: add R-Car SATA driver
+> >>[2/4] ARM: mach-shmobile: r8a7779: SATA DT configuration
+> >>[3/4] ARM: mach-shmobile: r8a7779: add SATA support
+> >>[4/4] ARM: mach-shmobile: marzen: add SATA support
+> 
+> >>Patch 1 also applies to the 'upstream' branch of Jeff Garzik's libata-dev.git
+> >>repo.
+> 
+> >>Patch changes since the initial posting are reported in the individual patches.
+> 
+> >Thanks, I have updated topic/r-car-sata and verified
+> >that the SATA driver is successfully initialised for both
+> >non-DT and DT boot.
+> 
+>    The SATA driver have been already merged by Linus:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=163cf81d266f017d718ef786fbbb6b2513ce7ec3
+> 
+> Can we merge the rest of the patches in this merge window?
 
-As I noted in the upstream push email (and associated git tag text), it 
-did not seem like all parties were happy with the sysfs layout.
+Unfortunately the path for patches for shmobile is long, arduous and
+out of my control.
 
-	Jeff
-
-
-
+I will merge the remaining patches into the renesas tree ASAP
+and push them to arm-soc for v3.10.
