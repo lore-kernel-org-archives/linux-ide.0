@@ -1,79 +1,198 @@
-From: Jan Sembera <fis@bofh.cz>
-Subject: Re: Regression between v3.5 and v3.6 in libata
-Date: Wed, 27 Feb 2013 15:25:08 +0100
-Message-ID: <20130227142508.GB8208@abydos.bofh.cz>
-References: <20130226200348.GA25087@abydos.bofh.cz>
- <20130226220702.GC25087@abydos.bofh.cz>
- <512DA957.1090600@gmail.com>
- <20130227093842.GA8208@abydos.bofh.cz>
- <512DFF1C.5010707@gmail.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [Resend][PATCH] ACPI / glue: Drop .find_bridge() callback from struct acpi_bus_type
+Date: Wed, 27 Feb 2013 23:06:52 +0100
+Message-ID: <2612891.I2roH54cPk@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from anise.cz ([81.0.246.76]:42589 "EHLO anise.cz"
+Received: from hydra.sisk.pl ([212.160.235.94]:46832 "EHLO hydra.sisk.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752565Ab3B0OZK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 27 Feb 2013 09:25:10 -0500
-Content-Disposition: inline
-In-Reply-To: <512DFF1C.5010707@gmail.com>
+	id S1750973Ab3B0WAG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Feb 2013 17:00:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lwe@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org, mjg@redhat.com, holger@homac.de
+To: ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Yinghai Lu <yinghai@kernel.org>
 
-On Wed, Feb 27, 2013 at 08:42:04PM +0800, Aaron Lu wrote:
-> On 02/27/2013 05:38 PM, Jan Sembera wrote:
-> > On Wed, Feb 27, 2013 at 12:36:07AM -0600, Robert Hancock wrote:
-> >> On 02/26/2013 04:07 PM, Jan Sembera wrote:
-> >>> So I apparently missed two most important differences between good and bad
-> >>> boots.
-> >>>
-> >>> On Tue, Feb 26, 2013 at 09:03:48PM +0100, Jan Sembera wrote:
-> >>>> [    2.877438] scsi6 : pata_atiixp
-> >>>> [    2.881369] scsi7 : pata_atiixp
-> >>>>
-> >>>> [    2.391535] scsi6 : pata_acpi
-> >>>> [    2.391994] scsi7 : pata_acpi
-> >>>
-> >>> pata-acpi doesn't play very well with this controller. Disabling it in
-> >>> kernel and rebooting (even with 3.8) provided completely working kernel.
-> >>> So either this driver shouldn't bind pata-acpi and leave it on pata-atiixp
-> >>> as before (some kind of blacklisting needed?), or it needs some fixing to
-> >>> work nicely with this controller.
-> >>>
-> >>> As a workaround for now, I'll just not compile PATA_ACPI into the kernel.
-> >>
-> >> What are your kernel config settings for these modules? The idea is that
-> >> pata_acpi is only supposed to get loaded if no other driver is able to
-> >> bind to the device.
-> >
-> > This is based on a config that Ubuntu uses for building vanilla kernels and
-> > has PATA_ACPI=y, PATA_ATIIXP=m. Which probably means that pata_acpi will
-> > grab the controller before pata_atiixp has any chance to do so. Which is
-> > probably bad and should be set to PATA_ACPI=m instead.
-> >
-> > Should this also be treated as a bug in pata_acpi, or is it expected that
-> > it's going to fail on some subset of motherboards/controllers and it's not
-> > worth bothering with fixing it, especially if there is some other driver
-> > that handles the controller fine?
-> 
-> The order here is important: vendor driver should always be used before
-> pata_acpi.
-> 
-> And regarding the bisected commit, it actually fixed a bug in pata_acpi
-> and made it successfully probed the controller device, so that no other
-> pata driver is able to probe it; and due to pata_acpi can not always
-> successfully drive that controller(this depends on ACPI table, it may
-> not be a bug in pata_acpi), the disks attached will not function
-> properly. Here is an explanation on this:
-> https://bugzilla.kernel.org/show_bug.cgi?id=49151#c41
-> 
-> And a previously submitted bug report on this:
-> https://bugzilla.kernel.org/show_bug.cgi?id=48631
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Ok, thanks for the detailed explanation. I'll switch to PATA_ACPI=m for now,
-but if there is some debugging you'd like me to do with pata_acpi, I'm
-willing to help out with that as well.
+After PCI has stopped using the .find_bridge() callback in
+struct acpi_bus_type, the only remaining users of it are SATA and
+USB.  However, SATA only pretends to be a user, because it points
+that callback to a stub always returning -ENODEV, and USB uses it
+incorrectly, because as a result of the way it is used by USB every
+device in the system that doesn't have a bus type or parent is
+passed to usb_acpi_find_device() for inspection.
 
-Cheers,
-Jan
+What USB actually needs, though, is to call usb_acpi_find_device()
+for USB ports that don't have a bus type defined, but have
+usb_port_device_type as their device type.
+
+To fix that add a device type field to struct acpi_bus_type and
+make acpi_get_bus_type() compare it with the device type fields of
+the device objects it inspects in addition to checking their bus
+types.  Next, make USB set the new type field in usb_acpi_bus to
+point to usb_port_device_type and stop abusing the .find_bridge()
+callback.
+
+In addition to that drop the SATA's dummy .find_bridge() callback,
+and remove .find_bridge(), which is not used any more, from struct
+acpi_bus_type entirely.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+I send this as an RFC before the merge window, but since it depends on changes
+in both PM and PCI trees, it couldn't be applied before.  Now that they both
+have been merged, here it goes again.
+
+Please let me know if there are any objections.
+
+Thanks,
+Rafael
+
+---
+ drivers/acpi/glue.c         |   39 ++++++---------------------------------
+ drivers/ata/libata-acpi.c   |    6 ------
+ drivers/usb/core/usb-acpi.c |    2 +-
+ include/acpi/acpi_bus.h     |    4 +---
+ 4 files changed, 8 insertions(+), 43 deletions(-)
+
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -64,16 +64,17 @@ int unregister_acpi_bus_type(struct acpi
+ }
+ EXPORT_SYMBOL_GPL(unregister_acpi_bus_type);
+ 
+-static struct acpi_bus_type *acpi_get_bus_type(struct bus_type *type)
++static struct acpi_bus_type *acpi_get_bus_type(struct device *dev)
+ {
+ 	struct acpi_bus_type *tmp, *ret = NULL;
+ 
+-	if (!type)
++	if (!dev->bus && !dev->type)
+ 		return NULL;
+ 
+ 	down_read(&bus_type_sem);
+ 	list_for_each_entry(tmp, &bus_type_list, list) {
+-		if (tmp->bus == type) {
++		if ((tmp->bus && tmp->bus == dev->bus)
++		    || (tmp->type && tmp->type == dev->type)) {
+ 			ret = tmp;
+ 			break;
+ 		}
+@@ -82,22 +83,6 @@ static struct acpi_bus_type *acpi_get_bu
+ 	return ret;
+ }
+ 
+-static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
+-{
+-	struct acpi_bus_type *tmp;
+-	int ret = -ENODEV;
+-
+-	down_read(&bus_type_sem);
+-	list_for_each_entry(tmp, &bus_type_list, list) {
+-		if (tmp->find_bridge && !tmp->find_bridge(dev, handle)) {
+-			ret = 0;
+-			break;
+-		}
+-	}
+-	up_read(&bus_type_sem);
+-	return ret;
+-}
+-
+ static acpi_status do_acpi_find_child(acpi_handle handle, u32 lvl_not_used,
+ 				      void *addr_p, void **ret_p)
+ {
+@@ -261,22 +246,11 @@ err:
+ 
+ static int acpi_platform_notify(struct device *dev)
+ {
+-	struct acpi_bus_type *type;
++	struct acpi_bus_type *type = acpi_get_bus_type(dev);
+ 	acpi_handle handle;
+ 	int ret;
+ 
+ 	ret = acpi_bind_one(dev, NULL);
+-	if (ret && (!dev->bus || !dev->parent)) {
+-		/* bridge devices genernally haven't bus or parent */
+-		ret = acpi_find_bridge_device(dev, &handle);
+-		if (!ret) {
+-			ret = acpi_bind_one(dev, handle);
+-			if (ret)
+-				goto out;
+-		}
+-	}
+-
+-	type = acpi_get_bus_type(dev->bus);
+ 	if (ret) {
+ 		if (!type || !type->find_device) {
+ 			DBG("No ACPI bus support for %s\n", dev_name(dev));
+@@ -293,7 +267,6 @@ static int acpi_platform_notify(struct d
+ 		if (ret)
+ 			goto out;
+ 	}
+-
+ 	if (type && type->setup)
+ 		type->setup(dev);
+ 
+@@ -316,7 +289,7 @@ static int acpi_platform_notify_remove(s
+ {
+ 	struct acpi_bus_type *type;
+ 
+-	type = acpi_get_bus_type(dev->bus);
++	type = acpi_get_bus_type(dev);
+ 	if (type && type->cleanup)
+ 		type->cleanup(dev);
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -438,10 +438,8 @@ void acpi_remove_dir(struct acpi_device
+ struct acpi_bus_type {
+ 	struct list_head list;
+ 	struct bus_type *bus;
+-	/* For general devices under the bus */
++	struct device_type *type;
+ 	int (*find_device) (struct device *, acpi_handle *);
+-	/* For bridges, such as PCI root bridge, IDE controller */
+-	int (*find_bridge) (struct device *, acpi_handle *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
+ };
+Index: linux-pm/drivers/ata/libata-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/ata/libata-acpi.c
++++ linux-pm/drivers/ata/libata-acpi.c
+@@ -1144,13 +1144,7 @@ static int ata_acpi_find_device(struct d
+ 		return -ENODEV;
+ }
+ 
+-static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
+-{
+-	return -ENODEV;
+-}
+-
+ static struct acpi_bus_type ata_acpi_bus = {
+-	.find_bridge = ata_acpi_find_dummy,
+ 	.find_device = ata_acpi_find_device,
+ };
+ 
+Index: linux-pm/drivers/usb/core/usb-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/usb/core/usb-acpi.c
++++ linux-pm/drivers/usb/core/usb-acpi.c
+@@ -212,7 +212,7 @@ static int usb_acpi_find_device(struct d
+ 
+ static struct acpi_bus_type usb_acpi_bus = {
+ 	.bus = &usb_bus_type,
+-	.find_bridge = usb_acpi_find_device,
++	.type = &usb_port_device_type,
+ 	.find_device = usb_acpi_find_device,
+ };
+ 
+
