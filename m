@@ -1,51 +1,111 @@
-From: Sander Eikelenboom <linux@eikelenboom.it>
-Subject: libata-acpi.c ata_acpi_register_power_resource copy and paste mistake ?
-Date: Thu, 28 Feb 2013 17:45:10 +0100
-Message-ID: <928867757.20130228174510@eikelenboom.it>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: [PATCH 2/2] ACPI / glue: Drop .find_bridge() callback from struct acpi_bus_type
+Date: Thu, 28 Feb 2013 22:53:31 +0100
+Message-ID: <1995794.TENtrAZA5Q@vostro.rjw.lan>
+References: <2612891.I2roH54cPk@vostro.rjw.lan> <20130228023313.GC4042@kroah.com> <1504144.f1SBuDyFqp@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1504144.f1SBuDyFqp@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Yinghai Lu <yinghai@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Jeff,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-During the last merge of ahci code (d9978ec5680059d727b39d6c706777c6973587f2), i saw this coming by:
+After PCI and USB have stopped using the .find_bridge() callback in
+struct acpi_bus_type, the only remaining user of it is SATA, but SATA
+only pretends to be a user, because it points that callback to a stub
+always returning -ENODEV.
 
+For this reason, drop the SATA's dummy .find_bridge() callback and
+remove .find_bridge(), which is not used any more, from struct
+acpi_bus_type entirely.
 
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1024,30 +1024,20 @@ static void ata_acpi_register_power_resource(struct ata_device *dev)
- {
-        struct scsi_device *sdev = dev->sdev;
-        acpi_handle handle;
--       struct device *device;
- 
-        handle = ata_dev_acpi_handle(dev);
--       if (!handle)
--               return;
--
--       device = &sdev->sdev_gendev;
--
--       acpi_power_resource_register_device(device, handle);
-+       if (handle)
-+               acpi_dev_pm_remove_dependent(handle, &sdev->sdev_gendev);
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c       |   26 +-------------------------
+ drivers/ata/libata-acpi.c |    6 ------
+ include/acpi/acpi_bus.h   |    3 ---
+ 3 files changed, 1 insertion(+), 34 deletions(-)
+
+Index: linux-pm/drivers/ata/libata-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/ata/libata-acpi.c
++++ linux-pm/drivers/ata/libata-acpi.c
+@@ -1144,14 +1144,8 @@ static int ata_acpi_find_device(struct d
+ 		return -ENODEV;
  }
-
-shouldn't:
-
-acpi_dev_pm_remove_dependent(handle, &sdev->sdev_gendev);
-
-be
-
-acpi_dev_pm_add_dependent(handle, &sdev->sdev_gendev);
-
-in the ata_acpi_register_power_resource function ?
-
-(seems like a copy and paste mistake from the unregister function)
-
---
-Sander
+ 
+-static int ata_acpi_find_dummy(struct device *dev, acpi_handle *handle)
+-{
+-	return -ENODEV;
+-}
+-
+ static struct acpi_bus_type ata_acpi_bus = {
+ 	.name = "ATA",
+-	.find_bridge = ata_acpi_find_dummy,
+ 	.find_device = ata_acpi_find_device,
+ };
+ 
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -439,10 +439,7 @@ struct acpi_bus_type {
+ 	struct list_head list;
+ 	const char *name;
+ 	bool (*match)(struct device *dev);
+-	/* For general devices under the bus */
+ 	int (*find_device) (struct device *, acpi_handle *);
+-	/* For bridges, such as PCI root bridge, IDE controller */
+-	int (*find_bridge) (struct device *, acpi_handle *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
+ };
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -78,22 +78,6 @@ static struct acpi_bus_type *acpi_get_bu
+ 	return ret;
+ }
+ 
+-static int acpi_find_bridge_device(struct device *dev, acpi_handle * handle)
+-{
+-	struct acpi_bus_type *tmp;
+-	int ret = -ENODEV;
+-
+-	down_read(&bus_type_sem);
+-	list_for_each_entry(tmp, &bus_type_list, list) {
+-		if (tmp->find_bridge && !tmp->find_bridge(dev, handle)) {
+-			ret = 0;
+-			break;
+-		}
+-	}
+-	up_read(&bus_type_sem);
+-	return ret;
+-}
+-
+ static acpi_status do_acpi_find_child(acpi_handle handle, u32 lvl_not_used,
+ 				      void *addr_p, void **ret_p)
+ {
+@@ -262,15 +246,7 @@ static int acpi_platform_notify(struct d
+ 	int ret;
+ 
+ 	ret = acpi_bind_one(dev, NULL);
+-	if (ret) {
+-		if (!type) {
+-			ret = acpi_find_bridge_device(dev, &handle);
+-			if (!ret)
+-				ret = acpi_bind_one(dev, handle);
+-
+-			goto out;
+-		}
+-
++	if (ret && type) {
+ 		ret = type->find_device(dev, &handle);
+ 		if (ret) {
+ 			DBG("Unable to get handle for %s\n", dev_name(dev));
