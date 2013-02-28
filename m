@@ -1,65 +1,39 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [Resend][PATCH] ACPI / glue: Drop .find_bridge() callback from struct acpi_bus_type
-Date: Thu, 28 Feb 2013 22:49:27 +0100
-Message-ID: <1504144.f1SBuDyFqp@vostro.rjw.lan>
-References: <2612891.I2roH54cPk@vostro.rjw.lan> <1723405.gTrRpVTGu2@vostro.rjw.lan> <20130228023313.GC4042@kroah.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 2/2] ACPI / glue: Drop .find_bridge() callback from struct
+ acpi_bus_type
+Date: Thu, 28 Feb 2013 17:13:27 -0500
+Message-ID: <512FD687.7060904@pobox.com>
+References: <2612891.I2roH54cPk@vostro.rjw.lan> <20130228023313.GC4042@kroah.com> <1504144.f1SBuDyFqp@vostro.rjw.lan> <1995794.TENtrAZA5Q@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:47934 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759872Ab3B1Vq4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Feb 2013 16:46:56 -0500
-In-Reply-To: <20130228023313.GC4042@kroah.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1995794.TENtrAZA5Q@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Yinghai Lu <yinghai@kernel.org>
 
-On Wednesday, February 27, 2013 06:33:13 PM Greg Kroah-Hartman wrote:
-> On Thu, Feb 28, 2013 at 02:11:58AM +0100, Rafael J. Wysocki wrote:
-> > On Wednesday, February 27, 2013 02:20:32 PM Greg Kroah-Hartman wrote:
-> > > On Wed, Feb 27, 2013 at 11:06:52PM +0100, Rafael J. Wysocki wrote:
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > After PCI has stopped using the .find_bridge() callback in
-> > > > struct acpi_bus_type, the only remaining users of it are SATA and
-> > > > USB.  However, SATA only pretends to be a user, because it points
-> > > > that callback to a stub always returning -ENODEV, and USB uses it
-> > > > incorrectly, because as a result of the way it is used by USB every
-> > > > device in the system that doesn't have a bus type or parent is
-> > > > passed to usb_acpi_find_device() for inspection.
-> > > > 
-> > > > What USB actually needs, though, is to call usb_acpi_find_device()
-> > > > for USB ports that don't have a bus type defined, but have
-> > > > usb_port_device_type as their device type.
-> > > 
-> > > Ick, that's not good.  Can you have the original creator of that code
-> > > (someone else from Intel, I can't remember at the moment), fix that up
-> > > properly and send me patches?
-> > 
-> > That won't be necessary afer this patch.  Or do you want to fix up USB
-> > separately first?
-> 
-> No, sorry, my misunderstanding, I was assuming we still needed to do
-> other USB work after this.  If not, that's an even better reason to
-> accept this patch :)
+On 02/28/2013 04:53 PM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+> After PCI and USB have stopped using the .find_bridge() callback in
+> struct acpi_bus_type, the only remaining user of it is SATA, but SATA
+> only pretends to be a user, because it points that callback to a stub
+> always returning -ENODEV.
+>
+> For this reason, drop the SATA's dummy .find_bridge() callback and
+> remove .find_bridge(), which is not used any more, from struct
+> acpi_bus_type entirely.
+>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>   drivers/acpi/glue.c       |   26 +-------------------------
+>   drivers/ata/libata-acpi.c |    6 ------
+>   include/acpi/acpi_bus.h   |    3 ---
+>   3 files changed, 1 insertion(+), 34 deletions(-)
 
-Heh, thanks!
-
-Still, it seems that we can do a bit better that this.
-
-The two patches that will follow should be almost functionally equivalent to
-the $subject one, but the resulting code looks somewhat cleaner to me.
-
-[1/2] Add .macth() callback to struct acpi_bus_type (instead of the bus pointer).
-[2/2] Drop .find_bridge() from struct acpi_bus_type
-
-Thanks,
-Rafael
+patches 1-2 Acked-by: Jeff Garzik <jgarzik@pobox.com>
 
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
