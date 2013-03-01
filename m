@@ -1,18 +1,14 @@
 From: Sander Eikelenboom <linux@eikelenboom.it>
 Subject: [PATCH] libata-acpi.c: fix copy and paste mistake in ata_acpi_register_power_resource
 Date: Fri,  1 Mar 2013 12:16:42 +0100
-Message-ID: <1362136602-30327-1-git-send-email-linux@eikelenboom.it>
+Message-ID: <1362136602-30327-1-git-send-email-linux__46187.4433480718$1362136693$gmane$org@eikelenboom.it>
 References: <2508494.4AbRYXD1du@vostro.rjw.lan>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [84.200.39.61] ([84.200.39.61]:41301 "EHLO smtp.eikelenboom.it"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367Ab3CALRg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 1 Mar 2013 06:17:36 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <2508494.4AbRYXD1du@vostro.rjw.lan>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: rjw@sisk.plrjw@sisk.pl
 Cc: Sander Eikelenboom <linux@eikelenboom.it>, aaron.lu@intel.com, jgarzik@pobox.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 Fix a copy and paste mistake introduced in:
 
@@ -39,4 +35,3 @@ index 0ea1018..cb3eab6d 100644
  static void ata_acpi_unregister_power_resource(struct ata_device *dev)
 -- 
 1.7.2.5
-
