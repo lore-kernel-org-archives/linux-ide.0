@@ -1,44 +1,59 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/2] ACPI / glue: Add .match() callback to struct
- acpi_bus_type
-Date: Thu, 28 Feb 2013 21:07:06 -0800
-Message-ID: <20130301050706.GB25192@kroah.com>
-References: <2612891.I2roH54cPk@vostro.rjw.lan>
- <20130228023313.GC4042@kroah.com>
- <1504144.f1SBuDyFqp@vostro.rjw.lan>
- <194591401.DiJi7SfL1g@vostro.rjw.lan>
+From: Marc MERLIN <marc@merlins.org>
+Subject: Re: Reproduceable SATA lockup on 3.7.8 with SSD
+Date: Thu, 28 Feb 2013 22:44:46 -0800
+Message-ID: <20130301064446.GA21808@merlins.org>
+References: <20130226002731.GC25875@merlins.org> <512CD4F7.806@pobox.com> <20130226002731.GC25875@merlins.org> <20130226010232.GA18133@Krystal> <20130226165004.GD22367@merlins.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from magic.merlins.org ([209.81.13.136]:50542 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916Ab3CAGot (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Mar 2013 01:44:49 -0500
 Content-Disposition: inline
-In-Reply-To: <194591401.DiJi7SfL1g@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-usb@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <20130226165004.GD22367@merlins.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux Kernel mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, desnoyers@efficios.com
 
-On Thu, Feb 28, 2013 at 10:53:21PM +0100, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Feb 26, 2013 at 08:50:04AM -0800, Marc MERLIN wrote:
+> On Tue, Feb 26, 2013 at 10:29:59AM -0500, Jeff Garzik wrote:
+> > On 02/25/2013 07:27 PM, Marc MERLIN wrote:
+> > >Howdy,
+> > >
+> > >I seem to have the same problem (or similar) as Mathieu Desnoyers in
+> > >https://lkml.org/lkml/2013/2/22/437
+> > >
+> > >I can reliably get my SSD to drop from the SATA bus given the right 
+> > >workload
+> > >on linux.
+> > >
+> > >How can I tell if it's linux's fault of the drive's fault?
+> > 
+> > Manually force speed to 3.0 Gbps, then 1.5 Gbps, and see what happens.
+> > 
+> > Try module/kernel parameter libata.force=1.5Gbps or libata.force=3.0Gbps
 > 
-> USB uses the .find_bridge() callback from struct acpi_bus_type
-> incorrectly, because as a result of the way it is used by USB every
-> device in the system that doesn't have a bus type or parent is
-> passed to usb_acpi_find_device() for inspection.
+> Ok, so by reading my log at time of failure, you saw that speed was
+> flipping between the two? (I couldn't see that, but I'm not good at reading
+> it).
 > 
-> What USB actually needs, though, is to call usb_acpi_find_device()
-> for USB ports that don't have a bus type defined, but have
-> usb_port_device_type as their device type, as well as for USB
-> devices.
+> Also, just to make sure, you're not saying that you want me to change the
+> speed at runtime, but 
+> 1) boot once with speed forced at 3Gbps and try and reproduce
+> 2) boot a 2nd time with speed forced at 1.5Gbps and try and reproduce
 > 
-> To fix that replace the struct bus_type pointer in struct
-> acpi_bus_type used for matching devices to specific subsystems
-> with a .match() callback to be used for this purpose and update
-> the users of struct acpi_bus_type, including USB, accordingly.
-> Define the .match() callback routine for USB, usb_acpi_bus_match(),
-> in such a way that it will cover both USB devices and USB ports
-> and remove the now redundant .find_bridge() callback pointer from
-> usb_acpi_bus.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> If libata is not a module in my kernel, I can still put 
+> libata.force=1.5Gbps 
+> on the lilo/grub command line, correct?
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Jeff, could you clear up what you'd like me to try out?
+
+Thanks,
+Marc
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/  
