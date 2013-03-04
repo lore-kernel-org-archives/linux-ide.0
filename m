@@ -1,151 +1,60 @@
-From: Qiang Liu <qiang.liu@freescale.com>
-Subject: [PATCH] fsl/sata: create a sysfs entry for rx water mark
-Date: Mon, 4 Mar 2013 15:20:23 +0800
-Message-ID: <1362381623-10856-1-git-send-email-qiang.liu@freescale.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] pata_samsung_cf: use module_platform_driver_probe()
+Date: Mon, 04 Mar 2013 17:34:42 +0900
+Message-ID: <015401ce18b3$1eb9aaa0$5c2cffe0$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: jgarzik@pobox.com, linux-ide@vger.kernel.org
-Cc: Qiang Liu <qiang.liu@freescale.com>, linuxppc-dev@ozlabs.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:57437 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350Ab3CDIeo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Mar 2013 03:34:44 -0500
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MJ4009ZRNT11MG0@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Mon, 04 Mar 2013 17:34:43 +0900 (KST)
+Content-language: ko
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Support config RX WATER MARK via sysfs when running at run-time;
-A wrokaround for fix the exception happened to some WD HDD, found on
-WD3000HLFS-01G6U1, WD3000HLFS-01G6U0, some SSD disks. The read performance
-is also regression (about 30%) when use default value.
+This patch uses module_platform_driver_probe() macro which makes
+the code smaller and simpler.
 
-According to the latest documents, 0x10 is the default value of RX WATER MARK,
-but exception/performance issue happened to some disks mentioned above.
-
-The exception log as below when testing read performance with IOZone:
-ata1.00: exception Emask 0x0 SAct 0x7 SErr 0x800000 action 0x6 frozen
-ata1: SError: { LinkSeq }
-ata1.00: failed command: READ FPDMA QUEUED
-ata1.00: cmd 60/00:00:ff:2c:14/01:00:02:00:00/40 tag 0 ncq 131072 in
-res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata1.00: status: { DRDY }
-ata1.00: failed command: READ FPDMA QUEUED
-ata1.00: cmd 60/00:08:ff:2d:14/01:00:02:00:00/40 tag 1 ncq 131072 in
-res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata1.00: status: { DRDY }
-ata1.00: failed command: WRITE FPDMA QUEUED
-ata1.00: cmd 61/10:10:af:08:6e/00:00:12:00:00/40 tag 2 ncq 8192 out
-res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-ata1.00: status: { DRDY }
-ata1: hard resetting link
-ata1: Hardreset failed, not off-lined 0
-ata1: Signature Update detected @ 504 msecs
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-ata1.00: configured for UDMA/133
-ata1.00: device reported invalid CHS sector 0
-ata1.00: device reported invalid CHS sector 0
-ata1.00: device reported invalid CHS sector 0
-ata1: EH complete
-
-The exception/performance can be resolved when RX WATER MARK value is 0x16.
-
-Signed-off-by: Qiang Liu <qiang.liu@freescale.com>
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/ata/sata_fsl.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 55 insertions(+), 0 deletions(-)
+ drivers/ata/pata_samsung_cf.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 124b2c1..515f66f 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -285,6 +285,7 @@ struct sata_fsl_host_priv {
- 	int irq;
- 	int data_snoop;
- 	struct device_attribute intr_coalescing;
-+	struct device_attribute rx_watermark;
+diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+index 70b0e01..6ef27e9 100644
+--- a/drivers/ata/pata_samsung_cf.c
++++ b/drivers/ata/pata_samsung_cf.c
+@@ -661,18 +661,7 @@ static struct platform_driver pata_s3c_driver = {
+ 	},
  };
+ 
+-static int __init pata_s3c_init(void)
+-{
+-	return platform_driver_probe(&pata_s3c_driver, pata_s3c_probe);
+-}
+-
+-static void __exit pata_s3c_exit(void)
+-{
+-	platform_driver_unregister(&pata_s3c_driver);
+-}
+-
+-module_init(pata_s3c_init);
+-module_exit(pata_s3c_exit);
++module_platform_driver_probe(pata_s3c_driver, pata_s3c_probe);
+ 
+ MODULE_AUTHOR("Abhilash Kesavan, <a.kesavan@samsung.com>");
+ MODULE_DESCRIPTION("low-level driver for Samsung PATA controller");
+-- 
+1.7.2.5
 
- static void fsl_sata_set_irq_coalescing(struct ata_host *host,
-@@ -343,6 +344,48 @@ static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
- 	return strlen(buf);
- }
 
-+static ssize_t fsl_sata_rx_watermark_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	unsigned int rx_watermark;
-+	unsigned long flags;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct sata_fsl_host_priv *host_priv = host->private_data;
-+	void __iomem *csr_base = host_priv->csr_base;
-+
-+	spin_lock_irqsave(&host->lock, flags);
-+	rx_watermark = ioread32(csr_base + TRANSCFG);
-+	rx_watermark &= 0x1f;
-+
-+	spin_unlock_irqrestore(&host->lock, flags);
-+	return sprintf(buf, "%d\n", rx_watermark);
-+}
-+
-+static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
-+		struct device_attribute *attr,
-+		const char *buf, size_t count)
-+{
-+	unsigned int rx_watermark;
-+	unsigned long flags;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct sata_fsl_host_priv *host_priv = host->private_data;
-+	void __iomem *csr_base = host_priv->csr_base;
-+	u32 temp;
-+
-+	if (sscanf(buf, "%d", &rx_watermark) != 1) {
-+		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
-+		return -EINVAL;
-+	}
-+
-+	spin_lock_irqsave(&host->lock, flags);
-+	temp = ioread32(csr_base + TRANSCFG);
-+	temp &= 0xffffffe0;
-+	iowrite32(temp | rx_watermark, csr_base + TRANSCFG);
-+
-+	spin_unlock_irqrestore(&host->lock, flags);
-+	return strlen(buf);
-+}
-+
- static inline unsigned int sata_fsl_tag(unsigned int tag,
- 					void __iomem *hcr_base)
- {
-@@ -1500,6 +1543,17 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 	if (retval)
- 		goto error_exit_with_cleanup;
-
-+	host_priv->rx_watermark.show = fsl_sata_rx_watermark_show;
-+	host_priv->rx_watermark.store = fsl_sata_rx_watermark_store;
-+	sysfs_attr_init(&host_priv->rx_watermark.attr);
-+	host_priv->rx_watermark.attr.name = "rx_watermark";
-+	host_priv->rx_watermark.attr.mode = S_IRUGO | S_IWUSR;
-+	retval = device_create_file(host->dev, &host_priv->rx_watermark);
-+	if (retval) {
-+		device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
-+		goto error_exit_with_cleanup;
-+	}
-+
- 	return 0;
-
- error_exit_with_cleanup:
-@@ -1523,6 +1577,7 @@ static int sata_fsl_remove(struct platform_device *ofdev)
- 	struct sata_fsl_host_priv *host_priv = host->private_data;
-
- 	device_remove_file(&ofdev->dev, &host_priv->intr_coalescing);
-+	device_remove_file(&ofdev->dev, &host_priv->rx_watermark);
-
- 	ata_host_detach(host);
-
---
-1.7.5.1
