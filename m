@@ -1,31 +1,30 @@
 From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_fsl: Remove redundant NULL check before kfree
-Date: Mon, 04 Mar 2013 17:15:11 -0500
-Message-ID: <51351CEF.8070400@pobox.com>
-References: <1361747647-29539-1-git-send-email-s.syam@samsung.com>
+Subject: Re: [PATCH v2] [libata] Avoid specialized TLA's in ZPODD's Kconfig
+Date: Mon, 04 Mar 2013 17:14:55 -0500
+Message-ID: <51351CDF.6070003@pobox.com>
+References: <1663657.ypAtqGpGAq@vostro.rjw.lan> <1781256.mPQbtiUPYR@vostro.rjw.lan> <CA+55aFyzjN_wMH+2RCEA+aNLY0Z7fn4YU7VOtTALbgngn1+vCw@mail.gmail.com> <2223198.XmyRLgb3Gv@vostro.rjw.lan> <20130226161049.GA9303@kahuna> <CA+55aFy24fp+9zXiDmAgvsz6YvWQh2L0BAJ2hAhF7cNSdyMd8w@mail.gmail.com> <CA+55aFyu5woJsH2y3y=w4UFneOG8hKz_cLXgZQbJzn5asn8=hQ@mail.gmail.com> <20130226163712.GA30433@htj.dyndns.org> <CA+55aFyFRbMX9G_0Mv0nUZgw9mHAPzE0zCw5mCSbGG_r1diFHg@mail.gmail.com> <20130226165813.GB30433@htj.dyndns.org> <512CF809.8010102@pobox.com> <5130052E.9070403@intel.com> <5130A8DF.7080709@cogentembedded.com> <51318775.1060309@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:40558 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754643Ab3CDWVV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Mar 2013 17:21:21 -0500
-Received: by mail-qe0-f52.google.com with SMTP id s14so3917441qeb.11
-        for <linux-ide@vger.kernel.org>; Mon, 04 Mar 2013 14:21:21 -0800 (PST)
-In-Reply-To: <1361747647-29539-1-git-send-email-s.syam@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <51318775.1060309@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Syam Sidhardhan <syamsidhardh@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-On 02/24/2013 06:14 PM, Syam Sidhardhan wrote:
-> kfree on NULL pointer is a no-op.
+On 03/02/2013 12:00 AM, Aaron Lu wrote:
+> ODD is not a common TLA for non-ATA people so they will get confused
+> by its meaning when they are configuring the kernel. This patch fixed
+> this problem by using ODD only after stating what it is.
 >
-> Signed-off-by: Syam Sidhardhan <s.syam@samsung.com>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
 > ---
->   drivers/ata/sata_fsl.c |    3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> v2:
+> Add a space before open paren as suggested by Sergei Shtylyov.
+>
+>   drivers/ata/Kconfig | 13 +++++++------
+>   1 file changed, 7 insertions(+), 6 deletions(-)
 
 applied
 
