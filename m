@@ -1,102 +1,60 @@
-From: Youquan Song <youquan.song@linux.intel.com>
-Subject: Re: [PATCH v3] ata: Fix DVD not dectected at some Haswell platforms
-Date: Tue, 5 Mar 2013 09:21:14 -0500
-Message-ID: <20130305142114.GA27413@linux-youquan.bj.intel.com>
-References: <1361203255-1670-1-git-send-email-youquan.song@intel.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH 1/3] ide: tx4938ide: use module_platform_driver_probe()
+Date: Tue, 05 Mar 2013 11:25:46 +0900
+Message-ID: <004e01ce1948$be5f4f20$3b1ded60$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:58952 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932690Ab3CECMf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Mar 2013 21:12:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1361203255-1670-1-git-send-email-youquan.song@intel.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:44095 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758723Ab3CECZr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Mar 2013 21:25:47 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MJ60074D1EM2YD0@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 05 Mar 2013 11:25:46 +0900 (KST)
+Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: htejun@gmail.com, ming.lei@canonical.com, sshtylyov@mvista.com, lpechacek@suse.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, stable@vger.kernel.org, Youquan Song <youquan.song@linux.intel.com>
+To: "'David S. Miller'" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Hi Maintainer,
+This patch uses module_platform_driver_probe() macro which makes
+the code smaller and simpler.
 
-Can you take the patch which is needed by some new platforms?
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/ide/tx4938ide.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
-Thanks
--Youquan
+diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+index 91d49dd..ede8575 100644
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -203,18 +203,7 @@ static struct platform_driver tx4938ide_driver = {
+ 	.remove = __exit_p(tx4938ide_remove),
+ };
+ 
+-static int __init tx4938ide_init(void)
+-{
+-	return platform_driver_probe(&tx4938ide_driver, tx4938ide_probe);
+-}
+-
+-static void __exit tx4938ide_exit(void)
+-{
+-	platform_driver_unregister(&tx4938ide_driver);
+-}
+-
+-module_init(tx4938ide_init);
+-module_exit(tx4938ide_exit);
++module_platform_driver_probe(tx4938ide_driver, tx4938ide_probe);
+ 
+ MODULE_DESCRIPTION("TX4938 internal IDE driver");
+ MODULE_LICENSE("GPL");
+-- 
+1.7.2.5
 
-On Mon, Feb 18, 2013 at 11:00:55AM -0500, Youquan Song wrote:
-> There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d 
-> "ata_piix: make DVD Drive recognisable on systems with Intel Sandybridge
->  chipsets(v2)" fixing the 4 ports IDE controller 32bit PIO mode. 
-> 
-> We've hit a problem with DVD not recognized on Haswell Desktop platform which
-> includes Lynx Point 2-port SATA controller.
-> 
-> This quirk patch disables 32bit PIO on this controller in IDE mode.
-> 
-> v2: Change spelling error in statememnt pointed by Sergei Shtylyov.
-> v3: Change comment statememnt and spliting line over 80 characters pointed by
->     Libor Pechacek and also rebase the patch against 3.8-rc7 kernel.
-> 
-> Tested-by: Lee, Chun-Yi <jlee@suse.com>
-> Signed-off-by: Youquan Song <youquan.song@intel.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/ata/ata_piix.c |   14 +++++++++++++-
->  1 files changed, 13 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 174eca6..4aab550 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -150,6 +150,7 @@ enum piix_controller_ids {
->  	tolapai_sata,
->  	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
->  	ich8_sata_snb,
-> +	ich8_2port_sata_snb,
->  };
->  
->  struct piix_map_db {
-> @@ -304,7 +305,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
->  	/* SATA Controller IDE (Lynx Point) */
->  	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
->  	/* SATA Controller IDE (Lynx Point) */
-> -	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-> +	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
->  	/* SATA Controller IDE (Lynx Point) */
->  	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
->  	/* SATA Controller IDE (Lynx Point-LP) */
-> @@ -422,6 +423,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
->  	[ich8m_apple_sata]	= &ich8m_apple_map_db,
->  	[tolapai_sata]		= &tolapai_map_db,
->  	[ich8_sata_snb]		= &ich8_map_db,
-> +	[ich8_2port_sata_snb]	= &ich8_2port_map_db,
->  };
->  
->  static struct pci_bits piix_enable_bits[] = {
-> @@ -1225,6 +1227,16 @@ static struct ata_port_info piix_port_info[] = {
->  		.udma_mask	= ATA_UDMA6,
->  		.port_ops	= &piix_sata_ops,
->  	},
-> +
-> +	[ich8_2port_sata_snb] =
-> +	{
-> +		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR
-> +					| PIIX_FLAG_PIO16,
-> +		.pio_mask	= ATA_PIO4,
-> +		.mwdma_mask	= ATA_MWDMA2,
-> +		.udma_mask	= ATA_UDMA6,
-> +		.port_ops	= &piix_sata_ops,
-> +	},
->  };
->  
->  #define AHCI_PCI_BAR 5
-> -- 
-> 1.7.7.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+
