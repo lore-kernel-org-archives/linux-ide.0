@@ -1,32 +1,60 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v2] [libata] Avoid specialized TLA's in ZPODD's Kconfig
-Date: Mon, 04 Mar 2013 17:14:55 -0500
-Message-ID: <51351CDF.6070003@pobox.com>
-References: <1663657.ypAtqGpGAq@vostro.rjw.lan> <1781256.mPQbtiUPYR@vostro.rjw.lan> <CA+55aFyzjN_wMH+2RCEA+aNLY0Z7fn4YU7VOtTALbgngn1+vCw@mail.gmail.com> <2223198.XmyRLgb3Gv@vostro.rjw.lan> <20130226161049.GA9303@kahuna> <CA+55aFy24fp+9zXiDmAgvsz6YvWQh2L0BAJ2hAhF7cNSdyMd8w@mail.gmail.com> <CA+55aFyu5woJsH2y3y=w4UFneOG8hKz_cLXgZQbJzn5asn8=hQ@mail.gmail.com> <20130226163712.GA30433@htj.dyndns.org> <CA+55aFyFRbMX9G_0Mv0nUZgw9mHAPzE0zCw5mCSbGG_r1diFHg@mail.gmail.com> <20130226165813.GB30433@htj.dyndns.org> <512CF809.8010102@pobox.com> <5130052E.9070403@intel.com> <5130A8DF.7080709@cogentembedded.com> <51318775.1060309@intel.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] pata_at32: use module_platform_driver_probe()
+Date: Tue, 05 Mar 2013 10:39:47 +0900
+Message-ID: <004901ce1942$5238e780$f6aab680$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <51318775.1060309@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jeff Garzik <jgarzik@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:55157 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932114Ab3CEBju (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Mar 2013 20:39:50 -0500
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MJ500E24Z9HE2A0@mailout2.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 05 Mar 2013 10:39:49 +0900 (KST)
+Content-language: ko
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-On 03/02/2013 12:00 AM, Aaron Lu wrote:
-> ODD is not a common TLA for non-ATA people so they will get confused
-> by its meaning when they are configuring the kernel. This patch fixed
-> this problem by using ODD only after stating what it is.
->
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
-> ---
-> v2:
-> Add a space before open paren as suggested by Sergei Shtylyov.
->
->   drivers/ata/Kconfig | 13 +++++++------
->   1 file changed, 7 insertions(+), 6 deletions(-)
+This patch uses module_platform_driver_probe() macro which makes
+the code smaller and simpler.
 
-applied
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/ata/pata_at32.c |   13 +------------
+ 1 files changed, 1 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
+index 36f189c..8d493b4 100644
+--- a/drivers/ata/pata_at32.c
++++ b/drivers/ata/pata_at32.c
+@@ -393,18 +393,7 @@ static struct platform_driver pata_at32_driver = {
+ 	},
+ };
+ 
+-static int __init pata_at32_init(void)
+-{
+-	return platform_driver_probe(&pata_at32_driver, pata_at32_probe);
+-}
+-
+-static void __exit pata_at32_exit(void)
+-{
+-	platform_driver_unregister(&pata_at32_driver);
+-}
+-
+-module_init(pata_at32_init);
+-module_exit(pata_at32_exit);
++module_platform_driver_probe(pata_at32_driver, pata_at32_probe);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("AVR32 SMC/CFC PATA Driver");
+-- 
+1.7.2.5
 
 
