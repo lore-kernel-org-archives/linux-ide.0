@@ -1,105 +1,102 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: [PATCH #upstream] libata: export ata_port port_no attribute via /sys
-Date: Wed,  6 Mar 2013 13:00:12 -0600
-Message-ID: <1362596412-17314-1-git-send-email-dmilburn@redhat.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Disk shock protection interferes with standby timers, please advise
+Date: Thu, 07 Mar 2013 00:16:00 +0100
+Message-ID: <876214glvz.fsf@denkblock.local>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65019 "EHLO mx1.redhat.com"
+Received: from nebensachen.de ([78.46.130.30]:38320 "EHLO nebensachen.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753263Ab3CFSzD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Mar 2013 13:55:03 -0500
+	id S1753043Ab3CFX0X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Mar 2013 18:26:23 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: jgarzik@pobox.com
-Cc: linux-ide@vger.kernel.org, kay.sievers@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com, hare@suse.de
+To: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@intel.com>
+Cc: linux-ide@vger.kernel.org, =?iso-8859-15?Q?Tom=E1=A8_Janou=A8ek?= <tomi@nomi.cz>
 
-While registering host controller track port number based upon number
-of ports available on the controller, export port_no attribute through
-/sys.
+Hi there,
 
-# pwd
-/sys/devices/pci0000:00/0000:00:1f.2/ata8/ata_port/ata8
-# ll
-total 0
-lrwxrwxrwx. 1 root root    0 Mar  6 12:43 device -> ../../../ata8
--r--r--r--. 1 root root 4096 Mar  6 12:43 idle_irq
--r--r--r--. 1 root root 4096 Mar  6 12:43 nr_pmp_links
--r--r--r--. 1 root root 4096 Mar  6 12:43 port_no
-drwxr-xr-x. 2 root root    0 Mar  6 12:42 power
-lrwxrwxrwx. 1 root root    0 Mar  6 12:41 subsystem -> ../../../../../../class/ata_port
--rw-r--r--. 1 root root 4096 Mar  6 12:40 uevent
-# cat port_no
-1
+Tom=C3=A1s Janousek has reported that the standby timer of his notebook=
+ hd is
+not properly reenabled after a shock protection event. This is the
+scenario:
+1. Standby timer is initialised using hdparm -S ... and everything work=
+s
+   as expected.
+2. Until disk heads are being unloaded due to a shock protection event.
+   Standby is prevented for as long as the request to unload_heads had
+   indicated =E2=80=93 still as expected.
+3. The current implementation of shock protection issues a Check Power
+   Mode command once the imminent danger is over. This was meant
+   specifically to reenable the standby timer and used to work on the
+   Hitachi drive I used for testing at the time. Alas, for some drives,
+   including a Western Digital I have here at my disposal, that is not
+   enough and they keep spinning until any command *but* Check Power
+   Mode or Idle Immediate with Unload Feature is received.
 
-Signed-off-by: David Milburn <dmilburn@redhat.com>
----
- drivers/ata/libata-core.c      |    6 ++++--
- drivers/ata/libata-transport.c |    4 +++-
- include/linux/libata.h         |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+Now, the ATA7 spec states that after receiving an Idle Immediate with
+Unload Feature (section 6.20.10):
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 497adea..82135b1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5632,6 +5632,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
- 	ap->lock = &host->lock;
- 	ap->print_id = -1;
-+	ap->local_port_no = -1;
- 	ap->host = host;
- 	ap->dev = host->dev;
- 
-@@ -6122,9 +6123,10 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 		kfree(host->ports[i]);
- 
- 	/* give ports names and add SCSI hosts */
--	for (i = 0; i < host->n_ports; i++)
-+	for (i = 0; i < host->n_ports; i++) {
- 		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
--
-+		host->ports[i]->local_port_no = i + 1;
-+	}
- 
- 	/* Create associated sysfs transport objects  */
- 	for (i = 0; i < host->n_ports; i++) {
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index c04d393..077a856 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -37,7 +37,7 @@
- #include "libata.h"
- #include "libata-transport.h"
- 
--#define ATA_PORT_ATTRS		2
-+#define ATA_PORT_ATTRS		3
- #define ATA_LINK_ATTRS		3
- #define ATA_DEV_ATTRS		9
- 
-@@ -216,6 +216,7 @@ static DEVICE_ATTR(name, S_IRUGO, show_ata_port_##name, NULL)
- 
- ata_port_simple_attr(nr_pmp_links, nr_pmp_links, "%d\n", int);
- ata_port_simple_attr(stats.idle_irq, idle_irq, "%ld\n", unsigned long);
-+ata_port_simple_attr(local_port_no, port_no, "%u\n", unsigned int);
- 
- static DECLARE_TRANSPORT_CLASS(ata_port_class,
- 			       "ata_port", NULL, NULL, NULL);
-@@ -709,6 +710,7 @@ struct scsi_transport_template *ata_attach_transport(void)
- 	count = 0;
- 	SETUP_PORT_ATTRIBUTE(nr_pmp_links);
- 	SETUP_PORT_ATTRIBUTE(idle_irq);
-+	SETUP_PORT_ATTRIBUTE(port_no);
- 	BUG_ON(count > ATA_PORT_ATTRS);
- 	i->port_attrs[count] = NULL;
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 91c9d10..6eece8b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -745,6 +745,7 @@ struct ata_port {
- 	/* Flags that change dynamically, protected by ap->lock */
- 	unsigned int		pflags; /* ATA_PFLAG_xxx */
- 	unsigned int		print_id; /* user visible unique port ID */
-+	unsigned int            local_port_no; /* host local port num */
- 	unsigned int		port_no; /* 0 based port no. inside the host */
- 
- #ifdef CONFIG_ATA_SFF
+--8<---------------cut here---------------start------------->8---
+The device shall stay at Low Power Idle mode, shall not go into Standby
+mode and shall not load the head(s) onto the media until receiving a ne=
+w
+command.
+[...]
+The device shall retain data
+in the write cache and resume writing the cached data onto the media
+after receiving a Software Reset, a Hardware Reset, or any new command
+except Idle Immediate with Unload Feature.
+--8<---------------cut here---------------end--------------->8---
+
+But then it says about the Check Power Mode command (section 6.8.8):
+
+--8<---------------cut here---------------start------------->8---
+The Check Power Mode command shall not cause the device to change power
+or affect the operation of the Standby timer.
+--8<---------------cut here---------------end--------------->8---
+
+Hence, we should issue another command when the drive is not in standby
+already in order to reenable the standby timer. Tom=C3=A1s suggested is=
+suing
+an Idle Immediate when Check Power Mode indicates that the disk is not
+in standby already. Most obligingly, he even provided a patch to be
+found at
+<https://github.com/liskin/patches/blob/master/hacks/linux-3.3_hdaps-un=
+prevent-standby.patch>.
+
+My WD drive, however, gives a distinctly audible click when Idle
+Immediate is issued after an Idle Immediate with Unload Feature. I rath=
+er
+suspect that the heads are actively loaded again, which is undesirable.
+This can easily be tested, even without applying Tom=C3=A1s' patch, by
+executing the following commands:
+
+# hdparm -S 1 /dev/sda
+[disk spins down after 5 seconds]
+# hdparm --idle-immediate /dev/sda
+[spins up again]
+# hdparm --idle-unload /dev/sda
+[keeps spinning until another command reaches disk, reenabling standby =
+timer]
+# hdparm -C /dev/sda
+[reenables standby timer depending on disk model/manufacturer]
+# hdparm --idle-immediate /dev/sda
+[definitely reenables standby timer but also loads heads (click sound)]
+
+On the other hand,
+
+# hdparm -I /dev/sda
+
+also reenables the standby timer yet leaves the heads alone. So my
+question is this: Can anyone give some advice as to what command what b=
+e
+suitable to be issued instead of Idle Immediate when the shock
+protection timeout has elapsed? Basically, it should be cheap, cause no
+=E2=80=9Cmechanical action=E2=80=9D, and be anything *but* Check Power =
+Mode.
+
+Thanks for your help in advance,
+
+Elias
