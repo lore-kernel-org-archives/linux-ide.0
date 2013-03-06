@@ -1,152 +1,83 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH #upstream] libata: export local port number through /sys
-Date: Tue, 5 Mar 2013 17:04:30 -0600
-Message-ID: <20130305230430.GA14118@dhcp-10-15-1-70.hsv.redhat.com>
-References: <1359049929-17069-1-git-send-email-dmilburn@redhat.com> <512BD1DA.80305@redhat.com> <CAPXgP13Q3TyWPwE3CqhiqouLQH-oyr8EC=wHChy50he74qokug@mail.gmail.com> <513613D0.9090904@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Youquan Song <youquan.song@intel.com>
+Subject: [PATCH v3] ata: Fix DVD not dectected at some Haswell platforms
+Date: Wed,  6 Mar 2013 10:49:05 -0500
+Message-ID: <1362584945-10202-1-git-send-email-youquan.song@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37654 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:31733 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755104Ab3CEW6c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Mar 2013 17:58:32 -0500
-Content-Disposition: inline
-In-Reply-To: <513613D0.9090904@suse.de>
+	id S1751215Ab3CFDlR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 Mar 2013 22:41:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, kay@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com, dmilburn@redhat.com
+To: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, ming.lei@canonical.com, sshtylyov@mvista.com, lpechacek@suse.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, stable@vger.kernel.org, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
 
-On Tue, Mar 05, 2013 at 04:48:32PM +0100, Hannes Reinecke wrote:
-> On 02/26/2013 04:26 PM, Kay Sievers wrote:
-> >On Mon, Feb 25, 2013 at 10:04 PM, David Milburn <dmilburn@redhat.com> 
-> >wrote:
-> >>David Milburn wrote:
-> >>>
-> >>>Export <global port>.<local port> format through /sys
-> >>>
-> >>>./pci0000:00/0000:00:1f.2/ata1.1
-> >>>./pci0000:00/0000:00:1f.2/ata1.1/link1.1/dev1.1.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata1.1/link1.1/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata1.1/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata1.1/ata_port/ata1.1
-> >>>./pci0000:00/0000:00:1f.2/ata2.2
-> >>>./pci0000:00/0000:00:1f.2/ata2.2/link2.2/dev2.2.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata2.2/link2.2/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata2.2/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata2.2/ata_port/ata2.2
-> >>>./pci0000:00/0000:00:1f.2/ata3.3
-> >>>./pci0000:00/0000:00:1f.2/ata3.3/link3.3/dev3.3.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata3.3/link3.3/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata3.3/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata3.3/ata_port/ata3.3
-> >>>./pci0000:00/0000:00:1f.2/ata4.4
-> >>>./pci0000:00/0000:00:1f.2/ata4.4/link4.4/dev4.4.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata4.4/link4.4/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata4.4/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata4.4/ata_port/ata4.4
-> >>>./pci0000:00/0000:00:1f.2/ata5.5
-> >>>./pci0000:00/0000:00:1f.2/ata5.5/link5.5/dev5.5.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata5.5/link5.5/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata5.5/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata5.5/ata_port/ata5.5
-> >>>./pci0000:00/0000:00:1f.2/ata6.6
-> >>>./pci0000:00/0000:00:1f.2/ata6.6/link6.6/dev6.6.0/ata_device
-> >>>./pci0000:00/0000:00:1f.2/ata6.6/link6.6/ata_link
-> >>>./pci0000:00/0000:00:1f.2/ata6.6/ata_port
-> >>>./pci0000:00/0000:00:1f.2/ata6.6/ata_port/ata6.6
-> >>>
-> Hmm.
-> 
-> Can't say I like the 'global port' notation.
-> Personally I would prefer to have a sysfs attribute for the local 
-> port number, and have path_id get it from there.
-> 
-> For 95% of all cases the above is just an information duplication 
-> (ie it'll only provide a real value for udev, but not for the user).
-> 
-> So, please, use a sysfs attribute for the local port and keep the 
-> numbering as it is.
+There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d 
+"ata_piix: make DVD Drive recognisable on systems with Intel Sandybridge
+ chipsets(v2)" fixing the 4 ports IDE controller 32bit PIO mode. 
 
-Hi Hannes,
+We've hit a problem with DVD not recognized on Haswell Desktop platform which
+includes Lynx Point 2-port SATA controller.
 
-Thanks for your feedback.
+This quirk patch disables 32bit PIO on this controller in IDE mode.
 
-Would this patch be acceptable to everyone?
+v2: Change spelling error in statememnt pointed by Sergei Shtylyov.
+v3: Change comment statememnt and spliting line over 80 characters pointed by
+    Libor Pechacek and also rebase the patch against 3.8-rc7 kernel.
 
-Thanks,
-David
-
+Tested-by: Lee, Chun-Yi <jlee@suse.com>
+Signed-off-by: Youquan Song <youquan.song@intel.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/ata/libata-core.c      |    6 ++++--
- drivers/ata/libata-transport.c |    4 +++-
- include/linux/libata.h         |    1 +
- 3 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/ata/ata_piix.c |   14 +++++++++++++-
+ 1 files changed, 13 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 497adea..82135b1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5632,6 +5632,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
- 	ap->lock = &host->lock;
- 	ap->print_id = -1;
-+	ap->local_port_no = -1;
- 	ap->host = host;
- 	ap->dev = host->dev;
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 174eca6..4aab550 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -150,6 +150,7 @@ enum piix_controller_ids {
+ 	tolapai_sata,
+ 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
+ 	ich8_sata_snb,
++	ich8_2port_sata_snb,
+ };
  
-@@ -6122,9 +6123,10 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 		kfree(host->ports[i]);
+ struct piix_map_db {
+@@ -304,7 +305,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* SATA Controller IDE (Lynx Point) */
+ 	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Lynx Point) */
+-	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
+ 	/* SATA Controller IDE (Lynx Point) */
+ 	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
+ 	/* SATA Controller IDE (Lynx Point-LP) */
+@@ -422,6 +423,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
+ 	[ich8m_apple_sata]	= &ich8m_apple_map_db,
+ 	[tolapai_sata]		= &tolapai_map_db,
+ 	[ich8_sata_snb]		= &ich8_map_db,
++	[ich8_2port_sata_snb]	= &ich8_2port_map_db,
+ };
  
- 	/* give ports names and add SCSI hosts */
--	for (i = 0; i < host->n_ports; i++)
-+	for (i = 0; i < host->n_ports; i++) {
- 		host->ports[i]->print_id = atomic_inc_return(&ata_print_id);
--
-+		host->ports[i]->local_port_no = i + 1;
-+	}
+ static struct pci_bits piix_enable_bits[] = {
+@@ -1225,6 +1227,16 @@ static struct ata_port_info piix_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &piix_sata_ops,
+ 	},
++
++	[ich8_2port_sata_snb] =
++	{
++		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR
++					| PIIX_FLAG_PIO16,
++		.pio_mask	= ATA_PIO4,
++		.mwdma_mask	= ATA_MWDMA2,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &piix_sata_ops,
++	},
+ };
  
- 	/* Create associated sysfs transport objects  */
- 	for (i = 0; i < host->n_ports; i++) {
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index c04d393..e3808b9 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -37,7 +37,7 @@
- #include "libata.h"
- #include "libata-transport.h"
- 
--#define ATA_PORT_ATTRS		2
-+#define ATA_PORT_ATTRS		3
- #define ATA_LINK_ATTRS		3
- #define ATA_DEV_ATTRS		9
- 
-@@ -216,6 +216,7 @@ static DEVICE_ATTR(name, S_IRUGO, show_ata_port_##name, NULL)
- 
- ata_port_simple_attr(nr_pmp_links, nr_pmp_links, "%d\n", int);
- ata_port_simple_attr(stats.idle_irq, idle_irq, "%ld\n", unsigned long);
-+ata_port_simple_attr(local_port_no, local_port_no, "%u\n", unsigned int);
- 
- static DECLARE_TRANSPORT_CLASS(ata_port_class,
- 			       "ata_port", NULL, NULL, NULL);
-@@ -709,6 +710,7 @@ struct scsi_transport_template *ata_attach_transport(void)
- 	count = 0;
- 	SETUP_PORT_ATTRIBUTE(nr_pmp_links);
- 	SETUP_PORT_ATTRIBUTE(idle_irq);
-+	SETUP_PORT_ATTRIBUTE(local_port_no);
- 	BUG_ON(count > ATA_PORT_ATTRS);
- 	i->port_attrs[count] = NULL;
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 91c9d10..5bcbbc5 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -745,6 +745,7 @@ struct ata_port {
- 	/* Flags that change dynamically, protected by ap->lock */
- 	unsigned int		pflags; /* ATA_PFLAG_xxx */
- 	unsigned int		print_id; /* user visible unique port ID */
-+	unsigned int            local_port_no; /* user visible host local port ID */ 
- 	unsigned int		port_no; /* 0 based port no. inside the host */
- 
- #ifdef CONFIG_ATA_SFF
+ #define AHCI_PCI_BAR 5
+-- 
+1.7.7.4
 
