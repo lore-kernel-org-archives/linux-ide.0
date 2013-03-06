@@ -1,83 +1,92 @@
-From: Youquan Song <youquan.song@intel.com>
-Subject: [PATCH v3] ata: Fix DVD not dectected at some Haswell platforms
-Date: Wed,  6 Mar 2013 10:49:05 -0500
-Message-ID: <1362584945-10202-1-git-send-email-youquan.song@intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH #upstream] libata: export local port number through /sys
+Date: Wed, 06 Mar 2013 08:10:39 +0100
+Message-ID: <5136EBEF.7070303@suse.de>
+References: <1359049929-17069-1-git-send-email-dmilburn@redhat.com> <512BD1DA.80305@redhat.com> <CAPXgP13Q3TyWPwE3CqhiqouLQH-oyr8EC=wHChy50he74qokug@mail.gmail.com> <513613D0.9090904@suse.de> <20130305230430.GA14118@dhcp-10-15-1-70.hsv.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:31733 "EHLO mga11.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:50580 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751215Ab3CFDlR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Mar 2013 22:41:17 -0500
+	id S1751270Ab3CFHKo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 6 Mar 2013 02:10:44 -0500
+In-Reply-To: <20130305230430.GA14118@dhcp-10-15-1-70.hsv.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, ming.lei@canonical.com, sshtylyov@mvista.com, lpechacek@suse.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, stable@vger.kernel.org, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, kay@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com
 
-There is a quirk patch 5e5a4f5d5a08c9c504fe956391ac3dae2c66556d 
-"ata_piix: make DVD Drive recognisable on systems with Intel Sandybridge
- chipsets(v2)" fixing the 4 ports IDE controller 32bit PIO mode. 
+On 03/06/2013 12:04 AM, David Milburn wrote:
+> On Tue, Mar 05, 2013 at 04:48:32PM +0100, Hannes Reinecke wrote:
+>> On 02/26/2013 04:26 PM, Kay Sievers wrote:
+>>> On Mon, Feb 25, 2013 at 10:04 PM, David Milburn <dmilburn@redhat.co=
+m>
+>>> wrote:
+>>>> David Milburn wrote:
+>>>>>
+>>>>> Export <global port>.<local port> format through /sys
+>>>>>
+>>>>> ./pci0000:00/0000:00:1f.2/ata1.1
+>>>>> ./pci0000:00/0000:00:1f.2/ata1.1/link1.1/dev1.1.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata1.1/link1.1/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata1.1/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata1.1/ata_port/ata1.1
+>>>>> ./pci0000:00/0000:00:1f.2/ata2.2
+>>>>> ./pci0000:00/0000:00:1f.2/ata2.2/link2.2/dev2.2.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata2.2/link2.2/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata2.2/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata2.2/ata_port/ata2.2
+>>>>> ./pci0000:00/0000:00:1f.2/ata3.3
+>>>>> ./pci0000:00/0000:00:1f.2/ata3.3/link3.3/dev3.3.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata3.3/link3.3/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata3.3/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata3.3/ata_port/ata3.3
+>>>>> ./pci0000:00/0000:00:1f.2/ata4.4
+>>>>> ./pci0000:00/0000:00:1f.2/ata4.4/link4.4/dev4.4.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata4.4/link4.4/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata4.4/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata4.4/ata_port/ata4.4
+>>>>> ./pci0000:00/0000:00:1f.2/ata5.5
+>>>>> ./pci0000:00/0000:00:1f.2/ata5.5/link5.5/dev5.5.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata5.5/link5.5/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata5.5/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata5.5/ata_port/ata5.5
+>>>>> ./pci0000:00/0000:00:1f.2/ata6.6
+>>>>> ./pci0000:00/0000:00:1f.2/ata6.6/link6.6/dev6.6.0/ata_device
+>>>>> ./pci0000:00/0000:00:1f.2/ata6.6/link6.6/ata_link
+>>>>> ./pci0000:00/0000:00:1f.2/ata6.6/ata_port
+>>>>> ./pci0000:00/0000:00:1f.2/ata6.6/ata_port/ata6.6
+>>>>>
+>> Hmm.
+>>
+>> Can't say I like the 'global port' notation.
+>> Personally I would prefer to have a sysfs attribute for the local
+>> port number, and have path_id get it from there.
+>>
+>> For 95% of all cases the above is just an information duplication
+>> (ie it'll only provide a real value for udev, but not for the user).
+>>
+>> So, please, use a sysfs attribute for the local port and keep the
+>> numbering as it is.
+>
+> Hi Hannes,
+>
+> Thanks for your feedback.
+>
+> Would this patch be acceptable to everyone?
+>
+I would prefer having it named 'port_no' instead of 'local_port_no'.
+Other than that the patch is exactly what I had in mind.
 
-We've hit a problem with DVD not recognized on Haswell Desktop platform which
-includes Lynx Point 2-port SATA controller.
+Thanks.
 
-This quirk patch disables 32bit PIO on this controller in IDE mode.
+Cheers,
 
-v2: Change spelling error in statememnt pointed by Sergei Shtylyov.
-v3: Change comment statememnt and spliting line over 80 characters pointed by
-    Libor Pechacek and also rebase the patch against 3.8-rc7 kernel.
-
-Tested-by: Lee, Chun-Yi <jlee@suse.com>
-Signed-off-by: Youquan Song <youquan.song@intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/ata/ata_piix.c |   14 +++++++++++++-
- 1 files changed, 13 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 174eca6..4aab550 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -150,6 +150,7 @@ enum piix_controller_ids {
- 	tolapai_sata,
- 	piix_pata_vmw,			/* PIIX4 for VMware, spurious DMA_ERR */
- 	ich8_sata_snb,
-+	ich8_2port_sata_snb,
- };
- 
- struct piix_map_db {
-@@ -304,7 +305,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* SATA Controller IDE (Lynx Point) */
- 	{ 0x8086, 0x8c01, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
- 	/* SATA Controller IDE (Lynx Point) */
--	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ 0x8086, 0x8c08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
- 	/* SATA Controller IDE (Lynx Point) */
- 	{ 0x8086, 0x8c09, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
- 	/* SATA Controller IDE (Lynx Point-LP) */
-@@ -422,6 +423,7 @@ static const struct piix_map_db *piix_map_db_table[] = {
- 	[ich8m_apple_sata]	= &ich8m_apple_map_db,
- 	[tolapai_sata]		= &tolapai_map_db,
- 	[ich8_sata_snb]		= &ich8_map_db,
-+	[ich8_2port_sata_snb]	= &ich8_2port_map_db,
- };
- 
- static struct pci_bits piix_enable_bits[] = {
-@@ -1225,6 +1227,16 @@ static struct ata_port_info piix_port_info[] = {
- 		.udma_mask	= ATA_UDMA6,
- 		.port_ops	= &piix_sata_ops,
- 	},
-+
-+	[ich8_2port_sata_snb] =
-+	{
-+		.flags		= PIIX_SATA_FLAGS | PIIX_FLAG_SIDPR
-+					| PIIX_FLAG_PIO16,
-+		.pio_mask	= ATA_PIO4,
-+		.mwdma_mask	= ATA_MWDMA2,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &piix_sata_ops,
-+	},
- };
- 
- #define AHCI_PCI_BAR 5
--- 
-1.7.7.4
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
