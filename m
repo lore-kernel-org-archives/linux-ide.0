@@ -1,34 +1,39 @@
-From: Germaine Sandoval <gsandoval@luna.edu>
-Subject: Greetings from George Daniels
-Date: Sun, 10 Mar 2013 15:42:36 -0600 (MDT)
-Message-ID: <588381949.726767.1362951756009.JavaMail.root__33426.1128017262$1362952343$gmane$org@luna.edu>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system
+ suspend
+Date: Mon, 11 Mar 2013 11:42:54 +0800
+Message-ID: <513D52BE.7040307@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from folj3.lvti.cc.nm.us ([63.230.102.27]:47511 "EHLO
-	mxHero.luna.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753260Ab3CJVvf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 10 Mar 2013 17:51:35 -0400
-Received: from mxHero (localhost [127.0.0.1])
-	by mxHero.luna.edu (Postfix) with ESMTP id E56D94061C7
-	for <linux-ide@vger.kernel.org>; Sun, 10 Mar 2013 21:41:04 +0000 (UTC)
+Received: from mga01.intel.com ([192.55.52.88]:64214 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753546Ab3CKDls (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 10 Mar 2013 23:41:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>
 
+Hi all,
 
+I've seen some reports on STANDBY IMMEDIATE failed on NVIDIA MCP5x
+controllers when system goes to suspend(this command is sent by scsi sd
+driver on system suspend as a SCSI STOP command, which is translated to
+STANDBY IMMEDIATE ATA command). I've no idea of why this happened, so
+I wrote this email in hope of getting some new idea.
 
-Greetings from George Daniels
+The related bug report:
+https://bugzilla.kernel.org/show_bug.cgi?id=48951
 
-I am George Daniels, a Banker and credit system programmer (HSBC bank). 
-I saw your email address while browsing through  the bank D.T.C Screen in my office 
-yesterday so I decided to use this very chance to know you. I believe 
-we should use every opportunity to know each other better. However, I am contacting you 
-for obvious reason which you will understand. 
+And google search showed that Peter reported a similar problem here:
+http://marc.info/?l=linux-ide&m=133534061316338&w=2
 
-I am sending this mail just to know if this email address is OK, 
-reply me back so that I will send  more details to you. 
-I have a very important thing to discuss with you, I look forward to receiving your response at 
-georgedaniels@postino.net. Have a pleasant day.
+And bladud has found that, disable asyn suspend for the scsi target
+device can work around this problem.
 
-George Daniels
+Please feel free to suggest what can possibly be the cause, thanks.
+
+-Aaron
+
