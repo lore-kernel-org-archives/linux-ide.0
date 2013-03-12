@@ -1,36 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Mark Lord <kernel@start.ca>
 Subject: Re: STANDBY IMMEDIATE failed on NVIDIA MCP5x controllers when system
  suspend
-Date: Tue, 12 Mar 2013 11:08:37 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1303121107230.2153-100000@iolanthe.rowland.org>
-References: <513E98A7.3040307@intel.com>
+Date: Tue, 12 Mar 2013 12:34:08 -0400
+Message-ID: <513F5900.9030503@start.ca>
+References: <513D52BE.7040307@intel.com> <1362991742.2395.9.camel@dabdike.int.hansenpartnership.com> <CADLC3L1+z=Nx_MFBz60z3Ow_98hetLYDjK5On-zxwdpUf+quzA@mail.gmail.com> <1363013464.2395.63.camel@dabdike.int.hansenpartnership.com> <CADLC3L0nM+3ttR8V8cCOZWGY+eJqGZdmKiTRieYr_d+Xqh36UA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:37777 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754038Ab3CLPIi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Mar 2013 11:08:38 -0400
-In-Reply-To: <513E98A7.3040307@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CADLC3L0nM+3ttR8V8cCOZWGY+eJqGZdmKiTRieYr_d+Xqh36UA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Aaron Lu <aaron.lu@intel.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Aaron Lu <aaron.lwe@gmail.com>, bladud@gmail.com, Joe Sapp <nixphoeni+kernel@gmail.com>, Alberto Mattea <support.intranet@libero.it>, Peter Dons Tychsen <donpedro@tdcadsl.dk>, Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 12 Mar 2013, Aaron Lu wrote:
+On 13-03-11 03:30 PM, Robert Hancock wrote:
+..
+> I'm sure there are some SSDs that do violate their data integrity
+> commitments - a while ago some tests were done (don't have a link
+> handy and I don't think they identified the actual vendor/model of the
+> drives in any case) but there were definitely some SSDs that did do
+> nasty things like trash unrelated data if power was lost while
+> writing, etc. So we definitely don't want to risk this sort of thing
+> occurring on a normal power-off or suspend.
 
-> So ata_host_controller waits for all of the ata_ports, and the ata_port
-> waits for both scsi_host and ata_link. scsi_host waits for scsi_target,
-> and scsi_target waits for scsi_device. So if scsi_device is not done,
-> ata_port will not start. Doesn't look like a problem to me.
-> 
-> And from the log:
-> https://bugzilla.kernel.org/attachment.cgi?id=95101
-> It also looks like the order is correct.
 
-You could compare the PM debugging logs for an async suspend and a 
-synchronous suspend.  There might be an obvious difference in the 
-ordering that would explain the problem.
+Just about all current SATA SSDs advertise having some form(s)
+of "background garbage collection".  That "feature" has always concerned me,
+because of the real possibility of power being removed (system shutdown)
+while the drive firmware is in the midst of re-shuffling my data around.
 
-Alan Stern
+One would hope that "STANDBY IMMEDIATE" is taken by the drive
+as a signal to stop that fussing about and prepare for full/sudden power-off.
 
