@@ -1,54 +1,137 @@
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: Re: [PATCH 10/10] drivers: misc: use module_platform_driver_probe()
-Date: Thu, 14 Mar 2013 15:06:31 +0100
-Message-ID: <20130314140631.GM1906@pengutronix.de>
+From: Fabio Porcedda <fabio.porcedda@gmail.com>
+Subject: Re: [PATCH 01/10] drivers: media: use module_platform_driver_probe()
+Date: Thu, 14 Mar 2013 17:40:58 +0100
+Message-ID: <CAHkwnC8cGMi83wTWG8C7kOdhHB3O-ZktzmU12qw3f9cTxTYvrg@mail.gmail.com>
 References: <1363266691-15757-1-git-send-email-fabio.porcedda@gmail.com>
- <1363266691-15757-12-git-send-email-fabio.porcedda@gmail.com>
- <201303141358.05616.arnd@arndb.de>
+ <1363266691-15757-2-git-send-email-fabio.porcedda@gmail.com> <Pine.LNX.4.64.1303141424390.22728@axis700.grange>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-input-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201303141358.05616.arnd@arndb.de>
+In-Reply-To: <Pine.LNX.4.64.1303141424390.22728@axis700.grange>
 Sender: linux-input-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Fabio Porcedda <fabio.porcedda@gmail.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org, linux-ide@vger.kernel.org, lm-sensors@lm-sensors.org, linux-input@vger.kernel.org, linux-fbdev@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, H Hartley Sweeten <hsweeten@visionengravers.com>, Hans-Christian Egtvedt <hans-christian.egtvedt@atmel.com>, Grant Likely <grant.likely@secretlab.ca>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org, linux-ide@vger.kernel.org, lm-sensors@lm-sensors.org, linux-input@vger.kernel.org, linux-fbdev@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mauro Carvalho Chehab <mchehab@redhat.com>, Josh Wu <josh.wu@atmel.com>, Hans Verkuil <hans.verkuil@cisco.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Mar 14, 2013 at 01:58:05PM +0000, Arnd Bergmann wrote:
-> On Thursday 14 March 2013, Fabio Porcedda wrote:
-> > This patch converts the drivers to use the
-> > module_platform_driver_probe() macro which makes the code smaller and
-> > a bit simpler.
-> > 
-> > Signed-off-by: Fabio Porcedda <fabio.porcedda@gmail.com>
-> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > ---
-> >  drivers/misc/atmel_pwm.c  | 12 +-----------
-> >  drivers/misc/ep93xx_pwm.c | 13 +------------
-> >  2 files changed, 2 insertions(+), 23 deletions(-)
-> 
-> The patch itself seems fine, but there are two issues around it:
-> 
-> * The PWM drivers should really get moved to drivers/pwm and converted to the new
->   PWM subsystem. I don't know if Hartley or Hans-Christian have plans to do
->   that already.
-> 
-> * Regarding the use of module_platform_driver_probe, I'm a little worried about
->   the interactions with deferred probing. I don't think there are any regressions,
->   but we should probably make people aware that one cannot return -EPROBE_DEFER
->   from a platform_driver_probe function.
+On Thu, Mar 14, 2013 at 2:25 PM, Guennadi Liakhovetski
+<g.liakhovetski@gmx.de> wrote:
+> Hi Fabio
+>
+> On Thu, 14 Mar 2013, Fabio Porcedda wrote:
+>
+>> This patch converts the drivers to use the
+>> module_platform_driver_probe() macro which makes the code smaller and
+>> a bit simpler.
+>>
+>> Signed-off-by: Fabio Porcedda <fabio.porcedda@gmail.com>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: Mauro Carvalho Chehab <mchehab@redhat.com>
+>> Cc: Josh Wu <josh.wu@atmel.com>
+>> Cc: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+>> Cc: Hans Verkuil <hans.verkuil@cisco.com>
+>> Cc: linux-media@vger.kernel.org
+>
+> Thanks for the patch. Subtracting this series
+> http://thread.gmane.org/gmane.linux.drivers.video-input-infrastructure/61403
+> you only need to convert atmel-isi.c. Please, respin.
 
-I'm worried about this aswell. I think platform_driver_probe shouldn't
-be used anymore. Even if a driver does not explicitly make use of
--EPROBE_DEFER, it leaks in very quickly if a driver for example uses a
-regulator and just returns the error value from regulator_get.
+Ok, I'll send a updated one.
 
-Sascha
+Thanks for the reviewing the patch.
+
+Best regards
+Fabio Porcedda
+
+> Thanks
+> Guennadi
+>
+>> ---
+>>  drivers/media/platform/sh_vou.c                | 13 +------------
+>>  drivers/media/platform/soc_camera/atmel-isi.c  | 12 +-----------
+>>  drivers/media/platform/soc_camera/mx1_camera.c | 13 +------------
+>>  3 files changed, 3 insertions(+), 35 deletions(-)
+>>
+>> diff --git a/drivers/media/platform/sh_vou.c b/drivers/media/platform/sh_vou.c
+>> index 66c8da1..d853162 100644
+>> --- a/drivers/media/platform/sh_vou.c
+>> +++ b/drivers/media/platform/sh_vou.c
+>> @@ -1485,18 +1485,7 @@ static struct platform_driver __refdata sh_vou = {
+>>       },
+>>  };
+>>
+>> -static int __init sh_vou_init(void)
+>> -{
+>> -     return platform_driver_probe(&sh_vou, sh_vou_probe);
+>> -}
+>> -
+>> -static void __exit sh_vou_exit(void)
+>> -{
+>> -     platform_driver_unregister(&sh_vou);
+>> -}
+>> -
+>> -module_init(sh_vou_init);
+>> -module_exit(sh_vou_exit);
+>> +module_platform_driver_probe(sh_vou, sh_vou_probe);
+>>
+>>  MODULE_DESCRIPTION("SuperH VOU driver");
+>>  MODULE_AUTHOR("Guennadi Liakhovetski <g.liakhovetski@gmx.de>");
+>> diff --git a/drivers/media/platform/soc_camera/atmel-isi.c b/drivers/media/platform/soc_camera/atmel-isi.c
+>> index 82dbf99..12ba31d 100644
+>> --- a/drivers/media/platform/soc_camera/atmel-isi.c
+>> +++ b/drivers/media/platform/soc_camera/atmel-isi.c
+>> @@ -1081,17 +1081,7 @@ static struct platform_driver atmel_isi_driver = {
+>>       },
+>>  };
+>>
+>> -static int __init atmel_isi_init_module(void)
+>> -{
+>> -     return  platform_driver_probe(&atmel_isi_driver, &atmel_isi_probe);
+>> -}
+>> -
+>> -static void __exit atmel_isi_exit(void)
+>> -{
+>> -     platform_driver_unregister(&atmel_isi_driver);
+>> -}
+>> -module_init(atmel_isi_init_module);
+>> -module_exit(atmel_isi_exit);
+>> +module_platform_driver_probe(atmel_isi_driver, atmel_isi_probe);
+>>
+>>  MODULE_AUTHOR("Josh Wu <josh.wu@atmel.com>");
+>>  MODULE_DESCRIPTION("The V4L2 driver for Atmel Linux");
+>> diff --git a/drivers/media/platform/soc_camera/mx1_camera.c b/drivers/media/platform/soc_camera/mx1_camera.c
+>> index 25b2a28..4389f43 100644
+>> --- a/drivers/media/platform/soc_camera/mx1_camera.c
+>> +++ b/drivers/media/platform/soc_camera/mx1_camera.c
+>> @@ -859,18 +859,7 @@ static struct platform_driver mx1_camera_driver = {
+>>       .remove         = __exit_p(mx1_camera_remove),
+>>  };
+>>
+>> -static int __init mx1_camera_init(void)
+>> -{
+>> -     return platform_driver_probe(&mx1_camera_driver, mx1_camera_probe);
+>> -}
+>> -
+>> -static void __exit mx1_camera_exit(void)
+>> -{
+>> -     return platform_driver_unregister(&mx1_camera_driver);
+>> -}
+>> -
+>> -module_init(mx1_camera_init);
+>> -module_exit(mx1_camera_exit);
+>> +module_platform_driver_probe(mx1_camera_driver, mx1_camera_probe);
+>>
+>>  MODULE_DESCRIPTION("i.MX1/i.MXL SoC Camera Host driver");
+>>  MODULE_AUTHOR("Paulius Zaleckas <paulius.zaleckas@teltonika.lt>");
+>> --
+>> 1.8.1.5
+>>
+>
+> ---
+> Guennadi Liakhovetski, Ph.D.
+> Freelance Open-Source Software Developer
+> http://www.open-technology.de/
+
+
 
 -- 
-Pengutronix e.K.                           |                             |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
-Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+Fabio Porcedda
