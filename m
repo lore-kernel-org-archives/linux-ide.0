@@ -1,38 +1,177 @@
-From: Fabio Porcedda <fabio.porcedda@gmail.com>
-Subject: Re: [PATCH v2 4/8] drivers: input: use module_platform_driver_probe()
-Date: Thu, 14 Mar 2013 18:51:58 +0100
-Message-ID: <CAHkwnC-vOPxqWq3jF=sbDrhvyWhNYvV5rAd69K8b5iH3KyqyPQ@mail.gmail.com>
-References: <1363280978-24051-1-git-send-email-fabio.porcedda@gmail.com>
- <1363280978-24051-5-git-send-email-fabio.porcedda@gmail.com> <3681471.ufqahH3gTF@dtor-d630.eng.vmware.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3681471.ufqahH3gTF@dtor-d630.eng.vmware.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Sachin Kamat <sachin.kamat@linaro.org>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media <linux-media@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-input <linux-input@vger.kernel.org>, linux-fbdev <linux-fbdev@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Liam Girdwood <lrg@slimlogic.co.uk>, Bill Pemberton <wfp5p@virginia.edu>, Linus Walleij <linus.walleij@linaro.org>, David Howells <dhowells@redhat.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH RESEND v11 0/4] block layer runtime pm
+Date: Fri, 15 Mar 2013 17:05:01 +0800
+Message-ID: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:65146 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752408Ab3COJDz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 15 Mar 2013 05:03:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Aaron Lu <aaron.lu@intel.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 
-On Thu, Mar 14, 2013 at 6:30 PM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> Hi Fabio,
->
-> On Thursday, March 14, 2013 06:09:34 PM Fabio Porcedda wrote:
->> This patch converts the drivers to use the
->> module_platform_driver_probe() macro which makes the code smaller and
->> a bit simpler.
->
-> I already have patches from Sachin Kamat for this, I am waiting for -rc3
-> to sync up with mainline and pick up the macro before applying them.
+In August 2010, Jens and Alan discussed about "Runtime PM and the block
+layer". http://marc.info/?t=128259108400001&r=1&w=2
+And then Alan has given a detailed implementation guide:
+http://marc.info/?l=linux-scsi&m=133727953625963&w=2
 
-Thank for reviewing.
+To test:
+# ls -l /sys/block/sda
+/sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
 
-I've sent a updated patch without the patch already sent by Sachin Kamat.
+# echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+Then you'll see sda is suspended after 10secs idle.
 
-Best regards
-Fabio Porcedda
+[ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+[ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
 
-> Thanks.
->
-> --
-> Dmitry
+And if you do some IO, it will resume immediately.
+[ 1791.052438] sd 2:0:0:0: [sda] Starting disk
+
+For test, I often set the autosuspend time to 1 second. If you are using
+a GUI, the 10 seconds delay may be too long that the disk can not enter
+runtime suspended state.
+
+Note that sd's runtime suspend callback will dump some kernel messages
+and the syslog daemon will write kernel message to /var/log/messages,
+making the disk instantly resume after suspended. So for test, the
+syslog daemon should better be temporarily stopped.
+
+A git repo for it, on top of v3.9-rc1:
+https://github.com/aaronlu/linux.git blockpm
+
+v11:
+- Add Alan Stern's Acked-by tag.
+
+v10:
+- Add link of Alan Stern's ideas on block layer runtime PM to patch 2
+  and 3's changelog;
+- Add back code to schdule device suspend if scsi driver return -EBUSY.
+
+v9:
+- No need to mark last busy and autosuspend in blk_pm_runtime_init as
+  suggested by Alan Stern;
+- mark last busy in blk_runtime_post_suspend if driver failed to runtime
+  suspend the device, so that PM core can try to autosuspend it some
+  time later;
+- Update scsi bus layer runtime callback to handle scsi devices which
+  use request based runtime PM and which don't.
+
+v8:
+- Set default autosuspend delay to -1 to avoid suspend till an updated
+  value is set as suggested by Alan Stern;
+- Always check the dev field of the queue structure, as it is incorrect
+  and meaningless to do any operation on devices that do not use block
+  layer runtime PM as reminded by Alan Stern;
+- Update scsi bus level runtime PM callback to take care of scsi devices
+  that use block layer runtime PM and that don't.
+
+v7:
+- Add kernel doc for block layer runtime PM API as suggested by
+  Alan Stern;
+
+- Add back check for q->dev, as that serves as a flag if driver
+  is using block layer runtime PM;
+
+- Do not auto suspend when last request is finished, as that's a hot
+  path and auto suspend is not a trivial function. Instead, mark last
+  busy in pre_suspend so that runtim PM core will retry suspend some
+  time later to solve the 1st problem demostrated in v6, suggested by
+  Alan Stern.
+
+- Move block layer runtime PM strtegy functions to where they are
+  needed instead of in include/linux/blkdev.h as suggested by Alan
+  Stern since clients of block layer do not need to know those
+  functions.
+
+v6:
+Take over from Lin Ming.
+
+- Instead of put the device into autosuspend state in
+  blk_post_runtime_suspend, do it when the last request is finished.
+  This can also solve the problem illustrated below:
+
+      thread A				      thread B
+|suspend timer expired			|
+|  ... ...				|a new request comes in,
+|  ... ...				|blk_pm_add_request
+|  ... ...				|skip request_resume due to
+|  ... ...				|q->status is still RPM_ACTIVE
+|  rpm_suspend				|  ... ...
+|    scsi_runtime_suspend		|  ... ...
+|      blk_pre_runtime_suspend		|  ... ...
+|      return -EBUSY due to nr_pending	|  ... ...
+|  rpm_suspend done			|  ... ...
+|					|    blk_pm_put_request, mark last busy
+
+But no more trigger point, and the device will stay at RPM_ACTIVE state.
+Run pm_runtime_autosuspend after the last request is finished solved
+this problem.
+
+- Requests which have the REQ_PM flag should not involve nr_pending
+  counting, or we may lose the condition to resume the device:
+  Suppose queue is active and nr_pending is 0. Then a REQ_PM request
+  comes and nr_pending will be increased to 1, but since the request has
+  REQ_PM flag, it will not cause resume. Before it is finished, a normal
+  request comes in, and since nr_pending is 1 now, it will not trigger
+  the resume of the device either. Bug.
+
+- Do not quiesce the device in scsi bus level runtime suspend callback.
+  Since the only reason the device is to be runtime suspended is due to
+  no more requests pending for it, quiesce it is pointless.
+
+- Remove scsi_autopm_* from sd_check_events as we are request driven.
+
+- Call blk_pm_runtime_init in scsi_sysfs_initialize_dev, so that we do
+  not need to check queue's device in blk_pm_add/put_request.
+
+- Do not mark last busy and initiate an autosuspend for the device in
+  blk_pm_runtime_init function.
+
+- Do not mark last busy and initiate an autosuspend for the device in
+  block_post_runtime_resume, as when the request that triggered the
+  resume finished, the blk_pm_put_request will mark last busy and
+  initiate an autosuspend.
+
+v5:
+- rename scsi_execute_req to scsi_execute_req_flags
+  and wrap scsi_execute_req around it.
+- add detail function descriptions in patch 2 log
+- define static helper functions to do runtime pm work on block layer
+  and put the definitions inside a #ifdef block
+
+v4:
+- add CONFIG_PM_RUNTIME check
+- update queue runtime pm status after system resume
+- use pm_runtime_autosuspend instead of pm_request_autosuspend in scsi_runtime_idle
+- always count PM request
+
+v3:
+- remove block layer suspend/resume callbacks
+- add block layer runtime pm helper functions
+
+v2:
+- remove queue idle timer, use runtime pm core's auto suspend
+
+Lin Ming (4):
+  block: add a flag to identify PM request
+  block: add runtime pm helpers
+  block: implement runtime pm strategy
+  sd: change to auto suspend mode
+
+ block/blk-core.c           | 183 +++++++++++++++++++++++++++++++++++++++++++++
+ block/elevator.c           |  26 +++++++
+ drivers/scsi/scsi_lib.c    |   9 +--
+ drivers/scsi/scsi_pm.c     |  84 +++++++++++++++++----
+ drivers/scsi/sd.c          |  22 ++----
+ include/linux/blk_types.h  |   2 +
+ include/linux/blkdev.h     |  27 +++++++
+ include/scsi/scsi_device.h |  16 +++-
+ 8 files changed, 331 insertions(+), 38 deletions(-)
+
+-- 
+1.8.1.4
+
