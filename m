@@ -1,44 +1,54 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 10/10] drivers: misc: use module_platform_driver_probe()
-Date: Mon, 18 Mar 2013 11:28:45 +0000
-Message-ID: <201303181128.45215.arnd@arndb.de>
-References: <1363266691-15757-1-git-send-email-fabio.porcedda@gmail.com> <201303181058.51641.arnd@arndb.de> <CAHkwnC-aHwd24S5MyLhnVzTqqQj2L7MMuVX9dirhS-G830jZcw@mail.gmail.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] sata_highbank: make ahci_highbank_pm_ops static
+Date: Tue, 19 Mar 2013 10:14:26 +0900
+Message-ID: <006801ce243f$1960ffd0$4c22ff70$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:56742 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471Ab3CRL24 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Mar 2013 07:28:56 -0400
-In-Reply-To: <CAHkwnC-aHwd24S5MyLhnVzTqqQj2L7MMuVX9dirhS-G830jZcw@mail.gmail.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:64353 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753948Ab3CSBOm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Mar 2013 21:14:42 -0400
+Received: from epcpsbgr5.samsung.com
+ (u145.gpu120.samsung.co.kr [203.254.230.145])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0MJV002C5VG0IS90@mailout1.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 19 Mar 2013 10:14:27 +0900 (KST)
+Received: from DOJG1HAN02 ([12.23.120.99])
+ by mmp1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTPA id <0MJV00E0QVG2PBA0@mmp1.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 19 Mar 2013 10:14:26 +0900 (KST)
+Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabio Porcedda <fabio.porcedda@gmail.com>
-Cc: H Hartley Sweeten <hartleys@visionengravers.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lm-sensors@lm-sensors.org" <lm-sensors@lm-sensors.org>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Hans-Christian Egtvedt <hans-christian.egtvedt@atmel.com>, Grant Likely <grant.likely@secretlab.ca>
+To: 'Jeff Garzik' <jgarzik@pobox.com>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-On Monday 18 March 2013, Fabio Porcedda wrote:
-> 
-> On Mon, Mar 18, 2013 at 11:58 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Monday 18 March 2013, Fabio Porcedda wrote:
-> >> Since by using platform_driver_probe() the  function
-> >> ep93xx_pwm_probe() is freed after initialization,
-> >> is better to use module_platform_drive_probe().
-> >> IMHO i don't see any good reason to use module_platform_driver() for
-> >> this driver.
-> >
-> > As I commented earlier, the platform_driver_probe() and
-> > module_platform_drive_probe() interfaces are rather dangerous in combination
-> > with deferred probing, I would much prefer Harley's patch.
-> 
-> Since those drivers don't use -EPROBE_DEFER i was thinking that they don't use
-> deferred probing.
-> I'm missing something?
+Make ahci_highbank_pm_ops static because ahci_highbank_pm_ops is
+not exported.
 
-clk_get() may return -EPROBE_DEFER after ep93xx is converted to use the
-common clk API. We currently return the value of clk_get from the probe()
-function, which will automatically do the right thing as long as the probe
-function remains reachable.
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/ata/sata_highbank.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-	Arnd
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 5dba77c..b1ab7d8 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -418,7 +418,7 @@ static int ahci_highbank_resume(struct device *dev)
+ }
+ #endif
+ 
+-SIMPLE_DEV_PM_OPS(ahci_highbank_pm_ops,
++static SIMPLE_DEV_PM_OPS(ahci_highbank_pm_ops,
+ 		  ahci_highbank_suspend, ahci_highbank_resume);
+ 
+ static struct platform_driver ahci_highbank_driver = {
+-- 
+1.7.2.5
+
+
