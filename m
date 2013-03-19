@@ -1,16 +1,18 @@
 From: Noone Nowhere <levelwol@gmail.com>
 Subject: Wrong NCQ blacklist at libata for Maxtor DiamondMax 10
-Date: Tue, 19 Mar 2013 16:26:14 +0200
-Message-ID: <CANxHX8-2EVqgX0vviNt5n6P6PCqjQk3GMGDUue6k_ckSYXoA3A@mail.gmail.com>
+Date: Tue, 19 Mar 2013 16:50:48 +0200
+Message-ID: <CANxHX888dHpH9NSrr7Uh7ffQeP4uocWTCGRZwgAbhTgdFX=vbg@mail.gmail.com>
+References: <CANxHX8-2EVqgX0vviNt5n6P6PCqjQk3GMGDUue6k_ckSYXoA3A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oa0-f65.google.com ([209.85.219.65]:51505 "EHLO
-	mail-oa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753780Ab3CSO0O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Mar 2013 10:26:14 -0400
-Received: by mail-oa0-f65.google.com with SMTP id k14so123917oag.0
-        for <linux-ide@vger.kernel.org>; Tue, 19 Mar 2013 07:26:14 -0700 (PDT)
+Received: from mail-oa0-f68.google.com ([209.85.219.68]:34538 "EHLO
+	mail-oa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756830Ab3CSOut (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Mar 2013 10:50:49 -0400
+Received: by mail-oa0-f68.google.com with SMTP id j6so129224oag.7
+        for <linux-ide@vger.kernel.org>; Tue, 19 Mar 2013 07:50:48 -0700 (PDT)
+In-Reply-To: <CANxHX8-2EVqgX0vviNt5n6P6PCqjQk3GMGDUue6k_ckSYXoA3A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
