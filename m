@@ -1,61 +1,36 @@
-From: Fabio Porcedda <fabio.porcedda@gmail.com>
-Subject: Re: [PATCH 10/10] drivers: misc: use module_platform_driver_probe()
-Date: Thu, 21 Mar 2013 14:10:17 +0100
-Message-ID: <CAHkwnC-u=34CnHR5dH3qu6YeYyNcsmPfVORZFwtS4RYSjrVJ2g@mail.gmail.com>
-References: <1363266691-15757-1-git-send-email-fabio.porcedda@gmail.com>
- <201303201020.14654.arnd@arndb.de> <CAHkwnC-8FH0nyJ+eT=+7doP+fSdZjNYUW4zzs_r6e9wt3Yt4Fg@mail.gmail.com>
- <201303201146.07987.arnd@arndb.de>
+From: "Wenzhou Ourvis" <ourvis@ourvis.com>
+Subject: Re: Hello
+Date: Thu, 21 Mar 2013 14:55:48 -0300
+Message-ID: <20130321175551.20F44B6C8D@mail.dominos.com.my>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-input-owner@vger.kernel.org>
-In-Reply-To: <201303201146.07987.arnd@arndb.de>
-Sender: linux-input-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, H Hartley Sweeten <hartleys@visionengravers.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lm-sensors@lm-sensors.org" <lm-sensors@lm-sensors.org>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Grant Likely <grant.likely@secretlab.ca>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.dominos.com.my ([60.52.203.108]:39062 "EHLO
+	mail.dominos.com.my" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753353Ab3CUVig convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Mar 2013 17:38:36 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <ourvis@ourvis.com>
 
-On Wed, Mar 20, 2013 at 12:46 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 20 March 2013, Fabio Porcedda wrote:
->>
->> On Wed, Mar 20, 2013 at 11:20 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Wednesday 20 March 2013, Fabio Porcedda wrote:
->> >> I think we can check inside the  deferred_probe_work_func()
->> >> if the dev->probe function pointer is equal to platform_drv_probe_fail().
->> >
->> > I think it's too late by then, because that would only warn if we try to probe
->> > it again, but when platform_driver_probe() does not succeed immediately, it
->>
->> Maybe you mean "does succeed immediately" ?
->
-> I mean in this code (simplified for the sake of discussion)
->
-> int __init_or_module platform_driver_probe(struct platform_driver *drv,
->                 int (*probe)(struct platform_device *))
-> {
->         int retval, code;
->
->         drv->probe = probe;
->         retval = code = platform_driver_register(drv);
->
->         drv->probe = NULL;
->         if (code == 0 && list_empty(&drv->driver.p->klist_devices.k_list))
->                 retval = -ENODEV;
->         drv->driver.probe = platform_drv_probe_fail;
->
->         if (code != retval)
->                 platform_driver_unregister(drv);
->         return retval;
-> }
->
-> we assume that all devices are bound to drivers during the call to
-> platform_driver_register, and if the device list is empty afterwards,
-> we unregister the driver and will never get to the deferred probing
-> stage.
+Dear E-mail User,
 
-Thanks for the explanation, I understand now that is not that simple.
 
-I was hoping it was easier.
+  This is to immediately inform you that your email address with Micros ID: IDJT-32238-EHI-676GI-8ED has won you 2,485,000.00 GBP and a brand new Range Rover SUV from the Wenzhou Ourvis yearly draw promo.
 
-Regards
---
-Fabio Porcedda
+Use the details below to login and fill in the claim form to immediately begin your claims.
+
+
+
+WEBSITE: www.wenzhourvis.cla.fr
+USERNAME: ISO912PP
+PASSWORD: XNO87PS
+
+
+Regards,
+Dr. Warren Payne,
+Wenzhou Ourvis Company.
+European Zonal Coordinator,
+United Kingdom.
