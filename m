@@ -1,59 +1,41 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND v11 0/4] block layer runtime pm
-Date: Fri, 22 Mar 2013 09:09:58 -0600
-Message-ID: <20130322150958.GK25978@kernel.dk>
-References: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
+From: "WERNER ERICH ZELLER" <e639@humv.es>
+Subject: ACHTUNG FRIEND!
+Date: Fri, 22 Mar 2013 00:57:10 +0100 (CET)
+Message-ID: <55112.82.128.17.98.1363910230.squirrel__36773.6745778986$1363975542$gmane$org@correo.humv.es>
+Reply-To: wernererichzeller@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:43717
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932192Ab3CVPKO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Mar 2013 11:10:14 -0400
-Content-Disposition: inline
-In-Reply-To: <1363338305-4987-1-git-send-email-aaron.lu@intel.com>
+Received: from agero.humv.es ([193.146.74.20]:58141 "EHLO agero.humv.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422633Ab3CVSFL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 22 Mar 2013 14:05:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 
-On Fri, Mar 15 2013, Aaron Lu wrote:
-> In August 2010, Jens and Alan discussed about "Runtime PM and the block
-> layer". http://marc.info/?t=128259108400001&r=1&w=2
-> And then Alan has given a detailed implementation guide:
-> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
-> 
-> To test:
-> # ls -l /sys/block/sda
-> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
-> 
-> # echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
-> # echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
-> Then you'll see sda is suspended after 10secs idle.
-> 
-> [ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
-> [ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
-> 
-> And if you do some IO, it will resume immediately.
-> [ 1791.052438] sd 2:0:0:0: [sda] Starting disk
-> 
-> For test, I often set the autosuspend time to 1 second. If you are using
-> a GUI, the 10 seconds delay may be too long that the disk can not enter
-> runtime suspended state.
-> 
-> Note that sd's runtime suspend callback will dump some kernel messages
-> and the syslog daemon will write kernel message to /var/log/messages,
-> making the disk instantly resume after suspended. So for test, the
-> syslog daemon should better be temporarily stopped.
-> 
-> A git repo for it, on top of v3.9-rc1:
-> https://github.com/aaronlu/linux.git blockpm
 
-I think it's about time we get this in, but the patchset isn't very
-friendly from a scsi vs block perspective. Can you re-shuffle the REQ_PM
-change, just do a separate patch for that. I'll get it queued up for
-3.10 then.
 
--- 
-Jens Axboe
 
+--=20
+Eure Eminenz, das ist das dritte Mal, dass ich schreibe Ihnen bin, ich
+bete nur du es dieses Mal! Ich bin Barrister Werner Erich Zeller des
+Vereinigten K=F6nigreichs und ich schreibe auf Ihre 100% aufrichtiges
+Interesse und Partnerschaft bei der Wiederherstellung der H=F6he von =80=
+ 15
+Mio. (EURO) Privatbank, die fr=FCher zu einem sp=E4ten Kunde von mir, d=
+ie,
+ohne einem bestimmten Nest weitergegeben geh=F6rten zu suchen Angeh=F6r=
+igen
+und Empf=E4nger. Wie f=FCr die Rechtm=E4=DFigkeit und Echtheit, lassen =
+Sie das zu
+mir, ich werde es als Rechtsanwalt rechtlich 100% Griff! Wir stehen bei=
+de
+zu 50% des =80 15 Mio. (EURO) jeweils als Partner profitieren. Schicken=
+ Sie
+mir eine private E-Mail f=FCr die Details: wernererichzeller@yahoo.com =
+und
+Telefon: +447024090820
+
+Bitte zur=FCck zu mir sofort!
+Werner Erich Zeller (Attorney)
