@@ -1,152 +1,61 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [git patches] libata minor updates
-Date: Sat, 23 Mar 2013 00:02:20 -0400
-Message-ID: <20130323040220.GA7454@havoc.gtf.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v12 0/5] block layer runtime pm
+Date: Fri, 22 Mar 2013 22:23:45 -0600
+Message-ID: <20130323042345.GR1628@kernel.dk>
+References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:46242
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750967Ab3CWEYD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Mar 2013 00:24:03 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 
+On Sat, Mar 23 2013, Aaron Lu wrote:
+> In August 2010, Jens and Alan discussed about "Runtime PM and the block
+> layer". http://marc.info/?t=128259108400001&r=1&w=2
+> And then Alan has given a detailed implementation guide:
+> http://marc.info/?l=linux-scsi&m=133727953625963&w=2
+> 
+> To test:
+> # ls -l /sys/block/sda
+> /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/block/sda
+> 
+> # echo 10000 > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/autosuspend_delay_ms
+> # echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata1/host0/target0:0:0/0:0:0:0/power/control
+> Then you'll see sda is suspended after 10secs idle.
+> 
+> [ 1767.680192] sd 2:0:0:0: [sda] Synchronizing SCSI cache
+> [ 1767.680317] sd 2:0:0:0: [sda] Stopping disk
+> 
+> And if you do some IO, it will resume immediately.
+> [ 1791.052438] sd 2:0:0:0: [sda] Starting disk
+> 
+> For test, I often set the autosuspend time to 1 second. If you are using
+> a GUI, the 10 seconds delay may be too long that the disk can not enter
+> runtime suspended state.
+> 
+> Note that sd's runtime suspend callback will dump some kernel messages
+> and the syslog daemon will write kernel message to /var/log/messages,
+> making the disk instantly resume after suspended. So for test, the
+> syslog daemon should better be temporarily stopped.
+> 
+> A git repo for it, on top of block/for-next:
+> https://github.com/aaronlu/linux.git blockpm
+> 
+> v12:
+> - Split patch 1 into 2 patches, one introduces REQ_PM in block layer
+>   and one uses that flag in SCSI layer, suggested by Jens Axboe.
 
-Please pull b186affe0c9d39e4d3152cd34bffea8fe1fa17f4 from
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream-linus
+Thanks Aaron, I've applied 1, and 3-4. I'll leave 2 and 5 for James to
+pickup. James, if you want me to carry them, just let me know.
 
+-- 
+Jens Axboe
 
-to receive the following updates:
-
- drivers/ata/Kconfig           | 13 +++++++------
- drivers/ata/ahci.c            |  2 ++
- drivers/ata/ata_piix.c        |  4 ++++
- drivers/ata/libata-acpi.c     |  2 +-
- drivers/ata/pata_samsung_cf.c | 13 +------------
- drivers/ata/sata_fsl.c        |  3 +--
- 6 files changed, 16 insertions(+), 21 deletions(-)
-
-Aaron Lu (1):
-      [libata] Avoid specialized TLA's in ZPODD's Kconfig
-
-Andrew Brownfield (1):
-      ata_piix: Add MODULE_PARM_DESC to prefer_ms_hyperv
-
-James Ralston (1):
-      ahci: Add Device IDs for Intel Wellsburg PCH
-
-Jingoo Han (1):
-      pata_samsung_cf: use module_platform_driver_probe()
-
-Sander Eikelenboom (1):
-      libata-acpi.c: fix copy and paste mistake in ata_acpi_register_power_resource
-
-Syam Sidhardhan (1):
-      sata_fsl: Remove redundant NULL check before kfree
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 3e751b7..a5a3ebc 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -59,15 +59,16 @@ config ATA_ACPI
- 	  option libata.noacpi=1
- 
- config SATA_ZPODD
--	bool "SATA Zero Power ODD Support"
-+	bool "SATA Zero Power Optical Disc Drive (ZPODD) support"
- 	depends on ATA_ACPI
- 	default n
- 	help
--	  This option adds support for SATA ZPODD. It requires both
--	  ODD and the platform support, and if enabled, will automatically
--	  power on/off the ODD when certain condition is satisfied. This
--	  does not impact user's experience of the ODD, only power is saved
--	  when ODD is not in use(i.e. no disc inside).
-+	  This option adds support for SATA Zero Power Optical Disc
-+	  Drive (ZPODD). It requires both the ODD and the platform
-+	  support, and if enabled, will automatically power on/off the
-+	  ODD when certain condition is satisfied. This does not impact
-+	  end user's experience of the ODD, only power is saved when
-+	  the ODD is not in use (i.e. no disc inside).
- 
- 	  If unsure, say N.
- 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a99112c..6a67b07 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -281,6 +281,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci }, /* Wellsburg RAID */
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index d2ba439..ffdd32d 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1547,6 +1547,10 @@ static bool piix_broken_system_poweroff(struct pci_dev *pdev)
- 
- static int prefer_ms_hyperv = 1;
- module_param(prefer_ms_hyperv, int, 0);
-+MODULE_PARM_DESC(prefer_ms_hyperv,
-+	"Prefer Hyper-V paravirtualization drivers instead of ATA, "
-+	"0 - Use ATA drivers, "
-+	"1 (Default) - Use the paravirtualization drivers.");
- 
- static void piix_ignore_devices_quirk(struct ata_host *host)
- {
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 0ea1018..cb3eab6d 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -1027,7 +1027,7 @@ static void ata_acpi_register_power_resource(struct ata_device *dev)
- 
- 	handle = ata_dev_acpi_handle(dev);
- 	if (handle)
--		acpi_dev_pm_remove_dependent(handle, &sdev->sdev_gendev);
-+		acpi_dev_pm_add_dependent(handle, &sdev->sdev_gendev);
- }
- 
- static void ata_acpi_unregister_power_resource(struct ata_device *dev)
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index 70b0e01..6ef27e9 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -661,18 +661,7 @@ static struct platform_driver pata_s3c_driver = {
- 	},
- };
- 
--static int __init pata_s3c_init(void)
--{
--	return platform_driver_probe(&pata_s3c_driver, pata_s3c_probe);
--}
--
--static void __exit pata_s3c_exit(void)
--{
--	platform_driver_unregister(&pata_s3c_driver);
--}
--
--module_init(pata_s3c_init);
--module_exit(pata_s3c_exit);
-+module_platform_driver_probe(pata_s3c_driver, pata_s3c_probe);
- 
- MODULE_AUTHOR("Abhilash Kesavan, <a.kesavan@samsung.com>");
- MODULE_DESCRIPTION("low-level driver for Samsung PATA controller");
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 124b2c1..608f82f 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1511,8 +1511,7 @@ error_exit_with_cleanup:
- 
- 	if (hcr_base)
- 		iounmap(hcr_base);
--	if (host_priv)
--		kfree(host_priv);
-+	kfree(host_priv);
- 
- 	return retval;
- }
