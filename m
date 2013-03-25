@@ -1,24 +1,26 @@
-From: Youquan Song <youquan.song@linux.intel.com>
-Subject: Re: [PATCH v3] ata: Fix DVD not dectected at some Haswell platforms
-Date: Mon, 25 Mar 2013 12:08:05 -0400
-Message-ID: <20130325160805.GA16882@linux-youquan.bj.intel.com>
-References: <1362584945-10202-1-git-send-email-youquan.song@intel.com> <20130314140123.GA19289@linux-youquan.bj.intel.com>
+From: Ronald <ronald645@gmail.com>
+Subject: RE: ata: HDIO_DRIVE_* ioctl() Linux 3.9 regression
+Date: Mon, 25 Mar 2013 18:26:50 +0100
+Message-ID: <CAF1_xX3Ox6=fKomLpvrDxMZ9edB0=2SrVDDPrU0nivD_Yj6KHw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130314140123.GA19289@linux-youquan.bj.intel.com>
-Sender: stable-owner@vger.kernel.org
-Cc: Jeff Garzik <jgarzik@pobox.com>, htejun@gmail.com, ming.lei@canonical.com, sshtylyov@mvista.com, lpechacek@suse.cz, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, seth.heasley@intel.com, jlee@suse.com, james.d.ralston@intel.com, stable@vger.kernel.org, youquan.song@intel.com
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:36550 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758735Ab3CYR0v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Mar 2013 13:26:51 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: krzysiek@podlesie.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> 
-> Can you look at the patch which required by some Haswell platforms?
-> 
-Hi Jeff,
+In reply to [1]: I have the same issue. Git bisect took 50+ rebuilds xD
 
-What's your opinion about the patch? It block the installation on some
-new platforms.
+Smartd does not work anymore since 84a9a8cd9 ([libata] Set proper SK
+when CK_COND is set.).
 
-Thanks
--Youquan 
+I hope I'm not stepping on anyone's toe's by chosing the same title.
+I'm not subscribed to this list.
+
+Just wanted to add a 'me2'
+
+[1] http://www.spinics.net/lists/linux-ide/msg45268.html
