@@ -1,26 +1,37 @@
-From: Ronald <ronald645@gmail.com>
-Subject: RE: ata: HDIO_DRIVE_* ioctl() Linux 3.9 regression
-Date: Mon, 25 Mar 2013 18:26:50 +0100
-Message-ID: <CAF1_xX3Ox6=fKomLpvrDxMZ9edB0=2SrVDDPrU0nivD_Yj6KHw@mail.gmail.com>
+From: Michele Roca <michele.rocca@cacciatoritrentini.it>
+Subject: MY GOOD FRIEND!
+Date: Wed, 27 Mar 2013 09:10:09 +0100
+Message-ID: <858397a3c3e05f3d5407156d0b746379__17010.7144666419$1364372425$gmane$org@cacciatoritrentini.it>
+Reply-To: <wernererichzeller@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:36550 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758735Ab3CYR0v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Mar 2013 13:26:51 -0400
+Received: from vm0854.cs10.seeweb.it ([95.174.23.70]:55134 "EHLO
+	smtpserver01.ergonet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756934Ab3C0ISs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Mar 2013 04:18:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: krzysiek@podlesie.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-In reply to [1]: I have the same issue. Git bisect took 50+ rebuilds xD
 
-Smartd does not work anymore since 84a9a8cd9 ([libata] Set proper SK
-when CK_COND is set.).
 
-I hope I'm not stepping on anyone's toe's by chosing the same title.
-I'm not subscribed to this list.
 
-Just wanted to add a 'me2'
+I am Barrister Werner Erich Zeller; I need your sincere partnership in
+transferring the sum of 15,000,000.00 EUR The details await you as you=20
+reply!
 
-[1] http://www.spinics.net/lists/linux-ide/msg45268.html
+please! Call +44 702 409 0820 (office)
+
+--=20
+Ich bin Barrister Werner Erich Zeller, ich brauche eure aufrichtige
+Partnerschaft intransferring die Summe von 15.000.000,00 EUR auf Ihr
+Bankkonto in dieser Woche f=C3=BCr den Nutzen der beiden von uns 50% ea=
+ch.It
+ist 100% legal, legitim und sicher! f=C3=BCr Details, schreiben Sie mir=
+ auf
+dieser meiner privaten E-Mail statt: Dies ist dringende und ernste Sie
+m=C3=BCssen bereit sein und bereit, bevor Sie mich kontaktieren.
+
+bitte! Rufen Sie +44 702 409 0820 (B=C3=BCro)
