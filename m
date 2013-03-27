@@ -1,37 +1,63 @@
-From: Michele Roca <michele.rocca@cacciatoritrentini.it>
-Subject: MY GOOD FRIEND!
-Date: Wed, 27 Mar 2013 09:10:09 +0100
-Message-ID: <858397a3c3e05f3d5407156d0b746379__17010.7144666419$1364372425$gmane$org@cacciatoritrentini.it>
-Reply-To: <wernererichzeller@yahoo.com>
+From: Krzysztof Mazur <krzysiek@podlesie.net>
+Subject: Re: ata: HDIO_DRIVE_* ioctl() Linux 3.9 regression
+Date: Wed, 27 Mar 2013 13:51:14 +0100
+Message-ID: <20130327125114.GA22214@shrek.podlesie.net>
+References: <CAF1_xX3Ox6=fKomLpvrDxMZ9edB0=2SrVDDPrU0nivD_Yj6KHw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vm0854.cs10.seeweb.it ([95.174.23.70]:55134 "EHLO
-	smtpserver01.ergonet.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756934Ab3C0ISs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Mar 2013 04:18:48 -0400
+Received: from shrek-wifi.podlesie.net ([93.179.225.50]:51805 "EHLO
+	shrek.podlesie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139Ab3C0MvT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Mar 2013 08:51:19 -0400
+Content-Disposition: inline
+In-Reply-To: <CAF1_xX3Ox6=fKomLpvrDxMZ9edB0=2SrVDDPrU0nivD_Yj6KHw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ronald <ronald645@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, gwendal@google.com, jgarzik@redhat.com
 
+On Mon, Mar 25, 2013 at 06:26:50PM +0100, Ronald wrote:
+> In reply to [1]: I have the same issue. Git bisect took 50+ rebuilds xD
+> 
+> Smartd does not work anymore since 84a9a8cd9 ([libata] Set proper SK
+> when CK_COND is set.).
+> 
+> I hope I'm not stepping on anyone's toe's by chosing the same title.
+> I'm not subscribed to this list.
+> 
+> Just wanted to add a 'me2'
+> 
+> [1] http://www.spinics.net/lists/linux-ide/msg45268.html
 
+It seems that the SAM_STAT_CHECK_CONDITION is not cleared
+causing -EIO, because that patch modified sensebuf and
+the check for clearing SAM_STAT_CHECK_CONDITION is no longer valid.
 
-
-I am Barrister Werner Erich Zeller; I need your sincere partnership in
-transferring the sum of 15,000,000.00 EUR The details await you as you=20
-reply!
-
-please! Call +44 702 409 0820 (office)
-
---=20
-Ich bin Barrister Werner Erich Zeller, ich brauche eure aufrichtige
-Partnerschaft intransferring die Summe von 15.000.000,00 EUR auf Ihr
-Bankkonto in dieser Woche f=C3=BCr den Nutzen der beiden von uns 50% ea=
-ch.It
-ist 100% legal, legitim und sicher! f=C3=BCr Details, schreiben Sie mir=
- auf
-dieser meiner privaten E-Mail statt: Dies ist dringende und ernste Sie
-m=C3=BCssen bereit sein und bereit, bevor Sie mich kontaktieren.
-
-bitte! Rufen Sie +44 702 409 0820 (B=C3=BCro)
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 318b413..ff44787 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -532,8 +532,8 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 			struct scsi_sense_hdr sshdr;
+ 			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
+ 					     &sshdr);
+-			if (sshdr.sense_key == 0 &&
+-			    sshdr.asc == 0 && sshdr.ascq == 0)
++			if (sshdr.sense_key == RECOVERED_ERROR &&
++			    sshdr.asc == 0 && sshdr.ascq == 0x1d)
+ 				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
+ 		}
+ 
+@@ -618,8 +618,8 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 			struct scsi_sense_hdr sshdr;
+ 			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
+ 						&sshdr);
+-			if (sshdr.sense_key == 0 &&
+-				sshdr.asc == 0 && sshdr.ascq == 0)
++			if (sshdr.sense_key == RECOVERED_ERROR &&
++			    sshdr.asc == 0 && sshdr.ascq == 0x1d)
+ 				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
+ 		}
+ 
+Krzysiek
