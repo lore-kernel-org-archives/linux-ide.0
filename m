@@ -1,16 +1,16 @@
 From: Gwendal Grignou <gwendal@google.com>
 Subject: [PATCH v2] [libata] Fix HDIO_DRIVE_CMD ioctl sense data check
-Date: Fri, 29 Mar 2013 10:09:52 -0700
-Message-ID: <1364576992-17598-1-git-send-email-gwendal@google.com>
-References: <CAMHSBOXOrxihwBNuA=uN+SKifzZx8UR40=gNnxbkRpk92FQjKg@mail.gmail.com>
+Date: Fri, 29 Mar 2013 10:12:46 -0700
+Message-ID: <1364577166-17930-1-git-send-email-gwendal@google.com>
+References: <1364576992-17598-1-git-send-email-gwendal@google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ea0-f202.google.com ([209.85.215.202]:34582 "EHLO
-	mail-ea0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754679Ab3C2RKD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Mar 2013 13:10:03 -0400
-Received: by mail-ea0-f202.google.com with SMTP id a15so48126eae.1
-        for <linux-ide@vger.kernel.org>; Fri, 29 Mar 2013 10:10:01 -0700 (PDT)
-In-Reply-To: <CAMHSBOXOrxihwBNuA=uN+SKifzZx8UR40=gNnxbkRpk92FQjKg@mail.gmail.com>
+Received: from mail-we0-f201.google.com ([74.125.82.201]:63673 "EHLO
+	mail-we0-f201.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754807Ab3C2RSx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Mar 2013 13:18:53 -0400
+Received: by mail-we0-f201.google.com with SMTP id d46so48326wer.2
+        for <linux-ide@vger.kernel.org>; Fri, 29 Mar 2013 10:18:51 -0700 (PDT)
+In-Reply-To: <1364576992-17598-1-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: ronald645@gmail.com
@@ -22,8 +22,6 @@ not changed accordingly.
 
 Tested: check that SMART ENABLE sent using HDIO_DRIVE_CMD returns 0
 instead of EIO.
-
-Change-Id: I84dccd3febb0467a83a39e55ecfdaaa9686332cd
 
 Signed-off-by: Gwendal Grignou <gwendal@google.com>
 ---
