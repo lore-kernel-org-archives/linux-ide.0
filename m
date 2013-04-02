@@ -1,29 +1,35 @@
-From: "Huang, Shane" <Shane.Huang@amd.com>
-Subject: RE: [PATCH] libata: fix DMA to stack in reading devslp_timing
- parameters
-Date: Mon, 1 Apr 2013 09:51:45 +0000
-Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E10856B718@SCYBEXDAG04.amd.com>
-References: <1364558095.14860.59.camel@i7.infradead.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 1/1] AHCI: Optimize interrupt processing
+Date: Tue, 2 Apr 2013 14:03:12 +0200
+Message-ID: <20130402120312.GA19112@dhcp-26-207.brq.redhat.com>
+References: <cover.1362568800.git.agordeev@redhat.com>
+ <7aaa7f37e742bf57e3043be865774b8a1f033d86.1362568800.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from co9ehsobe004.messaging.microsoft.com ([207.46.163.27]:50694
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751750Ab3DAJwR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Apr 2013 05:52:17 -0400
-In-Reply-To: <1364558095.14860.59.camel@i7.infradead.org>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:48514 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760746Ab3DBL6j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Apr 2013 07:58:39 -0400
+Content-Disposition: inline
+In-Reply-To: <7aaa7f37e742bf57e3043be865774b8a1f033d86.1362568800.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Jeff Garzik <jgarzik@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-SGkgRGF2aWQsDQoNCj4gRml4IHRoaXMgYnkgdXNpbmcgYXAtPnNlY3Rvcl9idWYgaW5zdGVhZCBv
-ZiBhIHN0YWNrIGJ1ZmZlci4NCj4gDQo+IC0tLQ0KPiBJJ20gc29tZXdoYXQgaWdub3JhbnQsIGJ1
-dCBpdCBsb29rcyBsaWtlIHRoaXMgaXMga2luZCBvZiB0aGluZyBpcyB3aGF0DQo+IGFwLT5zZWN0
-b3JfYnVmIGlzICpmb3IqLCByaWdodD8gQW5kIGluIGF0YV9kZXZfY29uZmlndXJlKCkgbm9ib2R5
-IGVsc2UNCj4gaXMgbGlrZWx5IHRvIGJlIHVzaW5nIGl0Pw0KDQpZb3VyIGZpeCBpcyBmaW5lIHdp
-dGggbWUsIHRoYW5rcy4gSSBkaWRuJ3Qgbm90aWNlIHRoaXMgd2FybmluZyBzaW5jZQ0KQ09ORklH
-X0RNQV9BUElfREVCVUcgd2FzIG5vdCBzZXQgaGVyZS4NCg0KUmVnYXJkcywNClNoYW5lDQoNCg==
+On Wed, Mar 06, 2013 at 12:26:47PM +0100, Alexander Gordeev wrote:
+> Split interrupt service routine into hardware context handler and
+> threaded context handler. That allows to protect ports with individual
+> locks rather than with a single host-wide lock, which results in better
+> parallelism.
 
+Hi Jeff,
+
+Any comment on this change?
+Thanks!
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
