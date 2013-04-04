@@ -1,63 +1,76 @@
 From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH 5/6] ARM: i.MX5: Add PATA and SRTC clocks
-Date: Thu,  4 Apr 2013 11:25:08 +0200
-Message-ID: <1365067509-10186-6-git-send-email-s.hauer@pengutronix.de>
+Subject: [PATCH 4/6] ata: i.MX PATA: add devicetree support
+Date: Thu,  4 Apr 2013 11:25:07 +0200
+Message-ID: <1365067509-10186-5-git-send-email-s.hauer@pengutronix.de>
 References: <1365067509-10186-1-git-send-email-s.hauer@pengutronix.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:38455 "EHLO
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:38459 "EHLO
 	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758284Ab3DDJZn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 05:25:43 -0400
+	with ESMTP id S1758291Ab3DDJZv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 05:25:51 -0400
 In-Reply-To: <1365067509-10186-1-git-send-email-s.hauer@pengutronix.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
 Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Shawn Guo <shawn.guo@linaro.org>, Sascha Hauer <s.hauer@pengutronix.de>
 
-This adds the clock gates and the binding documentation
-for PATA and SRTC.
+Not much to do here, only the compatible entries have to be added.
 
 Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
 ---
- Documentation/devicetree/bindings/clock/imx5-clock.txt | 2 ++
- arch/arm/mach-imx/clk-imx51-imx53.c                    | 4 +++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/ata/imx-pata.txt | 17 +++++++++++++++++
+ drivers/ata/pata_imx.c                             |  9 +++++++++
+ 2 files changed, 26 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/imx-pata.txt
 
-diff --git a/Documentation/devicetree/bindings/clock/imx5-clock.txt b/Documentation/devicetree/bindings/clock/imx5-clock.txt
-index 2a0c904..da5eb30 100644
---- a/Documentation/devicetree/bindings/clock/imx5-clock.txt
-+++ b/Documentation/devicetree/bindings/clock/imx5-clock.txt
-@@ -172,6 +172,8 @@ clocks and IDs.
- 	can1_serial_gate	157
- 	can1_ipg_gate		158
- 	owire_gate		159
-+	srtc_gate		160
-+	pata_gate		161
- 
- Examples (for mx53):
- 
-diff --git a/arch/arm/mach-imx/clk-imx51-imx53.c b/arch/arm/mach-imx/clk-imx51-imx53.c
-index 0f39f8c..026a819 100644
---- a/arch/arm/mach-imx/clk-imx51-imx53.c
-+++ b/arch/arm/mach-imx/clk-imx51-imx53.c
-@@ -83,7 +83,7 @@ enum imx5_clks {
- 	ssi2_root_gate, ssi3_root_gate, ssi_ext1_gate, ssi_ext2_gate,
- 	epit1_ipg_gate, epit1_hf_gate, epit2_ipg_gate, epit2_hf_gate,
- 	can_sel, can1_serial_gate, can1_ipg_gate,
--	owire_gate,
-+	owire_gate, srtc_gate, pata_gate,
- 	clk_max
+diff --git a/Documentation/devicetree/bindings/ata/imx-pata.txt b/Documentation/devicetree/bindings/ata/imx-pata.txt
+new file mode 100644
+index 0000000..e38d734
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/imx-pata.txt
+@@ -0,0 +1,17 @@
++* Freescale i.MX PATA Controller
++
++Required properties:
++- compatible: "fsl,imx27-pata"
++- reg: Address range of the PATA Controller
++- interrupts: The interrupt of the PATA Controller
++- clocks: the clocks for the PATA Controller
++
++Example:
++
++	pata: pata@83fe0000 {
++		compatible = "fsl,imx51-pata", "fsl,imx27-pata";
++		reg = <0x83fe0000 0x4000>;
++		interrupts = <70>;
++		clocks = <&clks 161>;
++		status = "disabled";
++	};
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index adbb01d..aa3d166 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -230,11 +230,20 @@ static const struct dev_pm_ops pata_imx_pm_ops = {
  };
+ #endif
  
-@@ -235,6 +235,8 @@ static void __init mx5_clocks_common_init(unsigned long rate_ckil,
- 	clk[epit2_ipg_gate] = imx_clk_gate2("epit2_ipg_gate", "ipg", MXC_CCM_CCGR2, 6);
- 	clk[epit2_hf_gate] = imx_clk_gate2("epit2_hf_gate", "per_root", MXC_CCM_CCGR2, 8);
- 	clk[owire_gate] = imx_clk_gate2("owire_gate", "per_root", MXC_CCM_CCGR2, 22);
-+	clk[srtc_gate] = imx_clk_gate2("srtc_gate", "per_root", MXC_CCM_CCGR4, 28);
-+	clk[pata_gate] = imx_clk_gate2("pata_gate", "ipg", MXC_CCM_CCGR4, 0);
- 
- 	for (i = 0; i < ARRAY_SIZE(clk); i++)
- 		if (IS_ERR(clk[i]))
++static const struct of_device_id imx_pata_dt_ids[] = {
++	{
++		.compatible = "fsl,imx27-pata",
++	}, {
++		/* sentinel */
++	}
++};
++
+ static struct platform_driver pata_imx_driver = {
+ 	.probe		= pata_imx_probe,
+ 	.remove		= pata_imx_remove,
+ 	.driver = {
+ 		.name		= DRV_NAME,
++		.of_match_table	= imx_pata_dt_ids,
+ 		.owner		= THIS_MODULE,
+ #ifdef CONFIG_PM
+ 		.pm		= &pata_imx_pm_ops,
 -- 
 1.8.2.rc2
 
