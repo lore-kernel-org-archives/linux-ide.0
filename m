@@ -1,86 +1,52 @@
-From: Sascha Hauer <s.hauer@pengutronix.de>
-Subject: [PATCH 2/6] ata: i.MX PATA: cleanup error path
-Date: Thu,  4 Apr 2013 11:25:05 +0200
-Message-ID: <1365067509-10186-3-git-send-email-s.hauer@pengutronix.de>
-References: <1365067509-10186-1-git-send-email-s.hauer@pengutronix.de>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: [PATCH 1/1] libata: sata_rcar: Convert to devm_ioremap_resource()
+Date: Thu,  4 Apr 2013 14:56:36 +0530
+Message-ID: <1365067596-8868-1-git-send-email-sachin.kamat@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:38463 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758292Ab3DDJZ7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 05:25:59 -0400
-In-Reply-To: <1365067509-10186-1-git-send-email-s.hauer@pengutronix.de>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:36693 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758923Ab3DDJiW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 05:38:22 -0400
+Received: by mail-pd0-f178.google.com with SMTP id w11so1319474pde.23
+        for <linux-ide@vger.kernel.org>; Thu, 04 Apr 2013 02:38:22 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Shawn Guo <shawn.guo@linaro.org>, Sascha Hauer <s.hauer@pengutronix.de>
+To: linux-ide@vger.kernel.org
+Cc: jgarzik@pobox.com, vladimir.barinov@cogentembedded.com, sachin.kamat@linaro.org
 
-- rename free_priv label to 'err' since priv is allocated with devm_*
-  and not freed here.
-- add missing 'goto err' in case ata_host_activate fails
-- add 'ret' variable to return correct error value instead of hardcoded
-  -ENOMEM in error case.
+Use the newly introduced devm_ioremap_resource() instead of
+devm_request_and_ioremap() which provides more consistent error handling.
 
-Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 ---
- drivers/ata/pata_imx.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ drivers/ata/sata_rcar.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-index af893dd..f243496 100644
---- a/drivers/ata/pata_imx.c
-+++ b/drivers/ata/pata_imx.c
-@@ -98,6 +98,7 @@ static int pata_imx_probe(struct platform_device *pdev)
- 	struct pata_imx_priv *priv;
- 	int irq = 0;
- 	struct resource *io_res;
-+	int ret;
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index caf33f6..4799868 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -17,6 +17,7 @@
+ #include <linux/libata.h>
+ #include <linux/platform_device.h>
+ #include <linux/clk.h>
++#include <linux/err.h>
  
- 	io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	if (io_res == NULL)
-@@ -121,8 +122,10 @@ static int pata_imx_probe(struct platform_device *pdev)
- 	clk_prepare_enable(priv->clk);
+ #define DRV_NAME "sata_rcar"
  
- 	host = ata_host_alloc(&pdev->dev, 1);
--	if (!host)
--		goto free_priv;
-+	if (!host) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
+@@ -799,9 +800,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
  
  	host->private_data = priv;
- 	ap = host->ports[0];
-@@ -135,7 +138,8 @@ static int pata_imx_probe(struct platform_device *pdev)
- 		resource_size(io_res));
- 	if (!priv->host_regs) {
- 		dev_err(&pdev->dev, "failed to map IO/CTL base\n");
--		goto free_priv;
-+		ret = -EBUSY;
-+		goto err;
+ 
+-	priv->base = devm_request_and_ioremap(&pdev->dev, mem);
+-	if (!priv->base) {
+-		ret = -EADDRNOTAVAIL;
++	priv->base = devm_ioremap_resource(&pdev->dev, mem);
++	if (IS_ERR(priv->base)) {
++		ret = PTR_ERR(priv->base);
+ 		goto cleanup;
  	}
  
- 	ap->ioaddr.cmd_addr = priv->host_regs + PATA_IMX_DRIVE_DATA;
-@@ -158,13 +162,17 @@ static int pata_imx_probe(struct platform_device *pdev)
- 			priv->host_regs + PATA_IMX_ATA_INT_EN);
- 
- 	/* activate */
--	return ata_host_activate(host, irq, ata_sff_interrupt, 0,
-+	ret = ata_host_activate(host, irq, ata_sff_interrupt, 0,
- 				&pata_imx_sht);
- 
--free_priv:
-+	if (ret)
-+		goto err;
-+
-+	return 0;
-+err:
- 	clk_disable_unprepare(priv->clk);
- 
--	return -ENOMEM;
-+	return ret;
- }
- 
- static int pata_imx_remove(struct platform_device *pdev)
 -- 
-1.8.2.rc2
+1.7.9.5
 
