@@ -1,28 +1,34 @@
-From: Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH 5/6] ARM: i.MX5: Add PATA and SRTC clocks
-Date: Thu, 4 Apr 2013 21:13:08 +0800
-Message-ID: <20130404131306.GF21790@S2101-09.ap.freescale.net>
-References: <1365067509-10186-1-git-send-email-s.hauer@pengutronix.de>
- <1365067509-10186-6-git-send-email-s.hauer@pengutronix.de>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/1] libata: sata_rcar: Convert to devm_ioremap_resource()
+Date: Thu, 04 Apr 2013 18:43:45 +0400
+Message-ID: <515D91A1.6040808@cogentembedded.com>
+References: <1365067596-8868-1-git-send-email-sachin.kamat@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:20719 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758604Ab3DDNMj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 09:12:39 -0400
-Content-Disposition: inline
-In-Reply-To: <1365067509-10186-6-git-send-email-s.hauer@pengutronix.de>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:49113 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761888Ab3DDOoq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Apr 2013 10:44:46 -0400
+Received: by mail-lb0-f169.google.com with SMTP id p11so2800926lbi.14
+        for <linux-ide@vger.kernel.org>; Thu, 04 Apr 2013 07:44:44 -0700 (PDT)
+In-Reply-To: <1365067596-8868-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sascha Hauer <s.hauer@pengutronix.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: linux-ide@vger.kernel.org, jgarzik@pobox.com, vladimir.barinov@cogentembedded.com
 
-On Thu, Apr 04, 2013 at 11:25:08AM +0200, Sascha Hauer wrote:
-> This adds the clock gates and the binding documentation
-> for PATA and SRTC.
-> 
-> Signed-off-by: Sascha Hauer <s.hauer@pengutronix.de>
+Hello.
 
-Patch #5 and #6 applied, thanks.
+On 04-04-2013 13:26, Sachin Kamat wrote:
+
+> Use the newly introduced devm_ioremap_resource() instead of
+> devm_request_and_ioremap() which provides more consistent error handling.
+
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+
+Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+
+MBR, Sergei
 
