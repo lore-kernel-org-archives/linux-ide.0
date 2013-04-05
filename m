@@ -1,67 +1,42 @@
-From: Peter Maloney <peter.maloney@brockmann-consult.de>
-Subject: Re: RAID barely usable on my home machine
-Date: Fri, 05 Apr 2013 10:58:46 +0200
-Message-ID: <515E9246.3080200@brockmann-consult.de>
-References: <CAO=zWDLfnBJBFgm4H67XEqsKPP=+Ayk3Jd4OUdEfmLXsvNGdog@mail.gmail.com> <CAAMCDeeY1S+TMyiFpVjEFX3K66JaxcwBFV+zDRD6eyRfM2Qxsw@mail.gmail.com> <CAO=zWD+5GHjJCD0Z64ZQFR=98ysRyd0o2U=t4ER8mJaSpwQDuQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Baruch Even <baruch@ev-en.org>
+Subject: [PATCH 1/1] [libata] SCSI: really use SATL version in VPD
+Date: Fri,  5 Apr 2013 14:48:13 +0300
+Message-ID: <1365162493-9415-1-git-send-email-baruch@ev-en.org>
+References: <satl-driver-version>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60701 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab3DEI67 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Apr 2013 04:58:59 -0400
-In-Reply-To: <CAO=zWD+5GHjJCD0Z64ZQFR=98ysRyd0o2U=t4ER8mJaSpwQDuQ@mail.gmail.com>
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:43574 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161123Ab3DELsx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Apr 2013 07:48:53 -0400
+Received: by mail-wi0-f178.google.com with SMTP id ez12so487288wid.11
+        for <linux-ide@vger.kernel.org>; Fri, 05 Apr 2013 04:48:52 -0700 (PDT)
+In-Reply-To: <satl-driver-version>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Maik Zumstrull <maik@zumstrull.net>
-Cc: Roger Heflin <rogerheflin@gmail.com>, Linux RAID <linux-raid@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, 700975 <700975@bugs.debian.org>
+To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+Cc: Baruch Even <baruch@ev-en.org>
 
-On 2013-04-05 10:06, Maik Zumstrull wrote:
-> On Fri, Apr 5, 2013 at 2:16 AM, Roger Heflin <rogerheflin@gmail.com> wrote:
->
->> lspci look like this for the controller:
->> SATA controller: Marvell Technology Group Ltd. Device 9230 (rev 10)
->>
->> 4pt sata3.0 6gbit or is yours a different one?
-> Mine looks slightly different (included somewhere in my mail), but
-> should be a device in the same family.
->
->> I have the issue also, I have eliminated all smart hits against the
->> disks and no incidents since then.
-> Not a great workaround as such, first of all, running SMART against
-> your storage is kind of recommended, and secondly, as I said, udisks2
-> will also SMART your disks occasionally, which you have to uninstall
-> parts of GNOME to get rid of.
-This reminds me of an old thread in freebsd-scsi, where a guy with some
-SAS disks and a SAS2008 controller would have his disks 'lost' if he
-used smartctl on routine, and could reproduce it reliably by spamming a
-disk with smartctl -a (but smartctl -i, and something else would not
-reproduce it). And he found that to solve it, he can change the "disk
-tags" to much lower. I think "disk tags" might be equivalent to the
-nr_requests in Linux.
+Commit message of c78968bb by Jeff Garzik says we need to provide the SATL
+driver version and not the disk firmware version but the code overwrites the
+driver version with the disk version.
 
-Here is the thread:
-http://osdir.com/ml/freebsd-scsi/2011-11/msg00006.html
->> I have seagate 1.5tb drives on mine that had had the issues.
-> Suggests it's not something about my drives, as I have WD Red disks.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Baruch Even <baruch@ev-en.org>
+---
+ drivers/ata/libata-scsi.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 318b413..e61a054 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2126,7 +2126,6 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
+ 	memcpy(&rbuf[8], "linux   ", 8);
+ 	memcpy(&rbuf[16], "libata          ", 16);
+ 	memcpy(&rbuf[32], DRV_VERSION, 4);
+-	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
+ 
+ 	/* we don't store the ATA device signature, so we fake it */
+ 
 -- 
-
---------------------------------------------
-Peter Maloney
-Brockmann Consult
-Max-Planck-Str. 2
-21502 Geesthacht
-Germany
-Tel: +49 4152 889 300
-Fax: +49 4152 889 333
-E-mail: peter.maloney@brockmann-consult.de
-Internet: http://www.brockmann-consult.de
---------------------------------------------
+1.7.10.4
 
