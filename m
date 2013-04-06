@@ -1,43 +1,39 @@
-From: Baruch Even <baruch@ev-en.org>
-Subject: [PATCH v3 1/1] [libata] SCSI: really use SATL version in VPD
-Date: Fri,  5 Apr 2013 19:11:45 +0300
-Message-ID: <1365178306-17363-1-git-send-email-baruch@ev-en.org>
-References: <satl-driver-version-v3>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:44954 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161930Ab3DEQMH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Apr 2013 12:12:07 -0400
-Received: by mail-wg0-f44.google.com with SMTP id z12so3992889wgg.35
-        for <linux-ide@vger.kernel.org>; Fri, 05 Apr 2013 09:12:05 -0700 (PDT)
-In-Reply-To: <satl-driver-version-v3>
-Sender: linux-ide-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/3] PCI, scsi, ahci: Unify usages of 0x1b4b vendor ID
+ to use PCI_VENDOR_ID_MARVELL_EXT
+Date: Sat, 06 Apr 2013 09:44:44 +0100
+Message-ID: <1365237884.2787.2.camel@dabdike>
+References: <20130321043449.7229.81056.stgit@amt.stowe>
+	 <20130321043509.7229.93525.stgit@amt.stowe>
+	 <CAErSpo77UWR3u+DfdaOW0hG6FXQv+ADsb24bjKQ3fJOR5SFBZg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAErSpo77UWR3u+DfdaOW0hG6FXQv+ADsb24bjKQ3fJOR5SFBZg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Myron Stowe <myron.stowe@redhat.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
-Cc: Baruch Even <baruch@ev-en.org>
 
-As per c78968bb by Jeff Garzik ([libata] SCSI: simulator version, not device
-version, belongs in VPD) We need to provide the SATL driver version and not the
-disk firmware version but the code overwrites the driver version with the disk
-version.
+On Thu, 2013-04-04 at 12:23 -0600, Bjorn Helgaas wrote:
+> On Wed, Mar 20, 2013 at 10:35 PM, Myron Stowe <myron.stowe@redhat.com> wrote:
+> > With the 0x1b4b vendor ID #define in place, convert hard-coded ID values.
+> > Also, unify the previous SCSI specific use of this vendor ID to the new
+> > macro.
+> >
+> > Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
+> > ---
+> >
+> >  drivers/ata/ahci.c           |   10 +++++-----
+> >  drivers/scsi/mvsas/mv_init.c |    6 +++---
+> >  drivers/scsi/mvumi.c         |    4 ++--
+> >  drivers/scsi/mvumi.h         |    1 -
+> >  4 files changed, 10 insertions(+), 11 deletions(-)
+> 
+> Jeff & James, if you don't object to these, I can push them through my
+> PCI tree along with the corresponding pci_ids.h addition.
 
-Signed-off-by: Baruch Even <baruch@ev-en.org>
----
- drivers/ata/libata-scsi.c |    1 -
- 1 file changed, 1 deletion(-)
+Fine by me.  You can add my acked by if you need it.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 318b413..e61a054 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2126,7 +2126,6 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- 	memcpy(&rbuf[8], "linux   ", 8);
- 	memcpy(&rbuf[16], "libata          ", 16);
- 	memcpy(&rbuf[32], DRV_VERSION, 4);
--	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
- 
- 	/* we don't store the ATA device signature, so we fake it */
- 
--- 
-1.7.10.4
-
+James
