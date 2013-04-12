@@ -1,55 +1,101 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] drivers: ata: rcar: use devm_ioremap_resource()
-Date: Fri, 12 Apr 2013 06:23:57 -0400
-Message-ID: <5167E0BD.5080808@pobox.com>
-References: <1365749477-22770-1-git-send-email-silviupopescu1990@gmail.com>
+From: Marc C <marc.ceeeee@gmail.com>
+Subject: [RFC PATCH] AHCI: Workaround for ATAPI on buggy AHCI controller
+Date: Fri, 12 Apr 2013 12:34:24 -0700
+Message-ID: <CAO1A-8A0c=5GnH4wLYBz+N1tHLUO3CeuOSq_7S+ZxscNqt5Hnw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:46252 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819Ab3DLKX7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Apr 2013 06:23:59 -0400
-In-Reply-To: <1365749477-22770-1-git-send-email-silviupopescu1990@gmail.com>
+Received: from mail-vc0-f177.google.com ([209.85.220.177]:54683 "EHLO
+	mail-vc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680Ab3DLTeZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Apr 2013 15:34:25 -0400
+Received: by mail-vc0-f177.google.com with SMTP id hr11so2474856vcb.22
+        for <linux-ide@vger.kernel.org>; Fri, 12 Apr 2013 12:34:24 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jeff@garzik.org
+Cc: linux-ide@vger.kernel.org
 
-On 04/12/2013 02:51 AM, Silviu-Mihai Popescu wrote:
-> Convert  use of devm_request_and_ioremap() to the newly introduced
-> devm_ioremap_resource() which provides more consistent error handling.
-> This was found with coccinelle.
->
-> Signed-off-by: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
-> ---
->   drivers/ata/sata_rcar.c |    6 +++---
->   1 file changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index caf33f6..8c51a3a 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -799,9 +799,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
->
->   	host->private_data = priv;
->
-> -	priv->base = devm_request_and_ioremap(&pdev->dev, mem);
-> -	if (!priv->base) {
-> -		ret = -EADDRNOTAVAIL;
-> +	priv->base = devm_ioremap_resource(&pdev->dev, mem);
-> +	if (IS_ERR(priv->base)) {
-> +		ret = PTR_ERR(priv->base);
->   		goto cleanup;
->   	}
->
->
+Hello Jeff,
 
-See 2de1d5e159ccf317a9285a0dfaa6e4262500d7dd in libata-dev.git#upstream.
+I'm working with a proprietary but AHCI-compatible SATA controller that uses
+the libata driver. Early versions of this controller have issues with processing
+non-data ATAPI commands. A workaround was identified which requires some
+register pokes in the command completion path of the driver. I don't expect to
+push this patch upstream (yet). However, I would like to get some feedback
+regarding the workaround, and check if the placement of the code is "acceptable"
+or if there would be a better place to put it.
 
-	Jeff
+The workaround itself is rather simple: toggle the START bit immediately after a
+non-data ATAPI command completes. The ST bit toggle would be performed within
+atomic context in the AHCI port interrupt ISR.
+
+Signed-off-by: Marc C <marc.ceeeee@gmail.com>
+---
+ linux/drivers/ata/libahci.c     |   26 ++++++++++++++++++++++++++
+ linux/drivers/ata/libata-core.c |    6 ++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/linux/drivers/ata/libahci.c b/linux/drivers/ata/libahci.c
+index f9eaa82..20b3a9a 100644
+--- a/linux/drivers/ata/libahci.c
++++ b/linux/drivers/ata/libahci.c
+@@ -2215,6 +2215,32 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+ }
+ EXPORT_SYMBOL_GPL(ahci_set_em_messages);
+
++void ahci_apply_atapi_workaround(struct ata_queued_cmd *qc)
++{
++    if (!(qc->flags & ATA_QCFLAG_DMAMAP)) {
++        /*
++         * Non-data ATAPI commands need to kick the DMA engine
++         */
++        struct ata_port *ap = qc->ap;
++        void __iomem *port_mmio = ahci_port_base(ap);
++        u32 tmp = readl(port_mmio + PORT_CMD);
++
++        /* check if the HBA is idle */
++        if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) != 0) {
++            /* setting HBA to idle */
++            tmp &= ~PORT_CMD_START;
++            writel(tmp, port_mmio + PORT_CMD);
++
++            /* wait for engine to stop */
++            do {
++                tmp = readl(port_mmio + PORT_CMD);
++            } while (tmp & PORT_CMD_LIST_ON);
++        }
++        ahci_start_engine(ap);
++    }
++}
++EXPORT_SYMBOL_GPL(ahci_apply_atapi_workaround);
++
+ MODULE_AUTHOR("Jeff Garzik");
+ MODULE_DESCRIPTION("Common AHCI SATA low-level routines");
+ MODULE_LICENSE("GPL");
+diff --git a/linux/drivers/ata/libata-core.c b/linux/drivers/ata/libata-core.c
+index 4e73e1b..383de21 100644
+--- a/linux/drivers/ata/libata-core.c
++++ b/linux/drivers/ata/libata-core.c
+@@ -4827,6 +4827,12 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ {
+     struct ata_port *ap = qc->ap;
+
++    if (ata_is_atapi(qc->tf.protocol)) {
++        void ahci_apply_atapi_workaround(struct ata_queued_cmd *qc);
++        ahci_apply_atapi_workaround(qc);
++    }
++
+     /* XXX: New EH and old EH use different mechanisms to
+      * synchronize EH with regular execution path.
+      *
+--
+1.7.9.5
 
 
 
 
+--
+Regards,
+Marc
+marc.ceeeee@gmail.com
