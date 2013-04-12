@@ -1,36 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v3 1/1] [libata] SCSI: really use SATL version in VPD
-Date: Thu, 11 Apr 2013 19:45:16 -0400
-Message-ID: <51674B0C.1020206@pobox.com>
-References: <satl-driver-version-v3> <1365178306-17363-1-git-send-email-baruch@ev-en.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
+Subject: [PATCH] drivers: ata: rcar: use devm_ioremap_resource()
+Date: Fri, 12 Apr 2013 09:51:17 +0300
+Message-ID: <1365749477-22770-1-git-send-email-silviupopescu1990@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:48648 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750731Ab3DKXpX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Apr 2013 19:45:23 -0400
-Received: by mail-qc0-f174.google.com with SMTP id z24so341843qcq.19
-        for <linux-ide@vger.kernel.org>; Thu, 11 Apr 2013 16:45:21 -0700 (PDT)
-In-Reply-To: <1365178306-17363-1-git-send-email-baruch@ev-en.org>
+Received: from mail-ea0-f171.google.com ([209.85.215.171]:49938 "EHLO
+	mail-ea0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909Ab3DLGvW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Apr 2013 02:51:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Baruch Even <baruch@ev-en.org>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
 
-On 04/05/2013 12:11 PM, Baruch Even wrote:
-> As per c78968bb by Jeff Garzik ([libata] SCSI: simulator version, not device
-> version, belongs in VPD) We need to provide the SATL driver version and not the
-> disk firmware version but the code overwrites the driver version with the disk
-> version.
->
-> Signed-off-by: Baruch Even <baruch@ev-en.org>
-> ---
->   drivers/ata/libata-scsi.c |    1 -
->   1 file changed, 1 deletion(-)
+Convert  use of devm_request_and_ioremap() to the newly introduced
+devm_ioremap_resource() which provides more consistent error handling.
+This was found with coccinelle.
 
-applied
+Signed-off-by: Silviu-Mihai Popescu <silviupopescu1990@gmail.com>
+---
+ drivers/ata/sata_rcar.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index caf33f6..8c51a3a 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -799,9 +799,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 
+ 	host->private_data = priv;
+ 
+-	priv->base = devm_request_and_ioremap(&pdev->dev, mem);
+-	if (!priv->base) {
+-		ret = -EADDRNOTAVAIL;
++	priv->base = devm_ioremap_resource(&pdev->dev, mem);
++	if (IS_ERR(priv->base)) {
++		ret = PTR_ERR(priv->base);
+ 		goto cleanup;
+ 	}
+ 
+-- 
+1.7.9.5
 
