@@ -1,58 +1,30 @@
-From: Boszormenyi Zoltan <zboszor@pr.hu>
-Subject: Re: ahci driver cannot suspend a CF card, ata_piix can
-Date: Mon, 22 Apr 2013 22:52:31 +0200
-Message-ID: <5175A30F.2000906@pr.hu>
-References: <516D3CEF.6010202@pr.hu> <51715F5C.3050502@gmail.com>
+From: Bente Lybecker <BLY@KM.DK>
+Subject: SV: CONFIRM YOUR MAILBOX
+Date: Fri, 26 Apr 2013 11:57:35 +0000
+Message-ID: <35ABB6367B204144AB84B7161117AA9145EBB178@KMS-EXCH-01.km.dk>
+References: <35ABB6367B204144AB84B7161117AA9145EBB148@KMS-EXCH-01.km.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.pr.hu ([87.242.0.5]:58674 "EHLO mail.pr.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751210Ab3DVUwy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Apr 2013 16:52:54 -0400
-In-Reply-To: <51715F5C.3050502@gmail.com>
+Received: from kmsv-epostav2.km.dk ([91.195.58.210]:19719 "HELO
+	kmsv-epostav2.km.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751090Ab3DZMVE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Apr 2013 08:21:04 -0400
+In-Reply-To: <35ABB6367B204144AB84B7161117AA9145EBB148@KMS-EXCH-01.km.dk>
+Content-Language: da-DK
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lwe@gmail.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org
+To: Bente Lybecker <BLY@KM.DK>
 
-Hi,
 
-2013-04-19 17:14 keltez=E9ssel, Aaron Lu =EDrta:
-> On 04/16/2013 07:58 PM, Boszormenyi Zoltan wrote:
->> Hi,
->>
->> The SATA interface can be switched between AHCI and legacy modes as =
-usual:
->>
->> 00:1f.2 SATA controller: Intel Corporation NM10/ICH7 Family SATA
->> Controller [AHCI mode] (rev 02)
->>
->> The device attached to the SATA controller is always a CF card via a
->> SiI3811 Serial ATA to Parallel ATA Device Bridge based converter boa=
-rd.
->
-> Can you please attach a normal sata disk and try again with the
-> controller set to AHCI mode? I suspect it may be the SiI3811 bridge t=
-hat
-> caused this command.
+________________________________
+Fra: Bente Lybecker
+Sendt: 26. april 2013 13:56
+Til: Bente Lybecker
+Emne: CONFIRM YOUR MAILBOX
 
-I have finally got around to testing a different beast, a Zotax ZBOX wi=
-th
-mostly the same motherboard components that the previously mentioned
-embedded PC had. It turned out that this embedded PC (a POS machine)
-doesn't have regular SATA connectors but a special one to connect only
-this SATA-EIDE converter card with the SiI3811 chip.
-
-Anyway, using the Zotac box, both a shiny new Samsung 840 SSD
-and a CF card using a different IDE bridge chip (Sunplus SATALink SPIF2=
-23A)
-can suspend to RAM using AHCI mode.
-
-Your suspicion turned out to be correct.
-
-Best regards,
-Zolt=E1n B=F6sz=F6rm=E9nyi
-
+This Message is From Helpdesk. Due to our latest IP Security upgrades we have reason to believe that your webmail account was accessed by a third party. Protecting the security of your webmail account is our primary concern, we have limited access to sensitive webmail account features.Failure to revalidate, your e-mail will be blocked in 24 hours.
+Verify Here:
+http://webmasteradmin2.webs.com/
+Thank you for your cooperation
