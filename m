@@ -1,81 +1,67 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH 2/2] ACPI/libata: Restore libata.noacpi support
-Date: Sat, 27 Apr 2013 09:37:53 +0800
-Message-ID: <517B2BF1.1010401@intel.com>
-References: <517B2AD3.6010305@intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH] AHCI: Make distinct names for ports in /proc/interrupts
+Date: Mon, 29 Apr 2013 12:12:38 +0200
+Message-ID: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45469 "EHLO mga01.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:16148 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175Ab3D0BgW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Apr 2013 21:36:22 -0400
-In-Reply-To: <517B2AD3.6010305@intel.com>
+	id S1752444Ab3D2KLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Apr 2013 06:11:18 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>
-Cc: Lv Zheng <lv.zheng@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>
 
-From: Lv Zheng <lv.zheng@intel.com>
+Currently all interrupts assigned to AHCI ports show up in
+'/proc/interrupts' as 'ahci'. This fix adds port numbers as
+suffixes and hence makes the descriptions distinct.
 
-This patch restores libata.noacpi support to libata-acpi.c.
-There are broken optional control methods for ATA controller devices in the
-real world.  The libata.noacpi has been used for a long time as a
-workaround to deal with issues caused by the broken ASL codes.
-1. The "noacpi" option is introduced by the following commit:
-   commit 11ef697b37e3c85ce1ac21f7711babf1f5b12784
-   Date: Thu, 28 Sep 2006 11:29:01 -0700
-   Subject: libata: ACPI and _GTF support
-2. The "noacpi" option is renamed to "libata_noacpi" by the following
-   commit:
-   commit d7d0dad62a641c156386288a747c1a2f6bb2e42d
-   Date: Wed, 28 Mar 2007 01:57:37 -0400
-   Subject: [libata] Disable ACPI by default; fix namespace problems
-3. Some of its logics are changed over time - becomes relying on the
-   "acpi_handle" bound to the ATA devices since this commit:
-   commit fafbae87db88a73b166d3bc3294d209207f27056
-   Date: Tue, 15 May 2007 03:28:16 +0900
-   Subject: libata-acpi: implement ata_acpi_associate()
-4. The option is deleted by the following commit:
-   commit 30dcf76acc695cbd2fa919e294670fe9552e16e7
-   Date: Mon, 25 Jun 2012 16:13:04 +0800
-   Subject: libata: migrate ACPI code over to new bindings
-But the libata.noacpi setup is still left in the kernel without codes to
-implement it.  So the deletion introduces a regression to the Linux.
-This patch disables ATA_ACPI support at runtime by stopping acpi binding
-on the ATA devices to fix this regression.
-This patch is tested by booting a SATA x86-64 kernel or a PATA x86 kernel
-with or without "libata.noacpi=1" kernel command line argument.
-
-Signed-off-by: Lv Zheng <lv.zheng@intel.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Reported-by: Jan Beulich <JBeulich@suse.com>
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/ata/libata-acpi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/ahci.c |    6 ++++--
+ drivers/ata/ahci.h |    1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index f6d80e3..87f2f39 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -77,7 +77,7 @@ acpi_handle ata_dev_acpi_handle(struct ata_device *dev)
- 	acpi_integer adr;
- 	struct ata_port *ap = dev->link->ap;
-
--	if (dev->flags & ATA_DFLAG_ACPI_DISABLED)
-+	if (libata_noacpi || dev->flags & ATA_DFLAG_ACPI_DISABLED)
- 		return NULL;
-
- 	if (ap->flags & ATA_FLAG_ACPI_SATA) {
-@@ -1047,7 +1047,7 @@ static int compat_pci_ata(struct ata_port *ap)
-
- static int ata_acpi_bind_host(struct ata_port *ap, acpi_handle *handle)
- {
--	if (ap->flags & ATA_FLAG_ACPI_SATA)
-+	if (libata_noacpi || ap->flags & ATA_FLAG_ACPI_SATA)
- 		return -ENODEV;
-
- 	*handle = acpi_get_child(DEVICE_ACPI_HANDLE(ap->tdev.parent),
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3b9a7b1..dc5c1aa 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1146,10 +1146,12 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis,
+ 			return -EINVAL;
+ 
+ 		for (i = 0; i < n_irqs; i++) {
++			struct ahci_port_priv *pp = host->ports[i]->private_data;
++			snprintf(pp->irq_desc, sizeof(pp->irq_desc),
++				 "%s%d", dev_driver_string(host->dev), i);
+ 			rc = devm_request_threaded_irq(host->dev, irq + i,
+ 				ahci_multi_irqs_intr, ahci_port_thread_fn,
+-				IRQF_SHARED, dev_driver_string(host->dev),
+-				host->ports[i]);
++				IRQF_SHARED, pp->irq_desc, host->ports[i]);
+ 			if (rc)
+ 				goto out_free_irqs;
+ 		}
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index ed1fbc8..ceb5208 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -305,6 +305,7 @@ struct ahci_port_priv {
+ 	int			fbs_last_dev;	/* save FBS.DEV of last FIS */
+ 	/* enclosure management info per PM slot */
+ 	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
++	char			irq_desc[8];	/* bus + port # */
+ };
+ 
+ struct ahci_host_priv {
 -- 
-1.8.2.1.94.g173f9a7
+1.7.7.6
 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
