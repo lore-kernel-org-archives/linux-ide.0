@@ -1,68 +1,77 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] AHCI: Make distinct names for ports in /proc/interrupts
-Date: Tue, 30 Apr 2013 17:41:19 -0400
-Message-ID: <51803A7F.8080608@pobox.com>
-References: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [git patches] libata updates
+Date: Tue, 30 Apr 2013 18:26:54 -0400
+Message-ID: <20130430222654.GA16716@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:43503 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933706Ab3D3VlY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Apr 2013 17:41:24 -0400
-In-Reply-To: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
+Received: from havoc.gtf.org ([69.61.125.42]:43273 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760097Ab3D3W0z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 30 Apr 2013 18:26:55 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>
-
-On 04/29/2013 06:12 AM, Alexander Gordeev wrote:
-> Currently all interrupts assigned to AHCI ports show up in
-> '/proc/interrupts' as 'ahci'. This fix adds port numbers as
-> suffixes and hence makes the descriptions distinct.
->
-> Reported-by: Jan Beulich <JBeulich@suse.com>
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->   drivers/ata/ahci.c |    6 ++++--
->   drivers/ata/ahci.h |    1 +
->   2 files changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 3b9a7b1..dc5c1aa 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1146,10 +1146,12 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis,
->   			return -EINVAL;
->
->   		for (i = 0; i < n_irqs; i++) {
-> +			struct ahci_port_priv *pp = host->ports[i]->private_data;
-> +			snprintf(pp->irq_desc, sizeof(pp->irq_desc),
-> +				 "%s%d", dev_driver_string(host->dev), i);
->   			rc = devm_request_threaded_irq(host->dev, irq + i,
->   				ahci_multi_irqs_intr, ahci_port_thread_fn,
-> -				IRQF_SHARED, dev_driver_string(host->dev),
-> -				host->ports[i]);
-> +				IRQF_SHARED, pp->irq_desc, host->ports[i]);
->   			if (rc)
->   				goto out_free_irqs;
->   		}
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index ed1fbc8..ceb5208 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -305,6 +305,7 @@ struct ahci_port_priv {
->   	int			fbs_last_dev;	/* save FBS.DEV of last FIS */
->   	/* enclosure management info per PM slot */
->   	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
-> +	char			irq_desc[8];	/* bus + port # */
-
-Would prefer to initialize irq_desc when the struct of ahci_port_priv is 
-initialized, rather than at irq request time.
-
-	Jeff
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
 
+Summary:
 
+1) More ACPI fixes, cleanups
+
+2) Minor cleanups for sata_highbank, pata_at32, pata_octeon_cf,
+   sata_rcar
+
+3) pata_legacy: small bug found in opti chipset code (untested fix,
+   due to ancient h/w)
+
+4) sata_fsl: RX water mark config knob, some h/w needs it
+
+5) pata_imx: cleanups, DeviceTree support
+
+6) SCSI<->ATA translator: properly export translator version,
+   not device firmware version
+
+
+Please pull 2cc1144a31f76d4a9fb48bec5d6ba1359f980813 from
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git tags/upstream-linus
+
+
+to receive the following updates:
+
+Aaron Lu (2):
+      libata-acpi: remove redundent code for power resource handling
+      [libata] acpi: make ata_ap_acpi_handle not block
+
+Alexandru Gheorghiu (1):
+      pata_octeon_cf: Use resource_size function
+
+Baruch Even (1):
+      [libata] SCSI: really use SATL version in VPD
+
+Dan Carpenter (1):
+      pata_legacy: bogus clock in opti82c46x_set_piomode()
+
+Jingoo Han (2):
+      pata_at32: use module_platform_driver_probe()
+      sata_highbank: make ahci_highbank_pm_ops static
+
+Lv Zheng (1):
+      ACPI/libata: Restore libata.noacpi support
+
+Qiang Liu (1):
+      fsl/sata: create a sysfs entry for rx water mark
+
+Robert Richter (1):
+      sata_highbank: Rename proc_name to the module name
+
+Sachin Kamat (1):
+      sata_rcar: Convert to devm_ioremap_resource()
+
+Sascha Hauer (4):
+      pata_imx: Use devm_clk_get
+      pata_imx: cleanup error path
+      pata_imx: use void __iomem * for regs
+      pata_imx: add devicetree support
 
