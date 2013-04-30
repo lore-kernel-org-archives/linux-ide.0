@@ -1,38 +1,32 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH] sata_highbank: Rename proc_name to the module name
-Date: Tue, 30 Apr 2013 18:33:29 -0400
-Message-ID: <518046B9.7090604@pobox.com>
-References: <1367341038-7335-1-git-send-email-rric@kernel.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] libata updates
+Date: Tue, 30 Apr 2013 16:18:10 -0700
+Message-ID: <CA+55aFyGauCogyZojMp542kDJOMzumkjm3bR9iXP7=+4_aKs8g@mail.gmail.com>
+References: <20130430222654.GA16716@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:47428 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932686Ab3D3Wdc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Apr 2013 18:33:32 -0400
-In-Reply-To: <1367341038-7335-1-git-send-email-rric@kernel.org>
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:48089 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933786Ab3D3XSL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Apr 2013 19:18:11 -0400
+In-Reply-To: <20130430222654.GA16716@havoc.gtf.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Richter <rric@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Richter <robert.richter@calxeda.com>, Rob Herring <rob.herring@calxeda.com>, Alexander Graf <agraf@suse.de>, stable@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On 04/30/2013 12:57 PM, Robert Richter wrote:
-> From: Robert Richter <robert.richter@calxeda.com>
+On Tue, Apr 30, 2013 at 3:26 PM, Jeff Garzik <jeff@garzik.org> wrote:
 >
-> mkinitrd looks at /sys/class/scsi_host/host$hostnum/proc_name to find
-> the module name of a disk driver. Current name is "highbank-ahci" but
-> the module is "sata_highbank". Rename it to match the module name.
->
-> Cc: Rob Herring <rob.herring@calxeda.com>
-> Cc: Alexander Graf <agraf@suse.de>
-> Cc: <stable@vger.kernel.org> v3.7..
-> Signed-off-by: Robert Richter <robert.richter@calxeda.com>
-> ---
->   drivers/ata/sata_highbank.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Summary:
 
-applied
+return -EMISSINGDIFFSTAT;
 
+I've pulled, but *please* make sure to fix your broken script. I
+really do want to see the diffstat, partly because I want to know what
+to expect even before pulling, partly just to verify that what I
+pulled actually matches what you expected me to pull (iow, hopefully
+you actually read your own diffstat and anything surprising would have
+jumped out at you).
 
-
+               Linus
