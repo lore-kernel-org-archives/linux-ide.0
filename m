@@ -1,54 +1,68 @@
-From: Alexander Graf <agraf@suse.de>
-Subject: Re: [PATCH] sata_highbank: Rename proc_name to the module name
-Date: Tue, 30 Apr 2013 18:59:13 +0200
-Message-ID: <517FF861.2090308@suse.de>
-References: <1367341038-7335-1-git-send-email-rric@kernel.org>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH] AHCI: Make distinct names for ports in /proc/interrupts
+Date: Tue, 30 Apr 2013 17:41:19 -0400
+Message-ID: <51803A7F.8080608@pobox.com>
+References: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50960 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759576Ab3D3Q7Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 30 Apr 2013 12:59:16 -0400
-In-Reply-To: <1367341038-7335-1-git-send-email-rric@kernel.org>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:43503 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933706Ab3D3VlY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Apr 2013 17:41:24 -0400
+In-Reply-To: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Richter <rric@kernel.org>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Robert Richter <robert.richter@calxeda.com>, Rob Herring <rob.herring@calxeda.com>, stable@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>
 
-On 04/30/2013 06:57 PM, Robert Richter wrote:
-> From: Robert Richter<robert.richter@calxeda.com>
+On 04/29/2013 06:12 AM, Alexander Gordeev wrote:
+> Currently all interrupts assigned to AHCI ports show up in
+> '/proc/interrupts' as 'ahci'. This fix adds port numbers as
+> suffixes and hence makes the descriptions distinct.
 >
-> mkinitrd looks at /sys/class/scsi_host/host$hostnum/proc_name to find
-> the module name of a disk driver. Current name is "highbank-ahci" but
-> the module is "sata_highbank". Rename it to match the module name.
->
-> Cc: Rob Herring<rob.herring@calxeda.com>
-> Cc: Alexander Graf<agraf@suse.de>
-> Cc:<stable@vger.kernel.org>  v3.7..
-> Signed-off-by: Robert Richter<robert.richter@calxeda.com>
-
-Acked-by: Alexander Graf <agraf@suse.de>
-
-
-Alex
-
+> Reported-by: Jan Beulich <JBeulich@suse.com>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->   drivers/ata/sata_highbank.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/ata/ahci.c |    6 ++++--
+>   drivers/ata/ahci.h |    1 +
+>   2 files changed, 5 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-> index 5dba77c..b1a664a 100644
-> --- a/drivers/ata/sata_highbank.c
-> +++ b/drivers/ata/sata_highbank.c
-> @@ -251,7 +251,7 @@ static const struct ata_port_info ahci_highbank_port_info = {
->   };
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 3b9a7b1..dc5c1aa 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1146,10 +1146,12 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis,
+>   			return -EINVAL;
 >
->   static struct scsi_host_template ahci_highbank_platform_sht = {
-> -	AHCI_SHT("highbank-ahci"),
-> +	AHCI_SHT("sata_highbank"),
->   };
->
->   static const struct of_device_id ahci_of_match[] = {
+>   		for (i = 0; i < n_irqs; i++) {
+> +			struct ahci_port_priv *pp = host->ports[i]->private_data;
+> +			snprintf(pp->irq_desc, sizeof(pp->irq_desc),
+> +				 "%s%d", dev_driver_string(host->dev), i);
+>   			rc = devm_request_threaded_irq(host->dev, irq + i,
+>   				ahci_multi_irqs_intr, ahci_port_thread_fn,
+> -				IRQF_SHARED, dev_driver_string(host->dev),
+> -				host->ports[i]);
+> +				IRQF_SHARED, pp->irq_desc, host->ports[i]);
+>   			if (rc)
+>   				goto out_free_irqs;
+>   		}
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index ed1fbc8..ceb5208 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -305,6 +305,7 @@ struct ahci_port_priv {
+>   	int			fbs_last_dev;	/* save FBS.DEV of last FIS */
+>   	/* enclosure management info per PM slot */
+>   	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
+> +	char			irq_desc[8];	/* bus + port # */
+
+Would prefer to initialize irq_desc when the struct of ahci_port_priv is 
+initialized, rather than at irq request time.
+
+	Jeff
+
+
+
 
