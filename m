@@ -1,32 +1,49 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] libata updates
-Date: Tue, 30 Apr 2013 16:18:10 -0700
-Message-ID: <CA+55aFyGauCogyZojMp542kDJOMzumkjm3bR9iXP7=+4_aKs8g@mail.gmail.com>
-References: <20130430222654.GA16716@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:48089 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933786Ab3D3XSL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Apr 2013 19:18:11 -0400
-In-Reply-To: <20130430222654.GA16716@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH] ata: increase retry count but shorten duration for Calxeda controller
+Date: Wed,  1 May 2013 16:34:47 -0500
+Message-ID: <1367444087-18336-1-git-send-email-mark.langsdorf@calxeda.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, IDE-ML <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Tue, Apr 30, 2013 at 3:26 PM, Jeff Garzik <jeff@garzik.org> wrote:
->
-> Summary:
+The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+Retrying the phy hard reset can work around the issue, but the drive
+may fail again. In less than 150 out of 15000 test runs, it took more
+than 10 tries for the link to be established (but never more than 35).
+Increase the retry count to guarantee the link is established.
 
-return -EMISSINGDIFFSTAT;
+Also, the default 2 second time-out on a failed drive is too long in
+this situation. Shorten it to 500 ms. This was also tested 15000 times
+on 24 drives and none of them experienced a time out.
 
-I've pulled, but *please* make sure to fix your broken script. I
-really do want to see the diffstat, partly because I want to know what
-to expect even before pulling, partly just to verify that what I
-pulled actually matches what you expected me to pull (iow, hopefully
-you actually read your own diffstat and anything surprising would have
-jumped out at you).
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+ drivers/ata/sata_highbank.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-               Linus
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 0d7c4c2..536936f 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -199,7 +199,7 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline)
+ {
+-	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	unsigned long timing[] = { 5, 100, 500};
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+@@ -207,7 +207,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 	bool online;
+ 	u32 sstatus;
+ 	int rc;
+-	int retry = 10;
++	int retry = 100;
+ 
+ 	ahci_stop_engine(ap);
+ 
+-- 
+1.7.10.4
