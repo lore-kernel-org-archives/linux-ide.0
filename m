@@ -1,53 +1,43 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: libata maintainership change
-Date: Fri, 03 May 2013 16:01:33 -0400
-Message-ID: <5184179D.5050407@pobox.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: libata maintainership change
+Date: Fri, 3 May 2013 14:10:34 -0700
+Message-ID: <20130503211034.GD22860@mtj.dyndns.org>
+References: <5184179D.5050407@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f43.google.com ([209.85.213.43]:41920 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729Ab3ECUBi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 May 2013 16:01:38 -0400
+Received: from mail-vb0-f45.google.com ([209.85.212.45]:63340 "EHLO
+	mail-vb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763585Ab3ECVKj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 May 2013 17:10:39 -0400
+Content-Disposition: inline
+In-Reply-To: <5184179D.5050407@pobox.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux IDE mailing list <linux-ide@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Linux IDE mailing list <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
+Hello,
 
-Linux has really found its groove.
+On Fri, May 03, 2013 at 04:01:33PM -0400, Jeff Garzik wrote:
+> Until such time as block-based storage disappears from this earth,
+> the brave Sir Tejun, basically the libata co-author at this point,
+> has agreed to be a target for slings and arrows known as libata
+> patches.
 
-When I first got involved in Linux, there was no PCI API (now called the 
-hotplug or device API), and patch submission was a moderately painful 
-process of throwing spaghetti at a wall: sending and resending, with 
-both Linus and maintainers having to manually resolve merge conflicts. 
-<shiver>
+Yes, come high water or fire, I'll soldier on!!!11!!1!one!!
 
-It was a real fight to get any Linux hardware support at all.  The vast 
-amount of hardware documentation was locked away or simply unavailable.
+On a more serious note, while I haven't been too active on libata for
+quite a while now, I'm fairly confident that I can play the patch
+monkey role.  I'll set up a tree and send a pull request to update
+MAINTAINERS.
 
-Working on memory management or filesystems or scheduling was always the 
-Sexy Rock Star PhD work that attracted engineers.  OTOH, I felt, device 
-drivers were ignored as boring, unsexy grunt work.  Which, ok, maybe it 
-was.  Each new device driver, though, spread Linux to more and greater 
-locales.  Alan Cox and Don Becker did enormous heavy lifting back then. 
-  Now Linux is where it is today, with most hardware vendors actively 
-seeking open source driver support (except NVIDIA, natch).  The kernel 
-has come a long way.
+I owe Jeff a lot for holding my hands when I first started hacking on
+the kernel.  I don't think I'd be here now if it weren't for his help,
+so thanks Jeff and I hope you enjoy whatever your next chapter
+brings. :)
 
-Time for new open source pastures outside the kernel, for me.  SATA is 
-slowly getting unexciting to the world.  Which, really, just means the 
-brand new technology has reached a usable plateau.  :)  And maybe in a 
-few years, with directly attached PCI-NextGenSuperFastExpress storage, 
-ATA and SCSI will be distant memories.
+Thanks!
 
-Until such time as block-based storage disappears from this earth, the 
-brave Sir Tejun, basically the libata co-author at this point, has 
-agreed to be a target for slings and arrows known as libata patches.
-
-All the best,
-
-	Jeff
-
-
+-- 
+tejun
