@@ -1,42 +1,43 @@
-From: "John P. Goldman" <gliceaga@mendoza-conicet.gob.ar>
-Subject: dringender Vorschlag
-Date: Wed, 8 May 2013 05:46:28 -0300 (ART)
-Message-ID: <351326728.69416.1368002788604.JavaMail.root__40214.7904308096$1368004033$gmane$org@correo.mendoza-conicet.gob.ar>
-Reply-To: "John P. Goldman" <johnp.goldman@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Wolfram Sang <wsa@the-dreams.de>
+Subject: [RFC 01/42] drivers/ata: don't check resource with devm_ioremap_resource
+Date: Fri, 10 May 2013 10:16:46 +0200
+Message-ID: <1368173847-5661-2-git-send-email-wsa@the-dreams.de>
+References: <1368173847-5661-1-git-send-email-wsa@the-dreams.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.mendoza-conicet.gob.ar ([200.69.149.90]:40948 "EHLO
-	mx2.mendoza-conicet.gob.ar" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751190Ab3EHJG6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 May 2013 05:06:58 -0400
+Received: from sauhun.de ([89.238.76.85]:60325 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751561Ab3EJIQQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 May 2013 04:16:16 -0400
+In-Reply-To: <1368173847-5661-1-git-send-email-wsa@the-dreams.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Wolfram Sang <wsa@the-dreams.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
+devm_ioremap_resource does sanity checks on the given resource. No need to
+duplicate this in the driver.
 
+Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
+---
+ drivers/ata/pata_ep93xx.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-Entschuldigungen f=C3=BCr kommen in Ihre Privatsph=C3=A4re! Ich bin Rec=
-htsanwalt
-Werner Erich Zeller; Ich habe einen meiner einflussreichen und
-wohlhabenden Kunden zum Tode; und er hatte eine sehr geheime und privat=
-e
-Investitionen von =E2=82=AC15,000,000.00 bei einer privaten Bank in Gro=
-=C3=9Fbritannien
-hier zu Lebzeiten. Diese Investition wurde ohne einen deklarierten
-n=C3=A4chsten Angeh=C3=B6rigen und beg=C3=BCnstigte. Jetzt brauche ich =
-Sie arbeiten mit
-mir als mein Partner zu erholen und zu je 50 % Aktienfonds. Alle Dokume=
-nte
-werden rechtlich beantragt und beschafft, und in 5 Werktage, wird diese
-Transaktion auftreten. Aber ich brauche einen ernsten, treuen und
-glaubw=C3=BCrdigen Partner.
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index c1bfaf4..980b88e 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -933,11 +933,6 @@ static int ep93xx_pata_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (!mem_res) {
+-		err = -ENXIO;
+-		goto err_rel_gpio;
+-	}
+-
+ 	ide_base = devm_ioremap_resource(&pdev->dev, mem_res);
+ 	if (IS_ERR(ide_base)) {
+ 		err = PTR_ERR(ide_base);
+-- 
+1.7.10.4
 
-Bitte senden Sie mir eine vertrauliche Antwort, wenn Sie denken, Sie
-vertraut werden k=C3=B6nnen und sind von den Qualit=C3=A4ten! Ich warte=
- auf Ihre
-schnelle Antwort.
-
-Werner Erich Zeller (Rechtsanwalt)
-Rufen Sie + 44-702-409-0820 (Office)
