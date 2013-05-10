@@ -1,57 +1,40 @@
-From: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
-Subject: [PATCH] IDE: bugfix of IDE PIO size calculation
-Date: Fri, 10 May 2013 11:47:11 -0700
-Message-ID: <20130510184711.32151.70337.stgit@linux-yegoshin>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] IDE: bugfix of IDE PIO size calculation
+Date: Fri, 10 May 2013 22:56:19 +0400
+Message-ID: <518D42D3.3010709@cogentembedded.com>
+References: <20130510184711.32151.70337.stgit@linux-yegoshin>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from multi.imgtec.com ([194.200.65.239]:2171 "EHLO multi.imgtec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752392Ab3EJSsh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 May 2013 14:48:37 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20130510184711.32151.70337.stgit@linux-yegoshin>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, davem@davemloft.net
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net
 
-IDE PIO calculates size wrong.
-Proven by test on MIPS Malta platform with multiple CPU types
-with bootparam flag "ide-core.nodma=0.0".
+Hello.
 
-It is still needed to test non-DMA IO.
+On 05/10/2013 10:47 PM, Leonid Yegoshin wrote:
 
-Change-Id: Id82c2bc5965d85960846db53d84846d9a05d75a3
-Author: Leonid Yegoshin <yegoshin@mips.com>
-Signed-off-by: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
-(imported from commit 43cee988ce0aa8d2ca1eec014d25f014e95eefe6)
-(imported from commit d74805b8b12cada05df811e112eb7e3ec197d565)
----
- drivers/ide/ide-taskfile.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+> IDE PIO calculates size wrong.
+> Proven by test on MIPS Malta platform with multiple CPU types
+> with bootparam flag "ide-core.nodma=0.0".
+>
+> It is still needed to test non-DMA IO.
+>
+> Change-Id: Id82c2bc5965d85960846db53d84846d9a05d75a3
 
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 729428e..dabb88b 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -239,9 +239,6 @@ void ide_pio_bytes(ide_drive_t *drive, struct ide_cmd *cmd,
- 		unsigned nr_bytes = min(len, cursg->length - cmd->cursg_ofs);
- 		int page_is_high;
- 
--		if (nr_bytes > PAGE_SIZE)
--			nr_bytes = PAGE_SIZE;
--
- 		page = sg_page(cursg);
- 		offset = cursg->offset + cmd->cursg_ofs;
- 
-@@ -249,6 +246,8 @@ void ide_pio_bytes(ide_drive_t *drive, struct ide_cmd *cmd,
- 		page = nth_page(page, (offset >> PAGE_SHIFT));
- 		offset %= PAGE_SIZE;
- 
-+		nr_bytes = min_t(unsigned, nr_bytes, (PAGE_SIZE - offset));
-+
- 		page_is_high = PageHighMem(page);
- 		if (page_is_high)
- 			local_irq_save(flags);
+    Please get rid of this line.
 
+> Author: Leonid Yegoshin <yegoshin@mips.com>
 
+     From: line at the start of message is used for that.
+
+> Signed-off-by: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
+> (imported from commit 43cee988ce0aa8d2ca1eec014d25f014e95eefe6)
+> (imported from commit d74805b8b12cada05df811e112eb7e3ec197d565)
+
+     What are those two lines? Why are they here, in upstream patch?
+
+WBR, Sergei
