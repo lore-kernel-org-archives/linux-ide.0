@@ -1,48 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] make ata_exec_internal_sg honor DMADIR
-Date: Tue, 14 May 2013 12:06:16 -0700
-Message-ID: <20130514190616.GU6795@mtj.dyndns.org>
-References: <CA+WQ+_13jrv6eKy7j5_Y8Tj0pvfnoWVWsb5JQtyttNONk84vKw@mail.gmail.com>
- <201305121213.47294.plr.vincent@gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2] AHCI: Make distinct names for ports in
+ /proc/interrupts
+Date: Tue, 14 May 2013 21:41:19 +0200
+Message-ID: <20130514194118.GA20747@dhcp-26-207.brq.redhat.com>
+References: <20130429101237.GA27738@dhcp-26-207.brq.redhat.com>
+ <51803A7F.8080608@pobox.com>
+ <20130507083836.GA18862@dhcp-26-207.brq.redhat.com>
+ <20130514185642.GT6795@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f180.google.com ([209.85.213.180]:55604 "EHLO
-	mail-ye0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754581Ab3ENTGW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 May 2013 15:06:22 -0400
-Received: by mail-ye0-f180.google.com with SMTP id r11so169230yen.11
-        for <linux-ide@vger.kernel.org>; Tue, 14 May 2013 12:06:21 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <201305121213.47294.plr.vincent@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20130514185642.GT6795@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>
 List-Id: linux-ide@vger.kernel.org
-To: Vincent Pelletier <plr.vincent@gmail.com>
-Cc: linux-ide@vger.kernel.org, Csaba =?iso-8859-1?Q?Hal=E1sz?= <csaba.halasz@gmail.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-(cc'ing Sergei)
-
-On Sun, May 12, 2013 at 12:13:46PM +0200, Vincent Pelletier wrote:
-> In my understanding, it should indeed go in the "if (cdb)" block, as it should 
-> only be needed for ATAPI commands. I don't think lbam/lbah need to be set (or 
-> if they do, it's a different issue), because they are set independently from 
-> DMADIR in atapi_xlat (so ata_exec_internal_sg would have to set them 
-> independently too, probably in the "if (cdb)" block).
+On Tue, May 14, 2013 at 11:56:42AM -0700, Tejun Heo wrote:
+> On Tue, May 07, 2013 at 10:38:37AM +0200, Alexander Gordeev wrote:
+> > Currently all interrupts assigned to AHCI ports show up in
+> > '/proc/interrupts' as 'ahci'. This fix adds port numbers as
+> > suffixes and hence makes the descriptions distinct.
+> > 
+> > Reported-by: Jan Beulich <JBeulich@suse.com>
+> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > 
-> I've modified original patch to the attached one, and tested it: drive is 
-> correctly recognised and data can be read from it.
+> Patch doesn't apply.  Can you please refresh it on top of the
+> following git branch?
+
+Well, this patch is on top of a previously posted another patch
+"[PATCH RFC 1/1] AHCI: Optimize interrupt processing". Jeff said
+he applied the latter, but I did not notice it made to his repo.
+
+Would you consider to accept "AHCI: Optimize interrupt processing"
+patch first, or still refresh this one?
+
+>  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.11
 > 
-> What would be needed to integrate this patch into the kernel ?
-> Also, why does atapi_dmadir default to disabled ? I'm very unfamiliar with 
-> ata[pi], if there any drawback from enabling it by default to fix such
-> devices ?
-
-Patch looks correct to me but can you please put more detail into the
-description preferably with a link to this thread?  As for why
-atapi_dmadir isn't enabled by default, my memory is extremely fuzzy
-now but ISTR it to be deprecated and cause issues with some devices.
-
-Thanks.
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
